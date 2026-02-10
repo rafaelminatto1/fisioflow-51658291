@@ -1,8 +1,9 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import {
   initializeAuth,
-  getReactNativePersistence,
-  getAuth
+  getAuth,
+  // @ts-ignore - types are sometimes missing in some environments
+  getReactNativePersistence
 } from 'firebase/auth';
 import { initializeFirestore, CACHE_SIZE_UNLIMITED, enableMultiTabIndexedDbPersistence, getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
@@ -22,7 +23,7 @@ const firebaseConfig = {
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
 // Initialize Auth with React Native persistence
-let auth;
+let auth: ReturnType<typeof getAuth>;
 try {
   auth = initializeAuth(app, {
     persistence: getReactNativePersistence(AsyncStorage),
@@ -33,7 +34,7 @@ try {
 }
 
 // Initialize Firestore with offline persistence
-let db;
+let db: ReturnType<typeof getFirestore>;
 try {
   db = initializeFirestore(app, {
     cacheSizeBytes: CACHE_SIZE_UNLIMITED,
@@ -59,3 +60,4 @@ try {
 const storage = getStorage(app);
 
 export { app, auth, db, storage };
+

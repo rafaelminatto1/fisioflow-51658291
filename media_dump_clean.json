@@ -1,0 +1,1382 @@
+[
+  {
+    "id": "02b467a9-564e-4a18-bbf5-8150154f50e0",
+    "name": "Isometria Cervical (Extensão)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F02b467a9-564e-4a18-bbf5-8150154f50e0%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "0335b398-ac40-44ea-85fe-c1dfa2fc9a38",
+    "name": "Elevação Frontal de Ombro",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F0335b398-ac40-44ea-85fe-c1dfa2fc9a38%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=nd1R8XKFHNI"
+  },
+  {
+    "id": "04a5f252-82e5-416e-b3fe-4bbbf1be7370",
+    "name": "Face Pull",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F04a5f252-82e5-416e-b3fe-4bbbf1be7370%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=0Po47vvj9g4"
+  },
+  {
+    "id": "09a61106-323b-4716-bc12-c7bbd931ba0b",
+    "name": "Alongamento de Tríceps por Trás",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F09a61106-323b-4716-bc12-c7bbd931ba0b%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=m8ZEOpPRXO8"
+  },
+  {
+    "id": "0a34d973-4a39-41c0-95fe-83c12e2e31fc",
+    "name": "Agachamento com Suporte",
+    "image_url": "/brain/7e65c419-d18b-4800-90a9-a7cb8ea3f998/agachamento_com_suporte_1768403341872.png",
+    "video_url": "https://www.youtube.com/watch?v=4L5nBs8Eq7g"
+  },
+  {
+    "id": "0a4b1e70-34ee-4718-a2fc-c8e2597e1c15",
+    "name": "Bird-dog (Cachorro e Pássaro)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F0a4b1e70-34ee-4718-a2fc-c8e2597e1c15%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=g_wUo3CQYWY"
+  },
+  {
+    "id": "0b6a0d0e-aed9-4300-b0a2-b739e768ec13",
+    "name": "Extensão de Ombro em Pronação",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F0b6a0d0e-aed9-4300-b0a2-b739e768ec13%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=spFsexpuQt8"
+  },
+  {
+    "id": "0ffb39fe-1cf7-4277-9cf2-e52efb748ace",
+    "name": "Ponte Unilateral",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F0ffb39fe-1cf7-4277-9cf2-e52efb748ace%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=uZlM7Bpdf90"
+  },
+  {
+    "id": "124c3df3-bba5-431a-87f5-c14f77fcb4b3",
+    "name": "Levantamento Terra",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F124c3df3-bba5-431a-87f5-c14f77fcb4b3%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=0Et5echrei8"
+  },
+  {
+    "id": "137960fc-89dd-4b2d-b972-2fe7a014e4cb",
+    "name": "Mobilidade de Coluna",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F137960fc-89dd-4b2d-b972-2fe7a014e4cb%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=2rhE67qpFT4"
+  },
+  {
+    "id": "13b4fac7-40e7-44d7-878d-d7613a9468bf",
+    "name": "Chin Tuck com Elevação (Head Lift)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F13b4fac7-40e7-44d7-878d-d7613a9468bf%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "1b06d13a-7fe3-4197-9419-746f3f61cf17",
+    "name": "Alongamento de Piriforme (4 Supino)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F1b06d13a-7fe3-4197-9419-746f3f61cf17%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "1b2fed47-b1f8-4caa-9200-43664eb9deeb",
+    "name": "Medicine Ball Slam",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F1b2fed47-b1f8-4caa-9200-43664eb9deeb%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "1b335a64-4349-4084-98ad-644ea7c7aded",
+    "name": "Respiração com Labios Franzidos (Pursed Lip)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F1b335a64-4349-4084-98ad-644ea7c7aded%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=2cGWi2Td8eg"
+  },
+  {
+    "id": "1b53aae1-8248-4c2c-ad97-10b71d6d2a27",
+    "name": "Remada Curvada (Barbell Row)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F1b53aae1-8248-4c2c-ad97-10b71d6d2a27%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=eeZ59A0qmtk"
+  },
+  {
+    "id": "1b6a7d2c-259d-4cd1-b1ef-43262d66fd4f",
+    "name": "Huff Cough",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F1b6a7d2c-259d-4cd1-b1ef-43262d66fd4f%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=pmJU3osuHSo"
+  },
+  {
+    "id": "1b8da9f8-7f2b-4bf0-88b3-4c42f73343e0",
+    "name": "Agachamento Livre",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F1b8da9f8-7f2b-4bf0-88b3-4c42f73343e0%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=4L5nBs8Eq7g"
+  },
+  {
+    "id": "1bc9cced-333a-45fe-a1b6-b6cf7d286b83",
+    "name": "Ankle Pumps (Bombinha)",
+    "image_url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/storage/v1/object/public/exercise-thumbnails/generated/ankle_pumps_post_op_1768920762499.avif",
+    "video_url": ""
+  },
+  {
+    "id": "1d887410-7bf1-4193-b014-157b23c6f505",
+    "name": "Rotação de Ombro com Toalha",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F1d887410-7bf1-4193-b014-157b23c6f505%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "1e4bbe8d-ac6e-4639-bc74-5d0de50998b0",
+    "name": "Extensão de Punho com Halter",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F1e4bbe8d-ac6e-4639-bc74-5d0de50998b0%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "21787493-4e7e-42db-9ba9-d5ebf3d61c61",
+    "name": "Alongamento de Panturrilha na Parede",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F21787493-4e7e-42db-9ba9-d5ebf3d61c61%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=zWKZO-SSIic"
+  },
+  {
+    "id": "21aba699-3698-49d9-a98f-d7b0d58b55d2",
+    "name": "Alongamento de Panturrilha Sentado (Sóleo)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F21aba699-3698-49d9-a98f-d7b0d58b55d2%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=PI_vlskeT10"
+  },
+  {
+    "id": "21de4c3d-8fd8-4d76-9952-19b2d9238209",
+    "name": "Ponte de Glúteo Unilateral",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F21de4c3d-8fd8-4d76-9952-19b2d9238209%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=2qBIZo4ngpA"
+  },
+  {
+    "id": "2203b17a-f256-48eb-a023-53d82198e71e",
+    "name": "Pallof Press",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F2203b17a-f256-48eb-a023-53d82198e71e%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "224db92d-6e32-4721-8c3c-753668b57090",
+    "name": "Alongamento de Glúteo Supino",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F224db92d-6e32-4721-8c3c-753668b57090%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=byVSCnP0gmU"
+  },
+  {
+    "id": "239e1bc5-a8f7-45c9-bd60-61b5d56f349b",
+    "name": "Alongamento de Bíceps na Parede",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F239e1bc5-a8f7-45c9-bd60-61b5d56f349b%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=G30Hk9EoYhk"
+  },
+  {
+    "id": "24d7105d-6222-4cac-b022-af486c670d07",
+    "name": "Abdominal Crupeado",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F24d7105d-6222-4cac-b022-af486c670d07%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=O0pIQ2UqeCY"
+  },
+  {
+    "id": "273d04a8-34f2-44c7-a73f-566c0cbe1494",
+    "name": "Elevação Lateral de Ombro (0-90°)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F273d04a8-34f2-44c7-a73f-566c0cbe1494%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=n9PrIOKUebo"
+  },
+  {
+    "id": "286a7f27-9989-4504-8812-50c31cfd9468",
+    "name": "Mobilização Cervical com Toalha",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F286a7f27-9989-4504-8812-50c31cfd9468%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "291e3c43-de1d-46c6-af15-c341e9cf02b5",
+    "name": "Saltos Laterais (Skater Hops)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F291e3c43-de1d-46c6-af15-c341e9cf02b5%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "29950c95-1519-403f-ba61-3ea069750f40",
+    "name": "Monster Walk (Caminhada Monster)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F29950c95-1519-403f-ba61-3ea069750f40%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=tOe7TEkJuJI"
+  },
+  {
+    "id": "2b45df0c-3657-400b-8230-d959f2a60dcb",
+    "name": "Extensão de Dedos",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F2b45df0c-3657-400b-8230-d959f2a60dcb%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=F35ALt_r_Ug"
+  },
+  {
+    "id": "2c7f07f5-8cbd-4ee8-a184-cf4e48802087",
+    "name": "Inversão de Tornozelo com Faixa",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F2c7f07f5-8cbd-4ee8-a184-cf4e48802087%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "316b65ac-6d73-4c1f-a7a8-1024b8f4f358",
+    "name": "Alongamento de Peitoral no Canto",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F316b65ac-6d73-4c1f-a7a8-1024b8f4f358%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "3329d2c0-8d1e-46be-9490-c14b2e5fa280",
+    "name": "Ponte de Glúteo Bilateral",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F3329d2c0-8d1e-46be-9490-c14b2e5fa280%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=O18cJCrlU1M"
+  },
+  {
+    "id": "3345bb1e-cfc0-4ff3-a9c3-cbc162d8827a",
+    "name": "Mergulho no Banco (Tríceps)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F3345bb1e-cfc0-4ff3-a9c3-cbc162d8827a%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "3541df60-9b9e-4038-85d8-409c0d5304f5",
+    "name": "Elevação de Panturrilha em Pé",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F3541df60-9b9e-4038-85d8-409c0d5304f5%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=h7bZ4XbuZLg"
+  },
+  {
+    "id": "35a45de4-9308-4f3a-98cf-0c34317ca652",
+    "name": "agachamento sumo",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F35a45de4-9308-4f3a-98cf-0c34317ca652%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/shorts/xP1wLymF2NE"
+  },
+  {
+    "id": "36267e08-f5db-4661-a30e-e8e42404412d",
+    "name": "Alongamento Levantador da Escápula",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F36267e08-f5db-4661-a30e-e8e42404412d%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "36562767-4169-4997-987d-480f48d77aca",
+    "name": "Mobilização de Ombro com Bastão",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F36562767-4169-4997-987d-480f48d77aca%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=u4J61K44OkU"
+  },
+  {
+    "id": "36c41e4f-4626-4d1f-8090-ecd1e3851831",
+    "name": "Apoio Unipodal Olhos Fechados",
+    "image_url": "",
+    "video_url": ""
+  },
+  {
+    "id": "36fba17a-19c0-425c-a1ae-8c71ca9d6f0e",
+    "name": "Alongamento de Adutores",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F36fba17a-19c0-425c-a1ae-8c71ca9d6f0e%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=d_0n6T1FF1g"
+  },
+  {
+    "id": "37c791cb-bb4a-4ca4-ac6e-b104b6fa4a1b",
+    "name": "Deslizamento do Nervo Mediano",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F37c791cb-bb4a-4ca4-ac6e-b104b6fa4a1b%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "38d6a2e2-adc7-47cd-a7c9-550996f9a892",
+    "name": "Single Leg Stance com Movimento de Braço",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F38d6a2e2-adc7-47cd-a7c9-550996f9a892%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=MfJdMLouRLc"
+  },
+  {
+    "id": "39f8e6d7-4df2-40c1-bf70-c999cca555bb",
+    "name": "Alongamento de Psoas (Ilíaco)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F39f8e6d7-4df2-40c1-bf70-c999cca555bb%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=3ea8_FdpX2o"
+  },
+  {
+    "id": "3a914408-ff33-4924-a853-9a833151463c",
+    "name": "Tuck Jump (Salto Grupard)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F3a914408-ff33-4924-a853-9a833151463c%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "3aa3a675-8e0a-45c2-9675-f4eece5ee8d9",
+    "name": "Salto Lateral (Lateral Bound)",
+    "image_url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/storage/v1/object/public/exercise-thumbnails/generated/lateral_bound_sports_1768921190178.avif",
+    "video_url": ""
+  },
+  {
+    "id": "3b963b28-4647-4367-88ec-7edd221294c4",
+    "name": "Postura da Criança",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F3b963b28-4647-4367-88ec-7edd221294c4%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "3c653228-db4f-46e7-bc61-d78457404571",
+    "name": "Elevação de Panturrilha Sentado",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F3c653228-db4f-46e7-bc61-d78457404571%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=uKBE0L4IZOA"
+  },
+  {
+    "id": "3c72fabd-7eae-4e43-8c6a-22ae0b8ff387",
+    "name": "Alongamento de Sóleo na Parede",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F3c72fabd-7eae-4e43-8c6a-22ae0b8ff387%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "3ccfbaba-3c89-419e-a07c-ce98b801d967",
+    "name": "Chin Tucks",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F3ccfbaba-3c89-419e-a07c-ce98b801d967%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "3cfa9027-eb99-4396-bc68-ccebbbd0f419",
+    "name": "Rotação Torácica Sentado",
+    "image_url": "",
+    "video_url": ""
+  },
+  {
+    "id": "3e36c518-0672-41ac-acd6-e043b40ddd6a",
+    "name": "Push-up Plus",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F3e36c518-0672-41ac-acd6-e043b40ddd6a%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=I2MM3UBAlU4"
+  },
+  {
+    "id": "3e499e73-e420-404e-aa6d-3c9835bc3f14",
+    "name": "Prancha Abdominal (Plank)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F3e499e73-e420-404e-aa6d-3c9835bc3f14%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=EGhQD9CVVGc"
+  },
+  {
+    "id": "4204a561-e640-4176-bdce-cd68ddb7b0f7",
+    "name": "Step Up",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F4204a561-e640-4176-bdce-cd68ddb7b0f7%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=wfhXnLILqdk"
+  },
+  {
+    "id": "437b9b5e-2cb7-4a8f-9f00-ea60a0879475",
+    "name": "Star Excursion Balance Test (SEBT)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F437b9b5e-2cb7-4a8f-9f00-ea60a0879475%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=4GMzE7NV3W0"
+  },
+  {
+    "id": "44df23a0-a4be-4cc3-8e6f-e5aaaefb5d82",
+    "name": "Pular Corda Imaginária",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F44df23a0-a4be-4cc3-8e6f-e5aaaefb5d82%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "4530460e-55e5-431f-bf78-5e8966569b23",
+    "name": "Descida Controlada de Degrau",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F4530460e-55e5-431f-bf78-5e8966569b23%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "45803b1d-30ca-400e-ad2f-df7e266729ce",
+    "name": "Coordenação Cruzada (Cross Crawl)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F45803b1d-30ca-400e-ad2f-df7e266729ce%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "466cacb6-905a-48ff-a507-c6575797901a",
+    "name": "Agachamento Goblet",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F466cacb6-905a-48ff-a507-c6575797901a%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "47df886c-41cd-476d-921b-e01e2881d27e",
+    "name": "Deadlift (Levantamento Terra) com Halteres",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F47df886c-41cd-476d-921b-e01e2881d27e%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=zH1QFLtuep0"
+  },
+  {
+    "id": "488d2447-2832-4bb4-9e17-ef65768ecfb2",
+    "name": "Círculos de Quadril",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F488d2447-2832-4bb4-9e17-ef65768ecfb2%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "48faaf03-3626-4ecb-9c33-6d2a244618e1",
+    "name": "Scorpion Stretch",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F48faaf03-3626-4ecb-9c33-6d2a244618e1%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "49b385fb-7f5f-444b-b749-58e2c5195bea",
+    "name": "Ab Wheel Rollout",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F49b385fb-7f5f-444b-b749-58e2c5195bea%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "4ab0a36d-7510-4421-b182-6acd88bb730b",
+    "name": "Preensão de Toalha com os Dedos",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F4ab0a36d-7510-4421-b182-6acd88bb730b%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "4b1e716a-a0ff-4e8c-a69f-14b53234f011",
+    "name": "Respiração Costal Inferior",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F4b1e716a-a0ff-4e8c-a69f-14b53234f011%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=yS4DDjKNObs"
+  },
+  {
+    "id": "4e87539c-3199-4aec-ae20-4749e80ea055",
+    "name": "Mobilização de Nervo Ulnar",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F4e87539c-3199-4aec-ae20-4749e80ea055%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=wC_dAf-EJyA"
+  },
+  {
+    "id": "5096ca7d-787b-4c96-8f6d-0f77b4266e6d",
+    "name": "Subida de Escada",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F5096ca7d-787b-4c96-8f6d-0f77b4266e6d%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=KK7YWYBG5q4"
+  },
+  {
+    "id": "534b4eaf-6718-4d58-9d2d-71a1c46febb1",
+    "name": "Superman",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F534b4eaf-6718-4d58-9d2d-71a1c46febb1%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "53782b5c-1f5c-4fb5-9b41-f89c531a6b2d",
+    "name": "Prancha Abdominal",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F53782b5c-1f5c-4fb5-9b41-f89c531a6b2d%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=dduZjSypIS8"
+  },
+  {
+    "id": "539ed598-43b1-4b66-846f-ae3eaf89d4ee",
+    "name": "Alongamento de Peitoral na Porta",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F539ed598-43b1-4b66-846f-ae3eaf89d4ee%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=oe7C99EHJYM"
+  },
+  {
+    "id": "53a9efd3-2290-4422-8714-d80ce013d2b9",
+    "name": "Salto Unipodal com Aterrissagem",
+    "image_url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/storage/v1/object/public/exercise-thumbnails/generated/single_leg_hop_landing_sports_1768921171501.avif",
+    "video_url": ""
+  },
+  {
+    "id": "53d5f00e-a5c8-4e15-b118-9326774206db",
+    "name": "4 Apoios (Four Point kneeling)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F53d5f00e-a5c8-4e15-b118-9326774206db%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=x7UL6t8g9Uw"
+  },
+  {
+    "id": "5456ed6b-eef0-49ee-aa0d-1cb94eaf917c",
+    "name": "Retração Escapular",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F5456ed6b-eef0-49ee-aa0d-1cb94eaf917c%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "575d07c7-bc3d-429c-9f04-7fdc752fb230",
+    "name": "Prancha Abdominal",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F575d07c7-bc3d-429c-9f04-7fdc752fb230%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=dduZjSypIS8"
+  },
+  {
+    "id": "580da2cd-47f3-4fd0-ba71-be29a76151a9",
+    "name": "Clamshell (Concha)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F580da2cd-47f3-4fd0-ba71-be29a76151a9%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=39vuP5xozsI"
+  },
+  {
+    "id": "5818c63c-a41c-46e5-8ef2-5ae68119831e",
+    "name": "Burpee Modificado",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F5818c63c-a41c-46e5-8ef2-5ae68119831e%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=OC8SuAknPJ4"
+  },
+  {
+    "id": "59069383-fa9c-4f8e-bb61-a1dc2601cb84",
+    "name": "Alongamento de Quadríceps com Toalha",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F59069383-fa9c-4f8e-bb61-a1dc2601cb84%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "5d4e9e60-72c7-4646-acb6-77bfcef7869a",
+    "name": "Marcha Supina de Quadril",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F5d4e9e60-72c7-4646-acb6-77bfcef7869a%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "5d90cfeb-ea29-4c87-bbf2-3c282e502b8e",
+    "name": "Prone Y-T-W",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F5d90cfeb-ea29-4c87-bbf2-3c282e502b8e%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=QdGTI4Lshg4"
+  },
+  {
+    "id": "5f52d2e0-dfae-4770-a035-087ed83b245f",
+    "name": "Clock Reach (Alcance do Relógio)",
+    "image_url": "",
+    "video_url": ""
+  },
+  {
+    "id": "5fd7f81f-bb4a-47e6-bcce-c95b7fd0103b",
+    "name": "Fortalecimento de Glúteo",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F5fd7f81f-bb4a-47e6-bcce-c95b7fd0103b%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=E_uO_YbJCZY"
+  },
+  {
+    "id": "61bcc16f-b1c4-491e-898a-e6d0be2a0aed",
+    "name": "Rowing com Faixa Elástica",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F61bcc16f-b1c4-491e-898a-e6d0be2a0aed%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=1wQGAbIkdXo"
+  },
+  {
+    "id": "63058119-f79a-4aaf-ac42-0fb342d1df3e",
+    "name": "Fortalecimento de Glúteo",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F63058119-f79a-4aaf-ac42-0fb342d1df3e%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=SNtxAHBvsp4"
+  },
+  {
+    "id": "639d526a-647c-44e8-9300-4327f2dff585",
+    "name": "Stretching Global Ativo",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F639d526a-647c-44e8-9300-4327f2dff585%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=glBs1fsyhdo"
+  },
+  {
+    "id": "64391fd6-e533-495d-bd98-aff25dabf8ff",
+    "name": "Espirometria Incentivada",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F64391fd6-e533-495d-bd98-aff25dabf8ff%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=PLji1XJ0Z-E"
+  },
+  {
+    "id": "647b66fe-d57e-41dd-8107-abe7d008a81f",
+    "name": "Alongamento 90-90",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F647b66fe-d57e-41dd-8107-abe7d008a81f%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "668869ad-e594-4478-954f-1ef95cd9c9f5",
+    "name": "Apoio Unipodal",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F668869ad-e594-4478-954f-1ef95cd9c9f5%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=z-GrNaTVDhw"
+  },
+  {
+    "id": "6879381c-1a8e-4e29-ba62-1815d0f9f1ff",
+    "name": "Deslizamento de Tendões (Tendon Glides)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F6879381c-1a8e-4e29-ba62-1815d0f9f1ff%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "68a79743-9985-40a5-bd88-585927eebafc",
+    "name": "Tandem Walk (Caminhada em Tandem)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F68a79743-9985-40a5-bd88-585927eebafc%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=MuueTXaBJ3k"
+  },
+  {
+    "id": "69dd4f63-d7e1-46d2-9383-a98af2639578",
+    "name": "Gato-Camelo",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F69dd4f63-d7e1-46d2-9383-a98af2639578%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=YuzoxlVanHw"
+  },
+  {
+    "id": "6cc08e4c-6cc7-46ff-9806-949556ac37ba",
+    "name": "Ponte de Glúteo",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F6cc08e4c-6cc7-46ff-9806-949556ac37ba%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=O18cJCrlU1M"
+  },
+  {
+    "id": "6d684cbf-b694-4dc5-98a5-9e861c4c4126",
+    "name": "Coordenação Óculo-Manual",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F6d684cbf-b694-4dc5-98a5-9e861c4c4126%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=RF7gYbSntrU"
+  },
+  {
+    "id": "74df06c3-97fa-4448-b8d5-0a35438cb801",
+    "name": "Alongamento Trapézio Superior",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F74df06c3-97fa-4448-b8d5-0a35438cb801%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "75f5f09d-3010-4615-9a15-73f41f0c05a5",
+    "name": "Agachamento com Soco",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F75f5f09d-3010-4615-9a15-73f41f0c05a5%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "763de08e-c8a2-4cfa-be64-4913c77b0317",
+    "name": "Equilíbrio em Disco Instável",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F763de08e-c8a2-4cfa-be64-4913c77b0317%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=GLLRLrS48UA"
+  },
+  {
+    "id": "765bf678-24b4-4d5d-876d-3c569e923a5d",
+    "name": "Flexão de Cotovelo (Bicep Curl)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F765bf678-24b4-4d5d-876d-3c569e923a5d%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=8dP1h64X40Y"
+  },
+  {
+    "id": "78dd3222-a05b-4f27-b1fa-35b892941356",
+    "name": "Remada Sentada com Faixa",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F78dd3222-a05b-4f27-b1fa-35b892941356%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "797ac2aa-583d-41a6-a73e-2aa200e4d304",
+    "name": "Quadríceps Arco Curto",
+    "image_url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/storage/v1/object/public/exercise-thumbnails/generated/short_arc_quads_post_op_1768921154515.avif",
+    "video_url": ""
+  },
+  {
+    "id": "7a03c9f5-99dc-405a-88ba-b4893fd0b793",
+    "name": "Alongamento de Rombóides na Parede",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F7a03c9f5-99dc-405a-88ba-b4893fd0b793%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=k5-XTE2YF7g"
+  },
+  {
+    "id": "7abed066-3b08-43d7-950e-716ea0a16508",
+    "name": "Alongamento de Quadríceps",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F7abed066-3b08-43d7-950e-716ea0a16508%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=VSu2K_EwYBA"
+  },
+  {
+    "id": "7d9dd2cc-eaf7-43bc-a6ef-4d9ee5b05647",
+    "name": "Mobilização de Coluna Thorácica com Foam Roller",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F7d9dd2cc-eaf7-43bc-a6ef-4d9ee5b05647%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=sTyRcxKnrsI"
+  },
+  {
+    "id": "7db917f8-3898-461f-a055-5d55b20ca8c7",
+    "name": "Gato-Vaca (Cat-Cow)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F7db917f8-3898-461f-a055-5d55b20ca8c7%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=LIVJZZyZ2qM"
+  },
+  {
+    "id": "7ddcb9f0-daf5-4921-b29f-7a81faca8014",
+    "name": "V-Up (Abdominal Canivete)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F7ddcb9f0-daf5-4921-b29f-7a81faca8014%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "8216eda0-2151-468e-9cd7-8efafd8d6fbd",
+    "name": "Agachamento na Cadeira",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F8216eda0-2151-468e-9cd7-8efafd8d6fbd%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "825b7a90-c599-40fe-8bcf-839fc1655255",
+    "name": "Propriocepção em Disco",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F825b7a90-c599-40fe-8bcf-839fc1655255%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=GLLRLrS48UA"
+  },
+  {
+    "id": "85cb38c0-d365-41fe-893c-35093cb2d6f8",
+    "name": "L-Sit (Sustentação em L)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F85cb38c0-d365-41fe-893c-35093cb2d6f8%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "8e5c4a06-aa57-4f43-8114-b7da53c67509",
+    "name": "Thomas Test Stretch",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F8e5c4a06-aa57-4f43-8114-b7da53c67509%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=Q0XiUq9TJ2w"
+  },
+  {
+    "id": "8e6cade2-9a44-4e4c-a6ef-1769a507a78d",
+    "name": "Farmer's Carry (Caminhada do Fazendeiro)",
+    "image_url": "",
+    "video_url": ""
+  },
+  {
+    "id": "8eb41ab9-5fac-42e0-b40c-c8d9d4b8194a",
+    "name": "Perdigueiro",
+    "image_url": "/brain/7e65c419-d18b-4800-90a9-a7cb8ea3f998/bird_dog_exercise_1768404060429.png",
+    "video_url": "https://www.youtube.com/watch?v=Nm8onc8ndVw"
+  },
+  {
+    "id": "8ff5fa14-835c-4a25-b82c-d642782be9f4",
+    "name": "Escalada na Parede (Wall Climber)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F8ff5fa14-835c-4a25-b82c-d642782be9f4%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "9058e05e-b006-4b1c-bd7e-9b285b94aaba",
+    "name": "BOSU Ball Squat",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F9058e05e-b006-4b1c-bd7e-9b285b94aaba%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=uzwYIILcgfE"
+  },
+  {
+    "id": "91624a88-fed9-45fe-8d39-1a277aea225e",
+    "name": "Alongamento de Peitoral na Porta (Variação)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F91624a88-fed9-45fe-8d39-1a277aea225e%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "91f3e5c9-ac80-48e6-8da0-0049f7fc2c35",
+    "name": "Hip Airplane",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F91f3e5c9-ac80-48e6-8da0-0049f7fc2c35%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "921eb62f-60f8-4f56-8364-88e291a63a33",
+    "name": "Agachamento Parelde (Wall Sit)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F921eb62f-60f8-4f56-8364-88e291a63a33%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=p1KsWs_SNjg"
+  },
+  {
+    "id": "95dd2a2c-5fe2-40ed-b57d-ace308a859cf",
+    "name": "Salto Horizontal (Broad Jump)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F95dd2a2c-5fe2-40ed-b57d-ace308a859cf%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "95e06cca-7996-4004-8fdc-044c6265aa2c",
+    "name": "Dead Bug",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F95e06cca-7996-4004-8fdc-044c6265aa2c%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=o4GKiEoYClI"
+  },
+  {
+    "id": "98ce538b-624c-4369-b5f1-59948d45b49b",
+    "name": "Panturrilha em Pé",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F98ce538b-624c-4369-b5f1-59948d45b49b%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=h7bZ4XbuZLg"
+  },
+  {
+    "id": "9a6d787c-9975-4b28-81f6-797dbe7ae58c",
+    "name": "Mobilização de Escápula (Wall Slides)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F9a6d787c-9975-4b28-81f6-797dbe7ae58c%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=tWDGEyMWv10"
+  },
+  {
+    "id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+    "name": "Perdigueiro (Bird Dog)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "9c2e9feb-4c19-4130-82f3-e08cb77afa84",
+    "name": "Equilíbrio Unipodal em Disco/Espuma",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F9c2e9feb-4c19-4130-82f3-e08cb77afa84%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "9ddf66b7-69ca-47db-b004-0b9c7cf47382",
+    "name": "Afundo",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F9ddf66b7-69ca-47db-b004-0b9c7cf47382%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=poAnWrA7DSU"
+  },
+  {
+    "id": "9e3aa6fb-1b3c-4acd-bc32-f5adc1ad0602",
+    "name": "Levantamento Terra",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F9e3aa6fb-1b3c-4acd-bc32-f5adc1ad0602%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=0Et5echrei8"
+  },
+  {
+    "id": "9fa43615-8b6e-49cc-ad58-577298bfa2dd",
+    "name": "Depth Jump (Salto Profundo)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2F9fa43615-8b6e-49cc-ad58-577298bfa2dd%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "9fc590c6-49c7-47da-a1fa-b454fdbd43f4",
+    "name": "Agachamento Livre",
+    "image_url": "",
+    "video_url": "https://www.youtube.com/watch?v=4L5nBs8Eq7g"
+  },
+  {
+    "id": "IJqYPawr0QhvwTKskf7Q",
+    "name": "Exercício de Teste - Alongamento de Isquiotibiais",
+    "image_url": "",
+    "video_url": ""
+  },
+  {
+    "id": "a0d4e677-bc5d-4e5c-bd32-658a9a532229",
+    "name": "Mobilização de Quadril (Capsular)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fa0d4e677-bc5d-4e5c-bd32-658a9a532229%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=JSA-6h66cYY"
+  },
+  {
+    "id": "a0e1b23d-dca0-4fc5-8dbe-2c6b1949c67a",
+    "name": "Respiração Diafragmática",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fa0e1b23d-dca0-4fc5-8dbe-2c6b1949c67a%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=_iQfblkbUJ4"
+  },
+  {
+    "id": "a13b1d82-e0e3-4240-9104-92d775ee5a83",
+    "name": "Pronação e Supinação de Punho",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fa13b1d82-e0e3-4240-9104-92d775ee5a83%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "a1545d00-8aed-4ba7-812a-83470b38edc8",
+    "name": "Boxe de Sombra (Shadow Boxing)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fa1545d00-8aed-4ba7-812a-83470b38edc8%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "a15530ef-7276-4450-a307-c3e126c14117",
+    "name": "Elevação de Panturrilha em Pé",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fa15530ef-7276-4450-a307-c3e126c14117%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "a2d12c5a-8098-42e0-ba8e-6e8689248620",
+    "name": "Pronação e Supinação com Peso",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fa2d12c5a-8098-42e0-ba8e-6e8689248620%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "a4759e6b-2570-49cd-97a7-9b48a8b211bc",
+    "name": "Hollow Rock (Canoa)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fa4759e6b-2570-49cd-97a7-9b48a8b211bc%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "a53d2a2e-90df-4e12-99d9-c34a687445ef",
+    "name": "Torção de Toalha (Grip)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fa53d2a2e-90df-4e12-99d9-c34a687445ef%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "a8afa48a-77cc-40df-b23d-cf61f343a206",
+    "name": "World's Greatest Stretch",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fa8afa48a-77cc-40df-b23d-cf61f343a206%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "a9a77512-1615-4f84-889e-71a0481dadd1",
+    "name": "Extensão de Cotovelo (Tricep)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fa9a77512-1615-4f84-889e-71a0481dadd1%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=Vf3zBwDqxA8"
+  },
+  {
+    "id": "aabcf71c-9234-426e-bef9-759e1286c47f",
+    "name": "Descida de Escada",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Faabcf71c-9234-426e-bef9-759e1286c47f%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=mvT_RiWBykM"
+  },
+  {
+    "id": "acfc8fa4-6d28-4748-bf52-5d66b787803f",
+    "name": "Alongamento de Isquiotibiais em Pé",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Facfc8fa4-6d28-4748-bf52-5d66b787803f%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=V-zQZ0MTTvM"
+  },
+  {
+    "id": "ad117b25-fe94-48ba-abae-27581b5b0a27",
+    "name": "Wall Angels (Anjos na Parede)",
+    "image_url": "",
+    "video_url": ""
+  },
+  {
+    "id": "adb7373b-bfae-4ca6-ad4a-6f26851a6e3b",
+    "name": "Codman Pendular",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fadb7373b-bfae-4ca6-ad4a-6f26851a6e3b%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=QF_ubbr_RUE"
+  },
+  {
+    "id": "adcb6539-adfc-4bb6-b46e-381ac8be63a2",
+    "name": "Mobilização Patelar",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fadcb6539-adfc-4bb6-b46e-381ac8be63a2%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=yZ0Oh561mc8"
+  },
+  {
+    "id": "af498abc-e4d5-4014-8f05-d131e83e6309",
+    "name": "Agachamento Búlgaro",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Faf498abc-e4d5-4014-8f05-d131e83e6309%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "b03643e1-47f7-4eeb-9bc7-de2fbd5a332e",
+    "name": "Equilíbrio em Tandem",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fb03643e1-47f7-4eeb-9bc7-de2fbd5a332e%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "b05fa3bf-791d-47f3-b76e-217802dde886",
+    "name": "Alongamento de Quadríceps",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fb05fa3bf-791d-47f3-b76e-217802dde886%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=VSu2K_EwYBA"
+  },
+  {
+    "id": "b1ac6203-b1f7-4965-aec6-ccd3e7391501",
+    "name": "Mini-Landing Protocol",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fb1ac6203-b1f7-4965-aec6-ccd3e7391501%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=HLx6MZmOBAE"
+  },
+  {
+    "id": "b438432e-f4d0-45fc-9e13-2c1306db9dad",
+    "name": "Flexão Inclinada",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fb438432e-f4d0-45fc-9e13-2c1306db9dad%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "b533a956-5d7c-4ceb-b4c6-71536c540adf",
+    "name": "SLR com Dorsiflexão Automática",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fb533a956-5d7c-4ceb-b4c6-71536c540adf%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=LdAD9GNv8FI"
+  },
+  {
+    "id": "b5e67932-ac7a-40c2-8b2f-9973fcf26f7f",
+    "name": "Flexão de Quadril com Vassoura",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fb5e67932-ac7a-40c2-8b2f-9973fcf26f7f%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "b636b2ba-2580-4425-bd36-621bb765d94b",
+    "name": "Marcha com Padrões Cruzados",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fb636b2ba-2580-4425-bd36-621bb765d94b%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=1wOSCEpPkV0"
+  },
+  {
+    "id": "b6488dc0-fb26-43ee-ad99-d701bef53963",
+    "name": "Stiff Unilateral",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fb6488dc0-fb26-43ee-ad99-d701bef53963%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "b65d5a99-7eff-45a9-9433-c5fb2abc6e8f",
+    "name": "Prancha na Parede",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fb65d5a99-7eff-45a9-9433-c5fb2abc6e8f%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "b7262ed6-7e26-492e-a14c-59c7ad0e69f4",
+    "name": "Coordenação Digital (Dedos)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fb7262ed6-7e26-492e-a14c-59c7ad0e69f4%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=OdrLrV8Gdlw"
+  },
+  {
+    "id": "b8780f14-2037-4cb9-b0d5-d92222b1e296",
+    "name": "Mobilidade de Ombro",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fb8780f14-2037-4cb9-b0d5-d92222b1e296%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=QPjIbr_sSCk"
+  },
+  {
+    "id": "b92906fa-740d-4797-b7aa-5f0fad5803ac",
+    "name": "Rotação Externa de Ombro",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fb92906fa-740d-4797-b7aa-5f0fad5803ac%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=hKRr7kAuw7k"
+  },
+  {
+    "id": "ba6c07e2-7e9b-4714-9709-b56e9143d5fb",
+    "name": "Caminhada na Ponta dos Pés",
+    "image_url": "",
+    "video_url": ""
+  },
+  {
+    "id": "bd8440f5-991e-45c8-9b85-6d640417d0e1",
+    "name": "Desvio Radial de Punho",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fbd8440f5-991e-45c8-9b85-6d640417d0e1%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=xd2R3odumVA"
+  },
+  {
+    "id": "bea028c5-24f8-4f05-95fa-f9df68cfa6f8",
+    "name": "Cobra Prona",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fbea028c5-24f8-4f05-95fa-f9df68cfa6f8%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "befcc012-1f46-4252-b429-a56e0c1ed8ca",
+    "name": "Elevação de Perna Retificada (SLR)",
+    "image_url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/storage/v1/object/public/exercise-thumbnails/generated/slr_strength_post_op_1768920800735.avif",
+    "video_url": ""
+  },
+  {
+    "id": "bf5122ab-fd57-47d3-b6ed-e2f081e71918",
+    "name": "Alongamento de Isquiotibiais",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fbf5122ab-fd57-47d3-b6ed-e2f081e71918%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=3O8SLneuVKc"
+  },
+  {
+    "id": "bf9fd47a-e046-4f63-9565-b1bc49f7db87",
+    "name": "Elevação de Pernas na Barra",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fbf9fd47a-e046-4f63-9565-b1bc49f7db87%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "c13843f6-32b7-4ecc-9a19-a98d165f9130",
+    "name": "Extensão de Joelho em Cadeia Cinética Aberta",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fc13843f6-32b7-4ecc-9a19-a98d165f9130%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=jVKEuSLe0gw"
+  },
+  {
+    "id": "c2d217e3-53dc-44d7-9c8d-35991df844c5",
+    "name": "Alongamento Lateral de Pescoço",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fc2d217e3-53dc-44d7-9c8d-35991df844c5%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "c391fb48-73f8-4bdc-935c-09fce60fd525",
+    "name": "Rotação Externa de Ombro com Faixa",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fc391fb48-73f8-4bdc-935c-09fce60fd525%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=GOajkbXkuak"
+  },
+  {
+    "id": "c3ba30fe-9684-463b-a7cc-565ec0650b48",
+    "name": "Afundo Lateral",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fc3ba30fe-9684-463b-a7cc-565ec0650b48%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "c59164bc-13a1-41af-89c0-a4d13efc489e",
+    "name": "Afundo Frontal (Lunge)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fc59164bc-13a1-41af-89c0-a4d13efc489e%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=QyToBgXairI"
+  },
+  {
+    "id": "c5c17d48-60d7-4bc8-ae76-1661923717df",
+    "name": "RDL (Romanian Deadlift)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fc5c17d48-60d7-4bc8-ae76-1661923717df%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=5zmlnbWb-g4"
+  },
+  {
+    "id": "c5e5a7b1-e695-4ac5-98f9-7b3df1fdbaab",
+    "name": "Deslizamento de Calcanhar",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fc5e5a7b1-e695-4ac5-98f9-7b3df1fdbaab%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "c683c59e-ba03-4ebe-9a90-cf61768f856b",
+    "name": "Exercício de Parede para Ombro",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fc683c59e-ba03-4ebe-9a90-cf61768f856b%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "c6c42235-1dba-48bc-8505-6a55783956ea",
+    "name": "Alongamento de Quadríceps em Pé",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fc6c42235-1dba-48bc-8505-6a55783956ea%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=4sEq7OYYee0"
+  },
+  {
+    "id": "c89ba4e7-0394-47ac-a11a-bb359cac5422",
+    "name": "Equilíbrio Unipodal Solo",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fc89ba4e7-0394-47ac-a11a-bb359cac5422%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=Dls7wd5qgfI"
+  },
+  {
+    "id": "c9640a9f-4448-4573-8852-7e085d2cfcad",
+    "name": "Side Plank (Prancha Lateral)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fc9640a9f-4448-4573-8852-7e085d2cfcad%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=8imTmxwFgRg"
+  },
+  {
+    "id": "caa06c44-7786-4344-be88-73a2abc80767",
+    "name": "Alongamento Isquiotibiais com Toalha",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fcaa06c44-7786-4344-be88-73a2abc80767%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "caab385c-60aa-4509-8e5e-5af795beaa36",
+    "name": "Squeeze de Bola (Espalmar)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fcaab385c-60aa-4509-8e5e-5af795beaa36%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=nuMxlv2i8Aw"
+  },
+  {
+    "id": "caca8746-0545-4876-a060-101dc614d5ba",
+    "name": "Gait Training com Obstáculos",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fcaca8746-0545-4876-a060-101dc614d5ba%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=7A-zUBKCukA"
+  },
+  {
+    "id": "cbd26ac9-91ed-43a6-81fc-f32eae722cfe",
+    "name": "Isometria de Quadríceps (Quad Sets)",
+    "image_url": "https://ycvbtjfrchcyvmkvuocu.supabase.co/storage/v1/object/public/exercise-thumbnails/generated/quad_sets_isometric_post_op_1768920780872.avif",
+    "video_url": ""
+  },
+  {
+    "id": "cd66cb4b-9e85-44f1-84d9-0ca60b9462cb",
+    "name": "Lunge com Rotação",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fcd66cb4b-9e85-44f1-84d9-0ca60b9462cb%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=2XTF_3tgH00"
+  },
+  {
+    "id": "ce0f4293-94cb-4f30-9bb0-f323ba8c1f28",
+    "name": "Agachamento Livre",
+    "image_url": "",
+    "video_url": "https://www.youtube.com/watch?v=4L5nBs8Eq7g"
+  },
+  {
+    "id": "ce3a7786-7b0f-4db6-8e67-a1238b668f19",
+    "name": "Leg Press 45°",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fce3a7786-7b0f-4db6-8e67-a1238b668f19%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=q4W4_VJbKW0"
+  },
+  {
+    "id": "ce4cad36-c3d9-42f6-8a55-82513a6567f1",
+    "name": "Heel Flicks (Calcanhar no Glúteo)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fce4cad36-c3d9-42f6-8a55-82513a6567f1%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "cee7cd8a-6f76-400f-b2b8-28de44ab1581",
+    "name": "Alcance em Y (Y-Balance Practice)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fcee7cd8a-6f76-400f-b2b8-28de44ab1581%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "cf1e55c0-1f7f-40c8-b7b8-5e5f46aba86e",
+    "name": "Eversão de Tornozelo com Faixa",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fcf1e55c0-1f7f-40c8-b7b8-5e5f46aba86e%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "d0037281-3256-4ffc-9d5a-b57c6820d83d",
+    "name": "Fortalecimento de Preensão (Bolinha)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fd0037281-3256-4ffc-9d5a-b57c6820d83d%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "d06c4004-76f7-4596-9ec9-9dec14aa91ad",
+    "name": "Ponte com Uma Perna",
+    "image_url": "",
+    "video_url": ""
+  },
+  {
+    "id": "d25f2891-9c91-4b06-b5d5-a965ca657350",
+    "name": "Marcha Estacionária Alta",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fd25f2891-9c91-4b06-b5d5-a965ca657350%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "d3f4d506-f735-44bc-a7c1-2b4cce5627f8",
+    "name": "Abdução de Quadril Deitado",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fd3f4d506-f735-44bc-a7c1-2b4cce5627f8%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "d509897f-7126-45c1-937f-707e409b128e",
+    "name": "Mobilização de Nervo Ciático (Slump)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fd509897f-7126-45c1-937f-707e409b128e%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=VD4IfNZF8Uc"
+  },
+  {
+    "id": "d6042be1-f9e7-443c-aa79-39e64960f113",
+    "name": "Salto Unilateral na Caixa",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fd6042be1-f9e7-443c-aa79-39e64960f113%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "d6046fa7-8a3a-4cf4-98f5-d4dc8edf7d20",
+    "name": "Squat Jump",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fd6046fa7-8a3a-4cf4-98f5-d4dc8edf7d20%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=XOTO2qWRy9U"
+  },
+  {
+    "id": "d6e94b02-1f6c-4c08-8571-5e3d5c69054c",
+    "name": "Mobilidade de Tornozelo",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fd6e94b02-1f6c-4c08-8571-5e3d5c69054c%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=CREaubVbw0I"
+  },
+  {
+    "id": "d7548baf-4209-4c11-8bb9-c144325e7d5b",
+    "name": "Sit-to-Stand",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fd7548baf-4209-4c11-8bb9-c144325e7d5b%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=chw2oMUrh4U"
+  },
+  {
+    "id": "d83ab396-b53a-4983-8dd9-ba91994453ad",
+    "name": "Isometria Cervical (Inclinção Lateral)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fd83ab396-b53a-4983-8dd9-ba91994453ad%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "db6b7668-a439-442d-bed0-f72d0eacefed",
+    "name": "Caminhada nos Calcanhares",
+    "image_url": "",
+    "video_url": ""
+  },
+  {
+    "id": "dc502cfe-3831-465a-b39f-bd753f403608",
+    "name": "Passos Laterais com Faixa",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fdc502cfe-3831-465a-b39f-bd753f403608%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "dc5176c2-cd8c-4548-9eab-025d52163e16",
+    "name": "Copenhagen Plank",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fdc5176c2-cd8c-4548-9eab-025d52163e16%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "dd5d26aa-c593-4030-8c77-3a468983b98f",
+    "name": "Mobilidade do Hálux",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fdd5d26aa-c593-4030-8c77-3a468983b98f%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "de6f57be-c016-49c3-8a74-cfddfef25563",
+    "name": "Mobilidade de Ombro",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fde6f57be-c016-49c3-8a74-cfddfef25563%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=QPjIbr_sSCk"
+  },
+  {
+    "id": "df9c5648-6627-49af-8a84-8fd3f0b2f9bc",
+    "name": "Agachamento em Disco Instável",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fdf9c5648-6627-49af-8a84-8fd3f0b2f9bc%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=02HgYV3ZxNU"
+  },
+  {
+    "id": "e00e0ee3-81e5-4334-b43d-23704f360c38",
+    "name": "Respiração 4-7-8",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fe00e0ee3-81e5-4334-b43d-23704f360c38%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=PC2gtWs6hsw"
+  },
+  {
+    "id": "e02bff6b-114e-4921-8ec5-f67ba50940cb",
+    "name": "Exercício do Pé Curto (Short Foot)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fe02bff6b-114e-4921-8ec5-f67ba50940cb%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "e1007b01-eb24-43e4-893d-e17c2f9b565e",
+    "name": "Rolling com Foam Roller",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fe1007b01-eb24-43e4-893d-e17c2f9b565e%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=Hu-rVZVSzxs"
+  },
+  {
+    "id": "e15a7a53-ce3d-4811-bf69-28760da0e857",
+    "name": "Step Down",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fe15a7a53-ce3d-4811-bf69-28760da0e857%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=tOplbmmW2Rg"
+  },
+  {
+    "id": "e1b7dc68-c03b-4088-8564-d88755e8e670",
+    "name": "Flexão de Punho",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fe1b7dc68-c03b-4088-8564-d88755e8e670%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=JZPuG8EOJQo"
+  },
+  {
+    "id": "e20291a1-cec4-4bcc-84f2-86a297f6071c",
+    "name": "Afundo Reverso",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fe20291a1-cec4-4bcc-84f2-86a297f6071c%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "e27d4256-c834-4e2c-845b-1dfb767c3cb2",
+    "name": "Abdominal Oblíquo",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fe27d4256-c834-4e2c-845b-1dfb767c3cb2%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=Smr8ipkN5A0"
+  },
+  {
+    "id": "e381977a-2726-47ef-b66b-c28f8079fff2",
+    "name": "Nordic Hamstring Curl",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fe381977a-2726-47ef-b66b-c28f8079fff2%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "e4657c8f-48b0-49c2-b200-5ade77ca86fc",
+    "name": "Relaxamento Progressivo de Jacobson",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fe4657c8f-48b0-49c2-b200-5ade77ca86fc%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=qEC51in5Yfg"
+  },
+  {
+    "id": "e505e16a-bb39-41c8-8c4d-7dcda1fa572c",
+    "name": "Mobilidade de Coluna",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fe505e16a-bb39-41c8-8c4d-7dcda1fa572c%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=nWa3MMgGLoE"
+  },
+  {
+    "id": "e7d2ae17-25cf-4142-9ec3-603faea6a7cf",
+    "name": "Flexão de Punho com Halter",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fe7d2ae17-25cf-4142-9ec3-603faea6a7cf%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "e8525045-eac8-4221-a9af-17bbdd63219b",
+    "name": "Rotação Torácica em 4 Apoios",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fe8525045-eac8-4221-a9af-17bbdd63219b%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "eb3aef63-c24a-402d-9209-e340129869ac",
+    "name": "Rotação Interna de Ombro com Faixa",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Feb3aef63-c24a-402d-9209-e340129869ac%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=GOajkbXkuak"
+  },
+  {
+    "id": "ebee5a64-2f53-40c3-a253-6a5ae2115e3a",
+    "name": "Oposição de Dedos",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Febee5a64-2f53-40c3-a253-6a5ae2115e3a%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "ef9809ab-8ed8-4054-a7a8-126aa530a9dc",
+    "name": "Deslocamento Lateral (Shuffle)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fef9809ab-8ed8-4054-a7a8-126aa530a9dc%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "f0ce84fc-23c3-4b47-944a-4725736db1e6",
+    "name": "Desvio Radial",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Ff0ce84fc-23c3-4b47-944a-4725736db1e6%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "f2b4628e-d77a-4914-8b8c-17e254bc0134",
+    "name": "Tapete de Pisos Diferentes",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Ff2b4628e-d77a-4914-8b8c-17e254bc0134%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=olY58rwkvaQ"
+  },
+  {
+    "id": "f570b5e5-dfba-407d-9a7b-ff60219ec683",
+    "name": "Elevação de Panturrilha em Degrau",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Ff570b5e5-dfba-407d-9a7b-ff60219ec683%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "f57b18d2-5da8-4d34-9c3c-6fc4d1df3fd1",
+    "name": "Mobilização de Nervo Mediano (Tinel e Phalen)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Ff57b18d2-5da8-4d34-9c3c-6fc4d1df3fd1%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=S4iD6dElrDA"
+  },
+  {
+    "id": "f5d77fd6-6776-4faf-b1c4-286bf77f55f6",
+    "name": "Flexão de Braço na Parede",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Ff5d77fd6-6776-4faf-b1c4-286bf77f55f6%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "f5eb147e-c269-4b00-9e15-ea3c428dcbae",
+    "name": "Carregamento Lateral",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Ff5eb147e-c269-4b00-9e15-ea3c428dcbae%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=hJf0QkdnD6k"
+  },
+  {
+    "id": "f60ff519-6a7e-453b-b469-f25136633988",
+    "name": "Carrying de Carga (Farmer Walk)",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Ff60ff519-6a7e-453b-b469-f25136633988%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=v6uwFOVzDbo"
+  },
+  {
+    "id": "f696ced4-ad75-4b23-afe2-ecb3e4935625",
+    "name": "Mobilização de Tornozelo em DF",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Ff696ced4-ad75-4b23-afe2-ecb3e4935625%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=eJOwsFeLdik"
+  },
+  {
+    "id": "f6b2cd85-5192-4d27-864d-e4c2a2422bbf",
+    "name": "Expansão Torácica unilateral",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Ff6b2cd85-5192-4d27-864d-e4c2a2422bbf%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=_e_JV1-_HAA"
+  },
+  {
+    "id": "f878db35-4710-4796-a69a-08eebf5ca69e",
+    "name": "Elevação de Calcanhar Sentado",
+    "image_url": "",
+    "video_url": ""
+  },
+  {
+    "id": "f8b620c0-a01f-4a3e-acc9-589105ad57a6",
+    "name": "Abdução de Quadril em Pé",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Ff8b620c0-a01f-4a3e-acc9-589105ad57a6%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=9-XUx041ioE"
+  },
+  {
+    "id": "f92afdb4-ef22-44c2-84d8-8334025c4915",
+    "name": "Flexão de Joelho em Pronação",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Ff92afdb4-ef22-44c2-84d8-8334025c4915%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=4cDAR84kEPw"
+  },
+  {
+    "id": "fa2f5230-895c-4bca-8217-8d9bebe70435",
+    "name": "Extensão de Cotovelo com Garrafa",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Ffa2f5230-895c-4bca-8217-8d9bebe70435%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "fb959553-cc44-47d9-9217-392c3d29af92",
+    "name": "Box Jump",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Ffb959553-cc44-47d9-9217-392c3d29af92%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=kNIInK_Le8I"
+  },
+  {
+    "id": "fdf0361a-b2f6-48ef-8be3-b35f51be3b6f",
+    "name": "Polichinelo Adaptado",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Ffdf0361a-b2f6-48ef-8be3-b35f51be3b6f%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "ff166d2a-3f96-48e7-aee2-d640130b09ba",
+    "name": "Extensão de Punho",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fff166d2a-3f96-48e7-aee2-d640130b09ba%2Fimage.png?alt=media",
+    "video_url": "https://www.youtube.com/watch?v=gt5DWnS_nEw"
+  },
+  {
+    "id": "ff68b19a-3e01-41fe-aa5a-88b1451f6c7d",
+    "name": "Step Touch com Braços",
+    "image_url": "https://firebasestorage.googleapis.com/v0/b/fisioflow-migration.firebasestorage.app/o/exercise-media%2Fff68b19a-3e01-41fe-aa5a-88b1451f6c7d%2Fimage.png?alt=media",
+    "video_url": ""
+  },
+  {
+    "id": "ffdd5e13-871e-4333-9778-3fbfed8cba44",
+    "name": "Corner Stretch (Alongamento no Canto)",
+    "image_url": "",
+    "video_url": ""
+  }
+]

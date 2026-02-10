@@ -275,12 +275,12 @@ export default defineConfig(({ mode }) => {
       //   },
       //   strategies: 'generateSW',
       // }),
-      // Compression disabled - Firebase Hosting handles gzip automatically
-      // viteCompression({
-      //   algorithm: 'gzip',
-      //   ext: '.gz',
-      //   threshold: 10240,
-      // }),
+      // Compression enabled
+      viteCompression({
+        algorithm: 'gzip',
+        ext: '.gz',
+        threshold: 10240,
+      }),
       isProduction && excludeMswPlugin(),
     ].filter(Boolean),
     resolve: {
@@ -334,7 +334,6 @@ export default defineConfig(({ mode }) => {
           chunkFileNames: 'assets/js/[name]-[hash].js',
           entryFileNames: 'assets/js/[name]-[hash].js',
           assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
-          /*
           manualChunks: (id) => {
             if (id.includes('node_modules')) {
               // CRITICAL: React + Scheduler deve ser sempre o primeiro chunk carregado
@@ -411,7 +410,6 @@ export default defineConfig(({ mode }) => {
               return 'vendor';
             }
           },
-          */
           experimentalMinChunkSize: 100000,
         },
         preserveEntrySignatures: 'strict',
