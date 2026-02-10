@@ -38,13 +38,21 @@ export default function AppointmentFormScreen() {
   const params = useLocalSearchParams();
   const appointmentId = params.id as string | undefined;
 
+
   const { create, update, isCreating, isUpdating } = useAppointments();
   const { data: patients } = usePatients({ status: 'active' });
   const { medium, success, error: hapticError } = useHaptics();
 
   const [selectedPatient, setSelectedPatient] = useState<string>('');
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
+
+  // Use query params for initial state if available
+  const initialDate = params.date as string || '';
+  const initialTime = params.time as string || '';
+
+
+
+  const [date, setDate] = useState(initialDate);
+  const [time, setTime] = useState(initialTime);
   const [type, setType] = useState('Fisioterapia');
   const [duration, setDuration] = useState(45);
   const [notes, setNotes] = useState('');

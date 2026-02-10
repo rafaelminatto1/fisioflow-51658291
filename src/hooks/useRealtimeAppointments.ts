@@ -43,7 +43,7 @@ export const useRealtimeAppointments = () => {
       if (snapshot.exists()) {
         const val = snapshot.val();
         logger.debug('[Realtime] Agenda refresh signal received', val, 'useRealtimeAppointments');
-        queryClient.invalidateQueries({ queryKey: ['appointments'] });
+        queryClient.invalidateQueries({ queryKey: ['appointments_v2'] });
         const now = Date.now();
         if (val._timestamp && (now - val._timestamp < 5000)) {
           toast({

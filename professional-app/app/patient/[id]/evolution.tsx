@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,12 @@ import {
   TouchableOpacity,
   Alert,
   TextInput,
+  Animated,
+  Dimensions,
+  Platform,
+  KeyboardAvoidingView,
+  ActivityIndicator,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,10 +25,370 @@ import { createEvolution } from '@/lib/firestore';
 import { useAuthStore } from '@/store/auth';
 import * as ImagePicker from 'expo-image-picker';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 interface Photo {
   uri: string;
   id: string;
 }
+
+// SOAP sections configuration with enhanced styling
+const SOAP_SECTIONS = {
+  subjective: {
+    letter: 'S',
+    label: 'Subjetivo',
+    placeholder: 'O que o paciente relatou? Queixas, sintomas, sensações...',
+    description: 'Relato do paciente sobre seus sintomas',
+    icon: 'chatbubbles',
+    gradient: ['#3B82F6', '#2563EB'], // Blue gradient
+    color: '#3B82F6',
+    lightColor: '#DBEAFE',
+  },
+  objective: {
+    letter: 'O',
+    label: 'Objetivo',
+    placeholder: 'Dados mensuráveis: ADM, força muscular, edema, postura...',
+    description: 'Achados clínicos e exame físico',
+    icon: 'eye',
+    gradient: ['#10B981', '#059669'], // Green gradient
+    color: '#10B981',
+    lightColor: '#D1FAE5',
+  },
+  assessment: {
+    letter: 'A',
+    label: 'Avaliação',
+    placeholder: 'Sua interpretação: diagnóstico funcional, progresso, prognóstico...',
+    description: 'Análise clínica do profissional',
+    icon: 'brain',
+    gradient: ['#F59E0B', '#D97706'], // Orange/amber gradient
+    color: '#F59E0B',
+    lightColor: '#FEF3C7',
+  },
+  plan: {
+    letter: 'P',
+    label: 'Plano',
+    placeholder: 'Próximos passos: conduta, exercícios, orientações, retornos...',
+    description: 'Intervenções planejadas',
+    icon: 'list',
+    gradient: ['#8B5CF6', '#7C3AED'], // Purple gradient
+    color: '#8B5CF6',
+    lightColor: '#EDE9FE',
+  },
+} as const;
+
+type SOAPKey = keyof typeof SOAP_SECTIONS;
+
+// Animated progress indicator component
+const ProgressRing = ({ progress, size = 60, strokeWidth = 6 }: { progress: number; size?: number; strokeWidth?: number }) => {
+  const colors = useColors();
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (progress / 100) * circumference;
+
+  return (
+    <View style={[styles.progressRingContainer, { width: size, height: size }]}>
+      {/* Background circle */}
+      <View
+        style={[
+          styles.progressRingBg,
+          {
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+            borderWidth: strokeWidth,
+            borderColor: colors.border,
+          },
+        ]}
+      />
+      {/* Progress circle using absolute positioning */}
+      <View
+        style={[
+          styles.progressRing,
+          {
+            width: size,
+            height: size,
+            borderRadius: size / 2,
+            borderWidth: strokeWidth,
+            borderColor: colors.primary,
+            borderRightColor: 'transparent',
+            borderBottomColor: 'transparent',
+            transform: [{ rotate: `${-90 + (progress * 3.6)}deg` }],
+          },
+        ]}
+      />
+      <View style={styles.progressRingContent}>
+        <Text style={[styles.progressText, { color: colors.text }]}>{Math.round(progress)}%</Text>
+      </View>
+    </View>
+  );
+};
+
+// Enhanced SOAP Input Field Component
+const SOAPInputField = ({
+  section,
+  value,
+  onChangeText,
+  isFocused,
+  onFocus,
+  onBlur,
+  colors,
+}: {
+  section: typeof SOAP_SECTIONS[SOAPKey];
+  value: string;
+  onChangeText: (text: string) => void;
+  isFocused: boolean;
+  onFocus: () => void;
+  onBlur: () => void;
+  colors: ReturnType<typeof useColors>;
+}) => {
+  const animatedBorder = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(animatedBorder, {
+      toValue: isFocused ? 1 : 0,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, [isFocused, animatedBorder]);
+
+  const borderColor = animatedBorder.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.border, section.color],
+  });
+
+  const hasContent = value.trim().length > 0;
+
+  return (
+    <View style={styles.soapFieldContainer}>
+      {/* Enhanced header with letter badge */}
+      <View style={styles.soapFieldHeader}>
+        <View style={[styles.soapLetterBadge, { backgroundColor: section.color }]}>
+          <Text style={styles.soapLetterText}>{section.letter}</Text>
+        </View>
+        <View style={styles.soapFieldHeaderInfo}>
+          <Text style={[styles.soapFieldLabel, { color: colors.text }]}>{section.label}</Text>
+          <Text style={[styles.soapFieldDescription, { color: colors.textSecondary }]}>
+            {section.description}
+          </Text>
+        </View>
+        {hasContent && (
+          <View style={[styles.completionIndicator, { backgroundColor: section.lightColor }]}>
+            <Ionicons name="checkmark-circle" size={16} color={section.color} />
+          </View>
+        )}
+      </View>
+
+      {/* Enhanced input with animated border */}
+      <Animated.View
+        style={[
+          styles.soapInputWrapper,
+          {
+            backgroundColor: colors.surface,
+            borderColor,
+          },
+        ]}
+      >
+        <TextInput
+          style={[styles.soapInput, { color: colors.text }]}
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={section.placeholder}
+          placeholderTextColor={colors.textMuted}
+          multiline
+          onFocus={onFocus}
+          onBlur={onBlur}
+          textAlignVertical="top"
+          autoFocus={false}
+        />
+
+        {/* Character count */}
+        <View style={styles.inputFooter}>
+          <Text style={[styles.charCount, { color: colors.textMuted }]}>
+            {value.length} caracteres
+          </Text>
+          {value.length > 0 && (
+            <TouchableOpacity onPress={() => onChangeText('')}>
+              <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </Animated.View>
+    </View>
+  );
+};
+
+// Pain Level Slider Component
+const PainLevelSlider = ({
+  painLevel,
+  onValueChange,
+  colors,
+}: {
+  painLevel: number;
+  onValueChange: (value: number) => void;
+  colors: ReturnType<typeof useColors>;
+}) => {
+  const getPainColor = (level: number) => {
+    if (level === 0) return colors.success;
+    if (level <= 3) return colors.success;
+    if (level <= 6) return colors.warning;
+    return colors.error;
+  };
+
+  const getPainEmoji = (level: number) => {
+    if (level === 0) return '😊';
+    if (level <= 2) return '🙂';
+    if (level <= 4) return '😐';
+    if (level <= 6) return '😟';
+    if (level <= 8) return '😣';
+    return '😫';
+  };
+
+  const painColor = getPainColor(painLevel);
+
+  return (
+    <View style={[styles.painContainer, { backgroundColor: colors.surface }]}>
+      <View style={styles.painHeader}>
+        <Ionicons name="pulse" size={22} color={colors.primary} />
+        <Text style={[styles.painTitle, { color: colors.text }]}>Nível de Dor (EVA)</Text>
+      </View>
+
+      <View style={styles.painDisplay}>
+        {/* Pain emoji */}
+        <View style={[styles.painEmojiContainer, { backgroundColor: `${painColor}15` }]}>
+          <Text style={styles.painEmoji}>{getPainEmoji(painLevel)}</Text>
+        </View>
+
+        {/* Pain value */}
+        <View style={styles.painValueSection}>
+          <View style={[styles.painValueBadge, { backgroundColor: painColor }]}>
+            <Text style={styles.painValueText}>{painLevel}</Text>
+          </View>
+          <Text style={[styles.painValueLabel, { color: colors.textSecondary }]}>/ 10</Text>
+        </View>
+      </View>
+
+      {/* Pain description */}
+      <View style={[styles.painDescriptionCard, { backgroundColor: `${painColor}10` }]}>
+        <Text style={[styles.painDescription, { color: painColor }]}>
+          {painLevel === 0 && 'Sem dor - Paciente sem queixas dolorosas'}
+          {painLevel >= 1 && painLevel <= 3 && 'Dor leve - Paciente consegue realizar atividades normalmente'}
+          {painLevel >= 4 && painLevel <= 6 && 'Dor moderada - Paciente sente desconforto mas consegue continuar'}
+          {painLevel >= 7 && 'Dor intensa - Paciente precisa interromper atividades'}
+        </Text>
+      </View>
+
+      {/* Slider */}
+      <Slider
+        minValue={0}
+        maxValue={10}
+        step={1}
+        value={painLevel}
+        onValueChange={onValueChange}
+        marks={[
+          { value: 0, label: '0' },
+          { value: 2, label: '2' },
+          { value: 4, label: '4' },
+          { value: 6, label: '6' },
+          { value: 8, label: '8' },
+          { value: 10, label: '10' }
+        ]}
+      />
+    </View>
+  );
+};
+
+// Photo Grid Component
+const PhotoGrid = ({
+  photos,
+  onAddPhoto,
+  onTakePhoto,
+  onRemovePhoto,
+  colors,
+}: {
+  photos: Photo[];
+  onAddPhoto: () => void;
+  onTakePhoto: () => void;
+  onRemovePhoto: (id: string) => void;
+  colors: ReturnType<typeof useColors>;
+}) => {
+  return (
+    <View style={[styles.photoContainer, { backgroundColor: colors.surface }]}>
+      <View style={styles.photoHeader}>
+        <Ionicons name="images" size={22} color={colors.primary} />
+        <Text style={[styles.photoTitle, { color: colors.text }]}>Fotos e Anexos</Text>
+        <View style={[styles.photoCountBadge, { backgroundColor: `${colors.primary}20` }]}>
+          <Text style={[styles.photoCountText, { color: colors.primary }]}>{photos.length}/5</Text>
+        </View>
+      </View>
+
+      {photos.length === 0 ? (
+        <View style={styles.emptyPhotoState}>
+          <TouchableOpacity
+            style={[styles.emptyPhotoButton, { borderColor: colors.border }]}
+            onPress={onAddPhoto}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.emptyPhotoIcon, { backgroundColor: `${colors.primary}10` }]}>
+              <Ionicons name="camera-outline" size={40} color={colors.primary} />
+            </View>
+            <Text style={[styles.emptyPhotoText, { color: colors.text }]}>
+              Adicionar Fotos
+            </Text>
+            <Text style={[styles.emptyPhotoSubtext, { color: colors.textSecondary }]}>
+              Toque para selecionar da galeria ou tirar uma foto
+            </Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <>
+          <View style={styles.photosGrid}>
+            {photos.map((photo) => (
+              <View key={photo.id} style={styles.photoItem}>
+                <Image source={{ uri: photo.uri }} style={styles.photoImage} />
+                <TouchableOpacity
+                  style={[styles.removePhotoBtn, { backgroundColor: colors.error }]}
+                  onPress={() => onRemovePhoto(photo.id)}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="close" size={16} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+            ))}
+            {photos.length < 5 && (
+              <TouchableOpacity
+                style={[styles.addPhotoBtn, { borderColor: colors.border }]}
+                onPress={onAddPhoto}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="add" size={32} color={colors.textMuted} />
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Action buttons */}
+          <View style={styles.photoActions}>
+            <TouchableOpacity
+              style={[styles.photoActionBtn, { backgroundColor: colors.primary }]}
+              onPress={onAddPhoto}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="images" size={18} color="#FFFFFF" />
+              <Text style={styles.photoActionText}>Galeria</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.photoActionBtn, { backgroundColor: colors.info }]}
+              onPress={onTakePhoto}
+              activeOpacity={0.8}
+            >
+              <Ionicons name="camera" size={18} color="#FFFFFF" />
+              <Text style={styles.photoActionText}>Câmera</Text>
+            </TouchableOpacity>
+          </View>
+        </>
+      )}
+    </View>
+  );
+};
 
 export default function EvolutionScreen() {
   const colors = useColors();
@@ -35,6 +401,7 @@ export default function EvolutionScreen() {
   const { medium, success, error: hapticError } = useHaptics();
   const queryClient = useQueryClient();
 
+  // Form state
   const [subjective, setSubjective] = useState('');
   const [objective, setObjective] = useState('');
   const [assessment, setAssessment] = useState('');
@@ -42,13 +409,16 @@ export default function EvolutionScreen() {
   const [painLevel, setPainLevel] = useState(0);
   const [photos, setPhotos] = useState<Photo[]>([]);
 
+  // Focus state
+  const [focusedField, setFocusedField] = useState<SOAPKey | null>(null);
+
   const createMutation = useMutation({
     mutationFn: (data: Omit<Parameters<typeof createEvolution>[1], 'professionalId'>) =>
       createEvolution(user!.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patientEvolutions', patientId] });
       success();
-      Alert.alert('Sucesso', 'Evolução registrada com sucesso', [
+      Alert.alert('Sucesso', 'Evolução registrada com sucesso!', [
         { text: 'OK', onPress: () => router.back() }
       ]);
     },
@@ -61,7 +431,8 @@ export default function EvolutionScreen() {
   const handleSave = async () => {
     medium();
 
-    if (!subjective.trim() && !objective.trim() && !assessment.trim() && !plan.trim()) {
+    const hasContent = subjective.trim() || objective.trim() || assessment.trim() || plan.trim();
+    if (!hasContent) {
       Alert.alert('Atenção', 'Preencha pelo menos um campo do SOAP');
       hapticError();
       return;
@@ -95,18 +466,24 @@ export default function EvolutionScreen() {
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images'],
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         quality: 0.8,
-        allowsMultiple: true,
+        allowsMultipleSelection: true,
       });
 
       if (!result.canceled && result.assets) {
-        const newPhotos = result.assets.map((asset, index) => ({
+        const remainingSlots = 5 - photos.length;
+        const assetsToAdd = result.assets.slice(0, remainingSlots);
+        const newPhotos = assetsToAdd.map((asset, index) => ({
           uri: asset.uri,
           id: `photo-${Date.now()}-${index}`,
         }));
         setPhotos([...photos, ...newPhotos]);
         success();
+
+        if (result.assets.length > remainingSlots) {
+          Alert.alert('Aviso', `Apenas ${remainingSlots} foto(s) adicionada(s). Máximo de 5 fotos.`);
+        }
       }
     } catch (err) {
       hapticError();
@@ -142,397 +519,610 @@ export default function EvolutionScreen() {
     }
   };
 
-  const getPainColor = (level: number) => {
-    if (level <= 3) return colors.success;
-    if (level <= 6) return colors.warning;
-    return colors.error;
+  const handleRemovePhoto = (id: string) => {
+    medium();
+    setPhotos(photos.filter((p) => p.id !== id));
   };
 
-  const getPainDescription = (level: number) => {
-    if (level === 0) return 'Sem dor';
-    if (level <= 3) return 'Dor leve - Paciente consegue realizar atividades normalmente';
-    if (level <= 6) return 'Dor moderada - Paciente sente desconforto mas consegue continuar';
-    return 'Dor intensa - Paciente precisa interromper atividades';
+  // Calculate form completion
+  const getCompletionPercentage = () => {
+    const fields = [subjective, objective, assessment, plan];
+    const filledFields = fields.filter(f => f.trim().length > 0).length;
+    return Math.round((filledFields / fields.length) * 100);
   };
+
+  const completionPercentage = getCompletionPercentage();
+  const canSave = subjective.trim() || objective.trim() || assessment.trim() || plan.trim();
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
-      {/* Header */}
-      <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={28} color={colors.text} />
-        </TouchableOpacity>
-        <Text style={[styles.title, { color: colors.text }]}>Nova Evolução</Text>
-        <View style={{ width: 28 }} />
-      </View>
+      <KeyboardAvoidingView
+        style={styles.keyboardContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={0}
+      >
+        {/* Enhanced Header */}
+        <View style={[styles.header, { borderBottomColor: colors.border }]}>
+          <TouchableOpacity
+            style={[styles.headerButton, { backgroundColor: colors.surface }]}
+            onPress={() => router.back()}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="chevron-back" size={24} color={colors.text} />
+          </TouchableOpacity>
 
-      {/* Patient Info */}
-      <View style={[styles.patientInfo, { backgroundColor: colors.surface }]}>
-        <Ionicons name="person" size={20} color={colors.primary} />
-        <Text style={[styles.patientName, { color: colors.text }]}>{patientName}</Text>
-      </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Pain Level */}
-        <Card style={styles.sectionCard} padding="sm">
-          <View style={styles.sectionHeader}>
-            <Ionicons name="pulse" size={20} color={colors.primary} />
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Nível de Dor (EVA)</Text>
-          </View>
-
-          <View style={styles.painDisplay}>
-            <View style={[styles.painValueContainer, { backgroundColor: getPainColor(painLevel) }]}>
-              <Text style={[styles.painValue, { color: '#FFFFFF' }]}>{painLevel}</Text>
-            </View>
-            <Text style={[styles.painLabel, { color: colors.text }]}>/ 10</Text>
-            <Text style={[styles.painDescription, { color: colors.textSecondary }]}>
-              {getPainDescription(painLevel)}
+          <View style={styles.headerCenter}>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>Nova Evolução</Text>
+            <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
+              {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
             </Text>
           </View>
 
-          <Slider
-            minValue={0}
-            maxValue={10}
-            step={1}
-            value={painLevel}
-            onValueChange={setPainLevel}
-            marks={[0, 2, 4, 6, 8, 10]}
+          {/* Progress indicator */}
+          <View style={styles.headerProgress}>
+            <ProgressRing progress={completionPercentage} size={44} strokeWidth={3} />
+          </View>
+        </View>
+
+        {/* Patient Info Card - Enhanced */}
+        <View style={[styles.patientCard, { backgroundColor: colors.surface }]}>
+          <View style={[styles.patientAvatar, { backgroundColor: `${colors.primary}20` }]}>
+            <Ionicons name="person" size={24} color={colors.primary} />
+          </View>
+          <View style={styles.patientInfo}>
+            <Text style={[styles.patientName, { color: colors.text }]}>{patientName}</Text>
+            <Text style={[styles.sessionLabel, { color: colors.textSecondary }]}>
+              Sessão de avaliação
+            </Text>
+          </View>
+          <View style={styles.sessionStatus}>
+            <View style={[styles.statusDot, { backgroundColor: colors.success }]} />
+            <Text style={[styles.statusText, { color: colors.textSecondary }]}>Em andamento</Text>
+          </View>
+        </View>
+
+        <ScrollView
+          style={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Pain Level Section */}
+          <PainLevelSlider painLevel={painLevel} onValueChange={setPainLevel} colors={colors} />
+
+          {/* SOAP Form - Enhanced */}
+          <View style={[styles.soapContainer, { backgroundColor: colors.surface }]}>
+            <View style={styles.soapHeader}>
+              <Ionicons name="document-text" size={22} color={colors.primary} />
+              <Text style={[styles.soapTitle, { color: colors.text }]}>Registro SOAP</Text>
+              <View style={[styles.completionBadge, { backgroundColor: `${colors.primary}15` }]}>
+                <Text style={[styles.completionText, { color: colors.primary }]}>
+                  {completionPercentage}%
+                </Text>
+              </View>
+            </View>
+
+            {/* Progress bar */}
+            <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
+              <View
+                style={[styles.progressFill, { width: `${completionPercentage}%`, backgroundColor: colors.primary }]}
+              />
+            </View>
+
+            {/* SOAP Fields */}
+            <View style={styles.soapFields}>
+              <SOAPInputField
+                section={SOAP_SECTIONS.subjective}
+                value={subjective}
+                onChangeText={setSubjective}
+                isFocused={focusedField === 'subjective'}
+                onFocus={() => setFocusedField('subjective')}
+                onBlur={() => setFocusedField(null)}
+                colors={colors}
+              />
+
+              <SOAPInputField
+                section={SOAP_SECTIONS.objective}
+                value={objective}
+                onChangeText={setObjective}
+                isFocused={focusedField === 'objective'}
+                onFocus={() => setFocusedField('objective')}
+                onBlur={() => setFocusedField(null)}
+                colors={colors}
+              />
+
+              <SOAPInputField
+                section={SOAP_SECTIONS.assessment}
+                value={assessment}
+                onChangeText={setAssessment}
+                isFocused={focusedField === 'assessment'}
+                onFocus={() => setFocusedField('assessment')}
+                onBlur={() => setFocusedField(null)}
+                colors={colors}
+              />
+
+              <SOAPInputField
+                section={SOAP_SECTIONS.plan}
+                value={plan}
+                onChangeText={setPlan}
+                isFocused={focusedField === 'plan'}
+                onFocus={() => setFocusedField('plan')}
+                onBlur={() => setFocusedField(null)}
+                colors={colors}
+              />
+            </View>
+          </View>
+
+          {/* Photo Section */}
+          <PhotoGrid
+            photos={photos}
+            onAddPhoto={handleAddPhoto}
+            onTakePhoto={handleTakePhoto}
+            onRemovePhoto={handleRemovePhoto}
+            colors={colors}
           />
-        </Card>
 
-        {/* SOAP */}
-        <Card style={styles.sectionCard} padding="sm">
-          <View style={styles.sectionHeader}>
-            <Ionicons name="document-text" size={20} color={colors.primary} />
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Registro SOAP</Text>
-          </View>
+          {/* Save Button - Enhanced */}
+          <View style={styles.saveSection}>
+            <TouchableOpacity
+              style={[
+                styles.saveButton,
+                {
+                  backgroundColor: canSave ? colors.primary : colors.border,
+                  opacity: canSave ? 1 : 0.6,
+                },
+              ]}
+              onPress={handleSave}
+              disabled={createMutation.isPending || !canSave}
+              activeOpacity={0.8}
+            >
+              {createMutation.isPending ? (
+                <>
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                  <Text style={styles.saveButtonText}>Salvando...</Text>
+                </>
+              ) : (
+                <>
+                  <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+                  <Text style={styles.saveButtonText}>Salvar Evolução</Text>
+                </>
+              )}
+            </TouchableOpacity>
 
-          {/* Subjective */}
-          <View style={styles.soapField}>
-            <View style={styles.soapLabelRow}>
-              <View style={[styles.soapLabelBadge, { backgroundColor: colors.primary }]}>
-                <Text style={[styles.soapLabelText, { color: '#FFFFFF' }]}>S</Text>
-              </View>
-              <Text style={[styles.soapFieldLabel, { color: colors.text }]}>Subjetivo</Text>
-            </View>
-            <TextInput
-              style={[styles.soapInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-              value={subjective}
-              onChangeText={setSubjective}
-              placeholder="O que o paciente relatou?"
-              placeholderTextColor={colors.textMuted}
-              multiline
-              numberOfLines={3}
-              textAlignVertical="top"
-            />
-          </View>
-
-          {/* Objective */}
-          <View style={styles.soapField}>
-            <View style={styles.soapLabelRow}>
-              <View style={[styles.soapLabelBadge, { backgroundColor: colors.info }]}>
-                <Text style={[styles.soapLabelText, { color: '#FFFFFF' }]}>O</Text>
-              </View>
-              <Text style={[styles.soapFieldLabel, { color: colors.text }]}>Objetivo</Text>
-            </View>
-            <TextInput
-              style={[styles.soapInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-              value={objective}
-              onChangeText={setObjective}
-              placeholder="Dados mensuráveis (ADM, força, etc.)"
-              placeholderTextColor={colors.textMuted}
-              multiline
-              numberOfLines={3}
-              textAlignVertical="top"
-            />
-          </View>
-
-          {/* Assessment */}
-          <View style={styles.soapField}>
-            <View style={styles.soapLabelRow}>
-              <View style={[styles.soapLabelBadge, { backgroundColor: colors.warning }]}>
-                <Text style={[styles.soapLabelText, { color: '#FFFFFF' }]}>A</Text>
-              </View>
-              <Text style={[styles.soapFieldLabel, { color: colors.text }]}>Avaliação</Text>
-            </View>
-            <TextInput
-              style={[styles.soapInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-              value={assessment}
-              onChangeText={setAssessment}
-              placeholder="Sua interpretação profissional"
-              placeholderTextColor={colors.textMuted}
-              multiline
-              numberOfLines={3}
-              textAlignVertical="top"
-            />
-          </View>
-
-          {/* Plan */}
-          <View style={styles.soapField}>
-            <View style={styles.soapLabelRow}>
-              <View style={[styles.soapLabelBadge, { backgroundColor: colors.success }]}>
-                <Text style={[styles.soapLabelText, { color: '#FFFFFF' }]}>P</Text>
-              </View>
-              <Text style={[styles.soapFieldLabel, { color: colors.text }]}>Plano</Text>
-            </View>
-            <TextInput
-              style={[styles.soapInput, { backgroundColor: colors.surface, borderColor: colors.border, color: colors.text }]}
-              value={plan}
-              onChangeText={setPlan}
-              placeholder="Próximos passos do tratamento"
-              placeholderTextColor={colors.textMuted}
-              multiline
-              numberOfLines={3}
-              textAlignVertical="top"
-            />
-          </View>
-        </Card>
-
-        {/* Photos */}
-        <Card style={styles.sectionCard} padding="sm">
-          <View style={styles.sectionHeader}>
-            <Ionicons name="camera" size={20} color={colors.primary} />
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Fotos</Text>
-            <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
-              {photos.length}/5
+            <Text style={[styles.saveHint, { color: colors.textSecondary }]}>
+              Preencha pelo menos um campo do SOAP para salvar
             </Text>
           </View>
 
-          {photos.length > 0 ? (
-            <View style={styles.photosGrid}>
-              {photos.map((photo) => (
-                <View key={photo.id} style={styles.photoContainer}>
-                  {/* eslint-disable-next-line @typescript-eslint/no-require-imports */}
-                  <Image
-                    source={{ uri: photo.uri }}
-                    style={styles.photo}
-                  />
-                  <TouchableOpacity
-                    style={styles.removePhotoButton}
-                    onPress={() => {
-                      medium();
-                      setPhotos(photos.filter((p) => p.id !== photo.id));
-                    }}
-                  >
-                    <Ionicons name="close-circle" size={24} color={colors.error} />
-                  </TouchableOpacity>
-                </View>
-              ))}
-              {photos.length < 5 && (
-                <TouchableOpacity
-                  style={[styles.addPhotoButton, { borderColor: colors.border }]}
-                  onPress={handleAddPhoto}
-                >
-                  <Ionicons name="add" size={32} color={colors.textSecondary} />
-                </TouchableOpacity>
-              )}
-            </View>
-          ) : (
-            <TouchableOpacity
-              style={[styles.emptyPhotos, { borderColor: colors.border }]}
-              onPress={handleAddPhoto}
-            >
-              <Ionicons name="images" size={48} color={colors.textMuted} />
-              <Text style={[styles.emptyPhotosText, { color: colors.textSecondary }]}>
-                Adicionar fotos
-              </Text>
-            </TouchableOpacity>
-          )}
-
-          <View style={styles.photoButtons}>
-            <TouchableOpacity
-              style={[styles.photoActionButton, { backgroundColor: colors.primary }]}
-              onPress={handleAddPhoto}
-            >
-              <Ionicons name="images" size={20} color="#FFFFFF" />
-              <Text style={styles.photoActionText}>Galeria</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.photoActionButton, { backgroundColor: colors.info }]}
-              onPress={handleTakePhoto}
-            >
-              <Ionicons name="camera" size={20} color="#FFFFFF" />
-              <Text style={styles.photoActionText}>Câmera</Text>
-            </TouchableOpacity>
-          </View>
-        </Card>
-
-        {/* Save Button */}
-        <Button
-          title="Salvar Evolução"
-          onPress={handleSave}
-          loading={createMutation.isPending}
-          style={styles.saveButton}
-        />
-
-        <View style={{ height: 32 }} />
-      </ScrollView>
+          <View style={{ height: 32 }} />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
-
-import { Image } from 'react-native';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  keyboardContainer: {
+    flex: 1,
+  },
+  // Header Styles
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  patientInfo: {
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: -0.3,
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    marginTop: 2,
+    textTransform: 'capitalize',
+  },
+  headerProgress: {
+    marginLeft: 8,
+  },
+
+  // Progress Ring Styles
+  progressRingContainer: {
+    position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressRingBg: {
+    position: 'absolute',
+  },
+  progressRing: {
+    position: 'absolute',
+    transformOrigin: 'center',
+  },
+  progressRingContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+
+  // Patient Card Styles
+  patientCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 8,
+    marginHorizontal: 16,
+    marginTop: 16,
+    padding: 16,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  patientAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  patientInfo: {
+    flex: 1,
   },
   patientName: {
     fontSize: 16,
     fontWeight: '600',
+    letterSpacing: -0.2,
   },
+  sessionLabel: {
+    fontSize: 13,
+    marginTop: 2,
+  },
+  sessionStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+
+  // Content Styles
   content: {
     flex: 1,
-  },
-  sectionCard: {
-    marginHorizontal: 16,
     marginTop: 16,
   },
-  sectionHeader: {
+
+  // Pain Level Styles
+  painContainer: {
+    marginHorizontal: 16,
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  painHeader: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 20,
     gap: 8,
-    marginBottom: 16,
   },
-  sectionTitle: {
+  painTitle: {
     fontSize: 18,
     fontWeight: '600',
-  },
-  sectionSubtitle: {
-    marginLeft: 'auto',
-    fontSize: 14,
+    letterSpacing: -0.3,
   },
   painDisplay: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  painValueContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  painValue: {
-    fontSize: 36,
-    fontWeight: 'bold',
-  },
-  painLabel: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  painDescription: {
-    fontSize: 13,
-    textAlign: 'center',
-    marginTop: 8,
-  },
-  soapField: {
-    marginBottom: 20,
-  },
-  soapLabelRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
+    justifyContent: 'space-between',
+    marginBottom: 16,
   },
-  soapLabelBadge: {
+  painEmojiContainer: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  painEmoji: {
+    fontSize: 40,
+  },
+  painValueSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  painValueBadge: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  painValueText: {
+    fontSize: 24,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  painValueLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  painDescriptionCard: {
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 20,
+  },
+  painDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+
+  // SOAP Container Styles
+  soapContainer: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  soapHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 8,
+  },
+  soapTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    letterSpacing: -0.3,
+    flex: 1,
+  },
+  completionBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  completionText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  progressBar: {
+    height: 6,
+    borderRadius: 3,
+    marginBottom: 20,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+
+  // SOAP Fields Styles
+  soapFields: {
+    gap: 20,
+  },
+  soapFieldContainer: {
+    gap: 10,
+  },
+  soapFieldHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  soapLetterBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  soapLetterText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  soapFieldHeaderInfo: {
+    flex: 1,
+  },
+  soapFieldLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    letterSpacing: -0.2,
+  },
+  soapFieldDescription: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  completionIndicator: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  soapInputWrapper: {
+    borderRadius: 14,
+    borderWidth: 2,
+    overflow: 'hidden',
+  },
+  soapInput: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    lineHeight: 22,
+    minHeight: 100,
+  },
+  inputFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    paddingTop: 0,
+  },
+  charCount: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+
+  // Photo Section Styles
+  photoContainer: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  photoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 8,
+  },
+  photoTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    letterSpacing: -0.3,
+    flex: 1,
+  },
+  photoCountBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  photoCountText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  emptyPhotoState: {
+    alignItems: 'center',
+  },
+  emptyPhotoButton: {
+    width: '100%',
+    borderRadius: 16,
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    paddingVertical: 32,
+    alignItems: 'center',
+  },
+  emptyPhotoIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  emptyPhotoText: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  emptyPhotoSubtext: {
+    fontSize: 13,
+    textAlign: 'center',
+  },
+  photosGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 16,
+  },
+  photoItem: {
+    width: (SCREEN_WIDTH - 32 - 36) / 2,
+    aspectRatio: 1,
+    borderRadius: 16,
+    overflow: 'hidden',
+  },
+  photoImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  removePhotoBtn: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
     width: 28,
     height: 28,
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  soapLabelText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  soapFieldLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  soapInput: {
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    minHeight: 80,
-  },
-  photosGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 16,
-  },
-  photoContainer: {
-    width: '48%',
+  addPhotoBtn: {
+    width: (SCREEN_WIDTH - 32 - 36) / 2,
     aspectRatio: 1,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  photo: {
-    width: '100%',
-    height: '100%',
-  },
-  removePhotoButton: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    borderRadius: 12,
-  },
-  addPhotoButton: {
-    width: '48%',
-    aspectRatio: 1,
-    borderRadius: 12,
+    borderRadius: 16,
     borderWidth: 2,
     borderStyle: 'dashed',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyPhotos: {
-    borderRadius: 12,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    paddingVertical: 32,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  emptyPhotosText: {
-    fontSize: 14,
-    marginTop: 8,
-  },
-  photoButtons: {
+  photoActions: {
     flexDirection: 'row',
     gap: 12,
   },
-  photoActionButton: {
+  photoActionBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 10,
+    paddingVertical: 14,
+    borderRadius: 14,
     gap: 8,
   },
   photoActionText: {
@@ -540,8 +1130,36 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  saveButton: {
+
+  // Save Section Styles
+  saveSection: {
     marginHorizontal: 16,
-    marginTop: 8,
+    marginTop: 24,
+    alignItems: 'center',
+  },
+  saveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    paddingVertical: 18,
+    borderRadius: 16,
+    gap: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  saveButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: -0.3,
+  },
+  saveHint: {
+    fontSize: 12,
+    marginTop: 12,
+    textAlign: 'center',
   },
 });
