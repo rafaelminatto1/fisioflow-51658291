@@ -44,7 +44,7 @@ Ambos os apps devem ter o seguinte `.env`:
 ```env
 # Firebase Configuration
 EXPO_PUBLIC_FIREBASE_API_KEY=AIzaSyCz2c3HvQoV7RvFCbCaudbEEelEQaO-tY8
-EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=fisioflow-migration.firebaseapp.com
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=moocafisio.com.br
 EXPO_PUBLIC_FIREBASE_PROJECT_ID=fisioflow-migration
 EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=fisioflow-migration.firebasestorage.app
 EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=412418905255
