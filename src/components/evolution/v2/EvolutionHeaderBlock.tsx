@@ -55,7 +55,8 @@ export const EvolutionHeaderBlock: React.FC<EvolutionHeaderBlockProps> = ({
     <div className={cn(
       'relative overflow-hidden rounded-xl border border-border/50',
       'bg-gradient-to-br from-card via-card to-muted/20',
-      'shadow-sm transition-all duration-300 hover:shadow-md',
+      'shadow-sm hover:shadow-md transition-all duration-300',
+      'animate-in fade-in-0 slide-in-from-top-2 duration-300',
       className
     )}>
       {/* Decorative background elements */}
@@ -71,7 +72,7 @@ export const EvolutionHeaderBlock: React.FC<EvolutionHeaderBlockProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             {/* Date and Time */}
             <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 transition-all duration-200 hover:scale-105">
                 <Calendar className="h-4 w-4 text-primary" />
               </div>
               <div className="flex flex-col">
@@ -89,8 +90,8 @@ export const EvolutionHeaderBlock: React.FC<EvolutionHeaderBlockProps> = ({
 
             {/* Session Number Pill */}
             {sessionNumber && (
-              <div className="flex items-center self-start sm:self-center">
-                <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border border-primary/20 shadow-sm">
+              <div className="flex items-center self-start sm:self-center animate-in fade-in-0 zoom-in-95 duration-300">
+                <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border border-primary/20 shadow-sm transition-all duration-200 hover:shadow hover:scale-105">
                   <Hash className="h-3.5 w-3.5 text-primary" />
                   <div className="flex flex-col">
                     <span className="text-xs font-medium text-muted-foreground leading-none">Sessão</span>
@@ -104,8 +105,8 @@ export const EvolutionHeaderBlock: React.FC<EvolutionHeaderBlockProps> = ({
           </div>
 
           {/* Therapist Section */}
-          <div className="flex items-center gap-3 pt-2 border-t border-border/50">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-muted/50 to-muted border border-border">
+          <div className="flex items-center gap-3 pt-2 border-t border-border/50 animate-in fade-in-0 duration-300 delay-100">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-muted/50 to-muted border border-border transition-all duration-200 hover:scale-105">
               <User className="h-4 w-4 text-muted-foreground" />
             </div>
             <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
@@ -115,7 +116,7 @@ export const EvolutionHeaderBlock: React.FC<EvolutionHeaderBlockProps> = ({
               {therapistCrefito && (
                 <>
                   <span className="hidden sm:inline text-muted-foreground/40">·</span>
-                  <span className="text-xs text-muted-foreground font-mono px-2 py-0.5 rounded-md bg-muted/50 border border-border/50">
+                  <span className="text-xs text-muted-foreground font-mono px-2 py-0.5 rounded-md bg-muted/50 border border-border/50 transition-colors duration-200 hover:bg-muted">
                     {therapistCrefito}
                   </span>
                 </>
