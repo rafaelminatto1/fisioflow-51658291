@@ -17,6 +17,7 @@ import { useColors } from '@/hooks/useColorScheme';
 import { useAppointments, getAppointmentByIdHook } from '@/hooks/useAppointments';
 import { usePatients } from '@/hooks/usePatients';
 import { useHaptics } from '@/hooks/useHaptics';
+import { useCreateFinancialRecord } from '@/hooks/usePatientFinancial';
 import type { AppointmentStatus } from '@/types';
 import { format } from 'date-fns';
 
@@ -50,9 +51,17 @@ export default function AppointmentFormScreen() {
   const appointmentId = params.id as string | undefined;
 
 
-  const { create, update, delete: deleteAppointment, isCreating, isUpdating, isDeleting } = useAppointments();
+  const { 
+    createAsync, 
+    updateAsync, 
+    deleteAsync, 
+    isCreating, 
+    isUpdating, 
+    isDeleting 
+  } = useAppointments();
   const { data: patients } = usePatients({ status: 'active' });
   const { medium, success, error: hapticError } = useHaptics();
+  const createFinancialMutation = useCreateFinancialRecord();
 
   const [isLoadingData, setIsLoadingData] = useState(!!appointmentId);
   const [selectedPatient, setSelectedPatient] = useState<string>(params.patientId as string || '');
@@ -145,19 +154,38 @@ export default function AppointmentFormScreen() {
       };
 
       if (isEditing && appointmentId) {
-        await update({ id: appointmentId, data: appointmentData });
+        await updateAsync({ id: appointmentId, data: appointmentData });
         success();
-        Alert.alert('Sucesso', 'Agendamento atualizado com sucesso');
+
+        // Se marcou como concluído, perguntar se quer criar registro financeiro
+        if (status === 'completed') {
+          Alert.alert(
+            'Consulta Concluída',
+            'Deseja criar um registro financeiro para este atendimento agora?',
+            [
+              { text: 'Não', onPress: () => router.back() },
+              {
+                text: 'Sim, Criar',
+                onPress: () => {
+                  router.replace(`/patient/${selectedPatient}?tab=financial&autoCreate=true&date=${year}-${month}-${day}`);
+                }
+              }
+            ]
+          );
+        } else {
+          Alert.alert('Sucesso', 'Agendamento atualizado com sucesso');
+          router.back();
+        }
       } else {
-        await create(appointmentData);
+        await createAsync(appointmentData);
         success();
         Alert.alert('Sucesso', 'Agendamento criado com sucesso');
+        router.back();
       }
-
-      router.back();
-    } catch (err) {
+    } catch (err: any) {
       hapticError();
-      Alert.alert('Erro', 'Não foi possível salvar o agendamento. Tente novamente.');
+      const errorMessage = err?.message || 'Não foi possível salvar o agendamento.';
+      Alert.alert('Erro', errorMessage);
     }
   };
 
@@ -173,7 +201,7 @@ export default function AppointmentFormScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteAppointment(appointmentId!);
+              await deleteAsync(appointmentId!);
               success();
               Alert.alert('Sucesso', 'Agendamento excluído com sucesso');
               router.back();

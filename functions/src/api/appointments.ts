@@ -121,13 +121,25 @@ export const listAppointmentsHttp = onRequest(
       params.push(limit, offset);
 
       const result = await pool.query(query, params);
-      // Add cache headers for better performance (CDN/browser cache for 30 seconds)
-      res.set('Cache-Control', 'private, max-age=30');
+      // Disable cache for list to ensure immediate updates after creation
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
       res.json({ data: result.rows as Appointment[] });
     } catch (error: unknown) {
       logger.error('Error in listAppointments:', error);
-      const statusCode = error instanceof HttpsError && error.code === 'unauthenticated' ? 401 : 500;
-      res.status(statusCode).json({ error: error instanceof Error ? error.message : 'Erro ao listar agendamentos' });
+      
+      if (error instanceof HttpsError && error.code === 'unauthenticated') {
+        res.status(401).json({ error: error.message });
+        return;
+      }
+
+      // Handle specific DB errors
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('unique constraint') || errorMessage.includes('idx_appointments_time_conflict')) {
+        res.status(409).json({ error: 'Já existe um agendamento para este profissional neste horário.' });
+        return;
+      }
+
+      res.status(500).json({ error: errorMessage });
     }
   }
 );
@@ -255,14 +267,8 @@ export const createAppointmentHttp = onRequest(
       }
 
       try {
-        // @ts-ignore
-        const realtime = await import('../realtime/publisher');
-        // Usar RTDB em paralelo com Ably (migração gradual)
-        await Promise.allSettled([
-          realtime.publishAppointmentEvent(organizationId, { event: 'INSERT', new: appointment as any, old: null }),
-          rtdb.refreshAppointments(organizationId)
-        ]);
-      } catch (err) { logger.error('Erro Realtime:', err); }
+        await rtdb.refreshAppointments(organizationId);
+      } catch (err) { logger.error('Erro Realtime RTDB:', err); }
 
       try {
         await dispatchAppointmentNotification({
@@ -278,9 +284,21 @@ export const createAppointmentHttp = onRequest(
       }
       res.status(201).json({ data: appointment });
     } catch (error: unknown) {
-      if (error instanceof HttpsError && error.code === 'unauthenticated') { res.status(401).json({ error: error.message }); return; }
-      logger.error('Error in createAppointmentHttp:', error);
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Erro ao criar agendamento' });
+      if (error instanceof HttpsError && error.code === 'unauthenticated') { 
+        res.status(401).json({ error: error.message }); 
+        return; 
+      }
+      
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error('Error in createAppointmentHttp:', { error: errorMessage, stack: error instanceof Error ? error.stack : undefined });
+
+      // Handle duplicate key error from PostgreSQL
+      if (errorMessage.includes('unique constraint') || errorMessage.includes('idx_appointments_time_conflict')) {
+        res.status(409).json({ error: 'Já existe um agendamento para este profissional neste horário exato.' });
+        return;
+      }
+
+      res.status(500).json({ error: errorMessage });
     }
   }
 );
@@ -473,13 +491,8 @@ export const cancelAppointmentHttp = onRequest(
       }
 
       try {
-        // @ts-ignore
-        const realtime = await import('../realtime/publisher');
-        await Promise.allSettled([
-          realtime.publishAppointmentEvent(organizationId, { event: 'DELETE', new: null, old: current.rows[0] }),
-          rtdb.refreshAppointments(organizationId)
-        ]);
-      } catch (err) { logger.error('Erro Realtime:', err); }
+        await rtdb.refreshAppointments(organizationId);
+      } catch (err) { logger.error('Erro Realtime RTDB:', err); }
 
       try {
         await dispatchAppointmentNotification({
@@ -878,14 +891,9 @@ export const createAppointmentHandler = async (request: any) => {
 
     // Publicar Evento
     try {
-      // @ts-ignore
-      const realtime = await import('../realtime/publisher');
-      await Promise.allSettled([
-        realtime.publishAppointmentEvent(auth.organizationId, { event: 'INSERT', new: appointment, old: null }),
-        rtdb.refreshAppointments(auth.organizationId)
-      ]);
+      await rtdb.refreshAppointments(auth.organizationId);
     } catch (err) {
-      logger.error('Erro Realtime:', err);
+      logger.error('Erro Realtime RTDB:', err);
     }
 
     try {
@@ -1039,14 +1047,9 @@ export const updateAppointmentHandler = async (request: any) => {
 
     // Publicar Evento
     try {
-      // @ts-ignore
-      const realtime = await import('../realtime/publisher');
-      await Promise.allSettled([
-        realtime.publishAppointmentEvent(auth.organizationId, { event: 'UPDATE', new: updatedAppt, old: currentAppt }),
-        rtdb.refreshAppointments(auth.organizationId)
-      ]);
+      await rtdb.refreshAppointments(auth.organizationId);
     } catch (err) {
-      logger.error('Erro Realtime:', err);
+      logger.error('Erro Realtime RTDB:', err);
     }
 
     const previousStatus = normalizeAppointmentStatus(String(currentAppt.status || 'agendado'));
@@ -1153,14 +1156,9 @@ export const cancelAppointmentHandler = async (request: any) => {
 
     // Publicar Evento
     try {
-      // @ts-ignore
-      const realtime = await import('../realtime/publisher');
-      await Promise.allSettled([
-        realtime.publishAppointmentEvent(auth.organizationId, { event: 'UPDATE', new: result.rows[0], old: current.rows[0] }),
-        rtdb.refreshAppointments(auth.organizationId)
-      ]);
+      await rtdb.refreshAppointments(auth.organizationId);
     } catch (err) {
-      logger.error('Erro Realtime:', err);
+      logger.error('Erro Realtime RTDB:', err);
     }
 
     try {

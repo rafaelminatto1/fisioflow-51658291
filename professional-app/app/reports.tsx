@@ -5,19 +5,21 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { startOfMonth, endOfMonth } from 'date-fns';
 import { useColors } from '@/hooks/useColorScheme';
-import { Card, Button } from '@/components';
+import { Card } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useAppointments } from '@/hooks/useAppointments';
 import { usePatients } from '@/hooks/usePatients';
 import { getProfessionalStats } from '@/lib/firestore';
 import { useQuery } from '@tanstack/react-query';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 type PeriodType = 'week' | 'month' | 'quarter' | 'year';
 
@@ -29,6 +31,22 @@ interface StatCard {
   icon: keyof typeof Ionicons.glyphMap;
   color: string;
 }
+
+// Simple Bar component for charts
+const Bar = ({ label, value, maxValue, color }: { label: string, value: number, maxValue: number, color: string }) => {
+  const colors = useColors();
+  const height = maxValue > 0 ? (value / maxValue) * 100 : 0;
+  
+  return (
+    <View style={styles.barContainer}>
+      <View style={styles.barTrack}>
+        <View style={[styles.barFill, { height: `${height}%`, backgroundColor: color }]} />
+      </View>
+      <Text style={[styles.barValue, { color: colors.text }]} numberOfLines={1}>{value}</Text>
+      <Text style={[styles.barLabel, { color: colors.textSecondary }]} numberOfLines={1}>{label}</Text>
+    </View>
+  );
+};
 
 export default function ReportsScreen() {
   const colors = useColors();
@@ -44,6 +62,42 @@ export default function ReportsScreen() {
     queryKey: ['professionalStats'],
     queryFn: () => getProfessionalStats('current-professional'),
   });
+
+  // Calcular dados para o gráfico de tipos
+  const appointmentsByType = useMemo(() => {
+    const types: Record<string, number> = {};
+    appointments.forEach(apt => {
+      const type = apt.type || 'Outro';
+      types[type] = (types[type] || 0) + 1;
+    });
+    
+    return Object.entries(types)
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+  }, [appointments]);
+
+  const maxTypeValue = useMemo(() => 
+    Math.max(...appointmentsByType.map(t => t.value), 0), 
+  [appointmentsByType]);
+
+  // Calcular pacientes mais frequentes
+  const topPatients = useMemo(() => {
+    const counts: Record<string, { name: string, count: number }> = {};
+    appointments.forEach(apt => {
+      if (apt.patientId) {
+        if (!counts[apt.patientId]) {
+          counts[apt.patientId] = { name: apt.patientName || 'Paciente', count: 0 };
+        }
+        counts[apt.patientId].count++;
+      }
+    });
+
+    return Object.entries(counts)
+      .map(([id, data]) => ({ id, ...data }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+  }, [appointments]);
 
   // Calcular estatísticas baseadas nos dados reais
   const overviewStats = useMemo<StatCard[]>(() => {
@@ -257,17 +311,31 @@ export default function ReportsScreen() {
                   {overviewStats.map(renderStatCard)}
                 </View>
 
-                {/* Appointments by Type Chart Placeholder */}
+                {/* Appointments by Type Chart */}
                 <Card style={styles.chartCard} padding="md">
                   <Text style={[styles.chartTitle, { color: colors.text }]}>
                     Consultas por Tipo
                   </Text>
-                  <View style={styles.chartPlaceholder}>
-                    <Ionicons name="bar-chart" size={48} color={colors.textMuted} />
-                    <Text style={[styles.chartPlaceholderText, { color: colors.textSecondary }]}>
-                      Gráfico será exibido aqui
-                    </Text>
-                  </View>
+                  {appointmentsByType.length > 0 ? (
+                    <View style={styles.chartContent}>
+                      {appointmentsByType.map((item, idx) => (
+                        <Bar 
+                          key={idx} 
+                          label={item.label} 
+                          value={item.value} 
+                          maxValue={maxTypeValue} 
+                          color={colors.primary} 
+                        />
+                      ))}
+                    </View>
+                  ) : (
+                    <View style={styles.chartPlaceholder}>
+                      <Ionicons name="bar-chart" size={48} color={colors.textMuted} />
+                      <Text style={[styles.chartPlaceholderText, { color: colors.textSecondary }]}>
+                        Nenhum dado disponível para este período
+                      </Text>
+                    </View>
+                  )}
                 </Card>
               </>
             )}
@@ -286,17 +354,26 @@ export default function ReportsScreen() {
                   <Text style={[styles.chartTitle, { color: colors.text }]}>
                     Pacientes Mais Frequentes
                   </Text>
-                  {appointments.slice(0, 5).map((apt, idx) => (
-                    <View key={apt.id} style={[styles.topPatientItem, { borderBottomColor: colors.border }]}>
-                      <View style={styles.rankBadge}>
-                        <Text style={styles.rankText}>#{idx + 1}</Text>
+                  {topPatients.length > 0 ? (
+                    topPatients.map((patient, idx) => (
+                      <View key={patient.id} style={[styles.topPatientItem, idx === topPatients.length - 1 && { borderBottomWidth: 0 }, { borderBottomColor: colors.border }]}>
+                        <View style={styles.rankBadge}>
+                          <Text style={styles.rankText}>#{idx + 1}</Text>
+                        </View>
+                        <Text style={[styles.patientName, { color: colors.text }]}>{patient.name}</Text>
+                        <Text style={[styles.visitCount, { color: colors.textSecondary }]}>
+                          {patient.count} visitas
+                        </Text>
                       </View>
-                      <Text style={[styles.patientName, { color: colors.text }]}>{apt.patientName}</Text>
-                      <Text style={[styles.visitCount, { color: colors.textSecondary }]}>
-                        {/* Placeholder count */}
+                    ))
+                  ) : (
+                    <View style={styles.chartPlaceholder}>
+                      <Ionicons name="people-outline" size={48} color={colors.textMuted} />
+                      <Text style={[styles.chartPlaceholderText, { color: colors.textSecondary }]}>
+                        Nenhum dado disponível
                       </Text>
                     </View>
-                  ))}
+                  )}
                 </Card>
               </>
             )}
@@ -309,7 +386,7 @@ export default function ReportsScreen() {
                 <View style={styles.statsGrid}>
                   {([
                     { label: 'Faturamento', value: 'R$ 0,00', icon: 'cash', color: colors.success },
-                    { label: 'Consultas', value: '0', icon: 'calendar', color: colors.primary },
+                    { label: 'Consultas', value: appointments.length, icon: 'calendar', color: colors.primary },
                     { label: 'Pendente', value: 'R$ 0,00', icon: 'time', color: colors.warning },
                   ] as StatCard[]).map(renderStatCard)}
                 </View>
@@ -318,7 +395,7 @@ export default function ReportsScreen() {
                   <View style={styles.infoContent}>
                     <Ionicons name="information-circle" size={20} color={colors.info} />
                     <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-                      Módulo financeiro em desenvolvimento. Configure seus valores e planos de tratamento.
+                      Módulo financeiro em desenvolvimento. Configure seus valores e planos de tratamento no perfil de cada paciente.
                     </Text>
                   </View>
                 </Card>
@@ -449,7 +526,40 @@ const styles = StyleSheet.create({
   chartTitle: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 16,
+    marginBottom: 24,
+  },
+  chartContent: {
+    flexDirection: 'row',
+    height: 200,
+    justifyContent: 'space-around',
+    alignItems: 'flex-end',
+    paddingBottom: 20,
+  },
+  barContainer: {
+    alignItems: 'center',
+    width: (SCREEN_WIDTH - 64) / 5,
+  },
+  barTrack: {
+    width: 24,
+    height: 120,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    justifyContent: 'flex-end',
+    overflow: 'hidden',
+  },
+  barFill: {
+    width: '100%',
+    borderRadius: 12,
+  },
+  barValue: {
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 8,
+  },
+  barLabel: {
+    fontSize: 10,
+    marginTop: 4,
+    textAlign: 'center',
   },
   chartPlaceholder: {
     alignItems: 'center',
@@ -458,6 +568,8 @@ const styles = StyleSheet.create({
   },
   chartPlaceholderText: {
     fontSize: 14,
+    textAlign: 'center',
+    paddingHorizontal: 32,
   },
   topPatientsCard: {
     marginBottom: 16,
@@ -488,6 +600,7 @@ const styles = StyleSheet.create({
   },
   visitCount: {
     fontSize: 14,
+    fontWeight: '600',
   },
   infoCard: {
     marginBottom: 16,
