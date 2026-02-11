@@ -121,14 +121,18 @@ export async function checkServicesHealth(): Promise<{
 /**
  * Inicialização no cliente (para ser chamada no main.tsx)
  */
-export function initializeOnClient() {
+export async function initializeOnClient(): Promise<void> {
   if (typeof window === 'undefined') return;
 
   // Aguarda o DOM estar pronto
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeServices);
+    await new Promise<void>((resolve) => {
+      document.addEventListener('DOMContentLoaded', () => {
+        initializeServices().then(() => resolve());
+      });
+    });
   } else {
-    initializeServices();
+    await initializeServices();
   }
 }
 
