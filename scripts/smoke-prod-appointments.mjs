@@ -11,7 +11,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 const email = process.env.SMOKE_USER_EMAIL || 'rafael.minatto@yahoo.com.br';
 const password = process.env.SMOKE_USER_PASS || 'Yukari30@';
 const apiKey = process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY || 'AIzaSyCz2c3HvQoV7RvFCbCaudbEEelEQaO-tY8';
-const authDomain = process.env.VITE_FIREBASE_AUTH_DOMAIN || 'fisioflow-migration.firebaseapp.com';
+const authDomain = process.env.VITE_FIREBASE_AUTH_DOMAIN || 'moocafisio.com.br';
 const projectId = process.env.VITE_FIREBASE_PROJECT_ID || 'fisioflow-migration';
 const hash = process.env.CLOUD_RUN_HASH || 'tfecm5cqoq';
 

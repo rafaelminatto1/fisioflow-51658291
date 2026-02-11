@@ -102,7 +102,7 @@ function isAdmin() {
 ```json
 {
   "key": "Content-Security-Policy",
-  "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://www.gstatic.com https://www.googleapis.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://fisioflow-migration.firebaseapp.com https://ably.io; frame-src 'self' https://www.youtube.com; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self';"
+  "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://www.gstatic.com https://www.googleapis.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://moocafisio.com.br https://ably.io; frame-src 'self' https://www.youtube.com; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self';"
 }
 ```
 

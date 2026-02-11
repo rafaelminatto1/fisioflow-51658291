@@ -37,7 +37,7 @@ cp .env.example .env
 EXPO_PUBLIC_FIREBASE_API_KEY=AIzaSyXXXXXX-XXXXXXXXXXXXXXXXX
 
 # Auth Domain
-EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=fisioflow-migration.firebaseapp.com
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=moocafisio.com.br
 
 # Project ID
 EXPO_PUBLIC_FIREBASE_PROJECT_ID=fisioflow-migration

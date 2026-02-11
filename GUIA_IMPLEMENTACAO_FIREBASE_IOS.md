@@ -214,7 +214,7 @@ mkdir -p apps/patient-ios/ios
 ```bash
 # apps/patient-ios/.env
 EXPO_PUBLIC_FIREBASE_API_KEY=your_api_key
-EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=fisioflow-migration.firebaseapp.com
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=moocafisio.com.br
 EXPO_PUBLIC_FIREBASE_PROJECT_ID=fisioflow-migration
 EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=fisioflow-migration.appspot.com
 EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=412418905255
