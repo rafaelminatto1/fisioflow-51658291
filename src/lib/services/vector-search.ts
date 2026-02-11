@@ -15,8 +15,8 @@ import {
   serverTimestamp,
   getFirestore,
 } from 'firebase/firestore';
-import { db } from '@/integrations/firebase/client';
-import { logger } from '@/lib/logging/logger';
+import { db } from '@/integrations/firebase/app';
+import { logger } from '@/lib/errors/logger';
 import {
   generateEmbedding,
   generateSOAPEmbedding,
