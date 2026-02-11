@@ -20,9 +20,9 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useColors } from '@/hooks/useColorScheme';
 import { Slider } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
-import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
-import { createEvolution, updateEvolution, deleteEvolution, getEvolutionById } from '@/lib/firestore';
-import { useAuthStore } from '@/store/auth';
+import { useQuery } from '@tanstack/react-query';
+import { useEvolutions } from '@/hooks';
+import { getEvolutionById } from '@/lib/api';
 import * as ImagePicker from 'expo-image-picker';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -396,9 +396,17 @@ export default function EvolutionScreen() {
   const evolutionId = params.evolutionId as string | undefined;
   const patientName = params.patientName as string || 'Paciente';
 
-  const { user } = useAuthStore();
   const { medium, success, error: hapticError } = useHaptics();
-  const queryClient = useQueryClient();
+  
+  // Use the new API-based hooks
+  const { 
+    createAsync: createEvolutionAsync, 
+    updateAsync: updateEvolutionAsync, 
+    deleteAsync: deleteEvolutionAsync,
+    isCreating,
+    isUpdating,
+    isDeleting,
+  } = useEvolutions(patientId);
 
   // Form state
   const [subjective, setSubjective] = useState('');
@@ -416,69 +424,23 @@ export default function EvolutionScreen() {
   // Load existing evolution if editing
   const { isLoading: isLoadingEvolution } = useQuery({
     queryKey: ['evolution', evolutionId],
-    queryFn: () => getEvolutionById(evolutionId!),
-    enabled: !!evolutionId,
+    queryFn: async () => {
+        if (!evolutionId) return null;
+        return getEvolutionById(evolutionId); 
+    },
+    enabled: isEditing,
     onSuccess: (data) => {
       if (data) {
         setSubjective(data.subjective || '');
         setObjective(data.objective || '');
         setAssessment(data.assessment || '');
         setPlan(data.plan || '');
-        setPainLevel(data.painLevel || 0);
-        if (data.attachments) {
-          setPhotos(data.attachments.map((uri, index) => ({
-            uri,
-            id: `photo-${Date.now()}-${index}`
-          })));
-        }
+        // Pain level and attachments are not in the new API table yet.
+        // This will need to be added to the schema and API later.
+        // setPainLevel(data.painLevel || 0); 
+        // setPhotos(data.attachments || []);
       }
     }
-  });
-
-  const createMutation = useMutation({
-    mutationFn: (data: any) => createEvolution(user!.id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patientEvolutions', patientId] });
-      success();
-      Alert.alert('Sucesso', 'Evolução registrada com sucesso!', [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
-    },
-    onError: () => {
-      hapticError();
-      Alert.alert('Erro', 'Não foi possível salvar a evolução. Tente novamente.');
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: (data: any) => updateEvolution(evolutionId!, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patientEvolutions', patientId] });
-      queryClient.invalidateQueries({ queryKey: ['evolution', evolutionId] });
-      success();
-      Alert.alert('Sucesso', 'Evolução atualizada com sucesso!', [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
-    },
-    onError: () => {
-      hapticError();
-      Alert.alert('Erro', 'Não foi possível atualizar a evolução.');
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: () => deleteEvolution(evolutionId!),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patientEvolutions', patientId] });
-      success();
-      Alert.alert('Sucesso', 'Evolução excluída com sucesso!', [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
-    },
-    onError: () => {
-      hapticError();
-      Alert.alert('Erro', 'Não foi possível excluir a evolução.');
-    },
   });
 
   const handleSave = async () => {
@@ -494,26 +456,31 @@ export default function EvolutionScreen() {
     try {
       const evolutionData = {
         patientId,
+        date: new Date().toISOString(),
         subjective: subjective.trim(),
         objective: objective.trim(),
         assessment: assessment.trim(),
         plan: plan.trim(),
-        painLevel,
-        exercises: [],
-        attachments: photos.map(p => p.uri),
       };
 
       if (isEditing) {
-        await updateMutation.mutateAsync(evolutionData);
+        await updateEvolutionAsync({ id: evolutionId!, data: evolutionData as any });
+        success();
+        Alert.alert('Sucesso', 'Evolução atualizada com sucesso!');
       } else {
-        await createMutation.mutateAsync(evolutionData);
+        await createEvolutionAsync(evolutionData as any);
+        success();
+        Alert.alert('Sucesso', 'Evolução registrada com sucesso!');
       }
-    } catch (err) {
-      // Error handled in mutation
+      router.back();
+    } catch (err: any) {
+      hapticError();
+      Alert.alert('Erro', err.message || 'Não foi possível salvar a evolução.');
     }
   };
 
   const handleDelete = () => {
+    if (!evolutionId) return;
     medium();
     Alert.alert(
       'Excluir Evolução',
@@ -523,7 +490,17 @@ export default function EvolutionScreen() {
         {
           text: 'Excluir',
           style: 'destructive',
-          onPress: () => deleteMutation.mutate(),
+          onPress: async () => {
+              try {
+                await deleteEvolutionAsync(evolutionId);
+                success();
+                Alert.alert('Sucesso', 'Evolução excluída com sucesso!');
+                router.back();
+              } catch (err: any) {
+                hapticError();
+                Alert.alert('Erro', err.message || 'Não foi possível excluir a evolução.');
+              }
+          },
         },
       ]
     );
@@ -782,10 +759,10 @@ export default function EvolutionScreen() {
                 },
               ]}
               onPress={handleSave}
-              disabled={createMutation.isPending || updateMutation.isPending || !canSave}
+              disabled={isCreating || isUpdating || !canSave}
               activeOpacity={0.8}
             >
-              {createMutation.isPending || updateMutation.isPending ? (
+              {isCreating || isUpdating ? (
                 <>
                   <ActivityIndicator size="small" color="#FFFFFF" />
                   <Text style={styles.saveButtonText}>Salvando...</Text>
@@ -804,9 +781,9 @@ export default function EvolutionScreen() {
               <TouchableOpacity
                 style={[styles.deleteButton, { borderColor: colors.error }]}
                 onPress={handleDelete}
-                disabled={deleteMutation.isPending}
+                disabled={isDeleting}
               >
-                {deleteMutation.isPending ? (
+                {isDeleting ? (
                   <ActivityIndicator size="small" color={colors.error} />
                 ) : (
                   <>

@@ -55,8 +55,8 @@ Detailed system architecture for FisioFlow.
         ┌─────────────┴─────────────────────┐
         │            Service Layer           │
         │  ┌──────────┐  ┌──────────┐       │
-        │  │Firebase  │  │  Ably    │  Stripe│
-        │  │Services  │  │Realtime │  │ API  │
+        │  │Firebase  │  │ Firebase │  Stripe│
+        │  │Services  │  │ Realtime │  │ API  │
         │  └──────────┘  └──────────┘       │
         └──────────────┬─────────────────────┘
                        │
@@ -342,55 +342,55 @@ CREATE POLICY patient_access ON patients
 
 ## Realtime Architecture
 
-### Ably Integration
+### Firebase Realtime Database Integration
 
 ```
 ┌─────────────────────────────────────────┐
 │           Client (Browser)              │
 │  ┌───────────────────────────────────┐ │
-│  │  Ably JavaScript Client           │ │
-│  │  - Auto reconnect                 │ │
-│  │  - Connection state monitoring    │ │
+│  │  Firebase SDK (Realtime DB)       │ │
+│  │  - Native WebSockets              │ │
+│  │  - Offline Persistence            │ │
 │  └──────────┬────────────────────────┘ │
 └─────────────┼───────────────────────────┘
               │
-              ▼ WebSocket
+              ▼ WebSocket / HTTPS
 ┌─────────────────────────────────────────┐
-│           Ably Cloud                   │
+│      Firebase Realtime Database         │
 │  ┌───────────────────────────────────┐ │
-│  │  Channels                         │ │
-│  │  - appointments:{orgId}           │ │
-│  │  - patient:{patientId}            │ │
-│  │  - organization:{orgId}           │ │
+│  │  Data Paths                       │ │
+│  │  - /sync/{orgId}/appointments     │ │
+│  │  - /sync/{orgId}/patients         │ │
+│  │  - /sync/{orgId}/notifications    │ │
 │  └──────────┬────────────────────────┘ │
 └─────────────┼───────────────────────────┘
               │
-              ▼ REST API
+              ▼ Firebase Admin SDK
 ┌─────────────────────────────────────────┐
 │      Cloud Function (Publisher)         │
 │  - Called on database mutations         │
-│  - Publishes to Ably channel            │
+│  - Updates Firebase RTDB timestamp      │
 └─────────────────────────────────────────┘
 ```
 
-### Channel Naming Convention
+### Sync Strategy
 
-| Pattern | Purpose | Example |
-|---------|---------|---------|
-| `appointments:{orgId}` | Organization-wide appointments | `appointments:org-123` |
-| `patient:{patientId}` | Patient-specific updates | `patient:pt-456` |
-| `organization:{orgId}` | Organization updates | `organization:org-123` |
-| `user:{userId}` | User notifications | `user:user-789` |
+The system uses a "Realtime Pulse" strategy. Instead of sending the full data over WebSockets, Cloud Functions update a version/timestamp in Firebase Realtime Database. Clients subscribe to these paths and trigger a TanStack Query refetch when a change is detected.
+
+| Path Pattern | Purpose | Example |
+|--------------|---------|---------|
+| `/sync/{orgId}/appointments` | Organization appointments pulse | `/sync/org-123/appointments` |
+| `/sync/{orgId}/patients` | Organization patients pulse | `/sync/org-123/patients` |
+| `/sync/{orgId}/notifications` | Organization notifications pulse | `/sync/org-123/notifications` |
+| `/sync/{orgId}/users/{userId}` | User-specific pulse | `/sync/org-123/users/user-789` |
 
 ### Message Format
 
 ```typescript
-interface RealtimeMessage<T> {
-  event: 'INSERT' | 'UPDATE' | 'DELETE';
-  data: T;
-  old?: T; // For UPDATE/DELETE
-  timestamp: string;
-  version: number;
+interface RealtimePulse {
+  updatedAt: number; // Server timestamp
+  reason?: string;   // Optional event description
+  version: number;   // Incremental version
 }
 ```
 
@@ -431,7 +431,7 @@ interface RealtimeMessage<T> {
 | **Cloud Functions** | Minimize cold starts, bundle size |
 | **Cloud SQL** | Connection pooling, query optimization |
 | **Storage** | Lifecycle policies, compression |
-| **Ably** | Channel multiplexing |
+| **Realtime DB** | Minimal data storage (pulse only) |
 
 ---
 
@@ -482,7 +482,7 @@ interface RealtimeMessage<T> {
 | Factor | Decision |
 |--------|----------|
 | **Authentication** | Built-in, scalable |
-| **Realtime** | Removed (using Ably) |
+| **Realtime** | Firebase Realtime Database |
 | **Hosting** | Global CDN, free tier |
 | **Functions** | Serverless, auto-scaling |
 | **Database** | Changed to Cloud SQL (PostgreSQL) |
@@ -515,7 +515,7 @@ interface RealtimeMessage<T> {
 | Technology | Risk Level | Mitigation |
 |------------|------------|------------|
 | **Supabase** | High | Migration to Firebase |
-| **Ably** | Medium | Self-hosted alternative |
+| **Cloud SQL Proxy** | Low | Managed connector |
 | **Capacitor** | Low | Native migration path |
 
 ---

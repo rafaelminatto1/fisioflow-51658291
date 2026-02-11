@@ -499,6 +499,8 @@ CREATE TABLE IF NOT EXISTS evolutions (
   objective TEXT,
   assessment TEXT,
   plan TEXT,
+  pain_level INTEGER,
+  attachments JSONB,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

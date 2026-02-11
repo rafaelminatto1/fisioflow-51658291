@@ -45,7 +45,7 @@ The FisioFlow project is a modern, full-stack ecosystem designed for physical th
 
 ### Manual
 - [ ] Verify PWA installation and offline capabilities (Service Workers).
-- [ ] Test real-time appointment updates via Ably in a dual-window session.
+- [ ] Test real-time appointment updates via Firebase Realtime Database in a dual-window session.
 - [ ] Audit the SOAP generation output quality with a real clinical vignette.
 
 ---

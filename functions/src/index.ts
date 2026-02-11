@@ -183,6 +183,7 @@ export {
 
 // API de Registros Financeiros de Pacientes
 export {
+    listAllFinancialRecordsHttp as listAllFinancialRecordsV2,
     listPatientFinancialRecordsHttp as listPatientFinancialRecords,
     getPatientFinancialSummaryHttp as getPatientFinancialSummaryV2,
     createFinancialRecordHttp as createFinancialRecord,
