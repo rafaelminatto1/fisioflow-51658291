@@ -1,7 +1,6 @@
 
 /**
  * Hook que escuta o Firebase Realtime DB para saber quando atualizar a agenda.
- * Substitui o Ably para sinalização de refresh.
  * Se o Realtime Database não estiver configurado/disponível no projeto Firebase,
  * o hook não faz nada (a agenda continua funcionando via Firestore).
  */

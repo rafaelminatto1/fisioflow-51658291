@@ -12,7 +12,8 @@
 
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { getAblyClient, ABLY_CHANNELS, ABLY_EVENTS } from '@/integrations/ably/client';
+import { getDatabase, ref, onValue, off } from 'firebase/database';
+import { app } from '@/integrations/firebase/app';
 import { patientsApi } from '@/integrations/firebase/functions';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useAuth } from '@/contexts/AuthContext';
@@ -59,42 +60,36 @@ export const useActivePatients = () => {
 
   const [retryCount, setRetryCount] = useState(0);
 
-  // Setup realtime subscription via Ably
+  // Setup realtime subscription via Firebase Realtime Database
   useEffect(() => {
     if (!organizationId) {
       logger.debug('useActivePatients: Missing organizationId', undefined, 'usePatients');
       return;
     }
 
-    logger.debug('useActivePatients: subscribing via Ably', { organizationId, retryCount }, 'usePatients');
+    logger.debug('useActivePatients: subscribing via RTDB', { organizationId, retryCount }, 'usePatients');
 
-    const ably = getAblyClient();
-    const channel = ably.channels.get(ABLY_CHANNELS.patients(organizationId));
+    let db;
+    try {
+      db = getDatabase(app);
+    } catch (error) {
+      // Realtime Database não configurado ou indisponível
+      logger.debug('RTDB not available, patients sync disabled', error, 'usePatients');
+      return;
+    }
 
-    channel.subscribe(ABLY_EVENTS.update, (message) => {
-      logger.debug('Realtime (Ably): Pacientes atualizados', { organizationId, event: message.name }, 'usePatients');
-      queryClient.invalidateQueries({ queryKey: ['patients', organizationId] });
+    const triggerRef = ref(db, `orgs/${organizationId}/patients/refresh_trigger`);
+
+    const unsubscribe = onValue(triggerRef, (snapshot) => {
+      if (snapshot.exists()) {
+        logger.debug('Realtime (RTDB): Pacientes atualizados', { organizationId }, 'usePatients');
+        queryClient.invalidateQueries({ queryKey: ['patients', organizationId] });
+      }
     });
 
-    // Handle channel errors (e.g. 410 Gone)
-    const handleChannelState = (stateChange: unknown) => {
-      if (stateChange.current === 'failed' || stateChange.current === 'suspended') {
-        logger.error(`Realtime: Ably channel ${stateChange.current}`, stateChange.reason, 'usePatients');
-
-        // Auto-retry connection after delay
-        setTimeout(() => {
-          logger.debug('Realtime: Retrying patients subscription...', {}, 'usePatients');
-          setRetryCount(prev => prev + 1);
-        }, 5000);
-      }
-    };
-
-    channel.on(handleChannelState);
-
     return () => {
-      logger.debug('Realtime (Ably): Unsubscribing from patients channel', { organizationId }, 'usePatients');
-      channel.unsubscribe();
-      channel.off(handleChannelState);
+      logger.debug('Realtime (RTDB): Unsubscribing from patients trigger', { organizationId }, 'usePatients');
+      off(triggerRef, 'value', unsubscribe);
     };
   }, [organizationId, queryClient, retryCount]);
 
