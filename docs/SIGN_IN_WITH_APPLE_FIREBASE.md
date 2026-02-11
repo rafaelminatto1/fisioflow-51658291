@@ -10,7 +10,7 @@ O script `scripts/configure-firebase-apple-signin.mjs` configura o provedor Appl
 
 1. **Apple Developer** (developer.apple.com):
    - **Services ID**: em Identifiers > + > Services IDs. Em "Sign in with Apple", marque e defina **Return URL**:  
-     `https://fisioflow-migration.firebaseapp.com/__/auth/handler`
+     `https://moocafisio.com.br/__/auth/handler`
    - **Key**: em Keys > + > "Sign in with Apple" ativado. Baixe o `.p8` e anote o **Key ID**.
    - **Team ID**: em Membership > Membership details.
 
@@ -54,7 +54,7 @@ Se o provedor Apple já existir, o script atualiza a configuração; caso contr�
 
 No **Apple Developer**, o Return URL do Services ID deve ser:
 
-`https://fisioflow-migration.firebaseapp.com/__/auth/handler`
+`https://moocafisio.com.br/__/auth/handler`
 
 ---
 
