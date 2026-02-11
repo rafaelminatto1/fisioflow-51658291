@@ -29,6 +29,13 @@ const API_URLS = {
     update: CLOUD_RUN_BASE_URL('updateAppointmentV2'),
     cancel: CLOUD_RUN_BASE_URL('cancelAppointmentV2'),
   },
+  evolutions: {
+    list: CLOUD_RUN_BASE_URL('listEvolutionsV2'),
+    get: CLOUD_RUN_BASE_URL('getEvolutionV2'),
+    create: CLOUD_RUN_BASE_URL('createEvolutionV2'),
+    update: CLOUD_RUN_BASE_URL('updateEvolutionV2'),
+    delete: CLOUD_RUN_BASE_URL('deleteEvolutionV2'),
+  },
   exercises: {
     list: CLOUD_RUN_BASE_URL('listExercisesV2'),
     get: CLOUD_RUN_BASE_URL('getExerciseV2'),
@@ -44,6 +51,7 @@ const API_URLS = {
     delete: CLOUD_RUN_BASE_URL('deletePartnership'),
   },
   financial: {
+    listAll: CLOUD_RUN_BASE_URL('listAllFinancialRecordsV2'),
     listRecords: CLOUD_RUN_BASE_URL('listPatientFinancialRecords'),
     getSummary: CLOUD_RUN_BASE_URL('getPatientFinancialSummaryV2'),
     createRecord: CLOUD_RUN_BASE_URL('createFinancialRecord'),
@@ -110,6 +118,22 @@ export interface ApiExercise {
   duration?: number;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface ApiEvolution {
+    id: string;
+    patient_id: string;
+    therapist_id: string;
+    appointment_id?: string;
+    date: string;
+    subjective?: string;
+    objective?: string;
+    assessment?: string;
+    plan?: string;
+    pain_level?: number;
+    attachments?: string[];
+    created_at: string;
+    updated_at: string;
 }
 
 export interface ApiPartnership {
@@ -532,6 +556,40 @@ export async function deleteExercise(id: string): Promise<{ success: boolean }> 
 }
 
 // ============================================================
+// EVOLUTIONS API
+// ============================================================
+
+export async function getEvolutions(patientId: string): Promise<ApiEvolution[]> {
+    const response = await fetchApi<ApiResponse<ApiEvolution[]>>(API_URLS.evolutions.list, { patientId });
+    return response.data || [];
+}
+
+export async function getEvolutionById(id: string): Promise<ApiEvolution | null> {
+    try {
+        const response = await fetchApi<ApiResponse<ApiEvolution>>(API_URLS.evolutions.get, { evolutionId: id });
+        return response.data || null;
+    } catch {
+        return null;
+    }
+}
+
+export async function createEvolution(data: Partial<ApiEvolution>): Promise<ApiEvolution> {
+    const response = await fetchApi<ApiResponse<ApiEvolution>>(API_URLS.evolutions.create, data);
+    if (response.error) throw new Error(response.error);
+    return response.data;
+}
+
+export async function updateEvolution(id: string, data: Partial<ApiEvolution>): Promise<ApiEvolution> {
+    const response = await fetchApi<ApiResponse<ApiEvolution>>(API_URLS.evolutions.update, { evolutionId: id, ...data });
+    if (response.error) throw new Error(response.error);
+    return response.data;
+}
+
+export async function deleteEvolution(id: string): Promise<{ success: boolean }> {
+    return fetchApi<{ success: boolean }>(API_URLS.evolutions.delete, { evolutionId: id });
+}
+
+// ============================================================
 // BATCH OPERATIONS (for optimization)
 // ============================================================
 
@@ -574,6 +632,13 @@ export const api = {
     create: createExercise,
     update: updateExercise,
     delete: deleteExercise,
+  },
+  evolutions: {
+    list: getEvolutions,
+    get: getEvolutionById,
+    create: createEvolution,
+    update: updateEvolution,
+    delete: deleteEvolution,
   },
 };
 
@@ -646,6 +711,22 @@ export async function deletePartnership(id: string): Promise<{ success: boolean 
 // ============================================================
 // PATIENT FINANCIAL RECORDS API
 // ============================================================
+
+/**
+ * Get all financial records for the organization
+ */
+export async function getAllFinancialRecords(
+  options?: { startDate?: string; endDate?: string; limit?: number }
+): Promise<(ApiFinancialRecord & { patient_name: string })[]> {
+  const requestData: any = {
+    limit: options?.limit || 100,
+  };
+  if (options?.startDate) requestData.startDate = options.startDate;
+  if (options?.endDate) requestData.endDate = options.endDate;
+
+  const response = await fetchApi<ApiResponse<(ApiFinancialRecord & { patient_name: string })[]>>(API_URLS.financial.listAll, requestData);
+  return response.data || [];
+}
 
 /**
  * Get patient financial records

@@ -72,7 +72,7 @@ export default defineConfig({
   // webServer configuration is disabled in CI to avoid issues
   // In CI, we expect the tests to run without a running dev server
   webServer: process.env.CI ? undefined : {
-    command: 'VITE_DISABLE_ABLY=1 npm run dev -- --host 127.0.0.1',
+    command: 'npm run dev -- --host 127.0.0.1',
     url: 'http://127.0.0.1:8084',
     reuseExistingServer: true,
     timeout: 120000,
