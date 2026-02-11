@@ -26,7 +26,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
+          title: 'Painel',
           headerTitle: 'FisioFlow Pro',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="grid" size={size} color={color} />
