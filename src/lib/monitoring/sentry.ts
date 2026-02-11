@@ -5,8 +5,9 @@
  */
 
 import * as Sentry from '@sentry/react';
-import { logger } from '@/lib/logging/logger';
+import { logger } from '@/lib/errors/logger';
 import type { Breadcrumb, BreadcrumbHint } from '@sentry/react';
+import type { ComponentProps } from 'react';
 
 /**
  * Configurações do Sentry
@@ -282,8 +283,8 @@ export function useSentry() {
 /**
  * Componente Error Boundary com Sentry
  */
-import { ComponentProps } from 'react';
-export { Sentry.ErrorBoundary as ErrorBoundary };
+const ErrorBoundaryComponent = Sentry.ErrorBoundary;
+export { ErrorBoundaryComponent as ErrorBoundary };
 
 export type ErrorBoundaryProps = ComponentProps<typeof Sentry.ErrorBoundary>;
 

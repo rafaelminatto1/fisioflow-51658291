@@ -5,8 +5,8 @@
  */
 
 import { getAnalytics, logEvent, Analytics } from 'firebase/analytics';
-import { firebaseApp } from '@/integrations/firebase/client';
-import { logger } from '@/lib/logging/logger';
+import { app as firebaseApp } from '@/integrations/firebase/app';
+import { logger } from '@/lib/errors/logger';
 
 let analyticsInstance: Analytics | null = null;
 

@@ -5,7 +5,7 @@
  */
 
 import { flashModel, proModel } from '@/lib/firebase-ai';
-import { logger } from '@/lib/logging/logger';
+import { logger } from '@/lib/errors/logger';
 import { withPerformanceTrace, traceAIOperation } from '@/lib/monitoring/performance';
 import {
   findSimilarEvolutions,
