@@ -190,6 +190,13 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => path.replace(/^\/functions/, ''),
         },
       },
+      warmup: {
+        clientFiles: [
+          './src/App.tsx',
+          './src/components/ui/AppLoadingSkeleton.tsx',
+          './src/contexts/AuthContextProvider.tsx'
+        ],
+      },
     },
     define: {
       __APP_VERSION__: JSON.stringify(appVersion),
@@ -282,6 +289,11 @@ export default defineConfig(({ mode }) => {
         ext: '.gz',
         threshold: 10240,
       }),
+      viteCompression({
+        algorithm: 'brotliCompress',
+        ext: '.br',
+        threshold: 10240,
+      }),
       isProduction && excludeMswPlugin(),
     ].filter(Boolean),
     resolve: {
@@ -307,16 +319,16 @@ export default defineConfig(({ mode }) => {
         // "@react-pdf/pdfkit": path.resolve(__dirname, "./src/lib/pdfkit.browser.fixed.js"),
         // "@react-pdf/pdfkit/lib/pdfkit.browser.js": path.resolve(__dirname, "./src/lib/pdfkit.browser.fixed.js"),
       },
-    optimizeDeps: {
-      include: [
-        '@react-pdf/renderer',
-        '@react-pdf/pdfkit',
-      ],
-      exclude: [
-        // PDFKit será lazy-loaded, não pré-bundle
-        // 'pdfkit',
-      ],
-    },
+      optimizeDeps: {
+        include: [
+          '@react-pdf/renderer',
+          '@react-pdf/pdfkit',
+        ],
+        exclude: [
+          // PDFKit será lazy-loaded, não pré-bundle
+          // 'pdfkit',
+        ],
+      },
     },
     build: {
       outDir: 'dist',
@@ -341,7 +353,6 @@ export default defineConfig(({ mode }) => {
         input: {
           main: './index.html',
         },
-        external: [],
         output: {
           chunkFileNames: 'assets/js/[name]-[hash].js',
           entryFileNames: 'assets/js/[name]-[hash].js',
@@ -431,28 +442,8 @@ export default defineConfig(({ mode }) => {
             }
           },
           experimentalMinChunkSize: 100000,
-          // CRÍTICO: Adicionar inlineDynamicImports para evitar circular dependency
-          inlineDynamicImports: false,
         },
         preserveEntrySignatures: 'strict',
-        // CRÍTICO: Desabilitar moduleSideEffects para PDFKit para evitar circular dependency
-        moduleContext: (id) => {
-          if (id.includes('node_modules/@react-pdf/pdfkit')) {
-            return 'globalThis';
-          }
-        },
-        treeshake: {
-          moduleSideEffects: (id) => {
-            // Forçar tree-shaking agressivo para PDFKit
-            if (id.includes('@react-pdf/pdfkit')) {
-              return false;
-            }
-            if (id.includes('pako')) {
-              return false;
-            }
-            return true;
-          }
-        }
       },
       chunkSizeWarningLimit: 5000,
       reportCompressedSize: false,
