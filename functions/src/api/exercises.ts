@@ -26,13 +26,13 @@ export const listExercisesHttp = onRequest({ region: 'southamerica-east1', memor
     await authorizeRequest(extractBearerToken(getAuthHeader(req)));
     const { category, difficulty, search, limit = 100, offset = 0 } = parseBody(req);
     const pool = getPool();
-    let query = `SELECT id,name,slug,category,description,instructions,muscles,equipment,difficulty,video_url,thumbnail_url,duration_minutes,sets_recommended,reps_recommended,precautions,benefits,tags FROM exercises WHERE is_active = true`;
+    let query = `SELECT id,name,slug,category,description,instructions,muscles,equipment,difficulty,video_url,image_url,duration_minutes,sets_recommended,reps_recommended,precautions,benefits,tags FROM exercises WHERE is_active = true`;
     const params: (string | number)[] = [];
     let paramCount = 0;
     if (category) { paramCount++; query += ` AND category = $${paramCount}`; params.push(category); }
     if (difficulty) { paramCount++; query += ` AND difficulty = $${paramCount}`; params.push(difficulty); }
     if (search) { paramCount++; query += ` AND (name ILIKE $${paramCount} OR description ILIKE $${paramCount})`; params.push(`%${search}%`); }
-    query += ` ORDER BY display_order, name LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+    query += ` ORDER BY name LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
     params.push(limit, offset);
     const result = await pool.query(query, params);
     const categoriesResult = await pool.query('SELECT DISTINCT category FROM exercises WHERE is_active = true ORDER BY category');
@@ -57,9 +57,9 @@ export const searchSimilarExercisesHttp = onRequest({ region: 'southamerica-east
     if (exerciseId) {
       const baseResult = await pool.query('SELECT category FROM exercises WHERE id = $1', [exerciseId]);
       if (baseResult.rows.length === 0) { res.status(404).json({ error: 'Exercício não encontrado' }); return; }
-      result = await pool.query(`SELECT * FROM exercises WHERE is_active = true AND id != $1 AND category = $2 ORDER BY display_order, name LIMIT $3`, [exerciseId, baseResult.rows[0].category, limit]);
+      result = await pool.query(`SELECT * FROM exercises WHERE is_active = true AND id != $1 AND category = $2 ORDER BY name LIMIT $3`, [exerciseId, baseResult.rows[0].category, limit]);
     } else {
-      result = await pool.query(`SELECT * FROM exercises WHERE is_active = true AND (name ILIKE $1 OR description ILIKE $1 OR $1 = ANY(tags)) ORDER BY display_order, name LIMIT $2`, [`%${searchQuery}%`, limit]);
+      result = await pool.query(`SELECT * FROM exercises WHERE is_active = true AND (name ILIKE $1 OR description ILIKE $1 OR $1 = ANY(tags)) ORDER BY name LIMIT $2`, [`%${searchQuery}%`, limit]);
     }
     res.json({ data: result.rows });
   } catch (e: unknown) {
@@ -115,8 +115,8 @@ export const getPrescribedExercisesHttp = onRequest({ region: 'southamerica-east
     const pool = getPool();
     const patientCheck = await pool.query('SELECT id FROM patients WHERE id = $1 AND organization_id = $2', [patientId, auth.organizationId]);
     if (patientCheck.rows.length === 0) { res.status(404).json({ error: 'Paciente não encontrado' }); return; }
-    const result = await pool.query(`SELECT pe.id,pe.patient_id,pe.exercise_id,pe.sets,pe.reps,pe.duration,pe.frequency,pe.is_active,pe.created_at,e.id as exercise_data_id,e.name,e.category,e.difficulty,e.video_url,e.thumbnail_url FROM prescribed_exercises pe JOIN exercises e ON pe.exercise_id=e.id WHERE pe.patient_id=$1 AND pe.is_active=true`, [patientId]);
-    const data = result.rows.map((row: any) => ({ id: row.id, patient_id: row.patient_id, exercise_id: row.exercise_id, sets: row.sets, reps: row.reps, duration: row.duration, frequency: row.frequency, is_active: row.is_active, created_at: row.created_at, exercise: { id: row.exercise_data_id, name: row.name, category: row.category, difficulty_level: row.difficulty, video_url: row.video_url, thumbnail_url: row.thumbnail_url } }));
+    const result = await pool.query(`SELECT pe.id,pe.patient_id,pe.exercise_id,pe.sets,pe.reps,pe.duration,pe.frequency,pe.is_active,pe.created_at,e.id as exercise_data_id,e.name,e.category,e.difficulty,e.video_url,e.image_url FROM prescribed_exercises pe JOIN exercises e ON pe.exercise_id=e.id WHERE pe.patient_id=$1 AND pe.is_active=true`, [patientId]);
+    const data = result.rows.map((row: any) => ({ id: row.id, patient_id: row.patient_id, exercise_id: row.exercise_id, sets: row.sets, reps: row.reps, duration: row.duration, frequency: row.frequency, is_active: row.is_active, created_at: row.created_at, exercise: { id: row.exercise_data_id, name: row.name, category: row.category, difficulty_level: row.difficulty, video_url: row.video_url, thumbnail_url: row.image_url, image_url: row.image_url } }));
     res.json({ data });
   } catch (e: unknown) {
     if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
@@ -153,8 +153,9 @@ export const createExerciseHttp = onRequest({ region: 'southamerica-east1', memo
     const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
     if (auth.role !== 'admin' && auth.role !== 'fisioterapeuta') { res.status(403).json({ error: 'Permissão insuficiente' }); return; }
     const exercise = parseBody(req);
+    const imageUrl = exercise.image_url || exercise.thumbnail_url || null;
     const pool = getPool();
-    const result = await pool.query(`INSERT INTO exercises (name,category,difficulty,description,instructions,muscles,equipment,video_url,thumbnail_url,duration_minutes,sets_recommended,reps_recommended,precautions,benefits,tags,display_order,is_active) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,true) RETURNING *`, [exercise.name, exercise.category, exercise.difficulty || 'médio', exercise.description || null, exercise.instructions || null, exercise.muscles || [], exercise.equipment || [], exercise.video_url || null, exercise.thumbnail_url || null, exercise.duration_minutes || 0, exercise.sets_recommended || 3, exercise.reps_recommended || 10, exercise.precautions || null, exercise.benefits || null, exercise.tags || [], exercise.display_order || 0]);
+    const result = await pool.query(`INSERT INTO exercises (name,category,difficulty,description,instructions,muscles,equipment,video_url,image_url,duration_minutes,sets_recommended,reps_recommended,precautions,benefits,tags,is_active) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,true) RETURNING *`, [exercise.name, exercise.category, exercise.difficulty || 'médio', exercise.description || null, exercise.instructions || null, exercise.muscles || [], exercise.equipment || [], exercise.video_url || null, imageUrl, exercise.duration_minutes || 0, exercise.sets_recommended || 3, exercise.reps_recommended || 10, exercise.precautions || null, exercise.benefits || null, exercise.tags || []]);
     res.status(201).json({ data: result.rows[0] });
   } catch (e: unknown) {
     if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
@@ -272,7 +273,7 @@ export const listExercisesHandler = async (request: any) => {
       SELECT
         id, name, slug, category, description,
         instructions, muscles, equipment, difficulty,
-        video_url, thumbnail_url, duration_minutes,
+        video_url, image_url, duration_minutes,
         sets_recommended, reps_recommended, precautions,
         benefits, tags
       FROM exercises
@@ -299,7 +300,7 @@ export const listExercisesHandler = async (request: any) => {
       params.push(`%${search}%`);
     }
 
-    query += ` ORDER BY display_order, name LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+    query += ` ORDER BY name LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
     params.push(limit, offset);
 
     const result = await pool.query(query, params);
@@ -458,7 +459,7 @@ export const searchSimilarExercisesHandler = async (request: any) => {
          WHERE is_active = true
            AND id != $1
            AND category = $2
-         ORDER BY display_order, name
+         ORDER BY name
          LIMIT $3`,
         [exerciseId, baseExercise.category, limit]
       );
@@ -468,7 +469,7 @@ export const searchSimilarExercisesHandler = async (request: any) => {
         `SELECT * FROM exercises
          WHERE is_active = true
            AND (name ILIKE $1 OR description ILIKE $1 OR $1 = ANY(tags))
-         ORDER BY display_order, name
+         ORDER BY name
          LIMIT $2`,
         [`%${searchQuery}%`, limit]
       );
@@ -585,7 +586,7 @@ export const getPrescribedExercisesHandler = async (request: any) => {
         pe.id, pe.patient_id, pe.exercise_id, pe.sets, pe.reps,
         pe.duration, pe.frequency, pe.is_active, pe.created_at,
         e.id as exercise_data_id, e.name, e.category, e.difficulty,
-        e.video_url, e.thumbnail_url
+        e.video_url, e.image_url
       FROM prescribed_exercises pe
       JOIN exercises e ON pe.exercise_id = e.id
       WHERE pe.patient_id = $1
@@ -609,7 +610,8 @@ export const getPrescribedExercisesHandler = async (request: any) => {
         category: row.category,
         difficulty_level: row.difficulty,
         video_url: row.video_url,
-        thumbnail_url: row.thumbnail_url
+        thumbnail_url: row.image_url,
+        image_url: row.image_url
       }
     }));
 
@@ -636,14 +638,13 @@ interface CreateExerciseRequest {
   muscles?: string[];
   equipment?: string[];
   video_url?: string;
-  thumbnail_url?: string;
+  image_url?: string;
   duration_minutes?: number;
   sets_recommended?: number;
   reps_recommended?: number;
   precautions?: string;
   benefits?: string;
   tags?: string[];
-  display_order?: number;
 }
 
 interface CreateExerciseResponse {
@@ -664,6 +665,7 @@ export const createExerciseHandler = async (request: any) => {
   }
 
   const exercise = request.data;
+  const imageUrl = exercise.image_url || exercise.thumbnail_url || null;
 
   const pool = getPool();
 
@@ -671,10 +673,10 @@ export const createExerciseHandler = async (request: any) => {
     const result = await pool.query(
       `INSERT INTO exercises (
         name, category, difficulty, description, instructions,
-        muscles, equipment, video_url, thumbnail_url,
+        muscles, equipment, video_url, image_url,
         duration_minutes, sets_recommended, reps_recommended,
-        precautions, benefits, tags, display_order, is_active
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, true)
+        precautions, benefits, tags, is_active
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, true)
       RETURNING *`,
       [
         exercise.name,
@@ -685,14 +687,13 @@ export const createExerciseHandler = async (request: any) => {
         exercise.muscles || [],
         exercise.equipment || [],
         exercise.video_url || null,
-        exercise.thumbnail_url || null,
+        imageUrl,
         exercise.duration_minutes || 0,
         exercise.sets_recommended || 3,
         exercise.reps_recommended || 10,
         exercise.precautions || null,
         exercise.benefits || null,
-        exercise.tags || [],
-        exercise.display_order || 0
+        exercise.tags || []
       ]
     );
 

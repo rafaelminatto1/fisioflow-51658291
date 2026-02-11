@@ -442,9 +442,6 @@ const ScheduleRefactored = () => {
                     <CalendarDays className="w-6 h-6 text-blue-600" />
                     Agenda
                   </h1>
-                  <p className="text-sm text-slate-500 mt-0.5">
-                    {formattedMonth}
-                  </p>
                 </div>
 
                 {/* Quick Stats Pills */}

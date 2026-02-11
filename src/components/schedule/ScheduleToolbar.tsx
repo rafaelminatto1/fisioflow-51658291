@@ -150,11 +150,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
           >
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          <div className="px-3 min-w-[140px] text-center">
-            <span className="text-sm font-semibold text-gray-900 dark:text-white">
-              {formattedDateRange.charAt(0).toUpperCase() + formattedDateRange.slice(1)}
-            </span>
-          </div>
+          <div className="px-3 min-w-[140px] text-center" />
           <Button
             variant="ghost"
             size="sm"
@@ -289,9 +285,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
           >
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          <span className="text-sm font-semibold px-2 min-w-[120px] text-center">
-            {formattedDateRange.charAt(0).toUpperCase() + formattedDateRange.slice(1)}
-          </span>
+          <div className="min-w-[120px]" />
           <Button
             variant="ghost"
             size="sm"
@@ -376,9 +370,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
         >
           <ChevronLeft className="w-4 h-4" />
         </Button>
-        <span className="text-sm font-semibold">
-          {formattedDateShort.charAt(0).toUpperCase() + formattedDateShort.slice(1)}
-        </span>
+        <div className="min-w-[60px]" />
         <Button
           variant="ghost"
           size="sm"
