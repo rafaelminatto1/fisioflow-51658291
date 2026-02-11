@@ -1,23 +1,34 @@
-import { onRequest } from 'firebase-functions/v2/https';
-import { getPool } from '../init';
-import { authorizeRequest, getOrganizationId } from '../lib/auth-utils'; // Assuming auth utils exist
+import { onRequest, HttpsError } from 'firebase-functions/v2/https';
+import { getPool, getAdminAuth } from '../init';
+import { getOrganizationIdCached } from '../lib/cache-helpers';
 import { logger } from '../lib/logger';
 import { setCorsHeaders } from '../lib/cors';
 import { EVOLUTION_HTTP_OPTS } from '../lib/function-config';
+
+async function verifyAuthHeader(req: any): Promise<{ uid: string }> {
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      throw new HttpsError('unauthenticated', 'No bearer token');
+    }
+    const token = authHeader.split('Bearer ')[1];
+    try {
+      const decodedToken = await getAdminAuth().verifyIdToken(token);
+      return { uid: decodedToken.uid };
+    } catch (error) {
+      throw new HttpsError('unauthenticated', 'Invalid token');
+    }
+}
 
 /**
  * List evolutions for a patient
  */
 export const listEvolutionsHttp = onRequest(EVOLUTION_HTTP_OPTS, async (req, res) => {
   setCorsHeaders(res, req);
-  if (req.method === 'OPTIONS') {
-    res.status(204).send('');
-    return;
-  }
+  if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
 
   try {
-    const { uid } = await authorizeRequest(req);
-    const organizationId = await getOrganizationId(uid);
+    const { uid } = await verifyAuthHeader(req);
+    const organizationId = await getOrganizationIdCached(uid);
     const { patientId } = req.body;
 
     if (!patientId) {
@@ -34,7 +45,7 @@ export const listEvolutionsHttp = onRequest(EVOLUTION_HTTP_OPTS, async (req, res
     res.json({ data: result.rows });
   } catch (error: any) {
     logger.error('Error in listEvolutionsHttp:', error);
-    res.status(error.code === 'unauthenticated' ? 401 : 500).json({ error: error.message });
+    res.status(error.code === 'unauthenticated' ? 401 : 500).json({ error: error.message || 'Internal Server Error' });
   }
 });
 
@@ -43,14 +54,11 @@ export const listEvolutionsHttp = onRequest(EVOLUTION_HTTP_OPTS, async (req, res
  */
 export const getEvolutionHttp = onRequest(EVOLUTION_HTTP_OPTS, async (req, res) => {
     setCorsHeaders(res, req);
-    if (req.method === 'OPTIONS') {
-      res.status(204).send('');
-      return;
-    }
+    if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
   
     try {
-      const { uid } = await authorizeRequest(req);
-      const organizationId = await getOrganizationId(uid);
+      const { uid } = await verifyAuthHeader(req);
+      const organizationId = await getOrganizationIdCached(uid);
       const { evolutionId } = req.body;
   
       if (!evolutionId) {
@@ -72,7 +80,7 @@ export const getEvolutionHttp = onRequest(EVOLUTION_HTTP_OPTS, async (req, res) 
       res.json({ data: result.rows[0] });
     } catch (error: any) {
       logger.error('Error in getEvolutionHttp:', error);
-      res.status(error.code === 'unauthenticated' ? 401 : 500).json({ error: error.message });
+      res.status(error.code === 'unauthenticated' ? 401 : 500).json({ error: error.message || 'Internal Server Error' });
     }
 });
 
@@ -82,15 +90,12 @@ export const getEvolutionHttp = onRequest(EVOLUTION_HTTP_OPTS, async (req, res) 
  */
 export const createEvolutionHttp = onRequest(EVOLUTION_HTTP_OPTS, async (req, res) => {
   setCorsHeaders(res, req);
-  if (req.method === 'OPTIONS') {
-    res.status(204).send('');
-    return;
-  }
+  if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
 
   try {
-    const { uid } = await authorizeRequest(req);
-    const organizationId = await getOrganizationId(uid);
-    const { patientId, appointmentId, date, subjective, objective, assessment, plan } = req.body;
+    const { uid } = await verifyAuthHeader(req);
+    const organizationId = await getOrganizationIdCached(uid);
+    const { patientId, appointmentId, date, subjective, objective, assessment, plan, pain_level, attachments } = req.body;
 
     if (!patientId || !date) {
       res.status(400).json({ error: 'patientId e date são obrigatórios' });
@@ -99,16 +104,16 @@ export const createEvolutionHttp = onRequest(EVOLUTION_HTTP_OPTS, async (req, re
 
     const pool = getPool();
     const result = await pool.query(
-      `INSERT INTO evolutions (patient_id, therapist_id, organization_id, appointment_id, date, subjective, objective, assessment, plan)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO evolutions (patient_id, therapist_id, organization_id, appointment_id, date, subjective, objective, assessment, plan, pain_level, attachments)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
        RETURNING *`,
-      [patientId, uid, organizationId, appointmentId, date, subjective, objective, assessment, plan]
+      [patientId, uid, organizationId, appointmentId, date, subjective, objective, assessment, plan, pain_level, attachments ? JSON.stringify(attachments) : null]
     );
 
     res.status(201).json({ data: result.rows[0] });
   } catch (error: any) {
     logger.error('Error in createEvolutionHttp:', error);
-    res.status(error.code === 'unauthenticated' ? 401 : 500).json({ error: error.message });
+    res.status(error.code === 'unauthenticated' ? 401 : 500).json({ error: error.message || 'Internal Server Error' });
   }
 });
 
@@ -117,14 +122,11 @@ export const createEvolutionHttp = onRequest(EVOLUTION_HTTP_OPTS, async (req, re
  */
 export const updateEvolutionHttp = onRequest(EVOLUTION_HTTP_OPTS, async (req, res) => {
     setCorsHeaders(res, req);
-    if (req.method === 'OPTIONS') {
-      res.status(204).send('');
-      return;
-    }
+    if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
   
     try {
-      const { uid } = await authorizeRequest(req);
-      const organizationId = await getOrganizationId(uid);
+      const { uid } = await verifyAuthHeader(req);
+      const organizationId = await getOrganizationIdCached(uid);
       const { evolutionId, ...updates } = req.body;
   
       if (!evolutionId) {
@@ -132,15 +134,17 @@ export const updateEvolutionHttp = onRequest(EVOLUTION_HTTP_OPTS, async (req, re
         return;
       }
 
-      const allowedFields = ['date', 'subjective', 'objective', 'assessment', 'plan'];
+      const allowedFields = ['date', 'subjective', 'objective', 'assessment', 'plan', 'pain_level', 'attachments'];
       const setClauses: string[] = [];
       const values: any[] = [];
       let paramCount = 1;
 
       for (const key of Object.keys(updates)) {
           if(allowedFields.includes(key)) {
-              setClauses.push(`${key} = $${paramCount++}`);
-              values.push(updates[key]);
+              setClauses.push(`${key} = $${paramCount}`);
+              const value = key === 'attachments' ? JSON.stringify(updates[key]) : updates[key];
+              values.push(value);
+              paramCount++;
           }
       }
 
@@ -154,7 +158,7 @@ export const updateEvolutionHttp = onRequest(EVOLUTION_HTTP_OPTS, async (req, re
   
       const pool = getPool();
       const result = await pool.query(
-        `UPDATE evolutions SET ${setClauses.join(', ')} WHERE id = $${paramCount++} AND organization_id = $${paramCount++} RETURNING *`,
+        `UPDATE evolutions SET ${setClauses.join(', ')} WHERE id = $${paramCount} AND organization_id = $${paramCount + 1} RETURNING *`,
         values
       );
 
@@ -166,7 +170,7 @@ export const updateEvolutionHttp = onRequest(EVOLUTION_HTTP_OPTS, async (req, re
       res.json({ data: result.rows[0] });
     } catch (error: any) {
       logger.error('Error in updateEvolutionHttp:', error);
-      res.status(error.code === 'unauthenticated' ? 401 : 500).json({ error: error.message });
+      res.status(error.code === 'unauthenticated' ? 401 : 500).json({ error: error.message || 'Internal Server Error' });
     }
 });
 
@@ -175,14 +179,11 @@ export const updateEvolutionHttp = onRequest(EVOLUTION_HTTP_OPTS, async (req, re
  */
 export const deleteEvolutionHttp = onRequest(EVOLUTION_HTTP_OPTS, async (req, res) => {
     setCorsHeaders(res, req);
-    if (req.method === 'OPTIONS') {
-      res.status(204).send('');
-      return;
-    }
+    if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
   
     try {
-      const { uid } = await authorizeRequest(req);
-      const organizationId = await getOrganizationId(uid);
+      const { uid } = await verifyAuthHeader(req);
+      const organizationId = await getOrganizationIdCached(uid);
       const { evolutionId } = req.body;
   
       if (!evolutionId) {
@@ -204,6 +205,6 @@ export const deleteEvolutionHttp = onRequest(EVOLUTION_HTTP_OPTS, async (req, re
       res.status(200).json({ success: true });
     } catch (error: any) {
       logger.error('Error in deleteEvolutionHttp:', error);
-      res.status(error.code === 'unauthenticated' ? 401 : 500).json({ error: error.message });
+      res.status(error.code === 'unauthenticated' ? 401 : 500).json({ error: error.message || 'Internal Server Error' });
     }
 });

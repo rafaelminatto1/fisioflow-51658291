@@ -1,3 +1,5 @@
+import { CORS_ORIGINS } from '../init';
+
 /**
  * Firebase Functions Optimization Configuration
  *
