@@ -11,6 +11,7 @@ import { GamificationFeedbackProvider } from '@/contexts/GamificationFeedbackCon
 import { useAuth } from '@/contexts/AuthContext';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { AppLoadingSkeleton } from '@/components/ui/AppLoadingSkeleton';
 
 let _loggedAppInit = false;
 let _loggedNotificationsInit = false;
@@ -72,15 +73,7 @@ const persister = createAsyncStoragePersister({
   throttleTime: 3000,
 });
 
-// Loading fallback component
-const PageLoadingFallback = () => (
-  <div className="flex items-center justify-center min-h-screen">
-    <div className="flex flex-col items-center space-y-4">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      <p className="text-sm text-muted-foreground">Carregando...</p>
-    </div>
-  </div>
-);
+
 
 // Wrapper to sync auth user with Statsig
 const StatsigProviderWrapper = ({ children }: { children: React.ReactNode }) => {
@@ -189,7 +182,7 @@ const App = () => {
                       }}
                     >
                       <NotificationInitializer />
-                      <Suspense fallback={<PageLoadingFallback />}>
+                      <Suspense fallback={<AppLoadingSkeleton message="Carregando sistema..." />}>
                         <AppRoutes />
                         <VersionManager />
 
