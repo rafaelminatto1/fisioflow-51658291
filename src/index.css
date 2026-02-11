@@ -409,6 +409,19 @@ All colors MUST be HSL.
     padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
   }
 
+  /* Modal footer sempre visível no iOS mobile */
+  .modal-footer-safe {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
+  }
+
+  /* Garantir que modals mobile não ultrapassem viewport */
+  @media (max-width: 768px) {
+    .modal-mobile-container {
+      max-height: calc(100dvh - 1rem);
+      height: calc(100dvh - 1rem);
+    }
+  }
+
   /* iPhone 11+ optimizations */
   @media screen and (min-width: 390px) and (max-width: 430px) {
     .touch-target {
@@ -1771,6 +1784,33 @@ All colors MUST be HSL.
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Fix for Dialog content on mobile - ensure footer is always visible */
+@media (max-width: 768px) {
+  [data-radix-dialog-content][data-state="open"] {
+    max-height: calc(100dvh - 2rem);
+    max-width: calc(100vw - 2rem);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Ensure Dialog footer is always visible on mobile */
+  [data-radix-dialog-content][data-state="open"] [data-radix-dialog-footer] {
+    flex-shrink: 0;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
+    position: sticky;
+    bottom: 0;
+    background: inherit;
+    border-top: 1px solid hsl(var(--border));
+  }
+
+  /* Make dialog body scrollable */
+  [data-radix-dialog-content][data-state="open"] > div:not([data-radix-dialog-header]):not([data-radix-dialog-footer]) {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+  }
 }
 
 /* Custom scrollbar for modal content */

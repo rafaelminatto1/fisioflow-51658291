@@ -341,6 +341,11 @@ export default defineConfig(({ mode }) => {
               if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) {
                 return 'react-vendor';
               }
+              // Bibliotecas de drag & drop - DEPOIS de react-vendor para garantir a mesma instância
+              // IMPORTANTE: Isso precisa vir antes dos outros chunks pois @dnd-kit é usado em muitos lugares
+              if (id.includes('@dnd-kit') || id.includes('@hello-pangea/dnd')) {
+                return 'dnd-vendor';
+              }
               // Router depende de React, carregar após
               if (id.includes('react-router')) {
                 return 'router-vendor';
@@ -402,10 +407,6 @@ export default defineConfig(({ mode }) => {
               if (id.includes('zustand')) {
                 return 'zustand-vendor';
               }
-              // Bibliotecas de drag & drop
-              if (id.includes('@dnd-kit') || id.includes('@hello-pangea/dnd')) {
-                return 'dnd-vendor';
-              }
               // Demais dependências
               return 'vendor';
             }
@@ -423,8 +424,13 @@ export default defineConfig(({ mode }) => {
       include: [
         // React core - CRITICAL: deve ser sempre o primeiro
         'react',
+        'react-dom',
         'react-dom/client',
-        'scheduler',
+        // DnD kits - CRITICAL: garantir que use a mesma instância do React
+        '@dnd-kit/core',
+        '@dnd-kit/sortable',
+        '@dnd-kit/utilities',
+        '@hello-pangea/dnd',
         // React libraries que dependem do scheduler
         'react-router-dom',
         '@tanstack/react-query',

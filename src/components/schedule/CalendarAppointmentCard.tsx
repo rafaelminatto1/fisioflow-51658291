@@ -514,7 +514,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                 {/* Hover Actions (Edit/Drag). Com dragHandleOnly, mostrar handle sempre para descoberta. */}
                 {!isMobile && (isHovered || dragHandleOnly) && draggable && !isDragging && !selectionMode && (
                     <AnimatePresence>
-                        <motion.div
+                        <div
                             key="edit-action"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -522,6 +522,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                         >
                             <div
                                 role="button"
+                                aria-label="Opções do agendamento"
                                 className="p-0.5 rounded-sm hover:bg-black/10 dark:hover:bg-white/10 transition-colors backdrop-blur-[1px]"
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -533,8 +534,8 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                                     style={customSubtextStyle}
                                 />
                             </div>
-                        </motion.div>
-                        <motion.div
+                        </div>
+                        <div
                             key="drag-handle"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -544,6 +545,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                                 <div
                                     className="size-full min-w-[24px] min-h-[24px] flex items-center justify-center -m-0.5 p-0.5"
                                     draggable
+                                    aria-label="Arrastar agendamento"
                                     onDragStart={(e) => {
                                         e.stopPropagation();
                                         onOpenPopover(null);
@@ -565,12 +567,14 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                                     />
                                 </div>
                             ) : (
-                                <GripVertical
-                                    className={cn("w-3 h-3", statusStyles.subtext)}
-                                    style={customSubtextStyle}
-                                />
+                                <div aria-label="Arrastar agendamento">
+                                    <GripVertical
+                                        className={cn("w-3 h-3", statusStyles.subtext)}
+                                        style={customSubtextStyle}
+                                    />
+                                </div>
                             )}
-                        </motion.div>
+                        </div>
                     </AnimatePresence>
                 )}
             </div>

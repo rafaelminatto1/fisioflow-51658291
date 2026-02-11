@@ -14,7 +14,8 @@ import {
 import {
   CustomModal,
   CustomModalHeader,
-  CustomModalTitle
+  CustomModalTitle,
+  CustomModalFooter
 } from '@/components/ui/custom-modal';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -846,8 +847,8 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         </Tabs>
       </FormProvider>
 
-      <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 px-5 sm:px-6 py-4 border-t bg-background shrink-0">
-        <div className="flex justify-center sm:justify-start">
+      <CustomModalFooter isMobile={isMobile} className="flex-col-reverse sm:flex-row sm:justify-between gap-3 bg-background">
+        <div className="flex justify-center sm:justify-start w-full sm:w-auto">
           {currentMode === 'edit' && appointment && (
             <Button
               type="button"
@@ -862,7 +863,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
           )}
         </div>
 
-        <div className="flex gap-2 justify-end flex-wrap">
+        <div className="flex gap-2 justify-end flex-wrap w-full sm:w-auto">
           {currentMode === 'view' && appointment && (
             <Button
               type="button"
@@ -933,7 +934,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
             </Button>
           )}
         </div>
-      </div>
+      </CustomModalFooter>
 
       <QuickPatientModal
         open={quickPatientModalOpen}

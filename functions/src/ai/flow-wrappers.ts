@@ -14,10 +14,25 @@ import {
     soapGenerationFlow,
     type SoapGenerationInput,
     analyzePatientProgressFlow,
+    patientExecutiveSummaryFlow,
     generateExercisePlan,
 } from './flows';
 
 import { logger } from '../lib/logger';
+
+export async function patientSummaryHandler(request: CallableRequest) {
+    if (!request.auth) {
+        throw new Error('Unauthorized');
+    }
+
+    try {
+        const result = await patientExecutiveSummaryFlow(request.data);
+        return result;
+    } catch (e: any) {
+        logger.error('Genkit flow failed', e);
+        throw new Error('Summary generation failed');
+    }
+}
 
 export async function analyzeProgressHandler(request: CallableRequest) {
     if (!request.auth) {

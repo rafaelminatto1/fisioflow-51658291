@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { EvaluationForm, EvaluationFormWithFields, EvaluationFormField } from '@/types/clinical-forms';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { callFunction } from '@/integrations/firebase/functions';
 
 export type EvaluationFormFormData = {
   nome: string;
@@ -42,21 +43,39 @@ export function useEvaluationForms(tipo?: string) {
   return useQuery({
     queryKey: ['evaluation-forms', tipo],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'evaluation_forms'),
-        where('ativo', '==', true),
-        orderBy('nome')
-      );
+      try {
+        // Tentar API V2 (Postgres)
+        const response = await callFunction('listAssessmentTemplates', {});
+        if (response.data) {
+          // Adaptar formato Postgres (id, name, description) para formato esperado (nome, descricao)
+          return response.data.map((f: any) => ({
+            ...f,
+            nome: f.name,
+            descricao: f.description,
+            tipo: f.category || 'anamnese',
+            ativo: f.is_active
+          })) as EvaluationForm[];
+        }
+        throw new Error('Falha na API V2');
+      } catch (error) {
+        console.warn('[useEvaluationForms] API V2 falhou, usando fallback Firestore:', error);
+        
+        const q = firestoreQuery(
+          collection(db, 'evaluation_forms'),
+          where('ativo', '==', true),
+          orderBy('nome')
+        );
 
-      const snapshot = await getDocs(q);
-      let data = snapshot.docs.map(convertDocToEvaluationForm);
+        const snapshot = await getDocs(q);
+        let data = snapshot.docs.map(convertDocToEvaluationForm);
 
-      // Filter by tipo if provided
-      if (tipo) {
-        data = data.filter(f => f.tipo === tipo);
+        // Filter by tipo if provided
+        if (tipo) {
+          data = data.filter(f => f.tipo === tipo);
+        }
+
+        return data;
       }
-
-      return data;
     },
   });
 }

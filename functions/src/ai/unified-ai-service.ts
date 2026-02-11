@@ -113,6 +113,8 @@ export const aiServiceHandler = async (request: any) => {
       return soapGenerationHandler({ data: params });
     case 'analyzeProgress':
       return analyzeProgressHandler({ data: params });
+    case 'patientExecutiveSummary':
+      return patientSummaryHandler({ data: params });
 
     // Movement Analysis
     case 'movementAnalysis':
@@ -202,6 +204,9 @@ export const aiServiceHttpHandler = async (req: any, res: any) => {
         break;
       case 'analyzeProgress':
         result = await analyzeProgressHandler(mockRequest);
+        break;
+      case 'patientExecutiveSummary':
+        result = await patientSummaryHandler(mockRequest);
         break;
       case 'movementAnalysis':
         result = await movementAnalysisHandler(mockRequest);
