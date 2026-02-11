@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,16 +7,18 @@ import {
   Alert,
   TouchableOpacity,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Button, Input, Card } from '@/components';
+import { Button, Input } from '@/components';
 import { useColors } from '@/hooks/useColorScheme';
-import { useAppointments } from '@/hooks/useAppointments';
+import { useAppointments, getAppointmentByIdHook } from '@/hooks/useAppointments';
 import { usePatients } from '@/hooks/usePatients';
 import { useHaptics } from '@/hooks/useHaptics';
-import type { AppointmentBase } from '@/types';
+import type { AppointmentStatus } from '@/types';
+import { format } from 'date-fns';
 
 const APPOINTMENT_TYPES = [
   'Avaliação Inicial',
@@ -32,6 +34,15 @@ const APPOINTMENT_TYPES = [
 
 const DURATIONS = [30, 45, 60, 90, 120];
 
+const STATUS_OPTIONS: { label: string; value: AppointmentStatus }[] = [
+  { label: 'Agendado', value: 'scheduled' },
+  { label: 'Confirmado', value: 'confirmed' },
+  { label: 'Em Atendimento', value: 'in_progress' },
+  { label: 'Concluído', value: 'completed' },
+  { label: 'Cancelado', value: 'cancelled' },
+  { label: 'Faltou', value: 'no_show' },
+];
+
 export default function AppointmentFormScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -39,31 +50,54 @@ export default function AppointmentFormScreen() {
   const appointmentId = params.id as string | undefined;
 
 
-  const { create, update, isCreating, isUpdating } = useAppointments();
+  const { create, update, delete: deleteAppointment, isCreating, isUpdating, isDeleting } = useAppointments();
   const { data: patients } = usePatients({ status: 'active' });
   const { medium, success, error: hapticError } = useHaptics();
 
-  const [selectedPatient, setSelectedPatient] = useState<string>('');
-
-  // Use query params for initial state if available
-  const initialDate = params.date as string || '';
-  const initialTime = params.time as string || '';
-
-
-
-  const [date, setDate] = useState(initialDate);
-  const [time, setTime] = useState(initialTime);
+  const [isLoadingData, setIsLoadingData] = useState(!!appointmentId);
+  const [selectedPatient, setSelectedPatient] = useState<string>(params.patientId as string || '');
+  const [date, setDate] = useState(params.date as string || '');
+  const [time, setTime] = useState(params.time as string || '');
   const [type, setType] = useState('Fisioterapia');
-  const [duration, setDuration] = useState(45);
+  const [duration, setDuration] = useState(60);
+  const [status, setStatus] = useState<AppointmentStatus>('scheduled');
   const [notes, setNotes] = useState('');
 
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [showTypeModal, setShowTypeModal] = useState(false);
   const [showDurationModal, setShowDurationModal] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
 
   const isEditing = !!appointmentId;
 
+  useEffect(() => {
+    if (appointmentId) {
+      loadAppointmentData();
+    }
+  }, [appointmentId]);
+
+  const loadAppointmentData = async () => {
+    try {
+      const data = await getAppointmentByIdHook(appointmentId!);
+      if (data) {
+        setSelectedPatient(data.patientId);
+        const appointmentDate = new Date(data.date);
+        setDate(format(appointmentDate, 'dd/MM/yyyy'));
+        setTime(data.time || format(appointmentDate, 'HH:mm'));
+        setType(data.type);
+        setDuration(data.duration);
+        setStatus(data.status);
+        setNotes(data.notes || '');
+      }
+    } catch (err) {
+      Alert.alert('Erro', 'Não foi possível carregar os dados do agendamento.');
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
   const selectedPatientData = patients?.find((p) => p.id === selectedPatient);
+  const selectedStatusData = STATUS_OPTIONS.find((s) => s.value === status);
 
   const validateForm = () => {
     if (!selectedPatient) {
@@ -106,7 +140,7 @@ export default function AppointmentFormScreen() {
         type,
         date: appointmentDate,
         duration,
-        status: 'scheduled' as const,
+        status,
         notes: notes.trim() || undefined,
       };
 
@@ -126,6 +160,41 @@ export default function AppointmentFormScreen() {
       Alert.alert('Erro', 'Não foi possível salvar o agendamento. Tente novamente.');
     }
   };
+
+  const handleDelete = () => {
+    medium();
+    Alert.alert(
+      'Excluir Agendamento',
+      'Tem certeza que deseja excluir este agendamento? Esta ação não pode ser desfeita.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteAppointment(appointmentId!);
+              success();
+              Alert.alert('Sucesso', 'Agendamento excluído com sucesso');
+              router.back();
+            } catch (err) {
+              hapticError();
+              Alert.alert('Erro', 'Não foi possível excluir o agendamento.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  if (isLoadingData) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={{ marginTop: 16, color: colors.textSecondary }}>Carregando dados...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
@@ -149,11 +218,12 @@ export default function AppointmentFormScreen() {
             medium();
             setShowPatientModal(true);
           }}
+          disabled={isEditing}
         >
           <Text style={[styles.selectorText, { color: selectedPatientData ? colors.text : colors.textMuted }]}>
-            {selectedPatientData?.name || 'Selecione o paciente'}
+            {selectedPatientData?.name || (params.patientName as string) || 'Selecione o paciente'}
           </Text>
-          <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
+          {!isEditing && <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />}
         </TouchableOpacity>
 
         {/* Date and Time */}
@@ -195,18 +265,37 @@ export default function AppointmentFormScreen() {
           <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
         </TouchableOpacity>
 
-        {/* Duration Selection */}
-        <Text style={[styles.label, { color: colors.textSecondary }]}>Duração</Text>
-        <TouchableOpacity
-          style={[styles.selector, { backgroundColor: colors.surface, borderColor: colors.border }]}
-          onPress={() => {
-            medium();
-            setShowDurationModal(true);
-          }}
-        >
-          <Text style={[styles.selectorText, { color: colors.text }]}>{duration} minutos</Text>
-          <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
-        </TouchableOpacity>
+        <View style={styles.row}>
+          <View style={styles.col}>
+            {/* Duration Selection */}
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Duração</Text>
+            <TouchableOpacity
+              style={[styles.selector, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              onPress={() => {
+                medium();
+                setShowDurationModal(true);
+              }}
+            >
+              <Text style={[styles.selectorText, { color: colors.text }]}>{duration} min</Text>
+              <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.col}>
+            {/* Status Selection */}
+            <Text style={[styles.label, { color: colors.textSecondary }]}>Status</Text>
+            <TouchableOpacity
+              style={[styles.selector, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              onPress={() => {
+                medium();
+                setShowStatusModal(true);
+              }}
+            >
+              <Text style={[styles.selectorText, { color: colors.text }]}>{selectedStatusData?.label}</Text>
+              <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
+        </View>
 
         {/* Notes */}
         <Text style={[styles.label, { color: colors.textSecondary }]}>Observações</Text>
@@ -228,6 +317,17 @@ export default function AppointmentFormScreen() {
           loading={isCreating || isUpdating}
           style={styles.saveButton}
         />
+
+        {isEditing && (
+          <Button
+            title="Excluir Agendamento"
+            onPress={handleDelete}
+            variant="outline"
+            loading={isDeleting}
+            style={[styles.deleteButton, { borderColor: colors.error }]}
+            textStyle={{ color: colors.error }}
+          />
+        )}
 
         <View style={{ height: 32 }} />
       </ScrollView>
@@ -340,6 +440,43 @@ export default function AppointmentFormScreen() {
           </View>
         </SafeAreaView>
       </Modal>
+
+      {/* Status Selection Modal */}
+      <Modal
+        visible={showStatusModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowStatusModal(false)}
+      >
+        <SafeAreaView style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Status do Agendamento</Text>
+              <TouchableOpacity onPress={() => setShowStatusModal(false)}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.modalList}>
+              {STATUS_OPTIONS.map((s) => (
+                <TouchableOpacity
+                  key={s.value}
+                  style={[styles.modalItem, { borderBottomColor: colors.border, backgroundColor: status === s.value ? colors.primaryLight : 'transparent' }]}
+                  onPress={() => {
+                    medium();
+                    setStatus(s.value);
+                    setShowStatusModal(false);
+                  }}
+                >
+                  <Text style={[styles.modalItemText, { color: colors.text }]}>{s.label}</Text>
+                  {status === s.value && (
+                    <Ionicons name="checkmark" size={20} color={colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -396,6 +533,10 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: 8,
+  },
+  deleteButton: {
+    marginTop: 12,
+    borderWidth: 1,
   },
   modalOverlay: {
     flex: 1,
