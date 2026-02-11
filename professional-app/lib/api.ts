@@ -43,6 +43,9 @@ const API_URLS = {
     update: CLOUD_RUN_BASE_URL('updateExerciseV2'),
     delete: CLOUD_RUN_BASE_URL('deleteExerciseV2'),
   },
+  dashboard: {
+    stats: CLOUD_RUN_BASE_URL('getDashboardStatsV2'),
+  },
   partnerships: {
     list: CLOUD_RUN_BASE_URL('listPartnerships'),
     get: CLOUD_RUN_BASE_URL('getPartnership'),
@@ -134,6 +137,13 @@ export interface ApiEvolution {
     attachments?: string[];
     created_at: string;
     updated_at: string;
+}
+
+export interface ApiDashboardStats {
+    activePatients: number;
+    todayAppointments: number;
+    pendingAppointments: number;
+    completedAppointments: number;
 }
 
 export interface ApiPartnership {
@@ -319,6 +329,14 @@ async function fetchApi<T>(
     console.error(`[API] ${endpoint}:`, error);
     throw error;
   }
+}
+
+// ============================================================
+// DASHBOARD API
+// ============================================================
+export async function getDashboardStats(): Promise<ApiDashboardStats> {
+    const response = await fetchApi<ApiResponse<ApiDashboardStats>>(API_URLS.dashboard.stats);
+    return response.data;
 }
 
 // ============================================================

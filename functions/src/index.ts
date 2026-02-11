@@ -132,6 +132,11 @@ export {
     updateAssessmentHttp as updateAssessmentV2,
 } from './api/assessments';
 
+// API do Dashboard
+export {
+    getDashboardStatsHttp as getDashboardStatsV2,
+} from './api/dashboard';
+
 // API de Perfis (onCall with CORS so callFunctionHttp works from browser)
 export const getProfile = onCall(
     { cors: true },
