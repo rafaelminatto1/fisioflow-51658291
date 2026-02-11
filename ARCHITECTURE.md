@@ -61,7 +61,7 @@ FisioFlow is a comprehensive physical therapy management platform designed for B
 | Service | Purpose |
 |---------|---------|
 | **Cloud SQL** | Primary relational database (PostgreSQL) |
-| **Ably** | Real-time notifications and sync |
+| **Realtime Database** | Real-time notifications and sync |
 | **WhatsApp API** | Patient engagement and reminders |
 | **Google Calendar** | Professional/Patient schedule sync |
 | **Sentry** | Error tracking and performance |
@@ -87,7 +87,7 @@ FisioFlow is a comprehensive physical therapy management platform designed for B
 │  ┌──────────────────────▼──────────────────────────────────────┐    │
 │  │                   API Layer                                  │    │
 │  │  ┌──────────────────────────────────────────────────┐    │    │
-│  │  │ Firebase SDK (Firestore, Auth, Storage)            │    │    │
+│  │  │ Firebase SDK (Firestore, RTDB, Auth, Storage)     │    │    │
 │  │  │ Cloud Functions (V2 HTTP & Callable)              │    │    │
 │  │  │ External APIs (WhatsApp, Google, Stripe)          │    │    │
 │  │  └──────────────────────────────────────────────────┘    │    │
@@ -106,8 +106,8 @@ FisioFlow is a comprehensive physical therapy management platform designed for B
 │         │                │                │                         │
 │         ▼                ▼                ▼                         │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                   │
-│  │ Cloud SQL   │  │ Ably         │  │ Google      │                   │
-│  │ (Postgres)  │  │ (Realtime)  │  │ Secrets     │                   │
+│  │ Cloud SQL   │  │ Realtime    │  │ Google      │                   │
+│  │ (Postgres)  │  │ Database    │  │ Secrets     │                   │
 │  └─────────────┘  └─────────────┘  └─────────────┘                   │
 │                                                                   │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                   │
@@ -123,7 +123,7 @@ FisioFlow is a comprehensive physical therapy management platform designed for B
 
 1. **Write (Web App)**: API call to Cloud Function V2 → Save to Cloud SQL (Primary) → Sync to Firestore (Secondary/Sync Layer).
 2. **Write (Mobile App)**: Save to Firestore (Offline-first) → Background Trigger (syncPatientToSql) → Persist in Cloud SQL.
-3. **Real-time**: Cloud SQL change → Cloud Function Trigger → Publish to Ably → Reflect in all clients.
+3. **Real-time**: Cloud SQL change → Cloud Function Trigger → Update Firebase RTDB Trigger → Reflect in all clients via listeners.
 
 ### Patient Creation Flow
 
@@ -152,7 +152,7 @@ User Action
        ▼
 ┌──────────────────────┐
 │ Realtime Update      │
-│ (Ably)               │
+│ (Firebase RTDB)      │
 └─────┬────────────────┘
       │
       ▼
@@ -192,7 +192,7 @@ User Drag & Drop
       ▼
 ┌──────────────────────┐
 │ Realtime Sync        │
-│ (Ably)               │
+│ (Firebase RTDB)      │
 └─────┬────────────────┘
       │
       ▼
