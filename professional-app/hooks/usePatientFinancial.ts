@@ -30,6 +30,13 @@ export function usePatientFinancialSummary(patientId: string) {
   }) as UseQueryResult<ApiFinancialSummary | null, Error>;
 }
 
+export function useAllFinancialRecords(options?: { startDate?: string, endDate?: string }) {
+    return useQuery({
+        queryKey: ['allFinancialRecords', options],
+        queryFn: () => getAllFinancialRecords(options),
+    }) as UseQueryResult<(ApiFinancialRecord & { patient_name: string })[], Error>;
+}
+
 export function useCreateFinancialRecord() {
   const queryClient = useQueryClient();
 
