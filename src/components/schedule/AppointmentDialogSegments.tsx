@@ -300,12 +300,12 @@ export const TypeAndStatusSection = ({ disabled }: { disabled: boolean }) => {
                     onValueChange={(value) => setValue('status', value as AppointmentStatus)}
                     disabled={disabled}
                 >
-                    <SelectTrigger 
+                    <SelectTrigger
                         className="h-10 text-xs sm:text-sm"
                         aria-labelledby="status-label"
                         aria-required="true"
                     >
-                        <SelectValue />
+                        <SelectValue placeholder="Selecione o status" />
                     </SelectTrigger>
                     <SelectContent>
                         {APPOINTMENT_STATUSES.map((status) => (

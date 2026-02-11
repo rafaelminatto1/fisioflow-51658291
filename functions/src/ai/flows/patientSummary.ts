@@ -35,14 +35,12 @@ export const patientExecutiveSummaryFlow = ai.defineFlow(
         }),
     },
     async (input) => {
-        const historyText = input.history.map(h => 
+        const historyText = input.history.map(h =>
             `Data: ${h.date}
 Subjetivo: ${h.subjective || 'N/A'}
 Objetivo: ${h.objective || 'N/A'}
 Exercícios: ${h.exercises?.join(', ') || 'N/A'}`
-        ).join('
----
-');
+        ).join('\n---\n');
 
         const prompt = `
       Você é um Consultor Sênior de Fisioterapia.

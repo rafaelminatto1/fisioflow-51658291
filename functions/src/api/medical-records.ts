@@ -5,6 +5,7 @@ import { MedicalRecord, TreatmentSession, PainRecord } from '../types/models';
 import { logger } from '../lib/logger';
 import { setCorsHeaders } from '../lib/cors';
 import { triggerPatientRagReindex } from '../ai/rag/rag-index-maintenance';
+import { rtdb } from '../lib/rtdb';
 
 function parseBody(req: any): any { return typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {}); }
 function getAuthHeader(req: any): string | undefined { const h = req.headers?.authorization || req.headers?.Authorization; return Array.isArray(h) ? h[0] : h; }
@@ -71,7 +72,10 @@ export const createMedicalRecordHttp = onRequest(httpOpts, async (req, res) => {
     if (patientCheck.rows.length === 0) { res.status(404).json({ error: 'Paciente não encontrado' }); return; }
     const result = await pool.query(`INSERT INTO medical_records (patient_id, created_by, organization_id, type, title, content, record_date) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`, [patientId, auth.userId, auth.organizationId, type, title, content || '', recordDate || new Date().toISOString().split('T')[0]]);
     await triggerPatientRagReindexSafe(patientId, auth.organizationId, 'medical_record_created_http');
-    try { const realtime = await import('../realtime/publisher'); await realtime.publishPatientUpdate(patientId, { type: 'medical_record_created', recordId: result.rows[0].id }); } catch (er) { logger.error('Ably:', er); }
+    // RTDB: Notificar clientes sobre atualização (not critical for medical records)
+    try {
+      await rtdb.refreshPatients(auth.organizationId);
+    } catch (er) { logger.error('Erro RTDB:', er); }
     res.status(201).json({ data: result.rows[0] });
   } catch (e: unknown) {
     setCorsHeaders(res);
@@ -352,15 +356,11 @@ export const createMedicalRecordHandler = async (request: any) => {
     );
     await triggerPatientRagReindexSafe(patientId, auth.organizationId, 'medical_record_created');
 
-    // Publicar no Ably
+    // RTDB: Notificar clientes sobre atualização (not critical for medical records)
     try {
-      const realtime = await import('../realtime/publisher');
-      await realtime.publishPatientUpdate(patientId, {
-        type: 'medical_record_created',
-        recordId: result.rows[0].id,
-      });
+      await rtdb.refreshPatients(auth.organizationId);
     } catch (e) {
-      logger.error('Error publishing to Ably:', e);
+      logger.error('Erro RTDB:', e);
     }
 
     return { data: result.rows[0] as MedicalRecord };

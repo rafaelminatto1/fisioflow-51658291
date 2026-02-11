@@ -1,7 +1,7 @@
 
 /**
  * Publica atualizações no Firebase Realtime Database
- * Usado para sincronizar estado entre clientes (substitui Ably)
+ * Usado para sincronizar estado entre clientes via triggers
  */
 
 import * as admin from 'firebase-admin';
@@ -29,8 +29,16 @@ export const publishRealtime = async (path: string, data: any) => {
  */
 export const rtdb = {
   // Atualiza a agenda de uma organização
-  refreshAppointments: (orgId: string) => 
+  refreshAppointments: (orgId: string) =>
     publishRealtime(`orgs/${orgId}/agenda/refresh_trigger`, { force: true }),
+
+  // Atualiza a lista de pacientes (V1 - Firestore)
+  refreshPatients: (orgId: string) =>
+    publishRealtime(`orgs/${orgId}/patients/refresh_trigger`, { force: true }),
+
+  // Atualiza a lista de pacientes (V2 - Postgres)
+  refreshPatientsV2: (orgId: string) =>
+    publishRealtime(`orgs/${orgId}/patients-v2/refresh_trigger`, { force: true }),
 
   // Adiciona item ao feed de atividades
   pushActivity: (orgId: string, activity: { type: string; title: string; user: string }) => {

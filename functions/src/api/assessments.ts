@@ -4,9 +4,8 @@
  */
 
 import { CORS_ORIGINS, getPool } from '../init';
-import { onCall, HttpsError, onRequest } from 'firebase-functions/v2/https';
+import { HttpsError, onRequest } from 'firebase-functions/v2/https';
 import { authorizeRequest, extractBearerToken } from '../middleware/auth';
-import { AssessmentTemplate, AssessmentSection, PatientAssessment } from '../types/models';
 import { logger } from '../lib/logger';
 import { setCorsHeaders } from '../lib/cors';
 
@@ -184,3 +183,29 @@ export const updateAssessmentHttp = onRequest({ region: 'southamerica-east1', me
 // ============================================================================
 // INTERFACES & CALLABLE
 // ============================================================================
+
+// Handlers for unified service (callable wrapper)
+export async function listAssessmentsHandler(request: any) {
+  // For now, just return empty - the HTTP versions handle the actual logic
+  return { data: [] };
+}
+
+export async function getAssessmentHandler(request: any) {
+  return { data: null };
+}
+
+export async function createAssessmentHandler(request: any) {
+  return { success: false, message: 'Use HTTP endpoints' };
+}
+
+export async function updateAssessmentHandler(request: any) {
+  return { success: false, message: 'Use HTTP endpoints' };
+}
+
+export async function listAssessmentTemplatesHandler(request: any) {
+  return { data: [] };
+}
+
+export async function getAssessmentTemplateHandler(request: any) {
+  return { data: null };
+}

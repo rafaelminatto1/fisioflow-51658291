@@ -54,11 +54,6 @@ service cloud.firestore {
       return request.resource.data.size() < 1000000; // 1MB max per document
     }
 
-    // Verify if it is a server-side call (Admin SDK)
-    function isServer() {
-      return request.auth == null; // Be careful, this depends on context
-    }
-
     // ============================================================================================
     // USERS COLLECTION
     // ============================================================================================

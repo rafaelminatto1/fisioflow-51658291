@@ -159,6 +159,16 @@
       "disabled": false,
       "autoApprove": []
     },
+    "stitch": {
+      "type": "http",
+      "url": "https://stitch.googleapis.com/mcp",
+      "headers": {
+        "Accept": "application/json",
+        "X-Goog-Api-Key": "AQ.Ab8RN6KZoLwfpsQbZFwXNPvTFxgCXtOXIwG5ri_Z5KGBk3Lb3A"
+      },
+      "disabled": false,
+      "autoApprove": []
+    },
     "gcloud": {
       "command": "npx",
       "args": [

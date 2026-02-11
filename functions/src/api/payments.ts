@@ -242,17 +242,6 @@ export const createPaymentHandler = async (request: any) => {
 
     const payment = result.rows[0];
 
-    // Publicar no Ably
-    try {
-      const realtime = await import('../realtime/publisher');
-      await realtime.publishPatientUpdate(patientId, {
-        type: 'payment_created',
-        paymentId: payment.id,
-      });
-    } catch (e) {
-      logger.error('Error publishing to Ably:', e);
-    }
-
     return { data: payment as Payment };
   } catch (error: unknown) {
     logger.error('Error in createPayment:', error);

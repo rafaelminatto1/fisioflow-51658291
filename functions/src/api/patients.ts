@@ -16,6 +16,7 @@ import * as admin from 'firebase-admin';
 import { clearPatientRagIndex, triggerPatientRagReindex } from '../ai/rag/rag-index-maintenance';
 import { STANDARD_FUNCTION, withCors } from '../lib/function-config';
 import { getOrganizationIdCached } from '../lib/cache-helpers';
+import { rtdb } from '../lib/rtdb';
 
 // Configuração otimizada para funções de pacientes (com CORS)
 const PATIENT_HTTP_OPTS = withCors(STANDARD_FUNCTION, CORS_ORIGINS);
@@ -554,16 +555,11 @@ export const createPatientHttp = onRequest(
         logger.error(`[createPatientHttp] Failed to sync patient ${patient.id} to Firestore:`, fsError);
       }
 
-      // Publicar no Ably
+      // RTDB: Notificar clientes sobre atualização
       try {
-        const realtime = await import('../realtime/publisher');
-        await realtime.publishPatientEvent(organizationId, {
-          event: 'INSERT',
-          new: patient,
-          old: null,
-        });
+        await rtdb.refreshPatients(organizationId);
       } catch (err) {
-        logger.error('Erro ao publicar evento no Ably:', err);
+        logger.error('Erro ao publicar no RTDB:', err);
       }
 
       setCorsHeaders(res, req);
@@ -660,10 +656,10 @@ export const updatePatientHttp = onRequest(
         logger.error(`[updatePatientHttp] Failed to sync patient ${patientId} to Firestore:`, fsError);
       }
 
+      // RTDB: Notificar clientes sobre atualização
       try {
-        const realtime = await import('../realtime/publisher');
-        await realtime.publishPatientEvent(organizationId, { event: 'UPDATE', new: patient, old: existing.rows[0] });
-      } catch (err) { logger.error('Erro ao publicar evento no Ably:', err); }
+        await rtdb.refreshPatients(organizationId);
+      } catch (err) { logger.error('Erro ao publicar no RTDB:', err); }
       res.json({ data: patient });
     } catch (error: unknown) {
       if (error instanceof HttpsError && error.code === 'unauthenticated') { res.status(401).json({ error: error.message }); return; }
@@ -715,10 +711,10 @@ export const deletePatientHttp = onRequest(
         logger.error(`[deletePatientHttp] Failed to sync deletion of ${patientId} to Firestore:`, fsError);
       }
 
+      // RTDB: Notificar clientes sobre atualização
       try {
-        const realtime = await import('../realtime/publisher');
-        await realtime.publishPatientEvent(organizationId, { event: 'DELETE', new: null, old: result.rows[0] });
-      } catch (err) { logger.error('Erro ao publicar evento no Ably:', err); }
+        await rtdb.refreshPatients(organizationId);
+      } catch (err) { logger.error('Erro ao publicar no RTDB:', err); }
       res.json({ success: true });
     } catch (error: unknown) {
       if (error instanceof HttpsError && error.code === 'unauthenticated') { res.status(401).json({ error: error.message }); return; }
@@ -1066,16 +1062,11 @@ export const createPatientHandler = async (request: any) => {
       is_active: patient.is_active
     }));
 
-    // Publicar no Ably para atualização em tempo real
+    // RTDB: Notificar clientes sobre atualização
     try {
-      const realtime = await import('../realtime/publisher');
-      await realtime.publishPatientEvent(auth.organizationId, {
-        event: 'INSERT',
-        new: patient,
-        old: null,
-      });
+      await rtdb.refreshPatients(auth.organizationId);
     } catch (err) {
-      logger.error('Erro ao publicar evento no Ably:', err);
+      logger.error('Erro ao publicar no RTDB:', err);
     }
 
     return { data: patient as Patient };
@@ -1214,16 +1205,11 @@ export const updatePatientHandler = async (request: any) => {
       logger.error(`[updatePatient] Failed to sync patient ${id} to Firestore:`, fsError); // Changed from patientId to id
     }
 
-    // Publicar no Ably
+    // RTDB: Notificar clientes sobre atualização
     try {
-      const realtime = await import('../realtime/publisher');
-      await realtime.publishPatientEvent(auth.organizationId, {
-        event: 'UPDATE',
-        new: patient,
-        old: existing.rows[0],
-      });
+      await rtdb.refreshPatients(auth.organizationId);
     } catch (err) {
-      logger.error('Erro ao publicar evento no Ably:', err);
+      logger.error('Erro ao publicar no RTDB:', err);
     }
 
     return { data: patient as Patient };
@@ -1298,16 +1284,11 @@ export const deletePatientHandler = async (request: any) => {
       logger.error(`[deletePatient] Failed to sync deletion of ${patientId} to Firestore:`, fsError);
     }
 
-    // Publicar no Ably
+    // RTDB: Notificar clientes sobre atualização
     try {
-      const realtime = await import('../realtime/publisher');
-      await realtime.publishPatientEvent(auth.organizationId, {
-        event: 'DELETE',
-        new: null,
-        old: result.rows[0],
-      });
+      await rtdb.refreshPatients(auth.organizationId);
     } catch (err) {
-      logger.error('Erro ao publicar evento no Ably:', err);
+      logger.error('Erro ao publicar no RTDB:', err);
     }
 
     return { success: true };

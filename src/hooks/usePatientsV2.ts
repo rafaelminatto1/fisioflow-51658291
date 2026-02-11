@@ -3,7 +3,8 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { getAblyClient, ABLY_CHANNELS, ABLY_EVENTS } from '@/integrations/ably/client';
+import { getDatabase, ref, onValue, off } from 'firebase/database';
+import { app } from '@/integrations/firebase/app';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { PatientServiceV2, type PatientV2 } from '@/services/patientServiceV2';
@@ -59,26 +60,29 @@ export const useActivePatientsV2 = () => {
   const queryClient = useQueryClient();
   const [retryCount, _setRetryCount] = useState(0);
 
-  // Setup realtime subscription via Ably (Compatible with Backend V2 events)
+  // Setup realtime subscription via Firebase Realtime Database
   useEffect(() => {
     if (!organizationId) return;
 
-    const ably = getAblyClient();
-    const channel = ably.channels.get(ABLY_CHANNELS.patients(organizationId));
+    let db;
+    try {
+      db = getDatabase(app);
+    } catch (error) {
+      fisioLogger.debug('RTDB not available, patients V2 sync disabled', error, 'usePatientsV2');
+      return;
+    }
 
-    const handleUpdate = () => {
-      fisioLogger.debug('Realtime (Ably): Pacientes atualizados via V2', undefined, 'usePatientsV2');
-      queryClient.invalidateQueries({ queryKey: ['patients-v2', organizationId] });
-    };
+    const triggerRef = ref(db, `orgs/${organizationId}/patients-v2/refresh_trigger`);
 
-    channel.subscribe(ABLY_EVENTS.update, handleUpdate);
-    channel.subscribe(ABLY_EVENTS.create, handleUpdate); // V2 might send different event names
-    channel.subscribe('INSERT', handleUpdate); // Raw DB event
-    channel.subscribe('UPDATE', handleUpdate); // Raw DB event
-    channel.subscribe('DELETE', handleUpdate); // Raw DB event
+    const unsubscribe = onValue(triggerRef, (snapshot) => {
+      if (snapshot.exists()) {
+        fisioLogger.debug('Realtime (RTDB): Pacientes V2 atualizados', { organizationId }, 'usePatientsV2');
+        queryClient.invalidateQueries({ queryKey: ['patients-v2', organizationId] });
+      }
+    });
 
     return () => {
-      channel.unsubscribe();
+      off(triggerRef, 'value', unsubscribe);
     };
   }, [organizationId, queryClient, retryCount]);
 

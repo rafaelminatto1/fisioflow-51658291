@@ -14,6 +14,9 @@ import { initializeRemoteConfig } from '@/lib/firebase/remote-config';
 import { initCrashlytics } from '@/lib/firebase/crashlytics';
 import { initPerformanceMonitoring } from '@/lib/firebase/performance';
 
+// Novos serviços implementados (Firebase/Google Cloud 2025)
+import { initializeOnClient } from '@/lib/services/initialization';
+
 initSentry();
 initAppCheck();
 
@@ -37,6 +40,11 @@ initCrashlytics().catch((error) => {
 // Inicializar Firebase Performance Monitoring
 initPerformanceMonitoring().catch((error) => {
   logger.error('Failed to initialize Performance Monitoring', error, 'main.tsx');
+});
+
+// Inicializar novos serviços unificados (Performance, Remote Config, Analytics, Sentry)
+initializeOnClient().catch((error) => {
+  logger.error('Failed to initialize unified services', error, 'main.tsx');
 });
 
 // ============================================================================

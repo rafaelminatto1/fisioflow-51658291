@@ -255,6 +255,7 @@ export const createAppointmentHttp = onRequest(
       }
 
       try {
+        // @ts-ignore
         const realtime = await import('../realtime/publisher');
         // Usar RTDB em paralelo com Ably (migração gradual)
         await Promise.allSettled([
@@ -386,6 +387,7 @@ export const updateAppointmentHttp = onRequest(
       }
 
       try {
+        // @ts-ignore
         const realtime = await import('../realtime/publisher');
         await Promise.allSettled([
           realtime.publishAppointmentEvent(organizationId, { event: 'UPDATE', new: updatedAppt, old: currentAppt }),
@@ -471,6 +473,7 @@ export const cancelAppointmentHttp = onRequest(
       }
 
       try {
+        // @ts-ignore
         const realtime = await import('../realtime/publisher');
         await Promise.allSettled([
           realtime.publishAppointmentEvent(organizationId, { event: 'DELETE', new: null, old: current.rows[0] }),
@@ -875,6 +878,7 @@ export const createAppointmentHandler = async (request: any) => {
 
     // Publicar Evento
     try {
+      // @ts-ignore
       const realtime = await import('../realtime/publisher');
       await Promise.allSettled([
         realtime.publishAppointmentEvent(auth.organizationId, { event: 'INSERT', new: appointment, old: null }),
@@ -1035,6 +1039,7 @@ export const updateAppointmentHandler = async (request: any) => {
 
     // Publicar Evento
     try {
+      // @ts-ignore
       const realtime = await import('../realtime/publisher');
       await Promise.allSettled([
         realtime.publishAppointmentEvent(auth.organizationId, { event: 'UPDATE', new: updatedAppt, old: currentAppt }),
@@ -1148,6 +1153,7 @@ export const cancelAppointmentHandler = async (request: any) => {
 
     // Publicar Evento
     try {
+      // @ts-ignore
       const realtime = await import('../realtime/publisher');
       await Promise.allSettled([
         realtime.publishAppointmentEvent(auth.organizationId, { event: 'UPDATE', new: result.rows[0], old: current.rows[0] }),

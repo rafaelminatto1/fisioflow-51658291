@@ -10,7 +10,6 @@
 
 import { test } from '@playwright/test';
 import { testUsers } from './fixtures/test-data';
-import { disableAblyForTest } from './fixtures/disable-ably';
 
 const BASE_URL = 'http://localhost:8084';
 
@@ -19,7 +18,6 @@ test.use({ browserName: 'chromium' });
 test.setTimeout(120000);
 
 test('criação rápida de paciente e autocomplete no modal de agendamento', async ({ page }) => {
-  await disableAblyForTest(page);
 
   // Capture console logs
   page.on('console', msg => {
