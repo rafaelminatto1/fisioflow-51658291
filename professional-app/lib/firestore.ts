@@ -798,11 +798,67 @@ export async function createEvolution(
       ...evolutionData,
       professionalId,
       createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     });
     return docRef.id;
   } catch (error) {
     console.error('Error creating evolution:', error);
     throw error;
+  }
+}
+
+export async function updateEvolution(
+  evolutionId: string,
+  data: Partial<Evolution>
+): Promise<void> {
+  try {
+    const docRef = doc(db, 'evolutions', evolutionId);
+    await updateDoc(docRef, {
+      ...data,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (error) {
+    console.error('Error updating evolution:', error);
+    throw error;
+  }
+}
+
+export async function deleteEvolution(evolutionId: string): Promise<void> {
+  try {
+    const docRef = doc(db, 'evolutions', evolutionId);
+    await deleteDoc(docRef);
+  } catch (error) {
+    console.error('Error deleting evolution:', error);
+    throw error;
+  }
+}
+
+export async function getEvolutionById(evolutionId: string): Promise<Evolution | null> {
+  try {
+    const docRef = doc(db, 'evolutions', evolutionId);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      return {
+        id: docSnap.id,
+        patientId: data.patientId,
+        professionalId: data.professionalId || data.therapistId,
+        subjective: data.subjective,
+        objective: data.objective,
+        assessment: data.assessment,
+        plan: data.plan,
+        notes: data.notes,
+        painLevel: data.painLevel,
+        exercises: data.exercises,
+        attachments: data.attachments,
+        createdAt: convertTimestamp(data.createdAt),
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching evolution:', error);
+    return null;
   }
 }
 
