@@ -19,7 +19,7 @@ import { useColors } from '@/hooks/useColorScheme';
 import { Card } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useQuery } from '@tanstack/react-query';
-import { getPatientById } from '@/lib/firestore';
+import { getPatientByIdHook } from '@/hooks/usePatients';
 import { format } from 'date-fns';
 import { usePatientExercises, useEvolutions } from '@/hooks';
 import {
@@ -38,29 +38,24 @@ export default function PatientDetailScreen() {
   const colors = useColors();
   const { light, medium } = useHaptics();
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<'info' | 'history' | 'exercises' | 'financial'>((tab as any) || 'info');
+  const [selectedTab, setSelectedTab] = useState<'info' | 'financial' | 'evolutions' | 'exercises'>((tab as any) || 'info');
 
-  // Buscar dados reais do paciente
   const { data: patient, isLoading: isLoadingPatient, refetch } = useQuery({
     queryKey: ['patient', id],
-    queryFn: () => id ? getPatientById(id as string) : null,
+    queryFn: () => id ? getPatientByIdHook(id as string) : null,
     enabled: !!id,
   });
 
-  // Buscar evoluções do paciente
   const { evolutions, isLoading: isLoadingEvolutions, refetch: refetchEvolutions } = useEvolutions(id as string);
 
-  // Buscar registros financeiros do paciente
   const { data: financialRecords, isLoading: isLoadingFinancial, refetch: refetchFinancial } = usePatientFinancialRecords(id as string);
   const { data: financialSummary, refetch: refetchSummary } = usePatientFinancialSummary(id as string);
 
-  // Mutations para operações financeiras
   const createFinancialMutation = useCreateFinancialRecord();
   const updateFinancialMutation = useUpdateFinancialRecord();
   const deleteFinancialMutation = useDeleteFinancialRecord();
   const markAsPaidMutation = useMarkAsPaid();
 
-  // Modal states
   const [showFinancialModal, setShowFinancialModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState<ApiFinancialRecord | null>(null);
   const [formData, setFormData] = useState({
@@ -70,7 +65,6 @@ export default function PatientDetailScreen() {
     notes: '',
   });
 
-  // Handle auto-create from appointment completion
   useEffect(() => {
     if (autoCreate === 'true' && selectedTab === 'financial') {
       setShowFinancialModal(true);
@@ -155,7 +149,7 @@ export default function PatientDetailScreen() {
 
         {/* Tab Selector */}
         <View style={[styles.tabContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          {(['info', 'financial', 'exercises'] as const).map((tabKey) => (
+          {(['info', 'financial', 'evolutions'] as const).map((tabKey) => (
             <TouchableOpacity
               key={tabKey}
               style={[
@@ -182,58 +176,80 @@ export default function PatientDetailScreen() {
         {/* Tab Content */}
         {selectedTab === 'info' && (
           <>
-            <Card style={styles.contentCard}>
-              <View style={styles.infoSection}>
-                <Text style={[styles.infoSectionTitle, { color: colors.text }]}>Informações do Paciente</Text>
-
-                {patient?.email && (
-                  <View style={styles.infoRow}>
-                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Email:</Text>
-                    <Text style={[styles.infoValue, { color: colors.text }]}>{patient.email}</Text>
-                  </View>
-                )}
-                {patient?.phone && (
-                  <View style={styles.infoRow}>
-                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Telefone:</Text>
-                    <Text style={[styles.infoValue, { color: colors.text }]}>{patient.phone}</Text>
-                  </View>
-                )}
-                {patient?.birthDate && (
-                  <View style={styles.infoRow}>
-                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Nascimento:</Text>
-                    <Text style={[styles.infoValue, { color: colors.text }]}>
-                      {format(new Date(patient.birthDate), 'dd/MM/yyyy')}
-                    </Text>
-                  </View>
-                )}
-                {(patient?.condition || patient?.diagnosis) && (
-                  <View style={[styles.divider, { backgroundColor: colors.border }]} />
-                )}
-                {patient?.condition && (
-                  <View style={styles.infoRow}>
-                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Condição:</Text>
-                    <Text style={[styles.infoValue, { color: colors.text }]}>{patient.condition}</Text>
-                  </View>
-                )}
-                {patient?.diagnosis && (
-                  <View style={styles.infoRow}>
-                    <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Diagnóstico:</Text>
-                    <Text style={[styles.infoValue, { color: colors.text }]}>{patient.diagnosis}</Text>
-                  </View>
-                )}
-                {patient?.notes && (
-                  <>
-                    <View style={[styles.divider, { backgroundColor: colors.border }]} />
-                    <View style={styles.notesSection}>
-                      <Text style={[styles.notesLabel, { color: colors.text }]}>Observações:</Text>
-                      <Text style={[styles.notesText, { color: colors.text }]}>
-                        {patient.notes}
-                      </Text>
+            <View style={styles.infoSection}>
+                {/* Personal Information */}
+                <Card style={styles.infoCard}>
+                    <View style={styles.infoCardHeader}>
+                        <Ionicons name="person-circle-outline" size={20} color={colors.primary} />
+                        <Text style={[styles.infoSectionTitle, { color: colors.text }]}>Informações Pessoais</Text>
                     </View>
-                  </>
+                    <View style={styles.infoRow}>
+                        <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Nome:</Text>
+                        <Text style={[styles.infoValue, { color: colors.text }]}>{patient?.name || 'N/A'}</Text>
+                    </View>
+                    {patient?.birthDate && (
+                    <View style={styles.infoRow}>
+                        <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Nascimento:</Text>
+                        <Text style={[styles.infoValue, { color: colors.text }]}>
+                        {format(new Date(patient.birthDate), 'dd/MM/yyyy')}
+                        </Text>
+                    </View>
+                    )}
+                </Card>
+
+                {/* Contact Information */}
+                <Card style={styles.infoCard}>
+                    <View style={styles.infoCardHeader}>
+                        <Ionicons name="call-outline" size={20} color={colors.primary} />
+                        <Text style={[styles.infoSectionTitle, { color: colors.text }]}>Contato</Text>
+                    </View>
+                    {patient?.email && (
+                    <View style={styles.infoRow}>
+                        <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Email:</Text>
+                        <Text style={[styles.infoValue, { color: colors.text }]}>{patient.email}</Text>
+                    </View>
+                    )}
+                    {patient?.phone && (
+                    <View style={styles.infoRow}>
+                        <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Telefone:</Text>
+                        <Text style={[styles.infoValue, { color: colors.text }]}>{patient.phone}</Text>
+                    </View>
+                    )}
+                </Card>
+
+                {/* Clinical Data */}
+                <Card style={styles.infoCard}>
+                    <View style={styles.infoCardHeader}>
+                        <Ionicons name="pulse-outline" size={20} color={colors.primary} />
+                        <Text style={[styles.infoSectionTitle, { color: colors.text }]}>Dados Clínicos</Text>
+                    </View>
+                    {patient?.condition && (
+                    <View style={styles.infoRow}>
+                        <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Condição:</Text>
+                        <Text style={[styles.infoValue, { color: colors.text }]}>{patient.condition}</Text>
+                    </View>
+                    )}
+                    {patient?.diagnosis && (
+                    <View style={styles.infoRow}>
+                        <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Diagnóstico:</Text>
+                        <Text style={[styles.infoValue, { color: colors.text }]}>{patient.diagnosis}</Text>
+                    </View>
+                    )}
+                </Card>
+
+                {/* Observations */}
+                {patient?.notes && (
+                    <Card style={styles.infoCard}>
+                        <View style={styles.infoCardHeader}>
+                            <Ionicons name="document-text-outline" size={20} color={colors.primary} />
+                            <Text style={[styles.infoSectionTitle, { color: colors.text }]}>Observações</Text>
+                        </View>
+                        <Text style={[styles.notesText, { color: colors.text }]}>
+                            {patient.notes}
+                        </Text>
+                    </Card>
                 )}
-              </View>
-            </Card>
+            </View>
 
             <TouchableOpacity
               style={[styles.editButton, { backgroundColor: colors.primary }]}
@@ -248,7 +264,7 @@ export default function PatientDetailScreen() {
           </>
         )}
 
-        {selectedTab === 'exercises' && (
+        {selectedTab === 'evolutions' && (
           <View style={styles.evolutionsContainer}>
             <TouchableOpacity
               style={[styles.addEvolutionBtn, { backgroundColor: colors.primary }]}
@@ -275,13 +291,19 @@ export default function PatientDetailScreen() {
                   <Card style={styles.evolutionCard}>
                     <View style={styles.evolutionHeader}>
                       <Text style={[styles.evolutionDate, { color: colors.text }]}>
-                        {format(new Date(evolution.createdAt!), 'dd/MM/yyyy HH:mm')}
+                        {format(new Date(evolution.date!), 'dd/MM/yyyy HH:mm')}
                       </Text>
                       {evolution.painLevel !== undefined && (
                         <View style={[styles.painBadge, { backgroundColor: evolution.painLevel > 5 ? colors.errorLight : colors.successLight }]}>
                           <Text style={[styles.painText, { color: evolution.painLevel > 5 ? colors.error : colors.success }]}>
                             Dor: {evolution.painLevel}
                           </Text>
+                        </View>
+                      )}
+                       {evolution.attachments && evolution.attachments.length > 0 && (
+                        <View style={[styles.attachmentsBadge, { backgroundColor: colors.infoLight }]}>
+                            <Ionicons name="attach" size={14} color={colors.info} />
+                            <Text style={[styles.attachmentsText, { color: colors.info }]}>{evolution.attachments.length}</Text>
                         </View>
                       )}
                     </View>
@@ -294,6 +316,16 @@ export default function PatientDetailScreen() {
                       {evolution.objective && (
                         <Text style={[styles.soapItem, { color: colors.text }]} numberOfLines={1}>
                           <Text style={{ fontWeight: 'bold' }}>O: </Text>{evolution.objective}
+                        </Text>
+                      )}
+                       {evolution.assessment && (
+                        <Text style={[styles.soapItem, { color: colors.text }]} numberOfLines={1}>
+                          <Text style={{ fontWeight: 'bold' }}>A: </Text>{evolution.assessment}
+                        </Text>
+                      )}
+                       {evolution.plan && (
+                        <Text style={[styles.soapItem, { color: colors.text }]} numberOfLines={1}>
+                          <Text style={{ fontWeight: 'bold' }}>P: </Text>{evolution.plan}
                         </Text>
                       )}
                     </View>
@@ -359,7 +391,7 @@ export default function PatientDetailScreen() {
                 medium();
                 setEditingRecord(null);
                 setFormData({
-                  session_date: format(new Date(), 'yyyy-MM-dd'),
+                  session_date: format(new Date(), 'yyyy-MM-DD'),
                   session_value: '',
                   payment_method: '',
                   notes: '',
@@ -872,6 +904,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
+  attachmentsBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    gap: 4,
+    marginLeft: 8,
+  },
+  attachmentsText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
   soapPreview: {
     gap: 4,
     paddingRight: 24,
@@ -1003,6 +1048,7 @@ const styles = StyleSheet.create({
   },
   valueFinal: {
     fontSize: 15,
+    fontWeight: 'bold',
   },
   valuePaid: {
     fontSize: 13,
