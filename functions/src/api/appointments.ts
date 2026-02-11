@@ -1134,7 +1134,7 @@ export const cancelAppointmentHandler = async (request: any) => {
       throw new HttpsError('not-found', 'Agendamento não encontrado');
     }
 
-    const result = await pool.query(
+    await pool.query(
       `UPDATE appointments
        SET status = 'cancelado', notes = notes || $1, updated_at = NOW()
        WHERE id = $2 AND organization_id = $3
