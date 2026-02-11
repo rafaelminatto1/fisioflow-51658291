@@ -120,29 +120,30 @@ const TextBlock: React.FC<{
   return (
     <div className={cn(
       'rounded-xl border border-border/50 bg-card overflow-hidden transition-all duration-300',
-      'shadow-sm hover:shadow-md',
-      isFocused && `ring-2 ring-${accentColor}/10`,
+      'shadow-sm hover:shadow-md hover:border-border/70',
+      'animate-in fade-in-0 slide-in-from-bottom-2 duration-300',
+      isFocused && `ring-2 ring-${accentColor}/10 shadow-md`,
       className
     )}>
       {/* Top accent line */}
       <div className={cn(
-        'absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r opacity-0 transition-opacity duration-300',
-        isFocused && colors.from, colors.to
-      )} style={{ opacity: isFocused ? 1 : 0 }} />
+        'absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r transition-all duration-500',
+        isFocused ? `opacity-100 ${colors.from} ${colors.to}` : 'opacity-0'
+      )} />
 
       {/* Header */}
-      <div className="flex items-center gap-2.5 p-3.5 border-b border-border/40 bg-gradient-to-r from-muted/20 to-transparent">
+      <div className="flex items-center gap-2.5 p-3.5 border-b border-border/40 bg-gradient-to-r from-muted/30 to-muted/10 transition-colors duration-300">
         <div className={cn(
-          'p-1.5 rounded-lg transition-all duration-200',
+          'p-1.5 rounded-lg transition-all duration-300 ease-out',
           iconBg,
-          isFocused && 'scale-110'
+          isFocused ? 'scale-110 shadow-md' : 'hover:scale-105'
         )}>
           {icon}
         </div>
-        <div className="flex flex-col">
-          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+        <div className="flex flex-col flex-1 min-w-0">
+          <h3 className="text-sm font-semibold text-foreground truncate">{title}</h3>
           {hasContent && (
-            <span className="text-[10px] text-green-600 flex items-center gap-1 animate-in slide-in-from-top-1 duration-300">
+            <span className="text-[10px] text-green-600 dark:text-green-400 flex items-center gap-1 animate-in slide-in-from-top-1 duration-300">
               <CheckCircle2 className="h-2.5 w-2.5" />
               Preenchido
             </span>
@@ -209,27 +210,28 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
   return (
     <Card className={cn(
       'h-full flex flex-col border-border/50 shadow-lg overflow-hidden',
+      'animate-in fade-in-0 duration-300',
       className
     )}>
       {/* Enhanced Panel header */}
       <div className="relative">
         {/* Gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-primary/5 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/8 via-background to-primary/8 pointer-events-none" />
 
         <div className="relative flex items-center justify-between px-5 py-4 border-b border-border/50">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 border border-primary/25 shadow-sm transition-all duration-300 hover:shadow-md">
               <FileText className="h-5 w-5 text-primary" />
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <span className="font-semibold text-base text-foreground">Evolução</span>
-                <Badge variant="outline" className="text-[10px] font-normal h-5 px-1.5 rounded-full border-primary/30 text-primary bg-primary/5">
+                <Badge variant="outline" className="text-[10px] font-normal h-5 px-1.5 rounded-full border-primary/30 text-primary bg-primary/10 animate-in fade-in-0 zoom-in-95 duration-300">
                   V2 - Texto Livre
                 </Badge>
               </div>
               {completionPercent < 100 && (
-                <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+                <span className="text-[11px] text-muted-foreground flex items-center gap-1 animate-in fade-in-0 slide-in-from-left-2 duration-300">
                   <AlertCircle className="h-3 w-3" />
                   {totalBlocks - filledBlocks} bloco{totalBlocks - filledBlocks !== 1 ? 's' : ''} pendente{totalBlocks - filledBlocks !== 1 ? 's' : ''}
                 </span>
@@ -239,7 +241,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 
           <div className="flex items-center gap-3">
             {autoSaveEnabled && lastSaved && (
-              <Badge variant="outline" className="text-xs h-7 px-2.5 gap-1.5 rounded-lg border-green-200 bg-green-50 text-green-700">
+              <Badge variant="outline" className="text-xs h-7 px-2.5 gap-1.5 rounded-lg border-green-300 dark:border-green-700 bg-green-100 dark:bg-green-950 text-green-700 dark:text-green-400 shadow-sm transition-all duration-300 hover:shadow">
                 <CheckCircle2 className="h-3 w-3" />
                 <div className="flex flex-col items-start leading-tight">
                   <span className="text-[9px] opacity-70">Salvo às</span>
@@ -252,8 +254,8 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
             <Badge
               variant={completionPercent === 100 ? 'default' : 'secondary'}
               className={cn(
-                'text-xs h-7 px-2.5 rounded-lg',
-                completionPercent === 100 && 'bg-gradient-to-r from-primary to-primary/80'
+                'text-xs h-7 px-2.5 rounded-lg transition-all duration-300',
+                completionPercent === 100 && 'bg-gradient-to-r from-primary to-primary/80 shadow-md animate-pulse'
               )}
             >
               {filledBlocks}/{totalBlocks} blocos
@@ -263,30 +265,34 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
       </div>
 
       {/* Enhanced Progress bar */}
-      <div className="w-full h-1.5 bg-muted relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20" />
+      <div className="w-full h-1.5 bg-muted/80 relative overflow-hidden shadow-inner">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10" />
         <div
-          className="h-full bg-gradient-to-r from-primary via-primary/90 to-primary transition-all duration-500 ease-out relative"
+          className="h-full bg-gradient-to-r from-primary via-primary/95 to-primary/90 transition-all duration-700 ease-out relative"
           style={{ width: `${completionPercent}%` }}
         >
           {/* Animated shimmer effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer" />
+          {/* Glow effect at the end */}
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-full bg-white/50 blur-[2px]" />
         </div>
       </div>
 
       {/* Blocks */}
       <CardContent className="flex-1 overflow-y-auto p-5 space-y-5">
         {/* Block 1: Header (auto-filled) */}
-        <EvolutionHeaderBlock
-          therapistName={data.therapistName}
-          therapistCrefito={data.therapistCrefito}
-          sessionDate={data.sessionDate}
-          sessionNumber={data.sessionNumber}
-          totalSessions={data.totalSessions}
-        />
+        <div className="animate-in fade-in-0 slide-in-from-top-2 duration-300">
+          <EvolutionHeaderBlock
+            therapistName={data.therapistName}
+            therapistCrefito={data.therapistCrefito}
+            sessionDate={data.sessionDate}
+            sessionNumber={data.sessionNumber}
+            totalSessions={data.totalSessions}
+          />
+        </div>
 
         {/* Block 2 & 3: Pain Level (EVA) + Patient Report - Side by Side */}
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.5fr)] gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.5fr)] gap-4 animate-in fade-in-0 slide-in-from-top-3 duration-300 delay-100">
           {/* Pain Level (EVA) */}
           <PainLevelBlock
             painLevel={data.painLevel}
@@ -313,46 +319,54 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
         </div>
 
         {/* Block 4: Main Evolution Text */}
-        <TextBlock
-          icon={<FileText className="h-4 w-4 text-violet-600" />}
-          iconBg="bg-violet-500/10 border border-violet-500/20"
-          title="Texto de Evolução"
-          placeholder={`Descreva a evolução da sessão livremente...\n\nExemplo:\nOBJETIVO:\nReeducação da coordenação muscular entre musculatura escapular e GU\nEstabilização dinâmica da GU durante abdução e flexão de ombro.\n\nPaciente apresentou melhora da ADM em flexão...`}
-          hint="Texto livre para descrever a evolução - use como preferir (pode incluir objetivo, achados, conduta)"
-          value={data.evolutionText}
-          onValueChange={(val) => handleFieldChange('evolutionText', val)}
-          disabled={disabled}
-          rows={12}
-          accentColor="violet"
-        />
+        <div className="animate-in fade-in-0 slide-in-from-top-4 duration-300 delay-150">
+          <TextBlock
+            icon={<FileText className="h-4 w-4 text-violet-600" />}
+            iconBg="bg-violet-500/10 border border-violet-500/20"
+            title="Texto de Evolução"
+            placeholder={`Descreva a evolução da sessão livremente...\n\nExemplo:\nOBJETIVO:\nReeducação da coordenação muscular entre musculatura escapular e GU\nEstabilização dinâmica da GU durante abdução e flexão de ombro.\n\nPaciente apresentou melhora da ADM em flexão...`}
+            hint="Texto livre para descrever a evolução - use como preferir (pode incluir objetivo, achados, conduta)"
+            value={data.evolutionText}
+            onValueChange={(val) => handleFieldChange('evolutionText', val)}
+            disabled={disabled}
+            rows={12}
+            accentColor="violet"
+          />
+        </div>
 
         <Separator className="my-3" />
 
         {/* Block 5: Procedures Checklist */}
-        <ProcedureChecklistBlock
-          procedures={data.procedures}
-          onChange={(procs) => handleFieldChange('procedures', procs)}
-          disabled={disabled}
-        />
+        <div className="animate-in fade-in-0 slide-in-from-top-5 duration-300 delay-200">
+          <ProcedureChecklistBlock
+            procedures={data.procedures}
+            onChange={(procs) => handleFieldChange('procedures', procs)}
+            disabled={disabled}
+          />
+        </div>
 
         {/* Block 6: Exercises */}
-        <ExerciseBlockV2
-          exercises={data.exercises}
-          onChange={(exs) => handleFieldChange('exercises', exs)}
-          disabled={disabled}
-        />
+        <div className="animate-in fade-in-0 slide-in-from-top-6 duration-300 delay-250">
+          <ExerciseBlockV2
+            exercises={data.exercises}
+            onChange={(exs) => handleFieldChange('exercises', exs)}
+            disabled={disabled}
+          />
+        </div>
 
         {/* Block 6.5: Measurements */}
-        <MeasurementsBlock
-          measurements={data.measurements || []}
-          onChange={(meas) => handleFieldChange('measurements', meas)}
-          disabled={disabled}
-        />
+        <div className="animate-in fade-in-0 slide-in-from-top-7 duration-300 delay-300">
+          <MeasurementsBlock
+            measurements={data.measurements || []}
+            onChange={(meas) => handleFieldChange('measurements', meas)}
+            disabled={disabled}
+          />
+        </div>
 
         <Separator className="my-3" />
 
         {/* Block 7: Observations, Home Care, Attachments - 3 columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 animate-in fade-in-0 slide-in-from-top-8 duration-300 delay-[350ms]">
           {/* Observations */}
           <TextBlock
             icon={<StickyNote className="h-4 w-4 text-amber-600" />}
@@ -388,11 +402,11 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 
         {/* Save button (when not using auto-save) - Enhanced */}
         {onSave && (
-          <div className="flex justify-end pt-3">
+          <div className="flex justify-end pt-3 animate-in fade-in-0 duration-500">
             <Button
               onClick={onSave}
               disabled={disabled || isSaving}
-              className="gap-2 rounded-xl shadow-sm hover:shadow-md transition-all"
+              className="gap-2 rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
               size="lg"
             >
               {isSaving ? (
