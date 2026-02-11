@@ -142,6 +142,14 @@ export const useComputerVision = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const landmarkerRef = useRef<unknown>(null);
   const requestRef = useRef<number>();
+  
+  // Exercise Logic State
+  const exerciseStateRef = useRef<{
+    stage: 'up' | 'down';
+    lastRepTime: number;
+    reps: number;
+    minAngle: number;
+  }>({ stage: 'up', lastRepTime: 0, reps: 0, minAngle: 180 });
 
   const { load: loadMediaPipe, isLoaded: mediaPipeLoaded } = useMediaPipeVision();
 
@@ -192,13 +200,59 @@ export const useComputerVision = () => {
     if (!ctx) return;
 
     const startTimeMs = performance.now();
-    const result = landmarkerRef.current.detectForVideo(video, startTimeMs);
+    let result: any; 
+    
+    try {
+        result = landmarkerRef.current.detectForVideo(video, startTimeMs);
+    } catch (e) {
+        // Ignore frame errors
+        requestRef.current = requestAnimationFrame(processFrame);
+        return;
+    }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (result.landmarks && result.landmarks.length > 0) {
       const landmarks = result.landmarks[0];
       
+      // Draw Skeleton
+      if (settings.showSkeleton) {
+        // Feedback Color based on form
+        const feedbackColor = getBiomechanicalFeedbackColor(landmarks, currentExercise || '');
+        drawSkeleton(ctx, landmarks, canvas.width, canvas.height, feedbackColor);
+      }
+      
+      // Multi-Exercise Logic
+      const state = exerciseStateRef.current;
+
+      if (currentExercise === 'squat') {
+        const hip = landmarks[24]; const knee = landmarks[26]; const ankle = landmarks[28];
+        if (hip && knee && ankle) {
+           const angle = calculateAngle(hip, knee, ankle);
+           handleRepetition(angle, 160, 100, state);
+           if (settings.showAngles) drawAngle(ctx, knee, angle, canvas.width, canvas.height);
+        }
+      } else if (currentExercise === 'pushup') {
+        const shoulder = landmarks[12]; const elbow = landmarks[14]; const wrist = landmarks[16];
+        if (shoulder && elbow && wrist) {
+           const angle = calculateAngle(shoulder, elbow, wrist);
+           handleRepetition(angle, 150, 70, state);
+           if (settings.showAngles) drawAngle(ctx, elbow, angle, canvas.width, canvas.height);
+        }
+      } else if (currentExercise === 'lateral_raise') {
+        const hip = landmarks[24]; const shoulder = landmarks[12]; const elbow = landmarks[14];
+        if (hip && shoulder && elbow) {
+           const angle = calculateAngle(hip, shoulder, elbow);
+           handleRepetition(angle, 30, 85, state, 'inverse'); // Starts low, goes high
+           if (settings.showAngles) drawAngle(ctx, shoulder, angle, canvas.width, canvas.height);
+        }
+      }
+
+      // Sync Reps to Session
+      if (state.reps !== currentSession?.totalRepetitions) {
+         setCurrentSession(prev => prev ? ({ ...prev, totalRepetitions: state.reps }) : null);
+      }
+
       // Basic FPS calculation
       setProcessingStats({
         fps: Math.round(1000 / (performance.now() - startTimeMs + 1)),
@@ -208,7 +262,101 @@ export const useComputerVision = () => {
     }
 
     requestRef.current = requestAnimationFrame(processFrame);
-  }, [isActive]);
+  }, [isActive, currentExercise, settings]);
+
+  // Helper: Calculate Angle
+  const calculateAngle = (a: PoseKeypoint, b: PoseKeypoint, c: PoseKeypoint) => {
+    const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
+    let angle = Math.abs(radians * 180.0 / Math.PI);
+    if (angle > 180.0) angle = 360 - angle;
+    return angle;
+  };
+
+  // Helper: Repetition Handler
+  const handleRepetition = (angle: number, thresholdUp: number, thresholdDown: number, state: any, mode: 'normal' | 'inverse' = 'normal') => {
+    if (mode === 'normal') {
+      if (angle > thresholdUp) {
+        if (state.stage === 'down' && state.minAngle < thresholdDown) {
+          state.reps += 1;
+          state.minAngle = 180;
+        }
+        state.stage = 'up';
+      }
+      if (angle < thresholdDown + 20) {
+        state.stage = 'down';
+        if (angle < state.minAngle) state.minAngle = angle;
+      }
+    } else {
+      // Inverse (for raises, where "down" is small angle and "up" is large)
+      if (angle < thresholdUp) {
+        if (state.stage === 'up' && state.maxAngle > thresholdDown) {
+          state.reps += 1;
+          state.maxAngle = 0;
+        }
+        state.stage = 'down';
+      }
+      if (angle > thresholdDown - 20) {
+        state.stage = 'up';
+        if (angle > (state.maxAngle || 0)) state.maxAngle = angle;
+      }
+    }
+  };
+
+  const getBiomechanicalFeedbackColor = (landmarks: any, exercise: string): string => {
+    // Logic to detect compensations
+    // Example: If hip drops too much in pushup (arch back)
+    if (exercise === 'pushup') {
+      const shoulder = landmarks[12];
+      const hip = landmarks[24];
+      const ankle = landmarks[28];
+      if (shoulder && hip && ankle) {
+        const alignment = calculateAngle(shoulder, hip, ankle);
+        return alignment < 160 ? '#ef4444' : '#22c55e'; // Red if back is arched
+      }
+    }
+    return '#22c55e'; // Default Green
+  };
+
+  // Helper: Draw Skeleton
+  const drawSkeleton = (ctx: CanvasRenderingContext2D, landmarks: PoseKeypoint[], w: number, h: number, color = '#00ff00') => {
+     ctx.lineWidth = 3;
+     ctx.strokeStyle = color;
+     
+     // Connect keypoints (Simplified connection list for legs/arms/torso)
+     const connections = [
+       [11, 12], [11, 13], [13, 15], // Arms L
+       [12, 14], [14, 16], // Arms R
+       [11, 23], [12, 24], // Torso
+       [23, 24],
+       [23, 25], [25, 27], // Legs L
+       [24, 26], [26, 28]  // Legs R
+     ];
+
+     connections.forEach(([i, j]) => {
+        if (landmarks[i] && landmarks[j]) {
+           ctx.beginPath();
+           ctx.moveTo(landmarks[i].x * w, landmarks[i].y * h);
+           ctx.lineTo(landmarks[j].x * w, landmarks[j].y * h);
+           ctx.stroke();
+        }
+     });
+     
+     // Draw points
+     ctx.fillStyle = '#ff0000';
+     [11,12,13,14,15,16,23,24,25,26,27,28].forEach(idx => {
+        if(landmarks[idx]) {
+           ctx.beginPath();
+           ctx.arc(landmarks[idx].x * w, landmarks[idx].y * h, 4, 0, 2 * Math.PI);
+           ctx.fill();
+        }
+     });
+  };
+
+  const drawAngle = (ctx: CanvasRenderingContext2D, point: PoseKeypoint, angle: number, w: number, h: number) => {
+      ctx.fillStyle = 'white';
+      ctx.font = '16px Arial';
+      ctx.fillText(`${Math.round(angle)}°`, point.x * w + 10, point.y * h);
+  };
 
   const startExerciseSession = (type: string) => {
     setCurrentExercise(type);
