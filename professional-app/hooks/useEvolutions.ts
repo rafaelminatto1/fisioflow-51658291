@@ -1,6 +1,35 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getPatientEvolutions, createEvolution, updateEvolution, deleteEvolution, Evolution } from '@/lib/firestore';
+import { 
+    getEvolutions as apiGetEvolutions, 
+    createEvolution as apiCreateEvolution, 
+    updateEvolution as apiUpdateEvolution, 
+    deleteEvolution as apiDeleteEvolution, 
+    ApiEvolution 
+} from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
+import type { Evolution } from '@/types';
+
+// Map API evolution type to app Evolution type
+function mapApiEvolution(apiEvolution: ApiEvolution): Evolution {
+    return {
+      id: apiEvolution.id,
+      patientId: apiEvolution.patient_id,
+      professionalId: apiEvolution.therapist_id,
+      appointmentId: apiEvolution.appointment_id,
+      date: new Date(apiEvolution.date),
+      subjective: apiEvolution.subjective,
+      objective: apiEvolution.objective,
+      assessment: apiEvolution.assessment,
+      plan: apiEvolution.plan,
+      createdAt: new Date(apiEvolution.created_at),
+      // The following fields are not in the new table, so we use defaults
+      notes: '', 
+      painLevel: 0,
+      exercises: [],
+      attachments: [],
+    };
+}
+
 
 export function useEvolutions(patientId: string) {
   const queryClient = useQueryClient();
@@ -8,28 +37,53 @@ export function useEvolutions(patientId: string) {
 
   const query = useQuery({
     queryKey: ['patientEvolutions', patientId],
-    queryFn: () => getPatientEvolutions(patientId),
+    queryFn: async () => {
+        const data = await apiGetEvolutions(patientId);
+        return data.map(mapApiEvolution);
+    },
     enabled: !!patientId,
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: Omit<Evolution, 'id' | 'professionalId' | 'createdAt'>) =>
-      createEvolution(user!.id, data),
+    mutationFn: async (data: Omit<Evolution, 'id' | 'professionalId' | 'createdAt'>) => {
+        if (!user) throw new Error("User not authenticated");
+        const apiData: Partial<ApiEvolution> = {
+            patient_id: data.patientId,
+            appointment_id: data.appointmentId,
+            date: data.date.toISOString(),
+            subjective: data.subjective,
+            objective: data.objective,
+            assessment: data.assessment,
+            plan: data.plan,
+        };
+        const result = await apiCreateEvolution(apiData);
+        return mapApiEvolution(result);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patientEvolutions', patientId] });
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string, data: Partial<Evolution> }) =>
-      updateEvolution(id, data),
-    onSuccess: () => {
+    mutationFn: async ({ id, data }: { id: string, data: Partial<Evolution> }) => {
+        const apiData: Partial<ApiEvolution> = {
+            date: data.date?.toISOString(),
+            subjective: data.subjective,
+            objective: data.objective,
+            assessment: data.assessment,
+            plan: data.plan,
+        };
+        const result = await apiUpdateEvolution(id, apiData);
+        return mapApiEvolution(result);
+    },
+    onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['patientEvolutions', patientId] });
+      queryClient.invalidateQueries({ queryKey: ['evolution', id] });
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteEvolution(id),
+    mutationFn: (id: string) => apiDeleteEvolution(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patientEvolutions', patientId] });
     },

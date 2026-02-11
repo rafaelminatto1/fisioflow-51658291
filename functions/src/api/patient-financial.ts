@@ -105,6 +105,34 @@ async function listPatientFinancialRecordsLogic(auth: any, data: any) {
     return { data: records };
 }
 
+async function listAllFinancialRecordsLogic(auth: any, data: any) {
+    const { limit = 100, offset = 0, startDate, endDate } = data;
+
+    let query = `
+      SELECT pfr.*, p.name as patient_name
+      FROM patient_financial_records pfr
+      JOIN patients p ON pfr.patient_id = p.id
+      WHERE pfr.organization_id = $1
+    `;
+    const params: any[] = [auth.organizationId];
+    let paramCount = 1;
+
+    if (startDate) {
+        query += ` AND pfr.session_date >= $${++paramCount}`;
+        params.push(startDate);
+    }
+    if (endDate) {
+        query += ` AND pfr.session_date <= $${++paramCount}`;
+        params.push(endDate);
+    }
+
+    query += ` ORDER BY pfr.session_date DESC, pfr.created_at DESC LIMIT $${++paramCount} OFFSET $${++paramCount}`;
+    params.push(limit, offset);
+
+    const result = await getPool().query(query, params);
+    return { data: result.rows };
+}
+
 async function getPatientFinancialSummaryLogic(auth: any, data: any) {
     const { patientId } = data;
 
@@ -419,6 +447,17 @@ export const markAsPaidHttp = onRequest(httpOpts, async (req, res) => {
         const result = await markAsPaidLogic(auth, parseBody(req));
         res.json(result);
     } catch (e) { handleError('markAsPaidHttp', e, res); }
+});
+
+export const listAllFinancialRecordsHttp = onRequest(httpOpts, async (req, res) => {
+    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
+    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+    setCorsHeaders(res);
+    try {
+        const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
+        const result = await listAllFinancialRecordsLogic(auth, parseBody(req));
+        res.json(result);
+    } catch (e) { handleError('listAllFinancialRecordsHttp', e, res); }
 });
 
 // ============================================================================

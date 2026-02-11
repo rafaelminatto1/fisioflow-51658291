@@ -25,7 +25,7 @@ FisioFlow is a hybrid ecosystem leveraging Firebase and Google Cloud SQL. It is 
 2. **Database**: 
    - Relational: [Cloud SQL (Postgres)](file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/scripts/migration/cloudsql-schema.sql)
    - Real-time/NoSQL: [Firestore](file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/firestore.rules)
-3. **Real-time**: [Ably](https://ably.com) for event publishing from Functions to Client.
+3. **Real-time**: Firebase Realtime Database for pulse-based synchronization.
 4. **AI**: Google Vertex AI (Gemini Pro) for clinical intelligence.
 
 ## ⚠️ Critical Files
