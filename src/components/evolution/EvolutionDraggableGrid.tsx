@@ -951,7 +951,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                                 <TooltipProvider>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" onClick={handleResetLayout} className="h-8.5 w-8.5 text-muted-foreground hover:text-destructive">
+                                            <Button variant="ghost" size="icon" onClick={handleResetLayout} aria-label="Redefinir layout para o padrão" className="h-8.5 w-8.5 text-muted-foreground hover:text-destructive">
                                                 <RotateCcw className="h-3.5 w-3.5" />
                                             </Button>
                                         </TooltipTrigger>

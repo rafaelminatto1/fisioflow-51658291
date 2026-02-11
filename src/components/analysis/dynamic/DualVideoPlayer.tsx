@@ -180,11 +180,11 @@ const DualVideoPlayer: React.FC<DualVideoPlayerProps> = ({ videoA, videoB, syncO
             {/* Controls */}
             <Card className="p-4 space-y-4">
                 <div className="flex items-center gap-4">
-                    <Button variant="outline" size="icon" onClick={() => handleSeek([currentTime - 5])}><SkipBack className="w-4 h-4" /></Button>
-                    <Button onClick={togglePlay} className="w-12">
+                    <Button variant="outline" size="icon" onClick={() => handleSeek([currentTime - 5])} aria-label="Voltar 5 segundos"><SkipBack className="w-4 h-4" /></Button>
+                    <Button onClick={togglePlay} className="w-12" aria-label={playing ? "Pausar" : "Reproduzir"}>
                         {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                     </Button>
-                    <Button variant="outline" size="icon" onClick={() => handleSeek([currentTime + 5])}><SkipForward className="w-4 h-4" /></Button>
+                    <Button variant="outline" size="icon" onClick={() => handleSeek([currentTime + 5])} aria-label="Avançar 5 segundos"><SkipForward className="w-4 h-4" /></Button>
 
                     <div className="w-32">
                         <span className="text-xs text-muted-foreground">Velocidade: {speed}x</span>

@@ -714,6 +714,7 @@ export const CalendarView = memo(({
                   size="sm"
                   onClick={() => navigateCalendar('prev')}
                   className="h-8 w-8 p-0"
+                  aria-label={`Navegar para ${viewType === 'day' ? 'ontem' : viewType === 'week' ? 'semana anterior' : 'mês anterior'}`}
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -725,6 +726,7 @@ export const CalendarView = memo(({
                   size="sm"
                   onClick={() => navigateCalendar('next')}
                   className="h-8 w-8 p-0"
+                  aria-label={`Navegar para ${viewType === 'day' ? 'amanhã' : viewType === 'week' ? 'próxima semana' : 'mês posterior'}`}
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -743,6 +745,7 @@ export const CalendarView = memo(({
                           : "text-gray-600 dark:text-gray-400"
                       )}
                       aria-pressed={viewType === type}
+                      aria-label={type === 'day' ? 'Visualização Diária' : 'Visualização Semanal'}
                     >
                       {type === 'day' ? 'D' : 'S'}
                     </button>
@@ -754,6 +757,7 @@ export const CalendarView = memo(({
                     size="icon"
                     className={cn("h-8 w-8", selectionMode && "bg-primary")}
                     onClick={onToggleSelectionMode}
+                    aria-label={selectionMode ? "Sair do modo de seleção" : "Entrar no modo de seleção"}
                   >
                     <CheckSquare className="w-3.5 h-3.5" />
                   </Button>
@@ -762,6 +766,7 @@ export const CalendarView = memo(({
                   <Button
                     onClick={onCreateAppointment}
                     className="bg-blue-600 hover:bg-blue-700 text-white h-8 w-8 p-0"
+                    aria-label="Novo Agendamento"
                   >
                     <Plus className="w-4 h-4" />
                   </Button>
