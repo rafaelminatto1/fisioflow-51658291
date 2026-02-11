@@ -123,6 +123,8 @@ export const WEBHOOK_FUNCTION: FunctionOptions = {
   concurrency: 20,
 };
 
+export const EVOLUTION_HTTP_OPTS = withCors(DATABASE_FUNCTION, CORS_ORIGINS);
+
 /**
  * Funções com CORS HTTP
  * Para chamadas diretas do navegador

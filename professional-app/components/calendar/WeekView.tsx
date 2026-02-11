@@ -33,10 +33,12 @@ export const WeekView = ({
 
     const getAppointmentsForDay = (day: Date) => {
         return appointments.filter(apt => {
-            const aptDateObj = new Date(apt.date);
-            const aptDateStr = aptDateObj.toISOString().split('T')[0];
-            const viewDateStr = format(day, 'yyyy-MM-dd');
-            return aptDateStr === viewDateStr;
+            const aptDate = new Date(apt.date);
+            return (
+                aptDate.getFullYear() === day.getFullYear() &&
+                aptDate.getMonth() === day.getMonth() &&
+                aptDate.getDate() === day.getDate()
+            );
         });
     };
 

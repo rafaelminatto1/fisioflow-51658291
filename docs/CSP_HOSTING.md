@@ -7,7 +7,7 @@ A política de segurança de conteúdo está configurada em `firebase.json` sob 
 | Diretiva | Propósito |
 |----------|-----------|
 | `script-src` | Scripts: app, Google APIs, Firebase, Google Tag Manager (GA4) |
-| `connect-src` | Requisições: Firebase, Ably, Cloud Functions, GA4, Sentry |
+| `connect-src` | Requisições: Firebase, Cloud Functions, GA4, Sentry |
 | `style-src` | Estilos: app, Google Fonts |
 | `img-src` | Imagens: app, data URIs, blob, HTTPS |
 | `frame-src` | Iframes: app, YouTube |
@@ -18,7 +18,6 @@ A política de segurança de conteúdo está configurada em `firebase.json` sob 
 - **Google Analytics**: `https://www.googletagmanager.com`
 - **Sentry**: `https://*.ingest.sentry.io`, `https://*.sentry.io`
 - **Firebase**: `https://*.firebaseio.com`, `https://*.firebasedatabase.app`, `https://*.googleapis.com`
-- **Ably**: `https://ably.io`, `https://*.ably.io`, etc.
 - **Cloud Functions**: `https://*.cloudfunctions.net`
 
 ## Adicionando Novos Domínios

@@ -113,6 +113,15 @@ export {
     searchSimilarExercisesHttp as searchSimilarExercisesV2,
 } from './api/exercises';
 
+// API de Evoluções (SOAP)
+export {
+  listEvolutionsHttp as listEvolutionsV2,
+  getEvolutionHttp as getEvolutionV2,
+  createEvolutionHttp as createEvolutionV2,
+  updateEvolutionHttp as updateEvolutionV2,
+  deleteEvolutionHttp as deleteEvolutionV2,
+} from './api/evolutions';
+
 // API de Avaliações
 export {
     listAssessmentTemplatesHttp as listAssessmentTemplatesV2,

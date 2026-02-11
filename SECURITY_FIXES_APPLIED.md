@@ -17,7 +17,6 @@
     "variables": {
       "DB_HOST": "35.192.122.198",
       "DB_SOCKET_PATH": "/cloudsql",
-      "ABLY_API_KEY": "zmqcyQ.hjud3A:UFQTNkXMSS17eJawRzhNP0cg-qBhn6Rp3vdJkib-c30",
       "NODE_ENV": "production",
       "WHATSAPP_BUSINESS_ACCOUNT_ID": "806225345331804",
       "WHATSAPP_PHONE_NUMBER": "+551158749885"
@@ -39,7 +38,6 @@
 ```
 
 **Action Required:**
-- [ ] Rotate Ably API key at https://ably.com/dashboard
 - [ ] Move DB_HOST to Google Secret Manager
 - [ ] Configure WhatsApp credentials via Secret Manager
 
@@ -102,7 +100,7 @@ function isAdmin() {
 ```json
 {
   "key": "Content-Security-Policy",
-  "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://www.gstatic.com https://www.googleapis.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://moocafisio.com.br https://ably.io; frame-src 'self' https://www.youtube.com; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self';"
+  "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://www.gstatic.com https://www.googleapis.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; connect-src 'self' https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://moocafisio.com.br; frame-src 'self' https://www.youtube.com; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self';"
 }
 ```
 
@@ -115,20 +113,13 @@ function isAdmin() {
 ### Immediate (Today):
 
 1. **Rotate Exposed Secrets:**
-   - [ ] Ably API Key: `zmqcyQ.hjud3A:UFQTNkXMSS17eJawRzhNP0cg-qBhn6Rp3vdJkib-c30`
    - [ ] WhatsApp Access Token in .env
    - [ ] Inngest Signing Key
 
 2. **Set up Google Secret Manager:**
    ```bash
    # Install gcloud CLI if not already installed
-   gcloud secrets create ABLY_API_KEY --data-file="-"
-   echo "your_new_api_key" | gcloud secrets versions add ABLY_API_KEY --data-file="-"
-
-   # Grant Cloud Functions access
-   gcloud secrets add-iam-policy-binding ABLY_API_KEY \
-     --member="serviceAccount:YOUR_PROJECT@appspot.gserviceaccount.com" \
-     --role="roles/secretmanager.secretAccessor"
+   # Move other secrets to GSM
    ```
 
 3. **Fix MFA Implementation:**

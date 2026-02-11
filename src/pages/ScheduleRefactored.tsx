@@ -1,6 +1,7 @@
-
-
-// Lazy load CalendarView for better initial load performance
+/**
+ * Schedule Page - Refactored for better performance and maintainability
+ * Optimized with useScheduleOptimized hook
+ */
 
 import { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,8 @@ import { AppointmentSearch } from '@/components/schedule/AppointmentSearch';
 import { WaitlistQuickAdd } from '@/components/schedule/WaitlistQuickAdd';
 import { WaitlistQuickViewModal } from '@/components/schedule/WaitlistQuickViewModal';
 import { KeyboardShortcuts } from '@/components/schedule/KeyboardShortcuts';
-import { useAppointments, useRescheduleAppointment } from '@/hooks/useAppointments';
+import { useRescheduleAppointment } from '@/hooks/useAppointments';
+import { useScheduleOptimized, type ScheduleView } from '@/hooks/useScheduleOptimized';
 import { useWaitlistMatch } from '@/hooks/useWaitlistMatch';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { AlertTriangle, Plus, Settings as SettingsIcon, ChevronLeft, ChevronRight, CalendarDays, Users, Clock } from 'lucide-react';
@@ -139,7 +141,26 @@ const ScheduleRefactored = () => {
   // HOOKS
   // ===================================================================
 
-  const { data: appointments = [], isLoading: loading, error, refetch, isFromCache, cacheTimestamp } = useAppointments();
+  // OTIMIZAÇÃO: Hook centralizado para carregar dados da agenda com cache inteligente
+  const {
+    appointments: filteredFromOptimized,
+    isLoading: loading,
+    error,
+    refetch,
+    stats: optimizedStats,
+    prefetchDate
+  } = useScheduleOptimized({
+    view: (viewType === 'list' ? 'list' : viewType) as ScheduleView,
+    date: currentDate,
+    filters: {
+      searchQuery: searchTerm
+    }
+  });
+
+  // Mapeamento para o tipo Appointment usado no componente (se houver diferença sutil)
+  // useScheduleOptimized retorna tipos compatíveis com o que CalendarView espera
+  const appointments = filteredFromOptimized as unknown as Appointment[];
+
   const { mutateAsync: rescheduleAppointment } = useRescheduleAppointment();
   const { _totalInWaitlist } = useWaitlistMatch();
 
@@ -166,69 +187,25 @@ const ScheduleRefactored = () => {
   // COMPUTED VALUES
   // ===================================================================
 
-  const filteredAppointments = useMemo(() => {
-    if (!searchTerm.trim()) return appointments;
-    const term = searchTerm.toLowerCase();
-    return appointments.filter(appointment =>
-      appointment.patientName.toLowerCase().includes(term)
-    );
-  }, [appointments, searchTerm]);
-
+  // OTIMIZAÇÃO: Stats agora vem do hook otimizado ou são calculados de forma mais eficiente
   const enhancedStats: ScheduleStats = useMemo(() => {
-    const now = new Date();
-    const todayStart = startOfDay(now);
-    const todayEnd = endOfDay(now);
-
-    const todayAppointments = filteredAppointments.filter(apt => {
-      const aptDate = safeParseDate(apt.appointmentDate);
-      return aptDate && isDateInRange(aptDate, todayStart, todayEnd);
-    });
-
-    const completed = todayAppointments.filter(
-      apt => apt.status === 'completed' || apt.status === 'concluido'
-    ).length;
-
-    const confirmed = todayAppointments.filter(
-      apt => apt.status === 'confirmed' || apt.status === 'confirmado'
-    ).length;
-
-    const pending = todayAppointments.filter(
-      apt => apt.status === 'scheduled' || apt.status === 'agendado'
-    ).length;
-
-    const total = todayAppointments.length;
-    const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-    const nextAppointment = todayAppointments
+    const nextAppointment = appointments
       .filter(apt => {
         const timeUntil = getTimeUntilAppointment(apt);
         return timeUntil !== null && timeUntil > 0;
       })
       .sort((a, b) => a.appointmentTime.localeCompare(b.appointmentTime))[0] || null;
 
-    const weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - now.getDay() + 1);
-    weekStart.setHours(0, 0, 0, 0);
-
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 6);
-    weekEnd.setHours(23, 59, 59, 999);
-
-    const weekAppointments = filteredAppointments.filter(apt => {
-      const aptDate = safeParseDate(apt.appointmentDate);
-      return aptDate && isDateInRange(aptDate, weekStart, weekEnd);
-    });
-
     return {
-      total,
-      completed,
-      confirmed,
-      pending,
-      completionRate,
+      total: optimizedStats.today,
+      completed: optimizedStats.completed,
+      confirmed: optimizedStats.confirmed,
+      pending: optimizedStats.pending,
+      completionRate: optimizedStats.today > 0 ? Math.round((optimizedStats.completed / optimizedStats.today) * 100) : 0,
       nextAppointment,
-      weekTotal: weekAppointments.length
+      weekTotal: optimizedStats.total // Total da view atual (pode ser semana)
     };
-  }, [filteredAppointments]);
+  }, [appointments, optimizedStats]);
 
   const formattedMonth = useMemo(() => {
     const month = format(currentDate, "MMMM 'de' yyyy", { locale: ptBR });
@@ -241,7 +218,7 @@ const ScheduleRefactored = () => {
 
   const handleRefresh = useCallback(async () => {
     await checkConnection();
-    await refetch({ cancelRefetch: false });
+    refetch();
   }, [checkConnection, refetch]);
 
   const handleCreateAppointment = useCallback(() => {
@@ -283,6 +260,7 @@ const ScheduleRefactored = () => {
         title: '✅ Reagendado com sucesso',
         description: `Atendimento de ${appointment.patientName} movido para ${formatDateToBrazilian(newDate)} às ${newTime}.`,
       });
+      refetch(); // Forçar refresh do hook otimizado
     } catch {
       toast({
         title: '❌ Erro ao reagendar',
@@ -291,7 +269,7 @@ const ScheduleRefactored = () => {
       });
       throw new Error('Failed to reschedule appointment');
     }
-  }, [rescheduleAppointment]);
+  }, [rescheduleAppointment, refetch]);
 
   const handleEditAppointment = useCallback((appointment: Appointment) => {
     setSelectedAppointment(appointment);
@@ -442,11 +420,11 @@ const ScheduleRefactored = () => {
 
         {/* Offline/Cache Warning Banner */}
         <OfflineIndicator
-          isFromCache={isFromCache}
+          isFromCache={false}
           isOnline={isOnline}
           isChecking={isChecking}
           isReconnecting={isReconnecting}
-          cacheTimestamp={cacheTimestamp}
+          cacheTimestamp={null}
           itemCount={appointments.length}
           itemLabel="agendamentos"
           onRefresh={handleRefresh}
@@ -482,7 +460,7 @@ const ScheduleRefactored = () => {
                     <Users className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">{enhancedStats.weekTotal}</span>
-                      <span className="text-xs text-emerald-600 dark:text-emerald-400">Semana</span>
+                      <span className="text-xs text-emerald-600 dark:text-emerald-400">Total View</span>
                     </div>
                   </div>
                 </div>
@@ -515,16 +493,24 @@ const ScheduleRefactored = () => {
                 <div className="flex items-center gap-1">
                   <Button size="icon" variant="ghost" onClick={() => setCurrentDate(date => {
                     const newDate = new Date(date);
-                    newDate.setDate(newDate.getDate() - 7);
+                    if (viewType === 'month') {
+                      newDate.setMonth(newDate.getMonth() - 1);
+                    } else {
+                      newDate.setDate(newDate.getDate() - 7);
+                    }
                     return newDate;
-                  })} className="h-9 w-9" aria-label="Semana anterior">
+                  })} className="h-9 w-9" aria-label="Anterior">
                     <ChevronLeft className="h-5 w-5" />
                   </Button>
                   <Button size="icon" variant="ghost" onClick={() => setCurrentDate(date => {
                     const newDate = new Date(date);
-                    newDate.setDate(newDate.getDate() + 7);
+                    if (viewType === 'month') {
+                      newDate.setMonth(newDate.getMonth() + 1);
+                    } else {
+                      newDate.setDate(newDate.getDate() + 7);
+                    }
                     return newDate;
-                  })} className="h-9 w-9" aria-label="Próxima semana">
+                  })} className="h-9 w-9" aria-label="Próximo">
                     <ChevronRight className="h-5 w-5" />
                   </Button>
                 </div>
@@ -548,7 +534,7 @@ const ScheduleRefactored = () => {
               <AppointmentSearch
                 searchTerm={searchTerm}
                 onSearchChange={setSearchTerm}
-                resultsCount={filteredAppointments.length}
+                resultsCount={appointments.length}
               />
             </div>
           </div>
@@ -559,7 +545,7 @@ const ScheduleRefactored = () => {
           <div className="h-full max-w-[1920px] mx-auto">
             <Suspense fallback={<LoadingSkeleton type={viewType === 'day' ? 'calendar-day' : viewType === 'week' ? 'calendar-week' : 'calendar'} className="h-full w-full" />}>
               <CalendarView
-                appointments={filteredAppointments}
+                appointments={appointments}
                 currentDate={currentDate}
                 onDateChange={setCurrentDate}
                 viewType={viewType as CalendarViewType}
