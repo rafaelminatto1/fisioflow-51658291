@@ -186,10 +186,10 @@ export function setContext(key: string, context: Record<string, any>) {
 }
 
 /**
- * Inicia uma performance transaction
+ * Inicia uma performance span (antigo transaction)
  */
 export function startTransaction(name: string, op: string = 'custom') {
-  return Sentry.startTransaction({ name, op });
+  return Sentry.startInactiveSpan({ name, op });
 }
 
 /**
