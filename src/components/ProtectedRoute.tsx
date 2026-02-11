@@ -58,7 +58,7 @@ export function ProtectedRoute({
 
   // Show optimized loading skeleton
   if (!initialized || loading) {
-    return <AppLoadingSkeleton message={!initialized ? 'Iniciando' : 'Verificando'} />;
+    return <AppLoadingSkeleton message="Carregando sistema..." />;
   }
 
   // Handle session check failure
