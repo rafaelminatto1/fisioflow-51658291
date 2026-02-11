@@ -211,7 +211,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
               ? "pt-[60px] md:pt-0 pb-24 md:pb-0"
               : compactPadding
                 ? "p-2 xs:p-3 sm:p-3 md:p-4 pt-[60px] md:pt-4 pb-24 md:pb-4"
-                : "p-3 xs:p-4 sm:p-6 md:p-8 pt-[60px] md:pt-8 pb-24 md:pb-8"
+                : "p-2 xs:p-3 sm:p-4 md:p-6 pt-[60px] md:pt-6 pb-24 md:pb-6"
           )}
         >
           <div className={cn(
@@ -224,7 +224,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
             maxWidth === '2xl' && "max-w-2xl",
             maxWidth === '7xl' && "max-w-7xl",
             maxWidth === 'full' && "max-w-full",
-            !fullWidth && !maxWidth && "max-w-7xl"
+            !fullWidth && !maxWidth && "max-w-full"
           )}>
             {showBreadcrumbs && (
               <div className="mb-6 animate-fade-in">
