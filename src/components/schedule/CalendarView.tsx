@@ -442,18 +442,8 @@ export const CalendarView = memo(({
   }, [onDateChange]);
 
   const getHeaderTitle = useCallback(() => {
-    switch (viewType) {
-      case 'day':
-        return format(currentDate, "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR });
-      case 'week': {
-        const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-        const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
-        return `${format(weekStart, "d 'de' MMM", { locale: ptBR })} - ${format(weekEnd, "d 'de' MMM 'de' yyyy", { locale: ptBR })}`;
-      }
-      case 'month':
-        return format(currentDate, "MMMM 'de' yyyy", { locale: ptBR });
-    }
-  }, [viewType, currentDate]);
+    return '';
+  }, []);
 
   // Restore focus to calendar grid when a reschedule dialog closes
   const calendarGridRef = useRef<HTMLDivElement>(null);
