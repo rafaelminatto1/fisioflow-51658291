@@ -322,6 +322,18 @@ export default function ExercisesScreen() {
           </View>
         )}
       </Modal>
+      
+      {!patientId && (
+        <TouchableOpacity
+          style={[styles.fab, { backgroundColor: colors.primary }]}
+          onPress={() => {
+            medium();
+            router.push('/exercise-form');
+          }}
+        >
+          <Ionicons name="add" size={28} color="#FFFFFF" />
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 }
@@ -499,5 +511,19 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     flex: 1,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    shadowOffset: { height: 2, width: 0 },
   },
 });

@@ -33,12 +33,15 @@ export const DayView = ({
     const renderAppointments = () => {
         return appointments
             .filter(apt => {
-                // Robust date matching: compare YYYY-MM-DD strings
-                // We assume apt.date is stored as UTC (e.g. T00:00:00.000Z) representing the day
-                const aptDateObj = new Date(apt.date);
-                const aptDateStr = aptDateObj.toISOString().split('T')[0];
-                const viewDateStr = format(date, 'yyyy-MM-dd');
-                return aptDateStr === viewDateStr;
+                // Robust date matching: compare local date components
+                const aptDate = new Date(apt.date);
+                const viewDate = date;
+                
+                return (
+                    aptDate.getFullYear() === viewDate.getFullYear() &&
+                    aptDate.getMonth() === viewDate.getMonth() &&
+                    aptDate.getDate() === viewDate.getDate()
+                );
             })
             .map((apt) => {
                 let hour = 0;

@@ -487,6 +487,22 @@ CREATE TABLE IF NOT EXISTS patient_financial_summaries (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- EVOLUCOES (SOAP Notes)
+CREATE TABLE IF NOT EXISTS evolutions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  patient_id UUID NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+  therapist_id TEXT NOT NULL REFERENCES profiles(user_id),
+  organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  appointment_id UUID REFERENCES appointments(id) ON DELETE SET NULL,
+  date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  subjective TEXT,
+  objective TEXT,
+  assessment TEXT,
+  plan TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ============================================
 -- ÍNDICES
 -- ============================================

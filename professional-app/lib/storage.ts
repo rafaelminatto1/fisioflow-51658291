@@ -62,6 +62,18 @@ export async function uploadPatientPhoto(patientId: string, uri: string): Promis
 }
 
 /**
+ * Upload de uma foto de perfil do profissional
+ * @param userId ID do usuário/profissional
+ * @param uri URI local da foto
+ * @returns URL pública da foto
+ */
+export async function uploadAvatar(userId: string, uri: string): Promise<string> {
+  const timestamp = Date.now();
+  const path = `avatars/${userId}/profile_${timestamp}.jpg`;
+  return uploadFile(uri, path);
+}
+
+/**
  * Upload de um anexo para o prontuário
  * @param patientId ID do paciente
  * @param uri URI local do arquivo

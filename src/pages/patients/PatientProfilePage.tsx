@@ -1,14 +1,12 @@
 /**
  * Patient Profile Page - Migrated to Firebase
+ * Optimized with usePatientProfileOptimized for better performance
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { useQuery } from '@tanstack/react-query';
 import { PatientHelpers, Patient } from '@/types';
-import { db, collection, query, where, getDocs, orderBy, limit } from '@/integrations/firebase/app';
-import { PatientDashboard360 } from '@/components/patient/dashboard/PatientDashboard360';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,7 +14,6 @@ import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
-
     ArrowLeft,
     Edit,
     Calendar as CalendarIcon,
@@ -28,7 +25,6 @@ import {
     DollarSign,
     Trophy,
     Files,
-    Award,
     Trash,
     Download,
     CreditCard,
@@ -36,6 +32,7 @@ import {
     Brain,
     ClipboardList,
     Sparkles,
+    Gift,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -43,44 +40,44 @@ import { parseResponseDate } from '@/utils/dateUtils';
 
 import EditPatientModal from '@/components/modals/EditPatientModal';
 
-// Gamification Imports
-import GamificationHeader from '@/components/gamification/GamificationHeader';
-import StreakCalendar from '@/components/gamification/StreakCalendar';
-import LevelJourneyMap from '@/components/gamification/LevelJourneyMap';
-import { Leaderboard } from '@/components/gamification/Leaderboard';
-import { RewardShop } from '@/components/gamification/RewardShop';
+// Hooks Otimizados
+import { usePatientProfileOptimized, type ProfileTab } from '@/hooks/usePatientProfileOptimized';
 import { useGamification } from '@/hooks/useGamification';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-
-// Overview & Clinical History Imports
-import { PatientEvolutionDashboard } from '@/components/patients/PatientEvolutionDashboard';
-import { ProgressAnalysisCard } from '@/components/patients/ProgressAnalysisCard';
 import { usePatientEvolutionReport } from '@/hooks/usePatientEvolutionReport';
-import { SessionHistoryPanel } from '@/components/session/SessionHistoryPanel';
-
-// Analytics & ML Imports
-import { PatientAnalyticsDashboard, PatientLifecycleChart, PatientInsightsPanel, AIAssistantPanel } from '@/components/patients/analytics';
-import { usePatientLifecycleSummary } from '@/hooks/usePatientAnalytics';
-import { PatientAIChat } from '@/components/ai/PatientAIChat';
-import { PatientSmartSummary } from '@/components/ai/PatientSmartSummary';
-import { DoctorReferralReportGenerator } from '@/components/reports/DoctorReferralReportGenerator';
-
-// Evolution Cards
-import { MedicalReturnCard } from '@/components/evolution/MedicalReturnCard';
-import { SurgeriesCard } from '@/components/evolution/SurgeriesCard';
-import { MetasCard } from '@/components/evolution/MetasCard';
-import { useQueryClient } from '@tanstack/react-query';
-
-// Financial & Documents Imports
+import { useSoapRecordsV2 } from '@/hooks/useSoapRecordsV2';
 import { usePatientDocuments, useUploadDocument, useDeleteDocument, useDownloadDocument, type PatientDocument } from '@/hooks/usePatientDocuments';
+import { useEvaluationForms } from '@/hooks/useEvaluationForms';
+import { usePatientLifecycleSummary } from '@/hooks/usePatientAnalytics';
+
+// UI Components
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useEvaluationForms } from '@/hooks/useEvaluationForms';
-import { PatientServiceV2 } from '@/services/patientServiceV2';
-import { DocumentScanner } from '@/components/patient/DocumentScanner';
+
+// Lazy loading para componentes de abas pesadas
+const LazyPatientDashboard360 = lazy(() => import('@/components/patient/dashboard/PatientDashboard360').then(m => ({ default: m.PatientDashboard360 })));
+const LazyMedicalReturnCard = lazy(() => import('@/components/evolution/MedicalReturnCard').then(m => ({ default: m.MedicalReturnCard })));
+const LazySurgeriesCard = lazy(() => import('@/components/evolution/SurgeriesCard').then(m => ({ default: m.SurgeriesCard })));
+const LazyMetasCard = lazy(() => import('@/components/evolution/MetasCard').then(m => ({ default: m.MetasCard })));
+const LazyProgressAnalysisCard = lazy(() => import('@/components/patients/ProgressAnalysisCard').then(m => ({ default: m.ProgressAnalysisCard })));
+const LazyPatientEvolutionDashboard = lazy(() => import('@/components/patients/PatientEvolutionDashboard').then(m => ({ default: m.PatientEvolutionDashboard })));
+const LazySessionHistoryPanel = lazy(() => import('@/components/session/SessionHistoryPanel').then(m => ({ default: m.SessionHistoryPanel })));
+const LazyPatientAnalyticsDashboard = lazy(() => import('@/components/patients/analytics/PatientAnalyticsDashboard').then(m => ({ default: m.PatientAnalyticsDashboard })));
+const LazyAIAssistantPanel = lazy(() => import('@/components/patients/analytics/AIAssistantPanel').then(m => ({ default: m.AIAssistantPanel })));
+const LazyPatientAIChat = lazy(() => import('@/components/ai/PatientAIChat').then(m => ({ default: m.PatientAIChat })));
+const LazyPatientSmartSummary = lazy(() => import('@/components/ai/PatientSmartSummary').then(m => ({ default: m.PatientSmartSummary })));
+const LazyDoctorReferralReportGenerator = lazy(() => import('@/components/reports/DoctorReferralReportGenerator').then(m => ({ default: m.DoctorReferralReportGenerator })));
+const LazyPatientLifecycleChart = lazy(() => import('@/components/patients/analytics/PatientLifecycleChart').then(m => ({ default: m.PatientLifecycleChart })));
+const LazyPatientInsightsPanel = lazy(() => import('@/components/patients/analytics/PatientInsightsPanel').then(m => ({ default: m.PatientInsightsPanel })));
+const LazyGamificationHeader = lazy(() => import('@/components/gamification/GamificationHeader').then(m => ({ default: m.GamificationHeader })));
+const LazyStreakCalendar = lazy(() => import('@/components/gamification/StreakCalendar').then(m => ({ default: m.StreakCalendar })));
+const LazyLevelJourneyMap = lazy(() => import('@/components/gamification/LevelJourneyMap').then(m => ({ default: m.LevelJourneyMap })));
+const LazyLeaderboard = lazy(() => import('@/components/gamification/Leaderboard').then(m => ({ default: m.Leaderboard })));
+const LazyRewardShop = lazy(() => import('@/components/gamification/RewardShop').then(m => ({ default: m.RewardShop })));
+const LazyDocumentScanner = lazy(() => import('@/components/patient/DocumentScanner').then(m => ({ default: m.DocumentScanner })));
 
 const PersonalDataTab = ({ patient }: { patient: Patient }) => (
     <div className="space-y-6">
@@ -177,89 +174,75 @@ const PersonalDataTab = ({ patient }: { patient: Patient }) => (
     </div>
 );
 
-const OverviewTab = ({ patient }: { patient: Patient }) => {
+const OverviewTab = ({ patient, upcomingAppointments, invalidateTab }: { patient: Patient, upcomingAppointments: any[], invalidateTab: (tab: ProfileTab) => void }) => {
     const { data: evolutionData } = usePatientEvolutionReport(patient.id);
-    const queryClient = useQueryClient();
-
-    // Fetch upcoming appointments
-    const { data: upcomingAppointments } = useQuery({
-        queryKey: ['upcoming-appointments', patient.id],
-        queryFn: async () => {
-            const q = query(
-                collection(db, 'appointments'),
-                where('patient_id', '==', patient.id),
-                where('status', 'in', ['agendado', 'confirmado']),
-                where('appointment_date', '>=', new Date().toISOString().split('T')[0]),
-                orderBy('appointment_date', 'asc'),
-                orderBy('appointment_time', 'asc'),
-                limit(5)
-            );
-            const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
-        },
-        enabled: !!patient.id,
-    });
 
     return (
         <div className="space-y-6">
-            <PatientDashboard360
-                patient={{
-                    id: patient.id,
-                    full_name: patient.full_name || patient.name,
-                    email: patient.email || undefined,
-                    phone: patient.phone || undefined,
-                    birth_date: patient.birth_date || patient.birthDate,
-                    address: patient.address || undefined,
-                    city: patient.city || undefined,
-                    state: patient.state || undefined,
-                    gender: patient.gender,
-                    status: patient.status
-                }}
-                upcomingAppointments={Array.isArray(upcomingAppointments) ? upcomingAppointments : []}
-                onAction={() => { }}
-            />
+            <Suspense fallback={<LoadingSkeleton type="card" />}>
+                <LazyPatientDashboard360
+                    patient={{
+                        id: patient.id,
+                        full_name: patient.full_name || patient.name,
+                        email: patient.email || undefined,
+                        phone: patient.phone || undefined,
+                        birth_date: patient.birth_date || patient.birthDate,
+                        address: patient.address || undefined,
+                        city: patient.city || undefined,
+                        state: patient.state || undefined,
+                        gender: patient.gender,
+                        status: patient.status
+                    }}
+                    upcomingAppointments={upcomingAppointments}
+                    onAction={() => { }}
+                />
+            </Suspense>
 
             {/* Evolution Management Cards */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <MedicalReturnCard
-                    patient={patient}
-                    patientId={patient.id}
-                    onPatientUpdated={() => queryClient.invalidateQueries({ queryKey: ['patient', patient.id] })}
-                />
-                <SurgeriesCard patientId={patient.id} />
+                <Suspense fallback={<LoadingSkeleton type="card" />}>
+                    <LazyMedicalReturnCard
+                        patient={patient}
+                        patientId={patient.id}
+                        onPatientUpdated={() => invalidateTab('overview')}
+                    />
+                </Suspense>
+                <Suspense fallback={<LoadingSkeleton type="card" />}>
+                    <LazySurgeriesCard patientId={patient.id} />
+                </Suspense>
             </div>
 
-            <MetasCard patientId={patient.id} />
+            <Suspense fallback={<LoadingSkeleton type="card" />}>
+                <LazyMetasCard patientId={patient.id} />
+            </Suspense>
 
             {/* Evolution charts below */}
             {evolutionData && evolutionData.sessions.length > 0 && (
-                <>
-                    <ProgressAnalysisCard sessions={evolutionData.sessions} />
-                    <PatientEvolutionDashboard
-                        patientId={patient.id}
-                        patientName={patient.full_name || patient.name}
-                        sessions={evolutionData.sessions}
-                        currentPainLevel={evolutionData.currentPainLevel}
-                        initialPainLevel={evolutionData.initialPainLevel}
-                        totalSessions={evolutionData.totalSessions}
-                        averageImprovement={evolutionData.averageImprovement}
-                    />
-                </>
+                <div className="space-y-6">
+                    <Suspense fallback={<LoadingSkeleton type="card" />}>
+                        <LazyProgressAnalysisCard sessions={evolutionData.sessions} />
+                    </Suspense>
+                    <Suspense fallback={<LoadingSkeleton type="card" />}>
+                        <LazyPatientEvolutionDashboard
+                            patientId={patient.id}
+                            patientName={patient.full_name || patient.name}
+                            sessions={evolutionData.sessions}
+                            currentPainLevel={evolutionData.currentPainLevel}
+                            initialPainLevel={evolutionData.initialPainLevel}
+                            totalSessions={evolutionData.totalSessions}
+                            averageImprovement={evolutionData.averageImprovement}
+                        />
+                    </Suspense>
+                </div>
             )}
         </div>
     );
 };
 
-import { useSoapRecordsV2 } from '@/hooks/useSoapRecordsV2';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
-
-// ... (imports)
-
 const ClinicalHistoryTab = ({ patientId }: { patientId: string }) => {
     const { data: records = [] } = useSoapRecordsV2(patientId);
 
-    // Adapt records to SessionData interface
-    const sessions = records.map(record => ({
+    const sessions = useMemo(() => records.map(record => ({
         id: record.id,
         session_date: record.recordDate,
         subjective: record.subjective,
@@ -267,51 +250,35 @@ const ClinicalHistoryTab = ({ patientId }: { patientId: string }) => {
         assessment: record.assessment,
         plan: record.plan,
         created_at: record.createdAt,
-        // Optional fields
-        pain_level_after: 0, // V2 SOAP doesn't have pain level in core yet, separate record
-    }));
+        pain_level_after: 0,
+    })), [records]);
 
     return (
         <div className="h-[600px]">
-            <SessionHistoryPanel
-                sessions={sessions}
-                onReplicate={() => { }} // No-op for readonly view
-            />
+            <Suspense fallback={<LoadingSkeleton type="card" />}>
+                <LazySessionHistoryPanel
+                    sessions={sessions}
+                    onReplicate={() => { }}
+                />
+            </Suspense>
         </div>
     );
 };
 
-const FinancialTab = ({ patientId }: { patientId: string }) => {
-    const { data: transactions = [], isLoading } = useQuery({
-        queryKey: ['patient-transactions', patientId],
-        queryFn: async () => {
-            const q = query(
-                collection(db, 'appointments'),
-                where('patient_id', '==', patientId),
-                orderBy('appointment_date', 'desc')
-            );
-            const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
-        },
-        enabled: !!patientId
-    });
+const FinancialTab = ({ patientId, appointments }: { patientId: string, appointments: any[] }) => {
+    // Calculate totals based on appointments (which include payment info in FisioFlow)
+    const transactions = appointments;
+    
+    const totalPaid = useMemo(() => transactions
+        .filter((t: any) => t.payment_status === 'paid_single' || t.payment_status === 'paid_package')
+        .reduce((sum: number, t: any) => sum + (Number(t.payment_amount) || 0), 0), [transactions]);
 
-    // Calculate totals
-    const totalPaid = transactions
-        .filter((t: { payment_status?: string }) => t.payment_status === 'paid_single' || t.payment_status === 'paid_package')
-        .reduce((sum: number, t: { payment_amount?: string | number }) => sum + (Number(t.payment_amount) || 0), 0);
-
-    const totalPending = transactions
-        .filter((t: { payment_status?: string }) => t.payment_status === 'pending')
-        .reduce((sum: number, t: { payment_amount?: string | number }) => sum + (Number(t.payment_amount) || 0), 0);
-
-    if (isLoading) {
-        return <div className="p-8 text-center"><Skeleton className="h-40 w-full mx-auto" /></div>;
-    }
+    const totalPending = useMemo(() => transactions
+        .filter((t: any) => t.payment_status === 'pending')
+        .reduce((sum: number, t: any) => sum + (Number(t.payment_amount) || 0), 0), [transactions]);
 
     return (
         <div className="space-y-6">
-            {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card className="bg-gradient-to-br from-green-50 to-white border-green-200">
                     <CardContent className="p-4">
@@ -356,7 +323,6 @@ const FinancialTab = ({ patientId }: { patientId: string }) => {
                 </Card>
             </div>
 
-            {/* Transaction History */}
             <Card>
                 <CardHeader>
                     <CardTitle className="text-lg">Histórico de Pagamentos</CardTitle>
@@ -369,15 +335,7 @@ const FinancialTab = ({ patientId }: { patientId: string }) => {
                         </div>
                     ) : (
                         <div className="space-y-2">
-                            {transactions.map((tx: {
-                                id: string;
-                                appointment_date: string;
-                                payment_status: string;
-                                payment_method?: string;
-                                type?: string;
-                                installments?: number;
-                                payment_amount?: string | number;
-                            }) => (
+                            {transactions.map((tx: any) => (
                                 <div
                                     key={tx.id}
                                     className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
@@ -424,8 +382,7 @@ const FinancialTab = ({ patientId }: { patientId: string }) => {
     );
 };
 
-const DocumentsTab = ({ patientId }: { patientId: string }) => {
-    const { data: documents, isLoading } = usePatientDocuments(patientId);
+const DocumentsTab = ({ patientId, documents, isLoading }: { patientId: string, documents: PatientDocument[], isLoading: boolean }) => {
     const uploadDocument = useUploadDocument();
     const deleteDocument = useDeleteDocument();
     const downloadDocument = useDownloadDocument();
@@ -483,7 +440,10 @@ const DocumentsTab = ({ patientId }: { patientId: string }) => {
 
     return (
         <div className="space-y-4">
-            <DocumentScanner onScanComplete={(text) => alert('Texto extraído: ' + text.substring(0, 100) + '...')} />
+            <Suspense fallback={<Skeleton className="h-20 w-full" />}>
+                <LazyDocumentScanner onScanComplete={(text) => alert('Texto extraído: ' + text.substring(0, 100) + '...')} />
+            </Suspense>
+            
             <Card className="border-dashed border-2">
                 <CardContent className="p-8">
                     <div className="flex flex-col items-center justify-center">
@@ -557,7 +517,6 @@ const DocumentsTab = ({ patientId }: { patientId: string }) => {
                 </Card>
             )}
 
-            {/* Upload Category Dialog */}
             <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
@@ -605,63 +564,64 @@ const DocumentsTab = ({ patientId }: { patientId: string }) => {
     );
 };
 
-// ============================================================================
-// ANALYTICS TAB WITH ML PREDICTIONS
-// ============================================================================
-
 const AnalyticsTab = ({ patientId, patientName, birthDate, condition }: { patientId: string; patientName: string; birthDate?: string; condition: string }) => {
     const { data: lifecycleSummary, isLoading: lifecycleLoading } = usePatientLifecycleSummary(patientId);
     const { data: records = [] } = useSoapRecordsV2(patientId);
 
-    // Adapt records for smart summary
-    const summaryHistory = records.map(r => ({
+    const summaryHistory = useMemo(() => records.map(r => ({
         date: r.recordDate,
         subjective: r.subjective,
         objective: r.objective,
-    }));
+    })), [records]);
 
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
-                    {/* New Smart Patient Summary - High Visibility */}
-                    <PatientSmartSummary
-                        patientId={patientId}
-                        patientName={patientName}
-                        condition={condition}
-                        history={summaryHistory}
-                    />
+                    <Suspense fallback={<LoadingSkeleton type="card" />}>
+                        <LazyPatientSmartSummary
+                            patientId={patientId}
+                            patientName={patientName}
+                            condition={condition}
+                            history={summaryHistory}
+                        />
+                    </Suspense>
                 </div>
                 <div className="lg:col-span-1">
-                    {/* Professional PDF Generator */}
-                    <DoctorReferralReportGenerator
-                        patientId={patientId}
-                        patientName={patientName}
-                        birthDate={birthDate}
-                        condition={condition}
-                    />
+                    <Suspense fallback={<LoadingSkeleton type="card" />}>
+                        <LazyDoctorReferralReportGenerator
+                            patientId={patientId}
+                            patientName={patientName}
+                            birthDate={birthDate}
+                            condition={condition}
+                        />
+                    </Suspense>
                 </div>
             </div>
 
-            {/* Main Analytics Dashboard */}
-            <PatientAnalyticsDashboard patientId={patientId} patientName={patientName} />
+            <Suspense fallback={<LoadingSkeleton type="card" />}>
+                <LazyPatientAnalyticsDashboard patientId={patientId} patientName={patientName} />
+            </Suspense>
 
-            {/* AI Assistant Panel - Full Width */}
-            <AIAssistantPanel patientId={patientId} patientName={patientName} />
+            <Suspense fallback={<LoadingSkeleton type="card" />}>
+                <LazyAIAssistantPanel patientId={patientId} patientName={patientName} />
+            </Suspense>
 
-            {/* Google Gemini Chat - New */}
-            <PatientAIChat patientId={patientId} patientName={patientName} />
+            <Suspense fallback={<LoadingSkeleton type="card" />}>
+                <LazyPatientAIChat patientId={patientId} patientName={patientName} />
+            </Suspense>
 
-            {/* Two-column layout for lifecycle and insights */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Lifecycle Chart */}
-                <PatientLifecycleChart
-                    summary={lifecycleSummary || null}
-                    isLoading={lifecycleLoading}
-                />
+                <Suspense fallback={<LoadingSkeleton type="card" />}>
+                    <LazyPatientLifecycleChart
+                        summary={lifecycleSummary || null}
+                        isLoading={lifecycleLoading}
+                    />
+                </Suspense>
 
-                {/* Insights Panel */}
-                <PatientInsightsPanel patientId={patientId} limit={5} showHeader={true} />
+                <Suspense fallback={<LoadingSkeleton type="card" />}>
+                    <LazyPatientInsightsPanel patientId={patientId} limit={5} showHeader={true} />
+                </Suspense>
             </div>
         </div>
     );
@@ -687,37 +647,43 @@ const GamificationTab = ({ patientId }: { patientId: string }) => {
 
     return (
         <div className="space-y-8">
-            <GamificationHeader
-                level={profile.level}
-                currentXp={currentXp}
-                xpPerLevel={xpPerLevel}
-                streak={streak}
-            />
+            <Suspense fallback={<Skeleton className="h-32 w-full" />}>
+                <LazyGamificationHeader
+                    level={profile.level}
+                    currentXp={currentXp}
+                    xpPerLevel={xpPerLevel}
+                    streak={streak}
+                />
+            </Suspense>
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                 <div className="xl:col-span-2 space-y-8">
-                    {/* Recompensas Ativas */}
                     <div>
                         <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                             <Gift className="w-5 h-5 text-primary" />
                             Loja de Vantagens
                         </h3>
-                        <RewardShop />
+                        <Suspense fallback={<LoadingSkeleton type="card" />}>
+                            <LazyRewardShop />
+                        </Suspense>
                     </div>
 
-                    {/* Mapa de Jornada */}
-                    <LevelJourneyMap currentLevel={profile.level} />
+                    <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+                        <LazyLevelJourneyMap currentLevel={profile.level} />
+                    </Suspense>
                 </div>
 
                 <div className="space-y-8">
-                    {/* Ranking Social */}
-                    <Leaderboard />
+                    <Suspense fallback={<LoadingSkeleton type="card" />}>
+                        <LazyLeaderboard />
+                    </Suspense>
 
-                    {/* Calendário de Frequência */}
-                    <StreakCalendar
-                        todayActivity={false} // Would need real activity check
-                        activeDates={profile.last_activity_date ? [profile.last_activity_date] : []}
-                    />
+                    <Suspense fallback={<LoadingSkeleton type="card" />}>
+                        <LazyStreakCalendar
+                            todayActivity={false}
+                            activeDates={profile.last_activity_date ? [profile.last_activity_date] : []}
+                        />
+                    </Suspense>
                 </div>
             </div>
         </div>
@@ -729,37 +695,35 @@ export const PatientProfilePage = () => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
 
-    const { data: patient, isLoading } = useQuery({
-        queryKey: ['patient', id],
-        queryFn: async () => {
-            if (!id) return null;
-            // Migrated to V2 API (Postgres)
-            const response = await PatientServiceV2.get(id);
-            return response.data;
-        },
-        enabled: !!id
-    });
-
-    const [editingPatient, setEditingPatient] = useState<boolean>(false);
-    const [evaluationModalOpen, setEvaluationModalOpen] = useState<boolean>(false);
-    const [_selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-
     // Valid tab values
     const validTabs = ['overview', 'analytics', 'personal', 'clinical', 'financial', 'gamification', 'documents'] as const;
     type TabValue = typeof validTabs[number];
 
-    // Get initial tab from URL or default to 'overview'
     const [activeTab, setActiveTab] = useState<TabValue>(() => {
         const tabFromUrl = searchParams.get('tab');
         return (tabFromUrl && validTabs.includes(tabFromUrl as TabValue)) ? tabFromUrl as TabValue : 'overview';
     });
 
-    // Fetch evaluation forms for the modal
+    // OTIMIZAÇÃO: Hook centralizado para carregar dados do perfil com cache inteligente e prefetch
+    const {
+        patient,
+        appointments,
+        documents,
+        isLoading,
+        isLoadingDocuments,
+        invalidateTab,
+    } = usePatientProfileOptimized({
+        patientId: id || '',
+        activeTab: activeTab === 'personal' || activeTab === 'clinical' ? 'overview' : activeTab as any,
+    });
+
+    const [editingPatient, setEditingPatient] = useState<boolean>(false);
+    const [evaluationModalOpen, setEvaluationModalOpen] = useState<boolean>(false);
+
     const { data: evaluationForms = [] } = useEvaluationForms();
 
-    // Auto-open edit modal if patient has incomplete registration
     useEffect(() => {
-        if (patient && patient.incomplete_registration) {
+        if (patient && (patient as any).incomplete_registration) {
             setEditingPatient(true);
         }
     }, [patient]);
@@ -769,9 +733,7 @@ export const PatientProfilePage = () => {
     };
 
     const handleSelectTemplate = (templateId: string) => {
-        setSelectedTemplate(templateId);
         setEvaluationModalOpen(false);
-        // Navigate to new evaluation page with selected template
         navigate(`/patients/${id}/evaluations/new/${templateId}`);
     };
 
@@ -794,13 +756,12 @@ export const PatientProfilePage = () => {
         );
     }
 
-    const patientName = PatientHelpers.getName(patient);
+    const patientName = PatientHelpers.getName(patient as any);
     const initials = patientName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
 
     return (
         <MainLayout>
             <div className="space-y-6 pb-20 fade-in relative">
-                {/* Header Navigation */}
                 <div className="flex items-center gap-2 text-muted-foreground mb-2">
                     <Button variant="ghost" size="icon" onClick={() => navigate('/patients')} className="-ml-2 hover:bg-transparent hover:text-primary">
                         <ArrowLeft className="h-5 w-5" />
@@ -808,7 +769,6 @@ export const PatientProfilePage = () => {
                     <span className="text-sm font-medium hover:text-primary cursor-pointer" onClick={() => navigate('/patients')}>Voltar para Pacientes</span>
                 </div>
 
-                {/* Patient Header Card - Enhanced */}
                 <div className="bg-gradient-to-r from-card to-card/50 rounded-xl p-6 shadow-sm border space-y-6 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
 
@@ -816,26 +776,26 @@ export const PatientProfilePage = () => {
                         <div className="flex items-center gap-5">
                             <div className="relative">
                                 <Avatar className="h-24 w-24 border-4 border-background shadow-md">
-                                    <AvatarImage src={patient.photo_url} className="object-cover" />
+                                    <AvatarImage src={(patient as any).photo_url} className="object-cover" />
                                     <AvatarFallback className="text-2xl bg-primary/10 text-primary font-bold">
                                         {initials}
                                     </AvatarFallback>
                                 </Avatar>
-                                <div className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-background ${patient.status === 'active' || patient.status === 'Em Tratamento' ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                <div className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-background ${(patient as any).status === 'active' || (patient as any).status === 'Em Tratamento' ? 'bg-green-500' : 'bg-gray-400'}`} />
                             </div>
 
                             <div className="space-y-1">
                                 <h1 className="text-3xl font-bold tracking-tight text-foreground">{patientName}</h1>
                                 <div className="flex flex-wrap items-center gap-3">
-                                    <Badge variant={patient.status === 'Em Tratamento' || patient.status === 'active' ? 'default' : 'secondary'} className="px-3 py-1">
-                                        {patient.status || 'Status desconhecido'}
+                                    <Badge variant={(patient as any).status === 'Em Tratamento' || (patient as any).status === 'active' ? 'default' : 'secondary'} className="px-3 py-1">
+                                        {(patient as any).status || 'Status desconhecido'}
                                     </Badge>
-                                    {patient.birth_date && (
+                                    {(patient as any).birth_date && (
                                         <span className="text-sm text-muted-foreground flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-md">
                                             <CalendarIcon className="h-3.5 w-3.5" />
-                                            {format(new Date(patient.birth_date), 'dd/MM/yyyy')}
+                                            {format(new Date((patient as any).birth_date), 'dd/MM/yyyy')}
                                             <span className="text-muted-foreground/50">|</span>
-                                            {Math.floor((new Date().getTime() - new Date(patient.birth_date).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} anos
+                                            {Math.floor((new Date().getTime() - new Date((patient as any).birth_date).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} anos
                                         </span>
                                     )}
                                 </div>
@@ -869,7 +829,7 @@ export const PatientProfilePage = () => {
                             </div>
                             <div className="overflow-hidden">
                                 <p className="text-muted-foreground text-xs font-medium mb-0.5">Telefone</p>
-                                <p className="font-medium truncate">{patient.phone || 'Não informado'}</p>
+                                <p className="font-medium truncate">{(patient as any).phone || 'Não informado'}</p>
                             </div>
                         </div>
 
@@ -879,8 +839,8 @@ export const PatientProfilePage = () => {
                             </div>
                             <div className="overflow-hidden">
                                 <p className="text-muted-foreground text-xs font-medium mb-0.5">Email</p>
-                                <p className="font-medium truncate" title={patient.email}>
-                                    {patient.email || 'Não informado'}
+                                <p className="font-medium truncate" title={(patient as any).email}>
+                                    {(patient as any).email || 'Não informado'}
                                 </p>
                             </div>
                         </div>
@@ -891,13 +851,12 @@ export const PatientProfilePage = () => {
                             </div>
                             <div className="overflow-hidden">
                                 <p className="text-muted-foreground text-xs font-medium mb-0.5">Localização</p>
-                                <p className="font-medium truncate">{patient.city ? `${patient.city}/${patient.state || ''}` : 'Não informado'}</p>
+                                <p className="font-medium truncate">{(patient as any).city ? `${(patient as any).city}/${(patient as any).state || ''}` : 'Não informado'}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Content Tabs - Sticky */}
                 <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabValue)} className="w-full">
                     <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm pb-2 pt-2 -mx-4 px-4 border-b">
                         <TabsList className="w-full justify-start h-auto p-1 bg-transparent overflow-x-auto flex-nowrap scrollbar-hide gap-2">
@@ -928,20 +887,20 @@ export const PatientProfilePage = () => {
 
                     <div className="mt-6 min-h-[500px]">
                         <TabsContent value="overview" className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2">
-                            <OverviewTab patient={patient} />
+                            <OverviewTab patient={patient as any} upcomingAppointments={appointments} invalidateTab={invalidateTab} />
                         </TabsContent>
 
                         <TabsContent value="analytics" className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2">
                             <AnalyticsTab 
                                 patientId={id || ''} 
                                 patientName={patientName} 
-                                birthDate={patient.birth_date}
-                                condition={patient.main_condition || 'Não informada'} 
+                                birthDate={(patient as any).birth_date}
+                                condition={(patient as any).main_condition || 'Não informada'} 
                             />
                         </TabsContent>
 
                         <TabsContent value="personal" className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2">
-                            <PersonalDataTab patient={patient} />
+                            <PersonalDataTab patient={patient as any} />
                         </TabsContent>
 
                         <TabsContent value="clinical" className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2">
@@ -949,7 +908,7 @@ export const PatientProfilePage = () => {
                         </TabsContent>
 
                         <TabsContent value="financial" className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2">
-                            <FinancialTab patientId={id || ''} />
+                            <FinancialTab patientId={id || ''} appointments={appointments} />
                         </TabsContent>
 
                         <TabsContent value="gamification" className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2">
@@ -957,7 +916,7 @@ export const PatientProfilePage = () => {
                         </TabsContent>
 
                         <TabsContent value="documents" className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2">
-                            <DocumentsTab patientId={id || ''} />
+                            <DocumentsTab patientId={id || ''} documents={documents as any} isLoading={isLoadingDocuments} />
                         </TabsContent>
                     </div>
                 </Tabs>
@@ -966,10 +925,9 @@ export const PatientProfilePage = () => {
                     open={editingPatient}
                     onOpenChange={setEditingPatient}
                     patientId={id}
-                    patient={patient}
+                    patient={patient as any}
                 />
 
-                {/* Evaluation Template Selection Modal */}
                 <Dialog open={evaluationModalOpen} onOpenChange={setEvaluationModalOpen}>
                     <DialogContent className="sm:max-w-[600px]">
                         <DialogHeader>
@@ -998,7 +956,6 @@ export const PatientProfilePage = () => {
                                     </div>
                                 ) : (
                                     <div className="space-y-2">
-                                        {/* Quick access - Favorites */}
                                         {evaluationForms.filter(f => f.is_favorite).slice(0, 3).length > 0 && (
                                             <div className="space-y-2">
                                                 <p className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
@@ -1032,7 +989,6 @@ export const PatientProfilePage = () => {
                                             </div>
                                         )}
 
-                                        {/* All templates */}
                                         <details className="group">
                                             <summary className="text-xs font-semibold text-muted-foreground flex items-center gap-1 cursor-pointer hover:text-foreground list-none p-0 bg-transparent border-none w-full">
                                                 <span>Ver todos os templates</span>

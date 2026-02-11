@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import {
   View,
@@ -16,7 +16,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
-import { Card, Button } from '@/components';
+import { Card } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useQuery } from '@tanstack/react-query';
 import { getPatientById } from '@/lib/firestore';
@@ -30,21 +30,18 @@ import {
   useDeleteFinancialRecord,
   useMarkAsPaid,
 } from '@/hooks/usePatientFinancial';
-import { usePartnerships } from '@/hooks/usePartnerships';
 import type { ApiFinancialRecord } from '@/lib/api';
 
 export default function PatientDetailScreen() {
-  const { id, patientName } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+  const { id, patientName, tab, autoCreate, date: initialDateParam } = params;
   const colors = useColors();
   const { light, medium } = useHaptics();
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<'info' | 'history' | 'exercises' | 'financial'>('info');
-
-  // Alias para exercises quando precisar usar evolution label
-  const tabLabel = selectedTab === 'exercises' ? 'Evoluções' : selectedTab === 'info' ? 'Informações' : 'Histórico';
+  const [selectedTab, setSelectedTab] = useState<'info' | 'history' | 'exercises' | 'financial'>((tab as any) || 'info');
 
   // Buscar dados reais do paciente
-  const { data: patient, isLoading, refetch } = useQuery({
+  const { data: patient, isLoading: isLoadingPatient, refetch } = useQuery({
     queryKey: ['patient', id],
     queryFn: () => id ? getPatientById(id as string) : null,
     enabled: !!id,
@@ -52,9 +49,6 @@ export default function PatientDetailScreen() {
 
   // Buscar evoluções do paciente
   const { evolutions, isLoading: isLoadingEvolutions, refetch: refetchEvolutions } = useEvolutions(id as string);
-
-  // Buscar exercícios do paciente
-  const { data: patientExercises } = usePatientExercises(id as string);
 
   // Buscar registros financeiros do paciente
   const { data: financialRecords, isLoading: isLoadingFinancial, refetch: refetchFinancial } = usePatientFinancialRecords(id as string);
@@ -70,11 +64,18 @@ export default function PatientDetailScreen() {
   const [showFinancialModal, setShowFinancialModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState<ApiFinancialRecord | null>(null);
   const [formData, setFormData] = useState({
-    session_date: format(new Date(), 'yyyy-MM-dd'),
+    session_date: (initialDateParam as string) || format(new Date(), 'yyyy-MM-dd'),
     session_value: '',
     payment_method: '',
     notes: '',
   });
+
+  // Handle auto-create from appointment completion
+  useEffect(() => {
+    if (autoCreate === 'true' && selectedTab === 'financial') {
+      setShowFinancialModal(true);
+    }
+  }, [autoCreate, selectedTab]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -134,7 +135,7 @@ export default function PatientDetailScreen() {
             style={[styles.actionBtn, { backgroundColor: colors.success }]}
             onPress={() => {
               medium();
-              router.push(`/exercises?patientId=${id}`);
+              router.push(`/exercises?patientId=${id}&patientName=${name}`);
             }}
           >
             <Ionicons name="fitness" size={20} color="#FFFFFF" />
@@ -144,7 +145,7 @@ export default function PatientDetailScreen() {
             style={[styles.actionBtn, { backgroundColor: colors.info }]}
             onPress={() => {
               medium();
-              router.push(`/patient/[id]/evolution?id=${id}&patientName=${name}`);
+              router.push(`/patient/${id}/evolution?id=${id}&patientName=${name}`);
             }}
           >
             <Ionicons name="document-text" size={20} color="#FFFFFF" />
@@ -154,25 +155,25 @@ export default function PatientDetailScreen() {
 
         {/* Tab Selector */}
         <View style={[styles.tabContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          {(['info', 'financial', 'exercises'] as const).map((tab) => (
+          {(['info', 'financial', 'exercises'] as const).map((tabKey) => (
             <TouchableOpacity
-              key={tab}
+              key={tabKey}
               style={[
                 styles.tab,
-                selectedTab === tab && { backgroundColor: colors.primary },
+                selectedTab === tabKey && { backgroundColor: colors.primary },
               ]}
               onPress={() => {
                 medium();
-                setSelectedTab(tab);
+                setSelectedTab(tabKey);
               }}
             >
               <Text
                 style={[
                   styles.tabText,
-                  { color: selectedTab === tab ? '#FFFFFF' : colors.textSecondary },
+                  { color: selectedTab === tabKey ? '#FFFFFF' : colors.textSecondary },
                 ]}
               >
-                {tab === 'info' ? 'Informações' : tab === 'financial' ? 'Financeiro' : 'Evoluções'}
+                {tabKey === 'info' ? 'Informações' : tabKey === 'financial' ? 'Financeiro' : 'Evoluções'}
               </Text>
             </TouchableOpacity>
           ))}
@@ -205,7 +206,7 @@ export default function PatientDetailScreen() {
                     </Text>
                   </View>
                 )}
-                {patient?.condition && (
+                {(patient?.condition || patient?.diagnosis) && (
                   <View style={[styles.divider, { backgroundColor: colors.border }]} />
                 )}
                 {patient?.condition && (
@@ -253,7 +254,7 @@ export default function PatientDetailScreen() {
               style={[styles.addEvolutionBtn, { backgroundColor: colors.primary }]}
               onPress={() => {
                 medium();
-                router.push(`/patient/[id]/evolution?id=${id}&patientName=${name}`);
+                router.push(`/patient/${id}/evolution?id=${id}&patientName=${name}`);
               }}
             >
               <Ionicons name="add" size={24} color="#FFFFFF" />
@@ -268,7 +269,7 @@ export default function PatientDetailScreen() {
                   key={evolution.id}
                   onPress={() => {
                     medium();
-                    router.push(`/patient/[id]/evolution?id=${id}&evolutionId=${evolution.id}&patientName=${name}`);
+                    router.push(`/patient/${id}/evolution?id=${id}&evolutionId=${evolution.id}&patientName=${name}`);
                   }}
                 >
                   <Card style={styles.evolutionCard}>
@@ -387,11 +388,11 @@ export default function PatientDetailScreen() {
                         <Text style={[styles.recordDate, { color: colors.text }]}>
                           {format(new Date(record.session_date), 'dd/MM/yyyy')}
                         </Text>
-                        {record.partnership && (
+                        {(record as any).partnership && (
                           <View style={[styles.partnershipBadge, { backgroundColor: colors.infoLight }]}>
                             <Ionicons name="pricetag" size={12} color={colors.info} />
                             <Text style={[styles.partnershipBadgeText, { color: colors.info }]}>
-                              {record.partnership.name}
+                              {(record as any).partnership.name}
                             </Text>
                           </View>
                         )}
@@ -752,10 +753,6 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 22,
     fontWeight: 'bold',
-  },
-  condition: {
-    fontSize: 14,
-    marginVertical: 4,
   },
   statusBadge: {
     alignSelf: 'flex-start',
@@ -1138,5 +1135,10 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 8,
     fontSize: 14,
+  },
+  infoSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
   },
 });

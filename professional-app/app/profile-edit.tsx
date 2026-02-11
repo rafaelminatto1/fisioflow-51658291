@@ -21,6 +21,7 @@ import { Button, Card } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateProfessionalProfile, getProfessionalProfile } from '@/lib/firestore';
+import { uploadAvatar } from '@/lib/storage';
 import * as ImagePicker from 'expo-image-picker';
 
 interface FormData {
@@ -169,10 +170,22 @@ export default function ProfileEditScreen() {
       });
 
       if (!result.canceled && result.assets[0]) {
-        setAvatarUri(result.assets[0].uri);
+        const selectedUri = result.assets[0].uri;
+        setAvatarUri(selectedUri);
         medium();
-        // TODO: Upload para Firebase Storage
-        Alert.alert('Sucesso', 'Foto atualizada!');
+        
+        try {
+          setIsSaving(true);
+          const downloadUrl = await uploadAvatar(user!.id, selectedUri);
+          await updateMutation.mutateAsync({ avatarUrl: downloadUrl } as any);
+          success();
+          Alert.alert('Sucesso', 'Foto atualizada!');
+        } catch (uploadErr) {
+          error();
+          Alert.alert('Erro', 'Não foi possível salvar a imagem no servidor.');
+        } finally {
+          setIsSaving(false);
+        }
       }
     } catch (err) {
       error();

@@ -22,7 +22,6 @@ This security audit identified **8 critical**, **6 high**, **9 medium**, and **4
 
 **Issue:**
 ```json
-"ABLY_API_KEY": "zmqcyQ.hjud3A:UFQTNkXMSS17eJawRzhNP0cg-qBhn6Rp3vdJkib-c30",
 "DB_HOST": "35.192.122.198",
 "WHATSAPP_BUSINESS_ACCOUNT_ID": "806225345331804",
 "WHATSAPP_PHONE_NUMBER": "+551158749885"
@@ -30,23 +29,20 @@ This security audit identified **8 critical**, **6 high**, **9 medium**, and **4
 
 **Impact:**
 - Exposed production API keys and database credentials
-- Ably API key provides full access to real-time messaging
 - Database host exposed for potential direct connection attacks
 - WhatsApp business account credentials exposed
 
 **Fix Applied:**
 ```diff
-- "ABLY_API_KEY": "zmqcyQ.hjud3A:UFQTNkXMSS17eJawRzhNP0cg-qBhn6Rp3vdJkib-c30",
 - "DB_HOST": "35.192.122.198",
 + # Secrets removed from firebase.json
 + # Use Google Secret Manager or Firebase project configuration
 ```
 
 **Remediation:**
-1. Immediately rotate the exposed Ably API key
-2. Configure secrets via Google Secret Manager
-3. Add `.env` and `firebase.json` to `.gitignore` if not already
-4. Use environment-specific configurations
+1. Configure secrets via Google Secret Manager
+2. Add `.env` and `firebase.json` to `.gitignore` if not already
+3. Use environment-specific configurations
 
 ---
 
@@ -73,9 +69,7 @@ This security audit identified **8 critical**, **6 high**, **9 medium**, and **4
 .env.production.local
 
 # Use environment-specific secrets
-# For Firebase Cloud Functions, use:
-gcloud secrets create ABLY_API_KEY --data-file="-"
-echo "your_new_api_key" | gcloud secrets versions add ABLY_API_KEY --data-file="-"
+# For Firebase Cloud Functions, use Google Secret Manager
 ```
 
 **Remediation Steps:**
@@ -534,11 +528,10 @@ Add SRI for external CDN resources.
 ## Required Actions by Priority
 
 ### Immediate (Within 24 Hours):
-1. [ ] Rotate exposed Ably API key
-2. [ ] Remove hardcoded secrets from firebase.json
-3. [ ] Fix MFA TOTP verification (install otplib)
-4. [ ] Rotate WhatsApp access tokens
-5. [ ] Move all secrets to Google Secret Manager
+1. [ ] Remove hardcoded secrets from firebase.json
+2. [ ] Fix MFA TOTP verification (install otplib)
+3. [ ] Rotate WhatsApp access tokens
+4. [ ] Move all secrets to Google Secret Manager
 
 ### Urgent (Within 1 Week):
 6. [ ] Fix storage rules existence check

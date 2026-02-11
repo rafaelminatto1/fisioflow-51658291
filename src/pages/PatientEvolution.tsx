@@ -1,5 +1,6 @@
 /**
  * Patient Evolution Page - Migrated to Firebase
+ * Optimized with useEvolutionDataOptimized for better performance
  */
 
 import { lazy, Suspense, useEffect, useMemo, useState, useCallback, startTransition } from 'react';
@@ -43,15 +44,9 @@ import { useCommandPalette } from '@/hooks/ui/useCommandPalette';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // Hooks
-import {
-  usePatientSurgeries,
-  usePatientGoals,
-  usePatientPathologies,
-  useRequiredMeasurements,
-  useEvolutionMeasurements,
-} from '@/hooks/usePatientEvolution';
+import { useEvolutionDataOptimized, type EvolutionTab } from '@/hooks/evolution/useEvolutionDataOptimized';
 import { useAppointmentData } from '@/hooks/useAppointmentData';
-import { useAutoSaveSoapRecord, useSoapRecords, useDraftSoapRecordByAppointment, type SoapRecord } from '@/hooks/useSoapRecords';
+import { useAutoSaveSoapRecord, useDraftSoapRecordByAppointment, type SoapRecord } from '@/hooks/useSoapRecords';
 import { useGamification } from '@/hooks/useGamification';
 import { useSessionExercises } from '@/hooks/useSessionExercises';
 import { useAutoSave } from '@/hooks/useAutoSave';
@@ -126,7 +121,7 @@ const PatientEvolution = () => {
   const [showInsights, setShowInsights] = useState(true);
   const [showComparison, setShowComparison] = useState(false);
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
-  const [activeTab, setActiveTab] = useState('evolucao'); // evolucao, avaliacao, tratamento, historico, assistente
+  const [activeTab, setActiveTab] = useState<EvolutionTab>('evolucao'); // evolucao, avaliacao, tratamento, historico, assistente
   const [sessionLongAlertShown, setSessionLongAlertShown] = useState(false);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
 
@@ -172,12 +167,30 @@ const PatientEvolution = () => {
     patientError
   } = useAppointmentData(appointmentId);
 
+  // OTIMIZAÇÃO: Hook centralizado para carregar dados de evolução com cache otimizado
+  const {
+    goals,
+    pathologies,
+    activePathologies,
+    soapRecords: previousEvolutions,
+    measurements,
+    requiredMeasurements,
+    surgeries,
+    medicalReturns,
+    isLoading: evolutionDataLoading,
+    invalidateData,
+  } = useEvolutionDataOptimized({
+    patientId: patientId || '',
+    activeTab,
+    prefetchNextTab: true
+  });
+
   // Timeout warning state
   const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
-    if (dataLoading) {
+    if (dataLoading || evolutionDataLoading) {
       timeout = setTimeout(() => {
         setShowTimeoutWarning(true);
       }, 10000); // 10 seconds
@@ -185,41 +198,15 @@ const PatientEvolution = () => {
       setShowTimeoutWarning(false);
     }
     return () => clearTimeout(timeout);
-  }, [dataLoading]);
+  }, [dataLoading, evolutionDataLoading]);
 
   // Hooks que dependem de patientId - chamados APÓS useAppointmentData
-  // OTIMIZAÇÃO: Hooks secundários são carregados apenas quando necessário (enabled: !!patientId)
-  // e com staleTime maior para reduzir requisições
   const { lastSession, isLoadingLastSession, suggestExerciseChanges } = useSessionExercises(patientId || '');
   const { awardXp } = useGamification(patientId || '');
-  const { data: surgeries = [] } = usePatientSurgeries(patientId || '');
-  const { data: goals = [] } = usePatientGoals(patientId || '');
-  const { data: pathologies = [] } = usePatientPathologies(patientId || '');
-  // OTIMIZAÇÃO: Reduzido limite de medições na carga inicial de 120 para 50
-  const { data: measurements = [] } = useEvolutionMeasurements(patientId || '', { limit: 50 });
-  const { data: previousEvolutions = [] } = useSoapRecords(patientId || '', 10);
   const { data: draftByAppointment } = useDraftSoapRecordByAppointment(patientId || '', appointmentId);
 
   // Hook de auto-save
   const autoSaveMutation = useAutoSaveSoapRecord();
-
-  // OTIMIZAÇÃO: Prefetch de dados em background quando patientId está disponível
-  useEffect(() => {
-    if (patientId) {
-      // Prefetch em background usando startTransition para não bloquear a UI
-      startTransition(() => {
-        // Dados para outras abas são carregados de forma lazy
-        queryClient.prefetchQuery({
-          queryKey: ['patient-surgeries', patientId],
-          staleTime: 1000 * 60 * 15,
-        });
-        queryClient.prefetchQuery({
-          queryKey: ['patient-goals', patientId],
-          staleTime: 1000 * 60 * 15,
-        });
-      });
-    }
-  }, [patientId, queryClient]);
 
   // ========== CALLBACKS ==========
   const setSoapDataStable = useCallback((data: { subjective: string; objective: string; assessment: string; plan: string }) => {
@@ -265,19 +252,6 @@ const PatientEvolution = () => {
   }, [lastSession, sessionExercises.length, isLoadingLastSession]);
 
   // ========== MEMOIZED VALUES ==========
-  // Patologias ativas para medições obrigatórias
-  const activePathologies = useMemo(() =>
-    pathologies.filter(p => p.status === 'em_tratamento'),
-    [pathologies]
-  );
-
-  // OTIMIZAÇÃO: Medições obrigatórias só carregam quando aba de avaliação está ativa
-  // ou quando há patologias ativas e ainda não foram carregadas
-  const shouldLoadRequiredMeasurements = activeTab === 'avaliacao' || activeTab === 'evolucao';
-  const { data: requiredMeasurements = [] } = useRequiredMeasurements(
-    shouldLoadRequiredMeasurements ? activePathologies.map(p => p.pathology_name) : []
-  );
-
   // Tempo de tratamento do paciente
   const treatmentDuration = useMemo(() =>
     patient?.created_at
@@ -317,6 +291,15 @@ const PatientEvolution = () => {
     };
   }, [previousEvolutions, goals, pathologies, measurements]);
 
+  // Medições realizadas hoje
+  const todayMeasurements = useMemo(() => {
+    const today = startOfDay(new Date());
+    return measurements.filter(m => {
+      const measurementDate = startOfDay(new Date(m.measured_at));
+      return measurementDate.getTime() === today.getTime();
+    });
+  }, [measurements]);
+
   // Medições agrupadas por tipo para gráficos
   const measurementsByType = useMemo(() => {
     const grouped: Record<string, Array<{ date: string; value: number; fullDate: string }>> = {};
@@ -345,31 +328,6 @@ const PatientEvolution = () => {
       sessionNumber: evolutionStats.totalEvolutions + 1,
     }));
   }, [selectedTherapistId, therapists, appointment?.appointment_date, evolutionStats.totalEvolutions]);
-
-  // Medições agrupadas por nome
-  const measurementsGroupedByName = useMemo(() => {
-    const grouped: Record<string, Array<{ date: string; value: number; fullDate: string }>> = {};
-    measurements.forEach(m => {
-      if (!grouped[m.measurement_name]) {
-        grouped[m.measurement_name] = [];
-      }
-      grouped[m.measurement_name].push({
-        date: format(new Date(m.measured_at), 'dd/MM', { locale: ptBR }),
-        value: m.value,
-        fullDate: m.measured_at
-      });
-    });
-    return grouped;
-  }, [measurements]);
-
-  // Medições realizadas hoje
-  const todayMeasurements = useMemo(() => {
-    const today = startOfDay(new Date());
-    return measurements.filter(m => {
-      const measurementDate = startOfDay(new Date(m.measured_at));
-      return measurementDate.getTime() === today.getTime();
-    });
-  }, [measurements]);
 
   // ========== ALERTAS INTELIGENTES (Memoizados) ==========
   // Metas próximas do vencimento
@@ -858,7 +816,7 @@ const PatientEvolution = () => {
   }
 
   // Loading state
-  if (dataLoading) {
+  if (dataLoading || (evolutionDataLoading && activeTab === 'evolucao')) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center h-[50vh]">
@@ -1006,7 +964,7 @@ const PatientEvolution = () => {
             previousEvolutionsCount={previousEvolutions.length}
             tabsConfig={tabsConfig}
             activeTab={activeTab}
-            onTabChange={setActiveTab}
+            onTabChange={(v) => setActiveTab(v as EvolutionTab)}
             pendingRequiredMeasurements={pendingRequiredMeasurements.length}
             upcomingGoalsCount={upcomingGoals.length}
             evolutionVersion={evolutionVersion}
@@ -1014,7 +972,7 @@ const PatientEvolution = () => {
           />
 
           {/* Abas de Navegação */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full pb-20" aria-label="Abas de evolução e acompanhamento">
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as EvolutionTab)} className="w-full pb-20" aria-label="Abas de evolução e acompanhamento">
             {/* ABA 1: EVOLUÇÃO (SOAP V1 ou Texto Livre V2) */}
             <TabsContent value="evolucao" className="mt-4">
               {evolutionVersion === 'v2-texto' ? (
@@ -1037,7 +995,7 @@ const PatientEvolution = () => {
                     sessionLongAlertShown={sessionLongAlertShown}
                     activePathologies={activePathologies}
                     previousEvolutionsCount={previousEvolutions.length}
-                    onTabChange={setActiveTab}
+                    onTabChange={(v) => setActiveTab(v as EvolutionTab)}
                   />
 
                   {/* V2 Notion Panel */}
@@ -1076,7 +1034,7 @@ const PatientEvolution = () => {
                         sessionLongAlertShown={sessionLongAlertShown}
                         activePathologies={activePathologies}
                         previousEvolutionsCount={previousEvolutions.length}
-                        onTabChange={setActiveTab}
+                        onTabChange={(v) => setActiveTab(v as EvolutionTab)}
                       />
                     </>
                   }
@@ -1087,7 +1045,7 @@ const PatientEvolution = () => {
                       <MedicalReturnCard
                         patient={patient}
                         patientId={patientId || undefined}
-                        onPatientUpdated={() => queryClient?.invalidateQueries({ queryKey: ['patient', patientId] })}
+                        onPatientUpdated={() => invalidateData('all')}
                       />
 
                       {/* Cirurgias */}

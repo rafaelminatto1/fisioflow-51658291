@@ -15,12 +15,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useColors } from '@/hooks/useColorScheme';
-import { useAuthStore } from '@/store/auth';
 import { Button, Card, Input } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createPatient, updatePatient, getPatientById } from '@/lib/firestore';
-import { format } from 'date-fns';
+import { useQuery } from '@tanstack/react-query';
+import { format, parse, isValid } from 'date-fns';
+import { usePatients, getPatientByIdHook } from '@/hooks/usePatients';
+import type { Patient } from '@/types';
 
 interface FormData {
   name: string;
@@ -30,11 +30,13 @@ interface FormData {
   condition: string;
   diagnosis: string;
   notes: string;
+  status: 'active' | 'inactive';
 }
 
 interface FormErrors {
   name?: string;
   phone?: string;
+  birthDate?: string;
 }
 
 const maskPhone = (value: string) => {
@@ -57,12 +59,12 @@ export default function PatientFormScreen() {
   const colors = useColors();
   const router = useRouter();
   const params = useLocalSearchParams();
-  const { user } = useAuthStore();
-  const { light, medium, success, error } = useHaptics();
-  const queryClient = useQueryClient();
+  const { medium, success, error } = useHaptics();
 
   const patientId = params.id as string | undefined;
   const isEditing = !!patientId;
+
+  const { createAsync, updateAsync, isCreating, isUpdating } = usePatients();
 
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -72,14 +74,15 @@ export default function PatientFormScreen() {
     condition: '',
     diagnosis: '',
     notes: '',
+    status: 'active',
   });
 
   const [formErrors, setFormErrors] = useState<FormErrors>({});
 
-  // Buscar dados do paciente se for edição
+  // Fetch patient data for editing
   const { data: patient, isLoading: isLoadingPatient } = useQuery({
     queryKey: ['patient', patientId],
-    queryFn: () => patientId ? getPatientById(patientId) : null,
+    queryFn: () => (patientId ? getPatientByIdHook(patientId) : null),
     enabled: !!patientId,
   });
 
@@ -93,45 +96,10 @@ export default function PatientFormScreen() {
         condition: patient.condition || '',
         diagnosis: patient.diagnosis || '',
         notes: patient.notes || '',
+        status: patient.status,
       });
     }
   }, [patient]);
-
-  const createMutation = useMutation({
-    mutationFn: (data: Omit<FormData, 'birthDate'> & { birthDate?: Date }) =>
-      createPatient(user!.id, {
-        ...data,
-        status: 'active',
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
-      success();
-      Alert.alert('Sucesso', 'Paciente cadastrado com sucesso!', [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
-    },
-    onError: () => {
-      error();
-      Alert.alert('Erro', 'Não foi possível cadastrar o paciente. Tente novamente.');
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<FormData> & { birthDate?: Date } }) =>
-      updatePatient(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
-      queryClient.invalidateQueries({ queryKey: ['patient', patientId] });
-      success();
-      Alert.alert('Sucesso', 'Paciente atualizado com sucesso!', [
-        { text: 'OK', onPress: () => router.back() }
-      ]);
-    },
-    onError: () => {
-      error();
-      Alert.alert('Erro', 'Não foi possível atualizar o paciente. Tente novamente.');
-    },
-  });
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -146,17 +114,15 @@ export default function PatientFormScreen() {
       newErrors.phone = 'Telefone inválido';
     }
 
+    if (formData.birthDate && formData.birthDate.length > 0) {
+        const parsedDate = parse(formData.birthDate, 'dd/MM/yyyy', new Date());
+        if (!isValid(parsedDate) || formData.birthDate.length !== 10) {
+            newErrors.birthDate = 'Data deve estar no formato DD/MM/AAAA';
+        }
+    }
+
     setFormErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
-
-  const parseDate = (dateString: string): Date | undefined => {
-    if (!dateString) return undefined;
-    const parts = dateString.split('/');
-    if (parts.length !== 3) return undefined;
-    const [day, month, year] = parts;
-    const parsed = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-    return isNaN(parsed.getTime()) ? undefined : parsed;
   };
 
   const handleSave = async () => {
@@ -168,19 +134,30 @@ export default function PatientFormScreen() {
     }
 
     try {
-      const { birthDate: birthDateStr, ...rest } = formData;
-      const submitData = {
-        ...rest,
-        birthDate: parseDate(birthDateStr),
+      const submitData: Partial<Patient> = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        condition: formData.condition,
+        notes: formData.notes,
+        status: formData.status,
+        birthDate: formData.birthDate ? parse(formData.birthDate, 'dd/MM/yyyy', new Date()) : undefined,
       };
 
       if (isEditing && patientId) {
-        await updateMutation.mutateAsync({ id: patientId, data: submitData as any });
+        await updateAsync({ id: patientId, data: submitData });
+        success();
+        Alert.alert('Sucesso', 'Paciente atualizado com sucesso!');
       } else {
-        await createMutation.mutateAsync(submitData as any);
+        await createAsync(submitData as Omit<Patient, 'id'>);
+        success();
+        Alert.alert('Sucesso', 'Paciente cadastrado com sucesso!');
       }
-    } catch (err) {
-      // Error handling in mutation
+      router.back();
+    } catch (err: any) {
+      error();
+      const errorMessage = err?.message || 'Não foi possível salvar os dados do paciente.';
+      Alert.alert('Erro', errorMessage);
     }
   };
 
@@ -264,6 +241,7 @@ export default function PatientFormScreen() {
               placeholder="DD/MM/AAAA"
               keyboardType="numeric"
               maxLength={10}
+              error={formErrors.birthDate}
             />
           </Card>
 
@@ -302,7 +280,7 @@ export default function PatientFormScreen() {
           <Button
             title={isEditing ? 'Salvar Alterações' : 'Cadastrar Paciente'}
             onPress={handleSave}
-            loading={createMutation.isPending || updateMutation.isPending}
+            loading={isCreating || isUpdating}
             style={styles.saveButton}
           />
 
@@ -322,13 +300,12 @@ export default function PatientFormScreen() {
                       style: 'destructive',
                       onPress: async () => {
                         try {
-                          await updatePatient(patientId!, { status: 'inactive' });
-                          queryClient.invalidateQueries({ queryKey: ['patients'] });
+                          await updateAsync({ id: patientId, data: { status: 'inactive' } });
                           success();
                           router.back();
-                        } catch {
+                        } catch (err: any) {
                           error();
-                          Alert.alert('Erro', 'Não foi possível desativar o paciente.');
+                          Alert.alert('Erro', err.message || 'Não foi possível desativar o paciente.');
                         }
                       }
                     }
@@ -347,6 +324,7 @@ export default function PatientFormScreen() {
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

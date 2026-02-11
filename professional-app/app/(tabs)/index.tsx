@@ -103,7 +103,7 @@ export default function DashboardScreen() {
             style={[styles.notificationBtn, { backgroundColor: colors.surface }]}
             onPress={() => {
               light();
-              // TODO: Navigate to notifications
+              router.push('/notifications');
             }}
           >
             <Ionicons name="notifications-outline" size={24} color={colors.text} />
