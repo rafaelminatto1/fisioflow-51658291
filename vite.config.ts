@@ -341,6 +341,7 @@ export default defineConfig(({ mode }) => {
         input: {
           main: './index.html',
         },
+        external: [],
         output: {
           chunkFileNames: 'assets/js/[name]-[hash].js',
           entryFileNames: 'assets/js/[name]-[hash].js',
@@ -390,9 +391,16 @@ export default defineConfig(({ mode }) => {
               if (id.includes('framer-motion') || id.includes('motion')) {
                 return 'animation-vendor';
               }
-              // Bibliotecas PDF
-              if (id.includes('jspdf') || id.includes('@react-pdf')) {
-                return 'pdf-vendor';
+              // Bibliotecas PDF - CRÍTICO: Isolar completamente para evitar circular dependency
+              // Separar jsPDF e @react-pdf em chunks diferentes
+              if (id.includes('@react-pdf/pdfkit') || id.includes('@react-pdf/png-js')) {
+                return 'pdfkit-vendor';
+              }
+              if (id.includes('jspdf')) {
+                return 'jspdf-vendor';
+              }
+              if (id.includes('@react-pdf') && !id.includes('pdfkit')) {
+                return 'react-pdf-vendor';
               }
               // Excel
               if (id.includes('xlsx')) {
@@ -423,8 +431,28 @@ export default defineConfig(({ mode }) => {
             }
           },
           experimentalMinChunkSize: 100000,
+          // CRÍTICO: Adicionar inlineDynamicImports para evitar circular dependency
+          inlineDynamicImports: false,
         },
         preserveEntrySignatures: 'strict',
+        // CRÍTICO: Desabilitar moduleSideEffects para PDFKit para evitar circular dependency
+        moduleContext: (id) => {
+          if (id.includes('node_modules/@react-pdf/pdfkit')) {
+            return 'globalThis';
+          }
+        },
+        treeshake: {
+          moduleSideEffects: (id) => {
+            // Forçar tree-shaking agressivo para PDFKit
+            if (id.includes('@react-pdf/pdfkit')) {
+              return false;
+            }
+            if (id.includes('pako')) {
+              return false;
+            }
+            return true;
+          }
+        }
       },
       chunkSizeWarningLimit: 5000,
       reportCompressedSize: false,
@@ -508,15 +536,25 @@ export default defineConfig(({ mode }) => {
                 const filePath = args.path;
                 let contents = fs.readFileSync(filePath, 'utf8');
 
-                // Corrigir imports do pako
-                contents = contents.replace(/import require\$\$1\$2 from 'pako\/lib\/zlib\/zstream\.js';/g,
-                  "import * as require$$1$2 from 'pako/lib/zlib/zstream.js';");
-                contents = contents.replace(/import require\$\$2 from 'pako\/lib\/zlib\/deflate\.js';/g,
-                  "import * as require$$2 from 'pako/lib/zlib/deflate.js';");
-                contents = contents.replace(/import require\$\$3\$1 from 'pako\/lib\/zlib\/inflate\.js';/g,
-                  "import * as require$$3$1 from 'pako/lib/zlib/inflate.js';");
-                contents = contents.replace(/import require\$\$4\$1 from 'pako\/lib\/zlib\/constants\.js';/g,
-                  "import * as require$$4$1 from 'pako/lib/zlib/constants.js';");
+                // Fix circular dependency by replacing namespace imports with default imports
+                // The issue is that "import * as" creates a namespace object that can cause TDZ errors
+                // with circular dependencies. Using default imports avoids this.
+                contents = contents.replace(
+                  /import \* as require\$\$1\$2 from 'pako\/lib\/zlib\/zstream\.js';/g,
+                  "import require$$1$2 from 'pako/lib/zlib/zstream.js';"
+                );
+                contents = contents.replace(
+                  /import \* as require\$\$2 from 'pako\/lib\/zlib\/deflate\.js';/g,
+                  "import require$$2 from 'pako/lib/zlib/deflate.js';"
+                );
+                contents = contents.replace(
+                  /import \* as require\$\$3\$1 from 'pako\/lib\/zlib\/inflate\.js';/g,
+                  "import require$$3$1 from 'pako/lib/zlib/inflate.js';"
+                );
+                contents = contents.replace(
+                  /import \* as require\$\$4\$1 from 'pako\/lib\/zlib\/constants\.js';/g,
+                  "import require$$4$1 from 'pako/lib/zlib/constants.js';"
+                );
 
                 // Remover import problemático do MD5 e substituir uso por CryptoJS.MD5
                 contents = contents.replace(/import MD5 from 'crypto-js\/md5\.js';\s*/g, '');
