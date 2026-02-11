@@ -9,7 +9,7 @@
  */
 
 import { getVertexAI, getGenerativeModel } from "firebase/vertexai";
-import { firebaseApp } from "@/integrations/firebase/client";
+import { app as firebaseApp } from "@/integrations/firebase/client";
 
 // Initialize Vertex AI with Firebase
 const vertexAI = getVertexAI(firebaseApp);

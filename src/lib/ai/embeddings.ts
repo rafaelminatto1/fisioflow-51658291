@@ -5,8 +5,8 @@
  */
 
 import { getVertexAI, getGenerativeModel } from 'firebase/vertexai';
-import { firebaseApp } from '@/integrations/firebase/client';
-import { logger } from '@/lib/logging/logger';
+import { app as firebaseApp } from '@/integrations/firebase/app';
+import { logger } from '@/lib/errors/logger';
 import { withPerformanceTrace } from '@/lib/monitoring/performance';
 
 const vertexAI = getVertexAI(firebaseApp);

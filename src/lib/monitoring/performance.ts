@@ -4,11 +4,12 @@
  * Rastreia performance de operações críticas no app
  */
 
-import { trace, performance } from 'firebase/performance';
-import { firebaseApp } from '@/integrations/firebase/client';
-import { logger } from '@/lib/logging/logger';
+import { trace } from 'firebase/performance';
+import { getPerformance } from 'firebase/performance';
+import { app as firebaseApp } from '@/integrations/firebase/app';
+import { logger } from '@/lib/errors/logger';
 
-let perfInstance: ReturnType<typeof performance> | null = null;
+let perfInstance: ReturnType<typeof getPerformance> | null = null;
 
 /**
  * Inicializa o Performance Monitoring
@@ -17,7 +18,7 @@ export function initPerformanceMonitoring() {
   try {
     if (perfInstance) return perfInstance;
 
-    perfInstance = performance(firebaseApp);
+    perfInstance = getPerformance(firebaseApp);
     logger.info('[Performance] Monitoring inicializado');
     return perfInstance;
   } catch (error) {

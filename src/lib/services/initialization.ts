@@ -8,8 +8,8 @@ import { initPerformanceMonitoring } from '@/lib/monitoring/performance';
 import { initRemoteConfig } from '@/lib/config/remote-config';
 import { initAnalytics } from '@/lib/analytics/events';
 import { initSentry, setUser } from '@/lib/monitoring/sentry';
-import { auth } from '@/integrations/firebase/client';
-import { logger } from '@/lib/logging/logger';
+import { auth } from '@/lib/firebase';
+import { logger } from '@/lib/errors/logger';
 
 /**
  * Inicializa todos os serviços do Firebase
@@ -68,44 +68,15 @@ export function setupUserTracking(user: {
  */
 export function clearUserTracking() {
   try {
-    // Sentry
-    const { clearUser: sentryClearUser } = require('@/lib/monitoring/sentry');
-    sentryClearUser();
+    // Sentry - import dinâmico para evitar erro de build
+    import('@/lib/monitoring/sentry').then(({ clearUser: sentryClearUser }) => {
+      sentryClearUser();
+    });
 
     logger.debug('[Init] Tracking do usuário limpo');
   } catch (error) {
     logger.error('[Init] Erro ao limpar tracking do usuário:', error);
   }
-}
-
-/**
- * Hook React para inicializar serviços automaticamente
- */
-import { useEffect } from 'react';
-import { useAuthState } from 'react-firebase-hooks/auth';
-
-export function useFirebaseServices() {
-  const [user, loading] = useAuthState(auth);
-
-  useEffect(() => {
-    // Inicializar serviços na montagem
-    initializeServices();
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      setupUserTracking(user);
-    } else if (!loading) {
-      // Usuário fez logout
-      clearUserTracking();
-    }
-  }, [user, loading]);
-
-  return {
-    initialized: true,
-    user,
-    loading,
-  };
 }
 
 /**
@@ -169,7 +140,6 @@ export const firebaseServices = {
   setupUser: setupUserTracking,
   clearUser: clearUserTracking,
   checkHealth: checkServicesHealth,
-  useServices: useFirebaseServices,
 };
 
 export default firebaseServices;
