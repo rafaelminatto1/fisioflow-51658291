@@ -14,8 +14,8 @@ import {
   getAll,
   type RemoteConfig,
 } from 'firebase/remote-config';
-import { firebaseApp } from '@/integrations/firebase/client';
-import { logger } from '@/lib/logging/logger';
+import { app as firebaseApp } from '@/integrations/firebase/app';
+import { logger } from '@/lib/errors/logger';
 
 let remoteConfigInstance: RemoteConfig | null = null;
 
