@@ -15,8 +15,9 @@ import { Link, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input } from '@/components';
 import { useColors } from '@/hooks/useColorScheme';
-import { useAuthStore } from '@/store/auth';
+import { useAuthStore } from '@/lib/firebase';
 import { validators } from '@/lib/validation';
+import logoIcon from '../../assets/icon.png';
 
 export default function LoginScreen() {
   const colors = useColors();
@@ -68,7 +69,7 @@ export default function LoginScreen() {
           {/* Logo */}
           <View style={styles.logoContainer}>
             <Image
-              source={require('../assets/icon.png')}
+              source={logoIcon}
               style={styles.logoImage}
               resizeMode="contain"
             />

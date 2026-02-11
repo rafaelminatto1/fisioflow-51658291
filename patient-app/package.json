@@ -37,6 +37,7 @@
     "expo-status-bar": "~3.0.9",
     "firebase": "^11.0.0",
     "react": "19.1.0",
+    "react-dom": "^19.1.0",
     "react-native": "0.81.5",
     "react-native-chart-kit": "^1.0.0",
     "react-native-gesture-handler": "~2.28.0",
@@ -44,7 +45,11 @@
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
     "react-native-svg": "15.8.0",
+    "react-native-web": "^0.21.2",
     "zustand": "^5.0.0"
+  },
+  "resolutions": {
+    "react-native": "react-native-web"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

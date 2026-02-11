@@ -287,7 +287,7 @@ export const CalendarWeekView = memo(({
                         <div className="grid grid-cols-[60px_repeat(6,1fr)] bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm overflow-x-auto -mx-2 px-2">
                             {/* Time icon - Sticky Left */}
                             <div className="h-14 border-r border-slate-200 dark:border-slate-800 flex items-center justify-center sticky left-0 z-50 bg-white dark:bg-slate-950">
-                                <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-600 dark:text-gray-500">
+                                <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700/50">
                                     <span className="text-[10px] font-bold">GMT-3</span>
                                 </div>
                             </div>
@@ -351,7 +351,7 @@ export const CalendarWeekView = memo(({
                                             key={`time-${time}`}
                                             className={cn(
                                                 "border-r border-slate-100 dark:border-slate-800 text-[11px] font-medium flex justify-end pr-2 pt-2 sticky left-0 z-30 bg-white dark:bg-slate-950",
-                                                isHour ? "text-slate-600 dark:text-gray-500 -mt-2.5 translate-y-0" : "text-gray-500 dark:text-slate-600 hidden"
+                                                isHour ? "text-slate-900 dark:text-slate-200 -mt-2.5 translate-y-0" : "text-gray-500 dark:text-slate-600 hidden"
                                             )}
                                             style={{ gridRow: index + 1, gridColumn: 1 }}
                                         >

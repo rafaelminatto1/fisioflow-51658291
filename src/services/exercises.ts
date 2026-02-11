@@ -1,6 +1,7 @@
 import { Exercise } from '@/types';
 import { NO_EQUIPMENT_GROUP_ID, EQUIPMENT, HOME_EQUIPMENT_GROUP } from '@/lib/constants/exerciseConstants';
 import { exercisesFirestore } from './exercisesFirestore';
+import { callFunctionHttp } from '@/integrations/firebase/functions';
 
 export interface ExerciseFilters {
     category?: string;
@@ -14,32 +15,61 @@ export interface ExerciseFilters {
 
 export const exerciseService = {
     async getExercises(filters?: ExerciseFilters): Promise<Exercise[]> {
-        // Expand equipment filters if needed (handling special group "Sem Equipamento")
-        let equipment = filters?.equipment;
-        if (equipment && equipment.includes(NO_EQUIPMENT_GROUP_ID)) {
-            const homeGroupLabels = EQUIPMENT
-                .filter(e => HOME_EQUIPMENT_GROUP.includes(e.value))
-                .map(e => e.label);
+        try {
+            // Tentar V2 (Postgres) primeiro para dados mais consistentes com o novo backend
+            const response = await callFunctionHttp('listExercisesV2', {
+                category: filters?.category,
+                difficulty: filters?.difficulty,
+                search: filters?.searchTerm,
+            });
 
-            const expanded = new Set([...equipment.filter(e => e !== NO_EQUIPMENT_GROUP_ID), ...homeGroupLabels]);
-            equipment = Array.from(expanded);
+            if (response.success && response.data) {
+                // Adaptar campos do Postgres para a interface do Frontend se necessário
+                return response.data.map((ex: any) => ({
+                    ...ex,
+                    targetMuscles: ex.muscles || [],
+                    equipment: ex.equipment || [],
+                }));
+            }
+
+            throw new Error('Falha na API V2');
+        } catch (error) {
+            console.warn('[ExerciseService] API V2 falhou, usando fallback Firestore:', error);
+
+            // Fallback para Firestore
+            let equipment = filters?.equipment;
+            if (equipment && equipment.includes(NO_EQUIPMENT_GROUP_ID)) {
+                const homeGroupLabels = EQUIPMENT
+                    .filter(e => HOME_EQUIPMENT_GROUP.includes(e.value))
+                    .map(e => e.label);
+
+                const expanded = new Set([...equipment.filter(e => e !== NO_EQUIPMENT_GROUP_ID), ...homeGroupLabels]);
+                equipment = Array.from(expanded);
+            }
+
+            return exercisesFirestore.getExercises({
+                ...filters,
+                equipment,
+            });
         }
-
-        return exercisesFirestore.getExercises({
-            ...filters,
-            equipment,
-        });
     },
 
     async getExerciseById(id: string): Promise<Exercise> {
-        const exercise = await exercisesFirestore.getExerciseById(id);
-        if (!exercise) {
-            throw new Error('Exercício não encontrado');
+        try {
+            const response = await callFunctionHttp('getExerciseV2', { exerciseId: id });
+            if (response.success && response.data) return response.data;
+            throw new Error('Falha na API V2');
+        } catch (error) {
+            const exercise = await exercisesFirestore.getExerciseById(id);
+            if (!exercise) throw new Error('Exercício não encontrado');
+            return exercise;
         }
-        return exercise;
     },
 
     async createExercise(exercise: Omit<Exercise, 'id'>): Promise<Exercise> {
+        // Criar no Firestore (que dispara o sync para SQL via trigger se configurado)
+        // ou criar via V2 que sincroniza de volta. Vamos manter Firestore como master 
+        // para escrita por enquanto para garantir offline support.
         return exercisesFirestore.createExercise(exercise);
     },
 

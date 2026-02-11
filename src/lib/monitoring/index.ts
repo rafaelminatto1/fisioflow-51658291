@@ -23,7 +23,7 @@ export enum MetricType {
   APPOINTMENT_CREATED = 'appointment_created',
   APPOINTMENT_CANCELLED = 'appointment_cancelled',
   PATIENT_REGISTERED = 'patient_registered',
-  EXERCICE_COMPLETED = 'exercise_completed',
+  EXERCISE_COMPLETED = 'exercise_completed',
 
   // User Engagement
   FEATURE_USED = 'feature_used',

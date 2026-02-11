@@ -43,7 +43,33 @@ import { withImageParams } from '@/lib/storageProxy';
 import * as ReactWindow from 'react-window';
 const { FixedSizeGrid: Grid, FixedSizeList } = ReactWindow;
 import type { ListChildComponentProps, GridChildComponentProps } from 'react-window';
-import { AutoSizer } from 'react-virtualized';
+
+// Custom AutoSizer component to avoid react-virtualized import issues
+function AutoSizer({ children }: { children: (size: { width: number; height: number }) => React.ReactElement }) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [size, setSize] = React.useState({ width: 0, height: 0 });
+
+  React.useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        setSize({ width, height });
+      }
+    });
+
+    resizeObserver.observe(container);
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  return (
+    <div ref={containerRef} className="w-full h-full">
+      {size.width > 0 && size.height > 0 ? children(size) : null}
+    </div>
+  );
+}
 import { useDebounce } from '@/hooks/performance/useDebounce';
 
 
@@ -766,46 +792,60 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMod
       </div>
 
       {/* Exercise Grid/List */}
-      <div className="flex-1 min-h-0 relative">
+      <div className="flex-1 overflow-y-auto">
         {filteredExercises.length === 0 ? (
           <EmptyState icon={Dumbbell} title="Nenhum exercício" />
+        ) : viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 p-2">
+            {filteredExercises.map((exercise, index) => (
+              <div key={exercise.id} className="relative group">
+                <ExerciseCard
+                  exercise={exercise}
+                  isFavorite={isFavorite(exercise.id)}
+                  onToggleFavorite={() => toggleFavorite(exercise.id)}
+                  onView={() => setViewExercise(exercise)}
+                  onEdit={() => onEditExercise(exercise)}
+                  onDelete={() => setDeleteId(exercise.id)}
+                  selectionMode={selectionMode}
+                  isAdded={addedExerciseIds.includes(exercise.id)}
+                  onAdd={() => onSelectExercise && onSelectExercise(exercise)}
+                  imagePriority={index < 6}
+                />
+                {isSelectionMode && (
+                  <div className="absolute top-2 right-2 z-20">
+                    <Checkbox
+                      checked={selectedExercises.includes(exercise.id)}
+                      onCheckedChange={() => toggleSelection(exercise.id)}
+                      className="h-6 w-6 border-2 bg-background data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         ) : (
-          <AutoSizer>
-            {({ height, width }) => {
-              if (viewMode === 'grid') {
-                const columnCount = width < 768 ? 1 : width < 1280 ? 2 : 3;
-                const columnWidth = width / columnCount;
-                const rowCount = Math.ceil(filteredExercises.length / columnCount);
-                const rowHeight = 420; // Approx height of card including gutter
-
-                return (
-                  <Grid
-                    columnCount={columnCount}
-                    columnWidth={columnWidth}
-                    height={height}
-                    rowCount={rowCount}
-                    rowHeight={rowHeight}
-                    width={width}
-                    itemData={{ items: filteredExercises, columnCount }}
-                  >
-                    {GridRow}
-                  </Grid>
-                );
-              } else {
-                return (
-                  <FixedSizeList
-                    height={height}
-                    itemCount={filteredExercises.length}
-                    itemSize={110} // Approx height of list item
-                    width={width}
-                    itemData={filteredExercises}
-                  >
-                    {ListRow}
-                  </FixedSizeList>
-                );
-              }
-            }}
-          </AutoSizer>
+          <div className="space-y-2 p-2">
+            {filteredExercises.map((exercise) => (
+              <div key={exercise.id} className="relative flex items-center gap-2">
+                {isSelectionMode && (
+                  <Checkbox
+                    checked={selectedExercises.includes(exercise.id)}
+                    onCheckedChange={() => toggleSelection(exercise.id)}
+                  />
+                )}
+                <div className="flex-1">
+                  <ExerciseListItem
+                    exercise={exercise}
+                    isFavorite={isFavorite(exercise.id)}
+                    onToggleFavorite={() => toggleFavorite(exercise.id)}
+                    onView={() => setViewExercise(exercise)}
+                    onEdit={() => onEditExercise(exercise)}
+                    onDelete={() => setDeleteId(exercise.id)}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 

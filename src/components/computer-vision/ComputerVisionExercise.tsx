@@ -314,7 +314,27 @@ const ComputerVisionExercise: React.FC<ComputerVisionExerciseProps> = ({ onSessi
   const [error, setError] = useState<string | null>(null);
   const [sessionFinished, setSessionFinished] = useState(false);
 
-  // ... (existing useEffect and handlers)
+  useEffect(() => {
+     _initializeSystem();
+  }, [_initializeSystem]);
+
+  const handleStartExercise = () => {
+    _startExerciseSession(selectedExercise);
+    setSessionFinished(false);
+  };
+
+  const handleScreenshot = () => {
+    const dataUrl = _takeScreenshot();
+    if (dataUrl) {
+       // Could save to state or download
+       console.log("Screenshot taken");
+    }
+  };
+  
+  const handleCalibrate = (height: number, armSpan: number) => {
+     _calibrateSystem(); // Mock implementation in hook for now
+     setShowCalibration(false);
+  };
 
   // Parar exercício
   const handleStopExercise = () => {

@@ -109,6 +109,7 @@ export function PatientsPageHeader({
             onClick={onToggleAnalytics}
             className="hidden sm:inline-flex"
             aria-pressed={showAnalytics}
+            aria-label={showAnalytics ? 'Ocultar análises de pacientes' : 'Ver análises de pacientes'}
           >
             <Activity className="mr-2 h-4 w-4" aria-hidden />
             {showAnalytics ? 'Ocultar análises' : 'Análises'}
@@ -118,11 +119,12 @@ export function PatientsPageHeader({
             size="sm"
             onClick={onExport}
             className="hidden sm:inline-flex"
+            aria-label="Exportar lista de pacientes para CSV"
           >
             <Download className="mr-2 h-4 w-4" aria-hidden />
             Exportar
           </Button>
-          <Button size="sm" onClick={onNewPatient} className="sm:min-w-[140px]">
+          <Button size="sm" onClick={onNewPatient} className="sm:min-w-[140px]" aria-label="Cadastrar novo paciente">
             <Plus className="mr-2 h-4 w-4" aria-hidden />
             <span className="hidden sm:inline">Novo Paciente</span>
             <span className="sm:hidden">Novo</span>

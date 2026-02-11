@@ -171,10 +171,10 @@ export const EvaluationTemplateManager = () => {
                                         )}
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <Button variant="ghost" size="icon" onClick={() => handleEdit(template)}>
+                                        <Button variant="ghost" size="icon" onClick={() => handleEdit(template)} aria-label={`Editar template ${template.title}`}>
                                             <Edit2 className="w-4 h-4" />
                                         </Button>
-                                        <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={() => {
+                                        <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" aria-label={`Excluir template ${template.title}`} onClick={() => {
                                             if (confirm('Tem certeza que deseja excluir?')) deleteMutation.mutate(template.id);
                                         }}>
                                             <Trash2 className="w-4 h-4" />

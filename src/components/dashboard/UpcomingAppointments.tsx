@@ -102,7 +102,7 @@ export function UpcomingAppointments() {
                   </div>
                 </div>
               </div>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" aria-label={`Ligar para ${AppointmentHelpers.getPatientName(appointment)}`}>
                 <Phone className="w-4 h-4" />
               </Button>
             </div>

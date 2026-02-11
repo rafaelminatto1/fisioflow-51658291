@@ -27,7 +27,6 @@ import {
   doc,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { LineChart } from 'react-native-chart-kit';
 
 interface Evolution {
   id: string;
@@ -156,57 +155,6 @@ export default function ProgressScreen() {
     });
   };
 
-  const getChartData = () => {
-    const filtered = getFilteredEvolutions().reverse(); // Oldest to newest
-
-    // Group by date and get latest pain level per day
-    const painByDate: Record<string, number> = {};
-    const dates: string[] = [];
-
-    filtered.forEach(evo => {
-      const date = evo.date?.toDate();
-      if (date) {
-        const dateStr = format(date, 'dd/MM');
-        if (!painByDate[dateStr]) {
-          painByDate[dateStr] = evo.pain_level || 0;
-          dates.push(dateStr);
-        }
-      }
-    });
-
-    // Limit to last 7-10 data points for cleaner chart
-    const displayDates = dates.slice(-10);
-    const displayData = displayDates.map(d => painByDate[d]);
-
-    return {
-      labels: displayDates,
-      datasets: [
-        {
-          data: displayData,
-          color: (opacity = 1) => `rgba(34, 197, 94, ${opacity})`,
-          strokeWidth: 2,
-        },
-      ],
-    };
-  };
-
-  const chartConfig = {
-    backgroundColor: colors.card || '#ffffff',
-    backgroundGradientFrom: colors.card || '#ffffff',
-    backgroundGradientTo: colors.card || '#ffffff',
-    decimalPlaces: 0,
-    color: (opacity = 1) => `rgba(34, 197, 94, ${opacity})`,
-    labelColor: (opacity = 1) => colors.textSecondary || '#6b7280',
-    style: {
-      borderRadius: 16,
-    },
-    propsForDots: {
-      r: '4',
-      strokeWidth: '2',
-      stroke: colors.primary || '#22c55e',
-    },
-  };
-
   const filteredEvolutions = getFilteredEvolutions();
 
   if (loading) {
@@ -304,23 +252,20 @@ export default function ProgressScreen() {
           </Card>
         )}
 
-        {/* Pain Chart */}
+        {/* Pain Chart - Not available on web */}
         {filteredEvolutions.length > 0 && (
           <Card style={styles.chartCard}>
             <Text style={[styles.chartTitle, { color: colors.text }]}>
               Nível de Dor
             </Text>
             <Text style={[styles.chartSubtitle, { color: colors.textSecondary }]}>
-              Últimas {selectedPeriod === 'week' ? '7' : selectedPeriod === 'month' ? '30' : 'todas as'} sessões
+              Gráficos disponíveis no app nativo
             </Text>
-            <LineChart
-              data={getChartData()}
-              width={Dimensions.get('window').width - 64}
-              height={200}
-              chartConfig={chartConfig}
-              bezier
-              style={styles.chart}
-            />
+            <View style={styles.webChartPlaceholder}>
+              <Text style={[styles.placeholderText, { color: colors.textSecondary }]}>
+                {`Média de dor: ${stats.averagePain.toFixed(1)}/10`}
+              </Text>
+            </View>
           </Card>
         )}
 
@@ -529,6 +474,16 @@ const styles = StyleSheet.create({
   chart: {
     marginVertical: 8,
     borderRadius: 16,
+  },
+  webChartPlaceholder: {
+    height: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f3f4f6',
+    borderRadius: 12,
+  },
+  placeholderText: {
+    fontSize: 14,
   },
   sectionTitle: {
     fontSize: 18,

@@ -7,6 +7,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { DataProvider } from '@/contexts/DataContext';
 import { RealtimeProvider } from '@/contexts/RealtimeContext';
 import { AuthContextProvider } from '@/contexts/AuthContextProvider';
+import { GamificationFeedbackProvider } from '@/contexts/GamificationFeedbackContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -172,31 +173,33 @@ const App = () => {
         <TooltipProvider>
           <AuthContextProvider>
             <StatsigProviderWrapper>
-              <RealtimeProvider>
-                <DataProvider>
-                  <Toaster />
-                  <Sonner />
-                  <NetworkStatus />
-                  <SyncManager />
-                  {/* <PWAInstallPrompt /> */}
-                  {/* <PWAUpdatePrompt /> */}
-                  <BrowserRouter
-                    future={{
-                      v7_startTransition: true,
-                      v7_relativeSplatPath: true,
-                    }}
-                  >
-                    <NotificationInitializer />
-                    <Suspense fallback={<PageLoadingFallback />}>
-                      <AppRoutes />
-                      <VersionManager />
+              <GamificationFeedbackProvider>
+                <RealtimeProvider>
+                  <DataProvider>
+                    <Toaster />
+                    <Sonner />
+                    <NetworkStatus />
+                    <SyncManager />
+                    {/* <PWAInstallPrompt /> */}
+                    {/* <PWAUpdatePrompt /> */}
+                    <BrowserRouter
+                      future={{
+                        v7_startTransition: true,
+                        v7_relativeSplatPath: true,
+                      }}
+                    >
+                      <NotificationInitializer />
+                      <Suspense fallback={<PageLoadingFallback />}>
+                        <AppRoutes />
+                        <VersionManager />
 
-                      <WebVitalsIndicator />
+                        <WebVitalsIndicator />
 
-                    </Suspense>
-                  </BrowserRouter>
-                </DataProvider>
-              </RealtimeProvider>
+                      </Suspense>
+                    </BrowserRouter>
+                  </DataProvider>
+                </RealtimeProvider>
+              </GamificationFeedbackProvider>
             </StatsigProviderWrapper>
           </AuthContextProvider>
         </TooltipProvider>

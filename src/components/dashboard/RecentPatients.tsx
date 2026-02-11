@@ -64,7 +64,7 @@ export const RecentPatients = memo(function RecentPatients() {
                     </div>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" aria-label={`Ver perfil de ${patientName}`}>
                   <Eye className="w-4 h-4" />
                 </Button>
               </div>

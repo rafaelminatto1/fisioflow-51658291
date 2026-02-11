@@ -79,12 +79,13 @@ export const CustomModal: React.FC<CustomModalProps> = ({
   if (!open) return null;
 
   // Mobile: Bottom sheet com altura fixa para footer sempre visível
+  // Usar 85dvh para garantir que o footer não seja cortado por safe areas do iOS
   const modalContainerClass = isMobile
-    ? "fixed inset-x-0 bottom-0 top-auto z-50 flex flex-col"
+    ? "fixed inset-x-0 bottom-0 top-auto z-50 flex flex-col safe-bottom"
     : "fixed inset-0 z-50 flex items-center justify-center p-4";
 
   const modalContentClass = isMobile
-    ? "bg-white w-full rounded-t-2xl shadow-2xl flex flex-col h-[90dvh] max-h-[90dvh] min-h-0 overflow-hidden pb-[env(safe-area-inset-bottom,0px)]"
+    ? "bg-white w-full rounded-t-2xl shadow-2xl flex flex-col h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] min-h-0 overflow-hidden"
     : "bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden";
 
   return (
@@ -171,10 +172,12 @@ export const CustomModalBody: React.FC<{
 export const CustomModalFooter: React.FC<{
   className?: string;
   children: React.ReactNode;
-}> = ({ className, children }) => {
+  isMobile?: boolean;
+}> = ({ className, children, isMobile = false }) => {
   return (
     <div className={cn(
       "flex items-center justify-end gap-3 px-4 sm:px-6 py-4 border-t bg-gray-50 shrink-0",
+      isMobile && "pb-[calc(env(safe-area-inset-bottom)+1rem)]",
       className
     )}>
       {children}

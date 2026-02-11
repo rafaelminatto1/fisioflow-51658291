@@ -260,6 +260,7 @@ const Telemedicine = () => {
                         size="icon"
                         variant="outline"
                         className="h-8 w-8 touch-target"
+                        aria-label="Copiar link da sala"
                         onClick={() => copyRoomLink(room.id)}
                       >
                         <Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
