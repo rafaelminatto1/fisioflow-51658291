@@ -131,34 +131,35 @@ function excludeMswPlugin() {
 }
 
 // Plugin para substituir pdfkit.browser.js pela versão corrigida
-function fixPdfkitImport() {
-  const fixedPdfkitPath = path.resolve(__dirname, './src/lib/pdfkit.browser.fixed.js');
-  return {
-    name: 'fix-pdfkit-import',
-    resolveId(id: string, importer: string | undefined) {
-      // Intercepta a importação do pdfkit.browser.js
-      // Log para debug
-      if (id && (id.includes('pdfkit.browser.js') || id.includes('crypto-js/md5') || id === '@react-pdf/pdfkit')) {
-        console.log('[fixPdfkitImport] Resolving:', id, 'from:', importer);
-      }
-      if (id === '@react-pdf/pdfkit') {
-        // Captura importações do pacote raiz e direciona para a versão corrigida
-        console.log('[fixPdfkitImport] Redirecting package import to fixed pdfkit');
-        return fixedPdfkitPath;
-      }
-      if (id && (id.includes('@react-pdf/pdfkit/lib/pdfkit.browser.js') ||
-          id.endsWith('pdfkit.browser.js'))) {
-        console.log('[fixPdfkitImport] Redirecting to:', fixedPdfkitPath);
-        return fixedPdfkitPath;
-      }
-    },
-    load(id: string) {
-      if (id.includes('pdfkit.browser.fixed.js')) {
-        console.log('[fixPdfkitImport] Loading fixed file:', id);
-      }
-    },
-  };
-}
+// REMOVIDO: Causava erro de circular dependency
+// function fixPdfkitImport() {
+//   const fixedPdfkitPath = path.resolve(__dirname, './src/lib/pdfkit.browser.fixed.js');
+//   return {
+//     name: 'fix-pdfkit-import',
+//     resolveId(id: string, importer: string | undefined) {
+//       // Intercepta a importação do pdfkit.browser.js
+//       // Log para debug
+//       if (id && (id.includes('pdfkit.browser.js') || id.includes('crypto-js/md5') || id === '@react-pdf/pdfkit')) {
+//         console.log('[fixPdfkitImport] Resolving:', id, 'from:', importer);
+//       }
+//       if (id === '@react-pdf/pdfkit') {
+//         // Captura importações do pacote raiz e direciona para a versão corrigida
+//         console.log('[fixPdfkitImport] Redirecting package import to fixed pdfkit');
+//         return fixedPdfkitPath;
+//       }
+//       if (id && (id.includes('@react-pdf/pdfkit/lib/pdfkit.browser.js') ||
+//           id.endsWith('pdfkit.browser.js'))) {
+//         console.log('[fixPdfkitImport] Redirecting to:', fixedPdfkitPath);
+//         return fixedPdfkitPath;
+//       }
+//     },
+//     load(id: string) {
+//       if (id.includes('pdfkit.browser.fixed.js')) {
+//         console.log('[fixPdfkitImport] Loading fixed file:', id);
+//       }
+//     },
+//   };
+// }
 
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production';
@@ -198,7 +199,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       mockMobileModules(),
-      fixPdfkitImport(),
+      // REMOVIDO: fixPdfkitImport() - causava circular dependency error
       mode === 'development' && componentTagger(),
       htmlPlugin(appVersion, buildTime, isProduction),
       isProduction && process.env.SENTRY_AUTH_TOKEN && sentryVitePlugin({
@@ -302,10 +303,20 @@ export default defineConfig(({ mode }) => {
         "react-grid-layout/dist/legacy": path.resolve(__dirname, "./node_modules/react-grid-layout/dist/legacy.mjs"),
         // Fix @kitware/vtk.js / @cornerstonejs: globalthis não exporta default em ESM
         globalthis: path.resolve(__dirname, "./src/lib/globalthis-shim.ts"),
-        // Fix pdfkit.browser.js ESM import issues with pako and crypto-js
-        "@react-pdf/pdfkit": path.resolve(__dirname, "./src/lib/pdfkit.browser.fixed.js"),
-        "@react-pdf/pdfkit/lib/pdfkit.browser.js": path.resolve(__dirname, "./src/lib/pdfkit.browser.fixed.js"),
+        // REMOVIDO: Fix pdfkit.browser.js ESM import issues - causava circular dependency
+        // "@react-pdf/pdfkit": path.resolve(__dirname, "./src/lib/pdfkit.browser.fixed.js"),
+        // "@react-pdf/pdfkit/lib/pdfkit.browser.js": path.resolve(__dirname, "./src/lib/pdfkit.browser.fixed.js"),
       },
+    optimizeDeps: {
+      include: [
+        '@react-pdf/renderer',
+        '@react-pdf/pdfkit',
+      ],
+      exclude: [
+        // PDFKit será lazy-loaded, não pré-bundle
+        // 'pdfkit',
+      ],
+    },
     },
     build: {
       outDir: 'dist',
