@@ -30,6 +30,7 @@ import { logger } from 'firebase-functions';
 import { getAdminDb, deleteByQuery } from '../init';
 import { FieldPath } from 'firebase-admin/firestore';
 import { sendVoucherExpiringEmail, sendBirthdayEmail } from '../communications/resend-templates';
+import { sendWhatsAppTemplateMessageInternal, WhatsAppTemplate, formatPhoneForWhatsApp } from '../communications/whatsapp';
 
 export const expiringVouchers = onSchedule({
   schedule: 'every day 10:00',
@@ -61,12 +62,6 @@ export const expiringVouchers = onSchedule({
 
     if (vouchersSnapshot.empty) {
       logger.info('[expiringVouchers] Nenhum voucher expirando em 7 dias');
-      void {
-        success: true,
-        remindersSent: 0,
-        timestamp: new Date().toISOString(),
-        message: 'No expiring vouchers',
-      };
       return;
     }
 
@@ -89,22 +84,21 @@ export const expiringVouchers = onSchedule({
 
     // Send reminders
     let remindersSent = 0;
-    const results = await Promise.all(
+    await Promise.all(
       vouchersSnapshot.docs.map(async (doc) => {
         const voucher = { id: doc.id, ...doc.data() } as any;
-        const patient = patientsMap.get(voucher.patient_id) || {
-          id: voucher.patient_id,
-          name: 'Unknown',
-        };
+        const patient = patientsMap.get(voucher.patient_id);
         const organization = orgsMap.get(voucher.organization_id) || {
           id: voucher.organization_id,
-          name: 'Unknown',
+          name: 'FisioFlow',
         };
+
+        if (!patient) return;
 
         try {
           // Send email reminder
           if (patient.email) {
-            const emailResult = await sendVoucherExpiringEmail(patient.email, {
+            await sendVoucherExpiringEmail(patient.email, {
               customerName: patient.name || 'Paciente',
               voucherName: voucher.name || 'Voucher',
               sessionsRemaining: voucher.sessions_remaining || 0,
@@ -112,28 +106,35 @@ export const expiringVouchers = onSchedule({
               daysUntilExpiration: 7,
               organizationName: organization.name || 'FisioFlow',
             });
-
-            logger.info('[expiringVouchers] Email reminder sent', {
-              voucherId: voucher.id,
-              patientId: patient.id,
-              patientEmail: patient.email,
-              success: emailResult.success,
-              error: emailResult.error,
-            });
           }
 
-          // TODO: Send WhatsApp reminder
+          // Send WhatsApp reminder
           if (patient.phone) {
-            logger.info('[expiringVouchers] Enviando lembrete por WhatsApp', {
-              voucherId: voucher.id,
-              patientId: patient.id,
-              patientPhone: patient.phone,
-            });
+            try {
+              await sendWhatsAppTemplateMessageInternal({
+                to: formatPhoneForWhatsApp(patient.phone),
+                template: WhatsAppTemplate.APPOINTMENT_REMINDER, // Reutilizando template aproximado ou criar específico
+                language: 'pt_BR',
+                components: [
+                  {
+                    type: 'body',
+                    parameters: [
+                      { type: 'text', text: patient.name || 'Paciente' },
+                      { type: 'text', text: 'Seu voucher expira em 7 dias' },
+                      { type: 'text', text: 'FisioFlow' },
+                    ],
+                  },
+                ],
+              });
+              logger.info('[expiringVouchers] WhatsApp reminder sent', { patientId: patient.id });
+            } catch (waError) {
+              logger.error('[expiringVouchers] WhatsApp failed', { waError });
+            }
           }
 
           // Log reminder sent
           const reminderRef = db.collection('voucher_reminders').doc();
-          await reminderRef.create({
+          await reminderRef.set({
             voucher_id: voucher.id,
             patient_id: patient.id,
             organization_id: organization.id,
@@ -146,41 +147,17 @@ export const expiringVouchers = onSchedule({
           });
 
           remindersSent++;
-          void {
-            voucherId: voucher.id,
-            patientId: patient.id,
-            sent: true,
-          };
-          return;
         } catch (error) {
           logger.error('[expiringVouchers] Erro ao enviar lembrete', {
             voucherId: voucher.id,
             patientId: patient.id,
             error,
           });
-          void {
-            voucherId: voucher.id,
-            patientId: patient.id,
-            sent: false,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          };
-          return;
         }
       })
     );
 
-    logger.info('[expiringVouchers] Concluído', {
-      remindersSent,
-      totalVouchers: vouchersSnapshot.docs.length,
-    });
-
-    void {
-      success: true,
-      remindersSent,
-      totalVouchers: vouchersSnapshot.docs.length,
-      timestamp: new Date().toISOString(),
-      results,
-    };
+    logger.info('[expiringVouchers] Concluído', { remindersSent });
   } catch (error) {
     logger.error('[expiringVouchers] Erro fatal', { error });
     throw error;
@@ -340,11 +317,26 @@ export const birthdays = onSchedule({
         try {
           // Send WhatsApp message
           if (whatsappEnabled && preferredChannel === 'whatsapp' && patient.phone) {
-            logger.info('[birthdays] Enviando mensagem WhatsApp', {
-              patientId: patient.id,
-              patientPhone: patient.phone,
-            });
-            messagesQueued++;
+            try {
+              await sendWhatsAppTemplateMessageInternal({
+                to: formatPhoneForWhatsApp(patient.phone),
+                template: WhatsAppTemplate.BIRTHDAY_GREETING,
+                language: 'pt_BR',
+                components: [
+                  {
+                    type: 'body',
+                    parameters: [
+                      { type: 'text', text: patient.name || 'Paciente' },
+                      { type: 'text', text: org?.name || 'FisioFlow' },
+                    ],
+                  },
+                ],
+              });
+              logger.info('[birthdays] WhatsApp message sent', { patientId: patient.id });
+              messagesQueued++;
+            } catch (waError) {
+              logger.error('[birthdays] WhatsApp failed', { waError });
+            }
           }
 
           // Send birthday email

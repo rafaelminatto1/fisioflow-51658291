@@ -69,6 +69,45 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { useAuth } from '@/contexts/AuthContext';
+import { useGamification } from '@/hooks/useGamification';
+import { Progress } from '@/components/ui/progress';
+
+const GamificationMiniProfile = ({ collapsed }: { collapsed: boolean }) => {
+  const { profile: authProfile } = useAuth();
+  const { currentLevel, progressPercentage, currentXp, xpPerLevel } = useGamification(authProfile?.id || '');
+
+  if (collapsed) {
+    return (
+      <div className="flex flex-col items-center py-2 gap-1 group cursor-help">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-yellow-500/20">
+          L{currentLevel}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-3 my-2 p-3 rounded-2xl bg-gradient-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 border border-slate-200/60 dark:border-slate-800/60 shadow-sm">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-yellow-400 flex items-center justify-center text-slate-900 shadow-sm">
+            <Trophy className="w-4 h-4" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nível</span>
+            <span className="text-sm font-black text-slate-700 dark:text-slate-200">{currentLevel}</span>
+          </div>
+        </div>
+        <div className="flex flex-col items-end">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">XP</span>
+          <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400">{currentXp}/{xpPerLevel}</span>
+        </div>
+      </div>
+      <Progress value={progressPercentage} className="h-1.5 bg-slate-100 dark:bg-slate-800" />
+    </div>
+  );
+};
 
 // Ordem baseada em frequência de uso e fluxo de trabalho clínico
 const menuItems = [
@@ -322,6 +361,7 @@ export function Sidebar() {
       return (
         <Link
           to={items[0]?.href || '#'}
+          aria-label={label}
           className={cn(
             "flex items-center justify-center px-2 py-2.5 rounded-xl transition-all duration-200 group relative overflow-hidden",
             isActive
@@ -760,6 +800,9 @@ export function Sidebar() {
         "p-3 border-t border-border/60 shrink-0 bg-gradient-to-t from-background/50 to-transparent relative",
         collapsed && "p-2"
       )}>
+        {/* Gamification Progress */}
+        <GamificationMiniProfile collapsed={collapsed} />
+
         {/* Efeito de brilho inferior */}
         <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
