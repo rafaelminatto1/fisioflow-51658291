@@ -975,94 +975,71 @@ const PatientEvolution = () => {
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as EvolutionTab)} className="w-full pb-20" aria-label="Abas de evolução e acompanhamento">
             {/* ABA 1: EVOLUÇÃO (SOAP V1 ou Texto Livre V2) */}
             <TabsContent value="evolucao" className="mt-4">
-              {evolutionVersion === 'v2-texto' ? (
-                /* ===== V2: Texto Livre (Notion-style) ===== */
-                <div className="space-y-4">
-                  {/* Alertas (shared between V1 and V2) */}
-                  {requiredMeasurements.length > 0 && (
-                    <MandatoryTestAlert
-                      tests={mandatoryTestAlertsData}
-                      onResolve={() => setActiveTab('avaliacao')}
-                    />
-                  )}
-                  <EvolutionAlerts
-                    overdueGoals={overdueGoals}
-                    painScale={painScale}
-                    painTrend={painTrend}
-                    upcomingGoals={upcomingGoals}
-                    daysSinceLastEvolution={daysSinceLastEvolution}
-                    sessionDurationMinutes={sessionDurationMinutes}
-                    sessionLongAlertShown={sessionLongAlertShown}
-                    activePathologies={activePathologies}
-                    previousEvolutionsCount={previousEvolutions.length}
-                    onTabChange={(v) => setActiveTab(v as EvolutionTab)}
-                  />
-
-                  {/* V2 Notion Panel */}
-                  <Suspense fallback={<LoadingSkeleton type="card" />}>
-                    <LazyNotionEvolutionPanel
-                      data={evolutionV2Data}
-                      onChange={setEvolutionV2DataStable}
-                      isSaving={autoSaveMutation.isPending}
-                      disabled={false}
-                      autoSaveEnabled={autoSaveEnabled}
-                      lastSaved={lastSavedAt}
-                    />
-                  </Suspense>
-                </div>
-              ) : (
-                /* ===== V1: SOAP (original) ===== */
-                <EvolutionResponsiveLayout
-                  alertsSection={
-                    <>
-                      {/* Alerta de Testes Obrigatórios */}
-                      {requiredMeasurements.length > 0 && (
-                        <MandatoryTestAlert
-                          tests={mandatoryTestAlertsData}
-                          onResolve={() => setActiveTab('avaliacao')}
-                        />
-                      )}
-
-                      {/* Alertas Inteligentes */}
-                      <EvolutionAlerts
-                        overdueGoals={overdueGoals}
-                        painScale={painScale}
-                        painTrend={painTrend}
-                        upcomingGoals={upcomingGoals}
-                        daysSinceLastEvolution={daysSinceLastEvolution}
-                        sessionDurationMinutes={sessionDurationMinutes}
-                        sessionLongAlertShown={sessionLongAlertShown}
-                        activePathologies={activePathologies}
-                        previousEvolutionsCount={previousEvolutions.length}
-                        onTabChange={(v) => setActiveTab(v as EvolutionTab)}
+              <EvolutionResponsiveLayout
+                alertsSection={
+                  <>
+                    {/* Alerta de Testes Obrigatórios */}
+                    {requiredMeasurements.length > 0 && (
+                      <MandatoryTestAlert
+                        tests={mandatoryTestAlertsData}
+                        onResolve={() => setActiveTab('avaliacao')}
                       />
-                    </>
-                  }
-                  topSection={
-                    /* Cards superiores - grid responsivo */
-                    <CardGrid>
-                      {/* Retorno Médico */}
-                      <MedicalReturnCard
-                        patient={patient}
-                        patientId={patientId || undefined}
-                        onPatientUpdated={() => invalidateData('all')}
+                    )}
+
+                    {/* Alertas Inteligentes */}
+                    <EvolutionAlerts
+                      overdueGoals={overdueGoals}
+                      painScale={painScale}
+                      painTrend={painTrend}
+                      upcomingGoals={upcomingGoals}
+                      daysSinceLastEvolution={daysSinceLastEvolution}
+                      sessionDurationMinutes={sessionDurationMinutes}
+                      sessionLongAlertShown={sessionLongAlertShown}
+                      activePathologies={activePathologies}
+                      previousEvolutionsCount={previousEvolutions.length}
+                      onTabChange={(v) => setActiveTab(v as EvolutionTab)}
+                    />
+                  </>
+                }
+                topSection={
+                  /* Cards superiores - grid responsivo */
+                  <CardGrid>
+                    {/* Retorno Médico */}
+                    <MedicalReturnCard
+                      patient={patient}
+                      patientId={patientId || undefined}
+                      onPatientUpdated={() => invalidateData('all')}
+                    />
+
+                    {/* Cirurgias */}
+                    <SurgeriesCard patientId={patientId || undefined} />
+
+                    {/* Resumo da Evolução - ocupa 2 linhas em telas grandes */}
+                    <div className="lg:row-span-2">
+                      <EvolutionSummaryCard stats={evolutionStats} />
+                    </div>
+
+                    {/* Metas - ocupa largura restante */}
+                    <div className="sm:col-span-2 lg:col-span-2">
+                      <MetasCard patientId={patientId || undefined} />
+                    </div>
+                  </CardGrid>
+                }
+                mainGrid={
+                  evolutionVersion === 'v2-texto' ? (
+                    /* ===== V2: Texto Livre (Notion-style) ===== */
+                    <Suspense fallback={<LoadingSkeleton type="card" />}>
+                      <LazyNotionEvolutionPanel
+                        data={evolutionV2Data}
+                        onChange={setEvolutionV2DataStable}
+                        isSaving={autoSaveMutation.isPending}
+                        disabled={false}
+                        autoSaveEnabled={autoSaveEnabled}
+                        lastSaved={lastSavedAt}
                       />
-
-                      {/* Cirurgias */}
-                      <SurgeriesCard patientId={patientId || undefined} />
-
-                      {/* Resumo da Evolução - ocupa 2 linhas em telas grandes */}
-                      <div className="lg:row-span-2">
-                        <EvolutionSummaryCard stats={evolutionStats} />
-                      </div>
-
-                      {/* Metas - ocupa largura restante */}
-                      <div className="sm:col-span-2 lg:col-span-2">
-                        <MetasCard patientId={patientId || undefined} />
-                      </div>
-                    </CardGrid>
-                  }
-                  mainGrid={
+                    </Suspense>
+                  ) : (
+                    /* ===== V1: SOAP (original) ===== */
                     <EvolutionGridContainer>
                       <Suspense fallback={<LoadingSkeleton type="card" />}>
                         <LazyEvolutionDraggableGrid
@@ -1114,9 +1091,9 @@ const PatientEvolution = () => {
                         />
                       </Suspense>
                     </EvolutionGridContainer>
-                  }
-                />
-              )}
+                  )
+                }
+              />
             </TabsContent>
 
             {/* ABA 2: AVALIAÇÃO (Medições + Mapa de Dor + Gráficos) */}

@@ -4,6 +4,7 @@ import {
     createEvolution as apiCreateEvolution, 
     updateEvolution as apiUpdateEvolution, 
     deleteEvolution as apiDeleteEvolution, 
+    getEvolutionById as apiGetEvolutionById,
     ApiEvolution 
 } from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
@@ -21,15 +22,14 @@ function mapApiEvolution(apiEvolution: ApiEvolution): Evolution {
       objective: apiEvolution.objective,
       assessment: apiEvolution.assessment,
       plan: apiEvolution.plan,
+      painLevel: apiEvolution.pain_level,
+      attachments: apiEvolution.attachments || [],
       createdAt: new Date(apiEvolution.created_at),
       // The following fields are not in the new table, so we use defaults
       notes: '', 
-      painLevel: 0,
       exercises: [],
-      attachments: [],
     };
 }
-
 
 export function useEvolutions(patientId: string) {
   const queryClient = useQueryClient();
@@ -45,22 +45,24 @@ export function useEvolutions(patientId: string) {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: Omit<Evolution, 'id' | 'professionalId' | 'createdAt'>) => {
+    mutationFn: async (data: Partial<Omit<Evolution, 'id' | 'professionalId' | 'createdAt'>>) => {
         if (!user) throw new Error("User not authenticated");
         const apiData: Partial<ApiEvolution> = {
             patient_id: data.patientId,
             appointment_id: data.appointmentId,
-            date: data.date.toISOString(),
+            date: (data.date || new Date()).toISOString(),
             subjective: data.subjective,
             objective: data.objective,
             assessment: data.assessment,
             plan: data.plan,
+            pain_level: data.painLevel,
+            attachments: data.attachments,
         };
         const result = await apiCreateEvolution(apiData);
         return mapApiEvolution(result);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patientEvolutions', patientId] });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['patientEvolutions', variables.patientId] });
     },
   });
 
@@ -72,12 +74,14 @@ export function useEvolutions(patientId: string) {
             objective: data.objective,
             assessment: data.assessment,
             plan: data.plan,
+            pain_level: data.painLevel,
+            attachments: data.attachments,
         };
         const result = await apiUpdateEvolution(id, apiData);
         return mapApiEvolution(result);
     },
-    onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: ['patientEvolutions', patientId] });
+    onSuccess: (_, { id, data }) => {
+      queryClient.invalidateQueries({ queryKey: ['patientEvolutions', data.patientId] });
       queryClient.invalidateQueries({ queryKey: ['evolution', id] });
     },
   });
@@ -104,4 +108,16 @@ export function useEvolutions(patientId: string) {
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
   };
+}
+
+export function useEvolution(evolutionId?: string) {
+    return useQuery({
+        queryKey: ['evolution', evolutionId],
+        queryFn: async () => {
+            if (!evolutionId) return null;
+            const data = await apiGetEvolutionById(evolutionId);
+            return data ? mapApiEvolution(data) : null;
+        },
+        enabled: !!evolutionId,
+    });
 }
