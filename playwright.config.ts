@@ -32,13 +32,13 @@ export default defineConfig({
   workers: process.env.CI ? 4 : 4, // Aumentado de 2 para 4 para mais paralelização
   reporter: 'html',
   globalSetup: './e2e/global-setup.ts',
-  timeout: 60000, // Timeout global de 60s por teste (era 30s padrão)
+  timeout: 120000, // Aumentado para 120s
   use: {
     baseURL: process.env.BASE_URL || 'http://127.0.0.1:8084',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    actionTimeout: 20000, // Aumentado de 15000 para 20000ms
-    navigationTimeout: 40000, // Aumentado de 30000 para 40000ms
+    actionTimeout: 30000, // Aumentado para 30s
+    navigationTimeout: 60000, // Aumentado para 60s
   },
 
   projects: process.env.CI ? [

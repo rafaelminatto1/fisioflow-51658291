@@ -100,72 +100,28 @@ export { checkTimeConflictHttp as checkTimeConflictV2 } from './api/appointments
 export { listDoctorsHttp as listDoctors, searchDoctorsHttp as searchDoctorsV2 } from './api/doctors';
 
 // API de Exercícios
-export const listExercises = onCall(async (request) => {
-    const { listExercisesHandler } = await import('./api/exercises');
-    return listExercisesHandler(request);
-});
-export const getExercise = onCall(async (request) => {
-    const { getExerciseHandler } = await import('./api/exercises');
-    return getExerciseHandler(request);
-});
-export const searchSimilarExercises = onCall(async (request) => {
-    const { searchSimilarExercisesHandler } = await import('./api/exercises');
-    return searchSimilarExercisesHandler(request);
-});
-export const getExerciseCategories = onCall(async (request) => {
-    const { getExerciseCategoriesHandler } = await import('./api/exercises');
-    return getExerciseCategoriesHandler(request);
-});
-export const getPrescribedExercises = onCall(async (request) => {
-    const { getPrescribedExercisesHandler } = await import('./api/exercises');
-    return getPrescribedExercisesHandler(request);
-});
-export const logExercise = onCall(async (request) => {
-    const { logExerciseHandler } = await import('./api/exercises');
-    return logExerciseHandler(request);
-});
-export const createExercise = onCall(async (request) => {
-    const { createExerciseHandler } = await import('./api/exercises');
-    return createExerciseHandler(request);
-});
-export const updateExercise = onCall(async (request) => {
-    const { updateExerciseHandler } = await import('./api/exercises');
-    return updateExerciseHandler(request);
-});
-export const deleteExercise = onCall(async (request) => {
-    const { deleteExerciseHandler } = await import('./api/exercises');
-    return deleteExerciseHandler(request);
-});
-export const mergeExercises = onCall(async (request) => {
-    const { mergeExercisesHandler } = await import('./api/exercises');
-    return mergeExercisesHandler(request);
-});
+export {
+    listExercisesHttp as listExercisesV2,
+    getExerciseHttp as getExerciseV2,
+    getExerciseCategoriesHttp as getExerciseCategoriesV2,
+    getPrescribedExercisesHttp as getPrescribedExercisesV2,
+    logExerciseHttp as logExerciseV2,
+    createExerciseHttp as createExerciseV2,
+    updateExerciseHttp as updateExerciseV2,
+    deleteExerciseHttp as deleteExerciseV2,
+    mergeExercisesHttp as mergeExercisesV2,
+    searchSimilarExercisesHttp as searchSimilarExercisesV2,
+} from './api/exercises';
 
 // API de Avaliações
-export const listAssessments = onCall(async (request) => {
-    const { listAssessmentsHandler } = await import('./api/assessments');
-    return listAssessmentsHandler(request);
-});
-export const getAssessment = onCall(async (request) => {
-    const { getAssessmentHandler } = await import('./api/assessments');
-    return getAssessmentHandler(request);
-});
-export const createAssessment = onCall(async (request) => {
-    const { createAssessmentHandler } = await import('./api/assessments');
-    return createAssessmentHandler(request);
-});
-export const updateAssessment = onCall(async (request) => {
-    const { updateAssessmentHandler } = await import('./api/assessments');
-    return updateAssessmentHandler(request);
-});
-export const listAssessmentTemplates = onCall(async (request) => {
-    const { listAssessmentTemplatesHandler } = await import('./api/assessments');
-    return listAssessmentTemplatesHandler(request);
-});
-export const getAssessmentTemplate = onCall(async (request) => {
-    const { getAssessmentTemplateHandler } = await import('./api/assessments');
-    return getAssessmentTemplateHandler(request);
-});
+export {
+    listAssessmentTemplatesHttp as listAssessmentTemplatesV2,
+    getAssessmentTemplateHttp as getAssessmentTemplateV2,
+    listAssessmentsHttp as listAssessmentsV2,
+    getAssessmentHttp as getAssessmentV2,
+    createAssessmentHttp as createAssessmentV2,
+    updateAssessmentHttp as updateAssessmentV2,
+} from './api/assessments';
 
 // API de Perfis (onCall with CORS so callFunctionHttp works from browser)
 export const getProfile = onCall(
@@ -573,6 +529,12 @@ export const assessmentService = onCall(
         return assessmentServiceHandler(request);
     }
 );
+
+// ============================================================================
+// GAMIFICATION TRIGGERS & API
+// ============================================================================
+export { onExerciseCompleted, onAppointmentCompleted } from './gamification/triggers';
+export { getLeaderboard, processPurchase } from './gamification/api';
 
 // ============================================================================
 // BACKGROUND TRIGGERS

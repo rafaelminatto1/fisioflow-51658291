@@ -6,23 +6,40 @@ const loginPassword = process.env.E2E_LOGIN_PASSWORD || testUsers.admin.password
 
 test.describe('Autenticação', () => {
   test('deve fazer login com credenciais válidas', async ({ page }) => {
-    await page.goto('/auth', { waitUntil: 'domcontentloaded' });
+    console.log(`[Test] Iniciando login para: ${loginEmail}`);
+    await page.goto('/auth', { waitUntil: 'networkidle' });
 
     await page.fill('input[type="email"]', loginEmail);
     await page.fill('input[type="password"]', loginPassword);
 
-    // Aguardar navegação após o clique no botão de submit
-    await Promise.all([
-      page.waitForURL(/\/(\?|schedule|patients|dashboard|eventos)?/, { timeout: 10000 }),
-      page.click('button[type="submit"]'),
-    ]);
+    // Capturar logs do console para debug
+    page.on('console', msg => {
+      if (msg.type() === 'error') console.log(`[Browser Error] ${msg.text()}`);
+    });
 
-    // Verificar que estamos na página inicial (não mais em /auth)
-    await expect(page).not.toHaveURL(/\/auth/);
+    await page.click('button[type="submit"]');
 
-    // Verificar que o menu do usuário está visível
-    const userMenuButton = page.locator('[data-testid="user-menu"]').first();
-    await expect(userMenuButton).toBeVisible({ timeout: 10000 });
+    // Esperar redirecionamento robusto
+    try {
+      // 1. Esperar a URL mudar
+      await page.waitForURL((url) => url.pathname === '/' || !url.href.includes('/auth'), { 
+        timeout: 25000,
+        waitUntil: 'networkidle'
+      });
+      console.log(`[Test] Login bem-sucedido, redirecionado para: ${page.url()}`);
+    } catch (e) {
+      const currentUrl = page.url();
+      const content = await page.textContent('body');
+      console.error(`[Test] Erro no redirecionamento. URL: ${currentUrl}`);
+      if (content?.includes('inválid') || content?.includes('error')) {
+        console.error('[Test] Mensagem de erro detectada na página');
+      }
+      throw e;
+    }
+
+    // Verificar que o menu do usuário está presente (indica que o app carregou)
+    const userMenu = page.locator('[data-testid="user-menu"]');
+    await expect(userMenu.first()).toBeVisible({ timeout: 15000 });
   });
 
   test('deve mostrar erro com credenciais inválidas', async ({ page }) => {

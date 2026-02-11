@@ -47,6 +47,8 @@ import EditPatientModal from '@/components/modals/EditPatientModal';
 import GamificationHeader from '@/components/gamification/GamificationHeader';
 import StreakCalendar from '@/components/gamification/StreakCalendar';
 import LevelJourneyMap from '@/components/gamification/LevelJourneyMap';
+import { Leaderboard } from '@/components/gamification/Leaderboard';
+import { RewardShop } from '@/components/gamification/RewardShop';
 import { useGamification } from '@/hooks/useGamification';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
@@ -60,6 +62,8 @@ import { SessionHistoryPanel } from '@/components/session/SessionHistoryPanel';
 import { PatientAnalyticsDashboard, PatientLifecycleChart, PatientInsightsPanel, AIAssistantPanel } from '@/components/patients/analytics';
 import { usePatientLifecycleSummary } from '@/hooks/usePatientAnalytics';
 import { PatientAIChat } from '@/components/ai/PatientAIChat';
+import { PatientSmartSummary } from '@/components/ai/PatientSmartSummary';
+import { DoctorReferralReportGenerator } from '@/components/reports/DoctorReferralReportGenerator';
 
 // Evolution Cards
 import { MedicalReturnCard } from '@/components/evolution/MedicalReturnCard';
@@ -605,11 +609,40 @@ const DocumentsTab = ({ patientId }: { patientId: string }) => {
 // ANALYTICS TAB WITH ML PREDICTIONS
 // ============================================================================
 
-const AnalyticsTab = ({ patientId, patientName }: { patientId: string; patientName: string }) => {
+const AnalyticsTab = ({ patientId, patientName, birthDate, condition }: { patientId: string; patientName: string; birthDate?: string; condition: string }) => {
     const { data: lifecycleSummary, isLoading: lifecycleLoading } = usePatientLifecycleSummary(patientId);
+    const { data: records = [] } = useSoapRecordsV2(patientId);
+
+    // Adapt records for smart summary
+    const summaryHistory = records.map(r => ({
+        date: r.recordDate,
+        subjective: r.subjective,
+        objective: r.objective,
+    }));
 
     return (
         <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
+                    {/* New Smart Patient Summary - High Visibility */}
+                    <PatientSmartSummary
+                        patientId={patientId}
+                        patientName={patientName}
+                        condition={condition}
+                        history={summaryHistory}
+                    />
+                </div>
+                <div className="lg:col-span-1">
+                    {/* Professional PDF Generator */}
+                    <DoctorReferralReportGenerator
+                        patientId={patientId}
+                        patientName={patientName}
+                        birthDate={birthDate}
+                        condition={condition}
+                    />
+                </div>
+            </div>
+
             {/* Main Analytics Dashboard */}
             <PatientAnalyticsDashboard patientId={patientId} patientName={patientName} />
 
@@ -638,9 +671,8 @@ const GamificationTab = ({ patientId }: { patientId: string }) => {
     const {
         profile,
         xpPerLevel,
-        unlockedAchievements,
-        allAchievements,
-        dailyQuests
+        currentXp,
+        streak
     } = useGamification(patientId);
 
     if (!profile) {
@@ -654,62 +686,38 @@ const GamificationTab = ({ patientId }: { patientId: string }) => {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
             <GamificationHeader
                 level={profile.level}
-                currentXp={profile.current_xp}
+                currentXp={currentXp}
                 xpPerLevel={xpPerLevel}
-                streak={profile.current_streak}
+                streak={streak}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-6">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                <div className="xl:col-span-2 space-y-8">
+                    {/* Recompensas Ativas */}
+                    <div>
+                        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                            <Gift className="w-5 h-5 text-primary" />
+                            Loja de Vantagens
+                        </h3>
+                        <RewardShop />
+                    </div>
+
+                    {/* Mapa de Jornada */}
                     <LevelJourneyMap currentLevel={profile.level} />
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-8">
+                    {/* Ranking Social */}
+                    <Leaderboard />
+
+                    {/* Calendário de Frequência */}
                     <StreakCalendar
-                        todayActivity={dailyQuests?.some((q: { completed?: boolean }) => q.completed) || false}
+                        todayActivity={false} // Would need real activity check
                         activeDates={profile.last_activity_date ? [profile.last_activity_date] : []}
                     />
-
-                    {/* Achievements Preview */}
-                    <Card className="overflow-hidden border-none shadow-sm bg-gradient-to-br from-slate-50 to-white border">
-                        <div className="p-4 border-b flex justify-between items-center bg-white/50 backdrop-blur-sm">
-                            <h3 className="font-semibold flex items-center gap-2">
-                                <Award className="w-5 h-5 text-purple-500" />
-                                Conquistas
-                            </h3>
-                            <span className="text-xs text-muted-foreground">
-                                {unlockedAchievements?.length || 0}/{allAchievements?.length || 0}
-                            </span>
-                        </div>
-                        <div className="p-4 grid grid-cols-4 gap-2">
-                            {allAchievements.slice(0, 8).map((achievement: { id: string; name?: string; icon_url?: string }) => {
-                                const isUnlocked = unlockedAchievements.some((ua: { achievement_id: string }) => ua.achievement_id === achievement.id);
-                                return (
-                                    <div key={achievement.id} className="flex flex-col items-center gap-1 group relative">
-                                        <div className={`
-                                    w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300
-                                    ${isUnlocked
-                                                ? 'bg-purple-100 text-purple-600 shadow-sm group-hover:scale-110'
-                                                : 'bg-muted text-muted-foreground/30 grayscale'
-                                            }
-                                `}>
-                                            <Award className="w-6 h-6" />
-                                        </div>
-                                        {/* Tooltip-ish */}
-                                        <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap bg-gray-900 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 pointer-events-none z-10 transition-opacity">
-                                            {achievement.title}
-                                        </div>
-                                    </div>
-                                )
-                            })}
-                        </div>
-                        <Button variant="ghost" className="w-full text-xs text-muted-foreground hover:bg-slate-50 border-t rounded-none h-10">
-                            Ver todas as conquistas
-                        </Button>
-                    </Card>
                 </div>
             </div>
         </div>
@@ -924,7 +932,12 @@ export const PatientProfilePage = () => {
                         </TabsContent>
 
                         <TabsContent value="analytics" className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2">
-                            <AnalyticsTab patientId={id || ''} patientName={patientName} />
+                            <AnalyticsTab 
+                                patientId={id || ''} 
+                                patientName={patientName} 
+                                birthDate={patient.birth_date}
+                                condition={patient.main_condition || 'Não informada'} 
+                            />
                         </TabsContent>
 
                         <TabsContent value="personal" className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2">

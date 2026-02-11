@@ -34,3 +34,7 @@ export {
 export {
     analyzePatientProgressFlow,
 } from './patientAnalysis';
+
+export {
+    patientExecutiveSummaryFlow,
+} from './patientSummary';
