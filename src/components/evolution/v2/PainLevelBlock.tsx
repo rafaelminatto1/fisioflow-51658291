@@ -179,47 +179,51 @@ export const PainLevelBlock: React.FC<PainLevelBlockProps> = ({
           </div>
         </div>
 
-        {/* Quick Presets - Enhanced Buttons */}
-        <div className="grid grid-cols-4 gap-2">
-          {PAIN_LEVELS.map((preset) => {
-            const Icon = preset.icon;
-            const isActive = painLevel === preset.value;
-            const isNearActive = Math.abs(painLevel - preset.value) <= 2;
+        {/* Number Buttons 1-10 */}
+        <div className="pt-2 space-y-2">
+          <label className="block text-[11px] font-medium text-muted-foreground px-1 flex items-center gap-1.5">
+            <span>Selecione o nível de dor</span>
+            <span className="text-[9px] text-muted-foreground/60">(clique para selecionar)</span>
+          </label>
+          <div className="grid grid-cols-10 gap-1.5">
+            {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => {
+              const isActive = painLevel === num;
+              const numColors = getPainColor(num);
 
-            return (
-              <button
-                key={preset.value}
-                type="button"
-                onClick={() => handlePresetClick(preset.value)}
-                disabled={disabled}
-                className={cn(
-                  'relative group flex flex-col items-center gap-1.5 py-2.5 px-2 rounded-xl border transition-all duration-200',
-                  'hover:scale-105 active:scale-95',
-                  isActive
-                    ? `${colors.border} bg-gradient-to-br ${colors.gradient} shadow-md`
-                    : isNearActive
-                      ? 'border-border bg-muted/50 hover:bg-muted'
-                      : 'border-border/50 bg-muted/30 hover:bg-muted/50',
-                  disabled && 'opacity-50 cursor-not-allowed hover:scale-100'
-                )}
-              >
-                <Icon className={cn(
-                  'h-4 w-4 transition-colors',
-                  isActive ? 'text-white' : `text-${preset.color}-500`
-                )} />
-                <span className={cn(
-                  'text-[10px] font-semibold',
-                  isActive ? 'text-white' : 'text-muted-foreground'
-                )}>
-                  {preset.value}
-                </span>
-                {/* Tooltip on hover */}
-                <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 rounded-md bg-foreground text-[9px] text-white opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                  {preset.label}
-                </span>
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => handlePresetClick(num)}
+                  disabled={disabled}
+                  className={cn(
+                    'relative group h-11 rounded-lg border font-semibold text-sm',
+                    'transition-all duration-200 ease-out',
+                    'hover:scale-105 hover:-translate-y-0.5',
+                    'active:scale-95 active:translate-y-0',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50',
+                    isActive
+                      ? `${numColors.border} bg-gradient-to-br ${numColors.gradient} shadow-lg shadow-${numColors.text.split('-')[1]}-500/20 text-white`
+                      : 'border-border/60 bg-muted/40 hover:bg-muted/60 hover:border-border text-muted-foreground hover:text-foreground',
+                    disabled && 'opacity-50 cursor-not-allowed hover:scale-100 hover:translate-y-0'
+                  )}
+                  style={isActive ? {
+                    boxShadow: `0 4px 12px -2px ${numColors.text.includes('emerald') ? '#10b981' : numColors.text.includes('lime') ? '#84cc16' : numColors.text.includes('amber') ? '#f59e0b' : '#f43f5e'}40`
+                  } : undefined}
+                >
+                  {num}
+                  {/* Hover glow effect */}
+                  {!isActive && (
+                    <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-foreground/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                  )}
+                  {/* Active indicator */}
+                  {isActive && (
+                    <div className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1 rounded-full bg-white shadow-sm" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Pain Location Input - Enhanced */}
