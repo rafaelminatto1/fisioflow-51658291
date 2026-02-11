@@ -18,10 +18,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useColors } from '@/hooks/useColorScheme';
-import { Button, Card, Slider } from '@/components';
+import { Slider } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createEvolution } from '@/lib/firestore';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
+import { createEvolution, updateEvolution, deleteEvolution, getEvolutionById } from '@/lib/firestore';
 import { useAuthStore } from '@/store/auth';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -82,8 +82,6 @@ type SOAPKey = keyof typeof SOAP_SECTIONS;
 const ProgressRing = ({ progress, size = 60, strokeWidth = 6 }: { progress: number; size?: number; strokeWidth?: number }) => {
   const colors = useColors();
   const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
-  const strokeDashoffset = circumference - (progress / 100) * circumference;
 
   return (
     <View style={[styles.progressRingContainer, { width: size, height: size }]}>
@@ -395,6 +393,7 @@ export default function EvolutionScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const patientId = params.id as string;
+  const evolutionId = params.evolutionId as string | undefined;
   const patientName = params.patientName as string || 'Paciente';
 
   const { user } = useAuthStore();
@@ -412,9 +411,32 @@ export default function EvolutionScreen() {
   // Focus state
   const [focusedField, setFocusedField] = useState<SOAPKey | null>(null);
 
+  const isEditing = !!evolutionId;
+
+  // Load existing evolution if editing
+  const { isLoading: isLoadingEvolution } = useQuery({
+    queryKey: ['evolution', evolutionId],
+    queryFn: () => getEvolutionById(evolutionId!),
+    enabled: !!evolutionId,
+    onSuccess: (data) => {
+      if (data) {
+        setSubjective(data.subjective || '');
+        setObjective(data.objective || '');
+        setAssessment(data.assessment || '');
+        setPlan(data.plan || '');
+        setPainLevel(data.painLevel || 0);
+        if (data.attachments) {
+          setPhotos(data.attachments.map((uri, index) => ({
+            uri,
+            id: `photo-${Date.now()}-${index}`
+          })));
+        }
+      }
+    }
+  });
+
   const createMutation = useMutation({
-    mutationFn: (data: Omit<Parameters<typeof createEvolution>[1], 'professionalId'>) =>
-      createEvolution(user!.id, data),
+    mutationFn: (data: any) => createEvolution(user!.id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patientEvolutions', patientId] });
       success();
@@ -425,6 +447,37 @@ export default function EvolutionScreen() {
     onError: () => {
       hapticError();
       Alert.alert('Erro', 'Não foi possível salvar a evolução. Tente novamente.');
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (data: any) => updateEvolution(evolutionId!, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patientEvolutions', patientId] });
+      queryClient.invalidateQueries({ queryKey: ['evolution', evolutionId] });
+      success();
+      Alert.alert('Sucesso', 'Evolução atualizada com sucesso!', [
+        { text: 'OK', onPress: () => router.back() }
+      ]);
+    },
+    onError: () => {
+      hapticError();
+      Alert.alert('Erro', 'Não foi possível atualizar a evolução.');
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteEvolution(evolutionId!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['patientEvolutions', patientId] });
+      success();
+      Alert.alert('Sucesso', 'Evolução excluída com sucesso!', [
+        { text: 'OK', onPress: () => router.back() }
+      ]);
+    },
+    onError: () => {
+      hapticError();
+      Alert.alert('Erro', 'Não foi possível excluir a evolução.');
     },
   });
 
@@ -450,10 +503,30 @@ export default function EvolutionScreen() {
         attachments: photos.map(p => p.uri),
       };
 
-      await createMutation.mutateAsync(evolutionData);
+      if (isEditing) {
+        await updateMutation.mutateAsync(evolutionData);
+      } else {
+        await createMutation.mutateAsync(evolutionData);
+      }
     } catch (err) {
       // Error handled in mutation
     }
+  };
+
+  const handleDelete = () => {
+    medium();
+    Alert.alert(
+      'Excluir Evolução',
+      'Tem certeza que deseja excluir esta evolução? Esta ação não pode ser desfeita.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: () => deleteMutation.mutate(),
+        },
+      ]
+    );
   };
 
   const handleAddPhoto = async () => {
@@ -534,6 +607,14 @@ export default function EvolutionScreen() {
   const completionPercentage = getCompletionPercentage();
   const canSave = subjective.trim() || objective.trim() || assessment.trim() || plan.trim();
 
+  if (isEditing && isLoadingEvolution) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
       <KeyboardAvoidingView
@@ -552,7 +633,9 @@ export default function EvolutionScreen() {
           </TouchableOpacity>
 
           <View style={styles.headerCenter}>
-            <Text style={[styles.headerTitle, { color: colors.text }]}>Nova Evolução</Text>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>
+              {isEditing ? 'Editar Evolução' : 'Nova Evolução'}
+            </Text>
             <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>
               {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
             </Text>
@@ -572,12 +655,14 @@ export default function EvolutionScreen() {
           <View style={styles.patientInfo}>
             <Text style={[styles.patientName, { color: colors.text }]}>{patientName}</Text>
             <Text style={[styles.sessionLabel, { color: colors.textSecondary }]}>
-              Sessão de avaliação
+              {isEditing ? 'Sessão editada' : 'Sessão em andamento'}
             </Text>
           </View>
           <View style={styles.sessionStatus}>
             <View style={[styles.statusDot, { backgroundColor: colors.success }]} />
-            <Text style={[styles.statusText, { color: colors.textSecondary }]}>Em andamento</Text>
+            <Text style={[styles.statusText, { color: colors.textSecondary }]}>
+              {isEditing ? 'Atualizando' : 'Em andamento'}
+            </Text>
           </View>
         </View>
 
@@ -672,10 +757,10 @@ export default function EvolutionScreen() {
                 },
               ]}
               onPress={handleSave}
-              disabled={createMutation.isPending || !canSave}
+              disabled={createMutation.isPending || updateMutation.isPending || !canSave}
               activeOpacity={0.8}
             >
-              {createMutation.isPending ? (
+              {createMutation.isPending || updateMutation.isPending ? (
                 <>
                   <ActivityIndicator size="small" color="#FFFFFF" />
                   <Text style={styles.saveButtonText}>Salvando...</Text>
@@ -683,10 +768,29 @@ export default function EvolutionScreen() {
               ) : (
                 <>
                   <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
-                  <Text style={styles.saveButtonText}>Salvar Evolução</Text>
+                  <Text style={styles.saveButtonText}>
+                    {isEditing ? 'Atualizar Evolução' : 'Salvar Evolução'}
+                  </Text>
                 </>
               )}
             </TouchableOpacity>
+
+            {isEditing && (
+              <TouchableOpacity
+                style={[styles.deleteButton, { borderColor: colors.error }]}
+                onPress={handleDelete}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? (
+                  <ActivityIndicator size="small" color={colors.error} />
+                ) : (
+                  <>
+                    <Ionicons name="trash-outline" size={20} color={colors.error} />
+                    <Text style={[styles.deleteButtonText, { color: colors.error }]}>Excluir Evolução</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
 
             <Text style={[styles.saveHint, { color: colors.textSecondary }]}>
               Preencha pelo menos um campo do SOAP para salvar
@@ -1156,6 +1260,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     letterSpacing: -0.3,
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    paddingVertical: 14,
+    borderRadius: 16,
+    marginTop: 16,
+    borderWidth: 1,
+    gap: 8,
+  },
+  deleteButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   saveHint: {
     fontSize: 12,

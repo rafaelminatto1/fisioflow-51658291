@@ -21,7 +21,7 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { useQuery } from '@tanstack/react-query';
 import { getPatientById } from '@/lib/firestore';
 import { format } from 'date-fns';
-import { usePatientExercises } from '@/hooks';
+import { usePatientExercises, useEvolutions } from '@/hooks';
 import {
   usePatientFinancialRecords,
   usePatientFinancialSummary,
@@ -50,6 +50,9 @@ export default function PatientDetailScreen() {
     enabled: !!id,
   });
 
+  // Buscar evoluções do paciente
+  const { evolutions, isLoading: isLoadingEvolutions, refetch: refetchEvolutions } = useEvolutions(id as string);
+
   // Buscar exercícios do paciente
   const { data: patientExercises } = usePatientExercises(id as string);
 
@@ -77,6 +80,7 @@ export default function PatientDetailScreen() {
     setRefreshing(true);
     light();
     await refetch();
+    await refetchEvolutions();
     await refetchFinancial();
     await refetchSummary();
     setRefreshing(false);
@@ -256,15 +260,57 @@ export default function PatientDetailScreen() {
               <Text style={styles.addEvolutionBtnText}>Nova Evolução SOAP</Text>
             </TouchableOpacity>
 
-            <View style={styles.emptyEvolution}>
-              <Ionicons name="document-text-outline" size={64} color={colors.textMuted} />
-              <Text style={[styles.emptyEvolutionTitle, { color: colors.text }]}>
-                Nenhuma evolução registrada
-              </Text>
-              <Text style={[styles.emptyEvolutionText, { color: colors.textSecondary }]}>
-                Registre a primeira evolução deste paciente
-              </Text>
-            </View>
+            {isLoadingEvolutions ? (
+              <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
+            ) : evolutions.length > 0 ? (
+              evolutions.map((evolution) => (
+                <TouchableOpacity
+                  key={evolution.id}
+                  onPress={() => {
+                    medium();
+                    router.push(`/patient/[id]/evolution?id=${id}&evolutionId=${evolution.id}&patientName=${name}`);
+                  }}
+                >
+                  <Card style={styles.evolutionCard}>
+                    <View style={styles.evolutionHeader}>
+                      <Text style={[styles.evolutionDate, { color: colors.text }]}>
+                        {format(new Date(evolution.createdAt!), 'dd/MM/yyyy HH:mm')}
+                      </Text>
+                      {evolution.painLevel !== undefined && (
+                        <View style={[styles.painBadge, { backgroundColor: evolution.painLevel > 5 ? colors.errorLight : colors.successLight }]}>
+                          <Text style={[styles.painText, { color: evolution.painLevel > 5 ? colors.error : colors.success }]}>
+                            Dor: {evolution.painLevel}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                    <View style={styles.soapPreview}>
+                      {evolution.subjective && (
+                        <Text style={[styles.soapItem, { color: colors.text }]} numberOfLines={1}>
+                          <Text style={{ fontWeight: 'bold' }}>S: </Text>{evolution.subjective}
+                        </Text>
+                      )}
+                      {evolution.objective && (
+                        <Text style={[styles.soapItem, { color: colors.text }]} numberOfLines={1}>
+                          <Text style={{ fontWeight: 'bold' }}>O: </Text>{evolution.objective}
+                        </Text>
+                      )}
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={colors.textMuted} style={styles.evolutionArrow} />
+                  </Card>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <View style={styles.emptyEvolution}>
+                <Ionicons name="document-text-outline" size={64} color={colors.textMuted} />
+                <Text style={[styles.emptyEvolutionTitle, { color: colors.text }]}>
+                  Nenhuma evolução registrada
+                </Text>
+                <Text style={[styles.emptyEvolutionText, { color: colors.textSecondary }]}>
+                  Registre a primeira evolução deste paciente
+                </Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -789,86 +835,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
   },
-  historyItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  historyDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  historyInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  historyType: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  historyDate: {
-    fontSize: 13,
-  },
-  exerciseCard: {
-    marginBottom: 12,
-  },
-  exerciseHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  exerciseName: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  exerciseProgress: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  progressBar: {
-    height: 8,
-    borderRadius: 4,
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 4,
-  },
-  infoSection: {
-    padding: 16,
-  },
-  infoSectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 12,
-    gap: 8,
-  },
-  editButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  emptyTab: {
-    alignItems: 'center',
-    paddingVertical: 60,
-  },
-  emptyTabTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 16,
-  },
-  emptyTabText: {
-    fontSize: 14,
-    marginTop: 4,
-  },
   evolutionsContainer: {
     gap: 16,
   },
@@ -879,11 +845,48 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     gap: 12,
+    marginBottom: 8,
   },
   addEvolutionBtnText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  evolutionCard: {
+    padding: 16,
+    position: 'relative',
+  },
+  evolutionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  evolutionDate: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  painBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  painText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  soapPreview: {
+    gap: 4,
+    paddingRight: 24,
+  },
+  soapItem: {
+    fontSize: 14,
+  },
+  evolutionArrow: {
+    position: 'absolute',
+    right: 12,
+    top: '50%',
+    marginTop: -10,
   },
   emptyEvolution: {
     alignItems: 'center',
@@ -899,5 +902,241 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
     paddingHorizontal: 32,
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 8,
+  },
+  editButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  financialContainer: {
+    gap: 16,
+  },
+  summaryCard: {
+    padding: 16,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  summaryItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  summaryLabel: {
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  summaryValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  addFinancialBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 8,
+  },
+  addFinancialBtnText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  recordsList: {
+    gap: 12,
+  },
+  recordCard: {
+    padding: 16,
+  },
+  recordHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  recordDateContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  recordDate: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  partnershipBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    gap: 4,
+  },
+  partnershipBadgeText: {
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  recordValues: {
+    gap: 4,
+    marginBottom: 12,
+  },
+  valueRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  valueLabel: {
+    fontSize: 13,
+  },
+  valueOriginal: {
+    fontSize: 13,
+    textDecorationLine: 'line-through',
+  },
+  valueDiscount: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  valueFinal: {
+    fontSize: 15,
+  },
+  valuePaid: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  paymentMethodContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
+  paymentMethodText: {
+    fontSize: 13,
+  },
+  recordNotes: {
+    fontSize: 13,
+    fontStyle: 'italic',
+    marginBottom: 12,
+  },
+  recordActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+  },
+  markPaidBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    gap: 6,
+  },
+  markPaidBtnText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  editRecordBtn: {
+    padding: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  deleteRecordBtn: {
+    padding: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  modalScroll: {
+    marginBottom: 20,
+  },
+  formGroup: {
+    marginBottom: 16,
+  },
+  formLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  formInput: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+  },
+  formTextarea: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  paymentMethodsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  paymentMethodOption: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  paymentMethodOptionText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  modalBtnCancel: {
+    borderWidth: 1,
+  },
+  modalBtnText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalBtnConfirmText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  loadingContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 8,
+    fontSize: 14,
   },
 });
