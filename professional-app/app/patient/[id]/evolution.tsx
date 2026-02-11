@@ -737,6 +737,31 @@ export default function EvolutionScreen() {
             </View>
           </View>
 
+          {/* Scientific Support - New Section */}
+          <Card style={styles.supportCard}>
+            <View style={styles.supportHeader}>
+              <Ionicons name="library" size={20} color={colors.primary} />
+              <Text style={[styles.supportTitle, { color: colors.text }]}>Suporte Científico & Melhores Práticas</Text>
+            </View>
+            <Text style={[styles.supportText, { color: colors.textSecondary }]}>
+              Baseado no diagnóstico e plano, recomendamos:
+            </Text>
+            <View style={styles.tipsList}>
+              <View style={styles.tipItem}>
+                <Ionicons name="star" size={16} color={colors.warning} />
+                <Text style={[styles.tipText, { color: colors.text }]}>Protocolo PRICE para lesões agudas (primeiras 48h).</Text>
+              </View>
+              <View style={styles.tipItem}>
+                <Ionicons name="star" size={16} color={colors.warning} />
+                <Text style={[styles.tipText, { color: colors.text }]}>Exercícios excêntricos para tendinopatias crônicas.</Text>
+              </View>
+            </View>
+            <TouchableOpacity style={[styles.searchBtn, { backgroundColor: colors.primary + '15' }]}>
+              <Ionicons name="search" size={16} color={colors.primary} />
+              <Text style={[styles.searchBtnText, { color: colors.primary }]}>Buscar evidências no PubMed</Text>
+            </TouchableOpacity>
+          </Card>
+
           {/* Photo Section */}
           <PhotoGrid
             photos={photos}
@@ -1280,5 +1305,49 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 12,
     textAlign: 'center',
+  },
+  supportCard: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    padding: 16,
+  },
+  supportHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  supportTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  supportText: {
+    fontSize: 13,
+    marginBottom: 12,
+  },
+  tipsList: {
+    gap: 8,
+    marginBottom: 16,
+  },
+  tipItem: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'flex-start',
+  },
+  tipText: {
+    fontSize: 13,
+    flex: 1,
+  },
+  searchBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 8,
+    gap: 8,
+  },
+  searchBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
 });
