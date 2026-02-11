@@ -62,9 +62,7 @@ fisioflow/
 │   ├── contexts/            # React contexts (Auth, Realtime)
 │   ├── hooks/               # Custom React hooks
 │   ├── integrations/        # External service integrations
-│   │   ├── firebase/        # Firebase integration
-│   │   ├── supabase/        # Supabase integration
-│   │   └── ably/            # Ably realtime
+│   │   └── firebase/        # Firebase integration
 │   ├── lib/                 # Utility libraries
 │   │   ├── accessibility/   # A11y utilities
 │   │   ├── monitoring/      # Sentry & monitoring
@@ -119,7 +117,7 @@ fisioflow/
 | **Cloud Functions** | Serverless compute |
 | **Cloud Storage** | File storage |
 | **Authentication** | User auth |
-| **Ably** | Realtime updates |
+| **Realtime Database** | Realtime updates |
 
 ### Data Flow
 
@@ -131,12 +129,12 @@ fisioflow/
        ├──────────────┐
        │              │
        ▼              ▼
-┌──────────┐   ┌──────────┐
-│ Firebase │   │ Ably     │
-│  Auth    │   │ Realtime │
-└─────┬────┘   └────┬─────┘
-      │              │
-      ▼              ▼
+┌──────────┐   ┌──────────────────┐
+│ Firebase │   │ Firebase         │
+│  Auth    │   │ Realtime Database│
+└─────┬────┘   └────────┬─────────┘
+      │                  │
+      ▼                  ▼
 ┌─────────────────────────┐
 │   Firebase Data Connect │
 │   (Cloud SQL PostgreSQL)│
@@ -288,13 +286,23 @@ const { data } = await createPatient({
 
 ### Realtime Updates
 
-Using Ably channels:
+Using Firebase Realtime Database with React Query invalidation:
 
 ```typescript
-import { subscribeToAppointments } from '@/lib/realtime/ably-client';
+import { useEffect } from 'react';
+import { getDatabase, ref, onValue, off } from 'firebase/database';
+import { useQueryClient } from '@tanstack/react-query';
+import { app } from '@/integrations/firebase/app';
 
-const unsubscribe = subscribeToAppointments(orgId, (message) => {
-  console.log('Appointment update:', message);
+// Listen for realtime triggers
+const db = getDatabase(app);
+const triggerRef = ref(db, `orgs/${orgId}/appointments/refresh_trigger`);
+
+const unsubscribe = onValue(triggerRef, (snapshot) => {
+  if (snapshot.exists()) {
+    // Invalidate React Query cache to fetch fresh data
+    queryClient.invalidateQueries({ queryKey: ['appointments'] });
+  }
 });
 ```
 

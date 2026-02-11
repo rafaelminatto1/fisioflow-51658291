@@ -1,5 +1,6 @@
 import { createContext, useState, useCallback, useEffect, useRef } from 'react';
-import { getAblyClient, ABLY_CHANNELS, ABLY_EVENTS } from '@/integrations/ably/client';
+import { getDatabase, ref, onValue, off } from 'firebase/database';
+import { app } from '@/integrations/firebase/app';
 import { appointmentsApi } from '@/integrations/firebase/functions';
 import { useAuth } from '@/contexts/AuthContext';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -199,10 +200,38 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [flushPendingUpdates]);
 
   /**
-   * Subscrever às mudanças na tabela de appointments via Supabase Realtime
-   * Otimizado com filtros específicos para reduzir tráfego
+   * Carregar appointments iniciais ao montar o provider
+   * OTIMIZADO: Só carrega appointments futuros e dos últimos 7 dias
+   */
+  const loadInitialAppointments = useCallback(async () => {
+    if (!organizationId) return;
+
+    try {
+      logger.debug('Realtime: Loading initial appointments via Functions', {}, 'RealtimeContext');
+
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const dateFrom = sevenDaysAgo.toISOString().split('T')[0];
+
+      const response = await appointmentsApi.list({
+        dateFrom,
+        limit: 100
+      });
+
+      if (response.data) {
+        setAppointments(response.data as Appointment[]);
+        logger.debug(`Realtime: Loaded ${response.data.length} initial appointments`, {}, 'RealtimeContext');
+      }
+    } catch (error) {
+      logger.error('Realtime: Error in loadInitialAppointments', error, 'RealtimeContext');
+    }
+  }, [organizationId]);
+
+  /**
+   * Subscrever às mudanças na agenda via Firebase Realtime Database
+   * Otimizado com triggers para reduzir tráfego
    *
-   * FIX: Tracka estado de subscription para evitar erros de WebSocket
+   * FIX: Tracka estado de subscription para evitar erros
    */
   const subscribeToAppointments = useCallback(() => {
     if (!organizationId) {
@@ -213,82 +242,58 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return () => { };
     }
 
-    logger.debug('Realtime: Subscribing to appointments via Ably', { organizationId, retryCount }, 'RealtimeContext');
+    logger.debug('Realtime: Subscribing to appointments via RTDB', { organizationId, retryCount }, 'RealtimeContext');
 
-    const ably = getAblyClient();
-    const channel = ably.channels.get(ABLY_CHANNELS.appointments(organizationId));
+    let db;
+    try {
+      db = getDatabase(app);
+    } catch (error) {
+      logger.debug('Realtime: RTDB not available, skipping subscription', error, 'RealtimeContext');
+      return () => { };
+    }
 
-    channel.subscribe(ABLY_EVENTS.update, (message) => {
-      const payload = message.data as {
-        eventType: string;
-        new: Record<string, unknown>;
-        old: Record<string, unknown>;
-      };
-      handleRealtimeChange(payload);
+    const triggerRef = ref(db, `orgs/${organizationId}/agenda/refresh_trigger`);
+
+    const unsubscribe = onValue(triggerRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const val = snapshot.val();
+        // RTDB trigger contains both the signal and optional payload
+        logger.debug('Realtime (RTDB): Agenda refresh signal received', { organizationId, val }, 'RealtimeContext');
+
+        // If payload contains event data, process it
+        if (val.data && typeof val.data === 'object') {
+          handleRealtimeChange(val.data as {
+            eventType: string;
+            new: Record<string, unknown>;
+            old: Record<string, unknown>;
+          });
+        } else {
+          // No detailed payload, reload from API
+          loadInitialAppointments();
+        }
+      }
     });
 
-    // Handle channel errors (e.g. 410 Gone)
-    const handleChannelState = (stateChange: Ably.ChannelStateChange) => {
-      if (stateChange.current === 'failed' || stateChange.current === 'suspended') {
-        logger.error(`Realtime: Ably channel ${stateChange.current}`, stateChange.reason, 'RealtimeContext');
-        setIsSubscribed(false);
-
-        // Auto-retry connection after delay
-        const timeout = setTimeout(() => {
-          logger.debug('Realtime: Retrying subscription...', {}, 'RealtimeContext');
-          setRetryCount(prev => prev + 1);
-        }, 5000);
-
-        return () => clearTimeout(timeout);
-      }
-    };
-
-    channel.on(handleChannelState);
     setIsSubscribed(true);
 
     return () => {
-      logger.debug('Realtime: Unsubscribing from Ably channel', { organizationId }, 'RealtimeContext');
-      channel.unsubscribe();
-      channel.off(handleChannelState);
+      logger.debug('Realtime (RTDB): Unsubscribing from agenda trigger', { organizationId }, 'RealtimeContext');
+      off(triggerRef, 'value', unsubscribe);
       setIsSubscribed(false);
 
       if (updateTimeoutRef.current) {
         clearTimeout(updateTimeoutRef.current);
       }
     };
-  }, [organizationId, handleRealtimeChange, retryCount]);
+  }, [organizationId, handleRealtimeChange, retryCount, loadInitialAppointments]);
 
   /**
    * Carregar appointments iniciais ao montar o provider
    * OTIMIZADO: Só carrega appointments futuros e dos últimos 7 dias
    */
   useEffect(() => {
-    const loadInitialAppointments = async () => {
-      if (!organizationId) return;
-
-      try {
-        logger.debug('Realtime: Loading initial appointments via Functions', {}, 'RealtimeContext');
-
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        const dateFrom = sevenDaysAgo.toISOString().split('T')[0];
-
-        const response = await appointmentsApi.list({
-          dateFrom,
-          limit: 100
-        });
-
-        if (response.data) {
-          setAppointments(response.data as Appointment[]);
-          logger.debug(`Realtime: Loaded ${response.data.length} initial appointments`, {}, 'RealtimeContext');
-        }
-      } catch (error) {
-        logger.error('Realtime: Error in loadInitialAppointments', error, 'RealtimeContext');
-      }
-    };
-
     loadInitialAppointments();
-  }, [organizationId]);
+  }, [loadInitialAppointments]);
 
   /**
    * Setup realtime subscription quando o componente monta

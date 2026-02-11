@@ -8,7 +8,7 @@
 
 /** Mensagem amigável exibida quando o backend retorna 409 (conflito de horário). */
 export const APPOINTMENT_CONFLICT_MESSAGE =
-  'Capacidade máxima de pacientes por horário atingida. Escolha outro horário ou entre na fila de espera.';
+  '⚠️ Já existe um agendamento neste horário. Escolha outro horário ou verifique se não está duplicando um agendamento existente.';
 
 /** Título opcional para toasts de conflito. */
 export const APPOINTMENT_CONFLICT_TITLE = 'Conflito de horário';
@@ -32,7 +32,11 @@ export function isAppointmentConflictError(error: unknown): boolean {
       : error instanceof Error
         ? error.message
         : String(error);
-  return msg.includes('409') || msg.includes('Conflito de horário');
+  return msg.includes('409') ||
+         msg.includes('Conflito de horário') ||
+         msg.includes('duplicate key value violates unique constraint') ||
+         msg.includes('idx_appointments_time_conflict') ||
+         msg.includes('time_conflict');
 }
 
 /**

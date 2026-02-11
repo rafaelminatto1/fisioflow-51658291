@@ -612,25 +612,20 @@ export const syncDoctorToSql = functions.firestore.onDocumentWritten(
 );
 
 /**
- * Firestore trigger unificado: publica eventos de agendamento no Ably (INSERT e UPDATE)
+ * Firestore trigger unificado: publica eventos de agendamento no RTDB
  */
 export const onAppointmentWritten = functions.firestore.onDocumentWritten(
     'appointments/{appointmentId}',
     async (event) => {
         const after = event.data?.after?.data();
-        const before = event.data?.before?.data();
         if (!after) return;
 
-        const eventType = before ? 'UPDATE' : 'INSERT';
+        // RTDB: Notificar clientes sobre atualização
         try {
-            const realtime = await import('./realtime/publisher');
-            await realtime.publishAppointmentEvent(after.organization_id, {
-                event: eventType,
-                new: after,
-                old: before ?? null,
-            });
+            const { rtdb } = await import('./lib/rtdb');
+            await rtdb.refreshAppointments(after.organization_id);
         } catch (err) {
-            console.error('[onAppointmentWritten] Realtime publish failed (non-critical):', err);
+            console.error('[onAppointmentWritten] RTDB publish failed (non-critical):', err);
         }
     }
 );
@@ -766,3 +761,15 @@ export {
 
 // Storage Triggers
 export { onDicomUpload } from './storage/dicomTriggers';
+
+// ============================================================================
+// AI INDEXING (Vector Search)
+// ============================================================================
+export {
+    indexExistingEvolutions,
+    indexEvolution,
+    reindexPatientEvolutions,
+    removeEvolutionEmbedding,
+    onEvolutionCreated,
+    getIndexingStats,
+} from './ai/indexing';

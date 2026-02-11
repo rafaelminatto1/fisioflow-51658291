@@ -40,6 +40,11 @@ const analyzeProgressHandler = async (request: any) => {
   return analyzeProgressHandler(request);
 };
 
+const patientSummaryHandler = async (request: any) => {
+  const { patientSummaryHandler } = await import('./flow-wrappers');
+  return patientSummaryHandler(request);
+};
+
 // Handlers de movement-analysis
 const movementAnalysisHandler = async (request: any) => {
   const { movementAnalysisHandler } = await import('./movement-analysis');
