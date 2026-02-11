@@ -75,107 +75,107 @@ const TextBlock: React.FC<{
   className,
   accentColor = 'primary'
 }) => {
-  const [localValue, setLocalValue] = useState(value);
-  const [isFocused, setIsFocused] = useState(false);
-  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastSentValue = useRef(value);
+    const [localValue, setLocalValue] = useState(value);
+    const [isFocused, setIsFocused] = useState(false);
+    const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const lastSentValue = useRef(value);
 
-  // Sync external value changes
-  useEffect(() => {
-    if (value !== localValue && value !== lastSentValue.current && !debounceTimer.current) {
-      setLocalValue(value || '');
-      lastSentValue.current = value || '';
-    }
-  }, [value, localValue]);
+    // Sync external value changes
+    useEffect(() => {
+      if (value !== localValue && value !== lastSentValue.current && !debounceTimer.current) {
+        setLocalValue(value || '');
+        lastSentValue.current = value || '';
+      }
+    }, [value, localValue]);
 
-  useEffect(() => {
-    return () => {
-      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    useEffect(() => {
+      return () => {
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+      };
+    }, []);
+
+    const handleChange = useCallback(
+      (val: string) => {
+        setLocalValue(val);
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+        debounceTimer.current = setTimeout(() => {
+          lastSentValue.current = val;
+          onValueChange(val);
+        }, 800);
+      },
+      [onValueChange]
+    );
+
+    const hasContent = localValue.trim().length > 0;
+
+    const accentColors: Record<string, { from: string; to: string; border: string }> = {
+      primary: { from: 'from-primary/60', to: 'to-primary', border: 'border-primary' },
+      sky: { from: 'from-sky-500/60', to: 'to-sky-500', border: 'border-sky-500' },
+      violet: { from: 'from-violet-500/60', to: 'to-violet-500', border: 'border-violet-500' },
+      amber: { from: 'from-amber-500/60', to: 'to-amber-500', border: 'border-amber-500' },
     };
-  }, []);
 
-  const handleChange = useCallback(
-    (val: string) => {
-      setLocalValue(val);
-      if (debounceTimer.current) clearTimeout(debounceTimer.current);
-      debounceTimer.current = setTimeout(() => {
-        lastSentValue.current = val;
-        onValueChange(val);
-      }, 800);
-    },
-    [onValueChange]
-  );
+    const colors = accentColors[accentColor] || accentColors.primary;
 
-  const hasContent = localValue.trim().length > 0;
-
-  const accentColors: Record<string, { from: string; to: string; border: string }> = {
-    primary: { from: 'from-primary/60', to: 'to-primary', border: 'border-primary' },
-    sky: { from: 'from-sky-500/60', to: 'to-sky-500', border: 'border-sky-500' },
-    violet: { from: 'from-violet-500/60', to: 'to-violet-500', border: 'border-violet-500' },
-    amber: { from: 'from-amber-500/60', to: 'to-amber-500', border: 'border-amber-500' },
-  };
-
-  const colors = accentColors[accentColor] || accentColors.primary;
-
-  return (
-    <div className={cn(
-      'rounded-xl border border-border/50 bg-card overflow-hidden transition-all duration-300',
-      'shadow-sm hover:shadow-md hover:border-border/70',
-      'animate-in fade-in-0 slide-in-from-bottom-2 duration-300',
-      isFocused && `ring-2 ring-${accentColor}/10 shadow-md`,
-      className
-    )}>
-      {/* Top accent line */}
+    return (
       <div className={cn(
-        'absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r transition-all duration-500',
-        isFocused ? `opacity-100 ${colors.from} ${colors.to}` : 'opacity-0'
-      )} />
-
-      {/* Header */}
-      <div className="flex items-center gap-2.5 p-3.5 border-b border-border/40 bg-gradient-to-r from-muted/30 to-muted/10 transition-colors duration-300">
+        'rounded-xl border border-border/50 bg-card overflow-hidden transition-all duration-300',
+        'shadow-sm hover:shadow-md hover:border-border/70',
+        'animate-in fade-in-0 slide-in-from-bottom-2 duration-300',
+        isFocused && `ring-2 ring-${accentColor}/10 shadow-md`,
+        className
+      )}>
+        {/* Top accent line */}
         <div className={cn(
-          'p-1.5 rounded-lg transition-all duration-300 ease-out',
-          iconBg,
-          isFocused ? 'scale-110 shadow-md' : 'hover:scale-105'
-        )}>
-          {icon}
+          'absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r transition-all duration-500',
+          isFocused ? `opacity-100 ${colors.from} ${colors.to}` : 'opacity-0'
+        )} />
+
+        {/* Header */}
+        <div className="flex items-center gap-2.5 p-3.5 border-b border-border/40 bg-gradient-to-r from-muted/30 to-muted/10 transition-colors duration-300">
+          <div className={cn(
+            'p-1.5 rounded-lg transition-all duration-300 ease-out',
+            iconBg,
+            isFocused ? 'scale-110 shadow-md' : 'hover:scale-105'
+          )}>
+            {icon}
+          </div>
+          <div className="flex flex-col flex-1 min-w-0">
+            <h3 className="text-sm font-semibold text-foreground truncate">{title}</h3>
+            {hasContent && (
+              <span className="text-[10px] text-green-600 dark:text-green-400 flex items-center gap-1 animate-in slide-in-from-top-1 duration-300">
+                <CheckCircle2 className="h-2.5 w-2.5" />
+                Preenchido
+              </span>
+            )}
+          </div>
         </div>
-        <div className="flex flex-col flex-1 min-w-0">
-          <h3 className="text-sm font-semibold text-foreground truncate">{title}</h3>
-          {hasContent && (
-            <span className="text-[10px] text-green-600 dark:text-green-400 flex items-center gap-1 animate-in slide-in-from-top-1 duration-300">
-              <CheckCircle2 className="h-2.5 w-2.5" />
-              Preenchido
-            </span>
-          )}
+
+        {/* Content */}
+        <div className="p-4">
+          <div className={cn(
+            'rounded-lg border border-transparent transition-all duration-200',
+            isFocused && 'border-border/50 bg-muted/30'
+          )}>
+            <MagicTextarea
+              value={localValue}
+              onValueChange={handleChange}
+              placeholder={placeholder}
+              disabled={disabled}
+              rows={rows}
+              className="min-h-[100px] border-0 shadow-none resize-y focus-visible:ring-0 bg-transparent px-0"
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+            />
+          </div>
+          <p className="text-[11px] text-muted-foreground/60 mt-2 flex items-center gap-1">
+            <Sparkles className="h-3 w-3" />
+            {hint}
+          </p>
         </div>
       </div>
-
-      {/* Content */}
-      <div className="p-4">
-        <div className={cn(
-          'rounded-lg border border-transparent transition-all duration-200',
-          isFocused && 'border-border/50 bg-muted/30'
-        )}>
-          <MagicTextarea
-            value={localValue}
-            onValueChange={handleChange}
-            placeholder={placeholder}
-            disabled={disabled}
-            rows={rows}
-            className="min-h-[100px] border-0 shadow-none resize-y focus-visible:ring-0 bg-transparent px-0"
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-          />
-        </div>
-        <p className="text-[11px] text-muted-foreground/60 mt-2 flex items-center gap-1">
-          <Sparkles className="h-3 w-3" />
-          {hint}
-        </p>
-      </div>
-    </div>
-  );
-};
+    );
+  };
 
 export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
   data,
@@ -366,7 +366,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
         <Separator className="my-3" />
 
         {/* Block 7: Observations, Home Care, Attachments - 3 columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 animate-in fade-in-0 slide-in-from-top-8 duration-300 delay-[350ms]">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 animate-in fade-in-0 slide-in-from-top-8 duration-300 animate-delay-7">
           {/* Observations */}
           <TextBlock
             icon={<StickyNote className="h-4 w-4 text-amber-600" />}
