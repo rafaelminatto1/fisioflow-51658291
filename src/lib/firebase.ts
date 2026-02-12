@@ -76,10 +76,6 @@ export {
 // Re-export default
 export { app as default } from '@/integrations/firebase/app';
 
-// Log de deprecacao para desenvolvimento
-if (import.meta.env.DEV) {
-  console.warn(
-    '[DEPRECATION] @/lib/firebase está usando re-export de @/integrations/firebase/app. ' +
-    'Atualize os imports para usar a nova implementacao: @/integrations/firebase/app'
-  );
-}
+// NOTE: This file is a stable re-export layer from @/integrations/firebase/app.
+// ~17 files still import from this path. A migration to direct imports is planned.
+

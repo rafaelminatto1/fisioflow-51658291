@@ -136,3 +136,62 @@ export function formatAppointmentType(type: string): string {
   };
   return typeLabels[type.toLowerCase()] || type || 'Particular';
 }
+/**
+ * Get relative time from now
+ * 
+ * @param date - Date in YYYY-MM-DD format
+ * @param time - Time in HH:MM format
+ * @returns Relative time string (e.g., 'daqui a 15 min', 'há 10 min')
+ */
+export function getRelativeTime(date: string, time: string): string {
+  if (!date || !time) return '';
+
+  const appointmentTime = new Date(`${date}T${time}:00`);
+  const now = new Date();
+  const diffInMs = appointmentTime.getTime() - now.getTime();
+  const diffInMinutes = Math.round(diffInMs / (1000 * 60));
+
+  if (Math.abs(diffInMinutes) < 1) return 'agora';
+
+  if (diffInMinutes > 0) {
+    if (diffInMinutes >= 60) {
+      const hours = Math.floor(diffInMinutes / 60);
+      return `daqui a ${hours}h`;
+    }
+    return `daqui a ${diffInMinutes} min`;
+  } else {
+    const absMinutes = Math.abs(diffInMinutes);
+    if (absMinutes >= 60) {
+      const hours = Math.floor(absMinutes / 60);
+      return `há ${hours}h`;
+    }
+    return `há ${absMinutes} min atrás`;
+  }
+}
+
+/**
+ * Check if an appointment is currently ongoing
+ */
+export function isAppointmentOngoing(date: string, time: string, duration: number): boolean {
+  if (!date || !time || !duration) return false;
+
+  const startTime = new Date(`${date}T${time}:00`);
+  const endTime = new Date(startTime.getTime() + duration * 60000);
+  const now = new Date();
+
+  return now >= startTime && now <= endTime;
+}
+
+/**
+ * Get appointment progress percentage
+ */
+export function getAppointmentProgress(date: string, time: string, duration: number): number {
+  if (!date || !time || !duration) return 0;
+
+  const startTime = new Date(`${date}T${time}:00`);
+  const now = new Date();
+  const elapsedMinutes = (now.getTime() - startTime.getTime()) / 60000;
+
+  const progress = Math.min(Math.max((elapsedMinutes / duration) * 100, 0), 100);
+  return Math.round(progress);
+}
