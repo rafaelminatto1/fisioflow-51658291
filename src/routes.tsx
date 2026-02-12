@@ -180,6 +180,7 @@ const BookingPage = lazy(() => import(/* webpackChunkName: "public-booking" */ "
 const ClinicalAnalysisPage = lazy(() => import(/* webpackChunkName: "ai-clinical" */ "./pages/ai/ClinicalAnalysisPage"));
 const MovementLabPage = lazy(() => import(/* webpackChunkName: "ai-movement" */ "./pages/ai/MovementLabPage"));
 const DocumentScannerPage = lazy(() => import(/* webpackChunkName: "ai-scanner" */ "./pages/ai/DocumentScannerPage"));
+const ActivityLabPage = lazy(() => import(/* webpackChunkName: "ai-activity-lab" */ "./pages/ai/ActivityLabPage"));
 
 // Google Integrations & Marketing
 const IntegrationsPage = lazy(() => import(/* webpackChunkName: "integrations-google" */ "./pages/Integrations"));
@@ -358,6 +359,7 @@ export function AppRoutes() {
             <Route path="/ai/clinical" element={<ProtectedRoute><ClinicalAnalysisPage /></ProtectedRoute>} />
             <Route path="/ai/movement" element={<ProtectedRoute><MovementLabPage /></ProtectedRoute>} />
             <Route path="/ai/scanner" element={<ProtectedRoute><DocumentScannerPage /></ProtectedRoute>} />
+            <Route path="/ai/activity-lab" element={<ProtectedRoute><ActivityLabPage /></ProtectedRoute>} />
 
             {/* Google Integrations */}
             <Route path="/integrations" element={<ProtectedRoute><IntegrationsPage /></ProtectedRoute>} />

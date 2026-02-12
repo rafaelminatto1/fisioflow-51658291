@@ -120,6 +120,9 @@ export const aiServiceHandler = async (request: any) => {
       return analyzeProgressHandler({ data: params });
     case 'patientExecutiveSummary':
       return patientSummaryHandler({ data: params });
+    case 'multimodalAnalysis':
+      const { multimodalAnalysisFlow } = await import('./flows');
+      return multimodalAnalysisFlow(params);
 
     // Movement Analysis
     case 'movementAnalysis':
@@ -212,6 +215,10 @@ export const aiServiceHttpHandler = async (req: any, res: any) => {
         break;
       case 'patientExecutiveSummary':
         result = await patientSummaryHandler(mockRequest);
+        break;
+      case 'multimodalAnalysis':
+        const { multimodalAnalysisFlow: flow } = await import('./flows');
+        result = await flow(params);
         break;
       case 'movementAnalysis':
         result = await movementAnalysisHandler(mockRequest);

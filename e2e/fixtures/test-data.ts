@@ -19,8 +19,8 @@ export const testUsers = {
   },
   // Firebase test user
   rafael: {
-    email: 'teste@moocafisio.com.br',
-    password: 'Yukari3030@',
+    email: 'rafael.minatto@yahoo.com.br',
+    password: 'Yukari30@',
     role: 'professional',
     expectedOrganizationId: null,
   },

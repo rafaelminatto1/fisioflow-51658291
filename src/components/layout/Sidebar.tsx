@@ -217,6 +217,7 @@ const googleAiSubmenu = [
   { icon: Brain, label: 'IA Clínica (Genkit)', href: '/ai/clinical' },
   { icon: Video, label: 'Lab Movimento (Vision)', href: '/ai/movement' },
   { icon: FileText, label: 'Scanner Laudos', href: '/ai/scanner' },
+  { icon: Activity, label: 'Activity Lab', href: '/ai/activity-lab' },
 ];
 
 const adminSubmenu = [

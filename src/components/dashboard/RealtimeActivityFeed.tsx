@@ -110,12 +110,18 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
         const activityList: ActivityEvent[] = [];
 
         appointmentsWithNames.forEach((apt) => {
+          const timestamp = apt.created_at?.toDate 
+            ? apt.created_at.toDate() 
+            : apt.created_at 
+              ? new Date(apt.created_at) 
+              : new Date();
+
           activityList.push({
             id: apt.id,
             type: 'appointment',
             title: 'Novo Agendamento',
             description: `${apt.patients?.name || 'Paciente'} - ${safeFormatDate(apt.appointment_date)}`,
-            timestamp: apt.created_at?.toDate ? apt.created_at.toDate() : new Date(apt.created_at),
+            timestamp: isNaN(timestamp.getTime()) ? new Date() : timestamp,
             icon: Calendar,
             variant: 'default',
           });
