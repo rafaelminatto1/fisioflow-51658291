@@ -9,6 +9,8 @@ import { getAuth, Auth, connectAuthEmulator } from 'firebase/auth';
 
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 
+import { getRemoteConfig, fetchAndActivate, getValue } from 'firebase/remote-config';
+
 import {
 
   getFirestore,
@@ -130,6 +132,7 @@ let authInstance: Auth | null = null;
 let dbInstance: Firestore | null = null;
 let storageInstance: FirebaseStorage | null = null;
 let functionsInstance: Functions | null = null;
+let remoteConfigInstance: any = null;
 
 /**
  * Obtém a instância do Firebase App
@@ -138,9 +141,9 @@ export function getFirebaseApp(): FirebaseApp {
   if (!appInstance) {
     appInstance = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-    // Inicializar App Check apenas no navegador
+    // Inicializar App Check e Remote Config apenas no navegador
     if (typeof window !== 'undefined') {
-      // @ts-ignore - self.FIREBASE_APPCHECK_DEBUG_TOKEN can be used for local testing
+      // @ts-ignore
       if (import.meta.env.DEV) {
         // @ts-ignore
         self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
@@ -150,10 +153,28 @@ export function getFirebaseApp(): FirebaseApp {
         provider: new ReCaptchaEnterpriseProvider(import.meta.env.VITE_APP_CHECK_SITE_KEY || '6Ld_placeholder'),
         isTokenAutoRefreshEnabled: true
       });
-      console.log('[Firebase] App Check initialized');
+
+      // Initialize Remote Config
+      remoteConfigInstance = getRemoteConfig(appInstance);
+      remoteConfigInstance.settings.minimumFetchIntervalMillis = 3600000; // 1 hour
+      remoteConfigInstance.defaultConfig = {
+        'enable_multimodal_ai': true,
+        'ai_analysis_severity_threshold': 'moderate'
+      };
+      fetchAndActivate(remoteConfigInstance);
+
+      console.log('[Firebase] App Check and Remote Config initialized');
     }
   }
   return appInstance;
+}
+
+/**
+ * Obtém um valor do Remote Config
+ */
+export function getRemoteValue(key: string): any {
+  if (!remoteConfigInstance) return null;
+  return getValue(remoteConfigInstance, key);
 }
 
 /**

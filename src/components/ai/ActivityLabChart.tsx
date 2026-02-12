@@ -152,35 +152,3 @@ export const ActivityLabChart: React.FC<ActivityLabChartProps> = ({ session }) =
     </Card>
   );
 };
-
-        
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-          <div className="p-3 bg-blue-50 rounded-lg">
-            <p className="text-xs text-blue-600 font-medium uppercase">Pico de Força</p>
-            <p className="text-xl font-bold">{(session.peak_force || session.peakForce || 0).toFixed(1)} kg</p>
-          </div>
-          <div className="p-3 bg-green-50 rounded-lg">
-            <p className="text-xs text-green-600 font-medium uppercase">Força Média</p>
-            <p className="text-xl font-bold">{(session.avg_force || session.avgForce || 0).toFixed(1)} kg</p>
-          </div>
-          <div className="p-3 bg-purple-50 rounded-lg">
-            <p className="text-xs text-purple-600 font-medium uppercase">RFD (kg/s)</p>
-            <p className="text-xl font-bold">{(session.rfd || session.rateOfForceDevelopment || 0).toFixed(1)}</p>
-          </div>
-          <div className="p-3 bg-orange-50 rounded-lg">
-            <p className="text-xs text-orange-600 font-medium uppercase">Duração</p>
-            <p className="text-xl font-bold">{(session.duration || 0).toFixed(1)} s</p>
-          </div>
-        </div>
-        
-        <div className="mt-4 text-xs text-gray-400 flex flex-wrap gap-x-4">
-          <span>Dispositivo: {session.device_model || session.deviceModel}</span>
-          <span>Firmware: {session.device_firmware || session.deviceFirmware}</span>
-          <span>Bateria: {session.device_battery || session.deviceBattery}%</span>
-          <span>Simulado: {session.is_simulated ? 'Sim' : 'Não'}</span>
-          <span>Frequência: {session.sample_rate || session.sampleRate || 80} Hz</span>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};

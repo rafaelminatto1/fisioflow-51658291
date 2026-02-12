@@ -24,32 +24,6 @@ config.resolver.unstable_symlinks = true;
 // IMPORTANTE: Não adicionar watchFolders do monorepo
 config.watchFolders = [__dirname];
 
-// Custom resolver para Firebase sub-packages apenas
-const originalResolver = config.resolver.resolveRequest;
-
-config.resolver.resolveRequest = (context, moduleName, platform, halted) => {
-  // Firebase sub-packages - resolver manualmente para evitar problemas com exports
-  if (moduleName?.startsWith('firebase/')) {
-    const subPath = moduleName.replace('firebase/', '');
-    const firebasePath = path.resolve(__dirname, `node_modules/firebase/${subPath}/dist/index.cjs.js`);
-
-    if (fs.existsSync(firebasePath)) {
-      return {
-        filePath: firebasePath,
-        type: 'sourceFile',
-      };
-    }
-  }
-
-  // Usar o resolver original para todos os outros casos
-  if (originalResolver) {
-    return originalResolver(context, moduleName, platform, halted);
-  }
-
-  // Fallback para o resolver do contexto
-  return context.resolveRequest(context, moduleName, platform);
-};
-
 // Configurar blockList para não bloquear arquivos necessários
 config.resolver.blockList = [
   /test-results\/.*/,

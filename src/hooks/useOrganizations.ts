@@ -48,13 +48,15 @@ export const useOrganizations = () => {
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as Organization[];
     },
+    staleTime: 1000 * 60 * 30, // 30 minutes
+    gcTime: 1000 * 60 * 60, // 60 minutes
   });
 
   // Query para organização atual do usuário
-  const { 
-    data: currentOrganization, 
+  const {
+    data: currentOrganization,
     isLoading: isCurrentOrgLoading,
-    error: currentOrgError 
+    error: currentOrgError
   } = useQuery({
     queryKey: ['current-organization'],
     queryFn: async () => {
@@ -88,6 +90,7 @@ export const useOrganizations = () => {
         ...orgSnap.data(),
       } as Organization;
     },
+    staleTime: 1000 * 60 * 15, // 15 minutes
   });
 
   // Mutation para criar organização

@@ -518,11 +518,11 @@ const PatientEvolution = () => {
     // V2: Map V2 data to SOAP fields for saving (backwards compatible)
     const saveData = evolutionVersion === 'v2-texto'
       ? {
-          subjective: evolutionV2Data.patientReport || '',
-          objective: evolutionV2Data.evolutionText || '',
-          assessment: evolutionV2Data.procedures.map(p => `${p.completed ? '[x]' : '[ ]'} ${p.name}${p.notes ? ` - ${p.notes}` : ''}`).join('\n'),
-          plan: evolutionV2Data.observations || '',
-        }
+        subjective: evolutionV2Data.patientReport || '',
+        objective: evolutionV2Data.evolutionText || '',
+        assessment: evolutionV2Data.procedures.map(p => `${p.completed ? '[x]' : '[ ]'} ${p.name}${p.notes ? ` - ${p.notes}` : ''}`).join('\n'),
+        plan: evolutionV2Data.observations || '',
+      }
       : soapData;
 
     if (!saveData.subjective && !saveData.objective && !saveData.assessment && !saveData.plan) {
@@ -541,22 +541,22 @@ const PatientEvolution = () => {
     // V2: Use exercises from V2 data if in V2 mode
     const exercisesToSave = evolutionVersion === 'v2-texto'
       ? evolutionV2Data.exercises.map(ex => ({
-          id: ex.id,
-          exerciseId: ex.exerciseId || ex.id,
-          name: ex.name,
-          sets: parseInt(ex.prescription.split('x')[0]) || 3,
-          repetitions: parseInt(ex.prescription.split('x')[1]) || 10,
-          completed: ex.completed,
-          observations: [
-            ex.observations,
-            ex.patientFeedback?.pain ? 'DOR' : '',
-            ex.patientFeedback?.fatigue ? 'FADIGA' : '',
-            ex.patientFeedback?.difficultyPerforming ? 'DIFICULDADE' : '',
-            ex.patientFeedback?.notes,
-          ].filter(Boolean).join(' | ') || '',
-          weight: '',
-          image_url: ex.image_url,
-        }))
+        id: ex.id,
+        exerciseId: ex.exerciseId || ex.id,
+        name: ex.name,
+        sets: parseInt(ex.prescription.split('x')[0]) || 3,
+        repetitions: parseInt(ex.prescription.split('x')[1]) || 10,
+        completed: ex.completed,
+        observations: [
+          ex.observations,
+          ex.patientFeedback?.pain ? 'DOR' : '',
+          ex.patientFeedback?.fatigue ? 'FADIGA' : '',
+          ex.patientFeedback?.difficultyPerforming ? 'DIFICULDADE' : '',
+          ex.patientFeedback?.notes,
+        ].filter(Boolean).join(' | ') || '',
+        weight: '',
+        image_url: ex.image_url,
+      }))
       : sessionExercises;
 
     try {
@@ -785,6 +785,169 @@ const PatientEvolution = () => {
     }
   );
 
+  // ========== SEÇÕES MEMOIZADAS (Prevenção de Re-renders) ==========
+
+  // 1. Alerts Section - Depende principalmente de metas e medições, não do texto SOAP
+  const alertsSectionContent = useMemo(() => (
+    <>
+      {/* Alerta de Testes Obrigatórios */}
+      {requiredMeasurements.length > 0 && (
+        <MandatoryTestAlert
+          tests={mandatoryTestAlertsData}
+          onResolve={() => setActiveTab('avaliacao')}
+        />
+      )}
+
+      {/* Alertas Inteligentes */}
+      <EvolutionAlerts
+        overdueGoals={overdueGoals}
+        painScale={painScale}
+        painTrend={painTrend}
+        upcomingGoals={upcomingGoals}
+        daysSinceLastEvolution={daysSinceLastEvolution}
+        sessionDurationMinutes={sessionDurationMinutes}
+        sessionLongAlertShown={sessionLongAlertShown}
+        activePathologies={activePathologies}
+        previousEvolutionsCount={previousEvolutions.length}
+        onTabChange={(v) => setActiveTab(v as EvolutionTab)}
+      />
+    </>
+  ), [
+    requiredMeasurements.length,
+    mandatoryTestAlertsData,
+    overdueGoals,
+    painScale,
+    painTrend,
+    upcomingGoals,
+    daysSinceLastEvolution,
+    sessionDurationMinutes,
+    sessionLongAlertShown,
+    activePathologies,
+    previousEvolutions.length
+  ]);
+
+  // 2. Top Section (Cards) - Depende apenas do paciente/stats, MUITO estável
+  const topSectionContent = useMemo(() => (
+    <CardGrid>
+      {/* Retorno Médico */}
+      <MedicalReturnCard
+        patient={patient}
+        patientId={patientId || undefined}
+        onPatientUpdated={() => invalidateData('all')}
+      />
+
+      {/* Cirurgias */}
+      <SurgeriesCard patientId={patientId || undefined} />
+
+      {/* Resumo da Evolução - ocupa 2 linhas em telas grandes */}
+      <div className="lg:row-span-2">
+        <EvolutionSummaryCard stats={evolutionStats} />
+      </div>
+
+      {/* Metas - ocupa largura restante */}
+      <div className="sm:col-span-2 lg:col-span-2">
+        <MetasCard patientId={patientId || undefined} />
+      </div>
+    </CardGrid>
+  ), [
+    patient,
+    patientId,
+    invalidateData,
+    evolutionStats
+  ]);
+
+  // 3. Main Grid (Editor) - Onde o usuário digita. Re-renderiza muito, mas isolado das outras seções.
+  const mainGridContent = useMemo(() => (
+    evolutionVersion === 'v2-texto' ? (
+      /* ===== V2: Texto Livre (Notion-style) ===== */
+      <Suspense fallback={<LoadingSkeleton type="card" />}>
+        <LazyNotionEvolutionPanel
+          data={evolutionV2Data}
+          onChange={setEvolutionV2DataStable}
+          isSaving={autoSaveMutation.isPending}
+          disabled={false}
+          autoSaveEnabled={autoSaveEnabled}
+          lastSaved={lastSavedAt}
+        />
+      </Suspense>
+    ) : (
+      /* ===== V1: SOAP (original) ===== */
+      <EvolutionGridContainer>
+        <Suspense fallback={<LoadingSkeleton type="card" />}>
+          <LazyEvolutionDraggableGrid
+            soapData={soapData}
+            onSoapChange={setSoapDataStable}
+            painScaleData={painScale}
+            onPainScaleChange={setPainScale}
+            painHistory={painHistory}
+            showPainTrend={true}
+            onAISuggest={() => setActiveTab('assistente')}
+            onCopyLast={(section) => {
+              if (previousEvolutions.length > 0) {
+                const last = previousEvolutions[0];
+                setSoapData(prev => ({ ...prev, [section]: last[section] || '' }));
+                toast({
+                  title: 'Copiado',
+                  description: `Texto de ${section} copiado da última sessão.`
+                });
+              }
+            }}
+            patientId={patientId}
+            patientPhone={patient?.phone}
+            soapRecordId={currentSoapRecordId}
+            requiredMeasurements={requiredMeasurements}
+            exercises={sessionExercises}
+            onExercisesChange={setSessionExercises}
+            onSuggestExercises={() => {
+              const suggestions = suggestExerciseChanges(sessionExercises, painScale.level, soapData.assessment || '');
+              setSessionExercises(suggestions);
+              toast({
+                title: 'Sugestões Aplicadas',
+                description: 'Os exercícios foram evoluídos com base no progresso do paciente.'
+              });
+            }}
+            onRepeatLastSession={() => {
+              if (lastSession?.exercises_performed) {
+                setSessionExercises(lastSession.exercises_performed as SessionExercise[]);
+                toast({
+                  title: 'Exercícios Repetidos',
+                  description: 'Os exercícios da sessão anterior foram carregados.'
+                });
+              }
+            }}
+            lastSessionExercises={lastSession?.exercises_performed as SessionExercise[] || []}
+            previousEvolutions={previousEvolutions}
+            onCopyLastEvolution={(evolution) => {
+              handleCopyPreviousEvolution(evolution);
+            }}
+          />
+        </Suspense>
+      </EvolutionGridContainer>
+    )
+  ), [
+    evolutionVersion,
+    evolutionV2Data,
+    setEvolutionV2DataStable,
+    autoSaveMutation.isPending,
+    autoSaveEnabled,
+    lastSavedAt,
+    soapData,
+    setSoapDataStable,
+    painScale,
+    painHistory,
+    previousEvolutions,
+    patientId,
+    patient?.phone,
+    currentSoapRecordId,
+    requiredMeasurements,
+    sessionExercises,
+    lastSession,
+    handleCopyPreviousEvolution,
+    toast,
+    // Add missing deps
+    suggestExerciseChanges
+  ]);
+
   // ========== RENDERIZAÇÃO ==========
 
   // Main content - custom breadcrumb: último segmento (UUID) mostra nome do paciente
@@ -976,123 +1139,9 @@ const PatientEvolution = () => {
             {/* ABA 1: EVOLUÇÃO (SOAP V1 ou Texto Livre V2) */}
             <TabsContent value="evolucao" className="mt-4">
               <EvolutionResponsiveLayout
-                alertsSection={
-                  <>
-                    {/* Alerta de Testes Obrigatórios */}
-                    {requiredMeasurements.length > 0 && (
-                      <MandatoryTestAlert
-                        tests={mandatoryTestAlertsData}
-                        onResolve={() => setActiveTab('avaliacao')}
-                      />
-                    )}
-
-                    {/* Alertas Inteligentes */}
-                    <EvolutionAlerts
-                      overdueGoals={overdueGoals}
-                      painScale={painScale}
-                      painTrend={painTrend}
-                      upcomingGoals={upcomingGoals}
-                      daysSinceLastEvolution={daysSinceLastEvolution}
-                      sessionDurationMinutes={sessionDurationMinutes}
-                      sessionLongAlertShown={sessionLongAlertShown}
-                      activePathologies={activePathologies}
-                      previousEvolutionsCount={previousEvolutions.length}
-                      onTabChange={(v) => setActiveTab(v as EvolutionTab)}
-                    />
-                  </>
-                }
-                topSection={
-                  /* Cards superiores - grid responsivo */
-                  <CardGrid>
-                    {/* Retorno Médico */}
-                    <MedicalReturnCard
-                      patient={patient}
-                      patientId={patientId || undefined}
-                      onPatientUpdated={() => invalidateData('all')}
-                    />
-
-                    {/* Cirurgias */}
-                    <SurgeriesCard patientId={patientId || undefined} />
-
-                    {/* Resumo da Evolução - ocupa 2 linhas em telas grandes */}
-                    <div className="lg:row-span-2">
-                      <EvolutionSummaryCard stats={evolutionStats} />
-                    </div>
-
-                    {/* Metas - ocupa largura restante */}
-                    <div className="sm:col-span-2 lg:col-span-2">
-                      <MetasCard patientId={patientId || undefined} />
-                    </div>
-                  </CardGrid>
-                }
-                mainGrid={
-                  evolutionVersion === 'v2-texto' ? (
-                    /* ===== V2: Texto Livre (Notion-style) ===== */
-                    <Suspense fallback={<LoadingSkeleton type="card" />}>
-                      <LazyNotionEvolutionPanel
-                        data={evolutionV2Data}
-                        onChange={setEvolutionV2DataStable}
-                        isSaving={autoSaveMutation.isPending}
-                        disabled={false}
-                        autoSaveEnabled={autoSaveEnabled}
-                        lastSaved={lastSavedAt}
-                      />
-                    </Suspense>
-                  ) : (
-                    /* ===== V1: SOAP (original) ===== */
-                    <EvolutionGridContainer>
-                      <Suspense fallback={<LoadingSkeleton type="card" />}>
-                        <LazyEvolutionDraggableGrid
-                          soapData={soapData}
-                          onSoapChange={setSoapDataStable}
-                          painScaleData={painScale}
-                          onPainScaleChange={setPainScale}
-                          painHistory={painHistory}
-                          showPainTrend={true}
-                          onAISuggest={() => setActiveTab('assistente')}
-                          onCopyLast={(section) => {
-                            if (previousEvolutions.length > 0) {
-                              const last = previousEvolutions[0];
-                              setSoapData(prev => ({ ...prev, [section]: last[section] || '' }));
-                              toast({
-                                title: 'Copiado',
-                                description: `Texto de ${section} copiado da última sessão.`
-                              });
-                            }
-                          }}
-                          patientId={patientId}
-                          patientPhone={patient?.phone}
-                          soapRecordId={currentSoapRecordId}
-                          requiredMeasurements={requiredMeasurements}
-                          exercises={sessionExercises}
-                          onExercisesChange={setSessionExercises}
-                          onSuggestExercises={() => {
-                            const suggestions = suggestExerciseChanges(sessionExercises, painScale.level, soapData.assessment || '');
-                            setSessionExercises(suggestions);
-                            toast({
-                              title: 'Sugestões Aplicadas',
-                              description: 'Os exercícios foram evoluídos com base no progresso do paciente.'
-                            });
-                          }}
-                          onRepeatLastSession={() => {
-                            if (lastSession?.exercises_performed) {
-                              setSessionExercises(lastSession.exercises_performed as SessionExercise[]);
-                              toast({
-                                title: 'Exercícios Repetidos',
-                                description: 'Os exercícios da sessão anterior foram carregados.'
-                              });
-                            }
-                          }}
-                          lastSessionExercises={lastSession?.exercises_performed as SessionExercise[] || []}
-                          previousEvolutions={previousEvolutions}
-                          onCopyLastEvolution={(evolution) => {
-                            handleCopyPreviousEvolution(evolution);
-                          }}
-                        />
-                      </Suspense>
-                    </EvolutionGridContainer>
-                  )
-                }
+                alertsSection={alertsSectionContent}
+                topSection={topSectionContent}
+                mainGrid={mainGridContent}
               />
             </TabsContent>
 

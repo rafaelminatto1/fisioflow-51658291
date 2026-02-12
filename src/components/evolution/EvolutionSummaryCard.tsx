@@ -3,6 +3,7 @@
  * Exibe EvolutionStats em layout vertical com barras de progresso
  */
 
+import { memo } from 'react';
 import { BarChart2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EvolutionStats } from '@/components/evolution/EvolutionStats';
@@ -19,7 +20,7 @@ interface EvolutionSummaryCardProps {
   };
 }
 
-export function EvolutionSummaryCard({ stats }: EvolutionSummaryCardProps) {
+export const EvolutionSummaryCard = memo(function EvolutionSummaryCard({ stats }: EvolutionSummaryCardProps) {
   return (
     <Card className="border-primary/20 bg-primary/5 flex min-h-[300px] flex-col shadow-sm overflow-hidden">
       <CardHeader className="pb-2 pt-3 px-4 flex-shrink-0">
@@ -33,4 +34,4 @@ export function EvolutionSummaryCard({ stats }: EvolutionSummaryCardProps) {
       </CardContent>
     </Card>
   );
-}
+});

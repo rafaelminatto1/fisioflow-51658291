@@ -50,9 +50,7 @@ export const multimodalAnalysisFlow = ai.defineFlow(
                 systemPrompt = 'Analise esta imagem clínica e forneça achados relevantes para fisioterapia.';
         }
 
-SystemPrompt += `
-
-Notas adicionais do terapeuta: ${notes || 'Nenhuma'}`;
+        systemPrompt += `\n\nNotas adicionais do terapeuta: ${notes || 'Nenhuma'}`;
 
         const { output } = await ai.generate({
             model: gemini15Pro,

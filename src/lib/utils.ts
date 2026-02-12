@@ -1,10 +1,20 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { format, isValid } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+// Helper seguro para formatação de data
+export const safeFormat = (date: Date | string | number | undefined | null, formatStr: string, options?: { locale?: typeof ptBR }) => {
+  if (!date) return 'N/A';
+  const d = new Date(date);
+  if (!isValid(d)) return 'Data inválida';
+  return format(d, formatStr, options || { locale: ptBR });
+};
 
 export const formatCurrency = (value: number, decimals: number = 2): string => {
   return new Intl.NumberFormat('pt-BR', {

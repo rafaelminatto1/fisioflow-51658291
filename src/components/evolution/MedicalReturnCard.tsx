@@ -3,7 +3,7 @@
  * Exibe e permite editar: data do retorno, médico, telefone; link para relatório médico
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -24,7 +24,7 @@ interface MedicalReturnCardProps {
   onPatientUpdated?: () => void;
 }
 
-export function MedicalReturnCard({ patient, patientId, onPatientUpdated }: MedicalReturnCardProps) {
+export const MedicalReturnCard = memo(function MedicalReturnCard({ patient, patientId, onPatientUpdated }: MedicalReturnCardProps) {
   const navigate = useNavigate();
   const {
     data: medicalReturns = [],
@@ -238,4 +238,4 @@ export function MedicalReturnCard({ patient, patientId, onPatientUpdated }: Medi
       />
     </>
   );
-}
+});

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -60,14 +60,25 @@ export default function Inventory() {
   const updateItem = useUpdateInventoryItem();
   const createMovement = useCreateMovement();
 
-  const filteredInventory = inventory.filter(item => {
-    const matchesSearch = item.item_name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = !categoryFilter || item.category === categoryFilter;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredInventory = useMemo(() => {
+    return inventory.filter(item => {
+      const matchesSearch = item.item_name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = !categoryFilter || item.category === categoryFilter;
+      return matchesSearch && matchesCategory;
+    });
+  }, [inventory, searchTerm, categoryFilter]);
 
-  const lowStockItems = inventory.filter(i => i.current_quantity <= i.minimum_quantity);
-  const totalValue = inventory.reduce((acc, i) => acc + (i.current_quantity * (i.cost_per_unit || 0)), 0);
+  const lowStockItems = useMemo(() => {
+    return inventory.filter(i => i.current_quantity <= i.minimum_quantity);
+  }, [inventory]);
+
+  const totalValue = useMemo(() => {
+    return inventory.reduce((acc, i) => acc + (i.current_quantity * (i.cost_per_unit || 0)), 0);
+  }, [inventory]);
+
+  const uniqueCategoriesCount = useMemo(() => {
+    return new Set(inventory.map(i => i.category)).size;
+  }, [inventory]);
 
   const handleCreateItem = async () => {
     if (!itemForm.item_name) {
@@ -206,7 +217,7 @@ export default function Inventory() {
                 <span className="text-sm">Categorias</span>
               </div>
               <p className="text-2xl font-bold mt-1">
-                {new Set(inventory.map(i => i.category)).size}
+                {uniqueCategoriesCount}
               </p>
             </CardContent>
           </Card>

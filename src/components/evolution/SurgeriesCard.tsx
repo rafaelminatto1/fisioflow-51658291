@@ -3,10 +3,7 @@
  * Lista cirurgias de forma compacta
  */
 
-
-/** Formata tempo desde a cirurgia de forma compacta */
-
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatDetailedDuration } from '@/utils/dateUtils';
@@ -18,6 +15,7 @@ import { usePatientSurgeries } from '@/hooks/usePatientEvolution';
 import { SurgeryFormModal } from '@/components/evolution/SurgeryFormModal';
 import { getSurgeryTypeLabel, getAffectedSideLabel } from '@/lib/constants/surgery';
 import type { Surgery } from '@/types/evolution';
+
 function formatTimeSinceSurgery(surgeryDate: string): string {
   if (!surgeryDate) return '—';
   return formatDetailedDuration(surgeryDate);
@@ -27,7 +25,7 @@ interface SurgeriesCardProps {
   patientId: string | undefined;
 }
 
-export function SurgeriesCard({ patientId }: SurgeriesCardProps) {
+export const SurgeriesCard = memo(function SurgeriesCard({ patientId }: SurgeriesCardProps) {
   const { data: surgeries = [], isLoading } = usePatientSurgeries(patientId || '');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSurgery, setEditingSurgery] = useState<Surgery | null>(null);
@@ -145,4 +143,4 @@ export function SurgeriesCard({ patientId }: SurgeriesCardProps) {
       />
     </>
   );
-}
+});

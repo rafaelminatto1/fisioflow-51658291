@@ -38,15 +38,20 @@ import { useAuth } from '@/hooks/useAuth';
 import { mfaService } from '@/lib/auth/mfa';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect, useCallback, useMemo, memo } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo, lazy, Suspense } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { NotificationPreferences } from '@/components/notifications/NotificationPreferences';
-import { NotificationHistory } from '@/components/notifications/NotificationHistory';
-import { InviteUserModal } from '@/components/admin/InviteUserModal';
+import { PasswordInput } from '@/components/ui/password-input';
+import { Skeleton } from '@/components/ui/skeleton';
 import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
-import { BackupSettings } from '@/components/settings/BackupSettings';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+
+// Lazy load components with error handling and default export check
+const NotificationPreferences = lazy(() => import('@/components/notifications/NotificationPreferences').then(module => ({ default: module.NotificationPreferences })));
+const NotificationHistory = lazy(() => import('@/components/notifications/NotificationHistory').then(module => ({ default: module.NotificationHistory })));
+const BackupSettings = lazy(() => import('@/components/settings/BackupSettings').then(module => ({ default: module.BackupSettings })));
+const InviteUserModal = lazy(() => import('@/components/admin/InviteUserModal').then(module => ({ default: module.InviteUserModal })));
+
 
 // ============================================================================================
 // TYPES & INTERFACES
@@ -570,7 +575,7 @@ const Settings = () => {
     let cancelled = false;
     mfaService.getMFASettings(user.uid).then((settings) => {
       if (!cancelled) setMfaEnabled(settings.enabled);
-    }).catch(() => {});
+    }).catch(() => { });
     return () => { cancelled = true; };
   }, [user?.uid]);
 
@@ -966,7 +971,19 @@ const Settings = () => {
               </CardContent>
             </Card>
 
-            <BackupSettings />
+            <Card>
+              <CardHeader>
+                <CardTitle>Backup e Restauração</CardTitle>
+                <CardDescription>
+                  Gerencie backups dos dados do sistema
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Suspense fallback={<Skeleton className="h-[100px] w-full" />}>
+                  <BackupSettings />
+                </Suspense>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Schedule Tab */}
@@ -1092,7 +1109,9 @@ const Settings = () => {
         </Tabs>
       </div>
 
-      <InviteUserModal open={inviteModalOpen} onOpenChange={setInviteModalOpen} />
+      <Suspense fallback={null}>
+        <InviteUserModal open={inviteModalOpen} onOpenChange={setInviteModalOpen} />
+      </Suspense>
     </MainLayout>
   );
 };
