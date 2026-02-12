@@ -8,7 +8,7 @@
  */
 
 import { cn } from '@/lib/utils';
-import type { ReactNode } from 'react';
+import { memo, type ReactNode } from 'react';
 
 interface EvolutionResponsiveLayoutProps {
   /** Cards superiores (Resumo, Retorno, Cirurgias, Metas) */
@@ -24,7 +24,7 @@ interface EvolutionResponsiveLayoutProps {
  * Layout responsivo para página de evolução.
  * Usa a rolagem natural da página sem barras de rolagem internas.
  */
-export function EvolutionResponsiveLayout({
+export const EvolutionResponsiveLayout = memo(function EvolutionResponsiveLayout({
   topSection,
   mainGrid,
   alertsSection,
@@ -42,13 +42,13 @@ export function EvolutionResponsiveLayout({
       <div>{mainGrid}</div>
     </div>
   );
-}
+});
 
 /**
  * Grid de cards responsivo.
  * Mobile: 1 coluna → Tablet: 2 colunas → Desktop: 3 colunas
  */
-export function CardGrid({ children, className }: { children: ReactNode; className?: string }) {
+export const CardGrid = memo(function CardGrid({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div
       className={cn(
@@ -64,7 +64,7 @@ export function CardGrid({ children, className }: { children: ReactNode; classNa
       {children}
     </div>
   );
-}
+});
 
 /**
  * Container simples para o grid de evolução.

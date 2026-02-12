@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import LogTableRow from '@/components/audit/LogTableRow';
 
 const ACTION_LABELS: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive'; icon: typeof Plus }> = {
   INSERT: { label: 'Criação', variant: 'default', icon: Plus },
@@ -62,59 +63,6 @@ const TABLE_LABELS: Record<string, string> = {
   exercises: 'Exercícios',
   vouchers: 'Vouchers',
 };
-
-function DiffViewer({ oldData, newData, changes }: {
-  oldData: Record<string, unknown>;
-  newData: Record<string, unknown>;
-  changes: Record<string, { old: unknown; new: unknown }> | null;
-}) {
-  if (changes && Object.keys(changes).length > 0) {
-    return (
-      <div className="space-y-2">
-        {Object.entries(changes).map(([key, value]: [string, { old: unknown; new: unknown }]) => (
-          <div key={key} className="text-sm border-b pb-2">
-            <span className="font-medium text-muted-foreground">{key}:</span>
-            <div className="flex gap-4 mt-1">
-              <div className="flex items-center gap-1">
-                <Minus className="h-3 w-3 text-destructive" />
-                <code className="text-xs bg-destructive/10 px-1 rounded">
-                  {JSON.stringify(value.old)}
-                </code>
-              </div>
-              <div className="flex items-center gap-1">
-                <Plus className="h-3 w-3 text-green-500" />
-                <code className="text-xs bg-green-500/10 px-1 rounded">
-                  {JSON.stringify(value.new)}
-                </code>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-2 gap-4">
-      {oldData && (
-        <div>
-          <h4 className="font-semibold mb-2 text-destructive">Dados Anteriores</h4>
-          <pre className="bg-muted p-3 rounded text-xs overflow-auto max-h-60">
-            {JSON.stringify(oldData, null, 2)}
-          </pre>
-        </div>
-      )}
-      {newData && (
-        <div>
-          <h4 className="font-semibold mb-2 text-green-500">Dados Novos</h4>
-          <pre className="bg-muted p-3 rounded text-xs overflow-auto max-h-60">
-            {JSON.stringify(newData, null, 2)}
-          </pre>
-        </div>
-      )}
-    </div>
-  );
-}
 
 export default function AuditLogs() {
   const [actionFilter, setActionFilter] = useState<string>('all');
@@ -315,100 +263,9 @@ export default function AuditLogs() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {logs.map((log) => {
-                          const actionInfo = ACTION_LABELS[log.action] || {
-                            label: log.action,
-                            variant: 'outline' as const,
-                            icon: FileText,
-                          };
-                          const ActionIcon = actionInfo.icon;
-
-                          return (
-                            <TableRow key={log.id}>
-                              <TableCell className="whitespace-nowrap">
-                                <div className="flex items-center gap-2">
-                                  <Clock className="h-4 w-4 text-muted-foreground" />
-                                  {log.timestamp
-                                    ? format(new Date(log.timestamp), 'dd/MM/yyyy HH:mm:ss', {
-                                      locale: ptBR,
-                                    })
-                                    : '-'}
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <div>
-                                  <div className="font-medium">
-                                    {log.user_name || 'Sistema'}
-                                  </div>
-                                  <div className="text-sm text-muted-foreground">
-                                    {log.user_email || '-'}
-                                  </div>
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant={actionInfo.variant} className="gap-1">
-                                  <ActionIcon className="h-3 w-3" />
-                                  {actionInfo.label}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                <code className="text-sm bg-muted px-2 py-1 rounded">
-                                  {TABLE_LABELS[log.table_name] || log.table_name}
-                                </code>
-                              </TableCell>
-                              <TableCell>
-                                <code className="text-xs text-muted-foreground">
-                                  {log.record_id?.substring(0, 8) || '-'}...
-                                </code>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <Dialog>
-                                  <DialogTrigger asChild>
-                                    <Button variant="ghost" size="sm">
-                                      <Eye className="h-4 w-4" />
-                                    </Button>
-                                  </DialogTrigger>
-                                  <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-                                    <DialogHeader>
-                                      <DialogTitle>Detalhes do Log</DialogTitle>
-                                    </DialogHeader>
-                                    <div className="space-y-4">
-                                      <div className="grid grid-cols-2 gap-4 text-sm">
-                                        <div>
-                                          <span className="text-muted-foreground">ID:</span>
-                                          <code className="ml-2 font-mono">{log.id}</code>
-                                        </div>
-                                        <div>
-                                          <span className="text-muted-foreground">Registro:</span>
-                                          <code className="ml-2 font-mono">{log.record_id || '-'}</code>
-                                        </div>
-                                        <div>
-                                          <span className="text-muted-foreground">Ação:</span>
-                                          <Badge variant={actionInfo.variant} className="ml-2">
-                                            {actionInfo.label}
-                                          </Badge>
-                                        </div>
-                                        <div>
-                                          <span className="text-muted-foreground">Tabela:</span>
-                                          <span className="ml-2">{TABLE_LABELS[log.table_name] || log.table_name}</span>
-                                        </div>
-                                      </div>
-
-                                      <div className="border-t pt-4">
-                                        <h4 className="font-semibold mb-3">Alterações</h4>
-                                        <DiffViewer
-                                          oldData={log.old_data}
-                                          newData={log.new_data}
-                                          changes={log.changes}
-                                        />
-                                      </div>
-                                    </div>
-                                  </DialogContent>
-                                </Dialog>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
+                        {logs.map((log) => (
+                          <LogTableRow key={log.id} log={log} />
+                        ))}
                       </TableBody>
                     </Table>
                   </div>
