@@ -36,11 +36,12 @@ interface Prescription {
 
 interface ExercisePlayerProps {
     prescription: Prescription;
+    patientId: string;
     onComplete: () => void;
     onExit: () => void;
 }
 
-export function ExercisePlayer({ prescription, onComplete, onExit }: ExercisePlayerProps) {
+export function ExercisePlayer({ prescription, patientId, onComplete, onExit }: ExercisePlayerProps) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isPlaying, setIsPlaying] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
@@ -123,13 +124,12 @@ export function ExercisePlayer({ prescription, onComplete, onExit }: ExercisePla
     const handleNext = async () => {
         try {
             // Log completion
-            await PatientService.logExercise({
-                exercise_id: currentExercise.id,
-                prescription_id: prescription.id,
-                difficulty_rating: difficulty || undefined,
-                feedback_notes: feedback,
-                completed_at: new Date().toISOString()
-            });
+            await PatientService.logExercise(
+                patientId,
+                prescription.id,
+                String(difficulty),
+                feedback
+            );
 
             if (isLastExercise) {
                 onComplete();
