@@ -6,6 +6,8 @@ import { profileApi } from '@/integrations/firebase/functions';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useToast } from '@/hooks/use-toast';
 import { AuthContextType, AuthContext, AuthError } from './AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
+import { AppointmentService } from '@/services/appointmentService';
 
 export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -14,6 +16,36 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [initialized, setInitialized] = useState(false);
   const [sessionCheckFailed, _setSessionCheckFailed] = useState(false);
   const { _toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Prefetch dashboard data
+  const prefetchDashboardData = useCallback((orgId: string) => {
+    if (!orgId) return;
+
+    logger.info('Prefetching dashboard data', { orgId }, 'AuthContextProvider');
+
+    // Prefetch appointments
+    queryClient.prefetchQuery({
+      queryKey: ['appointments_v2', 'list', orgId],
+      queryFn: async () => {
+        const data = await AppointmentService.fetchAppointments(orgId);
+        return { data, isFromCache: false, cacheTimestamp: null, source: 'firestore' };
+      },
+      staleTime: 1000 * 60 * 5,
+    });
+
+    // Prefetch analytics summary
+    queryClient.prefetchQuery({
+      queryKey: ["analytics-summary", orgId],
+      staleTime: 1000 * 60 * 5,
+    });
+
+    // Prefetch admin metrics
+    queryClient.prefetchQuery({
+      queryKey: ['dashboard-metrics', orgId],
+      staleTime: 1000 * 60 * 5,
+    });
+  }, [queryClient]);
 
   /**
    * Obtém ou cria a organização padrão para o usuário
@@ -161,6 +193,9 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     try {
       const profileData = await fetchProfile(user);
       setProfile(profileData);
+      if (profileData?.organization_id) {
+        prefetchDashboardData(profileData.organization_id);
+      }
     } catch (err) {
       logger.error('Erro ao atualizar perfil', err, 'AuthContextProvider');
     }
@@ -183,7 +218,12 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
         // Carregar perfil do Firestore em background (não bloqueia a UI)
         fetchProfile(firebaseUser).then(profileData => {
-          if (mounted) setProfile(profileData);
+          if (mounted) {
+            setProfile(profileData);
+            if (profileData?.organization_id) {
+              prefetchDashboardData(profileData.organization_id);
+            }
+          }
         }).catch(err => {
           logger.error('Erro ao carregar perfil', err, 'AuthContextProvider');
         });

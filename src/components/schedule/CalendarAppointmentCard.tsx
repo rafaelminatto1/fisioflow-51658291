@@ -12,6 +12,7 @@ import { useStatusConfig } from '@/hooks/useStatusConfig';
 import { useReducedMotion } from '@/lib/accessibility/a11y-utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { getOptimalTextColor } from '@/utils/colorContrast';
+import { normalizeTime, calculateEndTime, formatDuration } from './shared/utils';
 
 interface CalendarAppointmentCardProps {
     appointment: Appointment;
@@ -38,10 +39,7 @@ interface CalendarAppointmentCardProps {
     density?: 'normal' | 'compact';
 }
 
-const normalizeTime = (time: string | null | undefined): string => {
-    if (!time || !time.trim()) return '00:00';
-    return time.substring(0, 5);
-};
+
 
 const getStatusStyles = (status: string) => {
     // Healthcare palette: primary #0891B2, secondary #22D3EE, success #059669, bg #ECFEFF, text #164E63
@@ -207,21 +205,25 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
     const isCompact = density === 'compact';
 
     const isOverbooked = Boolean(appointment.isOverbooked || appointment.notes?.includes(OVERBOOK_MARKER));
-    const statusStyles = isOverbooked ? overbookStyles : getStatusStyles(appointment.status);
     const normalizedStatus = normalizeStatus(appointment.status || 'agendado');
-    const customStatusConfig = getCustomStatusConfig(normalizedStatus);
+    const statusStyles = isOverbooked ? overbookStyles : getStatusStyles(normalizedStatus);
+
+    // Use shared status config for labels and icons
+    const sharedStatusConfig = getCustomStatusConfig(normalizedStatus);
+    const StatusIcon = sharedStatusConfig.icon || CheckCircle2;
+
     const useCustomStatusStyle =
         !isOverbooked && (hasCustomColors(normalizedStatus) || isCustomStatus(normalizedStatus));
     const customTextColor = useCustomStatusStyle
-        ? getOptimalTextColor(customStatusConfig.bgColor || customStatusConfig.color)
+        ? getOptimalTextColor(sharedStatusConfig.bgColor || sharedStatusConfig.color)
         : null;
     const customCardStyle = useCustomStatusStyle
-        ? { backgroundColor: customStatusConfig.bgColor, borderColor: customStatusConfig.borderColor }
+        ? { backgroundColor: sharedStatusConfig.bgColor, borderColor: sharedStatusConfig.borderColor }
         : undefined;
-    const customTextStyle = customTextColor ? { color: customTextColor } : undefined;
+    const customTextColorStyle = customTextColor ? { color: customTextColor } : undefined;
     const customSubtextStyle = customTextColor ? { color: customTextColor, opacity: 0.85 } : undefined;
     const customAccentStyle = useCustomStatusStyle
-        ? { backgroundColor: customStatusConfig.color || customStatusConfig.borderColor }
+        ? { backgroundColor: sharedStatusConfig.color || sharedStatusConfig.borderColor }
         : undefined;
 
     // Get card size configuration
@@ -230,26 +232,21 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
     // Calculate scaled font sizes based on user preference
     const fontScale = fontPercentage / 100; // Convert percentage to multiplier (0.5 to 1.5)
     const scaledTimeFontSize = isCompact
-        ? Math.max(7, Math.round(sizeConfig.timeFontSize * fontScale * 0.6))
-        : Math.round(sizeConfig.timeFontSize * fontScale);
+        ? Math.max(7, Math.round(sizeConfig.timeFontSize * fontScale * 0.7))
+        : Math.round(sizeConfig.timeFontSize * fontScale * 0.9);
     const scaledNameFontSize = isCompact
-        ? Math.max(12, Math.round(sizeConfig.nameFontSize * fontScale * 0.9))
-        : Math.max(14, Math.round(sizeConfig.nameFontSize * fontScale));
+        ? Math.max(12, Math.round(sizeConfig.nameFontSize * fontScale * 0.95))
+        : Math.max(15, Math.round(sizeConfig.nameFontSize * fontScale * 1.1));
     const scaledTypeFontSize = Math.round(sizeConfig.typeFontSize * fontScale);
 
     const duration = appointment.duration || 60;
-    const _isSmall = duration <= 30; // 30 min or less
     const isTiny = duration < 30; // Less than 30 min (e.g. 15, 20)
     const useCompactLayout = isCompact && !isTiny;
 
     const handleMouseEnter = () => setIsHovered(true);
     const handleMouseLeave = () => setIsHovered(false);
 
-    // Disable dragging in selection mode or on touch devices (Mobile/iPad) for better UX
-    // This allows clicks to register immediately without waiting for drag detection
     const draggable = isDraggable && !selectionMode && !isTouch;
-    // When dragHandleOnly, only the grip handle initiates drag
-    // But root MUST be draggable to receive dragOver events while cursor transitions to drop target
     const rootDraggable = draggable;
 
     const handleClick = (e: React.MouseEvent) => {
@@ -258,15 +255,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
             onToggleSelection(appointment.id);
             return;
         }
-
-        // Quando estiver arrastando, não abrir o popover
-        if (isDragging) {
-            return;
-        }
-
-        // Chamar onOpenPopover diretamente para abrir o popover
-        // Isso é necessário porque os listeners do @dnd-kit no DraggableAppointment
-        // capturam os eventos de pointer e impedem que o clique chegue ao PopoverTrigger
+        if (isDragging) return;
         onOpenPopover(appointment.id);
     };
 
@@ -274,7 +263,6 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             e.stopPropagation();
-
             if (selectionMode && onToggleSelection) {
                 onToggleSelection(appointment.id);
             } else {
@@ -302,7 +290,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                 opacity: isDragging && hideGhostWhenSiblings ? 0 : (isDragging ? 0.2 : 1),
                 scale: reducedMotion ? 1 : (isDragging ? 0.98 : 1),
                 y: 0,
-                boxShadow: isDragging || isHovered ? "0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1)" : "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
+                boxShadow: isDragging || isHovered ? "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)" : "0 1px 2px 0 rgba(0, 0, 0, 0.02)"
             }}
             whileTap={reducedMotion ? undefined : {
                 scale: isTouch ? 0.97 : 0.99,
@@ -310,13 +298,6 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
             }}
             draggable={rootDraggable}
             onDragStart={(e) => {
-                // Quando dragHandleOnly, apenas o handle deve iniciar o drag
-                // Mas o card raiz precisa ser draggable para receber dragOver
-                if (!rootDraggable && e && 'dataTransfer' in e) {
-                    // Prevenir drag pelo card raiz quando dragHandleOnly é true
-                    e.preventDefault();
-                    return;
-                }
                 if (rootDraggable && e && 'dataTransfer' in e) {
                     onOpenPopover(null);
                     onDragStart(e as unknown as React.DragEvent, appointment);
@@ -343,95 +324,56 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
             onClick={handleClick}
             onKeyDown={handleKeyDown}
             className={cn(
-                "calendar-appointment-card absolute rounded-lg flex flex-col overflow-hidden [transition:left_150ms_ease-out,width_150ms_ease-out,opacity_150ms_ease-out,transform_150ms_ease-out,box-shadow_150ms_ease-out] border",
+                "calendar-appointment-card absolute rounded-xl flex flex-col overflow-hidden transition-all duration-200 border",
+                "bg-white dark:bg-slate-900",
                 "cursor-pointer",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                statusStyles.bg,
-                statusStyles.hoverBg,
-                statusStyles.border,
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-1",
+                !useCustomStatusStyle && statusStyles.bg,
+                !useCustomStatusStyle && statusStyles.border,
                 draggable && "cursor-grab active:cursor-grabbing",
-                isDragging && "z-50 ring-2 ring-dashed ring-primary/50 shadow-xl backdrop-blur-[1px]",
-                isSaving && "animate-pulse-subtle ring-2 ring-amber-400/60 ring-offset-1 z-30",
-                !isDragging && isHovered && !selectionMode && "ring-2 ring-black/5 dark:ring-white/10 shadow-xl",
-                isDropTarget && !isDragging && "ring-2 ring-primary/70 ring-offset-1 shadow-2xl z-25",
-                selectionMode && "hover:opacity-90 active:scale-[0.98] transition-all duration-150",
-                isSelected && "ring-2 ring-primary ring-offset-1 shadow-xl z-40",
-                isTouch && "active:scale-[0.98] transition-transform duration-150"
+                isDragging && "z-50 ring-2 ring-primary/40 shadow-2xl",
+                isSaving && "animate-pulse ring-2 ring-amber-400/50 z-30",
+                !isDragging && isHovered && !selectionMode && "shadow-lg scale-[1.01] z-10",
+                isDropTarget && !isDragging && "ring-2 ring-primary/60 shadow-2xl z-25",
+                isSelected && "ring-2 ring-primary shadow-xl z-40"
             )}
             style={{
                 ...style,
                 ...(customCardStyle || {}),
                 pointerEvents: isDragging && hideGhostWhenSiblings && !dragHandleOnly ? 'none' : undefined,
+                borderRadius: '12px'
             }}
             role="button"
             tabIndex={0}
             aria-label={`${appointment.patientName} - ${normalizeTime(appointment.time)} - ${appointment.status}`}
-            aria-selected={isSelected}
-            aria-pressed={isSelected}
         >
+            {/* Status Border Strip */}
+            <div
+                className={cn(
+                    "absolute left-0 top-0 bottom-0 w-1 rounded-l-xl opacity-90",
+                    !useCustomStatusStyle && statusStyles.accent
+                )}
+                style={customAccentStyle}
+            />
+
             <div
                 className={cn(
                     "flex flex-col h-full relative",
-                    isTiny && "p-0.5 justify-center items-center"
+                    isTiny && "p-1 justify-center items-center"
                 )}
                 style={isTiny
                     ? undefined
-                    : useCompactLayout
-                        ? { padding: '0.2rem 0.5rem 0.2rem 0.3rem' }
-                        : { padding: `max(8px, ${sizeConfig.padding})`, paddingRight: '0.875rem' }}
+                    : {
+                        padding: useCompactLayout ? '6px 8px' : '10px 12px',
+                        paddingLeft: '14px' // Extra padding for the border strip
+                    }}
             >
-                {/* 1. Tiny View (< 30m): Minimal indicator */}
+                {/* 1. Tiny View (< 30m) */}
                 {isTiny ? (
-                    <div className="flex items-center gap-1 w-full justify-center">
-                        <div
-                            className={cn("w-1.5 h-1.5 rounded-full shrink-0", statusStyles.accent)}
-                            style={customAccentStyle}
-                        />
-                        {/* Only show time if > 15m allows? Actually for 15m, usually just color is enough on grid */}
-                        {duration >= 20 && (
-                            <span
-                                className={cn("text-[9px] font-bold", statusStyles.text)}
-                                style={customTextStyle}
-                            >
-                                {normalizeTime(appointment.time)}
-                            </span>
-                        )}
-                    </div>
-                ) : useCompactLayout ? (
-                    <div className="flex flex-col min-w-0 w-full gap-0.5">
-                        <div className="flex items-center gap-1 min-w-0">
-                            <div
-                                className={cn("w-px h-2 rounded-full shrink-0 opacity-80", statusStyles.accent)}
-                                style={customAccentStyle}
-                            />
-                            <span
-                                className={cn(
-                                    "font-mono font-semibold shrink-0 leading-none tracking-tight",
-                                    statusStyles.text,
-                                )}
-                                style={{ fontSize: `${scaledTimeFontSize}px`, ...(customTextStyle || {}) }}
-                            >
-                                {normalizeTime(appointment.time)}
-                            </span>
-
-                            {isSaving ? (
-                                <Loader2 className="ml-auto w-3 h-3 text-amber-500 animate-spin shrink-0" />
-                            ) : selectionMode ? (
-                                isSelected ? (
-                                    <CheckCircle2 className="ml-auto w-3 h-3 text-primary fill-background shrink-0" />
-                                ) : (
-                                    <Circle className="ml-auto w-3 h-3 opacity-40 shrink-0" />
-                                )
-                            ) : null}
-                        </div>
-
+                    <div className="flex items-center gap-1.5 w-full">
                         <span
-                            className={cn(
-                                "min-w-0 leading-tight tracking-tight font-semibold line-clamp-2 whitespace-normal break-words",
-                                statusStyles.text,
-                            )}
-                            style={{ fontSize: `${scaledNameFontSize}px`, ...(customTextStyle || {}) }}
-                            title={appointment.patientName}
+                            className={cn("text-[10px] font-bold truncate", !useCustomStatusStyle && statusStyles.text)}
+                            style={customTextColorStyle}
                         >
                             {appointment.patientName}
                         </span>
@@ -439,143 +381,73 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                 ) : (
                     /* 2. Normal View (>= 30m) */
                     <>
-                        {/* Header: Time & Status */}
-                        <div className="flex items-center justify-between gap-2 mb-1 w-full">
-                            <div className="flex items-center gap-2 min-w-0">
-                                {/* Accent Bar logic instead of dot for cleaner look */}
-                                <div
-                                    className={cn("w-1 h-3 rounded-full shrink-0 opacity-80", statusStyles.accent)}
-                                    style={customAccentStyle}
-                                />
+                        <div className="flex items-start justify-between gap-1 w-full mb-1">
+                            <span
+                                className={cn(
+                                    "font-mono font-bold tracking-tight leading-none",
+                                    !useCustomStatusStyle && statusStyles.text,
+                                    "opacity-80"
+                                )}
+                                style={{ fontSize: `${scaledTimeFontSize}px`, ...(customTextColorStyle || {}) }}
+                            >
+                                {normalizeTime(appointment.time)}
+                                {!useCompactLayout && ` - ${calculateEndTime(normalizeTime(appointment.time), duration)}`}
+                            </span>
 
-                                <span
-                                    className={cn(
-                                        "font-mono font-semibold truncate leading-none tracking-tight",
-                                        statusStyles.text,
-                                    )}
-                                    style={{ fontSize: `${scaledTimeFontSize}px`, ...(customTextStyle || {}) }}
-                                >
-                                    {normalizeTime(appointment.time)}
-                                </span>
-                            </div>
-
-                            {/* Selection or loading indicator only; status icon removed per repagination */}
-                            {isSaving ? (
-                                <div className="flex-shrink-0">
-                                    <Loader2 className="w-3.5 h-3.5 text-amber-500 animate-spin" />
+                            {/* Status Label Badge */}
+                            {!isTiny && (
+                                <div className={cn(
+                                    "flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider",
+                                    !useCustomStatusStyle && statusStyles.bg,
+                                    !useCustomStatusStyle && "bg-white/40 dark:bg-black/20",
+                                    !useCustomStatusStyle && statusStyles.text
+                                )}
+                                    style={customTextColorStyle}>
+                                    <StatusIcon className="w-2.5 h-2.5" />
+                                    {sharedStatusConfig.label}
                                 </div>
-                            ) : selectionMode ? (
-                                <div className="flex-shrink-0">
-                                    {isSelected ? (
-                                        <CheckCircle2 className="w-3.5 h-3.5 text-primary fill-background" />
-                                    ) : (
-                                        <Circle className="w-3.5 h-3.5 opacity-40" />
-                                    )}
-                                </div>
-                            ) : null}
+                            )}
                         </div>
 
-                        {/* Patient Name & Details (tooltip for long names) */}
-                        <div className="flex flex-col mt-1 min-h-0 w-full">
-                            <div className="min-w-0 flex-1">
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <span
-                                            className={cn(
-                                                "block font-bold leading-tight line-clamp-2 tracking-tight",
-                                                statusStyles.text,
-                                            )}
-                                            style={{ fontSize: `${scaledNameFontSize}px`, ...(customTextStyle || {}) }}
-                                        >
-                                            {appointment.patientName}
-                                        </span>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top" className="max-w-[280px] break-words">
-                                        {appointment.patientName}
-                                    </TooltipContent>
-                                </Tooltip>
-
-                                {sizeConfig.showType && (
-                                    <span
-                                        className={cn(
-                                            "block truncate opacity-70 mt-1 font-medium",
-                                            statusStyles.subtext
-                                        )}
-                                        style={{ fontSize: `${scaledTypeFontSize}px`, ...(customSubtextStyle || {}) }}
-                                    >
-                                        {appointment.type}
-                                    </span>
+                        <div className="flex flex-col min-w-0 w-full overflow-hidden">
+                            <span
+                                className={cn(
+                                    "block font-black leading-[1.15] tracking-tight line-clamp-2",
+                                    !useCustomStatusStyle && statusStyles.text,
                                 )}
-                            </div>
+                                style={{ fontSize: `${scaledNameFontSize}px`, ...(customTextColorStyle || {}) }}
+                            >
+                                {appointment.patientName}
+                            </span>
+
+                            {sizeConfig.showType && !useCompactLayout && (
+                                <span
+                                    className={cn(
+                                        "block truncate mt-1 font-medium opacity-70",
+                                        !useCustomStatusStyle && statusStyles.subtext
+                                    )}
+                                    style={{ fontSize: `${scaledTypeFontSize}px`, ...(customSubtextStyle || {}) }}
+                                >
+                                    {appointment.type}
+                                </span>
+                            )}
                         </div>
                     </>
                 )}
 
-                {/* Hover Actions (Edit/Drag). Com dragHandleOnly, mostrar handle sempre para descoberta. */}
-                {!isMobile && (isHovered || dragHandleOnly) && draggable && !isDragging && !selectionMode && (
-                    <AnimatePresence>
-                        <div
-                            key="edit-action"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="absolute top-0.5 right-0.5 flex flex-col gap-0.5"
+                {/* Hover Actions */}
+                {!isMobile && isHovered && !isDragging && !selectionMode && (
+                    <div className="absolute top-1 right-1 flex items-center gap-1">
+                        <button
+                            className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onEditAppointment?.(appointment);
+                            }}
                         >
-                            <div
-                                role="button"
-                                aria-label="Opções do agendamento"
-                                className="p-0.5 rounded-sm hover:bg-black/10 dark:hover:bg-white/10 transition-colors backdrop-blur-[1px]"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onEditAppointment?.(appointment);
-                                }}
-                            >
-                                <MoreVertical
-                                    className={cn("w-3 h-3", statusStyles.subtext)}
-                                    style={customSubtextStyle}
-                                />
-                            </div>
-                        </div>
-                        <div
-                            key="drag-handle"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            className="absolute bottom-0.5 right-0.5 opacity-50 hover:opacity-100 cursor-grab active:cursor-grabbing backdrop-blur-[1px] p-0.5 rounded-sm"
-                        >
-                            {dragHandleOnly ? (
-                                <div
-                                    className="size-full min-w-[24px] min-h-[24px] flex items-center justify-center -m-0.5 p-0.5"
-                                    draggable
-                                    aria-label="Arrastar agendamento"
-                                    onDragStart={(e) => {
-                                        e.stopPropagation();
-                                        onOpenPopover(null);
-                                        onDragStart(e, appointment);
-                                    }}
-                                    onDragOver={(e) => {
-                                        // Sempre chamar preventDefault para manter o drag ativo
-                                        // mesmo quando o cursor está sobre o próprio handle
-                                        // Isso evita que o drag "morra" ao sair do handle
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                    }}
-                                    onDragEnd={onDragEnd}
-                                    data-drag-handle
-                                >
-                                    <GripVertical
-                                        className={cn("w-3 h-3", statusStyles.subtext)}
-                                        style={customSubtextStyle}
-                                    />
-                                </div>
-                            ) : (
-                                <div aria-label="Arrastar agendamento">
-                                    <GripVertical
-                                        className={cn("w-3 h-3", statusStyles.subtext)}
-                                        style={customSubtextStyle}
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    </AnimatePresence>
+                            <MoreVertical className={cn("w-3.5 h-3.5 opacity-60", !useCustomStatusStyle && statusStyles.text)} />
+                        </button>
+                    </div>
                 )}
             </div>
         </motion.div>

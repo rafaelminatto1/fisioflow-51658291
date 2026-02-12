@@ -143,16 +143,20 @@ export function getFirebaseApp(): FirebaseApp {
 
     // Inicializar App Check e Remote Config apenas no navegador
     if (typeof window !== 'undefined') {
-      // @ts-ignore
-      if (import.meta.env.DEV) {
+      // Only initialize App Check when explicitly enabled via env var
+      const isAppCheckEnabled = import.meta.env.VITE_ENABLE_APPCHECK === 'true';
+      if (isAppCheckEnabled) {
         // @ts-ignore
-        self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-      }
+        if (import.meta.env.DEV) {
+          // @ts-ignore
+          self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+        }
 
-      initializeAppCheck(appInstance, {
-        provider: new ReCaptchaEnterpriseProvider(import.meta.env.VITE_APP_CHECK_SITE_KEY || '6Ld_placeholder'),
-        isTokenAutoRefreshEnabled: true
-      });
+        initializeAppCheck(appInstance, {
+          provider: new ReCaptchaEnterpriseProvider(import.meta.env.VITE_APP_CHECK_SITE_KEY || '6Ld_placeholder'),
+          isTokenAutoRefreshEnabled: true
+        });
+      }
 
       // Initialize Remote Config
       remoteConfigInstance = getRemoteConfig(appInstance);
@@ -210,7 +214,7 @@ export function getFirebaseAuth(): Auth {
 function initializeDbInstance(): Firestore {
   if (!dbInstance) {
     const app = getFirebaseApp();
-    
+
     // Configurar cache do Firestore
     // Em produção, usar IndexedDB para persistência (multi-tab support)
     if (import.meta.env.PROD && typeof window !== 'undefined') {
