@@ -34,7 +34,7 @@ export default defineConfig({
   globalSetup: './e2e/global-setup.ts',
   timeout: 120000, // Aumentado para 120s
   use: {
-    baseURL: process.env.BASE_URL || 'http://127.0.0.1:8084',
+    baseURL: process.env.BASE_URL || 'http://localhost:5173',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     actionTimeout: 30000, // Aumentado para 30s
@@ -73,7 +73,7 @@ export default defineConfig({
   // In CI, we expect the tests to run without a running dev server
   webServer: process.env.CI ? undefined : {
     command: 'npm run dev -- --host 127.0.0.1',
-    url: 'http://127.0.0.1:8084',
+    url: 'http://localhost:5173',
     reuseExistingServer: true,
     timeout: 120000,
   },
