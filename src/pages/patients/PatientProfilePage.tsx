@@ -77,6 +77,7 @@ const LazyStreakCalendar = lazy(() => import('@/components/gamification/StreakCa
 const LazyLevelJourneyMap = lazy(() => import('@/components/gamification/LevelJourneyMap').then(m => ({ default: m.LevelJourneyMap })));
 const LazyLeaderboard = lazy(() => import('@/components/gamification/Leaderboard').then(m => ({ default: m.Leaderboard })));
 const LazyRewardShop = lazy(() => import('@/components/gamification/RewardShop').then(m => ({ default: m.RewardShop })));
+const LazyPatientActivityLabTab = lazy(() => import('@/components/patient/PatientActivityLabTab').then(m => ({ default: m.PatientActivityLabTab })));
 const LazyDocumentScanner = lazy(() => import('@/components/patient/DocumentScanner').then(m => ({ default: m.DocumentScanner })));
 
 const PersonalDataTab = ({ patient }: { patient: Patient }) => (
@@ -873,6 +874,10 @@ export const PatientProfilePage = () => {
                             <TabsTrigger value="clinical" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-4 py-2 text-sm font-medium transition-all">
                                 Histórico Clínico
                             </TabsTrigger>
+                            <TabsTrigger value="activity-lab" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-4 py-2 text-sm font-medium transition-all gap-2">
+                                <Activity className="h-3.5 w-3.5" />
+                                Biomecânica
+                            </TabsTrigger>
                             <TabsTrigger value="financial" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-4 py-2 text-sm font-medium transition-all">
                                 Financeiro
                             </TabsTrigger>
@@ -905,6 +910,12 @@ export const PatientProfilePage = () => {
 
                         <TabsContent value="clinical" className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2">
                             <ClinicalHistoryTab patientId={id || ''} />
+                        </TabsContent>
+
+                        <TabsContent value="activity-lab" className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2">
+                            <Suspense fallback={<LoadingSkeleton />}>
+                                <LazyPatientActivityLabTab patientId={id || ''} />
+                            </Suspense>
                         </TabsContent>
 
                         <TabsContent value="financial" className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2">

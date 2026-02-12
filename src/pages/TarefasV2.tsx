@@ -889,19 +889,19 @@ export default function TarefasV2() {
               {/* Table Header */}
               <div className="p-4 border-b">
                 <div className="flex items-center gap-2 mb-3">
-                  {Object.entries(groupedTasks).filter(([status]) => status !== 'ARQUIVADO').map(([status, tasks]) => (
+                  {Object.entries(groupedTasks || {}).filter(([status]) => status !== 'ARQUIVADO').map(([status, tasks]) => (
                     <div
                       key={`header-${status}`}
                       className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 px-2 py-1 rounded"
-                      onClick={() => toggleGroup(status)}
+                      onClick={() => toggleGroup(status as TarefaStatus)}
                     >
                       {expandedGroups.has(status) ? (
                         <ChevronDown className="h-4 w-4" />
                       ) : (
                         <ChevronRight className="h-4 w-4" />
                       )}
-                      <div className={cn('h-3 w-3 rounded-full', STATUS_COLORS[status].dot)} />
-                      <span className="font-medium text-sm">{STATUS_LABELS[status]}</span>
+                      <div className={cn('h-3 w-3 rounded-full', STATUS_COLORS[status as TarefaStatus]?.dot)} />
+                      <span className="font-medium text-sm">{STATUS_LABELS[status as TarefaStatus]}</span>
                       <Badge variant="secondary" className="text-xs">{tasks.length}</Badge>
                     </div>
                   ))}
@@ -911,9 +911,9 @@ export default function TarefasV2() {
               {/* Virtualized Table */}
               <ScrollArea className="h-[calc(100vh-450px)]">
                 <TaskTableVirtualized
-                  tasks={Object.values(groupedTasks)
-                    .filter(tasks => expandedGroups.has(tasks[0]?.status || 'BACKLOG'))
-                    .flat()}
+                  tasks={Object.entries(groupedTasks || {})
+                    .filter(([status]) => expandedGroups.has(status))
+                    .flatMap(([, tasks]) => tasks)}
                   selectedTasks={selectedTasks}
                   toggleTaskSelection={toggleTaskSelection}
                   onViewTask={handleViewTask}

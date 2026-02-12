@@ -38,3 +38,7 @@ export {
 export {
     patientExecutiveSummaryFlow,
 } from './patientSummary';
+
+export {
+    multimodalAnalysisFlow,
+} from './multimodalAnalysis';

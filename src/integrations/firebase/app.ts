@@ -4,10 +4,18 @@
  */
 
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+
 import { getAuth, Auth, connectAuthEmulator } from 'firebase/auth';
+
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
+
 import {
 
   getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  CACHE_SIZE_UNLIMITED,
   Firestore,
   doc,
   getDoc,
@@ -21,7 +29,6 @@ import {
   limit,
   addDoc as firestoreAddDoc,
   deleteDoc,
-  enableMultiTabIndexedDbPersistence,
   orderBy,
   onSnapshot,
   getDocsFromCache,
@@ -130,6 +137,21 @@ let functionsInstance: Functions | null = null;
 export function getFirebaseApp(): FirebaseApp {
   if (!appInstance) {
     appInstance = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+
+    // Inicializar App Check apenas no navegador
+    if (typeof window !== 'undefined') {
+      // @ts-ignore - self.FIREBASE_APPCHECK_DEBUG_TOKEN can be used for local testing
+      if (import.meta.env.DEV) {
+        // @ts-ignore
+        self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+      }
+
+      initializeAppCheck(appInstance, {
+        provider: new ReCaptchaEnterpriseProvider(import.meta.env.VITE_APP_CHECK_SITE_KEY || '6Ld_placeholder'),
+        isTokenAutoRefreshEnabled: true
+      });
+      console.log('[Firebase] App Check initialized');
+    }
   }
   return appInstance;
 }
@@ -161,13 +183,35 @@ export function getFirebaseAuth(): Auth {
 }
 
 /**
- * Obtém a instância do Firebase Firestore
- * Configura cache persistente para offline support
+ * Obtém a instância do Firebase Firestore (Sync)
+ * Configura cache persistente para offline support se em produção
  */
-export async function getFirebaseDb(): Promise<Firestore> {
+function initializeDbInstance(): Firestore {
   if (!dbInstance) {
     const app = getFirebaseApp();
-    dbInstance = getFirestore(app);
+    
+    // Configurar cache do Firestore
+    // Em produção, usar IndexedDB para persistência (multi-tab support)
+    if (import.meta.env.PROD && typeof window !== 'undefined') {
+      try {
+        dbInstance = initializeFirestore(app, {
+          localCache: persistentLocalCache({
+            tabManager: persistentMultipleTabManager(),
+            cacheSizeBytes: CACHE_SIZE_UNLIMITED
+          }),
+          experimentalAutoDetectLongPolling: true
+        });
+        logger.info('Firestore: Multi-tab persistence enabled via localCache', undefined, 'firebase-app');
+      } catch (err) {
+        // Fallback se initializeFirestore falhar (ex: já inicializado)
+        dbInstance = getFirestore(app);
+        logger.warn('Firestore: Using fallback instance (persistence might be disabled)', err, 'firebase-app');
+      }
+    } else {
+      // Em desenvolvimento ou ambiente sem window, usar instância padrão
+      dbInstance = getFirestore(app);
+      logger.info('Firestore: Initialized default instance', undefined, 'firebase-app');
+    }
 
     // Conectar ao Firebase Emulator em testes E2E (se configurado)
     const emulatorHost = getFirestoreEmulatorHost();
@@ -175,35 +219,20 @@ export async function getFirebaseDb(): Promise<Firestore> {
       try {
         connectFirestoreEmulator(dbInstance, ...parseEmulatorUrl(emulatorHost));
         logger.info(`Firebase Firestore: Connected to emulator at ${emulatorHost}`, undefined, 'firebase-app');
-      } catch (err) {
-        logger.warn('Firebase Firestore: Failed to connect to emulator', err, 'firebase-app');
+      } catch (_err) {
+        // Ignorar se já estiver conectado ou erro não crítico
       }
-    }
-
-    // Configurar cache do Firestore
-    // Em desenvolvimento, usar cache em memória para evitar problemas
-    // Em produção, usar IndexedDB para persistência
-    if (import.meta.env.PROD && typeof window !== 'undefined') {
-      try {
-        // Habilitar persistência com multi-tab support
-        await enableMultiTabIndexedDbPersistence(dbInstance);
-        logger.info('Firestore: Multi-tab persistence enabled', undefined, 'firebase-app');
-      } catch (err: unknown) {
-        const error = err as { code?: string };
-        if (error.code === 'failed-precondition') {
-          logger.warn('Firestore: Persistence failed - multiple tabs open', error, 'firebase-app');
-        } else if (error.code === 'unimplemented') {
-          logger.warn('Firestore: Persistence not supported in this browser', error, 'firebase-app');
-        } else {
-          logger.error('Firestore: Persistence error', err, 'firebase-app');
-        }
-      }
-    } else {
-      // Em desenvolvimento, usar cache sem persistência
-      logger.info('Firestore: Running in development mode (no persistence)', undefined, 'firebase-app');
     }
   }
   return dbInstance;
+}
+
+/**
+ * Obtém a instância do Firebase Firestore (Async)
+ * Mantido por compatibilidade com código que aguarda a inicialização
+ */
+export async function getFirebaseDb(): Promise<Firestore> {
+  return initializeDbInstance();
 }
 
 /**
@@ -258,7 +287,7 @@ export function useAuth(): Auth {
  * Hook React para usar o Firestore
  */
 export function useFirestore(): Firestore {
-  return getFirestore(getFirebaseApp());
+  return initializeDbInstance();
 }
 
 /**
@@ -286,22 +315,12 @@ export const auth = getFirebaseAuth();
  * IMPORTANTE: Para garantir que a persistência seja configurada, 
  * use preferencialmente getFirebaseDb() ou useFirestore() hook.
  * Mas para compatibilidade com código existente que importa 'db', 
- * exportamos a instância básica aqui.
+ * exportamos a instância inicializada aqui.
  */
-export const db = getFirestore(app);
+export const db = initializeDbInstance();
 
 export const storage = getFirebaseStorage();
 export const functions = getFirebaseFunctions();
-
-/**
- * Inicializa a persistência do Firestore em background
- * Não bloqueia a inicialização da aplicação
- */
-if (typeof window !== 'undefined' && import.meta.env.PROD) {
-  getFirebaseDb().catch((err) => {
-    logger.warn('Firestore persistence initialization deferred', err, 'firebase-app');
-  });
-}
 
 /**
  * Expor instâncias do Firebase no window para diagnóstico em desenvolvimento
@@ -337,6 +356,14 @@ export const setDoc = (reference: DocumentReference<unknown>, data: unknown, opt
     return firestoreSetDoc(reference, cleanForFirestore(data), options);
   }
   return firestoreSetDoc(reference, cleanForFirestore(data));
+};
+
+/**
+ * Obtém a contagem de documentos em uma coleção ou query de forma eficiente (servidor)
+ */
+export const getCount = async (query: Query<unknown>): Promise<number> => {
+  const snapshot = await getCountFromServer(query);
+  return snapshot.data().count;
 };
 
 export {

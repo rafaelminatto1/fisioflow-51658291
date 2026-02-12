@@ -12,6 +12,7 @@ import { enforceRateLimit, RATE_LIMITS } from '../middleware/rate-limit';
 import { Patient } from '../types/models';
 import { setCorsHeaders } from '../lib/cors';
 import { logger } from '../lib/logger';
+import { logAuditEvent } from '../lib/audit';
 import * as admin from 'firebase-admin';
 import { clearPatientRagIndex, triggerPatientRagReindex } from '../ai/rag/rag-index-maintenance';
 import { STANDARD_FUNCTION, withCors } from '../lib/function-config';
@@ -715,6 +716,18 @@ export const deletePatientHttp = onRequest(
       try {
         await rtdb.refreshPatients(organizationId);
       } catch (err) { logger.error('Erro ao publicar no RTDB:', err); }
+
+      // Log Audit Event (Healthcare standard)
+      await logAuditEvent({
+        action: 'delete',
+        resourceType: 'patient',
+        resourceId: patientId,
+        userId: uid,
+        organizationId,
+        description: 'Paciente excluído (soft-delete)',
+        sensitivity: 'high'
+      });
+
       res.json({ success: true });
     } catch (error: unknown) {
       if (error instanceof HttpsError && error.code === 'unauthenticated') { res.status(401).json({ error: error.message }); return; }

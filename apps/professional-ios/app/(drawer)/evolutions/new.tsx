@@ -23,6 +23,7 @@ import { Icon } from '@/components/ui/Icon';
 import { SignatureCanvas } from '@/components/SignatureCanvas';
 import { VitalSignsInput } from '@/components/VitalSignsInput';
 import { ObjectiveExamForm } from '@/components/ObjectiveExamForm';
+import { MultimodalAIAnalysis } from '@/components/MultimodalAIAnalysis';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { HapticFeedback } from '@/lib/haptics';
@@ -277,6 +278,14 @@ export default function NewEvolutionScreen() {
               onRespiratoryRateChange={setRespiratoryRate}
               oxygenSaturation={oxygenSaturation}
               onOxygenSaturationChange={setOxygenSaturation}
+            />
+
+            {/* AI Image Analysis */}
+            <MultimodalAIAnalysis 
+              patientId={patientId} 
+              onAnalysisResult={(findings) => {
+                setPostureAnalysis(prev => prev + '\n\nAchados IA:\n' + findings.join('\n'));
+              }}
             />
 
             {/* Physical Exam */}

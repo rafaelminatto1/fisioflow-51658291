@@ -2,7 +2,13 @@
 // Firebase configuration from environment variables
 
 import { initializeApp, getApps } from 'firebase/app';
-import { getFirestore, enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
+import { 
+  getFirestore, 
+  initializeFirestore, 
+  persistentLocalCache, 
+  persistentMultipleTabManager,
+  CACHE_SIZE_UNLIMITED
+} from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 import Constants from 'expo-constants';
@@ -21,14 +27,15 @@ const firebaseConfig = {
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
 // Initialize Firestore
-export const db = getFirestore(app);
-
-// Enable offline persistence
-if (typeof window !== 'undefined') {
-  enableMultiTabIndexedDbPersistence(db).catch((err) => {
-    console.log('Firestore persistence error:', err);
-  });
-}
+export const db = (typeof window !== 'undefined') 
+  ? initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager(),
+        cacheSizeBytes: CACHE_SIZE_UNLIMITED
+      }),
+      experimentalAutoDetectLongPolling: true
+    })
+  : getFirestore(app);
 
 // Initialize Auth
 export const auth = getAuth(app);

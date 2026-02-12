@@ -72,24 +72,24 @@ export default function ProfileScreen() {
           collection(db, 'patients'),
           where('created_by', '==', profile.uid)
         );
-        const patientsSnapshot = await getDocs(patientsQuery);
-        const patientsCount = patientsSnapshot.size;
+        const patientsSnapshot = await getCountFromServer(patientsQuery);
+        const patientsCount = patientsSnapshot.data().count;
 
         // Count completed sessions (evolutions)
         const sessionsQuery = query(
           collection(db, 'evolutions'),
           where('created_by', '==', profile.uid)
         );
-        const sessionsSnapshot = await getDocs(sessionsQuery);
-        const sessionsCount = sessionsSnapshot.size;
+        const sessionsSnapshot = await getCountFromServer(sessionsQuery);
+        const sessionsCount = sessionsSnapshot.data().count;
 
         // Count evaluations
         const evaluationsQuery = query(
           collection(db, 'evaluations'),
           where('created_by', '==', profile.uid)
         );
-        const evaluationsSnapshot = await getDocs(evaluationsQuery);
-        const evaluationsCount = evaluationsSnapshot.size;
+        const evaluationsSnapshot = await getCountFromServer(evaluationsQuery);
+        const evaluationsCount = evaluationsSnapshot.data().count;
 
         setStats({
           patients: patientsCount,

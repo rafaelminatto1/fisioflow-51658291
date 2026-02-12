@@ -30,7 +30,7 @@ import {
     withCors
 } from './lib/function-config';
 
-// Set global options for all functions - CONFIGURAÇÃO ORIGINAL (ajustada para quota Spark)
+// Set global options for all functions - CONFIGURAÇÃO OTIMIZADA PARA GEN 2
 setGlobalOptions({
     region: 'southamerica-east1',
     secrets: [
@@ -44,12 +44,12 @@ setGlobalOptions({
         WHATSAPP_ACCESS_TOKEN_SECRET,
         RESEND_API_KEY_SECRET
     ],
-    // Mantido baixo para não exceder quota do plano Spark
-    maxInstances: 1,
-    memory: '256MiB',
-    cpu: 0.1,
+    // Aumentado para permitir melhor escalabilidade em produção
+    maxInstances: 10,
+    memory: '512MiB', // Memória base aumentada para suportar concorrência
+    cpu: 1, // CPU dedicado necessário para concorrência > 1
     timeoutSeconds: 60,
-    concurrency: 1,
+    concurrency: 80, // Aproveita concorrência do Gen 2 (reduz cold starts e custos)
     minInstances: 0,
 });
 

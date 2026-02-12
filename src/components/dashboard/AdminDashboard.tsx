@@ -16,12 +16,45 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import { AIInsightsWidget } from './AIInsightsWidget';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LazyWidget } from './LazyWidget';
+import { Skeleton } from '@/components/ui/skeleton';
+
+interface AdminDashboardProps {
+  period?: string;
+}
 
 interface AnimatedCardProps {
   children: React.ReactNode;
   delay?: number;
   className?: string;
 }
+
+// Custom Tooltip Component for Charts
+const CustomChartTooltip = React.memo(({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="rounded-lg border border-border bg-card p-3 shadow-md">
+        <p className="text-sm font-medium mb-2">{label}</p>
+        <div className="space-y-1.5">
+          {payload.map((entry: any, index: number) => (
+            <div key={index} className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <div
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: entry.color }}
+                />
+                <span className="text-xs text-muted-foreground">{entry.name}</span>
+              </div>
+              <span className="text-sm font-semibold">{entry.value}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+  return null;
+});
+
+CustomChartTooltip.displayName = 'CustomChartTooltip';
 
 const AnimatedCard = React.memo(({ children, delay = 0, className = '' }: AnimatedCardProps) => (
   <div
@@ -41,7 +74,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
   const navigate = useNavigate();
   const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics();
 
-  // ... (useMemo calculations remain the same)
+  const formattedRevenue = useMemo(() => {
+    const revenue = metrics?.receitaMensal || 0;
+    return revenue >= 1000
+      ? `R$ ${(revenue / 1000).toFixed(1)}k`
+      : `R$ ${revenue.toLocaleString('pt-BR')}`;
+  }, [metrics?.receitaMensal]);
+
+  const maxAtendimentos = useMemo(() => {
+    return Math.max(...(metrics?.receitaPorFisioterapeuta?.map(f => f.atendimentos) || [1]), 1);
+  }, [metrics?.receitaPorFisioterapeuta]);
+
+  const statusBadgeVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+    switch (status) {
+      case 'confirmado': return 'default';
+      case 'pendente': return 'secondary';
+      case 'cancelado': return 'destructive';
+      case 'concluido': return 'outline';
+      default: return 'default';
+    }
+  };
 
   // TODO: Add appointments query if needed
   const appointmentsLoading = false;

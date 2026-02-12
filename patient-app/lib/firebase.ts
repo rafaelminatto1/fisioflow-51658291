@@ -1,14 +1,26 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { 
+  getFirestore, 
+  doc, 
+  getDoc, 
+  updateDoc, 
+  initializeFirestore, 
+  persistentLocalCache, 
+  persistentMultipleTabManager,
+  CACHE_SIZE_UNLIMITED,
+  connectFirestoreEmulator
+} from 'firebase/firestore';
 import {
   getAuth,
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
   initializeAuth,
-  getReactNativePersistence
+  getReactNativePersistence,
+  connectAuthEmulator
 } from 'firebase/auth';
-import { getStorage } from 'firebase/storage';
+import { getStorage, connectStorageEmulator } from 'firebase/storage';
+import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 import { create } from 'zustand';
 
 import { Platform } from 'react-native';
@@ -55,11 +67,22 @@ const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 // Initialize Storage
 const storage = getStorage(app);
 
+// Initialize Functions
+const functions = getFunctions(app, 'southamerica-east1');
+
 // Initialize Firestore
-export const db = getFirestore(app);
+export const db = (Platform.OS === 'web')
+  ? initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager(),
+        cacheSizeBytes: CACHE_SIZE_UNLIMITED
+      }),
+      experimentalAutoDetectLongPolling: true
+    })
+  : getFirestore(app);
 
 // Initialize Auth based on platform
-let auth;
+let auth: any;
 if (Platform.OS === 'web') {
   // Web - usar getAuth padrão
   auth = getAuth(app);
@@ -75,7 +98,19 @@ if (Platform.OS === 'web') {
   }
 }
 
-export { auth, storage };
+// Connect to Emulators if configured
+if (process.env.EXPO_PUBLIC_USE_EMULATOR === 'true') {
+  const host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
+  
+  console.log(`[Firebase] Connecting to emulators at ${host}`);
+  
+  connectAuthEmulator(auth, `http://${host}:9099`);
+  connectFirestoreEmulator(db, host, 8080);
+  connectStorageEmulator(storage, host, 9199);
+  connectFunctionsEmulator(functions, host, 5001);
+}
+
+export { auth, storage, functions };
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
