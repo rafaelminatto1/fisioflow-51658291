@@ -71,12 +71,12 @@ export default function MarketingDashboard() {
 
           totalReviews = reviews.length;
           if (totalReviews > 0) {
-            averageRating = reviews.reduce((sum: number, r: unknown) => sum + r.rating, 0) / totalReviews;
-            rating5 = reviews.filter((r: unknown) => r.rating === 5).length;
-            rating4 = reviews.filter((r: unknown) => r.rating === 4).length;
-            rating3 = reviews.filter((r: unknown) => r.rating === 3).length;
-            rating2 = reviews.filter((r: unknown) => r.rating === 2).length;
-            rating1 = reviews.filter((r: unknown) => r.rating === 1).length;
+            averageRating = reviews.reduce((sum: number, r: GoogleReview) => sum + r.rating, 0) / totalReviews;
+            rating5 = reviews.filter((r: GoogleReview) => r.rating === 5).length;
+            rating4 = reviews.filter((r: GoogleReview) => r.rating === 4).length;
+            rating3 = reviews.filter((r: GoogleReview) => r.rating === 3).length;
+            rating2 = reviews.filter((r: GoogleReview) => r.rating === 2).length;
+            rating1 = reviews.filter((r: GoogleReview) => r.rating === 1).length;
           }
         } catch (err) {
           console.error('Error fetching reviews:', err);

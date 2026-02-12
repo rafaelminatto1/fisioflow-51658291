@@ -18,12 +18,12 @@ export const GLOBAL_OPTIONS = {
   region: 'southamerica-east1' as const,
   // Aumentado para permitir mais instâncias concorrentes
   maxInstances: 10,
-  // Memória suficiente para operações normais
-  memory: '256MiB' as const,
-  // CPU balanceado para custo/benefício
-  cpu: 0.5 as const,
+  // Memória suficiente para operações normais e concorrência
+  memory: '512MiB' as const,
+  // CPU necessário para concorrência > 1
+  cpu: 1 as const,
   timeoutSeconds: 60,
-  concurrency: 10, // Permite até 10 requisições por instância
+  concurrency: 80, // Gen 2 standard concurrency
   minInstances: 0,
 };
 
@@ -37,11 +37,11 @@ export const GLOBAL_OPTIONS = {
  */
 export const SIMPLE_FUNCTION: FunctionOptions = {
   region: 'southamerica-east1',
-  memory: '128MiB',
+  memory: '256MiB', // Aumentado para suportar concorrência
   maxInstances: 50,
-  cpu: 0.1,
+  cpu: 1, // CPU 1 para permitir concurrency
   timeoutSeconds: 30,
-  concurrency: 20,
+  concurrency: 80,
 };
 
 /**
@@ -51,11 +51,11 @@ export const SIMPLE_FUNCTION: FunctionOptions = {
  */
 export const STANDARD_FUNCTION: FunctionOptions = {
   region: 'southamerica-east1',
-  memory: '256MiB',
+  memory: '512MiB',
   maxInstances: 20,
   cpu: 1,
   timeoutSeconds: 60,
-  concurrency: 10,
+  concurrency: 80,
 };
 
 /**
