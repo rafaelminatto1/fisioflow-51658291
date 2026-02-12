@@ -6,7 +6,7 @@ import { ptBR } from 'date-fns/locale';
 import { Calendar, User, Bell } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
-import { db, collection, query, orderBy, limit, onSnapshot, getDocs, doc, getDoc } from '@/integrations/firebase/app';
+import { db, collection, query, where, orderBy, limit, onSnapshot, getDocs, doc, getDoc } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
@@ -47,7 +47,8 @@ const safeFormatDate = (val: unknown): string => {
  * Implementa cleanup adequado para evitar memory leaks
  */
 export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
+  const organizationId = profile?.organization_id;
   const [activities, setActivities] = useState<ActivityEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -56,7 +57,7 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
    * Cleanup adequado com unsubscribe functions
    */
   useEffect(() => {
-    if (authLoading || !user) return;
+    if (authLoading || !user || !organizationId) return;
 
     const unsubscribers: Array<() => void> = [];
 
@@ -67,6 +68,7 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
         // Fetch appointments first
         const appointmentsQuery = query(
           collection(db, 'appointments'),
+          where('organization_id', '==', organizationId),
           orderBy('created_at', 'desc'),
           limit(5)
         );
@@ -74,7 +76,7 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
         const appointmentsSnapshot = await getDocs(appointmentsQuery);
         const appointments: AppointmentDocument[] = [];
 
-        // Manually fetch patient names to avoid relationship errors
+        // Collect patient IDs to fetch names in bulk
         const patientIds = new Set<string>();
         appointmentsSnapshot.forEach((doc) => {
           const data = normalizeFirestoreData(doc.data());
@@ -86,45 +88,41 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
 
         const patientMap = new Map<string, string>();
 
-        // Fetch patient data
+        // Fetch patient data in bulk (simulated here with individual gets but could be optimized further)
         if (patientIds.size > 0) {
           const patientPromises = Array.from(patientIds).map(async (patientId) => {
-            const patientDoc = await getDoc(doc(db, 'patients', patientId));
-            if (patientDoc.exists()) {
-              const patientData = patientDoc.data();
-              return { id: patientId, name: patientData.full_name || patientData.name || 'Paciente desconhecido' };
+            try {
+              const patientDoc = await getDoc(doc(db, 'patients', patientId));
+              if (patientDoc.exists()) {
+                const patientData = patientDoc.data();
+                return { id: patientId, name: patientData.full_name || patientData.name || 'Paciente' };
+              }
+            } catch (e) {
+              logger.warn(`Could not fetch patient ${patientId}`, e);
             }
-            return { id: patientId, name: 'Paciente desconhecido' };
+            return { id: patientId, name: 'Paciente' };
           });
 
           const patients = await Promise.all(patientPromises);
           patients.forEach((p) => patientMap.set(p.id, p.name));
         }
 
-        // Attach names to appointments
-        const appointmentsWithNames = appointments.map((apt) => ({
-          ...apt,
-          patients: { name: patientMap.get(apt.patient_id) || 'Paciente desconhecido' }
-        }));
-
-        const activityList: ActivityEvent[] = [];
-
-        appointmentsWithNames.forEach((apt) => {
-          const timestamp = apt.created_at?.toDate 
-            ? apt.created_at.toDate() 
-            : apt.created_at 
-              ? new Date(apt.created_at) 
+        const activityList: ActivityEvent[] = appointments.map((apt) => {
+          const timestamp = apt.created_at?.toDate
+            ? apt.created_at.toDate()
+            : apt.created_at
+              ? new Date(apt.created_at)
               : new Date();
 
-          activityList.push({
+          return {
             id: apt.id,
             type: 'appointment',
             title: 'Novo Agendamento',
-            description: `${apt.patients?.name || 'Paciente'} - ${safeFormatDate(apt.appointment_date)}`,
+            description: `${patientMap.get(apt.patient_id || '') || 'Paciente'} - ${safeFormatDate(apt.appointment_date)}`,
             timestamp: isNaN(timestamp.getTime()) ? new Date() : timestamp,
             icon: Calendar,
             variant: 'default',
-          });
+          };
         });
 
         setActivities(activityList.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()));
@@ -138,96 +136,69 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
 
     loadRecentActivities();
 
-    // Setup realtime subscriptions
+    // Setup realtime subscriptions with organization filter
     const appointmentsQuery = query(
       collection(db, 'appointments'),
+      where('organization_id', '==', organizationId),
       orderBy('created_at', 'desc'),
       limit(10)
     );
 
-    const appointmentsUnsub = onSnapshot(appointmentsQuery, async (snapshot) => {
-      const newActivities: ActivityEvent[] = [];
+    const appointmentsUnsub = onSnapshot(appointmentsQuery, (snapshot) => {
+      const addedChanges = snapshot.docChanges().filter(c => c.type === 'added');
+      if (addedChanges.length === 0) return;
 
-      for (const change of snapshot.docChanges()) {
-        if (change.type === 'added') {
-          const apt = normalizeFirestoreData(change.doc.data());
-          const patientId = apt.patient_id;
+      const newActivities: ActivityEvent[] = addedChanges.map(change => {
+        const apt = normalizeFirestoreData(change.doc.data());
+        return {
+          id: `activity-${change.doc.id}-${Date.now()}`,
+          type: 'appointment',
+          title: 'Novo Agendamento',
+          description: `${apt.patient_name || 'Paciente'} - ${safeFormatDate(apt.appointment_date)}`,
+          timestamp: new Date(),
+          icon: Calendar,
+          variant: 'success',
+        };
+      });
 
-          let patientName = 'Paciente';
-          if (patientId) {
-            try {
-              const patientDoc = await getDoc(doc(db, 'patients', patientId));
-              if (patientDoc.exists()) {
-                const patientData = patientDoc.data();
-                patientName = patientData.full_name || patientData.name || 'Paciente';
-              }
-            } catch (e) {
-              logger.error('Error fetching patient', e, 'RealtimeActivityFeed');
-            }
-          }
-
-          const newActivity: ActivityEvent = {
-            id: `activity-${change.doc.id}-${Date.now()}`,
-            type: 'appointment',
-            title: 'Novo Agendamento',
-            description: `${patientName} - ${safeFormatDate(apt.appointment_date)}`,
-            timestamp: new Date(),
-            icon: Calendar,
-            variant: 'success',
-          };
-
-          newActivities.push(newActivity);
-        }
-      }
-
-      if (newActivities.length > 0) {
-        setActivities((prev) => [...newActivities, ...prev].slice(0, MAX_ACTIVITIES));
-      }
-    }, (error) => {
-      logger.warn('Appointments subscription error', error, 'RealtimeActivityFeed');
+      setActivities((prev) => [...newActivities, ...prev].slice(0, MAX_ACTIVITIES));
     });
 
     unsubscribers.push(appointmentsUnsub);
 
     const patientsQuery = query(
       collection(db, 'patients'),
+      where('organization_id', '==', organizationId),
       orderBy('created_at', 'desc'),
       limit(10)
     );
 
     const patientsUnsub = onSnapshot(patientsQuery, (snapshot) => {
-      const newActivities: ActivityEvent[] = [];
+      const addedChanges = snapshot.docChanges().filter(c => c.type === 'added');
+      if (addedChanges.length === 0) return;
 
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === 'added') {
-          const patient = normalizeFirestoreData(change.doc.data());
-          const newActivity: ActivityEvent = {
-            id: `patient-${change.doc.id}-${Date.now()}`,
-            type: 'patient',
-            title: 'Novo Paciente',
-            description: patient.full_name || patient.name || 'Novo paciente cadastrado',
-            timestamp: new Date(),
-            icon: User,
-            variant: 'success',
-          };
-          newActivities.push(newActivity);
-        }
+      const newActivities: ActivityEvent[] = addedChanges.map(change => {
+        const patient = normalizeFirestoreData(change.doc.data());
+        return {
+          id: `patient-${change.doc.id}-${Date.now()}`,
+          type: 'patient',
+          title: 'Novo Paciente',
+          description: patient.full_name || patient.name || 'Novo paciente cadastrado',
+          timestamp: new Date(),
+          icon: User,
+          variant: 'success',
+        };
       });
 
-      if (newActivities.length > 0) {
-        setActivities((prev) => [...newActivities, ...prev].slice(0, MAX_ACTIVITIES));
-      }
-    }, (error) => {
-      logger.warn('Patients subscription error', error, 'RealtimeActivityFeed');
+      setActivities((prev) => [...newActivities, ...prev].slice(0, MAX_ACTIVITIES));
     });
 
     unsubscribers.push(patientsUnsub);
 
-    // Cleanup function
     return () => {
       unsubscribers.forEach((unsub) => unsub());
     };
-  }, [user, authLoading]);
+  }, [user, organizationId, authLoading]);
 
   /**
    * Memoizar função de cor para evitar recriações

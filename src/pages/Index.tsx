@@ -1,8 +1,5 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { AdminDashboard } from '@/components/dashboard/AdminDashboard';
-import { PatientDashboard } from '@/components/dashboard/PatientDashboard';
-import { TherapistDashboard } from '@/components/dashboard/TherapistDashboard';
 import { IncompleteRegistrationAlert } from '@/components/dashboard/IncompleteRegistrationAlert';
 import { CustomizableDashboard } from '@/components/dashboard/CustomizableDashboard';
 import { RealtimeActivityFeed } from '@/components/dashboard/RealtimeActivityFeed';
@@ -10,6 +7,23 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+
+// Lazy load dashboard components
+const AdminDashboard = lazy(() => import('@/components/dashboard/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
+const PatientDashboard = lazy(() => import('@/components/dashboard/PatientDashboard').then(m => ({ default: m.PatientDashboard })));
+const TherapistDashboard = lazy(() => import('@/components/dashboard/TherapistDashboard').then(m => ({ default: m.TherapistDashboard })));
+
+const DashboardSkeleton = () => (
+  <div className="space-y-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <Skeleton className="h-32 w-full" />
+      <Skeleton className="h-32 w-full" />
+      <Skeleton className="h-32 w-full" />
+    </div>
+    <Skeleton className="h-[400px] w-full" />
+  </div>
+);
 
 const Index = () => {
   const { profile } = useAuth();
@@ -17,18 +31,24 @@ const Index = () => {
   const [periodFilter, setPeriodFilter] = useState('hoje');
 
   const renderDashboard = () => {
-    if (!profile) return <AdminDashboard period={periodFilter} />;
+    return (
+      <Suspense fallback={<DashboardSkeleton />}>
+        {(() => {
+          if (!profile) return <AdminDashboard period={periodFilter} />;
 
-    switch (profile.role) {
-      case 'admin':
-        return <AdminDashboard period={periodFilter} />;
-      case 'fisioterapeuta':
-        return <TherapistDashboard lastUpdate={new Date()} profile={profile} />;
-      case 'paciente':
-        return <PatientDashboard lastUpdate={new Date()} profile={profile} />;
-      default:
-        return <AdminDashboard period={periodFilter} />;
-    }
+          switch (profile.role) {
+            case 'admin':
+              return <AdminDashboard period={periodFilter} />;
+            case 'fisioterapeuta':
+              return <TherapistDashboard lastUpdate={new Date()} profile={profile} />;
+            case 'paciente':
+              return <PatientDashboard lastUpdate={new Date()} profile={profile} />;
+            default:
+              return <AdminDashboard period={periodFilter} />;
+          }
+        })()}
+      </Suspense>
+    );
   };
 
   const displayName = getDisplayName();

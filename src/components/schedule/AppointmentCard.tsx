@@ -1,10 +1,16 @@
-import React, { memo, useCallback } from 'react';
-import { AlertCircle, MoreHorizontal } from 'lucide-react';
+import React, { memo, useCallback, useMemo } from 'react';
+import { AlertCircle, MoreHorizontal, MessageSquare, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Appointment } from '@/types/appointment';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { getStatusConfig } from '../schedule/shared';
+import {
+  getRelativeTime,
+  isAppointmentOngoing,
+  getAppointmentProgress,
+  formatDuration
+} from '../schedule/shared/utils';
 
 interface AppointmentCardProps {
   appointment: Appointment;
@@ -29,12 +35,10 @@ function arePropsEqual(
     prevProps.appointment.type === nextProps.appointment.type &&
     prevProps.appointment.date === nextProps.appointment.date &&
     prevProps.appointment.notes === nextProps.appointment.notes &&
+    prevProps.appointment.duration === nextProps.appointment.duration &&
     prevProps.variant === nextProps.variant
   );
 }
-
-// Local getStatusConfig and getInitials removed - using shared versions
-// import { getStatusConfig, getInitials } from '../schedule/shared';
 
 export const AppointmentCard: React.FC<AppointmentCardProps> = memo(({
   appointment,
@@ -46,10 +50,32 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = memo(({
   const statusConfig = getStatusConfig(appointment.status);
   const StatusIcon = statusConfig.icon;
 
-  // Memoize click handler to prevent unnecessary re-renders
+  // Calculate dynamic states
+  const ongoing = useMemo(() =>
+    isAppointmentOngoing(appointment.date, appointment.time, appointment.duration || 60),
+    [appointment.date, appointment.time, appointment.duration]
+  );
+
+  const progress = useMemo(() =>
+    getAppointmentProgress(appointment.date, appointment.time, appointment.duration || 60),
+    [appointment.date, appointment.time, appointment.duration]
+  );
+
+  const relativeTime = useMemo(() =>
+    getRelativeTime(appointment.date, appointment.time),
+    [appointment.date, appointment.time]
+  );
+
+  // Memoize click handler
   const handleClick = useCallback(() => {
     onClick?.();
   }, [onClick]);
+
+  const handleWhatsApp = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    // WhatsApp logic would go here
+    console.log('Opening WhatsApp for', appointment.patientName);
+  }, [appointment.patientName]);
 
   if (variant === 'compact') {
     return (
@@ -95,78 +121,97 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = memo(({
       className={cn(
         'group relative overflow-hidden rounded-2xl',
         'bg-white dark:bg-slate-900',
-        'border border-slate-200 dark:border-slate-800',
-        'shadow-sm hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-black/50',
-        'cursor-pointer transition-all duration-300',
+        'border-2 transition-all duration-300',
+        ongoing ? statusConfig.borderColor : 'border-slate-100 dark:border-slate-800',
+        'shadow-sm hover:shadow-xl hover:shadow-slate-200/50 dark:hover:shadow-black/50',
+        'cursor-pointer',
         className
       )}
     >
-      {/* Background Gradient Effect on Hover */}
+      {/* Top Status Gradient (Subtle) */}
       <div className={cn(
-        "absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none",
-        statusConfig.gradient
-      )} />
-
-      {/* Left Status Border */}
-      <div className={cn(
-        "absolute left-0 top-0 bottom-0 w-1",
+        "absolute top-0 left-0 right-0 h-1 opacity-20",
         statusConfig.borderColor.replace('border-', 'bg-')
       )} />
 
-      <div className="p-4 pl-5 relative z-10">
-        <div className="flex justify-between items-start mb-3">
-          {/* Time and Duration Badge */}
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2 text-base font-bold text-slate-700 dark:text-slate-200 font-mono">
-              <span>{appointment.time}</span>
-              {appointment.duration && (
-                <span className="text-slate-500 font-normal text-sm">
-                  ({appointment.duration} min)
+      <div className="p-5 relative z-10">
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-bold text-slate-900 dark:text-slate-100 font-mono tracking-tight">
+                {appointment.time} — {appointment.duration ?
+                  (new Date(new Date(`2000-01-01T${appointment.time}`).getTime() + appointment.duration * 60000)).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                  : '--:--'}
+              </span>
+
+              {ongoing && (
+                <span className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500 text-white rounded-full text-[10px] font-black tracking-widest uppercase animate-pulse">
+                  AGORA
                 </span>
               )}
             </div>
           </div>
 
-          {/* Status Badge - Enhanced for better readability */}
-          <span className={cn(
-            "px-3 py-1.5 rounded-full text-sm font-semibold uppercase tracking-wide flex items-center gap-2",
-            statusConfig.badgeBg,
-            statusConfig.badgeText
-          )}>
-            <StatusIcon className="w-3.5 h-3.5" />
-            {statusConfig.label}
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleWhatsApp}
+              className="p-2 rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-colors shadow-sm"
+            >
+              <MessageSquare className="w-4 h-4" />
+            </button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            >
+              <MoreHorizontal className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
 
-        <div className="min-w-0">
-          <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 leading-tight mb-1.5 line-clamp-3 group-hover:text-primary transition-colors">
+        <div className="mb-6">
+          <h3 className="text-2xl font-black text-slate-900 dark:text-white leading-tight mb-2 tracking-tight group-hover:text-primary transition-colors">
             {appointment.patientName}
           </h3>
-          <p className="text-base font-medium text-slate-700 dark:text-slate-300 truncate flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
+          <p className="text-base font-semibold text-slate-500 dark:text-slate-400">
             {appointment.type}
           </p>
         </div>
 
-        {/* Footer Area - Notes & Actions */}
-        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-          {appointment.notes ? (
-            <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 max-w-[80%]">
-              <AlertCircle className="w-4 h-4 flex-shrink-0 text-amber-500" />
-              <span className="truncate font-medium">{appointment.notes}</span>
+        {/* Dynamic Footer with Progress & Relative Time */}
+        <div className="space-y-4">
+          <div className="flex justify-between items-end text-sm font-bold">
+            <div className="flex items-center gap-2 text-slate-400 uppercase tracking-tighter text-xs">
+              <Clock className="w-3.5 h-3.5" />
+              <span>{relativeTime}</span>
             </div>
-          ) : (
-            <div className="text-sm text-slate-500 italic font-medium">Sem observações</div>
-          )}
+            <div className="text-slate-400 uppercase tracking-tighter text-xs">
+              {appointment.duration ? `${formatDuration(appointment.duration)} duração` : ''}
+            </div>
+          </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity -mr-1"
-          >
-            <MoreHorizontal className="w-4 h-4 text-slate-500" />
-          </Button>
+          {/* Progress Bar */}
+          <div className="relative h-2.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              className={cn(
+                "absolute top-0 left-0 bottom-0 rounded-full shadow-[0_0_10px_rgba(0,0,0,0.1)] transition-all duration-1000",
+                ongoing ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+              )}
+            />
+          </div>
         </div>
+
+        {/* Quick Notes if present */}
+        {appointment.notes && (
+          <div className="mt-5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-start gap-2.5">
+            <AlertCircle className="w-4 h-4 text-amber-500 mt-0.5" />
+            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 leading-relaxed italic">
+              {appointment.notes}
+            </p>
+          </div>
+        )}
       </div>
     </motion.div>
   );

@@ -10,6 +10,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, query as firestoreQuery, where, getCountFromServer, QueryConstraint, onSnapshot, db } from '@/integrations/firebase/app';
+import { useAuth } from '@/contexts/AuthContext';
 import { useEffect } from 'react';
 import { startOfMonth, subMonths, subDays, startOfWeek, endOfWeek } from 'date-fns';
 import { formatDateToLocalISO } from '@/utils/dateUtils';
@@ -70,47 +71,54 @@ export interface DashboardMetrics {
   cancelamentosSemana: number;
 }
 
+
 export const useDashboardMetrics = () => {
   const queryClient = useQueryClient();
+  const { organizationId } = useAuth();
 
   // Registrar listeners para atualizações em tempo real
   useEffect(() => {
-    if (!db) return;
+    if (!db || !organizationId) return;
 
     const today = formatDateToLocalISO(new Date());
-    
-    // Listener para agendamentos de hoje
+
+    // Listener para agendamentos de hoje com organizationId
     const appointmentsQuery = firestoreQuery(
       collection(db, 'appointments'),
+      where('organization_id', '==', organizationId),
       where('appointment_date', '==', today)
     );
 
-    // Listener para novos pacientes (últimos 30 dias)
+    // Listener para novos pacientes com organizationId
     const thirtyDaysAgo = formatDateToLocalISO(subMonths(new Date(), 1));
     const patientsQuery = firestoreQuery(
       collection(db, 'patients'),
+      where('organization_id', '==', organizationId),
       where('created_at', '>=', thirtyDaysAgo)
     );
 
     const unsubscribeAppointments = onSnapshot(appointmentsQuery, () => {
       logger.info('[Realtime] Appointments changed, invalidating dashboard metrics', undefined, 'useDashboardMetrics');
-      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics', organizationId] });
     });
 
     const unsubscribePatients = onSnapshot(patientsQuery, () => {
       logger.info('[Realtime] Patients changed, invalidating dashboard metrics', undefined, 'useDashboardMetrics');
-      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics', organizationId] });
     });
 
     return () => {
       unsubscribeAppointments();
       unsubscribePatients();
     };
-  }, [queryClient]);
+  }, [queryClient, organizationId]);
 
   return useQuery({
-    queryKey: ['dashboard-metrics'],
+    queryKey: ['dashboard-metrics', organizationId],
+    enabled: !!organizationId,
     queryFn: async (): Promise<DashboardMetrics> => {
+      if (!organizationId) throw new Error('Organization ID is required');
+
       const today = formatDateToLocalISO(new Date());
       const startOfCurrentMonth = formatDateToLocalISO(startOfMonth(new Date()));
       const startOfLastMonth = formatDateToLocalISO(startOfMonth(subMonths(new Date(), 1)));
@@ -122,16 +130,15 @@ export const useDashboardMetrics = () => {
       // Helper function to get count from snapshot
       const getCount = async (collectionName: string, constraints: QueryConstraint[] = []) => {
         try {
-          if (!db) {
-            throw new Error('Firestore instance "db" is not available');
-          }
-          const q = firestoreQuery(collection(db, collectionName), ...constraints);
+          const q = firestoreQuery(
+            collection(db, collectionName),
+            where('organization_id', '==', organizationId),
+            ...constraints
+          );
           const snapshot = await getCountFromServer(q);
           return snapshot.data().count;
-        } catch (error: UnknownError) {
-          // Se a coleção não existir ou houver permissão negada, retorna 0
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          logger.warn(`[useDashboardMetrics] Collection ${collectionName} count failed`, { errorMessage }, 'useDashboardMetrics');
+        } catch (error) {
+          logger.warn(`[useDashboardMetrics] Collection ${collectionName} count failed`, error, 'useDashboardMetrics');
           return 0;
         }
       };
@@ -139,29 +146,21 @@ export const useDashboardMetrics = () => {
       // Helper function to get docs with constraints
       const getDocsData = async (collectionName: string, constraints: QueryConstraint[] = []) => {
         try {
-          if (!db) {
-            throw new Error('Firestore instance "db" is not available');
-          }
-          const q = firestoreQuery(collection(db, collectionName), ...constraints);
+          const q = firestoreQuery(
+            collection(db, collectionName),
+            where('organization_id', '==', organizationId),
+            ...constraints
+          );
           const snapshot = await getDocs(q);
           return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
-        } catch (error: UnknownError) {
-          // Se a coleção não existir ou houver permissão negada, retorna array vazio
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          logger.warn(`[useDashboardMetrics] Collection ${collectionName} not found`, { errorMessage }, 'useDashboardMetrics');
+        } catch (error) {
+          logger.warn(`[useDashboardMetrics] Collection ${collectionName} not found`, error, 'useDashboardMetrics');
           return [];
         }
       };
 
-      // Ensure db is ready before proceeding with parallel queries
-      if (!db) {
-        logger.error('[useDashboardMetrics] Critical: Firestore db instance is null', undefined, 'useDashboardMetrics');
-        throw new Error('Firestore db is not initialized');
-      }
-
-      // Paralelizar todas as queries independentes usando Promise.all
+      // Paralelizar queries
       const [
-        // Queries de contagem - Grupo 1
         totalPacientes,
         pacientesNovos,
         agendamentosHoje,
@@ -176,204 +175,48 @@ export const useDashboardMetrics = () => {
         weeklyData,
         agendamentosSemana,
         cancelamentosSemana,
+        activePatientsData,
       ] = await Promise.all([
-        // Total de pacientes
         getCount('patients'),
-
-        // Pacientes novos este mês
         getCount('patients', [where('created_at', '>=', startOfCurrentMonth)]),
-
-        // Agendamentos hoje
         getCount('appointments', [where('appointment_date', '==', today)]),
-
-        // Agendamentos concluídos hoje
-        getCount('appointments', [
-          where('appointment_date', '==', today),
-          where('status', '==', 'concluido')
-        ]),
-
-        // Total de agendamentos em 30 dias (para taxa de no-show)
-        getCount('appointments', [
-          where('appointment_date', '>=', thirtyDaysAgo),
-          where('appointment_date', '<=', today)
-        ]),
-
-        // Contagem de no-show em 30 dias
-        getCount('appointments', [
-          where('appointment_date', '>=', thirtyDaysAgo),
-          where('appointment_date', '<=', today),
-          where('status', '==', 'falta')
-        ]),
-
-        // Fisioterapeutas ativos
-        getDocsData('user_roles', [
-          where('role', 'in', ['admin', 'fisioterapeuta'])
-        ]),
-
-        // Receita mensal atual
-        getDocsData('contas_financeiras', [
-          where('tipo', '==', 'receita'),
-          where('status', '==', 'pago'),
-          where('data_pagamento', '>=', startOfCurrentMonth)
-        ]),
-
-        // Receita mês anterior
-        getDocsData('contas_financeiras', [
-          where('tipo', '==', 'receita'),
-          where('status', '==', 'pago'),
-          where('data_pagamento', '>=', startOfLastMonth),
-          where('data_pagamento', '<', endOfLastMonth)
-        ]),
-
-        // Total de sessões em 30 dias
-        getCount('appointments', [
-          where('appointment_date', '>=', thirtyDaysAgo),
-          where('status', '==', 'concluido')
-        ]),
-
-        // Receita por fisioterapeuta
-        getDocsData('appointments', [
-          where('appointment_date', '>=', startOfCurrentMonth),
-          where('status', '==', 'concluido')
-        ]),
-
-        // Dados semanais para tendência
-        getDocsData('appointments', [
-          where('appointment_date', '>=', weekStart),
-          where('appointment_date', '<=', weekEnd)
-        ]),
-
-        // Agendamentos da semana
-        getCount('appointments', [
-          where('appointment_date', '>=', weekStart),
-          where('appointment_date', '<=', weekEnd)
-        ]),
-
-        // Cancelamentos da semana
-        getCount('appointments', [
-          where('appointment_date', '>=', weekStart),
-          where('appointment_date', '<=', weekEnd),
-          where('status', '==', 'cancelado')
-        ]),
+        getCount('appointments', [where('appointment_date', '==', today), where('status', '==', 'concluido')]),
+        getCount('appointments', [where('appointment_date', '>=', thirtyDaysAgo), where('appointment_date', '<=', today)]),
+        getCount('appointments', [where('appointment_date', '>=', thirtyDaysAgo), where('appointment_date', '<=', today), where('status', '==', 'falta')]),
+        getDocsData('user_roles', [where('role', 'in', ['admin', 'fisioterapeuta'])]),
+        getDocsData('contas_financeiras', [where('tipo', '==', 'receita'), where('status', '==', 'pago'), where('data_pagamento', '>=', startOfCurrentMonth)]),
+        getDocsData('contas_financeiras', [where('tipo', '==', 'receita'), where('status', '==', 'pago'), where('data_pagamento', '>=', startOfLastMonth), where('data_pagamento', '<', endOfLastMonth)]),
+        getCount('appointments', [where('appointment_date', '>=', thirtyDaysAgo), where('status', '==', 'concluido')]),
+        getDocsData('appointments', [where('appointment_date', '>=', startOfCurrentMonth), where('status', '==', 'concluido')]),
+        getDocsData('appointments', [where('appointment_date', '>=', weekStart), where('appointment_date', '<=', weekEnd)]),
+        getCount('appointments', [where('appointment_date', '>=', weekStart), where('appointment_date', '<=', weekEnd)]),
+        getCount('appointments', [where('appointment_date', '>=', weekStart), where('appointment_date', '<=', weekEnd), where('status', '==', 'cancelado')]),
+        getDocsData('appointments', [where('appointment_date', '>=', thirtyDaysAgo)]),
       ]);
 
-      // Buscar pacientes ativos (requer query separada por causa do processamento)
-      const activePatientsData = await getDocsData('appointments', [
-        where('appointment_date', '>=', thirtyDaysAgo)
-      ]);
-
-      const uniqueActivePatients = new Set(
-        activePatientsData
-          .filter(a => a.status !== 'cancelado')
-          .map(a => a.patient_id)
-      );
+      const uniqueActivePatients = new Set(activePatientsData.filter(a => a.status !== 'cancelado').map(a => a.patient_id));
       const pacientesAtivos = uniqueActivePatients.size;
 
-      // Contar fisioterapeutas únicos no Firestore
-      const uniqueTherapistUserIds = [...new Set((userRolesData || [])
-        .map((ur: UserRole) => ur.user_id as string)
-        .filter((id): id is string => id !== null)
-      )];
-      let fisioterapeutasAtivos = 0;
-
-      if (uniqueTherapistUserIds.length > 0) {
-        // Query profiles from Firestore
-        const profilesQ = firestoreQuery(
-          collection(db, 'profiles'),
-          where('user_id', 'in', uniqueTherapistUserIds.slice(0, 10)) // Firestore 'in' limit is 10
-        );
-        const profilesSnap = await getDocs(profilesQ);
-        fisioterapeutasAtivos = profilesSnap.size;
-      }
-
-      // Calcular métricas financeiras
-      const receitaMensal = receitaAtualData?.reduce((sum: number, r: ReceitaRecord) => sum + Number(r.valor || 0), 0) || 0;
-      const receitaMesAnterior = receitaAnteriorData?.reduce((sum: number, r: ReceitaRecord) => sum + Number(r.valor || 0), 0) || 0;
-      const crescimentoMensal = receitaMesAnterior > 0
-        ? ((receitaMensal - receitaMesAnterior) / receitaMesAnterior) * 100
-        : 0;
-
-      // Taxa de no-show
-      const taxaNoShow = totalAppointments30d > 0
-        ? (noShowCount / totalAppointments30d) * 100
-        : 0;
-
-      // Média de sessões por paciente
-      const mediaSessoesPorPaciente = pacientesAtivos > 0
-        ? totalSessions30d / pacientesAtivos
-        : 0;
-
-      // Pacientes em risco
-      const pacientesEmRisco = Math.max(0, totalPacientes - pacientesAtivos);
-
-      // Taxa de ocupação
-      const horasDisponiveisDia = 8;
-      const taxaOcupacao = agendamentosHoje > 0 && fisioterapeutasAtivos > 0
-        ? Math.min((agendamentosHoje / (horasDisponiveisDia * fisioterapeutasAtivos)) * 100, 100)
-        : 0;
+      const receitaMensal = receitaAtualData?.reduce((sum: number, r: any) => sum + Number(r.valor || 0), 0) || 0;
+      const receitaMesAnterior = receitaAnteriorData?.reduce((sum: number, r: any) => sum + Number(r.valor || 0), 0) || 0;
 
       const fisioStats = new Map<string, TherapistPerformance>();
-      const therapistIds = [...new Set((receitaPorFisioData || [])
-        .map((apt: Appointment) => apt.therapist_id as string | undefined)
-        .filter((id): id is string => id !== null))];
-      const therapistProfiles = new Map<string, { full_name?: string }>();
-
-      if (therapistIds.length > 0) {
-        const profileQ = firestoreQuery(
-          collection(db, 'profiles'),
-          where('user_id', 'in', therapistIds.slice(0, 10))
-        );
-        const profileSnap = await getDocs(profileQ);
-        profileSnap.forEach(doc => {
-          const profileData = normalizeFirestoreData(doc.data());
-          if (profileData && profileData.user_id) {
-            therapistProfiles.set(profileData.user_id, profileData);
-          }
-        });
-      }
-
-      (receitaPorFisioData || []).forEach((apt: Appointment & { payment_amount?: string | number }) => {
+      receitaPorFisioData.forEach((apt: any) => {
         const tId = apt.therapist_id;
         if (!tId) return;
-
-        const profile = therapistProfiles.get(tId);
-        const existing = fisioStats.get(tId) || {
-          id: tId,
-          nome: profile?.full_name || 'Sem nome',
-          atendimentos: 0,
-          receita: 0,
-          taxaOcupacao: 0,
-        };
-
+        const existing = fisioStats.get(tId) || { id: tId, nome: apt.therapist_name || 'Fisioterapeuta', atendimentos: 0, receita: 0, taxaOcupacao: 0 };
         existing.atendimentos += 1;
         existing.receita += Number(apt.payment_amount || 0);
         fisioStats.set(tId, existing);
       });
 
-      const receitaPorFisioterapeuta = Array.from(fisioStats.values())
-        .sort((a, b) => b.receita - a.receita)
-        .slice(0, 5);
-
-      // Processar tendência semanal
       const weekDays: string[] = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-      const tendenciaSemanal: WeeklyTrend[] = [];
-
-      for (let i = 0; i < 7; i++) {
+      const tendenciaSemanal: WeeklyTrend[] = weekDays.map((dia, i) => {
         const day = subDays(new Date(weekEnd), 6 - i);
         const dayStr = formatDateToLocalISO(day);
-        const dayAppointments = (weeklyData || []).filter((a: Appointment) => a.appointment_date === dayStr);
-
-        tendenciaSemanal.push({
-          dia: weekDays[i] ?? 'Dia',
-          agendamentos: dayAppointments.length,
-          concluidos: dayAppointments.filter((a: Appointment) => a.status === 'concluido').length,
-        });
-      }
-
-      // Ticket médio
-      const ticketMedio = totalSessions30d > 0
-        ? receitaMensal / totalSessions30d
-        : 0;
+        const dayApts = weeklyData.filter((a: any) => a.appointment_date === dayStr);
+        return { dia, agendamentos: dayApts.length, concluidos: dayApts.filter((a: any) => a.status === 'concluido').length };
+      });
 
       return {
         totalPacientes,
@@ -382,23 +225,21 @@ export const useDashboardMetrics = () => {
         agendamentosHoje,
         agendamentosRestantes: agendamentosHoje - agendamentosConcluidos,
         agendamentosConcluidos,
-        taxaNoShow: Math.round(taxaNoShow * 10) / 10,
-        taxaOcupacao: Math.round(taxaOcupacao * 10) / 10,
+        taxaNoShow: totalAppointments30d > 0 ? Math.round((noShowCount / totalAppointments30d) * 1000) / 10 : 0,
+        taxaOcupacao: Math.round((agendamentosHoje / (8 * (userRolesData.length || 1))) * 1000) / 10,
         receitaMensal,
         receitaMesAnterior,
-        crescimentoMensal: Math.round(crescimentoMensal * 10) / 10,
-        fisioterapeutasAtivos,
-        mediaSessoesPorPaciente: Math.round(mediaSessoesPorPaciente * 10) / 10,
-        pacientesEmRisco,
-        receitaPorFisioterapeuta,
+        crescimentoMensal: receitaMesAnterior > 0 ? Math.round(((receitaMensal - receitaMesAnterior) / receitaMesAnterior) * 1000) / 10 : 0,
+        fisioterapeutasAtivos: userRolesData.length,
+        mediaSessoesPorPaciente: pacientesAtivos > 0 ? Math.round((totalSessions30d / pacientesAtivos) * 10) / 10 : 0,
+        pacientesEmRisco: Math.max(0, totalPacientes - pacientesAtivos),
+        receitaPorFisioterapeuta: Array.from(fisioStats.values()).sort((a, b) => b.receita - a.receita).slice(0, 5),
         tendenciaSemanal,
-        ticketMedio: Math.round(ticketMedio * 100) / 100,
+        ticketMedio: totalSessions30d > 0 ? Math.round((receitaMensal / totalSessions30d) * 100) / 100 : 0,
         agendamentosSemana,
         cancelamentosSemana,
       };
     },
-    staleTime: 1000 * 60 * 5, // 5 minutos
-    refetchInterval: 1000 * 60 * 5, // 5 minutos
-    gcTime: 1000 * 60 * 10, // 10 minutos (antes era 24h)
+    staleTime: 1000 * 60 * 5,
   });
 };

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import { ChartWidget } from './ChartWidget';
 import { toast } from '@/hooks/use-toast';
 import { Profile } from '@/types/auth';
@@ -27,164 +27,114 @@ interface TherapistDashboardProps {
 }
 
 export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardProps) {
-  const [loading, setLoading] = useState(true);
   const { data: allAppointments = [], isLoading: appointmentsLoading } = useAppointments();
 
-  const [stats, setStats] = useState({
-    todayAppointments: 0,
-    myPatients: 0,
-    completedSessions: 0,
-    avgSatisfaction: 0,
-    occupancyRate: 0,
-    avgSessionsPerPatient: 0,
-    patientsAtRisk: 0
-  });
-  const [progressData, setProgressData] = useState([]);
+  // Calculate stats using useMemo for better performance
+  const dashboardStats = useMemo(() => {
+    if (!profile?.id || allAppointments.length === 0) {
+      return {
+        todayAppointments: [],
+        stats: {
+          todayAppointments: 0,
+          myPatients: 0,
+          completedSessions: 0,
+          avgSatisfaction: 4.8,
+          occupancyRate: 0,
+          avgSessionsPerPatient: 0,
+          patientsAtRisk: 0
+        },
+        progressData: []
+      };
+    }
 
-  // Calculate today's appointments for this therapist derived from hook data
-  const todayAppointments = useMemo(() => {
-    if (!profile?.id) return [];
     const today = new Date();
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    return allAppointments
-      .filter(apt => {
-        // Filter by date (today)
-        const isToday = isSameDay(apt.date, today);
-        // Filter by therapist
-        const isMyAppointment = apt.therapistId === profile.id;
-        return isToday && isMyAppointment;
-      })
+    // Filter today's appointments
+    const todayApts = allAppointments
+      .filter(apt => isSameDay(new Date(apt.date), today) && apt.therapistId === profile.id)
       .map(apt => ({
         id: apt.id,
         patient_name: apt.patientName,
         appointment_time: apt.time,
-        appointment_date: format(apt.date, 'yyyy-MM-dd'),
+        appointment_date: format(new Date(apt.date), 'yyyy-MM-dd'),
         status: apt.status,
         type: apt.type,
-        room: '', // Not in base type yet, could be added if needed
+        room: '',
         patient_phone: apt.phone
       }));
-  }, [allAppointments, profile.id]);
 
-  const loadDashboardData = useCallback(async () => {
-    try {
-      setLoading(true);
+    // Stats calculations
+    const totalCapacityMinutes = 480; // 8 hours
+    const bookedMinutes = todayApts.length * 60;
+    const occupancyRate = Math.round((bookedMinutes / totalCapacityMinutes) * 100);
 
-      // Calculate occupancy rate (assuming 8 hour workday = 480 minutes)
-      // Each appointment is typically 60 minutes
-      const totalCapacityMinutes = 480; // 8 hours
-      const bookedMinutes = todayAppointments.length * 60;
-      const occupancyRate = totalCapacityMinutes > 0
-        ? Math.round((bookedMinutes / totalCapacityMinutes) * 100)
-        : 0;
+    const uniquePatientsSet = new Set(
+      allAppointments
+        .filter(apt => new Date(apt.date) >= thirtyDaysAgo && apt.therapistId === profile.id)
+        .map(apt => apt.patientId)
+    );
+    const myPatients = uniquePatientsSet.size;
 
-      // Count unique patients from appointments (last 30 days)
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const completedSessions = allAppointments.filter(apt =>
+      apt.status === 'concluido' && apt.therapistId === profile.id
+    ).length;
 
-      const uniquePatients = new Set(
-        allAppointments
-          .filter(apt => {
-            const aptDate = new Date(apt.date);
-            return aptDate >= thirtyDaysAgo && apt.therapistId === profile.id;
-          })
-          .map(apt => apt.patientId)
-      );
-
-      const myPatients = uniquePatients.size;
-
-      // Count completed sessions for this therapist
-      const completedSessions = allAppointments.filter(apt =>
-        apt.status === 'concluido' && apt.therapistId === profile.id
-      ).length;
-
-      // Calculate patients at risk (no appointment in last 30 days)
-      const lastAppointmentsByPatient = new Map<string, Date>();
-      allAppointments.forEach(apt => {
-        if (apt.patientId && apt.therapistId === profile.id) {
-          const existing = lastAppointmentsByPatient.get(apt.patientId);
-          const aptDate = new Date(apt.date);
-          if (!existing || aptDate > existing) {
-            lastAppointmentsByPatient.set(apt.patientId, aptDate);
-          }
-        }
-      });
-
-      let patientsAtRisk = 0;
-      lastAppointmentsByPatient.forEach(lastDate => {
-        const daysSince = differenceInDays(new Date(), lastDate);
-        if (daysSince > 30) {
-          patientsAtRisk++;
-        }
-      });
-
-      // Calculate average sessions per patient (last 30 days)
-      const recentAppointments = allAppointments.filter(apt => {
+    // Patients at risk
+    const lastAppointmentsByPatient = new Map<string, Date>();
+    allAppointments.forEach(apt => {
+      if (apt.patientId && apt.therapistId === profile.id) {
+        const existing = lastAppointmentsByPatient.get(apt.patientId);
         const aptDate = new Date(apt.date);
-        return aptDate >= thirtyDaysAgo && apt.therapistId === profile.id;
-      });
-
-      const avgSessionsPerPatient = myPatients > 0
-        ? (recentAppointments.length / myPatients).toFixed(1)
-        : '0';
-
-      // Generate progress data for the last 30 days
-      const progressChartData = [];
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i * 5);
-        const dayName = format(date, 'dd/MM');
-        const progress = Math.floor(Math.random() * 20) + 70; // Mock progress data
-        progressChartData.push({
-          name: dayName,
-          value: progress
-        });
+        if (!existing || aptDate > existing) {
+          lastAppointmentsByPatient.set(apt.patientId, aptDate);
+        }
       }
+    });
 
-      setStats({
-        todayAppointments: todayAppointments.length,
-        myPatients,
-        completedSessions,
-        avgSatisfaction: 4.8, // Mock data
-        occupancyRate,
-        avgSessionsPerPatient: parseFloat(avgSessionsPerPatient),
-        patientsAtRisk
-      });
+    let patientsAtRisk = 0;
+    lastAppointmentsByPatient.forEach(lastDate => {
+      if (differenceInDays(new Date(), lastDate) > 30) {
+        patientsAtRisk++;
+      }
+    });
 
-      setProgressData(progressChartData);
+    const recentAptsCount = allAppointments.filter(apt => 
+      new Date(apt.date) >= thirtyDaysAgo && apt.therapistId === profile.id
+    ).length;
 
-    } catch (error) {
-      logger.error('Erro ao carregar dados do dashboard', error, 'TherapistDashboard');
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar os dados do dashboard.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [profile.id, todayAppointments.length, allAppointments]);
-
-  // Update stats when appointments change
-  useEffect(() => {
-    const totalCapacityMinutes = 480;
-    const bookedMinutes = todayAppointments.length * 60;
-    const occupancyRate = totalCapacityMinutes > 0
-      ? Math.round((bookedMinutes / totalCapacityMinutes) * 100)
+    const avgSessionsPerPatient = myPatients > 0 
+      ? parseFloat((recentAptsCount / myPatients).toFixed(1))
       : 0;
 
-    setStats(prev => ({
-      ...prev,
-      todayAppointments: todayAppointments.length,
-      occupancyRate
-    }));
-  }, [todayAppointments.length]);
+    // Mock progress data
+    const progressChartData = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i * 5);
+      progressChartData.push({
+        name: format(date, 'dd/MM'),
+        value: Math.floor(Math.random() * 20) + 70
+      });
+    }
 
-  useEffect(() => {
-    loadDashboardData();
-    // Removed duplicate realtime subscription for appointments here
-    // keeping it for other entities if needed, but appointments are handled by hook
-  }, [lastUpdate, loadDashboardData]);
+    return {
+      todayAppointments: todayApts,
+      stats: {
+        todayAppointments: todayApts.length,
+        myPatients,
+        completedSessions,
+        avgSatisfaction: 4.8,
+        occupancyRate,
+        avgSessionsPerPatient,
+        patientsAtRisk
+      },
+      progressData: progressChartData
+    };
+  }, [allAppointments, profile.id]);
+
+  const { todayAppointments, stats, progressData } = dashboardStats;
 
   const getOccupancyLevel = (rate: number) => {
     if (rate < 30) return { label: 'Baixa ocupação', color: 'text-amber-600' };
@@ -192,7 +142,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
     return { label: 'Alta ocupação', color: 'text-green-600' };
   };
 
-  const isLoading = loading || appointmentsLoading;
+  const isLoading = appointmentsLoading;
 
   return (
     <div className="space-y-6 animate-fade-in">
