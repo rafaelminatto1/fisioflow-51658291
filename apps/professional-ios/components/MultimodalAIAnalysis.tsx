@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image, ActivityIndicator, Alert, Pressable } fr
 import * as ImagePicker from 'expo-image-picker';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
+import { functions, getRemoteValue } from '@/lib/firebase';
 import { useTheme } from '@/hooks/useTheme';
 import { Icon } from '@/components/ui/Icon';
 import { Button } from '@/components/ui/Button';
@@ -19,6 +19,11 @@ export function MultimodalAIAnalysis({ patientId, onAnalysisResult }: Props) {
   const [analyzing, setAnalyzing] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
+
+  // Check Remote Config (default to true if not yet fetched)
+  const isEnabled = getRemoteValue('enable_multimodal_ai')?.asBoolean() ?? true;
+
+  if (!isEnabled) return null;
 
   const pickAndAnalyze = async (type: 'posture' | 'exam') => {
     try {
