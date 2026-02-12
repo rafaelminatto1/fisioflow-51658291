@@ -23,8 +23,7 @@
     "testflight": {
       "distribution": "internal",
       "ios": {
-        "autoIncrement": true,
-        "bundleIdentifier": "com.rafaelminatto.fisioflow"
+        "autoIncrement": true
       },
       "env": {
         "APP_ENV": "testflight"
@@ -33,7 +32,6 @@
     "production": {
       "autoIncrement": true,
       "ios": {
-        "bundleIdentifier": "com.rafaelminatto.fisioflow"
       },
       "env": {
         "APP_ENV": "production"
