@@ -1,13 +1,17 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import {
-  initializeAuth,
-  getAuth,
-  // @ts-ignore - types are sometimes missing in some environments
-  getReactNativePersistence
-} from 'firebase/auth';
-import { initializeFirestore, CACHE_SIZE_UNLIMITED, enableMultiTabIndexedDbPersistence, getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+import { initializeAuth, getAuth, getReactNativePersistence, connectAuthEmulator } from 'firebase/auth';
+import { 
+  initializeFirestore, 
+  CACHE_SIZE_UNLIMITED, 
+  getFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  connectFirestoreEmulator
+} from 'firebase/firestore';
+import { getStorage, connectStorageEmulator } from 'firebase/storage';
+import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 // Firebase configuration - use environment variables in production
 const firebaseConfig = {
@@ -28,7 +32,7 @@ try {
   auth = initializeAuth(app, {
     persistence: getReactNativePersistence(AsyncStorage),
   });
-} catch (error) {
+} catch (_error) {
   // Auth already initialized
   auth = getAuth(app);
 }
@@ -37,18 +41,11 @@ try {
 let db: ReturnType<typeof getFirestore>;
 try {
   db = initializeFirestore(app, {
-    cacheSizeBytes: CACHE_SIZE_UNLIMITED,
-  });
-
-  // Enable multi-tab persistence for better offline support
-  enableMultiTabIndexedDbPersistence(db).catch((err) => {
-    if (err.code === 'failed-precondition') {
-      console.log('Firestore persistence: Multiple tabs detected, using single tab persistence');
-    } else if (err.code === 'unimplemented') {
-      console.log('Firestore persistence: Not supported on this platform');
-    } else {
-      console.error('Firestore persistence error:', err);
-    }
+    localCache: persistentLocalCache({
+      cacheSizeBytes: CACHE_SIZE_UNLIMITED,
+      tabManager: persistentMultipleTabManager()
+    }),
+    experimentalAutoDetectLongPolling: true
   });
 } catch (error) {
   // Fallback to regular Firestore
@@ -59,5 +56,20 @@ try {
 // Initialize Storage
 const storage = getStorage(app);
 
-export { app, auth, db, storage };
+// Initialize Functions
+const functions = getFunctions(app, 'southamerica-east1');
+
+// Connect to Emulators if configured
+if (process.env.EXPO_PUBLIC_USE_EMULATOR === 'true') {
+  const host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
+  
+  console.log(`[Firebase] Connecting to emulators at ${host}`);
+  
+  connectAuthEmulator(auth, `http://${host}:9099`);
+  connectFirestoreEmulator(db, host, 8080);
+  connectStorageEmulator(storage, host, 9199);
+  connectFunctionsEmulator(functions, host, 5001);
+}
+
+export { app, auth, db, storage, functions };
 
