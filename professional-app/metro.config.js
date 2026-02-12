@@ -5,25 +5,6 @@ const fs = require('fs');
 // Configuração isolada do Metro para professional-app
 const config = getDefaultConfig(__dirname);
 
-// Polyfill para fetch - carregar antes de tudo
-config.serializer = {
-  ...config.serializer,
-  getModulesConfig: () => ({
-    ...config.serializer.getModulesConfig(),
-    prelude: `
-      // Polyfill fetch globalmente para expo-notifications
-      if (typeof global.fetch === 'undefined') {
-        if (typeof self !== 'undefined' && self.fetch) {
-          global.fetch = self.fetch;
-          global.Request = self.Request;
-          global.Response = self.Response;
-          global.Headers = self.Headers;
-        }
-      }
-    `,
-  }),
-};
-
 // Adicionar extensões de arquivo para Firebase e outros pacotes que usam ESM
 config.resolver.sourceExts = [
   ...config.resolver.sourceExts,
