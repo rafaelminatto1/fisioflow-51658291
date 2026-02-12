@@ -14,8 +14,8 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
   // Autenticação
   test.beforeEach(async ({ page }) => {
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.fill('input[type="email"]', testUsers.rafael.email);
+    await page.fill('input[type="password"]', testUsers.rafael.password);
     await page.click('button[type="submit"]');
     await page.waitForURL((url) => url.pathname === '/' || /\/(dashboard|eventos|schedule)/.test(url.pathname), { timeout: 20000 });
   });
@@ -251,8 +251,8 @@ test.describe('Fluxos Críticos - Mobile', () => {
     await page.setViewportSize({ width: 375, height: 667 });
 
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.fill('input[type="email"]', testUsers.rafael.email);
+    await page.fill('input[type="password"]', testUsers.rafael.password);
     await page.click('button[type="submit"]');
     await page.waitForURL((url) => url.pathname === '/' || /\/(dashboard|eventos|schedule)/.test(url.pathname), { timeout: 20000 });
 

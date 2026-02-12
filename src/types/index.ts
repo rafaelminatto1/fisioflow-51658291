@@ -1,5 +1,8 @@
 // Core data types for the FisioFlow application
 
+// Google AI Suite
+export * from './activityLab';
+
 // Re-export agenda types (includes schedule configuration types)
 export * from './agenda';
 export type { EnhancedAppointment } from './appointment';

@@ -4,6 +4,7 @@ import { getOrganizationIdCached } from '../lib/cache-helpers';
 import { logger } from '../lib/logger';
 import { setCorsHeaders } from '../lib/cors';
 import { EVOLUTION_HTTP_OPTS } from '../lib/function-config';
+import { logAuditEvent } from '../lib/audit';
 
 async function verifyAuthHeader(req: any): Promise<{ uid: string }> {
     const authHeader = req.headers.authorization || '';
@@ -109,6 +110,19 @@ export const createEvolutionHttp = onRequest(EVOLUTION_HTTP_OPTS, async (req, re
        RETURNING *`,
       [patientId, uid, organizationId, appointmentId, date, subjective, objective, assessment, plan, pain_level, attachments ? JSON.stringify(attachments) : null]
     );
+
+    // Log Audit Event (Healthcare standard)
+    if (result.rows.length > 0) {
+      await logAuditEvent({
+        action: 'create',
+        resourceType: 'evolution',
+        resourceId: result.rows[0].id,
+        userId: uid,
+        organizationId,
+        description: 'Evolução clínica criada',
+        sensitivity: 'phi'
+      });
+    }
 
     res.status(201).json({ data: result.rows[0] });
   } catch (error: any) {
