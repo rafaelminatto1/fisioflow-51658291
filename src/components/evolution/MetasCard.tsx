@@ -6,7 +6,7 @@
  * - Ações rápidas de concluir/editar
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { Target, Plus, CheckCircle2, Clock, Edit, Trophy } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,7 +32,7 @@ function formatCountdown(targetDate: string | undefined): { text: string; isUrge
     };
 }
 
-export function MetasCard({ patientId }: MetasCardProps) {
+export const MetasCard = memo(function MetasCard({ patientId }: MetasCardProps) {
     const { data: goals = [], isLoading } = usePatientGoals(patientId || '');
     const completeGoal = useCompleteGoal();
 
@@ -201,4 +201,4 @@ export function MetasCard({ patientId }: MetasCardProps) {
             />
         </>
     );
-}
+});

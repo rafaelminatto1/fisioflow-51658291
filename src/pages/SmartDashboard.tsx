@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import {
-
   Brain, TrendingUp, AlertTriangle, Users, DollarSign,
   Calendar, BarChart3, CheckCircle,
   MessageSquare, Sparkles,
@@ -21,10 +20,12 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { DraggableGrid, GridItem } from '@/components/ui/DraggableGrid';
+import { GridItem } from '@/components/ui/DraggableGrid';
 import { Layout } from 'react-grid-layout';
 import { GridWidget } from '@/components/ui/GridWidget';
 import { toast } from 'sonner';
+
+const DraggableGrid = lazy(() => import('@/components/ui/DraggableGrid').then(module => ({ default: module.DraggableGrid })));
 
 type ViewMode = 'today' | 'week' | 'month' | 'custom';
 
@@ -117,11 +118,9 @@ export default function SmartDashboard() {
         if (type === 'revenue') return metrics.receitaMensal / 4; // Estimate
         break;
       case 'month':
-        if (type === 'appointments') return metrics.totalPatients; // Placeholder? No, need total appts month. 
-        // Let's use metrics.agendamentosRestantes + metrics.agendamentosConcluidos + others for month?
-        // Actually metrics has specific fields. Let's try to map best available.
-        if (type === 'appointments') return metrics.agendamentosHoje * 20; // Rough estimate if not in metric
-        if (type === 'completed') return metrics.agendamentosConcluidos * 20;
+        // if (type === 'appointments') return metrics.totalPatients; // Removed: property not properly typed on interface
+        if (type === 'appointments') return Math.round((metrics.agendamentosHoje || 0) * 22); // Rough estimate
+        if (type === 'completed') return (metrics.agendamentosConcluidos || 0) * 20;
         if (type === 'new_patients') return metrics.pacientesNovos;
         if (type === 'revenue') return metrics.receitaMensal;
         break;
@@ -133,7 +132,7 @@ export default function SmartDashboard() {
     if (type === 'appointments') {
       if (viewMode === 'today') return metrics.agendamentosHoje;
       if (viewMode === 'week') return metrics.agendamentosSemana;
-      return metrics.agendamentosHoje * 22; // Approximation for month
+      return (metrics.agendamentosHoje || 0) * 22; // Approximation for month
     }
     if (type === 'completed') {
       if (viewMode === 'today') return metrics.agendamentosConcluidos;
@@ -194,7 +193,10 @@ export default function SmartDashboard() {
   /* ==========================================================================================
    * GRID ITEMS DEFINITION
    * ========================================================================================== */
-  const gridItems: GridItem[] = [
+  /* ==========================================================================================
+   * GRID ITEMS DEFINITION
+   * ========================================================================================== */
+  const gridItems: GridItem[] = useMemo(() => [
     // 1. STAT CARDS
     ...statsCards.map((stat, i) => ({
       id: stat.id,
@@ -320,7 +322,9 @@ export default function SmartDashboard() {
             <div className="text-center border-l">
               <p className="text-xs text-muted-foreground">Partic.</p>
               <p className="text-xl font-bold">{eventStats.participants}</p>
-              <p className="text-[10px] text-muted-foreground">Est. 12/evento</p>
+              <p className="text-xl font-bold text-emerald-600">
+                Est. 12/evento
+              </p>
             </div>
           </div>
         </GridWidget>
@@ -391,9 +395,9 @@ export default function SmartDashboard() {
                 notifications.map((notif) => (
                   <div key={notif.id} className="flex gap-3">
                     <div className={`h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 ${notif.type === 'success' || notif.type === 'payment' ? 'bg-green-100 text-green-600' :
-                        notif.type === 'warning' ? 'bg-amber-100 text-amber-600' :
-                          notif.type === 'error' ? 'bg-red-100 text-red-600' :
-                            'bg-blue-100 text-blue-600'
+                      notif.type === 'warning' ? 'bg-amber-100 text-amber-600' :
+                        notif.type === 'error' ? 'bg-red-100 text-red-600' :
+                          'bg-blue-100 text-blue-600'
                       }`}>
                       {notif.type === 'payment' ? <DollarSign className="h-4 w-4" /> :
                         notif.type === 'appointment' ? <Calendar className="h-4 w-4" /> :
@@ -416,7 +420,7 @@ export default function SmartDashboard() {
       ),
       defaultLayout: { w: 4, h: 8, x: 8, y: 9, minW: 3, minH: 4 }
     }
-  ];
+  ], [statsCards, revenueChartData, highRiskAppointments, isEditable, eventStats, medicalReturnsUpcoming, notifications, navigate]);
 
   /* ==========================================================================================
    * RENDER
@@ -562,17 +566,19 @@ export default function SmartDashboard() {
         </div>
 
         {/* DRAGGABLE GRID */}
-        <DraggableGrid
-          items={gridItems}
-          onLayoutChange={(layout) => {
-            if (isEditable) {
-              setSavedLayout(layout);
-            }
-          }}
-          layouts={savedLayout.length > 0 ? { lg: savedLayout, md: savedLayout } : undefined}
-          isEditable={isEditable}
-          rowHeight={80}
-        />
+        <Suspense fallback={<div className="h-96 w-full flex items-center justify-center text-muted-foreground">Carregando Dashboard...</div>}>
+          <DraggableGrid
+            items={gridItems}
+            onLayoutChange={(layout) => {
+              if (isEditable) {
+                setSavedLayout(layout);
+              }
+            }}
+            layouts={savedLayout.length > 0 ? { lg: savedLayout, md: savedLayout } as any : undefined}
+            isEditable={isEditable}
+            rowHeight={80}
+          />
+        </Suspense>
       </div>
     </MainLayout>
   );

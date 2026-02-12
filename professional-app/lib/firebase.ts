@@ -10,6 +10,7 @@ import {
 } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
+import { getRemoteConfig, fetchAndActivate, getValue } from 'firebase/remote-config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
@@ -58,6 +59,21 @@ const storage = getStorage(app);
 
 // Initialize Functions
 const functions = getFunctions(app, 'southamerica-east1');
+
+// Initialize Remote Config
+const remoteConfig = getRemoteConfig(app);
+remoteConfig.settings.minimumFetchIntervalMillis = 3600000;
+remoteConfig.defaultConfig = {
+  'enable_multimodal_ai': true,
+};
+fetchAndActivate(remoteConfig);
+
+/**
+ * Obtém um valor do Remote Config
+ */
+export function getRemoteValue(key: string): any {
+  return getValue(remoteConfig, key);
+}
 
 // Connect to Emulators if configured
 if (process.env.EXPO_PUBLIC_USE_EMULATOR === 'true') {

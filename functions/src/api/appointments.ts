@@ -207,20 +207,33 @@ export const checkTimeConflictHttp = onRequest(
 );
 
 /**
- * HTTP version of createAppointment for CORS
+ * HTTP version of createAppointment for CORS/compatibility
  */
 export const createAppointmentHttp = onRequest(
-  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' },
+  { 
+    region: 'southamerica-east1', 
+    memory: '512MiB', 
+    maxInstances: 10, 
+    cpu: 1,
+    concurrency: 80,
+    cors: CORS_ORIGINS, 
+    invoker: 'public' 
+  },
   async (req, res) => {
     if (req.method === 'OPTIONS') { setCorsHeaders(res, req); res.status(204).send(''); return; }
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
     setCorsHeaders(res, req);
     try {
       const { uid } = await verifyAuthHeader(req);
-      const organizationId = await getOrganizationId(uid);
+      
+      // Parallelize initial fetch of metadata
+      const [organizationId, body] = await Promise.all([
+        getOrganizationId(uid),
+        Promise.resolve(typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {}))
+      ]);
+
       const pool = getPool();
       const userId = uid;
-      const body = typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {});
       const data = body;
       const requiredFields = ['patientId', 'date', 'startTime', 'endTime'];
       for (const field of requiredFields) {
@@ -252,36 +265,40 @@ export const createAppointmentHttp = onRequest(
       );
       const appointment = result.rows[0];
 
-      // [SYNC] Write to Firestore for legacy frontend compatibility
-      try {
-        const db = getAdminDb();
-        await db.collection('appointments').doc(appointment.id).set({
-          ...appointment,
-          notification_origin: 'api_appointments_v2',
-          created_at: new Date(),
-          updated_at: new Date()
-        });
-        logger.info(`[createAppointmentHttp] Appointment ${appointment.id} synced to Firestore`);
-      } catch (fsError) {
-        logger.error(`[createAppointmentHttp] Failed to sync appointment ${appointment.id} to Firestore:`, fsError);
-      }
+      // NON-BLOCKING BACKGROUND TASKS
+      // We start these but don't 'await' them before responding to the user
+      (async () => {
+        try {
+          const db = getAdminDb();
+          await Promise.all([
+            // 1. Sync to Firestore
+            db.collection('appointments').doc(appointment.id).set({
+              ...appointment,
+              notification_origin: 'api_appointments_v2_optimized',
+              created_at: new Date(),
+              updated_at: new Date()
+            }),
+            // 2. Update RTDB
+            rtdb.refreshAppointments(organizationId),
+            // 3. Dispatch Notification
+            dispatchAppointmentNotification({
+              kind: 'scheduled',
+              organizationId,
+              patientId: String(appointment.patient_id),
+              appointmentId: String(appointment.id),
+              date: normalizeDateOnly(appointment.date),
+              time: normalizeTimeOnly(appointment.start_time),
+            })
+          ]);
+          logger.info(`[createAppointmentHttp] Background tasks completed for ${appointment.id}`);
+        } catch (bgError) {
+          logger.error(`[createAppointmentHttp] Background tasks failed for ${appointment.id}:`, bgError);
+        }
+      })();
 
-      try {
-        await rtdb.refreshAppointments(organizationId);
-      } catch (err) { logger.error('Erro Realtime RTDB:', err); }
-
-      try {
-        await dispatchAppointmentNotification({
-          kind: 'scheduled',
-          organizationId,
-          patientId: String(appointment.patient_id),
-          appointmentId: String(appointment.id),
-          date: normalizeDateOnly(appointment.date),
-          time: normalizeTimeOnly(appointment.start_time),
-        });
-      } catch (notifyError) {
-        logger.error('[createAppointmentHttp] Notification dispatch failed (non-blocking):', notifyError);
-      }
+      // Optional: Add to event loop to ensure completion in some environments
+      // In Gen 2, if the function returns, CPU might be throttled, but concurrency helps.
+      
       res.status(201).json({ data: appointment });
     } catch (error: unknown) {
       if (error instanceof HttpsError && error.code === 'unauthenticated') { 

@@ -7,7 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
-
   Calendar,
   Activity,
   Clock,
@@ -30,17 +29,26 @@ const PatientGamification = lazy(() => import('@/components/gamification/Patient
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { PatientService } from '@/lib/services/PatientService';
 import { useAppointments } from '@/hooks/useAppointments';
-import { useAI } from '@/integrations/firebase/ai';
+import { useAI, AIFeatureCategory } from '@/integrations/firebase/ai';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { PainMapRegistration } from '@/components/patient/PainMapRegistration';
 import { PatientHelpers } from '@/types';
-import { ExercisePlayer } from '@/components/patient/ExercisePlayer';
 import { PainMapService } from '@/lib/services/painMapService';
+
+// Lazy load heavy components
+const PainMapRegistration = lazy(() => import('@/components/patient/PainMapRegistration').then(m => ({ default: m.PainMapRegistration })));
+const ExercisePlayer = lazy(() => import('@/components/patient/ExercisePlayer').then(m => ({ default: m.ExercisePlayer })));
 
 interface PrescriptionExercise {
   id: string;
-  exercise: { name: string };
+  exercise: {
+    id: string;
+    name: string;
+    video_url?: string;
+    description?: string;
+    duration_seconds?: number;
+    rest_seconds?: number;
+  };
   sets: number;
   reps: number;
 }
@@ -53,6 +61,7 @@ interface PainRecord {
   intensity?: number;
   location?: string;
   created_at: string;
+  pain_type?: string; // Optional if needed for UI but not present in service return
 }
 
 const PatientPortal = () => {
@@ -64,9 +73,9 @@ const PatientPortal = () => {
 
   // Fetch patient data linked to the profile
   const { data: patient, isLoading: isLoadingPatient } = useQuery({
-    queryKey: ['patient-profile', user?.id],
-    queryFn: () => PatientService.getPatientByProfileId(user!.id),
-    enabled: !!user?.id
+    queryKey: ['patient-profile', user?.uid],
+    queryFn: () => PatientService.getPatientByProfileId(user!.uid),
+    enabled: !!user?.uid
   });
 
   // Fetch prescriptions
@@ -134,8 +143,8 @@ const PatientPortal = () => {
       `;
 
       const result = await generate(prompt, {
-        userId: user!.id,
-        feature: 'patient_chat',
+        userId: user!.uid,
+        feature: AIFeatureCategory.PATIENT_CHAT,
       });
 
       setAiSummary(result.content);
@@ -151,7 +160,7 @@ const PatientPortal = () => {
     if (patient && !aiSummary && !isGeneratingSummary) {
       generateHealthSummary();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patient?.id]);
 
   if (isLoadingPatient) {
@@ -349,13 +358,15 @@ const PatientPortal = () => {
                 </CardHeader>
                 <CardContent>
                   {showPainReg ? (
-                    <PainMapRegistration
-                      patientId={patient.id}
-                      onSuccess={() => {
-                        setShowPainReg(false);
-                        queryClient.invalidateQueries({ queryKey: ['pain-records'] });
-                      }}
-                    />
+                    <Suspense fallback={<div className="h-[400px] flex items-center justify-center"><Activity className="h-8 w-8 text-primary animate-pulse" /></div>}>
+                      <PainMapRegistration
+                        patientId={patient.id}
+                        onSuccess={() => {
+                          setShowPainReg(false);
+                          queryClient.invalidateQueries({ queryKey: ['pain-records'] });
+                        }}
+                      />
+                    </Suspense>
                   ) : (
                     <div className="space-y-4">
                       {painRecords?.[0] ? (
@@ -406,7 +417,7 @@ const PatientPortal = () => {
                   </div>
                 ) : prescriptions?.length ? (
                   <div className="space-y-3">
-                    {prescriptions.map((p) => (
+                    {prescriptions.map((p: PrescriptionExercise) => (
                       <div
                         key={p.id}
                         className="flex items-center justify-between p-4 rounded-lg border bg-card hover:shadow-md transition-all group"
@@ -458,7 +469,7 @@ const PatientPortal = () => {
                           </Badge>
                           <div>
                             <p className="text-sm font-medium">{record.body_part}</p>
-                            <p className="text-xs text-muted-foreground">{record.pain_type}</p>
+                            <p className="text-xs text-muted-foreground">{record.pain_type ?? 'Geral'}</p>
                           </div>
                         </div>
                         <span className="text-xs text-muted-foreground">
@@ -492,14 +503,30 @@ const PatientPortal = () => {
 
       {/* Modals/Overlays */}
       {selectedPrescription && (
-        <ExercisePlayer
-          prescription={selectedPrescription}
-          patientId={patient.id}
-          onClose={() => setSelectedPrescription(null)}
-          onComplete={() => {
-            queryClient.invalidateQueries({ queryKey: ['prescribed-exercises'] });
-          }}
-        />
+        <Suspense fallback={<div className="fixed inset-0 z-50 bg-background/80 flex items-center justify-center"><Activity className="h-12 w-12 text-primary animate-pulse" /></div>}>
+          <ExercisePlayer
+            prescription={{
+              id: selectedPrescription.id,
+              title: selectedPrescription.exercise.name,
+              exercises: [{
+                id: selectedPrescription.exercise.id || selectedPrescription.id,
+                name: selectedPrescription.exercise.name,
+                video_url: selectedPrescription.exercise.video_url,
+                description: selectedPrescription.exercise.description,
+                sets: selectedPrescription.sets,
+                reps: selectedPrescription.reps,
+                duration_seconds: selectedPrescription.exercise.duration_seconds,
+                rest_seconds: selectedPrescription.exercise.rest_seconds,
+                // Map other necessary fields if defaults needed
+              }]
+            }}
+            patientId={patient.id}
+            onExit={() => setSelectedPrescription(null)}
+            onComplete={() => {
+              queryClient.invalidateQueries({ queryKey: ['prescribed-exercises'] });
+            }}
+          />
+        </Suspense>
       )}
     </MainLayout>
   );
