@@ -26,6 +26,7 @@ import {
   PatientAnalytics,
   PatientPageInsights,
   PatientsPageHeader,
+  PatientCard,
   countActiveFilters,
   matchesFilters,
   type PatientFilters
@@ -39,18 +40,6 @@ import { cn, calculateAge, exportToCSV } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
 import type { PatientStats } from '@/hooks/usePatientStats';
 import { toast } from '@/hooks/use-toast';
-
-function formatLastActivity(stats?: PatientStats): string {
-  if (!stats) return '—';
-  if (stats.sessionsCompleted === 0 && stats.totalAppointments === 0) return 'Sem sessões';
-  const days = stats.daysSinceLastAppointment;
-  if (days === 0) return 'Hoje';
-  if (days === 1) return 'Ontem';
-  if (days < 7) return `${days}d atrás`;
-  if (days < 30) return `${Math.floor(days / 7)} sem. atrás`;
-  if (days < 365) return `${Math.floor(days / 30)} mês(es)`;
-  return `${Math.floor(days / 365)} ano(s)`;
-}
 
 const Patients = () => {
   const { profile } = useAuth();
@@ -332,122 +321,19 @@ const Patients = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
               {filteredPatients.map((patient, index) => {
                 const patientStats = statsMap[patient.id];
-                const sessionsInfo = patientStats
-                  ? `${patientStats.sessionsCompleted} sessão${patientStats.sessionsCompleted !== 1 ? 'ões' : ''}`
-                  : null;
-                const firstEvaluationInfo = patientStats?.firstEvaluationDate
-                  ? `Prim. aval.: ${formatFirstEvaluationDate(patientStats.firstEvaluationDate)}`
-                  : null;
-                const classificationInfo = patientStats
-                  ? PATIENT_CLASSIFICATIONS[patientStats.classification]
-                  : null;
-
                 return (
                   <LazyComponent
                     key={patient.id}
                     placeholder={<div className="h-[140px] w-full bg-muted/50 rounded-xl animate-pulse" />}
                     rootMargin="200px"
                   >
-                    <Card
-                      className="group flex flex-col gap-3 p-3 rounded-xl bg-card hover:bg-slate-50 dark:hover:bg-slate-800/50 active:bg-slate-100 dark:active:bg-slate-800 transition-colors border border-transparent hover:border-border dark:hover:border-slate-700"
-                      style={{ animationDelay: `${index * 50}ms` }}
-                    >
-                      <div
-                        className="flex flex-1 cursor-pointer min-w-0"
-                        onClick={() => navigate(`/patients/${patient.id}`)}
-                      >
-                        <div className="flex items-start gap-3 w-full min-w-0">
-                          <div className="relative shrink-0">
-                            <Avatar className="h-11 w-11 ring-2 ring-border dark:ring-slate-700 shrink-0">
-                              <AvatarFallback className={cn(
-                                "text-xs font-bold",
-                                patient.status === 'Em Tratamento'
-                                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400"
-                                  : patient.status === 'Inicial'
-                                    ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400"
-                                    : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                              )}>
-                                {(() => {
-                                  const name = PatientHelpers.getName(patient);
-                                  return name ? name.split(' ').map(n => n[0]).join('').substring(0, 2) : 'P';
-                                })()}
-                              </AvatarFallback>
-                            </Avatar>
-                          </div>
-
-                          <div className="flex flex-col flex-1 min-w-0">
-                            {/* Linha 1: nome + status */}
-                            <div className="flex items-center justify-between gap-2">
-                              <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
-                                {PatientHelpers.getName(patient) || 'Paciente sem nome'}
-                              </p>
-                              <Badge className={cn(
-                                "shrink-0 inline-flex items-center rounded-full border border-transparent text-[10px] font-semibold px-2 py-0.5",
-                                patient.status === 'Em Tratamento'
-                                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
-                                  : patient.status === 'Inicial'
-                                    ? "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400"
-                                    : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-                              )}>
-                                {patient.status || 'Inicial'}
-                              </Badge>
-                            </div>
-                            {/* Linha 2: condição principal */}
-                            {patient.main_condition && (
-                              <p className="text-xs text-muted-foreground truncate mt-0.5 flex items-center gap-1">
-                                <Stethoscope className="h-3 w-3 shrink-0" />
-                                {patient.main_condition}
-                              </p>
-                            )}
-                            <p className="text-[11px] text-muted-foreground truncate">
-                              {patient.phone || patient.email || `${calculateAge(patient.birth_date)} anos`}
-                            </p>
-
-                            {/* Linha 3: sessões | última atividade */}
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-[10px] text-muted-foreground">
-                              {sessionsInfo && (
-                                <span className="flex items-center gap-1">
-                                  <Calendar className="w-3 h-3 shrink-0" />
-                                  {sessionsInfo}
-                                </span>
-                              )}
-                              <span className="truncate" title={patientStats?.lastAppointmentDate}>
-                                {formatLastActivity(patientStats)}
-                              </span>
-                              {firstEvaluationInfo && (
-                                <span className="truncate hidden sm:inline">{firstEvaluationInfo}</span>
-                              )}
-                            </div>
-                            {((patient.progress ?? 0) > 0) && (
-                              <div className="mt-1.5">
-                                <div className="flex justify-between text-[10px] text-muted-foreground mb-0.5">
-                                  <span>Progresso</span>
-                                  <span>{patient.progress}%</span>
-                                </div>
-                                <Progress value={patient.progress ?? 0} className="h-1.5" />
-                              </div>
-                            )}
-                            {classificationInfo && (
-                              <Badge
-                                variant="outline"
-                                className="mt-1.5 w-fit text-[9px] px-1.5 py-0 font-normal opacity-80"
-                              >
-                                {classificationInfo.label}
-                              </Badge>
-                            )}
-                          </div>
-
-                          <div className="shrink-0 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors self-center">
-                            <ChevronRight className="w-4 h-4" />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="shrink-0 flex justify-end border-t border-border/50 pt-2 -mb-1">
-                        <PatientActions patient={patient} />
-                      </div>
-                    </Card>
+                    <PatientCard
+                      patient={patient}
+                      index={index}
+                      stats={patientStats}
+                      onClick={() => navigate(`/patients/${patient.id}`)}
+                      actions={<PatientActions patient={patient} />}
+                    />
                   </LazyComponent>
                 );
               })}

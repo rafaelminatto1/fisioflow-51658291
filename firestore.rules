@@ -102,11 +102,11 @@ service cloud.firestore {
     // ============================================================================================
 
     match /patients {
-      allow list, get: if isAuthenticated();
+      allow list: if isAdmin() || isProfessional();
     }
 
     match /patients/{patientId} {
-      allow read: if isAuthenticated();
+      allow read: if isAdmin() || isProfessional() || (isPatient() && (request.auth.uid == patientId || request.auth.uid == resource.data.userId));
       allow create: if (isProfessional() || isAdmin()) && isValidSize();
       allow update: if isProfessional() || isAdmin() || (isPatient() && isOwner('userId'));
       allow delete: if isAdmin();
@@ -117,11 +117,11 @@ service cloud.firestore {
     // ============================================================================================
 
     match /appointments {
-      allow list, get: if isAuthenticated();
+      allow list: if isAdmin() || isProfessional();
     }
 
     match /appointments/{appointmentId} {
-      allow read: if isAuthenticated();
+      allow read: if isAdmin() || isProfessional() || (isPatient() && (request.auth.uid == resource.data.patientId || request.auth.uid == resource.data.userId));
       allow create: if (isProfessional() || isAdmin()) && isValidSize();
       allow update: if isProfessional() || isAdmin();
       allow delete: if isAdmin();
