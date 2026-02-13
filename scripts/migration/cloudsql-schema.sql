@@ -529,7 +529,8 @@ CREATE INDEX IF NOT EXISTS idx_treatment_sessions_patient_date ON treatment_sess
 CREATE INDEX IF NOT EXISTS idx_exercises_category_difficulty ON exercises(category, difficulty);
 
 -- Unique constraint for appointments
-CREATE UNIQUE INDEX IF NOT EXISTS idx_appointments_time_conflict
+-- Allow multiple appointments at the same time to respect capacity settings
+CREATE INDEX IF NOT EXISTS idx_appointments_time_conflict
 ON appointments(therapist_id, date, start_time, end_time)
 WHERE status NOT IN ('cancelado', 'paciente_faltou');
 

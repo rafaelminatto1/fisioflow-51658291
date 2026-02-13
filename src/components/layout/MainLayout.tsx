@@ -32,6 +32,7 @@ import {
   LogOut
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import fisioflowLogo from '@/assets/logo.avif';
 import { signOut } from 'firebase/auth';
 import { getFirebaseAuth } from '@/integrations/firebase/app';
@@ -131,7 +132,14 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
               {/* Indicador de usuários online */}
               <OnlineUsersIndicator />
 
-              <NotificationBell className="h-7.5 w-7.5" />
+              <div className="flex items-center gap-2.5 mr-2">
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100/50 dark:border-emerald-800/30">
+                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium whitespace-nowrap">
+                    Conectado - dados em tempo real
+                  </span>
+                </div>
+              </div>
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

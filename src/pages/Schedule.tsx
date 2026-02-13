@@ -546,20 +546,6 @@ const Schedule = () => {
 
         <div className="flex flex-col flex-1 relative min-h-0">
 
-          {/* Horizontal Waitlist */}
-          <WaitlistHorizontal
-            onSchedulePatient={handleScheduleFromWaitlist}
-            className="flex-shrink-0 z-20"
-            isOnline={isOnline}
-            isChecking={isChecking}
-            isReconnecting={isReconnecting}
-            isFromCache={isFromCache}
-            isStale={isUsingStaleData}
-            dataSource={dataSource}
-            cacheTimestamp={cacheTimestamp}
-            onRefresh={handleRefresh}
-            hasConnectionBanner={hasConnectionBanner}
-          />
 
           {/* Calendar Area */}
           <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950">

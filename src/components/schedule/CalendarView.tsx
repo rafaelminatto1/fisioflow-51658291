@@ -28,6 +28,7 @@ import { formatDateToLocalISO } from '@/lib/utils/dateFormat';
 import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { WaitlistIndicator } from './WaitlistIndicator';
 
 const USE_DND_KIT = true;
 
@@ -248,20 +249,20 @@ export const CalendarView = memo(({
   // Index appointments by date string (YYYY-MM-DD) for O(1) lookup
   const appointmentsByDate = useMemo(() => {
     const map = new Map<string, Appointment[]>();
-    
+
     (displayAppointments || []).forEach(apt => {
       if (!apt || !apt.date) return;
-      
+
       const aptDate = parseAppointmentDate(apt.date);
       if (!aptDate) return;
       const dateKey = format(aptDate, 'yyyy-MM-dd');
-      
+
       if (!map.has(dateKey)) {
         map.set(dateKey, []);
       }
       map.get(dateKey)!.push(apt);
     });
-    
+
     return map;
   }, [displayAppointments]);
 
@@ -884,19 +885,11 @@ export const CalendarView = memo(({
                   </div>
                 )}
 
-                {/* Cancel All */}
-                {onCancelAllToday && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onCancelAllToday}
-                    className="h-8 px-2.5 rounded-lg border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/50"
-                    title="Cancelar todos os agendamentos da data exibida"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span className="hidden lg:inline ml-1.5 text-xs">Cancelar todos</span>
-                  </Button>
-                )}
+                {/* Waitlist Indicator */}
+                <WaitlistIndicator
+                  onSchedulePatient={onCreateAppointment} // Reuse create appointment with patient prepopulated or handle specifically
+                  className="hidden md:flex"
+                />
 
                 {/* Settings */}
                 <Link to="/schedule/settings">

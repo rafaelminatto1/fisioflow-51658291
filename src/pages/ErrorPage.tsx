@@ -26,22 +26,27 @@ export default function ErrorPage() {
 
   return (
     <ErrorPageLayout
-      title="Ops! Algo deu errado"
+      title="Opa! Um Espasmo no Sistema"
       message={message}
-      primaryActionLabel="Início"
+      primaryActionLabel="Recuperar (Início)"
       primaryActionHref="/"
     >
-      <div className="flex flex-col sm:flex-row gap-3 justify-center">
-        {canGoBack && (
-          <Button
-            variant="outline"
-            className="gap-2"
-            onClick={() => navigate(-1)}
-          >
-            <RefreshCw className="h-4 w-4" />
-            Voltar
-          </Button>
-        )}
+      <div className="flex flex-col gap-4">
+        <p className="text-sm text-muted-foreground italic">
+          "O sistema teve uma contratura muscular súbita. Recomendamos uma liberação miofascial (recarregar a página) ou voltar para a posição neutra."
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          {canGoBack && (
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={() => navigate(-1)}
+            >
+              <RefreshCw className="h-4 w-4" />
+              Tentar Novamente
+            </Button>
+          )}
+        </div>
       </div>
     </ErrorPageLayout>
   );

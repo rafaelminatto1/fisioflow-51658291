@@ -23,14 +23,14 @@ export function NetworkStatus() {
 
             <div className="flex flex-col">
                 <span className="text-sm font-medium">
-                    {isReconnecting ? 'Reconectando...' : 'Sem conexão'}
+                    {isReconnecting ? 'Reconectando...' : 'Sem conexão. Aplique gelo no roteador!'}
                 </span>
                 {!isReconnecting && (
                     <button
                         onClick={() => tryReconnect()}
                         className="text-xs underline hover:text-white/90 text-left"
                     >
-                        Tentar reconectar
+                        Tentar mobilização de rede
                     </button>
                 )}
             </div>
