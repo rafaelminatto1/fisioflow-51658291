@@ -138,8 +138,8 @@
       <div class="loader-icon">
         <div class="spinner"></div>
       </div>
-      <div class="loader-text">Carregando sistema...</div>
-      <div class="loader-subtext">Preparando sua experiência</div>
+      <div class="loader-text" id="loader-joke">Carregando sistema...</div>
+      <div class="loader-subtext">Preparando sua reabilitação digital</div>
       <div class="progress-bar">
         <div class="progress-value"></div>
       </div>
@@ -150,6 +150,27 @@
     window.__APP_VERSION__ = "%APP_VERSION%";
     window.__BUILD_TIME__ = "%BUILD_TIME%";
     window.__CACHE_BUSTER__ = window.__BUILD_TIME__ || Date.now().toString();
+
+    const jokes = [
+      "Carregando... alongando a verdade um pouquinho.",
+      "Resistência não é fútil, é fisioterapia!",
+      "Trabalhando na sua postura... digo, no seu sistema.",
+      "Aguarde, estamos fortalecendo os pixels.",
+      "Quase lá! Só mais uma série de 10 segundos.",
+      "Gelo ou calor? Enquanto você decide, nós carregamos.",
+      "Inspirar... Expirar... Carregar...",
+      "Mobilizando as articulações do banco de dados."
+    ];
+    
+    let jokeIndex = 0;
+    const jokeElement = document.getElementById('loader-joke');
+    if (jokeElement) {
+      jokeElement.innerText = jokes[0];
+      setInterval(() => {
+        jokeIndex = (jokeIndex + 1) % jokes.length;
+        jokeElement.innerText = jokes[jokeIndex];
+      }, 3000);
+    }
 
     // Limpar storage se a versão mudar drasticamente (ex: após 24h)
     const lastVersion = localStorage.getItem('app_version');
