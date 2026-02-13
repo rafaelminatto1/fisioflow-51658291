@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "context7-mcp": {
+      "url": "https://server.smithery.ai/@upstash/context7-mcp/mcp",
+      "type": "http"
+    },
+    "brave": {
+      "url": "https://server.smithery.ai/brave/mcp",
+      "type": "http"
+    },
+    "server-sequential-thinking": {
+      "url": "https://server.smithery.ai/@smithery-ai/server-sequential-thinking/mcp",
+      "type": "http"
+    },
+    "exa": {
+      "url": "https://server.smithery.ai/exa/mcp",
+      "type": "http"
+    }
+  }
+}

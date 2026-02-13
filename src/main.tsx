@@ -31,7 +31,29 @@ const initServices = async () => {
   }
 };
 
-initServices();
+// ============================================================================
+// BOOTSTRAP (Render first, init later)
+// ============================================================================
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);
+
+// Inicialização de serviços secundários após o render inicial
+const runInit = () => {
+  setTimeout(() => {
+    initServices();
+  }, 0);
+};
+
+if (typeof window !== 'undefined') {
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(() => runInit());
+  } else {
+    runInit();
+  }
+}
 
 // ============================================================================
 // ERROR HANDLERS (Global)
@@ -40,9 +62,3 @@ window.addEventListener('vite:preloadError', () => {
   logger.error('Vite preload error - Recarregando deployment', null, 'main.tsx');
   window.location.reload();
 });
-
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);

@@ -8,21 +8,32 @@ interface AppLoadingSkeletonProps {
  * Skeleton de carregamento otimizado para a aplicação
  * Mostra progresso visual e permite retry após timeout
  */
-export function AppLoadingSkeleton({ message = 'Carregando...' }: AppLoadingSkeletonProps) {
+export function AppLoadingSkeleton({ message }: AppLoadingSkeletonProps) {
   const [showRetry, setShowRetry] = useState(false);
-  const [dots, setDots] = useState('');
+  const [jokeIndex, setJokeIndex] = useState(0);
 
-  // Animação dos pontos
+  const jokes = [
+    "Alongando a verdade um pouquinho...",
+    "Resistência não é fútil, é fisioterapia!",
+    "Trabalhando na sua postura digital...",
+    "Fortalecendo os pixels para você.",
+    "Só mais uma série de 10 segundos...",
+    "Gelo ou calor? Carregando enquanto você decide.",
+    "Inspirar... Expirar... Carregar...",
+    "Mobilizando as articulações do sistema."
+  ];
+
+  // Carrossel de piadas
   useEffect(() => {
     const interval = setInterval(() => {
-      setDots(prev => prev.length >= 3 ? '' : prev + '.');
-    }, 400);
+      setJokeIndex(prev => (prev + 1) % jokes.length);
+    }, 3500);
     return () => clearInterval(interval);
   }, []);
 
   // Mostrar botão de retry após 4 segundos
   useEffect(() => {
-    const timer = setTimeout(() => setShowRetry(true), 4000);
+    const timer = setTimeout(() => setShowRetry(true), 6000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -38,12 +49,12 @@ export function AppLoadingSkeleton({ message = 'Carregando...' }: AppLoadingSkel
         </div>
 
         {/* Mensagem de status */}
-        <div className="text-center space-y-2">
-          <p className="text-foreground font-medium">
-            {message}{dots}
+        <div className="text-center space-y-2 h-16 flex flex-col justify-center">
+          <p className="text-foreground font-medium transition-all duration-500">
+            {message || jokes[jokeIndex]}
           </p>
           <p className="text-sm text-muted-foreground">
-            Preparando sua experiência
+            Preparando sua reabilitação digital
           </p>
         </div>
 

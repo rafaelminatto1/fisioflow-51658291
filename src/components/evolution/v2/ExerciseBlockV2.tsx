@@ -46,6 +46,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
 
 interface ExerciseBlockV2Props {
   exercises: ExerciseV2Item[];
@@ -243,7 +244,7 @@ export const ExerciseBlockV2: React.FC<ExerciseBlockV2Props> = ({
                       >
                         <div className="h-10 w-10 flex-shrink-0 rounded-lg bg-muted/50 overflow-hidden border border-border/50">
                           {exercise.image_url ? (
-                            <img
+                            <OptimizedImage
                               src={withImageParams(exercise.image_url, {
                                 width: 80,
                                 height: 80,
@@ -252,7 +253,8 @@ export const ExerciseBlockV2: React.FC<ExerciseBlockV2Props> = ({
                                 fit: 'cover',
                               })}
                               alt={exercise.name}
-                              className="h-full w-full object-cover"
+                              aspectRatio="1:1"
+                              className="h-full w-full"
                             />
                           ) : (
                             <div className="h-full w-full flex items-center justify-center">
@@ -402,7 +404,7 @@ const ExerciseV2Row: React.FC<{
           {/* Exercise image (thumbnail) */}
           {exercise.image_url && (
             <div className="h-9 w-9 flex-shrink-0 rounded-lg overflow-hidden bg-muted border border-border/30">
-              <img
+              <OptimizedImage
                 src={withImageParams(exercise.image_url, {
                   width: 72,
                   height: 72,
@@ -411,7 +413,8 @@ const ExerciseV2Row: React.FC<{
                   fit: 'cover',
                 })}
                 alt={exercise.name}
-                className="h-full w-full object-cover"
+                aspectRatio="1:1"
+                className="h-full w-full"
               />
             </div>
           )}
