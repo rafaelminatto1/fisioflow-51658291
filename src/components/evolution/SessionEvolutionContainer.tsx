@@ -44,6 +44,7 @@ import { PatientService } from '@/lib/services/PatientService';
 import { useQueryClient } from '@tanstack/react-query';
 import { soapKeys } from '@/hooks/useSoapRecords';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { AgendaAutomationService } from '@/lib/services/AgendaAutomationService';
 
 interface SessionEvolutionContainerProps {
   appointmentId?: string;
@@ -507,6 +508,17 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
         title: 'Evolução salva',
         description: 'Os dados da sessão foram salvos com sucesso.'
       });
+
+      // Agenda Automation: Check for gaps after session completion
+      if (therapistId) {
+        const today = new Date().toISOString().split('T')[0];
+        AgendaAutomationService.detectGaps(therapistId, today).then(gaps => {
+          if (gaps.length > 0) {
+            // Em produção, pegaríamos o telefone real do admin da config da clínica
+            AgendaAutomationService.notifyAdminOfGaps(therapistId, gaps);
+          }
+        }).catch(err => logger.warn('Erro ao processar automação de agenda', err));
+      }
 
       if (onClose) {
         onClose();
