@@ -28,7 +28,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { CalendarIcon, User, Phone, Mail, MapPin, Activity, HeartPulse, Shield, Briefcase } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { cleanCPF, emailSchema, phoneSchema, cpfSchema } from '@/lib/validations';
+import { PatientFormSchema, type PatientFormData } from '@/schemas/patient';
 import { formatCPF, formatPhoneInput, formatCEP } from '@/utils/formatInputs';
 import type { Patient, PatientCreateInput, PatientUpdateInput } from '@/hooks/usePatientCrud';
 import { AddressAutocomplete } from '@/components/forms/AddressAutocomplete';
@@ -37,54 +37,8 @@ import { BrasilService } from '@/services/brasilApi';
 import { toast } from 'sonner';
 
 // ============================================================================================
-// SCHEMA & TYPES
+// COMPONENT
 // ============================================================================================
-
-const patientFormSchema = z.object({
-  // Informações Básicas
-  full_name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(200, 'Nome muito longo'),
-  email: emailSchema.optional().or(z.literal('')),
-  phone: phoneSchema.optional().or(z.literal('')),
-  cpf: z.string().optional().refine((val) => {
-    if (!val || val === '') return true;
-    return cpfSchema.safeParse(cleanCPF(val)).success;
-  }, { message: 'CPF inválido' }),
-  birth_date: z.string().min(1, 'Data de nascimento é obrigatória'),
-  gender: z.enum(['masculino', 'feminino', 'outro'], { required_error: 'Selecione o gênero' }),
-
-  // Endereço
-  address: z.string().max(500, 'Endereço muito longo').optional(),
-  city: z.string().max(100, 'Cidade muito longa').optional(),
-  state: z.string().length(2, 'Estado deve ter 2 caracteres').optional(),
-  zip_code: z.string().optional(),
-
-  // Contato de Emergência
-  emergency_contact: z.string().max(200, 'Contato muito longo').optional(),
-  emergency_contact_relationship: z.string().max(100, 'Parentesco muito longo').optional(),
-  emergency_phone: z.string().optional(),
-
-  // Informações Médicas
-  medical_history: z.string().max(5000, 'Histórico muito longo').optional(),
-  main_condition: z.string().min(1, 'Condição principal é obrigatória').max(500, 'Condição muito longa'),
-  allergies: z.string().max(500, 'Alergias muito longas').optional(),
-  medications: z.string().max(500, 'Medicamentos muito longos').optional(),
-  weight_kg: z.coerce.number().positive().max(500, 'Peso inválido').optional(),
-  height_cm: z.coerce.number().positive().max(300, 'Altura inválida').optional(),
-  blood_type: z.string().optional(),
-
-  // Informações Adicionais
-  marital_status: z.string().optional(),
-  profession: z.string().max(200, 'Profissão muito longa').optional(),
-  education_level: z.string().optional(),
-  health_insurance: z.string().max(200, 'Plano muito longo').optional(),
-  insurance_number: z.string().max(100, 'Número muito longo').optional(),
-  observations: z.string().max(5000, 'Observações muito longas').optional(),
-
-  // Status (apenas para edição)
-  status: z.enum(['Inicial', 'Em Tratamento', 'Recuperação', 'Concluído']).optional(),
-});
-
-export type PatientFormData = z.infer<typeof patientFormSchema>;
 
 interface PatientFormProps {
   patient?: Patient;
@@ -93,10 +47,6 @@ interface PatientFormProps {
   submitLabel?: string;
   organizationId: string;
 }
-
-// ============================================================================================
-// COMPONENT
-// ============================================================================================
 
 export const PatientForm: React.FC<PatientFormProps> = ({
   patient,
@@ -110,7 +60,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
   const isEditing = !!patient;
 
   const form = useForm<PatientFormData>({
-    resolver: zodResolver(patientFormSchema),
+    resolver: zodResolver(PatientFormSchema),
     defaultValues: {
       full_name: patient?.full_name || patient?.name || '',
       email: patient?.email || '',
