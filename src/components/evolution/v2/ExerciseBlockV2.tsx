@@ -47,6 +47,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
+import { ExerciseTemplateService, type ExerciseTemplate } from '@/lib/services/ExerciseTemplateService';
+import { Sparkles, History } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ExerciseBlockV2Props {
   exercises: ExerciseV2Item[];
@@ -75,6 +78,35 @@ export const ExerciseBlockV2: React.FC<ExerciseBlockV2Props> = ({
   const issueCount = exercises.filter(
     (e) => e.patientFeedback?.pain || e.patientFeedback?.fatigue || e.patientFeedback?.difficultyPerforming
   ).length;
+
+  const handleSmartSuggest = useCallback(async () => {
+    try {
+      // Aqui poderíamos pegar o diagnóstico real do contexto do paciente
+      // Por enquanto, simulamos uma busca baseada no histórico ou contexto
+      const templates = await ExerciseTemplateService.getAllTemplates();
+      
+      if (templates.length === 0) {
+        toast.info("Nenhum template inteligente configurado ainda.");
+        return;
+      }
+
+      // Se houver múltiplos, poderíamos abrir um modal. 
+      // Para o MVP, pegamos o primeiro relevante ou mostramos toast.
+      const template = templates[0]; 
+      
+      const newExercises = template.exercises.map(ex => ({
+        ...ex,
+        id: generateId()
+      }));
+
+      onChange([...exercises, ...newExercises]);
+      toast.success(`Adicionados ${newExercises.length} exercícios do template: ${template.name}`, {
+        icon: <Sparkles className="h-4 w-4 text-blue-500" />
+      });
+    } catch (error) {
+      toast.error("Falha ao carregar sugestões inteligentes.");
+    }
+  }, [exercises, onChange]);
 
   const filteredLibrary = useMemo(() => {
     if (!searchValue) return libraryExercises.slice(0, 15);
@@ -208,7 +240,19 @@ export const ExerciseBlockV2: React.FC<ExerciseBlockV2Props> = ({
             </div>
           </div>
 
-          <Popover open={showAutocomplete} onOpenChange={setShowAutocomplete}>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSmartSuggest}
+              disabled={disabled}
+              className="gap-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-500/10 rounded-lg group"
+            >
+              <Sparkles className="h-3.5 w-3.5 group-hover:animate-pulse" />
+              <span className="hidden sm:inline text-xs font-medium">Sugestão Smart</span>
+            </Button>
+
+            <Popover open={showAutocomplete} onOpenChange={setShowAutocomplete}>
             <PopoverTrigger asChild>
               <Button
                 variant="ghost"

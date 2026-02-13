@@ -13,7 +13,7 @@ const NotFound = () => {
   return (
     <ErrorPageLayout
       code="404"
-      title="Página com Escoliose"
+      title="Página com Edema, estamos colocando gelo!"
       message="Esta página está totalmente fora de lugar! Parece que ela pegou um caminho errado no treino de marcha."
       primaryActionLabel="Voltar para a Base"
       primaryActionHref="/"

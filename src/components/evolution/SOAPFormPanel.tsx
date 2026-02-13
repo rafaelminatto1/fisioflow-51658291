@@ -14,11 +14,14 @@ import {
   Loader2,
   CheckCircle2,
   Sparkles,
+  Mic,
+  MicOff,
 } from 'lucide-react';
 import { ConductReplication } from './ConductReplication';
 import { SOAPAssistant } from '@/components/ai/SOAPAssistant';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface SOAPData {
   subjective: string;
@@ -146,6 +149,74 @@ const SOAP_SECTIONS = [
   },
 ];
 
+const SpeechToSOAPButton = ({ onTranscription, disabled }: { onTranscription: (text: string) => void, disabled?: boolean }) => {
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  const startListening = useCallback(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+      toast.error("Seu navegador não suporta reconhecimento de voz.");
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'pt-BR';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => setIsListening(true);
+      recognition.onend = () => setIsListening(false);
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error', event.error);
+        setIsListening(false);
+        toast.error(`Erro na transcrição: ${event.error}`);
+      };
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript) {
+          onTranscription(transcript);
+        }
+      };
+
+      recognition.start();
+      recognitionRef.current = recognition;
+    } catch (error) {
+      console.error('Failed to start speech recognition', error);
+      setIsListening(false);
+    }
+  }, [onTranscription]);
+
+  const stopListening = useCallback(() => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    setIsListening(false);
+  }, []);
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className={cn(
+        "h-7 w-7 rounded-full transition-all",
+        isListening && "bg-red-500/10 text-red-500 animate-pulse hover:bg-red-500/20"
+      )}
+      onClick={(e) => {
+        e.stopPropagation();
+        isListening ? stopListening() : startListening();
+      }}
+      disabled={disabled}
+      title={isListening ? "Parar gravação" : "Gravar voz para este campo"}
+    >
+      {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+    </Button>
+  );
+};
+
 export const SOAPFormPanel: React.FC<SOAPFormPanelProps> = ({
   patientId,
   data,
@@ -228,14 +299,26 @@ export const SOAPFormPanel: React.FC<SOAPFormPanelProps> = ({
               )}
             >
               <div
-                className="flex items-center gap-2 p-3 cursor-pointer"
+                className="flex items-center gap-2 p-3 cursor-pointer group"
                 onClick={() => setActiveSection(isActive ? null : section.key)}
               >
                 <Icon className={cn('h-4 w-4', section.color)} />
                 <span className="font-medium text-sm">{section.label}</span>
-                {hasContent && (
-                  <CheckCircle2 className="h-3 w-3 text-green-500 ml-auto" />
-                )}
+                
+                <div className="ml-auto flex items-center gap-2">
+                  <SpeechToSOAPButton 
+                    disabled={disabled}
+                    onTranscription={(text) => {
+                      const current = data[section.key];
+                      const updated = current ? `${current} ${text}` : text;
+                      handleFieldChange(section.key, updated);
+                      toast.success(`Transcrito em ${section.label}`);
+                    }} 
+                  />
+                  {hasContent && (
+                    <CheckCircle2 className="h-3 w-3 text-green-500" />
+                  )}
+                </div>
               </div>
               <div className="px-3 pb-3">
                 <SOAPField
