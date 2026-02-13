@@ -21,6 +21,8 @@ import { GoalCountdown } from './GoalCountdown';
 import { TreatmentDurationCard } from './TreatmentDurationCard';
 import type { PatientGoal } from '@/types/evolution';
 import { PatientHelpers } from '@/types';
+import { EngagementService, type EngagementStatus } from '@/lib/services/EngagementService';
+import { AlertCircle, ShieldAlert } from 'lucide-react';
 
 interface PatientInfo {
   id: string;
@@ -43,6 +45,29 @@ interface PatientSummaryPanelProps {
   onPhoneClick?: () => void;
 }
 
+const EngagementBadge = ({ status, days }: { status: EngagementStatus['status'], days: number }) => {
+  if (status === 'active') return <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">Ativo</Badge>;
+  
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge 
+            variant={status === 'at_risk' ? 'destructive' : 'warning'} 
+            className="gap-1 animate-pulse"
+          >
+            {status === 'at_risk' ? <ShieldAlert className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+            {status === 'at_risk' ? 'Risco' : 'Inativo'}
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p className="text-xs">{days} dias sem atividade detectada.</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+};
+
 export const PatientSummaryPanel: React.FC<PatientSummaryPanelProps> = ({
   patient,
   goals = [],
@@ -53,7 +78,15 @@ export const PatientSummaryPanel: React.FC<PatientSummaryPanelProps> = ({
   onWhatsAppClick,
   onPhoneClick,
 }) => {
+  const [engagement, setEngagement] = React.useState<EngagementStatus | null>(null);
   const activeGoals = goals.filter((g) => g.status === 'em_andamento');
+  
+  React.useEffect(() => {
+    if (patient.id) {
+      EngagementService.getPatientEngagement(patient.id).then(setEngagement);
+    }
+  }, [patient.id]);
+
   const completedGoals = goals.filter((g) => g.status === 'concluido');
 
   const getInitials = (name: string) => {
@@ -97,9 +130,14 @@ export const PatientSummaryPanel: React.FC<PatientSummaryPanelProps> = ({
               </Avatar>
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold truncate">{PatientHelpers.getName(patient)}</h3>
-                {age && (
-                  <p className="text-sm text-muted-foreground">{age} anos</p>
-                )}
+                <div className="flex items-center gap-2">
+                  {age && (
+                    <p className="text-sm text-muted-foreground">{age} anos</p>
+                  )}
+                  {engagement && (
+                    <EngagementBadge status={engagement.status} days={engagement.daysSinceLastActivity} />
+                  )}
+                </div>
               </div>
             </div>
 
