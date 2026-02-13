@@ -7,6 +7,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { DataProvider } from '@/contexts/DataContext';
 import { RealtimeProvider } from '@/contexts/RealtimeContext';
 import { AuthContextProvider } from '@/contexts/AuthContextProvider';
+import { TourProvider } from '@/contexts/TourContext';
 import { GamificationFeedbackProvider } from '@/contexts/GamificationFeedbackContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
@@ -110,26 +111,54 @@ const NotificationInitializer = () => {
   return null;
 };
 
-const App = () => {
-  // Gerenciar atualizações do Service Worker
-  // DESABILITADO: useServiceWorkerUpdate();
-  // Os alertas de "Nova versão disponível" foram desabilitados conforme solicitação
+import { TourGuide } from '@/components/system/TourGuide';
 
+// Grouped providers for cleaner structure and better performance
+const AppProviders = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <ErrorBoundary>
+      <SkipLink />
+      <FocusVisibleHandler />
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{
+          persister,
+          maxAge: 1000 * 60 * 60 * 24 * 7,
+        }}
+        onSuccess={() => logger.info('Cache persistente restaurado', {}, 'App')}
+      >
+        <TooltipProvider>
+          <AuthContextProvider>
+            <TourProvider>
+              <StatsigProviderWrapper>
+                <GamificationFeedbackProvider>
+                  <RealtimeProvider>
+                    <DataProvider>
+                      {children}
+                    </DataProvider>
+                  </RealtimeProvider>
+                </GamificationFeedbackProvider>
+              </StatsigProviderWrapper>
+            </TourProvider>
+          </AuthContextProvider>
+        </TooltipProvider>
+      </PersistQueryClientProvider>
+    </ErrorBoundary>
+  );
+};
+
+const App = () => {
   useEffect(() => {
     if (!_loggedAppInit) {
       _loggedAppInit = true;
       logger.info('Aplicação iniciada', { timestamp: new Date().toISOString() }, 'App');
     }
 
-    // Initialize monitoring (performance, errors, analytics)
     initMonitoring();
-
-    // Initialize Core Web Vitals monitoring
     initWebVitalsMonitoring().catch((error) => {
       logger.error('Falha ao inicializar Core Web Vitals', error, 'App');
     });
 
-    // Initialize notification system
     const initNotifications = async () => {
       try {
         await notificationManager.initialize();
@@ -143,62 +172,33 @@ const App = () => {
     };
 
     initNotifications();
-
-    // Clear chunk load error flag on successful load
     sessionStorage.removeItem('chunk_load_error_reload');
   }, []);
 
   return (
-    <ErrorBoundary>
-      {/* Componentes de acessibilidade - WCAG 2.1 */}
-      <SkipLink />
-      <FocusVisibleHandler />
-      <PersistQueryClientProvider
-        client={queryClient}
-        persistOptions={{
-          persister,
-          maxAge: 1000 * 60 * 60 * 24 * 7, // 7 dias - manter dados por mais tempo
-          // REMOVIDO: buster que invalidava cache a cada deploy
-          // Os dados do banco serão atualizados via refetch, não precisamos limpar o cache
+    <AppProviders>
+      <Toaster />
+      <Sonner />
+      <NetworkStatus />
+      <SyncManager />
+      <TourGuide />
+      <BrowserRouter
+        future={{
+          v7_startTransition: true,
+          v7_relativeSplatPath: true,
         }}
-        onSuccess={() => logger.info('Cache persistente restaurado com sucesso', {}, 'App')}
       >
-        <TooltipProvider>
-          <AuthContextProvider>
-            <StatsigProviderWrapper>
-              <GamificationFeedbackProvider>
-                <RealtimeProvider>
-                  <DataProvider>
-                    <Toaster />
-                    <Sonner />
-                    <NetworkStatus />
-                    <SyncManager />
-                    {/* <PWAInstallPrompt /> */}
-                    {/* <PWAUpdatePrompt /> */}
-                    <BrowserRouter
-                      future={{
-                        v7_startTransition: true,
-                        v7_relativeSplatPath: true,
-                      }}
-                    >
-                      <NotificationInitializer />
-                      <Suspense fallback={<AppLoadingSkeleton message="Carregando sistema..." />}>
-                        <AppRoutes />
-                        <VersionManager />
-
-                        <WebVitalsIndicator />
-
-                      </Suspense>
-                    </BrowserRouter>
-                  </DataProvider>
-                </RealtimeProvider>
-              </GamificationFeedbackProvider>
-            </StatsigProviderWrapper>
-          </AuthContextProvider>
-        </TooltipProvider>
-      </PersistQueryClientProvider>
-    </ErrorBoundary>
+        <NotificationInitializer />
+        <Suspense fallback={<AppLoadingSkeleton message="Carregando sistema..." />}>
+          <AppRoutes />
+          <VersionManager />
+          <WebVitalsIndicator />
+        </Suspense>
+      </BrowserRouter>
+    </AppProviders>
   );
 };
+
+export default App;
 
 export default App;
