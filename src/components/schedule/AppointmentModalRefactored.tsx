@@ -531,19 +531,15 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       await persistAppointment(data);
     } catch (error: unknown) {
       if (isAppointmentConflictError(error)) {
-        // Check if it's a PostgreSQL constraint violation (duplicate time)
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        if (errorMessage.includes('duplicate key') || errorMessage.includes('idx_appointments_time_conflict')) {
-          toast.error('⚠️ Já existe um agendamento neste horário', {
-            description: 'Verifique se não está duplicando um agendamento ou escolha outro horário.',
-          });
-        } else {
-          // Instead of just a toast, show the CapacityExceededDialog
-          setPendingFormData(data);
-          setConflictCheck(freshConflictCheck);
-          setCapacityDialogOpen(true);
-          ErrorHandler.handle(error, 'AppointmentModalRefactored:handleSave', { showNotification: false });
-        }
+        // Since we removed the unique index, a 409 Conflict should now trigger 
+        // the CapacityExceededDialog instead of a hard error, 
+        // allowing the user to override if they have permissions.
+        setPendingFormData(data);
+        setConflictCheck(freshConflictCheck);
+        setCapacityDialogOpen(true);
+
+        // Log the error for debugging but don't show a secondary toast
+        ErrorHandler.handle(error, 'AppointmentModalRefactored:handleSave', { showNotification: false });
       } else {
         ErrorHandler.handle(error, 'AppointmentModalRefactored:handleSave');
       }

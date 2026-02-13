@@ -397,12 +397,12 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                             {/* Status Label Badge */}
                             {!isTiny && (
                                 <div className={cn(
-                                    "flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider",
+                                    "flex items-center gap-1 px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider",
                                     !useCustomStatusStyle && statusStyles.bg,
                                     !useCustomStatusStyle && "bg-white/40 dark:bg-black/20",
                                     !useCustomStatusStyle && statusStyles.text
                                 )}
-                                    style={customTextColorStyle}>
+                                    style={{ ...customTextColorStyle, fontSize: `${scaledTimeFontSize}px` }}>
                                     <StatusIcon className="w-2.5 h-2.5" />
                                     {sharedStatusConfig.label}
                                 </div>

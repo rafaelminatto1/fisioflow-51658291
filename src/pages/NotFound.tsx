@@ -13,11 +13,15 @@ const NotFound = () => {
   return (
     <ErrorPageLayout
       code="404"
-      title="Página não encontrada"
-      message="A página que você está procurando não existe ou foi movida."
-      primaryActionLabel="Ir para Início"
+      title="Página com Escoliose"
+      message="Esta página está totalmente fora de lugar! Parece que ela pegou um caminho errado no treino de marcha."
+      primaryActionLabel="Voltar para a Base"
       primaryActionHref="/"
-    />
+    >
+      <p className="text-sm text-muted-foreground mt-4 italic">
+        "Já tentou fazer compressa de gelo por 20 minutos? Geralmente ajuda, mas para links quebrados, melhor voltar ao início."
+      </p>
+    </ErrorPageLayout>
   );
 };
 
