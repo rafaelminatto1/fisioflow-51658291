@@ -597,21 +597,10 @@ export const onPatientCreated = functions.firestore.onDocumentCreated(
 // As funções de sync já existem como background triggers em produção.
 // Comentando para não causar conflitos.
 
-// export const syncPatientToSql = functions.firestore.onDocumentWritten(
-//     'patients/{patientId}',
-//     async (event) => {
-//         const { handlePatientSync } = await import('./triggers/sync-patients');
-//         return handlePatientSync(event as any);
-//     }
-// );
+// REMOVIDO - Funções de background trigger removidas do código
+// Não exportamos syncPatientToSql, syncDoctorToSql, syncAppointmentToSql aqui
+// porque já existem como triggers em produção e não podem ser redefinidas como HTTPS.
 
-// export const syncAppointmentToSql = functions.firestore.onDocumentWritten(
-//     'appointments/{appointmentId}',
-//     async (event) => {
-//         const { handleAppointmentSync } = await import('./triggers/sync-appointments');
-//         return handleAppointmentSync(event as any);
-//     }
-// );
 
 export const syncDoctorToSql = functions.firestore.onDocumentWritten(
     'doctors/{doctorId}',
