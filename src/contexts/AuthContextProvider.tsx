@@ -9,6 +9,12 @@ import { AuthContextType, AuthContext, AuthError } from './AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { AppointmentService } from '@/services/appointmentService';
 
+const isPermissionDeniedError = (error: unknown): boolean => {
+  const code = (error as { code?: string })?.code;
+  const message = (error as Error)?.message?.toLowerCase?.() ?? '';
+  return code === 'permission-denied' || message.includes('insufficient permissions');
+};
+
 export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -104,6 +110,10 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
       // This is expected immediately after registration while the backend trigger runs
       return null;
     } catch (err) {
+      if (isPermissionDeniedError(err)) {
+        logger.warn('Sem permissão para ler perfil no Firestore', { uid: firebaseUser.uid }, 'AuthContextProvider');
+        throw err;
+      }
       logger.error('Error fetching profile', err, 'AuthContextProvider');
       return null;
     }
@@ -177,6 +187,60 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         return null;
       }
     } catch (err) {
+      if (isPermissionDeniedError(err)) {
+        logger.warn('Busca de perfil interrompida por permissão insuficiente', { uid: firebaseUser.uid }, 'AuthContextProvider');
+        try {
+          const response = await profileApi.getCurrent();
+          const pgProfile = (response as { data?: Record<string, unknown> })?.data ?? response;
+          if (pgProfile && typeof pgProfile === 'object' && pgProfile.user_id) {
+            return {
+              id: String(pgProfile.id ?? firebaseUser.uid),
+              user_id: String(pgProfile.user_id),
+              full_name: String(pgProfile.full_name ?? firebaseUser.displayName ?? firebaseUser.email ?? 'Usuário'),
+              organization_id: pgProfile.organization_id ? String(pgProfile.organization_id) : undefined,
+              role: (pgProfile.role as Profile['role']) ?? 'fisioterapeuta',
+              phone: pgProfile.phone ? String(pgProfile.phone) : undefined,
+              avatar_url: pgProfile.avatar_url ? String(pgProfile.avatar_url) : undefined,
+              onboarding_completed: Boolean(pgProfile.onboarding_completed),
+              is_active: pgProfile.is_active !== false,
+              created_at: String(pgProfile.created_at ?? new Date().toISOString()),
+              updated_at: String(pgProfile.updated_at ?? new Date().toISOString()),
+            };
+          }
+        } catch (pgErr) {
+          logger.warn('Fallback via profileApi também falhou após permission-denied', pgErr, 'AuthContextProvider');
+        }
+
+        try {
+          const token = await firebaseUser.getIdTokenResult();
+          const claims = token.claims as Record<string, unknown>;
+          const claimOrganization =
+            (typeof claims.organizationId === 'string' && claims.organizationId) ||
+            (typeof claims.organization_id === 'string' && claims.organization_id) ||
+            undefined;
+          const claimRole =
+            (typeof claims.role === 'string' && claims.role) ||
+            'fisioterapeuta';
+
+          if (claimOrganization || claimRole) {
+            return {
+              id: firebaseUser.uid,
+              user_id: firebaseUser.uid,
+              full_name: firebaseUser.displayName ?? firebaseUser.email ?? 'Usuário',
+              organization_id: claimOrganization,
+              role: claimRole as Profile['role'],
+              onboarding_completed: false,
+              is_active: true,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            };
+          }
+        } catch (tokenErr) {
+          logger.warn('Fallback por custom claims falhou após permission-denied', tokenErr, 'AuthContextProvider');
+        }
+
+        return null;
+      }
       logger.error('Erro crítico ao buscar perfil', err, 'AuthContextProvider');
       return null;
     }
@@ -199,7 +263,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     } catch (err) {
       logger.error('Erro ao atualizar perfil', err, 'AuthContextProvider');
     }
-  }, [user, fetchProfile]);
+  }, [user, fetchProfile, prefetchDashboardData]);
 
   useEffect(() => {
     let mounted = true;
@@ -239,9 +303,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
       mounted = false;
       unsubscribe();
     };
-   
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty deps - fetchProfile is stable (useCallback with no deps)
+  }, [fetchProfile, prefetchDashboardData]);
 
   const signIn = async (email: string, password: string, _remember?: boolean): Promise<{ error?: AuthError | null }> => {
     try {
@@ -354,6 +416,4 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
-
 
