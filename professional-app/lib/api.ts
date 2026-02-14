@@ -11,8 +11,10 @@ import { auth } from './firebase';
 // CONFIGURATION
 // ============================================================
 
-const HASH = 'tfecm5cqoq';
-const CLOUD_RUN_BASE_URL = (func: string) => `https://${func.toLowerCase()}-${HASH}-rj.a.run.app`;
+const PROJECT_NUMBER = process.env.EXPO_PUBLIC_FIREBASE_PROJECT_NUMBER || '412418905255';
+const REGION = process.env.EXPO_PUBLIC_FIREBASE_REGION || 'southamerica-east1';
+const CLOUD_RUN_BASE_URL = (func: string) =>
+  `https://${func.toLowerCase()}-${PROJECT_NUMBER}.${REGION}.run.app/`;
 
 const API_URLS = {
   patients: {
