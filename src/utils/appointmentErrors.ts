@@ -1,5 +1,6 @@
-/**
- * Mensagens e helpers para erros de agendamento (conflito de horário, etc.)
+import { FunctionCallError } from '@/integrations/firebase/functions';
+
+/** Mensagens e helpers para erros de agendamento (conflito de horário, etc.)
  * Centraliza texto e detecção para manter consistência na UI.
  *
  * Backend retorna 409 com body: { "error": "Conflito de horário detectado" }.
@@ -13,17 +14,6 @@ export const APPOINTMENT_CONFLICT_MESSAGE =
 /** Título opcional para toasts de conflito. */
 export const APPOINTMENT_CONFLICT_TITLE = 'Conflito de horário';
 
-/**
- * Indica se o erro é de conflito de horário (HTTP 409 ou mensagem do backend).
- * Usado para exibir mensagem amigável e evitar toast genérico.
- *
- * @example
- * if (isAppointmentConflictError(error)) {
- *   toast.error(APPOINTMENT_CONFLICT_MESSAGE);
- * } else {
- *   ErrorHandler.handle(error, 'context');
- * }
- */
 export function isAppointmentConflictError(error: unknown): boolean {
   if (error == null) return false;
   const msg =
@@ -39,10 +29,50 @@ export function isAppointmentConflictError(error: unknown): boolean {
          msg.includes('time_conflict');
 }
 
-/**
- * Retorna a mensagem amigável de conflito se o erro for de conflito de horário, ou null.
- * Útil para unificar: toast.error(getAppointmentConflictUserMessage(error) ?? fallbackMessage).
- */
+interface AppointmentConflictDetails {
+  capacity?: number;
+  total?: number;
+  conflicts?: {
+    id?: string;
+    patient_name?: string;
+    patient_id?: string;
+    therapist_name?: string;
+    therapist_id?: string;
+    start_time?: string;
+    date?: string;
+  }[];
+}
+
+function formatConflictMessage(details: AppointmentConflictDetails): string {
+  const conflict = details.conflicts?.[0];
+  if (!conflict) return APPOINTMENT_CONFLICT_MESSAGE;
+  const patient = conflict.patient_name || conflict.patient_id || 'este paciente';
+  const therapist = conflict.therapist_name || conflict.therapist_id || 'este terapeuta';
+  const time = conflict.start_time ? conflict.start_time.slice(0, 5) : 'o horário informado';
+  const date = conflict.date ? new Date(conflict.date).toLocaleDateString('pt-BR') : 'essa data';
+  const slotInfo =
+    typeof details.total === 'number' && typeof details.capacity === 'number'
+      ? ` (${details.total}/${details.capacity} vagas)`
+      : '';
+  return `⚠️ Já existe o agendamento${conflict.id ? ` ${conflict.id}` : ''} do paciente ${patient} para o terapeuta ${therapist} às ${time} de ${date}${slotInfo}.`;
+}
+
+function extractConflictDetails(error: unknown): AppointmentConflictDetails | null {
+  if (error instanceof FunctionCallError && error.payload && typeof error.payload === 'object') {
+    const payload = error.payload as AppointmentConflictDetails;
+    if (payload.conflicts || payload.capacity || payload.total) {
+      return payload;
+    }
+  }
+  if (typeof error === 'object' && error !== null && 'conflicts' in error) {
+    const payload = error as AppointmentConflictDetails;
+    return payload;
+  }
+  return null;
+}
+
 export function getAppointmentConflictUserMessage(error: unknown): string | null {
+  const details = extractConflictDetails(error);
+  if (details) return formatConflictMessage(details);
   return isAppointmentConflictError(error) ? APPOINTMENT_CONFLICT_MESSAGE : null;
 }
