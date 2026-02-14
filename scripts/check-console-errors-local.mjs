@@ -164,8 +164,8 @@ async function collectForPage(page, url, label, errors, warnings) {
   warnings.length = 0;
 
   try {
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    await page.waitForTimeout(3000);
+    await page.goto(url, { waitUntil: 'load', timeout: 60000 });
+    await page.waitForTimeout(5000);
   } catch (err) {
     return {
       route: label || url,
@@ -187,8 +187,8 @@ async function collectForPage(page, url, label, errors, warnings) {
 }
 
 async function doLogin(page) {
-  await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded', timeout: 30000 });
-  await page.waitForTimeout(2000);
+  await page.goto(`${BASE_URL}/auth`, { waitUntil: 'load', timeout: 60000 });
+  await page.waitForTimeout(3000);
 
   const emailInput = page.locator('#login-email, input[type="email"], input[name="email"]').first();
   const passwordInput = page.locator('input[type="password"]').first();
@@ -204,7 +204,7 @@ async function doLogin(page) {
   await submitBtn.click();
 
   try {
-    await page.waitForURL((u) => !u.pathname.includes('/auth'), { timeout: 15000 });
+    await page.waitForURL((u) => !u.pathname.includes('/auth'), { timeout: 30000 });
   } catch {
     const errEl = page.locator('[data-testid="login-error"]');
     if (await errEl.isVisible()) {
@@ -213,7 +213,7 @@ async function doLogin(page) {
     }
   }
 
-  await page.waitForTimeout(2000);
+  await page.waitForTimeout(5000);
   return page.url().includes('/auth') ? false : true;
 }
 
@@ -250,7 +250,12 @@ async function main() {
     report.publicPages.push(result);
     const errCount = result.errors?.length || 0;
     const warnCount = result.warnings?.length || 0;
-    console.log(errCount > 0 ? `${errCount} erros, ${warnCount} warns` : warnCount > 0 ? `${warnCount} warns` : 'ok');
+    if (errCount > 0) {
+      console.log(`${errCount} erros:`);
+      result.errors.forEach(e => console.log(`    - ${e.text}`));
+    } else {
+      console.log(warnCount > 0 ? `${warnCount} warns` : 'ok');
+    }
   }
 
   // 2. Login

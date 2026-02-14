@@ -252,6 +252,35 @@ export const DateTimeSection = ({
                     )}>
                         {conflictCount}/{maxCapacity}
                     </Badge>
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">|</span>
+                        <span id="status-inline-label" className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+                            Status *
+                        </span>
+                        <Select
+                            value={watch('status')}
+                            onValueChange={(value) => setValue('status', value as AppointmentStatus)}
+                            disabled={disabled}
+                        >
+                            <SelectTrigger
+                                className="h-8 w-[150px] text-xs bg-background/80"
+                                aria-labelledby="status-inline-label"
+                                aria-required="true"
+                            >
+                                <SelectValue placeholder="Selecione o status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {APPOINTMENT_STATUSES.map((status) => (
+                                    <SelectItem key={status} value={status}>
+                                        <div className="flex items-center gap-2">
+                                            <div className={cn("w-2 h-2 rounded-full", STATUS_COLORS[status])} />
+                                            {STATUS_LABELS[status]}
+                                        </div>
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
             )}
         </div>

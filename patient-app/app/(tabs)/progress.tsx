@@ -30,14 +30,17 @@ import { db } from '@/lib/firebase';
 
 interface Evolution {
   id: string;
-  date: any; // Firestore Timestamp
-  subjective: string;
-  objective: string;
-  assessment: string;
-  plan: string;
-  pain_level: number;
-  professional_name: string;
-  session_number: number;
+  record_date: string;
+  date?: any; // Fallback
+  subjective?: string;
+  objective?: string;
+  assessment?: string;
+  plan?: string;
+  pain_level?: number;
+  therapist_name?: string;
+  professional_name?: string; // Fallback
+  session_number?: number;
+  status: string;
 }
 
 interface Stats {
@@ -54,6 +57,7 @@ export default function ProgressScreen() {
   const { user } = useAuthStore();
 
   const [evolutions, setEvolutions] = useState<Evolution[]>([]);
+  const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'all'>('month');
@@ -70,11 +74,29 @@ export default function ProgressScreen() {
       return;
     }
 
-    // Fetch evolutions from Firestore
-    const evolutionsRef = collection(db, 'users', user.id, 'evolutions');
+    // Fetch medical reports from root relatorios_medicos collection
+    const reportsRef = collection(db, 'relatorios_medicos');
+    const qReports = query(
+      reportsRef,
+      where('patientId', '==', user.id),
+      orderBy('data_emissao', 'desc')
+    );
+
+    const unsubReports = onSnapshot(qReports, (snapshot) => {
+      const reportsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setReports(reportsData);
+    });
+
+    // Fetch finalized evolutions from root soap_records collection
+    const evolutionsRef = collection(db, 'soap_records');
     const q = query(
       evolutionsRef,
-      orderBy('date', 'desc')
+      where('patient_id', '==', user.id),
+      where('status', '==', 'finalized'),
+      orderBy('record_date', 'desc')
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -91,7 +113,16 @@ export default function ProgressScreen() {
       setLoading(false);
     }, (error) => {
       console.error('Error fetching evolutions:', error);
-      setLoading(false);
+      // Fallback to legacy user subcollection if empty
+      const legacyRef = collection(db, 'users', user.id, 'evolutions');
+      const legacyQuery = query(legacyRef, orderBy('date', 'desc'));
+      
+      onSnapshot(legacyQuery, (legacySnap) => {
+        const legacyData = legacySnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
+        setEvolutions(legacyData);
+        calculateStats(legacyData);
+        setLoading(false);
+      });
     });
 
     return unsubscribe;
@@ -111,7 +142,11 @@ export default function ProgressScreen() {
     const totalSessions = evolutionsData.length;
 
     // Calculate date range
-    const dates = evolutionsData.map(e => e.date?.toDate() || new Date()).sort((a, b) => a.getTime() - b.getTime());
+    const dates = evolutionsData.map(e => {
+      if (e.record_date) return new Date(e.record_date);
+      return e.date?.toDate() || new Date();
+    }).sort((a, b) => a.getTime() - b.getTime());
+    
     const firstDate = dates[0];
     const lastDate = dates[dates.length - 1];
     const totalDays = Math.max(1, Math.ceil((lastDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24)));
@@ -150,7 +185,8 @@ export default function ProgressScreen() {
     }
 
     return evolutions.filter(e => {
-      const evoDate = e.date?.toDate() || new Date();
+      const dateStr = e.record_date || (e.date?.toDate()?.toISOString());
+      const evoDate = dateStr ? new Date(dateStr) : new Date();
       return evoDate >= startOfDay(startDate);
     });
   };
@@ -291,6 +327,36 @@ export default function ProgressScreen() {
             <EvolutionCard key={evolution.id} evolution={evolution} colors={colors} />
           ))
         )}
+
+        {/* Documents Section */}
+        {reports.length > 0 && (
+          <>
+            <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 24 }]}>
+              Documentos e Laudos
+            </Text>
+            {reports.map((report) => (
+              <Card key={report.id} style={styles.evolutionCard}>
+                <TouchableOpacity 
+                  style={styles.reportContent} 
+                  onPress={() => Alert.alert('Documento', 'Em breve: visualização de PDF direto no app.')}
+                >
+                  <View style={[styles.reportIcon, { backgroundColor: colors.info + '20' }]}>
+                    <Ionicons name="document-text" size={24} color={colors.info} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.evolutionDate, { color: colors.text }]}>
+                      Relatório Médico - {report.tipo_relatorio || 'Geral'}
+                    </Text>
+                    <Text style={[styles.evolutionProfessional, { color: colors.textSecondary }]}>
+                      Emitido em {format(new Date(report.data_emissao), "dd/MM/yyyy", { locale: ptBR })}
+                    </Text>
+                  </View>
+                  <Ionicons name="open-outline" size={20} color={colors.primary} />
+                </TouchableOpacity>
+              </Card>
+            ))}
+          </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -319,7 +385,8 @@ function StatCard({
 function EvolutionCard({ evolution, colors }: { evolution: Evolution; colors: any }) {
   const [expanded, setExpanded] = useState(false);
 
-  const evoDate = evolution.date?.toDate() || new Date();
+  const dateStr = evolution.record_date || (evolution.date?.toDate()?.toISOString());
+  const evoDate = dateStr ? new Date(dateStr) : new Date();
 
   return (
     <Card style={styles.evolutionCard}>
@@ -327,7 +394,7 @@ function EvolutionCard({ evolution, colors }: { evolution: Evolution; colors: an
         <View style={styles.evolutionHeader}>
           <View style={[styles.sessionNumber, { backgroundColor: colors.primary + '20' }]}>
             <Text style={[styles.sessionNumberText, { color: colors.primary }]}>
-              #{evolution.session_number}
+              #{evolution.session_number || '?'}
             </Text>
           </View>
           <View style={styles.evolutionHeaderInfo}>
@@ -335,12 +402,12 @@ function EvolutionCard({ evolution, colors }: { evolution: Evolution; colors: an
               {format(evoDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
             </Text>
             <Text style={[styles.evolutionProfessional, { color: colors.textSecondary }]}>
-              {evolution.professional_name}
+              {evolution.therapist_name || evolution.professional_name || 'Fisioterapeuta'}
             </Text>
           </View>
-          <View style={[styles.painIndicator, { backgroundColor: getPainColor(evolution.pain_level, colors) + '20' }]}>
-            <Text style={[styles.painIndicatorText, { color: getPainColor(evolution.pain_level, colors) }]}>
-              Dor: {evolution.pain_level}/10
+          <View style={[styles.painIndicator, { backgroundColor: getPainColor(evolution.pain_level || 0, colors) + '20' }]}>
+            <Text style={[styles.painIndicatorText, { color: getPainColor(evolution.pain_level || 0, colors) }]}>
+              Dor: {evolution.pain_level ?? '--'}/10
             </Text>
           </View>
           <Ionicons
@@ -353,16 +420,13 @@ function EvolutionCard({ evolution, colors }: { evolution: Evolution; colors: an
         {expanded && (
           <View style={styles.evolutionDetails}>
             {evolution.subjective && (
-              <SOAPSection label="Subjetivo" content={evolution.subjective} colors={colors} />
-            )}
-            {evolution.objective && (
-              <SOAPSection label="Objetivo" content={evolution.objective} colors={colors} />
+              <SOAPSection label="Relato" content={evolution.subjective} colors={colors} />
             )}
             {evolution.assessment && (
-              <SOAPSection label="Avaliação" content={evolution.assessment} colors={colors} />
+              <SOAPSection label="Evolução" content={evolution.assessment} colors={colors} />
             )}
             {evolution.plan && (
-              <SOAPSection label="Plano" content={evolution.plan} colors={colors} />
+              <SOAPSection label="Plano / Exercícios Casa" content={evolution.plan} colors={colors} />
             )}
           </View>
         )}
@@ -562,5 +626,18 @@ const styles = StyleSheet.create({
   soapContent: {
     fontSize: 14,
     lineHeight: 20,
+  },
+  reportContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 12,
+  },
+  reportIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

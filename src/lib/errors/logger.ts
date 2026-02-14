@@ -16,8 +16,8 @@ function getMinLogLevel(): LogLevel {
   const env = (import.meta as ImportMeta & { env: { VITE_LOG_LEVEL?: string; DEV?: boolean } }).env;
   const v = env.VITE_LOG_LEVEL?.toLowerCase();
   if (v === 'error' || v === 'warn' || v === 'info' || v === 'debug') return v as LogLevel;
-  // Reduzir logs em desenvolvimento por padrão
-  return env.DEV ? 'warn' : 'info';
+  // Reduzir logs em desenvolvimento por padrão para evitar ruído no console
+  return env.DEV ? 'warn' : 'warn';
 }
 
 function shouldLogLongTasks(): boolean {

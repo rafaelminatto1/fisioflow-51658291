@@ -45,6 +45,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { soapKeys } from '@/hooks/useSoapRecords';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 import { AgendaAutomationService } from '@/lib/services/AgendaAutomationService';
+import { NotionEvolutionPanel } from './v2-improved/NotionEvolutionPanel';
+import type { EvolutionV2Data } from './v2-improved/types';
 
 interface SessionEvolutionContainerProps {
   appointmentId?: string;
@@ -78,6 +80,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   const [, setAppointment] = useState<Record<string, unknown> | null>(null);
   const [appointmentLoadedFromApi, setAppointmentLoadedFromApi] = useState(false);
   const [activeTab, setActiveTab] = useState('evolution');
+  const [viewVersion, setViewVersion] = useState<'classic' | 'improved'>('improved');
 
   // Patient data
   // Using any[] to avoid strict type conflicts with child components that expect specific interfaces
@@ -281,10 +284,31 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   // Só carregar dados quando o usuário estiver autenticado (evita permission-denied por token ainda não disponível)
   useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    const unsub = auth.onAuthStateChanged((user) => {
+    let retryCount = 0;
+    const maxRetries = 3;
+
+    const unsub = auth.onAuthStateChanged(async (user) => {
       if (user) {
+        const attemptLoad = async () => {
+          try {
+            // Get token to ensure it's ready
+            await user.getIdToken(true);
+            await loadData();
+          } catch (err) {
+            if (retryCount < maxRetries) {
+              retryCount++;
+              logger.warn(`Retry loading data (${retryCount}/${maxRetries})...`, err, 'SessionEvolutionContainer');
+              timeoutId = setTimeout(attemptLoad, 500 * retryCount);
+            } else {
+              logger.error('Failed to load data after retries', err, 'SessionEvolutionContainer');
+              setLoadError('Erro de conexão ou permissão. Tente recarregar a página.');
+              setIsLoading(false);
+            }
+          }
+        };
+
         // Pequeno atraso para o SDK anexar o token às próximas requisições Firestore
-        timeoutId = setTimeout(() => loadData(), 100);
+        timeoutId = setTimeout(attemptLoad, 200);
       } else if (auth.currentUser === null) {
         setIsLoading(false);
         setLoadError('Faça login para acessar esta página.');
@@ -685,118 +709,167 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
         />
       )}
 
-      {/* Main Content - 4 Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 h-[calc(100vh-80px)]">
-        {/* Column 1: SOAP Form (30%) */}
-        <div className="lg:col-span-4 space-y-4">
-          <Card className="h-full">
-            <CardContent className="p-4">
-              {patientId && (
-                <SOAPFormPanel
-                  patientId={patientId}
-                  data={soapData}
-                  onChange={handleSoapChange}
-                  onSave={handleSave}
-                  isSaving={isSaving}
-                />
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Column 2: History & Surgeries (25%) */}
-        <div className="lg:col-span-3 space-y-4">
-          <ScrollArea className="h-[calc(100vh-120px)]">
-            <div className="space-y-4 pr-4">
-              {/* Conduct Replication */}
-              {patientId && (
-                <ConductReplication
-                  patientId={patientId}
-                  onSelectConduct={handleSelectConduct}
-                />
-              )}
-
-              {/* Session History */}
-              {patientId && (
-                <SessionHistoryPanel
-                  patientId={patientId}
-                  onReplicateConduct={handleReplicateConduct}
-                />
-              )}
-
-              {/* Surgery Timeline */}
-              {surgeries.length > 0 && (
-                <SurgeryTimeline surgeries={surgeries} />
-              )}
-            </div>
-          </ScrollArea>
-        </div>
-
-        {/* Column 3: Tests & Evolution (25%) */}
-        <div className="lg:col-span-3 space-y-4">
-          <ScrollArea className="h-[calc(100vh-120px)]">
-            <div className="space-y-4 pr-4">
-              <Tabs value={activeTab} onValueChange={setActiveTab} aria-label="Painéis de evolução">
-                <TabsList className="w-full">
-                  <TabsTrigger value="evolution" className="flex-1">Evolução</TabsTrigger>
-                  <TabsTrigger value="exercises" className="flex-1">Exercícios</TabsTrigger>
-                  <TabsTrigger value="pathologies" className="flex-1">Patologias</TabsTrigger>
-                  <TabsTrigger value="insights" className="flex-1">Insights</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="exercises" className="mt-4">
-                  <SessionExercisesPanel
-                    exercises={sessionExercises}
-                    onChange={setSessionExercises}
-                  />
-                </TabsContent>
-
-                <TabsContent value="evolution" className="mt-4">
+      {/* Main Content */}
+      <div className="p-4 h-[calc(100vh-80px)] overflow-hidden">
+        {viewVersion === 'improved' ? (
+          <NotionEvolutionPanel
+            data={{
+              patientReport: soapData.subjective,
+              evolutionText: soapData.assessment,
+              procedures: [], // Mapear se disponível
+              exercises: sessionExercises.map(ex => ({
+                id: ex.id || Math.random().toString(),
+                name: ex.name,
+                sets: ex.sets || '3',
+                reps: ex.reps || '10',
+                weight: ex.weight || '',
+                notes: ex.notes || '',
+                feedback: ex.feedback as any || 'good',
+              })),
+              painLevel: 0,
+              painLocation: '',
+              homeCareExercises: soapData.plan,
+              observations: '',
+              sessionNumber,
+              totalSessions: sessionNumber,
+              sessionDate: new Date().toISOString(),
+              therapistName: auth.currentUser?.displayName || 'Fisioterapeuta',
+              therapistCrefito: selectedTherapistCrefito || '',
+            }}
+            onChange={(newData) => {
+              setSoapData({
+                subjective: newData.patientReport,
+                objective: soapData.objective, // Manter o que já tinha
+                assessment: newData.evolutionText,
+                plan: newData.homeCareExercises || soapData.plan
+              });
+              setSessionExercises(newData.exercises.map(ex => ({
+                id: ex.id,
+                name: ex.name,
+                sets: ex.sets,
+                reps: ex.reps,
+                weight: ex.weight,
+                notes: ex.notes,
+                feedback: ex.feedback as any
+              })));
+            }}
+            onSave={handleSave}
+            isSaving={isSaving}
+          />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
+            {/* Column 1: SOAP Form (30%) */}
+            <div className="lg:col-span-4 space-y-4">
+              <Card className="h-full">
+                <CardContent className="p-4">
                   {patientId && (
-                    <TestEvolutionPanel
+                    <SOAPFormPanel
                       patientId={patientId}
-                      sessionNumber={sessionNumber}
+                      data={soapData}
+                      onChange={handleSoapChange}
+                      onSave={handleSave}
+                      isSaving={isSaving}
                     />
                   )}
-                </TabsContent>
+                </CardContent>
+              </Card>
+            </div>
 
-                <TabsContent value="pathologies" className="mt-4">
-                  {pathologies.length > 0 ? (
-                    <PathologyStatus pathologies={pathologies} />
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      Nenhuma patologia registrada.
-                    </div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="insights" className="mt-4">
+            {/* Column 2: History & Surgeries (25%) */}
+            <div className="lg:col-span-3 space-y-4">
+              <ScrollArea className="h-[calc(100vh-120px)]">
+                <div className="space-y-4 pr-4">
+                  {/* Conduct Replication */}
                   {patientId && (
-                    <MedicalReportSuggestions patientId={patientId} />
+                    <ConductReplication
+                      patientId={patientId}
+                      onSelectConduct={handleSelectConduct}
+                    />
                   )}
-                </TabsContent>
-              </Tabs>
-            </div>
-          </ScrollArea>
-        </div>
 
-        {/* Column 4: Patient Summary (20%) */}
-        <div className="lg:col-span-2">
-          <ScrollArea className="h-[calc(100vh-120px)]">
-            <div className="space-y-4 pr-4">
-              {patient && (
-                <PatientSummaryPanel
-                  patient={patient}
-                  goals={goals}
-                  totalSessions={sessionNumber}
-                />
-              )}
-              {goals.length > 0 && (
-                <GoalsTracker goals={goals} />
-              )}
+                  {/* Session History */}
+                  {patientId && (
+                    <SessionHistoryPanel
+                      patientId={patientId}
+                      onReplicateConduct={handleReplicateConduct}
+                    />
+                  )}
+
+                  {/* Surgery Timeline */}
+                  {surgeries.length > 0 && (
+                    <SurgeryTimeline surgeries={surgeries} />
+                  )}
+                </div>
+              </ScrollArea>
             </div>
-          </ScrollArea>
-        </div>
+
+            {/* Column 3: Tests & Evolution (25%) */}
+            <div className="lg:col-span-3 space-y-4">
+              <ScrollArea className="h-[calc(100vh-120px)]">
+                <div className="space-y-4 pr-4">
+                  <Tabs value={activeTab} onValueChange={setActiveTab} aria-label="Painéis de evolução">
+                    <TabsList className="w-full">
+                      <TabsTrigger value="evolution" className="flex-1">Evolução</TabsTrigger>
+                      <TabsTrigger value="exercises" className="flex-1">Exercícios</TabsTrigger>
+                      <TabsTrigger value="pathologies" className="flex-1">Patologias</TabsTrigger>
+                      <TabsTrigger value="insights" className="flex-1">Insights</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="exercises" className="mt-4">
+                      <SessionExercisesPanel
+                        exercises={sessionExercises}
+                        onChange={setSessionExercises}
+                      />
+                    </TabsContent>
+
+                    <TabsContent value="evolution" className="mt-4">
+                      {patientId && (
+                        <TestEvolutionPanel
+                          patientId={patientId}
+                          sessionNumber={sessionNumber}
+                        />
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="pathologies" className="mt-4">
+                      {pathologies.length > 0 ? (
+                        <PathologyStatus pathologies={pathologies} />
+                      ) : (
+                        <div className="text-center py-8 text-muted-foreground">
+                          Nenhuma patologia registrada.
+                        </div>
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="insights" className="mt-4">
+                      {patientId && (
+                        <MedicalReportSuggestions patientId={patientId} />
+                      )}
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              </ScrollArea>
+            </div>
+
+            {/* Column 4: Patient Summary (20%) */}
+            <div className="lg:col-span-2">
+              <ScrollArea className="h-[calc(100vh-120px)]">
+                <div className="space-y-4 pr-4">
+                  {patient && (
+                    <PatientSummaryPanel
+                      patient={patient}
+                      goals={goals}
+                      totalSessions={sessionNumber}
+                    />
+                  )}
+                  {goals.length > 0 && (
+                    <GoalsTracker goals={goals} />
+                  )}
+                </div>
+              </ScrollArea>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

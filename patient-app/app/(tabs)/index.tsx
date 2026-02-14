@@ -23,7 +23,8 @@ import { ptBR } from 'date-fns/locale';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColors } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/auth';
-import { Card, NotificationPermissionModal, SyncIndicator } from '@/components';
+import { useGamification } from '@/hooks/useGamification';
+import { Card, NotificationPermissionModal, SyncIndicator, LinearProgress } from '@/components';
 import {
   collection,
   query,
@@ -75,6 +76,7 @@ const quickActions: QuickAction[] = [
 export default function DashboardScreen() {
   const colors = useColors();
   const { user } = useAuthStore();
+  const { currentLevel, currentXp, xpPerLevel, progressPercentage } = useGamification(user?.id);
 
   const [todayPlan, setTodayPlan] = useState<TodayPlan | null>(null);
   const [nextAppointment, setNextAppointment] = useState<Appointment | null>(null);
@@ -109,53 +111,48 @@ export default function DashboardScreen() {
       return;
     }
 
-    // Fetch today's exercise plan
-    const plansRef = collection(db, 'users', user.id, 'exercise_plans');
-    const plansQuery = query(
-      plansRef,
-      where('status', '==', 'active'),
-      orderBy('created_at', 'desc'),
-      limit(1)
+    // Fetch today's exercise plan from root patient_exercises or soap_records exercises
+    const exercisesRef = collection(db, 'patient_exercises');
+    const exercisesQuery = query(
+      exercisesRef,
+      where('patientId', '==', user.id),
+      orderBy('prescribedAt', 'desc'),
+      limit(10)
     );
 
-    const unsubscribePlans = onSnapshot(plansQuery, (snapshot) => {
+    const unsubscribePlans = onSnapshot(exercisesQuery, (snapshot) => {
       if (!snapshot.empty) {
-        const planDoc = snapshot.docs[0];
-        const planData = planDoc.data();
+        const exercises = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        } as any));
+        
         setTodayPlan({
-          id: planDoc.id,
-          name: planData.name || 'Plano de Exercícios',
-          exercises: (planData.exercises || []).map((ex: any) => ({
+          id: 'current-plan',
+          name: 'Meus Exercícios',
+          exercises: exercises.map((ex: any) => ({
             id: ex.id,
-            name: ex.name,
-            sets: ex.sets,
-            reps: ex.reps,
+            name: ex.exercise?.name || 'Exercício',
+            sets: ex.sets || 3,
+            reps: ex.reps || 10,
             completed: ex.completed || false,
           })),
         });
-
-        // Calculate streak
-        const exercises = planData.exercises || [];
-        const completedToday = exercises.filter((e: any) => e.completed).length;
-        const totalToday = exercises.length;
-
-        // TODO: Calculate real streak from user document
-        if (completedToday === totalToday && totalToday > 0) {
-          setStreak(5); // Placeholder - would calculate from Firestore
-        }
       }
       setLoading(false);
     }, (error) => {
       console.error('Error fetching plans:', error);
+      // Fallback logic
       setLoading(false);
     });
 
-    // Fetch next appointment
-    const now = new Date();
-    const appointmentsRef = collection(db, 'users', user.id, 'appointments');
+    // Fetch next appointment from root appointments collection
+    const now = new Date().toISOString();
+    const appointmentsRef = collection(db, 'appointments');
     const appointmentsQuery = query(
       appointmentsRef,
-      where('date', '>=', now),
+      where('patient_id', '==', user.id),
+      where('date', '>=', now.split('T')[0]),
       orderBy('date', 'asc'),
       limit(1)
     );
@@ -166,8 +163,11 @@ export default function DashboardScreen() {
         const apptData = apptDoc.data();
         setNextAppointment({
           id: apptDoc.id,
-          ...apptData,
-        } as Appointment);
+          date: apptData.date, // ISO string in root collection
+          time: apptData.start_time,
+          type: apptData.type || 'Fisioterapia',
+          professional_name: apptData.therapist_name || 'Fisioterapeuta',
+        } as any);
       }
     });
 
@@ -196,8 +196,14 @@ export default function DashboardScreen() {
   const getNextAppointmentLabel = () => {
     if (!nextAppointment) return null;
 
-    const apptDate = nextAppointment.date?.toDate();
-    if (!apptDate) return null;
+    let apptDate: Date;
+    if (typeof nextAppointment.date === 'string') {
+      apptDate = new Date(nextAppointment.date);
+    } else {
+      apptDate = nextAppointment.date?.toDate();
+    }
+    
+    if (!apptDate || isNaN(apptDate.getTime())) return null;
 
     const today = new Date();
     const tomorrow = new Date(today);
@@ -223,7 +229,7 @@ export default function DashboardScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <View>
+          <View style={styles.headerLeft}>
             <Text style={[styles.greeting, { color: colors.textSecondary }]}>
               {getGreeting()}, {user?.name?.split(' ')[0] || 'Paciente'} 👋
             </Text>
@@ -231,17 +237,39 @@ export default function DashboardScreen() {
               {getTodayLabel()}
             </Text>
           </View>
-          <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
-            {user?.avatarUrl ? (
-              <Image source={{ uri: user.avatarUrl }} style={styles.avatar} />
-            ) : (
-              <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
-                <Text style={styles.avatarText}>
-                  {user?.name?.charAt(0).toUpperCase() || 'P'}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
+          
+          <View style={styles.headerRight}>
+            <TouchableOpacity 
+              style={[styles.levelBadge, { backgroundColor: colors.primary }]}
+              onPress={() => router.push('/(tabs)/profile')}
+            >
+              <Text style={styles.levelText}>Lvl {currentLevel}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/(tabs)/profile')}>
+              {user?.avatarUrl ? (
+                <Image source={{ uri: user.avatarUrl }} style={styles.avatar} />
+              ) : (
+                <View style={[styles.avatarPlaceholder, { backgroundColor: colors.primary }]}>
+                  <Text style={styles.avatarText}>
+                    {user?.name?.charAt(0).toUpperCase() || 'P'}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Level Progress Bar */}
+        <View style={styles.xpContainer}>
+          <View style={styles.xpHeader}>
+            <Text style={[styles.xpLabel, { color: colors.textSecondary }]}>Progresso do Nível</Text>
+            <Text style={[styles.xpValue, { color: colors.text }]}>{currentXp}/{xpPerLevel} XP</Text>
+          </View>
+          <LinearProgress 
+            progress={progressPercentage / 100} 
+            color={colors.primary}
+            style={styles.xpBar}
+          />
         </View>
 
         {loading ? (
@@ -457,9 +485,54 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     paddingHorizontal: 4,
     paddingVertical: 16,
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  levelBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  levelText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  xpContainer: {
+    marginBottom: 24,
+    paddingHorizontal: 4,
+  },
+  xpHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  xpLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  xpValue: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  xpBar: {
+    height: 8,
+    borderRadius: 4,
   },
   greeting: {
     fontSize: 14,

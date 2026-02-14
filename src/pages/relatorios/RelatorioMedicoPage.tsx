@@ -30,7 +30,9 @@ import { useOrganizations } from '@/hooks/useOrganizations';
 import { usePatients } from '@/hooks/usePatients';
 import { patientsApi } from '@/integrations/firebase/functions';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Download, Info } from 'lucide-react';
+import { Download, Info, Share2, Cloud } from 'lucide-react';
+import { useGoogleDocs } from '@/hooks/useGoogleDocs';
+import { useGoogleOAuth } from '@/hooks/useGoogleOAuth';
 
 const styles = StyleSheet.create({
   page: {
@@ -1288,6 +1290,48 @@ export default function RelatorioMedicoPage() {
   });
 
   const { data: pacientes = [] } = usePatients();
+  const { generateReport, isGenerating, listTemplates } = useGoogleDocs();
+  const { connect: connectGoogle, loading: isConnecting } = useGoogleOAuth();
+  const [googleTemplates, setGoogleTemplates] = useState<any[]>([]);
+  const [isGoogleTemplateDialogOpen, setIsGoogleTemplateDialogOpen] = useState(false);
+  const [selectedReportForGoogle, setSelectedReportForGoogle] = useState<RelatorioMedicoData | null>(null);
+
+  const handleGenerateGoogleDocs = async (relatorio: RelatorioMedicoData) => {
+    try {
+      setSelectedReportForGoogle(relatorio);
+      const templates = await listTemplates();
+      setGoogleTemplates(templates);
+      setIsGoogleTemplateDialogOpen(true);
+    } catch (err) {
+      toast.error('Conecte sua conta Google primeiro');
+      connectGoogle();
+    }
+  };
+
+  const confirmGenerateGoogleDocs = async (templateId: string) => {
+    if (!selectedReportForGoogle) return;
+
+    generateReport({
+      templateId,
+      patientName: selectedReportForGoogle.paciente.nome,
+      data: {
+        PACIENTE_NOME: selectedReportForGoogle.paciente.nome,
+        PACIENTE_CPF: selectedReportForGoogle.paciente.cpf || '',
+        QUEIXA_PRINCIPAL: selectedReportForGoogle.historico_clinico?.queixa_principal || '',
+        DIAGNOSTICO: selectedReportForGoogle.avaliacao?.diagnostico_fisioterapeutico || '',
+        PLANO_TRATAMENTO: selectedReportForGoogle.plano_tratamento?.objetivos || '',
+        DATA_EMISSAO: format(new Date(selectedReportForGoogle.data_emissao), 'dd/MM/yyyy'),
+        TERAPEUTA_NOME: selectedReportForGoogle.profissional_emissor.nome,
+      },
+    }, {
+      onSuccess: (data) => {
+        if (data.webViewLink) {
+          window.open(data.webViewLink, '_blank');
+        }
+        setIsGoogleTemplateDialogOpen(false);
+      }
+    });
+  };
 
   // Abrir relatório para o paciente quando vier do dashboard/evolução
   useEffect(() => {
@@ -1833,6 +1877,10 @@ export default function RelatorioMedicoPage() {
                             <Trash2 className="h-4 w-4 mr-1" />
                             Excluir
                           </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleGenerateGoogleDocs(relatorio)}>
+                            <Cloud className="h-4 w-4 mr-1 text-blue-500" />
+                            Google Docs
+                          </Button>
                           <PDFDownloadLink
                             document={<RelatorioMedicoPDF data={relatorio} />}
                             fileName={`relatorio-medico-${relatorio.paciente?.nome?.replace(/\s+/g, '-')}-${format(new Date(relatorio.data_emissao), 'dd-MM-yyyy')}.pdf`}
@@ -2015,6 +2063,48 @@ export default function RelatorioMedicoPage() {
                 <Button onClick={handleTemplateSubmit} disabled={saveTemplateMutation.isPending}>
                   <Save className="h-4 w-4 mr-2" />
                   {saveTemplateMutation.isPending ? 'Salvando...' : 'Salvar modelo'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog Google Templates */}
+        <Dialog open={isGoogleTemplateDialogOpen} onOpenChange={setIsGoogleTemplateDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Selecione um Modelo do Google Docs</DialogTitle>
+              <DialogDescription>
+                Seus templates do Google Drive que contêm "Template" ou "Modelo" no nome.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <ScrollArea className="h-64">
+                <div className="space-y-2">
+                  {googleTemplates.map((template) => (
+                    <Button
+                      key={template.id}
+                      variant="outline"
+                      className="w-full justify-start text-left h-auto py-3 px-4"
+                      onClick={() => confirmGenerateGoogleDocs(template.id)}
+                      disabled={isGenerating}
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-medium">{template.name}</span>
+                        <span className="text-xs text-muted-foreground">Google Docs Template</span>
+                      </div>
+                    </Button>
+                  ))}
+                  {googleTemplates.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      Nenhum template encontrado no seu Google Drive.
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+              <div className="flex justify-end gap-2">
+                <Button variant="ghost" onClick={() => setIsGoogleTemplateDialogOpen(false)}>
+                  Cancelar
                 </Button>
               </div>
             </div>

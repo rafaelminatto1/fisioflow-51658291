@@ -1,246 +1,99 @@
 /**
- * useGoogleDocs - Hook para integração com Google Docs
+ * useGoogleDocs - Hook para integração com Google Docs via Cloud Functions
  */
 
 import { useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import {
-  DocsService,
-  CLINICAL_REPORT_PLACEHOLDERS,
-  CERTIFICATE_PLACEHOLDERS,
-  DECLARATION_PLACEHOLDERS,
-} from '@/lib/integrations/google/docs';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/lib/firebase';
 
-interface UseGoogleDocsOptions {
-  accessToken?: string;
-}
+// Placeholders constants
+export const CLINICAL_REPORT_PLACEHOLDERS = {
+  PACIENTE_NOME: 'Nome completo do paciente',
+  PACIENTE_CPF: 'CPF do paciente',
+  PACIENTE_DATA_NASCIMENTO: 'Data de nascimento',
+  QUEIXA_PRINCIPAL: 'Queixa principal',
+  DIAGNOSTICO: 'Diagnóstico',
+  PLANO_TRATAMENTO: 'Plano de tratamento',
+};
 
-export function useGoogleDocs(options: UseGoogleDocsOptions = {}) {
-  const { accessToken } = options;
+export const CERTIFICATE_PLACEHOLDERS = {
+  PACIENTE_NOME: 'Nome do paciente',
+  CERTIFICADO_TIPO: 'Tipo de certificado',
+  PERIODO_INICIO: 'Início',
+  PERIODO_FIM: 'Fim',
+};
+
+export const DECLARATION_PLACEHOLDERS = {
+  PACIENTE_NOME: 'Nome do paciente',
+  DATA_ATENDIMENTO: 'Data',
+  HORARIO_ATENDIMENTO: 'Horário',
+};
+
+export function useGoogleDocs() {
   const queryClient = useQueryClient();
 
-  // Listar templates
+  // Listar templates via Cloud Function
   const listTemplates = useCallback(async (folderId?: string) => {
-    if (!accessToken) throw new Error('Access token não fornecido');
+    const listGoogleTemplates = httpsCallable(functions, 'listGoogleTemplates');
+    const result = await listGoogleTemplates({ folderId });
+    return (result.data as any).templates || [];
+  }, []);
 
-    const service = new DocsService(accessToken);
-    return service.listTemplates(folderId);
-  }, [accessToken]);
-
-  // Extrair placeholders do documento
-  const extractPlaceholders = useCallback(async (documentId: string) => {
-    if (!accessToken) throw new Error('Access token não fornecido');
-
-    const service = new DocsService(accessToken);
-    return service.extractPlaceholders(documentId);
-  }, [accessToken]);
-
-  // Gerar relatório a partir de template
+  // Gerar relatório a partir de template via Cloud Function
   const generateReport = useMutation({
     mutationFn: async ({
       templateId,
-      reportName,
+      patientName,
       data,
-      convertToPdf,
-      saveToFolder,
+      folderId,
     }: {
       templateId: string;
-      reportName: string;
+      patientName: string;
       data: Record<string, string>;
-      convertToPdf?: boolean;
-      saveToFolder?: string;
+      folderId?: string;
     }) => {
-      if (!accessToken) throw new Error('Access token não fornecido');
-
-      const service = new DocsService(accessToken);
-      return service.generateReport(templateId, reportName, data, {
-        convertToPdf,
-        saveToFolder,
+      const generateGoogleReport = httpsCallable(functions, 'generateGoogleReport');
+      const result = await generateGoogleReport({
+        templateId,
+        patientName,
+        data,
+        folderId,
       });
+      return result.data as { success: boolean; fileId: string; webViewLink: string };
     },
     onSuccess: (data) => {
-      toast.success('Relatório gerado com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['drive-files'] });
-      return data;
+      if (data.success) {
+        toast.success('Relatório gerado com sucesso!');
+        queryClient.invalidateQueries({ queryKey: ['drive-files'] });
+      }
     },
     onError: (error) => {
       console.error('Erro ao gerar relatório:', error);
-      toast.error('Erro ao gerar relatório');
+      toast.error('Erro ao gerar relatório. Verifique suas permissões do Google.');
     },
   });
 
-  // Gerar relatório clínico
-  const generateClinicalReport = useMutation({
-    mutationFn: async ({
-      templateId,
-      patientData,
-      clinicalData,
-      therapistData,
-      options,
-    }: {
-      templateId: string;
-      patientData: {
-        nome: string;
-        cpf?: string;
-        dataNascimento?: string;
-        contato?: string;
-      };
-      clinicalData: {
-        dataAvaliacao: string;
-        queixaPrincipal: string;
-        historia: string;
-        diagnostico: string;
-        planoTratamento: string;
-        observacoes?: string;
-      };
-      therapistData: {
-        nome: string;
-        registro?: string;
-        assinatura?: string;
-      };
-      options?: {
-        convertToPdf?: boolean;
-        saveToFolder?: string;
-      };
-    }) => {
-      if (!accessToken) throw new Error('Access token não fornecido');
-
-      const service = new DocsService(accessToken);
-      return service.generateClinicalReport(
-        templateId,
-        patientData,
-        clinicalData,
-        therapistData,
-        options
-      );
+  // Criar pasta do paciente
+  const createPatientFolder = useMutation({
+    mutationFn: async ({ name, parentId }: { name: string; parentId?: string }) => {
+      const createPatientDriveFolder = httpsCallable(functions, 'createPatientDriveFolder');
+      const result = await createPatientDriveFolder({ name, parentId });
+      return result.data as { folderId: string };
     },
     onSuccess: () => {
-      toast.success('Relatório clínico gerado!');
-    },
-    onError: (error) => {
-      console.error('Erro ao gerar relatório clínico:', error);
-      toast.error('Erro ao gerar relatório clínico');
-    },
+      toast.success('Pasta do paciente criada no Google Drive');
+    }
   });
-
-  // Gerar certificado
-  const generateCertificate = useMutation({
-    mutationFn: async ({
-      templateId,
-      patientData,
-      certificateData,
-      therapistData,
-      options,
-    }: {
-      templateId: string;
-      patientData: {
-        nome: string;
-        cpf?: string;
-      };
-      certificateData: {
-        tipo: string;
-        periodoInicio: string;
-        periodoFim: string;
-        totalSessoes: number;
-      };
-      therapistData: {
-        nome: string;
-        registro?: string;
-      };
-      options?: {
-        convertToPdf?: boolean;
-        saveToFolder?: string;
-      };
-    }) => {
-      if (!accessToken) throw new Error('Access token não fornecido');
-
-      const service = new DocsService(accessToken);
-      return service.generateCertificate(
-        templateId,
-        patientData,
-        certificateData,
-        therapistData,
-        options
-      );
-    },
-    onSuccess: () => {
-      toast.success('Certificado gerado!');
-    },
-    onError: (error) => {
-      console.error('Erro ao gerar certificado:', error);
-      toast.error('Erro ao gerar certificado');
-    },
-  });
-
-  // Gerar declaração de comparecimento
-  const generateAttendanceDeclaration = useMutation({
-    mutationFn: async ({
-      templateId,
-      patientData,
-      attendanceData,
-      options,
-    }: {
-      templateId: string;
-      patientData: {
-        nome: string;
-        cpf?: string;
-      };
-      attendanceData: {
-        data: string;
-        horario: string;
-        tipoAtendimento: string;
-      };
-      options?: {
-        convertToPdf?: boolean;
-        saveToFolder?: string;
-      };
-    }) => {
-      if (!accessToken) throw new Error('Access token não fornecido');
-
-      const service = new DocsService(accessToken);
-      return service.generateAttendanceDeclaration(
-        templateId,
-        patientData,
-        attendanceData,
-        options
-      );
-    },
-    onSuccess: () => {
-      toast.success('Declaração gerada!');
-    },
-    onError: (error) => {
-      console.error('Erro ao gerar declaração:', error);
-      toast.error('Erro ao gerar declaração');
-    },
-  });
-
-  // Ler conteúdo do documento
-  const getDocumentContent = useCallback(async (documentId: string) => {
-    if (!accessToken) throw new Error('Access token não fornecido');
-
-    const service = new DocsService(accessToken);
-    return service.getDocumentContent(documentId);
-  }, [accessToken]);
 
   return {
-    // Queries
     listTemplates,
-    extractPlaceholders,
-    getDocumentContent,
-
-    // Mutations
     generateReport: generateReport.mutate,
-    generateClinicalReport: generateClinicalReport.mutate,
-    generateCertificate: generateCertificate.mutate,
-    generateAttendanceDeclaration: generateAttendanceDeclaration.mutate,
-
-    // Loading states
     isGenerating: generateReport.isPending,
-    isGeneratingClinical: generateClinicalReport.isPending,
-    isGeneratingCertificate: generateCertificate.isPending,
-    isGeneratingDeclaration: generateAttendanceDeclaration.isPending,
-
+    createPatientFolder: createPatientFolder.mutate,
+    isCreatingFolder: createPatientFolder.isPending,
+    
     // Constants
     CLINICAL_REPORT_PLACEHOLDERS,
     CERTIFICATE_PLACEHOLDERS,

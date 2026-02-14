@@ -13,12 +13,14 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-export const useRealtimeAppointments = () => {
+export const useRealtimeAppointments = (enabled = true) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   useEffect(() => {
+    if (!enabled) return;
+
     const orgId = localStorage.getItem('fisioflow_org_id') || 'default';
     if (!user || !orgId) return;
 
@@ -57,5 +59,5 @@ export const useRealtimeAppointments = () => {
     return () => {
       off(triggerRef, 'value', unsubscribe);
     };
-  }, [user, queryClient, toast]);
+  }, [enabled, user, queryClient, toast]);
 };

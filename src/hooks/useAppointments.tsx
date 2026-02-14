@@ -168,21 +168,10 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
       return { data: [], isFromCache: false, cacheTimestamp: null, source: 'memory' };
     }
 
-    // Usar AppointmentService
-    if (!organizationId) {
-      // Se não tiver organizationId e não conseguir recuperar, pode falhar ou retornar vazio
-      // Por segurança, vamos tentar buscar sem filtro explicito se for permitido pelo RLS, 
-      // mas o Service espera string.
-      // Vamos assumir que getUserOrganizationId vai retornar algo ou lançar erro se crítico.
-      // Para evitar crash, vamos retornar vazio se não tiver ID.
-      logger.warn('Abortando fetch: organization_id não encontrado', {}, 'useAppointments');
-      return { data: [], isFromCache: false, cacheTimestamp: null, source: 'memory' };
-    }
-
     // Usar retry com backoff para resiliência de rede
     const data = await retryWithBackoff(() =>
       withTimeout(
-        AppointmentService.fetchAppointments(organizationId!),
+        AppointmentService.fetchAppointments(organizationId),
         15000
       )
     );
@@ -273,15 +262,22 @@ import { useRealtimeAppointments } from './useRealtimeAppointments';
 // ... (imports remain)
 
 // Main hook to fetch appointments with Realtime support
-export function useAppointments() {
+interface UseAppointmentsOptions {
+  enabled?: boolean;
+  enableRealtime?: boolean;
+}
+
+export function useAppointments(options: UseAppointmentsOptions = {}) {
   const { _toast } = useToast();
-  const { profile, user } = useAuth();
+  const { profile } = useAuth();
   const queryClient = useQueryClient();
   const organizationId = profile?.organization_id;
+  const isHookEnabled = options.enabled ?? true;
+  const shouldEnableQuery = isHookEnabled && !!organizationId;
 
   // Ativar listener do Realtime Database (Substitui Firestore onSnapshot)
   // Quando o backend publica no RTDB, este hook invalida a query automaticamente
-  useRealtimeAppointments();
+  useRealtimeAppointments((options.enableRealtime ?? true) && shouldEnableQuery);
 
   const appointmentsQuery = useQuery({
     queryKey: appointmentKeys.list(organizationId),
@@ -294,7 +290,7 @@ export function useAppointments() {
     refetchOnReconnect: true,
     refetchInterval: false,
     placeholderData: (previousData) => previousData,
-    enabled: !!organizationId || !!user,
+    enabled: shouldEnableQuery,
     throwOnError: false,
   });
 
