@@ -660,7 +660,7 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMod
           </div>
         </div>
         {/* Card grid skeleton - mimics real cards (image + content) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 9 }).map((_, i) => (
             <Card key={i} className="overflow-hidden">
               <div className="relative h-44 bg-muted">
@@ -796,7 +796,7 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMod
         {filteredExercises.length === 0 ? (
           <EmptyState icon={Dumbbell} title="Nenhum exercício" />
         ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 p-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-2">
             {filteredExercises.map((exercise, index) => (
               <div key={exercise.id} className="relative group">
                 <ExerciseCard

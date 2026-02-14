@@ -145,26 +145,26 @@ service cloud.firestore {
     // ============================================================================================
 
     match /exercises/{exerciseId} {
-      allow read: if isAdmin() || isProfessional();
+      allow read: if isAuthenticated();
       allow create: if (isProfessional() || isAdmin()) && isValidSize();
       allow update: if (isProfessional() && isOwner('createdBy')) || isAdmin();
       allow delete: if isAdmin();
     }
 
     match /exercise_protocols/{protocolId} {
-      allow read: if isAdmin() || isProfessional();
+      allow read: if isAuthenticated();
       allow create: if (isProfessional() || isAdmin()) && isValidSize();
       allow update, delete: if isProfessional() || isAdmin();
     }
 
     match /exercise_templates/{templateId} {
-      allow read: if isAdmin() || isProfessional();
+      allow read: if isAuthenticated();
       allow create: if (isProfessional() || isAdmin()) && isValidSize();
       allow update, delete: if isProfessional() || isAdmin();
     }
 
     match /exercise_template_items/{itemId} {
-      allow read: if isAdmin() || isProfessional();
+      allow read: if isAuthenticated();
       allow create: if (isProfessional() || isAdmin()) && isValidSize();
       allow update, delete: if isProfessional() || isAdmin();
     }
@@ -177,7 +177,7 @@ service cloud.firestore {
     }
 
     match /clinical_test_templates/{docId} {
-      allow read: if isAdmin() || isProfessional();
+      allow read: if isAuthenticated();
       allow create: if (isProfessional() || isAdmin()) && isValidSize();
       allow update, delete: if isProfessional() || isAdmin();
     }
@@ -188,15 +188,41 @@ service cloud.firestore {
 
     match /contas_financeiras/{id} {
         allow read: if isAdmin() || isProfessional();
-        allow write: if isAdmin();
+        allow write: if isAdmin() || isProfessional();
+    }
+
+    match /transactions/{transactionId} {
+      allow read: if isProfessional() || isAdmin();
+      allow create: if isProfessional() && isValidSize();
+      allow update, delete: if isAdmin();
     }
 
     match /payments/{paymentId} {
-      allow read, write: if isAdmin();
+      allow read, write: if isAdmin() || isProfessional();
     }
     
+    match /recibos/{id} {
+      allow read: if isAdmin() || isProfessional();
+      allow write: if isAdmin() || isProfessional();
+    }
+
+    match /nfse/{id} {
+      allow read: if isAdmin() || isProfessional();
+      allow write: if isAdmin() || isProfessional();
+    }
+
+    match /nfse_config/{id} {
+      allow read: if isAdmin() || isProfessional();
+      allow write: if isAdmin();
+    }
+
+    match /patient_financial_summaries/{id} {
+      allow read: if isAdmin() || isProfessional() || (isPatient() && resource.data.patient_id == request.auth.uid);
+      allow write: if isAdmin() || isProfessional();
+    }
+
     match /vouchers/{voucherId} {
-      allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow read: if isAdmin() || isProfessional() || (isAuthenticated() && resource.data.userId == request.auth.uid);
       allow create: if false; 
       allow update: if isAdmin();
       allow delete: if isAdmin();
@@ -228,7 +254,19 @@ service cloud.firestore {
       allow update: if isOwner('createdBy') || isAdmin();
       allow delete: if isAdmin();
     }
-    
+
+    match /eventos/{eventId} {
+      allow read: if canAccessPatientData() || isAdmin();
+      allow create: if isProfessional() && isValidSize();
+      allow update: if isOwner('createdBy') || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /prestadores/{id} {
+      allow read: if isProfessional() || isAdmin();
+      allow write: if isProfessional() || isAdmin();
+    }
+
     match /evolutions/{evolutionId} {
       allow read: if canAccessPatientData() || (isPatient() && resource.data.patientId == request.auth.uid) || isAdmin();
       allow create: if isProfessional() && isValidSize();

@@ -10,6 +10,7 @@ import { AppError } from '@/lib/errors/AppError';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 import { FinancialService } from '@/services/financialService';
+import { AgentIngestPayload, agentIngest } from '@/lib/debug/agentIngest';
 
 interface AppointmentApiItem {
     id: string;
@@ -42,6 +43,20 @@ function calculateEndTime(startTime: string, durationMinutes: number): string {
     date.setHours(hours, minutes, 0, 0);
     date.setMinutes(date.getMinutes() + durationMinutes);
     return date.toTimeString().slice(0, 5);
+}
+
+const AGENT_METADATA = {
+    sessionId: 'debug-session',
+    runId: 'pre-fix',
+    hypothesisId: 'H2'
+};
+
+function logAgentEvent(payload: AgentIngestPayload): void {
+    agentIngest({
+        ...AGENT_METADATA,
+        timestamp: payload.timestamp ?? Date.now(),
+        ...payload
+    });
 }
 
 export class AppointmentService {
@@ -237,23 +252,15 @@ export class AppointmentService {
     ): Promise<AppointmentBase> {
         try {
             // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    sessionId: 'debug-session',
-                    runId: 'pre-fix',
-                    hypothesisId: 'H2',
-                    location: 'src/services/appointmentService.ts:updateAppointment:entry',
-                    message: 'updateAppointment called',
-                    data: {
-                        appointmentId: id,
-                        providedUpdateKeys: Object.keys(updates || {}),
-                        rawUpdates: updates
-                    },
-                    timestamp: Date.now()
-                })
-            }).catch(() => { });
+            logAgentEvent({
+                location: 'src/services/appointmentService.ts:updateAppointment:entry',
+                message: 'updateAppointment called',
+                data: {
+                    appointmentId: id,
+                    providedUpdateKeys: Object.keys(updates || {}),
+                    rawUpdates: updates
+                }
+            });
             // #endregion
 
             const updateData: Record<string, string | number | null | undefined> = {};
@@ -293,25 +300,17 @@ export class AppointmentService {
             }
 
             // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    sessionId: 'debug-session',
-                    runId: 'pre-fix',
-                    hypothesisId: 'H2',
-                    location: 'src/services/appointmentService.ts:updateAppointment:preparedData',
-                    message: 'Prepared update payload',
-                    data: {
-                        appointmentId: id,
-                        updateData,
-                        candidateEndTime: updateTime && (updates.duration ? calculateEndTime(updateTime, updates.duration) : null),
-                        hasDuration: Boolean(updates.duration),
-                        hasStartTime: Boolean(updateTime)
-                    },
-                    timestamp: Date.now()
-                })
-            }).catch(() => { });
+            logAgentEvent({
+                location: 'src/services/appointmentService.ts:updateAppointment:preparedData',
+                message: 'Prepared update payload',
+                data: {
+                    appointmentId: id,
+                    updateData,
+                    candidateEndTime: updateTime && (updates.duration ? calculateEndTime(updateTime, updates.duration) : null),
+                    hasDuration: Boolean(updates.duration),
+                    hasStartTime: Boolean(updateTime)
+                }
+            });
             // #endregion
 
             if (Object.keys(updateData).length === 0) throw AppError.badRequest('Nenhum dado para atualizar');
@@ -321,24 +320,16 @@ export class AppointmentService {
             const fetchedUpdatedAppointment = response;
 
             // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    sessionId: 'debug-session',
-                    runId: 'pre-fix',
-                    hypothesisId: 'H2',
-                    location: 'src/services/appointmentService.ts:updateAppointment:response',
-                    message: 'Received update response',
-                    data: {
-                        appointmentId: id,
-                        responseTime: fetchedUpdatedAppointment?.start_time ?? fetchedUpdatedAppointment?.appointment_time,
-                        responseEndTime: fetchedUpdatedAppointment?.end_time,
-                        responseDuration: fetchedUpdatedAppointment?.duration
-                    },
-                    timestamp: Date.now()
-                })
-            }).catch(() => { });
+            logAgentEvent({
+                location: 'src/services/appointmentService.ts:updateAppointment:response',
+                message: 'Received update response',
+                data: {
+                    appointmentId: id,
+                    responseTime: fetchedUpdatedAppointment?.start_time ?? fetchedUpdatedAppointment?.appointment_time,
+                    responseEndTime: fetchedUpdatedAppointment?.end_time,
+                    responseDuration: fetchedUpdatedAppointment?.duration
+                }
+            });
             // #endregion
 
             // Helper to parse date string as local date (avoiding timezone issues)
@@ -391,22 +382,14 @@ export class AppointmentService {
             return updatedAppointment;
         } catch (error) {
             // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    sessionId: 'debug-session',
-                    runId: 'pre-fix',
-                    hypothesisId: 'H2',
-                    location: 'src/services/appointmentService.ts:updateAppointment:error',
-                    message: 'updateAppointment threw',
-                    data: {
-                        appointmentId: id,
-                        error: String(error)
-                    },
-                    timestamp: Date.now()
-                })
-            }).catch(() => { });
+            logAgentEvent({
+                location: 'src/services/appointmentService.ts:updateAppointment:error',
+                message: 'updateAppointment threw',
+                data: {
+                    appointmentId: id,
+                    error: String(error)
+                }
+            });
             // #endregion
 
             throw AppError.from(error, 'AppointmentService.updateAppointment');

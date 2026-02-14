@@ -247,13 +247,21 @@ export const createAppointmentHttp = onRequest(
       const therapistIdRaw = (data.therapistId != null && data.therapistId !== '') ? String(data.therapistId).trim() : '';
       const therapistId = therapistIdRaw || userId;
       // Conflito por capacidade do slot (0/4 = livre), não por terapeuta
-      const hasConflict = await checkTimeConflictByCapacity(pool, {
+      const conflictResult = await checkTimeConflictByCapacity(pool, {
         date: data.date,
         startTime: data.startTime,
         endTime: data.endTime,
         organizationId
       });
-      if (hasConflict) { res.status(409).json({ error: 'Conflito de horário detectado' }); return; }
+      if (conflictResult.hasConflict) {
+        res.status(409).json({
+          error: 'Conflito de horário detectado',
+          conflicts: conflictResult.conflicts,
+          total: conflictResult.total,
+          capacity: conflictResult.capacity
+        });
+        return;
+      }
       const result = await pool.query(
         `INSERT INTO appointments (patient_id, therapist_id, date, start_time, end_time, session_type, notes, status, organization_id, created_by)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
@@ -365,14 +373,22 @@ export const updateAppointmentHttp = onRequest(
 
       const runConflictCheck = (updates.date || updates.appointment_date || updates.startTime || updates.start_time || updates.appointment_time || updates.endTime || updates.end_time) || (updates.therapistId && updates.therapistId !== currentAppt.therapist_id);
       if (runConflictCheck) {
-        const hasConflict = await checkTimeConflictByCapacity(pool, {
-          date: newDate,
-          startTime: newStartTime,
-          endTime: newEndTime,
-          excludeAppointmentId: appointmentId,
-          organizationId
+      const conflictResult = await checkTimeConflictByCapacity(pool, {
+        date: newDate,
+        startTime: newStartTime,
+        endTime: newEndTime,
+        excludeAppointmentId: appointmentId,
+        organizationId
+      });
+      if (conflictResult.hasConflict) {
+        res.status(409).json({
+          error: 'Conflito de horário detectado',
+          conflicts: conflictResult.conflicts,
+          total: conflictResult.total,
+          capacity: conflictResult.capacity
         });
-        if (hasConflict) { res.status(409).json({ error: 'Conflito de horário detectado' }); return; }
+        return;
+      }
       }
       const allowedFields = ['date', 'start_time', 'end_time', 'therapist_id', 'status', 'type', 'session_type', 'notes'];
       const fieldMap: Record<string, string> = { startTime: 'start_time', endTime: 'end_time', therapistId: 'therapist_id', type: 'session_type', appointment_date: 'date', appointment_time: 'start_time' };
@@ -706,22 +722,43 @@ async function getSlotCapacity(organizationId: string, dateStr: string, startTim
  * Verifica conflito por capacidade: slot cheio quando count >= capacity.
  * Não considera therapist_id; conta todos os agendamentos no horário da organização.
  */
+interface CapacityConflictRow {
+  id: string;
+  patient_id: string | null;
+  patient_name: string | null;
+  therapist_id: string | null;
+  therapist_name: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  date: string | null;
+}
+
+interface CapacityConflictResult {
+  hasConflict: boolean;
+  total: number;
+  conflicts: CapacityConflictRow[];
+  capacity: number;
+}
+
 async function checkTimeConflictByCapacity(
   pool: any,
   params: { date: string; startTime: string; endTime: string; excludeAppointmentId?: string; organizationId: string }
-): Promise<boolean> {
+): Promise<CapacityConflictResult> {
   const { date, startTime, endTime, excludeAppointmentId, organizationId } = params;
   const capacity = await getSlotCapacity(organizationId, date, startTime);
 
   let query = `
-    SELECT id FROM appointments
-    WHERE organization_id = $1
-      AND date = $2
-      AND status NOT IN ('cancelado', 'remarcado', 'paciente_faltou')
+    SELECT a.id, a.patient_id, p.full_name AS patient_name, a.therapist_id, prof.full_name AS therapist_name, a.start_time, a.end_time, a.date
+    FROM appointments a
+    LEFT JOIN patients p ON a.patient_id = p.id
+    LEFT JOIN profiles prof ON a.therapist_id = prof.user_id
+    WHERE a.organization_id = $1
+      AND a.date = $2
+      AND a.status NOT IN ('cancelado', 'remarcado', 'paciente_faltou')
       AND (
-        (start_time <= $3 AND end_time > $3) OR
-        (start_time < $4 AND end_time >= $4) OR
-        (start_time >= $3 AND end_time <= $4)
+        (a.start_time <= $3 AND a.end_time > $3) OR
+        (a.start_time < $4 AND a.end_time >= $4) OR
+        (a.start_time >= $3 AND a.end_time <= $4)
       )
   `;
   const sqlParams: (string | number)[] = [organizationId, date, startTime, endTime];
@@ -730,9 +767,15 @@ async function checkTimeConflictByCapacity(
     sqlParams.push(excludeAppointmentId);
   }
   const result = await pool.query(query, sqlParams);
-  const count = result.rows.length;
+  const conflicts = result.rows as CapacityConflictRow[];
+  const count = conflicts.length;
   logger.info('[checkTimeConflictByCapacity]', { organizationId, date, startTime, capacity, count, hasConflict: count >= capacity });
-  return count >= capacity;
+  return {
+    hasConflict: count >= capacity,
+    total: count,
+    conflicts,
+    capacity,
+  };
 }
 
 /**
