@@ -2,7 +2,7 @@
  * useGamification - Migrated to Firebase
  */
 
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, setDoc } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, limit, setDoc } from '@/integrations/firebase/app';
 import { triggerGamificationFeedback } from '@/lib/gamification/feedback-utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { parseISO, differenceInCalendarDays } from 'date-fns';
@@ -94,6 +94,18 @@ export interface UseGamificationResult {
 export const useGamification = (patientId: string): UseGamificationResult => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const hasPatientId = patientId.trim().length > 0;
+
+  const isRecoverableFirestoreError = (error: unknown): boolean => {
+    const code = (error as { code?: string })?.code;
+    const message = (error as Error)?.message?.toLowerCase?.() ?? '';
+    return (
+      code === 'permission-denied' ||
+      code === 'failed-precondition' ||
+      message.includes('insufficient permissions') ||
+      message.includes('requires an index')
+    );
+  };
 
   // -------------------------------------------------------------------------
   // 1. Shop & Inventory Queries
@@ -101,30 +113,48 @@ export const useGamification = (patientId: string): UseGamificationResult => {
   const { data: shopItems = [] } = useQuery({
     queryKey: ['shop-items'],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'shop_items'),
-        where('is_active', '==', true),
-        orderBy('cost', 'asc')
-      );
+      try {
+        const q = firestoreQuery(
+          collection(db, 'shop_items'),
+          where('is_active', '==', true)
+        );
 
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as ShopItem[];
+        const snapshot = await getDocs(q);
+        return snapshot.docs
+          .map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }))
+          .sort((a, b) => Number((a as { cost?: number }).cost ?? 0) - Number((b as { cost?: number }).cost ?? 0)) as ShopItem[];
+      } catch (error) {
+        if (isRecoverableFirestoreError(error)) {
+          logger.warn('[useGamification] Falha ao carregar itens da loja (fallback vazio)', { error }, 'useGamification');
+          return [];
+        }
+        throw error;
+      }
     },
+    enabled: hasPatientId,
     staleTime: 1000 * 60 * 30, // 30 mins
   });
 
   const { data: userInventory = [] } = useQuery({
     queryKey: ['user-inventory', patientId],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'user_inventory'),
-        where('user_id', '==', patientId)
-      );
+      try {
+        const q = firestoreQuery(
+          collection(db, 'user_inventory'),
+          where('user_id', '==', patientId)
+        );
 
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as UserInventoryItem[];
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as UserInventoryItem[];
+      } catch (error) {
+        if (isRecoverableFirestoreError(error)) {
+          logger.warn('[useGamification] Falha ao carregar inventário (fallback vazio)', { error }, 'useGamification');
+          return [];
+        }
+        throw error;
+      }
     },
-    enabled: !!patientId,
+    enabled: hasPatientId,
   });
 
   // -------------------------------------------------------------------------
@@ -133,85 +163,93 @@ export const useGamification = (patientId: string): UseGamificationResult => {
   const { data: profile, isLoading: isLoadingProfile } = useQuery({
     queryKey: ['gamification-profile', patientId],
     queryFn: async () => {
-      const docRef = doc(db, 'patient_gamification', patientId);
-      const snapshot = await getDoc(docRef);
+      try {
+        const docRef = doc(db, 'patient_gamification', patientId);
+        const snapshot = await getDoc(docRef);
 
-      let data = null;
-      if (snapshot.exists()) {
-        data = { id: snapshot.id, ...snapshot.data() } as GamificationProfile;
-      }
+        let data = null;
+        if (snapshot.exists()) {
+          data = { id: snapshot.id, ...snapshot.data() } as GamificationProfile;
+        }
 
-      if (!data) {
-        // Create profile if not exists
-        const newProfile = {
-          patient_id: patientId,
-          total_points: 0,
-          level: 1,
-          current_streak: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        } as GamificationProfile;
+        if (!data) {
+          // Create profile if not exists
+          const newProfile = {
+            patient_id: patientId,
+            total_points: 0,
+            level: 1,
+            current_streak: 0,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          } as GamificationProfile;
 
-        await setDoc(docRef, newProfile);
-        return newProfile;
-      }
+          await setDoc(docRef, newProfile);
+          return newProfile;
+        }
 
-      // Check Streak Logic with Inventory Protection
-      if (data.last_activity_date) {
-        const { shouldReset } = calculateNewStreak(
-          data.current_streak,
-          data.last_activity_date
-        );
-
-        if (shouldReset) {
-          // Check for Streak Freeze in Inventory
-          const freezeQ = firestoreQuery(
-            collection(db, 'user_inventory'),
-            where('user_id', '==', patientId),
-            where('item_code', '==', 'streak_freeze'),
-            where('quantity', '>', 0),
-            limit(1)
+        // Check Streak Logic with Inventory Protection
+        if (data.last_activity_date) {
+          const { shouldReset } = calculateNewStreak(
+            data.current_streak,
+            data.last_activity_date
           );
 
-          const freezeSnapshot = await getDocs(freezeQ);
+          if (shouldReset) {
+            // Check for Streak Freeze in Inventory
+            const freezeQ = firestoreQuery(
+              collection(db, 'user_inventory'),
+              where('user_id', '==', patientId),
+              where('item_code', '==', 'streak_freeze'),
+              where('quantity', '>', 0),
+              limit(1)
+            );
 
-          if (!freezeSnapshot.empty) {
-            const freezeItem = { id: freezeSnapshot.docs[0].id, ...freezeSnapshot.docs[0].data() };
+            const freezeSnapshot = await getDocs(freezeQ);
 
-            // Consume Freeze
-            const newQuantity = (freezeItem.quantity || 1) - 1;
-            if (newQuantity === 0) {
-              await deleteDoc(doc(db, 'user_inventory', freezeItem.id));
-            } else {
-              await updateDoc(doc(db, 'user_inventory', freezeItem.id), { quantity: newQuantity });
+            if (!freezeSnapshot.empty) {
+              const freezeItem = { id: freezeSnapshot.docs[0].id, ...freezeSnapshot.docs[0].data() };
+
+              // Consume Freeze
+              const newQuantity = (freezeItem.quantity || 1) - 1;
+              if (newQuantity === 0) {
+                await deleteDoc(doc(db, 'user_inventory', freezeItem.id));
+              } else {
+                await updateDoc(doc(db, 'user_inventory', freezeItem.id), { quantity: newQuantity });
+              }
+
+              // Save Streak (fake an activity for yesterday to keep it alive)
+              const yesterday = new Date();
+              yesterday.setDate(yesterday.getDate() - 1);
+
+              await updateDoc(docRef, { last_activity_date: yesterday.toISOString() });
+
+              const updatedSnap = await getDoc(docRef);
+              if (updatedSnap.exists()) {
+                logger.info('Streak Saved by Freeze', null, 'useGamification');
+                return { id: updatedSnap.id, ...updatedSnap.data() } as GamificationProfile;
+              }
             }
 
-            // Save Streak (fake an activity for yesterday to keep it alive)
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-
-            await updateDoc(docRef, { last_activity_date: yesterday.toISOString() });
+            // No freeze available? Reset.
+            await updateDoc(docRef, { current_streak: 0 });
 
             const updatedSnap = await getDoc(docRef);
             if (updatedSnap.exists()) {
-              logger.info('Streak Saved by Freeze', null, 'useGamification');
               return { id: updatedSnap.id, ...updatedSnap.data() } as GamificationProfile;
             }
           }
-
-          // No freeze available? Reset.
-          await updateDoc(docRef, { current_streak: 0 });
-
-          const updatedSnap = await getDoc(docRef);
-          if (updatedSnap.exists()) {
-            return { id: updatedSnap.id, ...updatedSnap.data() } as GamificationProfile;
-          }
         }
-      }
 
-      return data;
+        return data;
+      } catch (error) {
+        if (isRecoverableFirestoreError(error)) {
+          logger.warn('[useGamification] Falha ao carregar perfil (fallback nulo)', { error }, 'useGamification');
+          return null;
+        }
+        throw error;
+      }
     },
-    enabled: !!patientId,
+    enabled: hasPatientId,
     staleTime: 1000 * 60 * 2,
   });
 
@@ -221,49 +259,57 @@ export const useGamification = (patientId: string): UseGamificationResult => {
   const { data: dailyQuests = [] } = useQuery({
     queryKey: ['daily-quests', patientId],
     queryFn: async () => {
-      const today = new Date().toISOString().split('T')[0];
+      try {
+        const today = new Date().toISOString().split('T')[0];
 
-      // 1. Try to get existing quests for today
-      const q = firestoreQuery(
-        collection(db, 'daily_quests'),
-        where('patient_id', '==', patientId),
-        where('date', '==', today),
-        limit(1)
-      );
+        // 1. Try to get existing quests for today
+        const q = firestoreQuery(
+          collection(db, 'daily_quests'),
+          where('patient_id', '==', patientId),
+          where('date', '==', today),
+          limit(1)
+        );
 
-      const snapshot = await getDocs(q);
+        const snapshot = await getDocs(q);
 
-      if (!snapshot.empty) {
-        const data = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
-        // Parse stored JSON
-        const quests = data.quests_data as DailyQuestItem[];
-        return quests;
+        if (!snapshot.empty) {
+          const data = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+          // Parse stored JSON
+          const quests = data.quests_data as DailyQuestItem[];
+          return quests;
+        }
+
+        // 2. No quests found? Generate Smart Quests!
+        const smartQuests: GeneratedQuest[] = await generateSmartQuests(patientId);
+
+        const newQuestsData: DailyQuestItem[] = smartQuests.map(q => ({
+          id: q.id,
+          title: q.title,
+          description: q.description,
+          xp: q.xp,
+          completed: false,
+          icon: q.icon
+        }));
+
+        // 3. Persist generated quests
+        await addDoc(collection(db, 'daily_quests'), {
+          patient_id: patientId,
+          date: today,
+          quests_data: newQuestsData,
+          completed_count: 0,
+          created_at: new Date().toISOString(),
+        });
+
+        return newQuestsData;
+      } catch (error) {
+        if (isRecoverableFirestoreError(error)) {
+          logger.warn('[useGamification] Falha ao carregar missões diárias (fallback vazio)', { error }, 'useGamification');
+          return [];
+        }
+        throw error;
       }
-
-      // 2. No quests found? Generate Smart Quests!
-      const smartQuests: GeneratedQuest[] = await generateSmartQuests(patientId);
-
-      const newQuestsData: DailyQuestItem[] = smartQuests.map(q => ({
-        id: q.id,
-        title: q.title,
-        description: q.description,
-        xp: q.xp,
-        completed: false,
-        icon: q.icon
-      }));
-
-      // 3. Persist generated quests
-      await addDoc(collection(db, 'daily_quests'), {
-        patient_id: patientId,
-        date: today,
-        quests_data: newQuestsData,
-        completed_count: 0,
-        created_at: new Date().toISOString(),
-      });
-
-      return newQuestsData;
     },
-    enabled: !!patientId,
+    enabled: hasPatientId,
     staleTime: 1000 * 60 * 60, // 1 hour
   });
 
@@ -273,17 +319,25 @@ export const useGamification = (patientId: string): UseGamificationResult => {
   const { data: achievementsData } = useQuery({
     queryKey: ['achievements', patientId],
     queryFn: async () => {
-      const [allSnapshot, unlockedSnapshot] = await Promise.all([
-        getDocs(firestoreQuery(collection(db, 'achievements'), where('is_active', '==', true))),
-        getDocs(firestoreQuery(collection(db, 'achievements_log'), where('patient_id', '==', patientId)))
-      ]);
+      try {
+        const [allSnapshot, unlockedSnapshot] = await Promise.all([
+          getDocs(firestoreQuery(collection(db, 'achievements'), where('is_active', '==', true))),
+          getDocs(firestoreQuery(collection(db, 'achievements_log'), where('patient_id', '==', patientId)))
+        ]);
 
-      return {
-        all: allSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as Achievement[],
-        unlocked: unlockedSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as UnlockedAchievement[]
-      };
+        return {
+          all: allSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as Achievement[],
+          unlocked: unlockedSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as UnlockedAchievement[]
+        };
+      } catch (error) {
+        if (isRecoverableFirestoreError(error)) {
+          logger.warn('[useGamification] Falha ao carregar conquistas (fallback vazio)', { error }, 'useGamification');
+          return { all: [], unlocked: [] };
+        }
+        throw error;
+      }
     },
-    enabled: !!patientId,
+    enabled: hasPatientId,
     staleTime: 1000 * 60 * 30, // 30 mins
   });
 
@@ -293,17 +347,30 @@ export const useGamification = (patientId: string): UseGamificationResult => {
   const { data: recentTransactions = [] } = useQuery({
     queryKey: ['xp-transactions', patientId],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'xp_transactions'),
-        where('patient_id', '==', patientId),
-        orderBy('created_at', 'desc'),
-        limit(10)
-      );
+      try {
+        const q = firestoreQuery(
+          collection(db, 'xp_transactions'),
+          where('patient_id', '==', patientId)
+        );
 
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) || [];
+        const snapshot = await getDocs(q);
+        return snapshot.docs
+          .map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }))
+          .sort(
+            (a, b) =>
+              new Date((b as { created_at?: string }).created_at ?? 0).getTime() -
+              new Date((a as { created_at?: string }).created_at ?? 0).getTime()
+          )
+          .slice(0, 10);
+      } catch (error) {
+        if (isRecoverableFirestoreError(error)) {
+          logger.warn('[useGamification] Falha ao carregar transações (fallback vazio)', { error }, 'useGamification');
+          return [];
+        }
+        throw error;
+      }
     },
-    enabled: !!patientId
+    enabled: hasPatientId
   });
 
   // -------------------------------------------------------------------------
