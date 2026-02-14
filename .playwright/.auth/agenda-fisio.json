@@ -1,0 +1,26 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:5173",
+      "localStorage": [
+        {
+          "name": "app_version",
+          "value": "%APP_VERSION%"
+        },
+        {
+          "name": "app_deployment_version",
+          "value": "1771024788294-v2.4.4-chunk-fix"
+        },
+        {
+          "name": "firebase:previous_websocket_failure",
+          "value": "true"
+        },
+        {
+          "name": "last_build_time",
+          "value": "%BUILD_TIME%"
+        }
+      ]
+    }
+  ]
+}
