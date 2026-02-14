@@ -39,7 +39,10 @@ service cloud.firestore {
     
     // Check if user belongs to the same organization (Custom Claim)
     function isSameOrg(orgId) {
-      return isAuthenticated() && request.auth.token.organizationId == orgId;
+      return isAuthenticated() && (
+        request.auth.token.organizationId == orgId ||
+        request.auth.token.organization_id == orgId
+      );
     }
 
     function canManageSchedule() {
