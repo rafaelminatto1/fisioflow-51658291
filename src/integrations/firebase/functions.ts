@@ -74,6 +74,7 @@ export class FunctionCallError extends Error {
   constructor(
     public functionName: string,
     public originalError: unknown,
+    public payload?: unknown,
     message?: string
   ) {
     super(
@@ -183,14 +184,16 @@ export async function callFunctionHttp<TRequest, TResponse>(
     if (!response.ok) {
       const errorText = await response.text();
       let serverMessage = errorText;
+      let parsed: Record<string, unknown> | null = null;
       try {
-        const errJson = JSON.parse(errorText) as { error?: string };
-        if (errJson?.error) serverMessage = errJson.error;
+        const errJson = JSON.parse(errorText) as Record<string, unknown>;
+        parsed = errJson;
+        if (errJson?.error) serverMessage = String(errJson.error);
       } catch {
         // keep errorText as-is
       }
-      const err = new Error(`HTTP ${response.status}: ${serverMessage}`);
-      (err as Error & { status?: number }).status = response.status;
+      const err = new FunctionCallError(functionName, errorText, parsed ?? undefined, serverMessage);
+      (err as FunctionCallError & { status?: number }).status = response.status;
       throw err;
     }
 
@@ -198,7 +201,7 @@ export async function callFunctionHttp<TRequest, TResponse>(
     return result as TResponse;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    throw new FunctionCallError(functionName, error, message);
+    throw new FunctionCallError(functionName, error, undefined, message);
   }
 }
 

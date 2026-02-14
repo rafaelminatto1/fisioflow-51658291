@@ -77,7 +77,6 @@ export default function ClinicalAnalysisPage() {
     if (!selectedPatient) {
       setAnalysisHistory([]);
       setAlerts([]);
-      setSelectedPatientData(null);
       return;
     }
 
