@@ -1,0 +1,101 @@
+/**
+ * Animations for Improved Evolution V2 Components
+ *
+ * Add these animations to your global CSS or Tailwind config
+ * to support the enhanced visual effects.
+ */
+
+/* Shimmer animation for progress bars */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Fade in animation */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Slide in from top */
+@keyframes slide-in-from-top {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Scale pulse for active indicators */
+@keyframes scale-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+/* Apply animations */
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-slide-in-from-top {
+  animation: slide-in-from-top 0.2s ease-out;
+}
+
+.animate-scale-pulse {
+  animation: scale-pulse 2s ease-in-out infinite;
+}
+
+/* Tailwind arbitrary values - if you want to add these to tailwind.config.js */
+/*
+module.exports = {
+  theme: {
+    extend: {
+      keyframes: {
+        shimmer: {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+        fadeIn: {
+          'from': { opacity: '0' },
+          'to': { opacity: '1' },
+        },
+        slideInFromTop: {
+          'from': { transform: 'translateY(-10px)', opacity: '0' },
+          'to': { transform: 'translateY(0)', opacity: '1' },
+        },
+        scalePulse: {
+          '0%, 100%': { transform: 'scale(1)', opacity: '1' },
+          '50%': { transform: 'scale(1.05)', opacity: '0.8' },
+        },
+      },
+      animation: {
+        shimmer: 'shimmer 2s infinite',
+        fadeIn: 'fadeIn 0.3s ease-out',
+        slideInFromTop: 'slideInFromTop 0.2s ease-out',
+        scalePulse: 'scalePulse 2s ease-in-out infinite',
+      },
+    },
+  },
+};
+*/

@@ -30,6 +30,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { usePatientExercisesPostgres } from '@/hooks';
+import { GamificationService } from '@/services/GamificationService';
 
 interface Exercise {
   id: string;
@@ -148,6 +149,10 @@ export default function ExercisesScreen() {
         // Online: sync directly to Firestore
         const planRef = doc(db, 'users', user.id, 'exercise_plans', exercisePlan.id);
         await updateDoc(planRef, { exercises: updatedExercises });
+        
+        if (newCompletedState) {
+          GamificationService.awardExerciseCompletion(user.id, exercise.id);
+        }
       } else {
         // Offline: queue the operation
         await queueOperation('complete_exercise', {
@@ -207,6 +212,8 @@ export default function ExercisesScreen() {
           created_at: new Date(),
           exercise_name: feedbackExercise.name,
         });
+
+        GamificationService.awardExerciseCompletion(user.id, feedbackExercise.id);
       } else {
         // Offline: queue both operations
         await queueOperation('complete_exercise', {

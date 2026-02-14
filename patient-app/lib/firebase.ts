@@ -77,7 +77,7 @@ export const db = (Platform.OS === 'web')
         tabManager: persistentMultipleTabManager(),
         cacheSizeBytes: CACHE_SIZE_UNLIMITED
       }),
-      experimentalAutoDetectLongPolling: true
+      experimentalAutoDetectLongPolling: false
     })
   : getFirestore(app);
 

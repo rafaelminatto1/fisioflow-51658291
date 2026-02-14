@@ -504,7 +504,8 @@ export const aiServiceHttp = onRequest(
     }
 );
 
-// REMOVIDO: migrateClinicalSchema - migração já executada
+// Cron Jobs
+export { dailyExerciseReminder } from './crons/patient-reminders';
 export { dailyPatientDigest } from './crons/scheduled-tasks';
 
 // ============================================================================
@@ -750,6 +751,9 @@ export const googleAuthCallback = googleIntegrations.googleAuthCallback;
 export const createMeetLink = googleIntegrations.createMeetLink;
 export const syncPatientCalendar = googleIntegrations.syncPatientCalendar;
 export const getBusinessReviews = googleIntegrations.getBusinessReviews;
+export const generateGoogleReport = googleIntegrations.generateGoogleReport;
+export const listGoogleTemplates = googleIntegrations.listGoogleTemplates;
+export const createPatientDriveFolder = googleIntegrations.createPatientDriveFolder;
 
 // Export helper functions (lib) - avoid re-exporting names already exported from api/
 export {
@@ -776,6 +780,9 @@ export {
 
 // Storage Triggers
 export { onDicomUpload } from './storage/dicomTriggers';
+
+// Report Triggers
+export { onReportCreated } from './triggers/reports';
 
 // ============================================================================
 // AI INDEXING (Vector Search)

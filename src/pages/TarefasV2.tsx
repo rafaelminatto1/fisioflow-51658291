@@ -57,8 +57,6 @@ import {
 } from '@/types/tarefas';
 import { useTarefas, useDeleteTarefa } from '@/hooks/useTarefas';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
-import { useTarefas, useDeleteTarefa } from '@/hooks/useTarefas';
-import { useTeamMembers } from '@/hooks/useTeamMembers';
 import { cn, safeFormat } from '@/lib/utils';
 // Recharts imports removed - moved to TaskInsights
 

@@ -4,13 +4,12 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, limit, onSnapshot, writeBatch, QueryDocumentSnapshot, getFirebaseAuth, db } from '@/integrations/firebase/app';
+import { collection, doc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, onSnapshot, writeBatch, QueryDocumentSnapshot, db } from '@/integrations/firebase/app';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
-
-const auth = getFirebaseAuth();
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface Notification {
   id: string;
@@ -34,44 +33,85 @@ const convertDocToNotification = (doc: QueryDocumentSnapshot): Notification => {
   } as Notification;
 };
 
+const isPermissionDeniedError = (error: unknown): boolean => {
+  const code = (error as { code?: string })?.code;
+  const message = (error as Error)?.message?.toLowerCase?.() ?? '';
+  return (
+    code === 'permission-denied' ||
+    code === 'failed-precondition' ||
+    message.includes('insufficient permissions') ||
+    message.includes('requires an index')
+  );
+};
+
 export const useNotifications = (limitValue = 10) => {
+  const { user } = useAuth();
+  const userId = user?.uid;
   const queryClient = useQueryClient();
   const [realtimeNotifications, setRealtimeNotifications] = useState<Notification[]>([]);
+  const [realtimeDisabled, setRealtimeDisabled] = useState(false);
+
+  useEffect(() => {
+    setRealtimeNotifications([]);
+    setRealtimeDisabled(false);
+  }, [userId]);
 
   // Fetch notifications
-  const { data: notifications = [], isLoading, refetch } = useQuery({
-    queryKey: ['notifications', limitValue],
+  const { data: notificationsData, isLoading, refetch } = useQuery({
+    queryKey: ['notifications', userId, limitValue],
     queryFn: async () => {
-      const user = auth.currentUser;
-      if (!user) return [];
+      if (!userId) return [];
 
       try {
         const q = firestoreQuery(
           collection(db, 'notifications'),
-          where('user_id', '==', user.uid),
-          orderBy('created_at', 'desc'),
-          limit(limitValue)
+          where('user_id', '==', userId)
         );
 
         const snapshot = await getDocs(q);
-        const data = snapshot.docs.map(convertDocToNotification);
+        const data = snapshot.docs
+          .map(convertDocToNotification)
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .slice(0, limitValue);
         return data;
       } catch (error) {
-        // Se a coleção não existir ainda, retorna array vazio
-        logger.warn('[useNotifications] Collection does not exist yet', error, 'useNotifications');
+        if (isPermissionDeniedError(error)) {
+          logger.warn('[useNotifications] Sem permissão para listar notificações', error, 'useNotifications');
+          return [];
+        }
+        logger.warn('[useNotifications] Falha ao carregar notificações', error, 'useNotifications');
         return [];
       }
     },
+    enabled: !!userId,
     staleTime: 30000, // 30 seconds
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: false,
+    refetchOnWindowFocus: false,
   });
 
   // Update realtime notifications when query data changes
   useEffect(() => {
-    if (notifications.length > 0) {
-      setRealtimeNotifications(notifications);
+    if (!notificationsData) {
+      setRealtimeNotifications((prev) => (prev.length === 0 ? prev : []));
+      return;
     }
-  }, [notifications]);
+
+    setRealtimeNotifications((prev) => {
+      if (prev.length === notificationsData.length) {
+        const unchanged = prev.every((item, index) => {
+          const incoming = notificationsData[index];
+          return (
+            incoming &&
+            item.id === incoming.id &&
+            item.is_read === incoming.is_read &&
+            item.created_at === incoming.created_at
+          );
+        });
+        if (unchanged) return prev;
+      }
+      return notificationsData;
+    });
+  }, [notificationsData]);
 
   // Count unread notifications
   const unreadCount = realtimeNotifications.filter((n) => !n.is_read).length;
@@ -90,13 +130,12 @@ export const useNotifications = (limitValue = 10) => {
   // Mark all as read
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      const user = auth.currentUser;
-      if (!user) return;
+      if (!userId) return;
 
       // First, fetch all unread notifications
       const q = firestoreQuery(
         collection(db, 'notifications'),
-        where('user_id', '==', user.uid),
+        where('user_id', '==', userId),
         where('is_read', '==', false)
       );
 
@@ -123,39 +162,44 @@ export const useNotifications = (limitValue = 10) => {
 
   // Real-time subscription using Firestore onSnapshot
   useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) return;
+    if (!userId || realtimeDisabled) return;
 
     const q = firestoreQuery(
       collection(db, 'notifications'),
-      where('user_id', '==', user.uid),
-      orderBy('created_at', 'desc'),
-      limit(limitValue)
+      where('user_id', '==', userId)
     );
+
+    let isInitialSnapshot = true;
 
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        const docs = snapshot.docs.map(convertDocToNotification);
+        const docs = snapshot.docs
+          .map(convertDocToNotification)
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .slice(0, limitValue);
         setRealtimeNotifications(docs);
 
-        // Check for new notifications (docChanges)
-        snapshot.docChanges().forEach((change) => {
-          if (change.type === 'added') {
-            const newNotification = convertDocToNotification(change.doc);
-            // Only show toast if it's a truly new notification (not initial load)
-            if (snapshot.docChanges().length === 1) {
-              toast(newNotification.title, {
-                description: newNotification.message,
-              });
-            }
-          }
-        });
+        if (isInitialSnapshot) {
+          isInitialSnapshot = false;
+          return;
+        }
 
-        // Invalidate queries to keep data in sync
-        queryClient.invalidateQueries({ queryKey: ['notifications'] });
+        snapshot.docChanges().forEach((change) => {
+          if (change.type !== 'added') return;
+          const newNotification = convertDocToNotification(change.doc);
+          toast(newNotification.title, {
+            description: newNotification.message,
+          });
+        });
       },
       (error) => {
+        if (isPermissionDeniedError(error)) {
+          logger.warn('Real-time notifications permission denied; desativando listener', error, 'useNotifications');
+          setRealtimeDisabled(true);
+          setRealtimeNotifications([]);
+          return;
+        }
         logger.error('Real-time notifications error', error, 'useNotifications');
       }
     );
@@ -163,7 +207,7 @@ export const useNotifications = (limitValue = 10) => {
     return () => {
       unsubscribe();
     };
-  }, [queryClient, limitValue]);
+  }, [userId, limitValue, realtimeDisabled]);
 
   return {
     notifications: realtimeNotifications,

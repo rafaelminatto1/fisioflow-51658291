@@ -29,9 +29,9 @@ export function AppLoadingSkeleton({ message }: AppLoadingSkeletonProps) {
       setJokeIndex(prev => (prev + 1) % jokes.length);
     }, 3500);
     return () => clearInterval(interval);
-  }, []);
+  }, [jokes.length]);
 
-  // Mostrar botão de retry após 4 segundos
+  // Mostrar botão de retry após 6 segundos
   useEffect(() => {
     const timer = setTimeout(() => setShowRetry(true), 6000);
     return () => clearTimeout(timer);

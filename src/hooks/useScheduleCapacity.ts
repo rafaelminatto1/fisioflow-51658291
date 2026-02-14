@@ -4,7 +4,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDoc, getDocs, setDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDoc, getDocs, setDoc, query as firestoreQuery, where, db } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { z } from 'zod';
@@ -42,6 +42,16 @@ export interface CapacityGroup {
 
 // Helper to convert doc
 const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }): ScheduleCapacity => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as ScheduleCapacity);
+const isPermissionDeniedError = (error: unknown): boolean => {
+  const code = (error as { code?: string })?.code;
+  const message = (error as Error)?.message?.toLowerCase?.() ?? '';
+  return (
+    code === 'permission-denied' ||
+    code === 'failed-precondition' ||
+    message.includes('insufficient permissions') ||
+    message.includes('requires an index')
+  );
+};
 
 export function useScheduleCapacity() {
   const { toast } = useToast();
@@ -63,16 +73,28 @@ export function useScheduleCapacity() {
 
       const q = firestoreQuery(
         collection(db, 'schedule_capacity_config'),
-        where('organization_id', '==', organizationId),
-        orderBy('day_of_week', 'asc'),
-        orderBy('start_time', 'asc')
+        where('organization_id', '==', organizationId)
       );
 
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDoc);
+      try {
+        const snapshot = await getDocs(q);
+        return snapshot.docs
+          .map(convertDoc)
+          .sort((a, b) => {
+            if (a.day_of_week !== b.day_of_week) return a.day_of_week - b.day_of_week;
+            return timeToMinutes(a.start_time) - timeToMinutes(b.start_time);
+          });
+      } catch (error) {
+        if (isPermissionDeniedError(error)) {
+          logger.warn('[useScheduleCapacity] Sem permissão para listar configurações de capacidade', { organizationId }, 'useScheduleCapacity');
+          return [];
+        }
+        throw error;
+      }
     },
     enabled: !!organizationId,
     staleTime: STALE_TIME_MS,
+    retry: (failureCount, error) => !isPermissionDeniedError(error) && failureCount < 2,
   });
 
   const createCapacity = useMutation({
@@ -480,10 +502,17 @@ export function useScheduleCapacity() {
     return groups;
   })();
 
+  const authError =
+    !isValidUserId
+      ? 'Sessão de usuário inválida'
+      : user && !organizationId
+        ? 'Perfil ainda não carregou a organização. Verifique permissões de acesso ao perfil.'
+        : null;
+
   return {
     capacities: capacities || [],
     capacityGroups,
-    isLoading,
+    isLoading: !!organizationId && isLoading,
     daysOfWeek,
     organizationId,
     createCapacity: createCapacity.mutate,
@@ -498,6 +527,6 @@ export function useScheduleCapacity() {
     isCreating: createCapacity.isPending || createMultipleCapacities.isPending,
     isUpdating: updateCapacity.isPending || updateCapacityGroup.isPending,
     isDeleting: deleteCapacity.isPending || deleteCapacityGroup.isPending,
-    authError: !isValidUserId ? 'Sessão de usuário inválida' : null,
+    authError,
   };
 }

@@ -1,145 +1,44 @@
 /**
- * useGoogleDrive - Hook para integração com Google Drive
+ * useGoogleDrive - Hook para integração com Google Drive via Cloud Functions
  */
 
 import { useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { DriveService } from '@/lib/integrations/google/drive';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '@/lib/firebase';
 
-interface UseGoogleDriveOptions {
-  accessToken?: string;
-}
-
-export function useGoogleDrive(options: UseGoogleDriveOptions = {}) {
-  const { accessToken } = options;
+export function useGoogleDrive() {
   const queryClient = useQueryClient();
 
-  // Listar arquivos
+  // Listar arquivos via Cloud Function
   const listFiles = useCallback(async (folderId?: string) => {
-    if (!accessToken) throw new Error('Access token não fornecido');
-
-    const service = new DriveService(accessToken);
-    return service.listFiles({ folderId });
-  }, [accessToken]);
+    const listGoogleFiles = httpsCallable(functions, 'listGoogleFiles');
+    const result = await listGoogleFiles({ folderId });
+    return (result.data as any).files || [];
+  }, []);
 
   // Criar pasta do paciente
-  const createPatientFolders = useMutation({
-    mutationFn: async ({
-      tenantId,
-      patientId,
-      patientName,
-    }: {
-      tenantId: string;
-      patientId: string;
-      patientName: string;
-    }) => {
-      if (!accessToken) throw new Error('Access token não fornecido');
-
-      const service = new DriveService(accessToken);
-      return service.createPatientFolderStructure(tenantId, patientId, patientName);
+  const createPatientFolder = useMutation({
+    mutationFn: async ({ name, parentId }: { name: string; parentId?: string }) => {
+      const createPatientDriveFolder = httpsCallable(functions, 'createPatientDriveFolder');
+      const result = await createPatientDriveFolder({ name, parentId });
+      return result.data as { folderId: string };
     },
     onSuccess: () => {
-      toast.success('Pastas criadas no Google Drive');
+      toast.success('Pasta criada no Google Drive');
       queryClient.invalidateQueries({ queryKey: ['drive-files'] });
     },
     onError: (error) => {
-      console.error('Erro ao criar pastas:', error);
-      toast.error('Erro ao criar pastas no Google Drive');
+      console.error('Erro ao criar pasta:', error);
+      toast.error('Erro ao criar pasta no Google Drive');
     },
   });
-
-  // Upload de PDF
-  const uploadPdf = useMutation({
-    mutationFn: async ({
-      fileName,
-      pdfBuffer,
-      folderId,
-    }: {
-      fileName: string;
-      pdfBuffer: Buffer;
-      folderId?: string;
-    }) => {
-      if (!accessToken) throw new Error('Access token não fornecido');
-
-      const service = new DriveService(accessToken);
-      return service.uploadPdf(fileName, pdfBuffer, folderId);
-    },
-    onSuccess: (data) => {
-      toast.success('PDF salvo no Google Drive');
-      return data;
-    },
-    onError: (error) => {
-      console.error('Erro ao fazer upload:', error);
-      toast.error('Erro ao salvar PDF no Google Drive');
-    },
-  });
-
-  // Compartilhar arquivo
-  const shareFile = useMutation({
-    mutationFn: async ({
-      fileId,
-      email,
-      role,
-    }: {
-      fileId: string;
-      email: string;
-      role?: 'reader' | 'writer';
-    }) => {
-      if (!accessToken) throw new Error('Access token não fornecido');
-
-      const service = new DriveService(accessToken);
-      return service.shareFile(fileId, email, role, true);
-    },
-    onSuccess: () => {
-      toast.success('Arquivo compartilhado com sucesso');
-    },
-    onError: (error) => {
-      console.error('Erro ao compartilhar:', error);
-      toast.error('Erro ao compartilhar arquivo');
-    },
-  });
-
-  // Obter link compartilhável
-  const getShareableLink = useCallback(async (fileId: string): Promise<string> => {
-    if (!accessToken) throw new Error('Access token não fornecido');
-
-    const service = new DriveService(accessToken);
-    return service.getShareableLink(fileId);
-  }, [accessToken]);
-
-  // Buscar PDFs
-  const getPdfs = useCallback(async (folderId?: string) => {
-    if (!accessToken) throw new Error('Access token não fornecido');
-
-    const service = new DriveService(accessToken);
-    return service.getPdfs(folderId);
-  }, [accessToken]);
-
-  // Buscar Google Docs
-  const getGoogleDocs = useCallback(async (folderId?: string) => {
-    if (!accessToken) throw new Error('Access token não fornecido');
-
-    const service = new DriveService(accessToken);
-    return service.getGoogleDocs(folderId);
-  }, [accessToken]);
 
   return {
-    // Queries
     listFiles,
-    getPdfs,
-    getGoogleDocs,
-    getShareableLink,
-
-    // Mutations
-    createPatientFolders: createPatientFolders.mutate,
-    uploadPdf: uploadPdf.mutate,
-    shareFile: shareFile.mutate,
-
-    // Loading states
-    isCreatingFolders: createPatientFolders.isPending,
-    isUploading: uploadPdf.isPending,
-    isSharing: shareFile.isPending,
+    createPatientFolder: createPatientFolder.mutate,
+    isCreatingFolder: createPatientFolder.isPending,
   };
 }
 
