@@ -94,6 +94,19 @@ const normalizeStatus = (value: unknown): string => {
     if (['initial', 'inicial', 'inactive', 'inativo', 'novo'].includes(raw)) {
         return 'Inicial';
     }
+    if (['recuperacao', 'recuperação', 'recovery'].includes(raw)) {
+        return 'Recuperação';
+    }
+    if (['concluido', 'concluído', 'completed'].includes(raw)) {
+        return 'Concluído';
+    }
+    if (['alta', 'discharged'].includes(raw)) {
+        return 'Alta';
+    }
+    if (['arquivado', 'archived'].includes(raw)) {
+        return 'Arquivado';
+    }
+
     return String(value);
 };
 
