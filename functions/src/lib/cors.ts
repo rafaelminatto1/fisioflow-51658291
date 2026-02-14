@@ -16,6 +16,7 @@ export interface RequestLike {
 
 const ALLOWED_ORIGIN_PATTERNS = [
   /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
+  /^http?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
   /moocafisio\.com\.br$/,
   /fisioflow\.web\.app$/,
 ];

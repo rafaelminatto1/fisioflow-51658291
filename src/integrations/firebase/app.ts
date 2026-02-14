@@ -64,7 +64,7 @@ import {
 } from 'firebase/firestore';
 import { connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
-import { getFunctions, Functions, httpsCallable } from 'firebase/functions';
+import { getFunctions, Functions, httpsCallable, connectFunctionsEmulator } from 'firebase/functions';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { cleanForFirestore } from '@/utils/firestoreData';
 
@@ -278,6 +278,17 @@ export function getFirebaseStorage(): FirebaseStorage {
 export function getFirebaseFunctions(region: string = 'southamerica-east1'): Functions {
   if (!functionsInstance) {
     functionsInstance = getFunctions(getFirebaseApp(), region);
+
+    if (import.meta.env.DEV) {
+      const host = import.meta.env.VITE_FIREBASE_FUNCTIONS_EMULATOR_HOST || 'localhost';
+      const port = parseInt(import.meta.env.VITE_FIREBASE_FUNCTIONS_EMULATOR_PORT || '5001');
+      try {
+        connectFunctionsEmulator(functionsInstance, host, port);
+        console.debug(`[Firebase] Functions: connected to emulator at ${host}:${port}`);
+      } catch (e) {
+        console.warn('[Firebase] Functions: connection to emulator failed', e);
+      }
+    }
   }
   return functionsInstance;
 }

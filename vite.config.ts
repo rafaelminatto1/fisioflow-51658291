@@ -3,7 +3,7 @@ import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import path from 'path';
-import { componentTagger } from 'lovable-tagger';
+// import { componentTagger } from 'lovable-tagger';
 import viteCompression from 'vite-plugin-compression';
 
 function htmlPlugin(appVersion: string, buildTime: string): any {
@@ -57,6 +57,7 @@ export default defineConfig(({ mode }) => {
   const buildTime = Date.now().toString();
   const VERSION_SUFFIX = '-v2.4.4-chunk-fix';
   const appVersion = (process.env.GIT_COMMIT_SHA || process.env.VITE_APP_VERSION || buildTime) + VERSION_SUFFIX;
+  const useFunctionsProxy = process.env.VITE_USE_FUNCTIONS_PROXY === 'true';
 
   return {
     define: {
@@ -66,7 +67,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       mockMobileModules(),
-      mode === 'development' && componentTagger(),
+      // mode === 'development' && componentTagger(),
       htmlPlugin(appVersion, buildTime),
       isProduction && process.env.SENTRY_AUTH_TOKEN && sentryVitePlugin({
         org: "fisioflow",
@@ -106,17 +107,17 @@ export default defineConfig(({ mode }) => {
               }
               // Firebase bundle
               if (id.includes('firebase')) return 'firebase-vendor';
-              
+
               // UI & Icons (Lucide é pesado)
               if (id.includes('lucide-react')) return 'ui-icons';
               if (id.includes('@radix-ui')) return 'ui-radix';
               if (id.includes('framer-motion')) return 'motion';
-              
+
               // Utilitários grandes
               if (id.includes('date-fns')) return 'utils-date';
               if (id.includes('lodash')) return 'utils-lodash';
               if (id.includes('sentry')) return 'sentry-vendor';
-              
+
               return 'vendor';
             }
           }
@@ -125,6 +126,19 @@ export default defineConfig(({ mode }) => {
     },
     optimizeDeps: {
       include: ['react', 'react-dom', 'framer-motion', 'lucide-react', 'react-router-dom', '@tanstack/react-query'],
-    }
+    },
+    ...(useFunctionsProxy
+      ? {
+        server: {
+          proxy: {
+            '/functions': {
+              target: 'http://127.0.0.1:5001/fisioflow-migration/southamerica-east1',
+              changeOrigin: true,
+              rewrite: (path) => path.replace(/^\/functions/, ''),
+            },
+          },
+        },
+      }
+      : {}),
   };
 });

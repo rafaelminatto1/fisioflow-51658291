@@ -126,7 +126,7 @@ export const listAppointmentsHttp = onRequest(
       res.json({ data: result.rows as Appointment[] });
     } catch (error: unknown) {
       logger.error('Error in listAppointments:', error);
-      
+
       if (error instanceof HttpsError && error.code === 'unauthenticated') {
         res.status(401).json({ error: error.message });
         return;
@@ -210,14 +210,14 @@ export const checkTimeConflictHttp = onRequest(
  * HTTP version of createAppointment for CORS/compatibility
  */
 export const createAppointmentHttp = onRequest(
-  { 
-    region: 'southamerica-east1', 
-    memory: '512MiB', 
-    maxInstances: 10, 
+  {
+    region: 'southamerica-east1',
+    memory: '512MiB',
+    maxInstances: 10,
     cpu: 1,
     concurrency: 80,
-    cors: CORS_ORIGINS, 
-    invoker: 'public' 
+    cors: CORS_ORIGINS,
+    invoker: 'public'
   },
   async (req, res) => {
     if (req.method === 'OPTIONS') { setCorsHeaders(res, req); res.status(204).send(''); return; }
@@ -225,7 +225,7 @@ export const createAppointmentHttp = onRequest(
     setCorsHeaders(res, req);
     try {
       const { uid } = await verifyAuthHeader(req);
-      
+
       // Parallelize initial fetch of metadata
       const [organizationId, body] = await Promise.all([
         getOrganizationId(uid),
@@ -306,14 +306,14 @@ export const createAppointmentHttp = onRequest(
 
       // Optional: Add to event loop to ensure completion in some environments
       // In Gen 2, if the function returns, CPU might be throttled, but concurrency helps.
-      
+
       res.status(201).json({ data: appointment });
     } catch (error: unknown) {
-      if (error instanceof HttpsError && error.code === 'unauthenticated') { 
-        res.status(401).json({ error: error.message }); 
-        return; 
+      if (error instanceof HttpsError && error.code === 'unauthenticated') {
+        res.status(401).json({ error: error.message });
+        return;
       }
-      
+
       const errorMessage = error instanceof Error ? error.message : String(error);
       logger.error('Error in createAppointmentHttp:', { error: errorMessage, stack: error instanceof Error ? error.stack : undefined });
 
@@ -373,22 +373,22 @@ export const updateAppointmentHttp = onRequest(
 
       const runConflictCheck = (updates.date || updates.appointment_date || updates.startTime || updates.start_time || updates.appointment_time || updates.endTime || updates.end_time) || (updates.therapistId && updates.therapistId !== currentAppt.therapist_id);
       if (runConflictCheck) {
-      const conflictResult = await checkTimeConflictByCapacity(pool, {
-        date: newDate,
-        startTime: newStartTime,
-        endTime: newEndTime,
-        excludeAppointmentId: appointmentId,
-        organizationId
-      });
-      if (conflictResult.hasConflict) {
-        res.status(409).json({
-          error: 'Conflito de horário detectado',
-          conflicts: conflictResult.conflicts,
-          total: conflictResult.total,
-          capacity: conflictResult.capacity
+        const conflictResult = await checkTimeConflictByCapacity(pool, {
+          date: newDate,
+          startTime: newStartTime,
+          endTime: newEndTime,
+          excludeAppointmentId: appointmentId,
+          organizationId
         });
-        return;
-      }
+        if (conflictResult.hasConflict) {
+          res.status(409).json({
+            error: 'Conflito de horário detectado',
+            conflicts: conflictResult.conflicts,
+            total: conflictResult.total,
+            capacity: conflictResult.capacity
+          });
+          return;
+        }
       }
       const allowedFields = ['date', 'start_time', 'end_time', 'therapist_id', 'status', 'type', 'session_type', 'notes'];
       const fieldMap: Record<string, string> = { startTime: 'start_time', endTime: 'end_time', therapistId: 'therapist_id', type: 'session_type', appointment_date: 'date', appointment_time: 'start_time' };
@@ -748,7 +748,7 @@ async function checkTimeConflictByCapacity(
   const capacity = await getSlotCapacity(organizationId, date, startTime);
 
   let query = `
-    SELECT a.id, a.patient_id, p.full_name AS patient_name, a.therapist_id, prof.full_name AS therapist_name, a.start_time, a.end_time, a.date
+    SELECT a.id, a.patient_id, p.name AS patient_name, a.therapist_id, prof.full_name AS therapist_name, a.start_time, a.end_time, a.date
     FROM appointments a
     LEFT JOIN patients p ON a.patient_id = p.id
     LEFT JOIN profiles prof ON a.therapist_id = prof.user_id
