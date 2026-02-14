@@ -1,8 +1,10 @@
 import { patientsApi } from '@/integrations/firebase/functions';
-import { PatientSchema, type Patient } from '@/schemas/patient';
+import { PatientSchema } from '@/schemas/patient';
 import { AppError } from '@/lib/errors/AppError';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import type { Patient } from '@/types';
+import { isValidCPF, isValidEmail, isValidPhone, stripNonDigits } from '@/utils/validators';
 import {
 
     getPatientName,
@@ -34,6 +36,93 @@ interface ServiceResult<T> {
     error: Error | null;
 }
 
+type PatientRecord = (PatientDBStandard | PatientDBExtended) & Record<string, unknown>;
+
+const normalizeString = (value: unknown): string | undefined => {
+    if (typeof value !== 'string') return undefined;
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+};
+
+const normalizeBirthDate = (value: unknown): string | undefined => {
+    if (value instanceof Date && !Number.isNaN(value.getTime())) {
+        return value.toISOString().split('T')[0];
+    }
+
+    const str = normalizeString(value);
+    if (!str) return undefined;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+
+    const parsed = new Date(str);
+    if (Number.isNaN(parsed.getTime())) return undefined;
+    return parsed.toISOString().split('T')[0];
+};
+
+const normalizeIsoDateTime = (value: unknown): string => {
+    if (value instanceof Date && !Number.isNaN(value.getTime())) {
+        return value.toISOString();
+    }
+
+    const str = normalizeString(value);
+    if (!str) return new Date().toISOString();
+
+    const parsed = new Date(str);
+    if (Number.isNaN(parsed.getTime())) return new Date().toISOString();
+    return parsed.toISOString();
+};
+
+const normalizeGender = (value: unknown): 'masculino' | 'feminino' | 'outro' => {
+    const raw = normalizeString(value)?.toLowerCase();
+    if (!raw) return 'outro';
+
+    if (raw === 'm' || raw === 'masculino' || raw === 'male' || raw === 'homem') {
+        return 'masculino';
+    }
+    if (raw === 'f' || raw === 'feminino' || raw === 'female' || raw === 'mulher') {
+        return 'feminino';
+    }
+    return 'outro';
+};
+
+const normalizeStatus = (value: unknown): string => {
+    const raw = normalizeString(value)?.toLowerCase();
+    if (!raw) return 'Inicial';
+
+    if (['active', 'ativo', 'em tratamento', 'em_tratamento', 'in_progress'].includes(raw)) {
+        return 'Em Tratamento';
+    }
+    if (['initial', 'inicial', 'inactive', 'inativo', 'novo'].includes(raw)) {
+        return 'Inicial';
+    }
+    return String(value);
+};
+
+const normalizeProgress = (value: unknown): number => {
+    const num = typeof value === 'number' ? value : Number(value);
+    if (!Number.isFinite(num)) return 0;
+    return Math.max(0, Math.min(100, Math.round(num)));
+};
+
+const normalizePhone = (value: unknown): string | undefined => {
+    const str = normalizeString(value);
+    if (!str) return undefined;
+    return isValidPhone(str) ? str : undefined;
+};
+
+const normalizeCPF = (value: unknown): string | undefined => {
+    const str = normalizeString(value);
+    if (!str) return undefined;
+
+    const digits = stripNonDigits(str);
+    return isValidCPF(digits) ? digits : undefined;
+};
+
+const normalizeEmail = (value: unknown): string | undefined => {
+    const str = normalizeString(value);
+    if (!str) return undefined;
+    return isValidEmail(str) ? str.toLowerCase() : undefined;
+};
+
 /**
  * Service to handle Patient business logic and data access
  */
@@ -42,58 +131,76 @@ export const PatientService = {
      * Map database patient record to application Patient type
      */
     mapToApp(dbPatient: PatientDBStandard | PatientDBExtended): Patient {
-        const extendedPatient = dbPatient as PatientDBExtended;
-
-        // Ensure birth_date is a string for Zod validation
-        let birthDate: string | undefined = undefined;
-        if (dbPatient.birth_date) {
-            const rawBirthDate = dbPatient.birth_date as unknown;
-            if (rawBirthDate instanceof Date) {
-                birthDate = rawBirthDate.toISOString().split('T')[0];
-            } else {
-                birthDate = String(dbPatient.birth_date);
-            }
-        }
+        const raw = dbPatient as PatientRecord;
+        const fallbackName = getPatientName({
+            full_name: normalizeString(raw.full_name),
+            name: normalizeString(raw.name),
+            phone: normalizeString(raw.phone),
+        });
+        const fullName = normalizeString(raw.full_name) || normalizeString(raw.name) || fallbackName || 'Sem nome';
+        const birthDate = normalizeBirthDate(raw.birth_date);
+        const createdAt = normalizeIsoDateTime(raw.created_at);
+        const updatedAt = normalizeIsoDateTime(raw.updated_at);
+        const mainCondition = normalizeString(raw.main_condition) || normalizeString(raw.observations) || '';
 
         return {
-            id: dbPatient.id,
-            name: getPatientName(dbPatient),
-            email: dbPatient.email ?? undefined,
-            phone: dbPatient.phone ?? undefined,
-            cpf: dbPatient.cpf ?? undefined,
-            birthDate,
-            gender: (extendedPatient.gender as unknown) || 'outro',
-            mainCondition: dbPatient.observations ?? '',
-            status: (dbPatient.status === 'active' ? 'Em Tratamento' : 'Inicial') as unknown,
-            progress: 0,
-            incomplete_registration: dbPatient.incomplete_registration ?? false,
-            createdAt: dbPatient.created_at ?? new Date().toISOString(),
-            updatedAt: dbPatient.updated_at ?? new Date().toISOString(),
-            organization_id: dbPatient.organization_id
+            id: String(raw.id),
+            full_name: fullName,
+            name: fullName,
+            email: normalizeEmail(raw.email),
+            phone: normalizePhone(raw.phone),
+            cpf: normalizeCPF(raw.cpf),
+            birthDate: birthDate || '',
+            birth_date: birthDate,
+            gender: normalizeGender(raw.gender),
+            mainCondition,
+            observations: normalizeString(raw.observations),
+            status: normalizeStatus(raw.status),
+            progress: normalizeProgress(raw.progress),
+            incomplete_registration: Boolean(raw.incomplete_registration),
+            createdAt,
+            created_at: createdAt,
+            updatedAt,
+            updated_at: updatedAt
         };
     },
 
     /**
      * Validate and map multiple patients from database
      */
-    mapPatientsFromDB(dbPatients: PatientDBStandard[] | null | undefined): Patient[] {
+    mapPatientsFromDB(dbPatients: PatientDBStandard[] | Patient[] | null | undefined): Patient[] {
         if (!dbPatients || dbPatients.length === 0) return [];
 
-        const validPatients: Patient[] = [];
+        const normalizedPatients: Patient[] = [];
+        const invalidPatientIds: string[] = [];
 
         for (const dbPatient of dbPatients) {
             try {
-                const mapped = this.mapToApp(dbPatient);
-                const result = PatientSchema.safeParse(mapped);
+                const mapped = this.mapToApp(dbPatient as PatientDBStandard);
+                const result = PatientSchema.safeParse({
+                    id: mapped.id,
+                    full_name: mapped.full_name || mapped.name,
+                    name: mapped.name,
+                    email: mapped.email ?? null,
+                    phone: mapped.phone ?? null,
+                    cpf: mapped.cpf ?? null,
+                    birth_date: mapped.birth_date ?? null,
+                    gender: mapped.gender,
+                    main_condition: mapped.mainCondition || null,
+                    status: mapped.status,
+                    progress: mapped.progress,
+                    incomplete_registration: mapped.incomplete_registration ?? false,
+                    created_at: mapped.createdAt,
+                    updated_at: mapped.updatedAt,
+                    organization_id: normalizeString((dbPatient as PatientRecord).organization_id) ?? null,
+                });
 
                 if (result.success) {
-                    validPatients.push(result.data);
+                    normalizedPatients.push(mapped);
                 } else {
-                    logger.warn(`Patient validation failed for ${dbPatient.id}`, { error: result.error }, 'PatientService');
-                    // Fallback: use mapped object even if incomplete, to ensure it appears in UI
-                    // We only strictly require ID and Name for the combobox
                     if (mapped.id && mapped.name) {
-                        validPatients.push(mapped);
+                        normalizedPatients.push(mapped);
+                        invalidPatientIds.push(mapped.id);
                     }
                 }
             } catch (error) {
@@ -101,7 +208,15 @@ export const PatientService = {
             }
         }
 
-        return validPatients;
+        if (invalidPatientIds.length > 0) {
+            logger.warn('Patient validation failed for normalized legacy records', {
+                invalidCount: invalidPatientIds.length,
+                total: dbPatients.length,
+                sampleIds: invalidPatientIds.slice(0, 10),
+            }, 'PatientService');
+        }
+
+        return normalizedPatients;
     },
 
     /**
@@ -123,7 +238,7 @@ export const PatientService = {
 
             // Map from API model to domain model and validate
             const patientsRaw = response.data || [];
-            const patients = this.mapPatientsFromDB(patientsRaw as unknown);
+            const patients = this.mapPatientsFromDB(patientsRaw as PatientDBStandard[]);
 
             logger.info('PatientService: patients mapped and validated', {
                 count: patients.length,

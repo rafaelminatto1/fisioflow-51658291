@@ -167,7 +167,7 @@ export function getFirebaseApp(): FirebaseApp {
       };
       fetchAndActivate(remoteConfigInstance);
 
-      console.log('[Firebase] App Check and Remote Config initialized');
+      logger.debug('[Firebase] App Check and Remote Config initialized', undefined, 'firebase-app');
     }
   }
   return appInstance;
@@ -215,27 +215,28 @@ function initializeDbInstance(): Firestore {
   if (!dbInstance) {
     const app = getFirebaseApp();
 
-    // Configurar cache do Firestore
+    // Configuração base do Firestore
+    // Desativamos experimentalAutoDetectLongPolling para evitar o erro de asserção interna (ID: b815)
+    // que ocorre em versões recentes do SDK (12.8.0)
+    const firestoreConfig: any = {
+      experimentalAutoDetectLongPolling: false
+    };
+
     // Em produção, usar IndexedDB para persistência (multi-tab support)
     if (import.meta.env.PROD && typeof window !== 'undefined') {
-      try {
-        dbInstance = initializeFirestore(app, {
-          localCache: persistentLocalCache({
-            tabManager: persistentMultipleTabManager(),
-            cacheSizeBytes: CACHE_SIZE_UNLIMITED
-          }),
-          experimentalAutoDetectLongPolling: true
-        });
-        logger.info('Firestore: Multi-tab persistence enabled via localCache', undefined, 'firebase-app');
-      } catch (err) {
-        // Fallback se initializeFirestore falhar (ex: já inicializado)
-        dbInstance = getFirestore(app);
-        logger.warn('Firestore: Using fallback instance (persistence might be disabled)', err, 'firebase-app');
-      }
-    } else {
-      // Em desenvolvimento ou ambiente sem window, usar instância padrão
+      firestoreConfig.localCache = persistentLocalCache({
+        tabManager: persistentMultipleTabManager(),
+        cacheSizeBytes: CACHE_SIZE_UNLIMITED
+      });
+    }
+
+    try {
+      dbInstance = initializeFirestore(app, firestoreConfig);
+      logger.info(`Firestore: Initialized with persistence=${!!firestoreConfig.localCache}`, undefined, 'firebase-app');
+    } catch (err) {
+      // Fallback se initializeFirestore falhar (ex: já inicializado)
       dbInstance = getFirestore(app);
-      logger.info('Firestore: Initialized default instance', undefined, 'firebase-app');
+      logger.warn('Firestore: Using fallback instance', err, 'firebase-app');
     }
 
     // Conectar ao Firebase Emulator em testes E2E (se configurado)
@@ -358,7 +359,7 @@ if (typeof window !== 'undefined' && import.meta.env.DEV) {
     storage,
     functions,
   };
-  console.log('[Firebase] Instances exposed at window.__fisioflow_firebase__ for debugging');
+  logger.debug('[Firebase] Instances exposed at window.__fisioflow_firebase__ for debugging', undefined, 'firebase-app');
 }
 
 /**

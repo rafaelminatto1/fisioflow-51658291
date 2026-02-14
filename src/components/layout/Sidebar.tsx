@@ -75,7 +75,13 @@ import { Progress } from '@/components/ui/progress';
 
 const GamificationMiniProfile = ({ collapsed }: { collapsed: boolean }) => {
   const { profile: authProfile } = useAuth();
-  const { currentLevel, progressPercentage, currentXp, xpPerLevel } = useGamification(authProfile?.id || '');
+  const isPatientContext = authProfile?.role === 'paciente' || authProfile?.role === 'patient';
+  const patientId = isPatientContext ? authProfile?.id || '' : '';
+  const { currentLevel, progressPercentage, currentXp, xpPerLevel } = useGamification(patientId);
+
+  if (!isPatientContext) {
+    return null;
+  }
 
   if (collapsed) {
     return (
@@ -310,8 +316,8 @@ export function Sidebar() {
           "flex items-center gap-3 rounded-xl transition-all duration-200 group relative overflow-hidden",
           collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2",
           isActive
-            ? "bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/40"
-            : "text-muted-foreground hover:bg-slate-100/80 dark:hover:bg-slate-800/60 hover:text-foreground"
+            ? "bg-slate-900 text-white font-semibold shadow-lg"
+            : "text-muted-foreground/70 hover:bg-slate-100 hover:text-slate-900 grayscale-[0.8] hover:grayscale-0"
         )}
       >
         {/* Efeito de ripple no hover */}
@@ -366,8 +372,8 @@ export function Sidebar() {
           className={cn(
             "flex items-center justify-center px-2 py-2.5 rounded-xl transition-all duration-200 group relative overflow-hidden",
             isActive
-              ? "bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/40"
-              : "text-muted-foreground hover:bg-slate-100/80 dark:hover:bg-slate-800/60 hover:text-foreground"
+              ? "bg-slate-900 text-white font-semibold shadow-lg"
+              : "text-muted-foreground/70 hover:bg-slate-100 hover:text-slate-900 grayscale-[0.8] hover:grayscale-0"
           )}
         >
           {/* Efeito de ripple no hover */}
@@ -391,8 +397,8 @@ export function Sidebar() {
             className={cn(
               "flex items-center justify-between w-full px-3 py-2 rounded-xl transition-all duration-200 group relative overflow-hidden",
               isActive
-                ? "bg-primary/15 text-primary font-semibold shadow-sm"
-                : "text-muted-foreground hover:bg-slate-100/80 dark:hover:bg-slate-800/60 hover:text-foreground"
+                ? "bg-slate-100 text-slate-900 font-semibold shadow-sm"
+                : "text-muted-foreground/70 hover:bg-slate-100 hover:text-slate-900 grayscale-[0.8] hover:grayscale-0"
             )}
           >
             {/* Efeito de ripple no hover */}

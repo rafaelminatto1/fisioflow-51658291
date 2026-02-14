@@ -10,7 +10,7 @@
  * @module hooks/usePatients
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { getDatabase, ref, onValue, off } from 'firebase/database';
 import { app } from '@/integrations/firebase/app';
@@ -31,6 +31,7 @@ import {
   isOnline,
   isNetworkError
 } from '@/lib/utils/query-helpers';
+import type { Patient } from '@/types';
 
 // ==============================================================================
 // MAPPING FUNCTIONS
@@ -52,22 +53,25 @@ import {
  * - Query validation (dev-only)
  * - Retry with backoff for network errors
  */
-export const useActivePatients = () => {
+interface UseActivePatientsOptions {
+  enabled?: boolean;
+}
+
+export const useActivePatients = (options: UseActivePatientsOptions = {}) => {
   const { profile } = useAuth();
   const { _toast } = useToast();
   const organizationId = profile?.organization_id;
   const queryClient = useQueryClient();
-
-  const [retryCount, setRetryCount] = useState(0);
+  const isHookEnabled = options.enabled ?? true;
 
   // Setup realtime subscription via Firebase Realtime Database
   useEffect(() => {
-    if (!organizationId) {
+    if (!isHookEnabled || !organizationId) {
       logger.debug('useActivePatients: Missing organizationId', undefined, 'usePatients');
       return;
     }
 
-    logger.debug('useActivePatients: subscribing via RTDB', { organizationId, retryCount }, 'usePatients');
+    logger.debug('useActivePatients: subscribing via RTDB', { organizationId }, 'usePatients');
 
     let db;
     try {
@@ -91,7 +95,7 @@ export const useActivePatients = () => {
       logger.debug('Realtime (RTDB): Unsubscribing from patients trigger', { organizationId }, 'usePatients');
       off(triggerRef, 'value', unsubscribe);
     };
-  }, [organizationId, queryClient, retryCount]);
+  }, [organizationId, queryClient, isHookEnabled]);
 
   const result = useQuery({
     queryKey: ['patients', organizationId],
@@ -122,8 +126,7 @@ export const useActivePatients = () => {
           throw error;
         }
 
-        // Transform data
-        const validPatients = PatientService.mapPatientsFromDB(data);
+        const validPatients: Patient[] = data ?? [];
         logger.debug('useActivePatients: fetched patients', {
           count: validPatients.length,
           patientIds: validPatients.map(p => p.id).slice(0, 5),
@@ -155,7 +158,7 @@ export const useActivePatients = () => {
         throw error;
       }
     },
-    enabled: !!organizationId,
+    enabled: isHookEnabled && !!organizationId,
     staleTime: PATIENT_QUERY_CONFIG.staleTime,
     retry: PATIENT_QUERY_CONFIG.maxRetries,
   });
@@ -200,7 +203,7 @@ export const useActivePatients = () => {
  * Alias for useActivePatients
  * @deprecated Use useActivePatients directly for clarity
  */
-export const usePatients = useActivePatients;
+export const usePatients = (options: UseActivePatientsOptions = {}) => useActivePatients(options);
 
 /**
  * Hook for fetching a single patient by ID
@@ -218,8 +221,7 @@ export const usePatientById = (id: string | undefined) => {
       if (error) throw error;
       if (!data) return null;
 
-      const patients = PatientService.mapPatientsFromDB([data]);
-      return patients[0] ?? null;
+      return data;
     },
     enabled: !!id,
     staleTime: PATIENT_QUERY_CONFIG.staleTimeLong,
