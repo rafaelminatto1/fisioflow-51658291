@@ -2,17 +2,25 @@
  * Configuração das URLs da API V2 (Cloud Functions)
  *
  * Prioridade de Configuração:
- * 1. VITE_CLOUD_FUNCTIONS_URL (URL base completa)
- * 2. Construção dinâmica via PROJECT_ID + REGION + HASH
- * 3. Fallback hardcoded (último deploy conhecido)
+ * 1. VITE_CLOUD_RUN_BASE_URL (URL base completa sem a função, ex: https://<function>-<project>.region.run.app)
+ * 2. Construção dinâmica via PROJECT_NUMBER + REGION (padrão Cloud Functions v2)
+ * 3. Fallback legado por HASH (compatibilidade)
  */
 
-const _PROJECT_ID = import.meta.env.VITE_FIREBASE_PROJECT_ID || 'fisioflow-migration';
 const _REGION = import.meta.env.VITE_FIREBASE_REGION || 'southamerica-east1';
-const HASH = import.meta.env.VITE_CLOUD_FUNCTIONS_HASH || 'tfecm5cqoq'; 
+const _PROJECT_NUMBER = import.meta.env.VITE_FIREBASE_PROJECT_NUMBER || '412418905255';
+const _LEGACY_HASH = import.meta.env.VITE_CLOUD_FUNCTIONS_HASH || 'tfecm5cqoq';
+const _RUN_APP_PATTERN = import.meta.env.VITE_CLOUD_RUN_PATTERN || 'project-number';
 
-// URL Base única para Cloud Run (Firebase Functions V2)
-const CLOUD_RUN_BASE_URL = (func: string) => `https://${func.toLowerCase()}-${HASH}-rj.a.run.app`;
+// URL base para Cloud Run (Firebase Functions v2)
+// Mantém barra final para evitar preflight em endpoint sem slash que costuma responder 404.
+const CLOUD_RUN_BASE_URL = (func: string) => {
+  const normalized = func.toLowerCase();
+  if (_RUN_APP_PATTERN === 'legacy-hash') {
+    return `https://${normalized}-${_LEGACY_HASH}-rj.a.run.app/`;
+  }
+  return `https://${normalized}-${_PROJECT_NUMBER}.${_REGION}.run.app/`;
+};
 
 export const API_URLS = {
   patients: {
@@ -34,6 +42,15 @@ export const API_URLS = {
   doctors: {
     list: CLOUD_RUN_BASE_URL('listDoctors'),
     search: CLOUD_RUN_BASE_URL('searchDoctorsV2'),
+  },
+  exercises: {
+    list: CLOUD_RUN_BASE_URL('listExercisesV2'),
+    get: CLOUD_RUN_BASE_URL('getExerciseV2'),
+    searchSimilar: CLOUD_RUN_BASE_URL('searchSimilarExercisesV2'),
+  },
+  profile: {
+    get: CLOUD_RUN_BASE_URL('getProfile'),
+    update: CLOUD_RUN_BASE_URL('updateProfile'),
   },
   clinical: {
     listGoals: CLOUD_RUN_BASE_URL('listpatientgoalshttp'),
