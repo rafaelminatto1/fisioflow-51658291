@@ -76,12 +76,12 @@ import { Response } from 'express';
 // O frontend usa as versões HTTP (V2) com CORS
 // HTTP (CORS) - frontend callFunctionHttp uses these names
 export {
-    listPatientsHttp as listPatientsV2,
-    getPatientStatsHttp as getPatientStatsV2,
-    getPatientHttp,
-    createPatientHttp as createPatientV2,
-    updatePatientHttp as updatePatientV2,
-    deletePatientHttp as deletePatientV2,
+    listPatientsHttp as listpatientsv2,
+    getPatientStatsHttp as getpatientstatsv2,
+    getPatientHttp as getpatienthttp,
+    createPatientHttp as createpatientv2,
+    updatePatientHttp as updatepatientv2,
+    deletePatientHttp as deletepatientv2,
 } from './api/patients';
 // Gamification / patient quests (callable)
 export { checkPatientAppointments, getLastPainMapDate } from './api/patient-quests';
@@ -90,65 +90,68 @@ export { checkPatientAppointments, getLastPainMapDate } from './api/patient-ques
 // OTIMIZAÇÃO: Removidas versões Callable duplicadas
 // O frontend usa as versões HTTP (V2) com CORS
 // HTTP (CORS) - frontend callFunctionHttp hits these URLs
-export { listAppointmentsHttp as listAppointments } from './api/appointments';
-export { getAppointmentHttp as getAppointmentV2 } from './api/appointments';
-export { createAppointmentHttp as createAppointmentV2 } from './api/appointments';
-export { updateAppointmentHttp as updateAppointmentV2 } from './api/appointments';
-export { cancelAppointmentHttp as cancelAppointmentV2 } from './api/appointments';
-export { checkTimeConflictHttp as checkTimeConflictV2 } from './api/appointments';
+export { listAppointmentsHttp as listappointments } from './api/appointments';
+export { getAppointmentHttp as getappointmentv2 } from './api/appointments';
+export { createAppointmentHttp as createappointmentv2 } from './api/appointments';
+export { updateAppointmentHttp as updateappointmentv2 } from './api/appointments';
+export { cancelAppointmentHttp as cancelappointmentv2 } from './api/appointments';
+export { checkTimeConflictHttp as checktimeconflictv2 } from './api/appointments';
 // API de Médicos (HTTP com CORS configurado no handler)
-export { listDoctorsHttp as listDoctors, searchDoctorsHttp as searchDoctorsV2 } from './api/doctors';
+export { listDoctorsHttp as listdoctors, searchDoctorsHttp as searchdoctorsv2 } from './api/doctors';
 
 // API de Exercícios
 export {
-    listExercisesHttp as listExercisesV2,
-    getExerciseHttp as getExerciseV2,
-    getExerciseCategoriesHttp as getExerciseCategoriesV2,
-    getPrescribedExercisesHttp as getPrescribedExercisesV2,
-    logExerciseHttp as logExerciseV2,
-    createExerciseHttp as createExerciseV2,
-    updateExerciseHttp as updateExerciseV2,
-    deleteExerciseHttp as deleteExerciseV2,
-    mergeExercisesHttp as mergeExercisesV2,
-    searchSimilarExercisesHttp as searchSimilarExercisesV2,
+    listExercisesHttp as listexercisesv2,
+    getExerciseHttp as getexercisev2,
+    searchSimilarExercisesHttp as searchsimilarexercises,
+    getExerciseCategoriesHttp as getexercisecategoriesv2,
+    getPrescribedExercisesHttp as getprescribedexercisesv2,
+    logExerciseHttp as logexercisev2,
+    createExerciseHttp as createexercisev2,
+    updateExerciseHttp as updateexercisev2,
+    deleteExerciseHttp as deleteexercisev2,
+    mergeExercisesHttp as mergeexercisesv2,
 } from './api/exercises';
 
 // API de Evoluções (SOAP)
 export {
-  listEvolutionsHttp as listEvolutionsV2,
-  getEvolutionHttp as getEvolutionV2,
-  createEvolutionHttp as createEvolutionV2,
-  updateEvolutionHttp as updateEvolutionV2,
-  deleteEvolutionHttp as deleteEvolutionV2,
+    listEvolutionsHttp as listevolutionsv2,
+    getEvolutionHttp as getevolutionv2,
+    createEvolutionHttp as createevolutionv2,
+    updateEvolutionHttp as updateevolutionv2,
+    deleteEvolutionHttp as deleteevolutionv2,
 } from './api/evolutions';
 
 // API de Avaliações
 export {
-    listAssessmentTemplatesHttp as listAssessmentTemplatesV2,
-    getAssessmentTemplateHttp as getAssessmentTemplateV2,
-    listAssessmentsHttp as listAssessmentsV2,
-    getAssessmentHttp as getAssessmentV2,
-    createAssessmentHttp as createAssessmentV2,
-    updateAssessmentHttp as updateAssessmentV2,
+    listAssessmentTemplatesHttp as listassessmenttemplatesv2,
+    getAssessmentTemplateHttp as getassessmenttemplatev2,
+    listAssessmentsHttp as listassessmentsv2,
+    getAssessmentHttp as getassessmentv2,
+    createAssessmentHttp as createassessmentv2,
+    updateAssessmentHttp as updateassessmentv2,
 } from './api/assessments';
 
 // API do Dashboard
 export {
-    getDashboardStatsHttp as getDashboardStatsV2,
+    getDashboardStatsHttp as getdashboardstatsv2,
 } from './api/dashboard';
 
-// API de Perfis (onCall with CORS so callFunctionHttp works from browser)
-export const getProfile = onCall(
-    { cors: true },
-    async (request) => {
-        const { getProfileHandler } = await import('./api/profile');
-        return getProfileHandler(request);
+// API de Perfis (HTTP com CORS) - lazy import para evitar timeout no carregamento
+export const getprofile = onRequest(
+    { region: 'southamerica-east1', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' },
+    async (req, res) => {
+        const { getProfileHttpHandler } = await import('./api/profile');
+        return getProfileHttpHandler(req, res);
     }
 );
-export const updateProfile = onCall(async (request) => {
-    const { updateProfileHandler } = await import('./api/profile');
-    return updateProfileHandler(request);
-});
+export const updateprofile = onRequest(
+    { region: 'southamerica-east1', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' },
+    async (req, res) => {
+        const { updateProfileHttpHandler } = await import('./api/profile');
+        return updateProfileHttpHandler(req, res);
+    }
+);
 
 // API de Pagamentos
 export const listPayments = onCall(async (request) => {
@@ -169,76 +172,61 @@ export const createPayment = onCall(async (request) => {
 // O frontend usa as versões HTTP (V2) com CORS
 // HTTP (CORS) - V2 endpoints for frontend
 export {
-    listTransactionsHttp as listTransactionsV2,
-    createTransactionHttp as createTransactionV2,
-    updateTransactionHttp as updateTransactionV2,
-    deleteTransactionHttp as deleteTransactionV2,
-    findTransactionByAppointmentIdHttp as findTransactionByAppointmentIdV2,
-    getEventReportHttp as getEventReportV2,
+    listTransactionsHttp as listtransactionsv2,
+    createTransactionHttp as createtransactionv2,
+    updateTransactionHttp as updatetransactionv2,
+    deleteTransactionHttp as deletetransactionv2,
+    findTransactionByAppointmentIdHttp as findtransactionbyappointmentidv2,
+    getEventReportHttp as geteventreportv2,
 } from './api/financial';
 
 // API de Parcerias (Partnerships)
 export {
-    listPartnershipsHttp as listPartnerships,
-    getPartnershipHttp as getPartnership,
-    createPartnershipHttp as createPartnership,
-    updatePartnershipHttp as updatePartnership,
-    deletePartnershipHttp as deletePartnership,
+    listPartnershipsHttp as listpartnerships,
+    getPartnershipHttp as getpartnership,
+    createPartnershipHttp as createpartnership,
+    updatePartnershipHttp as updatepartnership,
+    deletePartnershipHttp as deletepartnership,
 } from './api/partnerships';
 
 // API de Registros Financeiros de Pacientes
 export {
-    listAllFinancialRecordsHttp as listAllFinancialRecordsV2,
-    listPatientFinancialRecordsHttp as listPatientFinancialRecords,
-    getPatientFinancialSummaryHttp as getPatientFinancialSummaryV2,
-    createFinancialRecordHttp as createFinancialRecord,
-    updateFinancialRecordHttp as updateFinancialRecord,
-    deleteFinancialRecordHttp as deleteFinancialRecord,
-    markAsPaidHttp as markAsPaid,
+    listAllFinancialRecordsHttp as listallfinancialrecordsv2,
+    listPatientFinancialRecordsHttp as listpatientfinancialrecords,
+    getPatientFinancialSummaryHttp as getpatientfinancialsummaryv2,
+    createFinancialRecordHttp as createfinancialrecord,
+    updateFinancialRecordHttp as updatefinancialrecord,
+    deleteFinancialRecordHttp as deletefinancialrecord,
+    markAsPaidHttp as markaspaid,
 } from './api/patient-financial';
 
-// API de Prontuários
-export const getPatientRecords = onCall(async (request) => {
-    const { getPatientRecordsHandler } = await import('./api/medical-records');
-    return getPatientRecordsHandler(request);
-});
-export const getPainRecords = onCall(async (request) => {
-    const { getPainRecordsHandler } = await import('./api/medical-records');
-    return getPainRecordsHandler(request);
-});
-export const savePainRecord = onCall(async (request) => {
-    const { savePainRecordHandler } = await import('./api/medical-records');
-    return savePainRecordHandler(request);
-});
-export const createMedicalRecord = onCall(async (request) => {
-    const { createMedicalRecordHandler } = await import('./api/medical-records');
-    return createMedicalRecordHandler(request);
-});
-export const updateMedicalRecord = onCall(async (request) => {
-    const { updateMedicalRecordHandler } = await import('./api/medical-records');
-    return updateMedicalRecordHandler(request);
-});
-export const listTreatmentSessions = onCall(async (request) => {
-    const { listTreatmentSessionsHandler } = await import('./api/medical-records');
-    return listTreatmentSessionsHandler(request);
-});
-export const createTreatmentSession = onCall(async (request) => {
-    const { createTreatmentSessionHandler } = await import('./api/medical-records');
-    return createTreatmentSessionHandler(request);
-});
-export const updateTreatmentSession = onCall(async (request) => {
-    const { updateTreatmentSessionHandler } = await import('./api/medical-records');
-    return updateTreatmentSessionHandler(request);
-});
+// API de Prontuários (HTTP V2 - OTIMIZADO)
+export {
+    getPatientRecordsHttp as getpatientrecordsv2,
+    createMedicalRecordHttp as createmedicalrecordv2,
+    updateMedicalRecordHttp as updatemedicalrecordv2,
+    deleteMedicalRecordHttp as deletemedicalrecordv2,
+    listTreatmentSessionsHttp as listtreatmentsessionsv2,
+    createTreatmentSessionHttp as createtreatmentsessionv2,
+    getPainRecordsHttp as getpainrecordsv2,
+    savePainRecordHttp as savepainrecordv2,
+} from './api/medical-records';
+
+// Extensões de Prontuário (Callable)
+export {
+    saveSurgeries,
+    saveGoals,
+    savePathologies,
+} from './api/medical-records-extensions';
 
 // API HTTP para avaliações
-export const apiEvaluate = onRequest(async (req: Request, res: Response) => {
+export const apievaluate = onRequest(async (req: Request, res: Response) => {
     const { apiEvaluateHandler } = await import('./api/evaluate');
     return apiEvaluateHandler(req, res);
 });
 
 // Health Check
-export const healthCheck = onRequest(async (req: Request, res: Response) => {
+export const healthcheck = onRequest(async (req: Request, res: Response) => {
     const { healthCheckHandler } = await import('./api/health');
     return healthCheckHandler(req, res);
 });
@@ -262,7 +250,7 @@ export const listUserFiles = onCall(async (request) => {
 });
 
 // Cloud API Endpoints
-export const synthesizeTTS = onRequest(async (req: any, res: any) => {
+export const synthesizetts = onRequest(async (req: any, res: any) => {
     const { synthesizeTTSHandler } = await import('./api/tts');
     return synthesizeTTSHandler(req, res);
 });
@@ -593,13 +581,9 @@ export const onPatientCreated = functions.firestore.onDocumentCreated(
 );
 
 // [NEW] Sync Firestore changes back to Cloud SQL (Offline/Mobile support)
-export const syncPatientToSql = functions.firestore.onDocumentWritten(
-    'patients/{patientId}',
-    async (event) => {
-        const { handlePatientSync } = await import('./triggers/sync-patients');
-        return handlePatientSync(event as any);
-    }
-);
+// REMOVIDO: Essa função já existe como background trigger em produção
+// Para evitar conflitos de deploy, não exportamos aqui.
+
 
 export const syncAppointmentToSql = functions.firestore.onDocumentWritten(
     'appointments/{appointmentId}',

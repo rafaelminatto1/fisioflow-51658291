@@ -9,7 +9,9 @@ import * as admin from 'firebase-admin';
 import { GoogleAuth } from 'google-auth-library';
 
 // Inicializar Firebase Admin
-admin.initializeApp();
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
 
 // Criar cliente de autenticação
 const authClient = new GoogleAuth({

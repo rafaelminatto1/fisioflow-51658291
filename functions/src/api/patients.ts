@@ -232,7 +232,12 @@ export const listPatientsHttp = onRequest(
       });
     } catch (error: unknown) {
       logger.error('Error in listPatientsHttp:', error);
-      const statusCode = error instanceof HttpsError && error.code === 'unauthenticated' ? 401 : 500;
+      let statusCode = 500;
+      if (error instanceof HttpsError) {
+        if (error.code === 'unauthenticated') statusCode = 401;
+        else if (error.code === 'not-found') statusCode = 404;
+        else if (error.code === 'permission-denied') statusCode = 403;
+      }
       setCorsHeaders(res, req);
       res.status(statusCode).json({ error: error instanceof Error ? error.message : 'Erro ao listar pacientes' });
     }
@@ -408,10 +413,12 @@ export const getPatientStatsHttp = onRequest(
       });
     } catch (error: unknown) {
       if (error instanceof HttpsError && error.code === 'unauthenticated') {
+        setCorsHeaders(res, req);
         res.status(401).json({ error: error.message });
         return;
       }
       logger.error('Error in getPatientStatsHttp:', error);
+      setCorsHeaders(res, req);
       // Retorna stats vazios em vez de 500 para não quebrar o prefetch
       res.status(200).json(emptyStats());
     }
