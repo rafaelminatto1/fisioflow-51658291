@@ -593,21 +593,25 @@ export const onPatientCreated = functions.firestore.onDocumentCreated(
 );
 
 // [NEW] Sync Firestore changes back to Cloud SQL (Offline/Mobile support)
-export const syncPatientToSql = functions.firestore.onDocumentWritten(
-    'patients/{patientId}',
-    async (event) => {
-        const { handlePatientSync } = await import('./triggers/sync-patients');
-        return handlePatientSync(event as any);
-    }
-);
+// REMOVIDO - Exportações removidas para evitar conflitos de deploy
+// As funções de sync já existem como background triggers em produção.
+// Comentando para não causar conflitos.
 
-export const syncAppointmentToSql = functions.firestore.onDocumentWritten(
-    'appointments/{appointmentId}',
-    async (event) => {
-        const { handleAppointmentSync } = await import('./triggers/sync-appointments');
-        return handleAppointmentSync(event as any);
-    }
-);
+// export const syncPatientToSql = functions.firestore.onDocumentWritten(
+//     'patients/{patientId}',
+//     async (event) => {
+//         const { handlePatientSync } = await import('./triggers/sync-patients');
+//         return handlePatientSync(event as any);
+//     }
+// );
+
+// export const syncAppointmentToSql = functions.firestore.onDocumentWritten(
+//     'appointments/{appointmentId}',
+//     async (event) => {
+//         const { handleAppointmentSync } = await import('./triggers/sync-appointments');
+//         return handleAppointmentSync(event as any);
+//     }
+// );
 
 export const syncDoctorToSql = functions.firestore.onDocumentWritten(
     'doctors/{doctorId}',
