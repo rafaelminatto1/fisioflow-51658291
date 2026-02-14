@@ -163,7 +163,7 @@ async function getProfile(userId: string): Promise<ProfileData> {
   try {
     logger.info(`[Auth Middleware] No profile found for user: ${userId}, creating default organization and profile`);
 
-    const organizationId = `org-${userId.substring(0, 8)}-${userId.substring(8, 16)}-${userId.substring(16, 24)}-${userId.substring(24, 32)}`;
+    const organizationId = '00000000-0000-0000-0000-000000000000';
     const orgSlug = `clinica-${userId.substring(0, 8).toLowerCase()}`;
 
     try {
