@@ -18,6 +18,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ReciboPreview, ReciboPDF, ReciboData } from '@/components/financial/ReciboPDF';
 import { useRecibos, useCreateRecibo, valorPorExtenso } from '@/hooks/useRecibos';
+import { useOrganizations } from '@/hooks/useOrganizations';
 import { useAuth } from '@/contexts/AuthContext';
 import { db, collection, query as firestoreQuery, orderBy, getDocs, doc, getDoc, limit } from '@/integrations/firebase/app';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
