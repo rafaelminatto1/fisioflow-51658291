@@ -5,12 +5,17 @@ import { useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import {
 
-  User, CreditCard, FileText, Check, X, UserCog
+  User, FileText, Check, X, UserCog, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Tabs, TabsContent, TabsList, TabsTrigger
 } from '@/components/ui/tabs';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger
+} from '@/components/ui/collapsible';
 import {
   CustomModal,
   CustomModalHeader,
@@ -67,7 +72,6 @@ import { WaitlistQuickAdd } from './WaitlistQuickAdd';
 import {
   PatientSelectionSection,
   DateTimeSection,
-  TypeAndStatusSection,
   PaymentTab,
   OptionsTab
 } from './AppointmentDialogSegments';
@@ -86,6 +90,13 @@ interface AppointmentModalProps {
 }
 
 import { useNavigate } from 'react-router-dom';
+
+const normalizeTime = (time?: string): string => {
+  if (!time) return '';
+  const match = String(time).trim().match(/^(\d{1,2}):(\d{2})/);
+  if (!match) return String(time).trim();
+  return `${match[1].padStart(2, '0')}:${match[2]}`;
+};
 
 export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   isOpen,
@@ -119,14 +130,15 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const [capacityDialogOpen, setCapacityDialogOpen] = useState(false);
   const [pendingFormData, setPendingFormData] = useState<AppointmentFormData | null>(null);
   const [waitlistQuickAddOpen, setWaitlistQuickAddOpen] = useState(false);
+  const [isNotesExpanded, setIsNotesExpanded] = useState(false);
 
   const { user } = useAuth();
   const { therapists, isLoading: therapistsLoading } = useTherapists();
   const { mutateAsync: createAppointmentAsync, isPending: isCreating } = useCreateAppointment();
   const { mutateAsync: updateAppointmentAsync, isPending: isUpdating } = useUpdateAppointment();
   const { mutate: deleteAppointmentMutation } = useDeleteAppointment();
-  const { data: activePatients, isLoading: patientsLoading } = useActivePatients() as { data: Patient[] | undefined; isLoading: boolean };
-  const { data: appointments = [] } = useAppointments();
+  const { data: activePatients, isLoading: patientsLoading } = useActivePatients({ enabled: isOpen }) as { data: Patient[] | undefined; isLoading: boolean };
+  const { data: appointments = [] } = useAppointments({ enabled: isOpen, enableRealtime: false });
   const { getMinCapacityForInterval } = useScheduleCapacity();
   const { mutateAsync: consumeSession } = useUsePackageSession();
 
@@ -203,9 +215,9 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     defaultValues: {
       patient_id: appointment?.patientId || defaultPatientId || '',
       appointment_date: appointment?.date ? format(new Date(appointment.date), 'yyyy-MM-dd') : (defaultDate ? format(defaultDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')),
-      appointment_time: appointment?.time || defaultTime || '',
+      appointment_time: normalizeTime(appointment?.time || defaultTime || ''),
       duration: appointment?.duration || 60,
-      type: appointment?.type || 'Fisioterapia',
+      type: 'Fisioterapia',
       status: appointment?.status || 'agendado',
       notes: appointment?.notes || '',
       therapist_id: appointment?.therapistId || '',
@@ -250,9 +262,9 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       return {
         patient_id: apt.patientId || defaults.patientId || '',
         appointment_date: formattedDate,
-        appointment_time: apt.time || defaults.time || '00:00',
+        appointment_time: normalizeTime(apt.time || defaults.time || '00:00'),
         duration: apt.duration || 60,
-        type: apt.type || 'Fisioterapia',
+        type: 'Fisioterapia',
         status: apt.status || 'agendado',
         notes: apt.notes || '',
         therapist_id: apt.therapistId || '',
@@ -271,7 +283,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     return {
       patient_id: defaults.patientId || '',
       appointment_date: formattedDate,
-      appointment_time: defaults.time || '',
+      appointment_time: normalizeTime(defaults.time || ''),
       duration: 60,
       type: 'Fisioterapia',
       status: 'agendado',
@@ -306,6 +318,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       reset(formData);
       setCurrentMode(appointment ? 'edit' : initialMode);
       setActiveTab('info');
+      setIsNotesExpanded(Boolean(formData.notes?.trim()));
     } catch (err) {
       logger.error('Error resetting form', err, 'AppointmentModalRefactored');
       // Fail-safe reset
@@ -357,6 +370,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const watchPaymentMethod = watch('payment_method');
   const watchPaymentAmount = watch('payment_amount');
   const watchedStatus = watch('status');
+  const watchedNotes = watch('notes');
 
   const watchedDate = useMemo(() => {
     if (!watchedDateStr) return null;
@@ -386,17 +400,25 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
 
   // Otimização: gerar time slots apenas quando necessário e memoizar resultado
   const timeSlots = useMemo(() => {
+    let slots: string[] = [];
+
     if (slotInfo.length === 0 && !isDayClosed) {
-      const slots: string[] = [];
       for (let hour = 7; hour < 21; hour++) {
         for (let minute = 0; minute < 60; minute += 30) {
           slots.push(`${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`);
         }
       }
-      return slots;
+    } else {
+      slots = slotInfo.map(s => s.time);
     }
-    return slotInfo.map(s => s.time);
-  }, [slotInfo, isDayClosed]);
+
+    // Em edição, mantém o horário atual visível/selecionável mesmo fora dos slots do dia.
+    if (watchedTime && !slots.includes(watchedTime)) {
+      return [...slots, watchedTime].sort((a, b) => a.localeCompare(b));
+    }
+
+    return slots;
+  }, [slotInfo, isDayClosed, watchedTime]);
 
   // Otimização: pré-calcular conflitos por slot para evitar recálculo
   const slotsWithConflicts = useMemo(() => {
@@ -486,27 +508,33 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   };
 
   const handleSave = async (data: AppointmentFormData) => {
+    const normalizedData: AppointmentFormData = {
+      ...data,
+      appointment_time: normalizeTime(data.appointment_time),
+      type: 'Fisioterapia'
+    };
+
     // Validar campos obrigatórios que podem ter passado pelo hook-form se a schema for muito permissiva
-    if (!data.appointment_time || data.appointment_time === '') {
+    if (!normalizedData.appointment_time || normalizedData.appointment_time === '') {
       toast.error('Horário do agendamento é obrigatório');
       return;
     }
 
-    if (!data.patient_id || data.patient_id === '') {
+    if (!normalizedData.patient_id || normalizedData.patient_id === '') {
       toast.error('ID do paciente é obrigatório');
       return;
     }
 
-    if (!data.appointment_date || data.appointment_date === '') {
+    if (!normalizedData.appointment_date || normalizedData.appointment_date === '') {
       toast.error('Data do agendamento é obrigatória');
       return;
     }
 
     // Fisioterapeuta é opcional; quando não informado, o backend pode usar o usuário logado.
 
-    const selectedDate = parseISO(data.appointment_date);
-    const selectedTime = data.appointment_time;
-    const selectedDuration = data.duration || 60;
+    const selectedDate = parseISO(normalizedData.appointment_date);
+    const selectedTime = normalizedData.appointment_time;
+    const selectedDuration = normalizedData.duration || 60;
 
     const freshConflictCheck = checkAppointmentConflict({
       date: selectedDate,
@@ -521,20 +549,20 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     const currentCount = freshConflictCheck.totalConflictCount || 0;
 
     if (currentCount >= maxCapacity) {
-      setPendingFormData({ ...data });
+      setPendingFormData({ ...normalizedData });
       setConflictCheck(freshConflictCheck);
       setCapacityDialogOpen(true);
       return;
     }
 
     try {
-      await persistAppointment(data);
+      await persistAppointment(normalizedData);
     } catch (error: unknown) {
       if (isAppointmentConflictError(error)) {
         // Since we removed the unique index, a 409 Conflict should now trigger 
         // the CapacityExceededDialog instead of a hard error, 
         // allowing the user to override if they have permissions.
-        setPendingFormData(data);
+        setPendingFormData(normalizedData);
         setConflictCheck(freshConflictCheck);
         setCapacityDialogOpen(true);
 
@@ -652,16 +680,11 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       <FormProvider {...methods}>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
           <div className="px-5 sm:px-6 py-3 border-b shrink-0">
-            <TabsList className="grid w-full grid-cols-3 h-10">
+            <TabsList className="grid w-full grid-cols-2 h-10">
               <TabsTrigger value="info" className="flex items-center gap-2 text-xs sm:text-sm">
                 <User className="h-4 w-4" />
                 <span className="hidden xs:inline">Informações</span>
                 <span className="xs:hidden">Info</span>
-              </TabsTrigger>
-              <TabsTrigger value="payment" className="flex items-center gap-2 text-xs sm:text-sm">
-                <CreditCard className="h-4 w-4" />
-                <span className="hidden xs:inline">Pagamento</span>
-                <span className="xs:hidden">Pag.</span>
               </TabsTrigger>
               <TabsTrigger value="options" className="flex items-center gap-2 text-xs sm:text-sm">
                 <FileText className="h-4 w-4" />
@@ -777,8 +800,6 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                   }}
                 />
 
-                <TypeAndStatusSection disabled={currentMode === 'view'} />
-
                 <div className="space-y-2">
                   <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
                     <UserCog className="h-3.5 w-3.5 text-muted-foreground" />
@@ -809,28 +830,59 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
-                    <FileText className="h-3.5 w-3.5 text-muted-foreground" />
-                    Observações
-                  </Label>
-                  <Textarea
-                    {...methods.register('notes')}
-                    placeholder="Informações importantes sobre o atendimento..."
-                    rows={2}
+                  <PaymentTab
                     disabled={currentMode === 'view'}
-                    className="resize-none text-sm min-h-[70px]"
+                    watchPaymentStatus={watchPaymentStatus || 'pending'}
+                    watchPaymentMethod={watchPaymentMethod || ''}
+                    watchPaymentAmount={watchPaymentAmount || 0}
+                    patientId={watchedPatientId}
                   />
                 </div>
-              </TabsContent>
 
-              <TabsContent value="payment" className="mt-0 space-y-2.5 sm:space-y-3">
-                <PaymentTab
-                  disabled={currentMode === 'view'}
-                  watchPaymentStatus={watchPaymentStatus || 'pending'}
-                  watchPaymentMethod={watchPaymentMethod || ''}
-                  watchPaymentAmount={watchPaymentAmount || 0}
-                  patientId={watchedPatientId}
-                />
+                <Collapsible open={isNotesExpanded} onOpenChange={setIsNotesExpanded}>
+                  <div className="space-y-2">
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-auto w-full items-start justify-between px-3 py-2.5 text-left"
+                      >
+                        <span className="flex items-start gap-2">
+                          <FileText className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
+                          <span className="flex flex-col">
+                            <span className="text-xs sm:text-sm font-medium">Observações</span>
+                            <span className="text-[10px] sm:text-xs text-muted-foreground">
+                              {watchedNotes?.trim()
+                                ? 'Clique para ver ou editar as observações.'
+                                : 'Opcional. Clique para adicionar observações do atendimento.'}
+                            </span>
+                          </span>
+                        </span>
+                        {isNotesExpanded ? (
+                          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </CollapsibleTrigger>
+
+                    <CollapsibleContent>
+                      <div className="space-y-2">
+                        <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+                          <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+                          Observações
+                        </Label>
+                        <Textarea
+                          {...methods.register('notes')}
+                          placeholder="Informações importantes sobre o atendimento..."
+                          rows={2}
+                          disabled={currentMode === 'view'}
+                          className="resize-none text-sm min-h-[70px]"
+                        />
+                      </div>
+                    </CollapsibleContent>
+                  </div>
+                </Collapsible>
               </TabsContent>
 
               <TabsContent value="options" className="mt-0 space-y-3 sm:space-y-4">

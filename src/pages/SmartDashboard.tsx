@@ -438,24 +438,24 @@ export default function SmartDashboard() {
 
   return (
     <MainLayout maxWidth="7xl">
-      <div className="space-y-6 pb-20">
+      <div className="space-y-8 pb-20 px-4 md:px-8">
         {/* Header - Enhanced Design */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+          <div className="flex items-center gap-6">
             <div className="relative hidden md:block">
-              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-primary via-primary/80 to-primary/60 flex items-center justify-center shadow-lg shadow-primary/25">
-                <Brain className="h-7 w-7 text-primary-foreground" />
+              <div className="h-16 w-16 rounded-2xl bg-slate-900 flex items-center justify-center shadow-2xl">
+                <Brain className="h-8 w-8 text-white" />
               </div>
-              <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center ring-2 ring-background">
-                <Sparkles className="h-3 w-3 text-white" />
+              <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-emerald-500 flex items-center justify-center ring-4 ring-background">
+                <Sparkles className="h-3.5 w-3.5 text-white" />
               </div>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-                Bem-vindo de volta,
+              <p className="text-sm font-semibold text-muted-foreground/60 uppercase tracking-widest mb-1">
+                Analytics Hub
               </p>
-              <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground">
-                Rafael
+              <h1 className="text-3xl lg:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
+                Dashboard Inteligente
               </h1>
             </div>
           </div>

@@ -46,7 +46,7 @@ try {
       cacheSizeBytes: CACHE_SIZE_UNLIMITED,
       tabManager: persistentMultipleTabManager()
     }),
-    experimentalAutoDetectLongPolling: true
+    experimentalAutoDetectLongPolling: false
   });
 } catch (error) {
   // Fallback to regular Firestore
