@@ -23,10 +23,16 @@ export const useFinancial = () => {
       where('organization_id', '==', profile.organization_id)
     );
 
-    const unsubscribe = onSnapshot(q, () => {
-      logger.debug('Financial data changed, invalidating queries', null, 'useFinancial');
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-    });
+    const unsubscribe = onSnapshot(
+      q, 
+      () => {
+        logger.debug('Financial data changed, invalidating queries', null, 'useFinancial');
+        queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      },
+      (error) => {
+        logger.error('Error in financial real-time listener', error, 'useFinancial');
+      }
+    );
 
     return () => unsubscribe();
   }, [profile?.organization_id, queryClient]);
