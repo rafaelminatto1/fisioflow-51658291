@@ -253,70 +253,71 @@ export const ExerciseBlockV2: React.FC<ExerciseBlockV2Props> = ({
             </Button>
 
             <Popover open={showAutocomplete} onOpenChange={setShowAutocomplete}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={disabled}
-                className="gap-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-500/10 rounded-lg"
-              >
-                <Library className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline text-xs font-medium">Biblioteca</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[420px] p-0" align="end">
-              <Command shouldFilter={false}>
-                <CommandInput
-                  placeholder="Buscar exercício..."
-                  value={searchValue}
-                  onValueChange={setSearchValue}
-                />
-                <CommandList className="max-h-[320px]">
-                  <CommandEmpty className="py-8">
-                    <div className="flex flex-col items-center gap-2">
-                      <ImageOff className="h-10 w-10 text-muted-foreground/30" />
-                      <p className="text-sm text-muted-foreground">Nenhum exercício encontrado.</p>
-                    </div>
-                  </CommandEmpty>
-                  <CommandGroup>
-                    {filteredLibrary.map((exercise) => (
-                      <CommandItem
-                        key={exercise.id}
-                        value={exercise.id}
-                        onSelect={() => handleAddFromLibrary(exercise)}
-                        className="flex items-center gap-3 p-2.5 cursor-pointer"
-                      >
-                        <div className="h-10 w-10 flex-shrink-0 rounded-lg bg-muted/50 overflow-hidden border border-border/50">
-                          {exercise.image_url ? (
-                            <OptimizedImage
-                              src={withImageParams(exercise.image_url, {
-                                width: 80,
-                                height: 80,
-                                dpr: 2,
-                                format: 'auto',
-                                fit: 'cover',
-                              })}
-                              alt={exercise.name}
-                              aspectRatio="1:1"
-                              className="h-full w-full"
-                            />
-                          ) : (
-                            <div className="h-full w-full flex items-center justify-center">
-                              <Dumbbell className="h-5 w-5 text-muted-foreground/50" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex flex-col min-w-0 flex-1">
-                          <span className="font-medium text-sm truncate">{exercise.name}</span>
-                          <span className="text-xs text-muted-foreground truncate">{exercise.category}</span>
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={disabled}
+                  className="gap-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-500/10 rounded-lg"
+                >
+                  <Library className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline text-xs font-medium">Biblioteca</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[420px] p-0" align="end">
+                <Command shouldFilter={false}>
+                  <CommandInput
+                    placeholder="Buscar exercício..."
+                    value={searchValue}
+                    onValueChange={setSearchValue}
+                  />
+                  <CommandList className="max-h-[320px]">
+                    <CommandEmpty className="py-8">
+                      <div className="flex flex-col items-center gap-2">
+                        <ImageOff className="h-10 w-10 text-muted-foreground/30" />
+                        <p className="text-sm text-muted-foreground">Nenhum exercício encontrado.</p>
+                      </div>
+                    </CommandEmpty>
+                    <CommandGroup>
+                      {filteredLibrary.map((exercise) => (
+                        <CommandItem
+                          key={exercise.id}
+                          value={exercise.id}
+                          onSelect={() => handleAddFromLibrary(exercise)}
+                          className="flex items-center gap-3 p-2.5 cursor-pointer"
+                        >
+                          <div className="h-10 w-10 flex-shrink-0 rounded-lg bg-muted/50 overflow-hidden border border-border/50">
+                            {exercise.image_url ? (
+                              <OptimizedImage
+                                src={withImageParams(exercise.image_url, {
+                                  width: 80,
+                                  height: 80,
+                                  dpr: 2,
+                                  format: 'auto',
+                                  fit: 'cover',
+                                })}
+                                alt={exercise.name}
+                                aspectRatio="1:1"
+                                className="h-full w-full"
+                              />
+                            ) : (
+                              <div className="h-full w-full flex items-center justify-center">
+                                <Dumbbell className="h-5 w-5 text-muted-foreground/50" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-col min-w-0 flex-1">
+                            <span className="font-medium text-sm truncate">{exercise.name}</span>
+                            <span className="text-xs text-muted-foreground truncate">{exercise.category}</span>
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
       </div>
 

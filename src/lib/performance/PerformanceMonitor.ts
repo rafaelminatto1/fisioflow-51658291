@@ -13,6 +13,7 @@
  */
 
 import { Metric, onCLS, onFCP, onFID, onLCP, onTTFB } from 'web-vitals';
+import { logger } from '../errors/logger';
 
 // Interface para armazenar métricas
 export interface PerformanceMetric {
@@ -70,10 +71,10 @@ export function initPerformanceMonitoring(onMetricUpdate?: (metric: PerformanceM
 
     // Log em desenvolvimento
     if (import.meta.env.DEV) {
-      console.log(`[Performance] ${metric.name}:`, {
+      logger.debug(`[Performance] ${metric.name}:`, {
         value: metric.value,
         rating: performanceMetric.rating,
-      });
+      }, 'Performance');
     }
 
     // Enviar para Analytics/monitoramento
@@ -296,8 +297,8 @@ export async function sendPerformanceReport(endpoint?: string) {
 
   // Log em desenvolvimento
   if (import.meta.env.DEV) {
-    console.table(report.metrics);
-    console.log(`[Performance] Overall Score: ${report.score}/100`);
+    logger.debug('[Performance] Report Metrics', report.metrics, 'Performance');
+    logger.performance(`Overall Score: ${report.score}/100`, undefined, 'Performance');
   }
 
   return report;
@@ -321,7 +322,7 @@ export function markNavigationEnd(pageName: string) {
 
   const measure = performance.getEntriesByName(`nav-${pageName}`)[0] as PerformanceMeasure;
   if (measure) {
-    console.log(`[Navigation] ${pageName}: ${measure.duration.toFixed(0)}ms`);
+    logger.performance(`${pageName}: ${measure.duration.toFixed(0)}ms`, undefined, 'Navigation');
   }
 }
 
@@ -339,7 +340,7 @@ export async function measureAsync<T>(
     return await fn();
   } finally {
     const duration = performance.now() - start;
-    console.log(`[Performance] ${name}: ${duration.toFixed(2)}ms`);
+    logger.performance(`${name}: ${duration.toFixed(2)}ms`, undefined, 'Performance');
 
     // Armazenar como custom metric
     metricsStore.set(`custom-${name}`, {

@@ -8,7 +8,7 @@
 // Types
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, setDoc, addDoc, deleteDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
+import { collection, doc, getDoc, getDocs, setDoc, addDoc, deleteDoc, query as firestoreQuery, where, db } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './useAuth';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
@@ -74,6 +74,16 @@ const DAYS_OF_WEEK = [
 
 // Helper to convert doc
 const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as T);
+const isPermissionDeniedError = (error: unknown): boolean => {
+  const code = (error as { code?: string })?.code;
+  const message = (error as Error)?.message?.toLowerCase?.() ?? '';
+  return (
+    code === 'permission-denied' ||
+    code === 'failed-precondition' ||
+    message.includes('insufficient permissions') ||
+    message.includes('requires an index')
+  );
+};
 
 export function useScheduleSettings() {
   const { toast } = useToast();
@@ -93,13 +103,20 @@ export function useScheduleSettings() {
         collection(db, 'schedule_business_hours'),
         where('organization_id', '==', organizationId)
       );
-      const snapshot = await getDocs(q);
-      const hours = snapshot.docs.map(convertDoc) as BusinessHour[];
-      // Sort in JS because we query by organization_id
-      return hours.sort((a, b) => a.day_of_week - b.day_of_week);
+      try {
+        const snapshot = await getDocs(q);
+        const hours = snapshot.docs.map(convertDoc) as BusinessHour[];
+        return hours.sort((a, b) => a.day_of_week - b.day_of_week);
+      } catch (error) {
+        if (isPermissionDeniedError(error)) {
+          return [];
+        }
+        throw error;
+      }
     },
     enabled: !!organizationId,
     staleTime: STALE_TIME_MS,
+    retry: (failureCount, error) => !isPermissionDeniedError(error) && failureCount < 2,
   });
 
   const upsertBusinessHours = useMutation({
@@ -142,12 +159,20 @@ export function useScheduleSettings() {
     queryKey: ['cancellation-rules', organizationId],
     queryFn: async () => {
       const docRef = doc(db, 'schedule_cancellation_rules', organizationId!);
-      const snapshot = await getDoc(docRef);
-      if (!snapshot.exists()) return null;
-      return convertDoc(snapshot) as CancellationRule;
+      try {
+        const snapshot = await getDoc(docRef);
+        if (!snapshot.exists()) return null;
+        return convertDoc(snapshot) as CancellationRule;
+      } catch (error) {
+        if (isPermissionDeniedError(error)) {
+          return null;
+        }
+        throw error;
+      }
     },
     enabled: !!organizationId,
     staleTime: STALE_TIME_MS,
+    retry: (failureCount, error) => !isPermissionDeniedError(error) && failureCount < 2,
   });
 
   const upsertCancellationRules = useMutation({
@@ -172,12 +197,20 @@ export function useScheduleSettings() {
     queryKey: ['notification-settings', organizationId],
     queryFn: async () => {
       const docRef = doc(db, 'schedule_notification_settings', organizationId!);
-      const snapshot = await getDoc(docRef);
-      if (!snapshot.exists()) return null;
-      return convertDoc(snapshot) as NotificationSettings;
+      try {
+        const snapshot = await getDoc(docRef);
+        if (!snapshot.exists()) return null;
+        return convertDoc(snapshot) as NotificationSettings;
+      } catch (error) {
+        if (isPermissionDeniedError(error)) {
+          return null;
+        }
+        throw error;
+      }
     },
     enabled: !!organizationId,
     staleTime: STALE_TIME_MS,
+    retry: (failureCount, error) => !isPermissionDeniedError(error) && failureCount < 2,
   });
 
   const upsertNotificationSettings = useMutation({
@@ -203,14 +236,23 @@ export function useScheduleSettings() {
     queryFn: async () => {
       const q = firestoreQuery(
         collection(db, 'schedule_blocked_times'),
-        where('organization_id', '==', organizationId),
-        orderBy('start_date', 'asc')
+        where('organization_id', '==', organizationId)
       );
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDoc) as BlockedTime[];
+      try {
+        const snapshot = await getDocs(q);
+        return (snapshot.docs.map(convertDoc) as BlockedTime[]).sort(
+          (a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
+        );
+      } catch (error) {
+        if (isPermissionDeniedError(error)) {
+          return [];
+        }
+        throw error;
+      }
     },
     enabled: !!organizationId,
     staleTime: STALE_TIME_MS,
+    retry: (failureCount, error) => !isPermissionDeniedError(error) && failureCount < 2,
   });
 
   const createBlockedTime = useMutation({
@@ -260,10 +302,10 @@ export function useScheduleSettings() {
     organizationId,
 
     // Loading states
-    isLoadingHours,
-    isLoadingRules,
-    isLoadingNotifications,
-    isLoadingBlocked,
+    isLoadingHours: !!organizationId && isLoadingHours,
+    isLoadingRules: !!organizationId && isLoadingRules,
+    isLoadingNotifications: !!organizationId && isLoadingNotifications,
+    isLoadingBlocked: !!organizationId && isLoadingBlocked,
 
     // Mutations
     upsertBusinessHours,

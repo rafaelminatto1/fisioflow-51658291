@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { Play, Edit, Trash2, Clock, X, Bell, Users, UserPlus, FileText, CalendarClock, CheckCircle2, AlertCircle, Package, MessageCircle, Timer, NotepadText, CreditCard, Calendar } from 'lucide-react';
+import { Play, Edit, Trash2, Clock, X, Bell, Users, UserPlus, FileText, CheckCircle2, AlertCircle, Package, MessageCircle, Timer, NotepadText, CreditCard, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
 
@@ -238,6 +238,11 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
     onOpenChange?.(false);
   };
 
+  const handleOpenPatientProfile = () => {
+    navigate(`/patients/${appointment.patientId}`);
+    onOpenChange?.(false);
+  };
+
   const handleTherapistChange = async (therapistId: string) => {
     if (therapistId === localTherapistId) return;
     setLocalTherapistId(therapistId);
@@ -345,7 +350,13 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
           <div className="space-y-1.5 min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <h3 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 truncate leading-tight tracking-tight">
-                {appointment.patientName}
+                <button
+                  type="button"
+                  onClick={handleOpenPatientProfile}
+                  className="block w-full truncate text-left hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-sm"
+                >
+                  {appointment.patientName}
+                </button>
               </h3>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -533,8 +544,8 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
                 className="h-10 flex-1 rounded-xl bg-background shadow-sm font-bold text-xs gap-2 transition-all hover:border-primary/30"
                 onClick={handleEdit}
               >
-                <CalendarClock className="h-4 w-4 text-primary" />
-                Reagendar
+                <Edit className="h-4 w-4 text-primary" />
+                Editar
               </Button>
             </>
           )}
