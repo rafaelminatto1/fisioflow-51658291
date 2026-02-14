@@ -30,6 +30,8 @@ export const functionsInstance = getFunctions(app, DEFAULT_REGION);
  * When present, callFunctionHttp uses this URL instead of cloudfunctions.net.
  */
 const HTTP_FUNCTION_URLS: Record<string, string> = {
+  getProfile: API_URLS.profile.get,
+  updateProfile: API_URLS.profile.update,
   getPatientHttp: API_URLS.patients.get,
   listPatientsV2: API_URLS.patients.list,
   getPatientStatsV2: API_URLS.patients.stats,
@@ -43,8 +45,14 @@ const HTTP_FUNCTION_URLS: Record<string, string> = {
   checkTimeConflictV2: API_URLS.appointments.checkConflict,
   listDoctors: API_URLS.doctors.list,
   searchDoctorsV2: API_URLS.doctors.search,
+  listExercisesV2: API_URLS.exercises.list,
+  getExerciseV2: API_URLS.exercises.get,
+  searchSimilarExercises: API_URLS.exercises.searchSimilar,
 };
-const LOCAL_FUNCTIONS_PROXY = import.meta.env.DEV ? (import.meta.env.VITE_FUNCTIONS_PROXY || '/functions') : undefined;
+const LOCAL_FUNCTIONS_PROXY =
+  import.meta.env.DEV && import.meta.env.VITE_USE_FUNCTIONS_PROXY === 'true'
+    ? (import.meta.env.VITE_FUNCTIONS_PROXY || '/functions')
+    : undefined;
 
 /**
  * Get Firebase Functions instance
@@ -164,15 +172,16 @@ export async function callFunctionHttp<TRequest, TResponse>(
 
   const region = DEFAULT_REGION;
   const projectId = app.options.projectId;
-  const baseUrl =
-    HTTP_FUNCTION_URLS[functionName] ??
-    `https://${region}-${projectId}.cloudfunctions.net/${functionName}`;
-  const shouldProxy = LOCAL_FUNCTIONS_PROXY && !HTTP_FUNCTION_URLS[functionName];
+  const mappedUrl = HTTP_FUNCTION_URLS[functionName];
+  const canonicalUrl = `https://${region}-${projectId}.cloudfunctions.net/${functionName.toLowerCase()}`;
+  // Proxy local only when explicitly enabled (e.g. emulator workflow)
+  const shouldProxy = Boolean(LOCAL_FUNCTIONS_PROXY);
   const proxyBase = LOCAL_FUNCTIONS_PROXY?.replace(/\/$/, '');
-  const url = shouldProxy ? `${proxyBase}/${functionName}` : baseUrl;
+  const primaryUrl = shouldProxy ? `${proxyBase}/${functionName.toLowerCase()}` : (mappedUrl ?? canonicalUrl);
+  const shouldRetryWithCanonical = Boolean(mappedUrl) && !shouldProxy;
 
-  try {
-    const response = await fetch(url, {
+  const fetchJson = async (targetUrl: string): Promise<TResponse> => {
+    const response = await fetch(targetUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -199,9 +208,33 @@ export async function callFunctionHttp<TRequest, TResponse>(
 
     const result = await response.json();
     return result as TResponse;
+  };
+
+  const shouldFallbackToCanonical = (error: unknown): boolean => {
+    if (!(error instanceof FunctionCallError)) return true;
+    const status = (error as FunctionCallError & { status?: number }).status;
+    if (typeof status !== 'number') return true;
+    return status === 403 || status === 404 || status >= 500;
+  };
+
+  try {
+    return await fetchJson(primaryUrl);
   } catch (error) {
+    if (shouldRetryWithCanonical && primaryUrl !== canonicalUrl && shouldFallbackToCanonical(error)) {
+      try {
+        return await fetchJson(canonicalUrl);
+      } catch (fallbackError) {
+        const message = fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
+        throw new FunctionCallError(
+          functionName,
+          fallbackError,
+          { primaryUrl, fallbackUrl: canonicalUrl },
+          message
+        );
+      }
+    }
     const message = error instanceof Error ? error.message : String(error);
-    throw new FunctionCallError(functionName, error, undefined, message);
+    throw new FunctionCallError(functionName, error, { primaryUrl }, message);
   }
 }
 
@@ -776,10 +809,10 @@ export const appointmentsApi = {
 export const profileApi = {
   /**
    * Obtém o perfil do usuário atual.
-   * Usa callFunction (SDK) porque getProfile é callable e espera body { data }.
+   * Usa endpoint HTTP com bearer token para manter compatibilidade CORS.
    */
   getCurrent: async (): Promise<ProfileApi.Profile> => {
-    const res = await callFunction<Record<string, never>, { data: ProfileApi.Profile }>('getProfile', {});
+    const res = await callFunctionHttp<Record<string, never>, { data: ProfileApi.Profile }>('getProfile', {});
     return res.data;
   },
 
