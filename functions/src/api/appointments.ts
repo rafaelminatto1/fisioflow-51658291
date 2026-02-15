@@ -785,15 +785,15 @@ async function checkTimeConflictHelper(pool: any, params: CheckTimeConflictReque
   const { date, startTime, endTime, therapistId, excludeAppointmentId, organizationId } = params;
 
   let query = `
-    SELECT id FROM appointments
-    WHERE organization_id = $1
-      AND therapist_id = $2
-      AND date = $3
-      AND status NOT IN ('cancelado', 'remarcado', 'paciente_faltou')
+    SELECT appointments.id FROM appointments
+    WHERE appointments.organization_id = $1
+      AND appointments.therapist_id = $2
+      AND appointments.date = $3
+      AND appointments.status NOT IN ('cancelado', 'remarcado', 'paciente_faltou')
       AND (
-        (start_time <= $4 AND end_time > $4) OR
-        (start_time < $5 AND end_time >= $5) OR
-        (start_time >= $4 AND end_time <= $5)
+        (appointments.start_time <= $4 AND appointments.end_time > $4) OR
+        (appointments.start_time < $5 AND appointments.end_time >= $5) OR
+        (appointments.start_time >= $4 AND appointments.end_time <= $5)
       )
   `;
   const sqlParams: (string | number)[] = [organizationId, therapistId, date, startTime, endTime];
