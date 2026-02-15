@@ -126,9 +126,6 @@ async function getProfile(userId: string): Promise<ProfileData> {
 
     if (result.rows.length > 0) {
       const profile = result.rows[0];
-      if (!profile.is_active) {
-        throw new HttpsError('permission-denied', 'Este usuário está desativado');
-      }
       return profile;
     }
   } catch (error) {
