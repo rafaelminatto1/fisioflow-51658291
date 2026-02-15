@@ -208,11 +208,11 @@ export function getPool(): Pool {
             database: dbName,
             // Cloud Functions typically only need 2-5 connections per instance
             // Multiple instances each get their own pool
-            max: 5,                    // Reduced from 20 (better for serverless)
+            max: 20,                    // Increased from 5 to handle higher concurrency
             min: 0,                   // Allow pool to drain completely
             idleTimeoutMillis: 30000, // 30 seconds (reduced from 60s)
-            connectionTimeoutMillis: 10000, // 10 seconds (fail fast)
-            acquireTimeoutMillis: 10000,      // Add acquire timeout
+            connectionTimeoutMillis: 30000, // Increased from 10s to 30s (more time for connections)
+            acquireTimeoutMillis: 30000,      // Increased from 10s to 30s (more time to acquire connection)
             evictionRunIntervalMillis: 5000,   // Clean idle connections periodically
             // Cloud Functions optimization
             allowExitOnIdle: true,             // Allow process to exit when pool is idle
