@@ -6,10 +6,11 @@
 
 import { onRequest, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
-import { getPool, CORS_ORIGINS } from '../init';
+import { getPool } from '../init';
 import { setCorsHeaders } from '../lib/cors';
 import { Profile } from '../types/models';
 import { logger } from '../lib/logger';
+import { toValidUuid } from '../lib/uuid';
 
 const auth = admin.auth();
 
@@ -53,7 +54,17 @@ async function getUserProfile(userId: string): Promise<Profile> {
     );
 
     if (result.rows.length > 0) {
-      return result.rows[0] as Profile;
+      const profile = result.rows[0] as Profile;
+      const organizationId = toValidUuid(profile.organization_id);
+      if (organizationId) {
+        profile.organization_id = organizationId;
+        return profile;
+      }
+
+      logger.warn('Invalid organization_id in PostgreSQL profile, trying Firestore fallback', {
+        userId,
+        organizationId: profile.organization_id,
+      });
     }
   } catch (error) {
     logger.info('PostgreSQL query failed in getUserProfile, trying Firestore:', error);
@@ -65,11 +76,22 @@ async function getUserProfile(userId: string): Promise<Profile> {
     if (profileDoc.exists) {
       const data = profileDoc.data();
       if (data) {
+        const organizationId = (
+          toValidUuid(data.organizationId)
+          || toValidUuid(data.activeOrganizationId)
+          || toValidUuid(data.organizationIds?.[0])
+          || toValidUuid(data.organization_ids?.[0])
+          || toValidUuid(data.organization_id)
+        );
+        if (!organizationId) {
+          throw new HttpsError('failed-precondition', 'Perfil sem organizationId válido');
+        }
+
         // Convert Firestore profile to Profile format
         return {
           id: userId,
           user_id: userId,
-          organization_id: data.organizationId || data.activeOrganizationId || data.organizationIds?.[0] || 'default',
+          organization_id: organizationId,
           full_name: data.displayName || data.name || '',
           email: data.email || '',
           phone: data.phone || data.phoneNumber || '',
@@ -89,6 +111,9 @@ async function getUserProfile(userId: string): Promise<Profile> {
       }
     }
   } catch (error) {
+    if (error instanceof HttpsError) {
+      throw error;
+    }
     logger.info('Firestore query failed in getUserProfile:', error);
   }
 
@@ -145,7 +170,8 @@ export const getProfileHttpHandler = async (req: any, res: any) => {
 
     if (error instanceof HttpsError) {
       const statusCode = error.code === 'unauthenticated' ? 401 :
-        error.code === 'not-found' ? 404 : 500;
+        error.code === 'not-found' ? 404 :
+          (error.code === 'invalid-argument' || error.code === 'failed-precondition') ? 400 : 500;
       res.status(statusCode).json({ error: error.message });
     } else {
       res.status(500).json({ error: 'Erro interno ao buscar perfil' });
@@ -160,7 +186,6 @@ export const getProfile = onRequest(
   {
     region: 'southamerica-east1',
     maxInstances: 1,
-    cors: CORS_ORIGINS,
     invoker: 'public',
   },
   getProfileHttpHandler
@@ -306,7 +331,8 @@ export const updateProfileHttpHandler = async (req: any, res: any) => {
 
     if (error instanceof HttpsError) {
       const statusCode = error.code === 'unauthenticated' ? 401 :
-        error.code === 'not-found' ? 404 : 500;
+        error.code === 'not-found' ? 404 :
+          (error.code === 'invalid-argument' || error.code === 'failed-precondition') ? 400 : 500;
       res.status(statusCode).json({ error: error.message });
     } else {
       res.status(500).json({ error: 'Erro interno ao atualizar perfil' });
@@ -321,7 +347,6 @@ export const updateProfile = onRequest(
   {
     region: 'southamerica-east1',
     maxInstances: 1,
-    cors: CORS_ORIGINS,
     invoker: 'public',
   },
   updateProfileHttpHandler

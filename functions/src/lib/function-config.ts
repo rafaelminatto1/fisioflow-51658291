@@ -1,4 +1,4 @@
-import { CORS_ORIGINS } from '../init';
+import { CORS_ORIGINS } from './cors';
 
 /**
  * Firebase Functions Optimization Configuration
@@ -125,6 +125,7 @@ export const WEBHOOK_FUNCTION: FunctionOptions = {
   concurrency: 20,
 };
 
+// EVOLUTION_HTTP_OPTS - Moved to evolutions.ts as inline config to avoid CORS conflict
 export const EVOLUTION_HTTP_OPTS = withCors(DATABASE_FUNCTION, CORS_ORIGINS);
 
 /**

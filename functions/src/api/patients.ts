@@ -5,22 +5,26 @@
  */
 
 import { onCall, HttpsError, onRequest } from 'firebase-functions/v2/https';
-import { getPool, CORS_ORIGINS } from '../init';
+import { getPool } from '../init';
 import { authorizeRequest } from '../middleware/auth';
 import { verifyAppCheck } from '../middleware/app-check';
 import { enforceRateLimit, RATE_LIMITS } from '../middleware/rate-limit';
 import { Patient } from '../types/models';
 import { setCorsHeaders } from '../lib/cors';
+import { withErrorHandling } from '../lib/error-handler';
 import { logger } from '../lib/logger';
 import { logAuditEvent } from '../lib/audit';
 import * as admin from 'firebase-admin';
 import { clearPatientRagIndex, triggerPatientRagReindex } from '../ai/rag/rag-index-maintenance';
-import { STANDARD_FUNCTION, withCors } from '../lib/function-config';
 import { getOrganizationIdCached } from '../lib/cache-helpers';
 import { rtdb } from '../lib/rtdb';
 
-// Configuração otimizada para funções de pacientes (com CORS)
-const PATIENT_HTTP_OPTS = withCors(STANDARD_FUNCTION, CORS_ORIGINS);
+// Configuração otimizada para funções de pacientes
+const PATIENT_HTTP_OPTS = {
+  region: 'southamerica-east1',
+  maxInstances: 1,
+  invoker: 'public',
+};
 
 interface ListPatientsRequest {
   status?: string;
@@ -119,129 +123,111 @@ export async function getOrganizationId(userId: string): Promise<string> {
  */
 export const listPatientsHttp = onRequest(
   PATIENT_HTTP_OPTS,
-  async (req, res) => {
-    setCorsHeaders(res, req);
-    if (req.method === 'OPTIONS') {
-      res.status(204).send('');
-      return;
-    }
-
+  withErrorHandling(async (req, res) => {
     if (req.method !== 'POST') {
       res.status(405).json({ error: 'Method not allowed' });
       return;
     }
 
-    try {
-      const { uid } = await verifyAuthHeader(req);
-      // OTIMIZADO: Usa cache para evitar queries repetidas
-      const organizationId = await getOrganizationIdCached(uid);
+    const { uid } = await verifyAuthHeader(req);
+    // OTIMIZADO: Usa cache para evitar queries repetidas
+    const organizationId = await getOrganizationIdCached(uid);
 
-      const { status, search, limit = 50, offset = 0 } = req.body || {};
-      const pool = getPool();
+    const { status, search, limit = 50, offset = 0 } = req.body || {};
+    const pool = getPool();
 
-      let query = `
+    let query = `
         SELECT id, name, cpf, email, phone, birth_date, gender,
           main_condition, status, progress, is_active,
           created_at, updated_at
         FROM patients
         WHERE organization_id = $1 AND is_active = true
       `;
-      const params: (string | number)[] = [organizationId];
-      let paramCount = 1;
+    const params: (string | number)[] = [organizationId];
+    let paramCount = 1;
 
-      if (status) {
-        paramCount++;
-        query += ` AND status = $${paramCount}`;
-        params.push(status);
-      }
+    if (status) {
+      paramCount++;
+      query += ` AND status = $${paramCount}`;
+      params.push(status);
+    }
 
-      if (search) {
-        paramCount++;
-        query += ` AND (name ILIKE $${paramCount} OR cpf ILIKE $${paramCount} OR email ILIKE $${paramCount})`;
-        params.push(`%${search}%`);
-      }
+    if (search) {
+      paramCount++;
+      query += ` AND (name ILIKE $${paramCount} OR cpf ILIKE $${paramCount} OR email ILIKE $${paramCount})`;
+      params.push(`%${search}%`);
+    }
 
-      query += ` ORDER BY name ASC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
-      params.push(limit, offset);
+    query += ` ORDER BY name ASC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+    params.push(limit, offset);
 
-      const result = await pool.query(query, params);
+    const result = await pool.query(query, params);
 
-      let countQuery = `
+    let countQuery = `
         SELECT COUNT(*) as total
         FROM patients
         WHERE organization_id = $1 AND is_active = true
       `;
-      const countParams: (string | number)[] = [organizationId];
-      let countParamCount = 1;
+    const countParams: (string | number)[] = [organizationId];
+    let countParamCount = 1;
 
-      if (status) {
-        countParamCount++;
-        countQuery += ` AND status = $${countParamCount}`;
-        countParams.push(status);
-      }
-
-      if (search) {
-        countParamCount++;
-        countQuery += ` AND (name ILIKE $${countParamCount} OR cpf ILIKE $${countParamCount} OR email ILIKE $${countParamCount})`;
-        countParams.push(`%${search}%`);
-      }
-
-      const countResult = await pool.query(countQuery, countParams);
-
-      // Fallback to Firestore if PostgreSQL returns no patients (migration support)
-      let data = result.rows as Patient[];
-      let total = parseInt(countResult.rows[0].total, 10);
-
-      if (data.length === 0) {
-        logger.info('[listPatientsHttp] No patients in PostgreSQL, checking Firestore...');
-        const firestoreSnap = await admin.firestore().collection('patients')
-          .where('organizationId', '==', organizationId)
-          .where('isActive', '==', true)
-          .limit(limit)
-          .get();
-
-        if (!firestoreSnap.empty) {
-          data = firestoreSnap.docs.map(doc => {
-            const p = doc.data();
-            return {
-              id: doc.id,
-              name: p.name || p.full_name || '',
-              cpf: p.cpf || '',
-              email: p.email || '',
-              phone: p.phone || '',
-              birth_date: p.birth_date || null,
-              gender: p.gender || '',
-              main_condition: p.main_condition || '',
-              status: p.status || 'active',
-              progress: p.progress || 0,
-              is_active: p.isActive !== false,
-              created_at: p.createdAt || new Date().toISOString(),
-              updated_at: p.updatedAt || new Date().toISOString(),
-            } as Patient;
-          });
-          total = firestoreSnap.size;
-          logger.info('[listPatientsHttp] Loaded ' + total + ' patients from Firestore fallback');
-        }
-      }
-
-      res.json({
-        data: data,
-        total: total,
-        page: Math.floor(offset / limit) + 1,
-        perPage: limit,
-      });
-    } catch (error: unknown) {
-      logger.error('Error in listPatientsHttp:', error);
-      let statusCode = 500;
-      if (error instanceof HttpsError) {
-        if (error.code === 'unauthenticated') statusCode = 401;
-        else if (error.code === 'not-found') statusCode = 404;
-        else if (error.code === 'permission-denied') statusCode = 403;
-      }
-      setCorsHeaders(res, req);
-      res.status(statusCode).json({ error: error instanceof Error ? error.message : 'Erro ao listar pacientes' });
+    if (status) {
+      countParamCount++;
+      countQuery += ` AND status = $${countParamCount}`;
+      countParams.push(status);
     }
-  }
+
+    if (search) {
+      countParamCount++;
+      countQuery += ` AND (name ILIKE $${countParamCount} OR cpf ILIKE $${countParamCount} OR email ILIKE $${countParamCount})`;
+      countParams.push(`%${search}%`);
+    }
+
+    const countResult = await pool.query(countQuery, countParams);
+
+    // Fallback to Firestore if PostgreSQL returns no patients (migration support)
+    let data = result.rows as Patient[];
+    let total = parseInt(countResult.rows[0].total, 10);
+
+    if (data.length === 0) {
+      logger.info('[listPatientsHttp] No patients in PostgreSQL, checking Firestore...');
+      const firestoreSnap = await admin.firestore().collection('patients')
+        .where('organizationId', '==', organizationId)
+        .where('isActive', '==', true)
+        .limit(limit)
+        .get();
+
+      if (!firestoreSnap.empty) {
+        data = firestoreSnap.docs.map(doc => {
+          const p = doc.data();
+          return {
+            id: doc.id,
+            name: p.name || p.full_name || '',
+            cpf: p.cpf || '',
+            email: p.email || '',
+            phone: p.phone || '',
+            birth_date: p.birth_date || null,
+            gender: p.gender || '',
+            main_condition: p.main_condition || '',
+            status: p.status || 'active',
+            progress: p.progress || 0,
+            is_active: p.isActive !== false,
+            created_at: p.createdAt || new Date().toISOString(),
+            updated_at: p.updatedAt || new Date().toISOString(),
+          } as Patient;
+        });
+        total = firestoreSnap.size;
+        logger.info('[listPatientsHttp] Loaded ' + total + ' patients from Firestore fallback');
+      }
+    }
+
+    res.json({
+      data: data,
+      total: total,
+      page: Math.floor(offset / limit) + 1,
+      perPage: limit,
+    });
+  }, 'listPatientsHttp')
 );
 
 /**
@@ -252,7 +238,6 @@ export const getPatientHttp = onRequest(
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 1,
-    cors: CORS_ORIGINS,
     invoker: 'public',
   },
   async (req, res) => {
@@ -313,7 +298,6 @@ export const getPatientStatsHttp = onRequest(
   {
     region: 'southamerica-east1',
     maxInstances: 1,
-    cors: CORS_ORIGINS,
     invoker: 'public',
   },
   async (req, res) => {
@@ -433,7 +417,6 @@ export const createPatientHttp = onRequest(
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 1,
-    cors: CORS_ORIGINS,
     invoker: 'public',
   },
   async (req, res) => {
@@ -592,7 +575,6 @@ export const updatePatientHttp = onRequest(
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 1,
-    cors: CORS_ORIGINS,
     invoker: 'public',
   },
   async (req, res) => {
@@ -686,7 +668,6 @@ export const deletePatientHttp = onRequest(
     region: 'southamerica-east1',
     memory: '256MiB',
     maxInstances: 1,
-    cors: CORS_ORIGINS,
     invoker: 'public',
   },
   async (req, res) => {
@@ -848,7 +829,6 @@ export const listPatientsHandler = async (request: any) => {
 };
 
 export const listPatients = onCall<ListPatientsRequest, Promise<ListPatientsResponse>>(
-  { cors: CORS_ORIGINS },
   listPatientsHandler
 );
 
@@ -901,7 +881,6 @@ export const getPatientHandler = async (request: any) => {
 };
 
 export const getPatient = onCall<GetPatientRequest, Promise<GetPatientResponse>>(
-  { cors: CORS_ORIGINS },
   getPatientHandler
 );
 
@@ -1099,7 +1078,6 @@ export const createPatientHandler = async (request: any) => {
 };
 
 export const createPatient = onCall<CreatePatientRequest, Promise<CreatePatientResponse>>(
-  { cors: CORS_ORIGINS },
   createPatientHandler
 );
 
@@ -1242,7 +1220,6 @@ export const updatePatientHandler = async (request: any) => {
 };
 
 export const updatePatient = onCall<UpdatePatientRequest, Promise<UpdatePatientResponse>>(
-  { cors: CORS_ORIGINS },
   updatePatientHandler
 );
 
@@ -1321,7 +1298,6 @@ export const deletePatientHandler = async (request: any) => {
 };
 
 export const deletePatient = onCall<DeletePatientRequest, Promise<DeletePatientResponse>>(
-  { cors: CORS_ORIGINS },
   deletePatientHandler
 );
 
@@ -1426,6 +1402,5 @@ export const getPatientStatsHandler = async (request: any) => {
 };
 
 export const getPatientStats = onCall<GetPatientStatsRequest, Promise<GetPatientStatsResponse>>(
-  { cors: CORS_ORIGINS },
   getPatientStatsHandler
 );

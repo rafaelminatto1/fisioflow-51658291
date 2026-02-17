@@ -20,6 +20,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -128,6 +129,9 @@ export function ParticipantesTab({ eventoId }: ParticipantesTabProps) {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Novo Participante</DialogTitle>
+                <DialogDescription>
+                  Preencha os dados para adicionar um participante ao evento.
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div>

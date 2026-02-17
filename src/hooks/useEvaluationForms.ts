@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { EvaluationForm, EvaluationFormWithFields, EvaluationFormField } from '@/types/clinical-forms';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
-import { callFunction } from '@/integrations/firebase/functions';
+import { callFunctionHttpWithResponse } from '@/integrations/firebase/functions';
 
 export type EvaluationFormFormData = {
   nome: string;
@@ -20,6 +20,15 @@ export type EvaluationFormFormData = {
 };
 
 export type EvaluationFormFieldFormData = Omit<EvaluationFormField, 'id' | 'created_at' | 'form_id'>;
+
+type AssessmentTemplateApiItem = {
+  id: string;
+  name: string;
+  description?: string | null;
+  category?: string | null;
+  is_active?: boolean;
+  [key: string]: unknown;
+};
 
 // Helper to convert Firestore doc to EvaluationForm
 const convertDocToEvaluationForm = (doc: { id: string; data: () => Record<string, unknown> }): EvaluationForm => {
@@ -45,10 +54,13 @@ export function useEvaluationForms(tipo?: string) {
     queryFn: async () => {
       try {
         // Tentar API V2 (Postgres)
-        const response = await callFunction('listAssessmentTemplates', {});
+        const response = await callFunctionHttpWithResponse<Record<string, never>, AssessmentTemplateApiItem[]>(
+          'listAssessmentTemplatesV2',
+          {}
+        );
         if (response.data) {
           // Adaptar formato Postgres (id, name, description) para formato esperado (nome, descricao)
-          return response.data.map((f: any) => ({
+          return response.data.map((f) => ({
             ...f,
             nome: f.name,
             descricao: f.description,

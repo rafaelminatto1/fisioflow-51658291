@@ -15,6 +15,7 @@ import { HttpsError } from 'firebase-functions/v2/https';
 // Re-exportar getPool do index
 import { getPool } from '../init';
 import { logger } from '../lib/logger';
+import { toValidUuid } from '../lib/uuid';
 
 /**
  * Contexto de autenticação
@@ -126,7 +127,16 @@ async function getProfile(userId: string): Promise<ProfileData> {
 
     if (result.rows.length > 0) {
       const profile = result.rows[0];
-      return profile;
+      const organizationId = toValidUuid(profile.organization_id);
+      if (organizationId) {
+        profile.organization_id = organizationId;
+        return profile;
+      }
+
+      logger.warn('[Auth Middleware] Invalid organization_id in PostgreSQL profile', {
+        userId,
+        organizationId: profile.organization_id,
+      });
     }
   } catch (error) {
     logger.info('[Auth Middleware] PostgreSQL query failed, trying Firestore:', error);
@@ -140,7 +150,16 @@ async function getProfile(userId: string): Promise<ProfileData> {
       const data = profileDoc.data();
       if (data) {
         // Convert Firestore profile to ProfileData format
-        const organizationId = data.organizationId || data.organization_ids?.[0] || data.activeOrganizationId || 'default';
+        const organizationId = (
+          toValidUuid(data.organizationId)
+          || toValidUuid(data.organization_ids?.[0])
+          || toValidUuid(data.organizationIds?.[0])
+          || toValidUuid(data.activeOrganizationId)
+          || toValidUuid(data.organization_id)
+        );
+        if (!organizationId) {
+          throw new HttpsError('failed-precondition', 'Perfil sem organizationId válido');
+        }
         return {
           id: userId,
           user_id: userId,
@@ -153,6 +172,9 @@ async function getProfile(userId: string): Promise<ProfileData> {
       }
     }
   } catch (firestoreError) {
+    if (firestoreError instanceof HttpsError) {
+      throw firestoreError;
+    }
     logger.info('[Auth Middleware] Firestore query failed:', firestoreError);
   }
 

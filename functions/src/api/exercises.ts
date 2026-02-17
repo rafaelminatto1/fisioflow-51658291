@@ -1,9 +1,10 @@
-import { CORS_ORIGINS, getPool } from '../init';
+import { getPool } from '../init';
 import { onCall, HttpsError, onRequest } from 'firebase-functions/v2/https';
 import { authorizeRequest, extractBearerToken } from '../middleware/auth';
 import { Exercise } from '../types/models';
 import { logger } from '../lib/logger';
 import { setCorsHeaders } from '../lib/cors';
+import { withErrorHandling } from '../lib/error-handler';
 
 function getAuthHeader(req: any): string | undefined {
   const h = req.headers?.authorization || req.headers?.Authorization;
@@ -18,33 +19,35 @@ function parseBody(req: any): any {
 // HTTP VERSIONS (CORS fix)
 // ============================================================================
 
-export const listExercisesHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
-  if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
-  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-  setCorsHeaders(res);
-  try {
-    await authorizeRequest(extractBearerToken(getAuthHeader(req)));
-    const { category, difficulty, search, limit = 100, offset = 0 } = parseBody(req);
-    const pool = getPool();
-    let query = `SELECT id,name,slug,category,description,instructions,muscles,equipment,difficulty,video_url,image_url,duration_minutes,sets_recommended,reps_recommended,precautions,benefits,tags FROM exercises WHERE is_active = true`;
-    const params: (string | number)[] = [];
-    let paramCount = 0;
-    if (category) { paramCount++; query += ` AND category = $${paramCount}`; params.push(category); }
-    if (difficulty) { paramCount++; query += ` AND difficulty = $${paramCount}`; params.push(difficulty); }
-    if (search) { paramCount++; query += ` AND (name ILIKE $${paramCount} OR description ILIKE $${paramCount})`; params.push(`%${search}%`); }
-    query += ` ORDER BY name LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
-    params.push(limit, offset);
-    const result = await pool.query(query, params);
-    const categoriesResult = await pool.query('SELECT DISTINCT category FROM exercises WHERE is_active = true ORDER BY category');
-    res.json({ data: result.rows, categories: categoriesResult.rows.map((r: { category: string }) => r.category) });
-  } catch (e: unknown) {
-    if (e instanceof HttpsError && e.code === 'unauthenticated') { res.status(401).json({ error: e.message }); return; }
-    logger.error('listExercisesHttp:', e);
-    res.status(500).json({ error: e instanceof Error ? e.message : 'Erro ao listar exercícios' });
-  }
-});
+// Configuração manual de CORS para evitar conflitos
+// Usando any para evitar erros de tipagem estrita no HttpsOptions
+const EXERCISE_HTTP_OPTS: any = {
+  region: 'southamerica-east1',
+  memory: '256MiB',
+  maxInstances: 1,
+  invoker: 'public',
+};
 
-export const searchSimilarExercisesHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
+export const listExercisesHttp = onRequest(EXERCISE_HTTP_OPTS, withErrorHandling(async (req, res) => {
+  if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+  
+  await authorizeRequest(extractBearerToken(getAuthHeader(req)));
+  const { category, difficulty, search, limit = 100, offset = 0 } = parseBody(req);
+  const pool = getPool();
+  let query = `SELECT id,name,slug,category,description,instructions,muscles,equipment,difficulty,video_url,image_url,duration_minutes,sets_recommended,reps_recommended,precautions,benefits,tags FROM exercises WHERE is_active = true`;
+  const params: (string | number)[] = [];
+  let paramCount = 0;
+  if (category) { paramCount++; query += ` AND category = $${paramCount}`; params.push(category); }
+  if (difficulty) { paramCount++; query += ` AND difficulty = $${paramCount}`; params.push(difficulty); }
+  if (search) { paramCount++; query += ` AND (name ILIKE $${paramCount} OR description ILIKE $${paramCount})`; params.push(`%${search}%`); }
+  query += ` ORDER BY name LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+  params.push(limit, offset);
+  const result = await pool.query(query, params);
+  const categoriesResult = await pool.query('SELECT DISTINCT category FROM exercises WHERE is_active = true ORDER BY category');
+  res.json({ data: result.rows, categories: categoriesResult.rows.map((r: { category: string }) => r.category) });
+}, 'listExercisesHttp'));
+
+export const searchSimilarExercisesHttp = onRequest(EXERCISE_HTTP_OPTS, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -69,7 +72,7 @@ export const searchSimilarExercisesHttp = onRequest({ region: 'southamerica-east
   }
 });
 
-export const getExerciseHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
+export const getExerciseHttp = onRequest(EXERCISE_HTTP_OPTS, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -88,7 +91,7 @@ export const getExerciseHttp = onRequest({ region: 'southamerica-east1', memory:
   }
 });
 
-export const getExerciseCategoriesHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
+export const getExerciseCategoriesHttp = onRequest(EXERCISE_HTTP_OPTS, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -104,7 +107,7 @@ export const getExerciseCategoriesHttp = onRequest({ region: 'southamerica-east1
   }
 });
 
-export const getPrescribedExercisesHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
+export const getPrescribedExercisesHttp = onRequest(EXERCISE_HTTP_OPTS, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -125,7 +128,7 @@ export const getPrescribedExercisesHttp = onRequest({ region: 'southamerica-east
   }
 });
 
-export const logExerciseHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
+export const logExerciseHttp = onRequest(EXERCISE_HTTP_OPTS, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -145,7 +148,7 @@ export const logExerciseHttp = onRequest({ region: 'southamerica-east1', memory:
   }
 });
 
-export const createExerciseHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
+export const createExerciseHttp = onRequest(EXERCISE_HTTP_OPTS, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -164,7 +167,7 @@ export const createExerciseHttp = onRequest({ region: 'southamerica-east1', memo
   }
 });
 
-export const updateExerciseHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
+export const updateExerciseHttp = onRequest(EXERCISE_HTTP_OPTS, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -193,7 +196,7 @@ export const updateExerciseHttp = onRequest({ region: 'southamerica-east1', memo
   }
 });
 
-export const deleteExerciseHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
+export const deleteExerciseHttp = onRequest(EXERCISE_HTTP_OPTS, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -213,7 +216,7 @@ export const deleteExerciseHttp = onRequest({ region: 'southamerica-east1', memo
   }
 });
 
-export const mergeExercisesHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
+export const mergeExercisesHttp = onRequest(EXERCISE_HTTP_OPTS, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -323,7 +326,6 @@ export const listExercisesHandler = async (request: any) => {
 };
 
 export const listExercises = onCall<ListExercisesRequest, Promise<ListExercisesResponse>>(
-  { cors: CORS_ORIGINS },
   listExercisesHandler
 );
 
@@ -371,7 +373,6 @@ export const getExerciseHandler = async (request: any) => {
 };
 
 export const getExercise = onCall<GetExerciseRequest, Promise<GetExerciseResponse>>(
-  { cors: CORS_ORIGINS },
   getExerciseHandler
 );
 
@@ -485,7 +486,6 @@ export const searchSimilarExercisesHandler = async (request: any) => {
 };
 
 export const searchSimilarExercises = onCall<SearchSimilarExercisesRequest, Promise<SearchSimilarExercisesResponse>>(
-  { cors: CORS_ORIGINS },
   searchSimilarExercisesHandler
 );
 
@@ -523,7 +523,6 @@ export const getExerciseCategoriesHandler = async (request: any) => {
 };
 
 export const getExerciseCategories = onCall<Record<string, never>, Promise<GetExerciseCategoriesResponse>>(
-  { cors: CORS_ORIGINS },
   getExerciseCategoriesHandler
 );
 
@@ -542,7 +541,6 @@ interface LogExerciseResponse {
 }
 
 export const logExercise = onCall<LogExerciseRequest, Promise<LogExerciseResponse>>(
-  { cors: CORS_ORIGINS },
   logExerciseHandler
 );
 
@@ -625,7 +623,6 @@ export const getPrescribedExercisesHandler = async (request: any) => {
 };
 
 export const getPrescribedExercises = onCall<GetPrescribedExercisesRequest, Promise<GetPrescribedExercisesResponse>>(
-  { cors: CORS_ORIGINS },
   getPrescribedExercisesHandler
 );
 
@@ -707,7 +704,6 @@ export const createExerciseHandler = async (request: any) => {
 };
 
 export const createExercise = onCall<CreateExerciseRequest, Promise<CreateExerciseResponse>>(
-  { cors: CORS_ORIGINS },
   createExerciseHandler
 );
 
@@ -766,7 +762,6 @@ export const updateExerciseHandler = async (request: any) => {
 };
 
 export const updateExercise = onCall<UpdateExerciseRequest, Promise<{ data: Exercise }>>(
-  { cors: CORS_ORIGINS },
   updateExerciseHandler
 );
 
@@ -816,7 +811,6 @@ export const deleteExerciseHandler = async (request: any) => {
 };
 
 export const deleteExercise = onCall<DeleteExerciseRequest, Promise<{ success: boolean }>>(
-  { cors: CORS_ORIGINS },
   deleteExerciseHandler
 );
 
@@ -883,6 +877,5 @@ export const mergeExercisesHandler = async (request: any) => {
 };
 
 export const mergeExercises = onCall<MergeExercisesRequest, Promise<{ success: boolean, deletedCount: number }>>(
-  { cors: CORS_ORIGINS },
   mergeExercisesHandler
 );

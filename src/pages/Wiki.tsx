@@ -3,7 +3,7 @@
  * Página principal da wiki com lista de páginas e busca
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 import { wikiService } from '@/lib/services/wikiService';
+import { toast } from 'sonner';
 
 import type { WikiPage } from '@/types/wiki';
 
@@ -82,6 +83,16 @@ export default function WikiPage() {
     [pages]
   );
 
+  useEffect(() => {
+    if (!slug) {
+      setSelectedPage(null);
+      return;
+    }
+
+    const pageFromSlug = pages.find((page) => page.slug === slug) ?? null;
+    setSelectedPage(pageFromSlug);
+  }, [pages, slug]);
+
   const handleCreatePage = () => {
     setIsEditing(true);
     setSelectedPage(null);
@@ -99,15 +110,36 @@ export default function WikiPage() {
   const handleSave = async (data: Omit<WikiPage, 'id' | 'created_at' | 'updated_at' | 'version'>) => {
     if (!user?.id || !user?.organizationId) return;
     try {
-      await wikiService.savePage(user.organizationId, user.id, data, selectedPage ? { id: selectedPage.id, version: selectedPage.version } : undefined);
-      await queryClient.invalidateQueries({ queryKey: ['wiki-pages', user.organizationId] });
+      const savedPageId = await wikiService.savePage(
+        user.organizationId,
+        user.id,
+        data,
+        selectedPage ? { id: selectedPage.id, version: selectedPage.version } : undefined
+      );
+
+      const refreshedPages = await queryClient.fetchQuery({
+        queryKey: ['wiki-pages', user.organizationId],
+        queryFn: () => wikiService.listPages(user.organizationId),
+      });
+
+      const savedPage =
+        refreshedPages.find((page) => page.id === savedPageId) ??
+        refreshedPages.find((page) => page.slug === data.slug) ??
+        null;
+
+      setSelectedPage(savedPage);
       setIsEditing(false);
-      if (selectedPage) {
-        const updated = pages.find((p) => p.id === selectedPage.id);
-        if (updated) setSelectedPage(updated);
+
+      if (savedPage) {
+        navigate(`/wiki/${savedPage.slug}`);
+      } else {
+        navigate('/wiki');
       }
+
+      toast.success('Página salva com sucesso.');
     } catch (err) {
       console.error('Erro ao salvar página wiki:', err);
+      toast.error('Não foi possível salvar a página.');
     }
   };
 

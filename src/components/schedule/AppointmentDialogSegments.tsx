@@ -34,6 +34,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { EquipmentSelector, type SelectedEquipment } from './EquipmentSelector';
 import { AppointmentReminder, type AppointmentReminderData } from './AppointmentReminder';
 import { usePatientPackages } from '@/hooks/usePackages';
+import { NewPackagePopover } from './NewPackagePopover';
 
 export const PatientSelectionSection = ({
     patients,
@@ -175,7 +176,7 @@ export const DateTimeSection = ({
                         onValueChange={(value) => setValue('appointment_time', value)}
                         disabled={disabled}
                     >
-                        <SelectTrigger 
+                        <SelectTrigger
                             className={cn(
                                 "h-10 text-xs sm:text-sm",
                                 errors.appointment_time && "border-destructive text-destructive"
@@ -299,7 +300,7 @@ export const TypeAndStatusSection = ({ disabled }: { disabled: boolean }) => {
                     onValueChange={(value) => setValue('type', value as AppointmentType)}
                     disabled={disabled}
                 >
-                    <SelectTrigger 
+                    <SelectTrigger
                         className={cn(
                             "h-10 text-xs sm:text-sm",
                             errors.type && "border-destructive text-destructive"
@@ -432,6 +433,15 @@ export const PaymentTab = ({
                     <Label className="text-xs sm:text-sm font-medium flex items-center justify-between">
                         <span>Pacote do Paciente</span>
                         {isLoadingPackages && <span className="text-xs text-muted-foreground animate-pulse">Carregando...</span>}
+                        {!isLoadingPackages && patientId && (
+                            <NewPackagePopover
+                                patientId={patientId}
+                                onPackageCreated={(newPackageId) => {
+                                    setValue('session_package_id', newPackageId);
+                                    // Optionally force payment status validation or refresh
+                                }}
+                            />
+                        )}
                     </Label>
 
                     {patientId ? (

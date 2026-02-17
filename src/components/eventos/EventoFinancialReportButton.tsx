@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { useState } from "react";
 
 interface EventoFinancialReportButtonProps {
   eventoId: string;
@@ -23,7 +24,11 @@ interface EventoFinancialReportButtonProps {
 export function EventoFinancialReportButton({
   eventoId,
 }: EventoFinancialReportButtonProps) {
-  const { data: report, isLoading } = useEventoFinancialReport(eventoId);
+  const [open, setOpen] = useState(false);
+  const { data: report, isLoading } = useEventoFinancialReport(eventoId, open);
+  const detalhePagamentos = Array.isArray((report as { detalhePagamentos?: unknown[] } | undefined)?.detalhePagamentos)
+    ? (report as { detalhePagamentos: Array<{ tipo: string; descricao: string; valor: number; pagoEm?: string | null }> }).detalhePagamentos
+    : [];
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat("pt-BR", {
@@ -37,7 +42,7 @@ export function EventoFinancialReportButton({
   };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <FileText className="h-4 w-4 mr-2" />
@@ -69,7 +74,7 @@ export function EventoFinancialReportButton({
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-green-600">
-                    {formatCurrency(report.receitas)}
+                    {formatCurrency(report.receitas ?? 0)}
                   </div>
                 </CardContent>
               </Card>
@@ -82,7 +87,7 @@ export function EventoFinancialReportButton({
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold text-red-600">
-                    {formatCurrency(report.custoTotal)}
+                    {formatCurrency(report.custoTotal ?? 0)}
                   </div>
                 </CardContent>
               </Card>
@@ -96,13 +101,13 @@ export function EventoFinancialReportButton({
                 <CardContent>
                   <div
                     className={`text-2xl font-bold ${
-                      report.saldo >= 0 ? "text-green-600" : "text-red-600"
+                      (report.saldo ?? 0) >= 0 ? "text-green-600" : "text-red-600"
                     }`}
                   >
-                    {formatCurrency(report.saldo)}
+                    {formatCurrency(report.saldo ?? 0)}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Margem: {report.margem}%
+                    Margem: {report.margem ?? 0}%
                   </p>
                 </CardContent>
               </Card>
@@ -116,42 +121,42 @@ export function EventoFinancialReportButton({
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Prestadores</span>
                   <span className="font-medium">
-                    {formatCurrency(report.custosPrestadores)}
+                    {formatCurrency(report.custosPrestadores ?? 0)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Insumos (Checklist)</span>
                   <span className="font-medium">
-                    {formatCurrency(report.custosInsumos)}
+                    {formatCurrency(report.custosInsumos ?? 0)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Outros Custos</span>
                   <span className="font-medium">
-                    {formatCurrency(report.outrosCustos)}
+                    {formatCurrency(report.outrosCustos ?? 0)}
                   </span>
                 </div>
-                {report.pagamentosPendentes > 0 && (
+                {(report.pagamentosPendentes ?? 0) > 0 && (
                   <div className="flex justify-between pt-2 border-t">
                     <span className="text-orange-600 font-medium">
                       Pagamentos Pendentes
                     </span>
                     <span className="font-medium text-orange-600">
-                      {formatCurrency(report.pagamentosPendentes)}
+                      {formatCurrency(report.pagamentosPendentes ?? 0)}
                     </span>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {report.detalhePagamentos.length > 0 && (
+            {detalhePagamentos.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle>Histórico de Pagamentos</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {report.detalhePagamentos.map((pag, idx) => (
+                    {detalhePagamentos.map((pag, idx) => (
                       <div
                         key={idx}
                         className="flex justify-between items-center py-2 border-b last:border-b-0"

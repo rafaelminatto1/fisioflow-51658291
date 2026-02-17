@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,12 @@ import type {
   ActivityLabSession, 
 } from '@/types/activityLab';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+
+const normalizeSearch = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
 
 export default function ActivityLabPage() {
   const [selectedPatient, setSelectedPatient] = useState<ActivityLabPatient | null>(null);
@@ -33,15 +38,39 @@ export default function ActivityLabPage() {
   const [comparisonMode, setComparisonMode] = useState(false);
   const [activeTab, setActiveTab] = useState('patients');
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-  const { data: patients = [], isLoading: loadingPatients } = useActivityLabPatients();
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 250);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [searchTerm]);
+
+  const { data: patients = [], isLoading: loadingPatients, isFetching: fetchingPatients } = useActivityLabPatients(debouncedSearchTerm);
   const { data: sessions = [], isLoading: loadingSessions } = useActivityLabSessions(selectedPatient?.id);
   const { data: clinic } = useActivityLabClinic();
+  const isInitialPatientsLoading = loadingPatients && patients.length === 0 && searchTerm.trim().length === 0;
 
-  const filteredPatients = patients.filter(p => 
-    (p.full_name || p.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (p.cpf || '').includes(searchTerm)
-  );
+  const filteredPatients = useMemo(() => {
+    const trimmedTerm = searchTerm.trim();
+    if (!trimmedTerm) return patients;
+
+    const normalizedTerm = normalizeSearch(trimmedTerm);
+    const numericSearch = trimmedTerm.replace(/\D/g, '');
+
+    return patients.filter((p) => {
+      const patientName = p.full_name || p.name || '';
+      const normalizedPatientName = normalizeSearch(patientName);
+      const patientCpf = (p.cpf || '').replace(/\D/g, '');
+
+      const nameMatches = normalizedPatientName.includes(normalizedTerm);
+      const cpfMatches = numericSearch ? patientCpf.includes(numericSearch) : false;
+
+      return nameMatches || cpfMatches;
+    });
+  }, [patients, searchTerm]);
 
   const handleSelectPatient = (patient: ActivityLabPatient) => {
     setSelectedPatient(patient);
@@ -67,7 +96,7 @@ export default function ActivityLabPage() {
     }
   };
 
-  if (loadingPatients && patients.length === 0) {
+  if (isInitialPatientsLoading) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -132,9 +161,12 @@ export default function ActivityLabPage() {
                     </CardTitle>
                     <div className="relative mt-2">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      {fetchingPatients && (
+                        <Activity className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-500 animate-spin" />
+                      )}
                       <Input 
                         placeholder="Buscar por nome ou CPF..." 
-                        className="pl-9 bg-white border-slate-200"
+                        className="pl-9 pr-9 bg-white border-slate-200"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                       />
@@ -168,8 +200,17 @@ export default function ActivityLabPage() {
                       ))}
                       {filteredPatients.length === 0 && (
                         <div className="p-12 text-center text-gray-400">
-                          <Search className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                          <p className="text-sm">Nenhum paciente encontrado.</p>
+                          {fetchingPatients ? (
+                            <>
+                              <Activity className="w-8 h-8 mx-auto mb-2 opacity-40 animate-spin" />
+                              <p className="text-sm">Buscando pacientes...</p>
+                            </>
+                          ) : (
+                            <>
+                              <Search className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                              <p className="text-sm">Nenhum paciente encontrado.</p>
+                            </>
+                          )}
                         </div>
                       )}
                     </div>

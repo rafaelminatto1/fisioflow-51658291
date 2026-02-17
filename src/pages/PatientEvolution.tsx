@@ -177,7 +177,6 @@ const PatientEvolution = () => {
     requiredMeasurements,
     surgeries,
     medicalReturns,
-    isLoading: evolutionDataLoading,
     invalidateData,
   } = useEvolutionDataOptimized({
     patientId: patientId || '',
@@ -190,7 +189,7 @@ const PatientEvolution = () => {
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
-    if (dataLoading || evolutionDataLoading) {
+    if (dataLoading) {
       timeout = setTimeout(() => {
         setShowTimeoutWarning(true);
       }, 10000); // 10 seconds
@@ -198,7 +197,7 @@ const PatientEvolution = () => {
       setShowTimeoutWarning(false);
     }
     return () => clearTimeout(timeout);
-  }, [dataLoading, evolutionDataLoading]);
+  }, [dataLoading]);
 
   // Hooks que dependem de patientId - chamados APÓS useAppointmentData
   const { lastSession, isLoadingLastSession, suggestExerciseChanges } = useSessionExercises(patientId || '');
@@ -979,7 +978,7 @@ const PatientEvolution = () => {
   }
 
   // Loading state
-  if (dataLoading || (evolutionDataLoading && activeTab === 'evolucao')) {
+  if (dataLoading) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center h-[50vh]">

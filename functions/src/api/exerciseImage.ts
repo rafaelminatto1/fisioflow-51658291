@@ -6,7 +6,7 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import { getStorage } from 'firebase-admin/storage';
 import sharp from 'sharp';
-import { CORS_ORIGINS } from '../init';
+import { CORS_ORIGINS } from '../lib/cors';
 
 type OutputFormat = 'avif' | 'webp' | 'jpeg' | 'png';
 

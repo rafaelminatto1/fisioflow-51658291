@@ -32,6 +32,7 @@ export const functionsInstance = getFunctions(app, DEFAULT_REGION);
 const HTTP_FUNCTION_URLS: Record<string, string> = {
   getProfile: API_URLS.profile.get,
   updateProfile: API_URLS.profile.update,
+  listAssessmentTemplatesV2: API_URLS.assessments.listTemplates,
   getPatientHttp: API_URLS.patients.get,
   listPatientsV2: API_URLS.patients.list,
   getPatientStatsV2: API_URLS.patients.stats,
@@ -48,11 +49,20 @@ const HTTP_FUNCTION_URLS: Record<string, string> = {
   listExercisesV2: API_URLS.exercises.list,
   getExerciseV2: API_URLS.exercises.get,
   searchSimilarExercises: API_URLS.exercises.searchSimilar,
+  searchSimilarExercisesV2: API_URLS.exercises.searchSimilar,
+  listTransactionsV2: API_URLS.financial.listTransactions,
+  createTransactionV2: API_URLS.financial.createTransaction,
+  updateTransactionV2: API_URLS.financial.updateTransaction,
+  deleteTransactionV2: API_URLS.financial.deleteTransaction,
+  findTransactionByAppointmentIdV2: API_URLS.financial.findTransactionByAppointmentId,
+  getEventReportV2: API_URLS.financial.getEventReport,
 };
 const LOCAL_FUNCTIONS_PROXY =
   import.meta.env.DEV && import.meta.env.VITE_USE_FUNCTIONS_PROXY === 'true'
     ? (import.meta.env.VITE_FUNCTIONS_PROXY || '/functions')
     : undefined;
+const ENABLE_CANONICAL_FUNCTION_FALLBACK =
+  import.meta.env.VITE_ENABLE_CANONICAL_FUNCTION_FALLBACK !== 'false';
 
 /**
  * Get Firebase Functions instance
@@ -161,7 +171,7 @@ export async function callFunctionWithResponse<TRequest, TData>(
 export async function callFunctionHttp<TRequest, TResponse>(
   functionName: string,
   data: TRequest,
-  _options?: CallFunctionOptions
+  options?: CallFunctionOptions
 ): Promise<TResponse> {
   const auth = getFirebaseAuth();
   const token = await auth.currentUser?.getIdToken();
@@ -173,22 +183,46 @@ export async function callFunctionHttp<TRequest, TResponse>(
   const region = DEFAULT_REGION;
   const projectId = app.options.projectId;
   const mappedUrl = HTTP_FUNCTION_URLS[functionName];
-  const canonicalUrl = `https://${region}-${projectId}.cloudfunctions.net/${functionName.toLowerCase()}`;
+  const canonicalUrl = `https://${region}-${projectId}.cloudfunctions.net/${functionName}`;
   // Proxy local only when explicitly enabled (e.g. emulator workflow)
   const shouldProxy = Boolean(LOCAL_FUNCTIONS_PROXY);
   const proxyBase = LOCAL_FUNCTIONS_PROXY?.replace(/\/$/, '');
-  const primaryUrl = shouldProxy ? `${proxyBase}/${functionName.toLowerCase()}` : (mappedUrl ?? canonicalUrl);
-  const shouldRetryWithCanonical = Boolean(mappedUrl) && !shouldProxy;
+  const primaryUrl = shouldProxy ? `${proxyBase}/${functionName}` : (mappedUrl ?? canonicalUrl);
+  const shouldRetryWithCanonical =
+    Boolean(mappedUrl) &&
+    !shouldProxy &&
+    primaryUrl !== canonicalUrl &&
+    ENABLE_CANONICAL_FUNCTION_FALLBACK;
+  const timeoutMs = Math.max(1, options?.timeout ?? 15) * 1000;
 
   const fetchJson = async (targetUrl: string): Promise<TResponse> => {
-    const response = await fetch(targetUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(data),
-    });
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+    let response: Response;
+
+    try {
+      response = await fetch(targetUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+        signal: controller.signal,
+      });
+    } catch (fetchError) {
+      if ((fetchError as { name?: string })?.name === 'AbortError') {
+        throw new FunctionCallError(
+          functionName,
+          fetchError,
+          { targetUrl, timeoutMs },
+          `Request timeout after ${timeoutMs}ms`
+        );
+      }
+      throw fetchError;
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -393,10 +427,22 @@ export namespace FinancialApi {
   }
 
   export interface EventReport {
-    eventId: string;
-    totalRevenue: number;
-    totalExpenses: number;
-    transactionCount: number;
+    eventoId: string;
+    eventoNome?: string;
+    receitas: number;
+    custosPrestadores?: number;
+    custosInsumos?: number;
+    outrosCustos?: number;
+    custoTotal: number;
+    saldo: number;
+    margem?: number;
+    pagamentosPendentes?: number;
+    detalhePagamentos?: Array<{
+      tipo: string;
+      descricao: string;
+      valor: number;
+      pagoEm: string | null;
+    }>;
     [key: string]: unknown;
   }
 }
@@ -812,8 +858,28 @@ export const profileApi = {
    * Usa endpoint HTTP com bearer token para manter compatibilidade CORS.
    */
   getCurrent: async (): Promise<ProfileApi.Profile> => {
-    const res = await callFunctionHttp<Record<string, never>, { data: ProfileApi.Profile }>('getProfile', {});
-    return res.data;
+    try {
+      const res = await callFunctionHttp<Record<string, never>, { data: ProfileApi.Profile }>('getProfile', {});
+      return res.data;
+    } catch (error) {
+      // Compatibilidade com deployments antigos que ainda expõem getProfile como callable.
+      const status = (error as FunctionCallError & { status?: number })?.status;
+      const message = error instanceof Error ? error.message : String(error);
+      const isLegacyCallableError =
+        status === 400 &&
+        /invalid_argument|bad request/i.test(message);
+
+      if (isLegacyCallableError) {
+        const fallback = await callFunction<Record<string, never>, { data: ProfileApi.Profile } | ProfileApi.Profile>(
+          'getProfile',
+          {}
+        );
+        const payload = (fallback as { data?: ProfileApi.Profile })?.data ?? fallback;
+        return payload as ProfileApi.Profile;
+      }
+
+      throw error;
+    }
   },
 
   /**

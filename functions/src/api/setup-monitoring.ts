@@ -3,7 +3,7 @@
  * Executa uma vez para configurar Cloud Monitoring
  */
 
-import { CORS_ORIGINS } from '../init';
+import { CORS_ORIGINS } from '../lib/cors';
 import { onCall } from 'firebase-functions/v2/https';
 import { logger } from '../lib/logger';
 

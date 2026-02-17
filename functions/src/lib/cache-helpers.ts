@@ -9,6 +9,19 @@ import { HttpsError } from 'firebase-functions/v2/https';
 import { organizationCache, SimpleCache } from './function-config';
 import { logger } from './logger';
 import * as admin from 'firebase-admin';
+import { toValidUuid } from './uuid';
+
+function resolveOrganizationIdFromProfile(profile: FirebaseFirestore.DocumentData | undefined): string | null {
+  if (!profile) return null;
+
+  return (
+    toValidUuid(profile.organizationId)
+    || toValidUuid(profile.activeOrganizationId)
+    || toValidUuid(profile.organization_id)
+    || toValidUuid(profile.organizationIds?.[0])
+    || toValidUuid(profile.organization_ids?.[0])
+  );
+}
 
 // ============================================================================
 // ORGANIZATION ID CACHE
@@ -21,10 +34,18 @@ import * as admin from 'firebase-admin';
  * Cache expira em 5 minutos
  */
 export async function getOrganizationIdCached(userId: string): Promise<string> {
+  const cacheKey = `org:${userId}`;
+
   // Try memory cache first
-  const cached = organizationCache.get(`org:${userId}`);
+  const cached = organizationCache.get(cacheKey);
   if (cached) {
-    return cached;
+    const validCached = toValidUuid(cached);
+    if (!validCached) {
+      logger.warn('Invalid cached organization ID, clearing cache entry', { userId, cached });
+      organizationCache.delete(cacheKey);
+    } else {
+      return validCached;
+    }
   }
 
   // Try PostgreSQL
@@ -36,9 +57,16 @@ export async function getOrganizationIdCached(userId: string): Promise<string> {
     );
 
     if (result.rows.length > 0) {
-      const orgId = result.rows[0].organization_id;
-      organizationCache.set(`org:${userId}`, orgId);
-      return orgId;
+      const orgId = toValidUuid(result.rows[0].organization_id);
+      if (orgId) {
+        organizationCache.set(cacheKey, orgId);
+        return orgId;
+      }
+
+      logger.warn('Invalid organization_id found in PostgreSQL profile', {
+        userId,
+        organizationId: result.rows[0].organization_id,
+      });
     }
   } catch (error) {
     logger.info('PostgreSQL query failed for organization ID, trying Firestore:', error);
@@ -49,10 +77,13 @@ export async function getOrganizationIdCached(userId: string): Promise<string> {
     const profileDoc = await admin.firestore().collection('profiles').doc(userId).get();
     if (profileDoc.exists) {
       const profile = profileDoc.data();
-      const orgId = profile?.organizationId || profile?.activeOrganizationId || profile?.organizationIds?.[0] || 'default';
+      const orgId = resolveOrganizationIdFromProfile(profile);
+      if (!orgId) {
+        throw new HttpsError('failed-precondition', 'Perfil sem organizationId válido');
+      }
 
       // Cache the result
-      organizationCache.set(`org:${userId}`, orgId);
+      organizationCache.set(cacheKey, orgId);
 
       // Optionally update PostgreSQL with the found organization ID
       try {
@@ -61,13 +92,14 @@ export async function getOrganizationIdCached(userId: string): Promise<string> {
           'INSERT INTO profiles (user_id, organization_id) VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET organization_id = $2',
           [userId, orgId]
         );
-      } catch (pgError) {
+      } catch {
         // Ignore PostgreSQL update errors
       }
 
       return orgId;
     }
   } catch (error) {
+    if (error instanceof HttpsError) throw error;
     logger.info('Firestore query failed for organization ID:', error);
   }
 

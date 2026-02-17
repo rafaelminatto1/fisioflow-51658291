@@ -107,6 +107,19 @@ function getFirestoreEmulatorHost(): string | null {
   return import.meta.env.VITE_FIRESTORE_EMULATOR_HOST || null;
 }
 
+/**
+ * Determina se o emulator de Functions deve ser utilizado no frontend.
+ * Por padrão NÃO conecta em dev, a menos que explicitamente habilitado.
+ */
+function shouldUseFunctionsEmulator(): boolean {
+  if (!import.meta.env.DEV) return false;
+
+  return (
+    import.meta.env.VITE_USE_FUNCTIONS_EMULATOR === 'true' ||
+    Boolean(import.meta.env.VITE_FIREBASE_FUNCTIONS_EMULATOR_HOST)
+  );
+}
+
 // Validar configuração
 const requiredKeys: (keyof typeof firebaseConfig)[] = [
   'apiKey',
@@ -146,10 +159,12 @@ export function getFirebaseApp(): FirebaseApp {
       // Only initialize App Check when explicitly enabled via env var
       const isAppCheckEnabled = import.meta.env.VITE_ENABLE_APPCHECK === 'true';
       if (isAppCheckEnabled) {
-        // @ts-ignore
         if (import.meta.env.DEV) {
-          // @ts-ignore
-          self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+          (
+            self as typeof self & {
+              FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean;
+            }
+          ).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
         }
 
         initializeAppCheck(appInstance, {
@@ -279,12 +294,16 @@ export function getFirebaseFunctions(region: string = 'southamerica-east1'): Fun
   if (!functionsInstance) {
     functionsInstance = getFunctions(getFirebaseApp(), region);
 
-    if (import.meta.env.DEV) {
+    if (shouldUseFunctionsEmulator()) {
       const host = import.meta.env.VITE_FIREBASE_FUNCTIONS_EMULATOR_HOST || 'localhost';
-      const port = parseInt(import.meta.env.VITE_FIREBASE_FUNCTIONS_EMULATOR_PORT || '5001');
+      const port = parseInt(import.meta.env.VITE_FIREBASE_FUNCTIONS_EMULATOR_PORT || '5001', 10);
       try {
-        connectFunctionsEmulator(functionsInstance, host, port);
-        console.debug(`[Firebase] Functions: connected to emulator at ${host}:${port}`);
+        if (Number.isNaN(port)) {
+          console.warn('[Firebase] Functions: invalid emulator port, skipping connection');
+        } else {
+          connectFunctionsEmulator(functionsInstance, host, port);
+          console.debug(`[Firebase] Functions: connected to emulator at ${host}:${port}`);
+        }
       } catch (e) {
         console.warn('[Firebase] Functions: connection to emulator failed', e);
       }

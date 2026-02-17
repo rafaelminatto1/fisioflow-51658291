@@ -41,6 +41,8 @@ export interface WikiPageVersion {
   page_id: string;
   content: string;
   title: string;                   // Título naquela versão
+  html_content?: string;           // Estrutura serializada de blocos (quando disponível)
+  organization_id?: string;
   created_by: string;
   created_at: Timestamp;
   version: number;
@@ -66,6 +68,11 @@ export interface WikiComment {
   parent_comment_id?: string;      // Para respostas aninhadas
   content: string;
   created_by: string;
+  organization_id?: string;
+  block_id?: string;               // Comentário inline associado a um bloco
+  selection_text?: string;         // Trecho textual comentado
+  selection_start?: number;        // Offset opcional no conteúdo original
+  selection_end?: number;          // Offset opcional no conteúdo original
   created_at: Timestamp;
   updated_at?: Timestamp;
   deleted_at?: Timestamp;

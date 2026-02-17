@@ -1,16 +1,21 @@
 import { onCall, HttpsError, onRequest } from 'firebase-functions/v2/https';
-import { getPool, getAdminDb, getAdminAuth, CORS_ORIGINS } from '../init';
+import { getPool, getAdminDb, getAdminAuth } from '../init';
 import { authorizeRequest } from '../middleware/auth';
 import { Appointment } from '../types/models';
 import { logger } from '../lib/logger';
 import { rtdb } from '../lib/rtdb';
-import { setCorsHeaders } from '../lib/cors';
-import { DATABASE_FUNCTION, withCors } from '../lib/function-config';
 import { getOrganizationIdCached } from '../lib/cache-helpers';
 import { dispatchAppointmentNotification } from '../workflows/notifications';
+import { withErrorHandling } from '../lib/error-handler';
+import { setCorsHeaders } from '../lib/cors';
+import { isValidUuid } from '../lib/uuid';
 
 // OTIMIZADO: Configurações com mais instâncias
-const APPOINTMENT_HTTP_OPTS = withCors(DATABASE_FUNCTION, CORS_ORIGINS);
+const APPOINTMENT_HTTP_OPTS = {
+  region: 'southamerica-east1',
+  maxInstances: 2,
+  invoker: 'public',
+};
 
 // ============================================================================
 // HTTP VERSION (for frontend fetch calls with CORS fix)
@@ -77,133 +82,119 @@ function normalizeTimeOnly(value: unknown): string {
   return String(value || '').slice(0, 5);
 }
 
+const UUID_FILTER_BYPASS_VALUES = new Set(['', 'all', 'default', 'todos', 'none']);
+
+function normalizeOptionalUuidFilter(value: unknown, fieldName: string): string | null {
+  if (value === undefined || value === null) return null;
+  const raw = String(value).trim();
+  if (UUID_FILTER_BYPASS_VALUES.has(raw.toLowerCase())) return null;
+  if (!isValidUuid(raw)) {
+    throw new HttpsError('invalid-argument', `${fieldName} inválido`);
+  }
+  return raw;
+}
+
+function requireUuidField(value: unknown, fieldName: string): string {
+  const raw = String(value || '').trim();
+  if (!raw) {
+    throw new HttpsError('invalid-argument', `${fieldName} é obrigatório`);
+  }
+  if (!isValidUuid(raw)) {
+    throw new HttpsError('invalid-argument', `${fieldName} inválido`);
+  }
+  return raw;
+}
+
 /**
  * HTTP version of listAppointments for CORS/compatibility
  * OTIMIZADO - Usa cache de organização
  */
 export const listAppointmentsHttp = onRequest(
   APPOINTMENT_HTTP_OPTS,
-  async (req, res) => {
-    setCorsHeaders(res, req);
-    if (req.method === 'OPTIONS') {
-      res.status(204).send('');
-      return;
-    }
-
+  withErrorHandling(async (req, res) => {
     if (req.method !== 'POST') {
       res.status(405).json({ error: 'Method not allowed' });
       return;
     }
 
-    try {
-      const { uid } = await verifyAuthHeader(req);
-      // OTIMIZADO: Usa cache para evitar queries repetidas
-      const organizationId = await getOrganizationIdCached(uid);
+    const { uid } = await verifyAuthHeader(req);
+    // OTIMIZADO: Usa cache para evitar queries repetidas
+    const organizationId = await getOrganizationIdCached(uid);
 
-      const { dateFrom, dateTo, therapistId, status, patientId, limit = 100, offset = 0 } = req.body || {};
-      const pool = getPool();
+    const body = typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {});
+    const { dateFrom, dateTo, therapistId, status, patientId, limit = 100, offset = 0 } = body;
+    const pool = getPool();
+    const normalizedPatientId = normalizeOptionalUuidFilter(patientId, 'patientId');
 
-      let query = `SELECT a.*, p.name as patient_name, p.phone as patient_phone, prof.full_name as therapist_name
-                   FROM appointments a
-                   LEFT JOIN patients p ON a.patient_id = p.id
-                   LEFT JOIN profiles prof ON a.therapist_id = prof.user_id
-                   WHERE a.organization_id = $1`;
-      const params: (string | number)[] = [organizationId];
-      let paramCount = 1;
+    let query = `SELECT a.*, p.name as patient_name, p.phone as patient_phone, prof.full_name as therapist_name
+                 FROM appointments a
+                 LEFT JOIN patients p ON a.patient_id = p.id
+                 LEFT JOIN profiles prof ON a.therapist_id = prof.user_id
+                 WHERE a.organization_id = $1`;
+    const params: (string | number)[] = [organizationId];
+    let paramCount = 1;
 
-      if (dateFrom) { query += ` AND a.date >= $${++paramCount}`; params.push(dateFrom); }
-      if (dateTo) { query += ` AND a.date <= $${++paramCount}`; params.push(dateTo); }
-      if (therapistId) { query += ` AND a.therapist_id = $${++paramCount}`; params.push(therapistId); }
-      if (status) { query += ` AND a.status = $${++paramCount}`; params.push(status); }
-      if (patientId) { query += ` AND a.patient_id = $${++paramCount}`; params.push(patientId); }
+    if (dateFrom) { query += ` AND a.date >= $${++paramCount}`; params.push(dateFrom); }
+    if (dateTo) { query += ` AND a.date <= $${++paramCount}`; params.push(dateTo); }
+    if (therapistId) { query += ` AND a.therapist_id = $${++paramCount}`; params.push(therapistId); }
+    if (status) { query += ` AND a.status = $${++paramCount}`; params.push(status); }
+    if (normalizedPatientId) { query += ` AND a.patient_id = $${++paramCount}`; params.push(normalizedPatientId); }
 
-      query += ` ORDER BY a.date, a.start_time LIMIT $${++paramCount} OFFSET $${++paramCount}`;
-      params.push(limit, offset);
+    query += ` ORDER BY a.date, a.start_time LIMIT $${++paramCount} OFFSET $${++paramCount}`;
+    params.push(limit, offset);
 
-      const result = await pool.query(query, params);
-      // Disable cache for list to ensure immediate updates after creation
-      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-      res.json({ data: result.rows as Appointment[] });
-    } catch (error: unknown) {
-      logger.error('Error in listAppointments:', error);
-
-      if (error instanceof HttpsError && error.code === 'unauthenticated') {
-        res.status(401).json({ error: error.message });
-        return;
-      }
-
-      // Handle specific DB errors
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes('unique constraint') || errorMessage.includes('idx_appointments_time_conflict')) {
-        res.status(409).json({ error: 'Já existe um agendamento para este profissional neste horário.' });
-        return;
-      }
-
-      res.status(500).json({ error: errorMessage });
-    }
-  }
+    const result = await pool.query(query, params);
+    // Disable cache for list to ensure immediate updates after creation
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.json({ data: result.rows as Appointment[] });
+  }, 'listAppointmentsHttp')
 );
 
 /**
  * HTTP version of getAppointment for CORS
  */
 export const getAppointmentHttp = onRequest(
-  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' },
-  async (req, res) => {
-    if (req.method === 'OPTIONS') { setCorsHeaders(res, req); res.status(204).send(''); return; }
+  APPOINTMENT_HTTP_OPTS,
+  withErrorHandling(async (req, res) => {
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-    setCorsHeaders(res, req);
-    try {
-      const { uid } = await verifyAuthHeader(req);
-      const organizationId = await getOrganizationId(uid);
-      const body = typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {});
-      const { appointmentId } = body;
-      if (!appointmentId) { res.status(400).json({ error: 'appointmentId é obrigatório' }); return; }
-      const pool = getPool();
-      const result = await pool.query(
-        `SELECT a.*, p.name as patient_name, p.phone as patient_phone, prof.full_name as therapist_name
-         FROM appointments a LEFT JOIN patients p ON a.patient_id = p.id
-         LEFT JOIN profiles prof ON a.therapist_id = prof.user_id
-         WHERE a.id = $1 AND a.organization_id = $2`,
-        [appointmentId, organizationId]
-      );
-      if (result.rows.length === 0) { res.status(404).json({ error: 'Agendamento não encontrado' }); return; }
-      res.json({ data: result.rows[0] });
-    } catch (error: unknown) {
-      if (error instanceof HttpsError && error.code === 'unauthenticated') { res.status(401).json({ error: error.message }); return; }
-      logger.error('Error in getAppointmentHttp:', error);
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Erro ao buscar agendamento' });
-    }
-  }
+
+    const { uid } = await verifyAuthHeader(req);
+    const organizationId = await getOrganizationId(uid);
+    const body = typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {});
+    const appointmentId = requireUuidField(body.appointmentId, 'appointmentId');
+    const pool = getPool();
+    const result = await pool.query(
+      `SELECT a.*, p.name as patient_name, p.phone as patient_phone, prof.full_name as therapist_name
+       FROM appointments a LEFT JOIN patients p ON a.patient_id = p.id
+       LEFT JOIN profiles prof ON a.therapist_id = prof.user_id
+       WHERE a.id = $1 AND a.organization_id = $2`,
+      [appointmentId, organizationId]
+    );
+    if (result.rows.length === 0) { res.status(404).json({ error: 'Agendamento não encontrado' }); return; }
+    res.json({ data: result.rows[0] });
+  }, 'getAppointmentHttp')
 );
 
 /**
  * HTTP version of checkTimeConflict for CORS
  */
 export const checkTimeConflictHttp = onRequest(
-  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' },
-  async (req, res) => {
-    setCorsHeaders(res, req);
-    if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
+  APPOINTMENT_HTTP_OPTS,
+  withErrorHandling(async (req, res) => {
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-    try {
-      const { uid } = await verifyAuthHeader(req);
-      const organizationId = await getOrganizationId(uid);
-      const body = typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {});
-      const { therapistId, date, startTime, endTime, excludeAppointmentId } = body;
-      if (!therapistId || !date || !startTime || !endTime) {
-        res.status(400).json({ error: 'terapeuta, data, horário início e fim são obrigatórios' });
-        return;
-      }
-      const pool = getPool();
-      const hasConflict = await checkTimeConflictHelper(pool, { date, startTime, endTime, therapistId, excludeAppointmentId, organizationId });
-      res.json({ hasConflict, conflictingAppointments: [] });
-    } catch (error: unknown) {
-      if (error instanceof HttpsError && error.code === 'unauthenticated') { res.status(401).json({ error: error.message }); return; }
-      logger.error('Error in checkTimeConflictHttp:', error);
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Erro ao verificar conflito' });
+
+    const { uid } = await verifyAuthHeader(req);
+    const organizationId = await getOrganizationId(uid);
+    const body = typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {});
+    const { therapistId, date, startTime, endTime, excludeAppointmentId } = body;
+    if (!therapistId || !date || !startTime || !endTime) {
+      res.status(400).json({ error: 'terapeuta, data, horário início e fim são obrigatórios' });
+      return;
     }
-  }
+    const pool = getPool();
+    const hasConflict = await checkTimeConflictHelper(pool, { date, startTime, endTime, therapistId, excludeAppointmentId, organizationId });
+    res.json({ hasConflict, conflictingAppointments: [] });
+  }, 'checkTimeConflictHttp')
 );
 
 /**
@@ -216,123 +207,103 @@ export const createAppointmentHttp = onRequest(
     maxInstances: 10,
     cpu: 1,
     concurrency: 80,
-    cors: CORS_ORIGINS,
     invoker: 'public'
   },
-  async (req, res) => {
-    if (req.method === 'OPTIONS') { setCorsHeaders(res, req); res.status(204).send(''); return; }
+  withErrorHandling(async (req, res) => {
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-    setCorsHeaders(res, req);
-    try {
-      const { uid } = await verifyAuthHeader(req);
 
-      // Parallelize initial fetch of metadata
-      const [organizationId, body] = await Promise.all([
-        getOrganizationId(uid),
-        Promise.resolve(typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {}))
-      ]);
+    const { uid } = await verifyAuthHeader(req);
 
-      const pool = getPool();
-      const userId = uid;
-      const data = body;
-      const requiredFields = ['patientId', 'date', 'startTime', 'endTime'];
-      for (const field of requiredFields) {
-        if (!data[field]) {
-          if (field === 'type' && data.session_type) continue;
-          res.status(400).json({ error: `Campo obrigatório faltando: ${field}` });
-          return;
-        }
-      }
-      // Fisioterapeuta opcional: quando não informado, usa o usuário logado como responsável
-      const therapistIdRaw = (data.therapistId != null && data.therapistId !== '') ? String(data.therapistId).trim() : '';
-      const therapistId = therapistIdRaw || userId;
-      // Conflito por capacidade do slot (0/4 = livre), não por terapeuta
-      const conflictResult = await checkTimeConflictByCapacity(pool, {
-        date: data.date,
-        startTime: data.startTime,
-        endTime: data.endTime,
-        organizationId
-      });
-      if (conflictResult.hasConflict) {
-        res.status(409).json({
-          error: 'Conflito de horário detectado',
-          conflicts: conflictResult.conflicts,
-          total: conflictResult.total,
-          capacity: conflictResult.capacity
-        });
+    // Parallelize initial fetch of metadata
+    const [organizationId, body] = await Promise.all([
+      getOrganizationId(uid),
+      Promise.resolve(typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {}))
+    ]);
+
+    const pool = getPool();
+    const userId = uid;
+    const data = body;
+    const requiredFields = ['patientId', 'date', 'startTime', 'endTime'];
+    for (const field of requiredFields) {
+      if (!data[field]) {
+        if (field === 'type' && data.session_type) continue;
+        res.status(400).json({ error: `Campo obrigatório faltando: ${field}` });
         return;
       }
-      const result = await pool.query(
-        `INSERT INTO appointments (patient_id, therapist_id, date, start_time, end_time, session_type, notes, status, organization_id, created_by)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
-        [
-          data.patientId, therapistId, data.date, data.startTime, data.endTime,
-          normalizeSessionType(data.type || data.session_type),
-          data.notes || null, normalizeAppointmentStatus(data.status), organizationId, userId
-        ]
-      );
-      const appointment = result.rows[0];
-
-      // NON-BLOCKING BACKGROUND TASKS
-      // We start these but don't 'await' them before responding to the user
-      (async () => {
-        try {
-          const db = getAdminDb();
-          await Promise.all([
-            // 1. Sync to Firestore
-            db.collection('appointments').doc(appointment.id).set({
-              ...appointment,
-              notification_origin: 'api_appointments_v2_optimized',
-              created_at: new Date(),
-              updated_at: new Date()
-            }),
-            // 2. Update RTDB
-            rtdb.refreshAppointments(organizationId),
-            // 3. Dispatch Notification
-            dispatchAppointmentNotification({
-              kind: 'scheduled',
-              organizationId,
-              patientId: String(appointment.patient_id),
-              appointmentId: String(appointment.id),
-              date: normalizeDateOnly(appointment.date),
-              time: normalizeTimeOnly(appointment.start_time),
-            })
-          ]);
-          logger.info(`[createAppointmentHttp] Background tasks completed for ${appointment.id}`);
-        } catch (bgError) {
-          logger.error(`[createAppointmentHttp] Background tasks failed for ${appointment.id}:`, bgError);
-        }
-      })();
-
-      // Optional: Add to event loop to ensure completion in some environments
-      // In Gen 2, if the function returns, CPU might be throttled, but concurrency helps.
-
-      res.status(201).json({ data: appointment });
-    } catch (error: unknown) {
-      if (error instanceof HttpsError && error.code === 'unauthenticated') {
-        res.status(401).json({ error: error.message });
-        return;
-      }
-
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('Error in createAppointmentHttp:', { error: errorMessage, stack: error instanceof Error ? error.stack : undefined });
-
-      // Handle duplicate key error from PostgreSQL
-      if (errorMessage.includes('unique constraint') || errorMessage.includes('idx_appointments_time_conflict')) {
-        res.status(409).json({ error: 'Já existe um agendamento para este profissional neste horário exato.' });
-        return;
-      }
-
-      res.status(500).json({ error: errorMessage });
     }
-  }
+    const patientId = requireUuidField(data.patientId, 'patientId');
+    // Fisioterapeuta opcional: quando não informado, usa o usuário logado como responsável
+    const therapistIdRaw = (data.therapistId != null && data.therapistId !== '') ? String(data.therapistId).trim() : '';
+    const therapistId = therapistIdRaw || userId;
+    // Conflito por capacidade do slot (0/4 = livre), não por terapeuta
+    const conflictResult = await checkTimeConflictByCapacity(pool, {
+      date: data.date,
+      startTime: data.startTime,
+      endTime: data.endTime,
+      organizationId
+    });
+    if (conflictResult.hasConflict) {
+      res.status(409).json({
+        error: 'Conflito de horário detectado',
+        conflicts: conflictResult.conflicts,
+        total: conflictResult.total,
+        capacity: conflictResult.capacity
+      });
+      return;
+    }
+    const result = await pool.query(
+      `INSERT INTO appointments (patient_id, therapist_id, date, start_time, end_time, session_type, notes, status, organization_id, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+      [
+        patientId, therapistId, data.date, data.startTime, data.endTime,
+        normalizeSessionType(data.type || data.session_type),
+        data.notes || null, normalizeAppointmentStatus(data.status), organizationId, userId
+      ]
+    );
+    const appointment = result.rows[0];
+
+    // NON-BLOCKING BACKGROUND TASKS
+    // We start these but don't 'await' them before responding to the user
+    (async () => {
+      try {
+        const db = getAdminDb();
+        await Promise.all([
+          // 1. Sync to Firestore
+          db.collection('appointments').doc(appointment.id).set({
+            ...appointment,
+            notification_origin: 'api_appointments_v2_optimized',
+            created_at: new Date(),
+            updated_at: new Date()
+          }),
+          // 2. Update RTDB
+          rtdb.refreshAppointments(organizationId),
+          // 3. Dispatch Notification
+          dispatchAppointmentNotification({
+            kind: 'scheduled',
+            organizationId,
+            patientId: String(appointment.patient_id),
+            appointmentId: String(appointment.id),
+            date: normalizeDateOnly(appointment.date),
+            time: normalizeTimeOnly(appointment.start_time),
+          })
+        ]);
+        logger.info(`[createAppointmentHttp] Background tasks completed for ${appointment.id}`);
+      } catch (bgError) {
+        logger.error(`[createAppointmentHttp] Background tasks failed for ${appointment.id}:`, bgError);
+      }
+    })();
+
+    // Optional: Add to event loop to ensure completion in some environments
+    // In Gen 2, if the function returns, CPU might be throttled, but concurrency helps.
+
+    res.status(201).json({ data: appointment });
+  }, 'createAppointmentHttp')
 );
 
 /**
  * HTTP version of updateAppointment for CORS
  */
 export const updateAppointmentHttp = onRequest(
-  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' },
   async (req, res) => {
     setCorsHeaders(res, req);
     if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
@@ -342,8 +313,8 @@ export const updateAppointmentHttp = onRequest(
       const organizationId = await getOrganizationId(uid);
       const pool = getPool();
       const body = typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {});
-      const { appointmentId, ...updates } = body;
-      if (!appointmentId) { res.status(400).json({ error: 'appointmentId é obrigatório' }); return; }
+      const { ...updates } = body;
+      const appointmentId = requireUuidField(body.appointmentId, 'appointmentId');
       const current = await pool.query('SELECT * FROM appointments WHERE id = $1 AND organization_id = $2', [appointmentId, organizationId]);
       if (current.rows.length === 0) { res.status(404).json({ error: 'Agendamento não encontrado' }); return; }
       const currentAppt = current.rows[0];
@@ -479,6 +450,11 @@ export const updateAppointmentHttp = onRequest(
     } catch (error: unknown) {
       if (error instanceof HttpsError && error.code === 'unauthenticated') { setCorsHeaders(res, req); res.status(401).json({ error: error.message }); return; }
       if (error instanceof HttpsError && error.code === 'not-found') { setCorsHeaders(res, req); res.status(404).json({ error: error.message }); return; }
+      if (error instanceof HttpsError && (error.code === 'invalid-argument' || error.code === 'failed-precondition')) {
+        setCorsHeaders(res, req);
+        res.status(400).json({ error: error.message });
+        return;
+      }
       const errMsg = error instanceof Error ? error.message : 'Erro ao atualizar agendamento';
       const errStack = error instanceof Error ? error.stack : undefined;
       logger.error('Error in updateAppointmentHttp:', { message: errMsg, stack: errStack, error });
@@ -492,7 +468,6 @@ export const updateAppointmentHttp = onRequest(
  * HTTP version of cancelAppointment for CORS
  */
 export const cancelAppointmentHttp = onRequest(
-  { region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' },
   async (req, res) => {
     setCorsHeaders(res, req);
     if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
@@ -501,8 +476,8 @@ export const cancelAppointmentHttp = onRequest(
       const { uid } = await verifyAuthHeader(req);
       const organizationId = await getOrganizationId(uid);
       const body = typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {});
-      const { appointmentId, reason } = body;
-      if (!appointmentId) { res.status(400).json({ error: 'appointmentId é obrigatório' }); return; }
+      const reason = body.reason;
+      const appointmentId = requireUuidField(body.appointmentId, 'appointmentId');
       const pool = getPool();
       const current = await pool.query('SELECT * FROM appointments WHERE id = $1 AND organization_id = $2', [appointmentId, organizationId]);
       if (current.rows.length === 0) { res.status(404).json({ error: 'Agendamento não encontrado' }); return; }
@@ -542,6 +517,11 @@ export const cancelAppointmentHttp = onRequest(
       res.json({ success: true });
     } catch (error: unknown) {
       if (error instanceof HttpsError && error.code === 'unauthenticated') { res.status(401).json({ error: error.message }); return; }
+      if (error instanceof HttpsError && (error.code === 'invalid-argument' || error.code === 'failed-precondition')) {
+        res.status(400).json({ error: error.message });
+        return;
+      }
+      if (error instanceof HttpsError && error.code === 'not-found') { res.status(404).json({ error: error.message }); return; }
       logger.error('Error in cancelAppointmentHttp:', error);
       res.status(500).json({ error: error instanceof Error ? error.message : 'Erro ao cancelar agendamento' });
     }
@@ -623,7 +603,6 @@ export const listAppointmentsHandler = async (request: any) => {
 };
 
 export const listAppointments = onCall<ListAppointmentsRequest, Promise<ListAppointmentsResponse>>(
-  { cors: CORS_ORIGINS },
   listAppointmentsHandler
 );
 
@@ -675,7 +654,6 @@ export const getAppointmentHandler = async (request: any) => {
 };
 
 export const getAppointment = onCall<GetAppointmentRequest, Promise<GetAppointmentResponse>>(
-  { cors: CORS_ORIGINS },
   getAppointmentHandler
 );
 
@@ -854,7 +832,6 @@ export const checkTimeConflictHandler = async (request: any) => {
   }
 };
 
-export const checkTimeConflict = onCall({ cors: CORS_ORIGINS }, checkTimeConflictHandler);
 
 interface CreateAppointmentRequest {
   patientId: string;
@@ -981,7 +958,6 @@ export const createAppointmentHandler = async (request: any) => {
 };
 
 export const createAppointment = onCall<CreateAppointmentRequest, Promise<CreateAppointmentResponse>>(
-  { cors: CORS_ORIGINS },
   createAppointmentHandler
 );
 
@@ -1152,7 +1128,6 @@ export const updateAppointmentHandler = async (request: any) => {
 };
 
 export const updateAppointment = onCall<UpdateAppointmentRequest, Promise<UpdateAppointmentResponse>>(
-  { cors: CORS_ORIGINS },
   updateAppointmentHandler
 );
 
@@ -1244,6 +1219,5 @@ export const cancelAppointmentHandler = async (request: any) => {
 };
 
 export const cancelAppointment = onCall<CancelAppointmentRequest, Promise<CancelAppointmentResponse>>(
-  { cors: CORS_ORIGINS },
   cancelAppointmentHandler
 );
