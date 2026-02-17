@@ -9,43 +9,53 @@ import { onCall } from 'firebase-functions/v2/https';
 import { STANDARD_FUNCTION } from '../lib/function-config';
 
 // ============================================================================
-// ASSESSMENT HANDLERS IMPORT
+// ASSESSMENT HANDLERS IMPORT (Direct - no dynamic imports)
 // ============================================================================
 
-const listAssessmentsHandler = async (request: any) => {
-  const { listAssessmentsHandler } = await import('./assessments');
-  return listAssessmentsHandler(request);
-};
+import {
+  listAssessmentsHttp,
+  getAssessmentHttp,
+  createAssessmentHttp,
+  updateAssessmentHttp,
+  listAssessmentTemplatesHttp,
+  getAssessmentTemplateHttp
+} from './assessments';
 
-const getAssessmentHandler = async (request: any) => {
-  const { getAssessmentHandler } = await import('./assessments');
-  return getAssessmentHandler(request);
-};
+// Helper to convert HTTP handler to callable format
+const httpToCallable = (httpHandler: any) => async (request: any) => {
+  // Mock req/res objects for the HTTP handler
+  const req = {
+    method: 'POST',
+    headers: {
+      authorization: request.auth ? `Bearer ${request.auth.token}` : undefined
+    },
+    body: request.data
+  };
 
-const createAssessmentHandler = async (request: any) => {
-  const { createAssessmentHandler } = await import('./assessments');
-  return createAssessmentHandler(request);
-};
+  let responseData: any;
+  const res = {
+    status: (code: number) => ({
+      json: (data: any) => { responseData = data; return res; },
+      send: (data: any) => { responseData = data; return res; }
+    }),
+    json: (data: any) => { responseData = data; return res; },
+    send: (data: any) => { responseData = data; return res; }
+  };
 
-const updateAssessmentHandler = async (request: any) => {
-  const { updateAssessmentHandler } = await import('./assessments');
-  return updateAssessmentHandler(request);
-};
-
-const listAssessmentTemplatesHandler = async (request: any) => {
-  const { listAssessmentTemplatesHandler } = await import('./assessments');
-  return listAssessmentTemplatesHandler(request);
-};
-
-const getAssessmentTemplateHandler = async (request: any) => {
-  const { getAssessmentTemplateHandler } = await import('./assessments');
-  return getAssessmentTemplateHandler(request);
+  await httpHandler(req, res);
+  return responseData;
 };
 
 // ============================================================================
 // UNIFIED ASSESSMENT SERVICE
 // ============================================================================
 
+/**
+ * Assessment Service Unificado
+ *
+ * Uma única função que roteia para todos os handlers de avaliações
+ * Ações disponíveis: list, get, create, update, listTemplates, getTemplate
+ */
 /**
  * Assessment Service Unificado
  *
@@ -62,17 +72,17 @@ export const assessmentServiceHandler = async (request: any) => {
   // Roteamento para o handler apropriado
   switch (action) {
     case 'list':
-      return listAssessmentsHandler({ data: params });
+      return await httpToCallable(listAssessmentsHttp)({ data: params });
     case 'get':
-      return getAssessmentHandler({ data: params });
+      return await httpToCallable(getAssessmentHttp)({ data: params });
     case 'create':
-      return createAssessmentHandler({ data: params });
+      return await httpToCallable(createAssessmentHttp)({ data: params });
     case 'update':
-      return updateAssessmentHandler({ data: params });
+      return await httpToCallable(updateAssessmentHttp)({ data: params });
     case 'listTemplates':
-      return listAssessmentTemplatesHandler({ data: params });
+      return await httpToCallable(listAssessmentTemplatesHttp)({ data: params });
     case 'getTemplate':
-      return getAssessmentTemplateHandler({ data: params });
+      return await httpToCallable(getAssessmentTemplateHttp)({ data: params });
     default:
       throw new Error(`Ação desconhecida: ${action}`);
   }

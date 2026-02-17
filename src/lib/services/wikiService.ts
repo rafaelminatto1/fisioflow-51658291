@@ -14,10 +14,12 @@ import {
   where,
   serverTimestamp,
 } from '@/integrations/firebase/app';
-import type { WikiPage, WikiCategory } from '@/types/wiki';
+import type { WikiPage, WikiCategory, WikiComment, WikiPageVersion } from '@/types/wiki';
 
 const WIKI_PAGES = 'wiki_pages';
 const WIKI_CATEGORIES = 'wiki_categories';
+const WIKI_VERSIONS = 'wiki_versions';
+const WIKI_COMMENTS = 'wiki_comments';
 
 function mapDocToWikiPage(docSnap: { id: string; data: () => Record<string, unknown> }): WikiPage {
   const data = docSnap.data();
@@ -26,18 +28,18 @@ function mapDocToWikiPage(docSnap: { id: string; data: () => Record<string, unkn
     slug: (data.slug as string) ?? '',
     title: (data.title as string) ?? '',
     content: (data.content as string) ?? '',
-    html_content: data.html_content as string | undefined,
-    parent_id: data.parent_id as string | undefined,
+    html_content: typeof data.html_content === 'string' ? data.html_content : undefined,
+    parent_id: typeof data.parent_id === 'string' ? data.parent_id : undefined,
     organization_id: (data.organization_id as string) ?? '',
     created_by: (data.created_by as string) ?? '',
     updated_by: (data.updated_by as string) ?? '',
     tags: Array.isArray(data.tags) ? (data.tags as string[]) : [],
-    category: data.category as string | undefined,
+    category: typeof data.category === 'string' ? data.category : undefined,
     is_published: (data.is_published as boolean) ?? true,
     view_count: (data.view_count as number) ?? 0,
     attachments: Array.isArray(data.attachments) ? (data.attachments as WikiPage['attachments']) : [],
-    icon: data.icon as string | undefined,
-    cover_image: data.cover_image as string | undefined,
+    icon: typeof data.icon === 'string' ? data.icon : undefined,
+    cover_image: typeof data.cover_image === 'string' ? data.cover_image : undefined,
     created_at: data.created_at as WikiPage['created_at'],
     updated_at: data.updated_at as WikiPage['updated_at'],
     version: (data.version as number) ?? 1,
@@ -105,6 +107,11 @@ export const wikiService = {
       slug: data.slug,
       title: data.title,
       content: data.content,
+      html_content: data.html_content ?? null,
+      parent_id: data.parent_id ?? null,
+      category: data.category ?? null,
+      icon: data.icon ?? null,
+      cover_image: data.cover_image ?? null,
       tags: data.tags ?? [],
       is_published: data.is_published ?? true,
       view_count: data.view_count ?? 0,
@@ -117,6 +124,17 @@ export const wikiService = {
       const ref = doc(db, WIKI_PAGES, existingPage.id);
       const nextVersion = (existingPage.version ?? 1) + 1;
       await updateDoc(ref, { ...base, version: nextVersion });
+      await addDoc(collection(db, WIKI_VERSIONS), {
+        organization_id: organizationId,
+        page_id: existingPage.id,
+        title: data.title,
+        content: data.content,
+        html_content: data.html_content ?? null,
+        created_by: userId,
+        created_at: now,
+        version: nextVersion,
+        comment: 'Atualização da página',
+      });
       return existingPage.id;
     }
 
@@ -125,6 +143,99 @@ export const wikiService = {
       created_by: userId,
       created_at: now,
       version: 1,
+    });
+    await addDoc(collection(db, WIKI_VERSIONS), {
+      organization_id: organizationId,
+      page_id: ref.id,
+      title: data.title,
+      content: data.content,
+      html_content: data.html_content ?? null,
+      created_by: userId,
+      created_at: now,
+      version: 1,
+      comment: 'Versão inicial',
+    });
+    return ref.id;
+  },
+
+  async listPageVersions(organizationId: string, pageId: string): Promise<WikiPageVersion[]> {
+    try {
+      const q = query(
+        collection(db, WIKI_VERSIONS),
+        where('organization_id', '==', organizationId)
+      );
+      const snapshot = await getDocs(q);
+      const list = snapshot.docs.map((docSnap) => {
+        const data = docSnap.data();
+        return {
+          id: docSnap.id,
+          page_id: (data.page_id as string) ?? pageId,
+          title: (data.title as string) ?? '',
+          content: (data.content as string) ?? '',
+          html_content: typeof data.html_content === 'string' ? data.html_content : undefined,
+          organization_id: typeof data.organization_id === 'string' ? data.organization_id : organizationId,
+          created_by: (data.created_by as string) ?? '',
+          created_at: data.created_at as WikiPageVersion['created_at'],
+          version: (data.version as number) ?? 1,
+          comment: typeof data.comment === 'string' ? data.comment : undefined,
+        } satisfies WikiPageVersion;
+      });
+      return list
+        .filter((version) => version.page_id === pageId)
+        .sort((a, b) => b.version - a.version);
+    } catch {
+      return [];
+    }
+  },
+
+  async listComments(organizationId: string, pageId: string): Promise<WikiComment[]> {
+    try {
+      const q = query(
+        collection(db, WIKI_COMMENTS),
+        where('organization_id', '==', organizationId)
+      );
+      const snapshot = await getDocs(q);
+      const list = snapshot.docs.map((docSnap) => {
+        const data = docSnap.data();
+        return {
+          id: docSnap.id,
+          page_id: (data.page_id as string) ?? pageId,
+          content: (data.content as string) ?? '',
+          created_by: (data.created_by as string) ?? '',
+          organization_id: typeof data.organization_id === 'string' ? data.organization_id : organizationId,
+          parent_comment_id: typeof data.parent_comment_id === 'string' ? data.parent_comment_id : undefined,
+          block_id: typeof data.block_id === 'string' ? data.block_id : undefined,
+          selection_text: typeof data.selection_text === 'string' ? data.selection_text : undefined,
+          selection_start: typeof data.selection_start === 'number' ? data.selection_start : undefined,
+          selection_end: typeof data.selection_end === 'number' ? data.selection_end : undefined,
+          created_at: data.created_at as WikiComment['created_at'],
+          updated_at: data.updated_at as WikiComment['updated_at'],
+          resolved: typeof data.resolved === 'boolean' ? data.resolved : undefined,
+        } satisfies WikiComment;
+      });
+      const getTime = (comment: WikiComment) => {
+        const timestamp = comment.created_at as { toDate?: () => Date } | undefined;
+        return timestamp && typeof timestamp.toDate === 'function'
+          ? timestamp.toDate().getTime()
+          : 0;
+      };
+      return list
+        .filter((comment) => comment.page_id === pageId)
+        .sort((a, b) => getTime(a) - getTime(b));
+    } catch {
+      return [];
+    }
+  },
+
+  async addComment(
+    organizationId: string,
+    comment: Omit<WikiComment, 'id' | 'created_at'>
+  ): Promise<string> {
+    const now = serverTimestamp();
+    const ref = await addDoc(collection(db, WIKI_COMMENTS), {
+      ...comment,
+      organization_id: organizationId,
+      created_at: now,
     });
     return ref.id;
   },

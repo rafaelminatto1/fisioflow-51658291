@@ -1,10 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { activityLabService } from '@/services/activityLabService';
 
-export const useActivityLabPatients = () => {
+export const useActivityLabPatients = (searchTerm?: string) => {
+  const normalizedTerm = searchTerm?.trim() || '';
+
   return useQuery({
-    queryKey: ['activity-lab', 'patients'],
-    queryFn: () => activityLabService.getPatients(),
+    queryKey: ['activity-lab', 'patients', normalizedTerm],
+    queryFn: () => activityLabService.getPatients(normalizedTerm),
+    placeholderData: (previousData) => previousData ?? [],
     staleTime: 1000 * 60 * 5, // 5 minutos
   });
 };

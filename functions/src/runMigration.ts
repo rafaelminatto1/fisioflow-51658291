@@ -8,7 +8,8 @@
  */
 
 import { onCall } from 'firebase-functions/v2/https';
-import { getPool, CORS_ORIGINS } from './init';
+import { getPool } from './init';
+import { CORS_ORIGINS } from './lib/cors';
 
 export const runMigration = onCall({ cors: CORS_ORIGINS }, async (request) => {
   const pool = getPool();

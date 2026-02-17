@@ -3,8 +3,14 @@ import { getPool, getAdminAuth } from '../init';
 import { getOrganizationIdCached } from '../lib/cache-helpers';
 import { logger } from '../lib/logger';
 import { setCorsHeaders } from '../lib/cors';
-import { EVOLUTION_HTTP_OPTS } from '../lib/function-config';
 import { logAuditEvent } from '../lib/audit';
+
+// Configuração inline para evitar conflito CORS
+const EVOLUTION_HTTP_OPTS = {
+  region: 'southamerica-east1',
+  maxInstances: 1,
+  invoker: 'public',
+};
 
 async function verifyAuthHeader(req: any): Promise<{ uid: string }> {
     const authHeader = req.headers.authorization || '';

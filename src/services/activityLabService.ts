@@ -6,9 +6,9 @@ import {
   query,
   where,
   orderBy,
-  limit,
 } from '@/integrations/firebase/app';
 import { db } from '@/integrations/firebase/app';
+import { patientsApi } from '@/integrations/firebase/functions';
 import type { 
   ActivityLabPatient, 
   ActivityLabSession, 
@@ -18,6 +18,41 @@ import type {
 const PATIENTS_COLLECTION = 'patients';
 const SESSIONS_COLLECTION = 'sessions';
 const CLINIC_COLLECTION = 'clinic';
+
+const normalizeSearch = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+
+const sortPatientsByName = (patients: ActivityLabPatient[]) =>
+  [...patients].sort((a, b) => {
+    const aName = (a.full_name || a.name || '').toLowerCase();
+    const bName = (b.full_name || b.name || '').toLowerCase();
+    return aName.localeCompare(bName, 'pt-BR');
+  });
+
+const filterPatientsByTerm = (patients: ActivityLabPatient[], term: string) => {
+  const normalizedTerm = normalizeSearch(term);
+  const numericTerm = term.replace(/\D/g, '');
+
+  return patients.filter((patient) => {
+    const patientName = normalizeSearch(patient.full_name || patient.name || '');
+    const patientCpf = (patient.cpf || '').replace(/\D/g, '');
+
+    return (
+      patientName.includes(normalizedTerm) ||
+      (numericTerm ? patientCpf.includes(numericTerm) : false)
+    );
+  });
+};
+
+const loadPatientsFromFirestore = async (): Promise<ActivityLabPatient[]> => {
+  const snapshot = await getDocs(collection(db, PATIENTS_COLLECTION));
+  return snapshot.docs
+    .map((docSnap) => mapPatient(docSnap.id, docSnap.data()))
+    .filter((patient) => patient.is_active !== false && patient.status !== 'inactive');
+};
 
 function mapPatient(id: string, data: any): ActivityLabPatient {
   return {
@@ -71,15 +106,48 @@ export const activityLabService = {
   /**
    * Get all patients from Activity Lab
    */
-  async getPatients(): Promise<ActivityLabPatient[]> {
-    const q = query(
-      collection(db, PATIENTS_COLLECTION),
-      where('source', '==', 'activity_lab'),
-      orderBy('created_at', 'desc')
-    );
-    
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(d => mapPatient(d.id, d.data()));
+  async getPatients(searchTerm?: string): Promise<ActivityLabPatient[]> {
+    const term = searchTerm?.trim();
+
+    try {
+      // Use API V2 to keep patient search available for all allowed roles
+      // (Firestore direct reads are restricted for some roles, e.g. recepcionista).
+      const apiResponse = await patientsApi.list({
+        status: 'active',
+        search: term || undefined,
+        limit: 200,
+        offset: 0,
+      });
+
+      const rows = Array.isArray(apiResponse.data) ? apiResponse.data : [];
+      const mapped = rows
+        .map((row) => mapPatient(String(row.id || ''), row))
+        .filter((patient) => !!patient.id);
+
+      if (!term || mapped.length > 0) {
+        return sortPatientsByName(mapped);
+      }
+
+      // Fallback for accent-insensitive typing: if backend search returns no rows,
+      // load a larger active list and filter locally with normalized text.
+      const fallbackResponse = await patientsApi.list({
+        status: 'active',
+        limit: 2000,
+        offset: 0,
+      });
+
+      const fallbackRows = Array.isArray(fallbackResponse.data) ? fallbackResponse.data : [];
+      const fallbackMapped = fallbackRows
+        .map((row) => mapPatient(String(row.id || ''), row))
+        .filter((patient) => !!patient.id);
+
+      return sortPatientsByName(filterPatientsByTerm(fallbackMapped, term));
+    } catch {
+      // Local dev fallback (e.g., CORS on Cloud Functions) to keep autocomplete usable.
+      const firestorePatients = await loadPatientsFromFirestore();
+      if (!term) return sortPatientsByName(firestorePatients);
+      return sortPatientsByName(filterPatientsByTerm(firestorePatients, term));
+    }
   },
 
   /**

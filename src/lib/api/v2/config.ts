@@ -48,9 +48,20 @@ export const API_URLS = {
     get: CLOUD_RUN_BASE_URL('getExerciseV2'),
     searchSimilar: CLOUD_RUN_BASE_URL('searchSimilarExercisesV2'),
   },
+  assessments: {
+    listTemplates: CLOUD_RUN_BASE_URL('listAssessmentTemplatesV2'),
+  },
   profile: {
     get: CLOUD_RUN_BASE_URL('getProfile'),
     update: CLOUD_RUN_BASE_URL('updateProfile'),
+  },
+  financial: {
+    listTransactions: CLOUD_RUN_BASE_URL('listTransactionsV2'),
+    createTransaction: CLOUD_RUN_BASE_URL('createTransactionV2'),
+    updateTransaction: CLOUD_RUN_BASE_URL('updateTransactionV2'),
+    deleteTransaction: CLOUD_RUN_BASE_URL('deleteTransactionV2'),
+    findTransactionByAppointmentId: CLOUD_RUN_BASE_URL('findTransactionByAppointmentIdV2'),
+    getEventReport: CLOUD_RUN_BASE_URL('getEventReportV2'),
   },
   clinical: {
     listGoals: CLOUD_RUN_BASE_URL('listpatientgoalshttp'),

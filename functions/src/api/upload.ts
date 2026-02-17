@@ -12,7 +12,8 @@
 // TYPES
 // ============================================================================
 
-import { CORS_ORIGINS, getAdminAuth, getAdminStorage } from '../init';
+import { getAdminAuth, getAdminStorage } from '../init';
+import { CORS_ORIGINS } from '../lib/cors';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions';
 
