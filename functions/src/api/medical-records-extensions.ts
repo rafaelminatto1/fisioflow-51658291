@@ -1,5 +1,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
-import { getPool, CORS_ORIGINS } from '../init';
+import { getPool } from '../init';
+import { CORS_ORIGINS } from '../lib/cors';
 import { authorizeRequest } from '../middleware/auth';
 import { logger } from '../lib/logger';
 import { triggerPatientRagReindex } from '../ai/rag/rag-index-maintenance';

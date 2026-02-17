@@ -15,7 +15,7 @@ import { firestore } from 'firebase-admin';
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 import * as logger from 'firebase-functions/logger';
-import { CORS_ORIGINS } from '../init';
+import { CORS_ORIGINS } from '../lib/cors';
 
 const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID || 'primary';
 

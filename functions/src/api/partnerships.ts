@@ -7,13 +7,13 @@
  * - Applying partnership discounts to patients
  */
 
-import { CORS_ORIGINS, getPool } from '../init';
+import { getPool } from '../init';
 import { onCall, HttpsError, onRequest } from 'firebase-functions/v2/https';
 import { setCorsHeaders } from '../lib/cors';
 import { authorizeRequest, extractBearerToken } from '../middleware/auth';
 import { Partnership } from '../types/models';
 import { logger } from '../lib/logger';
-import { DATABASE_FUNCTION, withCors } from '../lib/function-config';
+// import { DATABASE_FUNCTION, withCors } from '../lib/function-config'; // Not used after CORS fix
 
 function parseBody(req: any): any {
     return typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {});
@@ -24,7 +24,11 @@ function getAuthHeader(req: any): string | undefined {
     return Array.isArray(h) ? h[0] : h;
 }
 
-const httpOpts = withCors(DATABASE_FUNCTION, CORS_ORIGINS);
+const httpOpts = {
+  region: 'southamerica-east1',
+  maxInstances: 1,
+  invoker: 'public',
+};
 
 function handleError(origin: string, e: unknown, res?: any) {
     logger.error(`${origin}:`, e);
