@@ -14,7 +14,7 @@
 
 import { onRequest } from 'firebase-functions/v2/https';
 import { logger } from '../lib/logger';
-import { CORS_ORIGINS } from '../init';
+import { CORS_ORIGINS } from '../lib/cors';
 
 export const apiEvaluateHandler = async (req: any, res: any) => {
   // CORS headers

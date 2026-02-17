@@ -101,6 +101,7 @@ export default function TherapistOccupancyPage() {
   };
 
   const StatCard = ({ 
+    testId,
     title, 
     value, 
     icon: Icon, 
@@ -108,6 +109,7 @@ export default function TherapistOccupancyPage() {
     trend,
     gradient 
   }: { 
+    testId: string;
     title: string; 
     value: string | number; 
     icon: React.ElementType;
@@ -115,13 +117,13 @@ export default function TherapistOccupancyPage() {
     trend?: { value: number; positive: boolean };
     gradient: string;
   }) => (
-    <Card className={cn("relative overflow-hidden", gradient)}>
+    <Card className={cn("relative overflow-hidden", gradient)} data-testid={testId}>
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="space-y-2">
             <p className="text-sm font-medium text-muted-foreground">{title}</p>
             <div className="flex items-baseline gap-2">
-              <p className="text-3xl font-bold">{isLoading ? <Skeleton className="h-9 w-20" /> : value}</p>
+              <p className="text-3xl font-bold" data-testid={`${testId}-value`}>{isLoading ? <Skeleton className="h-9 w-20" /> : value}</p>
               {trend && (
                 <span className={cn(
                   "flex items-center text-xs font-medium",
@@ -152,7 +154,7 @@ export default function TherapistOccupancyPage() {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
+      <div className="space-y-6" data-testid="therapist-occupancy-page">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -161,7 +163,7 @@ export default function TherapistOccupancyPage() {
           </div>
           <div className="flex items-center gap-3">
             <Select value={period} onValueChange={(v) => setPeriod(v as PeriodFilter)}>
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[180px]" data-testid="occupancy-period-select">
                 <SelectValue placeholder="Período" />
               </SelectTrigger>
               <SelectContent>
@@ -192,6 +194,7 @@ export default function TherapistOccupancyPage() {
         {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
+            testId="occupancy-stat-average"
             title="Ocupação Média"
             value={`${data?.ocupacaoMedia || 0}%`}
             icon={TrendingUp}
@@ -199,6 +202,7 @@ export default function TherapistOccupancyPage() {
             gradient="bg-gradient-to-br from-primary/10 to-primary/5"
           />
           <StatCard
+            testId="occupancy-stat-appointments"
             title="Consultas Hoje"
             value={data?.totalConsultasHoje || 0}
             icon={Calendar}
@@ -206,6 +210,7 @@ export default function TherapistOccupancyPage() {
             gradient="bg-gradient-to-br from-blue-500/10 to-blue-500/5"
           />
           <StatCard
+            testId="occupancy-stat-hours"
             title="Horas Trabalhadas"
             value={`${data?.totalHorasTrabalhadas || 0}h`}
             icon={Clock}
@@ -213,6 +218,7 @@ export default function TherapistOccupancyPage() {
             gradient="bg-gradient-to-br from-green-500/10 to-green-500/5"
           />
           <StatCard
+            testId="occupancy-stat-active-therapists"
             title="Fisioterapeutas Ativos"
             value={data?.fisioterapeutasAtivos || 0}
             icon={Users}
@@ -345,7 +351,7 @@ export default function TherapistOccupancyPage() {
                     </thead>
                     <tbody>
                       {data?.therapists.map((therapist) => (
-                        <tr key={therapist.id} className="border-b hover:bg-muted/50 transition-colors">
+                        <tr key={therapist.id} className="border-b hover:bg-muted/50 transition-colors" data-testid="therapist-occupancy-row">
                           <td className="py-3 px-2">
                             <div className="flex items-center gap-3">
                               <Avatar className="h-8 w-8">

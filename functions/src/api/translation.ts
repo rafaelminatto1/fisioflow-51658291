@@ -15,7 +15,7 @@ import {
   detectLanguage as detectLang,
 } from '../lib/translation';
 import { logger } from '../lib/logger';
-import { CORS_ORIGINS } from '../init';
+import { CORS_ORIGINS } from '../lib/cors';
 
 // ============================================================================
 // TYPES

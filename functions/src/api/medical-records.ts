@@ -1,5 +1,5 @@
 import { onCall, HttpsError, onRequest } from 'firebase-functions/v2/https';
-import { getPool, CORS_ORIGINS } from '../init';
+import { getPool } from '../init';
 import { authorizeRequest, extractBearerToken } from '../middleware/auth';
 import { MedicalRecord, TreatmentSession, PainRecord } from '../types/models';
 import { logger } from '../lib/logger';
@@ -7,9 +7,15 @@ import { setCorsHeaders } from '../lib/cors';
 import { triggerPatientRagReindex } from '../ai/rag/rag-index-maintenance';
 import { rtdb } from '../lib/rtdb';
 
+// Standard HTTP options for API functions
+const httpOpts = {
+  region: 'southamerica-east1',
+  maxInstances: 1,
+  invoker: 'public',
+};
+
 function parseBody(req: any): any { return typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {}); }
 function getAuthHeader(req: any): string | undefined { const h = req.headers?.authorization || req.headers?.Authorization; return Array.isArray(h) ? h[0] : h; }
-const httpOpts = { region: 'southamerica-east1' as const, memory: '512MiB' as const, maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' as const };
 
 async function triggerPatientRagReindexSafe(
   patientId: string | undefined,
@@ -285,7 +291,6 @@ export const getPatientRecordsHandler = async (request: any) => {
 };
 
 export const getPatientRecords = onCall<GetPatientRecordsRequest, Promise<GetPatientRecordsResponse>>(
-  { cors: CORS_ORIGINS },
   getPatientRecordsHandler
 );
 
@@ -373,7 +378,6 @@ export const createMedicalRecordHandler = async (request: any) => {
 };
 
 export const createMedicalRecord = onCall<CreateMedicalRecordRequest, Promise<CreateMedicalRecordResponse>>(
-  { cors: CORS_ORIGINS },
   createMedicalRecordHandler
 );
 
@@ -462,7 +466,6 @@ export const updateMedicalRecordHandler = async (request: any) => {
 };
 
 export const updateMedicalRecord = onCall<UpdateMedicalRecordRequest, Promise<UpdateMedicalRecordResponse>>(
-  { cors: CORS_ORIGINS },
   updateMedicalRecordHandler
 );
 
@@ -522,7 +525,6 @@ export const listTreatmentSessionsHandler = async (request: any) => {
 };
 
 export const listTreatmentSessions = onCall<ListTreatmentSessionsRequest, Promise<ListTreatmentSessionsResponse>>(
-  { cors: CORS_ORIGINS },
   listTreatmentSessionsHandler
 );
 
@@ -638,7 +640,6 @@ export const createTreatmentSessionHandler = async (request: any) => {
 };
 
 export const createTreatmentSession = onCall<CreateTreatmentSessionRequest, Promise<CreateTreatmentSessionResponse>>(
-  { cors: CORS_ORIGINS },
   createTreatmentSessionHandler
 );
 
@@ -737,7 +738,6 @@ export const updateTreatmentSessionHandler = async (request: any) => {
 };
 
 export const updateTreatmentSession = onCall<UpdateTreatmentSessionRequest, Promise<UpdateTreatmentSessionResponse>>(
-  { cors: CORS_ORIGINS },
   updateTreatmentSessionHandler
 );
 
@@ -789,7 +789,6 @@ export const getPainRecordsHandler = async (request: any) => {
 };
 
 export const getPainRecords = onCall<GetPainRecordsRequest, Promise<GetPainRecordsResponse>>(
-  { cors: CORS_ORIGINS },
   getPainRecordsHandler
 );
 
@@ -853,6 +852,5 @@ export const savePainRecordHandler = async (request: any) => {
 };
 
 export const savePainRecord = onCall<SavePainRecordRequest, Promise<SavePainRecordResponse>>(
-  { cors: CORS_ORIGINS },
   savePainRecordHandler
 );

@@ -110,6 +110,8 @@ export function PatientCombobox({
   }, [fuse, inputValue, patients]);
 
   const handleSelect = (patientId: string) => {
+    logger.debug('PatientCombobox handleSelect called', { patientId, callback: !!onValueChange }, 'PatientCombobox');
+    console.log('PatientCombobox handleSelect called:', patientId);
     onValueChange(patientId === value ? "" : patientId);
     setOpen(false);
     setInputValue("");
