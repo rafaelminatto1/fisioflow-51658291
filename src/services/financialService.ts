@@ -107,7 +107,7 @@ export class FinancialService {
     static async createTransaction(transaction: Omit<Transaction, 'id' | 'created_at' | 'updated_at'>): Promise<Transaction> {
         try {
             const response = await financialApi.create(transaction);
-            return response.data;
+            return response as Transaction;
         } catch (error) {
             throw AppError.from(error, 'FinancialService.createTransaction');
         }
@@ -119,7 +119,7 @@ export class FinancialService {
     static async updateTransaction(id: string, updates: Partial<Transaction>): Promise<Transaction> {
         try {
             const response = await financialApi.update(id, updates);
-            return response.data;
+            return response as Transaction;
         } catch (error) {
             throw AppError.from(error, 'FinancialService.updateTransaction');
         }
@@ -142,7 +142,7 @@ export class FinancialService {
     static async markAsPaid(id: string): Promise<Transaction> {
         try {
             const response = await financialApi.update(id, { status: 'concluido' });
-            return response.data;
+            return response as Transaction;
         } catch (error) {
             throw AppError.from(error, 'FinancialService.markAsPaid');
         }
@@ -154,7 +154,7 @@ export class FinancialService {
     static async getEventReport(eventoId: string): Promise<FinancialReport> {
         try {
             const response = await financialApi.getEventReport(eventoId);
-            return response.data;
+            return response as FinancialReport;
         } catch (error) {
             throw AppError.from(error, 'FinancialService.getEventReport');
         }
@@ -166,7 +166,7 @@ export class FinancialService {
     static async findTransactionByAppointmentId(appointmentId: string): Promise<Transaction | null> {
         try {
             const response = await financialApi.findByAppointment(appointmentId);
-            return response.data as Transaction | null;
+            return response as Transaction | null;
         } catch (error) {
             throw AppError.from(error, 'FinancialService.findTransactionByAppointmentId');
         }

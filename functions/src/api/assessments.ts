@@ -3,7 +3,7 @@
  * Lista templates de avaliação
  */
 
-import { CORS_ORIGINS, getPool } from '../init';
+import { getPool } from '../init';
 import { HttpsError, onRequest } from 'firebase-functions/v2/https';
 import { authorizeRequest, extractBearerToken } from '../middleware/auth';
 import { logger } from '../lib/logger';
@@ -22,7 +22,16 @@ function parseBody(req: any): any {
 // HTTP VERSIONS (CORS fix)
 // ============================================================================
 
-export const listAssessmentTemplatesHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
+// Configuração manual de CORS para evitar conflitos
+// Usando any para evitar erros de tipagem estrita no HttpsOptions
+const ASSESSMENT_HTTP_OPTS: any = {
+  region: 'southamerica-east1',
+  memory: '256MiB',
+  maxInstances: 1,
+  invoker: 'public',
+};
+
+export const listAssessmentTemplatesHttp = onRequest(ASSESSMENT_HTTP_OPTS, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -43,7 +52,7 @@ export const listAssessmentTemplatesHttp = onRequest({ region: 'southamerica-eas
   }
 });
 
-export const getAssessmentTemplateHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
+export const getAssessmentTemplateHttp = onRequest(ASSESSMENT_HTTP_OPTS, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -76,7 +85,7 @@ export const getAssessmentTemplateHttp = onRequest({ region: 'southamerica-east1
   }
 });
 
-export const listAssessmentsHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
+export const listAssessmentsHttp = onRequest(ASSESSMENT_HTTP_OPTS, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -98,7 +107,7 @@ export const listAssessmentsHttp = onRequest({ region: 'southamerica-east1', mem
   }
 });
 
-export const getAssessmentHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
+export const getAssessmentHttp = onRequest(ASSESSMENT_HTTP_OPTS, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -119,7 +128,7 @@ export const getAssessmentHttp = onRequest({ region: 'southamerica-east1', memor
   }
 });
 
-export const createAssessmentHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
+export const createAssessmentHttp = onRequest(ASSESSMENT_HTTP_OPTS, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);
@@ -149,7 +158,7 @@ export const createAssessmentHttp = onRequest({ region: 'southamerica-east1', me
   }
 });
 
-export const updateAssessmentHttp = onRequest({ region: 'southamerica-east1', memory: '256MiB', maxInstances: 1, cors: CORS_ORIGINS, invoker: 'public' }, async (req, res) => {
+export const updateAssessmentHttp = onRequest(ASSESSMENT_HTTP_OPTS, async (req, res) => {
   if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
   setCorsHeaders(res);

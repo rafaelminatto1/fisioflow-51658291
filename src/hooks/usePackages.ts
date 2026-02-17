@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { FinancialService } from '@/services/financialService';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { useAuth } from '@/contexts/AuthContext';
 
 const auth = getFirebaseAuth();
 
@@ -57,32 +58,38 @@ interface CreatePackageInput {
 interface PurchasePackageInput {
   patient_id: string;
   package_id: string;
+  // Optional overrides for "on the fly" customization
+  custom_sessions?: number;
+  custom_price?: number;
+  payment_method?: string;
 }
 
 // Hook para listar templates de pacotes
 export function useSessionPackages() {
+  const { profile } = useAuth();
+
   return useQuery({
-    queryKey: ['session-packages'],
+    queryKey: ['session-packages', profile?.organization_id],
     queryFn: async () => {
+      if (!profile?.organization_id) {
+        return [];
+      }
+
       const q = firestoreQuery(
         collection(db, 'session_packages'),
-        orderBy('total_sessions', 'asc') // Note: field name kept as in old DB or updated? I'll use total_sessions mapped to sessions_count
+        where('organization_id', '==', profile.organization_id)
       );
-      // Wait, let's keep the field names consistent with new schema if possible, or mapping.
-      // Based on useCreatePackage below, I'll use consistent names.
-      // Assuming new schema uses 'sessions_count', 'price' directly OR I map them.
-      // The Supabase version had mapping logic (pkg.total_sessions || pkg.sessions_count).
-      // I will standardize on 'sessions_count', 'price' for new docs, but read 'total_sessions' for backwards compat if migration kept it.
 
       const snapshot = await getDocs(q);
 
-      return snapshot.docs.map(doc => {
-        const data = normalizeFirestoreData(doc.data());
+      const mapped = snapshot.docs.map(doc => {
+        const data = normalizeFirestoreData(doc.data()) as Record<string, unknown>;
+        const sessions = Number(data.total_sessions || data.sessions_count || 0);
         return {
           id: doc.id,
           name: data.package_name || data.name,
           description: data.notes || data.description,
-          sessions_count: Number(data.total_sessions || data.sessions_count),
+          sessions_count: sessions,
           price: Number(data.final_value || data.price),
           validity_days: data.validity_months ? Number(data.validity_months) * 30 : (data.validity_days || 365),
           is_active: data.status === 'active' || data.is_active === true,
@@ -90,6 +97,9 @@ export function useSessionPackages() {
           created_at: data.created_at || new Date().toISOString(),
         } as SessionPackage;
       });
+
+      // Evita exigir índice composto (where + orderBy) no Firestore.
+      return mapped.sort((a, b) => a.sessions_count - b.sessions_count);
     },
   });
 }
@@ -267,14 +277,18 @@ export function usePurchasePackage() {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + validityDays);
 
+      const sessionsCount = input.custom_sessions ?? Number(pkgData.total_sessions || pkgData.sessions_count);
+      const pricePaid = input.custom_price ?? Number(pkgData.final_value || pkgData.price);
+
       const purchaseData = {
         patient_id,
         package_id,
-        sessions_purchased: Number(pkgData.total_sessions || pkgData.sessions_count),
+        sessions_purchased: sessionsCount,
         sessions_used: 0,
-        price_paid: Number(pkgData.final_value || pkgData.price),
+        price_paid: pricePaid,
         purchased_at: new Date().toISOString(),
         expires_at: expiresAt.toISOString(),
+        payment_method: input.payment_method || 'pix', // Default or provided
       };
 
       const docRef = await addDoc(collection(db, 'patient_packages'), purchaseData);
@@ -286,7 +300,7 @@ export function usePurchasePackage() {
         await FinancialService.createTransaction({
           tipo: 'receita',
           descricao: `Venda de Pacote: ${pkgData.package_name || pkgData.name}`,
-          valor: Number(pkgData.final_value || pkgData.price),
+          valor: pricePaid,
           status: 'concluido',
           metadata: {
             source: 'package_purchase',

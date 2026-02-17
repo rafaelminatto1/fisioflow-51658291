@@ -2,7 +2,7 @@ import { onRequest } from 'firebase-functions/v2/https';
 import { ImageAnnotatorClient } from '@google-cloud/vision';
 import { authorizeRequest, extractBearerToken } from '../middleware/auth';
 import { logger } from '../lib/logger';
-import { CORS_ORIGINS } from '../init';
+import { CORS_ORIGINS } from '../lib/cors';
 
 const visionClient = new ImageAnnotatorClient();
 const httpOpts = {

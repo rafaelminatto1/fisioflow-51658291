@@ -4,7 +4,8 @@
  */
 
 import { onRequest } from 'firebase-functions/v2/https';
-import { getPool, CORS_ORIGINS } from '../init';
+import { getPool } from '../init';
+import { CORS_ORIGINS } from '../lib/cors';
 import { logger } from '../lib/logger';
 
 /**

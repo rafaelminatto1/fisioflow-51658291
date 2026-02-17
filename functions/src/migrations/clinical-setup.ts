@@ -4,7 +4,8 @@
  */
 
 import { onCall } from 'firebase-functions/v2/https';
-import { getPool, CORS_ORIGINS } from '../init';
+import { getPool } from '../init';
+import { CORS_ORIGINS } from '../lib/cors';
 import { logger } from '../lib/logger';
 
 export const migrateClinicalSchema = onCall({ cors: CORS_ORIGINS }, async (request) => {
