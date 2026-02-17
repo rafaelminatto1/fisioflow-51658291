@@ -43,7 +43,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { db, collection, getDocs, query as firestoreQuery, where, orderBy as fsOrderBy, limit as fsLimit } from '@/integrations/firebase/app';
+import { db, collection, getDocs, query as firestoreQuery, where, limit as fsLimit } from '@/integrations/firebase/app';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 // ============================================================================
@@ -463,6 +463,19 @@ export function CohortComparison({
   const { data: patients, isLoading, error } = useQuery({
     queryKey: ['admin-cohort-patients', timeRange],
     queryFn: async (): Promise<PatientWithCohortData[]> => {
+      const toTimestampMs = (value: unknown): number => {
+        if (!value) return 0;
+        const parsed = new Date(String(value)).getTime();
+        return Number.isFinite(parsed) ? parsed : 0;
+      };
+
+      const completedStatuses = new Set([
+        'atendido',
+        'confirmado',
+        'completed',
+        'realizado',
+      ]);
+
       // Build query for Firebase
       const patientsQuery = firestoreQuery(
         collection(db, 'patients'),
@@ -489,36 +502,44 @@ export function CohortComparison({
       // Fetch analytics data for each patient in parallel
       const patientsWithAnalytics = await Promise.all(
         data.map(async (p) => {
-          // Get session count
+          // Get session count (avoid composite index by filtering status client-side)
           const appointmentsQuery = firestoreQuery(
             collection(db, 'appointments'),
-            where('patient_id', '==', p.id),
-            where('status', 'in', ['atendido', 'confirmado'])
+            where('patient_id', '==', p.id)
           );
           const appointmentsSnap = await getDocs(appointmentsQuery);
-          const totalSessions = appointmentsSnap.size;
+          const totalSessions = appointmentsSnap.docs.reduce((count, appointmentDoc) => {
+            const appointment = normalizeFirestoreData(appointmentDoc.data()) as Record<string, unknown>;
+            const status = String(appointment.status || '').toLowerCase();
+            return completedStatuses.has(status) ? count + 1 : count;
+          }, 0);
 
-          // Get latest risk score
+          // Get latest risk score (avoid composite index by sorting client-side)
           const riskQuery = firestoreQuery(
             collection(db, 'patient_risk_scores'),
-            where('patient_id', '==', p.id),
-            fsOrderBy('calculated_at', 'desc'),
-            fsLimit(1)
+            where('patient_id', '==', p.id)
           );
           const riskSnap = await getDocs(riskQuery);
-          const riskScore = riskSnap.docs[0]?.data();
-          const overallProgress = riskScore?.overall_progress_percentage || 0;
-          const dropoutRisk = riskScore?.dropout_risk_score || 50;
+          const latestRiskScore = riskSnap.docs
+            .map((doc) => normalizeFirestoreData(doc.data()) as Record<string, unknown>)
+            .sort(
+              (a, b) => toTimestampMs(b.calculated_at) - toTimestampMs(a.calculated_at)
+            )[0];
+          const overallProgress = Number(latestRiskScore?.overall_progress_percentage || 0);
+          const dropoutRisk = Number(latestRiskScore?.dropout_risk_score || 50);
 
-          // Get pathology from latest evolution
+          // Get pathology from latest evolution (avoid composite index by sorting client-side)
           const evolutionQuery = firestoreQuery(
             collection(db, 'patient_evolution'),
-            where('patient_id', '==', p.id),
-            fsOrderBy('created_at', 'desc'),
-            fsLimit(1)
+            where('patient_id', '==', p.id)
           );
           const evolutionSnap = await getDocs(evolutionQuery);
-          const pathology = evolutionSnap.docs[0]?.data()?.pathology || 'Não especificado';
+          const latestEvolution = evolutionSnap.docs
+            .map((doc) => normalizeFirestoreData(doc.data()) as Record<string, unknown>)
+            .sort(
+              (a, b) => toTimestampMs(b.created_at) - toTimestampMs(a.created_at)
+            )[0];
+          const pathology = String(latestEvolution?.pathology || 'Não especificado');
 
           return {
             id: p.id,

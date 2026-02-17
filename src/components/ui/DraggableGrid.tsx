@@ -27,7 +27,7 @@ interface DraggableGridProps {
     onLayoutChange?: (layout: Layout[]) => void;
     className?: string;
     rowHeight?: number;
-    cols?: { lg: number; md: number; sm: number; xs: number; xxs: number };
+    cols?: { xl?: number; lg: number; md: number; sm: number; xs: number; xxs: number };
     isEditable?: boolean;
     layouts?: ReactGridLayout.Layouts;
 }
