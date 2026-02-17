@@ -18,6 +18,18 @@ function getAuthHeader(req: any): string | undefined {
     return Array.isArray(h) ? h[0] : h;
 }
 
+function mapKnownDatabaseError(error: unknown): unknown {
+    if (!error || typeof error !== 'object') return error;
+
+    const code = (error as { code?: string }).code;
+    const message = error instanceof Error ? error.message : String(error);
+    if (code === '42P01' || message.includes('relation "eventos" does not exist')) {
+        return new HttpsError('failed-precondition', 'Módulo de eventos não está configurado no banco de dados');
+    }
+
+    return error;
+}
+
 // OTIMIZADO: Configuração com mais instâncias e melhor performance
 const httpOpts = {
   region: 'southamerica-east1',
@@ -30,11 +42,12 @@ const httpOpts = {
  * Helper para centralizar o tratamento de erros e evitar repetição
  */
 function handleError(origin: string, e: unknown, res?: any) {
-    logger.error(`${origin}:`, e);
-    const message = e instanceof Error ? e.message : 'Erro desconhecido';
+    const normalizedError = mapKnownDatabaseError(e);
+    logger.error(`${origin}:`, normalizedError);
+    const message = normalizedError instanceof Error ? normalizedError.message : 'Erro desconhecido';
     
     if (res) {
-        if (e instanceof HttpsError) {
+        if (normalizedError instanceof HttpsError) {
             const statusByCode: Record<string, number> = {
                 unauthenticated: 401,
                 'invalid-argument': 400,
@@ -43,13 +56,13 @@ function handleError(origin: string, e: unknown, res?: any) {
                 'not-found': 404,
                 'already-exists': 409,
             };
-            const status = statusByCode[e.code] || 500;
-            return res.status(status).json({ error: e.message, code: e.code });
+            const status = statusByCode[normalizedError.code] || 500;
+            return res.status(status).json({ error: normalizedError.message, code: normalizedError.code });
         }
         return res.status(500).json({ error: message });
     }
     
-    if (e instanceof HttpsError) throw e;
+    if (normalizedError instanceof HttpsError) throw normalizedError;
     throw new HttpsError('internal', message);
 }
 
