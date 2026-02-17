@@ -4,7 +4,7 @@
  */
 
 import { onRequest, HttpsError } from 'firebase-functions/v2/https';
-import { getPool, CORS_ORIGINS } from '../init';
+import { getPool } from '../init';
 import { verifyAuthHeader, getOrganizationId } from './patients'; // Reusing helpers
 import { setCorsHeaders } from '../lib/cors';
 import { logger } from '../lib/logger';
@@ -17,7 +17,6 @@ export const listDoctorsHttp = onRequest(
         region: 'southamerica-east1',
         memory: '256MiB',
         maxInstances: 1,
-        cors: CORS_ORIGINS,
         invoker: 'public',
     },
     async (req, res) => {
@@ -86,7 +85,6 @@ export const searchDoctorsHttp = onRequest(
         region: 'southamerica-east1',
         memory: '256MiB',
         maxInstances: 1,
-        cors: CORS_ORIGINS,
         invoker: 'public',
     },
     async (req, res) => {

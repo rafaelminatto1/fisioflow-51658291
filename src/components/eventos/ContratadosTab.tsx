@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -244,6 +244,9 @@ export function ContratadosTab({ eventoId, evento }: ContratadosTabProps) {
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Novo Contratado no Evento</DialogTitle>
+                <DialogDescription>
+                  Vincule um contratado existente ou cadastre um novo para este evento.
+                </DialogDescription>
               </DialogHeader>
               <Tabs value={mode} onValueChange={(value) => setMode(value as 'existente' | 'novo')}>
                 <TabsList className="grid w-full grid-cols-2">
@@ -452,6 +455,9 @@ export function ContratadosTab({ eventoId, evento }: ContratadosTabProps) {
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Editar Contratado</DialogTitle>
+              <DialogDescription>
+                Atualize os dados do contratado e as informações da alocação no evento.
+              </DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">

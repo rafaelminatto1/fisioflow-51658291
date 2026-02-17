@@ -160,6 +160,7 @@ test.describe('Patient Autocomplete - Novo Agendamento', () => {
       await page.waitForTimeout(300);
 
       // Verify patient was selected
+
       const combobox = page.locator('button[role="combobox"]').first();
       const text = await combobox.textContent();
 

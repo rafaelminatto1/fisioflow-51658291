@@ -9,58 +9,21 @@ import { onCall } from 'firebase-functions/v2/https';
 import { STANDARD_FUNCTION } from '../lib/function-config';
 
 // ============================================================================
-// EXERCISE HANDLERS IMPORT
+// EXERCISE HANDLERS IMPORT (Direct - no dynamic imports)
 // ============================================================================
 
-const listExercisesHandler = async (request: any) => {
-  const { listExercisesHandler } = await import('./exercises');
-  return listExercisesHandler(request);
-};
-
-const getExerciseHandler = async (request: any) => {
-  const { getExerciseHandler } = await import('./exercises');
-  return getExerciseHandler(request);
-};
-
-const searchSimilarExercisesHandler = async (request: any) => {
-  const { searchSimilarExercisesHandler } = await import('./exercises');
-  return searchSimilarExercisesHandler(request);
-};
-
-const getExerciseCategoriesHandler = async (request: any) => {
-  const { getExerciseCategoriesHandler } = await import('./exercises');
-  return getExerciseCategoriesHandler(request);
-};
-
-const getPrescribedExercisesHandler = async (request: any) => {
-  const { getPrescribedExercisesHandler } = await import('./exercises');
-  return getPrescribedExercisesHandler(request);
-};
-
-const logExerciseHandler = async (request: any) => {
-  const { logExerciseHandler } = await import('./exercises');
-  return logExerciseHandler(request);
-};
-
-const createExerciseHandler = async (request: any) => {
-  const { createExerciseHandler } = await import('./exercises');
-  return createExerciseHandler(request);
-};
-
-const updateExerciseHandler = async (request: any) => {
-  const { updateExerciseHandler } = await import('./exercises');
-  return updateExerciseHandler(request);
-};
-
-const deleteExerciseHandler = async (request: any) => {
-  const { deleteExerciseHandler } = await import('./exercises');
-  return deleteExerciseHandler(request);
-};
-
-const mergeExercisesHandler = async (request: any) => {
-  const { mergeExercisesHandler } = await import('./exercises');
-  return mergeExercisesHandler(request);
-};
+import {
+  listExercisesHandler,
+  getExerciseHandler,
+  searchSimilarExercisesHandler,
+  getExerciseCategoriesHandler,
+  getPrescribedExercisesHandler,
+  logExerciseHandler,
+  createExerciseHandler,
+  updateExerciseHandler,
+  deleteExerciseHandler,
+  mergeExercisesHandler
+} from './exercises';
 
 // ============================================================================
 // UNIFIED EXERCISE SERVICE
@@ -83,25 +46,25 @@ export const exerciseServiceHandler = async (request: any) => {
   // Roteamento para o handler apropriado
   switch (action) {
     case 'list':
-      return listExercisesHandler({ data: params });
+      return await listExercisesHandler({ data: params });
     case 'get':
-      return getExerciseHandler({ data: params });
+      return await getExerciseHandler({ data: params });
     case 'searchSimilar':
-      return searchSimilarExercisesHandler({ data: params });
+      return await searchSimilarExercisesHandler({ data: params });
     case 'getCategories':
-      return getExerciseCategoriesHandler({ data: params });
+      return await getExerciseCategoriesHandler({ data: params });
     case 'getPrescribed':
-      return getPrescribedExercisesHandler({ data: params });
+      return await getPrescribedExercisesHandler({ data: params });
     case 'log':
-      return logExerciseHandler({ data: params });
+      return await logExerciseHandler({ data: params });
     case 'create':
-      return createExerciseHandler({ data: params });
+      return await createExerciseHandler({ data: params });
     case 'update':
-      return updateExerciseHandler({ data: params });
+      return await updateExerciseHandler({ data: params });
     case 'delete':
-      return deleteExerciseHandler({ data: params });
+      return await deleteExerciseHandler({ data: params });
     case 'merge':
-      return mergeExercisesHandler({ data: params });
+      return await mergeExercisesHandler({ data: params });
     default:
       throw new Error(`Ação desconhecida: ${action}`);
   }

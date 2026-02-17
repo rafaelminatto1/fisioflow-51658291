@@ -46,6 +46,7 @@ interface SmartTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaEl
     showStats?: boolean;
     compact?: boolean;
     variant?: 'default' | 'ghost';
+    fullScreenEnabled?: boolean;
 }
 
 interface ToolbarButtonProps {
@@ -167,6 +168,7 @@ const MemoizedSmartTextarea = memo(React.forwardRef<HTMLTextAreaElement, SmartTe
         showStats = true,
         compact = false,
         variant = 'default',
+        fullScreenEnabled = true,
         ...props
     }, ref) => {
         const [isFullScreen, setIsFullScreen] = React.useState(false);
@@ -405,13 +407,15 @@ const MemoizedSmartTextarea = memo(React.forwardRef<HTMLTextAreaElement, SmartTe
                                 icon={Eraser}
                                 ariaLabel="Limpar todo o texto"
                             />
-                            <ToolbarButton
-                                onClick={() => setIsFullScreen(!isFullScreen)}
-                                title={isFullScreen ? "Sair da Tela Cheia" : "Tela Cheia"}
-                                icon={isFullScreen ? Minimize2 : Maximize2}
-                                shortcut={isFullScreen ? 'Esc' : undefined}
-                                ariaLabel={isFullScreen ? 'Sair do modo tela cheia' : 'Entrar em modo tela cheia'}
-                            />
+                            {fullScreenEnabled && (
+                                <ToolbarButton
+                                    onClick={() => setIsFullScreen(!isFullScreen)}
+                                    title={isFullScreen ? "Sair da Tela Cheia" : "Tela Cheia"}
+                                    icon={isFullScreen ? Minimize2 : Maximize2}
+                                    shortcut={isFullScreen ? 'Esc' : undefined}
+                                    ariaLabel={isFullScreen ? 'Sair do modo tela cheia' : 'Entrar em modo tela cheia'}
+                                />
+                            )}
                         </div>
                     </div>
                 )}

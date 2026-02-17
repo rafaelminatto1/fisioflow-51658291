@@ -2,13 +2,13 @@
 // --- Utilitários de Auxílio ---
 // OTIMIZADO - Configurações de performance e cache
 
-import { CORS_ORIGINS, getPool } from '../init';
+import { getPool } from '../init';
 import { onCall, HttpsError, onRequest } from 'firebase-functions/v2/https';
-import { setCorsHeaders } from '../lib/cors';
+import { CORS_ORIGINS, setCorsHeaders } from '../lib/cors';
+import { withErrorHandling } from '../lib/error-handler';
 import { authorizeRequest, extractBearerToken } from '../middleware/auth';
 import { Transaction } from '../types/models';
 import { logger } from '../lib/logger';
-import { DATABASE_FUNCTION, withCors } from '../lib/function-config';
 
 function parseBody(req: any): any {
     return typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {});
@@ -19,7 +19,12 @@ function getAuthHeader(req: any): string | undefined {
 }
 
 // OTIMIZADO: Configuração com mais instâncias e melhor performance
-const httpOpts = withCors(DATABASE_FUNCTION, CORS_ORIGINS);
+const httpOpts = {
+  region: 'southamerica-east1',
+  maxInstances: 1,
+  invoker: 'public',
+  cors: CORS_ORIGINS,
+};
 
 /**
  * Helper para centralizar o tratamento de erros e evitar repetição
@@ -29,8 +34,17 @@ function handleError(origin: string, e: unknown, res?: any) {
     const message = e instanceof Error ? e.message : 'Erro desconhecido';
     
     if (res) {
-        if (e instanceof HttpsError && e.code === 'unauthenticated') {
-            return res.status(401).json({ error: e.message });
+        if (e instanceof HttpsError) {
+            const statusByCode: Record<string, number> = {
+                unauthenticated: 401,
+                'invalid-argument': 400,
+                'failed-precondition': 400,
+                'permission-denied': 403,
+                'not-found': 404,
+                'already-exists': 409,
+            };
+            const status = statusByCode[e.code] || 500;
+            return res.status(status).json({ error: e.message, code: e.code });
         }
         return res.status(500).json({ error: message });
     }
@@ -109,38 +123,29 @@ async function updateTransactionLogic(auth: any, data: any) {
 
 // --- Endpoints HTTP (REST) ---
 
-export const listTransactionsHttp = onRequest(httpOpts, async (req, res) => {
-    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
+export const listTransactionsHttp = onRequest(httpOpts, withErrorHandling(async (req, res) => {
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-    setCorsHeaders(res);
-    try {
-        const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
-        const result = await listTransactionsLogic(auth, parseBody(req));
-        res.json(result);
-    } catch (e) { handleError('listTransactionsHttp', e, res); }
-});
+    
+    const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
+    const result = await listTransactionsLogic(auth, parseBody(req));
+    res.json(result);
+}, 'listTransactionsHttp'));
 
-export const createTransactionHttp = onRequest(httpOpts, async (req, res) => {
-    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
+export const createTransactionHttp = onRequest(httpOpts, withErrorHandling(async (req, res) => {
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-    setCorsHeaders(res);
-    try {
-        const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
-        const result = await createTransactionLogic(auth, parseBody(req));
-        res.status(201).json(result);
-    } catch (e) { handleError('createTransactionHttp', e, res); }
-});
+    
+    const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
+    const result = await createTransactionLogic(auth, parseBody(req));
+    res.status(201).json(result);
+}, 'createTransactionHttp'));
 
-export const updateTransactionHttp = onRequest(httpOpts, async (req, res) => {
-    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
+export const updateTransactionHttp = onRequest(httpOpts, withErrorHandling(async (req, res) => {
     if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-    setCorsHeaders(res);
-    try {
-        const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
-        const result = await updateTransactionLogic(auth, parseBody(req));
-        res.json(result);
-    } catch (e) { handleError('updateTransactionHttp', e, res); }
-});
+    
+    const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
+    const result = await updateTransactionLogic(auth, parseBody(req));
+    res.json(result);
+}, 'updateTransactionHttp'));
 
 // --- Endpoints Callable (Firebase SDK) ---
 
@@ -175,8 +180,8 @@ export const updateTransaction = onCall(httpOpts, updateTransactionHandler);
 
 // Mantendo as demais funções com a mesma lógica simplificada...
 export const deleteTransactionHttp = onRequest(httpOpts, async (req, res) => {
-    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
-    setCorsHeaders(res);
+    if (req.method === 'OPTIONS') { setCorsHeaders(res, req); res.status(204).send(''); return; }
+    setCorsHeaders(res, req);
     try {
         const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
         const { transactionId } = parseBody(req);
@@ -201,8 +206,8 @@ export const deleteTransactionHandler = async (request: any) => {
 export const deleteTransaction = onCall(httpOpts, deleteTransactionHandler);
 
 export const findTransactionByAppointmentIdHttp = onRequest(httpOpts, async (req, res) => {
-    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
-    setCorsHeaders(res);
+    if (req.method === 'OPTIONS') { setCorsHeaders(res, req); res.status(204).send(''); return; }
+    setCorsHeaders(res, req);
     try {
         const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
         const { appointmentId } = parseBody(req);
@@ -225,8 +230,8 @@ export const findTransactionByAppointmentIdHandler = async (request: any) => {
 export const findTransactionByAppointmentId = onCall(httpOpts, findTransactionByAppointmentIdHandler);
 
 export const getEventReportHttp = onRequest(httpOpts, async (req, res) => {
-    if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
-    setCorsHeaders(res);
+    if (req.method === 'OPTIONS') { setCorsHeaders(res, req); res.status(204).send(''); return; }
+    setCorsHeaders(res, req);
     try {
         await authorizeRequest(extractBearerToken(getAuthHeader(req)));
         const { eventoId } = parseBody(req);
@@ -239,11 +244,46 @@ export const getEventReportHttp = onRequest(httpOpts, async (req, res) => {
             pool.query('SELECT quantidade, custo_unitario FROM checklist_items WHERE evento_id = $1', [eventoId])
         ]);
         if (eventoRes.rows.length === 0) throw new HttpsError('not-found', 'Evento não encontrado');
-        const receitas = pagamentosRes.rows.filter((p: any) => p.tipo === 'receita').reduce((s: number, p: any) => s + Number(p.valor || 0), 0);
-        const custosTotal = prestadoresRes.rows.reduce((s: number, p: any) => s + Number(p.valor_acordado || 0), 0) + 
-                          checklistRes.rows.reduce((s: number, c: any) => s + (Number(c.quantidade) * Number(c.custo_unitario)), 0) +
-                          pagamentosRes.rows.filter((p: any) => p.tipo !== 'receita').reduce((s: number, p: any) => s + Number(p.valor || 0), 0);
-        res.json({ data: { eventoId, receitas, custoTotal: custosTotal, saldo: receitas - custosTotal } });
+        const receitas = pagamentosRes.rows
+            .filter((p: any) => p.tipo === 'receita')
+            .reduce((s: number, p: any) => s + Number(p.valor || 0), 0);
+        const custosPrestadores = prestadoresRes.rows
+            .reduce((s: number, p: any) => s + Number(p.valor_acordado || 0), 0);
+        const custosInsumos = checklistRes.rows
+            .reduce((s: number, c: any) => s + (Number(c.quantidade || 0) * Number(c.custo_unitario || 0)), 0);
+        const outrosCustos = pagamentosRes.rows
+            .filter((p: any) => p.tipo !== 'receita')
+            .reduce((s: number, p: any) => s + Number(p.valor || 0), 0);
+        const custoTotal = custosPrestadores + custosInsumos + outrosCustos;
+        const saldo = receitas - custoTotal;
+        const margem = receitas > 0 ? Number(((saldo / receitas) * 100).toFixed(2)) : 0;
+
+        const pagamentosPendentes = prestadoresRes.rows
+            .filter((p: any) => String(p.status_pagamento || '').toUpperCase() !== 'PAGO')
+            .reduce((s: number, p: any) => s + Number(p.valor_acordado || 0), 0);
+
+        const detalhePagamentos = pagamentosRes.rows.map((p: any) => ({
+            tipo: String(p.tipo || 'despesa'),
+            descricao: String(p.descricao || 'Pagamento'),
+            valor: Number(p.valor || 0),
+            pagoEm: p.pago_em ? new Date(p.pago_em).toISOString() : null,
+        }));
+
+        res.json({
+            data: {
+                eventoId,
+                eventoNome: eventoRes.rows[0].nome || '',
+                receitas,
+                custosPrestadores,
+                custosInsumos,
+                outrosCustos,
+                custoTotal,
+                saldo,
+                margem,
+                pagamentosPendentes,
+                detalhePagamentos,
+            }
+        });
     } catch (e) { handleError('getEventReportHttp', e, res); }
 });
 
@@ -258,4 +298,3 @@ export const getEventReportHandler = async (request: any) => {
     } catch (e) { return handleError('getEventReportHandler', e); }
 };
 export const getEventReport = onCall(httpOpts, getEventReportHandler);
-

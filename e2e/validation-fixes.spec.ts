@@ -48,16 +48,16 @@ test.describe('FisioFlow Validation Fixes', () => {
     
     // 2. NFSe Page
     await page.goto('/financeiro/nfse');
-    await expect(page.getByText('NFSe', { exact: false })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /NFSe/i })).toBeVisible();
     
     // 3. Recibos Page
     await page.goto('/financeiro/recibos');
-    await expect(page.getByText('Recibos', { exact: false })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Recibos$/i })).toBeVisible();
   });
 
   test('AI Clinical Analysis page should load without ReferenceError', async ({ page }) => {
     await page.goto('/ai/clinical');
-    await expect(page.getByText('IA Clínica', { exact: false })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /IA Clínica/i })).toBeVisible();
     
     // Check if patient selection exists
     await expect(page.getByText('Selecione o Paciente')).toBeVisible();

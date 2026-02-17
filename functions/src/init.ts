@@ -29,31 +29,7 @@ export const DB_HOST_IP_SECRET = defineSecret('DB_HOST_IP');
 export const DB_HOST_IP_PUBLIC_SECRET = defineSecret('DB_HOST_IP_PUBLIC');
 export const RESEND_API_KEY_SECRET = defineSecret('RESEND_API_KEY');
 
-// Firebase Functions v2 CORS - explicitly list allowed origins
-// Using 'cors: true' should work but has known issues in v2
-// Explicitly listing origins is the recommended workaround.
-// Do NOT add '*' to the array: Access-Control-Allow-Origin must be a single origin or '*', not a list.
-// For new domains (staging, etc.), add the exact origin here.
-export const CORS_ORIGINS = [
-    'http://localhost:5173',
-    'http://localhost:8083',
-    'http://localhost:8084',
-    'http://localhost:8085',
-    'http://localhost:8086',
-    'http://localhost:8087',
-    'http://localhost:5174',
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:8083',
-    'http://127.0.0.1:8084',
-    'http://127.0.0.1:8085',
-    'http://127.0.0.1:8086',
-    'http://127.0.0.1:8087',
-    'http://127.0.0.1:5174',
-    'https://fisioflow-migration.web.app',
-    'https://fisioflow.web.app',
-    'https://moocafisio.com.br',
-    'https://www.moocafisio.com.br',
-];
+// Firebase Functions v2 CORS configuration is now centralied in lib/cors.ts
 
 // ============================================================================
 // SINGLETON INSTANCES

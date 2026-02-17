@@ -4,7 +4,7 @@
  * Displays cohort comparison and analysis for the admin panel
  */
 
-import { CohortComparison } from '@/components/admin';
+import { CohortComparison } from '@/components/admin/CohortComparison';
 import { MainLayout } from '@/components/layout/MainLayout';
 
 function CohortAnalysisPage() {

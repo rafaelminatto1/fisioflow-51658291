@@ -186,6 +186,27 @@ service cloud.firestore {
     }
 
     // ============================================================================================
+    // PACKAGES
+    // ============================================================================================
+
+    match /session_packages/{packageId} {
+      allow read: if isAuthenticated();
+      allow write: if isProfessional() || isAdmin();
+    }
+
+    match /patient_packages/{packageId} {
+      allow read: if isProfessional() || isAdmin() || (isPatient() && resource.data.patient_id == request.auth.uid);
+      allow create: if isProfessional() || isAdmin();
+      allow update: if isProfessional() || isAdmin(); // Allow usage updates
+      allow delete: if isAdmin();
+    }
+
+    match /package_usage/{usageId} {
+      allow read: if isProfessional() || isAdmin() || (isPatient() && resource.data.patient_id == request.auth.uid);
+      allow create: if isProfessional() || isAdmin();
+    }
+
+    // ============================================================================================
     // FINANCIAL
     // ============================================================================================
 
@@ -263,6 +284,31 @@ service cloud.firestore {
       allow create: if isProfessional() && isValidSize();
       allow update: if isOwner('createdBy') || isAdmin();
       allow delete: if isAdmin();
+    }
+
+    match /participantes/{id} {
+      allow read: if canManageSchedule() || isAdmin();
+      allow create, update, delete: if canManageSchedule() || isAdmin();
+    }
+
+    match /contratados/{id} {
+      allow read: if canManageSchedule() || isAdmin();
+      allow create, update, delete: if canManageSchedule() || isAdmin();
+    }
+
+    match /evento_contratados/{id} {
+      allow read: if canManageSchedule() || isAdmin();
+      allow create, update, delete: if canManageSchedule() || isAdmin();
+    }
+
+    match /checklist_items/{id} {
+      allow read: if canManageSchedule() || isAdmin();
+      allow create, update, delete: if canManageSchedule() || isAdmin();
+    }
+
+    match /pagamentos/{id} {
+      allow read: if canManageSchedule() || isAdmin();
+      allow create, update, delete: if canManageSchedule() || isAdmin();
     }
 
     match /prestadores/{id} {

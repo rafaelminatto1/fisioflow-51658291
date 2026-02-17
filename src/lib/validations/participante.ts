@@ -42,7 +42,8 @@ const contatoValidation = z
 
 // Schema para criar participante com validações robustas
 export const participanteCreateSchema = z.object({
-  evento_id: z.string().uuid('ID do evento inválido'),
+  // IDs de evento vêm do Firestore (não necessariamente UUID)
+  evento_id: z.string().min(1, 'ID do evento inválido'),
   nome: z
     .string()
     .min(2, 'Nome deve ter pelo menos 2 caracteres')

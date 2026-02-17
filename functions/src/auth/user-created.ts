@@ -24,7 +24,8 @@ export const onUserCreated = functions
         const db = getAdminDb();
         const pool = getPool();
         const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000000';
-        const ADMIN_EMAIL = 'rafael.minatto@yahoo.com.br';
+        // Email do administrador - movido para .env por segurança
+        const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@fisioflow.com.br';
 
         try {
             // Dados sensíveis removidos: UID completo e email mascarado (LGPD)

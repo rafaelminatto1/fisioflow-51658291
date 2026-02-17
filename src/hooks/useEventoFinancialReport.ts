@@ -3,9 +3,10 @@ import { FinancialService, FinancialReport } from '@/services/financialService';
 
 export type { FinancialReport };
 
-export function useEventoFinancialReport(eventoId: string) {
+export function useEventoFinancialReport(eventoId: string, enabled = true) {
   return useQuery({
     queryKey: ["evento-financial-report", eventoId],
     queryFn: () => FinancialService.getEventReport(eventoId),
+    enabled: Boolean(eventoId) && enabled,
   });
 }

@@ -1,9 +1,8 @@
 import { onRequest, HttpsError } from 'firebase-functions/v2/https';
-import { getPool, getAdminAuth, CORS_ORIGINS } from '../init';
+import { getPool, getAdminAuth } from '../init';
 import { getOrganizationIdCached } from '../lib/cache-helpers';
 import { logger } from '../lib/logger';
 import { setCorsHeaders } from '../lib/cors';
-import { DATABASE_FUNCTION, withCors } from '../lib/function-config';
 
 async function verifyAuthHeader(req: any): Promise<{ uid: string }> {
     const authHeader = req.headers.authorization || '';
@@ -19,7 +18,11 @@ async function verifyAuthHeader(req: any): Promise<{ uid: string }> {
     }
 }
 
-const httpOpts = withCors(DATABASE_FUNCTION, CORS_ORIGINS);
+const httpOpts = {
+  region: 'southamerica-east1',
+  maxInstances: 1,
+  invoker: 'public',
+};
 
 export const getDashboardStatsHttp = onRequest(httpOpts, async (req, res) => {
     setCorsHeaders(res, req);

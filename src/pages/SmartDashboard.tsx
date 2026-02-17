@@ -29,6 +29,15 @@ const DraggableGrid = lazy(() => import('@/components/ui/DraggableGrid').then(mo
 
 type ViewMode = 'today' | 'week' | 'month' | 'custom';
 
+const SMART_DASHBOARD_GRID_COLS = {
+  xl: 12,
+  lg: 12,
+  md: 8,
+  sm: 4,
+  xs: 2,
+  xxs: 1,
+} as const;
+
 export default function SmartDashboard() {
   const [isEditable, setIsEditable] = useState(false);
   const [savedLayout, setSavedLayout] = useState<Layout[]>([]);
@@ -201,7 +210,7 @@ export default function SmartDashboard() {
     ...statsCards.map((stat, i) => ({
       id: stat.id,
       content: (
-        <GridWidget isDraggable={isEditable} className="h-full">
+        <GridWidget isDraggable={isEditable} className="h-full" data-testid={stat.id}>
           <div className={`h-full relative overflow-hidden bg-gradient-to-br ${stat.bgGradient} ${stat.borderColor} hover:shadow-lg transition-all duration-300 group rounded-xl border`}>
             <CardContent className="p-4 h-full flex flex-col justify-between">
               <div className="flex items-center justify-between mb-2">
@@ -301,28 +310,28 @@ export default function SmartDashboard() {
       id: 'stats-events',
       content: (
         <GridWidget title="Estatísticas de Eventos" icon={<Calendar className="h-4 w-4" />} isDraggable={isEditable}>
-          <div className="grid grid-cols-4 gap-2 h-full items-center">
-            <div className="text-center">
+          <div className="grid h-full grid-cols-2 gap-2 md:gap-3 lg:grid-cols-4" data-testid="stats-events-grid">
+            <div className="rounded-lg border border-border/50 p-2 text-center" data-testid="stats-events-total">
               <p className="text-xs text-muted-foreground">Total</p>
               <p className="text-xl font-bold">{eventStats.total}</p>
               <p className="text-[10px] text-muted-foreground">{eventStats.active} ativos</p>
             </div>
-            <div className="text-center border-l">
+            <div className="rounded-lg border border-border/50 p-2 text-center" data-testid="stats-events-completion">
               <p className="text-xs text-muted-foreground">Conclusão</p>
               <p className="text-xl font-bold">{eventStats.completionRate}%</p>
               <p className="text-[10px] text-muted-foreground">{eventStats.completed} concluídos</p>
             </div>
-            <div className="text-center border-l">
+            <div className="rounded-lg border border-border/50 p-2 text-center" data-testid="stats-events-revenue">
               <p className="text-xs text-muted-foreground">Receita Estimada</p>
               <p className="text-xl font-bold text-emerald-600">
                 {eventStats.revenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </p>
               <p className="text-[10px] text-muted-foreground">Potencial</p>
             </div>
-            <div className="text-center border-l">
+            <div className="rounded-lg border border-border/50 p-2 text-center" data-testid="stats-events-participants">
               <p className="text-xs text-muted-foreground">Partic.</p>
               <p className="text-xl font-bold">{eventStats.participants}</p>
-              <p className="text-xl font-bold text-emerald-600">
+              <p className="text-[10px] font-semibold text-emerald-600">
                 Est. 12/evento
               </p>
             </div>
@@ -438,7 +447,7 @@ export default function SmartDashboard() {
 
   return (
     <MainLayout maxWidth="7xl">
-      <div className="space-y-8 pb-20 px-4 md:px-8">
+      <div className="space-y-8 pb-20 px-4 md:px-8" data-testid="smart-dashboard-page">
         {/* Header - Enhanced Design */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
           <div className="flex items-center gap-6">
@@ -536,7 +545,7 @@ export default function SmartDashboard() {
           </Button>
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-xl font-bold">Dashboard Personalizado</h2>
             <p className="text-sm text-muted-foreground">Configure seus widgets favoritos</p>
@@ -574,9 +583,10 @@ export default function SmartDashboard() {
                 setSavedLayout(layout);
               }
             }}
-            layouts={savedLayout.length > 0 ? { lg: savedLayout, md: savedLayout } as any : undefined}
+            layouts={savedLayout.length > 0 ? { xl: savedLayout, lg: savedLayout, md: savedLayout } : undefined}
             isEditable={isEditable}
-            rowHeight={80}
+            cols={SMART_DASHBOARD_GRID_COLS}
+            rowHeight={76}
           />
         </Suspense>
       </div>

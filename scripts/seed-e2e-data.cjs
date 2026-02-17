@@ -62,9 +62,9 @@ function formatTime(date) {
 function generateCPF() {
   const cpf = Array(11).fill(0).map(() => Math.floor(Math.random() * 10));
   return cpf.slice(0, 3).join('') + '.' +
-         cpf.slice(3, 6).join('') + '.' +
-         cpf.slice(6, 9).join('') + '-' +
-         cpf.slice(9, 11).join('');
+    cpf.slice(3, 6).join('') + '.' +
+    cpf.slice(6, 9).join('') + '-' +
+    cpf.slice(9, 11).join('');
 }
 
 // Helper: generate phone number
@@ -541,6 +541,58 @@ async function seedExerciseVideos(db, orgId, therapistId) {
   return videos;
 }
 
+const SESSION_PACKAGES = [
+  {
+    name: 'Pacote Básico',
+    description: 'Pacote com 5 sessões de fisioterapia',
+    sessions_count: 5,
+    total_sessions: 5,
+    price: 750.00,
+    validity_days: 90,
+    is_active: true,
+  },
+  {
+    name: 'Pacote Intermediário',
+    description: 'Pacote com 10 sessões de fisioterapia',
+    sessions_count: 10,
+    total_sessions: 10,
+    price: 1400.00,
+    validity_days: 120,
+    is_active: true,
+  },
+  {
+    name: 'Pacote Avançado',
+    description: 'Pacote com 20 sessões de fisioterapia',
+    sessions_count: 20,
+    total_sessions: 20,
+    price: 2600.00,
+    validity_days: 180,
+    is_active: true,
+  },
+];
+
+async function seedSessionPackages(db, orgId) {
+  console.log(`\n📦 Seeding session packages...`);
+
+  const packages = [];
+
+  for (const pkg of SESSION_PACKAGES) {
+    const data = {
+      ...pkg,
+      organization_id: orgId,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const docRef = await db.collection('session_packages').add(data);
+    packages.push({ id: docRef.id, ...data });
+    console.log(`   ✅ Created package: ${pkg.name} (${docRef.id})`);
+  }
+
+  console.log(`   ✅ Session packages created: ${packages.length}`);
+  return packages;
+}
+
 async function main() {
   try {
     const { db, auth } = getFirebaseAdmin();
@@ -569,6 +621,9 @@ async function main() {
 
     // Seed exercise videos
     await seedExerciseVideos(db, orgId, therapistId);
+
+    // Seed session packages
+    await seedSessionPackages(db, orgId);
 
     console.log('\n✨ E2E data seeded successfully!');
     console.log(`\n📊 Summary:`);

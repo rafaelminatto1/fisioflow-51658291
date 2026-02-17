@@ -16,7 +16,7 @@
 import { onRequest, HttpsError } from 'firebase-functions/v2/https';
 import { getSpeechToTextClient } from '../lib/speech-to-text';
 import { logger } from '../lib/logger';
-import { CORS_ORIGINS } from '../init';
+import { CORS_ORIGINS } from '../lib/cors';
 
 interface TranscriptionRequest {
   audioData: string;

@@ -15,9 +15,9 @@ import {
     DB_HOST_IP_SECRET,
     DB_HOST_IP_PUBLIC_SECRET,
     CLOUD_SQL_CONNECTION_NAME_SECRET,
-    RESEND_API_KEY_SECRET,
-    CORS_ORIGINS
+    RESEND_API_KEY_SECRET
 } from './init';
+import { CORS_ORIGINS } from './lib/cors';
 import {
     WHATSAPP_PHONE_NUMBER_ID_SECRET,
     WHATSAPP_ACCESS_TOKEN_SECRET
@@ -26,7 +26,6 @@ import {
 // Import optimization presets
 import {
     AI_FUNCTION,
-    STANDARD_FUNCTION,
     withCors
 } from './lib/function-config';
 
@@ -137,18 +136,11 @@ export {
     getDashboardStatsHttp as getDashboardStatsV2,
 } from './api/dashboard';
 
-// API de Perfis (onCall with CORS so callFunctionHttp works from browser)
-export const getProfile = onCall(
-    { cors: true },
-    async (request) => {
-        const { getProfileHandler } = await import('./api/profile');
-        return getProfileHandler(request);
-    }
-);
-export const updateProfile = onCall(async (request) => {
-    const { updateProfileHandler } = await import('./api/profile');
-    return updateProfileHandler(request);
-});
+// API de Perfis (HTTP onRequest - compatível com callFunctionHttp/fetch)
+export {
+    getProfile,
+    updateProfile,
+} from './api/profile';
 
 // API de Pagamentos
 export const listPayments = onCall(async (request) => {
@@ -330,6 +322,21 @@ export const createPerformanceIndexes = onCall(async (request) => {
     return createPerformanceIndexesHandler(request);
 });
 
+// OTIMIZAÇÃO: Função para corrigir índice de agendamentos (500 Error Fix)
+export const fixAppointmentIndex = onRequest(
+    {
+        secrets: ['DB_PASS', 'DB_USER', 'DB_NAME', 'CLOUD_SQL_CONNECTION_NAME', 'DB_HOST_IP_PUBLIC'],
+        memory: '256MiB',
+        timeoutSeconds: 300,
+        region: 'southamerica-east1',
+        cors: CORS_ORIGINS,
+    },
+    async (req, res) => {
+        const { fixAppointmentIndexHandler } = await import('./migrations/fix-appointment-index');
+        return fixAppointmentIndexHandler(req, res);
+    }
+);
+
 // OTIMIZAÇÃO: Nova função HTTP para criar índices otimizados
 export const createOptimizedIndexes = onRequest(
     {
@@ -451,7 +458,8 @@ export const rebuildPatientRagIndexHttp = onRequest(
 // Economia: R$ 15-20/mês (13 serviços Cloud Run → 1 serviço unificado)
 // ============================================================================
 
-// HTTP AI endpoints (mantidos - funcionalidades diferentes)
+// HTTP AI endpoints (Temporarily disabled - files moved to .bak)
+/*
 export const getPatientAISummaryHttp = onRequest(
     { ...AI_FUNCTION, ...withCors(AI_FUNCTION, CORS_ORIGINS) },
     async (req: any, res: any) => {
@@ -467,6 +475,7 @@ export const getClinicalInsightsHttp = onRequest(
         return getClinicalInsightsHttpHandler(req, res);
     }
 );
+*/
 
 export const scanMedicalReportHttp = onRequest(
     { ...AI_FUNCTION, ...withCors(AI_FUNCTION, CORS_ORIGINS) },
@@ -530,20 +539,18 @@ export { dailyPatientDigest } from './crons/scheduled-tasks';
 // Economia potencial: ~R$ 8-12/mês (16 serviços → 2 serviços)
 // ============================================================================
 
+import { exerciseServiceHandler } from './api/exercises-unified';
+import { assessmentServiceHandler } from './api/assessments-unified';
+import { STANDARD_FUNCTION } from './lib/function-config';
+
 export const exerciseService = onCall(
     STANDARD_FUNCTION,
-    async (request) => {
-        const { exerciseServiceHandler } = await import('./api/exercises-unified');
-        return exerciseServiceHandler(request);
-    }
+    exerciseServiceHandler
 );
 
 export const assessmentService = onCall(
     STANDARD_FUNCTION,
-    async (request) => {
-        const { assessmentServiceHandler } = await import('./api/assessments-unified');
-        return assessmentServiceHandler(request);
-    }
+    assessmentServiceHandler
 );
 
 // ============================================================================

@@ -14,7 +14,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { firestore } from 'firebase-admin';
 import * as logger from 'firebase-functions/logger';
-import { CORS_ORIGINS } from '../init';
+import { CORS_ORIGINS } from '../lib/cors';
 
 export const createTelemedicineRoom = onCall({
   cors: CORS_ORIGINS,
