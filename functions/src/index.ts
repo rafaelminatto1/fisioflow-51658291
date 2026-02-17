@@ -602,7 +602,7 @@ export const onPatientCreated = functions.firestore.onDocumentCreated(
 /**
  * Firestore trigger unificado: publica eventos de agendamento no RTDB
  */
-export const onAppointmentRtdbSync = functions.firestore.onDocumentWritten(
+export const onAppointmentRtdbSyncTrigger = functions.firestore.onDocumentWritten(
     'appointments/{appointmentId}',
     async (event) => {
         const after = event.data?.after?.data();
@@ -615,6 +615,17 @@ export const onAppointmentRtdbSync = functions.firestore.onDocumentWritten(
         } catch (err) {
             console.error('[onAppointmentRtdbSync] RTDB publish failed (non-critical):', err);
         }
+    }
+);
+
+/**
+ * Legacy HTTPS function mantida para evitar erro de migração de tipo em produção.
+ * A sincronização real está em `onAppointmentRtdbSyncTrigger`.
+ */
+export const onAppointmentRtdbSync = onRequest(
+    { region: 'southamerica-east1', invoker: 'public' },
+    async (_req: Request, res: Response) => {
+        res.status(204).send('onAppointmentRtdbSync legacy endpoint');
     }
 );
 
