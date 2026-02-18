@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { Platform, AppState, AppStateStatus } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
-import { doc, setDoc, getDoc, updateDoc, arrayUnion, deleteField } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import notificationIcon from '@/assets/notification-icon.png';
 import { auth, db } from '@/lib/firebase';
 
@@ -111,6 +111,38 @@ export async function registerPushToken(
           'notifications.lastTokenUpdate': new Date(),
         });
       }
+    }
+
+    const profileRef = doc(db, 'profiles', userId);
+    const profileDoc = await getDoc(profileRef);
+
+    if (profileDoc.exists()) {
+      const profileData = profileDoc.data();
+      const existingProfileTokens = profileData.pushTokens || [];
+      const profileTokenIndex = existingProfileTokens.findIndex((t: PushToken) => t.token === token.data);
+
+      if (profileTokenIndex < 0) {
+        await updateDoc(profileRef, {
+          pushTokens: arrayUnion(tokenData),
+          'notifications.enabled': true,
+          'notifications.lastTokenUpdate': new Date(),
+        });
+      } else {
+        existingProfileTokens[profileTokenIndex].updatedAt = new Date();
+
+        await updateDoc(profileRef, {
+          pushTokens: existingProfileTokens,
+          'notifications.lastTokenUpdate': new Date(),
+        });
+      }
+    } else {
+      await setDoc(profileRef, {
+        pushTokens: [tokenData],
+        notifications: {
+          enabled: true,
+          lastTokenUpdate: new Date(),
+        },
+      }, { merge: true });
     }
 
     console.log('Push token registered:', token.data);
@@ -229,6 +261,21 @@ export async function clearPushToken(userId: string): Promise<void> {
 
       await updateDoc(userRef, {
         pushTokens: updatedTokens,
+      });
+    }
+
+    const profileRef = doc(db, 'profiles', userId);
+    const profileDoc = await getDoc(profileRef);
+
+    if (profileDoc.exists()) {
+      const profileData = profileDoc.data();
+      const existingProfileTokens = profileData.pushTokens || [];
+      const updatedProfileTokens = existingProfileTokens.filter(
+        (t: PushToken) => t.token !== tokenResult.data
+      );
+
+      await updateDoc(profileRef, {
+        pushTokens: updatedProfileTokens,
       });
     }
 

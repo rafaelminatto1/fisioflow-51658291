@@ -129,14 +129,18 @@ test('criação rápida de paciente e autocomplete no modal de agendamento', asy
     await page.waitForTimeout(1000);
 
     // 2. Digitar o nome do paciente no input de busca
-    const searchInput = page.locator('input[placeholder*="Buscar"], input[role="combobox"]').first();
+    // 2. Digitar o nome do paciente no input de busca
+    // Usar seletor específico do cmdk-input para garantir que estamos no input correto do Popover
+    const searchInput = page.locator('input[cmdk-input]').first();
+    await searchInput.waitFor({ state: 'visible', timeout: 5000 });
     await searchInput.fill(patientName);
     console.log(`✅ Nome digitado no combobox: ${patientName}`);
     await page.waitForTimeout(1000);
 
     // 3. Clicar na opção "Cadastrar..."
-    // Primeiro procura item da lista (quando há outros resultados)
-    const createOption = page.locator('[role="option"], [cmdk-item]').filter({ hasText: /Cadastrar/i }).first();
+    // Procurar item da lista que contenha o texto "Cadastrar" e o nome do paciente
+    // O texto no componente é: Cadastrar "{inputValue}"
+    const createOption = page.locator('[cmdk-item]').filter({ hasText: `Cadastrar "${patientName}"` }).first();
 
     if (await createOption.isVisible()) {
       await createOption.click();
@@ -212,11 +216,24 @@ test('criação rápida de paciente e autocomplete no modal de agendamento', asy
   console.log('\n📍 ETAPA 5: Submeter Cadastro');
   console.log('-'.repeat(70));
 
-  const submitButton = page.locator('button:has-text("Criar"), button:has-text("Salvar"), button:has-text("Cadastrar"), button[type="submit"]').first();
+  // Target specifically the "Criar Paciente" button inside the Quick Registration modal
+  // Using hierarchy to avoid clicking the "Criar" button of the Appointment Modal behind it
+  const submitButton = page.locator('[role="dialog"]')
+    .filter({ hasText: 'Cadastro Rápido' })
+    .locator('button')
+    .filter({ hasText: /Criar|Salvar|Cadastrar/i })
+    .last(); // Usually "Cancelar" is first, "Criar" is last, but filter hasText should handle it
 
   if (await submitButton.count() > 0) {
-    await submitButton.click();
-    console.log('✅ Botão de submissão clicado');
+    // Ensure it's the right one by checking visibility
+    if (await submitButton.isVisible()) {
+      await submitButton.click();
+      console.log('✅ Botão de submissão clicado (específico do modal)');
+    } else {
+      // Fallback
+      await page.locator('button:has-text("Criar Paciente")').click();
+      console.log('✅ Botão "Criar Paciente" clicado (fallback)');
+    }
 
     // Aguardar processamento
     await page.waitForTimeout(5000);

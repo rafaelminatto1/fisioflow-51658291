@@ -7,7 +7,7 @@ import { rtdb } from '../lib/rtdb';
 import { getOrganizationIdCached } from '../lib/cache-helpers';
 import { dispatchAppointmentNotification } from '../workflows/notifications';
 import { withErrorHandling } from '../lib/error-handler';
-import { setCorsHeaders } from '../lib/cors';
+
 import { isValidUuid } from '../lib/uuid';
 
 // OTIMIZADO: Configurações com mais instâncias
@@ -164,14 +164,21 @@ export const getAppointmentHttp = onRequest(
     const appointmentId = requireUuidField(body.appointmentId, 'appointmentId');
     const pool = getPool();
     const result = await pool.query(
-      `SELECT a.*, p.name as patient_name, p.phone as patient_phone, prof.full_name as therapist_name
-       FROM appointments a LEFT JOIN patients p ON a.patient_id = p.id
+      `SELECT 
+        a.*, 
+        to_jsonb(p.*) as patient,
+        prof.full_name as therapist_name
+       FROM appointments a 
+       LEFT JOIN patients p ON a.patient_id = p.id
        LEFT JOIN profiles prof ON a.therapist_id = prof.user_id
        WHERE a.id = $1 AND a.organization_id = $2`,
       [appointmentId, organizationId]
     );
     if (result.rows.length === 0) { res.status(404).json({ error: 'Agendamento não encontrado' }); return; }
-    res.json({ data: result.rows[0] });
+
+    // Adjust response structure if needed, or just return row
+    const row = result.rows[0];
+    res.json({ data: { ...row, patient: row.patient } });
   }, 'getAppointmentHttp')
 );
 
@@ -305,10 +312,11 @@ export const createAppointmentHttp = onRequest(
  */
 export const updateAppointmentHttp = onRequest(
   async (req, res) => {
-    setCorsHeaders(res, req);
-    if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
-    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-    try {
+    // Defines handler with error handling
+    const handler = withErrorHandling(async (req, res) => {
+      // Only accept POST requests
+      if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+
       const { uid } = await verifyAuthHeader(req);
       const organizationId = await getOrganizationId(uid);
       const pool = getPool();
@@ -409,13 +417,8 @@ export const updateAppointmentHttp = onRequest(
       }
 
       try {
-        // @ts-ignore
-        const realtime = await import('../realtime/publisher');
-        await Promise.allSettled([
-          realtime.publishAppointmentEvent(organizationId, { event: 'UPDATE', new: updatedAppt, old: currentAppt }),
-          rtdb.refreshAppointments(organizationId)
-        ]);
-      } catch (err) { logger.error('Erro Realtime:', err); }
+        await rtdb.refreshAppointments(organizationId);
+      } catch (err) { logger.error('Erro Realtime RTDB:', err); }
 
       const previousStatus = normalizeAppointmentStatus(String(currentAppt.status || 'agendado'));
       const nextStatus = normalizeAppointmentStatus(String(updatedAppt.status || currentAppt.status || 'agendado'));
@@ -447,20 +450,9 @@ export const updateAppointmentHttp = onRequest(
         logger.error('[updateAppointmentHttp] Notification dispatch failed (non-blocking):', notifyError);
       }
       res.json({ data: updatedAppt });
-    } catch (error: unknown) {
-      if (error instanceof HttpsError && error.code === 'unauthenticated') { setCorsHeaders(res, req); res.status(401).json({ error: error.message }); return; }
-      if (error instanceof HttpsError && error.code === 'not-found') { setCorsHeaders(res, req); res.status(404).json({ error: error.message }); return; }
-      if (error instanceof HttpsError && (error.code === 'invalid-argument' || error.code === 'failed-precondition')) {
-        setCorsHeaders(res, req);
-        res.status(400).json({ error: error.message });
-        return;
-      }
-      const errMsg = error instanceof Error ? error.message : 'Erro ao atualizar agendamento';
-      const errStack = error instanceof Error ? error.stack : undefined;
-      logger.error('Error in updateAppointmentHttp:', { message: errMsg, stack: errStack, error });
-      setCorsHeaders(res, req);
-      res.status(500).json({ error: errMsg });
-    }
+    }, 'updateAppointmentHttp');
+
+    return handler(req, res);
   }
 );
 
@@ -469,10 +461,11 @@ export const updateAppointmentHttp = onRequest(
  */
 export const cancelAppointmentHttp = onRequest(
   async (req, res) => {
-    setCorsHeaders(res, req);
-    if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
-    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-    try {
+    // Defines handler with error handling
+    const handler = withErrorHandling(async (req, res) => {
+      // Only accept POST requests
+      if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+
       const { uid } = await verifyAuthHeader(req);
       const organizationId = await getOrganizationId(uid);
       const body = typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {});
@@ -515,16 +508,9 @@ export const cancelAppointmentHttp = onRequest(
         logger.error('[cancelAppointmentHttp] Notification dispatch failed (non-blocking):', notifyError);
       }
       res.json({ success: true });
-    } catch (error: unknown) {
-      if (error instanceof HttpsError && error.code === 'unauthenticated') { res.status(401).json({ error: error.message }); return; }
-      if (error instanceof HttpsError && (error.code === 'invalid-argument' || error.code === 'failed-precondition')) {
-        res.status(400).json({ error: error.message });
-        return;
-      }
-      if (error instanceof HttpsError && error.code === 'not-found') { res.status(404).json({ error: error.message }); return; }
-      logger.error('Error in cancelAppointmentHttp:', error);
-      res.status(500).json({ error: error instanceof Error ? error.message : 'Erro ao cancelar agendamento' });
-    }
+    }, 'cancelAppointmentHttp');
+
+    return handler(req, res);
   }
 );
 
@@ -741,7 +727,7 @@ async function checkTimeConflictByCapacity(
   `;
   const sqlParams: (string | number)[] = [organizationId, date, startTime, endTime];
   if (excludeAppointmentId) {
-    query += ` AND id != $5`;
+    query += ` AND a.id != $5`;
     sqlParams.push(excludeAppointmentId);
   }
   const result = await pool.query(query, sqlParams);
@@ -777,7 +763,7 @@ async function checkTimeConflictHelper(pool: any, params: CheckTimeConflictReque
   const sqlParams: (string | number)[] = [organizationId, therapistId, date, startTime, endTime];
 
   if (excludeAppointmentId) {
-    query += ` AND id != $6`;
+    query += ` AND appointments.id != $6`;
     sqlParams.push(excludeAppointmentId);
   }
 

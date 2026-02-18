@@ -7,10 +7,10 @@
 import { onRequest, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { getPool } from '../init';
-import { setCorsHeaders } from '../lib/cors';
 import { Profile } from '../types/models';
 import { logger } from '../lib/logger';
 import { toValidUuid } from '../lib/uuid';
+import { withErrorHandling } from '../lib/error-handler';
 
 const auth = admin.auth();
 
@@ -80,7 +80,7 @@ async function getUserProfile(userId: string): Promise<Profile> {
           toValidUuid(data.organizationId)
           || toValidUuid(data.activeOrganizationId)
           || toValidUuid(data.organizationIds?.[0])
-          || toValidUuid(data.organization_ids?.[0])
+          || toValidUuid(data.organization_id?.[0])
           || toValidUuid(data.organization_id)
         );
         if (!organizationId) {
@@ -138,26 +138,19 @@ export const getProfileHandler = async (request: any) => {
 /**
  * POST /getProfile - Retorna o perfil do usuário autenticado
  */
-/**
- * Handler HTTP para getProfile
- */
-export const getProfileHttpHandler = async (req: any, res: any) => {
-  // Handle OPTIONS preflight FIRST
-  if (req.method === 'OPTIONS') {
-    setCorsHeaders(res, req);
-    res.status(204).send('');
-    return;
-  }
+export const getProfile = onRequest(
+  {
+    region: 'southamerica-east1',
+    maxInstances: 1,
+    invoker: 'public',
+  },
+  withErrorHandling(async (req, res) => {
+    // Only accept POST requests
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method not allowed' });
+      return;
+    }
 
-  // Only accept POST requests
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' });
-    return;
-  }
-
-  setCorsHeaders(res, req);
-
-  try {
     // Verify authentication
     const { uid } = await verifyAuth(req);
 
@@ -165,30 +158,7 @@ export const getProfileHttpHandler = async (req: any, res: any) => {
     const profile = await getUserProfile(uid);
 
     res.json({ data: profile });
-  } catch (error: unknown) {
-    logger.error('Erro ao buscar perfil:', error);
-
-    if (error instanceof HttpsError) {
-      const statusCode = error.code === 'unauthenticated' ? 401 :
-        error.code === 'not-found' ? 404 :
-          (error.code === 'invalid-argument' || error.code === 'failed-precondition') ? 400 : 500;
-      res.status(statusCode).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: 'Erro interno ao buscar perfil' });
-    }
-  }
-};
-
-/**
- * POST /getProfile - Retorna o perfil do usuário autenticado
- */
-export const getProfile = onRequest(
-  {
-    region: 'southamerica-east1',
-    maxInstances: 1,
-    invoker: 'public',
-  },
-  getProfileHttpHandler
+  }, 'getProfile')
 );
 
 /**
@@ -250,29 +220,23 @@ export const updateProfileHandler = async (request: any) => {
   return { data: result.rows[0] as Profile };
 };
 
+
 /**
  * POST /updateProfile - Atualiza o perfil do usuário
  */
-/**
- * Handler HTTP para updateProfile
- */
-export const updateProfileHttpHandler = async (req: any, res: any) => {
-  // Handle OPTIONS preflight FIRST
-  if (req.method === 'OPTIONS') {
-    setCorsHeaders(res, req);
-    res.status(204).send('');
-    return;
-  }
+export const updateProfile = onRequest(
+  {
+    region: 'southamerica-east1',
+    maxInstances: 1,
+    invoker: 'public',
+  },
+  withErrorHandling(async (req, res) => {
+    // Only accept POST requests
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method not allowed' });
+      return;
+    }
 
-  // Only accept POST requests
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method not allowed' });
-    return;
-  }
-
-  setCorsHeaders(res, req);
-
-  try {
     // Verify authentication
     const { uid } = await verifyAuth(req);
 
@@ -326,28 +290,5 @@ export const updateProfileHttpHandler = async (req: any, res: any) => {
     const result = await pool.query(query, values);
 
     res.json({ data: result.rows[0] as Profile });
-  } catch (error: unknown) {
-    logger.error('Erro ao atualizar perfil:', error);
-
-    if (error instanceof HttpsError) {
-      const statusCode = error.code === 'unauthenticated' ? 401 :
-        error.code === 'not-found' ? 404 :
-          (error.code === 'invalid-argument' || error.code === 'failed-precondition') ? 400 : 500;
-      res.status(statusCode).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: 'Erro interno ao atualizar perfil' });
-    }
-  }
-};
-
-/**
- * POST /updateProfile - Atualiza o perfil do usuário
- */
-export const updateProfile = onRequest(
-  {
-    region: 'southamerica-east1',
-    maxInstances: 1,
-    invoker: 'public',
-  },
-  updateProfileHttpHandler
+  }, 'updateProfile')
 );
