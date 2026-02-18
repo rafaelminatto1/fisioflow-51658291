@@ -64,16 +64,23 @@ import { adminDb } from './init';
 import './lib/sentry';
 
 // ============================================================================
-// API FUNCTIONS (Callable - Lazy Loading)
+// SERVIÇOS UNIFICADOS (RECOMENDADO PARA FRONTEND)
+// ============================================================================
+// Estes serviços consolidam múltiplas funções em um único Cloud Run Service
+// Economia estimada: R$ 40-60/mês ao reduzir instâncias warm.
+
+export { patientService, patientServiceHttp } from './api/patients-unified';
+export { appointmentService, appointmentServiceHttp } from './api/appointments-unified';
+export { evolutionService, evolutionServiceHttp } from './api/evolutions-unified';
+
+// ============================================================================
+// API FUNCTIONS (Individual Handlers - Mantidos para Retrocompatibilidade)
 // ============================================================================
 
 import { onCall, onRequest, Request } from 'firebase-functions/v2/https';
 import { Response } from 'express';
 
-// API de Pacientes
-// OTIMIZAÇÃO: Removidas versões Callable duplicadas (lines 75-98)
-// O frontend usa as versões HTTP (V2) com CORS
-// HTTP (CORS) - frontend callFunctionHttp uses these names
+// API de Pacientes (V2 HTTP)
 export {
     listPatientsHttp as listPatientsV2,
     getPatientStatsHttp as getPatientStatsV2,
@@ -85,10 +92,7 @@ export {
 // Gamification / patient quests (callable)
 export { checkPatientAppointments, getLastPainMapDate } from './api/patient-quests';
 
-// API de Agendamentos
-// OTIMIZAÇÃO: Removidas versões Callable duplicadas
-// O frontend usa as versões HTTP (V2) com CORS
-// HTTP (CORS) - frontend callFunctionHttp hits these URLs
+// API de Agendamentos (V2 HTTP)
 export { listAppointmentsHttp as listAppointments } from './api/appointments';
 export { getAppointmentHttp as getAppointmentV2 } from './api/appointments';
 export { createAppointmentHttp as createAppointmentV2 } from './api/appointments';
@@ -112,7 +116,8 @@ export {
     searchSimilarExercisesHttp as searchSimilarExercisesV2,
 } from './api/exercises';
 
-// API de Evoluções (SOAP)
+// API de Evoluções (SOAP) - Redundante, use evolutionService
+/*
 export {
   listEvolutionsHttp as listEvolutionsV2,
   getEvolutionHttp as getEvolutionV2,
@@ -120,6 +125,7 @@ export {
   updateEvolutionHttp as updateEvolutionV2,
   deleteEvolutionHttp as deleteEvolutionV2,
 } from './api/evolutions';
+*/
 
 // API de Avaliações
 export {
@@ -677,7 +683,7 @@ export const sendEmail = onCall(async (request) => {
 // ============================================================================
 
 import { onUserCreated } from './auth/user-created';
-export { onUserCreated }; // v1 trigger exported directly
+export { onUserCreated }; // v2 trigger exported directly
 
 export const createUserInvitation = onCall(
     { cors: true, memory: '512MiB', maxInstances: 1 },
