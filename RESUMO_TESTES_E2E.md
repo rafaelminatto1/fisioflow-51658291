@@ -182,6 +182,7 @@ firebase emulators:start
    - `booking.spec.ts`, `pc-siqueira-evolutions.spec.ts`, `fisioterapeuta-login-setvalue-check.spec.ts`
    - `login_verified.spec.ts`, `test-supabase-errors.spec.ts`, `test-firebase-migration.spec.ts`
    - `patients.spec.ts` (já usava testUsers corretamente)
+   - `patient-creation-quick.spec.ts` - ✅ Corrigido (seletores e race condition)
 
 2. **Problema `/pending-approval` resolvido** - função `ensureUserRole()` adicionada ao seed script
 

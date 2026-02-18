@@ -17,6 +17,7 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { useAppointments } from '@/hooks/useAppointments';
 import { usePatients } from '@/hooks/usePatients';
 import { getProfessionalStats } from '@/lib/firestore';
+import { useAuthStore } from '@/store/auth';
 import { useQuery } from '@tanstack/react-query';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -56,11 +57,13 @@ export default function ReportsScreen() {
 
   const { data: appointments } = useAppointments();
   const { data: patients } = usePatients();
+  const { user } = useAuthStore();
 
   // Buscar estatísticas do Firestore
   const { data: stats, isLoading } = useQuery({
-    queryKey: ['professionalStats'],
-    queryFn: () => getProfessionalStats('current-professional'),
+    queryKey: ['professionalStats', user?.id],
+    queryFn: () => (user?.id ? getProfessionalStats(user.id) : Promise.resolve(null)),
+    enabled: !!user?.id,
   });
 
   // Calcular dados para o gráfico de tipos

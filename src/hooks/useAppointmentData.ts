@@ -29,16 +29,23 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
 
             fisioLogger.debug('Fetching appointment from PostgreSQL via API', { appointmentId }, 'useAppointmentData');
             const data = await appointmentsApi.get(appointmentId);
+
+            // Check if patient data is embedded
+            const patientData = data.patient;
+
             fisioLogger.debug('Appointment loaded', {
                 id: data.id,
-                patient_id: data.patient_id,
-                hasPatientId: !!data.patient_id
+                patient_id: data.patientId,
+                hasPatientId: !!data.patientId,
+                hasEmbeddedPatient: !!patientData
             }, 'useAppointmentData');
 
             return {
                 id: data.id,
                 ...data,
-            } as AppointmentDBStandard;
+                // Ensure patient is passed through
+                patient: patientData
+            } as AppointmentDBStandard & { patient?: PatientDBStandard };
         },
         enabled: !!appointmentId,
         retry: 3,
@@ -46,18 +53,20 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
         staleTime: 1000 * 60 * 2, // 2 minutos
     });
 
-    const patientId = appointment?.patient_id;
+    const patientId = appointment?.patientId || appointment?.patient_id;
 
     // Log quando patientId muda
     if (appointment && import.meta.env.DEV) {
         fisioLogger.debug('Current state', {
             appointmentId: appointment.id,
             patientId: patientId,
-            hasPatientId: !!patientId
+            hasPatientId: !!patientId,
+            hasEmbeddedPatient: !!appointment.patient
         }, 'useAppointmentData');
     }
 
     // Buscar informações do paciente do PostgreSQL via Firebase Functions
+    // Se vier embutido no appointment, usa como initialData e evita fetch imediato
     const { data: patient, isLoading: patientLoading, error: patientError } = useQuery({
         queryKey: ['patient', patientId],
         queryFn: async () => {
@@ -68,9 +77,32 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
 
             devValidatePatient(PATIENT_SELECT.standard);
 
-            let response: { data?: PatientDBStandard | null } | null = null;
+            let response: { data?: PatientDBStandard | null } | PatientDBStandard | null = null;
             try {
-                response = await patientsApi.get(patientId);
+                // If we somehow got here but have the data (should likely hit cache/initialData first), return it
+                if (appointment?.patient && appointment.patient.id === patientId) {
+                    return appointment.patient as PatientDBStandard;
+                }
+
+                const result = await patientsApi.get(patientId);
+                // Handle direct return or wrapped response based on API consistency
+                const data = 'data' in result ? (result as any).data : result;
+
+                if (!data) {
+                    fisioLogger.warn('Patient not found in database', { patientId }, 'useAppointmentData');
+                    return null;
+                }
+
+                fisioLogger.debug('Patient loaded', {
+                    id: data.id,
+                    name: data.name || data.full_name
+                }, 'useAppointmentData');
+
+                return {
+                    id: data.id,
+                    ...data,
+                } as PatientDBStandard;
+
             } catch (e) {
                 // Fallback: getPatientHttp falha por CORS/rede; listPatientsV2 funciona — buscar na lista
                 const isNetworkOrCors = (e as Error)?.message?.includes('Failed to fetch') || (e as Error)?.name === 'TypeError';
@@ -85,27 +117,14 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
                 }
                 throw e;
             }
-
-            if (!response?.data) {
-                fisioLogger.warn('Patient not found in database', { patientId }, 'useAppointmentData');
-                return null;
-            }
-
-            const data = response.data;
-            fisioLogger.debug('Patient loaded', {
-                id: data.id,
-                name: data.name || data.full_name
-            }, 'useAppointmentData');
-
-            return {
-                id: data.id,
-                ...data,
-            } as PatientDBStandard;
         },
         enabled: !!patientId,
+        initialData: appointment?.patient as PatientDBStandard | undefined,
+        initialDataUpdatedAt: appointment ? Date.now() : undefined,
         retry: 3,
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-        staleTime: 1000 * 60 * 5, // 5 minutos
+        // Se veio do appointment, considera fresco por 5 min
+        staleTime: appointment?.patient ? 1000 * 60 * 5 : 1000 * 60 * 5,
     });
 
     return {

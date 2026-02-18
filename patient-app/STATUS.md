@@ -234,9 +234,9 @@
 - [x] Configurações de notificação no perfil
 - [x] Auto-registro de token no login (auth store)
 - [x] EAS Project ID configurado
-- [ ] Cloud functions para envio (pendente)
+- [x] Cloud functions para envio (email, WhatsApp e push)
 - [ ] Lembretes de exercícios (pendente)
-- [ ] Lembretes de consultas (pendente)
+- [x] Lembretes de consultas (push + email)
 
 ### 🔄 Em Andamento
 
@@ -441,7 +441,7 @@ pnpm test:coverage     # Com cobertura
 
 ### Fase 2: Notificações (Completado)
 - [x] Setup expo-notifications
-- [ ] Cloud functions para envio
+- [x] Cloud functions para envio (email + push)
 - [ ] Testar lembretes com notificações reais
 
 ### Fase 3: Offline (Completado)

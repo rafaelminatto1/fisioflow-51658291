@@ -201,7 +201,8 @@ export const appointmentReminders = onSchedule(
 
             const emailSent = emailEnabledByOrg && emailEnabledByPatient && !!dispatchResult.email.sent;
             const whatsappSent = whatsappEnabledByOrg && whatsappEnabledByPatient && !!dispatchResult.whatsapp.sent;
-            const anySent = emailSent || whatsappSent;
+            const pushSent = !!dispatchResult.push.sent;
+            const anySent = emailSent || whatsappSent || pushSent;
 
             if (anySent) remindersSent++;
 
@@ -216,10 +217,12 @@ export const appointmentReminders = onSchedule(
               channels: {
                 email: emailSent,
                 whatsapp: whatsappSent,
+                push: pushSent,
               },
               errors: {
                 email: dispatchResult.email.error || null,
                 whatsapp: dispatchResult.whatsapp.error || null,
+                push: dispatchResult.push.error || null,
               },
             });
 

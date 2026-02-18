@@ -56,6 +56,9 @@ const HTTP_FUNCTION_URLS: Record<string, string> = {
   deleteTransactionV2: API_URLS.financial.deleteTransaction,
   findTransactionByAppointmentIdV2: API_URLS.financial.findTransactionByAppointmentId,
   getEventReportV2: API_URLS.financial.getEventReport,
+  patientServiceHttp: API_URLS.services.patient,
+  appointmentServiceHttp: API_URLS.services.appointment,
+  evolutionServiceHttp: API_URLS.services.evolution,
 };
 const LOCAL_FUNCTIONS_PROXY =
   import.meta.env.DEV && import.meta.env.VITE_USE_FUNCTIONS_PROXY === 'true'
@@ -520,6 +523,7 @@ export namespace AppointmentApi {
     startTime: string;
     endTime: string;
     status: string;
+    patient?: PatientApi.Patient;
     [key: string]: unknown;
   }
 
@@ -619,69 +623,57 @@ export namespace DoctorApi {
  */
 export const patientsApi = {
   /**
-   * Lista pacientes com filtros opcionais (uses HTTP V2 to avoid App Check issues)
+   * Lista pacientes com filtros opcionais (uses Unified Service)
    */
   list: (params: PatientApi.ListParams = {}): Promise<FunctionResponse<PatientApi.Patient[]>> =>
-    callFunctionHttpWithResponse('listPatientsV2', params),
+    callFunctionHttpWithResponse('patientServiceHttp', { ...params, action: 'list' }),
 
   /**
-   * Obtém um paciente por ID (uses HTTP to avoid CORS issues)
+   * Obtém um paciente por ID (uses Unified Service)
    */
   get: (idOrParams: string | PatientApi.GetParams): Promise<PatientApi.Patient> => {
     const data = typeof idOrParams === 'string' ? { patientId: idOrParams } : idOrParams;
-    return callFunctionHttp('getPatientHttp', data);
+    return callFunctionHttp<{ action: string } & PatientApi.GetParams, { data: PatientApi.Patient }>(
+      'patientServiceHttp', 
+      { ...data, action: 'get' }
+    ).then(res => res.data);
   },
 
   /**
-   * Cria um novo paciente (usa URL HTTP direta para evitar CORS no cadastro rápido)
+   * Cria um novo paciente (uses Unified Service)
    */
   create: async (patient: PatientApi.CreateData): Promise<PatientApi.Patient> => {
-    const auth = getFirebaseAuth();
-    const token = await auth.currentUser?.getIdToken();
-    if (!token) {
-      throw new FunctionCallError('createPatientV2', 'No authentication token available');
-    }
-    const url = API_URLS.patients.create;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-      },
-      body: JSON.stringify(patient),
-    });
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new FunctionCallError('createPatientV2', new Error(`HTTP ${response.status}: ${errorText}`));
-    }
-    const result = await response.json() as { data: PatientApi.Patient };
-    return result.data;
-  },
-
-  /**
-   * Atualiza um paciente existente
-   */
-  update: async (patientId: string, updates: PatientApi.UpdateData): Promise<PatientApi.Patient> => {
-    const res = await callFunctionHttp<{ patientId: string } & PatientApi.UpdateData, { data: PatientApi.Patient }>(
-      'updatePatientV2',
-      { patientId, ...updates }
+    const res = await callFunctionHttp<any, { data: PatientApi.Patient }>(
+      'patientServiceHttp',
+      { ...patient, action: 'create' }
     );
     return res.data;
   },
 
   /**
-   * Remove um paciente
+   * Atualiza um paciente existente (uses Unified Service)
    */
-  delete: (patientId: string): Promise<{ success: boolean }> =>
-    callFunctionHttp('deletePatientV2', { patientId }),
+  update: async (patientId: string, updates: PatientApi.UpdateData): Promise<PatientApi.Patient> => {
+    const res = await callFunctionHttp<any, { data: PatientApi.Patient }>(
+      'patientServiceHttp',
+      { patientId, ...updates, action: 'update' }
+    );
+    return res.data;
+  },
 
   /**
-   * Obtém estatísticas de um paciente (usa HTTP para evitar CORS)
+   * Remove um paciente (uses Unified Service)
+   */
+  delete: (patientId: string): Promise<{ success: boolean }> =>
+    callFunctionHttp('patientServiceHttp', { patientId, action: 'delete' }),
+
+  /**
+   * Obtém estatísticas de um paciente (uses Unified Service)
    */
   getStats: async (patientId: string): Promise<PatientApi.Stats> => {
-    const res = await callFunctionHttp<{ patientId: string }, { data: PatientApi.Stats }>(
-      'getPatientStatsV2',
-      { patientId }
+    const res = await callFunctionHttp<any, { data: PatientApi.Stats }>(
+      'patientServiceHttp',
+      { patientId, action: 'stats' }
     );
     return res.data;
   },
@@ -788,65 +780,109 @@ export const clinicalApi = {
 };
 
 /**
+ * API de Evoluções no Firebase Functions
+ */
+export const evolutionsApi = {
+  /**
+   * Lista evoluções de um paciente (uses Unified Service)
+   */
+  list: (patientId: string): Promise<FunctionResponse<ClinicalApi.MedicalRecord[]>> =>
+    callFunctionHttpWithResponse('evolutionServiceHttp', { patientId, action: 'list' }),
+
+  /**
+   * Obtém uma evolução por ID (uses Unified Service)
+   */
+  get: async (evolutionId: string): Promise<ClinicalApi.MedicalRecord> => {
+    const res = await callFunctionHttp<any, { data: ClinicalApi.MedicalRecord }>(
+      'evolutionServiceHttp',
+      { evolutionId, action: 'get' }
+    );
+    return res.data;
+  },
+
+  /**
+   * Cria uma nova evolução (uses Unified Service)
+   */
+  create: async (data: any): Promise<ClinicalApi.MedicalRecord> => {
+    const res = await callFunctionHttp<any, { data: ClinicalApi.MedicalRecord }>(
+      'evolutionServiceHttp',
+      { ...data, action: 'create' }
+    );
+    return res.data;
+  },
+
+  /**
+   * Atualiza uma evolução existente (uses Unified Service)
+   */
+  update: async (evolutionId: string, updates: any): Promise<ClinicalApi.MedicalRecord> => {
+    const res = await callFunctionHttp<any, { data: ClinicalApi.MedicalRecord }>(
+      'evolutionServiceHttp',
+      { evolutionId, ...updates, action: 'update' }
+    );
+    return res.data;
+  },
+
+  /**
+   * Remove uma evolução (uses Unified Service)
+   */
+  delete: (evolutionId: string): Promise<{ success: boolean }> =>
+    callFunctionHttp('evolutionServiceHttp', { evolutionId, action: 'delete' }),
+};
+
+/**
  * API de Agendamentos no Firebase Functions
  */
 export const appointmentsApi = {
   /**
-   * Lista agendamentos com filtros opcionais
-   * Usa HTTP para evitar problemas de CORS com callable functions
+   * Lista agendamentos com filtros opcionais (uses Unified Service)
    */
   list: (params: AppointmentApi.ListParams = {}): Promise<FunctionResponse<AppointmentApi.Appointment[]>> =>
-    callFunctionHttpWithResponse('listAppointments', params),
+    callFunctionHttpWithResponse('appointmentServiceHttp', { ...params, action: 'list' }),
 
   /**
-   * Obtém um agendamento por ID
-   * Usa HTTP para evitar problemas de CORS com callable functions
+   * Obtém um agendamento por ID (uses Unified Service)
    */
   get: async (appointmentId: string): Promise<AppointmentApi.Appointment> => {
-    const res = await callFunctionHttp<{ appointmentId: string }, { data: AppointmentApi.Appointment }>(
-      'getAppointmentV2',
-      { appointmentId }
+    const res = await callFunctionHttp<any, { data: AppointmentApi.Appointment }>(
+      'appointmentServiceHttp',
+      { appointmentId, action: 'get' }
     );
     return res.data;
   },
 
   /**
-   * Cria um novo agendamento
-   * Usa HTTP para evitar problemas de CORS com callable functions
+   * Cria um novo agendamento (uses Unified Service)
    */
   create: async (appointment: AppointmentApi.CreateData): Promise<AppointmentApi.Appointment> => {
-    const res = await callFunctionHttp<AppointmentApi.CreateData, { data: AppointmentApi.Appointment }>(
-      'createAppointmentV2',
-      appointment
+    const res = await callFunctionHttp<any, { data: AppointmentApi.Appointment }>(
+      'appointmentServiceHttp',
+      { ...appointment, action: 'create' }
     );
     return res.data;
   },
 
   /**
-   * Atualiza um agendamento existente
-   * Usa HTTP para evitar problemas de CORS com callable functions
+   * Atualiza um agendamento existente (uses Unified Service)
    */
   update: async (appointmentId: string, updates: AppointmentApi.UpdateData): Promise<AppointmentApi.Appointment> => {
-    const res = await callFunctionHttp<{ appointmentId: string } & AppointmentApi.UpdateData, { data: AppointmentApi.Appointment }>(
-      'updateAppointmentV2',
-      { appointmentId, ...updates }
+    const res = await callFunctionHttp<any, { data: AppointmentApi.Appointment }>(
+      'appointmentServiceHttp',
+      { appointmentId, ...updates, action: 'update' }
     );
     return res.data;
   },
 
   /**
-   * Cancela um agendamento
-   * Usa HTTP para evitar problemas de CORS com callable functions
+   * Cancela um agendamento (uses Unified Service)
    */
   cancel: (appointmentId: string, reason?: string): Promise<{ success: boolean }> =>
-    callFunctionHttp('cancelAppointmentV2', { appointmentId, reason }),
+    callFunctionHttp('appointmentServiceHttp', { appointmentId, reason, action: 'cancel' }),
 
   /**
-   * Verifica conflitos de horário
-   * Usa HTTP para evitar problemas de CORS com callable functions
+   * Verifica conflitos de horário (uses Unified Service)
    */
   checkTimeConflict: (params: AppointmentApi.CheckConflictParams): Promise<AppointmentApi.ConflictResult> =>
-    callFunctionHttp('checkTimeConflictV2', params),
+    callFunctionHttp('appointmentServiceHttp', { ...params, action: 'checkConflict' }),
 };
 
 /**
@@ -921,4 +957,5 @@ export const api = {
   clinical: clinicalApi,
   appointments: appointmentsApi,
   profile: profileApi,
+  evolutions: evolutionsApi,
 };
