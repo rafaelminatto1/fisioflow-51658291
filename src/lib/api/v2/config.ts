@@ -10,7 +10,7 @@
 const _REGION = import.meta.env.VITE_FIREBASE_REGION || 'southamerica-east1';
 const _PROJECT_NUMBER = import.meta.env.VITE_FIREBASE_PROJECT_NUMBER || '412418905255';
 const _LEGACY_HASH = import.meta.env.VITE_CLOUD_FUNCTIONS_HASH || 'tfecm5cqoq';
-const _RUN_APP_PATTERN = import.meta.env.VITE_CLOUD_RUN_PATTERN || 'project-number';
+const _RUN_APP_PATTERN = import.meta.env.VITE_CLOUD_RUN_PATTERN || 'legacy-hash';
 
 // URL base para Cloud Run (Firebase Functions v2)
 // Mantém barra final para evitar preflight em endpoint sem slash que costuma responder 404.
@@ -54,6 +54,12 @@ export const API_URLS = {
   profile: {
     get: CLOUD_RUN_BASE_URL('getProfile'),
     update: CLOUD_RUN_BASE_URL('updateProfile'),
+  },
+  services: {
+    patient: CLOUD_RUN_BASE_URL('patientServiceHttp'),
+    appointment: CLOUD_RUN_BASE_URL('appointmentServiceHttp'),
+    evolution: CLOUD_RUN_BASE_URL('evolutionServiceHttp'),
+    ai: CLOUD_RUN_BASE_URL('aiServiceHttp'),
   },
   financial: {
     listTransactions: CLOUD_RUN_BASE_URL('listTransactionsV2'),
