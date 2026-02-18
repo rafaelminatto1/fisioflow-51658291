@@ -234,85 +234,52 @@ export const listPatientsHttp = onRequest(
  * HTTP version of getPatient for CORS/compatibility
  */
 export const getPatientHttp = onRequest(
-  {
-    region: 'southamerica-east1',
-    memory: '256MiB',
-    maxInstances: 1,
-    invoker: 'public',
-  },
-  async (req, res) => {
-    if (req.method === 'OPTIONS') {
-      setCorsHeaders(res, req);
-      res.status(204).send('');
-      return;
-    }
-
+  PATIENT_HTTP_OPTS,
+  withErrorHandling(async (req, res) => {
     if (req.method !== 'POST') {
-      setCorsHeaders(res, req);
       res.status(405).json({ error: 'Method not allowed' });
       return;
     }
 
-    setCorsHeaders(res, req);
+    const { uid } = await verifyAuthHeader(req);
+    const organizationId = await getOrganizationId(uid);
+    const { patientId } = (req.body as Record<string, unknown>) || {};
 
-    try {
-      const { uid } = await verifyAuthHeader(req);
-      const organizationId = await getOrganizationId(uid);
-      const { patientId } = (req.body as Record<string, unknown>) || {};
-
-      if (!patientId) {
-        res.status(400).json({ error: 'patientId é obrigatório' });
-        return;
-      }
-
-      const pool = getPool();
-
-      const result = await pool.query(
-        `SELECT id, name, cpf, email, phone, birth_date, gender,
-          main_condition, status, progress, is_active,
-          created_at, updated_at
-        FROM patients
-        WHERE id = $1 AND organization_id = $2`,
-        [patientId, organizationId]
-      );
-
-      if (result.rows.length === 0) {
-        res.status(404).json({ error: 'Paciente não encontrado' });
-        return;
-      }
-
-      res.json({ data: result.rows[0] });
-    } catch (error: unknown) {
-      logger.error('Error in getPatientHttp:', error);
-      setCorsHeaders(res, req);
-      const statusCode = error instanceof HttpsError && error.code === 'unauthenticated' ? 401 : 500;
-      res.status(statusCode).json({ error: error instanceof Error ? error.message : 'Erro ao buscar paciente' });
+    if (!patientId) {
+      res.status(400).json({ error: 'patientId é obrigatório' });
+      return;
     }
-  }
+
+    const pool = getPool();
+
+    const result = await pool.query(
+      `SELECT id, name, cpf, email, phone, birth_date, gender,
+        main_condition, status, progress, is_active,
+        created_at, updated_at
+      FROM patients
+      WHERE id = $1 AND organization_id = $2`,
+      [patientId, organizationId]
+    );
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'Paciente não encontrado' });
+      return;
+    }
+
+    res.json({ data: result.rows[0] });
+  }, 'getPatientHttp')
 );
 
 /**
  * HTTP version of getPatientStats for CORS/compatibility
  */
 export const getPatientStatsHttp = onRequest(
-  {
-    region: 'southamerica-east1',
-    maxInstances: 1,
-    invoker: 'public',
-  },
-  async (req, res) => {
-    if (req.method === 'OPTIONS') {
-      setCorsHeaders(res, req);
-      res.status(204).send('');
-      return;
-    }
-
+  PATIENT_HTTP_OPTS,
+  withErrorHandling(async (req, res) => {
     if (req.method !== 'POST') {
       res.status(405).json({ error: 'Method not allowed' });
       return;
     }
-
-    setCorsHeaders(res, req);
 
     const emptyStats = () => ({
       data: {
@@ -397,16 +364,13 @@ export const getPatientStatsHttp = onRequest(
       });
     } catch (error: unknown) {
       if (error instanceof HttpsError && error.code === 'unauthenticated') {
-        setCorsHeaders(res, req);
-        res.status(401).json({ error: error.message });
-        return;
+        throw error; // Let wrapper handle it
       }
       logger.error('Error in getPatientStatsHttp:', error);
-      setCorsHeaders(res, req);
       // Retorna stats vazios em vez de 500 para não quebrar o prefetch
       res.status(200).json(emptyStats());
     }
-  }
+  }, 'getPatientStatsHttp')
 );
 
 /**
