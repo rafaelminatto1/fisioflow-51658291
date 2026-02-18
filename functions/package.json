@@ -43,6 +43,7 @@
     "groq-sdk": "^0.37.0",
     "pg": "^8.13.1",
     "react-dom": "^19.1.0",
+    "expo-server-sdk": "^3.0.0",
     "resend": "^6.9.1",
     "sharp": "^0.33.4",
     "stripe": "^17.3.1",

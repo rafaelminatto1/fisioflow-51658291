@@ -4,6 +4,7 @@ import { getOrganizationIdCached } from '../lib/cache-helpers';
 import { logger } from '../lib/logger';
 import { setCorsHeaders } from '../lib/cors';
 import { logAuditEvent } from '../lib/audit';
+import { authorizeRequest } from '../middleware/auth';
 
 // Configuração inline para evitar conflito CORS
 const EVOLUTION_HTTP_OPTS = {
@@ -25,6 +26,10 @@ async function verifyAuthHeader(req: any): Promise<{ uid: string }> {
       throw new HttpsError('unauthenticated', 'Invalid token');
     }
 }
+
+// ============================================================================
+// HTTP HANDLERS
+// ============================================================================
 
 /**
  * List evolutions for a patient
@@ -228,3 +233,86 @@ export const deleteEvolutionHttp = onRequest(EVOLUTION_HTTP_OPTS, async (req, re
       res.status(error.code === 'unauthenticated' ? 401 : 500).json({ error: error.message || 'Internal Server Error' });
     }
 });
+
+// ============================================================================
+// CALLABLE HANDLERS
+// ============================================================================
+
+export const listEvolutionsHandler = async (request: any) => {
+    const auth = await authorizeRequest(request.auth?.token);
+    const { patientId } = request.data;
+    if (!patientId) throw new HttpsError('invalid-argument', 'patientId é obrigatório');
+    const pool = getPool();
+    const result = await pool.query(
+      'SELECT * FROM evolutions WHERE organization_id = $1 AND patient_id = $2 ORDER BY date DESC',
+      [auth.organizationId, patientId]
+    );
+    return { data: result.rows };
+};
+
+export const getEvolutionHandler = async (request: any) => {
+    const auth = await authorizeRequest(request.auth?.token);
+    const { evolutionId } = request.data;
+    if (!evolutionId) throw new HttpsError('invalid-argument', 'evolutionId é obrigatório');
+    const pool = getPool();
+    const result = await pool.query(
+      'SELECT * FROM evolutions WHERE organization_id = $1 AND id = $2',
+      [auth.organizationId, evolutionId]
+    );
+    if (result.rows.length === 0) throw new HttpsError('not-found', 'Evolução não encontrada');
+    return { data: result.rows[0] };
+};
+
+export const createEvolutionHandler = async (request: any) => {
+    const auth = await authorizeRequest(request.auth?.token);
+    const { patientId, appointmentId, date, subjective, objective, assessment, plan, pain_level, attachments } = request.data;
+    if (!patientId || !date) throw new HttpsError('invalid-argument', 'patientId e date são obrigatórios');
+    const pool = getPool();
+    const result = await pool.query(
+      `INSERT INTO evolutions (patient_id, therapist_id, organization_id, appointment_id, date, subjective, objective, assessment, plan, pain_level, attachments)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       RETURNING *`,
+      [patientId, auth.userId, auth.organizationId, appointmentId, date, subjective, objective, assessment, plan, pain_level, attachments ? JSON.stringify(attachments) : null]
+    );
+    return { data: result.rows[0] };
+};
+
+export const updateEvolutionHandler = async (request: any) => {
+    const auth = await authorizeRequest(request.auth?.token);
+    const { evolutionId, ...updates } = request.data;
+    if (!evolutionId) throw new HttpsError('invalid-argument', 'evolutionId é obrigatório');
+    const allowedFields = ['date', 'subjective', 'objective', 'assessment', 'plan', 'pain_level', 'attachments'];
+    const setClauses: string[] = [];
+    const values: any[] = [];
+    let paramCount = 1;
+    for (const key of Object.keys(updates)) {
+        if(allowedFields.includes(key)) {
+            setClauses.push(`${key} = $${paramCount}`);
+            values.push(key === 'attachments' ? JSON.stringify(updates[key]) : updates[key]);
+            paramCount++;
+        }
+    }
+    if (setClauses.length === 0) throw new HttpsError('invalid-argument', 'Nenhum campo para atualizar');
+    setClauses.push(`updated_at = NOW()`);
+    values.push(evolutionId, auth.organizationId);
+    const pool = getPool();
+    const result = await pool.query(
+      `UPDATE evolutions SET ${setClauses.join(', ')} WHERE id = $${paramCount} AND organization_id = $${paramCount + 1} RETURNING *`,
+      values
+    );
+    if (result.rows.length === 0) throw new HttpsError('not-found', 'Evolução não encontrada');
+    return { data: result.rows[0] };
+};
+
+export const deleteEvolutionHandler = async (request: any) => {
+    const auth = await authorizeRequest(request.auth?.token);
+    const { evolutionId } = request.data;
+    if (!evolutionId) throw new HttpsError('invalid-argument', 'evolutionId é obrigatório');
+    const pool = getPool();
+    const result = await pool.query(
+      'DELETE FROM evolutions WHERE id = $1 AND organization_id = $2',
+      [evolutionId, auth.organizationId]
+    );
+    if (result.rowCount === 0) throw new HttpsError('not-found', 'Evolução não encontrada');
+    return { success: true };
+};
