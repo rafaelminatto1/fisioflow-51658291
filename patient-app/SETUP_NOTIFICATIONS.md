@@ -74,3 +74,9 @@ Em vez de:
 ```
 ❌ Error: "projectId": Invalid uuid.
 ```
+
+## Integração com Cloud Functions
+
+- Os tokens de push são persistidos tanto em `users/{uid}` quanto em `profiles/{uid}` para que as Cloud Functions possam consumir as listas quando enviam lembretes 24h/2h.
+- As Cloud Functions `appointmentReminders` e `appointmentReminders2h` agora disparam notificações por e-mail, WhatsApp e push (Expo Server) usando os tokens armazenados.
+- Garanta que as funções estejam implantadas na região `southamerica-east1` para manter a consistência com o app.

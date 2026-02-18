@@ -24,6 +24,7 @@ import {
   sendWhatsAppTemplateMessageInternal,
   sendWhatsAppTextMessageInternal,
 } from '../communications/whatsapp';
+import { sendPushNotificationToUser } from '../integrations/notifications/push-notifications';
 
 const CORS_ORIGINS = [
   /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
@@ -74,6 +75,7 @@ export interface ScheduleNotificationSettings {
   send_reminder_24h?: boolean;
   send_reminder_2h?: boolean;
   send_cancellation_notice?: boolean;
+  send_push_notifications?: boolean;
   custom_confirmation_message?: string;
   custom_reminder_message?: string;
 }
@@ -92,6 +94,7 @@ export interface DispatchAppointmentNotificationInput {
 export interface DispatchAppointmentNotificationResult {
   email: NotificationResult;
   whatsapp: NotificationResult;
+  push: NotificationResult;
 }
 
 // ============================================================================
@@ -105,13 +108,14 @@ function getNotificationsCollection() {
 
 const DEFAULT_SCHEDULE_NOTIFICATION_SETTINGS: Required<Pick<
   ScheduleNotificationSettings,
-  'send_confirmation_email' | 'send_confirmation_whatsapp' | 'send_reminder_24h' | 'send_reminder_2h' | 'send_cancellation_notice'
+  'send_confirmation_email' | 'send_confirmation_whatsapp' | 'send_reminder_24h' | 'send_reminder_2h' | 'send_cancellation_notice' | 'send_push_notifications'
 >> = {
   send_confirmation_email: true,
   send_confirmation_whatsapp: true,
   send_reminder_24h: true,
   send_reminder_2h: true,
   send_cancellation_notice: true,
+  send_push_notifications: true,
 };
 
 function formatDatePtBr(dateValue: string): string {
@@ -190,6 +194,8 @@ export async function dispatchAppointmentNotification(
       : (input.kind === 'reminder_2h'
         ? !!settings.send_reminder_2h
         : !!settings.send_confirmation_whatsapp));
+  const eventAllowsPush = settings.send_push_notifications !== false;
+  const fallbackMessage = getDefaultMessage(input.kind, patientName, dateLabel, input.time);
 
   const email = patientData.email ? String(patientData.email) : '';
   const phone = patientData.phone ? String(patientData.phone) : '';
@@ -294,7 +300,6 @@ export async function dispatchAppointmentNotification(
     whatsappResult.error = 'Patient has no phone';
   } else {
     const to = formatPhoneForWhatsApp(phone);
-    const fallbackMessage = getDefaultMessage(input.kind, patientName, dateLabel, input.time);
     const customTemplate = ((
       input.kind === 'reminder_24h' || input.kind === 'reminder_2h'
         ? settings.custom_reminder_message
@@ -344,9 +349,53 @@ export async function dispatchAppointmentNotification(
     }
   }
 
+  const pushResult: NotificationResult = {
+    sent: false,
+    channel: 'push',
+  };
+
+  if (!eventAllowsPush) {
+    pushResult.error = 'Disabled by schedule settings';
+  } else {
+    const pushTitle = input.kind === 'cancelled'
+      ? 'Consulta cancelada'
+      : input.kind === 'rescheduled'
+        ? 'Consulta reagendada'
+        : (input.kind === 'reminder_24h' || input.kind === 'reminder_2h')
+          ? 'Lembrete de consulta'
+          : 'Consulta confirmada';
+
+    try {
+      const pushResponse = await sendPushNotificationToUser(input.patientId, {
+        title: pushTitle,
+        body: fallbackMessage,
+        data: {
+          type: 'appointment_notification',
+          appointmentId: input.appointmentId,
+          kind: input.kind,
+        },
+      });
+
+      if (pushResponse.successCount > 0) {
+        pushResult.sent = true;
+      }
+
+      if (pushResponse.failureCount > 0 || pushResponse.errors.length > 0) {
+        pushResult.error = pushResponse.errors.length > 0
+          ? pushResponse.errors.join('; ')
+          : 'One or more push notifications failed';
+      } else if (pushResponse.successCount === 0) {
+        pushResult.error = 'Nenhum token válido encontrado';
+      }
+    } catch (pushError) {
+      pushResult.error = pushError instanceof Error ? pushError.message : 'Failed to send push notification';
+    }
+  }
+
   return {
     email: emailResult,
     whatsapp: whatsappResult,
+    push: pushResult,
   };
 }
 
