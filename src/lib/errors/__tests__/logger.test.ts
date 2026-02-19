@@ -63,8 +63,11 @@ describe('Logger', () => {
 
   describe('performance', () => {
     it('should log performance metrics', () => {
+      logger.clearLogs(); // Clear previous logs
       logger.performance('Test operation', 100, 'TestComponent');
-      expect(console.log).toHaveBeenCalled();
+      const logs = logger.getLogs('performance');
+      expect(logs.length).toBeGreaterThan(0);
+      expect(logs[logs.length - 1].message).toBe('Test operation');
     });
   });
 

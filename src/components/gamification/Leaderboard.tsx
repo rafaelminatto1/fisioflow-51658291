@@ -1,8 +1,8 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Trophy, Medal, Crown, TrendingUp, Flame } from 'lucide-react';
+import { Trophy, Medal, Crown, Flame } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getFirebaseFunctions } from '@/integrations/firebase/app';
 import { httpsCallable } from 'firebase/functions';

@@ -12,7 +12,6 @@ import {
   Pressable,
   ScrollView,
   RefreshControl,
-  Badge,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { formatDistanceToNow } from 'date-fns';
@@ -36,9 +35,7 @@ import {
   onSnapshot,
   updateDoc,
   doc,
-  getDocs,
   writeBatch,
-  limit,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 

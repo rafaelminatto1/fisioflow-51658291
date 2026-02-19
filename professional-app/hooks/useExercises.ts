@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getExercises as apiGetExercises, getExerciseById as apiGetExerciseById, createExercise as apiCreateExercise, updateExercise as apiUpdateExercise, deleteExercise as apiDeleteExercise, type ApiExercise } from '@/lib/api';
+import { getExercises as apiGetExercises, createExercise as apiCreateExercise, updateExercise as apiUpdateExercise, deleteExercise as apiDeleteExercise, type ApiExercise } from '@/lib/api';
 import type { Exercise, ExerciseAssignment } from '@/types';
 
 export interface UseExercisesLibraryOptions {
