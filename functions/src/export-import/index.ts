@@ -8,8 +8,6 @@ import * as admin from 'firebase-admin';
 import { getLogger } from '../lib/logger';
 import { getPool } from '../init';
 
-// @ts-expect-error - csv-writer may not have types
-// @ts-expect-error - csv-parser may not have types
 
 const logger = getLogger('export-import');
 const db = admin.firestore();
