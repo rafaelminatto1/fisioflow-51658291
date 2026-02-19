@@ -11,6 +11,7 @@ import { Profile } from '../types/models';
 import { logger } from '../lib/logger';
 import { toValidUuid } from '../lib/uuid';
 import { withErrorHandling } from '../lib/error-handler';
+import { CORS_ORIGINS } from '../lib/cors';
 
 const auth = admin.auth();
 
@@ -143,6 +144,7 @@ export const getProfile = onRequest(
     region: 'southamerica-east1',
     maxInstances: 1,
     invoker: 'public',
+    cors: CORS_ORIGINS,
   },
   withErrorHandling(async (req, res) => {
     // Only accept POST requests
@@ -229,6 +231,7 @@ export const updateProfile = onRequest(
     region: 'southamerica-east1',
     maxInstances: 1,
     invoker: 'public',
+    cors: CORS_ORIGINS,
   },
   withErrorHandling(async (req, res) => {
     // Only accept POST requests

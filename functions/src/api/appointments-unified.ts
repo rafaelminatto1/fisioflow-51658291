@@ -5,7 +5,7 @@
  */
 
 import { onCall, onRequest, HttpsError } from 'firebase-functions/v2/https';
-import { CORS_ORIGINS } from '../lib/cors';
+import { CORS_ORIGINS, setCorsHeaders } from '../lib/cors';
 import { logger } from '../lib/logger';
 import { 
     listAppointmentsHttp,
@@ -31,6 +31,15 @@ export const appointmentServiceHttp = onRequest(
         invoker: 'public',
     },
     async (req, res) => {
+        // Set CORS headers manually to ensure they work
+        setCorsHeaders(res, req);
+
+        // Handle preflight OPTIONS requests
+        if (req.method === 'OPTIONS') {
+            res.status(204).send('');
+            return;
+        }
+
         const action = req.body?.action || req.query?.action;
 
         if (action === 'ping') {

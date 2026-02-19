@@ -158,6 +158,23 @@ const App = () => {
       logger.info('Aplicação iniciada', { timestamp: new Date().toISOString() }, 'App');
     }
 
+    // Remover loader inicial após React montar (fallback de segurança)
+    const removeInitialLoader = () => {
+      const loader = document.getElementById('initial-loader');
+      if (loader) {
+        logger.info('Removendo initial loader', {}, 'App');
+        loader.style.opacity = '0';
+        loader.style.transition = 'opacity 0.3s ease-out';
+        setTimeout(() => {
+          loader.remove();
+          logger.info('Initial loader removido', {}, 'App');
+        }, 300);
+      }
+    };
+
+    // Remover loader após 2 segundos (fallback se o React não remover)
+    const loaderTimeout = setTimeout(removeInitialLoader, 2000);
+
     initMonitoring();
     
     // Initialize our comprehensive performance monitoring system
@@ -183,6 +200,10 @@ const App = () => {
 
     initNotifications();
     sessionStorage.removeItem('chunk_load_error_reload');
+
+    return () => {
+      clearTimeout(loaderTimeout);
+    };
   }, []);
 
   return (

@@ -10,7 +10,7 @@ import { authorizeRequest } from '../middleware/auth';
 import { verifyAppCheck } from '../middleware/app-check';
 import { enforceRateLimit, RATE_LIMITS } from '../middleware/rate-limit';
 import { Patient } from '../types/models';
-import { setCorsHeaders } from '../lib/cors';
+import { setCorsHeaders, CORS_ORIGINS } from '../lib/cors';
 import { withErrorHandling } from '../lib/error-handler';
 import { logger } from '../lib/logger';
 import { logAuditEvent } from '../lib/audit';
@@ -24,6 +24,7 @@ const PATIENT_HTTP_OPTS = {
   region: 'southamerica-east1',
   maxInstances: 1,
   invoker: 'public',
+  cors: CORS_ORIGINS,
 };
 
 interface ListPatientsRequest {

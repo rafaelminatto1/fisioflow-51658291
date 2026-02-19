@@ -73,10 +73,47 @@ async function fetchAppointmentsByPeriod(query: PeriodQuery): Promise<Appointmen
       period: formatPeriodBounds(bounds),
     }, 'useAppointmentsByPeriod');
 
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'src/hooks/useAppointmentsByPeriod.ts:70',
+        message: 'Period appointments fetched',
+        data: {
+          viewType: query.viewType,
+          period: formatPeriodBounds(bounds),
+          count: filtered.length,
+        },
+        runId: 'agenda-debug',
+        hypothesisId: 'H1',
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+
     timer();
     return filtered;
   } catch (error) {
     logger.error('Failed to fetch period appointments', error, 'useAppointmentsByPeriod');
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'src/hooks/useAppointmentsByPeriod.ts:79',
+        message: 'Failed to fetch period appointments',
+        data: {
+          viewType: query.viewType,
+          period: formatPeriodBounds(bounds),
+        },
+        runId: 'agenda-debug',
+        hypothesisId: 'H1',
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+
     timer();
     throw error;
   }
