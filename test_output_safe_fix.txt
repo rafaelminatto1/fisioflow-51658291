@@ -1,0 +1,1374 @@
+
+> vite_react_shadcn_ts@0.0.0 test
+> vitest src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx
+
+
+ RUN  v3.2.4 /home/rafael/antigravity/fisioflow/fisioflow-51658291
+
+
+ RUN  v3.2.4 /home/rafael/antigravity/fisioflow/fisioflow-51658291
+
+stdout | src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx
+Test suite initialized
+
+stdout | src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx
+Test suite initialized
+
+ × src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx > PaymentRegistrationModal > renders correctly when open 105ms
+   → 
+   → Cannot read properties of undefined (reading 'clipboard')
+ × src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx > PaymentRegistrationModal > submits payment successfully 20ms
+   → 
+   → Cannot read properties of undefined (reading 'clipboard')
+ × src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx > PaymentRegistrationModal > updates appointment status only for single session 16ms
+   → 
+   → Cannot read properties of undefined (reading 'clipboard')
+ × src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx > PaymentRegistrationModal > handles API errors gracefully 15ms
+   → 
+   → Cannot read properties of undefined (reading 'clipboard')
+ ❯ src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx (4 tests | 4 failed) 161ms
+   × PaymentRegistrationModal > renders correctly when open 105ms
+     → 
+     → Cannot read properties of undefined (reading 'clipboard')
+   × PaymentRegistrationModal > submits payment successfully 20ms
+     → 
+     → Cannot read properties of undefined (reading 'clipboard')
+   × PaymentRegistrationModal > updates appointment status only for single session 16ms
+     → 
+     → Cannot read properties of undefined (reading 'clipboard')
+   × PaymentRegistrationModal > handles API errors gracefully 15ms
+     → 
+     → Cannot read properties of undefined (reading 'clipboard')
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx [ src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx ]
+TypeError: Cannot read properties of undefined (reading 'clipboard')
+ ❯ detachClipboardStubFromView node_modules/.pnpm/@testing-library+user-event@14.6.1_@testing-library+dom@10.4.1/node_modules/@testing-library/user-event/dist/esm/utils/dataTransfer/Clipboard.js:120:42
+ ❯ node_modules/.pnpm/@testing-library+user-event@14.6.1_@testing-library+dom@10.4.1/node_modules/@testing-library/user-event/dist/esm/utils/dataTransfer/Clipboard.js:159:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx > PaymentRegistrationModal > renders correctly when open
+{
+  stack: 'AggregateError: \n' +
+    '    at aggregateErrors (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:527:11)\n' +
+    '    at process.env.NODE_ENV.exports.act (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:872:24)\n' +
+    '    at /home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js:46:25\n' +
+    '    at renderRoot (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:189:26)\n' +
+    '    at Proxy.render (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:291:10)\n' +
+    '    at /home/rafael/antigravity/fisioflow/fisioflow-51658291/src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx:73:9\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n' +
+    '    at new Promise (<anonymous>)',
+  errors: [
+    {
+      stack: "TypeError: Cannot read properties of undefined (reading 'prototype')\n" +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: "Cannot read properties of undefined (reading 'prototype')",
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: "TypeError: Cannot read properties of undefined (reading 'prototype')\n" +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: "Cannot read properties of undefined (reading 'prototype')",
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.setTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-dismissable-layer@1.1.11_@types+react-dom@19.2.3_@types+react@19.2.9__@types+_s6lvzsromzmqgv7uol2tvvmg3a/node_modules/@radix-ui/react-dismissable-layer/src/dismissable-layer.tsx:282:28\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: 'window.setTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.clearTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n' +
+        '    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n' +
+        '    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n' +
+        '    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n' +
+        '    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n' +
+        '    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n' +
+        '    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)',
+      message: 'window.clearTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.clearTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n' +
+        '    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n' +
+        '    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n' +
+        '    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n' +
+        '    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n' +
+        '    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n' +
+        '    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)',
+      message: 'window.clearTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    }
+  ],
+  message: '',
+  constructor: 'Function<AggregateError>',
+  name: 'AggregateError',
+  toString: 'Function<toString>',
+  stacks: [
+    {
+      method: 'aggregateErrors',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js',
+      line: 527,
+      column: 11
+    },
+    {
+      method: 'process.env.NODE_ENV.exports.act',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js',
+      line: 872,
+      column: 24
+    },
+    {
+      method: '',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js',
+      line: 46,
+      column: 25
+    },
+    {
+      method: 'renderRoot',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js',
+      line: 189,
+      column: 26
+    },
+    {
+      method: 'Proxy.render',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js',
+      line: 291,
+      column: 10
+    },
+    {
+      method: '',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx',
+      line: 73,
+      column: 9
+    }
+  ]
+}
+ ❯ aggregateErrors node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:527:11
+ ❯ process.env.NODE_ENV.exports.act node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:872:24
+ ❯ node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js:46:25
+ ❯ renderRoot node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:189:26
+ ❯ Proxy.render node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:291:10
+ ❯ src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx:73:9
+     71| 
+     72|     it('renders correctly when open', () => {
+     73|         render(
+       |         ^
+     74|             <PaymentRegistrationModal
+     75|                 open={true}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx > PaymentRegistrationModal > renders correctly when open
+ FAIL  src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx > PaymentRegistrationModal > submits payment successfully
+ FAIL  src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx > PaymentRegistrationModal > updates appointment status only for single session
+ FAIL  src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx > PaymentRegistrationModal > handles API errors gracefully
+TypeError: Cannot read properties of undefined (reading 'clipboard')
+ ❯ resetClipboardStubOnView node_modules/.pnpm/@testing-library+user-event@14.6.1_@testing-library+dom@10.4.1/node_modules/@testing-library/user-event/dist/esm/utils/dataTransfer/Clipboard.js:115:42
+ ❯ node_modules/.pnpm/@testing-library+user-event@14.6.1_@testing-library+dom@10.4.1/node_modules/@testing-library/user-event/dist/esm/utils/dataTransfer/Clipboard.js:156:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx > PaymentRegistrationModal > submits payment successfully
+{
+  stack: 'AggregateError: \n' +
+    '    at aggregateErrors (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:527:11)\n' +
+    '    at process.env.NODE_ENV.exports.act (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:872:24)\n' +
+    '    at /home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js:46:25\n' +
+    '    at renderRoot (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:189:26)\n' +
+    '    at Proxy.render (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:291:10)\n' +
+    '    at /home/rafael/antigravity/fisioflow/fisioflow-51658291/src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx:88:9\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n' +
+    '    at new Promise (<anonymous>)',
+  errors: [
+    {
+      stack: "TypeError: Cannot read properties of undefined (reading 'prototype')\n" +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: "Cannot read properties of undefined (reading 'prototype')",
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: "TypeError: Cannot read properties of undefined (reading 'prototype')\n" +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: "Cannot read properties of undefined (reading 'prototype')",
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.setTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-dismissable-layer@1.1.11_@types+react-dom@19.2.3_@types+react@19.2.9__@types+_s6lvzsromzmqgv7uol2tvvmg3a/node_modules/@radix-ui/react-dismissable-layer/src/dismissable-layer.tsx:282:28\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: 'window.setTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.clearTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n' +
+        '    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n' +
+        '    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n' +
+        '    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n' +
+        '    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n' +
+        '    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n' +
+        '    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)',
+      message: 'window.clearTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.clearTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n' +
+        '    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n' +
+        '    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n' +
+        '    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n' +
+        '    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n' +
+        '    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n' +
+        '    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)',
+      message: 'window.clearTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    }
+  ],
+  message: '',
+  constructor: 'Function<AggregateError>',
+  name: 'AggregateError',
+  toString: 'Function<toString>',
+  stacks: [
+    {
+      method: 'aggregateErrors',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js',
+      line: 527,
+      column: 11
+    },
+    {
+      method: 'process.env.NODE_ENV.exports.act',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js',
+      line: 872,
+      column: 24
+    },
+    {
+      method: '',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js',
+      line: 46,
+      column: 25
+    },
+    {
+      method: 'renderRoot',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js',
+      line: 189,
+      column: 26
+    },
+    {
+      method: 'Proxy.render',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js',
+      line: 291,
+      column: 10
+    },
+    {
+      method: '',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx',
+      line: 88,
+      column: 9
+    }
+  ]
+}
+ ❯ aggregateErrors node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:527:11
+ ❯ process.env.NODE_ENV.exports.act node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:872:24
+ ❯ node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js:46:25
+ ❯ renderRoot node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:189:26
+ ❯ Proxy.render node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:291:10
+ ❯ src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx:88:9
+     86|     it('submits payment successfully', async () => {
+     87|         const user = userEvent.setup();
+     88|         render(
+       |         ^
+     89|             <PaymentRegistrationModal
+     90|                 open={true}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx > PaymentRegistrationModal > updates appointment status only for single session
+{
+  stack: 'AggregateError: \n' +
+    '    at aggregateErrors (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:527:11)\n' +
+    '    at process.env.NODE_ENV.exports.act (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:872:24)\n' +
+    '    at /home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js:46:25\n' +
+    '    at renderRoot (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:189:26)\n' +
+    '    at Proxy.render (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:291:10)\n' +
+    '    at /home/rafael/antigravity/fisioflow/fisioflow-51658291/src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx:132:9\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n' +
+    '    at new Promise (<anonymous>)',
+  errors: [
+    {
+      stack: "TypeError: Cannot read properties of undefined (reading 'prototype')\n" +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: "Cannot read properties of undefined (reading 'prototype')",
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: "TypeError: Cannot read properties of undefined (reading 'prototype')\n" +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: "Cannot read properties of undefined (reading 'prototype')",
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.setTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-dismissable-layer@1.1.11_@types+react-dom@19.2.3_@types+react@19.2.9__@types+_s6lvzsromzmqgv7uol2tvvmg3a/node_modules/@radix-ui/react-dismissable-layer/src/dismissable-layer.tsx:282:28\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: 'window.setTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.clearTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n' +
+        '    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n' +
+        '    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n' +
+        '    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n' +
+        '    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n' +
+        '    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n' +
+        '    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)',
+      message: 'window.clearTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.clearTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n' +
+        '    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n' +
+        '    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n' +
+        '    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n' +
+        '    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n' +
+        '    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n' +
+        '    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)',
+      message: 'window.clearTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    }
+  ],
+  message: '',
+  constructor: 'Function<AggregateError>',
+  name: 'AggregateError',
+  toString: 'Function<toString>',
+  stacks: [
+    {
+      method: 'aggregateErrors',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js',
+      line: 527,
+      column: 11
+    },
+    {
+      method: 'process.env.NODE_ENV.exports.act',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js',
+      line: 872,
+      column: 24
+    },
+    {
+      method: '',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js',
+      line: 46,
+      column: 25
+    },
+    {
+      method: 'renderRoot',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js',
+      line: 189,
+      column: 26
+    },
+    {
+      method: 'Proxy.render',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js',
+      line: 291,
+      column: 10
+    },
+    {
+      method: '',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx',
+      line: 132,
+      column: 9
+    }
+  ]
+}
+ ❯ aggregateErrors node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:527:11
+ ❯ process.env.NODE_ENV.exports.act node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:872:24
+ ❯ node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js:46:25
+ ❯ renderRoot node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:189:26
+ ❯ Proxy.render node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:291:10
+ ❯ src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx:132:9
+    130|         // Current implementation always updates to 'paid', so this te…
+    131|         const user = userEvent.setup();
+    132|         render(
+       |         ^
+    133|             <PaymentRegistrationModal
+    134|                 open={true}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx > PaymentRegistrationModal > handles API errors gracefully
+{
+  stack: 'AggregateError: \n' +
+    '    at aggregateErrors (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:527:11)\n' +
+    '    at process.env.NODE_ENV.exports.act (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:872:24)\n' +
+    '    at /home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js:46:25\n' +
+    '    at renderRoot (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:189:26)\n' +
+    '    at Proxy.render (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:291:10)\n' +
+    '    at /home/rafael/antigravity/fisioflow/fisioflow-51658291/src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx:155:9\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n' +
+    '    at new Promise (<anonymous>)',
+  errors: [
+    {
+      stack: "TypeError: Cannot read properties of undefined (reading 'prototype')\n" +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: "Cannot read properties of undefined (reading 'prototype')",
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: "TypeError: Cannot read properties of undefined (reading 'prototype')\n" +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: "Cannot read properties of undefined (reading 'prototype')",
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.setTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-dismissable-layer@1.1.11_@types+react-dom@19.2.3_@types+react@19.2.9__@types+_s6lvzsromzmqgv7uol2tvvmg3a/node_modules/@radix-ui/react-dismissable-layer/src/dismissable-layer.tsx:282:28\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: 'window.setTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.clearTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n' +
+        '    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n' +
+        '    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n' +
+        '    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n' +
+        '    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n' +
+        '    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n' +
+        '    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)',
+      message: 'window.clearTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.clearTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n' +
+        '    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n' +
+        '    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n' +
+        '    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n' +
+        '    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n' +
+        '    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n' +
+        '    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)',
+      message: 'window.clearTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    }
+  ],
+  message: '',
+  constructor: 'Function<AggregateError>',
+  name: 'AggregateError',
+  toString: 'Function<toString>',
+  stacks: [
+    {
+      method: 'aggregateErrors',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js',
+      line: 527,
+      column: 11
+    },
+    {
+      method: 'process.env.NODE_ENV.exports.act',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js',
+      line: 872,
+      column: 24
+    },
+    {
+      method: '',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js',
+      line: 46,
+      column: 25
+    },
+    {
+      method: 'renderRoot',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js',
+      line: 189,
+      column: 26
+    },
+    {
+      method: 'Proxy.render',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js',
+      line: 291,
+      column: 10
+    },
+    {
+      method: '',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx',
+      line: 155,
+      column: 9
+    }
+  ]
+}
+ ❯ aggregateErrors node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:527:11
+ ❯ process.env.NODE_ENV.exports.act node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:872:24
+ ❯ node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js:46:25
+ ❯ renderRoot node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:189:26
+ ❯ Proxy.render node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:291:10
+ ❯ src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx:155:9
+    153|         (FinancialService.createTransaction as any).mockRejectedValue(…
+    154| 
+    155|         render(
+       |         ^
+    156|             <PaymentRegistrationModal
+    157|                 open={true}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  08:34:38
+   Duration  1.31s (transform 127ms, setup 183ms, collect 426ms, tests 161ms, environment 285ms, prepare 47ms)
+
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx [ src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx ]
+TypeError: Cannot read properties of undefined (reading 'clipboard')
+ ❯ detachClipboardStubFromView node_modules/.pnpm/@testing-library+user-event@14.6.1_@testing-library+dom@10.4.1/node_modules/@testing-library/user-event/dist/esm/utils/dataTransfer/Clipboard.js:120:42
+ ❯ node_modules/.pnpm/@testing-library+user-event@14.6.1_@testing-library+dom@10.4.1/node_modules/@testing-library/user-event/dist/esm/utils/dataTransfer/Clipboard.js:159:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx > PaymentRegistrationModal > renders correctly when open
+{
+  stack: 'AggregateError: \n' +
+    '    at aggregateErrors (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:527:11)\n' +
+    '    at process.env.NODE_ENV.exports.act (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:872:24)\n' +
+    '    at /home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js:46:25\n' +
+    '    at renderRoot (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:189:26)\n' +
+    '    at Proxy.render (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:291:10)\n' +
+    '    at /home/rafael/antigravity/fisioflow/fisioflow-51658291/src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx:73:9\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n' +
+    '    at new Promise (<anonymous>)',
+  errors: [
+    {
+      stack: "TypeError: Cannot read properties of undefined (reading 'prototype')\n" +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: "Cannot read properties of undefined (reading 'prototype')",
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: "TypeError: Cannot read properties of undefined (reading 'prototype')\n" +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: "Cannot read properties of undefined (reading 'prototype')",
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.setTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-dismissable-layer@1.1.11_@types+react-dom@19.2.3_@types+react@19.2.9__@types+_s6lvzsromzmqgv7uol2tvvmg3a/node_modules/@radix-ui/react-dismissable-layer/src/dismissable-layer.tsx:282:28\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: 'window.setTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.clearTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n' +
+        '    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n' +
+        '    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n' +
+        '    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n' +
+        '    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n' +
+        '    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n' +
+        '    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)',
+      message: 'window.clearTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.clearTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n' +
+        '    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n' +
+        '    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n' +
+        '    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n' +
+        '    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n' +
+        '    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n' +
+        '    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)',
+      message: 'window.clearTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    }
+  ],
+  message: '',
+  constructor: 'Function<AggregateError>',
+  name: 'AggregateError',
+  toString: 'Function<toString>',
+  stacks: [
+    {
+      method: 'aggregateErrors',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js',
+      line: 527,
+      column: 11
+    },
+    {
+      method: 'process.env.NODE_ENV.exports.act',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js',
+      line: 872,
+      column: 24
+    },
+    {
+      method: '',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js',
+      line: 46,
+      column: 25
+    },
+    {
+      method: 'renderRoot',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js',
+      line: 189,
+      column: 26
+    },
+    {
+      method: 'Proxy.render',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js',
+      line: 291,
+      column: 10
+    },
+    {
+      method: '',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx',
+      line: 73,
+      column: 9
+    }
+  ]
+}
+ ❯ aggregateErrors node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:527:11
+ ❯ process.env.NODE_ENV.exports.act node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:872:24
+ ❯ node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js:46:25
+ ❯ renderRoot node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:189:26
+ ❯ Proxy.render node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:291:10
+ ❯ src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx:73:9
+     71| 
+     72|     it('renders correctly when open', () => {
+     73|         render(
+       |         ^
+     74|             <PaymentRegistrationModal
+     75|                 open={true}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { errors: [ { stack: 'TypeError: Cannot read properties of undefined (reading \'prototype\')\n    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)', message: 'Cannot read properties of undefined (reading \'prototype\')', constructor: 'Function<TypeError>', name: 'TypeError', toString: 'Function<toString>' }, { stack: 'TypeError: Cannot read properties of undefined (reading \'prototype\')\n    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)', message: 'Cannot read properties of undefined (reading \'prototype\')', constructor: 'Function<TypeError>', name: 'TypeError', toString: 'Function<toString>' }, { stack: 'TypeError: window.setTimeout is not a function\n    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-dismissable-layer@1.1.11_@types+react-dom@19.2.3_@types+react@19.2.9__@types+_s6lvzsromzmqgv7uol2tvvmg3a/node_modules/@radix-ui/react-dismissable-layer/src/dismissable-layer.tsx:282:28\n    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)', message: 'window.setTimeout is not a function', constructor: 'Function<TypeError>', name: 'TypeError', toString: 'Function<toString>' }, { stack: 'TypeError: window.clearTimeout is not a function\n    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)', message: 'window.clearTimeout is not a function', constructor: 'Function<TypeError>', name: 'TypeError', toString: 'Function<toString>' }, { stack: 'TypeError: window.clearTimeout is not a function\n    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)', message: 'window.clearTimeout is not a function', constructor: 'Function<TypeError>', name: 'TypeError', toString: 'Function<toString>' } ] }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx > PaymentRegistrationModal > renders correctly when open
+ FAIL  src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx > PaymentRegistrationModal > submits payment successfully
+ FAIL  src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx > PaymentRegistrationModal > updates appointment status only for single session
+ FAIL  src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx > PaymentRegistrationModal > handles API errors gracefully
+TypeError: Cannot read properties of undefined (reading 'clipboard')
+ ❯ resetClipboardStubOnView node_modules/.pnpm/@testing-library+user-event@14.6.1_@testing-library+dom@10.4.1/node_modules/@testing-library/user-event/dist/esm/utils/dataTransfer/Clipboard.js:115:42
+ ❯ node_modules/.pnpm/@testing-library+user-event@14.6.1_@testing-library+dom@10.4.1/node_modules/@testing-library/user-event/dist/esm/utils/dataTransfer/Clipboard.js:156:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx > PaymentRegistrationModal > submits payment successfully
+{
+  stack: 'AggregateError: \n' +
+    '    at aggregateErrors (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:527:11)\n' +
+    '    at process.env.NODE_ENV.exports.act (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:872:24)\n' +
+    '    at /home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js:46:25\n' +
+    '    at renderRoot (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:189:26)\n' +
+    '    at Proxy.render (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:291:10)\n' +
+    '    at /home/rafael/antigravity/fisioflow/fisioflow-51658291/src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx:88:9\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n' +
+    '    at new Promise (<anonymous>)',
+  errors: [
+    {
+      stack: "TypeError: Cannot read properties of undefined (reading 'prototype')\n" +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: "Cannot read properties of undefined (reading 'prototype')",
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: "TypeError: Cannot read properties of undefined (reading 'prototype')\n" +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: "Cannot read properties of undefined (reading 'prototype')",
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.setTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-dismissable-layer@1.1.11_@types+react-dom@19.2.3_@types+react@19.2.9__@types+_s6lvzsromzmqgv7uol2tvvmg3a/node_modules/@radix-ui/react-dismissable-layer/src/dismissable-layer.tsx:282:28\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: 'window.setTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.clearTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n' +
+        '    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n' +
+        '    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n' +
+        '    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n' +
+        '    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n' +
+        '    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n' +
+        '    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)',
+      message: 'window.clearTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.clearTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n' +
+        '    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n' +
+        '    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n' +
+        '    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n' +
+        '    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n' +
+        '    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n' +
+        '    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)',
+      message: 'window.clearTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    }
+  ],
+  message: '',
+  constructor: 'Function<AggregateError>',
+  name: 'AggregateError',
+  toString: 'Function<toString>',
+  stacks: [
+    {
+      method: 'aggregateErrors',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js',
+      line: 527,
+      column: 11
+    },
+    {
+      method: 'process.env.NODE_ENV.exports.act',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js',
+      line: 872,
+      column: 24
+    },
+    {
+      method: '',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js',
+      line: 46,
+      column: 25
+    },
+    {
+      method: 'renderRoot',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js',
+      line: 189,
+      column: 26
+    },
+    {
+      method: 'Proxy.render',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js',
+      line: 291,
+      column: 10
+    },
+    {
+      method: '',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx',
+      line: 88,
+      column: 9
+    }
+  ]
+}
+ ❯ aggregateErrors node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:527:11
+ ❯ process.env.NODE_ENV.exports.act node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:872:24
+ ❯ node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js:46:25
+ ❯ renderRoot node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:189:26
+ ❯ Proxy.render node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:291:10
+ ❯ src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx:88:9
+     86|     it('submits payment successfully', async () => {
+     87|         const user = userEvent.setup();
+     88|         render(
+       |         ^
+     89|             <PaymentRegistrationModal
+     90|                 open={true}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { errors: [ { stack: 'TypeError: Cannot read properties of undefined (reading \'prototype\')\n    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)', message: 'Cannot read properties of undefined (reading \'prototype\')', constructor: 'Function<TypeError>', name: 'TypeError', toString: 'Function<toString>' }, { stack: 'TypeError: Cannot read properties of undefined (reading \'prototype\')\n    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)', message: 'Cannot read properties of undefined (reading \'prototype\')', constructor: 'Function<TypeError>', name: 'TypeError', toString: 'Function<toString>' }, { stack: 'TypeError: window.setTimeout is not a function\n    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-dismissable-layer@1.1.11_@types+react-dom@19.2.3_@types+react@19.2.9__@types+_s6lvzsromzmqgv7uol2tvvmg3a/node_modules/@radix-ui/react-dismissable-layer/src/dismissable-layer.tsx:282:28\n    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)', message: 'window.setTimeout is not a function', constructor: 'Function<TypeError>', name: 'TypeError', toString: 'Function<toString>' }, { stack: 'TypeError: window.clearTimeout is not a function\n    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)', message: 'window.clearTimeout is not a function', constructor: 'Function<TypeError>', name: 'TypeError', toString: 'Function<toString>' }, { stack: 'TypeError: window.clearTimeout is not a function\n    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)', message: 'window.clearTimeout is not a function', constructor: 'Function<TypeError>', name: 'TypeError', toString: 'Function<toString>' } ] }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx > PaymentRegistrationModal > updates appointment status only for single session
+{
+  stack: 'AggregateError: \n' +
+    '    at aggregateErrors (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:527:11)\n' +
+    '    at process.env.NODE_ENV.exports.act (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:872:24)\n' +
+    '    at /home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js:46:25\n' +
+    '    at renderRoot (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:189:26)\n' +
+    '    at Proxy.render (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:291:10)\n' +
+    '    at /home/rafael/antigravity/fisioflow/fisioflow-51658291/src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx:132:9\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n' +
+    '    at new Promise (<anonymous>)',
+  errors: [
+    {
+      stack: "TypeError: Cannot read properties of undefined (reading 'prototype')\n" +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: "Cannot read properties of undefined (reading 'prototype')",
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: "TypeError: Cannot read properties of undefined (reading 'prototype')\n" +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: "Cannot read properties of undefined (reading 'prototype')",
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.setTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-dismissable-layer@1.1.11_@types+react-dom@19.2.3_@types+react@19.2.9__@types+_s6lvzsromzmqgv7uol2tvvmg3a/node_modules/@radix-ui/react-dismissable-layer/src/dismissable-layer.tsx:282:28\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: 'window.setTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.clearTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n' +
+        '    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n' +
+        '    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n' +
+        '    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n' +
+        '    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n' +
+        '    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n' +
+        '    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)',
+      message: 'window.clearTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.clearTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n' +
+        '    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n' +
+        '    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n' +
+        '    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n' +
+        '    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n' +
+        '    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n' +
+        '    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)',
+      message: 'window.clearTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    }
+  ],
+  message: '',
+  constructor: 'Function<AggregateError>',
+  name: 'AggregateError',
+  toString: 'Function<toString>',
+  stacks: [
+    {
+      method: 'aggregateErrors',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js',
+      line: 527,
+      column: 11
+    },
+    {
+      method: 'process.env.NODE_ENV.exports.act',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js',
+      line: 872,
+      column: 24
+    },
+    {
+      method: '',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js',
+      line: 46,
+      column: 25
+    },
+    {
+      method: 'renderRoot',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js',
+      line: 189,
+      column: 26
+    },
+    {
+      method: 'Proxy.render',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js',
+      line: 291,
+      column: 10
+    },
+    {
+      method: '',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx',
+      line: 132,
+      column: 9
+    }
+  ]
+}
+ ❯ aggregateErrors node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:527:11
+ ❯ process.env.NODE_ENV.exports.act node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:872:24
+ ❯ node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js:46:25
+ ❯ renderRoot node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:189:26
+ ❯ Proxy.render node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:291:10
+ ❯ src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx:132:9
+    130|         // Current implementation always updates to 'paid', so this te…
+    131|         const user = userEvent.setup();
+    132|         render(
+       |         ^
+    133|             <PaymentRegistrationModal
+    134|                 open={true}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { errors: [ { stack: 'TypeError: Cannot read properties of undefined (reading \'prototype\')\n    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)', message: 'Cannot read properties of undefined (reading \'prototype\')', constructor: 'Function<TypeError>', name: 'TypeError', toString: 'Function<toString>' }, { stack: 'TypeError: Cannot read properties of undefined (reading \'prototype\')\n    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)', message: 'Cannot read properties of undefined (reading \'prototype\')', constructor: 'Function<TypeError>', name: 'TypeError', toString: 'Function<toString>' }, { stack: 'TypeError: window.setTimeout is not a function\n    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-dismissable-layer@1.1.11_@types+react-dom@19.2.3_@types+react@19.2.9__@types+_s6lvzsromzmqgv7uol2tvvmg3a/node_modules/@radix-ui/react-dismissable-layer/src/dismissable-layer.tsx:282:28\n    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)', message: 'window.setTimeout is not a function', constructor: 'Function<TypeError>', name: 'TypeError', toString: 'Function<toString>' }, { stack: 'TypeError: window.clearTimeout is not a function\n    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)', message: 'window.clearTimeout is not a function', constructor: 'Function<TypeError>', name: 'TypeError', toString: 'Function<toString>' }, { stack: 'TypeError: window.clearTimeout is not a function\n    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)', message: 'window.clearTimeout is not a function', constructor: 'Function<TypeError>', name: 'TypeError', toString: 'Function<toString>' } ] }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx > PaymentRegistrationModal > handles API errors gracefully
+{
+  stack: 'AggregateError: \n' +
+    '    at aggregateErrors (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:527:11)\n' +
+    '    at process.env.NODE_ENV.exports.act (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:872:24)\n' +
+    '    at /home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js:46:25\n' +
+    '    at renderRoot (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:189:26)\n' +
+    '    at Proxy.render (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:291:10)\n' +
+    '    at /home/rafael/antigravity/fisioflow/fisioflow-51658291/src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx:155:9\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n' +
+    '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@vitest+runner@3.2.4/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n' +
+    '    at new Promise (<anonymous>)',
+  errors: [
+    {
+      stack: "TypeError: Cannot read properties of undefined (reading 'prototype')\n" +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: "Cannot read properties of undefined (reading 'prototype')",
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: "TypeError: Cannot read properties of undefined (reading 'prototype')\n" +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: "Cannot read properties of undefined (reading 'prototype')",
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.setTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-dismissable-layer@1.1.11_@types+react-dom@19.2.3_@types+react@19.2.9__@types+_s6lvzsromzmqgv7uol2tvvmg3a/node_modules/@radix-ui/react-dismissable-layer/src/dismissable-layer.tsx:282:28\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n' +
+        '    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)\n' +
+        '    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n' +
+        '    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)',
+      message: 'window.setTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.clearTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n' +
+        '    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n' +
+        '    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n' +
+        '    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n' +
+        '    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n' +
+        '    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n' +
+        '    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)',
+      message: 'window.clearTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    },
+    {
+      stack: 'TypeError: window.clearTimeout is not a function\n' +
+        '    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n' +
+        '    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n' +
+        '    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n' +
+        '    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n' +
+        '    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n' +
+        '    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n' +
+        '    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n' +
+        '    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n' +
+        '    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n' +
+        '    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)',
+      message: 'window.clearTimeout is not a function',
+      constructor: 'Function<TypeError>',
+      name: 'TypeError',
+      toString: 'Function<toString>'
+    }
+  ],
+  message: '',
+  constructor: 'Function<AggregateError>',
+  name: 'AggregateError',
+  toString: 'Function<toString>',
+  stacks: [
+    {
+      method: 'aggregateErrors',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js',
+      line: 527,
+      column: 11
+    },
+    {
+      method: 'process.env.NODE_ENV.exports.act',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js',
+      line: 872,
+      column: 24
+    },
+    {
+      method: '',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js',
+      line: 46,
+      column: 25
+    },
+    {
+      method: 'renderRoot',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js',
+      line: 189,
+      column: 26
+    },
+    {
+      method: 'Proxy.render',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js',
+      line: 291,
+      column: 10
+    },
+    {
+      method: '',
+      file: '/home/rafael/antigravity/fisioflow/fisioflow-51658291/src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx',
+      line: 155,
+      column: 9
+    }
+  ]
+}
+ ❯ aggregateErrors node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:527:11
+ ❯ process.env.NODE_ENV.exports.act node_modules/.pnpm/react@19.1.0/node_modules/react/cjs/react.development.js:872:24
+ ❯ node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/act-compat.js:46:25
+ ❯ renderRoot node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:189:26
+ ❯ Proxy.render node_modules/.pnpm/@testing-library+react@16.3.1_@testing-library+dom@10.4.1_@types+react-dom@19.2.3_@types+reac_idw7pp6v3m7glrdzda3y7y74cy/node_modules/@testing-library/react/dist/pure.js:291:10
+ ❯ src/components/schedule/__tests__/PaymentRegistrationModal.test.tsx:155:9
+    153|         (FinancialService.createTransaction as any).mockRejectedValue(…
+    154| 
+    155|         render(
+       |         ^
+    156|             <PaymentRegistrationModal
+    157|                 open={true}
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { errors: [ { stack: 'TypeError: Cannot read properties of undefined (reading \'prototype\')\n    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)', message: 'Cannot read properties of undefined (reading \'prototype\')', constructor: 'Function<TypeError>', name: 'TypeError', toString: 'Function<toString>' }, { stack: 'TypeError: Cannot read properties of undefined (reading \'prototype\')\n    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1652:52\n    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13957:11)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)', message: 'Cannot read properties of undefined (reading \'prototype\')', constructor: 'Function<TypeError>', name: 'TypeError', toString: 'Function<toString>' }, { stack: 'TypeError: window.setTimeout is not a function\n    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-dismissable-layer@1.1.11_@types+react-dom@19.2.3_@types+react@19.2.9__@types+_s6lvzsromzmqgv7uol2tvvmg3a/node_modules/@radix-ui/react-dismissable-layer/src/dismissable-layer.tsx:282:28\n    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23949:20)\n    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n    at commitHookEffectListMount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11905:29)\n    at commitHookPassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12028:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13841:13)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)\n    at recursivelyTraversePassiveMountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13815:11)\n    at commitPassiveMountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:13834:11)', message: 'window.setTimeout is not a function', constructor: 'Function<TypeError>', name: 'TypeError', toString: 'Function<toString>' }, { stack: 'TypeError: window.clearTimeout is not a function\n    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)', message: 'window.clearTimeout is not a function', constructor: 'Function<TypeError>', name: 'TypeError', toString: 'Function<toString>' }, { stack: 'TypeError: window.clearTimeout is not a function\n    at file:///home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/@radix-ui+react-select@2.2.6_@types+react-dom@19.2.3_@types+react@19.2.9__@types+react@19.2.9_tabstzjtvscesh5flcp6glw62a/node_modules/@radix-ui/react-select/src/select.tsx:1722:25\n    at Object.react-stack-bottom-frame (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:23961:13)\n    at runWithFiberInDEV (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13)\n    at commitHookEffectListUnmount (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:11996:17)\n    at commitHookPassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:12043:11)\n    at commitPassiveUnmountEffectsInsideOfDeletedTree_begin (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14269:13)\n    at recursivelyTraversePassiveUnmountEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14167:13)\n    at commitPassiveUnmountOnFiber (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:14194:11)\n    at flushPassiveEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15736:9)\n    at flushPendingEffects (/home/rafael/antigravity/fisioflow/fisioflow-51658291/node_modules/.pnpm/react-dom@19.1.0_react@19.1.0/node_modules/react-dom/cjs/react-dom-client.development.js:15702:14)', message: 'window.clearTimeout is not a function', constructor: 'Function<TypeError>', name: 'TypeError', toString: 'Function<toString>' } ] }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  08:34:38
+   Duration  1.32s (transform 127ms, setup 183ms, collect 426ms, tests 161ms, environment 285ms, prepare 47ms)
+
+JSON report written to /home/rafael/antigravity/fisioflow/fisioflow-51658291/coverage/test-results.json
+ HTML  Report is generated
+       You can run npx vite preview --outDir coverage to see the test results.
