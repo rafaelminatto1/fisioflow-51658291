@@ -50,7 +50,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { appointmentsApi } from '@/integrations/firebase/functions';
 import { WaitlistNotification } from './WaitlistNotification';
 import { WaitlistQuickAdd } from './WaitlistQuickAdd';
-import type { Appointment } from '@/types/appointment';
+import { PaymentRegistrationModal } from './PaymentRegistrationModal';
+import { Appointment, AppointmentStatus } from "@/types/appointment";
 
 import { STATUS_CONFIG, normalizeStatus } from '@/lib/config/agenda';
 
@@ -83,6 +84,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   const queryClient = useQueryClient();
   const [showWaitlistNotification, setShowWaitlistNotification] = useState(false);
   const [showWaitlistQuickAdd, setShowWaitlistQuickAdd] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showNoShowConfirmDialog, setShowNoShowConfirmDialog] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<string | null>(null);
   // Local state for optimistic updates - syncs with appointment
@@ -179,7 +181,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
     }
 
     // Optimistic update - update local state immediately
-    setLocalStatus(newStatus as unknown);
+    setLocalStatus(newStatus as AppointmentStatus);
     // Then call the API
     updateStatus({ appointmentId: appointment.id, status: newStatus });
 
@@ -196,7 +198,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
   const handleNoShowConfirm = () => {
     if (pendingStatus) {
-      setLocalStatus(pendingStatus as unknown);
+      setLocalStatus(pendingStatus as AppointmentStatus);
       updateStatus({ appointmentId: appointment.id, status: pendingStatus });
       setShowNoShowConfirmDialog(false);
       setPendingStatus(null);
@@ -215,7 +217,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
   const handleNoShowRechedule = () => {
     if (pendingStatus) {
-      setLocalStatus(pendingStatus as unknown);
+      setLocalStatus(pendingStatus as AppointmentStatus);
       updateStatus({ appointmentId: appointment.id, status: pendingStatus });
       setShowNoShowConfirmDialog(false);
       setPendingStatus(null);
@@ -263,6 +265,13 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
   const handlePaymentStatusChange = async (value: string) => {
     const newStatus = value === 'paid' ? 'paid' : 'pending';
+
+    // If user is marking as paid, show the payment registration modal
+    if (newStatus === 'paid' && localPaymentStatus !== 'paid') {
+      setShowPaymentModal(true);
+      return;
+    }
+
     if (newStatus === localPaymentStatus) return;
     setLocalPaymentStatus(newStatus);
     try {
@@ -273,6 +282,11 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
     } catch {
       setLocalPaymentStatus(((appointment.payment_status ?? 'pending') as string).toLowerCase());
     }
+  };
+
+  const handlePaymentSuccess = () => {
+    setLocalPaymentStatus('paid');
+    // We could reload appointment data here if needed, but optimistic update handles UI
   };
 
   // Calculate end time
@@ -733,6 +747,14 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Payment Registration Modal */}
+      <PaymentRegistrationModal
+        open={showPaymentModal}
+        onOpenChange={setShowPaymentModal}
+        appointment={appointment}
+        onSuccess={handlePaymentSuccess}
+      />
     </>
   );
 };
