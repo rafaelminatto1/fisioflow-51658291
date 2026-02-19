@@ -9,9 +9,7 @@ import { getLogger } from '../lib/logger';
 import { getPool } from '../init';
 
 // @ts-expect-error - csv-writer may not have types
-import * as csv from 'csv-writer';
 // @ts-expect-error - csv-parser may not have types
-import * as parser from 'csv-parser';
 
 const logger = getLogger('export-import');
 const db = admin.firestore();

@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useColors } from '@/hooks/useColorScheme';
-import { Button, Card, Slider } from '@/components';
+import { Slider } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createEvolution } from '@/lib/firestore';

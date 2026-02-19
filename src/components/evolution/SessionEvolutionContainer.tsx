@@ -46,7 +46,6 @@ import { soapKeys } from '@/hooks/useSoapRecords';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 import { AgendaAutomationService } from '@/lib/services/AgendaAutomationService';
 import { NotionEvolutionPanel } from './v2-improved/NotionEvolutionPanel';
-import type { EvolutionV2Data } from './v2-improved/types';
 
 interface SessionEvolutionContainerProps {
   appointmentId?: string;

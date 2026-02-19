@@ -2,9 +2,6 @@ import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDebounce } from '@/hooks/performance/useDebounce';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Card } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/empty-state';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { IncompleteRegistrationAlert } from '@/components/dashboard/IncompleteRegistrationAlert';
@@ -32,13 +29,11 @@ import {
   type PatientFilters
 } from '@/components/patients';
 import { usePatientsPaginated } from '@/hooks/usePatientCrud';
-import { useMultiplePatientStats, formatFirstEvaluationDate, PATIENT_CLASSIFICATIONS } from '@/hooks/usePatientStats';
+import { useMultiplePatientStats } from '@/hooks/usePatientStats';
 import { PatientHelpers } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
-import { Users, ChevronRight, Calendar, Stethoscope } from 'lucide-react';
-import { cn, calculateAge, exportToCSV } from '@/lib/utils';
-import { Progress } from '@/components/ui/progress';
-import type { PatientStats } from '@/hooks/usePatientStats';
+import { Users } from 'lucide-react';
+import { calculateAge, exportToCSV } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 
 const Patients = () => {

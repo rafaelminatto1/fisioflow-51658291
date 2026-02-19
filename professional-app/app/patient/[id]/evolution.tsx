@@ -1,28 +1,13 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
   Alert,
-  TextInput,
-  Animated,
   Dimensions,
-  Platform,
-  KeyboardAvoidingView,
-  ActivityIndicator,
-  Image,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useColors } from '@/hooks/useColorScheme';
-import { Slider } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useEvolutions, useEvolution } from '@/hooks';
 import { uploadFile } from '@/lib/storage';
-import * as ImagePicker from 'expo-image-picker';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 

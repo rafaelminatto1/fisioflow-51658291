@@ -18,14 +18,8 @@ import { Card, VideoModal, SyncIndicator, ExerciseFeedbackModal } from '@/compon
 import { ExerciseFeedback } from '@/components';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import {
-  collection,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
   updateDoc,
   doc,
-  getDoc,
   setDoc,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';

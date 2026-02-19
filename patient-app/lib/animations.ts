@@ -9,7 +9,6 @@
  */
 
 import { Animated, Easing } from 'react-native';
-import { useAnimationDuration } from '@/hooks/useAccessibility';
 
 export const Animations = {
   // Durations (in ms)
