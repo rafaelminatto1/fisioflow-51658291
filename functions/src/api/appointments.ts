@@ -7,6 +7,7 @@ import { rtdb } from '../lib/rtdb';
 import { getOrganizationIdCached } from '../lib/cache-helpers';
 import { dispatchAppointmentNotification } from '../workflows/notifications';
 import { withErrorHandling } from '../lib/error-handler';
+import { CORS_ORIGINS } from '../lib/cors';
 
 import { isValidUuid } from '../lib/uuid';
 
@@ -15,6 +16,7 @@ const APPOINTMENT_HTTP_OPTS = {
   region: 'southamerica-east1',
   maxInstances: 2,
   invoker: 'public',
+  cors: CORS_ORIGINS,
 };
 
 // ============================================================================

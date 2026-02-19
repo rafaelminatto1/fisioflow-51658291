@@ -6,6 +6,7 @@ import { profileApi } from '@/integrations/firebase/functions';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useToast } from '@/hooks/use-toast';
 import { AuthContextType, AuthContext, AuthError } from './AuthContext';
+import { Profile, RegisterFormData, UserRole } from '@/types/auth';
 import { useQueryClient } from '@tanstack/react-query';
 import { AppointmentService } from '@/services/appointmentService';
 
@@ -120,8 +121,11 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const fetchProfile = useCallback(async (firebaseUser: User, attempt = 1): Promise<Profile | null> => {
+    const MAX_ATTEMPTS = 3; // Reduzido de 5 para 3
+    const RETRY_DELAY = 1000; // 1 segundo
+
     try {
-      logger.debug(`Fetching profile from Firestore (Attempt ${attempt})`, null, 'AuthContextProvider');
+      logger.debug(`Fetching profile from Firestore (Attempt ${attempt}/${MAX_ATTEMPTS})`, null, 'AuthContextProvider');
       const profile = await waitForProfile(firebaseUser);
 
       if (profile) {
@@ -145,9 +149,9 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         return profile;
       } else {
         // Profile not found in Firestore. Retry a few times, then try Cloud SQL fallback.
-        if (attempt < 5) {
-          logger.info(`Profile not found in Firestore, retrying... (${attempt}/5)`, null, 'AuthContextProvider');
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s
+        if (attempt < MAX_ATTEMPTS) {
+          logger.info(`Profile not found in Firestore, retrying... (${attempt}/${MAX_ATTEMPTS})`, null, 'AuthContextProvider');
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
           return fetchProfile(firebaseUser, attempt + 1);
         }
 
@@ -267,10 +271,21 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   useEffect(() => {
     let mounted = true;
+    let timeoutId: NodeJS.Timeout;
+
+    // Timeout de segurança - se após 10s ainda estiver carregando, força conclusão
+    timeoutId = setTimeout(() => {
+      if (mounted && loading) {
+        logger.warn('Auth initialization timeout - forcing completion', null, 'AuthContextProvider');
+        setLoading(false);
+        setInitialized(true);
+      }
+    }, 10000); // 10 segundos
 
     // Firebase Auth State Listener
     const unsubscribe = onAuthStateChange((firebaseUser) => {
       if (!mounted) return;
+      clearTimeout(timeoutId);
 
       if (firebaseUser) {
         setUser(firebaseUser);
@@ -290,6 +305,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
           }
         }).catch(err => {
           logger.error('Erro ao carregar perfil', err, 'AuthContextProvider');
+          // Não bloquear a UI mesmo se o perfil falhar
         });
       } else {
         setUser(null);
@@ -301,9 +317,10 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     return () => {
       mounted = false;
+      clearTimeout(timeoutId);
       unsubscribe();
     };
-  }, [fetchProfile, prefetchDashboardData]);
+  }, [fetchProfile, prefetchDashboardData, loading]);
 
   const signIn = async (email: string, password: string, _remember?: boolean): Promise<{ error?: AuthError | null }> => {
     try {
