@@ -250,6 +250,30 @@ export function useScheduleOptimized(options: {
     return appointments;
   }, [activeQuery.data, filters]);
 
+  // Instrumentação de debug para entender por que a agenda pode não carregar
+  useEffect(() => {
+    if (!activeQuery.data) return;
+
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        location: 'src/hooks/useScheduleOptimized.ts:227',
+        message: 'useScheduleOptimized activeQuery data',
+        data: {
+          view,
+          totalCount: (activeQuery.data || []).length,
+          filteredCount: filteredAppointments.length,
+        },
+        runId: 'agenda-debug',
+        hypothesisId: 'H2',
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }, [view, activeQuery.data, filteredAppointments.length]);
+
   // Estatísticas do dia (memoizadas)
   const stats = useMemo(() => {
     const appointments = activeQuery.data || [];
