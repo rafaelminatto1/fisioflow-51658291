@@ -133,68 +133,108 @@ const mockServiceWorkerRegistration = {
   unregister: vi.fn(),
 };
 
-Object.defineProperty(global, 'navigator', {
+// Setup global mocks safely
+Object.defineProperty(global.navigator, 'serviceWorker', {
   value: {
-    serviceWorker: {
-      register: vi.fn().mockResolvedValue(mockServiceWorkerRegistration),
-      ready: Promise.resolve(mockServiceWorkerRegistration),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-    },
-    userAgent: 'Test User Agent',
-    onLine: true,
-    clipboard: {
-      writeText: vi.fn(),
-      readText: vi.fn(),
-    },
-  },
-  writable: true,
-});
-
-Object.defineProperty(global, 'window', {
-  value: {
-    PushManager: class MockPushManager { },
-    atob: vi.fn((str) => str),
-    btoa: vi.fn((str) => str),
+    register: vi.fn().mockResolvedValue(mockServiceWorkerRegistration),
+    ready: Promise.resolve(mockServiceWorkerRegistration),
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
-    location: {
-      origin: 'http://localhost:3000',
-      href: 'http://localhost:3000',
-    },
-    localStorage: {
-      getItem: vi.fn(),
-      setItem: vi.fn(),
-      removeItem: vi.fn(),
-      clear: vi.fn(),
-    },
-    sessionStorage: {
-      getItem: vi.fn(),
-      setItem: vi.fn(),
-      removeItem: vi.fn(),
-      clear: vi.fn(),
-    },
-    getComputedStyle: vi.fn(() => ({
-      getPropertyValue: vi.fn(() => ''),
-      paddingLeft: '0px',
-      paddingRight: '0px',
-      marginLeft: '0px',
-      marginRight: '0px',
-      borderLeftWidth: '0px',
-      borderRightWidth: '0px',
-    })),
-    matchMedia: vi.fn((query) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    })),
   },
   writable: true,
+  configurable: true,
+});
+
+Object.defineProperty(global.navigator, 'userAgent', {
+  value: 'Test User Agent',
+  writable: true,
+  configurable: true,
+});
+
+Object.defineProperty(global.navigator, 'onLine', {
+  value: true,
+  writable: true,
+  configurable: true,
+});
+
+Object.defineProperty(global.navigator, 'clipboard', {
+  value: {
+    writeText: vi.fn(),
+    readText: vi.fn(),
+  },
+  writable: true,
+  configurable: true,
+});
+
+// Extend window safely
+Object.assign(global.window, {
+  PushManager: class MockPushManager { },
+  atob: vi.fn((str) => str),
+  btoa: vi.fn((str) => str),
+});
+
+// Mock window events
+global.window.addEventListener = vi.fn();
+global.window.removeEventListener = vi.fn();
+
+// Mock window.matchMedia
+Object.defineProperty(global.window, 'matchMedia', {
+  writable: true,
+  configurable: true,
+  value: vi.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(), // deprecated
+    removeListener: vi.fn(), // deprecated
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
+// Mock localStorage and sessionStorage
+const localStorageMock = (function () {
+  let store: Record<string, string> = {};
+  return {
+    getItem: vi.fn((key: string) => store[key] || null),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = value.toString();
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete store[key];
+    }),
+    clear: vi.fn(() => {
+      store = {};
+    }),
+  };
+})();
+
+Object.defineProperty(global.window, 'localStorage', {
+  value: localStorageMock,
+  writable: true,
+  configurable: true
+});
+
+Object.defineProperty(global.window, 'sessionStorage', {
+  value: localStorageMock,
+  writable: true,
+  configurable: true
+});
+
+// Mock getComputedStyle
+Object.defineProperty(global.window, 'getComputedStyle', {
+  value: vi.fn(() => ({
+    getPropertyValue: vi.fn(() => ''),
+    paddingLeft: '0px',
+    paddingRight: '0px',
+    marginLeft: '0px',
+    marginRight: '0px',
+    borderLeftWidth: '0px',
+    borderRightWidth: '0px',
+  })),
+  writable: true,
+  configurable: true
 });
 
 // ============================================================================
@@ -250,7 +290,7 @@ vi.mock('web-push', () => ({
 beforeAll(() => {
   // Setup any global test configuration
   console.debug('Test suite initialized');
-  
+
   // Create portal container for modals/dialogs
   const portalRoot = document.createElement('div');
   portalRoot.setAttribute('id', 'portal-root');
