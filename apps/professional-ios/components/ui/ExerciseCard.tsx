@@ -1,10 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, Image, ViewStyle } from 'react-native';
 import { Card } from './Card';
-import { Badge } from './Badge';
 import { Icon } from './Icon';
 import { useTheme } from '@/hooks/useTheme';
-import { HapticFeedback } from '@/lib/haptics';
 import type { Exercise } from '@/types';
 
 export interface ExerciseCardProps {

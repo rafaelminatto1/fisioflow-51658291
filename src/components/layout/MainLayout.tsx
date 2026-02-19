@@ -8,7 +8,6 @@ import { MobileHeader } from './MobileHeader';
 import { BottomNavigation } from './BottomNavigation';
 import { OnlineUsersIndicator } from './OnlineUsersIndicator';
 import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
-import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { SkipLinks } from '@/components/accessibility/SkipLinks';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -32,7 +31,6 @@ import {
   LogOut
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import fisioflowLogo from '@/assets/logo.avif';
 import { signOut } from 'firebase/auth';
 import { getFirebaseAuth } from '@/integrations/firebase/app';

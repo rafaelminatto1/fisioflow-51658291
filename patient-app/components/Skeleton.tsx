@@ -5,7 +5,6 @@
 
 import { View, StyleSheet } from 'react-native';
 import { useColors } from '@/hooks/useColorScheme';
-import { useAnimationDuration } from '@/hooks/useAccessibility';
 
 interface SkeletonProps {
   width?: number | string;

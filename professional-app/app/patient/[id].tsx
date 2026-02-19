@@ -21,7 +21,7 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { useQuery } from '@tanstack/react-query';
 import { getPatientByIdHook } from '@/hooks/usePatients';
 import { format } from 'date-fns';
-import { usePatientExercises, useEvolutions } from '@/hooks';
+import { useEvolutions } from '@/hooks';
 import {
   usePatientFinancialRecords,
   usePatientFinancialSummary,

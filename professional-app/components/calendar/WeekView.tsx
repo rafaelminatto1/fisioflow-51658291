@@ -4,7 +4,7 @@ import { useColors } from '@/hooks/useColorScheme';
 import { TimeGrid } from './TimeGrid';
 import { AppointmentBase } from '@/types';
 import { router } from 'expo-router';
-import { format, startOfWeek, endOfWeek, addDays, isSameDay } from 'date-fns';
+import { format, startOfWeek, addDays, isSameDay } from 'date-fns';
 
 interface WeekViewProps {
     date: Date;

@@ -17,7 +17,7 @@ import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Button, Input, PasswordStrength } from '@/components';
 import { useColors } from '@/hooks/useColorScheme';
 import { auth, db } from '@/lib/firebase';
-import { validators, ValidationErrors } from '@/lib/validation';
+import { validators } from '@/lib/validation';
 
 export default function RegisterScreen() {
   const colors = useColors();
