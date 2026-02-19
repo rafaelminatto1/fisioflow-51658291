@@ -30,7 +30,7 @@ import { useOrganizations } from '@/hooks/useOrganizations';
 import { usePatients } from '@/hooks/usePatients';
 import { patientsApi } from '@/integrations/firebase/functions';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Download, Info, Share2, Cloud } from 'lucide-react';
+import { Download, Info, Cloud } from 'lucide-react';
 import { useGoogleDocs } from '@/hooks/useGoogleDocs';
 import { useGoogleOAuth } from '@/hooks/useGoogleOAuth';
 

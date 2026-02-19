@@ -45,7 +45,7 @@ import { usePatientProfileOptimized, type ProfileTab } from '@/hooks/usePatientP
 import { useGamification } from '@/hooks/useGamification';
 import { usePatientEvolutionReport } from '@/hooks/usePatientEvolutionReport';
 import { useSoapRecordsV2 } from '@/hooks/useSoapRecordsV2';
-import { usePatientDocuments, useUploadDocument, useDeleteDocument, useDownloadDocument, type PatientDocument } from '@/hooks/usePatientDocuments';
+import { useUploadDocument, useDeleteDocument, useDownloadDocument, type PatientDocument } from '@/hooks/usePatientDocuments';
 import { useEvaluationForms } from '@/hooks/useEvaluationForms';
 import { usePatientLifecycleSummary } from '@/hooks/usePatientAnalytics';
 

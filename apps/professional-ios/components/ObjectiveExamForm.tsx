@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Pressable } from 'react-native';
 import { Card } from './Card';
 import { Icon } from './Icon';
 import { Button } from './Button';
-import { useTheme } from '@/hooks/useTheme';
 import { HapticFeedback } from '@/lib/haptics';
 
 export interface ObjectiveExamFormProps {

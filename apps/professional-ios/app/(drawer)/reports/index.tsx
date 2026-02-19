@@ -12,19 +12,16 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { format, startOfMonth, endOfMonth, subMonths, differenceInDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { format } from 'date-fns';
 
 import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { StatCard } from '@/components/ui/StatCard';
-import { DateRangePicker } from '@/components/DateRangePicker';
 import { WeeklyChart, generateWeekData } from '@/components/ui/WeeklyChart';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { HapticFeedback } from '@/lib/haptics';
-import { collection, query, where, getDocs, getDoc, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 const { width } = Dimensions.get('window');

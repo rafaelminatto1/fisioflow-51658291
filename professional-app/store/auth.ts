@@ -52,7 +52,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const firebaseUser = userCredential.user;
 
       // Fetch user profile from Firestore - try users collection first, then profiles
-      let userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+      const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
       let userData = userDoc.exists() ? userDoc.data() : null;
 
       // If not found in users, try profiles collection
@@ -163,7 +163,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (firebaseUser) {
         try {
           // Try users collection first, then profiles
-          let userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
           let userData = userDoc.exists() ? userDoc.data() : null;
 
           // If not found in users, try profiles collection

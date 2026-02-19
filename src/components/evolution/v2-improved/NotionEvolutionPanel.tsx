@@ -19,7 +19,6 @@ import {
   Loader2,
   CheckCircle2,
   Sparkles,
-  Clock,
   AlertCircle,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -35,7 +34,7 @@ import { PainLevelBlock } from './PainLevelBlock';
 import { HomeCareBlock } from './HomeCareBlock';
 import { AttachmentsBlock } from './AttachmentsBlock';
 import { MeasurementsBlock } from './MeasurementsBlock';
-import type { EvolutionV2Data, MeasurementItem } from './types';
+import type { EvolutionV2Data } from './types';
 
 interface NotionEvolutionPanelProps {
   data: EvolutionV2Data;

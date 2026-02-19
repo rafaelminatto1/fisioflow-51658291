@@ -4,20 +4,21 @@
 
 import { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
 import { CalendarViewType } from '@/components/schedule/CalendarView';
-import { AppointmentModalRefactored as AppointmentModal } from '@/components/schedule/AppointmentModalRefactored';
-import { AppointmentQuickEditModal } from '@/components/schedule/AppointmentQuickEditModal';
-import { WaitlistQuickAdd } from '@/components/schedule/WaitlistQuickAdd';
-import { WaitlistHorizontal } from '@/components/schedule/WaitlistHorizontal';
 import { KeyboardShortcuts } from '@/components/schedule/KeyboardShortcuts';
 import { BulkActionsBar } from '@/components/schedule/BulkActionsBar';
 import { useAppointments, useRescheduleAppointment } from '@/hooks/useAppointments';
+import { useAppointmentsByPeriod } from '@/hooks/useAppointmentsByPeriod';
+import { usePrefetchAdjacentPeriods } from '@/hooks/usePrefetchAdjacentPeriods';
+import { useFilteredAppointments } from '@/hooks/useFilteredAppointments';
+import { ViewType } from '@/utils/periodCalculations';
+import { useAuth } from '@/contexts/AuthContext';
 import { useBulkActions } from '@/hooks/useBulkActions';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { AlertTriangle } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState } from '@/components/ui';
-import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { CalendarSkeleton } from '@/components/schedule/skeletons';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
@@ -41,10 +42,24 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { RouteKeys, PrefetchStrategy } from '@/lib/routing/routePrefetch';
+import { ScheduleDiagnostics } from '@/components/schedule/ScheduleDiagnostics';
 
 // Lazy load CalendarView for better initial load performance
 const CalendarView = lazy(() =>
   import('@/components/schedule/CalendarView').then(mod => ({ default: mod.CalendarView }))
+);
+
+// Lazy load modals for better initial load performance
+const AppointmentModal = lazy(() =>
+  import('@/components/schedule/AppointmentModalRefactored').then(mod => ({ default: mod.AppointmentModalRefactored }))
+);
+
+const AppointmentQuickEditModal = lazy(() =>
+  import('@/components/schedule/AppointmentQuickEditModal').then(mod => ({ default: mod.AppointmentQuickEditModal }))
+);
+
+const WaitlistQuickAdd = lazy(() =>
+  import('@/components/schedule/WaitlistQuickAdd').then(mod => ({ default: mod.WaitlistQuickAdd }))
 );
 
 // =====================================================================
@@ -145,18 +160,55 @@ const Schedule = () => {
   // HOOKS
   // ===================================================================
 
+  const { user } = useAuth();
+  const organizationId = user?.organizationId || '';
+
+  // Log organization ID for debugging
+  useEffect(() => {
+    logger.info('Schedule page - Organization ID', { 
+      hasUser: !!user, 
+      organizationId,
+      hasOrganizationId: !!organizationId 
+    }, 'Schedule');
+  }, [user, organizationId]);
+
+  // Use period-based data loading for better performance
+  // Only load appointments for the visible period (day/week/month)
+  const periodQuery = {
+    viewType: (viewType === 'list' ? 'week' : viewType) as ViewType,
+    date: currentDate,
+    organizationId,
+  };
+
+  // Use filtered appointments hook with optimized caching
+  // Applies filters efficiently with separate cache for filtered results
   const {
     data: appointments = [],
     isLoading: loading,
     error,
     refetch,
-    isFromCache,
-    cacheTimestamp,
-    // @ts-expect-error - Propriedades novas
-    dataSource,
-    // @ts-expect-error - New property from hook
-    isUsingStaleData
-  } = useAppointments();
+    isFiltered,
+    filterCount,
+    totalCount,
+  } = useFilteredAppointments(
+    periodQuery,
+    {
+      status: filters.status,
+      types: filters.types,
+      therapists: filters.therapists,
+      patientName: patientFilter,
+    }
+  );
+
+  // Prefetch adjacent periods for instant navigation
+  // Prefetches next and previous periods after 500ms delay
+  // Network-aware: skips prefetch on slow connections
+  usePrefetchAdjacentPeriods(periodQuery, {
+    direction: 'both',
+    delay: 500,
+    networkAware: true,
+  });
+
   const { mutateAsync: rescheduleAppointment } = useRescheduleAppointment();
 
   const {
@@ -188,7 +240,7 @@ const Schedule = () => {
     },
   });
 
-  const hasConnectionBanner = !isOnline || isChecking || isReconnecting || isFromCache || !!isUsingStaleData;
+  const hasConnectionBanner = !isOnline || isChecking || isReconnecting;
 
   // ===================================================================
   // COMPUTED VALUES
@@ -199,27 +251,8 @@ const Schedule = () => {
     return month.charAt(0).toUpperCase() + month.slice(1);
   }, [currentDate]);
 
-  const filteredAppointments = useMemo(() => {
-    return appointments.filter(apt => {
-      // Filter by patient name
-      if (patientFilter && apt.patientName !== patientFilter) {
-        return false;
-      }
-      // Filter by status
-      if (filters.status.length > 0 && !filters.status.includes(apt.status)) {
-        return false;
-      }
-      // Filter by type
-      if (filters.types.length > 0 && !filters.types.includes(apt.type)) {
-        return false;
-      }
-      // Filter by therapist
-      if (filters.therapists.length > 0 && apt.therapistId && !filters.therapists.includes(apt.therapistId)) {
-        return false;
-      }
-      return true;
-    });
-  }, [appointments, filters, patientFilter]);
+  // filteredAppointments is now handled by useFilteredAppointments hook
+  // No need for client-side filtering with useMemo
 
   // ===================================================================
   // HANDLERS
@@ -546,13 +579,22 @@ const Schedule = () => {
 
         <div className="flex flex-col flex-1 relative min-h-0">
 
+          {/* Diagnostic Component - Remove after debugging */}
+          {import.meta.env.DEV && (
+            <div className="px-4 pt-4">
+              <ScheduleDiagnostics 
+                currentDate={currentDate} 
+                viewType={viewType as 'day' | 'week' | 'month'} 
+              />
+            </div>
+          )}
 
           {/* Calendar Area */}
           <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950">
             <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950 relative min-h-[600px]">
-              <Suspense fallback={<LoadingSkeleton type="card" rows={3} className="h-full w-full" />}>
+              <Suspense fallback={<CalendarSkeleton viewType={viewType as CalendarViewType} />}>
                 <CalendarView
-                  appointments={filteredAppointments}
+                  appointments={appointments}
                   currentDate={currentDate}
                   onDateChange={setCurrentDate}
                   viewType={viewType as CalendarViewType}
@@ -588,34 +630,40 @@ const Schedule = () => {
           onUpdateStatusSelected={updateStatusSelected}
         />
 
-        {/* Modals Layer */}
-        <AppointmentQuickEditModal
-          appointment={quickEditAppointment}
-          open={!!quickEditAppointment}
-          onOpenChange={(open) => !open && setQuickEditAppointment(null)}
-        />
+        {/* Modals Layer - Lazy loaded for better performance */}
+        <Suspense fallback={null}>
+          <AppointmentQuickEditModal
+            appointment={quickEditAppointment}
+            open={!!quickEditAppointment}
+            onOpenChange={(open) => !open && setQuickEditAppointment(null)}
+          />
+        </Suspense>
 
-        <AppointmentModal
-          key={selectedAppointment ? `edit-${selectedAppointment.id}` : `create-${modalDefaultDate?.getTime() ?? 0}-${modalDefaultTime ?? ''}`}
-          isOpen={isModalOpen}
-          onClose={() => {
-            handleModalClose();
-            setScheduleFromWaitlist(null);
-          }}
-          appointment={selectedAppointment}
-          defaultDate={modalDefaultDate}
-          defaultTime={modalDefaultTime}
-          defaultPatientId={scheduleFromWaitlist?.patientId}
-          mode={selectedAppointment ? 'edit' : 'create'}
-        />
+        <Suspense fallback={null}>
+          <AppointmentModal
+            key={selectedAppointment ? `edit-${selectedAppointment.id}` : `create-${modalDefaultDate?.getTime() ?? 0}-${modalDefaultTime ?? ''}`}
+            isOpen={isModalOpen}
+            onClose={() => {
+              handleModalClose();
+              setScheduleFromWaitlist(null);
+            }}
+            appointment={selectedAppointment}
+            defaultDate={modalDefaultDate}
+            defaultTime={modalDefaultTime}
+            defaultPatientId={scheduleFromWaitlist?.patientId}
+            mode={selectedAppointment ? 'edit' : 'create'}
+          />
+        </Suspense>
 
         {waitlistQuickAdd && (
-          <WaitlistQuickAdd
-            open={!!waitlistQuickAdd}
-            onOpenChange={(open) => !open && setWaitlistQuickAdd(null)}
-            date={waitlistQuickAdd.date}
-            time={waitlistQuickAdd.time}
-          />
+          <Suspense fallback={null}>
+            <WaitlistQuickAdd
+              open={!!waitlistQuickAdd}
+              onOpenChange={(open) => !open && setWaitlistQuickAdd(null)}
+              date={waitlistQuickAdd.date}
+              time={waitlistQuickAdd.time}
+            />
+          </Suspense>
         )}
 
         <KeyboardShortcuts

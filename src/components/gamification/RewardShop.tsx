@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { ShoppingBag, Star, Zap, Gift, Clock, Loader2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGamification } from '@/hooks/useGamification';
 import { getFirebaseFunctions } from '@/integrations/firebase/app';
 import { httpsCallable } from 'firebase/functions';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
 
 interface RewardItem {
   id: string;

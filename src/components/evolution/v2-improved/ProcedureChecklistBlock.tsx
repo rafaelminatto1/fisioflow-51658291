@@ -4,14 +4,12 @@
  * Enhanced procedures checklist with better UX,
  * smooth animations, and professional visual design.
  */
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import {
   CheckSquare,
-  Square,
   Plus,
   X,
   Zap,
-  Search,
   MessageSquare,
   Sparkles,
   MoreVertical,

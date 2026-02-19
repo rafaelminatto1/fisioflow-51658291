@@ -9,9 +9,8 @@
 
 import { useState } from 'react';
 import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
 
 /**
@@ -247,7 +246,7 @@ export class ExerciseReminders {
   async sendCompletionNotification(count: number, streak: number): Promise<void> {
     if (!this.config.enabled) return;
 
-    let title = '🎉 Parabéns!';
+    const title = '🎉 Parabéns!';
     let body = '';
 
     if (streak >= 7) {

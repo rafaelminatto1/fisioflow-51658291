@@ -110,6 +110,7 @@ const SecuritySettings = lazy(() => import(/* webpackChunkName: "settings-securi
 const AdminCRUD = lazy(() => import(/* webpackChunkName: "admin-crud" */ "./pages/AdminCRUD"));
 const OrganizationSettings = lazy(() => import(/* webpackChunkName: "admin-organization" */ "./pages/OrganizationSettings"));
 const Admin = lazy(() => import(/* webpackChunkName: "admin-analytics" */ "./pages/Admin"));
+const SystemHealthPage = lazy(() => import(/* webpackChunkName: "admin-system-health" */ "./pages/admin/SystemHealthPage"));
 const AdvancedAnalytics = lazy(() => import(/* webpackChunkName: "analytics-advanced" */ "./pages/AdvancedAnalytics"));
 const CohortAnalysis = lazy(() => import(/* webpackChunkName: "analytics-cohorts" */ "./pages/CohortAnalysis"));
 // const ApiDocs = lazy(() => import(/* webpackChunkName: "api-docs" */ "./pages/ApiDocs"));

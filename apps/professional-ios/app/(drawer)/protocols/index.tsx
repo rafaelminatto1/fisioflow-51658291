@@ -8,8 +8,6 @@ import {
   Pressable,
   TextInput,
   ActivityIndicator,
-  Alert,
-  Image,
   Modal,
 } from 'react-native';
 import { useRouter } from 'expo-router';
@@ -22,10 +20,8 @@ import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { HapticFeedback } from '@/lib/haptics';
-import { PROTOCOL_TEMPLATES, getProtocolById, getProtocolsByCategory, searchProtocols, getRecommendedProtocols } from '@/lib/protocolTemplates';
-import { doc, setDoc, serverTimestamp, collection } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import type { ProtocolTemplate, ProtocolExercise } from '@/lib/protocolTemplates';
+import { PROTOCOL_TEMPLATES, searchProtocols } from '@/lib/protocolTemplates';
+import type { ProtocolTemplate } from '@/lib/protocolTemplates';
 
 export default function ProtocolTemplatesScreen() {
   const router = useRouter();

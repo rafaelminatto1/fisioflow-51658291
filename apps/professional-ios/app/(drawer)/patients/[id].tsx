@@ -13,8 +13,7 @@ import {
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { format, differenceInYears, differenceInDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { format } from 'date-fns';
 
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -23,7 +22,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/hooks/useTheme';
 import { HapticFeedback } from '@/lib/haptics';
-import { calculateAge, formatPhone, getInitials } from '@/lib/utils';
+import { calculateAge, formatPhone } from '@/lib/utils';
 import { doc, getDoc, collection, query, where, orderBy, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Patient, SOAPRecord, Appointment, Evaluation } from '@/types';

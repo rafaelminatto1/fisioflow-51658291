@@ -3,7 +3,7 @@
  * Prompts user to enable push notifications
  */
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import {
   View,
@@ -16,7 +16,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
-import * as Notifications from 'expo-notifications';
 
 interface NotificationPermissionModalProps {
   visible: boolean;

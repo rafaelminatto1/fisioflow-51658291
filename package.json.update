@@ -1,0 +1,21 @@
+{
+  "scripts": {
+    "// Performance & Monitoring": "",
+    "analyze": "ANALYZE=true pnpm build",
+    "lighthouse": "lighthouse http://localhost:4173 --view",
+    
+    "// Storybook (Q2 2026)": "",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "storybook:test": "test-storybook",
+    
+    "// Testing": "",
+    "test:components": "vitest run src/components/**/*.test.tsx",
+    "test:hooks": "vitest run src/hooks/**/*.test.ts",
+    "test:watch": "vitest watch",
+    
+    "// Health Check": "",
+    "health:check": "node scripts/health-check.js",
+    "health:monitor": "node scripts/monitor-health.js"
+  }
+}

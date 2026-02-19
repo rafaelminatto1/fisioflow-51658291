@@ -8,7 +8,7 @@ import React, { useState, useCallback } from 'react';
 import { Search, FileText, Calendar, User, TrendingUp } from 'lucide-react';
 import { findSimilarEvolutions } from '@/lib/services/vector-search';
 import { useDebounce } from '@/hooks/useDebounce';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

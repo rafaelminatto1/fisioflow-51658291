@@ -5,16 +5,13 @@
 
 import {
   collection,
-  doc,
   query,
-  where,
   orderBy,
   onSnapshot,
   getDocs,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { asyncResult, Result } from '@/lib/async';
-import { log } from '@/lib/logger';
 import { perf } from '@/lib/performance';
 
 /**

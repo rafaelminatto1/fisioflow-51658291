@@ -13,7 +13,6 @@ import {
   doc,
   updateDoc,
   serverTimestamp,
-  getFirestore,
 } from 'firebase/firestore';
 import { db } from '@/integrations/firebase/app';
 import { logger } from '@/lib/errors/logger';
@@ -281,7 +280,7 @@ export function clusterEmbeddings(
   }
 
   // K-means (max 10 iterações)
-  let assignments = new Array(embeddings.length).fill(0);
+  const assignments = new Array(embeddings.length).fill(0);
 
   for (let iter = 0; iter < 10; iter++) {
     // Assign to closest centroid

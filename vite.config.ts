@@ -105,18 +105,43 @@ export default defineConfig(({ mode }) => {
               if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
                 return 'react-core';
               }
+              
               // Firebase bundle
               if (id.includes('firebase')) return 'firebase-vendor';
 
-              // UI & Icons (Lucide é pesado)
+              // UI & Icons - Separar por biblioteca para melhor tree-shaking
               if (id.includes('lucide-react')) return 'ui-icons';
+              if (id.includes('@radix-ui/react-dialog')) return 'ui-dialog';
+              if (id.includes('@radix-ui/react-dropdown')) return 'ui-dropdown';
+              if (id.includes('@radix-ui/react-select')) return 'ui-select';
+              if (id.includes('@radix-ui/react-popover')) return 'ui-popover';
               if (id.includes('@radix-ui')) return 'ui-radix';
               if (id.includes('framer-motion')) return 'motion';
 
+              // Charts e visualizações (lazy load)
+              if (id.includes('recharts')) return 'charts';
+              if (id.includes('react-grid-layout')) return 'grid-layout';
+              
+              // PDF e Excel (lazy load)
+              if (id.includes('jspdf')) return 'pdf-generator';
+              if (id.includes('xlsx') || id.includes('exceljs')) return 'excel-generator';
+              
               // Utilitários grandes
               if (id.includes('date-fns')) return 'utils-date';
               if (id.includes('lodash')) return 'utils-lodash';
+              if (id.includes('zod')) return 'utils-validation';
+              
+              // Monitoring
               if (id.includes('sentry')) return 'sentry-vendor';
+              
+              // AI e ML
+              if (id.includes('@google/generative-ai') || id.includes('openai')) return 'ai-vendor';
+              
+              // Router
+              if (id.includes('react-router')) return 'router';
+              
+              // Query
+              if (id.includes('@tanstack/react-query')) return 'query';
 
               return 'vendor';
             }

@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
 import { useColors } from '@/hooks/useColorScheme';
-import { Input } from './Input';
 import { Ionicons } from '@expo/vector-icons';
 
 interface FormFieldProps {

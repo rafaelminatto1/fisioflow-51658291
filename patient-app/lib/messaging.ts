@@ -19,8 +19,6 @@ import {
   orderBy,
   serverTimestamp,
   getDoc,
-  getDocFromCache,
-  setDoc,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from './firebase';

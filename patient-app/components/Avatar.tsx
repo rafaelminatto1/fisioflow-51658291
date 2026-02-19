@@ -5,7 +5,6 @@
 
 import { View, Image, Text, StyleSheet } from 'react-native';
 import { useColors } from '@/hooks/useColorScheme';
-import { Ionicons } from '@expo/vector-icons';
 
 export type AvatarSize = 'xsmall' | 'small' | 'medium' | 'large' | 'xlarge';
 export type AvatarVariant = 'circle' | 'square' | 'rounded';

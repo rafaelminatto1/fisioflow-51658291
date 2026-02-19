@@ -27,7 +27,7 @@
  * - Observations and notes
  */
 
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   User,
   Eye,
@@ -40,8 +40,6 @@ import {
   Grimace,
   Zap,
   Dumbbell,
-  Home,
-  Paperclip,
   Plus,
   X,
   CheckCircle2,
@@ -51,8 +49,6 @@ import {
   Calendar,
   Clock,
   MoreVertical,
-  Image as ImageIcon,
-  Upload,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -60,21 +56,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+
+
+
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -88,7 +73,6 @@ import {
 } from '@/components/ui/popover';
 import {
   Command,
-  CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,

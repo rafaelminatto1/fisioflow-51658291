@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Icon } from './Icon';
 import { Button } from './Button';
 import { useTheme } from '@/hooks/useTheme';

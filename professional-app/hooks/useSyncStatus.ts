@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import NetInfo from '@react-native-community/netinfo';
 
 export type SyncStatus = 'synced' | 'syncing' | 'error' | 'offline';

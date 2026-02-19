@@ -18,7 +18,7 @@ import { useColors } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/auth';
 import { Card, Button } from '@/components';
 import { usePatientNotifications } from '@/lib/notificationsSystem';
-import { collection, query, where, getDocs, getCountFromServer } from 'firebase/firestore';
+import { collection, getDocs, getCountFromServer } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { APP_VERSION } from '@/lib/constants';
 import * as Notifications from 'expo-notifications';

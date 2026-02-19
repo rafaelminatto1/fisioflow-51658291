@@ -1,4 +1,4 @@
-import { db, collection, getDocs, query, where, orderBy, limit, addDoc } from '@/integrations/firebase/app';
+import { db, collection, getDocs, query, where, orderBy } from '@/integrations/firebase/app';
 import { WhatsAppService } from './WhatsAppService';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { notificationManager } from './NotificationManager';

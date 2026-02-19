@@ -23,17 +23,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+
+
 import { useAuditLogs, useExportAuditLogs, useBackups } from '@/hooks/useAuditLogs';
 import {
-  Search, Eye, FileText, Download, Database, RefreshCw,
-  Plus, Minus, Edit, Trash2, Shield, Clock, HardDrive,
+  Search, FileText, Download, Database, RefreshCw,
+  Plus, Edit, Trash2, Shield, Clock, HardDrive,
   CheckCircle, AlertCircle, XCircle
 } from 'lucide-react';
 import { format } from 'date-fns';

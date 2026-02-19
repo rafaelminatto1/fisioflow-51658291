@@ -12,7 +12,7 @@
  * - Professional clinical appearance
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   User,
   Eye,
@@ -27,7 +27,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Progress } from '@/components/ui/progress';
 import {
   Tooltip,
   TooltipContent,

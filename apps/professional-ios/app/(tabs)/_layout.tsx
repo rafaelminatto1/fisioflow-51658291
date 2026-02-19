@@ -3,7 +3,6 @@ import { Platform, Pressable, StyleSheet } from 'react-native';
 import { HapticFeedback } from '@/lib/haptics';
 import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/hooks/useTheme';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 
 import {

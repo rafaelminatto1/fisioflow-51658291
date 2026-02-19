@@ -6,7 +6,6 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
-  ActivityIndicator,
   Alert,
   Image,
 } from 'react-native';
@@ -16,14 +15,12 @@ import { DragListRenderItem } from 'react-native-draglist';
 
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
 import { Icon } from '@/components/ui/Icon';
-import { ExerciseSelector } from '@/components/ExerciseSelector';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { useExercises } from '@/hooks/useExercises';
 import { HapticFeedback } from '@/lib/haptics';
-import { doc, setDoc, serverTimestamp, collection, getDoc, query, where, getDocs } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, collection, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Exercise } from '@/types';
 

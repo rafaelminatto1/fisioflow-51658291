@@ -1,14 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, ViewStyle } from 'react-native';
-import { format, differenceInDays } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { differenceInDays } from 'date-fns';
 import { Card } from './Card';
-import { Badge } from './Badge';
 import { Avatar } from './Avatar';
 import { Icon } from './Icon';
 import { useTheme } from '@/hooks/useTheme';
-import { HapticFeedback } from '@/lib/haptics';
-import { getInitials } from '@/lib/utils';
 import type { Patient } from '@/types';
 
 export interface PatientCardProps {

@@ -1,12 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
-  collection,
   doc,
   onSnapshot,
-  query,
-  where,
-  orderBy,
-  limit,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 

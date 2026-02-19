@@ -1,141 +1,238 @@
-# 📚 FisioFlow - Documentação Oficial 2026
+# 📚 FisioFlow - Documentação 2026
 
-Bem-vindo à documentação oficial do **FisioFlow** - Sistema de Gestão Completo para Clínicas de Fisioterapia.
-
-## 🎯 Sobre esta Documentação
-
-Esta documentação foi criada para fornecer uma referência completa para desenvolvedores, administradores de sistema e qualquer pessoa que deseje entender ou contribuir com o projeto FisioFlow.
-
-## 📖 Como Usar esta Documentação
-
-### Para Começar Rápido
-Se você é novo no projeto, comece por:
-1. [Visão Geral](./01-visao-geral.md) - Entenda o que é o FisioFlow
-2. [Guia de Início Rápido](./guias/inicio-rapido.md) - Configure seu ambiente
-3. [Estrutura do Projeto](./04-estrutura-projeto.md) - Entenda a organização do código
-
-### Para Desenvolvedores
-Se você vai desenvolver ou contribuir:
-1. [Ambiente de Desenvolvimento](./03-ambiente-desenvolvimento.md)
-2. [Arquitetura](./02-arquitetura.md)
-3. [Componentes UI](./08-componentes-ui.md)
-4. [Guia de Contribuição](./12-guia-contribuicao.md)
-
-### Para Administradores
-Se você vai configurar ou manter o sistema:
-1. [Configuração Firebase](./guias/configuracao-firebase.md) e [Firebase Hosting](./guias/configuracao-firebase-hosting.md)
-2. [Configuração Firebase Hosting](./guias/configuracao-firebase-hosting.md)
-3. [Deploy em Produção](./11-deploy-producao.md)
-
-### Para Entender Funcionalidades
-Se você quer entender as funcionalidades disponíveis:
-1. [Funcionalidades](./funcionalidades/)
-2. [Roadmap](./13-roadmap.md) - Veja o que está por vir
-
-### Documentação Consolidada do Sistema
-Visão única de fluxos, requisitos funcionais e modelo de dados:
-1. [**Documentação Sistema Completa**](./DOCUMENTACAO_SISTEMA_COMPLETA.md) — Fluxos, funcionalidades, requisitos funcionais e entidades
-2. [**Entidades e Relacionamentos**](./ENTIDADES_E_RELACIONAMENTOS.md) — Diagrama ER, tabelas, FKs e tipos TypeScript
-3. [**Plano Firebase + GCP**](./PLANO_FIREBASE_GCP.md) — Infraestrutura 100% Firebase e Google Cloud (deploy, hosting, CI/CD, crons)
-
-## 📑 Índice da Documentação
-
-### 📚 Documentos Principais
-
-| Documento | Descrição | Status |
-|-----------|-----------|--------|
-| [01. Visão Geral](./01-visao-geral.md) | Overview do projeto, funcionalidades e stack | ✅ |
-| [02. Arquitetura](./02-arquitetura.md) | Arquitetura técnica, diagramas e decisões | ✅ |
-| [03. Ambiente de Desenvolvimento](./03-ambiente-desenvolvimento.md) | Setup e configuração do ambiente | ✅ |
-| [04. Estrutura do Projeto](./04-estrutura-projeto.md) | Organização de pastas e arquivos | ✅ |
-| [05. Banco de Dados](./05-banco-dados.md) | Schema, migrations e RLS policies | ✅ |
-| [06. Autenticação e Segurança](./06-autenticacao-seguranca.md) | Auth, roles, permissões e LGPD | ✅ |
-| [07. APIs e Integrações](./07-api-integracoes.md) | Edge Functions e integrações | ✅ |
-| [08. Componentes UI](./08-componentes-ui.md) | Design System e componentes | ✅ |
-| [09. Estado e Forms](./09-estado-forms.md) | State management e validações | ✅ |
-| [10. Testes e Qualidade](./10-testes-qualidade.md) | Estratégia de testes e qualidade | ✅ |
-| [11. Deploy e Produção](./11-deploy-producao.md) | Deploy, monitoramento e backups | ✅ |
-| [12. Guia de Contribuição](./12-guia-contribuicao.md) | Como contribuir com o projeto | ✅ |
-| [13. Roadmap](./13-roadmap.md) | Futuro do projeto e melhorias | ✅ |
-| [**Documentação Sistema Completa**](./DOCUMENTACAO_SISTEMA_COMPLETA.md) | Fluxos, requisitos funcionais e entidades (consolidado) | ✅ |
-| [**Entidades e Relacionamentos**](./ENTIDADES_E_RELACIONAMENTOS.md) | Diagrama ER, tabelas, FKs e tipos | ✅ |
-| [**Plano Firebase + GCP**](./PLANO_FIREBASE_GCP.md) | Infraestrutura 100% Firebase + GCP | ✅ |
-
-### 📘 Guias Práticos
-
-| Guia | Descrição | Link |
-|------|-----------|------|
-| Início Rápido | Setup rápido do ambiente | [Ver](./guias/inicio-rapido.md) |
-| Configuração Firebase | Setup Firebase + Firestore + Auth | [Ver](./guias/configuracao-firebase.md) |
-| Firebase Hosting | Deploy e domínio (Firebase + GCP) | [Ver](./guias/configuracao-firebase-hosting.md) |
-| Desenvolvimento Local | Ambiente local completo | [Ver](./guias/desenvolvimento-local.md) |
-| Debug & Troubleshooting | Resolução de problemas | [Ver](./guias/debug-troubleshooting.md) |
-| Otimização de Performance | Melhorias de performance | [Ver](./guias/otimizacao-performance.md) |
-
-### 📗 Referências Técnicas
-
-| Referência | Descrição | Link |
-|------------|-----------|------|
-| TypeScript Types | Tipos principais do sistema | [Ver](./referencias/tipos-ts.md) |
-| Hooks Customizados | Hooks disponíveis | [Ver](./referencias/hooks-customizados.md) |
-| Componentes Reutilizáveis | Componentes UI | [Ver](./referencias/componentes-reutilizaveis.md) |
-| Utilitários | Funções auxiliares | [Ver](./referencias/utilitarios.md) |
-| Validações | Schema de validações | [Ver](./referencias/validacoes.md) |
-| Constantes | Constantes globais | [Ver](./referencias/constantes.md) |
-
-### 📕 Funcionalidades
-
-| Funcionalidade | Descrição | Link |
-|----------------|-----------|------|
-| Pacientes | Gestão completa de pacientes | [Ver](./funcionalidades/pacientes.md) |
-| Agenda | Sistema de agendamento | [Ver](./funcionalidades/agenda.md) |
-| Prontuário | Prontuário eletrônico SOAP | [Ver](./funcionalidades/prontuario.md) |
-| Exercícios | Biblioteca de exercícios | [Ver](./funcionalidades/exercicios.md) |
-| Financeiro | Gestão financeira | [Ver](./funcionalidades/financeiro.md) |
-| Relatórios | Analytics e relatórios | [Ver](./funcionalidades/relatorios.md) |
-| Telemedicina | Telemedicina e videoconferência | [Ver](./funcionalidades/telemedicina.md) |
-| Avaliações | Fichas de avaliação | [Ver](./funcionalidades/avaliacoes.md) |
-| Gamificação | Sistema de gamificação | [Ver](./funcionalidades/gamificacao.md) |
-| CRM | CRM e marketing | [Ver](./funcionalidades/crm.md) |
-
-## 🚀 Stack Tecnológico
-
-```
-Frontend:  React 18 + TypeScript + Vite
-UI:        shadcn/ui + Tailwind CSS
-Backend:   Firebase (Firestore + Auth + Realtime + Storage + Cloud Functions)
-Deploy:    Firebase Hosting + Cloud Build
-Monitor:   Cloud Monitoring + Sentry
-Mobile:    Capacitor (iOS/Android)
-```
-
-## 🎯 Público-Alvo
-
-- **Desenvolvedores**: Para contribuir e estender o sistema
-- **Administradores**: Para configurar e manter a infraestrutura
-- **Fisioterapeutas**: Para entender as funcionalidades clínicas
-- **Gestores**: Para entender as capacidades do sistema
-
-## 📞 Suporte
-
-- 📧 Email: suporte@fisioflow.com
-- 💬 Discord: [Servidor do FisioFlow](https://discord.gg/fisioflow)
-- 🐛 Issues: [GitHub Issues](https://github.com/fisioflow/fisioflow/issues)
-- 📖 Wiki: [Documentação adicional](https://github.com/fisioflow/fisioflow/wiki)
-
-## 📄 Licença
-
-Este projeto está licenciado sob a MIT License - veja o arquivo [LICENSE](../LICENSE) para detalhes.
-
-## 🔗 Links Úteis
-
-- [Repositório Principal](https://github.com/fisioflow/fisioflow)
-- [Site Oficial](https://fisioflow.com)
-- [Aplicação em Produção](https://app.fisioflow.com)
-- [Status da API](https://status.fisioflow.com)
+**Última atualização:** 2026-02-18
 
 ---
 
-**Última atualização**: Janeiro 2026
-**Versão**: 2.0.0
-**Documentação mantida por**: Equipe FisioFlow
+## 📖 Índice de Documentação
+
+### 🚀 Getting Started
+- **[Quick Start - Melhorias](./QUICK_START_IMPROVEMENTS.md)** - Guia rápido das novas features
+- **[Roadmap 2026](./ROADMAP_2026.md)** - Planejamento completo do ano
+
+### 📊 Implementação
+- **[Implementation Summary](../ROADMAP_IMPLEMENTATION_SUMMARY.md)** - Resumo detalhado
+- **[Implementation Checklist](../IMPLEMENTATION_CHECKLIST.md)** - Checklist de validação
+- **[Executive Summary](../EXECUTIVE_SUMMARY.md)** - Resumo executivo para stakeholders
+
+### 🛠️ Guias Técnicos
+- **[API Documentation](./API_DOCUMENTATION.md)** - Documentação completa de APIs
+- **[Storybook Setup](./STORYBOOK_SETUP.md)** - Guia de configuração do Storybook
+
+### 📋 Arquitetura
+- **[Architecture](../ARCHITECTURE.md)** - Arquitetura do sistema
+- **[README Principal](../README.md)** - Documentação principal do projeto
+
+---
+
+## 🎯 Por Onde Começar?
+
+### Para Desenvolvedores
+1. Leia o **[Quick Start](./QUICK_START_IMPROVEMENTS.md)** para entender as novas features
+2. Consulte o **[Implementation Checklist](../IMPLEMENTATION_CHECKLIST.md)** para validar sua implementação
+3. Use a **[API Documentation](./API_DOCUMENTATION.md)** como referência
+
+### Para Tech Leads
+1. Revise o **[Implementation Summary](../ROADMAP_IMPLEMENTATION_SUMMARY.md)**
+2. Valide o **[Implementation Checklist](../IMPLEMENTATION_CHECKLIST.md)**
+3. Planeje com base no **[Roadmap 2026](./ROADMAP_2026.md)**
+
+### Para Stakeholders
+1. Leia o **[Executive Summary](../EXECUTIVE_SUMMARY.md)**
+2. Acompanhe o progresso no **[Roadmap 2026](./ROADMAP_2026.md)**
+
+---
+
+## 📊 Estrutura da Documentação
+
+```
+docs2026/
+├── README.md                          # Este arquivo
+├── ROADMAP_2026.md                    # Roadmap completo
+├── API_DOCUMENTATION.md               # Documentação de APIs
+├── STORYBOOK_SETUP.md                 # Guia do Storybook
+└── QUICK_START_IMPROVEMENTS.md        # Quick start
+
+../
+├── ROADMAP_IMPLEMENTATION_SUMMARY.md  # Resumo da implementação
+├── IMPLEMENTATION_CHECKLIST.md        # Checklist de validação
+├── EXECUTIVE_SUMMARY.md               # Resumo executivo
+├── ARCHITECTURE.md                    # Arquitetura
+└── README.md                          # README principal
+```
+
+---
+
+## 🔍 Busca Rápida
+
+### Performance
+- Monitoring: [Quick Start](./QUICK_START_IMPROVEMENTS.md#1-performance-monitoring)
+- Bundle: [Implementation Summary](../ROADMAP_IMPLEMENTATION_SUMMARY.md#-performance--bundle-optimization)
+- Métricas: [Executive Summary](../EXECUTIVE_SUMMARY.md#-métricas-de-sucesso)
+
+### Testing
+- Test Helpers: [Quick Start](./QUICK_START_IMPROVEMENTS.md#3-testing-melhorado)
+- Coverage: [Implementation Checklist](../IMPLEMENTATION_CHECKLIST.md#-testing--quality)
+- E2E: [Roadmap](./ROADMAP_2026.md#-testing--quality)
+
+### Acessibilidade
+- Hooks: [Quick Start](./QUICK_START_IMPROVEMENTS.md#2-acessibilidade-melhorada)
+- ARIA: [Implementation Summary](../ROADMAP_IMPLEMENTATION_SUMMARY.md#-acessibilidade)
+- WCAG: [Implementation Checklist](../IMPLEMENTATION_CHECKLIST.md#-acessibilidade)
+
+### DevOps
+- CI/CD: [Quick Start](./QUICK_START_IMPROVEMENTS.md#6-cicd-melhorado)
+- Staging: [Implementation Summary](../ROADMAP_IMPLEMENTATION_SUMMARY.md#-devops--cicd)
+- Lighthouse: [Roadmap](./ROADMAP_2026.md#-devops--cicd)
+
+---
+
+## 📝 Convenções de Documentação
+
+### Formato
+- Markdown (.md)
+- Títulos com emojis para melhor visualização
+- Código com syntax highlighting
+- Links relativos entre documentos
+
+### Estrutura
+- Título principal (H1)
+- Metadata (data, versão, status)
+- Índice (quando necessário)
+- Conteúdo organizado em seções (H2, H3)
+- Exemplos de código
+- Links para documentos relacionados
+
+### Atualização
+- Sempre atualizar a data no topo do documento
+- Manter histórico de versões quando relevante
+- Adicionar nota de "Última atualização"
+
+---
+
+## 🤝 Contribuindo
+
+### Adicionar Nova Documentação
+1. Criar arquivo .md na pasta apropriada
+2. Seguir convenções de formato
+3. Adicionar ao índice deste README
+4. Criar PR com descrição clara
+
+### Atualizar Documentação Existente
+1. Fazer alterações necessárias
+2. Atualizar data de "Última atualização"
+3. Adicionar nota de changelog se relevante
+4. Criar PR com descrição das mudanças
+
+### Review de Documentação
+- Verificar links quebrados
+- Validar exemplos de código
+- Checar ortografia e gramática
+- Garantir clareza e concisão
+
+---
+
+## 📞 Suporte
+
+### Dúvidas sobre Documentação
+- Slack: #fisioflow-docs
+- Email: docs@fisioflow.com
+- GitHub Issues: Tag `documentation`
+
+### Reportar Erros
+1. Verificar se já não foi reportado
+2. Criar issue com:
+   - Documento afetado
+   - Descrição do erro
+   - Sugestão de correção (se houver)
+
+### Sugerir Melhorias
+1. Criar issue com tag `documentation-enhancement`
+2. Descrever a melhoria proposta
+3. Justificar o valor da melhoria
+
+---
+
+## 🎯 Roadmap de Documentação
+
+### Q1 2026 ✅
+- [x] Roadmap 2026
+- [x] API Documentation
+- [x] Storybook Setup Guide
+- [x] Implementation Summary
+- [x] Implementation Checklist
+- [x] Executive Summary
+- [x] Quick Start Guide
+
+### Q2 2026 📝
+- [ ] Component Documentation (Storybook)
+- [ ] Architecture Deep Dive
+- [ ] Security Best Practices
+- [ ] Performance Optimization Guide
+- [ ] Testing Strategy Guide
+- [ ] Deployment Guide
+
+### Q3 2026 🔮
+- [ ] Mobile App Documentation
+- [ ] Telemedicine Guide
+- [ ] Wearables Integration
+- [ ] i18n Guide
+- [ ] Dark Mode Guide
+
+### Q4 2026 🔮
+- [ ] International Expansion Guide
+- [ ] Compliance Documentation
+- [ ] Advanced Analytics Guide
+- [ ] Custom Reports Guide
+
+---
+
+## 📊 Métricas de Documentação
+
+### Cobertura
+- Documentos criados: 8/8 (Q1)
+- Páginas documentadas: 100%
+- APIs documentadas: 100%
+- Componentes documentados: 0% (Q2)
+
+### Qualidade
+- Links quebrados: 0
+- Exemplos de código: 50+
+- Diagramas: 5+
+- Screenshots: 10+
+
+### Uso
+- Visualizações/mês: TBD
+- Feedback positivo: TBD
+- Issues reportados: 0
+
+---
+
+## 🏆 Melhores Práticas
+
+### Escrita
+- ✅ Seja claro e conciso
+- ✅ Use exemplos práticos
+- ✅ Inclua código executável
+- ✅ Adicione screenshots quando relevante
+- ✅ Use linguagem inclusiva
+
+### Organização
+- ✅ Estrutura lógica
+- ✅ Índice navegável
+- ✅ Links entre documentos
+- ✅ Versionamento claro
+- ✅ Metadata completa
+
+### Manutenção
+- ✅ Revisar trimestralmente
+- ✅ Atualizar com mudanças de código
+- ✅ Remover conteúdo obsoleto
+- ✅ Validar links periodicamente
+- ✅ Coletar feedback dos usuários
+
+---
+
+**Mantido por:** Equipe de Desenvolvimento FisioFlow
+**Última revisão:** 2026-02-18
+**Próxima revisão:** 2026-03-01

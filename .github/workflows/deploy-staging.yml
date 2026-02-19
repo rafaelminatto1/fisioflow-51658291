@@ -1,0 +1,82 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Run tests
+        run: |
+          pnpm test:unit
+          pnpm lint
+      
+      - name: Build for staging
+        run: pnpm build
+        env:
+          NODE_ENV: staging
+          VITE_FIREBASE_API_KEY: ${{ secrets.STAGING_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.STAGING_FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.STAGING_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.STAGING_FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.STAGING_FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.STAGING_FIREBASE_APP_ID }}
+      
+      - name: Deploy to Firebase Hosting (Staging)
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_STAGING }}'
+          projectId: ${{ secrets.STAGING_FIREBASE_PROJECT_ID }}
+          channelId: staging
+          expires: 30d
+      
+      - name: Deploy Cloud Functions (Staging)
+        run: |
+          npm install -g firebase-tools
+          firebase use staging --token ${{ secrets.FIREBASE_TOKEN }}
+          firebase deploy --only functions --token ${{ secrets.FIREBASE_TOKEN }}
+      
+      - name: Run smoke tests
+        run: |
+          pnpm test:e2e:critical
+        env:
+          BASE_URL: https://staging.fisioflow.com
+      
+      - name: Notify deployment
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          custom_payload: |
+            {
+              text: "✅ Staging deployment successful!",
+              attachments: [{
+                color: 'good',
+                text: `Branch: ${process.env.GITHUB_REF}\nCommit: ${process.env.GITHUB_SHA}\nURL: https://staging.fisioflow.com`
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Platform, AppState, AppStateStatus } from 'react-native';
+import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { doc, setDoc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';

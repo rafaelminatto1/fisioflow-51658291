@@ -8,7 +8,6 @@ import {
   RefreshControl,
   ActivityIndicator,
   TouchableOpacity,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,8 +22,6 @@ import {
   where,
   orderBy,
   onSnapshot,
-  getDoc,
-  doc,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
