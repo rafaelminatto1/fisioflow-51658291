@@ -5,8 +5,14 @@
       "type": "http"
     },
     "brave": {
-      "url": "https://server.smithery.ai/brave/mcp",
-      "type": "http"
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-brave-search"
+      ],
+      "env": {
+        "BRAVE_API_KEY": "BSAePlz76pot2NxzuGXngp-gEDzIxkv"
+      }
     },
     "server-sequential-thinking": {
       "url": "https://server.smithery.ai/@smithery-ai/server-sequential-thinking/mcp",
