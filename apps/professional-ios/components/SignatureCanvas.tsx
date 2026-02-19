@@ -1,5 +1,5 @@
-import React, { useRef, useEffect } from 'react';
-import { View, StyleSheet, GestureResponderEvent } from 'react-native';
+import React, { useRef } from 'react';
+import { View, StyleSheet } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 

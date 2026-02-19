@@ -7,9 +7,7 @@ import {
   ScrollView,
   TextInput,
   Pressable,
-  ActivityIndicator,
   Alert,
-  Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,7 +17,6 @@ import { ptBR } from 'date-fns/locale';
 
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
 import { Icon } from '@/components/ui/Icon';
 import { PatientSelector } from '@/components/PatientSelector';
 import { DateTimePicker } from '@/components/DateTimePicker';

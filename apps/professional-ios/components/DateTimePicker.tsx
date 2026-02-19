@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Platform, Modal } from 'react-native';
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
-import { format, addDays, subDays } from 'date-fns';
+import { format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Icon } from './Icon';
 import { useTheme } from '@/hooks/useTheme';

@@ -51,7 +51,12 @@ export const AppointmentActions: React.FC<AppointmentActionsProps> = ({
     });
 
     // Navega para a página de evolução
-    navigate(`/patient-evolution/${appointment.id}`);
+    navigate(`/patient-evolution/${appointment.id}`, {
+      state: {
+        patientId: appointment.patientId,
+        patientName: appointment.patientName
+      }
+    });
     toast({
       title: 'Iniciando atendimento',
       description: `Atendimento de ${appointment.patientName}`

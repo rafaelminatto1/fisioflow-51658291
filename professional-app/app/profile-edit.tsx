@@ -597,7 +597,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 24,
     borderWidth: 1,
-    // @ts-ignore - dynamic borderColor
+    // @ts-expect-error - dynamic borderColor
     borderColor: 'rgba(239, 68, 68, 0.3)',
   },
   dangerTitle: {
