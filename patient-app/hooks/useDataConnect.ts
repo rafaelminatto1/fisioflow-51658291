@@ -12,9 +12,7 @@ import {
   collection,
   query,
   where,
-  orderBy,
   onSnapshot,
-  DocumentData,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -122,7 +120,7 @@ export function usePatientExercisesPostgres(
 
     // Buscar exercícios via Firestore (fallback atual)
     const exercisesRef = collection(db, 'patient_exercises');
-    let exercisesQuery = query(
+    const exercisesQuery = query(
       exercisesRef,
       where('patientId', '==', patientId)
     );

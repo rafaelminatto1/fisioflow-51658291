@@ -17,7 +17,6 @@
 
 import { Platform } from 'react-native';
 import { useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Tipos de dados do HealthKit
 export type HealthDataType =

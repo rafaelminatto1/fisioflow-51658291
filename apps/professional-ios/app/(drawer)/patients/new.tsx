@@ -7,7 +7,6 @@ import {
   ScrollView,
   TextInput,
   Pressable,
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,

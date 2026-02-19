@@ -35,7 +35,7 @@ export function SemanticSearchPage() {
   const handleSelectEvolution = (evolutionId: string) => {
     setSelectedEvolution(evolutionId);
     // Navegar para a página da evolução
-    navigate `/patients/${evolutionId}`;
+    navigate(`/patients/${evolutionId}`);
   };
 
   const handleExampleSearch = (query: string) => {

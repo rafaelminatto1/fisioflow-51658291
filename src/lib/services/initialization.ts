@@ -8,7 +8,6 @@ import { initPerformanceMonitoring } from '@/lib/monitoring/performance';
 import { initRemoteConfig } from '@/lib/config/remote-config';
 import { initAnalytics } from '@/lib/analytics/events';
 import { initSentry, setUser } from '@/lib/monitoring/sentry';
-import { auth } from '@/lib/firebase';
 import { logger } from '@/lib/errors/logger';
 
 /**

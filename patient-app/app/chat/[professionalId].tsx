@@ -25,10 +25,8 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/auth';
-import { Card, Button } from '@/components';
-import { MessagingManager, Message, Conversation } from '@/lib/messaging';
+import { MessagingManager, Message } from '@/lib/messaging';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 
@@ -67,7 +65,7 @@ export default function ChatScreen() {
 
     try {
       // Buscar ou criar conversa
-      let convId = await findOrCreateConversation();
+      const convId = await findOrCreateConversation();
       setConversationId(convId);
 
       // Carregar mensagens
