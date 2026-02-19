@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useColors } from '@/hooks/useColorScheme';
-import { Button, Card, Input, Picker } from '@/components';
+import { Button, Input, Picker } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useQuery } from '@tanstack/react-query';
 import { useExerciseCreate, useExerciseUpdate, useExerciseDelete } from '@/hooks/useExercises';

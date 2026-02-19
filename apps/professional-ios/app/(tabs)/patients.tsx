@@ -9,26 +9,18 @@ import {
   TextInput,
   ActivityIndicator,
   RefreshControl,
-  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
-import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
 import { Icon } from '@/components/ui/Icon';
-import { Avatar } from '@/components/ui/Avatar';
 import { PatientCard } from '@/components/ui/PatientCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useTheme } from '@/hooks/useTheme';
 import { usePatients } from '@/hooks/usePatients';
 import { HapticFeedback } from '@/lib/haptics';
-import type { Patient } from '@/types';
-import { getInitials } from '@/lib/utils';
 
 type PatientStatus = 'all' | 'Em Tratamento' | 'Recuperação' | 'Inicial' | 'Concluído';
 type SortOption = 'name' | 'recent' | 'progress';

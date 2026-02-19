@@ -17,8 +17,16 @@ import {
 } from '@/lib/constants/appointment-queries';
 import { appointmentsApi, patientsApi } from '@/integrations/firebase/functions';
 import { fisioLogger } from '@/lib/errors/logger';
+import { type Patient, type AppointmentUnified } from '@/types';
+import { mapPatientDBToApp } from '@/utils/patientDataMappers';
 
-export const useAppointmentData = (appointmentId: string | undefined) => {
+export const useAppointmentData = (
+    appointmentId: string | undefined,
+    options?: {
+        initialPatientId?: string;
+        initialPatientData?: Partial<Patient>;
+    }
+) => {
     // Buscar dados do agendamento do PostgreSQL via Firebase Functions
     const { data: appointment, isLoading: appointmentLoading, error: appointmentError } = useQuery({
         queryKey: ['appointment', appointmentId],
@@ -40,12 +48,18 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
                 hasEmbeddedPatient: !!patientData
             }, 'useAppointmentData');
 
+            // Map to AppointmentUnified (or compatible) structure
             return {
-                id: data.id,
                 ...data,
-                // Ensure patient is passed through
-                patient: patientData
-            } as AppointmentDBStandard & { patient?: PatientDBStandard };
+                id: data.id,
+                patientId: (data.patient_id || data.patientId) as string,
+                patient_id: (data.patient_id || data.patientId) as string,
+                patientName: (data.patient?.full_name || data.patient?.name) as string,
+                date: (data.appointment_date || data.date) as string,
+                time: (data.appointment_time || data.time) as string,
+                // Ensure patient is passed through and mapped if present
+                patient: data.patient ? mapPatientDBToApp(data.patient) : undefined
+            } as unknown as AppointmentUnified;
         },
         enabled: !!appointmentId,
         retry: 3,
@@ -53,15 +67,17 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
         staleTime: 1000 * 60 * 2, // 2 minutos
     });
 
-    const patientId = appointment?.patientId || appointment?.patient_id;
+    // Use initialPatientId from navigation state if available, otherwise fall back to appointment data
+    const patientId = options?.initialPatientId || appointment?.patientId || appointment?.patient_id;
 
     // Log quando patientId muda
-    if (appointment && import.meta.env.DEV) {
+    if ((appointment || options?.initialPatientId) && import.meta.env.DEV) {
         fisioLogger.debug('Current state', {
-            appointmentId: appointment.id,
+            appointmentId: appointment?.id,
             patientId: patientId,
             hasPatientId: !!patientId,
-            hasEmbeddedPatient: !!appointment.patient
+            hasEmbeddedPatient: !!appointment?.patient,
+            fromNavigation: !!options?.initialPatientId
         }, 'useAppointmentData');
     }
 
@@ -75,65 +91,90 @@ export const useAppointmentData = (appointmentId: string | undefined) => {
                 throw new Error('ID do paciente não fornecido');
             }
 
-            devValidatePatient(PATIENT_SELECT.standard);
+            // Use extended selection to ensure we get gender, alerts etc.
+            // devValidatePatient(PATIENT_SELECT.extended); 
 
-            let response: { data?: PatientDBStandard | null } | PatientDBStandard | null = null;
+
+            // If we somehow got here but have the data (should likely hit cache/initialData first), return it
+            if (appointment?.patient && appointment.patient.id === patientId) {
+                return mapPatientDBToApp(appointment.patient);
+            }
+
+            if (options?.initialPatientData && options.initialPatientData.id === patientId) {
+                return options.initialPatientData as Patient;
+            }
+
             try {
-                // If we somehow got here but have the data (should likely hit cache/initialData first), return it
-                if (appointment?.patient && appointment.patient.id === patientId) {
-                    return appointment.patient as PatientDBStandard;
-                }
+                // 1. Try direct get first (most efficient)
+                const data = await patientsApi.get(patientId);
+                return mapPatientDBToApp(data);
+            } catch (err) {
+                console.warn(`[useAppointmentData] Direct fetch failed for ${patientId}, trying fallbacks...`, err);
 
-                const result = await patientsApi.get(patientId);
-                // Handle direct return or wrapped response based on API consistency
-                const data = 'data' in result ? (result as any).data : result;
-
-                if (!data) {
-                    fisioLogger.warn('Patient not found in database', { patientId }, 'useAppointmentData');
-                    return null;
-                }
-
-                fisioLogger.debug('Patient loaded', {
-                    id: data.id,
-                    name: data.name || data.full_name
-                }, 'useAppointmentData');
-
-                return {
-                    id: data.id,
-                    ...data,
-                } as PatientDBStandard;
-
-            } catch (e) {
-                // Fallback: getPatientHttp falha por CORS/rede; listPatientsV2 funciona — buscar na lista
-                const isNetworkOrCors = (e as Error)?.message?.includes('Failed to fetch') || (e as Error)?.name === 'TypeError';
-                if (isNetworkOrCors) {
-                    const listRes = await patientsApi.list({ limit: 2000 });
-                    const found = listRes.data?.find((p: { id?: string }) => p.id === patientId);
-                    if (found) {
-                        fisioLogger.debug('Patient loaded via list fallback', { id: found.id }, 'useAppointmentData');
-                        const p = found as Record<string, unknown>;
-                        return { id: p.id as string, full_name: (p.name ?? p.full_name ?? '') as string, ...p } as PatientDBStandard;
+                // 2. Smart Fallback: Search by name if available (O(1) lookup effectively)
+                const patientName = appointment?.patientName;
+                if (patientName) {
+                    try {
+                        const searchResult = await patientsApi.list({
+                            search: patientName,
+                            limit: 5 // Keep it tight, we expect exact name match or close to it
+                        });
+                        const found = searchResult.data.find((p: any) =>
+                            p.id === patientId || p.objectID === patientId
+                        );
+                        if (found) {
+                            console.log(`[useAppointmentData] Found patient via name search fallback: ${patientName}`);
+                            return mapPatientDBToApp(found);
+                        }
+                    } catch (searchErr) {
+                        console.warn(`[useAppointmentData] Name search fallback failed`, searchErr);
                     }
                 }
-                throw e;
+
+                // 3. Last Resort Fallback: List recent/active patients
+                // Reduced limit from 2000 to 100 for performance. 
+                // If the patient isn't in the top 100 active/recent, they likely need manual refresh or there's a bigger issue.
+                try {
+                    const fallbackData = await patientsApi.list({
+                        limit: 100,
+                        status: 'Em Tratamento' // Prioritize active patients
+                    });
+
+                    const found = fallbackData.data.find((p: any) =>
+                        p.id === patientId || p.objectID === patientId
+                    );
+
+                    if (found) {
+                        console.log('[useAppointmentData] Found patient via list fallback');
+                        return mapPatientDBToApp(found);
+                    }
+                } catch (fallbackErr) {
+                    console.error('[useAppointmentData] All fallbacks failed', fallbackErr);
+                }
+
+                // If all else fails, throw the original error to let React Query handle retry/error state
+                // OR return initialData if we have it (handled by initialData prop, but query fails)
+                throw err;
             }
         },
         enabled: !!patientId,
-        initialData: appointment?.patient as PatientDBStandard | undefined,
-        initialDataUpdatedAt: appointment ? Date.now() : undefined,
+        initialData: (appointment?.patient || options?.initialPatientData) as Patient | undefined,
+        initialDataUpdatedAt: (appointment || options?.initialPatientData) ? Date.now() : undefined,
         retry: 3,
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-        // Se veio do appointment, considera fresco por 5 min
-        staleTime: appointment?.patient ? 1000 * 60 * 5 : 1000 * 60 * 5,
+        // Se veio do appointment ou navigation, considera fresco por 5 min
+        staleTime: 1000 * 60 * 5,
     });
 
     return {
         appointment,
         patient,
         patientId,
-        // isLoading deve ser true se o appointment ainda está carregando
-        // OU se temos um appointment (e patientId) e o patient está carregando
-        isLoading: appointmentLoading || (!!patientId && patientLoading),
+        // isLoading deve ser true se:
+        // 1. Appointment está carregando
+        // 2. OU temos patientId (via prop ou appointment) e patient está carregando
+        // MAS se tivermos initialData (via prop ou embedded), patient e appointment podem não estar "loading" visualmente
+        isLoading: appointmentLoading || (!!patientId && patientLoading && !patient),
         error: appointmentError || patientError,
         appointmentLoading,
         patientLoading,

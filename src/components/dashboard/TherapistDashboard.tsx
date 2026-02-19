@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { ChartWidget } from './ChartWidget';
-import { toast } from '@/hooks/use-toast';
 import { Profile } from '@/types/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,7 +18,6 @@ import {
 } from 'lucide-react';
 import { format, isSameDay, differenceInDays } from 'date-fns';
 import { useAppointments } from '@/hooks/useAppointments';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface TherapistDashboardProps {
   lastUpdate: Date;

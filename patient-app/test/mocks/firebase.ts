@@ -8,7 +8,6 @@
  * Mock Auth State
  */
 
-import { Result } from '../../lib/async';
 
 let mockAuthUser: any = null;
 let mockAuthError: Error | null = null;

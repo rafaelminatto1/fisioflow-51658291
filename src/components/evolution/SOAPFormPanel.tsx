@@ -207,7 +207,11 @@ const SpeechToSOAPButton = ({ onTranscription, disabled }: { onTranscription: (t
       )}
       onClick={(e) => {
         e.stopPropagation();
-        isListening ? stopListening() : startListening();
+        if (isListening) {
+          stopListening();
+        } else {
+          startListening();
+        }
       }}
       disabled={disabled}
       title={isListening ? "Parar gravação" : "Gravar voz para este campo"}

@@ -22,8 +22,7 @@ import {
     Clock,
     AlertCircle,
     Zap,
-    CheckCircle2,
-    Target
+    CheckCircle2
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { cn, safeFormat } from '@/lib/utils';
@@ -33,7 +32,6 @@ import {
     TarefaStatus,
     TarefaPrioridade,
     STATUS_LABELS,
-    STATUS_COLORS,
     PRIORIDADE_LABELS,
     TaskStats
 } from '@/types/tarefas';

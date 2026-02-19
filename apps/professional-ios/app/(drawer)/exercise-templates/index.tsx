@@ -7,13 +7,10 @@ import {
   ScrollView,
   Pressable,
   TextInput,
-  ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/hooks/useTheme';

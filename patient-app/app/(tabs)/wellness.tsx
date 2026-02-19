@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
@@ -14,14 +14,11 @@ import { Card } from '@/components';
 import {
   useHealthKit,
   getTodaySteps,
-  type HealthData,
 } from '@/lib/healthkit';
 import {
   useHealthConnect,
   getTodayStepsHealthConnect,
 } from '@/lib/healthConnect';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 interface MetricCardProps {
   icon: keyof typeof Ionicons.glyphMap;

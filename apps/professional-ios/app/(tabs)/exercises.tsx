@@ -9,23 +9,18 @@ import {
   TextInput,
   ActivityIndicator,
   RefreshControl,
-  Image,
   Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, { FadeIn } from 'react-native-reanimated';
 
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
 import { Icon } from '@/components/ui/Icon';
 import { ExerciseCard } from '@/components/ui/ExerciseCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useTheme } from '@/hooks/useTheme';
 import { useExercises } from '@/hooks/useExercises';
 import { HapticFeedback } from '@/lib/haptics';
-import type { Exercise } from '@/types';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 52) / 2;

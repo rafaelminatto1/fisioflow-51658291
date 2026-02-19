@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { ChevronRight, Calendar, Phone, Mail, Stethoscope } from 'lucide-react';
+import { ChevronRight, Calendar, Stethoscope } from 'lucide-react';
 import { cn, calculateAge } from '@/lib/utils';
 import { Patient } from '@/schemas/patient';
 import { PatientHelpers } from '@/types';

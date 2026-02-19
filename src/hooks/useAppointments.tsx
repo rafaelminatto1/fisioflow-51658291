@@ -13,6 +13,8 @@ import { appointmentsCacheService } from '@/lib/offline/AppointmentsCacheService
 import { AppointmentService } from '@/services/appointmentService';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 import { isAppointmentConflictError } from '@/utils/appointmentErrors';
+import { invalidateAffectedPeriods } from '@/utils/cacheInvalidation';
+import { formatDateToLocalISO } from '@/utils/dateUtils';
 
 export const appointmentKeys = {
   all: ['appointments_v2'] as const,
@@ -387,7 +389,7 @@ export function useCreateAppointment() {
       // Return context with previous data and temp ID
       return { previousData, tempId };
     },
-    onSuccess: (data, _variables, context) => {
+    onSuccess: async (data, _variables, context) => {
       // Replace optimistic update with real data
       queryClient.setQueryData(
         appointmentKeys.list(profile?.organization_id),
@@ -399,6 +401,10 @@ export function useCreateAppointment() {
           };
         }
       );
+
+      // Use selective cache invalidation for period-based queries
+      const appointmentDate = formatDateToLocalISO(data.date);
+      await invalidateAffectedPeriods(appointmentDate, queryClient, profile?.organization_id || '');
 
       // Force refresh of lists to ensure consistency
       queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
@@ -469,7 +475,11 @@ export function useUpdateAppointment() {
 
       return { previousData };
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      // Use selective cache invalidation for period-based queries
+      const appointmentDate = formatDateToLocalISO(data.date);
+      await invalidateAffectedPeriods(appointmentDate, queryClient, profile?.organization_id || '');
+
       // Invalidate to ensure we have the latest data
       queryClient.invalidateQueries({ queryKey: appointmentKeys.list(profile?.organization_id) });
       queryClient.invalidateQueries({ queryKey: appointmentKeys.detail(data.id) });
@@ -529,13 +539,24 @@ export function useDeleteAppointment() {
   return useMutation({
     mutationFn: async (appointmentId: string) => {
       const organizationId = profile?.organization_id || await requireUserOrganizationId();
+      
+      // Get appointment data before deleting for cache invalidation
+      const currentResult = queryClient.getQueryData<AppointmentsQueryResult>(appointmentKeys.list(profile?.organization_id));
+      const appointment = currentResult?.data.find(apt => apt.id === appointmentId);
+      
       await AppointmentService.deleteAppointment(appointmentId, organizationId);
-      return appointmentId;
+      return { appointmentId, appointment };
     },
-    onSuccess: (deletedId) => {
+    onSuccess: async ({ appointmentId, appointment }) => {
+      // Use selective cache invalidation if we have the appointment date
+      if (appointment) {
+        const appointmentDate = formatDateToLocalISO(appointment.date);
+        await invalidateAffectedPeriods(appointmentDate, queryClient, profile?.organization_id || '');
+      }
+
       // Invalidate both list and detail queries
       queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
-      queryClient.removeQueries({ queryKey: appointmentKeys.detail(deletedId) });
+      queryClient.removeQueries({ queryKey: appointmentKeys.detail(appointmentId) });
 
       toast({
         title: 'Sucesso',

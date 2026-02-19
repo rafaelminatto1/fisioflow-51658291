@@ -225,7 +225,7 @@ async function createFinancialRecordLogic(auth: any, data: any) {
     const patientData = patient.rows[0];
     let discount_value = 0;
     let discount_type: 'percentage' | 'fixed' | 'partnership' | null = null;
-    let partnership_id = patientData.partnership_id;
+    const partnership_id = patientData.partnership_id;
 
     // Apply partnership discount if applicable
     if (patientData.partnership_id && !is_barter) {

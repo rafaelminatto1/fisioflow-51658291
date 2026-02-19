@@ -16,19 +16,16 @@ import {
   TrendingUp,
   Target,
   Zap,
-  Calendar,
-  ArrowUpRight,
-  ArrowDownRight
+  Calendar
 } from 'lucide-react';
-import { format, startOfWeek, endOfWeek, eachDayOfInterval, isWithinInterval, differenceInDays, addDays, subDays, startOfMonth, endOfMonth, isValid } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { startOfWeek, endOfWeek, eachDayOfInterval, isWithinInterval, differenceInDays, addDays, subDays, startOfMonth, endOfMonth, isValid } from 'date-fns';
 
 // safeFormat imported from @/lib/utils
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
@@ -52,7 +49,6 @@ import {
   TarefaPrioridade,
   STATUS_LABELS,
   STATUS_COLORS,
-  PRIORIDADE_LABELS,
   TaskStats
 } from '@/types/tarefas';
 import { useTarefas, useDeleteTarefa } from '@/hooks/useTarefas';

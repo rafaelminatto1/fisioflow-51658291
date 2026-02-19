@@ -3,6 +3,7 @@ import { format, isSameDay, isToday, isTomorrow, isYesterday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar, TrendingUp, RefreshCw } from 'lucide-react';
 import { SwipeableAppointmentCard } from './SwipeableAppointmentCard';
+import { VirtualizedAppointmentList } from './virtualized/VirtualizedAppointmentList';
 import { EmptyState } from '@/components/ui';
 import { useToast } from '@/hooks/use-toast';
 import type { Appointment } from '@/types/appointment';

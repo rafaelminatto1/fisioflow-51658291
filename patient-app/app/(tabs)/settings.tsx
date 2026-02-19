@@ -14,7 +14,6 @@ import {
   Switch,
   Alert,
   Linking,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,7 +23,7 @@ import { useAuthStore } from '@/store/auth';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { Card, Button } from '@/components';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { exportAndSharePatientData, getExportSummary } from '@/lib/dataExport';
+import { exportAndSharePatientData } from '@/lib/dataExport';
 
 interface SettingSection {
   title: string;

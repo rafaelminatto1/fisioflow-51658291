@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, Pressable, ActivityIndicator, TextInput, Scroll
 import { useRouter } from 'expo-router';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useExercises } from '@/hooks/useExercises';
-import { Card } from './Card';
 import { Icon } from './Icon';
 import { useTheme } from '@/hooks/useTheme';
 import { HapticFeedback } from '@/lib/haptics';

@@ -7,7 +7,6 @@
 import {
   getRemoteConfig,
   fetchAndActivate,
-  getValue,
   getBoolean,
   getNumber,
   getString,

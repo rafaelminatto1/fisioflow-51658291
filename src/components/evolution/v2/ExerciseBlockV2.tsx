@@ -47,8 +47,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
-import { ExerciseTemplateService, type ExerciseTemplate } from '@/lib/services/ExerciseTemplateService';
-import { Sparkles, History } from 'lucide-react';
+import { ExerciseTemplateService } from '@/lib/services/ExerciseTemplateService';
+import { Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ExerciseBlockV2Props {

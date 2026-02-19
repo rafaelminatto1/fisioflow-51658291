@@ -15,7 +15,6 @@ import {
   TouchableOpacity,
   Dimensions,
   Modal,
-  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';

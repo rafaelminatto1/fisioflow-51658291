@@ -2,17 +2,16 @@ import React, { memo, useState, forwardRef } from 'react';
 import { Appointment } from '@/types/appointment';
 import { CARD_SIZE_CONFIGS, normalizeStatus } from '@/lib/config/agenda';
 import { cn } from '@/lib/utils';
-import { MoreVertical, GripVertical, CheckCircle2, Circle, Loader2 } from 'lucide-react';
+import { MoreVertical, CheckCircle2 } from 'lucide-react';
 import { AppointmentQuickView } from './AppointmentQuickView';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useIsTouch } from '@/hooks/use-touch';
 import { useCardSize } from '@/hooks/useCardSize';
 import { useStatusConfig } from '@/hooks/useStatusConfig';
 import { useReducedMotion } from '@/lib/accessibility/a11y-utils';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { getOptimalTextColor } from '@/utils/colorContrast';
-import { normalizeTime, calculateEndTime, formatDuration } from './shared/utils';
+import { normalizeTime, calculateEndTime } from './shared/utils';
 
 interface CalendarAppointmentCardProps {
     appointment: Appointment;

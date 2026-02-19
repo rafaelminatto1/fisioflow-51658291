@@ -25,7 +25,7 @@ import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
-import { format, startOfDay, endOfDay, parseISO, differenceInMinutes } from 'date-fns';
+import { format, parseISO, differenceInMinutes } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { AppointmentService } from '@/services/appointmentService';
 import { getUserOrganizationId } from '@/utils/userHelpers';

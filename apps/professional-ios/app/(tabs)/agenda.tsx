@@ -13,13 +13,11 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { format, startOfWeek, addDays, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
 import { Icon } from '@/components/ui/Icon';
 import { AppointmentCard } from '@/components/ui/AppointmentCard';
 import { FilterChip } from '@/components/ui/FilterChip';

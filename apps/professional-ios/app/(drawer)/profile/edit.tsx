@@ -19,7 +19,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { updateDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
-import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { Card } from '@/components/ui/Card';
 import { useTheme } from '@/hooks/useTheme';

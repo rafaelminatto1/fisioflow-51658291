@@ -11,6 +11,7 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 import { FinancialService } from '@/services/financialService';
 import { AgentIngestPayload, agentIngest } from '@/lib/debug/agentIngest';
+import { AppointmentServiceDirect } from './appointmentServiceDirect';
 
 interface AppointmentApiItem {
     id: string;
@@ -70,75 +71,154 @@ export class AppointmentService {
         try {
             // Default limit increased to 3000 to cover more history/future without breaking
             const limit = options.limit || 3000;
-            const response = await appointmentsApi.list({ 
-                limit,
-                dateFrom: options.dateFrom,
-                dateTo: options.dateTo
-            });
-            const data = response.data || [];
-
-            // Validar e transformar dados
-            const validAppointments: AppointmentBase[] = [];
-            const validationErrors: { id: string; error: unknown }[] = [];
-
-            (data || []).forEach((item: AppointmentApiItem) => {
-                const itemToValidate = {
-                    ...item,
-                    patient: {
-                        id: item.patient_id,
-                        full_name: item.patient_name || 'Desconhecido',
-                        phone: item.patient_phone,
-                    },
-                    professional: {
-                        full_name: item.therapist_name
-                    }
-                };
-
-                const validation = VerifiedAppointmentSchema.safeParse(itemToValidate);
-
-                if (validation.success) {
-                    const validData = validation.data;
-                    validAppointments.push({
-                        id: validData.id,
-                        patientId: validData.patient_id || '',
-                        patientName: validData.patientName,
-                        phone: item.patient_phone || '',
-                        date: validData.date,
-                        time: validData.start_time || validData.appointment_time || '00:00',
-                        duration: validData.duration || 60,
-                        type: (validData.type || 'Fisioterapia') as AppointmentType,
-                        status: (validData.status || 'agendado') as AppointmentStatus,
-                        notes: validData.notes || '',
-                        createdAt: validData.created_at ? new Date(validData.created_at) : new Date(),
-                        updatedAt: validData.updated_at ? new Date(validData.updated_at) : new Date(),
-                        therapistId: validData.therapist_id ?? undefined,
-                        room: validData.room ?? undefined,
-                        payment_status: validData.payment_status || 'pending',
-                        payment_method: item.payment_method ?? undefined,
-                        payment_amount: item.payment_amount ?? undefined,
-                        session_package_id: item.session_package_id ?? undefined,
-                    });
-                } else {
-                    // Log detalhado do erro de validação para debug
-                    // Dados sensíveis removidos: nome do paciente mascarado (LGPD)
-                    const maskedName = item.patient_name ? item.patient_name.split(' ')[0] : '***';
-                    logger.error(`Appointment validation failed for ID ${item.id}`, {
-                        id: item.id,
-                        patient_name: maskedName,
-                        date: item.date,
-                        start_time: item.start_time,
-                        appointment_time: item.appointment_time,
-                        validationError: validation.error?.issues || 'Unknown error'
-                    }, 'AppointmentService');
-                    validationErrors.push({ id: item.id, error: validation.error });
-                }
-            });
-
-            if (validationErrors.length > 0) {
-                logger.warn(`Ignorados ${validationErrors.length} agendamentos inválidos`, {}, 'AppointmentService');
+            
+            logger.info('Fetching appointments', { 
+                organizationId, 
+                limit, 
+                dateFrom: options.dateFrom, 
+                dateTo: options.dateTo 
+            }, 'AppointmentService');
+            
+            if (!organizationId) {
+                logger.error('Organization ID is missing', {}, 'AppointmentService');
+                return [];
             }
+            
+            // Try Cloud Functions first, fallback to direct Firestore on CORS error
+            try {
+                logger.info('[AppointmentService] Calling appointmentsApi.list', {
+                    organizationId,
+                    limit,
+                    dateFrom: options.dateFrom,
+                    dateTo: options.dateTo
+                }, 'AppointmentService');
+                
+                const response = await appointmentsApi.list({ 
+                    limit,
+                    dateFrom: options.dateFrom,
+                    dateTo: options.dateTo
+                });
+                
+                logger.info('Appointments API response received', { 
+                    hasData: !!response.data,
+                    dataLength: response.data?.length || 0,
+                    responseKeys: Object.keys(response),
+                    sampleItem: response.data?.[0] ? {
+                        id: response.data[0].id,
+                        hasPatientId: !!response.data[0].patient_id,
+                        hasDate: !!(response.data[0].date || response.data[0].appointment_date),
+                        hasTime: !!(response.data[0].start_time || response.data[0].appointment_time)
+                    } : null
+                }, 'AppointmentService');
+                
+                const data = response.data || [];
 
-            return validAppointments;
+                // Validar e transformar dados
+                const validAppointments: AppointmentBase[] = [];
+                const validationErrors: { id: string; error: unknown }[] = [];
+
+                (data || []).forEach((item: AppointmentApiItem) => {
+                    const itemToValidate = {
+                        ...item,
+                        patient: {
+                            id: item.patient_id,
+                            full_name: item.patient_name || 'Desconhecido',
+                            phone: item.patient_phone,
+                        },
+                        professional: {
+                            full_name: item.therapist_name
+                        }
+                    };
+
+                    const validation = VerifiedAppointmentSchema.safeParse(itemToValidate);
+
+                    if (validation.success) {
+                        const validData = validation.data;
+                        validAppointments.push({
+                            id: validData.id,
+                            patientId: validData.patient_id || '',
+                            patientName: validData.patientName,
+                            phone: item.patient_phone || '',
+                            date: validData.date,
+                            time: validData.start_time || validData.appointment_time || '00:00',
+                            duration: validData.duration || 60,
+                            type: (validData.type || 'Fisioterapia') as AppointmentType,
+                            status: (validData.status || 'agendado') as AppointmentStatus,
+                            notes: validData.notes || '',
+                            createdAt: validData.created_at ? new Date(validData.created_at) : new Date(),
+                            updatedAt: validData.updated_at ? new Date(validData.updated_at) : new Date(),
+                            therapistId: validData.therapist_id ?? undefined,
+                            room: validData.room ?? undefined,
+                            payment_status: validData.payment_status || 'pending',
+                            payment_method: item.payment_method ?? undefined,
+                            payment_amount: item.payment_amount ?? undefined,
+                            session_package_id: item.session_package_id ?? undefined,
+                        });
+                    } else {
+                        // Log detalhado do erro de validação para debug
+                        // Dados sensíveis removidos: nome do paciente mascarado (LGPD)
+                        const maskedName = item.patient_name ? item.patient_name.split(' ')[0] : '***';
+                        logger.error(`Appointment validation failed for ID ${item.id}`, {
+                            id: item.id,
+                            patient_name: maskedName,
+                            date: item.date,
+                            appointment_date: item.appointment_date,
+                            start_time: item.start_time,
+                            appointment_time: item.appointment_time,
+                            patient_id: item.patient_id,
+                            therapist_id: item.therapist_id,
+                            status: item.status,
+                            type: item.type,
+                            duration: item.duration,
+                            validationError: JSON.stringify(validation.error?.issues || 'Unknown error', null, 2)
+                        }, 'AppointmentService');
+                        validationErrors.push({ id: item.id, error: validation.error });
+                    }
+                });
+
+                if (validationErrors.length > 0) {
+                    logger.warn(`Ignorados ${validationErrors.length} agendamentos inválidos`, {}, 'AppointmentService');
+                }
+
+                logger.info('Appointments processed successfully', {
+                    totalReceived: data.length,
+                    validAppointments: validAppointments.length,
+                    invalidAppointments: validationErrors.length,
+                    sampleValid: validAppointments[0] ? {
+                        id: validAppointments[0].id,
+                        patientName: validAppointments[0].patientName,
+                        date: validAppointments[0].date,
+                        time: validAppointments[0].time
+                    } : null
+                }, 'AppointmentService');
+
+                return validAppointments;
+            } catch (apiError) {
+                // Check if it's a CORS error
+                const errorMessage = apiError instanceof Error ? apiError.message : String(apiError);
+                const isCorsError = errorMessage.includes('Failed to fetch') || 
+                                   errorMessage.includes('CORS') ||
+                                   errorMessage.includes('NetworkError');
+                
+                logger.warn('[AppointmentService] API error caught', {
+                    error: errorMessage,
+                    isCorsError,
+                    errorType: typeof apiError,
+                    errorConstructor: apiError?.constructor?.name
+                }, 'AppointmentService');
+                
+                if (isCorsError) {
+                    logger.warn('CORS error detected, falling back to direct Firestore access', {
+                        error: errorMessage
+                    }, 'AppointmentService');
+                    
+                    // Fallback to direct Firestore access
+                    return await AppointmentServiceDirect.fetchAppointments(organizationId, options);
+                }
+                
+                // If not a CORS error, rethrow
+                throw apiError;
+            }
         } catch (error: UnknownError) {
             throw AppError.from(error, 'AppointmentService.fetchAppointments');
         }

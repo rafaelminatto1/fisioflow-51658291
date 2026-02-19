@@ -1,14 +1,35 @@
 
 
 /**
+ * CalendarView - Main calendar component for appointment scheduling
+ * 
+ * This component provides day, week, and month views of appointments with
+ * drag-and-drop rescheduling, filtering, and selection capabilities.
+ * 
+ * VIRTUALIZATION STATUS:
+ * - Virtualization infrastructure is available in src/components/schedule/virtualized/
+ * - VirtualizedCalendarGrid and VirtualizedAppointmentList are ready for integration
+ * - Currently NOT integrated because default slot counts (<50) are below threshold
+ * - See src/components/schedule/VIRTUALIZATION_README.md for integration guide
+ * - Virtualization will automatically activate when slot count exceeds 50
+ * 
+ * PERFORMANCE OPTIMIZATIONS:
+ * - Memoized components (AppointmentCard, TimeSlot)
+ * - Optimistic updates for drag-and-drop
+ * - Indexed appointment lookups by date
+ * - Debounced drop target announcements
+ * - Lazy-loaded modals
+ */
+
+/**
  * Feature flag to enable @dnd-kit implementation for drag and drop.
  * Set to true to use the new @dnd-kit implementation, false to use HTML5 native.
  */
 
 import { useState, useMemo, useEffect, useCallback, useRef, memo } from 'react';
-import { format, startOfWeek, endOfWeek, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths } from 'date-fns';
+import { format, startOfWeek, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Plus, Trash2, CheckSquare, Settings as SettingsIcon, Sparkles, Search, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, CheckSquare, Settings as SettingsIcon, Sparkles, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Appointment } from '@/types/appointment';

@@ -10,7 +10,7 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
-import { doc, setDoc, getDoc, updateDoc, arrayUnion, getDocs, collection, query, where } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, getDocs, collection, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 Notifications.setNotificationHandler({

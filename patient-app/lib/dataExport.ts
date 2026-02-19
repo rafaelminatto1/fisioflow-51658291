@@ -7,8 +7,7 @@
  * @module lib/dataExport
  */
 
-import { firestore } from 'firebase/app';
-import { collection, getDocs, doc, getDoc, query, where, orderBy } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';

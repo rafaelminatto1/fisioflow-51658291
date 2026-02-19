@@ -9,7 +9,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  Alert,
 } from 'react-native';
 import { Link, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';

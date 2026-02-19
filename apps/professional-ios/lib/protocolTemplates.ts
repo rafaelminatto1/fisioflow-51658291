@@ -3,7 +3,6 @@
  * Pre-defined exercise plans for common conditions
  */
 
-import type { Exercise } from '@/types';
 
 export interface ProtocolTemplate {
   id: string;

@@ -3,9 +3,9 @@
  * Optimized with useEvolutionDataOptimized for better performance
  */
 
-import { lazy, Suspense, useEffect, useMemo, useState, useCallback, startTransition } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState, useCallback } from 'react';
 import { collection, query, where, getDocs, addDoc, updateDoc, doc, limit } from '@/integrations/firebase/app';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   format,
   differenceInDays,
@@ -32,19 +32,19 @@ import { SurgeriesCard } from '@/components/evolution/SurgeriesCard';
 import { MetasCard } from '@/components/evolution/MetasCard';
 import { EvolutionSummaryCard } from '@/components/evolution/EvolutionSummaryCard';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { CardGrid } from '@/components/layout/ResponsiveGridLayout';
-import { EvolutionResponsiveLayout, EvolutionGridContainer } from '@/components/evolution/EvolutionResponsiveLayout';
+import { EvolutionGridContainer } from '@/components/evolution/EvolutionResponsiveLayout';
 import { useToast } from '@/hooks/use-toast';
 import { useCommandPalette } from '@/hooks/ui/useCommandPalette';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // Hooks
 import { useEvolutionDataOptimized, type EvolutionTab } from '@/hooks/evolution/useEvolutionDataOptimized';
+import { usePrefetchStrategy } from '@/hooks/evolution/usePrefetchStrategy';
 import { useAppointmentData } from '@/hooks/useAppointmentData';
 import { useAutoSaveSoapRecord, useDraftSoapRecordByAppointment, type SoapRecord } from '@/hooks/useSoapRecords';
 import { useGamification } from '@/hooks/useGamification';
@@ -58,8 +58,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { db, getFirebaseAuth } from '@/integrations/firebase/app';
 
 // Componentes de Evolução
-import { GoalsTracker } from '@/components/evolution/GoalsTracker';
-import { PathologyStatus } from '@/components/evolution/PathologyStatus';
 import { MandatoryTestAlert } from '@/components/session/MandatoryTestAlert';
 import { EvolutionHeader } from '@/components/evolution/EvolutionHeader';
 import { FloatingActionBar } from '@/components/evolution/FloatingActionBar';
@@ -77,15 +75,15 @@ import { getTherapistById } from '@/hooks/useTherapists';
 
 // Lazy loading para componentes pesados
 const LazyNotionEvolutionPanel = lazy(() => import('@/components/evolution/v2/NotionEvolutionPanel').then(m => ({ default: m.NotionEvolutionPanel })));
-const LazyTreatmentAssistant = lazy(() => import('@/components/ai/TreatmentAssistant').then(m => ({ default: m.TreatmentAssistant })));
-const LazyWhatsAppIntegration = lazy(() => import('@/components/whatsapp/WhatsAppIntegration').then(m => ({ default: m.WhatsAppIntegration })));
-const LazyPatientGamification = lazy(() => import('@/components/gamification/PatientGamification').then(m => ({ default: m.PatientGamification })));
-const LazyMeasurementCharts = lazy(() => import('@/components/evolution/MeasurementCharts').then(m => ({ default: m.MeasurementCharts })));
 const LazyEvolutionDraggableGrid = lazy(() => import('@/components/evolution/EvolutionDraggableGrid').then(m => ({ default: m.EvolutionDraggableGrid })));
-const LazyEvolutionHistoryTab = lazy(() => import('@/components/evolution/EvolutionHistoryTab').then(m => ({ default: m.EvolutionHistoryTab })));
-const LazySessionExercisesPanel = lazy(() => import('@/components/evolution/SessionExercisesPanel').then(m => ({ default: m.SessionExercisesPanel })));
-const LazyMeasurementForm = lazy(() => import('@/components/evolution/MeasurementForm').then(m => ({ default: m.MeasurementForm })));
-const LazyPainMapManager = lazy(() => import('@/components/evolution/PainMapManager').then(m => ({ default: m.PainMapManager })));
+
+// OTIMIZAÇÃO: Lazy loading de abas completas para melhor code splitting
+// Requirements: 4.1, 4.4 - Component-level code splitting
+const LazyEvolucaoTab = lazy(() => import('@/components/evolution/tabs/EvolucaoTab').then(m => ({ default: m.EvolucaoTab })));
+const LazyAvaliacaoTab = lazy(() => import('@/components/evolution/tabs/AvaliacaoTab').then(m => ({ default: m.AvaliacaoTab })));
+const LazyTratamentoTab = lazy(() => import('@/components/evolution/tabs/TratamentoTab').then(m => ({ default: m.TratamentoTab })));
+const LazyHistoricoTab = lazy(() => import('@/components/evolution/tabs/HistoricoTab').then(m => ({ default: m.HistoricoTab })));
+const LazyAssistenteTab = lazy(() => import('@/components/evolution/tabs/AssistenteTab').then(m => ({ default: m.AssistenteTab })));
 
 // Tipo para escala de dor
 export interface PainScaleData {
@@ -93,6 +91,16 @@ export interface PainScaleData {
   location?: string;
   character?: string;
 }
+
+// OTIMIZAÇÃO: Configuração de abas movida para escopo do módulo (constante)
+// Requirement 8.1, 8.4 - Remove unnecessary memoization
+const TABS_CONFIG = [
+  { value: 'evolucao', label: 'Evolução', shortLabel: 'Evol', icon: FileText, description: 'SOAP + Dor' },
+  { value: 'avaliacao', label: 'Avaliação', shortLabel: 'Aval', icon: BarChart3, description: 'Medições + Testes' },
+  { value: 'tratamento', label: 'Tratamento', shortLabel: 'Trat', icon: Activity, description: 'Exercícios + Metas' },
+  { value: 'historico', label: 'Histórico', shortLabel: 'Hist', icon: Clock, description: 'Timeline + Relatórios' },
+  { value: 'assistente', label: 'Assistente', shortLabel: 'IA', icon: Sparkles, description: 'IA + WhatsApp' },
+] as const;
 
 const PatientEvolution = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
@@ -157,6 +165,10 @@ const PatientEvolution = () => {
   // Ações de agendamento (completar atendimento)
   const { completeAppointment, isCompleting } = useAppointmentActions();
 
+  // Retrieve state from navigation if available (optimization)
+  const location = useLocation();
+  const navigationState = location.state as { patientId?: string; patientName?: string } | null;
+
   // Dados do agendamento e paciente - PRECISA ser chamado primeiro para obter patientId
   const {
     appointment,
@@ -165,9 +177,17 @@ const PatientEvolution = () => {
     isLoading: dataLoading,
     appointmentError,
     patientError
-  } = useAppointmentData(appointmentId);
+  } = useAppointmentData(appointmentId, {
+    initialPatientId: navigationState?.patientId,
+    initialPatientData: navigationState?.patientName ? {
+      id: navigationState.patientId!,
+      name: navigationState.patientName,
+      full_name: navigationState.patientName
+    } as any : undefined
+  });
 
   // OTIMIZAÇÃO: Hook centralizado para carregar dados de evolução com cache otimizado
+  // Requirement 3.1, 3.2: Tab-based data loading
   const {
     goals,
     pathologies,
@@ -178,10 +198,22 @@ const PatientEvolution = () => {
     surgeries,
     medicalReturns,
     invalidateData,
+    isLoadingCritical,
+    isLoadingTabData,
   } = useEvolutionDataOptimized({
     patientId: patientId || '',
     activeTab,
-    prefetchNextTab: true
+    loadStrategy: 'tab-based', // Use tab-based loading for optimal performance
+    prefetchNextTab: false // Disable built-in prefetch, using dedicated hook instead
+  });
+
+  // OTIMIZAÇÃO: Prefetch inteligente da próxima aba
+  // Requirements: 11.1, 11.2, 11.3, 11.4, 11.5
+  usePrefetchStrategy({
+    patientId: patientId || '',
+    activeTab,
+    activePathologies,
+    enabled: !!patientId && !dataLoading,
   });
 
   // Timeout warning state
@@ -251,15 +283,12 @@ const PatientEvolution = () => {
   }, [lastSession, sessionExercises.length, isLoadingLastSession]);
 
   // ========== MEMOIZED VALUES ==========
-  // Tempo de tratamento do paciente
-  const treatmentDuration = useMemo(() =>
-    patient?.created_at
-      ? formatDetailedDuration(patient.created_at)
-      : 'N/A',
-    [patient?.created_at]
-  );
+  // Tempo de tratamento do paciente - REMOVIDO useMemo (computação simples)
+  const treatmentDuration = patient?.created_at
+    ? formatDetailedDuration(patient.created_at)
+    : 'N/A';
 
-  // Estatísticas de evolução
+  // Estatísticas de evolução - MANTIDO (agregação complexa)
   const evolutionStats = useMemo(() => {
     const totalEvolutions = previousEvolutions.length;
     const completedGoals = goals.filter(g => g.status === 'concluido').length;
@@ -374,13 +403,10 @@ const PatientEvolution = () => {
     return 'stable'; // Estável
   }, [previousEvolutions]);
 
-  // Duração da sessão em minutos
-  const sessionDurationMinutes = useMemo(() =>
-    diffInMinutes(new Date(), sessionStartTime),
-    [sessionStartTime]
-  );
+  // Duração da sessão em minutos - REMOVIDO useMemo (computação simples)
+  const sessionDurationMinutes = diffInMinutes(new Date(), sessionStartTime);
 
-  // Memoize painHistory array to prevent recreation on every render
+  // Memoize painHistory array to prevent recreation on every render - MANTIDO (transformação de array)
   const painHistory = useMemo(() =>
     previousEvolutions
       .filter(e => e.pain_level !== null && e.pain_level !== undefined)
@@ -388,16 +414,9 @@ const PatientEvolution = () => {
     [previousEvolutions]
   );
 
-  // Memoize tab configuration to prevent recreation on every render
-  const tabsConfig = useMemo(() => [
-    { value: 'evolucao', label: 'Evolução', shortLabel: 'Evol', icon: FileText, description: 'SOAP + Dor' },
-    { value: 'avaliacao', label: 'Avaliação', shortLabel: 'Aval', icon: BarChart3, description: 'Medições + Testes' },
-    { value: 'tratamento', label: 'Tratamento', shortLabel: 'Trat', icon: Activity, description: 'Exercícios + Metas' },
-    { value: 'historico', label: 'Histórico', shortLabel: 'Hist', icon: Clock, description: 'Timeline + Relatórios' },
-    { value: 'assistente', label: 'Assistente', shortLabel: 'IA', icon: Sparkles, description: 'IA + WhatsApp' },
-  ], []);
+  // REMOVIDO: tabsConfig agora é constante do módulo (TABS_CONFIG)
 
-  // Memoize required measurements for alerts to prevent recreation
+  // Memoize required measurements for alerts to prevent recreation - MANTIDO (filtragem + transformação)
   const pendingRequiredMeasurements = useMemo(() =>
     requiredMeasurements.filter(req => {
       const completedToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
@@ -1124,7 +1143,7 @@ const PatientEvolution = () => {
             selectedTherapistId={selectedTherapistId}
             onTherapistChange={setSelectedTherapistId}
             previousEvolutionsCount={previousEvolutions.length}
-            tabsConfig={tabsConfig}
+            tabsConfig={TABS_CONFIG}
             activeTab={activeTab}
             onTabChange={(v) => setActiveTab(v as EvolutionTab)}
             pendingRequiredMeasurements={pendingRequiredMeasurements.length}
@@ -1133,96 +1152,50 @@ const PatientEvolution = () => {
             onVersionChange={handleVersionChange}
           />
 
-          {/* Abas de Navegação */}
+          {/* Abas de Navegação - OTIMIZADO com lazy loading por aba */}
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as EvolutionTab)} className="w-full pb-20" aria-label="Abas de evolução e acompanhamento">
             {/* ABA 1: EVOLUÇÃO (SOAP V1 ou Texto Livre V2) */}
-            <TabsContent value="evolucao" className="mt-4">
-              <EvolutionResponsiveLayout
-                alertsSection={alertsSectionContent}
-                topSection={topSectionContent}
-                mainGrid={mainGridContent}
-              />
+            <TabsContent value="evolucao" className="mt-0 h-full overflow-hidden flex flex-col data-[state=inactive]:hidden">
+              <Suspense fallback={<LoadingSkeleton type="card" />}>
+                <LazyEvolucaoTab
+                  alertsSection={alertsSectionContent}
+                  topSection={topSectionContent}
+                  mainGrid={mainGridContent}
+                />
+              </Suspense>
             </TabsContent>
 
             {/* ABA 2: AVALIAÇÃO (Medições + Mapa de Dor + Gráficos) */}
-            <TabsContent value="avaliacao" className="mt-4 space-y-4">
-              {/* Mapa de Dor */}
+            <TabsContent value="avaliacao">
               <Suspense fallback={<LoadingSkeleton type="card" />}>
-                <LazyPainMapManager
+                <LazyAvaliacaoTab
                   patientId={patientId || ''}
                   appointmentId={appointmentId}
-                  sessionId={currentSoapRecordId}
+                  currentSoapRecordId={currentSoapRecordId}
+                  requiredMeasurements={requiredMeasurements}
+                  pendingRequiredMeasurements={pendingRequiredMeasurements}
+                  todayMeasurements={todayMeasurements}
+                  measurementsByType={measurementsByType}
                 />
               </Suspense>
-
-              {/* Alerta de Medições Pendentes */}
-              {pendingRequiredMeasurements.length > 0 && (
-                <Card className="border-destructive/30 shadow-sm">
-                  <CardHeader className="bg-destructive/5 py-2 px-3">
-                    <CardTitle className="flex items-center gap-2 text-destructive text-sm">
-                      <AlertTriangle className="h-3.5 w-3.5" />
-                      Medições Obrigatórias Pendentes
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2 pt-3 px-3 pb-3">
-                    {requiredMeasurements
-                      .filter(req => {
-                        const completedToday = todayMeasurements.some(m => m.measurement_name === req.measurement_name);
-                        return !completedToday;
-                      })
-                      .map((req) => (
-                        <Alert
-                          key={req.id}
-                          variant={req.alert_level === 'high' ? 'destructive' : 'default'}
-                          className="py-2"
-                        >
-                          <AlertTriangle className="h-3.5 w-3.5" />
-                          <AlertTitle className="text-xs font-semibold">{req.measurement_name}</AlertTitle>
-                          <AlertDescription className="text-[10px]">
-                            {req.instructions}
-                            {req.measurement_unit && ` (${req.measurement_unit})`}
-                          </AlertDescription>
-                        </Alert>
-                      ))}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Formulário de Medição */}
-              {patientId && (
-                <Suspense fallback={<LoadingSkeleton type="card" />}>
-                  <LazyMeasurementForm
-                    patientId={patientId}
-                    soapRecordId={currentSoapRecordId}
-                    requiredMeasurements={requiredMeasurements}
-                  />
-                </Suspense>
-              )}
-
-              {/* Gráficos de Evolução */}
-              {Object.keys(measurementsByType).length > 0 && (
-                <Suspense fallback={<LoadingSkeleton type="card" />}>
-                  <LazyMeasurementCharts measurementsByType={measurementsByType} />
-                </Suspense>
-              )}
             </TabsContent>
 
             {/* ABA 3: TRATAMENTO (Exercícios + Metas) */}
-            <TabsContent value="tratamento" className="mt-4 space-y-4">
+            <TabsContent value="tratamento">
               <Suspense fallback={<LoadingSkeleton type="card" />}>
-                <LazySessionExercisesPanel
-                  exercises={sessionExercises}
-                  onChange={setSessionExercises}
+                <LazyTratamentoTab
+                  sessionExercises={sessionExercises}
+                  onExercisesChange={setSessionExercises}
+                  goals={goals}
+                  pathologies={pathologies}
                 />
               </Suspense>
-              <GoalsTracker goals={goals} />
-              <PathologyStatus pathologies={pathologies} />
             </TabsContent>
 
             {/* ABA 4: HISTÓRICO (Timeline + Evoluções Anteriores) */}
             <TabsContent value="historico">
               <Suspense fallback={<LoadingSkeleton type="card" />}>
-                <LazyEvolutionHistoryTab
+                <LazyHistoricoTab
                   patientId={patientId || ''}
                   surgeries={surgeries}
                   previousEvolutions={previousEvolutions}
@@ -1234,12 +1207,12 @@ const PatientEvolution = () => {
             </TabsContent>
 
             {/* ABA 5: ASSISTENTE (IA + WhatsApp + Gamificação) */}
-            <TabsContent value="assistente" className="mt-4 space-y-4">
-              {/* Assistente de IA */}
+            <TabsContent value="assistente">
               <Suspense fallback={<LoadingSkeleton type="card" />}>
-                <LazyTreatmentAssistant
+                <LazyAssistenteTab
                   patientId={patientId!}
                   patientName={PatientHelpers.getName(patient)}
+                  patientPhone={patient.phone}
                   onApplyToSoap={(field, content) => {
                     setSoapData(prev => ({ ...prev, [field]: prev[field] + content }));
                     setActiveTab('evolucao');
@@ -1249,16 +1222,6 @@ const PatientEvolution = () => {
                     });
                   }}
                 />
-              </Suspense>
-
-              {/* Integração WhatsApp */}
-              <Suspense fallback={<LoadingSkeleton type="card" />}>
-                <LazyWhatsAppIntegration patientId={patientId!} patientPhone={patient.phone} />
-              </Suspense>
-
-              {/* Gamificação */}
-              <Suspense fallback={<LoadingSkeleton type="card" />}>
-                <LazyPatientGamification patientId={patientId!} />
               </Suspense>
             </TabsContent>
           </Tabs>

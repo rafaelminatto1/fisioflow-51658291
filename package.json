@@ -82,7 +82,11 @@
     "changelog:week": "node src/lib/skills/fase1-changelog/generate-changelog.js --days=7",
     "changelog:since": "node src/lib/skills/fase1-changelog/generate-changelog.js",
     "test:e2e:critical": "playwright test e2e/critical-flows.spec.ts",
-    "test:e2e:a11y": "playwright test e2e/accessibility-extended.spec.ts"
+    "test:e2e:a11y": "playwright test e2e/accessibility-extended.spec.ts",
+    "test:components": "vitest run src/components/**/*.test.tsx",
+    "test:hooks": "vitest run src/hooks/**/*.test.ts",
+    "analyze": "ANALYZE=true pnpm build",
+    "lighthouse": "lighthouse http://localhost:4173 --view"
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.7",

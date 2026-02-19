@@ -8,7 +8,7 @@
  * Date formatting functions
  */
 
-import { format, formatDistanceToNow, differenceInDays, differenceInMonths, differenceInYears, isValid } from 'date-fns';
+import { format, formatDistanceToNow, differenceInDays, differenceInMonths, differenceInYears } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 export const DateFormatter = {

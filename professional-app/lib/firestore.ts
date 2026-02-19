@@ -9,12 +9,10 @@ import {
   limit,
   onSnapshot,
   updateDoc,
-  setDoc,
   addDoc,
   deleteDoc,
   serverTimestamp,
   Timestamp,
-  DocumentData,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Patient, Appointment, Exercise, ExerciseProgram, ProgramExercise, Evolution, ExerciseAssignment } from '@/types';

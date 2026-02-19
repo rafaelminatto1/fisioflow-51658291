@@ -1,5 +1,5 @@
 import React from 'react';
-import { Document, Page, Text, View, StyleSheet, Image, Font } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 

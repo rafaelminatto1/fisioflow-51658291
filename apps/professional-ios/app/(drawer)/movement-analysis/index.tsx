@@ -8,17 +8,14 @@ import {
   ActivityIndicator,
   Alert,
   Dimensions,
-  Platform,
 } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CameraView, Camera } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
-import { Camera as CameraIcon, Video, VideoOff, Check, X, RotateCw } from 'lucide-react-native';
 
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
-import { Card } from '@/components/ui/Card';
 import { useTheme } from '@/hooks/useTheme';
 import { PoseAnalyzer } from '@/lib/poseAnalyzer';
 import { MovementFeedback } from '@/components/MovementFeedback';

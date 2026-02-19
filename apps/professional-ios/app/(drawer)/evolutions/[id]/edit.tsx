@@ -20,7 +20,6 @@ import { ptBR } from 'date-fns/locale';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
-import { SignatureCanvas } from '@/components/SignatureCanvas';
 import { VitalSignsInput } from '@/components/VitalSignsInput';
 import { ObjectiveExamForm } from '@/components/ObjectiveExamForm';
 import { useTheme } from '@/hooks/useTheme';

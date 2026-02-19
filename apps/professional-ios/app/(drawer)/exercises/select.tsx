@@ -12,13 +12,12 @@ import {
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/hooks/useTheme';
 import { HapticFeedback } from '@/lib/haptics';
-import { query, collection, where, getDocs, orderBy } from 'firebase/firestore';
+import { query, collection, getDocs, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Exercise } from '@/types';
 

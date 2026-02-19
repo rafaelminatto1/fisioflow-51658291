@@ -3,7 +3,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { format, isSameDay, addHours, isBefore } from 'date-fns';
+import { format, addHours, isBefore } from 'date-fns';
 import { useColors } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/auth';
 import { Card } from '@/components';

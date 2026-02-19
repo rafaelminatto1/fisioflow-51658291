@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ActivityIndicator, TextInput, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ActivityIndicator, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { usePatients } from '@/hooks/usePatients';
@@ -8,7 +8,6 @@ import { Avatar } from './Avatar';
 import { Icon } from './Icon';
 import { useTheme } from '@/hooks/useTheme';
 import { HapticFeedback } from '@/lib/haptics';
-import { getInitials } from '@/lib/utils';
 
 export interface PatientSelectorProps {
   selected: { id: string; name: string } | null;

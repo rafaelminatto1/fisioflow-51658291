@@ -174,6 +174,25 @@ Object.defineProperty(global, 'window', {
       removeItem: vi.fn(),
       clear: vi.fn(),
     },
+    getComputedStyle: vi.fn(() => ({
+      getPropertyValue: vi.fn(() => ''),
+      paddingLeft: '0px',
+      paddingRight: '0px',
+      marginLeft: '0px',
+      marginRight: '0px',
+      borderLeftWidth: '0px',
+      borderRightWidth: '0px',
+    })),
+    matchMedia: vi.fn((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
   },
   writable: true,
 });
@@ -231,6 +250,11 @@ vi.mock('web-push', () => ({
 beforeAll(() => {
   // Setup any global test configuration
   console.debug('Test suite initialized');
+  
+  // Create portal container for modals/dialogs
+  const portalRoot = document.createElement('div');
+  portalRoot.setAttribute('id', 'portal-root');
+  document.body.appendChild(portalRoot);
 });
 
 afterEach(async () => {

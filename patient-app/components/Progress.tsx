@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { View, StyleSheet, ActivityIndicator, Text } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import { useColors } from '@/hooks/useColorScheme';
 
 export type ProgressSize = 'small' | 'medium' | 'large' | number;

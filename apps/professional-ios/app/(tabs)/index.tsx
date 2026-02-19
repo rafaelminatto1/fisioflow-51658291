@@ -1,15 +1,14 @@
 import { View, Text, ScrollView, StyleSheet, Pressable, Dimensions, ActivityIndicator } from 'react-native';
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { FadeInDown, FadeInUp, useAnimatedStyle, withSpring, useSharedValue } from 'react-native-reanimated';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
-import { format, isSameDay, startOfDay, endOfDay } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
 import { StatCard } from '@/components/ui/StatCard';
 import { AppointmentCard } from '@/components/ui/AppointmentCard';
 import { QuickActionCard } from '@/components/ui/QuickActionCard';

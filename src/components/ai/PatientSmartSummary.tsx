@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Brain, Sparkles, TrendingUp, TrendingDown, AlertCircle, CheckCircle2, ChevronRight, FileText } from 'lucide-react';
 import { toast } from 'sonner';

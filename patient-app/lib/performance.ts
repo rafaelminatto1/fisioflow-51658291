@@ -8,7 +8,6 @@
  * Performance metric interface
  */
 
-import { Performance } from 'react-native';
 import { log } from './logger';
 
 interface PerformanceMetric {

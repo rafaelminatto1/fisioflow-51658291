@@ -10,14 +10,12 @@
  * - Category-based organization
  */
 
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import {
   CheckSquare,
-  Square,
   Plus,
   X,
   Zap,
-  Search,
   MessageSquare,
   Sparkles,
   MoreVertical,

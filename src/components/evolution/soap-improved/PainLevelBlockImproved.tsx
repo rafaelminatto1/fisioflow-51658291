@@ -10,7 +10,7 @@
  * - Responsive design
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Activity,
   Smile,

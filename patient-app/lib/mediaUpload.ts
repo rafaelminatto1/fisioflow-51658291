@@ -11,7 +11,6 @@ import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as FileSystem from 'expo-file-system';
-import { Platform } from 'react-native';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage } from './firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';

@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TextInput } from 'react-native';
 import { useColors } from '@/hooks/useColorScheme';
-import { Ionicons } from '@expo/vector-icons';
 
 interface Props {
   label?: string;

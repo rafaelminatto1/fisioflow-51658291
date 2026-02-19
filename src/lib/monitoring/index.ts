@@ -13,6 +13,8 @@
 import * as Sentry from '@sentry/react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
+// Removed conflicting global declaration
+
 export enum MetricType {
   // Performance
   PAGE_LOAD = 'page_load',
@@ -120,10 +122,11 @@ function setupPerformanceMonitoring() {
       const resourceObserver = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
           if (entry.entryType === 'resource') {
+            const resEntry = entry as PerformanceResourceTiming;
             trackMetric(MetricType.PAGE_LOAD, {
-              resource: entry.name,
-              duration: entry.duration,
-              size: entry.transferSize,
+              resource: resEntry.name,
+              duration: resEntry.duration,
+              size: resEntry.transferSize,
             });
           }
         }
@@ -156,8 +159,8 @@ export function trackMetric(
   });
 
   // Enviar para analytics (PostHog ou similar)
-  if (window.analytics) {
-    window.analytics.track(type, {
+  if ((window as any).analytics) {
+    (window as any).analytics.track(type, {
       ...data,
       timestamp,
       userId,
@@ -166,8 +169,8 @@ export function trackMetric(
   }
 
   // Para analytics interno (Firebase Analytics)
-  if (window.gtag) {
-    window.gtag('event', type, {
+  if ((window as any).gtag) {
+    (window as any).gtag('event', type, {
       ...data,
       event_label: JSON.stringify(data),
       value,
@@ -203,7 +206,11 @@ export function trackError(
   });
 
   // Log local
-  logger.error(`[${level.toUpperCase()}]`, error.message, { context, userId, url });
+  // logger.error signature: (message: string, error?: unknown, context?: string)
+  // We combine context and component into the 3rd argument string or object depending on logger impl
+  // Based on error: Expected 1-3 arguments, but got 4.
+  const contextStr = context ? JSON.stringify(context) : undefined;
+  logger.error(`[${level.toUpperCase()}] ${error.message}`, error, contextStr);
 }
 
 /**
@@ -266,8 +273,8 @@ export function trackBusinessEvent(
   trackMetric(event as MetricType, data);
 
   // Firebase Analytics
-  if (window.gtag) {
-    window.gtag('event', event, {
+  if ((window as any).gtag) {
+    (window as any).gtag('event', event, {
       ...data,
       send_to: import.meta.env.VITE_GA_MEASUREMENT_ID,
     });
@@ -378,9 +385,10 @@ export function measureCoreWebVitals() {
       // First Input Delay (FID)
       const fidObserver = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
+          const fidEntry = entry as any; // Cast to any as FID types might be missing in older libs
           trackMetric(MetricType.PAGE_LOAD, {
             metric: 'FID',
-            value: entry.processingStart - entry.startTime,
+            value: fidEntry.processingStart - fidEntry.startTime,
           });
         }
       });
@@ -388,9 +396,10 @@ export function measureCoreWebVitals() {
       // Cumulative Layout Shift (CLS)
       const clsObserver = new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
+          const clsEntry = entry as any;
           trackMetric(MetricType.PAGE_LOAD, {
             metric: 'CLS',
-            value: entry.value,
+            value: clsEntry.value,
           });
         }
       });
@@ -418,24 +427,25 @@ export function endProfiling(sessionName: string) {
     performance.mark(`${sessionName}-end`);
     performance.measure(sessionName, `${sessionName}-start`, `${sessionName}-end`);
 
-      const measures = performance.getEntriesByName(sessionName);
-      measures.forEach(measure => {
-        trackMetric(MetricType.PAGE_LOAD, {
-          metric: 'custom_profile',
-          name: sessionName,
-          duration: measure.duration,
-        });
+    const measures = performance.getEntriesByName(sessionName);
+    measures.forEach(measure => {
+      trackMetric(MetricType.PAGE_LOAD, {
+        metric: 'custom_profile',
+        name: sessionName,
+        duration: measure.duration,
       });
-    }
+    });
+  }
 }
 
 /**
  * Cria transaction para performance
  */
 export function startPerformanceTransaction(name: string, operation: string) {
-  return Sentry.startTransaction({
-    op: operation,
+  // Sentry v8+ replacement for startTransaction
+  return Sentry.startInactiveSpan({
     name,
+    op: operation,
   });
 }
 
@@ -481,6 +491,14 @@ export function createDebouncedTrack(
 
 // Exportar Sentry para uso direto se necessário
 export { Sentry };
+
+// Export new monitoring utilities
+export * from './coreWebVitals';
+export * from './queryPerformance';
+export * from './devWarnings';
+export * from './metricsCollector';
+export * from './schedulePerformance';
+export { ProfilerWrapper, withProfiler, useRenderPerformance, measureSync } from './ReactProfiler';
 
 // Inicializar monitoring automaticamente
 if (import.meta.env.PROD || import.meta.env.VITE_SENTRY_DSN) {

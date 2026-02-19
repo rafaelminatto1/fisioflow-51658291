@@ -28,68 +28,82 @@ import { useSoapRecords } from '../useSoapRecords';
 
 // Tipos
 export type EvolutionTab = 'evolucao' | 'avaliacao' | 'tratamento' | 'historico' | 'assistente';
+export type LoadStrategy = 'critical' | 'tab-based' | 'full';
 
 export interface EvolutionDataOptions {
   patientId: string;
   appointmentId?: string;
   activeTab: EvolutionTab;
   // Opções de carregamento
+  loadStrategy?: LoadStrategy;
   loadHistoricalData?: boolean;
   loadMeasurements?: boolean;
   loadRequiredMeasurements?: boolean;
   prefetchNextTab?: boolean;
 }
 
-// Cache configuration constants - OTIMIZADO BASEADO EM PATRÕES DE USO
+// Cache configuration constants - OTIMIZADO BASEADO EM PADRÕES DE USO
+// Requirement 7: Optimize Cache Configuration
 export const EVOLUTION_CACHE_CONFIG = {
-  // Dados críticos - carregados imediatamente
+  // Session-scoped data (changes during session)
+  SOAP_DRAFT: {
+    staleTime: 30 * 1000,           // 30 seconds - drafts change frequently
+    gcTime: 5 * 60 * 1000,          // 5 minutes
+    refetchOnWindowFocus: true,
+  },
+  MEASUREMENTS_TODAY: {
+    staleTime: 2 * 60 * 1000,       // 2 minutes - measurements added during session
+    gcTime: 10 * 60 * 1000,         // 10 minutes
+    refetchOnWindowFocus: true,
+  },
+
+  // Stable data (rarely changes during session)
   PATIENT: {
-    staleTime: 1000 * 60 * 5,      // 5 minutos
-    gcTime: 1000 * 60 * 30,         // 30 minutos
+    staleTime: 10 * 60 * 1000,      // 10 minutes
+    gcTime: 30 * 60 * 1000,         // 30 minutes
+    refetchOnWindowFocus: false,
   },
   APPOINTMENT: {
-    staleTime: 1000 * 60 * 2,      // 2 minutos
-    gcTime: 1000 * 60 * 10,         // 10 minutos
+    staleTime: 10 * 60 * 1000,      // 10 minutes
+    gcTime: 30 * 60 * 1000,         // 30 minutes
+    refetchOnWindowFocus: false,
   },
-
-  // Dados de evolução - mudam durante a sessão
-  SOAP_RECORDS: {
-    staleTime: 1000 * 60 * 10,     // 10 minutos
-    gcTime: 1000 * 60 * 20,        // 20 minutos
-  },
-  DRAFTS: {
-    staleTime: 1000 * 60 * 1,      // 1 minuto - drafts mudam frequentemente
-    gcTime: 1000 * 60 * 5,         // 5 minutos
-  },
-
-  // Dados secundários - mudam pouco
   GOALS: {
-    staleTime: 1000 * 60 * 10,     // 10 minutos
-    gcTime: 1000 * 60 * 30,        // 30 minutos
+    staleTime: 5 * 60 * 1000,       // 5 minutes
+    gcTime: 15 * 60 * 1000,         // 15 minutes
+    refetchOnWindowFocus: false,
   },
   PATHOLOGIES: {
-    staleTime: 1000 * 60 * 20,     // 20 minutos - mudam raramente
-    gcTime: 1000 * 60 * 45,        // 45 minutos
+    staleTime: 10 * 60 * 1000,      // 10 minutes
+    gcTime: 30 * 60 * 1000,         // 30 minutes
+    refetchOnWindowFocus: false,
   },
-
-  // Medições - podem ser adicionadas durante sessão
   MEASUREMENTS: {
-    staleTime: 1000 * 60 * 5,      // 5 minutos
-    gcTime: 1000 * 60 * 15,        // 15 minutos
+    staleTime: 5 * 60 * 1000,       // 5 minutes
+    gcTime: 15 * 60 * 1000,         // 15 minutes
+    refetchOnWindowFocus: false,
   },
   REQUIRED_MEASUREMENTS: {
-    staleTime: 1000 * 60 * 30,     // 30 minutos - mudam muito raramente
-    gcTime: 1000 * 60 * 60,        // 1 hora
+    staleTime: 30 * 60 * 1000,      // 30 minutes - rarely change
+    gcTime: 60 * 60 * 1000,         // 1 hour
+    refetchOnWindowFocus: false,
   },
 
-  // Dados históricos - mudam muito pouco
+  // Historical data (never changes)
+  SOAP_RECORDS: {
+    staleTime: 30 * 60 * 1000,      // 30 minutes
+    gcTime: 60 * 60 * 1000,         // 1 hour
+    refetchOnWindowFocus: false,
+  },
   SURGERIES: {
-    staleTime: 1000 * 60 * 15,     // 15 minutos
-    gcTime: 1000 * 60 * 30,        // 30 minutos
+    staleTime: 30 * 60 * 1000,      // 30 minutes
+    gcTime: 60 * 60 * 1000,         // 1 hour
+    refetchOnWindowFocus: false,
   },
   MEDICAL_RETURNS: {
-    staleTime: 1000 * 60 * 10,     // 10 minutos
-    gcTime: 1000 * 60 * 20,        // 20 minutos
+    staleTime: 30 * 60 * 1000,      // 30 minutes
+    gcTime: 60 * 60 * 1000,         // 1 hour
+    refetchOnWindowFocus: false,
   },
 } as const;
 
@@ -129,6 +143,7 @@ export function useEvolutionDataOptimized(options: EvolutionDataOptions) {
     patientId,
     appointmentId,
     activeTab,
+    loadStrategy = 'tab-based', // Default to tab-based loading
     loadHistoricalData = false,
     loadMeasurements = true,
     loadRequiredMeasurements = true,
@@ -141,25 +156,47 @@ export function useEvolutionDataOptimized(options: EvolutionDataOptions) {
   const prefetchedTabsRef = useRef<Set<EvolutionTab>>(new Set());
   const lastPrefetchRef = useRef<number>(0);
 
+  // ==================== LOAD STRATEGY LOGIC ====================
+  // Determine what data to load based on strategy
+  
+  const shouldLoadData = useCallback((dataType: 'goals' | 'pathologies' | 'soap' | 'measurements' | 'required' | 'surgeries' | 'medical-returns') => {
+    // Full strategy: load everything
+    if (loadStrategy === 'full') return true;
+    
+    // Critical strategy: only essential data
+    if (loadStrategy === 'critical') {
+      return dataType === 'goals' || dataType === 'pathologies' || dataType === 'soap';
+    }
+    
+    // Tab-based strategy: load based on active tab
+    const tabDataMap: Record<EvolutionTab, string[]> = {
+      evolucao: ['goals', 'pathologies', 'soap', 'measurements', 'required'],
+      avaliacao: ['measurements', 'required'],
+      tratamento: ['goals', 'pathologies'],
+      historico: ['soap', 'surgeries', 'medical-returns', 'measurements'],
+      assistente: ['goals', 'pathologies'],
+    };
+    
+    return tabDataMap[activeTab]?.includes(dataType) || false;
+  }, [loadStrategy, activeTab]);
+
   // ==================== DADOS CRÍTICOS ====================
-  // Sempre carregados, independente da aba
+  // Sempre carregados, independente da aba (ou baseado em strategy)
 
   // Goals - usados em múltiplas abas
-  const goalsQuery = usePatientGoals(patientId);
+  const goalsQuery = usePatientGoals(patientId, { enabled: shouldLoadData('goals') });
 
   // Pathologies - usadas em múltiplas abas
-  const pathologiesQuery = usePatientPathologies(patientId);
+  const pathologiesQuery = usePatientPathologies(patientId, { enabled: shouldLoadData('pathologies') });
 
   // SOAP records (últimas 10) - sempre necessário
-  const soapRecordsQuery = useSoapRecords(patientId, 10);
+  const soapRecordsQuery = useSoapRecords(patientId, 10, { enabled: shouldLoadData('soap') });
 
   // ==================== DADOS CONDICIONAIS ====================
-  // Carregados baseado na aba ativa
+  // Carregados baseado na aba ativa e strategy
 
   // Medições - apenas na aba avaliação ou evolução
-  const shouldLoadMeasurements =
-    loadMeasurements &&
-    (activeTab === 'avaliacao' || activeTab === 'evolucao' || activeTab === 'historico');
+  const shouldLoadMeasurements = shouldLoadData('measurements') && loadMeasurements;
 
   // OTIMIZAÇÃO: Limite dinâmico baseado na aba
   const measurementsLimit = activeTab === 'avaliacao' ? 50 : 10;
@@ -174,8 +211,7 @@ export function useEvolutionDataOptimized(options: EvolutionDataOptions) {
     [pathologiesQuery.data]
   );
 
-  const shouldLoadRequired = loadRequiredMeasurements &&
-    (activeTab === 'avaliacao' || activeTab === 'evolucao');
+  const shouldLoadRequired = shouldLoadData('required') && loadRequiredMeasurements;
 
   const requiredMeasurementsQuery = useRequiredMeasurements(
     shouldLoadRequired ? activePathologies.map(p => p.pathology_name) : []
@@ -183,11 +219,11 @@ export function useEvolutionDataOptimized(options: EvolutionDataOptions) {
 
   // Dados históricos - apenas na aba histórico
   const surgeriesQuery = usePatientSurgeries(
-    loadHistoricalData || activeTab === 'historico' ? patientId : ''
+    (shouldLoadData('surgeries') || loadHistoricalData) ? patientId : ''
   );
 
   const medicalReturnsQuery = usePatientMedicalReturns(
-    loadHistoricalData || activeTab === 'historico' ? patientId : ''
+    (shouldLoadData('medical-returns') || loadHistoricalData) ? patientId : ''
   );
 
   // ==================== PREFETCH INTELIGENTE ====================
@@ -275,13 +311,16 @@ export function useEvolutionDataOptimized(options: EvolutionDataOptions) {
   }, [patientId, activeTab, activePathologies, prefetchNextTab, queryClient]);
 
   // ================= métodos de invalidação ====================
+  // Requirement 7.5: Selective cache invalidation
 
-  const invalidateData = useCallback((dataType?: 'goals' | 'pathologies' | 'measurements' | 'all') => {
+  const invalidateData = useCallback((dataType?: 'goals' | 'pathologies' | 'measurements' | 'soap' | 'surgeries' | 'medical-returns' | 'all') => {
     if (!patientId) return;
 
     if (!dataType || dataType === 'all') {
+      // Invalidate all patient data
       queryClient.invalidateQueries({ queryKey: evolutionKeys.patient(patientId) });
     } else {
+      // Selective invalidation - only invalidate specific data type
       switch (dataType) {
         case 'goals':
           queryClient.invalidateQueries({ queryKey: evolutionKeys.goals(patientId) });
@@ -291,6 +330,16 @@ export function useEvolutionDataOptimized(options: EvolutionDataOptions) {
           break;
         case 'measurements':
           queryClient.invalidateQueries({ queryKey: evolutionKeys.measurements(patientId) });
+          break;
+        case 'soap':
+          queryClient.invalidateQueries({ queryKey: evolutionKeys.soapRecords(patientId) });
+          queryClient.invalidateQueries({ queryKey: evolutionKeys.drafts(patientId) });
+          break;
+        case 'surgeries':
+          queryClient.invalidateQueries({ queryKey: evolutionKeys.surgeries(patientId) });
+          break;
+        case 'medical-returns':
+          queryClient.invalidateQueries({ queryKey: evolutionKeys.medicalReturns(patientId) });
           break;
       }
     }
@@ -315,6 +364,8 @@ export function useEvolutionDataOptimized(options: EvolutionDataOptions) {
 
     // Estados de loading - granulares para UI responsiva
     isLoading: goalsQuery.isLoading || pathologiesQuery.isLoading || soapRecordsQuery.isLoading,
+    isLoadingCritical: goalsQuery.isLoading || pathologiesQuery.isLoading || soapRecordsQuery.isLoading,
+    isLoadingTabData: measurementsQuery.isLoading || requiredMeasurementsQuery.isLoading || surgeriesQuery.isLoading || medicalReturnsQuery.isLoading,
     isLoadingMeasurements: measurementsQuery.isLoading,
     isLoadingRequired: requiredMeasurementsQuery.isLoading,
     isLoadingHistorical: surgeriesQuery.isLoading || medicalReturnsQuery.isLoading,

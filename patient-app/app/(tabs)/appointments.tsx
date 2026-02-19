@@ -19,7 +19,6 @@ import { ptBR } from 'date-fns/locale';
 import {
   collection,
   query,
-  where,
   orderBy,
   onSnapshot,
 } from 'firebase/firestore';

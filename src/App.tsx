@@ -11,6 +11,7 @@ import { TourProvider } from '@/contexts/TourContext';
 import { GamificationFeedbackProvider } from '@/contexts/GamificationFeedbackContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
+import { GlobalErrorBoundary } from '@/components/error/GlobalErrorBoundary';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { AppLoadingSkeleton } from '@/components/ui/AppLoadingSkeleton';
 
@@ -24,6 +25,7 @@ import { get, set, del } from 'idb-keyval';
 import { AppRoutes } from "./routes";
 import { VersionManager } from "@/components/system/VersionManager";
 import { initWebVitalsMonitoring, WebVitalsIndicator } from "@/lib/monitoring/web-vitals";
+import { initPerformanceMonitoring } from "@/lib/monitoring/initPerformanceMonitoring";
 
 import { FeatureFlagProvider } from "@/lib/featureFlags/hooks";
 // DESABILITADO: import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
@@ -116,10 +118,11 @@ import { TourGuide } from '@/components/system/TourGuide';
 // Grouped providers for cleaner structure and better performance
 const AppProviders = ({ children }: { children: React.ReactNode }) => {
   return (
-    <ErrorBoundary>
-      <SkipLink />
-      <FocusVisibleHandler />
-      <PersistQueryClientProvider
+    <GlobalErrorBoundary>
+      <ErrorBoundary>
+        <SkipLink />
+        <FocusVisibleHandler />
+        <PersistQueryClientProvider
         client={queryClient}
         persistOptions={{
           persister,
@@ -143,7 +146,8 @@ const AppProviders = ({ children }: { children: React.ReactNode }) => {
           </AuthContextProvider>
         </TooltipProvider>
       </PersistQueryClientProvider>
-    </ErrorBoundary>
+      </ErrorBoundary>
+    </GlobalErrorBoundary>
   );
 };
 
@@ -155,6 +159,12 @@ const App = () => {
     }
 
     initMonitoring();
+    
+    // Initialize our comprehensive performance monitoring system
+    initPerformanceMonitoring(queryClient).catch((error) => {
+      logger.error('Falha ao inicializar monitoramento de performance', error, 'App');
+    });
+    
     initWebVitalsMonitoring().catch((error) => {
       logger.error('Falha ao inicializar Core Web Vitals', error, 'App');
     });

@@ -155,7 +155,12 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
         staleTime: 1000 * 60 * 2, // 2 minutos
       });
 
-      navigate(`/patient-evolution/${appointment.id}`);
+      navigate(`/patient-evolution/${appointment.id}`, {
+        state: {
+          patientId: appointment.patientId,
+          patientName: appointment.patientName
+        }
+      });
       toast.success('Iniciando atendimento', {
         description: `Atendimento de ${appointment.patientName}`,
       });
@@ -430,8 +435,8 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
                       <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: STATUS_CONFIG[localStatus as keyof typeof STATUS_CONFIG]?.color || '#94a3b8' }} />
                       <span className="truncate">
                         {STATUS_CONFIG[localStatus as keyof typeof STATUS_CONFIG]?.label ||
-                         localStatus.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) ||
-                         'Status'}
+                          localStatus.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) ||
+                          'Status'}
                       </span>
                     </div>
                   </SelectValue>
