@@ -39,8 +39,8 @@ test('criação rápida de paciente e autocomplete no modal de agendamento', asy
   await page.goto(`${BASE_URL}/auth`);
   await page.waitForTimeout(3000);
 
-  await page.fill('input[type="email"]', testUsers.rafael.email);
-  await page.fill('input[type="password"]', testUsers.rafael.password);
+  await page.fill('input[name="email"]', testUsers.rafael.email);
+  await page.fill('input[name="password"]', testUsers.rafael.password);
   // Check for Vite error overlay
   const errorOverlay = page.locator('vite-error-overlay');
   if (await errorOverlay.isVisible()) {

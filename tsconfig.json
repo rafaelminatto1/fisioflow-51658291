@@ -29,6 +29,12 @@
       "@fisioflow/shared-utils": [
         "./packages/shared-utils/src"
       ],
+      "@fisioflow/ui": [
+        "./packages/ui/src"
+      ],
+      "@fisioflow/core": [
+        "./packages/core/src"
+      ],
       "@fisioflow/skills": [
         "./src/lib/skills"
       ],

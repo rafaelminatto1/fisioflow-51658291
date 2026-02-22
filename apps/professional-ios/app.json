@@ -18,18 +18,71 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.fisioflow.professional",
       "infoPlist": {
-        "NSCameraUsageDescription": "Necessário para análise de movimento e captura de exercícios",
-        "NSPhotoLibraryUsageDescription": "Necessário para selecionar fotos de exercícios e documentos",
-        "NSMicrophoneUsageDescription": "Necessário para gravação de vídeos de exercícios",
-        "NSFaceIDUsageDescription": "Use Face ID para autenticar seu acesso ao app",
+        "NSCameraUsageDescription": "O FisioFlow precisa acessar sua câmera para capturar fotos de progresso dos pacientes e demonstrações de exercícios. Essas fotos são criptografadas e armazenadas com segurança.",
+        "NSPhotoLibraryUsageDescription": "O FisioFlow precisa acessar sua galeria de fotos para selecionar imagens existentes de pacientes e exercícios. Suas fotos são protegidas com criptografia.",
+        "NSLocationWhenInUseUsageDescription": "O FisioFlow usa sua localização para verificar check-in na clínica e confirmar presença em consultas. Sua localização nunca é compartilhada com terceiros.",
+        "NSFaceIDUsageDescription": "O FisioFlow usa Face ID para proteger o acesso aos dados sensíveis de saúde dos seus pacientes com autenticação biométrica segura.",
         "UIFileSharingEnabled": true,
         "UISupportsDocumentBrowser": true,
-        "UIBackgroundModes": ["fetch", "remote-notification"]
+        "UIBackgroundModes": ["fetch", "remote-notification"],
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": false,
+          "NSExceptionDomains": {
+            "firebasestorage.googleapis.com": {
+              "NSIncludesSubdomains": true,
+              "NSExceptionAllowsInsecureHTTPLoads": false,
+              "NSExceptionMinimumTLSVersion": "TLSv1.3",
+              "NSExceptionRequiresForwardSecrecy": true,
+              "NSRequiresCertificateTransparency": true
+            },
+            "firestore.googleapis.com": {
+              "NSIncludesSubdomains": true,
+              "NSExceptionAllowsInsecureHTTPLoads": false,
+              "NSExceptionMinimumTLSVersion": "TLSv1.3",
+              "NSExceptionRequiresForwardSecrecy": true,
+              "NSRequiresCertificateTransparency": true
+            },
+            "identitytoolkit.googleapis.com": {
+              "NSIncludesSubdomains": true,
+              "NSExceptionAllowsInsecureHTTPLoads": false,
+              "NSExceptionMinimumTLSVersion": "TLSv1.3",
+              "NSExceptionRequiresForwardSecrecy": true,
+              "NSRequiresCertificateTransparency": true
+            },
+            "securetoken.googleapis.com": {
+              "NSIncludesSubdomains": true,
+              "NSExceptionAllowsInsecureHTTPLoads": false,
+              "NSExceptionMinimumTLSVersion": "TLSv1.3",
+              "NSExceptionRequiresForwardSecrecy": true,
+              "NSRequiresCertificateTransparency": true
+            },
+            "www.googleapis.com": {
+              "NSIncludesSubdomains": true,
+              "NSExceptionAllowsInsecureHTTPLoads": false,
+              "NSExceptionMinimumTLSVersion": "TLSv1.3",
+              "NSExceptionRequiresForwardSecrecy": true,
+              "NSRequiresCertificateTransparency": true
+            },
+            "www.youtube.com": {
+              "NSIncludesSubdomains": true,
+              "NSExceptionAllowsInsecureHTTPLoads": false,
+              "NSExceptionMinimumTLSVersion": "TLSv1.3",
+              "NSExceptionRequiresForwardSecrecy": true
+            },
+            "img.youtube.com": {
+              "NSIncludesSubdomains": true,
+              "NSExceptionAllowsInsecureHTTPLoads": false,
+              "NSExceptionMinimumTLSVersion": "TLSv1.3",
+              "NSExceptionRequiresForwardSecrecy": true
+            }
+          }
+        }
       },
       "config": {
         "googleSignIn": {
           "reservedClientId": "YOUR_RESERVED_CLIENT_ID"
-        }
+        },
+        "usesNonExemptEncryption": false
       }
     },
     "android": {

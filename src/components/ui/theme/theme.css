@@ -1,0 +1,238 @@
+/**
+ * Theme CSS Variables
+ *
+ * Define variáveis CSS para temas
+ */
+
+:root {
+  /* Fontes */
+  --font-root: 16px;
+  --font-heading: 20px;
+  --font-body: 16px;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Cores - Default Scheme */
+  --color-primary: #6366f1;
+  --color-secondary: #64748b;
+
+  /* Animações */
+  --anim-fast: 100ms;
+  --anim-normal: 200ms;
+  --anim-slow: 400ms;
+
+  /* Espaçamento */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+
+  /* Border radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+}
+
+/* Light Mode */
+.light {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --bg-hover: #f8fafc;
+  --bg-active: #e2e8f0;
+  --bg-muted: #f1f5f9;
+  --bg-accent: #6366f1;
+
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #64748b;
+  --text-muted: #94a3b8;
+  --text-inverted: #ffffff;
+
+  --border-primary: #e2e8f0;
+  --border-secondary: #e5e7eb;
+  --border-muted: #f1f5f9;
+
+  --ring-primary: rgba(99, 102, 241, 0.5);
+}
+
+/* Dark Mode */
+.dark {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-hover: #1e293b;
+  --bg-active: #334155;
+  --bg-muted: #1e293b;
+  --bg-accent: #6366f1;
+
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --text-muted: #64748b;
+  --text-inverted: #0f172a;
+
+  --border-primary: #334155;
+  --border-secondary: #475569;
+  --border-muted: #1e293b;
+
+  --ring-primary: rgba(99, 102, 241, 0.4);
+}
+
+/* High Contrast Mode */
+.high-contrast {
+  --bg-primary: #ffffff;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #ffffff;
+  --bg-hover: #ffffff;
+  --bg-active: #000000;
+  --bg-muted: #f0f0f0;
+
+  --text-primary: #000000;
+  --text-secondary: #000000;
+  --text-tertiary: #000000;
+  --text-muted: #333333;
+
+  --border-primary: #000000;
+  --border-secondary: #000000;
+  --border-muted: #000000;
+
+  --color-primary: #0000ff;
+  --color-secondary: #000000;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+}
+
+/* Font Sizes */
+.font-sm {
+  --font-root: 14px;
+  --font-heading: 18px;
+  --font-body: 14px;
+}
+
+.font-md {
+  --font-root: 16px;
+  --font-heading: 20px;
+  --font-body: 16px;
+}
+
+.font-lg {
+  --font-root: 18px;
+  --font-heading: 22px;
+  --font-body: 18px;
+}
+
+.font-xl {
+  --font-root: 20px;
+  --font-heading: 24px;
+  --font-body: 20px;
+}
+
+/* Animation Speeds */
+.anim-off,
+.reduce-motion * {
+  animation-duration: 0ms !important;
+  transition-duration: 0ms !important;
+}
+
+.anim-reduced {
+  --anim-fast: 150ms;
+  --anim-normal: 200ms;
+  --anim-slow: 300ms;
+}
+
+.anim-normal {
+  --anim-fast: 100ms;
+  --anim-normal: 200ms;
+  --anim-slow: 400ms;
+}
+
+.anim-fast {
+  --anim-fast: 50ms;
+  --anim-normal: 100ms;
+  --anim-slow: 200ms;
+}
+
+/* Color Schemes */
+.scheme-default {
+  --color-primary: #6366f1;
+  --color-secondary: #64748b;
+}
+
+.scheme-blue {
+  --color-primary: #2563eb;
+  --color-secondary: #3b82f6;
+}
+
+.scheme-green {
+  --color-primary: #059669;
+  --color-secondary: #10b981;
+}
+
+.scheme-purple {
+  --color-primary: #7c3aed;
+  --color-secondary: #8b5cf6;
+}
+
+.scheme-orange {
+  --color-primary: #ea580c;
+  --color-secondary: #f97316;
+}
+
+.scheme-rose {
+  --color-primary: #e11d48;
+  --color-secondary: #f43f5e;
+}
+
+/* Reduce Motion Preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus Visible - Accessibility */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-secondary);
+  border-radius: var(--radius-md);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+/* Selection */
+::selection {
+  background-color: var(--color-primary);
+  color: var(--text-inverted);
+}

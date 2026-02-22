@@ -136,7 +136,7 @@ export function LoginForm({
                     type="email"
                     placeholder="nome@exemplo.com"
                     autoComplete="email"
-                    className="h-11"
+                    className="h-12 bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-primary/20 transition-all duration-200"
                     tabIndex={activeTab === 'login' ? 1 : -1}
                     disabled={loading}
                     {...field}
@@ -159,7 +159,7 @@ export function LoginForm({
                   </FormLabel>
                   <button
                     type="button"
-                    className="text-xs text-primary hover:text-primary/80 transition-colors bg-transparent border-0 p-0 cursor-pointer"
+                    className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors bg-transparent border-0 p-0 cursor-pointer"
                     tabIndex={activeTab === 'login' ? 5 : -1}
                     onClick={() => {
                       logger.debug('Forgot password clicked', null, 'LoginForm');
@@ -174,7 +174,7 @@ export function LoginForm({
                     type="password"
                     placeholder="••••••••"
                     autoComplete="current-password"
-                    className="h-11"
+                    className="h-12 bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 focus:ring-primary/20 transition-all duration-200"
                     tabIndex={activeTab === 'login' ? 2 : -1}
                     disabled={loading}
                     {...field}
@@ -190,10 +190,10 @@ export function LoginForm({
         {(error || (hasBeenTouched && hasErrors)) && (
           <Alert
             variant="destructive"
-            className="animate-slide-up-fade"
+            className="animate-slide-up-fade border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-900/30"
             data-testid="login-error"
           >
-            <AlertDescription className="text-sm">
+            <AlertDescription className="text-sm font-medium">
               {error || 'Por favor, corrija os erros no formulário.'}
             </AlertDescription>
           </Alert>
@@ -202,17 +202,17 @@ export function LoginForm({
         {/* Submit Button */}
         <Button
           type="submit"
-          className="w-full h-11 text-sm font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-150 active:scale-[0.98]"
+          className="w-full h-12 text-sm font-bold bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 shadow-lg shadow-primary/25 transition-all duration-200 active:scale-[0.98] rounded-xl"
           disabled={loading}
           tabIndex={activeTab === 'login' ? 3 : -1}
         >
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              Entrando...
+              Conectando...
             </>
           ) : (
-            'Entrar na Plataforma'
+            'Acessar Minha Conta'
           )}
         </Button>
       </form>

@@ -3,8 +3,8 @@ import { test, expect } from '@playwright/test';
 test('Smoke Test: Full Flow Verification', async ({ page }) => {
   // 1. Login
   await page.goto('https://fisioflow.web.app/auth');
-  await page.fill('input[type="email"]', 'REDACTED_EMAIL');
-  await page.fill('input[type="password"]', 'REDACTED');
+  await page.fill('input[name="email"]', 'REDACTED_EMAIL');
+  await page.fill('input[name="password"]', 'REDACTED');
   await page.click('button[type="submit"]');
 
   // Aguardar redirecionamento para a agenda

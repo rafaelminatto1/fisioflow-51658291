@@ -10,7 +10,7 @@
  *   - Enhanced accessibility
  *   - Micro-interactions
  */
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import {
   FileText,
   MessageCircle,
@@ -18,15 +18,14 @@ import {
   Save,
   Loader2,
   CheckCircle2,
-  Sparkles,
   AlertCircle,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { MagicTextarea } from '@/components/ai/MagicTextarea';
 import { cn } from '@/lib/utils';
+import { RichTextBlock } from './RichTextBlock';
 import { EvolutionHeaderBlock } from './EvolutionHeaderBlock';
 import { ProcedureChecklistBlock } from './ProcedureChecklistBlock';
 import { ExerciseBlockV2 } from './ExerciseBlockV2';
@@ -46,135 +45,6 @@ interface NotionEvolutionPanelProps {
   lastSaved?: Date | null;
   className?: string;
 }
-
-// Enhanced Text block with improved styling
-const TextBlock: React.FC<{
-  icon: React.ReactNode;
-  iconBg: string;
-  iconGradient?: string;
-  title: string;
-  placeholder: string;
-  hint: string;
-  value: string;
-  onValueChange: (value: string) => void;
-  disabled?: boolean;
-  rows?: number;
-  className?: string;
-  accentColor?: string;
-}> = ({
-  icon,
-  iconBg,
-  iconGradient,
-  title,
-  placeholder,
-  hint,
-  value,
-  onValueChange,
-  disabled,
-  rows = 4,
-  className,
-  accentColor = 'primary'
-}) => {
-  const [localValue, setLocalValue] = useState(value);
-  const [isFocused, setIsFocused] = useState(false);
-  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastSentValue = useRef(value);
-
-  // Sync external value changes
-  useEffect(() => {
-    if (value !== localValue && value !== lastSentValue.current && !debounceTimer.current) {
-      setLocalValue(value || '');
-      lastSentValue.current = value || '';
-    }
-  }, [value, localValue]);
-
-  useEffect(() => {
-    return () => {
-      if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    };
-  }, []);
-
-  const handleChange = useCallback(
-    (val: string) => {
-      setLocalValue(val);
-      if (debounceTimer.current) clearTimeout(debounceTimer.current);
-      debounceTimer.current = setTimeout(() => {
-        lastSentValue.current = val;
-        onValueChange(val);
-      }, 800);
-    },
-    [onValueChange]
-  );
-
-  const hasContent = localValue.trim().length > 0;
-
-  const accentColors: Record<string, { from: string; to: string; border: string }> = {
-    primary: { from: 'from-primary/60', to: 'to-primary', border: 'border-primary' },
-    sky: { from: 'from-sky-500/60', to: 'to-sky-500', border: 'border-sky-500' },
-    violet: { from: 'from-violet-500/60', to: 'to-violet-500', border: 'border-violet-500' },
-    amber: { from: 'from-amber-500/60', to: 'to-amber-500', border: 'border-amber-500' },
-  };
-
-  const colors = accentColors[accentColor] || accentColors.primary;
-
-  return (
-    <div className={cn(
-      'rounded-xl border border-border/50 bg-card overflow-hidden transition-all duration-300',
-      'shadow-sm hover:shadow-md',
-      isFocused && `ring-2 ring-${accentColor}/10`,
-      className
-    )}>
-      {/* Top accent line */}
-      <div className={cn(
-        'absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r opacity-0 transition-opacity duration-300',
-        isFocused && colors.from, colors.to
-      )} style={{ opacity: isFocused ? 1 : 0 }} />
-
-      {/* Header */}
-      <div className="flex items-center gap-2.5 p-3.5 border-b border-border/40 bg-gradient-to-r from-muted/20 to-transparent">
-        <div className={cn(
-          'p-1.5 rounded-lg transition-all duration-200',
-          iconBg,
-          isFocused && 'scale-110'
-        )}>
-          {icon}
-        </div>
-        <div className="flex flex-col">
-          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
-          {hasContent && (
-            <span className="text-[10px] text-green-600 flex items-center gap-1 animate-in slide-in-from-top-1 duration-300">
-              <CheckCircle2 className="h-2.5 w-2.5" />
-              Preenchido
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="p-4">
-        <div className={cn(
-          'rounded-lg border border-transparent transition-all duration-200',
-          isFocused && 'border-border/50 bg-muted/30'
-        )}>
-          <MagicTextarea
-            value={localValue}
-            onValueChange={handleChange}
-            placeholder={placeholder}
-            disabled={disabled}
-            rows={rows}
-            className="min-h-[100px] border-0 shadow-none resize-y focus-visible:ring-0 bg-transparent px-0"
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-          />
-        </div>
-        <p className="text-[11px] text-muted-foreground/60 mt-2 flex items-center gap-1">
-          <Sparkles className="h-3 w-3" />
-          {hint}
-        </p>
-      </div>
-    </div>
-  );
-};
 
 export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
   data,
@@ -208,13 +78,11 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 
   return (
     <Card className={cn(
-      'h-full flex flex-col border-border/50 shadow-lg overflow-hidden',
+      'h-full flex flex-col border-none shadow-none bg-background overflow-hidden',
       className
     )}>
       {/* Enhanced Panel header */}
       <div className="relative">
-        {/* Gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-primary/5 pointer-events-none" />
 
         <div className="relative flex items-center justify-between px-5 py-4 border-b border-border/50">
           <div className="flex items-center gap-3">
@@ -275,7 +143,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
       </div>
 
       {/* Blocks */}
-      <CardContent className="flex-1 overflow-y-auto p-5 space-y-5">
+      <CardContent className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 space-y-3">
         {/* Block 1: Header (auto-filled) */}
         <EvolutionHeaderBlock
           therapistName={data.therapistName}
@@ -297,7 +165,7 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
           />
 
           {/* Patient Report */}
-          <TextBlock
+          <RichTextBlock
             icon={<MessageCircle className="h-4 w-4 text-sky-600" />}
             iconBg="bg-sky-500/10 border border-sky-500/20"
             title="Relato do Paciente"
@@ -306,27 +174,25 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
             value={data.patientReport}
             onValueChange={(val) => handleFieldChange('patientReport', val)}
             disabled={disabled}
-            rows={4}
             className="h-full"
             accentColor="sky"
           />
         </div>
 
         {/* Block 4: Main Evolution Text */}
-        <TextBlock
+        <RichTextBlock
           icon={<FileText className="h-4 w-4 text-violet-600" />}
           iconBg="bg-violet-500/10 border border-violet-500/20"
           title="Texto de Evolução"
-          placeholder={`Descreva a evolução da sessão livremente...\n\nExemplo:\nOBJETIVO:\nReeducação da coordenação muscular entre musculatura escapular e GU\nEstabilização dinâmica da GU durante abdução e flexão de ombro.\n\nPaciente apresentou melhora da ADM em flexão...`}
+          placeholder="Descreva a evolução da sessão livremente... Ex: OBJETIVO, achados, conduta..."
           hint="Texto livre para descrever a evolução - use como preferir (pode incluir objetivo, achados, conduta)"
           value={data.evolutionText}
           onValueChange={(val) => handleFieldChange('evolutionText', val)}
           disabled={disabled}
-          rows={12}
           accentColor="violet"
         />
 
-        <Separator className="my-3" />
+        {/* Removed Separator */}
 
         {/* Block 5: Procedures Checklist */}
         <ProcedureChecklistBlock
@@ -349,12 +215,12 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
           disabled={disabled}
         />
 
-        <Separator className="my-3" />
+        {/* Removed Separator */}
 
         {/* Block 7: Observations, Home Care, Attachments - 3 columns */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Observations */}
-          <TextBlock
+          <RichTextBlock
             icon={<StickyNote className="h-4 w-4 text-amber-600" />}
             iconBg="bg-amber-500/10 border border-amber-500/20"
             title="Observações"
@@ -363,7 +229,6 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
             value={data.observations}
             onValueChange={(val) => handleFieldChange('observations', val)}
             disabled={disabled}
-            rows={4}
             className="h-full"
             accentColor="amber"
           />

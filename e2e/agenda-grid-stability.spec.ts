@@ -17,8 +17,8 @@ test.describe('Agenda - Estabilidade do Grid durante Drag', () => {
 
     // 1) Login
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.rafael.email);
-    await page.fill('input[type="password"]', testUsers.rafael.password);
+    await page.fill('input[name="email"]', testUsers.rafael.email);
+    await page.fill('input[name="password"]', testUsers.rafael.password);
     await page.click('button[type="submit"]');
     await page.waitForURL((u) => u.pathname === '/' || u.pathname.startsWith('/schedule') || u.pathname.startsWith('/dashboard'), { timeout: 30000 });
 
