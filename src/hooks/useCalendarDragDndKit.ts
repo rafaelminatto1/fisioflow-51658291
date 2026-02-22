@@ -18,7 +18,7 @@ interface DropTarget {
 }
 
 interface UseCalendarDragDndKitProps {
-  onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string) => Promise<void>;
+  onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string, ignoreCapacity?: boolean) => Promise<void>;
   onOptimisticUpdate?: (appointmentId: string, newDate: Date, newTime: string) => void;
   onRevertUpdate?: (appointmentId: string) => void;
   getAppointmentsForSlot?: (date: Date, time: string) => Appointment[];
@@ -46,6 +46,7 @@ interface PendingReschedule {
   appointment: Appointment;
   newDate: Date;
   newTime: string;
+  ignoreCapacity?: boolean;
 }
 
 interface PendingOverCapacity extends PendingReschedule {
@@ -139,7 +140,7 @@ export const useCalendarDragDndKit = ({
     }
 
     const [, dateStr, timeStr] = match;
-    
+
     // Parse dateStr (YYYY-MM-DD) safely using utility to avoid timezone issues
     const newDate = parseResponseDate(dateStr);
     const newTime = timeStr;
@@ -222,7 +223,7 @@ export const useCalendarDragDndKit = ({
     }
 
     try {
-      await onAppointmentReschedule(appointment, newDate, newTime);
+      await onAppointmentReschedule(appointment, newDate, newTime, payload.ignoreCapacity);
 
       setDragState({ appointment: null, isDragging: false, savingAppointmentId: null });
       setPendingReschedule(null);
@@ -257,7 +258,7 @@ export const useCalendarDragDndKit = ({
 
   const handleConfirmOverCapacity = useCallback(async () => {
     if (!pendingReschedule) return;
-    await executeReschedule(pendingReschedule);
+    await executeReschedule({ ...pendingReschedule, ignoreCapacity: true });
   }, [executeReschedule, pendingReschedule]);
 
   const handleCancelReschedule = useCallback(() => {

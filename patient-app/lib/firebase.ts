@@ -15,7 +15,7 @@ import {
   signOut,
   onAuthStateChanged,
   initializeAuth,
-  getReactNativePersistence,
+  // getReactNativePersistence,
   connectAuthEmulator
 } from 'firebase/auth';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
@@ -89,7 +89,7 @@ if (Platform.OS === 'web') {
   // React Native - usar AsyncStorage para persistência
   try {
     auth = initializeAuth(app, {
-      persistence: getReactNativePersistence(AsyncStorage),
+      // persistence: getReactNativePersistence(AsyncStorage),
     });
   } catch (error) {
     // Fallback para getAuth se initializeAuth falhar (auth já inicializado)

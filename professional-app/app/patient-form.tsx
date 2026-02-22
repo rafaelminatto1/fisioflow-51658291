@@ -140,7 +140,7 @@ export default function PatientFormScreen() {
         condition: formData.condition,
         notes: formData.notes,
         status: formData.status,
-        birthDate: formData.birthDate ? parse(formData.birthDate, 'dd/MM/yyyy', new Date()) : undefined,
+        birthDate: formData.birthDate ? parse(formData.birthDate, 'dd/MM/yyyy', new Date()) : null,
       };
 
       if (isEditing && patientId) {
@@ -242,6 +242,9 @@ export default function PatientFormScreen() {
               maxLength={10}
               error={formErrors.birthDate}
             />
+            <Text style={[styles.fieldHint, { color: colors.textSecondary }]}>
+              Formato DD/MM/AAAA. Deixe em branco para remover a data.
+            </Text>
           </Card>
 
           {/* Clinical Info Section */}
@@ -395,5 +398,9 @@ const styles = StyleSheet.create({
   deactivateButtonText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  fieldHint: {
+    fontSize: 12,
+    marginTop: 6,
   },
 });

@@ -10,8 +10,8 @@ test('Verificar Admin Gamification em Produção', async ({ page }) => {
 
   // Login
   console.log('Preenchendo credenciais...');
-  await page.fill('input[type="email"]', testUsers.fisio.email);
-  await page.fill('input[type="password"]', testUsers.fisio.password);
+  await page.fill('input[name="email"]', testUsers.fisio.email);
+  await page.fill('input[name="password"]', testUsers.fisio.password);
 
   // Clicar em Entrar/Login (tentando seletores comuns)
   await page.click('button[type="submit"]');

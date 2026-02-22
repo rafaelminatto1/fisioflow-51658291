@@ -223,95 +223,15 @@ export const MeasurementsBlock: React.FC<MeasurementsBlockProps> = ({
   return (
     <>
       <div className={cn(
-        'rounded-xl border border-border/50 bg-card overflow-hidden transition-all duration-300',
-        'shadow-sm hover:shadow-md',
+        'w-full transition-all duration-300',
         className
       )}>
-        {/* Header with gradient accent */}
-        <div className="relative">
-          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-violet-500/60 via-violet-500 to-violet-500/60" />
-          <div className="flex items-center justify-between p-3.5 border-b border-border/40 bg-gradient-to-r from-violet-500/5 to-transparent">
-            <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-500/10 to-violet-500/5 border border-violet-500/20">
-                <Ruler className="h-4 w-4 text-violet-500" />
-              </div>
-              <div className="flex flex-col">
-                <h3 className="text-sm font-semibold text-foreground">Medições</h3>
-                {measurements.length > 0 && (
-                  <span className="text-[10px] text-muted-foreground">
-                    {completedCount} de {measurements.length} registradas
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <Popover open={showTemplates} onOpenChange={setShowTemplates}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={disabled}
-                  className="gap-1.5 text-violet-600 hover:text-violet-700 hover:bg-violet-500/10 rounded-lg"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline text-xs font-medium">Adicionar</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[280px] p-0" align="end">
-                <Command shouldFilter={false}>
-                  <CommandInput placeholder="Buscar medição..." />
-                  <CommandList className="max-h-[300px]">
-                    <CommandEmpty>
-                      <div className="py-4 px-3 text-center text-xs text-muted-foreground">
-                        Use os modelos abaixo
-                      </div>
-                    </CommandEmpty>
-                    <CommandGroup heading="Modelos Rápidos">
-                      {quickTemplates.map((template) => (
-                        <CommandItem
-                          key={template.name}
-                          onSelect={() => {
-                            handleAddMeasurement(template);
-                            setShowTemplates(false);
-                          }}
-                          className="cursor-pointer"
-                        >
-                          <Sparkles className="h-4 w-4 mr-2 text-violet-500" />
-                          <span>{template.name}</span>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                    <CommandGroup heading="Tipo Personalizado">
-                      {MEASUREMENT_TYPES.map((type) => (
-                        <CommandItem
-                          key={type}
-                          onSelect={() => {
-                            handleAddMeasurement({
-                              measurement_type: type,
-                              measurement_name: '',
-                            });
-                            setShowTemplates(false);
-                          }}
-                          className="cursor-pointer"
-                        >
-                          <Plus className="h-4 w-4 mr-2 text-muted-foreground" />
-                          <span>{MEASUREMENT_TYPE_LABELS[type]}</span>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-
         {/* Measurements list */}
-        <div className="p-3 space-y-3">
+        <div className="pb-2 space-y-3">
           {measurements.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-muted to-muted/50 mx-auto mb-3 flex items-center justify-center">
-                <Ruler className="h-7 w-7 opacity-30" />
+              <div className="w-12 h-12 rounded-lg bg-slate-50 border border-slate-100 mx-auto mb-3 flex items-center justify-center">
+                <Ruler className="h-5 w-5 text-slate-300" />
               </div>
               <p className="text-sm font-medium">Nenhuma medição adicionada</p>
               <p className="text-xs mt-1.5 opacity-70">Use o botão "Adicionar" para registrar</p>
@@ -392,11 +312,12 @@ const MeasurementCard: React.FC<{
   return (
     <div
       className={cn(
-        'group relative rounded-xl border transition-all duration-200 overflow-hidden',
-        'bg-card hover:bg-muted/30',
+        'group relative rounded-lg border transition-all duration-200 overflow-hidden',
+        'bg-transparent hover:bg-slate-50',
         measurement.completed
-          ? 'border-violet-200 bg-violet-50/30'
-          : 'border-border hover:border-violet-200',
+          ? 'border-transparent bg-slate-50/50'
+          : 'border-transparent hover:border-slate-200',
+        isExpanded && 'bg-slate-50 border-slate-200',
         isRemoving && 'opacity-0 scale-95'
       )}
     >

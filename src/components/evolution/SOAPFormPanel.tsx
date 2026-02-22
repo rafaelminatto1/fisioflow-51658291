@@ -215,6 +215,7 @@ const SpeechToSOAPButton = ({ onTranscription, disabled }: { onTranscription: (t
       }}
       disabled={disabled}
       title={isListening ? "Parar gravação" : "Gravar voz para este campo"}
+      aria-label={isListening ? "Parar gravação de voz" : "Gravar voz"}
     >
       {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
     </Button>

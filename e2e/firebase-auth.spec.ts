@@ -22,8 +22,8 @@ async function doLogin(page: Page, email: string, password: string) {
   await waitForPageLoad(page);
 
   // Preencher credenciais
-  await page.fill('input[type="email"]', email);
-  await page.fill('input[type="password"]', password);
+  await page.fill('input[name="email"]', email);
+  await page.fill('input[name="password"]', password);
 
   // Clicar no botão de submit
   await page.click('button[type="submit"]');
@@ -40,8 +40,8 @@ test.describe('Firebase Authentication - Login/Logout', () => {
   });
 
   test('deve fazer login com credenciais Firebase válidas', async ({ page }) => {
-    await page.fill('input[type="email"]', testUsers.rafael.email);
-    await page.fill('input[type="password"]', testUsers.rafael.password);
+    await page.fill('input[name="email"]', testUsers.rafael.email);
+    await page.fill('input[name="password"]', testUsers.rafael.password);
     await page.click('button[type="submit"]');
 
     // Aguardar navegação para dashboard
@@ -56,8 +56,8 @@ test.describe('Firebase Authentication - Login/Logout', () => {
   });
 
   test('deve mostrar erro com credenciais inválidas', async ({ page }) => {
-    await page.fill('input[type="email"]', 'invalido@example.com');
-    await page.fill('input[type="password"]', 'senhaErrada123');
+    await page.fill('input[name="email"]', 'invalido@example.com');
+    await page.fill('input[name="password"]', 'senhaErrada123');
     await page.click('button[type="submit"]');
 
     // Aguardar mensagem de erro
@@ -284,8 +284,8 @@ test.describe('Testes de Performance e Carga', () => {
     const startTime = Date.now();
 
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.rafael.email);
-    await page.fill('input[type="password"]', testUsers.rafael.password);
+    await page.fill('input[name="email"]', testUsers.rafael.email);
+    await page.fill('input[name="password"]', testUsers.rafael.password);
     await page.click('button[type="submit"]');
 
     await page.waitForURL(/\/(\?.*)?$/, { timeout: 15000 });
@@ -304,8 +304,8 @@ test.describe('Testes de Performance e Carga', () => {
     // Fazer login em cada aba
     for (const page of pages) {
       await page.goto('/auth');
-      await page.fill('input[type="email"]', testUsers.rafael.email);
-      await page.fill('input[type="password"]', testUsers.rafael.password);
+      await page.fill('input[name="email"]', testUsers.rafael.email);
+      await page.fill('input[name="password"]', testUsers.rafael.password);
       await page.click('button[type="submit"]');
       await page.waitForURL(/\/(\?.*)?$/, { timeout: 15000 });
     }

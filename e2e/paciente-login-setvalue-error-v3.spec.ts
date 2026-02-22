@@ -73,8 +73,8 @@ test.describe('Paciente Login - setValue Error Check (Simple)', () => {
     await page.screenshot({ path: '/tmp/paciente-simple-before.png' });
 
     // Try to find login form
-    const emailInput = page.locator('input[type="email"], input[name="email"], input[placeholder*="email" i]').first();
-    const passwordInput = page.locator('input[type="password"], input[name="password"]').first();
+    const emailInput = page.locator('input[name="email"], input[name="email"], input[placeholder*="email" i]').first();
+    const passwordInput = page.locator('input[name="password"], input[name="password"]').first();
 
     const hasEmail = await emailInput.count() > 0;
     const hasPassword = await passwordInput.count() > 0;

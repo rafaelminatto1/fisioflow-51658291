@@ -41,9 +41,9 @@ export function ExerciseCard({
       >
         {/* Thumbnail */}
         <View style={[styles.thumbnailContainer, variant === 'list' && styles.thumbnailContainerList]}>
-          {exercise.image_url || exercise.video_url ? (
+          {exercise.thumbnail_url || exercise.image_url ? (
             <Image
-              source={{ uri: exercise.image_url || exercise.video_url || '' }}
+              source={{ uri: exercise.thumbnail_url || exercise.image_url || '' }}
               style={styles.thumbnail}
               resizeMode="cover"
             />

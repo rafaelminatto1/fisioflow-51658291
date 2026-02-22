@@ -103,7 +103,7 @@ const DialogFooter = ({
   <div
     className={cn(
       "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
-      "pb-safe pt-2",
+      "pb-[env(safe-area-inset-bottom)] pt-2",
       className
     )}
     {...props}

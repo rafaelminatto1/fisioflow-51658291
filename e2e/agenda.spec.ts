@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { testUsers } from './fixtures/test-data';
 import type { Page } from '@playwright/test';
-const EMAIL_INPUT_SELECTOR = 'input[type="email"], input[name="email"], #login-email';
-const PASSWORD_INPUT_SELECTOR = 'input[type="password"], input[name="password"], #login-password';
+const EMAIL_INPUT_SELECTOR = 'input[name="email"], input[name="email"], #login-email';
+const PASSWORD_INPUT_SELECTOR = 'input[name="password"], input[name="password"], #login-password';
 const LOGIN_BUTTON_NAME = /Entrar na Plataforma|Entrar/i;
 
 function isScheduleLikeUrl(url: string): boolean {

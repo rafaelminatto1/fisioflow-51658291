@@ -25,8 +25,7 @@ import { ObjectiveExamForm } from '@/components/ObjectiveExamForm';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { HapticFeedback } from '@/lib/haptics';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useEvolutions } from '@/hooks/useEvolutions';
 import type { SOAPRecord } from '@/types';
 
 export default function EditEvolutionScreen() {
@@ -36,8 +35,12 @@ export default function EditEvolutionScreen() {
   const { profile } = useAuth();
 
   const evolutionId = params.id as string;
-  const [loading, saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [evolution, setEvolution] = useState<SOAPRecord | null>(null);
+  
+  // Use the hook to get decrypted SOAP data and update method
+  const { getById, update } = useEvolutions();
 
   // SOAP fields
   const [subjective, setSubjective] = useState('');
@@ -74,15 +77,14 @@ export default function EditEvolutionScreen() {
 
   const loadEvolution = async () => {
     try {
-      const docRef = doc(db, 'evolutions', evolutionId);
-      const docSnap = await getDoc(docRef);
+      setLoading(true);
+      // Use the hook's getById method which decrypts PHI fields
+      const evo = await getById(evolutionId);
 
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        const evo = { id: docSnap.id, ...data } as SOAPRecord;
+      if (evo) {
         setEvolution(evo);
 
-        // Load form fields
+        // Load form fields with decrypted data
         setSubjective(evo.subjective || '');
         setAssessment(evo.assessment || '');
         setInspection(evo.objective?.inspection || '');
@@ -95,16 +97,19 @@ export default function EditEvolutionScreen() {
         setInterventions(evo.plan?.interventions || []);
         setFrequency(evo.plan?.frequency || '');
         setDuration(evo.plan?.duration || '');
-        setBloodPressure(evo.vital_signs?.blood_pressure || '');
-        setHeartRate(evo.vital_signs?.heart_rate?.toString() || '');
-        setTemperature(evo.vital_signs?.temperature?.toString() || '');
-        setRespiratoryRate(evo.vital_signs?.respiratory_rate?.toString() || '');
-        setOxygenSaturation(evo.vital_signs?.oxygen_saturation?.toString() || '');
-        setSignature(evo.signature_hash || null);
+        setBloodPressure(evo.vitalSigns?.blood_pressure || '');
+        setHeartRate(evo.vitalSigns?.heart_rate?.toString() || '');
+        setTemperature(evo.vitalSigns?.temperature?.toString() || '');
+        setRespiratoryRate(evo.vitalSigns?.respiratory_rate?.toString() || '');
+        setOxygenSaturation(evo.vitalSigns?.oxygen_saturation?.toString() || '');
+        setSignature(evo.signatureHash || null);
       }
+      setLoading(false);
     } catch (error) {
-      console.error('Error loading evolution:', error);
+      // Never log PHI content - only log error type
+      console.error('Error loading evolution - failed to decrypt');
       Alert.alert('Erro', 'Não foi possível carregar a evolução.');
+      setLoading(false);
     }
   };
 
@@ -123,7 +128,8 @@ export default function EditEvolutionScreen() {
       setSaving(true);
       HapticFeedback.medium();
 
-      await updateDoc(doc(db, 'evolutions', evolutionId), {
+      // Use the hook's update method which encrypts PHI fields
+      await update(evolutionId, {
         subjective,
         objective: {
           inspection,
@@ -141,14 +147,13 @@ export default function EditEvolutionScreen() {
           duration,
           home_exercises: [],
         },
-        vital_signs: {
+        vitalSigns: {
           blood_pressure: bloodPressure,
           heart_rate: heartRate ? parseInt(heartRate) : null,
           temperature: temperature ? parseFloat(temperature) : null,
           respiratory_rate: respiratoryRate ? parseInt(respiratoryRate) : null,
           oxygen_saturation: oxygenSaturation ? parseFloat(oxygenSaturation) : null,
         },
-        updated_at: serverTimestamp(),
       });
 
       HapticFeedback.success();
@@ -163,7 +168,8 @@ export default function EditEvolutionScreen() {
         ]
       );
     } catch (error) {
-      console.error('Error updating evolution:', error);
+      // Never log PHI content - only log error type
+      console.error('Error updating evolution - encryption or save failed');
       HapticFeedback.error();
       Alert.alert('Erro', 'Não foi possível atualizar a evolução. Tente novamente.');
     } finally {

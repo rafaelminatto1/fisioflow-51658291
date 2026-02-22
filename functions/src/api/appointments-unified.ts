@@ -7,7 +7,7 @@
 import { onCall, onRequest, HttpsError } from 'firebase-functions/v2/https';
 import { CORS_ORIGINS, setCorsHeaders } from '../lib/cors';
 import { logger } from '../lib/logger';
-import { 
+import {
     listAppointmentsHttp,
     getAppointmentHttp,
     createAppointmentHttp,
@@ -56,6 +56,10 @@ export const appointmentServiceHttp = onRequest(
             case 'update': return updateAppointmentHttp(req, res);
             case 'cancel': return cancelAppointmentHttp(req, res);
             case 'checkConflict': return checkTimeConflictHttp(req, res);
+            case 'fixIndices': {
+                const { fixAppointmentIndexHandler } = await import('../migrations/fix-appointment-index');
+                return fixAppointmentIndexHandler(req, res);
+            }
             default:
                 res.status(400).json({ error: 'Ação de agendamento inválida.' });
         }
@@ -78,7 +82,7 @@ export const appointmentService = onCall(
             return { status: 'ok', service: 'appointmentService' };
         }
 
-        const { 
+        const {
             listAppointmentsHandler,
             getAppointmentHandler,
             createAppointmentHandler,

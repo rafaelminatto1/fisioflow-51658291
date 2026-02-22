@@ -35,8 +35,8 @@ test.describe('Fluxo Financeiro', () => {
 
         // Realizar Login
         await page.goto('/auth');
-        await page.fill('input[type="email"]', testUsers.admin.email);
-        await page.fill('input[type="password"]', testUsers.admin.password);
+        await page.fill('input[name="email"]', testUsers.admin.email);
+        await page.fill('input[name="password"]', testUsers.admin.password);
         await page.click('button[type="submit"]');
 
         await page.waitForURL(/(\/dashboard|\/schedule|\/agenda|\/$)/);
