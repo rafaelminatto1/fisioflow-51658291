@@ -100,8 +100,11 @@ export default function ExerciseDetailScreen() {
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         {/* Exercise Image/Video */}
         <Card style={styles.imageCard}>
-          {exercise.image_url ? (
-            <Image source={{ uri: exercise.image_url }} style={styles.image} />
+          {exercise.thumbnail_url || exercise.image_url ? (
+            <Image
+              source={{ uri: exercise.thumbnail_url || exercise.image_url }}
+              style={styles.image}
+            />
           ) : (
             <View style={[styles.imagePlaceholder, { backgroundColor: colors.card }]}>
               <Icon name="dumbbell" size={64} color={colors.textSecondary} />

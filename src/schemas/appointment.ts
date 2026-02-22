@@ -171,8 +171,8 @@ const idOrUid = () => z.string().min(1).nullable();
 
 export const AppointmentSchema = z.object({
     // Identificadores
-    id: z.string().uuid(),
-    patient_id: z.string().uuid().nullable(),
+    id: idOrUid(),
+    patient_id: idOrUid(),
     therapist_id: idOrUid(),
     organization_id: z.string().min(1).optional().nullable(),
 

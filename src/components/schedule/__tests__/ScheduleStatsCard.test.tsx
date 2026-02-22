@@ -52,7 +52,7 @@ describe('ScheduleStatsCard', () => {
     );
 
     const card = container.querySelector('.animate-bounce-in');
-    expect(card).toHaveStyle({ animationDelay: '0.2s' });
+    expect(card).toHaveAttribute('style', expect.stringContaining('animation-delay: 0.2s'));
   });
 
   it('deve ter classes de hover e transição', () => {

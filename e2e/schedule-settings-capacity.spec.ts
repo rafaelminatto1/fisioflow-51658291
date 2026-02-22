@@ -7,8 +7,8 @@ const loginPassword = process.env.E2E_LOGIN_PASSWORD || testUsers.admin.password
 test.describe('Configurações da Agenda - Capacidade', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/auth', { waitUntil: 'domcontentloaded' });
-    await page.fill('input[type="email"]', loginEmail);
-    await page.fill('input[type="password"]', loginPassword);
+    await page.fill('input[name="email"]', loginEmail);
+    await page.fill('input[name="password"]', loginPassword);
     await page.click('button[type="submit"]');
     await page.waitForURL((url) => url.pathname !== '/auth' && url.pathname !== '/auth/', { timeout: 20000 });
     await page.goto('/schedule/settings');

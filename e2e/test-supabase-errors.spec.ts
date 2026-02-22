@@ -10,8 +10,8 @@ test.describe('Teste de erros Supabase - Criar agendamento e iniciar atendimento
     await page.waitForLoadState('domcontentloaded');
 
     // Preencher credenciais
-    const emailInput = page.locator('input[type="email"], input[name="email"], input[placeholder*="email" i]').first();
-    const passwordInput = page.locator('input[type="password"], input[name="password"]').first();
+    const emailInput = page.locator('input[name="email"], input[name="email"], input[placeholder*="email" i]').first();
+    const passwordInput = page.locator('input[name="password"], input[name="password"]').first();
 
     await emailInput.fill(testUsers.fisio.email);
     await passwordInput.fill(testUsers.fisio.password);

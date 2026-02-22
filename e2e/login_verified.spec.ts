@@ -14,11 +14,11 @@ test.describe('Verified Login Flow', () => {
         // Check if we are on the login page
         await expect(page).toHaveURL(/.*auth\/login/);
         // Wait for email input to be visible which confirms page load
-        await expect(page.locator('input[type="email"]')).toBeVisible({ timeout: 10000 });
+        await expect(page.locator('input[name="email"]')).toBeVisible({ timeout: 10000 });
 
         // Fill in credentials
-        await page.fill('input[type="email"]', testUsers.fisio.email);
-        await page.fill('input[type="password"]', testUsers.fisio.password);
+        await page.fill('input[name="email"]', testUsers.fisio.email);
+        await page.fill('input[name="password"]', testUsers.fisio.password);
 
         // Submit
         const submitButton = page.locator('button[type="submit"]');

@@ -14,8 +14,8 @@ test('modal mobile - verificar botão agendar visível', async ({ page }) => {
   await page.screenshot({ path: 'e2e/screenshots/mobile/01-login.png', fullPage: false });
 
   // Preencher login
-  await page.fill('input[type="email"], input[name="email"]', 'rafael.minatto@yahoo.com.br');
-  await page.fill('input[type="password"], input[name="password"]', 'Yukari30@');
+  await page.fill('input[name="email"], input[name="email"]', 'rafael.minatto@yahoo.com.br');
+  await page.fill('input[name="password"], input[name="password"]', 'Yukari30@');
 
   // Clicar em entrar
   await page.click('button[type="submit"]');

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { db, collection, query, where, orderBy, onSnapshot, Timestamp } from '@/integrations/firebase/app';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -104,7 +104,7 @@ export function RevenueChart() {
         <CardDescription>Atualizações em tempo real</CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+        <div className="w-full bg-white dark:bg-gray-800 rounded-lg" style={{ height: '300px' }}>
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="date" />
@@ -118,7 +118,7 @@ export function RevenueChart() {
               dot={{ r: 4 }}
             />
           </LineChart>
-        </ResponsiveContainer>
+        </div>
       </CardContent>
     </Card>
   );

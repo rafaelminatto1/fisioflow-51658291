@@ -6,13 +6,13 @@ test('login flow with test credentials', async ({ page }) => {
     await page.goto('/auth');
 
     // Wait for the login form to be visible
-    await expect(page.locator('input[type="email"]')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('input[name="email"]')).toBeVisible({ timeout: 15000 });
 
     // Fill in the email
-    await page.fill('input[type="email"]', testUsers.fisio.email);
+    await page.fill('input[name="email"]', testUsers.fisio.email);
 
     // Fill in the password
-    await page.fill('input[type="password"]', testUsers.fisio.password);
+    await page.fill('input[name="password"]', testUsers.fisio.password);
 
     // Click the login button
     await page.click('button:has-text("Entrar na Plataforma")');

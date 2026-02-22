@@ -135,6 +135,7 @@ export function PatientCombobox({
         <Button
           variant="outline"
           role="combobox"
+          data-testid="patient-select"
           aria-expanded={open}
           className={cn(
             "w-full justify-between bg-background text-left font-normal",
@@ -171,6 +172,7 @@ export function PatientCombobox({
         <Command shouldFilter={false}>
           <CommandInput
             ref={inputRef}
+            data-testid="patient-search"
             placeholder="Buscar por nome, CPF ou telefone..."
             value={inputValue}
             onValueChange={setInputValue}

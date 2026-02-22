@@ -300,6 +300,7 @@ export default function ProfileScreen() {
                 src={profile?.photo_url}
                 name={getInitials(profile?.full_name || profile?.email || '')}
                 size={80}
+                encrypted={false}
               />
               <View style={styles.profileInfo}>
                 <Text style={[styles.profileName, { color: colors.text }]}>

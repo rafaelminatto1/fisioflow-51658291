@@ -208,8 +208,8 @@ test.describe('PC Siqueira - Criar 10 Evoluções Completas', () => {
   test.beforeEach(async ({ page }) => {
     // Login
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.fisio.email);
-    await page.fill('input[type="password"]', testUsers.fisio.password);
+    await page.fill('input[name="email"]', testUsers.fisio.email);
+    await page.fill('input[name="password"]', testUsers.fisio.password);
     await page.click('button[type="submit"]');
     // Wait for navigation to complete
     await page.waitForLoadState('domcontentloaded', { timeout: 10000 });

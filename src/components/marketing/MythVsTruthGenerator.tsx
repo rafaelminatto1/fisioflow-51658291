@@ -13,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import {
-
   Sparkles,
   Lightbulb,
   XCircle,
@@ -22,9 +21,11 @@ import {
   Plus,
   Trash2,
   Copy,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { generateMythVsTruth } from '@/services/ai/marketingAITemplateService';
 
 const MYTH_TEMPLATES = [
   {
@@ -84,6 +85,42 @@ export function MythVsTruthGenerator() {
     showHashtags: true,
   });
   const [previewMode, setPreviewMode] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
+  const handleAIGenerate = async () => {
+    if (!currentMyth.topic) {
+      toast.error('Informe um tópico primeiro para gerar com IA');
+      return;
+    }
+
+    setIsGeneratingAI(true);
+    try {
+      const result = await generateMythVsTruth({
+        topic: currentMyth.topic,
+        tone: 'educational'
+      });
+
+      if (result.success) {
+        setCurrentMyth({
+          ...currentMyth,
+          myth: result.myth || '',
+          truth: result.truth || '',
+          explanation: result.explanation || '',
+        });
+        
+        toast.success('Conteúdo gerado com IA!');
+        if (result.suggestions && result.suggestions.length > 0) {
+          toast.info(`Sugestão: ${result.suggestions[0]}`);
+        }
+      } else {
+        throw new Error(result.error || "Erro na geração");
+      }
+    } catch (error) {
+      toast.error('Não foi possível gerar com IA no momento');
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
 
   const addMyth = (template: typeof MYTH_TEMPLATES[0]) => {
     const newMyth: MythContent = {
@@ -247,7 +284,23 @@ ${myth.explanation}
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Tópico</Label>
+            <div className="flex items-center justify-between">
+              <Label>Tópico</Label>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleAIGenerate} 
+                disabled={isGeneratingAI}
+                className="h-8 text-purple-600 hover:text-purple-700 hover:bg-purple-50 gap-1.5"
+              >
+                {isGeneratingAI ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3 w-3" />
+                )}
+                Gerar com IA
+              </Button>
+            </div>
             <Input
               value={currentMyth.topic}
               onChange={e => setCurrentMyth({ ...currentMyth, topic: e.target.value })}

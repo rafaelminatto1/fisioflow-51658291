@@ -183,6 +183,7 @@ export function GlobalSearch() {
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput
           placeholder="Buscar eventos, participantes, prestadores..."
+          data-testid="global-search-input"
           value={searchQuery}
           onValueChange={setSearchQuery}
         />

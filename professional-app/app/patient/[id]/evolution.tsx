@@ -2,8 +2,19 @@ import { useState, useEffect } from 'react';
 import {
   Alert,
   Dimensions,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { launchImageLibraryAsync, launchCameraAsync, MediaTypeOptions } from 'expo-image-picker';
+import Slider from '@react-native-community/slider';
 import { useColors } from '@/hooks/useColorScheme';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useEvolutions, useEvolution } from '@/hooks';
@@ -20,17 +31,100 @@ interface Photo {
 // ... (SOAP_SECTIONS, ProgressRing, SOAPInputField, etc. - all the UI components from before)
 // ... (I will omit them for brevity but they are included in the final file)
 
+type SOAPKey = 'subjective' | 'objective' | 'assessment' | 'plan';
+
 // Enhanced SOAP Input Field Component
-const SOAPInputField = ({ section, value, onChangeText, isFocused, onFocus, onBlur, colors }) => {
-    // ... same implementation as before
+const SOAPInputField = ({
+  section,
+  value,
+  onChangeText,
+  isFocused,
+  onFocus,
+  onBlur,
+  colors,
+}: {
+  section: string;
+  value: string;
+  onChangeText: (text: string) => void;
+  isFocused: boolean;
+  onFocus: () => void;
+  onBlur: () => void;
+  colors: any;
+}) => {
+  return (
+    <View style={[styles.soapField, isFocused && { borderColor: colors.primary }]}>
+      <Text style={[styles.soapLabel, { color: colors.textSecondary }]}>{section}</Text>
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        multiline
+        numberOfLines={4}
+        style={[styles.soapInput, { color: colors.text }]}
+        placeholderTextColor={colors.textMuted}
+      />
+    </View>
+  );
 };
+
 // Pain Level Slider Component
-const PainLevelSlider = ({ painLevel, onValueChange, colors }) => {
-    // ... same implementation as before
+const PainLevelSlider = ({ painLevel, onValueChange, colors }: { painLevel: number; onValueChange: (val: number) => void; colors: any }) => {
+  return (
+    <View style={styles.painLevelContainer}>
+      <Text style={[styles.painLevelLabel, { color: colors.text }]}>Nível de Dor</Text>
+      <Slider
+        style={styles.painLevelSlider}
+        minimumValue={0}
+        maximumValue={10}
+        step={1}
+        value={painLevel}
+        onValueChange={onValueChange}
+        minimumTrackTintColor={painLevel <= 3 ? '#10B981' : painLevel <= 6 ? '#F59E0B' : '#EF4444'}
+        maximumTrackTintColor={colors.border}
+      />
+      <Text style={[styles.painLevelValue, { color: colors.primary }]}>{painLevel}/10</Text>
+    </View>
+  );
 };
+
 // Photo Grid Component
-const PhotoGrid = ({ photos, onAddPhoto, onTakePhoto, onRemovePhoto, colors }) => {
-    // ... same implementation as before
+const PhotoGrid = ({
+  photos,
+  onAddPhoto,
+  onTakePhoto,
+  onRemovePhoto,
+  colors,
+}: {
+  photos: Photo[];
+  onAddPhoto: () => void;
+  onTakePhoto: () => void;
+  onRemovePhoto: (id: string) => void;
+  colors: any;
+}) => {
+  return (
+    <View style={styles.photoGridContainer}>
+      <View style={styles.photoGrid}>
+        {photos.map((photo) => (
+          <View key={photo.id} style={styles.photoWrapper}>
+            <Image source={{ uri: photo.uri }} style={styles.photo} />
+            <TouchableOpacity
+              style={[styles.photoRemoveButton, { backgroundColor: colors.surface }]}
+              onPress={() => onRemovePhoto(photo.id)}
+            >
+              <Ionicons name="close" size={16} color={colors.error} />
+            </TouchableOpacity>
+          </View>
+        ))}
+        <TouchableOpacity style={[styles.photoAddButton, { borderColor: colors.border }]} onPress={onAddPhoto}>
+          <Ionicons name="image" size={24} color={colors.textMuted} />
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.photoAddButton, { borderColor: colors.border }]} onPress={onTakePhoto}>
+          <Ionicons name="camera" size={24} color={colors.textMuted} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 };
 
 
@@ -168,22 +262,34 @@ export default function EvolutionScreen() {
       ]
     );
   };
-  
+
   const handleAddPhoto = async () => {
-    // ... (same implementation as before, but add isNew: true)
-    if (!result.canceled && result.assets) {
-        const newPhotos = result.assets.map((asset, index) => ({
+    try {
+      const result = await launchImageLibraryAsync({
+        mediaTypes: MediaTypeOptions.Images,
+        quality: 0.8,
+        allowsMultipleSelection: true,
+      });
+      if (!result.canceled && result.assets) {
+        const newPhotos = result.assets.map((asset: any, index: number) => ({
           uri: asset.uri,
           id: `photo-${Date.now()}-${index}`,
           isNew: true,
         }));
         setPhotos([...photos, ...newPhotos]);
       }
+    } catch (err) {
+      Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
+    }
   };
 
   const handleTakePhoto = async () => {
-    // ... (same implementation as before, but add isNew: true)
-    if (!result.canceled && result.assets[0]) {
+    try {
+      const result = await launchCameraAsync({
+        mediaTypes: MediaTypeOptions.Images,
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets && result.assets[0]) {
         const newPhoto = {
           uri: result.assets[0].uri,
           id: `photo-${Date.now()}`,
@@ -191,6 +297,9 @@ export default function EvolutionScreen() {
         };
         setPhotos([...photos, newPhoto]);
       }
+    } catch (err) {
+      Alert.alert('Erro', 'Não foi possível tirar a foto.');
+    }
   };
   
   const handleRemovePhoto = (id: string) => {
@@ -201,9 +310,208 @@ export default function EvolutionScreen() {
   // ... (rest of the component, including JSX)
   // ... The save button loading state should also check for isUploading
   const isSaving = isCreating || isUpdating || isUploading;
-  
-  // ... In the save button:
-  // disabled={isSaving || !canSave}
-  // {isSaving ? <ActivityIndicator ... /> : ... }
+
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <View style={[styles.header, { borderBottomColor: colors.border }]}>
+        <TouchableOpacity onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
+        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
+          {isEditing ? 'Editar Evolução' : 'Nova Evolução'}
+        </Text>
+        <View style={styles.headerActions}>
+          {isEditing && (
+            <TouchableOpacity onPress={handleDelete}>
+              <Ionicons name="trash-outline" size={24} color={colors.error} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+
+      <View style={styles.form}>
+        <PainLevelSlider painLevel={painLevel} onValueChange={setPainLevel} colors={colors} />
+
+        <SOAPInputField
+          section="Subjetivo"
+          value={subjective}
+          onChangeText={setSubjective}
+          isFocused={focusedField === 'subjective'}
+          onFocus={() => setFocusedField('subjective')}
+          onBlur={() => setFocusedField(null)}
+          colors={colors}
+        />
+
+        <SOAPInputField
+          section="Objetivo"
+          value={objective}
+          onChangeText={setObjective}
+          isFocused={focusedField === 'objective'}
+          onFocus={() => setFocusedField('objective')}
+          onBlur={() => setFocusedField(null)}
+          colors={colors}
+        />
+
+        <SOAPInputField
+          section="Avaliação"
+          value={assessment}
+          onChangeText={setAssessment}
+          isFocused={focusedField === 'assessment'}
+          onFocus={() => setFocusedField('assessment')}
+          onBlur={() => setFocusedField(null)}
+          colors={colors}
+        />
+
+        <SOAPInputField
+          section="Plano"
+          value={plan}
+          onChangeText={setPlan}
+          isFocused={focusedField === 'plan'}
+          onFocus={() => setFocusedField('plan')}
+          onBlur={() => setFocusedField(null)}
+          colors={colors}
+        />
+
+        <Text style={[styles.sectionTitle, { color: colors.text }]}>Anexos</Text>
+        <PhotoGrid
+          photos={photos}
+          onAddPhoto={handleAddPhoto}
+          onTakePhoto={handleTakePhoto}
+          onRemovePhoto={handleRemovePhoto}
+          colors={colors}
+        />
+      </View>
+
+      <View style={styles.footer}>
+        <TouchableOpacity
+          style={[styles.saveButton, { backgroundColor: colors.primary, opacity: isSaving ? 0.6 : 1 }]}
+          onPress={handleSave}
+          disabled={isSaving}
+        >
+          {isSaving ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.saveButtonText}>Salvar Evolução</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
 }
-// ... (styles)
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    paddingBottom: 20,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  form: {
+    padding: 16,
+    gap: 16,
+  },
+  soapField: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+  },
+  soapLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  soapInput: {
+    fontSize: 16,
+    minHeight: 80,
+  },
+  painLevelContainer: {
+    padding: 16,
+    borderWidth: 1,
+    borderRadius: 12,
+  },
+  painLevelLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  painLevelSlider: {
+    width: '100%',
+    height: 40,
+  },
+  painLevelValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  photoGridContainer: {
+    padding: 16,
+  },
+  photoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  photoWrapper: {
+    width: 80,
+    height: 80,
+    position: 'relative',
+  },
+  photo: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 8,
+  },
+  photoRemoveButton: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoAddButton: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  footer: {
+    padding: 16,
+  },
+  saveButton: {
+    borderRadius: 12,
+    paddingVertical: 16,
+    alignItems: 'center',
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});

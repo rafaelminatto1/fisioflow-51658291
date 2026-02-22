@@ -71,8 +71,8 @@ test('debug iniciar atendimento - captura logs completos', async ({ page }) => {
     const password = process.env.E2E_LOGIN_PASSWORD || process.env.TEST_PASSWORD;
     
     console.log('2. Fazendo login...');
-    await page.fill('input[type="email"]', email);
-    await page.fill('input[type="password"]', password);
+    await page.fill('input[name="email"]', email);
+    await page.fill('input[name="password"]', password);
     await page.click('button[type="submit"]');
 
     // Esperar login completar
