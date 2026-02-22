@@ -1,44 +1,14 @@
 /**
- * AI Flows Index
- * 
- * Central export point for all Genkit AI flows
+ * Flows Export Index
  */
 
-export {
-    generateExercisePlan,
-} from './exerciseGenerator';
+export * from './exerciseSuggestion';
+export * from './clinicalAnalysis';
+export * from './soapGeneration';
+export * from './patientAnalysis';
+export * from './patientSummary';
+export * from './exerciseGenerator';
+export * from './multimodalAnalysis';
 
-export {
-    exerciseSuggestionFlow,
-    exerciseProgressionFlow,
-    type ExerciseSuggestionInput,
-    type ExerciseRecommendation,
-    type ExerciseProgramOutput,
-} from './exerciseSuggestion';
-
-export {
-    redFlagCheckFlow,
-    clinicalAnalysisFlow,
-    comprehensiveClinicalFlow,
-    type ClinicalAnalysisInput,
-    type ClinicalAnalysisOutput,
-} from './clinicalAnalysis';
-
-export {
-    soapGenerationFlow,
-    soapEnhancementFlow,
-    type SoapGenerationInput,
-    type SoapNoteOutput,
-} from './soapGeneration';
-
-export {
-    analyzePatientProgressFlow,
-} from './patientAnalysis';
-
-export {
-    patientExecutiveSummaryFlow,
-} from './patientSummary';
-
-export {
-    multimodalAnalysisFlow,
-} from './multimodalAnalysis';
+// Scheduling Flows (Fase 3: AI Scheduling Features)
+export * from './scheduling';

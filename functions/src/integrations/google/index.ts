@@ -1,4 +1,5 @@
 // Variáveis de Ambiente (Configurar no Google Cloud / .env)
+import { getAdminDb } from '../../init';
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as logger from 'firebase-functions/logger';
@@ -7,9 +8,9 @@ import { defineString } from 'firebase-functions/params';
 import { DocsService } from './docs.service';
 import { DriveService } from './drive.service';
 
-const GOOGLE_CLIENT_ID = defineString('GOOGLE_CLIENT_ID');
-const GOOGLE_CLIENT_SECRET = defineString('GOOGLE_CLIENT_SECRET');
-const GOOGLE_MAPS_KEY = defineString('GOOGLE_MAPS_API_KEY');
+const GOOGLE_CLIENT_ID = defineString('GOOGLE_CLIENT_ID', { default: '' });
+const GOOGLE_CLIENT_SECRET = defineString('GOOGLE_CLIENT_SECRET', { default: '' });
+const GOOGLE_MAPS_KEY = defineString('GOOGLE_MAPS_API_KEY', { default: '' });
 
 /**
  * Helper to get OAuth2 client lazily
@@ -86,7 +87,7 @@ export const googleAuthCallback = onCall({ region: 'southamerica-east1', cors: t
   try {
     const oauth2Client = getOAuth2Client();
     const { tokens } = await oauth2Client.getToken(code);
-    
+
     // AQUI: Salvar tokens no banco Postgres (tabela user_integrations)
     // Simulação:
     logger.info('Tokens received', { hasRefreshToken: !!tokens.refresh_token });
@@ -111,8 +112,8 @@ export const createMeetLink = onCall({ region: 'southamerica-east1', cors: true 
       requestBody: {
         summary: 'Consulta FisioFlow',
         description: 'Atendimento via Telemedicina',
-        start: { dateTime: new Date().toISOString() }, 
-        end: { dateTime: new Date(Date.now() + 3600000).toISOString() }, 
+        start: { dateTime: new Date().toISOString() },
+        end: { dateTime: new Date(Date.now() + 3600000).toISOString() },
         conferenceData: {
           createRequest: {
             requestId: `meet-${Date.now()}`,
@@ -138,7 +139,7 @@ export const createMeetLink = onCall({ region: 'southamerica-east1', cors: true 
  */
 export const syncPatientCalendar = onCall({ region: 'southamerica-east1', cors: true }, async (request) => {
   const { patientEmail, date, startTime, duration = 60 } = request.data;
-  
+
   if (!patientEmail || !date || !startTime) {
     throw new HttpsError('invalid-argument', 'Email, data e horário são obrigatórios');
   }
@@ -176,7 +177,7 @@ export const syncPatientCalendar = onCall({ region: 'southamerica-east1', cors: 
       requestBody: event,
       sendUpdates: 'all',
     });
-    
+
     return { success: true };
   } catch (error) {
     logger.error('Calendar sync error', error);
@@ -188,12 +189,78 @@ export const syncPatientCalendar = onCall({ region: 'southamerica-east1', cors: 
  * 6. Buscar Reviews (Google Business)
  */
 export const getBusinessReviews = onCall({ region: 'southamerica-east1', cors: true }, async (request) => {
-  return {
-    reviews: [
-      { author: 'Ana Silva', rating: 5, comment: 'Ótimo atendimento, clínica moderna!', date: '2024-02-01' },
-      { author: 'Carlos Souza', rating: 4, comment: 'Gostei muito da tecnologia.', date: '2024-01-28' },
-    ]
-  };
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'O usuário deve estar autenticado.');
+  }
+
+  const { uid } = request.auth;
+  const db = getAdminDb();
+
+  try {
+    // 1. Buscar o perfil do usuário para obter o organizationId
+    const profileQuery = await db.collection('profiles')
+      .where('user_id', '==', uid)
+      .limit(1)
+      .get();
+
+    if (profileQuery.empty) {
+      throw new HttpsError('not-found', 'Perfil de usuário não encontrado.');
+    }
+
+    const organizationId = profileQuery.docs[0].data().organization_id;
+
+    if (!organizationId) {
+      throw new HttpsError('failed-precondition', 'Usuário não está vinculado a uma organização.');
+    }
+
+    // 2. Buscar a configuração de marketing para obter o google_place_id
+    const configSnap = await db.collection('marketing_configs')
+      .doc(`${organizationId}_reviews`)
+      .get();
+
+    if (!configSnap.exists) {
+      return { reviews: [] };
+    }
+
+    const config = configSnap.data();
+    const placeId = config?.google_place_id;
+
+    if (!placeId) {
+      logger.info(`Nenhum Google Place ID configurado para a organização ${organizationId}`);
+      return { reviews: [] };
+    }
+
+    // 3. Chamar a API do Google Places (Details)
+    // Fields: reviews, rating, user_ratings_total
+    const url = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=reviews,rating,user_ratings_total&key=${GOOGLE_MAPS_KEY.value()}&language=pt-BR`;
+
+    const response = await fetch(url);
+    const data = await response.json() as any;
+
+    if (data.status !== 'OK') {
+      logger.error('Erro na API do Google Places', data);
+      throw new HttpsError('internal', `Erro do Google: ${data.status}`);
+    }
+
+    const reviews = (data.result?.reviews || []).map((r: any) => ({
+      author: r.author_name,
+      rating: r.rating,
+      comment: r.text,
+      date: new Date(r.time * 1000).toISOString().split('T')[0],
+      profile_photo: r.profile_photo_url,
+      relative_time: r.relative_time_description
+    }));
+
+    return {
+      reviews,
+      rating: data.result?.rating,
+      total_ratings: data.result?.user_ratings_total
+    };
+  } catch (error) {
+    if (error instanceof HttpsError) throw error;
+    logger.error('Error fetching Google Business reviews', error);
+    throw new HttpsError('internal', 'Falha ao buscar avaliações do Google.');
+  }
 });
 
 /**
@@ -205,7 +272,7 @@ export const generateGoogleReport = onCall({ region: 'southamerica-east1', cors:
 
   try {
     const { docs, drive } = await getGoogleServices(request);
-    
+
     const newDocName = `Relatório - ${patientName} - ${new Date().toLocaleDateString('pt-BR')}`;
     const copy = await docs.copyTemplate(templateId, newDocName);
     const documentId = copy.id;
@@ -218,7 +285,7 @@ export const generateGoogleReport = onCall({ region: 'southamerica-east1', cors:
       success: true,
       fileId: savedFile.id,
       webViewLink: savedFile.webViewLink,
-      documentId: documentId 
+      documentId: documentId
     };
   } catch (error) {
     logger.error('Report generation error', error);

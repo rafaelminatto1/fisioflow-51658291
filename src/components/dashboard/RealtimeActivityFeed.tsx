@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, memo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -217,45 +218,73 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
   }, []);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Bell className="h-5 w-5 text-primary" />
-          Atividades em Tempo Real
-        </CardTitle>
-        <CardDescription>Acompanhe as últimas atualizações do sistema</CardDescription>
+    <Card className="border-none shadow-premium-lg bg-white dark:bg-slate-900 overflow-hidden">
+      <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800/50">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <CardTitle className="flex items-center gap-2 text-lg font-black tracking-tight">
+              <div className="p-1.5 bg-primary/10 rounded-lg">
+                <Bell className="h-4 w-4 text-primary" />
+              </div>
+              Atividades
+            </CardTitle>
+            <CardDescription className="text-xs font-medium uppercase tracking-wider text-slate-400">Tempo Real</CardDescription>
+          </div>
+          <div className="flex gap-1">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/40" />
+          </div>
+        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         {isLoading ? (
-          <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+          <div className="flex flex-col items-center justify-center py-12 space-y-4">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Sincronizando...</p>
+          </div>
         ) : activities.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            Nenhuma atividade recente
+          <div className="text-center py-12 px-6">
+            <div className="w-12 h-12 bg-slate-50 dark:bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-100 dark:border-slate-700">
+              <Bell className="w-6 h-6 text-slate-300" />
+            </div>
+            <p className="text-sm font-bold text-slate-500 dark:text-slate-400">Nenhuma atividade recente</p>
+            <p className="text-xs text-slate-400 mt-1">O sistema está pronto para novos dados.</p>
           </div>
         ) : (
-          <ScrollArea className="h-[400px] pr-4">
-            <div className="space-y-3">
-              {activities.map(activity => {
+          <ScrollArea className="h-[480px]">
+            <div className="divide-y divide-slate-50 dark:divide-slate-800/50">
+              {activities.map((activity, idx) => {
                 const Icon = activity.icon;
+                const isNew = idx === 0;
                 return (
                   <div
                     key={activity.id}
-                    className="flex gap-3 p-3 border rounded-lg hover:bg-accent/50 transition-colors"
+                    className={`flex gap-4 p-4 transition-all duration-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 relative group ${isNew ? 'bg-primary/[0.02]' : ''}`}
                   >
-                    <div className={`mt-1 ${getIconColor(activity.variant)}`}>
+                    {isNew && (
+                      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r-full" />
+                    )}
+                    
+                    <div className={`mt-0.5 w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-110 ${
+                      activity.variant === 'success' ? 'bg-emerald-500/10 text-emerald-600' :
+                      activity.variant === 'warning' ? 'bg-amber-500/10 text-amber-600' :
+                      activity.variant === 'destructive' ? 'bg-red-500/10 text-red-600' :
+                      'bg-primary/10 text-primary'
+                    }`}>
                       <Icon className="h-5 w-5" />
                     </div>
+
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">{activity.title}</p>
-                          <p className="text-sm text-muted-foreground truncate">
+                        <div className="min-w-0">
+                          <p className="font-bold text-sm text-slate-900 dark:text-white leading-none mb-1.5">{activity.title}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium truncate">
                             {activity.description}
                           </p>
                         </div>
-                        <Badge variant="outline" className="text-xs whitespace-nowrap">
+                        <time className="text-[10px] font-black text-slate-400 uppercase whitespace-nowrap bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">
                           {format(activity.timestamp, 'HH:mm', { locale: ptBR })}
-                        </Badge>
+                        </time>
                       </div>
                     </div>
                   </div>
@@ -265,6 +294,11 @@ export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {
           </ScrollArea>
         )}
       </CardContent>
+      <div className="p-4 bg-slate-50/50 dark:bg-slate-800/20 border-t border-slate-100 dark:border-slate-800/50 flex justify-center">
+        <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-primary transition-colors">
+          Ver Log Completo
+        </Button>
+      </div>
     </Card>
   );
 });

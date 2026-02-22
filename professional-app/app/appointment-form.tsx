@@ -346,13 +346,28 @@ export default function AppointmentFormScreen() {
           style={styles.saveButton}
         />
 
+        {/* Start Appointment Button - Only show when editing and not completed */}
+        {isEditing && status !== 'completed' && status !== 'cancelled' && (
+          <Button
+            title="Iniciar Atendimento"
+            onPress={() => {
+              medium();
+              // Navigate to evolution form page
+              router.push(`/evolution-form?patientId=${selectedPatient}&patientName=${selectedPatientData?.name || 'Paciente'}&appointmentId=${appointmentId}` as any);
+            }}
+            variant="secondary"
+            style={[styles.startButton, { backgroundColor: colors.success }] as any}
+            leftIcon="play-circle-outline"
+          />
+        )}
+
         {isEditing && (
           <Button
             title="Excluir Agendamento"
             onPress={handleDelete}
             variant="outline"
             loading={isDeleting}
-            style={[styles.deleteButton, { borderColor: colors.error }]}
+            style={[styles.deleteButton, { borderColor: colors.error }] as any}
             textStyle={{ color: colors.error }}
           />
         )}
@@ -561,6 +576,9 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     marginTop: 8,
+  },
+  startButton: {
+    marginTop: 12,
   },
   deleteButton: {
     marginTop: 12,

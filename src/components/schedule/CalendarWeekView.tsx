@@ -246,8 +246,41 @@ export const CalendarWeekView = memo(({
         if (dayIndex === -1) return null;
 
         const time = normalizeTime(apt.time);
-        const startRowIndex = timeSlots.findIndex(t => t === time);
-        if (startRowIndex === -1) return null;
+        const [hours, minutes] = time.split(':').map(Number);
+        const aptMinutesTotal = hours * 60 + minutes;
+
+        let startRowIndex = -1;
+        let offsetMinutes = 0;
+
+        for (let i = 0; i < timeSlots.length; i++) {
+            const [slotHour, slotMin] = timeSlots[i].split(':').map(Number);
+            const slotMinutesTotal = slotHour * 60 + slotMin;
+
+            const nextSlot = timeSlots[i + 1];
+            let slotDuration = 30;
+            if (nextSlot) {
+                const [nextHour, nextMin] = nextSlot.split(':').map(Number);
+                slotDuration = (nextHour * 60 + nextMin) - slotMinutesTotal;
+            }
+
+            if (aptMinutesTotal >= slotMinutesTotal && aptMinutesTotal < slotMinutesTotal + slotDuration) {
+                startRowIndex = i;
+                offsetMinutes = aptMinutesTotal - slotMinutesTotal;
+                break;
+            }
+        }
+
+        if (startRowIndex === -1 && timeSlots.length > 0) {
+            const lastSlot = timeSlots[timeSlots.length - 1];
+            const [lastHour, lastMin] = lastSlot.split(':').map(Number);
+            const lastMinutesTotal = lastHour * 60 + lastMin;
+            if (aptMinutesTotal >= lastMinutesTotal) {
+                startRowIndex = timeSlots.length - 1;
+                offsetMinutes = aptMinutesTotal - lastMinutesTotal;
+            } else {
+                return null;
+            }
+        }
 
         // Duration-based height calculation
         const duration = apt.duration || 60;
@@ -260,6 +293,7 @@ export const CalendarWeekView = memo(({
 
         // Calcular largura e posição baseado na quantidade de cards sobrepostos
         const { width, left } = calculateOverlapStyle(count, index);
+        const offsetPx = (offsetMinutes / 30) * slotHeight;
 
         return {
             gridColumn: `${dayIndex + 2} / span 1`,
@@ -267,10 +301,10 @@ export const CalendarWeekView = memo(({
             height: `${heightInPixels}px`,
             width,
             left,
-            top: '0px',
+            marginTop: `${offsetPx}px`,
             zIndex: 10 + index
         };
-    }, [weekDays, timeSlots, appointmentsByDayIndex, cardSize, heightScale]);
+    }, [weekDays, timeSlots, appointmentsByDayIndex, cardSize, heightScale, slotHeight]);
 
     const isDraggable = !!onAppointmentReschedule;
     const isDraggingThis = useCallback((aptId: string) =>

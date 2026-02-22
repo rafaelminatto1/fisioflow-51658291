@@ -282,6 +282,7 @@ export interface Exercise {
   difficulty?: string;
   video_url?: string;
   image_url?: string;
+  thumbnail_url?: string;
   description?: string;
   instructions?: string;
   sets?: number;

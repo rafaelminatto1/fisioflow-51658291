@@ -10,7 +10,6 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import {
-
   Copy,
   Download,
   Sparkles,
@@ -23,9 +22,11 @@ import {
   Hash,
   AtSign,
   Smile,
-  RefreshCw
+  RefreshCw,
+  Loader2
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { generateSocialCaption } from '@/services/ai/marketingAITemplateService';
 
 const PLATFORMS = [
   {
@@ -145,6 +146,8 @@ export default function ContentGeneratorPage() {
   const [variables, setVariables] = useState<Record<string, string>>({});
   const [includeEmojis, setIncludeEmojis] = useState(true);
   const [customHashtags, setCustomHashtags] = useState('');
+  const [additionalContext, setAdditionalContext] = useState('');
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   const platform = PLATFORMS.find((p) => p.id === selectedPlatform) || PLATFORMS[0];
   const PlatformIcon = platform.icon;
@@ -153,6 +156,47 @@ export default function ContentGeneratorPage() {
 
   const characterCount = generatedContent.length;
   const isOverLimit = characterCount > platform.maxLength;
+
+  const handleAIGenerate = async () => {
+    setIsGeneratingAI(true);
+    try {
+      const result = await generateSocialCaption(
+        contentType === 'transformation' ? 'technical' : contentType as any,
+        {
+          ...variables,
+          platform: platform.name,
+          contentType: contentType,
+          additionalContext: additionalContext,
+        }
+      );
+
+      if (result.success && result.caption) {
+        let content = result.caption;
+        if (result.hashtags && result.hashtags.length > 0) {
+          content += `\n\n${result.hashtags.join(' ')}`;
+        }
+        setGeneratedContent(content);
+        
+        if (result.suggestions && result.suggestions.length > 0) {
+          toast({
+            title: "Conteúdo Gerado com IA",
+            description: result.suggestions[0],
+          });
+        }
+      } else {
+        throw new Error(result.error || "Falha ao gerar conteúdo");
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro na IA",
+        description: "Não foi possível gerar o conteúdo com IA. Usando template padrão.",
+      });
+      generateContent();
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
 
   const generateContent = () => {
     let content = currentTemplate;
@@ -366,10 +410,34 @@ export default function ContentGeneratorPage() {
             />
           </div>
 
-          <Button onClick={generateContent} className="w-full" size="lg">
-            <Sparkles className="h-5 w-5 mr-2" />
-            Gerar Conteúdo
-          </Button>
+          <div className="space-y-2">
+            <Label>Contexto Adicional para IA (opcional)</Label>
+            <Textarea
+              placeholder="Ex: Foco em idosos, tom mais animado, cite a promoção de verão..."
+              value={additionalContext}
+              onChange={(e) => setAdditionalContext(e.target.value)}
+              rows={2}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Button onClick={generateContent} className="w-full" variant="outline">
+              <RefreshCw className="h-5 w-5 mr-2" />
+              Usar Template
+            </Button>
+            <Button 
+              onClick={handleAIGenerate} 
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+              disabled={isGeneratingAI}
+            >
+              {isGeneratingAI ? (
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+              ) : (
+                <Sparkles className="h-5 w-5 mr-2" />
+              )}
+              Gerar com IA
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

@@ -19,9 +19,10 @@
       "buildNumber": "1",
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
-        "NSCameraUsageDescription": "Permitir acesso a camera para fotos de pacientes e exercicios",
-        "NSPhotoLibraryUsageDescription": "Permitir acesso a galeria para selecionar fotos",
-        "NSMicrophoneUsageDescription": "Permitir acesso ao microfone para gravar videos de exercicios"
+        "NSCameraUsageDescription": "O FisioFlow precisa acessar sua câmera para capturar fotos de progresso dos pacientes e demonstrações de exercícios. Essas fotos são criptografadas e armazenadas com segurança.",
+        "NSPhotoLibraryUsageDescription": "O FisioFlow precisa acessar sua galeria de fotos para selecionar imagens existentes de pacientes e exercícios. Suas fotos são protegidas com criptografia.",
+        "NSLocationWhenInUseUsageDescription": "O FisioFlow usa sua localização para verificar check-in na clínica e confirmar presença em consultas. Sua localização nunca é compartilhada com terceiros.",
+        "NSFaceIDUsageDescription": "O FisioFlow usa Face ID para proteger o acesso aos dados sensíveis de saúde dos seus pacientes com autenticação biométrica segura."
       },
       "config": {
         "usesNonExemptEncryption": false
@@ -48,7 +49,8 @@
       "expo-router",
       "expo-secure-store",
       "expo-notifications",
-      "expo-font"
+      "expo-font",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true

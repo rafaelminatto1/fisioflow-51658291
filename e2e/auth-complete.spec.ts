@@ -6,8 +6,8 @@ test.describe('Autenticação Completa - Login e Perfil', () => {
     await page.goto('/auth');
 
     // Fazer login
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.fill('input[name="email"]', testUsers.admin.email);
+    await page.fill('input[name="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
 
     // Aguardar redirecionamento (incluindo raiz /)
@@ -26,8 +26,8 @@ test.describe('Autenticação Completa - Login e Perfil', () => {
   test('deve carregar profile após login', async ({ page }) => {
     await page.goto('/auth');
 
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.fill('input[name="email"]', testUsers.admin.email);
+    await page.fill('input[name="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
 
     await page.waitForURL(/\/(eventos|dashboard|schedule|smart-dashboard|$)/, { timeout: 15000 });
@@ -48,8 +48,8 @@ test.describe('Autenticação Completa - Login e Perfil', () => {
   test('deve mostrar erro com credenciais inválidas', async ({ page }) => {
     await page.goto('/auth');
 
-    await page.fill('input[type="email"]', 'invalido@example.com');
-    await page.fill('input[type="password"]', 'senhaErrada123');
+    await page.fill('input[name="email"]', 'invalido@example.com');
+    await page.fill('input[name="password"]', 'senhaErrada123');
     await page.click('button[type="submit"]');
 
     // Aguardar mensagem de erro (ampliando regex)
@@ -64,8 +64,8 @@ test.describe('Autenticação Completa - Login e Perfil', () => {
   test('deve fazer logout corretamente', async ({ page }) => {
     // Login primeiro
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.fill('input[name="email"]', testUsers.admin.email);
+    await page.fill('input[name="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
     await page.waitForURL(/\/(eventos|dashboard|schedule|smart-dashboard|$)/, { timeout: 15000 });
 
@@ -102,8 +102,8 @@ test.describe('Autenticação Completa - Login e Perfil', () => {
 
   test('deve manter sessão após recarregar página', async ({ page }) => {
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.fill('input[name="email"]', testUsers.admin.email);
+    await page.fill('input[name="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
     await page.waitForURL(/\/(eventos|dashboard|schedule|smart-dashboard|$)/, { timeout: 15000 });
 

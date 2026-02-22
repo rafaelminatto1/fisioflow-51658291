@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/auth';
 import type { Patient } from '@/types';
 import { getPatients, getPatientById, createPatient, updatePatient, deletePatient, type ApiPatient } from '@/lib/api';
+import { auditLogger } from '@/lib/services/auditLogger';
 
 export interface UsePatientsOptions {
   status?: 'active' | 'inactive' | 'Em_Tratamento';
@@ -74,7 +75,12 @@ export function usePatients(options?: UsePatientsOptions) {
         observations: data.notes,
       });
 
-      return mapApiPatient(apiPatient);
+      const mappedPatient = mapApiPatient(apiPatient);
+      
+      // Log audit event
+      await auditLogger.logPHIModification(user.id, 'create', 'patient', mappedPatient.id);
+
+      return mappedPatient;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
@@ -93,6 +99,12 @@ export function usePatients(options?: UsePatientsOptions) {
       if (data.notes !== undefined) updateData.observations = data.notes;
 
       const apiPatient = await updatePatient(id, updateData);
+      
+      // Log audit event
+      if (user?.id) {
+        await auditLogger.logPHIModification(user.id, 'update', 'patient', id);
+      }
+
       return mapApiPatient(apiPatient);
     },
     onSuccess: () => {
@@ -101,7 +113,16 @@ export function usePatients(options?: UsePatientsOptions) {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => deletePatient(id),
+    mutationFn: async (id: string) => {
+      const result = await deletePatient(id);
+      
+      // Log audit event
+      if (user?.id) {
+        await auditLogger.logPHIModification(user.id, 'delete', 'patient', id);
+      }
+      
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
     },

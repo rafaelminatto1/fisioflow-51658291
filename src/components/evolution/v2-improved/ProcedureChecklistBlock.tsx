@@ -185,92 +185,15 @@ export const ProcedureChecklistBlock: React.FC<ProcedureChecklistBlockProps> = (
   return (
     <>
       <div className={cn(
-        'rounded-xl border border-border/50 bg-card overflow-hidden transition-all duration-300',
-        'shadow-sm hover:shadow-md',
+        'w-full transition-all duration-300',
         className
       )}>
-        {/* Header with gradient accent */}
-        <div className="relative">
-          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500/60 via-emerald-500 to-emerald-500/60" />
-          <div className="flex items-center justify-between p-3.5 border-b border-border/40 bg-gradient-to-r from-emerald-500/5 to-transparent">
-            <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20">
-                <Zap className="h-4 w-4 text-emerald-500" />
-              </div>
-              <div className="flex flex-col">
-                <h3 className="text-sm font-semibold text-foreground">Procedimentos</h3>
-                {procedures.length > 0 && (
-                  <span className="text-[10px] text-muted-foreground">
-                    {completedCount} de {procedures.length} concluídos
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <Popover open={showAutocomplete} onOpenChange={setShowAutocomplete}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={disabled}
-                  className="gap-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/10 rounded-lg"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline text-xs font-medium">Adicionar</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[380px] p-0" align="end">
-                <Command shouldFilter={true}>
-                  <CommandInput placeholder="Buscar procedimento..." />
-                  <CommandList className="max-h-[320px]">
-                    <CommandEmpty>
-                      <div className="py-6 px-3 flex flex-col items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                          <Sparkles className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                        <p className="text-sm text-muted-foreground text-center">
-                          Nenhum procedimento encontrado
-                        </p>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => handleOpenCreateModal('')}
-                          className="w-full mt-1 gap-2"
-                        >
-                          <Sparkles className="w-4 h-4" />
-                          Criar novo procedimento
-                        </Button>
-                      </div>
-                    </CommandEmpty>
-                    {Object.keys(groupedByCategory).map((categoryLabel) => (
-                      <CommandGroup key={categoryLabel} heading={categoryLabel}>
-                        {groupedByCategory[categoryLabel]
-                          .filter((p) => !existingNames.has(p.name.toLowerCase()))
-                          .map((proc) => (
-                            <CommandItem
-                              key={proc.name}
-                              value={proc.name}
-                              onSelect={() => handleAddProcedure(proc.name, proc.category)}
-                              className="cursor-pointer"
-                            >
-                              <span>{proc.name}</span>
-                            </CommandItem>
-                          ))}
-                      </CommandGroup>
-                    ))}
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-
         {/* Procedure list */}
-        <div className="p-3">
+        <div className="pb-2">
           {procedures.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-muted to-muted/50 mx-auto mb-3 flex items-center justify-center">
-                <Zap className="h-7 w-7 opacity-30" />
+              <div className="w-12 h-12 rounded-lg bg-slate-50 border border-slate-100 mx-auto mb-3 flex items-center justify-center">
+                <Zap className="h-5 w-5 text-slate-300" />
               </div>
               <p className="text-sm font-medium">Nenhum procedimento adicionado</p>
               <p className="text-xs mt-1.5 opacity-70">Use o botão "Adicionar" ou digite abaixo</p>
@@ -302,7 +225,7 @@ export const ProcedureChecklistBlock: React.FC<ProcedureChecklistBlockProps> = (
                 onKeyDown={handleQuickAdd}
                 placeholder="Digite um procedimento e pressione Enter..."
                 disabled={disabled}
-                className="h-9 pl-10 pr-4 text-sm border-dashed rounded-lg focus:ring-1 focus:ring-emerald-500/50"
+                className="h-9 pl-10 pr-4 text-sm border-transparent hover:bg-slate-50 focus:bg-white focus:ring-1 focus:ring-slate-200 focus:shadow-sm rounded-md transition-all duration-200"
               />
             </div>
             {quickAddValue.trim() && (
@@ -433,8 +356,8 @@ const ProcedureRow: React.FC<{
   return (
     <div
       className={cn(
-        'group relative flex flex-col rounded-xl transition-all duration-200',
-        'border border-transparent hover:border-border/50 hover:bg-muted/30',
+        'group relative flex flex-col rounded-lg transition-all duration-200',
+        'border border-transparent hover:bg-slate-50',
         procedure.completed && 'opacity-50',
         isRemoving && 'opacity-0 scale-95'
       )}

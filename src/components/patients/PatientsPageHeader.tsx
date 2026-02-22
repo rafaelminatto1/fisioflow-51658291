@@ -79,7 +79,7 @@ export function PatientsPageHeader({
   conditionFilter,
   onConditionFilterChange,
   uniqueConditions,
-  _activeAdvancedFiltersCount,
+  activeAdvancedFiltersCount,
   totalFilteredLabel,
   onClearAllFilters,
   hasActiveFilters,
@@ -88,234 +88,155 @@ export function PatientsPageHeader({
   children,
 }: PatientsPageHeaderProps) {
   return (
-    <header className="space-y-5 sm:space-y-6" data-testid="patients-page-header">
-      {/* Hero: título + descrição + ações */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <header className="space-y-6" data-testid="patients-page-header">
+      {/* Top Row: Title + Primary Actions */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-premium-sm border border-slate-100 dark:border-slate-800/50">
         <div className="space-y-1">
-          <h1
-            className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
-            id="page-title"
-          >
+          <h1 className="text-2xl font-black tracking-tighter text-slate-900 dark:text-white sm:text-3xl" id="page-title">
             Pacientes
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Gerencie o cadastro e evolução dos seus pacientes
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+            Gerenciamento completo da base de pacientes e prontuários
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            size="sm"
+            size="icon"
             onClick={onToggleAnalytics}
-            className="hidden sm:inline-flex"
+            className={cn("h-10 w-10 rounded-xl border-slate-200 dark:border-slate-800 transition-all", showAnalytics && "bg-primary text-white border-primary shadow-lg shadow-primary/20")}
             aria-pressed={showAnalytics}
-            aria-label={showAnalytics ? 'Ocultar análises de pacientes' : 'Ver análises de pacientes'}
+            title={showAnalytics ? 'Ocultar análises' : 'Ver análises'}
           >
-            <Activity className="mr-2 h-4 w-4" aria-hidden />
-            {showAnalytics ? 'Ocultar análises' : 'Análises'}
+            <Activity className="h-4 w-4" />
           </Button>
           <Button
             variant="outline"
-            size="sm"
+            size="icon"
             onClick={onExport}
-            className="hidden sm:inline-flex"
-            aria-label="Exportar lista de pacientes para CSV"
+            className="h-10 w-10 rounded-xl border-slate-200 dark:border-slate-800"
+            title="Exportar pacientes"
           >
-            <Download className="mr-2 h-4 w-4" aria-hidden />
-            Exportar
+            <Download className="h-4 w-4" />
           </Button>
-          <Button size="sm" onClick={onNewPatient} className="sm:min-w-[140px]" aria-label="Cadastrar novo paciente">
-            <Plus className="mr-2 h-4 w-4" aria-hidden />
-            <span className="hidden sm:inline">Novo Paciente</span>
-            <span className="sm:hidden">Novo</span>
+          <Button
+            size="sm"
+            onClick={onNewPatient}
+            data-testid="add-patient"
+            className="h-10 px-5 gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl shadow-lg shadow-slate-900/10 font-bold text-xs uppercase tracking-wider"
+          >
+            <Plus className="h-4 w-4" />
+            Novo Paciente
           </Button>
         </div>
       </div>
 
-      {/* KPI principal + 3 secundários */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="overflow-hidden border-0 bg-primary/5 shadow-sm transition-shadow duration-200 hover:shadow-md dark:bg-primary/10">
-          <CardContent className="p-4 sm:p-5">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-                <Users className="h-5 w-5" aria-hidden />
-              </div>
-              <div className="min-w-0">
-                <p className="text-2xl font-bold tabular-nums text-foreground sm:text-3xl">
-                  {stats.totalCount}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {stats.totalPages > 1
-                    ? `Página ${stats.currentPage} de ${stats.totalPages}`
-                    : 'Total de pacientes'}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Unified Toolbar: Search + Inline Filters */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1 group">
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" aria-hidden />
+          <input
+            type="search"
+            placeholder="Buscar por nome, condição ou telefone..."
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="h-12 w-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 pl-10 pr-4 text-sm font-medium ring-offset-background transition-all placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/50"
+            aria-label="Buscar pacientes"
+          />
+        </div>
 
-        <PatientStatsCard
-          value={stats.activeCount}
-          subtitle="Ativos (página)"
-          icon={<UserCheck className="h-4 w-4 sm:h-5 sm:w-5" />}
-          color="emerald"
-        />
-        <PatientStatsCard
-          value={stats.newCount}
-          subtitle="Novos (página)"
-          icon={<UserPlus className="h-4 w-4 sm:h-5 sm:w-5" />}
-          color="blue"
-        />
-        <PatientStatsCard
-          value={stats.completedCount}
-          subtitle="Concluídos (página)"
-          icon={<UserMinus className="h-4 w-4 sm:h-5 sm:w-5" />}
-          color="gray"
-        />
+        <div className="flex items-center gap-2">
+          <Select value={statusFilter} onValueChange={onStatusFilterChange}>
+            <SelectTrigger className="h-12 w-[150px] text-xs font-bold rounded-2xl border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-slate-200 dark:border-slate-800 shadow-xl">
+              <SelectItem value="all">Todos os status</SelectItem>
+              <SelectItem value="Inicial">Inicial</SelectItem>
+              <SelectItem value="Em Tratamento">Em Tratamento</SelectItem>
+              <SelectItem value="Recuperação">Recuperação</SelectItem>
+              <SelectItem value="Concluído">Concluído</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select value={conditionFilter} onValueChange={onConditionFilterChange}>
+            <SelectTrigger className="h-12 w-[170px] text-xs font-bold rounded-2xl border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50">
+              <SelectValue placeholder="Condição" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border-slate-200 dark:border-slate-800 shadow-xl">
+              <SelectItem value="all">Todas condições</SelectItem>
+              {uniqueConditions.map((c) => (
+                <SelectItem key={String(c)} value={String(c)}>
+                  {String(c)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      {/* Resumo por classificação - sempre visível e clicável como filtro */}
-      <div>
-        <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-          <AlertTriangle className="h-4 w-4" aria-hidden />
-          Resumo por classificação
-        </h3>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-7">
+      {/* Compact Classification Chips / KPIs */}
+      <div className="flex flex-wrap items-center gap-3 pb-2">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-500 shadow-inner-border">
+          <Users className="h-3.5 w-3.5" />
+          <span>{stats.totalCount} Pacientes</span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
           <StatChip
             label="Ativos"
             value={stats.activeByClassification}
-            icon={<CheckCircle2 className="h-3.5 w-3.5" />}
+            icon={<CheckCircle2 className="h-3 w-3" />}
             variant="success"
             classification="active"
             isSelected={classificationFilter === 'active'}
             onClick={onClassificationFilterChange}
           />
           <StatChip
-            label="Inativos 7d"
-            value={stats.inactive7}
-            icon={<Clock className="h-3.5 w-3.5" />}
-            variant="warning"
-            classification="inactive_7"
-            isSelected={classificationFilter === 'inactive_7'}
-            onClick={onClassificationFilterChange}
-          />
-          <StatChip
-            label="Inativos 30d"
-            value={stats.inactive30}
-            icon={<Clock className="h-3.5 w-3.5" />}
-            variant="danger"
-            classification="inactive_30"
-            isSelected={classificationFilter === 'inactive_30'}
-            onClick={onClassificationFilterChange}
-          />
-          <StatChip
-            label="Risco No-Show"
-            value={stats.noShowRisk}
-            icon={<AlertTriangle className="h-3.5 w-3.5" />}
-            variant="danger"
-            classification="no_show_risk"
-            isSelected={classificationFilter === 'no_show_risk'}
-            onClick={onClassificationFilterChange}
-          />
-          <StatChip
-            label="Com Pendências"
-            value={stats.hasUnpaid}
-            icon={<DollarSign className="h-3.5 w-3.5" />}
-            variant="warning"
-            classification="has_unpaid"
-            isSelected={classificationFilter === 'has_unpaid'}
-            onClick={onClassificationFilterChange}
-          />
-          <StatChip
-            label="Novos Pacientes"
+            label="Novos"
             value={stats.newPatients}
-            icon={<Sparkles className="h-3.5 w-3.5" />}
+            icon={<Sparkles className="h-3 w-3" />}
             variant="info"
             classification="new_patient"
             isSelected={classificationFilter === 'new_patient'}
             onClick={onClassificationFilterChange}
           />
           <StatChip
-            label="Inativos 60d+"
-            value={stats.inactive60}
-            icon={<Clock className="h-3.5 w-3.5" />}
+            label="Risco"
+            value={stats.noShowRisk}
+            icon={<AlertTriangle className="h-3 w-3" />}
             variant="danger"
-            classification="inactive_custom"
-            isSelected={classificationFilter === 'inactive_custom'}
+            classification="no_show_risk"
+            isSelected={classificationFilter === 'no_show_risk'}
+            onClick={onClassificationFilterChange}
+          />
+          <StatChip
+            label="Inativos"
+            value={stats.inactive30}
+            icon={<Clock className="h-3 w-3" />}
+            variant="warning"
+            classification="inactive_30"
+            isSelected={classificationFilter === 'inactive_30'}
             onClick={onClassificationFilterChange}
           />
         </div>
-      </div>
 
-      {/* Alerta de cadastros pendentes (slot para IncompleteRegistrationAlert) */}
-      {children}
-
-      {/* Busca + filtros rápidos */}
-      <Card className="overflow-hidden border shadow-sm">
-        <CardContent className="p-4 sm:p-5">
-          <div className="flex flex-col gap-4">
-            <div className="relative">
-              <Search
-                className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground"
-                aria-hidden
-              />
-              <input
-                type="search"
-                placeholder="Buscar por nome, condição, email ou telefone..."
-                value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="h-11 w-full rounded-lg border border-input bg-background pl-10 pr-4 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                aria-label="Buscar pacientes"
-              />
-            </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Select value={statusFilter} onValueChange={onStatusFilterChange}>
-                <SelectTrigger className="h-11">
-                  <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4 text-muted-foreground" aria-hidden />
-                    <SelectValue placeholder="Status" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os status</SelectItem>
-                  <SelectItem value="Inicial">Inicial</SelectItem>
-                  <SelectItem value="Em Tratamento">Em Tratamento</SelectItem>
-                  <SelectItem value="Recuperação">Recuperação</SelectItem>
-                  <SelectItem value="Concluído">Concluído</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={conditionFilter} onValueChange={onConditionFilterChange}>
-                <SelectTrigger className="h-11">
-                  <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4 text-muted-foreground" aria-hidden />
-                    <SelectValue placeholder="Condição" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as condições</SelectItem>
-                  {uniqueConditions.map((c) => (
-                    <SelectItem key={String(c)} value={String(c)}>
-                      {String(c)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {hasActiveFilters && (
-              <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-muted-foreground">
-                <span>{totalFilteredLabel ?? 'Resultados filtrados'}</span>
-                <button
-                  type="button"
-                  onClick={onClearAllFilters}
-                  className="rounded px-2 py-1 text-xs font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  Limpar filtros
-                </button>
-              </div>
-            )}
+        {hasActiveFilters && (
+          <div className="ml-auto flex items-center gap-4 animate-in fade-in slide-in-from-right-2 bg-primary/5 px-4 py-2 rounded-2xl border border-primary/10">
+            <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
+              {totalFilteredLabel ?? 'Filtrado'}
+            </span>
+            <button
+              type="button"
+              onClick={onClearAllFilters}
+              className="text-[10px] font-black uppercase tracking-[0.15em] text-primary hover:text-primary/80 transition-colors"
+            >
+              Limpar
+            </button>
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
     </header>
   );
 }
@@ -333,38 +254,38 @@ interface StatChipProps {
 function StatChip({ label, value, icon, variant, classification, isSelected, onClick }: StatChipProps) {
   const variantClasses = {
     success:
-      'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200',
+      'border-emerald-100 bg-emerald-50/40 text-emerald-700 dark:border-emerald-800/30 dark:bg-emerald-950/20 dark:text-emerald-300',
     warning:
-      'border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200',
+      'border-amber-100 bg-amber-50/40 text-amber-700 dark:border-amber-800/30 dark:bg-amber-950/20 dark:text-amber-300',
     danger:
-      'border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200',
+      'border-red-100 bg-red-50/40 text-red-700 dark:border-red-800/30 dark:bg-red-950/20 dark:text-red-300',
     info:
-      'border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-200',
+      'border-blue-100 bg-blue-50/40 text-blue-700 dark:border-blue-800/30 dark:bg-blue-950/20 dark:text-blue-300',
   };
 
   const handleClick = () => {
     if (onClick && classification) {
-      // Toggle: if already selected, clear filter
       onClick(isSelected ? 'all' : classification);
     }
   };
 
   const baseClasses = cn(
-    'flex items-center gap-2 rounded-lg border px-3 py-2 transition-colors',
+    'flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-all',
     variantClasses[variant],
-    onClick && 'cursor-pointer hover:opacity-90 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-    isSelected && 'ring-2 ring-primary ring-offset-2 ring-offset-background'
+    onClick && 'cursor-pointer hover:bg-opacity-80 active:scale-[0.98]',
+    isSelected && 'ring-1 ring-primary ring-offset-1 ring-offset-background font-medium'
   );
 
   const content = (
     <>
-      <span className="shrink-0 opacity-80" aria-hidden>
+      <span className="shrink-0 opacity-70" aria-hidden>
         {icon}
       </span>
-      <div className="min-w-0">
-        <p className="text-lg font-semibold tabular-nums">{value}</p>
-        <p className="truncate text-[10px] opacity-90">{label}</p>
-      </div>
+      <span className="text-[11px] tabular-nums font-semibold">{value}</span>
+      <span className="text-[10px] opacity-70 leading-none">{label}</span>
+      {isSelected && (
+        <span className="ml-0.5 text-[8px] opacity-60">✕</span>
+      )}
     </>
   );
 
@@ -375,7 +296,6 @@ function StatChip({ label, value, icon, variant, classification, isSelected, onC
         onClick={handleClick}
         className={baseClasses}
         aria-pressed={isSelected}
-        aria-label={`Filtrar por ${label}${isSelected ? ' (clique para limpar)' : ''}`}
       >
         {content}
       </button>

@@ -3,7 +3,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, query, where, db, getFirebaseAuth } from '@/integrations/firebase/app';
+import { collection, getDocs, query, where, db, getFirebaseAuth, doc, getDoc } from '@/integrations/firebase/app';
 import { getUserOrganizationId } from '@/utils/userHelpers';
 import { TeamMember } from '@/types/tarefas';
 import { fisioLogger } from '@/lib/errors/logger';
@@ -54,7 +54,6 @@ export function useTeamMember(userId: string | undefined) {
     queryFn: async (): Promise<TeamMember | null> => {
       if (!userId) return null;
 
-      const { doc, getDoc } = await import('@/integrations/firebase/app');
       const docRef = doc(db, 'profiles', userId);
       const snapshot = await getDoc(docRef);
 

@@ -117,14 +117,12 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
 
   return (
     <div className={cn(
-      'rounded-xl border border-border/50 bg-card overflow-hidden transition-all duration-300',
-      'shadow-sm hover:shadow-md',
+      'relative transition-all duration-300 group',
       className
     )}>
-      {/* Header with gradient accent */}
+      {/* Header */}
       <div className="relative">
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-violet-500/60 via-violet-500 to-violet-500/60" />
-        <div className="flex items-center justify-between p-3.5 border-b border-border/40 bg-gradient-to-r from-violet-500/5 to-transparent">
+        <div className="flex items-center justify-between px-2 py-1.5 opacity-70 group-hover:opacity-100 transition-opacity">
           <div className="flex items-center gap-2.5">
             <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-500/10 to-violet-500/5 border border-violet-500/20">
               <Home className="h-4 w-4 text-violet-500" />
@@ -147,7 +145,7 @@ export const HomeCareBlock: React.FC<HomeCareBlockProps> = ({
         </div>
       </div>
 
-      <div className="p-3 space-y-3">
+      <div className="px-2 pb-2 space-y-3">
         {/* Exercise list */}
         {exercises.length === 0 ? (
           <div className="text-center py-10 text-muted-foreground">

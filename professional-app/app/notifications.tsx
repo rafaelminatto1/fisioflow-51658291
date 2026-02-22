@@ -137,7 +137,7 @@ export default function NotificationsScreen() {
                 style={[
                   styles.notificationCard,
                   !notification.read && { backgroundColor: colors.primary + '05', borderColor: colors.primary + '30' }
-                ]}
+                ] as any}
                 padding="none"
               >
                 <View style={styles.cardContent}>

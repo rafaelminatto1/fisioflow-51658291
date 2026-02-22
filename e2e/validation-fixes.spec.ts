@@ -11,8 +11,8 @@ test.describe('FisioFlow Validation Fixes', () => {
     await page.goto('/login');
     
     // Fill credentials
-    await page.fill('input[type="email"]', testUsers.rafael.email);
-    await page.fill('input[type="password"]', testUsers.rafael.password);
+    await page.fill('input[name="email"]', testUsers.rafael.email);
+    await page.fill('input[name="password"]', testUsers.rafael.password);
     
     // Click login and wait for redirect
     await page.click('button[type="submit"]');

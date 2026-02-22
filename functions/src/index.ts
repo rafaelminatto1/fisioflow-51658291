@@ -491,6 +491,23 @@ export const scanMedicalReportHttp = onRequest(
     }
 );
 
+// Marketing AI Templates
+export const generateMarketingTemplate = onCall(
+    AI_FUNCTION,
+    async (request) => {
+        const { marketingTemplateHandler } = await import('./ai/marketing-ai');
+        return marketingTemplateHandler(request);
+    }
+);
+
+export const generateMarketingTemplateHttp = onRequest(
+    { ...AI_FUNCTION, ...withCors(AI_FUNCTION, CORS_ORIGINS) },
+    async (req: any) => {
+        const { marketingTemplateHandler } = await import('./ai/marketing-ai');
+        return marketingTemplateHandler(req);
+    }
+);
+
 // ============================================================================
 // OTIMIZAÇÃO FASE 2: AI SERVICE UNIFICADO
 // ============================================================================
@@ -518,6 +535,8 @@ export const aiServiceHttp = onRequest(
         return aiServiceHttpHandler(req, res);
     }
 );
+
+export { analyzeMovementVideo } from './api/video-analysis';
 
 // Cron Jobs
 export { dailyExerciseReminder } from './crons/patient-reminders';

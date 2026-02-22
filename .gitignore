@@ -137,7 +137,8 @@ test-results/
 playwright-report/
 blob-report/
 
-# iOS (Capacitor)
+# Mobile (Capacitor) - not used, web app deployed via Firebase Hosting
+android/
 ios/
 !.ios/placeholders
 

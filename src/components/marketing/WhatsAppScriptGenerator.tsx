@@ -25,9 +25,11 @@ import {
   Zap,
   Phone,
   CheckCircle2,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { generateMarketingContent } from '@/services/ai/marketingAITemplateService';
 
 type ScriptCategory =
   | 'agendamento'
@@ -208,6 +210,54 @@ export function WhatsAppScriptGenerator() {
   const [generatedMessage, setGeneratedMessage] = useState('');
   const [variables, setVariables] = useState<Record<string, string>>({});
   const [customMessage, setCustomMessage] = useState('');
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
+  const handleAIGenerate = async () => {
+    if (selectedCategory === 'all' && !selectedTemplate) {
+      toast.error('Selecione uma categoria ou template específico para a IA');
+      return;
+    }
+
+    setIsGeneratingAI(true);
+    try {
+      // Map category to AI content type
+      let type: any = 'caption';
+      if (selectedCategory === 'recall' || selectedTemplate?.category === 'recall') type = 'recall';
+      else if (selectedCategory === 'aniversario' || selectedTemplate?.category === 'aniversario') type = 'birthday';
+      else if (['agradecimento', 'alta', 'agendamento', 'lembrete'].includes(selectedCategory as string) || 
+               ['agradecimento', 'alta', 'agendamento', 'lembrete'].includes(selectedTemplate?.category as string)) {
+        type = 'review';
+      }
+      
+      const result = await generateMarketingContent({
+        type: type as any,
+        context: {
+          ...variables,
+          category: selectedCategory !== 'all' ? selectedCategory : selectedTemplate?.category,
+          templateName: selectedTemplate?.name,
+          templateDescription: selectedTemplate?.description,
+          clinicName: 'Sua Clínica',
+        },
+        tone: 'friendly'
+      });
+
+      if (result.success && result.template) {
+        setGeneratedMessage(result.template);
+        toast.success('Mensagem personalizada com IA!');
+        if (result.suggestions && result.suggestions.length > 0) {
+          toast.info(`Dica: ${result.suggestions[0]}`, {
+            duration: 5000,
+          });
+        }
+      } else {
+        throw new Error(result.error || "Erro na geração");
+      }
+    } catch (error) {
+      toast.error("Não foi possível gerar com IA no momento.");
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
 
   const filteredTemplates = SCRIPT_TEMPLATES.filter(
     t => selectedCategory === 'all' || t.category === selectedCategory
@@ -391,10 +441,24 @@ export function WhatsAppScriptGenerator() {
                   </div>
                 )}
 
-                <Button onClick={generateMessage} className="w-full">
-                  <Sparkles className="h-4 w-4 mr-2" />
-                  Gerar Mensagem
-                </Button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <Button onClick={generateMessage} className="w-full" variant="outline">
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Usar Template
+                  </Button>
+                  <Button 
+                    onClick={handleAIGenerate} 
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                    disabled={isGeneratingAI}
+                  >
+                    {isGeneratingAI ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4 mr-2" />
+                    )}
+                    Gerar com IA
+                  </Button>
+                </div>
               </>
             ) : (
               <p className="text-sm text-muted-foreground">

@@ -2,7 +2,7 @@ import { chromium } from 'playwright';
 import { writeFileSync } from 'fs';
 
 (async () => {
-  const browser = await chromium.launch({ headless: false, slowMo: 500 });
+  const browser = await chromium.launch({ headless: true, slowMo: 0 });
   const page = await browser.newPage();
   
   const logs = [];
@@ -51,10 +51,10 @@ import { writeFileSync } from 'fs';
   });
   
   try {
-    const baseUrl = 'http://localhost:8082';
+    const baseUrl = process.env.BASE_URL || 'http://localhost:5173';
     
     // Usar um appointmentId que vimos nos logs anteriores
-    const appointmentId = 'bafc8096-eba2-446c-952c-fe73b05c7933';
+    const appointmentId = process.env.APPOINTMENT_ID || 'bafc8096-eba2-446c-952c-fe73b05c7933';
     
     console.log(`Navegando diretamente para: ${baseUrl}/patient-evolution/${appointmentId}`);
     await page.goto(`${baseUrl}/patient-evolution/${appointmentId}`);

@@ -76,6 +76,7 @@ function generatePhone() {
 
 // Test data
 const PATIENT_NAMES = [
+  'João Silva',
   'Maria Silva Santos',
   'João Pedro Oliveira',
   'Ana Carolina Costa',

@@ -106,8 +106,8 @@ test.describe('Recepcionista SetValue Error - Deep Check', () => {
     console.log('STEP 3: Looking for login form');
     console.log('========================================\n');
 
-    const emailLocator = page.locator('input[type="email"]').first();
-    const passwordLocator = page.locator('input[type="password"]').first();
+    const emailLocator = page.locator('input[name="email"]').first();
+    const passwordLocator = page.locator('input[name="password"]').first();
 
     const hasEmailInput = await emailLocator.count() > 0;
     const hasPasswordInput = await passwordLocator.count() > 0;

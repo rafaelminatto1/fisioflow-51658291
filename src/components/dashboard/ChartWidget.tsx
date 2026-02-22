@@ -1,19 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
-
-  ResponsiveContainer, 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  BarChart, 
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  BarChart,
   Bar,
   PieChart,
   Pie,
-  Cell 
+  Cell,
+  AreaChart,
+  Area
 } from 'recharts';
 import { TrendingUp, Filter } from 'lucide-react';
 import { useState } from 'react';
@@ -111,31 +111,31 @@ export function ChartWidget({
     switch (type) {
       case 'bar':
         return (
-          <ResponsiveContainer width="100%" height={height}>
+          <div className="w-full bg-white dark:bg-gray-800 rounded-lg" style={{ height: `${height}px` }}>
             <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis 
-                dataKey="name" 
-                stroke="hsl(var(--muted-foreground))" 
+              <XAxis
+                dataKey="name"
+                stroke="hsl(var(--muted-foreground))"
                 fontSize={12}
               />
-              <YAxis 
-                stroke="hsl(var(--muted-foreground))" 
+              <YAxis
+                stroke="hsl(var(--muted-foreground))"
                 fontSize={12}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Bar 
-                dataKey="value" 
+              <Bar
+                dataKey="value"
                 fill={colors[0]}
                 radius={[4, 4, 0, 0]}
               />
             </BarChart>
-          </ResponsiveContainer>
+          </div>
         );
 
       case 'pie':
         return (
-          <ResponsiveContainer width="100%" height={height}>
+          <div className="w-full bg-white dark:bg-gray-800 rounded-lg" style={{ height: `${height}px` }}>
             <PieChart>
               <Pie
                 data={data}
@@ -153,34 +153,20 @@ export function ChartWidget({
               </Pie>
               <Tooltip content={<CustomTooltip />} />
             </PieChart>
-          </ResponsiveContainer>
+          </div>
         );
 
-      default: // line
+      case 'line':
+      default:
         return (
-          <ResponsiveContainer width="100%" height={height}>
-            <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis 
-                dataKey="name" 
-                stroke="hsl(var(--muted-foreground))" 
-                fontSize={12}
-              />
-              <YAxis 
-                stroke="hsl(var(--muted-foreground))" 
-                fontSize={12}
-              />
+          <div className="w-full bg-white dark:bg-gray-800 rounded-lg" style={{ height: `${height}px` }}>
+            <LineChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <XAxis dataKey="name" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
               <Tooltip content={<CustomTooltip />} />
-              <Line 
-                type="monotone" 
-                dataKey="value" 
-                stroke={colors[0]}
-                strokeWidth={2}
-                dot={{ fill: colors[0], strokeWidth: 2, r: 4 }}
-                activeDot={{ r: 6, stroke: colors[0], strokeWidth: 2 }}
-              />
+              <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={3} fillOpacity={1} />
             </LineChart>
-          </ResponsiveContainer>
+          </div>
         );
     }
   };
@@ -192,8 +178,10 @@ export function ChartWidget({
           <CardTitle className="text-lg text-foreground">{title}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="animate-pulse">
-            <div className="h-[300px] bg-muted rounded"></div>
+          <div className="h-[300px] bg-muted rounded">
+            <div className="animate-pulse">
+              <div className="h-[300px] bg-muted rounded"></div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -201,36 +189,33 @@ export function ChartWidget({
   }
 
   return (
-    <Card className="bg-gradient-card border-border">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg text-foreground">{title}</CardTitle>
-          {showFilters && (
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="h-8">
-                <Filter className="w-3 h-3 mr-1" />
-                Filtros
-              </Button>
-              <div className="flex gap-1">
-                {PERIOD_OPTIONS.map((option) => (
-                  <Button
-                    key={option.value}
-                    variant={selectedPeriod === option.value ? "secondary" : "ghost"}
-                    size="sm"
-                    className="h-8 px-2 text-xs"
-                    onClick={() => handlePeriodChange(option.value)}
-                  >
-                    {option.label}
-                  </Button>
-                ))}
-              </div>
+    <div className="w-full bg-white dark:bg-gray-800 rounded-2xl overflow-hidden p-6 shadow-premium-md border-none group">
+      <div className="flex items-center justify-between mb-8">
+        <h3 className="text-gray-900 dark:text-white font-black tracking-tight text-xl">{title}</h3>
+        <p className="text-gray-500 dark:text-gray-400 text-xs font-bold uppercase tracking-widest mt-1">Visão Geral de Desempenho</p>
+        {showFilters && (
+          <div className="flex items-center gap-3">
+            <div className="flex bg-gray-100 dark:bg-gray-700/50 p-1 rounded-xl inner-border">
+              {PERIOD_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-tighter rounded-lg transition-all ${selectedPeriod === option.value
+                    ? "bg-white dark:bg-gray-600 text-blue-600 shadow-premium-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                  }`}
+                  onClick={() => handlePeriodChange(option.value)}
+                >
+                  {option.label}
+                </button>
+              ))}
             </div>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent>
+            <Filter className="w-4 h-4" />
+          </div>
+        )}
+      </div>
+      <div className="mt-4">
         {renderChart()}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

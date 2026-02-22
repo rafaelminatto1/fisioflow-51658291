@@ -61,10 +61,9 @@ export function AppLoadingSkeleton({ message }: AppLoadingSkeletonProps) {
         {/* Barra de progresso simulada */}
         <div className="w-full max-w-xs h-1 bg-muted rounded-full overflow-hidden">
           <div 
-            className="h-full bg-primary rounded-full animate-pulse"
+            className="h-full bg-primary rounded-full animate-loading-progress"
             style={{ 
               width: '60%',
-              animation: 'loading-progress 2s ease-in-out infinite'
             }} 
           />
         </div>
@@ -79,15 +78,6 @@ export function AppLoadingSkeleton({ message }: AppLoadingSkeletonProps) {
           </button>
         )}
       </div>
-
-      {/* CSS para animação da barra */}
-      <style>{`
-        @keyframes loading-progress {
-          0% { width: 20%; transform: translateX(-100%); }
-          50% { width: 60%; transform: translateX(0); }
-          100% { width: 20%; transform: translateX(400%); }
-        }
-      `}</style>
     </div>
   );
 }

@@ -75,6 +75,7 @@ import { getTherapistById } from '@/hooks/useTherapists';
 
 // Lazy loading para componentes pesados
 const LazyNotionEvolutionPanel = lazy(() => import('@/components/evolution/v2/NotionEvolutionPanel').then(m => ({ default: m.NotionEvolutionPanel })));
+const LazyNotionEvolutionPanelV3 = lazy(() => import('@/components/evolution/v3-notion/NotionEvolutionPanel').then(m => ({ default: m.NotionEvolutionPanel })));
 const LazyEvolutionDraggableGrid = lazy(() => import('@/components/evolution/EvolutionDraggableGrid').then(m => ({ default: m.EvolutionDraggableGrid })));
 
 // OTIMIZAÇÃO: Lazy loading de abas completas para melhor code splitting
@@ -533,8 +534,9 @@ const PatientEvolution = () => {
       return;
     }
 
-    // V2: Map V2 data to SOAP fields for saving (backwards compatible)
-    const saveData = evolutionVersion === 'v2-texto'
+    // V2/V3: Map V2 data to SOAP fields for saving (backwards compatible)
+    const isV2orV3 = evolutionVersion === 'v2-texto' || evolutionVersion === 'v3-notion';
+    const saveData = isV2orV3
       ? {
         subjective: evolutionV2Data.patientReport || '',
         objective: evolutionV2Data.evolutionText || '',
@@ -556,8 +558,8 @@ const PatientEvolution = () => {
       return;
     }
 
-    // V2: Use exercises from V2 data if in V2 mode
-    const exercisesToSave = evolutionVersion === 'v2-texto'
+    // V2/V3: Use exercises from V2 data if in V2 or V3 mode
+    const exercisesToSave = (evolutionVersion === 'v2-texto' || evolutionVersion === 'v3-notion')
       ? evolutionV2Data.exercises.map(ex => ({
         id: ex.id,
         exerciseId: ex.exerciseId || ex.id,
@@ -645,12 +647,13 @@ const PatientEvolution = () => {
   const handleCompleteSession = async () => {
     const hasV1Content = soapData.subjective || soapData.objective || soapData.assessment || soapData.plan;
     const hasV2Content = evolutionV2Data.patientReport || evolutionV2Data.evolutionText || evolutionV2Data.procedures.length > 0;
-    const hasContent = evolutionVersion === 'v2-texto' ? hasV2Content : hasV1Content;
+    const isV2orV3 = evolutionVersion === 'v2-texto' || evolutionVersion === 'v3-notion';
+    const hasContent = isV2orV3 ? hasV2Content : hasV1Content;
 
     if (!hasContent) {
       toast({
         title: 'Complete a evolução',
-        description: evolutionVersion === 'v2-texto'
+        description: (evolutionVersion === 'v2-texto' || evolutionVersion === 'v3-notion')
           ? 'Preencha o texto de evolução antes de concluir o atendimento.'
           : 'Preencha os campos SOAP antes de concluir o atendimento.',
         variant: 'destructive'
@@ -875,20 +878,40 @@ const PatientEvolution = () => {
   ]);
 
   // 3. Main Grid (Editor) - Onde o usuário digita. Re-renderiza muito, mas isolado das outras seções.
-  const mainGridContent = useMemo(() => (
-    evolutionVersion === 'v2-texto' ? (
-      /* ===== V2: Texto Livre (Notion-style) ===== */
-      <Suspense fallback={<LoadingSkeleton type="card" />}>
-        <LazyNotionEvolutionPanel
-          data={evolutionV2Data}
-          onChange={setEvolutionV2DataStable}
-          isSaving={autoSaveMutation.isPending}
-          disabled={false}
-          autoSaveEnabled={autoSaveEnabled}
-          lastSaved={lastSavedAt}
-        />
-      </Suspense>
-    ) : (
+  const mainGridContent = useMemo(() => {
+    if (evolutionVersion === 'v3-notion') {
+      return (
+        /* ===== V3: Notion-style ===== */
+        <Suspense fallback={<LoadingSkeleton type="card" />}>
+          <LazyNotionEvolutionPanelV3
+            data={evolutionV2Data}
+            onChange={setEvolutionV2DataStable}
+            isSaving={autoSaveMutation.isPending}
+            disabled={false}
+            autoSaveEnabled={autoSaveEnabled}
+            lastSaved={lastSavedAt}
+          />
+        </Suspense>
+      );
+    }
+
+    if (evolutionVersion === 'v2-texto') {
+      return (
+        /* ===== V2: Texto Livre (Notion-style) ===== */
+        <Suspense fallback={<LoadingSkeleton type="card" />}>
+          <LazyNotionEvolutionPanel
+            data={evolutionV2Data}
+            onChange={setEvolutionV2DataStable}
+            isSaving={autoSaveMutation.isPending}
+            disabled={false}
+            autoSaveEnabled={autoSaveEnabled}
+            lastSaved={lastSavedAt}
+          />
+        </Suspense>
+      );
+    }
+
+    return (
       /* ===== V1: SOAP (original) ===== */
       <EvolutionGridContainer>
         <Suspense fallback={<LoadingSkeleton type="card" />}>
@@ -941,8 +964,8 @@ const PatientEvolution = () => {
           />
         </Suspense>
       </EvolutionGridContainer>
-    )
-  ), [
+    );
+  }, [
     evolutionVersion,
     evolutionV2Data,
     setEvolutionV2DataStable,

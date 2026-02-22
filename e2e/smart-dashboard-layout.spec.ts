@@ -6,8 +6,8 @@ async function login(page: Page): Promise<void> {
   const password = process.env.E2E_LOGIN_PASSWORD || testUsers.rafael.password;
 
   await page.goto('/auth', { waitUntil: 'domcontentloaded' });
-  await page.fill('#login-email, input[type="email"]', email);
-  await page.fill('#login-password, input[type="password"]', password);
+  await page.fill('#login-email, input[name="email"]', email);
+  await page.fill('#login-password, input[name="password"]', password);
 
   await Promise.all([
     page.waitForURL((url) => !url.pathname.includes('/auth'), { timeout: 45000 }),

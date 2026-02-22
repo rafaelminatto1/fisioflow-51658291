@@ -71,19 +71,19 @@ export class AppointmentService {
         try {
             // Default limit increased to 3000 to cover more history/future without breaking
             const limit = options.limit || 3000;
-            
-            logger.info('Fetching appointments', { 
-                organizationId, 
-                limit, 
-                dateFrom: options.dateFrom, 
-                dateTo: options.dateTo 
+
+            logger.info('Fetching appointments', {
+                organizationId,
+                limit,
+                dateFrom: options.dateFrom,
+                dateTo: options.dateTo
             }, 'AppointmentService');
-            
+
             if (!organizationId) {
                 logger.error('Organization ID is missing', {}, 'AppointmentService');
                 return [];
             }
-            
+
             // Try Cloud Functions first, fallback to direct Firestore on CORS error
             try {
                 logger.info('[AppointmentService] Calling appointmentsApi.list', {
@@ -92,14 +92,14 @@ export class AppointmentService {
                     dateFrom: options.dateFrom,
                     dateTo: options.dateTo
                 }, 'AppointmentService');
-                
-                const response = await appointmentsApi.list({ 
+
+                const response = await appointmentsApi.list({
                     limit,
                     dateFrom: options.dateFrom,
                     dateTo: options.dateTo
                 });
-                
-                logger.info('Appointments API response received', { 
+
+                logger.info('Appointments API response received', {
                     hasData: !!response.data,
                     dataLength: response.data?.length || 0,
                     responseKeys: Object.keys(response),
@@ -110,7 +110,7 @@ export class AppointmentService {
                         hasTime: !!(response.data[0].start_time || response.data[0].appointment_time)
                     } : null
                 }, 'AppointmentService');
-                
+
                 const data = response.data || [];
 
                 // Validar e transformar dados
@@ -196,26 +196,26 @@ export class AppointmentService {
             } catch (apiError) {
                 // Check if it's a CORS error
                 const errorMessage = apiError instanceof Error ? apiError.message : String(apiError);
-                const isCorsError = errorMessage.includes('Failed to fetch') || 
-                                   errorMessage.includes('CORS') ||
-                                   errorMessage.includes('NetworkError');
-                
+                const isCorsError = errorMessage.includes('Failed to fetch') ||
+                    errorMessage.includes('CORS') ||
+                    errorMessage.includes('NetworkError');
+
                 logger.warn('[AppointmentService] API error caught', {
                     error: errorMessage,
                     isCorsError,
                     errorType: typeof apiError,
                     errorConstructor: apiError?.constructor?.name
                 }, 'AppointmentService');
-                
+
                 if (isCorsError) {
                     logger.warn('CORS error detected, falling back to direct Firestore access', {
                         error: errorMessage
                     }, 'AppointmentService');
-                    
+
                     // Fallback to direct Firestore access
                     return await AppointmentServiceDirect.fetchAppointments(organizationId, options);
                 }
-                
+
                 // If not a CORS error, rethrow
                 throw apiError;
             }
@@ -228,7 +228,7 @@ export class AppointmentService {
      * Create a new appointment
      */
     static async createAppointment(
-        data: AppointmentFormData,
+        data: AppointmentFormData & { ignoreCapacity?: boolean },
         organizationId: string,
         existingAppointments: AppointmentBase[] = [] // Optional for conflict check
     ): Promise<AppointmentBase> {
@@ -273,6 +273,7 @@ export class AppointmentService {
                 session_type: sessionType,
                 status: data.status || 'agendado',
                 notes: data.notes || null,
+                ignoreCapacity: data.ignoreCapacity || false,
             };
 
             const response = await appointmentsApi.create(payload);
@@ -327,7 +328,7 @@ export class AppointmentService {
      */
     static async updateAppointment(
         id: string,
-        updates: Partial<AppointmentFormData>,
+        updates: Partial<AppointmentFormData> & { ignoreCapacity?: boolean },
         _organizationId: string
     ): Promise<AppointmentBase> {
         try {
@@ -354,6 +355,7 @@ export class AppointmentService {
             if (updates.room !== undefined) updateData.room = updates.room;
             if (updates.payment_status !== undefined) updateData.payment_status = updates.payment_status;
             if (updates.payment_amount !== undefined) updateData.payment_amount = updates.payment_amount;
+            if (updates.ignoreCapacity !== undefined) updateData.ignoreCapacity = updates.ignoreCapacity;
 
             // Handle Date/Time updates
             const updateDate = updates.appointment_date || updates.date;

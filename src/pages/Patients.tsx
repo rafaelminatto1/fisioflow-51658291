@@ -2,9 +2,16 @@ import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDebounce } from '@/hooks/performance/useDebounce';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { EmptyState } from '@/components/ui/empty-state';
+import { EmptyState, EmptyStateEnhanced } from '@/components/ui';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { IncompleteRegistrationAlert } from '@/components/dashboard/IncompleteRegistrationAlert';
+// ============================================================================
+// NOVOS COMPONENTES
+// ============================================================================
+import { QuickFilters } from '@/components/schedule/QuickFilters';
+import { DebouncedSearch } from '@/components/schedule/DebouncedSearch';
+import { ThemeProvider, useTheme } from '@/components/ui/theme';
+import { SkipLinks } from '@/components/ui/accessibility/SkipLinks';
 import {
 
   Pagination,
@@ -23,16 +30,24 @@ import {
   PatientAnalytics,
   PatientPageInsights,
   PatientsPageHeader,
-  PatientCard,
   countActiveFilters,
   matchesFilters,
   type PatientFilters
 } from '@/components/patients';
+import { PatientCard } from '@fisioflow/ui';
 import { usePatientsPaginated } from '@/hooks/usePatientCrud';
 import { useMultiplePatientStats } from '@/hooks/usePatientStats';
 import { PatientHelpers } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
-import { Users } from 'lucide-react';
+import { Users, Filter } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+
 import { calculateAge, exportToCSV } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 
@@ -77,8 +92,8 @@ const Patients = () => {
   // Reset to page 1 quando filtros mudam
   useEffect(() => {
     goToPage(1);
-     
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusFilter, debouncedSearch, conditionFilter, advancedFilters.classification]);
 
   // Get unique conditions and statuses for filters (from current page)
@@ -265,17 +280,36 @@ const Patients = () => {
           classificationFilter={advancedFilters.classification ?? 'all'}
           onClassificationFilterChange={handleClassificationFilterChange}
         >
-          <IncompleteRegistrationAlert />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className={cn("h-10 w-10 shrink-0", activeAdvancedFiltersCount > 0 && "border-primary bg-primary/5 text-primary")}
+                title="Filtros avançados"
+              >
+                <div className="relative">
+                  <Filter className="h-4 w-4" />
+                  {activeAdvancedFiltersCount > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-3 w-3 items-center justify-center rounded-full bg-primary text-[8px] text-primary-foreground font-bold">
+                      {activeAdvancedFiltersCount}
+                    </span>
+                  )}
+                </div>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[320px] p-4" align="end">
+              <PatientAdvancedFilters
+                onFilterChange={handleFilterChange}
+                activeFiltersCount={activeAdvancedFiltersCount}
+                onClearFilters={handleClearFilters}
+              />
+            </PopoverContent>
+          </Popover>
         </PatientsPageHeader>
 
-        {/* Advanced Filters */}
-        <PatientAdvancedFilters
-          onFilterChange={handleFilterChange}
-          activeFiltersCount={activeAdvancedFiltersCount}
-          onClearFilters={handleClearFilters}
-        />
+        <IncompleteRegistrationAlert />
 
-        {/* Insights de negócio - sempre visível */}
         <PatientPageInsights
           totalPatients={filteredPatients.length}
           classificationStats={filteredStats}
@@ -313,9 +347,11 @@ const Patients = () => {
           />
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in" data-testid="patient-list">
               {filteredPatients.map((patient, index) => {
                 const patientStats = statsMap[patient.id];
+                const patientName = PatientHelpers.getName(patient);
+                
                 return (
                   <LazyComponent
                     key={patient.id}
@@ -323,11 +359,16 @@ const Patients = () => {
                     rootMargin="200px"
                   >
                     <PatientCard
-                      patient={patient}
-                      index={index}
-                      stats={patientStats}
+                      name={patientName || 'Sem Nome'}
+                      condition={patient.main_condition}
+                      status={patient.status}
+                      stats={{
+                        sessionsCompleted: patientStats?.sessionsCompleted || 0,
+                        nextAppointment: patientStats?.nextAppointmentDate ? new Date(patientStats.nextAppointmentDate).toLocaleDateString('pt-BR') : undefined
+                      }}
                       onClick={() => navigate(`/patients/${patient.id}`)}
                       actions={<PatientActions patient={patient} />}
+                      className="h-full"
                     />
                   </LazyComponent>
                 );

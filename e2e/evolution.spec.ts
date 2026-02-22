@@ -92,6 +92,17 @@ test.describe('Evolução SOAP (Mocked)', () => {
             }
         });
 
+        await page.route(/appointmentservicehttp/i, async route => {
+            const method = route.request().method();
+            if (method === 'GET' || method === 'HEAD') {
+                await route.fulfill({ json: mockAppointment, status: 200 });
+            } else if (method === 'PATCH' || method === 'POST') {
+                await route.fulfill({ json: { ...mockAppointment, status: 'Realizado' }, status: 200 });
+            } else {
+                await route.fulfill({ json: { message: 'ok' }, status: 200 });
+            }
+        });
+
         await page.route('**/rest/v1/patients*', async route => {
             await route.fulfill({ json: mockPatient });
         });
@@ -129,8 +140,8 @@ test.describe('Evolução SOAP (Mocked)', () => {
 
         // Navigation
         await page.goto('/auth');
-        await page.fill('input[type="email"]', testUsers.admin.email);
-        await page.fill('input[type="password"]', testUsers.admin.password);
+        await page.fill('input[name="email"]', testUsers.admin.email);
+        await page.fill('input[name="password"]', testUsers.admin.password);
         await page.click('button[type="submit"]');
         await page.waitForURL(/\/(eventos|dashboard|schedule|smart-dashboard|$)/);
     });
@@ -140,13 +151,21 @@ test.describe('Evolução SOAP (Mocked)', () => {
         await page.goto(`/session-evolution/${validApptId}`);
 
         await expect(page.locator('.lucide-loader-2')).toBeHidden({ timeout: 15000 });
-        await expect(page.locator('text=Evolução de Sessão')).toBeVisible({ timeout: 10000 });
+        await expect(page.locator('text=Evolução de Sessão').first()).toBeVisible({ timeout: 10000 });
 
         // Fill Form
-        await page.fill('textarea[placeholder*="Queixas do paciente"]', 'Teste Subjetivo');
-        await page.fill('textarea[placeholder*="Achados clínicos"]', 'Teste Objetivo');
-        await page.fill('textarea[placeholder*="Análise clínica"]', 'Teste Avaliação');
-        await page.fill('textarea[placeholder*="Conduta, exercícios"]', 'Teste Plano');
+        // We now use ProseMirror (RichTextEditor) instead of textareas in V3/Improved Modes
+        const editors = page.locator('.ProseMirror');
+
+        // Relato (Subjective)
+        await editors.nth(0).fill('Teste Subjetivo');
+        // Evolução Dinâmica (Objective/Assessment merged or just next block)
+        if (await editors.count() > 1) {
+            await editors.nth(1).fill('Teste Avaliação');
+        }
+        if (await editors.count() > 2) {
+            await editors.nth(2).fill('Teste Plano');
+        }
 
         // Click Save
         const saveButtons = page.locator('button', { hasText: 'Salvar Evolução' });

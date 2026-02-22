@@ -106,9 +106,9 @@ export default function DashboardScreen() {
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hScroll}>
                     {upcomingAppointments.map(apt => (
                         <TouchableOpacity key={apt.id} onPress={() => router.push(`/appointment-form?id=${apt.id}`)}>
-                            <Card style={[styles.appointmentCard, {backgroundColor: colors.surface}]}>
+                            <Card style={[styles.appointmentCard, {backgroundColor: colors.surface}] as any}>
                                 <Text style={[styles.appointmentTime, {color: colors.primary}]}>{format(new Date(apt.date), 'HH:mm')}</Text>
-                                <Text style={[styles.patientName, {color: colors.text}]} numberOfLines={1}>{apt.patientName}</Text>
+                                <Text style={[styles.patientName, {color: colors.text}]} numberOfLines={1}>{apt.patientName || 'Paciente'}</Text>
                                 <Text style={[styles.appointmentType, {color: colors.textSecondary}]} numberOfLines={1}>{apt.type}</Text>
                             </Card>
                         </TouchableOpacity>
@@ -127,7 +127,7 @@ export default function DashboardScreen() {
                 <View>
                     {recentPatients.map(p => (
                         <TouchableOpacity key={p.id} onPress={() => router.push(`/patient/${p.id}`)}>
-                            <Card style={[styles.patientListItem, {backgroundColor: colors.surface}]}>
+                            <Card style={[styles.patientListItem, {backgroundColor: colors.surface}] as any}>
                                 <View style={[styles.patientAvatar, {backgroundColor: colors.primary + '20'}]}>
                                     <Text style={[styles.patientAvatarText, {color: colors.primary}]}>{p.name.charAt(0)}</Text>
                                 </View>

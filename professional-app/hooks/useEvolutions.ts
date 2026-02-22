@@ -9,6 +9,7 @@ import {
 } from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
 import type { Evolution } from '@/types';
+import { auditLogger } from '@/lib/services/auditLogger';
 
 // Map API evolution type to app Evolution type
 function mapApiEvolution(apiEvolution: ApiEvolution): Evolution {
@@ -59,6 +60,10 @@ export function useEvolutions(patientId: string) {
             attachments: data.attachments,
         };
         const result = await apiCreateEvolution(apiData);
+        
+        // Log audit event
+        await auditLogger.logPHIModification(user.id, 'create', 'soap_note', result.id);
+
         return mapApiEvolution(result);
     },
     onSuccess: (_, variables) => {
@@ -78,6 +83,12 @@ export function useEvolutions(patientId: string) {
             attachments: data.attachments,
         };
         const result = await apiUpdateEvolution(id, apiData);
+        
+        // Log audit event
+        if (user?.id) {
+          await auditLogger.logPHIModification(user.id, 'update', 'soap_note', id);
+        }
+
         return mapApiEvolution(result);
     },
     onSuccess: (_, { id, data }) => {
@@ -87,7 +98,16 @@ export function useEvolutions(patientId: string) {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => apiDeleteEvolution(id),
+    mutationFn: async (id: string) => {
+      const result = await apiDeleteEvolution(id);
+      
+      // Log audit event
+      if (user?.id) {
+        await auditLogger.logPHIModification(user.id, 'delete', 'soap_note', id);
+      }
+      
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patientEvolutions', patientId] });
     },

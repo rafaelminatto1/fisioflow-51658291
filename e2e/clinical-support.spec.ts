@@ -284,8 +284,8 @@ async function login(page: any, email: string, password: string) {
   await page.goto(`${BASE_URL}/auth`, { waitUntil: 'domcontentloaded' });
   await page.waitForTimeout(2000);
 
-  await page.fill('input[type="email"]', email);
-  await page.fill('input[type="password"]', password);
+  await page.fill('input[name="email"]', email);
+  await page.fill('input[name="password"]', password);
   await page.click('button[type="submit"]');
 
   await page.waitForURL(url => !url.pathname.includes('/auth'), { timeout: 30000 });

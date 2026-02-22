@@ -85,28 +85,38 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
     }
 
     try {
-      // Get Expo push token
-      const projectId = process.env.EXPO_PUBLIC_PROJECT_ID || 'fisioflow-professional';
-      token = (
-        await Notifications.getExpoPushTokenAsync({
-          projectId,
-        })
-      ).data;
+      // Get Expo push token - only if valid projectId is configured
+      const projectId = process.env.EXPO_PUBLIC_PROJECT_ID;
+      
+      if (projectId && projectId !== 'fisioflow-professional') {
+        // Validate UUID format
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (uuidRegex.test(projectId)) {
+          token = (
+            await Notifications.getExpoPushTokenAsync({
+              projectId,
+            })
+          ).data;
+          console.log('Expo Push Token:', token);
+        } else {
+          console.log('Push notifications: Invalid projectId format. Configure EXPO_PUBLIC_PROJECT_ID in .env');
+        }
+      } else {
+        console.log('Push notifications: projectId not configured. Set EXPO_PUBLIC_PROJECT_ID in .env for production');
+      }
 
-      console.log('Expo Push Token:', token);
-
-      // Also get FCM token for Firebase Cloud Messaging
+      // Also get FCM token for Firebase Cloud Messaging (only on Android with dev client)
       if (Platform.OS === 'android') {
         try {
           const messaging = getMessaging(app);
           const fcmToken = await getToken(messaging);
           console.log('FCM Token:', fcmToken);
         } catch (fcmError) {
-          console.log('FCM not available (requires expo-dev-client):', fcmError);
+          console.log('FCM not available (requires expo-dev-client)');
         }
       }
     } catch (error) {
-      console.error('Error getting push token:', error);
+      console.log('Push notifications setup skipped:', error instanceof Error ? error.message : 'Unknown error');
     }
   } else {
     console.error('Must use physical device for Push Notifications');

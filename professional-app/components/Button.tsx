@@ -9,6 +9,7 @@ import {
   TextStyle,
 } from 'react-native';
 import { useColors } from '@/hooks/useColorScheme';
+import { Ionicons } from '@expo/vector-icons';
 
 interface ButtonProps {
   title: string;
@@ -19,6 +20,7 @@ interface ButtonProps {
   loading?: boolean;
   style?: ViewStyle;
   textStyle?: TextStyle;
+  leftIcon?: keyof typeof Ionicons.prototype.props.name;
 }
 
 export function Button({
@@ -30,6 +32,7 @@ export function Button({
   loading = false,
   style,
   textStyle,
+  leftIcon,
 }: ButtonProps) {
   const colors = useColors();
 
@@ -94,6 +97,9 @@ export function Button({
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled || loading}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      accessibilityState={{ disabled: disabled || loading, busy: loading }}
       style={[
         styles.button,
         {
@@ -109,18 +115,28 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={getTextColor()} size="small" />
       ) : (
-        <Text
-          style={[
-            styles.text,
-            {
-              color: getTextColor(),
-              fontSize: getFontSize(),
-            },
-            textStyle,
-          ]}
-        >
-          {title}
-        </Text>
+        <>
+          {leftIcon && (
+            <Ionicons 
+              name={leftIcon as any} 
+              size={size === 'sm' ? 18 : 20} 
+              color={getTextColor()} 
+              style={styles.icon} 
+            />
+          )}
+          <Text
+            style={[
+              styles.text,
+              {
+                color: getTextColor(),
+                fontSize: getFontSize(),
+              },
+              textStyle,
+            ]}
+          >
+            {title}
+          </Text>
+        </>
       )}
     </TouchableOpacity>
   );
@@ -135,5 +151,8 @@ const styles = StyleSheet.create({
   },
   text: {
     fontWeight: '600',
+  },
+  icon: {
+    marginRight: 8,
   },
 });

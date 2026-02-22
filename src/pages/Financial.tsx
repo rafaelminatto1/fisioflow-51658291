@@ -166,39 +166,69 @@ const Financial = () => {
 
   return (
     <MainLayout>
-      <div className="container max-w-7xl mx-auto py-6 md:py-10 space-y-8 px-4 sm:px-6">
+      <div className="container max-w-7xl mx-auto py-6 md:py-8 space-y-8 animate-fade-in pb-20 md:pb-0">
         
-        {/* AI Financial Advisor */}
+        {/* Header - Design Moderno */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-premium-sm border border-slate-100 dark:border-slate-800/50">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tighter text-slate-900 dark:text-white leading-none">Gestão Financeira</h1>
+            <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-2">Visão consolidada de receitas, despesas e performance</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button onClick={handleExport} variant="outline" className="rounded-xl h-11 border-slate-200 dark:border-slate-800 font-bold text-xs uppercase tracking-wider" disabled={isExporting}>
+              <Download className="mr-2 h-4 w-4" />
+              Exportar
+            </Button>
+            <Button onClick={handleNewTransaction} className="rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg shadow-slate-900/10 font-bold h-11 px-6 text-xs uppercase tracking-wider">
+              <Plus className="mr-2 h-5 w-5" />
+              Nova Transação
+            </Button>
+          </div>
+        </div>
+
+        {/* AI Financial Advisor - Premium Card */}
         <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <Card className="border-emerald-500/20 bg-emerald-500/5 shadow-md overflow-hidden relative group">
-            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-              <Sparkles className="h-24 w-24 text-emerald-600" />
+          <Card className="border-none bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 shadow-premium-md overflow-hidden relative group rounded-2xl">
+            <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+              <Sparkles className="h-32 w-32 text-emerald-600" />
             </div>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-emerald-700">
-                <Sparkles className="h-5 w-5 animate-pulse" />
-                Consultor Financeiro Clinsight AI
-              </CardTitle>
-              <CardDescription>Análise estratégica do seu fluxo de caixa</CardDescription>
+            <CardHeader className="pb-2 border-b border-emerald-100/50 dark:border-emerald-900/30">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <CardTitle className="flex items-center gap-2 text-emerald-800 dark:text-emerald-400 font-black tracking-tight text-lg">
+                    <div className="p-1.5 bg-emerald-500/10 rounded-lg">
+                      <Sparkles className="h-4 w-4 animate-pulse" />
+                    </div>
+                    Clinsight AI
+                  </CardTitle>
+                  <CardDescription className="text-[10px] font-black uppercase tracking-widest text-emerald-600/60 dark:text-emerald-500/40">Consultoria Estratégica</CardDescription>
+                </div>
+                <div className="flex gap-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/40" />
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               {isGenerating ? (
-                <div className="space-y-2 py-2">
-                  <div className="h-4 w-3/4 bg-emerald-200/50 animate-pulse rounded" />
-                  <div className="h-4 w-1/2 bg-emerald-200/50 animate-pulse rounded" />
+                <div className="space-y-3 py-2">
+                  <div className="h-3 w-3/4 bg-emerald-200/30 animate-pulse rounded-full" />
+                  <div className="h-3 w-1/2 bg-emerald-200/30 animate-pulse rounded-full" />
                 </div>
               ) : (
-                <div className="prose prose-sm dark:prose-invert italic text-foreground/80 leading-relaxed">
-                  "{aiSummary || 'Analise seu faturamento para receber dicas exclusivas de rentabilidade.'}"
-                  <div className="mt-4">
+                <div className="space-y-4">
+                  <p className="text-sm font-bold text-emerald-900 dark:text-emerald-100 leading-relaxed italic">
+                    "{aiSummary || 'Analise seu faturamento para receber dicas exclusivas de rentabilidade.'}"
+                  </p>
+                  <div className="flex justify-start">
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       onClick={generateFinancialAdvice}
-                      className="text-xs h-8 text-emerald-700 hover:bg-emerald-100"
+                      className="text-[10px] font-black uppercase tracking-[0.2em] h-8 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10"
                     >
                       <RefreshCw className="mr-2 h-3 w-3" />
-                      Recalcular Insights
+                      Atualizar Insights
                     </Button>
                   </div>
                 </div>
@@ -207,104 +237,94 @@ const Financial = () => {
           </Card>
         </section>
 
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-foreground">Gestão Financeira</h1>
-            <p className="text-muted-foreground mt-1">Acompanhe receitas, despesas e pacotes de sessões.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button onClick={handleExport} variant="outline" className="rounded-xl h-11" disabled={isExporting}>
-              <Download className="mr-2 h-4 w-4" />
-              Exportar
-            </Button>
-            <Button onClick={handleNewTransaction} className="rounded-xl shadow-md font-bold h-11 px-6">
-              <Plus className="mr-2 h-5 w-5" />
-              Nova Transação
-            </Button>
-          </div>
-        </div>
-
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          <Card className="rounded-2xl border border-border/50 shadow-sm">
+          <Card className="rounded-2xl border-none shadow-premium-sm hover-lift bg-white dark:bg-slate-900 overflow-hidden group">
             <CardHeader className="pb-2 pt-6 px-6">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center justify-between">
+              <CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center justify-between">
                 Receita Total
-                <DollarSign className="h-4 w-4 text-emerald-500" />
+                <div className="p-1.5 bg-emerald-500/10 rounded-lg group-hover:scale-110 transition-transform">
+                  <DollarSign className="h-3.5 w-3.5 text-emerald-600" />
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="px-6 pb-6">
-              <p className="text-3xl font-black tracking-tight">R$ {stats?.totalRevenue.toLocaleString('pt-BR')}</p>
-              <div className="flex items-center mt-2 text-xs">
-                <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 border-none">
+              <p className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">R$ {stats?.totalRevenue.toLocaleString('pt-BR')}</p>
+              <div className="flex items-center mt-2">
+                <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 border-none text-[10px] font-bold px-2 py-0">
                   <TrendingUp className="h-3 w-3 mr-1" />
                   +{stats?.monthlyGrowth.toFixed(1)}%
                 </Badge>
-                <span className="text-muted-foreground ml-2">vs mês anterior</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-2">vs anterior</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="rounded-2xl border border-border/50 shadow-sm">
+          <Card className="rounded-2xl border-none shadow-premium-sm hover-lift bg-white dark:bg-slate-900 overflow-hidden group">
             <CardHeader className="pb-2 pt-6 px-6">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center justify-between">
+              <CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center justify-between">
                 Pendentes
-                <Clock className="h-4 w-4 text-amber-500" />
+                <div className="p-1.5 bg-amber-500/10 rounded-lg group-hover:scale-110 transition-transform">
+                  <Clock className="h-3.5 w-3.5 text-amber-600" />
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="px-6 pb-6">
-              <p className="text-3xl font-black tracking-tight text-amber-600">R$ {stats?.pendingPayments.toLocaleString('pt-BR')}</p>
-              <p className="text-xs text-muted-foreground mt-2">{transactions.filter(t => t.status === 'pendente').length} aguardando</p>
+              <p className="text-3xl font-black tracking-tighter text-amber-600">R$ {stats?.pendingPayments.toLocaleString('pt-BR')}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2">{transactions.filter(t => t.status === 'pendente').length} em aberto</p>
             </CardContent>
           </Card>
 
-          <Card className="rounded-2xl border border-border/50 shadow-sm">
+          <Card className="rounded-2xl border-none shadow-premium-sm hover-lift bg-white dark:bg-slate-900 overflow-hidden group">
             <CardHeader className="pb-2 pt-6 px-6">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center justify-between">
+              <CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center justify-between">
                 Ticket Médio
-                <TrendingUp className="h-4 w-4 text-blue-500" />
+                <div className="p-1.5 bg-blue-500/10 rounded-lg group-hover:scale-110 transition-transform">
+                  <TrendingUp className="h-3.5 w-3.5 text-blue-600" />
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="px-6 pb-6">
-              <p className="text-3xl font-black tracking-tight">R$ {stats?.averageTicket.toLocaleString('pt-BR')}</p>
-              <p className="text-xs text-muted-foreground mt-2">Por atendimento</p>
+              <p className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">R$ {stats?.averageTicket.toLocaleString('pt-BR')}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2">Média p/ sessão</p>
             </CardContent>
           </Card>
 
-          <Card className="rounded-2xl border border-border/50 shadow-sm">
+          <Card className="rounded-2xl border-none shadow-premium-sm hover-lift bg-white dark:bg-slate-900 overflow-hidden group">
             <CardHeader className="pb-2 pt-6 px-6">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center justify-between">
-                Recebimento
-                <Check className="h-4 w-4 text-primary" />
+              <CardTitle className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center justify-between">
+                Efetivação
+                <div className="p-1.5 bg-primary/10 rounded-lg group-hover:scale-110 transition-transform">
+                  <Check className="h-3.5 w-3.5 text-primary" />
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="px-6 pb-6">
-              <p className="text-3xl font-black tracking-tight">
+              <p className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">
                 {stats?.totalCount ? Math.round((stats.paidCount / stats.totalCount) * 100) : 0}%
               </p>
-              <p className="text-xs text-muted-foreground mt-2">{stats?.paidCount} de {stats?.totalCount} pagos</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2">{stats?.paidCount} de {stats?.totalCount} realizados</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Tabs */}
         <Tabs defaultValue="transactions" className="w-full">
-          <TabsList className="bg-muted/50 p-1 rounded-xl mb-4 sm:mb-6 grid grid-cols-3 w-full">
-            <TabsTrigger value="transactions" className="rounded-lg text-xs sm:text-sm">Transações</TabsTrigger>
-            <TabsTrigger value="packages" className="rounded-lg text-xs sm:text-sm">Pacotes</TabsTrigger>
-            <TabsTrigger value="reports" className="rounded-lg text-xs sm:text-sm">Relatórios</TabsTrigger>
+          <TabsList className="bg-slate-100 dark:bg-slate-800/50 p-1.5 rounded-2xl mb-6 sm:mb-8 grid grid-cols-3 w-full max-w-md mx-auto shadow-inner-border">
+            <TabsTrigger value="transactions" className="rounded-xl text-[10px] font-black uppercase tracking-widest transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:shadow-md">Transações</TabsTrigger>
+            <TabsTrigger value="packages" className="rounded-xl text-[10px] font-black uppercase tracking-widest transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:shadow-md">Pacotes</TabsTrigger>
+            <TabsTrigger value="reports" className="rounded-xl text-[10px] font-black uppercase tracking-widest transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:shadow-md">Insights</TabsTrigger>
           </TabsList>
 
           <TabsContent value="transactions" className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <h3 className="text-xl font-bold tracking-tight text-foreground">Fluxo de Caixa</h3>
+              <h3 className="text-xl font-black tracking-tighter text-slate-900 dark:text-white uppercase tracking-[0.1em]">Fluxo de Caixa</h3>
               <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                <SelectTrigger className="w-[180px] rounded-xl">
-                  <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
+                <SelectTrigger className="w-[180px] h-10 rounded-xl border-slate-200 dark:border-slate-800 font-bold text-xs">
+                  <Filter className="h-3.5 w-3.5 mr-2 text-primary" />
                   <SelectValue placeholder="Período" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-xl border-slate-200 dark:border-slate-800 shadow-xl">
                   <SelectItem value="day">Hoje</SelectItem>
                   <SelectItem value="week">Esta Semana</SelectItem>
                   <SelectItem value="month">Este Mês</SelectItem>
@@ -324,48 +344,50 @@ const Financial = () => {
                 onAction={handleNewTransaction}
               />
             ) : (
-              <div className="border border-border/50 rounded-2xl overflow-hidden bg-card shadow-sm">
-                <div className="overflow-x-auto -mx-2 sm:mx-0">
-                  <table className="w-full text-sm text-left">
-                    <thead className="bg-muted/30 text-muted-foreground font-medium border-b border-border/50">
+              <div className="border border-slate-100 dark:border-slate-800/50 rounded-2xl overflow-hidden bg-white dark:bg-slate-900 shadow-premium-sm">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm text-left border-collapse">
+                    <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-400 font-black uppercase tracking-widest border-b border-slate-100 dark:border-slate-800/50">
                       <tr>
-                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm">Data</th>
-                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm">Descrição</th>
-                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm">Status</th>
-                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm">Valor</th>
-                        <th className="px-3 sm:px-6 py-3 sm:py-4 text-right text-xs sm:text-sm">Ações</th>
+                        <th className="px-6 py-4 text-[10px]">Data</th>
+                        <th className="px-6 py-4 text-[10px]">Descrição</th>
+                        <th className="px-6 py-4 text-[10px]">Status</th>
+                        <th className="px-6 py-4 text-[10px]">Valor</th>
+                        <th className="px-6 py-4 text-right text-[10px]">Ações</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border/50">
+                    <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
                       {transactions.map((t) => (
-                        <tr key={t.id} className="hover:bg-muted/20 transition-colors group">
-                          <td className="px-3 sm:px-6 py-3 sm:py-4 text-muted-foreground text-xs sm:text-sm">
+                        <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-all group">
+                          <td className="px-6 py-5 text-slate-500 font-mono text-xs">
                             {t.created_at ? new Date(t.created_at).toLocaleDateString('pt-BR') : '-'}
                           </td>
-                          <td className="px-3 sm:px-6 py-3 sm:py-4">
-                            <p className="font-semibold text-xs sm:text-sm truncate max-w-[150px]">{t.descricao || 'Sem descrição'}</p>
-                            <p className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">{t.tipo}</p>
+                          <td className="px-6 py-5">
+                            <p className="font-bold text-sm text-slate-900 dark:text-white truncate max-w-[200px] leading-tight">{t.descricao || 'Sem descrição'}</p>
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">{t.tipo}</p>
                           </td>
-                          <td className="px-3 sm:px-6 py-3 sm:py-4">
-                            <Badge variant={t.status === 'concluido' ? 'success' : 'warning'} className="rounded-full px-2 sm:px-3 text-xs">
+                          <td className="px-6 py-5">
+                            <Badge variant={t.status === 'concluido' ? 'success' : 'warning'} className="rounded-lg px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest border-none shadow-sm">
                               {t.status === 'concluido' ? 'Pago' : 'Pendente'}
                             </Badge>
                           </td>
                           <td className={cn(
-                            "px-3 sm:px-6 py-3 sm:py-4 font-bold text-xs sm:text-sm",
-                            t.tipo === 'receita' ? 'text-emerald-600' : 'text-destructive'
+                            "px-6 py-5 font-black text-sm",
+                            t.tipo === 'receita' ? 'text-emerald-600' : 'text-red-600'
                           )}>
                             {t.tipo === 'receita' ? '+' : '-'} R$ {t.valor.toLocaleString('pt-BR')}
                           </td>
-                          <td className="px-3 sm:px-6 py-3 sm:py-4 text-right space-x-1 sm:space-x-2">
-                            {t.status === 'pendente' && (
-                              <Button variant="ghost" size="icon" onClick={() => markAsPaid(t.id)} className="h-8 w-8 text-emerald-600">
-                                <Check className="h-4 w-4" />
+                          <td className="px-6 py-5 text-right space-x-2">
+                            <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              {t.status === 'pendente' && (
+                                <Button variant="ghost" size="icon" onClick={() => markAsPaid(t.id)} className="h-8 w-8 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20">
+                                  <Check className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button variant="ghost" size="icon" onClick={() => handleEditTransaction(t)} className="h-8 w-8 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                                <Edit className="h-4 w-4" />
                               </Button>
-                            )}
-                            <Button variant="ghost" size="icon" onClick={() => handleEditTransaction(t)} className="h-8 w-8 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Edit className="h-4 w-4" />
-                            </Button>
+                            </div>
                           </td>
                         </tr>
                       ))}

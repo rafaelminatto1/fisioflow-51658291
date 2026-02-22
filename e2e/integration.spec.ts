@@ -5,8 +5,8 @@ test.describe('Testes de Integração E2E', () => {
   test('fluxo completo: criar paciente → agendar → marcar presença', async ({ page }) => {
     // 1. Login
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.fill('input[name="email"]', testUsers.admin.email);
+    await page.fill('input[name="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
     await page.waitForURL(/(\?.*|\/eventos|\/dashboard|\/schedule)/);
 
@@ -79,8 +79,8 @@ test.describe('Testes de Integração E2E', () => {
   test('multi-tenancy: dados isolados por organização', async ({ page, context: _context }) => {
     // Login org 1
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.fill('input[name="email"]', testUsers.admin.email);
+    await page.fill('input[name="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
     await page.waitForURL(/(\?.*|\/eventos|\/dashboard|\/schedule)/);
 
@@ -119,8 +119,8 @@ test.describe('Testes de Integração E2E', () => {
   test('permissões: admin vs fisioterapeuta vs estagiário', async ({ page }) => {
     // Test fisioterapeuta permissions
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.fill('input[name="email"]', testUsers.admin.email);
+    await page.fill('input[name="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
     await page.waitForURL(/(\?.*|\/eventos|\/dashboard|\/schedule)/);
 
@@ -144,8 +144,8 @@ test.describe('Testes de Integração E2E', () => {
   test('realtime sync: múltiplos usuários veem mesmas mudanças', async ({ page, context }) => {
     // Usuário 1
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.fill('input[name="email"]', testUsers.admin.email);
+    await page.fill('input[name="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
     await page.waitForURL(/(\?.*|\/eventos|\/dashboard|\/schedule)/);
     await page.goto('/schedule');
@@ -153,8 +153,8 @@ test.describe('Testes de Integração E2E', () => {
     // Usuário 2 (segunda aba)
     const page2 = await context.newPage();
     await page2.goto('/auth');
-    await page2.fill('input[type="email"]', testUsers.admin.email);
-    await page2.fill('input[type="password"]', testUsers.admin.password);
+    await page2.fill('input[name="email"]', testUsers.admin.email);
+    await page2.fill('input[name="password"]', testUsers.admin.password);
     await page2.click('button[type="submit"]');
     await page2.waitForURL(/(\?.*|\/eventos|\/dashboard|\/schedule)/);
     await page2.goto('/schedule');
@@ -195,8 +195,8 @@ test.describe('Testes de Integração E2E', () => {
 
   test('offline sync: salvar offline e sincronizar ao reconectar', async ({ page, context }) => {
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.fill('input[name="email"]', testUsers.admin.email);
+    await page.fill('input[name="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
     await page.waitForURL(/(\?.*|\/eventos|\/dashboard|\/schedule)/);
     await page.goto('/schedule');
@@ -247,8 +247,8 @@ test.describe('Testes de Integração E2E', () => {
 
   test('busca global: encontrar dados em diferentes módulos', async ({ page }) => {
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.fill('input[name="email"]', testUsers.admin.email);
+    await page.fill('input[name="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
     await page.waitForURL(/(\?.*|\/eventos|\/dashboard|\/schedule)/);
 
@@ -278,8 +278,8 @@ test.describe('Testes de Integração E2E', () => {
 
   test('exportação: gerar e baixar relatórios', async ({ page }) => {
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.fill('input[name="email"]', testUsers.admin.email);
+    await page.fill('input[name="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
     await page.waitForURL(/(\?.*|\/eventos|\/dashboard|\/schedule)/);
 

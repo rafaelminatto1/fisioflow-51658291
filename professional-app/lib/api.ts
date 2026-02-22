@@ -1,11 +1,24 @@
 /**
  * API Client for Professional App
  * Uses the same Cloud Functions V2 endpoints as the web app
+ * Falls back to Firestore when Cloud Functions are not available
  *
  * @module lib/api
  */
 
 import { auth } from './firebase';
+import { config } from './config';
+import { 
+  listPatientsFirestore, 
+  listAppointmentsFirestore, 
+  getDashboardStatsFirestore,
+  getAppointmentByIdFirestore,
+  getPatientByIdFirestore,
+  listEvolutionsFirestore,
+  listPatientFinancialRecordsFirestore,
+  getPatientFinancialSummaryFirestore,
+  listAllFinancialRecordsFirestore
+} from './firestore-fallback';
 
 // ============================================================
 // CONFIGURATION
@@ -284,14 +297,21 @@ async function fetchWithRetry<T>(
         continue;
       }
 
-      // Parse error response
+      // Parse error response - clone first to avoid "Already read" error
       let errorMessage = `HTTP ${response.status}`;
+      const responseClone = response.clone();
+      
       try {
-        const errorJson = await response.json();
+        const errorJson = await responseClone.json();
         errorMessage = errorJson.error || errorJson.message || errorMessage;
-      } catch {
-        const errorText = await response.text();
-        if (errorText) errorMessage = errorText;
+      } catch (jsonError) {
+        try {
+          const errorText = await response.text();
+          if (errorText) errorMessage = errorText;
+        } catch (textError) {
+          // If both fail, use default error message
+          console.warn('[API] Could not parse error response:', jsonError, textError);
+        }
       }
 
       throw new ApiError(
@@ -336,8 +356,20 @@ async function fetchApi<T>(
 // ============================================================
 // DASHBOARD API
 // ============================================================
-export async function getDashboardStats(): Promise<ApiDashboardStats> {
-    const response = await fetchApi<ApiResponse<ApiDashboardStats>>(API_URLS.dashboard.stats);
+export async function getDashboardStats(organizationId?: string): Promise<ApiDashboardStats> {
+    // Use Firestore fallback if Cloud Functions are disabled
+    if (!config.useCloudFunctions) {
+        console.log('[API] Using Firestore fallback for getDashboardStats');
+        const stats = await getDashboardStatsFirestore(organizationId);
+        return {
+            activePatients: stats.activePatients || 0,
+            todayAppointments: stats.appointmentsToday || 0,
+            pendingAppointments: 0,
+            completedAppointments: 0,
+        };
+    }
+
+    const response = await fetchApi<ApiResponse<ApiDashboardStats>>(API_URLS.dashboard.stats, { organizationId });
     return response.data;
 }
 
@@ -354,6 +386,12 @@ export async function getPatients(
   organizationId?: string,
   options?: { status?: string; search?: string; limit?: number }
 ): Promise<ApiPatient[]> {
+  // Use Firestore fallback if Cloud Functions are disabled
+  if (!config.useCloudFunctions) {
+    console.log('[API] Using Firestore fallback for getPatients');
+    return listPatientsFirestore(organizationId, options);
+  }
+
   const requestData: any = {
     limit: options?.limit || 100,
   };
@@ -370,6 +408,12 @@ export async function getPatients(
  * Get a single patient by ID
  */
 export async function getPatientById(id: string): Promise<ApiPatient | null> {
+  // Use Firestore fallback if Cloud Functions are disabled
+  if (!config.useCloudFunctions) {
+    console.log('[API] Using Firestore fallback for getPatientById');
+    return getPatientByIdFirestore(id);
+  }
+
   try {
     const response = await fetchApi<ApiResponse<ApiPatient>>(API_URLS.patients.get, {
       patientId: id,
@@ -432,6 +476,12 @@ export async function getAppointments(
     limit?: number;
   }
 ): Promise<ApiAppointment[]> {
+  // Use Firestore fallback if Cloud Functions are disabled
+  if (!config.useCloudFunctions) {
+    console.log('[API] Using Firestore fallback for getAppointments');
+    return listAppointmentsFirestore(organizationId, options?.therapistId, options);
+  }
+
   const requestData: any = {
     limit: options?.limit || 100,
   };
@@ -451,6 +501,12 @@ export async function getAppointments(
  * Get a single appointment by ID
  */
 export async function getAppointmentById(id: string): Promise<ApiAppointment | null> {
+  // Use Firestore fallback if Cloud Functions are disabled
+  if (!config.useCloudFunctions) {
+    console.log('[API] Using Firestore fallback for getAppointmentById');
+    return getAppointmentByIdFirestore(id);
+  }
+
   try {
     const response = await fetchApi<ApiResponse<ApiAppointment>>(API_URLS.appointments.get, {
       appointmentId: id,
@@ -580,6 +636,12 @@ export async function deleteExercise(id: string): Promise<{ success: boolean }> 
 // ============================================================
 
 export async function getEvolutions(patientId: string): Promise<ApiEvolution[]> {
+    // Use Firestore fallback if Cloud Functions are disabled
+    if (!config.useCloudFunctions) {
+        console.log('[API] Using Firestore fallback for getEvolutions');
+        return listEvolutionsFirestore(patientId);
+    }
+
     const response = await fetchApi<ApiResponse<ApiEvolution[]>>(API_URLS.evolutions.list, { patientId });
     return response.data || [];
 }
@@ -738,6 +800,12 @@ export async function deletePartnership(id: string): Promise<{ success: boolean 
 export async function getAllFinancialRecords(
   options?: { startDate?: string; endDate?: string; limit?: number }
 ): Promise<(ApiFinancialRecord & { patient_name: string })[]> {
+  // Use Firestore fallback if Cloud Functions are disabled
+  if (!config.useCloudFunctions) {
+    console.log('[API] Using Firestore fallback for getAllFinancialRecords');
+    return listAllFinancialRecordsFirestore(options);
+  }
+
   const requestData: any = {
     limit: options?.limit || 100,
   };
@@ -755,6 +823,12 @@ export async function getPatientFinancialRecords(
   patientId: string,
   options?: { status?: string; limit?: number }
 ): Promise<ApiFinancialRecord[]> {
+  // Use Firestore fallback if Cloud Functions are disabled
+  if (!config.useCloudFunctions) {
+    console.log('[API] Using Firestore fallback for getPatientFinancialRecords');
+    return listPatientFinancialRecordsFirestore(patientId, options);
+  }
+
   const requestData: any = {
     patientId,
     limit: options?.limit || 100,
@@ -770,6 +844,12 @@ export async function getPatientFinancialRecords(
  * Get patient financial summary
  */
 export async function getPatientFinancialSummary(patientId: string): Promise<ApiFinancialSummary | null> {
+  // Use Firestore fallback if Cloud Functions are disabled
+  if (!config.useCloudFunctions) {
+    console.log('[API] Using Firestore fallback for getPatientFinancialSummary');
+    return getPatientFinancialSummaryFirestore(patientId);
+  }
+
   try {
     const response = await fetchApi<ApiResponse<ApiFinancialSummary>>(API_URLS.financial.getSummary, {
       patientId,

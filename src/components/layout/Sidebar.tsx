@@ -72,6 +72,8 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useGamification } from '@/hooks/useGamification';
 import { Progress } from '@/components/ui/progress';
+import { getFirebaseAuth } from '@/integrations/firebase/app';
+import { signOut } from 'firebase/auth';
 
 const GamificationMiniProfile = ({ collapsed }: { collapsed: boolean }) => {
   const { profile: authProfile } = useAuth();
@@ -313,30 +315,21 @@ export function Sidebar() {
         aria-label={item.label}
         aria-current={isActive ? 'page' : undefined}
         className={cn(
-          "flex items-center gap-3 rounded-xl transition-all duration-200 group relative overflow-hidden",
-          collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2",
+          "flex items-center gap-3 rounded-xl transition-all duration-300 group relative overflow-hidden",
+          collapsed ? "justify-center px-2 py-3" : "px-4 py-2.5",
           isActive
-            ? "bg-slate-900 text-white font-semibold shadow-lg"
-            : "text-muted-foreground/70 hover:bg-slate-100 hover:text-slate-900 grayscale-[0.8] hover:grayscale-0"
+            ? "bg-slate-900 text-white font-bold shadow-xl shadow-slate-900/20"
+            : "text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-white"
         )}
       >
-        {/* Efeito de ripple no hover */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-
         <Icon className={cn(
-          "h-5 w-5 transition-transform duration-200 flex-shrink-0",
-          !isActive && "group-hover:scale-110 group-hover:rotate-3"
+          "h-5 w-5 transition-all duration-300 flex-shrink-0",
+          isActive ? "text-white" : "group-hover:scale-110 group-hover:rotate-3 group-hover:text-primary"
         )} />
-        {!collapsed && <span className="text-sm font-medium tracking-tight relative z-10">{item.label}</span>}
-        {collapsed && isActive && (
-          <div className="absolute left-0 w-1 h-8 bg-primary rounded-r-full shadow-[0_0_8px_rgba(255,255,255,0.5)]" />
-        )}
-        {/* Indicador de brilho no estado ativo */}
-        {!collapsed && isActive && (
-          <>
-            <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-white/10 to-transparent rounded-xl pointer-events-none" />
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-pulse" />
-          </>
+        {!collapsed && <span className="text-sm tracking-tight relative z-10">{item.label}</span>}
+        
+        {isActive && (
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-blue-400 rounded-r-full shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
         )}
       </Link>
     );
@@ -395,33 +388,26 @@ export function Sidebar() {
             aria-expanded={isOpen}
             aria-label={isOpen ? `Fechar menu ${label}` : `Abrir menu ${label}`}
             className={cn(
-              "flex items-center justify-between w-full px-3 py-2 rounded-xl transition-all duration-200 group relative overflow-hidden",
+              "flex items-center justify-between w-full px-4 py-2.5 rounded-xl transition-all duration-300 group relative overflow-hidden",
               isActive
-                ? "bg-slate-100 text-slate-900 font-semibold shadow-sm"
-                : "text-muted-foreground/70 hover:bg-slate-100 hover:text-slate-900 grayscale-[0.8] hover:grayscale-0"
+                ? "bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-bold"
+                : "text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-white"
             )}
           >
-            {/* Efeito de ripple no hover */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-
             <div className="flex items-center gap-3 relative z-10">
               <Icon className={cn(
-                "h-5 w-5 transition-transform duration-200",
-                !isActive && "group-hover:scale-110 group-hover:rotate-3"
+                "h-5 w-5 transition-all duration-300",
+                isActive ? "text-primary" : "group-hover:scale-110 group-hover:text-primary"
               )} />
-              <span className="text-sm font-medium tracking-tight">{label}</span>
+              <span className="text-sm tracking-tight">{label}</span>
             </div>
             <ChevronDown className={cn(
-              "h-4 w-4 transition-transform duration-300 flex-shrink-0 relative z-10",
+              "h-3.5 w-3.5 transition-transform duration-500 flex-shrink-0 relative z-10",
               isOpen && "rotate-180"
             )} />
-            {/* Indicador de glow no estado ativo */}
-            {isActive && (
-              <div className="absolute inset-0 bg-primary/5 rounded-xl pointer-events-none" />
-            )}
           </button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="pl-11 space-y-0.5 mt-1.5">
+        <CollapsibleContent className="pl-12 space-y-1 mt-1 animate-slide-up-fade">
           {items.map((item, index) => {
             const isSubActive = location.pathname === item.href ||
               (location.pathname + location.search === item.href) ||
@@ -431,22 +417,16 @@ export function Sidebar() {
                 key={item.href}
                 to={item.href}
                 className={cn(
-                  "block px-3 py-1.5 rounded-lg text-sm transition-all duration-200 relative overflow-hidden group",
+                  "block px-3 py-2 rounded-lg text-xs transition-all duration-200 relative overflow-hidden group font-medium",
                   isSubActive
-                    ? "bg-primary text-primary-foreground font-medium shadow-md"
-                    : "text-muted-foreground hover:bg-slate-50/80 dark:hover:bg-slate-800/50 hover:text-foreground hover:pl-4"
+                    ? "bg-primary/10 text-primary font-bold shadow-sm"
+                    : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white hover:pl-4"
                 )}
-                style={{ transitionDelay: `${index * 25}ms` }}
+                style={{ transitionDelay: `${index * 20}ms` }}
               >
-                {/* Efeito de ripple no hover */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-current/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
-
                 <span className="relative z-10">{item.label}</span>
                 {isSubActive && (
-                  <>
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-white/10 to-transparent rounded-lg pointer-events-none" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent animate-pulse" />
-                  </>
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-3 bg-primary rounded-r-full" />
                 )}
               </Link>
             );
@@ -458,11 +438,8 @@ export function Sidebar() {
 
   const handleLogout = async () => {
     try {
-      const { getFirebaseAuth } = await import('@/integrations/firebase/app');
-      const { signOut: signOutFn } = await import('firebase/auth');
-
       const auth = getFirebaseAuth();
-      await signOutFn(auth);
+      await signOut(auth);
 
       toast({
         title: 'Logout realizado',

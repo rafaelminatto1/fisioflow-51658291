@@ -5,8 +5,8 @@ import { testUsers } from './fixtures/test-data';
 test.describe('Testes de Acessibilidade WCAG 2.1 AA', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.fill('input[name="email"]', testUsers.admin.email);
+    await page.fill('input[name="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
     await page.waitForURL(/(\?|\/eventos|\/dashboard|\/schedule)/);
   });
@@ -70,7 +70,7 @@ test.describe('Testes de Acessibilidade WCAG 2.1 AA', () => {
     await page.goto('/eventos');
     await page.click('text=/novo evento/i');
 
-    const inputs = page.locator('input[type="text"], input[type="email"], textarea');
+    const inputs = page.locator('input[type="text"], input[name="email"], textarea');
     const count = await inputs.count();
 
     for (let i = 0; i < count; i++) {

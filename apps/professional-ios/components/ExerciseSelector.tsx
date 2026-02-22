@@ -105,9 +105,9 @@ export function ExerciseSelector({ onSelect, exclude = [] }: ExerciseSelectorPro
                 { opacity: pressed ? 0.7 : 1 },
               ]}
             >
-              {exercise.image_url || exercise.video_url ? (
+              {exercise.thumbnail_url || exercise.image_url ? (
                 <Image
-                  source={{ uri: exercise.image_url || exercise.video_url }}
+                  source={{ uri: exercise.thumbnail_url || exercise.image_url }}
                   style={styles.exerciseImage}
                   resizeMode="cover"
                 />

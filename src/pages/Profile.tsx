@@ -197,6 +197,7 @@ export const Profile = () => {
                       <Label htmlFor="name">Nome Completo</Label>
                       <Input
                         id="name"
+                        data-testid="profile-name"
                         value={profileData.name}
                         onChange={(e) => handleInputChange('name', e.target.value)}
                         disabled={!isEditing}

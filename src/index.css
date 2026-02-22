@@ -9,72 +9,60 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Base colors - Professional and clean */
-    --background: 0 0% 100%;
-    --foreground: 222.2 47.4% 11.2%;
+    --background: 210 20% 98%;
+    --foreground: 224 71.4% 4.1%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 47.4% 11.2%;
+    --card-foreground: 224 71.4% 4.1%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47.4% 11.2%;
+    --popover-foreground: 224 71.4% 4.1%;
 
-    /* Primary - Blue from Stich design (#0d7ff2) */
-    --primary: 210 90% 51%;
-    --primary-foreground: 0 0% 100%;
-    --primary-hover: 210 90% 45%;
-    --primary-glow: 210 95% 60%;
+    /* Primary - Refined depth */
+    --primary: 211 100% 50%;
+    --primary-foreground: 210 20% 98%;
+    --primary-hover: 211 100% 45%;
+    --primary-glow: 211 100% 60% / 0.15;
 
-    /* Secondary - Neutral grays */
-    --secondary: 220 13% 95%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary - Warmer grays */
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 220.9 39.3% 11%;
 
-    /* Success - Green for positive actions */
+    /* Success - Emerald depth */
     --success: 158 64% 52%;
     --success-foreground: 0 0% 100%;
 
-    /* Warning - Amber for attention */
-    --warning: 43 96% 56%;
+    /* Warning - Amber depth */
+    --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    /* Muted - Subtle backgrounds */
-    --muted: 220 13% 95%;
-    --muted-foreground: 220 9% 46%;
+    /* Muted - Softened */
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
 
-    /* Accent - Green for interactive elements */
+    /* Accent - Refined interactives */
     --accent: 158 64% 52%;
-    --accent-foreground: 0 0% 100%;
+    --accent-foreground: 220.9 39.3% 11%;
 
-    /* Destructive - Red for errors/delete */
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    /* Destructive */
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
 
     /* Borders & Inputs */
     --border: 220 13% 91%;
     --input: 220 13% 91%;
-    --ring: 210 90% 51%;
+    --ring: 211 100% 50%;
 
-    /* Modern gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(210 90% 51%), hsl(210 95% 60%));
-    --gradient-success: linear-gradient(135deg, hsl(158 64% 52%), hsl(158 74% 62%));
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%), hsl(220 13% 98%));
-    --gradient-background: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 13% 98%));
+    /* Premium shadows - Avoid generic looks */
+    --shadow-premium-sm: 0 2px 4px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.02);
+    --shadow-premium-md: 0 12px 24px -10px rgba(0, 0, 0, 0.1), 0 4px 8px -4px rgba(0, 0, 0, 0.05);
+    --shadow-premium-lg: 0 32px 64px -16px rgba(0, 0, 0, 0.12), 0 16px 32px -8px rgba(0, 0, 0, 0.08);
 
-    /* Shadows - Clean and professional */
-    --shadow-sm: 0 1px 2px 0 hsl(220 13% 91% / 0.5);
-    --shadow-md: 0 4px 6px -1px hsl(220 13% 91% / 0.3);
-    --shadow-lg: 0 10px 15px -3px hsl(220 13% 91% / 0.2);
-    --shadow-card: 0 2px 8px -2px hsl(220 13% 20% / 0.08);
-    --shadow-hover: 0 8px 24px -8px hsl(210 90% 51% / 0.25);
+    /* Visual Layering Shadows */
+    --shadow-inner-border: inset 0 0 0 1px rgba(0, 0, 0, 0.05), 0 4px 12px -2px rgba(0, 0, 0, 0.08);
 
-    /* Transitions */
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-fast: all 0.15s ease-out;
-
-    /* Advanced animations */
-    --bounce-duration: 0.6s;
-    --slide-distance: 20px;
-
-    --radius: 0.75rem;
+    --radius: 1rem;
+    /* Slightly more rounded for premium feel */
 
     /* Sidebar - Clean and professional */
     --sidebar-background: 0 0% 100%;
@@ -332,6 +320,7 @@ All colors MUST be HSL.
     0% {
       transform: translateX(-100%);
     }
+
     100% {
       transform: translateX(100%);
     }
@@ -350,41 +339,36 @@ All colors MUST be HSL.
     animation: shimmer 2s infinite linear;
   }
 
-  /* Hover effects */
+  /* Visual Depth Utilities */
+  .shadow-premium-sm {
+    box-shadow: var(--shadow-premium-sm);
+  }
+
+  .shadow-premium-md {
+    box-shadow: var(--shadow-premium-md);
+  }
+
+  .shadow-premium-lg {
+    box-shadow: var(--shadow-premium-lg);
+  }
+
+  .inner-border {
+    box-shadow: var(--shadow-inner-border);
+  }
+
+  /* Interactive Hover Lift */
   .hover-lift {
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.4s cubic-bezier(0.2, 1, 0.2, 1), box-shadow 0.4s cubic-bezier(0.2, 1, 0.2, 1);
   }
 
   .hover-lift:hover {
-    transform: translateY(-4px);
+    transform: translateY(-6px) scale(1.01);
+    box-shadow: var(--shadow-premium-lg);
   }
 
-  .hover-scale {
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .hover-scale:hover {
-    transform: scale(1.02);
-  }
-
-  /* Scrollbar customizado */
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: hsl(var(--muted));
-    border-radius: 10px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: hsl(var(--primary) / 0.3);
-    border-radius: 10px;
-  }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--primary) / 0.5);
+  /* Massive Typography Scaling */
+  .text-massive {
+    @apply text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[0.9];
   }
 
   /* Mobile optimizations */
@@ -464,6 +448,7 @@ All colors MUST be HSL.
   /* Prevent zoom on input focus for iOS */
   /* Prevent zoom on input focus for iOS */
   @media screen and (max-width: 768px) {
+
     input[type="text"],
     input[type="email"],
     input[type="password"],
@@ -507,6 +492,7 @@ All colors MUST be HSL.
 
   /* Fix hover states interfering with touch on iOS */
   @media (hover: none) and (pointer: coarse) {
+
     /* Disable hover effects on touch devices */
     .group:hover .group-hover\:opacity-100,
     .group:hover .group-hover\:block,
@@ -1329,10 +1315,12 @@ All colors MUST be HSL.
 
   /* Animação de pulso sutil para drop target */
   @keyframes pulse-subtle {
+
     0%,
     100% {
       opacity: 1;
     }
+
     50% {
       opacity: 0.85;
     }
@@ -1344,10 +1332,12 @@ All colors MUST be HSL.
 
   /* Animação de bounce sutil para indicador de drop */
   @keyframes bounce-subtle {
+
     0%,
     100% {
       transform: translateY(0);
     }
+
     50% {
       transform: translateY(-4px);
     }
@@ -1416,7 +1406,7 @@ All colors MUST be HSL.
   }
 
   /* Fix margin issues - ensure proper spacing */
-  .react-grid-layout > .react-grid-item {
+  .react-grid-layout>.react-grid-item {
     /* Ensure items don't overflow their calculated width */
     box-sizing: border-box;
     max-width: 100%;
@@ -1447,7 +1437,7 @@ All colors MUST be HSL.
   }
 
   /* Prevent content clipping during transitions */
-  .react-grid-item > * {
+  .react-grid-item>* {
     overflow: hidden;
   }
 
@@ -1561,9 +1551,11 @@ All colors MUST be HSL.
     0% {
       transform: scale(1.02);
     }
+
     50% {
       transform: scale(0.98);
     }
+
     100% {
       transform: scale(1);
     }
@@ -1609,6 +1601,7 @@ All colors MUST be HSL.
 
   /* Performance: Reduce motion for users who prefer it */
   @media (prefers-reduced-motion: reduce) {
+
     .react-grid-item,
     .drag-handle,
     .react-resizable-handle {
@@ -1627,6 +1620,7 @@ All colors MUST be HSL.
       opacity: 0;
       transform: scale(0.95);
     }
+
     to {
       opacity: 1;
       transform: scale(1);
@@ -1642,9 +1636,11 @@ All colors MUST be HSL.
     0% {
       box-shadow: 0 0 0 0 hsl(var(--success) / 0.7);
     }
+
     70% {
       box-shadow: 0 0 0 10px hsl(var(--success) / 0);
     }
+
     100% {
       box-shadow: 0 0 0 0 hsl(var(--success) / 0);
     }
@@ -1700,6 +1696,7 @@ All colors MUST be HSL.
 
 /* GPU acceleration for animated elements */
 @layer utilities {
+
   /* Enable GPU layer promotion for smooth animations */
   .will-change-transform {
     will-change: transform;
@@ -1819,7 +1816,7 @@ All colors MUST be HSL.
   }
 
   /* Make dialog body scrollable */
-  [data-radix-dialog-content][data-state="open"] > div:not([data-radix-dialog-header]):not([data-radix-dialog-footer]) {
+  [data-radix-dialog-content][data-state="open"]>div:not([data-radix-dialog-header]):not([data-radix-dialog-footer]) {
     flex: 1;
     overflow-y: auto;
     min-height: 0;
@@ -1850,6 +1847,7 @@ All colors MUST be HSL.
     opacity: 0;
     transform: translate3d(0, -10px, 0);
   }
+
   to {
     opacity: 1;
     transform: translate3d(0, 0, 0);
@@ -2109,6 +2107,26 @@ All colors MUST be HSL.
   @apply transition-all duration-150;
   will-change: border-color;
 }
+
+/* ========================================================================
+   V3 NOTION EVOLUTION - Strip card styling from sub-components
+   ======================================================================== */
+.notion-v3-block > div {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+
+.notion-v3-block > div > .absolute.top-0 {
+  display: none !important;
+}
+
+/* Hide internal headers of sub-components when using NotionSectionTitle */
+.notion-v3-block > div > [class*="border-b"][class*="bg-gradient"] {
+  display: none !important;
+}
+
 /* ========================================================================
    ACCESSIBILITY SETTINGS - User-controlled overrides
    ======================================================================== */
@@ -2175,9 +2193,11 @@ html.text-large {
   html.text-small {
     font-size: 14px;
   }
+
   html.text-medium {
     font-size: 16px;
   }
+
   html.text-large {
     font-size: 22px;
   }

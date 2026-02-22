@@ -245,18 +245,20 @@ export const createAppointmentHttp = onRequest(
     const therapistIdRaw = (data.therapistId != null && data.therapistId !== '') ? String(data.therapistId).trim() : '';
     const therapistId = therapistIdRaw || userId;
     // Conflito por capacidade do slot (0/4 = livre), não por terapeuta
-    const conflictResult = await checkTimeConflictByCapacity(pool, {
+    const ignoreCapacity = body.ignoreCapacity === true || body.ignore_capacity === true;
+    const conflictResult = !ignoreCapacity ? await checkTimeConflictByCapacity(pool, {
       date: data.date,
       startTime: data.startTime,
       endTime: data.endTime,
       organizationId
-    });
+    }) : { hasConflict: false, conflicts: [], total: 0, capacity: 4 };
+
     if (conflictResult.hasConflict) {
       res.status(409).json({
         error: 'Conflito de horário detectado',
-        conflicts: conflictResult.conflicts,
-        total: conflictResult.total,
-        capacity: conflictResult.capacity
+        conflicts: (conflictResult as CapacityConflictResult).conflicts,
+        total: (conflictResult as CapacityConflictResult).total,
+        capacity: (conflictResult as CapacityConflictResult).capacity
       });
       return;
     }
@@ -353,7 +355,8 @@ export const updateAppointmentHttp = onRequest(
       }
 
       const runConflictCheck = (updates.date || updates.appointment_date || updates.startTime || updates.start_time || updates.appointment_time || updates.endTime || updates.end_time) || (updates.therapistId && updates.therapistId !== currentAppt.therapist_id);
-      if (runConflictCheck) {
+      const ignoreCapacity = body.ignoreCapacity === true || body.ignore_capacity === true;
+      if (runConflictCheck && !ignoreCapacity) {
         const conflictResult = await checkTimeConflictByCapacity(pool, {
           date: newDate,
           startTime: newStartTime,
@@ -864,17 +867,25 @@ export const createAppointmentHandler = async (request: any) => {
   const pool = getPool();
 
   try {
-    // Verificar conflitos (usar therapistId resolvido para checagem correta)
-    const hasConflict = await checkTimeConflictHelper(pool, {
-      date: data.date,
-      startTime: data.startTime,
-      endTime: data.endTime,
-      therapistId,
-      organizationId: auth.organizationId,
-    });
+    // Inserir agendamento
+    const ignoreCapacity = request.data.ignoreCapacity === true;
 
-    if (hasConflict) {
-      throw new HttpsError('failed-precondition', 'Conflito de horário detectado');
+    // Verificar conflitos se não for ignorado
+    if (!ignoreCapacity) {
+      const conflictResult = await checkTimeConflictByCapacity(pool, {
+        date: data.date,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        organizationId: auth.organizationId,
+      });
+
+      if (conflictResult.hasConflict) {
+        throw new HttpsError('failed-precondition', 'Conflito de horário detectado', {
+          conflicts: conflictResult.conflicts,
+          total: conflictResult.total,
+          capacity: conflictResult.capacity
+        });
+      }
     }
 
     // Inserir agendamento
@@ -998,18 +1009,24 @@ export const updateAppointmentHandler = async (request: any) => {
     const currentAppt = current.rows[0];
 
     // Se houver alteração de horário/terapeuta, verificar conflito
-    if (updates.date || updates.startTime || updates.endTime || (updates.therapistId && updates.therapistId !== currentAppt.therapist_id)) {
-      const hasConflict = await checkTimeConflictHelper(pool, {
+    const hasTimeChange = updates.date || updates.startTime || updates.endTime || (updates.therapistId && updates.therapistId !== currentAppt.therapist_id);
+    const ignoreCapacity = request.data.ignoreCapacity === true;
+
+    if (hasTimeChange && !ignoreCapacity) {
+      const conflictResult = await checkTimeConflictByCapacity(pool, {
         date: updates.date || currentAppt.date,
         startTime: updates.startTime || currentAppt.start_time,
         endTime: updates.endTime || currentAppt.end_time,
-        therapistId: updates.therapistId || currentAppt.therapist_id,
         excludeAppointmentId: appointmentId,
         organizationId: auth.organizationId,
       });
 
-      if (hasConflict) {
-        throw new HttpsError('failed-precondition', 'Conflito de horário detectado');
+      if (conflictResult.hasConflict) {
+        throw new HttpsError('failed-precondition', 'Conflito de horário detectado', {
+          conflicts: conflictResult.conflicts,
+          total: conflictResult.total,
+          capacity: conflictResult.capacity
+        });
       }
     }
 

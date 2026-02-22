@@ -5,6 +5,7 @@
 import { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
 import { CalendarViewType } from '@/components/schedule/CalendarView';
 import { KeyboardShortcuts } from '@/components/schedule/KeyboardShortcuts';
+import { KeyboardShortcutsEnhanced } from '@/components/schedule/KeyboardShortcutsEnhanced';
 import { BulkActionsBar } from '@/components/schedule/BulkActionsBar';
 import { useAppointments, useRescheduleAppointment } from '@/hooks/useAppointments';
 import { useAppointmentsByPeriod } from '@/hooks/useAppointmentsByPeriod';
@@ -17,11 +18,19 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
 import { AlertTriangle } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { EmptyState } from '@/components/ui';
-import { CalendarSkeleton } from '@/components/schedule/skeletons';
+import { EmptyState, EmptyStateEnhanced } from '@/components/ui';
+import { CalendarSkeletonEnhanced, PulseLoader } from '@/components/schedule/skeletons/CalendarSkeletonEnhanced';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
+// ============================================================================
+// NOVOS COMPONENTES DE QUICK WINS
+// ============================================================================
+import { QuickFilters } from '@/components/schedule/QuickFilters';
+import { PullToRefresh } from '@/components/schedule/PullToRefresh';
+import { SwipeNavigation } from '@/components/schedule/SwipeNavigation';
+import { CalendarHeatMap } from '@/components/schedule/CalendarHeatMap';
+import { DebouncedSearch } from '@/components/schedule/DebouncedSearch';
 // ScheduleToolbar removed - actions merged into CalendarView header
 import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
 import { APPOINTMENT_CONFLICT_MESSAGE, APPOINTMENT_CONFLICT_TITLE, isAppointmentConflictError } from '@/utils/appointmentErrors';
@@ -160,15 +169,15 @@ const Schedule = () => {
   // HOOKS
   // ===================================================================
 
-  const { user } = useAuth();
-  const organizationId = user?.organizationId || '';
+  const { user, organizationId: authOrganizationId } = useAuth();
+  const organizationId = authOrganizationId || '';
 
   // Log organization ID for debugging
   useEffect(() => {
-    logger.info('Schedule page - Organization ID', { 
-      hasUser: !!user, 
+    logger.info('Schedule page - Organization ID', {
+      hasUser: !!user,
       organizationId,
-      hasOrganizationId: !!organizationId 
+      hasOrganizationId: !!organizationId
     }, 'Schedule');
   }, [user, organizationId]);
 
@@ -293,14 +302,15 @@ const Schedule = () => {
     setModalDefaultTime(undefined);
   }, []);
 
-  const handleAppointmentReschedule = useCallback(async (appointment: Appointment, newDate: Date, newTime: string) => {
+  const handleAppointmentReschedule = useCallback(async (appointment: Appointment, newDate: Date, newTime: string, ignoreCapacity?: boolean) => {
     try {
       const formattedDate = formatDateToLocalISO(newDate);
       await rescheduleAppointment({
         appointmentId: appointment.id,
         appointment_date: formattedDate,
         appointment_time: newTime,
-        duration: appointment.duration
+        duration: appointment.duration,
+        ignoreCapacity
       });
       toast({
         title: '✅ Reagendado com sucesso',
@@ -582,17 +592,17 @@ const Schedule = () => {
           {/* Diagnostic Component - Remove after debugging */}
           {import.meta.env.DEV && (
             <div className="px-4 pt-4">
-              <ScheduleDiagnostics 
-                currentDate={currentDate} 
-                viewType={viewType as 'day' | 'week' | 'month'} 
+              <ScheduleDiagnostics
+                currentDate={currentDate}
+                viewType={viewType as 'day' | 'week' | 'month'}
               />
             </div>
           )}
 
           {/* Calendar Area */}
-          <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950">
+          <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950" data-testid="mobile-schedule-list">
             <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950 relative min-h-[600px]">
-              <Suspense fallback={<CalendarSkeleton viewType={viewType as CalendarViewType} />}>
+              <Suspense fallback={<CalendarSkeletonEnhanced viewType={viewType as CalendarViewType} />}>
                 <CalendarView
                   appointments={appointments}
                   currentDate={currentDate}

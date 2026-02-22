@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 
 const data = [
   { day: 'Seg', consultas: 8, exercicios: 15 },
@@ -18,7 +18,7 @@ export function ActivityChart() {
         <CardTitle className="text-foreground">Atividades da Semana</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+        <div className="w-full bg-white dark:bg-gray-800 rounded-lg" style={{ height: '300px' }}>
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
             <XAxis 
@@ -53,7 +53,7 @@ export function ActivityChart() {
               name="Exercícios"
             />
           </BarChart>
-        </ResponsiveContainer>
+        </div>
       </CardContent>
     </Card>
   );

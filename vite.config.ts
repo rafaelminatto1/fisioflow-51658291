@@ -84,6 +84,8 @@ export default defineConfig(({ mode }) => {
         "@fisioflow/shared-types": path.resolve(__dirname, "./packages/shared-types/src"),
         "@fisioflow/shared-constants": path.resolve(__dirname, "./packages/shared-constants/src"),
         "@fisioflow/shared-utils": path.resolve(__dirname, "./packages/shared-utils/src"),
+        "@fisioflow/ui": path.resolve(__dirname, "./packages/ui/src"),
+        "@fisioflow/core": path.resolve(__dirname, "./packages/core/src"),
         "@fisioflow/skills": path.resolve(__dirname, "./src/lib/skills"),
         "react-grid-layout/dist/legacy": path.resolve(__dirname, "./node_modules/react-grid-layout/dist/legacy.mjs"),
         "globalthis": path.resolve(__dirname, "./src/lib/globalthis-shim.ts"),
@@ -152,18 +154,21 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       include: ['react', 'react-dom', 'framer-motion', 'lucide-react', 'react-router-dom', '@tanstack/react-query'],
     },
-    ...(useFunctionsProxy
-      ? {
-        server: {
-          proxy: {
-            '/functions': {
-              target: 'http://127.0.0.1:5001/fisioflow-migration/southamerica-east1',
-              changeOrigin: true,
-              rewrite: (path) => path.replace(/^\/functions/, ''),
+    server: {
+      watch: {
+        ignored: ['**/node_modules/**', '**/dist/**', '**/.git/**', '**/*.log'],
+      },
+      ...(useFunctionsProxy
+        ? {
+            proxy: {
+              '/functions': {
+                target: 'http://127.0.0.1:5001/fisioflow-migration/southamerica-east1',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/functions/, ''),
+              },
             },
-          },
-        },
-      }
-      : {}),
+          }
+        : {}),
+    },
   };
 });

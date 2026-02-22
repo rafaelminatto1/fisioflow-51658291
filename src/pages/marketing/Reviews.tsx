@@ -23,12 +23,15 @@ import {
   AlertCircle,
   Share2,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Sparkles,
+  Loader2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { generateMarketingContent } from '@/services/ai/marketingAITemplateService';
 
 interface GoogleReview {
   author: string;
@@ -50,7 +53,41 @@ export default function ReviewsPage() {
   const [filterRating, setFilterRating] = useState<FilterRating>('all');
   const [sortBy, setSortBy] = useState<SortOption>('recent');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isGeneratingReply, setIsGeneratingReply] = useState<string | null>(null);
   const reviewsPerPage = 10;
+
+  const handleAIGenerateReply = async (review: GoogleReview) => {
+    setIsGeneratingReply(review.author);
+    try {
+      const result = await generateMarketingContent({
+        type: 'caption',
+        context: {
+          contentType: 'celebration',
+          reviewComment: review.comment,
+          patientName: review.author,
+          rating: review.rating,
+          isReply: true,
+        },
+        tone: 'professional'
+      });
+
+      if (result.success && result.template) {
+        await navigator.clipboard.writeText(result.template);
+        toast({
+          title: 'Resposta gerada!',
+          description: 'A resposta foi copiada para sua área de transferência.',
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro na IA',
+        description: 'Não foi possível gerar a resposta no momento.',
+      });
+    } finally {
+      setIsGeneratingReply(null);
+    }
+  };
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -428,6 +465,20 @@ export default function ReviewsPage() {
 
                         {/* Actions */}
                         <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                            onClick={() => handleAIGenerateReply(review)}
+                            disabled={isGeneratingReply === review.author}
+                          >
+                            {isGeneratingReply === review.author ? (
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                              <Sparkles className="h-4 w-4 mr-2" />
+                            )}
+                            Responder com IA
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"

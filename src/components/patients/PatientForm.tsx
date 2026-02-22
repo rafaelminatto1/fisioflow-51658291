@@ -181,7 +181,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6" data-testid="patient-form">
       <Tabs defaultValue="basic" className="w-full">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 overflow-x-auto -mx-1 px-1 scrollbar-hide">
           <TabsTrigger value="basic">
@@ -221,6 +221,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                   </Label>
                   <Input
                     id="full_name"
+                    data-testid="patient-name"
                     placeholder="Nome completo do paciente"
                     {...register('full_name')}
                   />
@@ -238,6 +239,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                     <PopoverTrigger asChild>
                       <Button
                         variant="outline"
+                        data-testid="patient-birthdate"
                         className={cn(
                           "w-full justify-start text-left font-normal",
                           !watchedBirthDate && "text-muted-foreground"
@@ -278,6 +280,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                   <Label htmlFor="cpf">CPF</Label>
                   <Input
                     id="cpf"
+                    data-testid="patient-cpf"
                     value={watchedCpf || ''}
                     onChange={handleCpfChange}
                     onBlur={() => setValue('cpf', watchedCpf || '', { shouldValidate: true })}
@@ -323,6 +326,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                   </Label>
                   <Input
                     id="email"
+                    data-testid="patient-email"
                     type="email"
                     placeholder="email@exemplo.com"
                     {...register('email')}
@@ -340,6 +344,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                   </Label>
                   <Input
                     id="phone"
+                    data-testid="patient-phone"
                     value={watchedPhone || ''}
                     onChange={handlePhoneChange}
                     onBlur={() => setValue('phone', watchedPhone || '', { shouldValidate: true })}
@@ -591,6 +596,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                   <Label htmlFor="city">Cidade</Label>
                   <Input
                     id="city"
+                    data-testid="address-street"
                     placeholder="Nome da cidade"
                     {...register('city')}
                   />
@@ -603,7 +609,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                     control={control}
                     render={({ field }) => (
                       <Select onValueChange={field.onChange} value={field.value?.toUpperCase()}>
-                        <SelectTrigger>
+                        <SelectTrigger data-testid="address-number">
                           <SelectValue placeholder="UF" />
                         </SelectTrigger>
                         <SelectContent>
@@ -644,6 +650,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                   <Label htmlFor="zip_code">CEP</Label>
                   <Input
                     id="zip_code"
+                    data-testid="address-cep"
                     value={watchedCEP || ''}
                     onChange={handleCEPChange}
                     placeholder="00000-000"

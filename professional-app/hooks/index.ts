@@ -6,6 +6,7 @@ export { useCamera } from './useCamera';
 export { useCheckIn } from './useCheckIn';
 export { useHaptics } from './useHaptics';
 export { useSyncStatus } from './useSyncStatus';
+export { useEvolutions, useEvolution } from './useEvolutions';
 export {
   useExercisesLibrary,
   useExerciseCreate,
@@ -29,3 +30,6 @@ export {
   useDeleteFinancialRecord,
   useMarkAsPaid,
 } from './usePatientFinancial';
+export { useProtocols } from './useProtocols';
+export { useProtocol } from './useProtocol';
+export { usePatientProtocols } from './usePatientProtocols';

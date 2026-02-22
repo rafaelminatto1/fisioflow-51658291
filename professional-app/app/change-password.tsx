@@ -15,7 +15,7 @@ import { useColors } from '@/hooks/useColorScheme';
 import { Button } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
 import { updatePassword } from 'firebase/auth';
-import { getAuth } from '@/lib/firebase';
+import { auth as getAuth } from '@/lib/firebase';
 
 interface FormErrors {
   currentPassword?: string;
@@ -77,7 +77,7 @@ export default function ChangePasswordScreen() {
     setIsSubmitting(true);
 
     try {
-      const auth = getAuth();
+      const auth = getAuth;
       const currentUser = auth.currentUser;
 
       if (!currentUser) {
@@ -344,13 +344,12 @@ export default function ChangePasswordScreen() {
         {/* Submit Button */}
         <View style={styles.buttonContainer}>
           <Button
+            title={isSubmitting ? 'Alterando...' : 'Alterar Senha'}
             onPress={handleSubmit}
             disabled={isSubmitting}
             loading={isSubmitting}
             style={styles.submitButton}
-          >
-            {isSubmitting ? 'Alterando...' : 'Alterar Senha'}
-          </Button>
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

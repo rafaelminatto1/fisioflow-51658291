@@ -341,7 +341,7 @@ export function useCreateAppointment() {
   const { profile } = useAuth();
 
   return useMutation({
-    mutationFn: async (data: AppointmentFormData) => {
+    mutationFn: async (data: AppointmentFormData & { ignoreCapacity?: boolean }) => {
       const organizationId = profile?.organization_id || await requireUserOrganizationId();
 
       // Get current appointments for conflict checking
@@ -449,9 +449,13 @@ export function useUpdateAppointment() {
   const { profile } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ appointmentId, updates }: { appointmentId: string; updates: Partial<AppointmentFormData> }) => {
+    mutationFn: async ({ appointmentId, updates, ignoreCapacity }: {
+      appointmentId: string;
+      updates: Partial<AppointmentFormData>;
+      ignoreCapacity?: boolean;
+    }) => {
       const organizationId = profile?.organization_id || await requireUserOrganizationId();
-      return await AppointmentService.updateAppointment(appointmentId, updates, organizationId);
+      return await AppointmentService.updateAppointment(appointmentId, { ...updates, ignoreCapacity }, organizationId);
     },
     onMutate: async (variables) => {
       // Cancel outgoing refetches
@@ -539,11 +543,11 @@ export function useDeleteAppointment() {
   return useMutation({
     mutationFn: async (appointmentId: string) => {
       const organizationId = profile?.organization_id || await requireUserOrganizationId();
-      
+
       // Get appointment data before deleting for cache invalidation
       const currentResult = queryClient.getQueryData<AppointmentsQueryResult>(appointmentKeys.list(profile?.organization_id));
       const appointment = currentResult?.data.find(apt => apt.id === appointmentId);
-      
+
       await AppointmentService.deleteAppointment(appointmentId, organizationId);
       return { appointmentId, appointment };
     },
@@ -624,12 +628,13 @@ export function useRescheduleAppointment() {
   const { mutateAsync } = useUpdateAppointment();
 
   return {
-    mutateAsync: ({ appointmentId, appointment_date, appointment_time, duration }: {
+    mutateAsync: ({ appointmentId, appointment_date, appointment_time, duration, ignoreCapacity }: {
       appointmentId: string;
       appointment_date?: string;
       appointment_time?: string;
       duration?: number;
-    }) => mutateAsync({ appointmentId, updates: { appointment_date, appointment_time, duration } }),
+      ignoreCapacity?: boolean;
+    }) => mutateAsync({ appointmentId, updates: { appointment_date, appointment_time, duration }, ignoreCapacity }),
     isPending: false
   };
 }

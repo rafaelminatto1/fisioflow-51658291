@@ -5,8 +5,8 @@ test.describe('Permissões por Role', () => {
   test('admin deve ter acesso a todas as rotas', async ({ page }) => {
     // Login como admin
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.fill('input[name="email"]', testUsers.admin.email);
+    await page.fill('input[name="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
     await page.waitForURL(/\/(eventos|dashboard|schedule|smart-dashboard)/, { timeout: 10000 });
     
@@ -45,8 +45,8 @@ test.describe('Permissões por Role', () => {
   test('fisioterapeuta deve ter acesso a rotas permitidas', async ({ page }) => {
     // Login como fisioterapeuta
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.fisio.email);
-    await page.fill('input[type="password"]', testUsers.fisio.password);
+    await page.fill('input[name="email"]', testUsers.fisio.email);
+    await page.fill('input[name="password"]', testUsers.fisio.password);
     await page.click('button[type="submit"]');
     await page.waitForURL(/\/(eventos|dashboard|schedule|smart-dashboard)/, { timeout: 10000 });
     
@@ -72,8 +72,8 @@ test.describe('Permissões por Role', () => {
   test('estagiário deve ter acesso limitado', async ({ page }) => {
     // Login como estagiário
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.estagiario.email);
-    await page.fill('input[type="password"]', testUsers.estagiario.password);
+    await page.fill('input[name="email"]', testUsers.estagiario.email);
+    await page.fill('input[name="password"]', testUsers.estagiario.password);
     await page.click('button[type="submit"]');
     await page.waitForURL(/\/(eventos|dashboard|schedule|smart-dashboard)/, { timeout: 10000 });
     
@@ -120,8 +120,8 @@ test.describe('Permissões por Role', () => {
   test('deve verificar role no perfil do usuário', async ({ page }) => {
     // Login como admin
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.fill('input[name="email"]', testUsers.admin.email);
+    await page.fill('input[name="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
     await page.waitForURL(/\/(eventos|dashboard|schedule|smart-dashboard)/, { timeout: 10000 });
     

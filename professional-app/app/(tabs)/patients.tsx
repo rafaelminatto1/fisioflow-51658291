@@ -43,12 +43,18 @@ export default function PatientsScreen() {
       (patient.email && patient.email.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
-  const formatDate = (date: Date | string) => {
-    const d = typeof date === 'string' ? new Date(date) : date;
-    return d.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: 'short',
-    });
+  const formatDate = (date: Date | string | undefined) => {
+    if (!date) return 'N/A';
+    try {
+      const d = typeof date === 'string' ? new Date(date) : date;
+      if (!d || isNaN(d.getTime())) return 'N/A';
+      return d.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: 'short',
+      });
+    } catch {
+      return 'N/A';
+    }
   };
 
   return (

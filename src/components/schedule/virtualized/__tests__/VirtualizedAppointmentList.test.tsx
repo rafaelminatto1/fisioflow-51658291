@@ -124,7 +124,8 @@ describe('VirtualizedAppointmentList', () => {
     const expectedHeight = appointments.length * itemHeight;
     const innerContainer = container.querySelector('[style*="position: relative"]');
     
-    expect(innerContainer).toHaveStyle({ height: `${expectedHeight}px` });
+    const style = innerContainer?.getAttribute('style');
+    expect(style).toContain(`height: ${expectedHeight}px`);
   });
 
   it('should handle scroll events to update visible range', () => {
@@ -203,6 +204,7 @@ describe('VirtualizedAppointmentList', () => {
     const expectedHeight = appointments.length * customItemHeight;
     const innerContainer = container.querySelector('[style*="position: relative"]');
     
-    expect(innerContainer).toHaveStyle({ height: `${expectedHeight}px` });
+    const style = innerContainer?.getAttribute('style');
+    expect(style).toContain(`height: ${expectedHeight}px`);
   });
 });

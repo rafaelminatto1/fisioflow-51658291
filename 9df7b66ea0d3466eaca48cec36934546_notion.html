@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style type="text/tailwindcss">
+        :root {
+            --primary: #10b981;
+            --primary-hover: #059669;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border-light: #e5e7eb;
+            --bg-sidebar: #f9fafb;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            background-color: #ffffff;
+        }
+        .sidebar-item:hover {
+            background-color: #f3f4f6;
+        }
+        .timeline-line {
+            position: absolute;
+            left: 24px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background-color: var(--border-light);
+            z-index: 0;
+        }
+        .notion-input:focus {
+            outline: none;
+            background-color: #f3f4f6;
+            border-radius: 4px;
+        }
+        details summary::-webkit-details-marker {
+            display: none;
+        }
+        details[open] summary .expand-icon {
+            transform: rotate(90deg);
+        }
+    </style>
+</head>
+<body class="flex min-h-screen">
+<aside class="w-64 bg-[var(--bg-sidebar)] border-r border-[var(--border-light)] flex flex-col shrink-0 sticky top-0 h-screen overflow-y-auto">
+<div class="p-4 text-xs font-semibold text-[var(--text-muted)] flex items-center gap-2">
+            FisioFlow - Sistema de Gestão / Patient Evolution
+        </div>
+<nav class="flex-1 px-2 space-y-0.5">
+<div class="p-2 flex items-center gap-3 sidebar-item rounded-md cursor-pointer text-sm">
+<span class="material-symbols-outlined text-xl">insights</span> Activity
+            </div>
+<div class="mt-4 px-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Núcleo</div>
+<div class="p-2 flex items-center gap-3 sidebar-item rounded-md cursor-pointer text-sm">
+<span class="material-symbols-outlined text-xl">calendar_today</span> Agenda
+            </div>
+<div class="p-2 flex items-center gap-3 sidebar-item rounded-md cursor-pointer text-sm">
+<span class="material-symbols-outlined text-xl">dashboard</span> Dashboard
+            </div>
+<div class="p-2 flex items-center gap-3 sidebar-item rounded-md cursor-pointer text-sm">
+<span class="material-symbols-outlined text-xl">group</span> Pacientes
+            </div>
+<div class="mt-4 px-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Clínica</div>
+<div class="p-2 flex items-center gap-3 sidebar-item rounded-md cursor-pointer text-sm">
+<span class="material-symbols-outlined text-xl">fitness_center</span> Exercícios
+            </div>
+<div class="p-2 flex items-center gap-3 sidebar-item rounded-md cursor-pointer text-sm">
+<span class="material-symbols-outlined text-xl">assignment</span> Protocolos
+            </div>
+<div class="p-2 flex items-center gap-3 sidebar-item rounded-md cursor-pointer text-sm">
+<span class="material-symbols-outlined text-xl">chat_bubble</span> Comunicação
+            </div>
+<div class="mt-4 px-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Gestão</div>
+<div class="p-2 flex items-center gap-3 sidebar-item rounded-md cursor-pointer text-sm">
+<span class="material-symbols-outlined text-xl">list_alt</span> Lista de Espera
+            </div>
+<div class="p-2 flex items-center gap-3 sidebar-item rounded-md cursor-pointer text-sm">
+<span class="material-symbols-outlined text-xl">task_alt</span> Tarefas
+            </div>
+<div class="mt-4 px-2 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Módulos</div>
+<div class="p-2 flex items-center gap-3 sidebar-item rounded-md cursor-pointer text-sm">
+<span class="material-symbols-outlined text-xl">analytics</span> Avaliações
+            </div>
+<div class="p-2 flex items-center gap-3 sidebar-item rounded-md cursor-pointer text-sm bg-white shadow-sm border border-gray-100 font-medium">
+<span class="material-symbols-outlined text-xl">history_edu</span> Patient Evolution
+            </div>
+</nav>
+<div class="p-4 border-t border-[var(--border-light)] text-[10px] text-gray-400 flex flex-col gap-1">
+<div class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> Core Web Vitals</div>
+<div>18:41</div>
+</div>
+</aside>
+<main class="flex-1 flex flex-col relative bg-white">
+<header class="px-12 py-6">
+<div class="text-xs text-[var(--text-muted)] flex items-center gap-2">
+                FisioFlow <span class="material-symbols-outlined text-sm">chevron_right</span> 
+                Patients <span class="material-symbols-outlined text-sm">chevron_right</span> 
+                Patient Evolution <span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="font-medium text-[var(--text-main)]">22/02/2026 - Session #14</span>
+</div>
+</header>
+<div class="flex-1 px-12 pb-24 relative">
+<div class="timeline-line"></div>
+<section class="relative pl-16 mb-20">
+<div class="absolute left-[17px] top-2 w-[15px] h-[15px] rounded-full bg-white border-2 border-[var(--primary)] z-10"></div>
+<div class="max-w-4xl">
+<div class="group relative">
+<div class="absolute -left-10 top-2 opacity-0 group-hover:opacity-100 text-gray-300 text-sm font-mono transition-opacity">H1</div>
+<h1 class="text-4xl font-bold mb-8 outline-none" contenteditable="true">Patient Evolution</h1>
+</div>
+<div class="mb-12 group relative">
+<div class="absolute -left-10 top-1 opacity-0 group-hover:opacity-100 text-gray-300 text-sm font-mono transition-opacity">H2</div>
+<h2 class="text-xl font-semibold mb-6 flex items-center gap-2" contenteditable="true">Pain Level (EVA)</h2>
+<div class="relative py-4 mb-4">
+<div class="flex h-1 gap-1">
+<div class="flex-1 bg-green-500/30 rounded-full h-full"></div>
+<div class="flex-1 bg-green-500 rounded-full h-full"></div>
+<div class="flex-1 bg-yellow-400 rounded-full h-full"></div>
+<div class="flex-1 bg-orange-400 rounded-full h-full"></div>
+<div class="flex-1 bg-red-500 rounded-full h-full"></div>
+</div>
+<div class="absolute top-1/2 left-[60%] -translate-y-1/2 w-5 h-5 bg-white border-2 border-gray-400 rounded-full shadow-sm cursor-pointer hover:border-black"></div>
+<div class="flex justify-between mt-3 text-[10px] text-gray-400 font-medium">
+<span>0 - No Pain</span>
+<span>3</span>
+<span class="text-black font-bold">6</span>
+<span>10 - Maximum</span>
+</div>
+</div>
+<div class="text-sm text-gray-600 mb-4">
+                            Moderate Pain: <span class="font-bold text-black" contenteditable="true">6</span> (Scale of 0 to 10)
+                        </div>
+<div class="flex items-center gap-2 text-sm">
+<span class="text-gray-400">Location of pain:</span>
+<span class="hover:bg-gray-50 px-1 py-0.5 rounded transition-colors notion-input cursor-text" contenteditable="true">Shoulder, right side, anterior region</span>
+</div>
+</div>
+<div class="mb-12 group relative">
+<div class="absolute -left-10 top-1 opacity-0 group-hover:opacity-100 text-gray-300 text-sm font-mono transition-opacity">H2</div>
+<h2 class="text-xl font-semibold mb-4" contenteditable="true">Patient Report</h2>
+<div class="text-base text-gray-700 leading-relaxed notion-input min-h-[60px] p-1" contenteditable="true">
+                            The patient reported feeling better after the last session, with reduced pain in the shoulder during abduction. Sleeping better, but still feels some stiffness in the morning.
+                        </div>
+</div>
+<div class="mb-12 group relative">
+<div class="absolute -left-10 top-1 opacity-0 group-hover:opacity-100 text-gray-300 text-sm font-mono transition-opacity">H2</div>
+<h2 class="text-xl font-semibold mb-4" contenteditable="true">Evolution Text</h2>
+<div class="text-base text-gray-700 leading-relaxed notion-input min-h-[100px] p-1" contenteditable="true">
+<p class="mb-2"><strong>Objective data:</strong> Improved range of motion in flexion (+15°). Strength maintained at 4/5.</p>
+<p class="mb-2"><strong>Assessment:</strong> Progressing as expected. Inflammation seems to be subsiding.</p>
+<p><strong>Plan:</strong> Continue current protocol, adding light resistance bands for external rotation.</p>
+</div>
+</div>
+</div>
+</section>
+<div class="space-y-4">
+<details class="group/item relative pl-16">
+<summary class="list-none cursor-pointer">
+<div class="absolute left-[19px] top-2 w-[11px] h-[11px] rounded-full bg-gray-200 border-2 border-white z-10 group-open/item:bg-[var(--primary)]"></div>
+<div class="flex items-center gap-3 py-1 text-sm text-gray-400 hover:text-gray-900 transition-colors">
+<span class="material-symbols-outlined expand-icon text-lg transition-transform">chevron_right</span>
+<span class="font-medium">15/02/2026 - Session #13</span>
+<span class="px-2 py-0.5 bg-gray-100 rounded text-[10px] text-gray-500">Pain: 7/10</span>
+<span class="truncate max-w-xs text-xs italic">"Feeling significant stiffness after workout..."</span>
+</div>
+</summary>
+<div class="mt-4 pt-4 border-l border-gray-100 ml-2 pl-6 pb-6 text-sm text-gray-600">
+<h3 class="font-semibold text-gray-900 mb-2">Patient Report</h3>
+<p class="mb-4">Intense pain during the weekend. Difficulty lifting the arm above 90 degrees.</p>
+<h3 class="font-semibold text-gray-900 mb-2">Evolution</h3>
+<p>Focus on manual therapy and decompression. No active exercises today due to high irritability.</p>
+</div>
+</details>
+<details class="group/item relative pl-16">
+<summary class="list-none cursor-pointer">
+<div class="absolute left-[19px] top-2 w-[11px] h-[11px] rounded-full bg-gray-200 border-2 border-white z-10 group-open/item:bg-[var(--primary)]"></div>
+<div class="flex items-center gap-3 py-1 text-sm text-gray-400 hover:text-gray-900 transition-colors">
+<span class="material-symbols-outlined expand-icon text-lg transition-transform">chevron_right</span>
+<span class="font-medium">08/02/2026 - Session #12</span>
+<span class="px-2 py-0.5 bg-gray-100 rounded text-[10px] text-gray-500">Pain: 4/10</span>
+<span class="truncate max-w-xs text-xs italic">"Improving, baseline pain is low..."</span>
+</div>
+</summary>
+<div class="mt-4 pt-4 border-l border-gray-100 ml-2 pl-6 pb-6 text-sm text-gray-600">
+<p>Detailed historical content here...</p>
+</div>
+</details>
+<details class="group/item relative pl-16">
+<summary class="list-none cursor-pointer">
+<div class="absolute left-[19px] top-2 w-[11px] h-[11px] rounded-full bg-gray-200 border-2 border-white z-10 group-open/item:bg-[var(--primary)]"></div>
+<div class="flex items-center gap-3 py-1 text-sm text-gray-400 hover:text-gray-900 transition-colors">
+<span class="material-symbols-outlined expand-icon text-lg transition-transform">chevron_right</span>
+<span class="font-medium">01/02/2026 - Initial Assessment</span>
+<span class="px-2 py-0.5 bg-gray-100 rounded text-[10px] text-gray-500">Pain: 9/10</span>
+</div>
+</summary>
+<div class="mt-4 pt-4 border-l border-gray-100 ml-2 pl-6 pb-6 text-sm text-gray-600">
+<p>Initial diagnosis and treatment plan details...</p>
+</div>
+</details>
+</div>
+</div>
+<footer class="sticky bottom-0 bg-white/80 backdrop-blur-md border-t border-[var(--border-light)] p-4 px-12 flex justify-end gap-3 z-50">
+<button class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+<span class="material-symbols-outlined text-lg">picture_as_pdf</span> PDF
+            </button>
+<button class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+<span class="material-symbols-outlined text-lg">save</span> Save
+            </button>
+<button class="flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-[var(--primary)] rounded-lg hover:bg-[var(--primary-hover)] shadow-sm">
+<span class="material-symbols-outlined text-lg">check_circle</span> Conclude Session
+            </button>
+</footer>
+</main>
+
+</body></html>

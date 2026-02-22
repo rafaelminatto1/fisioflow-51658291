@@ -84,8 +84,8 @@ test.describe('Recepcionista Full Login - SetValue Comprehensive Check', () => {
     console.log('STEP 2: Login with valid credentials');
     console.log('========================================\n');
 
-    const emailInput = page.locator('input[type="email"]').first();
-    const passwordInput = page.locator('input[type="password"]').first();
+    const emailInput = page.locator('input[name="email"]').first();
+    const passwordInput = page.locator('input[name="password"]').first();
 
     if (await emailInput.count() > 0 && await passwordInput.count() > 0) {
       // Use valid test credentials from fixtures

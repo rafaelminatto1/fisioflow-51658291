@@ -10,6 +10,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import type { Profile } from '@/types/auth';
 import { HapticFeedback } from '@/lib/haptics';
+import { clearPhotoCache } from '@/hooks/usePhotoDecryption';
 
 interface AuthContextValue {
   profile: Profile | null;
@@ -69,6 +70,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = useCallback(async () => {
     HapticFeedback.medium();
+    
+    // Clear decrypted photo cache from memory
+    clearPhotoCache();
+    console.log('[AuthContext] Cleared photo cache on logout');
+    
     await firebaseSignOut(auth);
     setProfile(null);
   }, []);

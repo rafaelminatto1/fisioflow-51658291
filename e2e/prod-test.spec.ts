@@ -33,7 +33,7 @@ test('agenda em produção - carregar e testar', async ({ page }) => {
   // Verificar elementos da agenda
   const bodyText = await page.locator('body').textContent() || '';
   const hasAgendaText = bodyText?.toLowerCase().includes('agenda') || bodyText?.toLowerCase().includes('calendário');
-  const hasLoginButton = await page.locator('button:has-text("Entrar"), input[type="email"]').count() > 0;
+  const hasLoginButton = await page.locator('button:has-text("Entrar"), input[name="email"]').count() > 0;
   const hasNovoButton = await page.locator('button:has-text("Novo")').count() > 0;
   const hasCalendar = await page.locator('.calendar, [class*="calendar"]').count() > 0;
   const hasLoading = await page.locator('[class*="loading"], [class*="skeleton"]').count() > 0;

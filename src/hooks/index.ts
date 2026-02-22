@@ -1,57 +1,116 @@
-// Basic hooks
-export const useNavPreload = () => ({});
+/**
+ * FisioFlow - Exportações de hooks centralizadas
+ */
 
-export const useFileUpload = (_options?: unknown) => ({
-  isUploading: false,
-  progress: 0,
-  uploadedFiles: [],
-  upload: (_files: File[]) => Promise.resolve(),
-  removeFile: (_id: string) => { },
-  UseFileUploadOptions: {}
-});
+// ============================================================================
+// Core Hooks
+// ============================================================================
 
-export { useFormField, FormFieldContext, FormItemContext } from './useFormField';
-
-export { useSidebarProvider, SidebarContext } from './useSidebar';
-export { useSidebar } from './useSidebar';
-export { useIsMobile } from './use-mobile';
-
-// Error handling
-export {
-  useErrorHandler,
-  useAsyncOperation,
-  getErrorMessageFromStatus,
-  extractErrorInfo
-} from './useErrorHandler';
-export type {
-  ApiErrorOptions,
-  AsyncOperationResult,
-  UseErrorHandlerReturn
-} from './useErrorHandler';
-
-// Real hooks from separate files
 export { useAuth } from './useAuth';
 export { useData } from './useData';
+export { useMobile } from './use-mobile';
+
+// ============================================================================
+// Schedule Hooks
+// ============================================================================
+
 export { useAppointments } from './useAppointments';
+export { useAppointmentsByPeriod } from './useAppointmentsByPeriod';
+
+// ============================================================================
+// Quick Wins Hooks (Fase 1)
+// ============================================================================
+
+export { useQuickFilters } from './useQuickFilters';
+
+// ============================================================================
+// AI Scheduling Hooks (Fase 3)
+// ============================================================================
+
+export { useAIScheduling } from './useAIScheduling';
+
+// ============================================================================
+// Performance Core Hooks (Fase 2)
+// ============================================================================
+
+export {
+  useOptimizedQuery,
+  useAppointmentsQuery,
+  usePatientsQuery,
+  useExercisesQuery,
+  useOptimizedMutation,
+  usePrefetchOnHover,
+  prefetchAppointments,
+  prefetchPatients,
+  prefetchExercises,
+  useCacheManagement,
+  useCacheStats,
+  CACHE_CONFIG
+} from './useReactQueryOptimization';
+
+export {
+  useThrottle,
+  useThrottleFn,
+  useThrottleCallback,
+  requestAnimationFrameThrottle,
+  useRAFThrottle,
+  throttle
+} from './useThrottle';
+
+export {
+  useIntersectionObserver,
+  useIntersectionObserverCallback,
+  useMultipleIntersectionObserver,
+  useVisibilityRatio,
+  useInfiniteScroll,
+  useOnScreenExit
+} from './useIntersectionObserver';
+
+export { useVirtualList, useVirtualListHorizontal } from './useVirtualList';
+
+// ============================================================================
+// UX/UI Hooks (Fase 4)
+// ============================================================================
+
+// These hooks are implemented in UI components:
+// - useTheme (in @/components/ui/theme/ThemeProvider.tsx)
+// - useHaptic (in @/components/schedule/HapticFeedback.tsx)
+// - Responsive hooks (in @/components/responsive/ResponsiveContainer.tsx)
+
+// ============================================================================
+// Data Hooks
+// ============================================================================
+
 export { usePatients } from './usePatients';
 export { useExercises } from './useExercises';
-export { useTransacoes, useCreateTransacao, useUpdateTransacao } from './useTransacoes';
-export { useEmpresasParceiras, useCreateEmpresaParceira, useUpdateEmpresaParceira, useDeleteEmpresaParceira } from './useEmpresasParceiras';
 export { useDashboardStats } from './useDashboardStats';
+
+// ============================================================================
+// Action Hooks
+// ============================================================================
+
 export { useAppointmentActions } from './useAppointmentActions';
 export { useAutoSave } from './useAutoSave';
-export { useOfflineSync } from './useOfflineSync';
-export { useIntelligentPreload } from './useIntelligentPreload';
-export { useExerciseTemplates, useTemplateItems } from './useExerciseTemplates';
-export { useApplyExerciseTemplate } from './useApplyExerciseTemplate';
 export { useWaitlist, useWaitlistOffers } from './useWaitlist';
-export { useWhatsAppConfirmations } from './useWhatsAppConfirmations';
 export { usePainMaps } from './usePainMaps';
 export { usePatientDocuments } from './usePatientDocuments';
-export { useConductLibrary } from './useConductLibrary';
-export { useOrganizations } from './useOrganizations';
-export { useOrganizationMembers } from './useOrganizationMembers';
-export { useConnectionStatus, type ConnectionStatus, type ConnectionState } from './useConnectionStatus';
 
-// Re-export toast from the UI components to avoid circular dependency
+// ============================================================================
+// Advanced Feature Hooks (Fase 5)
+// ============================================================================
+
+// These are implemented in appointment components:
+// - useRecurringAppointments (in @/components/appointments/RecurringAppointment.tsx)
+
+// ============================================================================
+// Innovation Lab Hooks (Fase 7)
+// ============================================================================
+
+// These are implemented in AI components:
+// - useNaturalLanguageScheduler (in @/components/ai/NaturalLanguageScheduler.tsx)
+
+// ============================================================================
+// Toast Hook
+// ============================================================================
+
 export { useToast, toast } from '@/components/ui/use-toast';

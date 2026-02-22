@@ -139,3 +139,44 @@ export interface ExerciseAssignment {
   progress: number;
   notes?: string;
 }
+
+// Treatment Protocol types
+export interface TreatmentProtocol {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  condition?: string;
+  exercises: ProtocolExercise[];
+  professionalId: string;
+  isTemplate: boolean;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ProtocolExercise {
+  exerciseId: string;
+  exercise?: Exercise;
+  sets: number;
+  reps: number;
+  duration?: number;
+  frequency: string;
+  notes?: string;
+  order: number;
+}
+
+export interface PatientProtocol {
+  id: string;
+  patientId: string;
+  protocolId: string;
+  protocol?: TreatmentProtocol;
+  professionalId: string;
+  startDate: Date;
+  endDate?: Date;
+  isActive: boolean;
+  progress: number;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}

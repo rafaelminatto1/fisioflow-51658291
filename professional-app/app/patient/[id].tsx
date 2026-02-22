@@ -20,7 +20,7 @@ import { Card } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useQuery } from '@tanstack/react-query';
 import { getPatientByIdHook } from '@/hooks/usePatients';
-import { format } from 'date-fns';
+import { format, isValid, parse } from 'date-fns';
 import { useEvolutions } from '@/hooks';
 import {
   usePatientFinancialRecords,
@@ -64,6 +64,55 @@ export default function PatientDetailScreen() {
     payment_method: '',
     notes: '',
   });
+
+  const formatBirthDate = (birthDate?: unknown) => {
+    if (!birthDate) {
+      return null;
+    }
+
+    let parsed: Date | null = null;
+
+    if (birthDate instanceof Date) {
+      parsed = birthDate;
+    } else if (typeof birthDate === 'string') {
+      const trimmed = birthDate.trim();
+      if (!trimmed) {
+        return null;
+      }
+
+      if (trimmed.includes('/')) {
+        const parsedByMask = parse(trimmed, 'dd/MM/yyyy', new Date());
+        if (isValid(parsedByMask)) {
+          parsed = parsedByMask;
+        }
+      }
+
+      if (!parsed) {
+        const parsedByDate = new Date(trimmed);
+        if (isValid(parsedByDate)) {
+          parsed = parsedByDate;
+        }
+      }
+    } else if (typeof (birthDate as { toDate?: () => Date }).toDate === 'function') {
+      const parsedByTimestamp = (birthDate as { toDate: () => Date }).toDate();
+      if (isValid(parsedByTimestamp)) {
+        parsed = parsedByTimestamp;
+      }
+    } else if (typeof (birthDate as { seconds?: number }).seconds === 'number') {
+      const parsedBySeconds = new Date((birthDate as { seconds: number }).seconds * 1000);
+      if (isValid(parsedBySeconds)) {
+        parsed = parsedBySeconds;
+      }
+    }
+
+    if (!parsed || !isValid(parsed)) {
+      return null;
+    }
+
+    return format(parsed, 'dd/MM/yyyy');
+  };
+
+  const birthDateLabel = formatBirthDate(patient?.birthDate);
 
   useEffect(() => {
     if (autoCreate === 'true' && selectedTab === 'financial') {
@@ -139,7 +188,7 @@ export default function PatientDetailScreen() {
             style={[styles.actionBtn, { backgroundColor: colors.info }]}
             onPress={() => {
               medium();
-              router.push(`/patient/${id}/evolution?id=${id}&patientName=${name}`);
+              router.push(`/evolution-form?patientId=${id}&patientName=${name}` as any);
             }}
           >
             <Ionicons name="document-text" size={20} color="#FFFFFF" />
@@ -187,11 +236,11 @@ export default function PatientDetailScreen() {
                         <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Nome:</Text>
                         <Text style={[styles.infoValue, { color: colors.text }]}>{patient?.name || 'N/A'}</Text>
                     </View>
-                    {patient?.birthDate && (
+                    {birthDateLabel && (
                     <View style={styles.infoRow}>
                         <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Nascimento:</Text>
                         <Text style={[styles.infoValue, { color: colors.text }]}>
-                        {format(new Date(patient.birthDate), 'dd/MM/yyyy')}
+                        {birthDateLabel}
                         </Text>
                     </View>
                     )}
@@ -270,28 +319,44 @@ export default function PatientDetailScreen() {
               style={[styles.addEvolutionBtn, { backgroundColor: colors.primary }]}
               onPress={() => {
                 medium();
-                router.push(`/patient/${id}/evolution?id=${id}&patientName=${name}`);
+                router.push(`/evolution-form?patientId=${id}&patientName=${name}` as any);
               }}
             >
               <Ionicons name="add" size={24} color="#FFFFFF" />
               <Text style={styles.addEvolutionBtnText}>Nova Evolução SOAP</Text>
             </TouchableOpacity>
 
+            {/* View All Evolutions Button */}
+            {evolutions.length > 0 && (
+              <TouchableOpacity
+                style={[styles.viewAllBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                onPress={() => {
+                  medium();
+                  router.push(`/evolutions-list?patientId=${id}&patientName=${name}` as any);
+                }}
+              >
+                <Ionicons name="list-outline" size={20} color={colors.primary} />
+                <Text style={[styles.viewAllBtnText, { color: colors.primary }]}>
+                  Ver Todas as Evoluções ({evolutions.length})
+                </Text>
+              </TouchableOpacity>
+            )}
+
             {isLoadingEvolutions ? (
               <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
             ) : evolutions.length > 0 ? (
-              evolutions.map((evolution) => (
+              evolutions.slice(0, 3).map((evolution) => (
                 <TouchableOpacity
                   key={evolution.id}
                   onPress={() => {
                     medium();
-                    router.push(`/patient/${id}/evolution?id=${id}&evolutionId=${evolution.id}&patientName=${name}`);
+                    router.push(`/evolution-detail?evolutionId=${evolution.id}&patientId=${id}&patientName=${name}` as any);
                   }}
                 >
                   <Card style={styles.evolutionCard}>
                     <View style={styles.evolutionHeader}>
                       <Text style={[styles.evolutionDate, { color: colors.text }]}>
-                        {format(new Date(evolution.date!), 'dd/MM/yyyy HH:mm')}
+                        {evolution.date ? format(new Date(evolution.date), 'dd/MM/yyyy HH:mm') : 'Data não disponível'}
                       </Text>
                       {evolution.painLevel !== undefined && (
                         <View style={[styles.painBadge, { backgroundColor: evolution.painLevel > 5 ? colors.errorLight : colors.successLight }]}>
@@ -701,7 +766,7 @@ export default function PatientDetailScreen() {
                   <Text style={[styles.modalBtnText, { color: colors.text }]}>Cancelar</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.modalBtn, styles.modalBtnConfirm, { backgroundColor: colors.primary }]}
+                  style={[styles.modalBtn, { backgroundColor: colors.primary }]}
                   onPress={() => {
                     const sessionValue = parseFloat(formData.session_value);
                     if (!sessionValue || sessionValue <= 0) {
@@ -713,7 +778,7 @@ export default function PatientDetailScreen() {
                       patient_id: id as string,
                       session_date: formData.session_date,
                       session_value: sessionValue,
-                      payment_method: formData.payment_method || undefined,
+                      payment_method: (formData.payment_method as 'cash' | 'credit_card' | 'debit_card' | 'pix' | 'transfer' | 'barter' | 'other' | undefined) || undefined,
                       notes: formData.notes || undefined,
                     };
 
@@ -832,6 +897,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  infoSection: {
+    gap: 16,
+    marginBottom: 16,
+  },
+  infoCard: {
+    padding: 16,
+  },
+  infoCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
   contentCard: {
     marginBottom: 16,
   },
@@ -879,6 +957,20 @@ const styles = StyleSheet.create({
   addEvolutionBtnText: {
     color: '#FFFFFF',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  viewAllBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    gap: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+  },
+  viewAllBtnText: {
+    fontSize: 14,
     fontWeight: '600',
   },
   evolutionCard: {
@@ -1186,5 +1278,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 8,
+  },
+  emptyFinancial: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyFinancialTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 16,
+  },
+  emptyFinancialText: {
+    fontSize: 14,
+    marginTop: 4,
+    textAlign: 'center',
+    paddingHorizontal: 32,
   },
 });

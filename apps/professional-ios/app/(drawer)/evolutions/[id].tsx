@@ -18,8 +18,7 @@ import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/hooks/useTheme';
 import { HapticFeedback } from '@/lib/haptics';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useEvolutions } from '@/hooks/useEvolutions';
 import type { SOAPRecord } from '@/types';
 
 export default function EvolutionDetailScreen() {
@@ -30,6 +29,9 @@ export default function EvolutionDetailScreen() {
   const evolutionId = params.id as string;
   const [loading, setLoading] = useState(true);
   const [evolution, setEvolution] = useState<SOAPRecord | null>(null);
+  
+  // Use the hook to get decrypted SOAP data
+  const { getById } = useEvolutions();
 
   useEffect(() => {
     loadEvolution();
@@ -37,15 +39,13 @@ export default function EvolutionDetailScreen() {
 
   const loadEvolution = async () => {
     try {
-      const docRef = doc(db, 'evolutions', evolutionId);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        setEvolution({ id: docSnap.id, ...docSnap.data() } as SOAPRecord);
-      }
+      // Use the hook's getById method which decrypts PHI fields
+      const evo = await getById(evolutionId);
+      setEvolution(evo);
       setLoading(false);
     } catch (error) {
-      console.error('Error loading evolution:', error);
+      // Never log PHI content - only log error type
+      console.error('Error loading evolution - failed to decrypt');
       setLoading(false);
     }
   };

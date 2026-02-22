@@ -13,6 +13,7 @@ export { ProcedureChecklistBlock } from './ProcedureChecklistBlock';
 export { ExerciseBlockV2 } from './ExerciseBlockV2';
 export { HomeCareBlock } from './HomeCareBlock';
 export { AttachmentsBlock } from './AttachmentsBlock';
+export { MeasurementsBlock } from './MeasurementsBlock';
 
 export type {
   EvolutionV2Data,

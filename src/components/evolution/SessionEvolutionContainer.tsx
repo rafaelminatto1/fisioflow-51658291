@@ -46,6 +46,9 @@ import { soapKeys } from '@/hooks/useSoapRecords';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 import { AgendaAutomationService } from '@/lib/services/AgendaAutomationService';
 import { NotionEvolutionPanel } from './v2-improved/NotionEvolutionPanel';
+import { NotionEvolutionPanel as NotionV3Panel } from './v3-notion/NotionEvolutionPanel';
+import { EvolutionVersionToggle } from './v2-improved/EvolutionVersionToggle';
+import { useHighContrast } from '@/contexts/HighContrastContext';
 
 interface SessionEvolutionContainerProps {
   appointmentId?: string;
@@ -79,7 +82,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   const [, setAppointment] = useState<Record<string, unknown> | null>(null);
   const [appointmentLoadedFromApi, setAppointmentLoadedFromApi] = useState(false);
   const [activeTab, setActiveTab] = useState('evolution');
-  const [viewVersion, setViewVersion] = useState<'classic' | 'improved'>('improved');
+  const [viewVersion, setViewVersion] = useState<'classic' | 'improved' | 'v3-notion'>('improved');
 
   // Patient data
   // Using any[] to avoid strict type conflicts with child components that expect specific interfaces
@@ -629,9 +632,15 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-xl font-semibold">
-                Evolução de Sessão
-              </h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-xl font-semibold">
+                  Evolução de Sessão
+                </h1>
+                <EvolutionVersionToggle
+                  version={viewVersion === 'classic' ? 'v1-soap' : viewVersion === 'v3-notion' ? 'v3-notion' : 'v2-texto'}
+                  onToggle={(v) => setViewVersion(v === 'v1-soap' ? 'classic' : v === 'v3-notion' ? 'v3-notion' : 'improved')}
+                />
+              </div>
               {patient && (
                 <p className="text-sm text-muted-foreground">
                   {PatientHelpers.getName(patient)} • Sessão #{sessionNumber}
@@ -710,7 +719,52 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
 
       {/* Main Content */}
       <div className="p-4 h-[calc(100vh-80px)] overflow-hidden">
-        {viewVersion === 'improved' ? (
+        {viewVersion === 'v3-notion' ? (
+          <NotionV3Panel
+            data={{
+              patientReport: soapData.subjective,
+              evolutionText: soapData.assessment,
+              procedures: [],
+              exercises: sessionExercises.map(ex => ({
+                id: ex.id || Math.random().toString(),
+                name: ex.name,
+                sets: ex.sets || '3',
+                reps: ex.reps || '10',
+                weight: ex.weight || '',
+                notes: ex.notes || '',
+                feedback: ex.feedback as any || 'good',
+              })),
+              painLevel: 0,
+              painLocation: '',
+              homeCareExercises: soapData.plan,
+              observations: '',
+              sessionNumber,
+              totalSessions: sessionNumber,
+              sessionDate: new Date().toISOString(),
+              therapistName: auth.currentUser?.displayName || 'Fisioterapeuta',
+              therapistCrefito: selectedTherapistCrefito || '',
+            }}
+            onChange={(newData) => {
+              setSoapData({
+                subjective: newData.patientReport,
+                objective: soapData.objective,
+                assessment: newData.evolutionText,
+                plan: newData.homeCareExercises || soapData.plan
+              });
+              setSessionExercises(newData.exercises.map(ex => ({
+                id: ex.id,
+                name: ex.name,
+                sets: ex.sets,
+                reps: ex.reps,
+                weight: ex.weight,
+                notes: ex.notes,
+                feedback: ex.feedback as any
+              })));
+            }}
+            onSave={handleSave}
+            isSaving={isSaving}
+          />
+        ) : viewVersion === 'improved' ? (
           <NotionEvolutionPanel
             data={{
               patientReport: soapData.subjective,

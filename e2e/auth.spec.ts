@@ -9,8 +9,8 @@ test.describe('Autenticação', () => {
     console.log(`[Test] Iniciando login para: ${loginEmail}`);
     await page.goto('/auth', { waitUntil: 'networkidle' });
 
-    await page.fill('input[type="email"]', loginEmail);
-    await page.fill('input[type="password"]', loginPassword);
+    await page.fill('input[name="email"]', loginEmail);
+    await page.fill('input[name="password"]', loginPassword);
 
     // Capturar logs do console para debug
     page.on('console', msg => {
@@ -45,8 +45,8 @@ test.describe('Autenticação', () => {
   test('deve mostrar erro com credenciais inválidas', async ({ page }) => {
     await page.goto('/auth');
 
-    await page.fill('input[type="email"]', 'invalido@example.com');
-    await page.fill('input[type="password"]', 'senhaErrada123');
+    await page.fill('input[name="email"]', 'invalido@example.com');
+    await page.fill('input[name="password"]', 'senhaErrada123');
     await page.click('button[type="submit"]');
 
     await expect(page.locator('text=/erro|inválido|falhou/i').first()).toBeVisible({ timeout: 5000 });
@@ -55,8 +55,8 @@ test.describe('Autenticação', () => {
   test('deve fazer logout', async ({ page }) => {
     // Login primeiro
     await page.goto('/auth', { waitUntil: 'domcontentloaded' });
-    await page.fill('input[type="email"]', loginEmail);
-    await page.fill('input[type="password"]', loginPassword);
+    await page.fill('input[name="email"]', loginEmail);
+    await page.fill('input[name="password"]', loginPassword);
 
     // Aguardar navegação após o clique no botão de submit
     await Promise.all([
@@ -92,8 +92,8 @@ test.describe('Autenticação', () => {
 
   test('deve carregar profile após login', async ({ page }) => {
     await page.goto('/auth', { waitUntil: 'domcontentloaded' });
-    await page.fill('input[type="email"]', loginEmail);
-    await page.fill('input[type="password"]', loginPassword);
+    await page.fill('input[name="email"]', loginEmail);
+    await page.fill('input[name="password"]', loginPassword);
 
     // Aguardar navegação após o clique no botão de submit
     await Promise.all([

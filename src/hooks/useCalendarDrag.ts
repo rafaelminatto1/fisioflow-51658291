@@ -18,7 +18,7 @@ interface DropTarget {
 }
 
 interface UseCalendarDragProps {
-    onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string) => Promise<void>;
+    onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string, ignoreCapacity?: boolean) => Promise<void>;
     onOptimisticUpdate?: (appointmentId: string, newDate: Date, newTime: string) => void;
     onRevertUpdate?: (appointmentId: string) => void;
     // Função para obter appointments em um determinado slot (para preview dinâmica)
@@ -68,6 +68,7 @@ interface PendingReschedule {
     appointment: Appointment;
     newDate: Date;
     newTime: string;
+    ignoreCapacity?: boolean;
 }
 
 interface PendingOverCapacity extends PendingReschedule {
@@ -215,11 +216,15 @@ export const useCalendarDrag = ({
                     if (parsed?.id != null && (parsed.date != null || parsed.time != null)) {
                         appointmentToMove = {
                             id: parsed.id,
-                            date: typeof parsed.date === 'string' ? parsed.date : (parsed.date instanceof Date ? parsed.date.toISOString().slice(0, 10) : ''),
+                            date: new Date(typeof parsed.date === 'string' ? parsed.date : (parsed.date instanceof Date ? parsed.date.toISOString() : new Date().toISOString())),
                             time: typeof parsed.time === 'string' ? parsed.time : (parsed.time ?? ''),
                             patientName: '',
-                            status: 'agendado',
-                            duration: 60
+                            patientId: '',
+                            status: 'agendado' as import('@/types/appointment').AppointmentStatus,
+                            type: 'Fisioterapia' as import('@/types/appointment').AppointmentType,
+                            duration: 60,
+                            createdAt: new Date(),
+                            updatedAt: new Date()
                         } as import('@/types/appointment').Appointment;
                     }
                 }
@@ -313,7 +318,7 @@ export const useCalendarDrag = ({
 
         try {
             // 4. Faz a chamada API em background
-            await onAppointmentReschedule(appointment, newDate, newTime);
+            await onAppointmentReschedule(appointment, newDate, newTime, payload.ignoreCapacity);
 
             // 5. Limpa o estado de saving após sucesso
             setDragState({ appointment: null, isDragging: false, savingAppointmentId: null });
@@ -349,7 +354,7 @@ export const useCalendarDrag = ({
 
     const handleConfirmOverCapacity = useCallback(async () => {
         if (!pendingReschedule) return;
-        await executeReschedule(pendingReschedule);
+        await executeReschedule({ ...pendingReschedule, ignoreCapacity: true });
     }, [executeReschedule, pendingReschedule]);
 
     const handleCancelReschedule = useCallback(() => {

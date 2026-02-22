@@ -1,30 +1,41 @@
 const { getDefaultConfig } = require('expo/metro-config');
 const path = require('path');
-const fs = require('fs');
 
-// Configuração isolada do Metro para professional-app
-const config = getDefaultConfig(__dirname);
+// Caminhos do Monorepo
+const projectRoot = __dirname;
+const monorepoRoot = path.resolve(projectRoot, '..');
 
-// Adicionar extensões de arquivo para Firebase e outros pacotes que usam ESM
+// Configuração do Metro
+const config = getDefaultConfig(projectRoot);
+
+// Adicionar extensões de arquivo
 config.resolver.sourceExts = [
   ...config.resolver.sourceExts,
   'mjs',
   'cjs',
 ];
 
-// Configurar campos de resolução para React Native
+// Campos principais de resolução
 config.resolver.resolverMainFields = ['react-native', 'browser', 'main'];
 
-// Habilitar suporte a package exports (necessário para Firebase v11+)
+// Habilitar suporte a package exports
 config.resolver.unstable_enablePackageExports = true;
 
-// Permitir symlinks em node_modules
+// Permitir symlinks
 config.resolver.unstable_symlinks = true;
 
-// IMPORTANTE: Não adicionar watchFolders do monorepo
-config.watchFolders = [__dirname];
+// Watch folders: Incluir a raiz do monorepo para acessar packages/ui
+config.watchFolders = [monorepoRoot];
 
-// Configurar blockList para não bloquear arquivos necessários
+// Node Modules Resolution Strategy (Evitar duplicidade do React)
+config.resolver.nodeModulesPaths = [
+  path.resolve(projectRoot, 'node_modules'),
+  path.resolve(monorepoRoot, 'node_modules'),
+];
+
+config.resolver.disableHierarchicalLookup = true;
+
+// Blocklist para arquivos desnecessários
 config.resolver.blockList = [
   /test-results\/.*/,
   /playwright-report\/.*/,

@@ -439,7 +439,7 @@ export default function ProfileEditScreen() {
             <TouchableOpacity
               style={[styles.dangerButton, { backgroundColor: colors.error + '10' }]}
               onPress={() => {
-                router.push('/(auth)/change-password' as any);
+                router.push('/change-password' as any);
               }}
             >
               <Ionicons name="lock-closed-outline" size={20} color={colors.error} />
