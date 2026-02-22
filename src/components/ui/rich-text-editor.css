@@ -1,0 +1,565 @@
+/* ============================
+   Rich Text Editor (Tiptap) Styles
+   ============================ */
+
+/* Editor container */
+.rich-text-editor {
+    position: relative;
+}
+
+/* Toolbar */
+.rich-text-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 6px 8px;
+    border-bottom: 1px solid hsl(var(--border) / 0.4);
+    background: hsl(var(--muted) / 0.25);
+    border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.rich-text-toolbar-group {
+    display: flex;
+    gap: 1px;
+    align-items: center;
+}
+
+.rich-text-toolbar-group+.rich-text-toolbar-group {
+    padding-left: 6px;
+    margin-left: 6px;
+    border-left: 1px solid hsl(var(--border) / 0.4);
+}
+
+.rich-text-toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: hsl(var(--muted-foreground));
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 13px;
+}
+
+.rich-text-toolbar-btn:hover {
+    background: hsl(var(--muted) / 0.8);
+    color: hsl(var(--foreground));
+}
+
+.rich-text-toolbar-btn.is-active {
+    background: hsl(var(--primary) / 0.12);
+    color: hsl(var(--primary));
+    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.2);
+}
+
+.rich-text-toolbar-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+/* ProseMirror editor area */
+.rich-text-editor .ProseMirror {
+    min-height: 100px;
+    padding: 12px 14px;
+    outline: none;
+    font-size: 14px;
+    line-height: 1.7;
+    color: hsl(var(--foreground));
+}
+
+.rich-text-editor .ProseMirror p {
+    margin: 0 0 0.5em 0;
+}
+
+.rich-text-editor .ProseMirror p:last-child {
+    margin-bottom: 0;
+}
+
+.rich-text-editor .ProseMirror h2 {
+    font-size: 1.25em;
+    font-weight: 700;
+    margin: 1em 0 0.5em 0;
+    color: hsl(var(--foreground));
+}
+
+.rich-text-editor .ProseMirror h3 {
+    font-size: 1.1em;
+    font-weight: 600;
+    margin: 0.8em 0 0.4em 0;
+    color: hsl(var(--foreground));
+}
+
+.rich-text-editor .ProseMirror h2:first-child,
+.rich-text-editor .ProseMirror h3:first-child {
+    margin-top: 0;
+}
+
+.rich-text-editor .ProseMirror ul,
+.rich-text-editor .ProseMirror ol {
+    padding-left: 1.5em;
+    margin: 0.4em 0;
+}
+
+.rich-text-editor .ProseMirror ul {
+    list-style-type: disc;
+}
+
+.rich-text-editor .ProseMirror ol {
+    list-style-type: decimal;
+}
+
+.rich-text-editor .ProseMirror li {
+    margin: 0.15em 0;
+}
+
+.rich-text-editor .ProseMirror li p {
+    margin: 0;
+}
+
+.rich-text-editor .ProseMirror mark {
+    background-color: hsl(48, 100%, 70%);
+    border-radius: 2px;
+    padding: 0 2px;
+}
+
+.rich-text-editor .ProseMirror strong {
+    font-weight: 700;
+}
+
+.rich-text-editor .ProseMirror em {
+    font-style: italic;
+}
+
+.rich-text-editor .ProseMirror u {
+    text-decoration: underline;
+}
+
+.rich-text-editor .ProseMirror s {
+    text-decoration: line-through;
+    opacity: 0.65;
+}
+
+.rich-text-editor .ProseMirror hr {
+    border: none;
+    border-top: 1px solid hsl(var(--border) / 0.5);
+    margin: 1em 0;
+}
+
+.rich-text-editor .ProseMirror blockquote {
+    border-left: 3px solid hsl(var(--primary) / 0.3);
+    padding-left: 1em;
+    margin: 0.5em 0;
+    color: hsl(var(--muted-foreground));
+}
+
+/* Placeholder */
+.rich-text-editor .ProseMirror p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    color: hsl(var(--muted-foreground) / 0.5);
+    pointer-events: none;
+    height: 0;
+    font-style: italic;
+}
+
+/* Dark mode highlight */
+:is(.dark) .rich-text-editor .ProseMirror mark {
+    background-color: hsl(48, 80%, 35%);
+    color: hsl(48, 100%, 90%);
+}
+
+/* ============================
+   V3-Notion Animations
+   ============================ */
+
+/* Checkmark animation */
+@keyframes checkIn {
+    0% {
+        transform: scale(0) rotate(-45deg);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+.animate-check-in {
+    animation: checkIn 0.4s ease-out-back;
+}
+
+/* Required field pulse animation */
+@keyframes requiredPulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.6;
+        transform: scale(1.05);
+    }
+}
+
+.animate-required-pulse {
+    animation: requiredPulse 2s ease-in-out infinite;
+}
+
+/* Soft pulse for background emphasis */
+@keyframes pulseSoft {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.animate-pulse-soft {
+    animation: pulseSoft 3s ease-in-out;
+}
+
+/* Scale down animation */
+.scale-90 {
+    transform: scale(0.9);
+    transition: transform 0.3s ease-out;
+}
+
+/* ============================
+   Accessibility - Reduced Motion
+   ============================ */
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-check-in,
+    .animate-required-pulse,
+    .animate-pulse-soft {
+        animation: none;
+    }
+}
+
+/* ============================
+   Focus Indicators
+   ============================ */
+
+/* Focus ring for keyboard navigation */
+*:focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+.high-contrast .rich-text-toolbar-btn:hover {
+    background: hsl(var(--foreground));
+    color: hsl(var(--background));
+    border: 2px solid hsl(var(--foreground));
+}
+
+.high-contrast .rich-text-editor .ProseMirror {
+    color: hsl(var(--foreground));
+}
+
+.high-contrast .rich-text-editor .ProseMirror mark {
+    background-color: hsl(var(--primary));
+    color: hsl(var(--background));
+}
+
+/* ============================
+   Typing Pulse Effect
+   ============================ */
+
+.rich-text-editor.typing-active {
+    position: relative;
+}
+
+.rich-text-editor.typing-active::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: inherit;
+    pointer-events: none;
+    box-shadow: 0 0 15px -3px var(--typing-glow, rgba(0, 0, 0, 0));
+    opacity: 0.5;
+    transition: all 0.3s ease-out;
+    animation: typingGlow 2s ease-in-out infinite;
+}
+
+@keyframes typingGlow {
+    0%, 100% {
+        opacity: 0.3;
+        box-shadow: 0 0 10px -3px var(--typing-glow, rgba(0, 0, 0, 0));
+    }
+    50% {
+        opacity: 0.6;
+        box-shadow: 0 0 20px -3px var(--typing-glow, rgba(0, 0, 0, 0));
+    }
+}
+
+/* ============================
+   Mobile Touch Targets (44x44px minimum)
+   ============================ */
+
+@media (hover: none) {
+    .rich-text-toolbar-btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .rich-text-toolbar-group {
+        gap: 8px;
+    }
+}
+
+/* ============================
+   High Contrast Mode Styles
+   ============================ */
+
+body.high-contrast {
+    --foreground: 0 0 0;
+    --background: 255 255 255;
+    --muted-foreground: 100 100 100;
+    --muted: 240 240 240;
+    --border: 0 0 0;
+    --primary: 0 0 255;
+    --primary-foreground: 0 0 0;
+}
+
+body.high-contrast * {
+    text-shadow: none !important;
+    box-shadow: none !important;
+}
+
+body.high-contrast .rich-text-toolbar-btn {
+    border-width: 2px;
+}
+
+body.high-contrast .rich-text-editor .ProseMirror {
+    background-color: white;
+    color: black;
+}
+
+body.high-contrast .rich-text-editor .ProseMirror mark {
+    background-color: black;
+    color: white;
+    border: 2px solid white;
+}
+
+body.high-contrast .notion-v3-block {
+    background-color: white !important;
+    border-width: 2px;
+}
+
+body.high-contrast button {
+    border-width: 2px;
+    text-shadow: none;
+}
+
+/* Remove gradients in high contrast mode */
+body.high-contrast .rich-text-toolbar,
+body.high-contrast .notion-v3-block,
+body.high-contrast .rich-text-toolbar-btn {
+    background: solid !important;
+    background-image: none !important;
+}
+
+/* Focus indicators in high contrast */
+body.high-contrast *:focus-visible {
+    outline: 3px solid black;
+    outline-offset: 2px;
+}
+
+/* Increased font sizes */
+body.font-size-125 {
+    font-size: 125%;
+}
+
+body.font-size-150 {
+    font-size: 150%;
+}
+
+/* ============================
+   Phase 3-5: Sticky Section Headers
+   ============================ */
+
+.sticky-section-header {
+    transition: all 0.3s ease-out;
+}
+
+.sticky-section-header.is-sticky {
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid hsl(var(--border));
+}
+
+.sticky-section-header.show-back-to-top {
+    padding-right: 60px;
+}
+
+/* ============================
+   Phase 3-5: Compact View Mode
+   ============================ */
+
+.compact-section {
+    transition: all 0.3s ease-out;
+}
+
+.compact-section.is-compact {
+    max-height: none;
+}
+
+.compact-section.is-expanded {
+    max-height: none;
+}
+
+.compact-section.is-mobile {
+    border-radius: 8px;
+}
+
+/* ============================
+   Phase 3-5: Contextual Section Emphasis
+   ============================ */
+
+.emphasized-section {
+    position: relative;
+    overflow: hidden;
+}
+
+.emphasized-section.animate-required-pulse {
+    animation-duration: 2s;
+}
+
+/* ============================
+   Phase 3-5: Virtualized Block Renderer
+   ============================ */
+
+.virtualized-block-renderer {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.virtualized-block-renderer [data-block-id] {
+    will-change: transform;
+}
+
+/* ============================
+   Phase 3-5: Adaptive Section Collapse
+   ============================ */
+
+.adaptive-section-collapse {
+    transition: all 0.3s ease-out;
+}
+
+.adaptive-section-collapse.is-mobile.is-collapsed {
+    border-radius: 8px;
+}
+
+/* ============================
+   Phase 3-5: Progress Trending
+   ============================ */
+
+.progress-trending svg {
+    will-change: transform;
+}
+
+.progress-trending:hover svg {
+    transform: translateY(-2px);
+}
+
+/* ============================
+   Phase 3-5: Swipe Gestures
+   ============================ */
+
+.swipe-hint {
+    pointer-events: none;
+    user-select: none;
+}
+
+/* ============================
+   Phase 3-5: Offline Status
+   ============================ */
+
+.offline-status-indicator {
+    transition: all 0.2s ease;
+}
+
+.offline-status-bar {
+    transition: background-color 0.2s ease;
+}
+
+/* ============================
+   Phase 3-5: Voice Dictation
+   ============================ */
+
+.dictation-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 20px;
+    background: hsl(var(--primary) / 0.1);
+    color: hsl(var(--primary));
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.dictation-indicator.recording {
+    background: hsl(var(--rose) / 0.1);
+    color: hsl(var(--rose));
+    animation: dictationPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes dictationPulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* ============================
+   Phase 3-5: Medical Autocomplete
+   ============================ */
+
+.medical-autocomplete-menu {
+    z-index: 50;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.medical-autocomplete-menu [role="option"] {
+    transition: background-color 0.15s ease;
+}
+
+/* ============================
+   Phase 3-5: Mobile Bottom Sheet
+   ============================ */
+
+.mobile-sheet-trigger button {
+    transition: all 0.2s ease;
+}
+
+.mobile-sheet-trigger button:active {
+    transform: scale(0.98);
+}
+
+/* ============================
+   Phase 3-5: Exercise Quick Add
+   ============================ */
+
+.exercise-quick-add input[type="number"] {
+    -moz-appearance: textfield;
+    -webkit-appearance: textfield;
+}
+
+.exercise-quick-add input[type="number"]::-webkit-inner-spin-button,
+.exercise-quick-add input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}

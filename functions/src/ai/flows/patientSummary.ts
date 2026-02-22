@@ -2,6 +2,7 @@
  * Patient Executive Summary Flow (Genkit)
  * 
  * Gera um resumo executivo do histórico completo do paciente.
+ * Versão Otimizada com Prompt Avançado.
  */
 
 import { z } from 'genkit';
@@ -24,43 +25,55 @@ export const patientExecutiveSummaryFlow = ai.defineFlow(
             goals: z.array(z.string()).optional(),
         }),
         outputSchema: z.object({
-            summary: z.string(),
+            summary: z.string().describe("Resumo narrativo conciso do progresso (2-3 frases)"),
             trends: z.array(z.object({
                 metric: z.string(),
                 observation: z.string(),
                 sentiment: z.enum(['positive', 'neutral', 'negative']),
-            })),
-            clinicalAdvice: z.string(),
-            keyRisks: z.array(z.string()),
+            })).describe("Lista de tendências observadas (ex: dor, amplitude de movimento)"),
+            clinicalAdvice: z.string().describe("Recomendação clínica acionável"),
+            keyRisks: z.array(z.string()).describe("Lista de riscos ou alertas"),
         }),
     },
     async (input) => {
-        const historyText = input.history.map(h =>
-            `Data: ${h.date}
-Subjetivo: ${h.subjective || 'N/A'}
-Objetivo: ${h.objective || 'N/A'}
-Exercícios: ${h.exercises?.join(', ') || 'N/A'}`
-        ).join('\n---\n');
+        // Validação e formatação do histórico
+        let historyText = "Nenhum histórico disponível.";
+        
+        if (input.history && input.history.length > 0) {
+            // Ordenar por data (mais recente primeiro se não estiver ordenado, mas geralmente enviamos ordenado)
+            // Assumindo que o frontend envia ordenado ou que a IA consegue lidar.
+            // Limitando o histórico para não estourar tokens se for muito grande
+            const recentHistory = input.history.slice(0, 10); // Últimas 10 sessões
+            
+            historyText = recentHistory.map(h =>
+                `Sessão (${h.date}):
+   - Subjetivo: ${h.subjective || '-'}
+   - Objetivo: ${h.objective || '-'}
+   - Exercícios: ${h.exercises?.join(', ') || '-'}`
+            ).join('\n\n');
+        }
 
         const prompt = `
-      Você é um Consultor Sênior de Fisioterapia.
-      Analise o histórico abaixo e gere um resumo executivo de alto nível para o terapeuta.
-      
-      Paciente: ${input.patientName}
-      Condição: ${input.condition}
-      Metas: ${input.goals?.join(', ') || 'Não especificadas'}
-      
-      Histórico de Sessões:
-      ${historyText}
-      
-      Objetivo:
-      1. Sintetizar a jornada do paciente até agora.
-      2. Identificar padrões (ex: dor piora em certas atividades, melhora após certos exercícios).
-      3. Destacar riscos (ex: falta de adesão, sintomas atípicos).
-      4. Dar um conselho clínico estratégico.
+Role: Fisioterapeuta Sênior Especialista em Análise de Dados Clínicos.
+Task: Gerar um resumo executivo de alta qualidade para o fisioterapeuta responsável.
 
-      Responda em PORTUGUÊS.
-    `;
+Patient Context:
+- Nome: ${input.patientName}
+- Condição Principal: ${input.condition}
+- Metas: ${input.goals?.length ? input.goals.join(', ') : 'Não definidas'}
+
+Clinical History (Últimas sessões):
+${historyText}
+
+Instructions:
+1. SUMMARY: Escreva um parágrafo curto (2-3 frases) sintetizando o estado atual do paciente e a progressão recente. Seja direto.
+2. TRENDS: Identifique padrões claros nos dados (ex: "Dor diminuiu 50% nas últimas 3 semanas", "ADM de flexão estagnada em 90º"). Classifique o sentimento.
+3. ADVICE: Sugira o próximo passo clínico lógico (ex: "Progredir carga em cadeia cinética fechada", "Reavaliar técnica de agachamento").
+4. RISKS: Cite riscos potenciais baseados no histórico (ex: "Relato de dor tardia sugere sobrecarga", "Baixa adesão aos exercícios domiciliares").
+
+Output Format: JSON estrito conforme schema.
+Language: Portuguese (Brasil).
+`;
 
         const { output } = await ai.generate({
             model: gemini15Flash,
@@ -81,7 +94,7 @@ Exercícios: ${h.exercises?.join(', ') || 'N/A'}`
         });
 
         if (!output) {
-            throw new Error('Falha ao gerar resumo executivo');
+            throw new Error('Falha ao gerar resumo executivo. Tente novamente.');
         }
 
         return output;

@@ -10,6 +10,93 @@ export { Badge } from './badge';
 export { badgeVariants } from '@/lib/ui-variants';
 export * from './breadcrumb';
 export { PageBreadcrumbs } from './page-breadcrumbs';
+
+// ============================================================================
+// Theme System (Fase 4: UX/UI Enhancements)
+// ============================================================================
+
+export { ThemeProvider, useTheme, ThemeControls, ThemeSettings } from './theme/ThemeProvider';
+export type {
+  ThemePreferences,
+  ColorScheme,
+  FontSize,
+  AnimationSpeed,
+  ThemeContextValue
+} from './theme/ThemeProvider';
+
+// ============================================================================
+// Accessibility Components (Fase 4: UX/UI Enhancements)
+// ============================================================================
+
+export {
+  SkipLinks,
+  LiveRegion,
+  Announcement,
+  SrOnly,
+  FocusTrap
+} from './accessibility/SkipLinks';
+export type {
+  SkipLink,
+  LiveRegionProps,
+  AnnouncementProps,
+  SrOnlyProps,
+  FocusTrapProps
+} from './accessibility/SkipLinks';
+
+// ============================================================================
+// Responsive Components (Fase 4: UX/UI Enhancements)
+// ============================================================================
+// NOTE: ResponsiveContainer and related components are not yet implemented.
+// These will be added in future iterations.
+
+// export {
+//   ResponsiveContainer,
+//   Show,
+//   Hide,
+//   Grid,
+//   Flex,
+//   ResponsiveText,
+//   BREAKPOINTS,
+//   useBreakpoint,
+//   useBreakpointValue,
+//   useMediaQuery,
+//   useIsMobile,
+//   useIsTablet,
+//   useIsDesktop,
+//   useIsLandscape,
+//   useIsPortrait,
+//   useIsTouch,
+//   useIsPrint,
+//   usePrefersReducedMotion,
+//   usePrefersHighContrast,
+//   type Breakpoint,
+//   type ResponsiveValue,
+//   type ResponsiveContainerProps,
+//   type ShowProps,
+//   type GridProps,
+//   type FlexProps,
+//   type ResponsiveTextProps
+// } from './responsive/ResponsiveContainer';
+
+// ============================================================================
+// Rich Text Editor
+// ============================================================================
+
+export { RichTextEditor } from './RichTextEditor';
+export { RichTextToolbar } from './RichTextToolbar';
+
+// ============================================================================
+// Performance Monitor
+// ============================================================================
+
+export { PerformanceMonitor } from './PerformanceMonitor';
+
+// ============================================================================
+// Empty State
+// ============================================================================
+
+export { EmptyStateEnhanced } from './EmptyStateEnhanced';
+export type { EmptyStateVariant } from './EmptyStateEnhanced';
 export { Button } from './button';
 export { buttonVariants } from '@/lib/ui-variants';
 export { Calendar } from './calendar';

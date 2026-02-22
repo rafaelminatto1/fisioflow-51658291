@@ -21,11 +21,11 @@ test('criar novo agendamento - testar modal', async ({ page }) => {
   console.log('🔐 Fazendo login...');
   await page.goto('https://moocafisio.com.br/auth/login', { waitUntil: 'domcontentloaded' });
 
-  const emailInput = page.locator('input[type="email"], input[name="email"]').first();
+  const emailInput = page.locator('input[name="email"], input[name="email"]').first();
   await expect(emailInput).toBeVisible({ timeout: 15000 });
   await emailInput.fill(EMAIL);
 
-  const passwordInput = page.locator('input[type="password"], input[name="password"]').first();
+  const passwordInput = page.locator('input[name="password"], input[name="password"]').first();
   await expect(passwordInput).toBeVisible({ timeout: 5000 });
   await passwordInput.fill(PASSWORD);
 

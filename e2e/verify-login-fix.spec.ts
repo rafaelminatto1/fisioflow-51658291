@@ -8,8 +8,8 @@ test.describe('Verificação de Login - Correção Erro 500', () => {
 
         // Preencher credenciais de teste
         console.log('Preenchendo credenciais...');
-        await page.fill('input[type="email"]', testUsers.fisio.email);
-        await page.fill('input[type="password"]', testUsers.fisio.password);
+        await page.fill('input[name="email"]', testUsers.fisio.email);
+        await page.fill('input[name="password"]', testUsers.fisio.password);
 
         console.log('Clicando em Entrar...');
         await page.click('button[type="submit"]');

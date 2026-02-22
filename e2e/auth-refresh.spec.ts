@@ -40,7 +40,7 @@ test.describe('Login Page Refresh Test', () => {
 
     // Check if body was reset (indicating full page refresh)
     // We check if specific form elements still exist
-    const emailInput = page.locator('input[type="email"]').first();
+    const emailInput = page.locator('input[name="email"]').first();
     await expect(emailInput).toBeAttached();
   });
 

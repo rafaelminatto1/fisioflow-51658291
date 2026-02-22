@@ -91,6 +91,14 @@ export default function ProfileScreen() {
       },
     },
     {
+      icon: 'clipboard-outline' as const,
+      label: 'Protocolos de Tratamento',
+      onPress: () => {
+        medium();
+        router.push('/protocols' as any);
+      },
+    },
+    {
       icon: 'time-outline' as const,
       label: 'Horarios de Atendimento',
       onPress: () => {

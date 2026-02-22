@@ -9,8 +9,8 @@ test('verificar modal no mobile', async ({ page }) => {
   await page.screenshot({ path: 'e2e/screenshots/mobile-basic/1-login.png' });
 
   // Login
-  await page.fill('input[type="email"]', 'REDACTED_EMAIL');
-  await page.fill('input[type="password"]', 'REDACTED');
+  await page.fill('input[name="email"]', 'REDACTED_EMAIL');
+  await page.fill('input[name="password"]', 'REDACTED');
   await page.click('button[type="submit"]');
 
   // Esperar carregamento

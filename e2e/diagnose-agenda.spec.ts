@@ -29,8 +29,8 @@ test.describe('Diagnose Agenda Errors', () => {
         console.log('Navigating to /auth...');
         await page.goto('/auth', { waitUntil: 'domcontentloaded' });
 
-        await page.fill('input[type="email"]', testUsers.rafael.email);
-        await page.fill('input[type="password"]', testUsers.rafael.password);
+        await page.fill('input[name="email"]', testUsers.rafael.email);
+        await page.fill('input[name="password"]', testUsers.rafael.password);
         await page.click('button:has-text("Entrar")');
 
         await page.waitForURL(url => !url.pathname.includes('/auth'), { timeout: 45000 });
