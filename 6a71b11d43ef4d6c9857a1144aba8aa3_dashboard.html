@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FisioFlow - Patient Evolution Dashboard</title>
+<!-- Load Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Load FontAwesome for icons -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<!-- Load Inter Font for Notion-like typography -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            sidebar: '#F7F7F5',
+            'sidebar-text': '#37352f',
+            'sidebar-hover': '#EFEFED',
+            'notion-gray': '#9B9A97',
+            'notion-green': '#2EAADC', /* Approximation for Conclude button if needed, but standard green usually used */
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="flex h-screen bg-white text-[#37352f]">
+<!-- BEGIN: Sidebar -->
+<aside class="w-[240px] bg-sidebar flex-shrink-0 flex flex-col h-full border-r border-[#E9E9E8] overflow-hidden">
+<!-- Top Header in Sidebar -->
+<div class="px-4 py-3 cursor-pointer hover:bg-sidebar-hover transition-colors">
+<div class="flex items-center gap-2 text-sm font-medium">
+<div class="w-5 h-5 bg-gray-200 rounded flex items-center justify-center text-xs">F</div>
+<span class="truncate">FisioFlow - Sistema...</span>
+</div>
+</div>
+<!-- Navigation Scroll Area -->
+<div class="flex-1 overflow-y-auto custom-scrollbar px-3 py-2 space-y-6"><!-- Section: Activity -->
+<div class="mb-6">
+<div class="flex items-center gap-2 px-3 py-1 text-sm text-sidebar-text hover:bg-sidebar-hover rounded cursor-pointer">
+<i class="fa-regular fa-clock text-notion-gray w-4"></i>
+<span>Activity</span>
+</div>
+</div>
+<!-- Section: NÚCLEO -->
+<div class="mb-6 mt-6">
+<h3 class="text-[11px] font-medium uppercase px-3 mb-2 text-[#6B7280]">NÚCLEO</h3>
+<nav class="space-y-[1px]">
+<a class="flex items-center gap-3 px-3 py-1 text-sm text-sidebar-text hover:bg-sidebar-hover rounded group" href="#">
+<i class="fa-regular fa-calendar w-4 text-notion-gray group-hover:text-sidebar-text"></i>
+<span>Agenda</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-1 text-sm text-sidebar-text hover:bg-sidebar-hover rounded group" href="#">
+<i class="fa-solid fa-table-columns w-4 text-notion-gray group-hover:text-sidebar-text"></i>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-1 text-sm text-sidebar-text hover:bg-sidebar-hover rounded group" href="#">
+<i class="fa-regular fa-user w-4 text-notion-gray group-hover:text-sidebar-text"></i>
+<span>Pacientes</span>
+</a>
+</nav>
+</div>
+<!-- Section: CLÍNICA -->
+<div class="mb-6 mt-6">
+<h3 class="text-[11px] font-medium uppercase px-3 mb-2 text-[#6B7280]">CLÍNICA</h3>
+<nav class="space-y-[1px]">
+<a class="flex items-center gap-3 px-3 py-1 text-sm text-sidebar-text hover:bg-sidebar-hover rounded group" href="#">
+<i class="fa-solid fa-dumbbell w-4 text-notion-gray group-hover:text-sidebar-text"></i>
+<span>Exercícios</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-1 text-sm text-sidebar-text hover:bg-sidebar-hover rounded group" href="#">
+<i class="fa-solid fa-list-check w-4 text-notion-gray group-hover:text-sidebar-text"></i>
+<span>Protocolos</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-1 text-sm text-sidebar-text hover:bg-sidebar-hover rounded group" href="#">
+<i class="fa-regular fa-comments w-4 text-notion-gray group-hover:text-sidebar-text"></i>
+<span>Comunicação</span>
+</a>
+</nav>
+</div>
+<!-- Section: GESTÃO -->
+<div class="mb-6 mt-6">
+<h3 class="text-[11px] font-medium uppercase px-3 mb-2 text-[#6B7280]">GESTÃO</h3>
+<nav class="space-y-[1px]">
+<a class="flex items-center gap-3 px-3 py-1 text-sm text-sidebar-text hover:bg-sidebar-hover rounded group" href="#">
+<i class="fa-regular fa-calendar-check w-4 text-notion-gray group-hover:text-sidebar-text"></i>
+<span>Lista de Espera</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-1 text-sm text-sidebar-text hover:bg-sidebar-hover rounded group" href="#">
+<i class="fa-regular fa-square-check w-4 text-notion-gray group-hover:text-sidebar-text"></i>
+<span>Tarefas</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-1 text-sm text-sidebar-text hover:bg-sidebar-hover rounded group" href="#">
+<i class="fa-solid fa-check-double w-4 text-notion-gray group-hover:text-sidebar-text"></i>
+<span>Tarefas V2</span>
+</a>
+</nav>
+</div>
+<!-- Section: MÓDULOS -->
+<div class="mb-6 mt-6">
+<h3 class="text-[11px] font-medium uppercase px-3 mb-2 text-[#6B7280]">MÓDULOS</h3>
+<nav class="space-y-[1px]">
+<a class="flex items-center gap-3 px-3 py-1 text-sm text-sidebar-text hover:bg-sidebar-hover rounded group" href="#">
+<i class="fa-regular fa-clipboard w-4 text-notion-gray group-hover:text-sidebar-text"></i>
+<span>Avaliações</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-1 text-sm text-sidebar-text hover:bg-sidebar-hover rounded group" href="#">
+<i class="fa-solid fa-database w-4 text-notion-gray group-hover:text-sidebar-text"></i>
+<span>Cadastros</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-1 text-sm text-sidebar-text hover:bg-sidebar-hover rounded group" href="#">
+<i class="fa-regular fa-address-card w-4 text-notion-gray group-hover:text-sidebar-text"></i>
+<span>CRM</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-1 text-sm text-sidebar-text hover:bg-sidebar-hover rounded group" href="#">
+<i class="fa-solid fa-bullhorn w-4 text-notion-gray group-hover:text-sidebar-text"></i>
+<span>Marketing</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-1 text-sm text-sidebar-text hover:bg-sidebar-hover rounded group" href="#">
+<i class="fa-solid fa-gears w-4 text-notion-gray group-hover:text-sidebar-text"></i>
+<span>Operacionais</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-1 text-sm text-sidebar-text hover:bg-sidebar-hover rounded group" href="#">
+<i class="fa-regular fa-folder-open w-4 text-notion-gray group-hover:text-sidebar-text"></i>
+<span>Patient Evolution</span>
+</a>
+</nav>
+</div>
+<!-- Section: FINANCEIRO -->
+<div class="mb-6 mt-6">
+<h3 class="text-[11px] font-medium uppercase px-3 mb-2 text-[#6B7280]">FINANCEIRO</h3>
+<nav class="space-y-[1px]">
+<a class="flex items-center gap-3 px-3 py-1 text-sm text-sidebar-text hover:bg-sidebar-hover rounded group" href="#">
+<i class="fa-solid fa-landmark w-4 text-notion-gray group-hover:text-sidebar-text"></i>
+<span>Financeiro</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-1 text-sm text-sidebar-text hover:bg-sidebar-hover rounded group" href="#">
+<i class="fa-regular fa-file-lines w-4 text-notion-gray group-hover:text-sidebar-text"></i>
+<span>Relatórios</span>
+</a>
+</nav>
+</div>
+<!-- Section: SISTEMA (Pushed to bottom) -->
+<div class="mt-auto pb-4 mt-6">
+<h3 class="text-[11px] font-medium uppercase px-3 mb-2 text-[#6B7280]">SISTEMA</h3>
+<nav class="space-y-[1px]">
+<a class="flex items-center gap-3 px-3 py-1 text-sm text-sidebar-text hover:bg-sidebar-hover rounded group" href="#">
+<i class="fa-solid fa-chart-simple w-4 text-notion-gray group-hover:text-sidebar-text"></i>
+<span>Dashboard IA</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-1 text-sm text-sidebar-text hover:bg-sidebar-hover rounded group" href="#">
+<i class="fa-brands fa-google w-4 text-notion-gray group-hover:text-sidebar-text"></i>
+<span>Google AI Suite</span>
+</a>
+<!-- Active Item -->
+<a class="flex items-center gap-3 px-3 py-1 text-sm text-sidebar-text bg-[#E6E6E4] rounded group" href="#">
+<i class="fa-solid fa-gauge-high w-4 text-gray-600"></i>
+<span>Core Web Vitals</span>
+</a>
+</nav>
+</div></div>
+</aside>
+<!-- END: Sidebar -->
+<!-- BEGIN: Main Content Area -->
+<main class="flex-1 flex flex-col h-full overflow-hidden relative">
+<!-- Top Bar / Breadcrumbs -->
+<header class="px-12 pt-8 pb-4 flex-shrink-0">
+<div class="text-sm text-notion-gray">
+        FisioFlow <span class="mx-1">&gt;</span> Patients <span class="mx-1">&gt;</span> Patient Evolution <span class="mx-1">&gt;</span> <span class="text-black font-medium">22/02/2026 - Session #1</span>
+</div>
+</header>
+<!-- Content Scrollable Container -->
+<div class="flex-1 overflow-y-auto custom-scrollbar px-8 pb-32">
+<div class="max-w-[900px] mx-auto mt-12 pl-12 pr-4">
+<!-- H1 Header: Patient Evolution -->
+<div class="flex items-baseline mb-12 group gap-4">
+<div class="w-8 flex-shrink-0 text-right text-sm font-medium text-[#D3D1CB] select-none">H1</div>
+<h1 class="font-bold text-[#37352f] leading-tight text-3xl">Patient Evolution</h1>
+</div>
+<!-- H2 Header: Pain Level -->
+<div class="flex items-baseline mb-8 group gap-4">
+<div class="w-8 flex-shrink-0 text-right text-sm font-medium text-[#D3D1CB] select-none">H2</div>
+<div class="flex-1">
+<h2 class="text-2xl font-semibold text-[#37352f] mb-6">Pain Level (EVA)</h2>
+<!-- Visual Pain Scale Custom -->
+<div class="relative w-full max-w-2xl mb-10 pt-2">
+<!-- Linear Gradient Track -->
+<div class="w-full h-2 rounded-full relative" style="background: linear-gradient(to right, #4ade80 0%, #4ade80 30%, #facc15 30%, #facc15 60%, #f87171 60%, #f87171 100%);">
+<!-- Thumb Indicator at 60% (Value 6) -->
+<div class="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-2 border-gray-300 rounded-full shadow-md cursor-pointer hover:scale-110 transition-transform" style="left: 60%; transform: translate(-50%, -50%);"></div>
+</div>
+<!-- Labels -->
+<div class="relative w-full h-6 mt-2 text-xs text-gray-500 font-medium">
+<span class="absolute left-0">0 - No Pain</span>
+<span class="absolute left-[30%] -translate-x-1/2">3</span>
+<span class="absolute left-[60%] -translate-x-1/2">6</span>
+<span class="absolute right-0">10 - Maximum</span>
+</div>
+</div>
+<div class="text-base text-[#37352f]">
+<p>Moderate Pain: 6 (Scale of 0 to 10)</p>
+<p class="mt-2">Location of pain (optional): Shoulder, right side, anterior region</p>
+</div>
+</div>
+</div>
+<!-- H2 Header: Patient Report -->
+<div class="flex items-baseline mb-12 group gap-4">
+<div class="w-8 flex-shrink-0 text-right text-sm font-medium text-[#D3D1CB] select-none">H2</div>
+<div class="flex-1">
+<h2 class="text-2xl font-semibold text-[#37352f] mb-4">Patient Report</h2>
+<p class="text-base text-[#37352f] leading-relaxed">
+        The patient reported feeling better after the last session, with reduced pain in the shoulder...
+      </p>
+</div>
+</div>
+<!-- H2 Header: Evolution Text -->
+<div class="flex items-baseline mb-24 group gap-4">
+<div class="w-8 flex-shrink-0 text-right text-sm font-medium text-[#D3D1CB] select-none">H2</div>
+<div class="flex-1">
+<h2 class="text-2xl font-semibold text-[#37352f] mb-4">Evolution Text</h2>
+<div class="text-base text-[#37352f] leading-relaxed space-y-1">
+<p>Objective data: Improved range of motion.</p>
+<p>Assessment: Progressing as expected.</p>
+<p>Plan: Continue current protocol...</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- BEGIN: Bottom Action Bar -->
+<footer class="absolute bottom-0 left-0 right-0 bg-white border-t border-[#E9E9E8] px-6 py-2 flex justify-between items-center z-50">
+<!-- Left side (optional breadcrumb or empty) -->
+<div class="text-xs text-gray-400">
+<!-- Empty placeholder for balance if needed, or just justify-end -->
+</div>
+<!-- Right side: Actions & Status -->
+<div class="flex items-center gap-6">
+<!-- Action Buttons -->
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-2 px-3 py-1.5 border border-[#D9D9D7] hover:bg-[#F0F0EF] rounded text-sm font-medium text-[#37352f] transition-colors">
+<i class="fa-regular fa-file-pdf"></i>
+<span>PDF</span>
+</button>
+<button class="flex items-center gap-2 px-3 py-1.5 border border-[#D9D9D7] hover:bg-[#F0F0EF] rounded text-sm font-medium text-[#37352f] transition-colors">
+<i class="fa-regular fa-floppy-disk"></i>
+<span>Save</span>
+</button>
+<button class="flex items-center gap-2 px-3 py-1.5 bg-[#22c55e] hover:bg-[#16a34a] rounded text-sm font-medium text-white transition-colors shadow-sm">
+<i class="fa-solid fa-check"></i>
+<span>Conclude</span>
+</button>
+</div>
+<!-- Status Indicator Divider -->
+<div class="h-4 w-px bg-gray-300"></div>
+<!-- System Status -->
+<div class="flex items-center gap-4 text-xs text-[#37352f]">
+<span>18:41</span>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+<span class="text-gray-500">Core Web Vitals</span>
+</div>
+</div>
+</div>
+</footer>
+<!-- System Status Bar (Very bottom right overlay) -->
+<!-- END: Bottom Action Bar -->
+</main>
+<!-- END: Main Content Area -->
+</body></html>

@@ -166,14 +166,12 @@ export const AttachmentsBlock: React.FC<AttachmentsBlockProps> = ({
   return (
     <>
       <div className={cn(
-        'rounded-xl border border-border/50 bg-card overflow-hidden transition-all duration-300',
-        'shadow-sm hover:shadow-md',
+        'relative transition-all duration-300 group',
         className
       )}>
-        {/* Header with gradient accent */}
+        {/* Header */}
         <div className="relative">
-          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-500/60 via-cyan-500 to-cyan-500/60" />
-          <div className="flex items-center justify-between p-3.5 border-b border-border/40 bg-gradient-to-r from-cyan-500/5 to-transparent">
+          <div className="flex items-center justify-between px-2 py-1.5 opacity-70 group-hover:opacity-100 transition-opacity">
             <div className="flex items-center gap-2.5">
               <div className="p-1.5 rounded-lg bg-gradient-to-br from-cyan-500/10 to-cyan-500/5 border border-cyan-500/20">
                 <Paperclip className="h-4 w-4 text-cyan-500" />
@@ -190,7 +188,7 @@ export const AttachmentsBlock: React.FC<AttachmentsBlockProps> = ({
           </div>
         </div>
 
-        <div className="p-3">
+        <div className="px-2 pb-2">
           {/* Attachments list */}
           {attachments.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">

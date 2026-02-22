@@ -5,7 +5,7 @@
  * smooth animations, and professional visual design.
  */
 import React, { useState } from 'react';
-import { Activity, Smile, Meh, Frown, Ghost } from 'lucide-react';
+import { Activity, Smile, Meh, Frown, HeartCrack } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PainLevelBlockProps {
@@ -21,7 +21,7 @@ const PAIN_LEVELS = [
   { value: 0, label: 'Sem dor', color: 'emerald', icon: Smile },
   { value: 3, label: 'Dor leve', color: 'lime', icon: Meh },
   { value: 6, label: 'Dor moderada', color: 'amber', icon: Frown },
-  { value: 10, label: 'Dor intensa', color: 'rose', icon: Ghost },
+  { value: 10, label: 'Dor intensa', color: 'rose', icon: HeartCrack },
 ];
 
 const getPainConfig = (level: number) => {

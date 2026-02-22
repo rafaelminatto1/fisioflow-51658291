@@ -28,8 +28,8 @@ test.describe('Authentication Flow', () => {
     console.log('🔍 Procurando formulário de login...');
     
     // Tentar diferentes seletores para o formulário de login
-    const emailInput = page.locator('input[type="email"], input[name="email"], input[placeholder*="email" i]').first();
-    const passwordInput = page.locator('input[type="password"], input[name="password"]').first();
+    const emailInput = page.locator('input[name="email"], input[name="email"], input[placeholder*="email" i]').first();
+    const passwordInput = page.locator('input[name="password"], input[name="password"]').first();
     
     // Aguardar os campos aparecerem
     await emailInput.waitFor({ state: 'visible', timeout: 10000 });

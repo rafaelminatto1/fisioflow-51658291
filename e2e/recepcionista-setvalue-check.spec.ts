@@ -115,7 +115,7 @@ test.describe('Recepcionista Login - SetValue Error Check', () => {
 
     // Try to find email input
     const emailSelectors = [
-      'input[type="email"]',
+      'input[name="email"]',
       'input[name="email"]',
       'input[id*="email" i]',
       'input[placeholder*="email" i]',
@@ -158,7 +158,7 @@ test.describe('Recepcionista Login - SetValue Error Check', () => {
 
     // Find and fill password
     const passwordSelectors = [
-      'input[type="password"]',
+      'input[name="password"]',
       'input[name="password"]',
       'input[name="pass"]',
       'input[id*="password" i]'

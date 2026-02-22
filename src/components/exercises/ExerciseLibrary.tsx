@@ -39,7 +39,7 @@ import { MergeExercisesModal } from './MergeExercisesModal';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CreateTemplateFromSelectionModal } from './CreateTemplateFromSelectionModal';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
-import { withImageParams } from '@/lib/storageProxy';
+import { getBestImageUrl, getResponsiveImageSizes } from '@/lib/imageUtils';
 import * as ReactWindow from 'react-window';
 const { FixedSizeGrid: Grid, FixedSizeList } = ReactWindow;
 import type { ListChildComponentProps, GridChildComponentProps } from 'react-window';
@@ -127,9 +127,8 @@ const ExerciseCard = React.memo(function ExerciseCard({
 }) {
   const diffConfig = exercise.difficulty ? difficultyConfig[exercise.difficulty] : null;
   const catColor = exercise.category ? categoryColors[exercise.category] || 'bg-muted text-muted-foreground' : '';
-  const thumbSrc = exercise.image_url
-    ? withImageParams(exercise.image_url, { width: 400, height: 300, format: 'auto', fit: 'cover', quality: 75, dpr: 1 })
-    : undefined;
+  // Usar o melhor URL de imagem disponível (thumbnail > image > youtube thumbnail)
+  const thumbSrc = getBestImageUrl(exercise);
 
   return (
     <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:border-primary/40 hover:-translate-y-1 will-change-transform touch-manipulation h-full flex flex-col">
@@ -339,9 +338,8 @@ const ExerciseListItem = React.memo(function ExerciseListItem({
 }) {
   const diffConfig = exercise.difficulty ? difficultyConfig[exercise.difficulty] : null;
   const catColor = exercise.category ? categoryColors[exercise.category] || 'bg-muted text-muted-foreground' : '';
-  const thumbSrc = exercise.image_url
-    ? withImageParams(exercise.image_url, { width: 120, height: 120, format: 'auto', fit: 'cover', quality: 70, dpr: 1 })
-    : undefined;
+  // Usar o melhor URL de imagem disponível (thumbnail > image > youtube thumbnail)
+  const thumbSrc = getBestImageUrl(exercise);
 
   return (
     <Card className="p-4 hover:shadow-md transition-all hover:border-primary/30 group touch-manipulation">

@@ -28,8 +28,8 @@ test('fluxo completo: criar paciente e verificar autocomplete', async ({ page })
   await page.goto(`${BASE_URL}/auth`);
   await page.waitForTimeout(2000);
 
-  await page.fill('input[type="email"]', testUsers.rafael.email);
-  await page.fill('input[type="password"]', testUsers.rafael.password);
+  await page.fill('input[name="email"]', testUsers.rafael.email);
+  await page.fill('input[name="password"]', testUsers.rafael.password);
   await page.click('button[type="submit"]');
 
   await page.waitForURL(/\/(eventos|dashboard|schedule|smart-dashboard|$)/, { timeout: 30000 });

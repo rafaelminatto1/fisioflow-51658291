@@ -11,8 +11,8 @@ test.describe('Agenda - Novo Design dos Cards', () => {
   test.beforeEach(async ({ page }) => {
     // Login - usar URL completa para evitar problemas de porta
     await page.goto('http://localhost:8080/auth');
-    await page.fill('input[type="email"]', testUsers.fisio.email);
-    await page.fill('input[type="password"]', testUsers.fisio.password);
+    await page.fill('input[name="email"]', testUsers.fisio.email);
+    await page.fill('input[name="password"]', testUsers.fisio.password);
     await page.click('button[type="submit"]');
     await page.waitForURL(/\/(dashboard|schedule)/);
 
@@ -294,8 +294,8 @@ test.describe('Agenda - Novo Design dos Cards', () => {
 test.describe('Agenda - Screenshots Comparativos', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('http://localhost:8080/auth');
-    await page.fill('input[type="email"]', testUsers.fisio.email);
-    await page.fill('input[type="password"]', testUsers.fisio.password);
+    await page.fill('input[name="email"]', testUsers.fisio.email);
+    await page.fill('input[name="password"]', testUsers.fisio.password);
     await page.click('button[type="submit"]');
     await page.waitForURL(/\/(dashboard|schedule)/);
     await page.goto('http://localhost:8080/schedule');

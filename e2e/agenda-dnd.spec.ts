@@ -14,9 +14,9 @@ test('agenda drag and drop', async ({ page }) => {
     console.log('Page title:', title);
 
     console.log('Filling credentials...');
-    await page.waitForSelector('input[type="email"]', { timeout: 10000 });
-    await page.fill('input[type="email"]', testUsers.rafael.email);
-    await page.fill('input[type="password"]', testUsers.rafael.password);
+    await page.waitForSelector('input[name="email"]', { timeout: 10000 });
+    await page.fill('input[name="email"]', testUsers.rafael.email);
+    await page.fill('input[name="password"]', testUsers.rafael.password);
 
     console.log('Submitting login...');
     await page.click('button[type="submit"]');

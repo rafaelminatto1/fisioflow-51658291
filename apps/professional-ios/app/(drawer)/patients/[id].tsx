@@ -23,6 +23,7 @@ import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/hooks/useTheme';
 import { HapticFeedback } from '@/lib/haptics';
 import { calculateAge, formatPhone } from '@/lib/utils';
+import { useEvolutions } from '@/hooks/useEvolutions';
 import { doc, getDoc, collection, query, where, orderBy, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Patient, SOAPRecord, Appointment, Evaluation } from '@/types';
@@ -40,13 +41,14 @@ export default function PatientDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [patient, setPatient] = useState<Patient | null>(null);
-  const [evolutions, setEvolutions] = useState<SOAPRecord[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
+  
+  // Use the hook to get decrypted SOAP notes for this patient
+  const { data: evolutions, loading: evolutionsLoading } = useEvolutions(patientId);
 
   useEffect(() => {
     loadPatientData();
-    loadEvolutions();
     loadAppointments();
     loadEvaluations();
   }, [patientId]);
@@ -87,22 +89,6 @@ export default function PatientDetailScreen() {
       console.error('Error loading patient:', error);
       setLoading(false);
     }
-  };
-
-  const loadEvolutions = () => {
-    const q = query(
-      collection(db, 'evolutions'),
-      where('patient_id', '==', patientId),
-      orderBy('created_at', 'desc')
-    );
-
-    return onSnapshot(q, (snapshot) => {
-      const items: SOAPRecord[] = [];
-      snapshot.forEach((doc) => {
-        items.push({ id: doc.id, ...doc.data() } as SOAPRecord);
-      });
-      setEvolutions(items);
-    });
   };
 
   const loadAppointments = () => {

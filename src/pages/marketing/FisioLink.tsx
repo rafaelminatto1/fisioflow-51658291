@@ -13,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import {
-
   Link2,
   Smartphone,
   MessageSquare,
@@ -24,6 +23,10 @@ import {
   Copy,
   ExternalLink,
   Sparkles,
+  RefreshCw,
+  Edit,
+  Star,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -31,7 +34,9 @@ import {
   updateFisioLinkConfig,
   type FisioLinkConfig,
 } from '@/services/marketing/marketingService';
+import { generateFisiolinkTemplates } from '@/services/ai/marketingAITemplateService';
 import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
 
 const THEME_OPTIONS = [
   { value: 'light', label: 'Claro', preview: 'bg-white border-gray-200' },
@@ -66,6 +71,7 @@ export default function FisioLinkPage() {
   const [slug, setSlug] = useState('');
   const [saving, setSaving] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
   useEffect(() => {
     // Load existing config
@@ -80,6 +86,33 @@ export default function FisioLinkPage() {
       });
     }
   }, [organizationId]);
+
+  const handleAIGenerate = async () => {
+    setIsGeneratingAI(true);
+    try {
+      const result = await generateFisiolinkTemplates({
+        clinicName: user?.clinicName || 'Sua Clínica',
+        clinicAddress: config.google_maps_url || '[Endereço]',
+        clinicPhone: config.phone || '[Telefone]',
+        whatsappNumber: config.whatsapp_number || '[WhatsApp]',
+        clinicDescription: config.custom_message || '[Descrição]',
+      });
+
+      if (result.success && result.templates) {
+        setConfig({ ...config, custom_message: result.templates.medium });
+        toast.success('Bio gerada com IA!');
+        if (result.suggestions && result.suggestions.length > 0) {
+          toast.info(`Sugestão: ${result.suggestions[0]}`);
+        }
+      } else {
+        throw new Error(result.error || "Falha ao gerar");
+      }
+    } catch (error) {
+      toast.error('Erro ao gerar bio com IA');
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -252,7 +285,23 @@ export default function FisioLinkPage() {
 
               {/* Custom Message */}
               <div className="space-y-2">
-                <Label>Mensagem de Boas-vindas</Label>
+                <div className="flex items-center justify-between">
+                  <Label>Mensagem de Boas-vindas</Label>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleAIGenerate} 
+                    disabled={isGeneratingAI}
+                    className="h-8 text-purple-600 hover:text-purple-700 hover:bg-purple-50 gap-1.5"
+                  >
+                    {isGeneratingAI ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3 w-3" />
+                    )}
+                    Gerar com IA
+                  </Button>
+                </div>
                 <Textarea
                   value={config.custom_message}
                   onChange={(e) =>
@@ -452,8 +501,3 @@ export default function FisioLinkPage() {
     </MainLayout>
   );
 }
-
-import { cn } from '@/lib/utils';
-import RefreshCw from 'lucide-react/dist/esm/icons/refresh-cw';
-import Edit from 'lucide-react/dist/esm/icons/edit';
-import Star from 'lucide-react/dist/esm/icons/star';

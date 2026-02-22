@@ -62,7 +62,7 @@ interface CalendarViewProps {
   viewType: CalendarViewType;
   onViewTypeChange: (type: CalendarViewType) => void;
   onTimeSlotClick: (date: Date, time: string) => void;
-  onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string) => Promise<void>;
+  onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string, ignoreCapacity?: boolean) => Promise<void>;
   onEditAppointment?: (appointment: Appointment) => void;
   onDeleteAppointment?: (appointment: Appointment) => void;
   // Selection props
@@ -336,7 +336,7 @@ export const CalendarView = memo(({
     // Create updated appointment with new date/time
     const updatedAppointment: Appointment = {
       ...appointment,
-      date: formatDateToLocalISO(newDate),
+      date: formatDateToLocalISO(newDate) as any, // Type cast for date-fns compatibility
       time: newTime
     };
 
@@ -464,8 +464,23 @@ export const CalendarView = memo(({
   }, [onDateChange]);
 
   const getHeaderTitle = useCallback(() => {
-    return '';
-  }, []);
+    switch (viewType) {
+      case 'day':
+        return format(currentDate, "d 'de' MMMM", { locale: ptBR });
+      case 'week': {
+        const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+        const weekEnd = addDays(weekStart, 5); // Seg to Sab
+        if (weekStart.getMonth() === weekEnd.getMonth()) {
+          return `${format(weekStart, 'd')} - ${format(weekEnd, "d 'de' MMMM", { locale: ptBR })}`;
+        }
+        return `${format(weekStart, "d 'de' MMM", { locale: ptBR })} - ${format(weekEnd, "d 'de' MMM", { locale: ptBR })}`;
+      }
+      case 'month':
+        return format(currentDate, "MMMM 'de' yyyy", { locale: ptBR });
+      default:
+        return '';
+    }
+  }, [viewType, currentDate]);
 
   // Restore focus to calendar grid when a reschedule dialog closes
   const calendarGridRef = useRef<HTMLDivElement>(null);
@@ -543,12 +558,12 @@ export const CalendarView = memo(({
         return 'bg-gradient-to-br from-indigo-500 to-indigo-600 border-indigo-400 shadow-indigo-500/30';
       case 'falta':
       case 'no_show_confirmed':
-        return 'bg-gradient-to-br from-rose-500 to-rose-600 border-rose-400 shadow-rose-500/30';
-      case 'atrasado':
-      case 'late':
-        return 'bg-gradient-to-br from-yellow-500 to-yellow-600 border-yellow-400 shadow-yellow-500/30';
+        return 'bg-gradient-to-br from-rose-600 to-rose-700 border-rose-500 shadow-rose-600/30';
+      case 'remarcado_pelo_paciente':
+      case 'rescheduled_by_patient':
+        return 'bg-gradient-to-br from-teal-500 to-teal-600 border-teal-400 shadow-teal-500/30';
       default:
-        return 'bg-gradient-to-br from-gray-500 to-gray-600 border-gray-400 shadow-gray-500/30';
+        return 'bg-gradient-to-br from-slate-500 to-slate-600 border-slate-400 shadow-slate-500/30';
     }
   }, []);
 
@@ -714,8 +729,8 @@ export const CalendarView = memo(({
           {liveAnnouncement}
         </div>
       ) : null}
-      <Card className="flex flex-col border-0 shadow-xl min-h-[500px] sm:min-h-[600px]" role="region" aria-label="Calendário de agendamentos">
-        <CardContent className="p-2 md:p-3 lg:p-4 flex flex-col h-full">
+      <Card className="flex flex-col border-none shadow-premium-lg min-h-[500px] sm:min-h-[600px] bg-slate-50 dark:bg-slate-950/20" role="region" aria-label="Calendário de agendamentos">
+        <CardContent className="p-0 flex flex-col h-full">
           {/* Unified Header - Navigation + Actions */}
           <div className="px-3 sm:px-4 py-2.5 border-b bg-white dark:bg-slate-900" role="toolbar" aria-label="Navegação do calendário">
             {/* Mobile Header */}
@@ -779,6 +794,7 @@ export const CalendarView = memo(({
                     onClick={onCreateAppointment}
                     className="bg-blue-600 hover:bg-blue-700 text-white h-8 w-8 p-0"
                     aria-label="Novo Agendamento"
+                    data-testid="new-appointment"
                   >
                     <Plus className="w-4 h-4" />
                   </Button>
@@ -815,13 +831,13 @@ export const CalendarView = memo(({
                   variant="outline"
                   size="sm"
                   onClick={goToToday}
-                  className="h-8 px-3 rounded-lg font-medium"
+                  className="h-8 px-3 rounded-lg font-bold text-xs uppercase tracking-wider"
                   aria-label="Ir para hoje"
                 >
                   Hoje
                 </Button>
 
-                <h2 className="text-base font-semibold text-gray-900 dark:text-white" aria-live="polite" aria-atomic="true">
+                <h2 className="text-lg font-black text-slate-900 dark:text-white tracking-tighter capitalize" aria-live="polite" aria-atomic="true">
                   {getHeaderTitle()}
                 </h2>
 
@@ -990,6 +1006,7 @@ export const CalendarView = memo(({
                     onClick={onCreateAppointment}
                     size="sm"
                     className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white gap-1.5 shadow-md rounded-lg px-3 h-8"
+                    data-testid="new-appointment"
                   >
                     <Plus className="w-4 h-4" />
                     <span className="hidden lg:inline text-xs">Novo Agendamento</span>
@@ -1014,7 +1031,6 @@ export const CalendarView = memo(({
                   currentTime={currentTime}
                   currentTimePosition={currentTimePosition}
                   getAppointmentsForDate={getAppointmentsForDate}
-                  appointments={displayAppointments}
                   savingAppointmentId={dragStateNative.savingAppointmentId}
                   timeSlots={memoizedTimeSlots}
                   isDayClosed={isDayClosed}
@@ -1088,8 +1104,6 @@ export const CalendarView = memo(({
                     handleDrop={handleDropNative}
                     checkTimeBlocked={checkTimeBlocked}
                     isDayClosedForDate={isDayClosedForDate}
-                    getStatusColor={getStatusColor}
-                    isOverCapacity={isOverCapacity}
                     openPopoverId={openPopoverId}
                     setOpenPopoverId={setOpenPopoverId}
                     selectionMode={selectionMode}
@@ -1114,9 +1128,6 @@ export const CalendarView = memo(({
                   isOverCapacity={isOverCapacity}
                   openPopoverId={openPopoverId}
                   setOpenPopoverId={setOpenPopoverId}
-                  selectionMode={selectionMode}
-                  selectedIds={selectedIds}
-                  onToggleSelection={onToggleSelection}
                 />
               </div>
             )}

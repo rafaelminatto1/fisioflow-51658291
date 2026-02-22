@@ -33,6 +33,7 @@ import { toast } from 'sonner';
 import { calculateMarketingROI } from '@/services/marketing/marketingService';
 import { useAuth } from '@/contexts/AuthContext';
 import { subMonths } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface ROIMetrics {
   totalLeads: number;
@@ -347,5 +348,3 @@ export default function ROICalculatorPage() {
     </MainLayout>
   );
 }
-
-import { cn } from '@/lib/utils';

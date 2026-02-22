@@ -13,10 +13,10 @@ import { calculateAppointmentCardHeight, calculateSlotHeightFromCardSize } from 
 import { getOverlapStackPosition, DEFAULT_APPOINTMENT_DURATION_MINUTES } from '@/lib/calendar';
 import {
 
-  calculateCardWidthPercent,
-  calculateCardOffsetPercent,
-  shouldShowText,
-  MAX_CARDS_WITHOUT_BADGE
+    calculateCardWidthPercent,
+    calculateCardOffsetPercent,
+    shouldShowText,
+    MAX_CARDS_WITHOUT_BADGE
 } from '@/lib/calendar/dragPreview';
 
 interface CalendarDayViewProps {
@@ -206,212 +206,248 @@ const CalendarDayView = memo(({
                         {/* Time slots */}
                         <div className="relative" role="grid" data-calendar-drop-zone>
                             {timeSlots.map((time, _slotIndex) => {
-                        const hour = parseInt(time.split(':')[0]);
-                        const isCurrentHour = hour === currentTime.getHours();
-                        const isDropTarget = dropTarget && isSameDay(dropTarget.date, currentDate) && dropTarget.time === time;
-                        const blocked = isTimeBlocked(time);
-                        const blockReason = getBlockReason(time);
+                                const hour = parseInt(time.split(':')[0]);
+                                const isCurrentHour = hour === currentTime.getHours();
+                                const isDropTarget = dropTarget && isSameDay(dropTarget.date, currentDate) && dropTarget.time === time;
+                                const blocked = isTimeBlocked(time);
+                                const blockReason = getBlockReason(time);
 
-                        // Calcular preview cards para o drop target
-                        const showPreview = isDropTarget && !blocked && dragState.appointment;
-                        const previewCards = showPreview ? [...targetAppointments, dragState.appointment!] : [];
-                        const totalCards = previewCards.length;
+                                // Calcular preview cards para o drop target
+                                const showPreview = isDropTarget && !blocked && dragState.appointment;
+                                const previewCards = showPreview ? [...targetAppointments, dragState.appointment!] : [];
+                                const totalCards = previewCards.length;
 
-                        // Descrição acessível para screen readers
-                        const ariaLabel = blocked
-                            ? `Horário ${time} bloqueado`
-                            : showPreview
-                                ? `Horário ${time}, ${totalCards} paciente${totalCards !== 1 ? 's' : ''}. Solte para reagendar.`
-                                : `Horário ${time} disponível para agendamento`;
+                                // Descrição acessível para screen readers
+                                const ariaLabel = blocked
+                                    ? `Horário ${time} bloqueado`
+                                    : showPreview
+                                        ? `Horário ${time}, ${totalCards} paciente${totalCards !== 1 ? 's' : ''}. Solte para reagendar.`
+                                        : `Horário ${time} disponível para agendamento`;
 
-                        return (
-                            <TooltipProvider key={time}>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <div
-                                            role="gridcell"
-                                            aria-label={ariaLabel}
-                                            aria-dropeffect={!blocked ? 'move' : 'none'}
-                                            className={cn(
-                                                "calendar-time-slot group relative",
-                                                "transition-[background-color,box-shadow] duration-200 ease-out",
-                                                blocked && "blocked bg-red-50/60 dark:bg-red-950/30 ring-2 ring-inset ring-red-400/30 cursor-not-allowed",
-                                                isCurrentHour && !blocked && "bg-primary/5",
-                                                isDropTarget && !blocked && cn(
-                                                    "is-drop-target",
-                                                    "bg-primary/10 dark:bg-primary/20 ring-2 ring-inset ring-primary/40 dark:ring-primary/50 shadow-inner"
-                                                ),
-                                                dragState.isDragging && !blocked && !isDropTarget && "bg-primary/5",
-                                                showPreview && "z-40"
-                                            )}
-                                            style={{ height: `${slotHeightMobile}px`, minHeight: `${slotHeightMobile}px` }}
-                                            onClick={() => !blocked && onTimeSlotClick(currentDate, time)}
-                                            onDragOver={(e) => !blocked && handleDragOver(e, currentDate, time)}
-                                            onDragLeave={handleDragLeave}
-                                            onDrop={(e) => !blocked && handleDrop(e, currentDate, time)}
-                                        >
-                                            {blocked ? (
-                                                <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-destructive/80 dark:text-destructive font-medium" aria-hidden="true">
-                                                    <Ban className="h-4 w-4 shrink-0" />
-                                                    <span className="text-[10px] uppercase tracking-wide">Bloqueado</span>
-                                                </span>
-                                            ) : showPreview ? (
-                                                // Preview dinâmica mostrando como os cards serão organizados
-                                                <div className="absolute inset-0 flex items-center px-1 gap-1 pointer-events-none" aria-hidden="true">
-                                                    {previewCards.map((apt, index) => {
-                                                        const cardWidthPercent = calculateCardWidthPercent(totalCards);
-                                                        const leftOffset = calculateCardOffsetPercent(index, totalCards);
-                                                        const isDraggedCard = apt.id === dragState.appointment?.id;
-                                                        const showText = shouldShowText(cardWidthPercent, totalCards);
+                                return (
+                                    <TooltipProvider key={time}>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <div
+                                                    role="gridcell"
+                                                    aria-label={ariaLabel}
+                                                    aria-dropeffect={!blocked ? 'move' : 'none'}
+                                                    className={cn(
+                                                        "calendar-time-slot group relative",
+                                                        "transition-[background-color,box-shadow] duration-200 ease-out",
+                                                        blocked && "blocked bg-red-50/60 dark:bg-red-950/30 ring-2 ring-inset ring-red-400/30 cursor-not-allowed",
+                                                        isCurrentHour && !blocked && "bg-primary/5",
+                                                        isDropTarget && !blocked && cn(
+                                                            "is-drop-target",
+                                                            "bg-primary/10 dark:bg-primary/20 ring-2 ring-inset ring-primary/40 dark:ring-primary/50 shadow-inner"
+                                                        ),
+                                                        dragState.isDragging && !blocked && !isDropTarget && "bg-primary/5",
+                                                        showPreview && "z-40"
+                                                    )}
+                                                    style={{ height: `${slotHeightMobile}px`, minHeight: `${slotHeightMobile}px` }}
+                                                    onClick={() => !blocked && onTimeSlotClick(currentDate, time)}
+                                                    onDragOver={(e) => !blocked && handleDragOver(e, currentDate, time)}
+                                                    onDragLeave={handleDragLeave}
+                                                    onDrop={(e) => !blocked && handleDrop(e, currentDate, time)}
+                                                >
+                                                    {blocked ? (
+                                                        <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-destructive/80 dark:text-destructive font-medium" aria-hidden="true">
+                                                            <Ban className="h-4 w-4 shrink-0" />
+                                                            <span className="text-[10px] uppercase tracking-wide">Bloqueado</span>
+                                                        </span>
+                                                    ) : showPreview ? (
+                                                        // Preview dinâmica mostrando como os cards serão organizados
+                                                        <div className="absolute inset-0 flex items-center px-1 gap-1 pointer-events-none" aria-hidden="true">
+                                                            {previewCards.map((apt, index) => {
+                                                                const cardWidthPercent = calculateCardWidthPercent(totalCards);
+                                                                const leftOffset = calculateCardOffsetPercent(index, totalCards);
+                                                                const isDraggedCard = apt.id === dragState.appointment?.id;
+                                                                const showText = shouldShowText(cardWidthPercent, totalCards);
 
-                                                        return (
-                                                            <DropTargetPreviewCard
-                                                                key={apt.id}
-                                                                appointment={apt}
-                                                                isDraggedCard={!!isDraggedCard}
-                                                                cardWidthPercent={cardWidthPercent}
-                                                                leftOffset={leftOffset}
-                                                                showText={showText}
-                                                                variant="day"
-                                                            />
-                                                        );
-                                                    })}
+                                                                return (
+                                                                    <DropTargetPreviewCard
+                                                                        key={apt.id}
+                                                                        appointment={apt}
+                                                                        isDraggedCard={!!isDraggedCard}
+                                                                        cardWidthPercent={cardWidthPercent}
+                                                                        leftOffset={leftOffset}
+                                                                        showText={showText}
+                                                                        variant="day"
+                                                                    />
+                                                                );
+                                                            })}
 
-                                                    {/* Indicador de quantidade quando há muitos cards */}
-                                                    {totalCards > MAX_CARDS_WITHOUT_BADGE && (
-                                                        <div className="absolute bottom-1 right-1 bg-primary/80 text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
-                                                            {totalCards}
+                                                            {/* Indicador de quantidade quando há muitos cards */}
+                                                            {totalCards > MAX_CARDS_WITHOUT_BADGE && (
+                                                                <div className="absolute bottom-1 right-1 bg-primary/80 text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                                                    {totalCards}
+                                                                </div>
+                                                            )}
                                                         </div>
+                                                    ) : (
+                                                        <span className={cn(
+                                                            "absolute inset-0 flex items-center justify-center text-xs transition-opacity duration-200",
+                                                            !isDropTarget && "opacity-0 group-hover:opacity-100 text-muted-foreground",
+                                                            isDropTarget && "opacity-100 text-primary font-medium"
+                                                        )}>
+                                                            {isDropTarget ? (
+                                                                <span className="flex flex-col items-center gap-1">
+                                                                    <CalendarIcon className="w-5 h-5 text-primary/80" />
+                                                                    <span>Solte aqui</span>
+                                                                </span>
+                                                            ) : 'Clique para agendar'}
+                                                        </span>
                                                     )}
                                                 </div>
-                                            ) : (
-                                                <span className={cn(
-                                                    "absolute inset-0 flex items-center justify-center text-xs transition-opacity duration-200",
-                                                    !isDropTarget && "opacity-0 group-hover:opacity-100 text-muted-foreground",
-                                                    isDropTarget && "opacity-100 text-primary font-medium"
-                                                )}>
-                                                    {isDropTarget ? (
-                                                        <span className="flex flex-col items-center gap-1">
-                                                            <CalendarIcon className="w-5 h-5 text-primary/80" />
-                                                            <span>Solte aqui</span>
-                                                        </span>
-                                                    ) : 'Clique para agendar'}
-                                                </span>
+                                            </TooltipTrigger>
+                                            {blocked && blockReason && (
+                                                <TooltipContent>
+                                                    <p>{blockReason}</p>
+                                                </TooltipContent>
                                             )}
-                                        </div>
-                                    </TooltipTrigger>
-                                    {blocked && blockReason && (
-                                        <TooltipContent>
-                                            <p>{blockReason}</p>
-                                        </TooltipContent>
-                                    )}
-                                </Tooltip>
-                            </TooltipProvider>
-                        );
-                    })}
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                );
+                            })}
 
-                    {/* Current time indicator */}
-                    {isSameDay(currentDate, currentTime) && currentTimePosition >= 0 && currentTimePosition <= 100 && (
-                        <div
-                            className="absolute left-0 right-0 z-20 pointer-events-none"
-                            style={{ top: `${currentTimePosition}%` }}
-                        >
-                            <div className="flex items-center">
-                                <div className="w-24 flex items-center justify-center">
-                                    <div className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md animate-pulse-glow">
-                                        <Clock className="h-3 w-3 inline mr-1" />
-                                        {format(currentTime, 'HH:mm')}
+                            {/* Current time indicator */}
+                            {isSameDay(currentDate, currentTime) && currentTimePosition >= 0 && currentTimePosition <= 100 && (
+                                <div
+                                    className="absolute left-0 right-0 z-20 pointer-events-none"
+                                    style={{ top: `${currentTimePosition}%` }}
+                                >
+                                    <div className="flex items-center">
+                                        <div className="w-24 flex items-center justify-center">
+                                            <div className="bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md animate-pulse-glow">
+                                                <Clock className="h-3 w-3 inline mr-1" />
+                                                {format(currentTime, 'HH:mm')}
+                                            </div>
+                                        </div>
+                                        <div className="flex-1 h-0.5 bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
                                     </div>
                                 </div>
-                                <div className="flex-1 h-0.5 bg-primary shadow-[0_0_10px_rgba(var(--primary),0.5)]" />
-                            </div>
+                            )}
+
+                            {/* Appointments overlay - with stacking support for overlapping appointments (by time range) */}
+                            {(() => {
+                                return dayAppointments.map(apt => {
+                                    // Safety check for time - handle null, undefined, or empty string
+                                    const aptTime = apt.time && apt.time.trim() ? apt.time : '09:00';
+                                    const [hours, minutes] = aptTime.split(':').map(Number);
+                                    const aptMinutesTotal = hours * 60 + minutes;
+
+                                    let slotIndex = -1;
+                                    let offsetMinutes = 0;
+                                    // Assumindo slots de 30 minutos ou flexiveis gerados dinamicamente
+                                    for (let i = 0; i < timeSlots.length; i++) {
+                                        const [slotHour, slotMin] = timeSlots[i].split(':').map(Number);
+                                        const slotMinutesTotal = slotHour * 60 + slotMin;
+
+                                        // Determine the duration of the current slot based on the next slot
+                                        const nextSlot = timeSlots[i + 1];
+                                        let slotDuration = 30; // default to 30 mins
+                                        if (nextSlot) {
+                                            const [nextHour, nextMin] = nextSlot.split(':').map(Number);
+                                            slotDuration = (nextHour * 60 + nextMin) - slotMinutesTotal;
+                                        }
+
+                                        if (aptMinutesTotal >= slotMinutesTotal && aptMinutesTotal < slotMinutesTotal + slotDuration) {
+                                            slotIndex = i;
+                                            offsetMinutes = aptMinutesTotal - slotMinutesTotal;
+                                            break;
+                                        }
+                                    }
+
+                                    // If falling after the last slot, let's clamp it to the last slot
+                                    if (slotIndex === -1 && timeSlots.length > 0) {
+                                        const lastSlot = timeSlots[timeSlots.length - 1];
+                                        const [lastHour, lastMin] = lastSlot.split(':').map(Number);
+                                        const lastMinutesTotal = lastHour * 60 + lastMin;
+                                        if (aptMinutesTotal >= lastMinutesTotal) {
+                                            slotIndex = timeSlots.length - 1;
+                                            offsetMinutes = aptMinutesTotal - lastMinutesTotal;
+                                        } else {
+                                            return null;
+                                        }
+                                    }
+
+                                    // Check if this appointment's time slot is blocked
+                                    const isTimeSlotBlocked = isTimeBlocked(aptTime);
+                                    const isDropTarget = dropTarget && isSameDay(dropTarget.date, currentDate) && dropTarget.time === aptTime;
+
+                                    // Keep card sizing stable while dragging; preview handles target feedback.
+                                    const { index: stackIndex, count: stackCount } = getOverlapStackPosition(dayAppointments, apt);
+                                    const hasOverlap = stackCount > 1;
+
+                                    const widthPercent = hasOverlap ? (100 / stackCount) - 2 : 100;
+                                    const leftOffset = hasOverlap ? (stackIndex * (100 / stackCount)) + 1 : 0;
+
+                                    const duration = apt.duration ?? DEFAULT_APPOINTMENT_DURATION_MINUTES;
+
+                                    // Duration-based card height calculation
+                                    const heightMobile = calculateAppointmentCardHeight(cardSize, duration, heightScale);
+                                    const heightDesktop = heightMobile; // Same content, same height
+
+                                    // Calculate pixel offset for times that don't fall exactly on the slot boundary
+                                    // Assuming base slot duration is 30 mins for the layout calculation
+                                    const offsetPxMobile = (offsetMinutes / 30) * slotHeightMobile;
+                                    const offsetPxDesktop = (offsetMinutes / 30) * slotHeight;
+
+                                    const topMobile = (slotIndex * slotHeightMobile) + offsetPxMobile;
+                                    const topDesktop = (slotIndex * slotHeight) + offsetPxDesktop;
+                                    const isDraggable = !!onAppointmentReschedule;
+                                    const isDraggingThis = dragState.isDragging && dragState.appointment?.id === apt.id;
+
+                                    // Responsive positioning style
+                                    const style: React.CSSProperties = {
+                                        top: `${topMobile}px`,
+                                        height: `${heightMobile}px`,
+                                        left: hasOverlap ? `${leftOffset}%` : '4px',
+                                        right: hasOverlap ? 'auto' : '4px',
+                                        width: hasOverlap ? `${widthPercent}%` : 'calc(100% - 8px)',
+                                        zIndex: isDraggingThis ? 5 : (isDropTarget ? 25 : (hasOverlap ? 20 : 1)),
+                                        ['--top-desktop' as string]: `${topDesktop}px`,
+                                        ['--height-desktop' as string]: `${heightDesktop}px`,
+                                        transform: isDraggingThis ? 'rotate(2deg)' : undefined,
+                                    };
+
+                                    return (
+                                        <CalendarAppointmentCard
+                                            key={apt.id}
+                                            appointment={apt}
+                                            style={style}
+                                            isDraggable={isDraggable}
+                                            isDragging={isDraggingThis}
+                                            isSaving={apt.id === savingAppointmentId}
+                                            isDropTarget={!!isDropTarget}
+                                            hideGhostWhenSiblings={isDraggingThis && hasOverlap}
+                                            onDragStart={handleDragStart}
+                                            onDragEnd={handleDragEnd}
+                                            onDragOver={(e) => {
+                                                // Allow dropping on existing appointments to add multiple at same time
+                                                if (!isDraggingThis && !isTimeSlotBlocked) {
+                                                    handleDragOver(e, currentDate, aptTime);
+                                                }
+                                            }}
+                                            onDrop={(e) => {
+                                                // Allow dropping on existing appointments to add multiple at same time
+                                                if (!isDraggingThis && !isTimeSlotBlocked) {
+                                                    handleDrop(e, currentDate, aptTime);
+                                                }
+                                            }}
+                                            onEditAppointment={onEditAppointment}
+                                            onDeleteAppointment={onDeleteAppointment}
+                                            onOpenPopover={setOpenPopoverId}
+                                            isPopoverOpen={openPopoverId === apt.id}
+                                            selectionMode={selectionMode}
+                                            isSelected={selectedIds?.has(apt.id)}
+                                            onToggleSelection={onToggleSelection}
+                                        />
+                                    );
+                                });
+                            })()}
                         </div>
-                    )}
-
-                    {/* Appointments overlay - with stacking support for overlapping appointments (by time range) */}
-                    {(() => {
-                        return dayAppointments.map(apt => {
-                            // Safety check for time - handle null, undefined, or empty string
-                            const aptTime = apt.time && apt.time.trim() ? apt.time : '09:00';
-                            const [hours, minutes] = aptTime.split(':').map(Number);
-                            const slotIndex = timeSlots.findIndex(slot => {
-                                const [slotHour, slotMin] = slot.split(':').map(Number);
-                                return slotHour === hours && slotMin === minutes;
-                            });
-
-                            if (slotIndex === -1) return null;
-
-                            // Check if this appointment's time slot is blocked
-                            const isTimeSlotBlocked = isTimeBlocked(aptTime);
-                            const isDropTarget = dropTarget && isSameDay(dropTarget.date, currentDate) && dropTarget.time === aptTime;
-
-                            // Keep card sizing stable while dragging; preview handles target feedback.
-                            const { index: stackIndex, count: stackCount } = getOverlapStackPosition(dayAppointments, apt);
-                            const hasOverlap = stackCount > 1;
-
-                            const widthPercent = hasOverlap ? (100 / stackCount) - 2 : 100;
-                            const leftOffset = hasOverlap ? (stackIndex * (100 / stackCount)) + 1 : 0;
-
-                            const duration = apt.duration ?? DEFAULT_APPOINTMENT_DURATION_MINUTES;
-
-                            // Duration-based card height calculation
-                            const heightMobile = calculateAppointmentCardHeight(cardSize, duration, heightScale);
-                            const heightDesktop = heightMobile; // Same content, same height
-                            const topMobile = slotIndex * slotHeightMobile;
-                            const topDesktop = slotIndex * slotHeight;
-                            const isDraggable = !!onAppointmentReschedule;
-                            const isDraggingThis = dragState.isDragging && dragState.appointment?.id === apt.id;
-
-                            // Responsive positioning style
-                            const style: React.CSSProperties = {
-                                top: `${topMobile}px`,
-                                height: `${heightMobile}px`,
-                                left: hasOverlap ? `${leftOffset}%` : '4px',
-                                right: hasOverlap ? 'auto' : '4px',
-                                width: hasOverlap ? `${widthPercent}%` : 'calc(100% - 8px)',
-                                zIndex: isDraggingThis ? 5 : (isDropTarget ? 25 : (hasOverlap ? 20 : 1)),
-                                ['--top-desktop' as string]: `${topDesktop}px`,
-                                ['--height-desktop' as string]: `${heightDesktop}px`,
-                                transform: isDraggingThis ? 'rotate(2deg)' : undefined,
-                            };
-
-                            return (
-                                <CalendarAppointmentCard
-                                    key={apt.id}
-                                    appointment={apt}
-                                    style={style}
-                                    isDraggable={isDraggable}
-                                    isDragging={isDraggingThis}
-                                    isSaving={apt.id === savingAppointmentId}
-                                    isDropTarget={!!isDropTarget}
-                                    hideGhostWhenSiblings={isDraggingThis && hasOverlap}
-                                    onDragStart={handleDragStart}
-                                    onDragEnd={handleDragEnd}
-                                    onDragOver={(e) => {
-                                        // Allow dropping on existing appointments to add multiple at same time
-                                        if (!isDraggingThis && !isTimeSlotBlocked) {
-                                            handleDragOver(e, currentDate, aptTime);
-                                        }
-                                    }}
-                                    onDrop={(e) => {
-                                        // Allow dropping on existing appointments to add multiple at same time
-                                        if (!isDraggingThis && !isTimeSlotBlocked) {
-                                            handleDrop(e, currentDate, aptTime);
-                                        }
-                                    }}
-                                    onEditAppointment={onEditAppointment}
-                                    onDeleteAppointment={onDeleteAppointment}
-                                    onOpenPopover={setOpenPopoverId}
-                                    isPopoverOpen={openPopoverId === apt.id}
-                                    selectionMode={selectionMode}
-                                    isSelected={selectedIds?.has(apt.id)}
-                                    onToggleSelection={onToggleSelection}
-                                />
-                            );
-                        });
-                    })()}
                     </div>
-                </div>
                 </div>
                 {/* Bottom scroll indicator */}
                 <div id="scroll-indicator-bottom" className="scroll-indicator scroll-indicator-bottom opacity-0" aria-hidden="true" />

@@ -5,7 +5,7 @@ export default function Index() {
   const { isAuthenticated, user } = useAuthStore();
 
   // If authenticated and is a professional, go to professional tabs
-  if (isAuthenticated && user && (user.role === 'professional' || user.role === 'admin')) {
+  if (isAuthenticated && user && (user.role === 'professional' || user.role === 'admin' || user.role === 'fisioterapeuta')) {
     return <Redirect href="/(tabs)" />;
   }
 

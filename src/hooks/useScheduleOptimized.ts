@@ -12,7 +12,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useCallback, useRef, useEffect } from 'react';
-import { collection, query as firestoreQuery, where, orderBy, getDocs, db } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, orderBy, getDocs, limit as firestoreLimit, db } from '@/integrations/firebase/app';
 import { startOfDay, endOfDay, addDays, subDays, format } from 'date-fns';
 
 // Tipos
@@ -214,12 +214,13 @@ export function useScheduleOptimized(options: {
 
     if (datesToPrefetch.length === 0) return;
 
-    datesToPrefetch.forEach(d => prefetchedDatesRef.current.add(d));
-
-    // Prefetch em background
-    queryClient.prefetchQuery({
-      queryKey: scheduleKeys.day(d),
-      staleTime: SCHEDULE_CACHE_CONFIG.DAY.staleTime,
+    datesToPrefetch.forEach(d => {
+      prefetchedDatesRef.current.add(d);
+      // Prefetch em background
+      queryClient.prefetchQuery({
+        queryKey: scheduleKeys.day(d),
+        staleTime: SCHEDULE_CACHE_CONFIG.DAY.staleTime,
+      });
     });
   }, [date, view, prefetchAdjacent, queryClient]);
 
@@ -236,7 +237,8 @@ export function useScheduleOptimized(options: {
     }
 
     if (filters?.type && filters.type.length > 0) {
-      appointments = appointments.filter(a => filters.type!.includes(a.type));
+      const typeFilter = filters.type as string[];
+      appointments = appointments.filter(a => typeFilter.includes(a.type as string));
     }
 
     if (filters?.searchQuery) {
@@ -250,29 +252,6 @@ export function useScheduleOptimized(options: {
     return appointments;
   }, [activeQuery.data, filters]);
 
-  // Instrumentação de debug para entender por que a agenda pode não carregar
-  useEffect(() => {
-    if (!activeQuery.data) return;
-
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/3f007de9-e51e-4db7-b86b-110485f7b6de', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        location: 'src/hooks/useScheduleOptimized.ts:227',
-        message: 'useScheduleOptimized activeQuery data',
-        data: {
-          view,
-          totalCount: (activeQuery.data || []).length,
-          filteredCount: filteredAppointments.length,
-        },
-        runId: 'agenda-debug',
-        hypothesisId: 'H2',
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
-  }, [view, activeQuery.data, filteredAppointments.length]);
 
   // Estatísticas do dia (memoizadas)
   const stats = useMemo(() => {
@@ -322,17 +301,17 @@ export function useVirtualizedSchedule(options: {
   date: Date;
   limit?: number;
 }) {
-  const { date, limit = 50 } = options;
+  const { date, limit: limitCount = 50 } = options;
 
   const query = useQuery({
-    queryKey: ['schedule', 'virtualized', format(date, 'yyyy-MM-dd'), limit],
+    queryKey: ['schedule', 'virtualized', format(date, 'yyyy-MM-dd'), limitCount],
     queryFn: async () => {
       const q = firestoreQuery(
         collection(db, 'appointments'),
         where('appointment_date', '>=', format(date, 'yyyy-MM-dd')),
         orderBy('appointment_date', 'asc'),
         orderBy('appointment_time', 'asc'),
-        limit(limit)
+        firestoreLimit(limitCount)
       );
 
       const snapshot = await getDocs(q);
@@ -346,7 +325,7 @@ export function useVirtualizedSchedule(options: {
     appointments: query.data || [],
     isLoading: query.isLoading,
     error: query.error,
-    hasMore: (query.data?.length || 0) >= limit,
+    hasMore: (query.data?.length || 0) >= limitCount,
     refetch: query.refetch,
   };
 }

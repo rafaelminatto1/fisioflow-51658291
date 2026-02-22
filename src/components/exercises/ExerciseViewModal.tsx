@@ -14,7 +14,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
 import type { Exercise } from '@/hooks/useExercises';
-import { buildImageSrcSet } from '@/lib/storageProxy';
+import { getBestImageUrl } from '@/lib/imageUtils';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
 
 interface ExerciseViewModalProps {
@@ -69,7 +69,10 @@ export function ExerciseViewModal({
   const embedUrl = exercise.video_url ? getEmbedUrl(exercise.video_url) : null;
   const isDirectVideo = embedUrl?.match(/\.(mp4|webm|ogg)$/i);
   const hasVideo = !!exercise.video_url;
-  const hasImage = !!exercise.image_url;
+  const hasImage = !!exercise.image_url || !!exercise.thumbnail_url;
+
+  // Usar o melhor URL de imagem disponível
+  const imageUrl = getBestImageUrl(exercise);
 
   const defaultTab = hasVideo ? 'video' : 'image';
 
@@ -220,20 +223,14 @@ export function ExerciseViewModal({
                 </TabsContent>
 
                 <TabsContent value="image" className="w-full h-full mt-0 data-[state=active]:flex data-[state=active]:items-center data-[state=active]:justify-center">
-                  {hasImage ? (
+                  {hasImage && imageUrl ? (
                     <div className="relative w-full h-full flex items-center justify-center bg-white/5 rounded-xl overflow-hidden shadow-lg border border-border/50">
                       <OptimizedImage
-                        src={exercise.image_url!}
+                        src={imageUrl}
                         alt={exercise?.name ?? 'Exercício'}
                         className="max-w-full max-h-full object-contain"
                         aspectRatio="auto"
                         priority={true}
-                        srcset={buildImageSrcSet(exercise.image_url!, {
-                          widths: [640, 960, 1280, 1600],
-                          format: 'auto',
-                          fit: 'inside',
-                          quality: 80
-                        })}
                         sizes="(max-width: 768px) 100vw, (max-width: 1024px) 70vw, 60vw"
                       />
                     </div>

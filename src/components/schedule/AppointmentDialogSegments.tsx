@@ -297,22 +297,22 @@ export const TypeAndStatusSection = ({ disabled }: { disabled: boolean }) => {
         <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
                 <Label id="type-label" className="text-xs sm:text-sm font-medium">Tipo *</Label>
-                <Select
-                    value={watch('type')}
-                    onValueChange={(value) => setValue('type', value as AppointmentType)}
-                    disabled={disabled}
-                >
-                    <SelectTrigger
-                        className={cn(
-                            "h-10 text-xs sm:text-sm",
-                            errors.type && "border-destructive text-destructive"
-                        )}
-                        aria-labelledby="type-label"
-                        aria-required="true"
-                        aria-invalid={!!errors.type}
-                        aria-describedby={errors.type ? "type-error" : undefined}
-                    >
-                        <SelectValue placeholder="Tipo" />
+                                <Select
+                                    value={watch('type')}
+                                    onValueChange={(value) => setValue('type', value as AppointmentType)}
+                                    disabled={disabled}
+                                  >
+                                    <SelectTrigger
+                                        className={cn(
+                                            "h-10 text-xs sm:text-sm",
+                                            errors.type && "border-destructive text-destructive"
+                                        )}
+                                        data-testid="appointment-type"
+                                        aria-labelledby="type-label"
+                                        aria-required="true"
+                                        aria-invalid={!!errors.type}
+                                        aria-describedby={errors.type ? "type-error" : undefined}
+                                    >                        <SelectValue placeholder="Tipo" />
                     </SelectTrigger>
                     <SelectContent>
                         {APPOINTMENT_TYPES.map((type) => (

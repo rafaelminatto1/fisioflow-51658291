@@ -41,7 +41,7 @@ describe('periodCalculations', () => {
       // January 15, 2024 is a Monday
       const query: PeriodQuery = {
         viewType: 'week',
-        date: new Date('2024-01-15'),
+        date: new Date('2024-01-15T12:00:00'),
         organizationId,
       };
 
@@ -60,7 +60,7 @@ describe('periodCalculations', () => {
       // January 17, 2024 is a Wednesday
       const query: PeriodQuery = {
         viewType: 'week',
-        date: new Date('2024-01-17'),
+        date: new Date('2024-01-17T12:00:00'),
         organizationId,
       };
 
@@ -79,7 +79,7 @@ describe('periodCalculations', () => {
       // January 21, 2024 is a Sunday
       const query: PeriodQuery = {
         viewType: 'week',
-        date: new Date('2024-01-21'),
+        date: new Date('2024-01-21T12:00:00'),
         organizationId,
       };
 
@@ -97,7 +97,7 @@ describe('periodCalculations', () => {
     it('should calculate month bounds correctly', () => {
       const query: PeriodQuery = {
         viewType: 'month',
-        date: new Date('2024-01-15'),
+        date: new Date('2024-01-15T12:00:00'),
         organizationId,
       };
 
@@ -143,7 +143,7 @@ describe('periodCalculations', () => {
     it('should calculate next day', () => {
       const query: PeriodQuery = {
         viewType: 'day',
-        date: new Date('2024-01-15'),
+        date: new Date('2024-01-15T12:00:00'),
         organizationId,
       };
 
@@ -157,7 +157,7 @@ describe('periodCalculations', () => {
     it('should calculate previous day', () => {
       const query: PeriodQuery = {
         viewType: 'day',
-        date: new Date('2024-01-15'),
+        date: new Date('2024-01-15T12:00:00'),
         organizationId,
       };
 
@@ -170,7 +170,7 @@ describe('periodCalculations', () => {
     it('should calculate next week', () => {
       const query: PeriodQuery = {
         viewType: 'week',
-        date: new Date('2024-01-15'),
+        date: new Date('2024-01-15T12:00:00'),
         organizationId,
       };
 
@@ -183,7 +183,7 @@ describe('periodCalculations', () => {
     it('should calculate previous week', () => {
       const query: PeriodQuery = {
         viewType: 'week',
-        date: new Date('2024-01-15'),
+        date: new Date('2024-01-15T12:00:00'),
         organizationId,
       };
 
@@ -238,7 +238,7 @@ describe('periodCalculations', () => {
     it('should return true for date within day bounds', () => {
       const bounds = calculatePeriodBounds({
         viewType: 'day',
-        date: new Date('2024-01-15'),
+        date: new Date('2024-01-15T12:00:00'),
         organizationId,
       });
 
@@ -249,7 +249,7 @@ describe('periodCalculations', () => {
     it('should return false for date outside day bounds', () => {
       const bounds = calculatePeriodBounds({
         viewType: 'day',
-        date: new Date('2024-01-15'),
+        date: new Date('2024-01-15T12:00:00'),
         organizationId,
       });
 
@@ -260,7 +260,7 @@ describe('periodCalculations', () => {
     it('should return true for date within week bounds', () => {
       const bounds = calculatePeriodBounds({
         viewType: 'week',
-        date: new Date('2024-01-15'), // Monday
+        date: new Date('2024-01-15T12:00:00'), // Monday
         organizationId,
       });
 
@@ -271,7 +271,7 @@ describe('periodCalculations', () => {
     it('should return false for date outside week bounds', () => {
       const bounds = calculatePeriodBounds({
         viewType: 'week',
-        date: new Date('2024-01-15'), // Monday
+        date: new Date('2024-01-15T12:00:00'), // Monday
         organizationId,
       });
 
@@ -284,7 +284,7 @@ describe('periodCalculations', () => {
     it('should format period bounds correctly', () => {
       const bounds = calculatePeriodBounds({
         viewType: 'week',
-        date: new Date('2024-01-15'),
+        date: new Date('2024-01-15T12:00:00'),
         organizationId,
       });
 

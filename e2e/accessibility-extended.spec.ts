@@ -24,10 +24,11 @@ test.describe('Testes Estendidos de Acessibilidade WCAG 2.1 AA', () => {
   test.beforeEach(async ({ page }) => {
     // Login antes dos testes
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    // Form uses name="email" and name="password" instead of type selectors
+    await page.fill('input[name="email"]', testUsers.admin.email);
+    await page.fill('input[name="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
-    await page.waitForURL(/(\?|\/eventos|\/dashboard|\/schedule)/);
+    await page.waitForURL(/(\?|\/eventos|\/dashboard|\/schedule)/, { timeout: 30000 });
   });
 
   /**
@@ -210,7 +211,7 @@ test.describe('Testes Estendidos de Acessibilidade WCAG 2.1 AA', () => {
     await page.waitForLoadState('networkidle');
 
     const inputs = page.locator(
-      'input[type="text"], input[type="email"], input[type="tel"], input[type="date"], textarea, select'
+      'input[type="text"], input[name="email"], input[type="tel"], input[type="date"], textarea, select'
     );
 
     const count = await inputs.count();

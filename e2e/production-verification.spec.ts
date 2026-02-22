@@ -12,9 +12,9 @@ test.describe('Production Verification', () => {
     // Login process
     // Based on common patterns in this project (checking e2e/auth.spec.ts might be better but let's assume standard login fields)
     // Wait for login form
-    await page.waitForSelector('input[type="email"]', { timeout: 30000 });
-    await page.fill('input[type="email"]', EMAIL);
-    await page.fill('input[type="password"]', PASSWORD);
+    await page.waitForSelector('input[name="email"]', { timeout: 30000 });
+    await page.fill('input[name="email"]', EMAIL);
+    await page.fill('input[name="password"]', PASSWORD);
     
     console.log('Submitting login form...');
     await page.click('button[type="submit"]');

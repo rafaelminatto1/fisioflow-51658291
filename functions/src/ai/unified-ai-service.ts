@@ -84,6 +84,12 @@ const semanticSearchHandler = async (request: any) => {
   return semanticSearchHandler(request);
 };
 
+// Handlers de marketing-ai
+const marketingTemplateHandler = async (request: any) => {
+  const { marketingTemplateHandler } = await import('./marketing-ai');
+  return marketingTemplateHandler(request);
+};
+
 // ============================================================================
 // UNIFIED AI SERVICE (Callable)
 // ============================================================================
@@ -141,6 +147,34 @@ export const aiServiceHandler = async (request: any) => {
     // Fast Processing
     case 'fastProcessing':
       return aiFastProcessingHandler({ data: params });
+
+    // Marketing Templates
+    case 'generateMarketingTemplate':
+      return marketingTemplateHandler({ data: params });
+
+    // === SCHEDING ACTIONS (Fase 3: AI Scheduling Features) ===
+    case 'suggestOptimalSlot':
+      const { suggestOptimalSlotFlow } = await import('./flows/scheduling');
+      return suggestOptimalSlotFlow(params);
+    case 'predictNoShow':
+      const { predictNoShowFlow } = await import('./flows/scheduling');
+      return predictNoShowFlow(params);
+    case 'optimizeCapacity':
+      const { optimizeCapacityFlow } = await import('./flows/scheduling');
+      return optimizeCapacityFlow(params);
+    case 'waitlistPrioritization':
+      const { waitlistPrioritizationFlow } = await import('./flows/scheduling');
+      return waitlistPrioritizationFlow(params);
+    case 'getPatientAppointmentHistory':
+      const { getPatientAppointmentHistory } = await import('./flows/scheduling');
+      return getPatientAppointmentHistory(params);
+    case 'getPatientPreferences':
+      const { getPatientPreferences } = await import('./flows/scheduling');
+      return getPatientPreferences(params);
+    case 'checkSlotCapacity':
+      const { checkSlotCapacity } = await import('./flows/scheduling');
+      return checkSlotCapacity(params);
+    // ============================================================================
 
     default:
       throw new Error(`Ação desconhecida: ${action}`);
@@ -237,6 +271,9 @@ export const aiServiceHttpHandler = async (req: any, res: any) => {
         break;
       case 'fastProcessing':
         result = await aiFastProcessingHandler(mockRequest);
+        break;
+      case 'generateMarketingTemplate':
+        result = await marketingTemplateHandler(mockRequest);
         break;
       default:
         res.status(400).json({ error: `Ação desconhecida: ${action}` });

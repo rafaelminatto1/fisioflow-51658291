@@ -43,6 +43,7 @@ export function useExercises() {
             difficulty: data.difficulty,
             video_url: data.video_url,
             image_url: data.image_url,
+            thumbnail_url: data.thumbnail_url,
             description: data.description,
             instructions: data.instructions,
             sets: data.sets,
@@ -92,6 +93,7 @@ export function useExercises() {
           difficulty: data.difficulty,
           video_url: data.video_url,
           image_url: data.image_url,
+          thumbnail_url: data.thumbnail_url,
           description: data.description,
           instructions: data.instructions,
           sets: data.sets,
@@ -122,6 +124,7 @@ export function useExercises() {
         difficulty: exercise.difficulty,
         video_url: exercise.video_url,
         image_url: exercise.image_url,
+        thumbnail_url: exercise.thumbnail_url,
         description: exercise.description,
         instructions: exercise.instructions,
         sets: exercise.sets,
@@ -152,6 +155,7 @@ export function useExercises() {
       if (updates.difficulty !== undefined) updateData.difficulty = updates.difficulty;
       if (updates.video_url !== undefined) updateData.video_url = updates.video_url;
       if (updates.image_url !== undefined) updateData.image_url = updates.image_url;
+      if (updates.thumbnail_url !== undefined) updateData.thumbnail_url = updates.thumbnail_url;
       if (updates.description !== undefined) updateData.description = updates.description;
       if (updates.instructions !== undefined) updateData.instructions = updates.instructions;
       if (updates.sets !== undefined) updateData.sets = updates.sets;

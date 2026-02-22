@@ -9,6 +9,8 @@ import { RealtimeProvider } from '@/contexts/RealtimeContext';
 import { AuthContextProvider } from '@/contexts/AuthContextProvider';
 import { TourProvider } from '@/contexts/TourContext';
 import { GamificationFeedbackProvider } from '@/contexts/GamificationFeedbackContext';
+import { HighContrastProvider } from '@/contexts/HighContrastContext';
+import { MobileSheetProvider } from '@/components/evolution/v3-notion/MobileBottomSheet';
 import { useAuth } from '@/contexts/AuthContext';
 import { ErrorBoundary } from '@/components/error/ErrorBoundary';
 import { GlobalErrorBoundary } from '@/components/error/GlobalErrorBoundary';
@@ -26,6 +28,10 @@ import { AppRoutes } from "./routes";
 import { VersionManager } from "@/components/system/VersionManager";
 import { initWebVitalsMonitoring, WebVitalsIndicator } from "@/lib/monitoring/web-vitals";
 import { initPerformanceMonitoring } from "@/lib/monitoring/initPerformanceMonitoring";
+// ============================================================================
+// NOVO: TEMA PROVIDER
+// ============================================================================
+import { ThemeProvider } from '@/components/ui/theme';
 
 import { FeatureFlagProvider } from "@/lib/featureFlags/hooks";
 // DESABILITADO: import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
@@ -122,7 +128,8 @@ const AppProviders = ({ children }: { children: React.ReactNode }) => {
       <ErrorBoundary>
         <SkipLink />
         <FocusVisibleHandler />
-        <PersistQueryClientProvider
+        <ThemeProvider>
+          <PersistQueryClientProvider
         client={queryClient}
         persistOptions={{
           persister,
@@ -132,22 +139,27 @@ const AppProviders = ({ children }: { children: React.ReactNode }) => {
       >
         <TooltipProvider>
           <AuthContextProvider>
-            <TourProvider>
-              <StatsigProviderWrapper>
-                <GamificationFeedbackProvider>
-                  <RealtimeProvider>
-                    <DataProvider>
-                      {children}
-                    </DataProvider>
-                  </RealtimeProvider>
-                </GamificationFeedbackProvider>
-              </StatsigProviderWrapper>
-            </TourProvider>
+            <HighContrastProvider>
+              <MobileSheetProvider>
+                <TourProvider>
+                  <StatsigProviderWrapper>
+                    <GamificationFeedbackProvider>
+                      <RealtimeProvider>
+                        <DataProvider>
+                          {children}
+                        </DataProvider>
+                      </RealtimeProvider>
+                    </GamificationFeedbackProvider>
+                  </StatsigProviderWrapper>
+                </TourProvider>
+              </MobileSheetProvider>
+            </HighContrastProvider>
           </AuthContextProvider>
         </TooltipProvider>
       </PersistQueryClientProvider>
-      </ErrorBoundary>
-    </GlobalErrorBoundary>
+        </ThemeProvider>
+    </ErrorBoundary>
+  </GlobalErrorBoundary>
   );
 };
 
@@ -223,7 +235,7 @@ const App = () => {
         <Suspense fallback={<AppLoadingSkeleton message="Carregando sistema..." />}>
           <AppRoutes />
           <VersionManager />
-          <WebVitalsIndicator />
+          {(import.meta.env.DEV && !window.location.search.includes('e2e=true')) && <WebVitalsIndicator />}
         </Suspense>
       </BrowserRouter>
     </AppProviders>

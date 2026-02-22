@@ -52,25 +52,25 @@ const birthDateValidator = z.string().refine(
 // ============================================================================
 
 export const PatientSchema = z.object({
-    id: z.string().uuid(),
-    full_name: z.string().min(2).max(200),
-    name: z.string().optional(), // Alias often used in UI helpers
-    email: emailValidator,
-    phone: phoneValidator,
-    cpf: cpfValidator,
-    birth_date: birthDateValidator, // Renamed from birthDate to match hook/DB convention often seen
-    gender: z.enum(['masculino', 'feminino', 'outro']).optional().nullable(),
-    address: z.string().optional().nullable(),
-    city: z.string().optional().nullable(),
-    state: z.string().optional().nullable(),
-    zip_code: z.string().optional().nullable(),
-    main_condition: z.string().optional().nullable(), // Renamed from mainCondition
-    status: z.enum(['active', 'inactive', 'Em Tratamento', 'Inicial', 'Alta', 'Arquivado', 'Recuperação', 'Concluído']).default('active'),
-    progress: z.number().min(0).max(100).optional().default(0),
-    incomplete_registration: z.boolean().optional().default(false),
-    created_at: z.string().or(z.date()).optional(), // Renamed from createdAt
-    updated_at: z.string().or(z.date()).optional(), // Renamed from updatedAt
-    organization_id: z.string().uuid().optional().nullable(),
+  id: z.string().min(1),
+  full_name: z.string().min(2).max(200),
+  name: z.string().optional(), // Alias often used in UI helpers
+  email: emailValidator,
+  phone: phoneValidator,
+  cpf: cpfValidator,
+  birth_date: birthDateValidator, // Renamed from birthDate to match hook/DB convention often seen
+  gender: z.enum(['masculino', 'feminino', 'outro']).optional().nullable(),
+  address: z.string().optional().nullable(),
+  city: z.string().optional().nullable(),
+  state: z.string().optional().nullable(),
+  zip_code: z.string().optional().nullable(),
+  main_condition: z.string().optional().nullable(), // Renamed from mainCondition
+  status: z.enum(['active', 'inactive', 'Em Tratamento', 'Inicial', 'Alta', 'Arquivado', 'Recuperação', 'Concluído']).default('active'),
+  progress: z.number().min(0).max(100).optional().default(0),
+  incomplete_registration: z.boolean().optional().default(false),
+  created_at: z.string().or(z.date()).optional(), // Renamed from createdAt
+  updated_at: z.string().or(z.date()).optional(), // Renamed from updatedAt
+  organization_id: z.string().min(1).optional().nullable(),
 });
 
 export type Patient = z.infer<typeof PatientSchema>;

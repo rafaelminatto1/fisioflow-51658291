@@ -36,6 +36,12 @@ const aspectRatioClasses = {
 function isValidImageSrc(src: string): boolean {
   const s = src?.trim();
   if (!s) return false;
+
+  // Rejeitar URLs de proxy que não funcionam
+  if (s.startsWith('/api/')) {
+    return false;
+  }
+
   return (
     s.startsWith('http:') ||
     s.startsWith('https:') ||

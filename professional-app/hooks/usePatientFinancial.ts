@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient, UseQueryResult } from '@tanstack
 import {
   getPatientFinancialRecords,
   getPatientFinancialSummary,
+  getAllFinancialRecords,
   createFinancialRecord,
   updateFinancialRecord,
   deleteFinancialRecord,
@@ -45,6 +46,7 @@ export function useCreateFinancialRecord() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['patientFinancialRecords', variables.patient_id] });
       queryClient.invalidateQueries({ queryKey: ['patientFinancialSummary', variables.patient_id] });
+      queryClient.invalidateQueries({ queryKey: ['allFinancialRecords'] });
     },
   });
 }
@@ -58,6 +60,7 @@ export function useUpdateFinancialRecord() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patientFinancialRecords'] });
       queryClient.invalidateQueries({ queryKey: ['patientFinancialSummary'] });
+      queryClient.invalidateQueries({ queryKey: ['allFinancialRecords'] });
     },
   });
 }
@@ -70,6 +73,7 @@ export function useDeleteFinancialRecord() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patientFinancialRecords'] });
       queryClient.invalidateQueries({ queryKey: ['patientFinancialSummary'] });
+      queryClient.invalidateQueries({ queryKey: ['allFinancialRecords'] });
     },
   });
 }
@@ -86,6 +90,7 @@ export function useMarkAsPaid() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patientFinancialRecords'] });
       queryClient.invalidateQueries({ queryKey: ['patientFinancialSummary'] });
+      queryClient.invalidateQueries({ queryKey: ['allFinancialRecords'] });
     },
   });
 }

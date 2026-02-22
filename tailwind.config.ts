@@ -289,7 +289,11 @@ export default {
 			boxShadow: {
 				'medical': 'var(--shadow-medical)',
 				'card': 'var(--shadow-card)',
-				'hover': 'var(--shadow-hover)'
+				'hover': 'var(--shadow-hover)',
+				'premium-sm': 'var(--shadow-premium-sm)',
+				'premium-md': 'var(--shadow-premium-md)',
+				'premium-lg': 'var(--shadow-premium-lg)',
+				'inner-border': 'var(--shadow-inner-border)'
 			}
 		}
 	},
@@ -362,6 +366,29 @@ export default {
 						'transform': 'translateY(-2px)',
 						'box-shadow': '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
 					}
+				},
+				// Glassmorphism - 2026 Style
+				'.glass': {
+					'background': 'rgba(255, 255, 255, 0.7)',
+					'backdrop-filter': 'blur(12px)',
+					'-webkit-backdrop-filter': 'blur(12px)',
+					'border': '1px solid rgba(255, 255, 255, 0.3)',
+					'box-shadow': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+				},
+				'.glass-hover': {
+					'transition': 'all 0.3s ease',
+					'&:hover': {
+						'background': 'rgba(255, 255, 255, 0.8)',
+						'box-shadow': '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+						'transform': 'translateY(-1px)'
+					}
+				},
+				'.glass-dark': {
+					'background': 'rgba(17, 24, 39, 0.7)',
+					'backdrop-filter': 'blur(12px)',
+					'-webkit-backdrop-filter': 'blur(12px)',
+					'border': '1px solid rgba(255, 255, 255, 0.05)',
+					'box-shadow': '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.1)'
 				}
 			})
 		})

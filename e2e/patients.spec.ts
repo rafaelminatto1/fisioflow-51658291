@@ -5,8 +5,8 @@ test.describe('Pacientes - CRUD Completo', () => {
   test.beforeEach(async ({ page }) => {
     // Login
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.fill('input[name="email"]', testUsers.admin.email);
+    await page.fill('input[name="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
     // Aguardar navegação para fora da página de auth
     await page.waitForURL(/^(?!.*\/auth).*$/, { timeout: 15000 });

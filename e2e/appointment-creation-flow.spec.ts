@@ -5,8 +5,8 @@ test.describe('Fluxo de Criação de Agendamento', () => {
     test.beforeEach(async ({ page }) => {
         // 1. Login
         await page.goto('/auth');
-        await page.fill('input[type="email"]', testUsers.admin.email);
-        await page.fill('input[type="password"]', testUsers.admin.password);
+        await page.fill('input[name="email"]', testUsers.admin.email);
+        await page.fill('input[name="password"]', testUsers.admin.password);
         await page.click('button[type="submit"]');
         await page.waitForURL(/\/($|eventos|dashboard|schedule)/);
 

@@ -38,7 +38,7 @@ test.describe('Validate all pages', () => {
 
         // Wait for the login form to be visible
         try {
-            await expect(page.locator('input[type="email"]')).toBeVisible({ timeout: 30000 });
+            await expect(page.locator('input[name="email"]')).toBeVisible({ timeout: 30000 });
         } catch (e) {
             console.log('Timeout waiting for email input. Capturing screenshot...');
             await page.screenshot({ path: 'test-results/login-timeout.png' });
@@ -47,10 +47,10 @@ test.describe('Validate all pages', () => {
         console.log('Email input visible, filling form...');
 
         // Fill in the email
-        await page.fill('input[type="email"]', testUsers.rafael.email);
+        await page.fill('input[name="email"]', testUsers.rafael.email);
 
         // Fill in the password
-        await page.fill('input[type="password"]', testUsers.rafael.password);
+        await page.fill('input[name="password"]', testUsers.rafael.password);
 
         // Click the login button
         await page.click('button:has-text("Entrar")');

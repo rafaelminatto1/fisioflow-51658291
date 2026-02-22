@@ -1,5 +1,6 @@
 import React, { forwardRef, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { MotionCard } from '@fisioflow/ui';
 import { cn } from '@/lib/utils';
 import { X, GripVertical, MoveDiagonal2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ interface GridWidgetProps extends React.HTMLAttributes<HTMLDivElement> {
     headerClassName?: string;
     contentClassName?: string;
     className?: string;
+    variant?: 'glass' | 'glass-dark' | 'solid' | 'outlined';
     // Props injected by react-grid-layout
     style?: React.CSSProperties;
     className_rgl?: string;
@@ -47,6 +49,7 @@ export const GridWidget = forwardRef<HTMLDivElement, GridWidgetProps>(
             headerClassName,
             contentClassName,
             className,
+            variant = 'glass',
             style,
             className_rgl,
             onMouseDown,
@@ -85,15 +88,17 @@ export const GridWidget = forwardRef<HTMLDivElement, GridWidgetProps>(
                 onTouchEnd={onTouchEnd}
                 {...props}
             >
-                <Card className={cn(
-                    "h-full flex flex-col shadow-sm transition-all duration-200 overflow-hidden select-none group",
-                    "border-2 border-border/60",
+                <MotionCard 
+                    variant={variant}
+                    className={cn(
+                    "h-full flex flex-col shadow-sm transition-all duration-200 overflow-hidden select-none group p-0",
+                    variant === 'solid' && "border-2 border-border/60",
                     isDraggable && "hover:border-primary/30",
                     isDraggable && isGrabbed && "shadow-xl ring-4 ring-primary/10 scale-[1.01] border-primary/50 z-[100]" // Higher z-index when grabbed
                 )}>
                     {(title || icon || isDraggable || extraHeaderContent || headerActions) && (
                         <CardHeader className={cn(
-                            "p-3 pb-2 flex-row items-center justify-between space-y-0 shrink-0 border-b border-border/40",
+                            "p-3 pb-2 flex-row items-center justify-between space-y-0 shrink-0 border-b border-border/10",
                             headerClassName,
                             isDraggable && isGrabbed && "bg-muted/50" // Header highlight on grab
                         )}>
@@ -159,7 +164,7 @@ export const GridWidget = forwardRef<HTMLDivElement, GridWidgetProps>(
                             <MoveDiagonal2 className="h-3 w-3 text-primary rotate-90" />
                         </div>
                     )}
-                </Card>
+                </MotionCard>
             </div>
         );
     }

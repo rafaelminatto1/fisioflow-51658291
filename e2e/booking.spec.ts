@@ -10,12 +10,12 @@ test.describe('Public Booking Flow', () => {
         console.log('Setting up: Logging in to retrieve public slug...');
 
         await page.goto('/auth/login');
-        await page.fill('input[type="email"]', testUsers.fisio.email);
-        await page.fill('input[type="password"]', testUsers.fisio.password);
+        await page.fill('input[name="email"]', testUsers.fisio.email);
+        await page.fill('input[name="password"]', testUsers.fisio.password);
         await page.locator('button[type="submit"]').click();
 
         // Wait for login to complete
-        await expect(page.locator('input[type="email"]')).not.toBeVisible({ timeout: 15000 });
+        await expect(page.locator('input[name="email"]')).not.toBeVisible({ timeout: 15000 });
 
         // Go to profile
         await page.goto('/profile');

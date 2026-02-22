@@ -12,9 +12,9 @@ import {
 import { EventosStatsWidget } from '@/components/eventos/EventosStatsWidget';
 import { useNavigate } from 'react-router-dom';
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 'recharts';
 import { AIInsightsWidget } from './AIInsightsWidget';
-import { EmptyState } from '@/components/ui/EmptyState';
+import { EmptyStateEnhanced } from '@/components/ui/EmptyStateEnhanced';
 import { LazyWidget } from './LazyWidget';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -124,92 +124,114 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
           ))}
         </div>
       ) : (
-        <section aria-label="Métricas principais">
+        <section aria-label="Métricas principais" data-testid="stats-cards">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
             {/* Pacientes Ativos */}
             <AnimatedCard delay={0}>
-              <Card className="rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-200 group">
-                <CardHeader className="pb-3 px-4 pt-4">
-                  <CardTitle className="flex items-center justify-between text-sm font-medium">
-                    <span className="text-muted-foreground">Pacientes Ativos</span>
-                    <Users className="h-5 w-5 text-primary" />
+              <Card className="rounded-2xl border-none shadow-premium-sm hover:shadow-premium-md transition-all duration-300 group overflow-hidden bg-white dark:bg-slate-900">
+                <div className="absolute top-0 right-0 p-3 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                  <Users className="w-20 h-24 text-primary -mr-6 -mt-6" />
+                </div>
+                <CardHeader className="pb-2 px-5 pt-5">
+                  <CardTitle className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">
+                    <span>Pacientes Ativos</span>
+                    <div className="p-1.5 bg-primary/10 rounded-lg group-hover:scale-110 transition-transform">
+                      <Users className="h-3.5 w-3.5 text-primary" />
+                    </div>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="px-4 pb-4">
+                <CardContent className="px-5 pb-5">
                   <div className="flex items-baseline gap-2">
-                    <p className="text-3xl font-black tracking-tight">{metrics?.pacientesAtivos || 0}</p>
-                    <Badge variant="secondary" className="text-xs bg-success/10 text-success border-success/20">
-                      <TrendingUp className="h-3 w-3 mr-1" />
-                      {metrics?.pacientesNovos || 0} novos
+                    <p className="text-4xl font-black tracking-tighter text-slate-900 dark:text-white">{metrics?.pacientesAtivos || 0}</p>
+                    <Badge variant="secondary" className="text-[10px] bg-emerald-500/10 text-emerald-600 border-none font-bold px-2 py-0">
+                      +{metrics?.pacientesNovos || 0}
                     </Badge>
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-1">Total: {metrics?.totalPacientes || 0}</p>
+                  <p className="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-wider">Base total: {metrics?.totalPacientes || 0}</p>
                 </CardContent>
               </Card>
             </AnimatedCard>
 
             {/* Ocupação */}
             <AnimatedCard delay={50}>
-              <Card className="rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-200 group">
-                <CardHeader className="pb-3 px-4 pt-4">
-                  <CardTitle className="flex items-center justify-between text-sm font-medium">
-                    <span className="text-muted-foreground">Ocupação Hoje</span>
-                    <Calendar className="h-5 w-5 text-primary" />
+              <Card className="rounded-2xl border-none shadow-premium-sm hover:shadow-premium-md transition-all duration-300 group overflow-hidden bg-white dark:bg-slate-900">
+                <div className="absolute top-0 right-0 p-3 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                  <Calendar className="w-20 h-24 text-primary -mr-6 -mt-6" />
+                </div>
+                <CardHeader className="pb-2 px-5 pt-5">
+                  <CardTitle className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">
+                    <span>Ocupação Hoje</span>
+                    <div className="p-1.5 bg-primary/10 rounded-lg group-hover:scale-110 transition-transform">
+                      <Calendar className="h-3.5 w-3.5 text-primary" />
+                    </div>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="px-4 pb-4">
+                <CardContent className="px-5 pb-5">
                   <div className="flex items-baseline gap-2">
-                    <p className="text-3xl font-black tracking-tight">{metrics?.taxaOcupacao || 0}%</p>
-                    <Badge variant="outline" className="text-xs">
-                      {metrics?.agendamentosHoje || 0} agend.
-                    </Badge>
+                    <p className="text-4xl font-black tracking-tighter text-slate-900 dark:text-white">{metrics?.taxaOcupacao || 0}%</p>
+                    <span className="text-[10px] text-slate-400 font-bold">{metrics?.agendamentosHoje || 0} slots</span>
                   </div>
-                  <Progress value={metrics?.taxaOcupacao || 0} className="h-1.5 mt-2" />
+                  <div className="mt-3 bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                    <div 
+                      className="bg-gradient-to-r from-primary to-blue-400 h-full rounded-full transition-all duration-1000"
+                      style={{ width: `${metrics?.taxaOcupacao || 0}%` }}
+                    />
+                  </div>
                 </CardContent>
               </Card>
             </AnimatedCard>
 
             {/* Receita */}
             <AnimatedCard delay={100}>
-              <Card className="rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-200 group">
-                <CardHeader className="pb-3 px-4 pt-4">
-                  <CardTitle className="flex items-center justify-between text-sm font-medium">
-                    <span className="text-muted-foreground">Receita Mensal</span>
-                    <DollarSign className="h-5 w-5 text-primary" />
+              <Card className="rounded-2xl border-none shadow-premium-sm hover:shadow-premium-md transition-all duration-300 group overflow-hidden bg-white dark:bg-slate-900">
+                <div className="absolute top-0 right-0 p-3 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                  <DollarSign className="w-20 h-24 text-emerald-500 -mr-6 -mt-6" />
+                </div>
+                <CardHeader className="pb-2 px-5 pt-5">
+                  <CardTitle className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">
+                    <span>Receita Mensal</span>
+                    <div className="p-1.5 bg-emerald-500/10 rounded-lg group-hover:scale-110 transition-transform">
+                      <DollarSign className="h-3.5 w-3.5 text-emerald-600" />
+                    </div>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="px-4 pb-4">
+                <CardContent className="px-5 pb-5">
                   <div className="flex items-baseline gap-2">
-                    <p className="text-3xl font-black tracking-tight">{formattedRevenue}</p>
+                    <p className="text-4xl font-black tracking-tighter text-slate-900 dark:text-white">{formattedRevenue}</p>
                     <Badge
                       variant="secondary"
-                      className={`text-xs ${metrics?.crescimentoMensal && metrics.crescimentoMensal >= 0 ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}
+                      className={`text-[10px] font-bold px-2 py-0 border-none ${metrics?.crescimentoMensal && metrics.crescimentoMensal >= 0 ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-600'}`}
                     >
-                      {metrics?.crescimentoMensal && metrics.crescimentoMensal >= 0 ? '+' : ''}{metrics?.crescimentoMensal || 0}%
+                      {metrics?.crescimentoMensal && metrics.crescimentoMensal >= 0 ? '↑' : ''}{metrics?.crescimentoMensal || 0}%
                     </Badge>
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-1">vs mês anterior: R$ {metrics?.receitaMesAnterior?.toLocaleString('pt-BR') || 0}</p>
+                  <p className="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-wider">Prev: R$ {metrics?.receitaMesAnterior?.toLocaleString('pt-BR') || 0}</p>
                 </CardContent>
               </Card>
             </AnimatedCard>
 
             {/* No-Show */}
             <AnimatedCard delay={150}>
-              <Card className="rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-200 group">
-                <CardHeader className="pb-3 px-4 pt-4">
-                  <CardTitle className="flex items-center justify-between text-sm font-medium">
-                    <span className="text-muted-foreground">Taxa No-Show</span>
-                    <XCircle className={`h-5 w-5 ${(metrics?.taxaNoShow || 0) > 15 ? 'text-destructive' : 'text-muted-foreground'}`} />
+              <Card className="rounded-2xl border-none shadow-premium-sm hover:shadow-premium-md transition-all duration-300 group overflow-hidden bg-white dark:bg-slate-900">
+                <div className="absolute top-0 right-0 p-3 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                  <XCircle className="w-20 h-24 text-amber-500 -mr-6 -mt-6" />
+                </div>
+                <CardHeader className="pb-2 px-5 pt-5">
+                  <CardTitle className="flex items-center justify-between text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">
+                    <span>Taxa No-Show</span>
+                    <div className={`p-1.5 rounded-lg group-hover:scale-110 transition-transform ${(metrics?.taxaNoShow || 0) > 15 ? 'bg-red-500/10' : 'bg-amber-500/10'}`}>
+                      <XCircle className={`h-3.5 w-3.5 ${(metrics?.taxaNoShow || 0) > 15 ? 'text-red-600' : 'text-amber-600'}`} />
+                    </div>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="px-4 pb-4">
+                <CardContent className="px-5 pb-5">
                   <div className="flex items-baseline gap-2">
-                    <p className="text-3xl font-black tracking-tight">{metrics?.taxaNoShow || 0}%</p>
-                    <Badge variant="outline" className="text-xs">
-                      meta: &lt;10%
+                    <p className="text-4xl font-black tracking-tighter text-slate-900 dark:text-white">{metrics?.taxaNoShow || 0}%</p>
+                    <Badge variant="outline" className="text-[9px] font-black uppercase tracking-tighter border-slate-200 dark:border-slate-800">
+                      META &lt;10%
                     </Badge>
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-1">Últimos 30 dias</p>
+                  <p className="text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-wider">Média móvel (30d)</p>
                 </CardContent>
               </Card>
             </AnimatedCard>
@@ -234,14 +256,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
               <CardContent className="px-4 pb-4">
                 <LazyWidget height={200}>
                   {!metrics?.tendenciaSemanal || metrics.tendenciaSemanal.length === 0 ? (
-                    <EmptyState
+                    <EmptyStateEnhanced
                       icon={TrendingUp}
                       title="Sem dados semanais"
                       description="Os dados de tendência aparecerão aqui após os primeiros agendamentos da semana."
                       className="py-6"
                     />
                   ) : (
-                    <ResponsiveContainer width="100%" height={200}>
+                    <div className="w-full bg-white dark:bg-gray-800 rounded-lg" style={{ height: '200px' }}>
                       <BarChart data={metrics.tendenciaSemanal} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
                         <XAxis
                           dataKey="dia"
@@ -267,7 +289,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
                           ))}
                         </Bar>
                       </BarChart>
-                    </ResponsiveContainer>
+                    </div>
                   )}
                 </LazyWidget>
               </CardContent>
@@ -288,7 +310,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
               <CardContent className="px-4 pb-4">
                 <LazyWidget height={200}>
                   {(metrics?.receitaPorFisioterapeuta?.length || 0) === 0 ? (
-                    <EmptyState
+                    <EmptyStateEnhanced
                       icon={UserCheck}
                       title="Nenhum atendimento"
                       description="Os dados de desempenho aparecerão após os primeiros atendimentos do mês."
@@ -336,7 +358,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
         <div className="grid gap-4 md:gap-5 md:grid-cols-2 lg:grid-cols-7">
           {/* Agendamentos Próximos */}
           <AnimatedCard delay={650} className="lg:col-span-4">
-            <Card className="rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-200">
+            <Card className="rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-all duration-200" data-testid="today-schedule">
               <CardHeader className="pb-3 px-4 pt-4">
                 <CardTitle className="flex items-center gap-2 text-base font-medium">
                   <div className="p-1.5 bg-primary/10 rounded-lg">

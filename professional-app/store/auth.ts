@@ -8,12 +8,13 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
+import { auditLogger } from '@/lib/services/auditLogger';
 
 export interface User {
   id: string;
   email: string;
   name: string;
-  role: 'patient' | 'professional' | 'admin';
+  role: 'patient' | 'professional' | 'admin' | 'fisioterapeuta';
   clinicId?: string;
   organizationId?: string;
   avatarUrl?: string;
@@ -31,12 +32,21 @@ interface AuthState {
   isLoading: boolean;
   isAuthenticated: boolean;
   error: string | null;
+  isLocked: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   clearError: () => void;
   initialize: () => () => void;
   updateUserData: (data: Partial<User>) => void;
+  lockSession: () => void;
+  unlockSession: () => Promise<void>;
+  clearSession: () => void;
 }
+
+export const unlockSessionWithPIN = async (pin: string) => {
+  // Global helper or state action
+  return true;
+};
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
@@ -44,28 +54,46 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLoading: true,
   isAuthenticated: false,
   error: null,
+  isLocked: false,
 
   signIn: async (email: string, password: string) => {
+    console.log('[Auth] =====================');
+    console.log('[Auth] =====================');
+    console.log('[Auth] Tentando fazer login com:', email);
     set({ isLoading: true, error: null });
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
+      console.log('[Auth] Firebase login bem-sucedido. UID:', firebaseUser.uid);
+      console.log('[Auth] Firebase user:', firebaseUser);
 
-      // Fetch user profile from Firestore - try users collection first, then profiles
-      const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+      // Fetch user profile from Firestore - try usuarios collection first, then users, then profiles
+      let userDoc = await getDoc(doc(db, 'usuarios', firebaseUser.uid));
       let userData = userDoc.exists() ? userDoc.data() : null;
+      console.log('[Auth] Usuario encontrado em usuarios:', !!userData);
+
+      // If not found in usuarios, try users collection
+      if (!userData) {
+        userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+        userData = userDoc.exists() ? userDoc.data() : null;
+        console.log('[Auth] Usuario encontrado em users:', !!userData);
+      }
 
       // If not found in users, try profiles collection
       if (!userData) {
+        console.log('[Auth] Buscando em profiles...');
         const profileDoc = await getDoc(doc(db, 'profiles', firebaseUser.uid));
         if (profileDoc.exists()) {
           userData = profileDoc.data();
+          console.log('[Auth] Usuario encontrado em profiles:', userData);
         }
       }
 
       if (userData) {
-        // Check if user is a professional
-        if (userData.role !== 'professional' && userData.role !== 'admin') {
+        // Check if user is a professional (accept fisioterapeuta, professional, or admin)
+        const userRole = userData.role || userData.tipoUsuario || userData.type;
+        console.log('[Auth] Role do usuario:', userRole);
+        if (userRole !== 'professional' && userRole !== 'fisioterapeuta' && userRole !== 'admin') {
           await firebaseSignOut(auth);
           throw new Error('Acesso restrito a profissionais');
         }
@@ -73,15 +101,20 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         const user: User = {
           id: firebaseUser.uid,
           email: firebaseUser.email || '',
-          name: userData.name || userData.displayName || userData.full_name || 'Profissional',
-          role: userData.role,
-          clinicId: userData.clinicId || userData.clinic_id,
+          name: userData.name || userData.nome || userData.displayName || userData.full_name || userData.nomeCompleto || 'Profissional',
+          role: userRole as any,
+          clinicId: userData.clinicId || userData.clinic_id || userData.clinicaId,
           // Use a default organizationId if not set (for development/testing)
-          organizationId: userData.organizationId || userData.organization_id || '11111111-1111-1111-1111-111111111111',
+          organizationId: userData.organizationId || userData.organization_id || 'org-default',
           avatarUrl: userData.avatarUrl || userData.photoURL,
-          specialty: userData.specialty,
+          specialty: userData.specialty || userData.especialidade,
           crefito: userData.crefito,
         };
+
+        console.log('[Auth] Login completo. Usuario:', user);
+        
+        // Log audit event
+        await auditLogger.logLogin(user.id);
 
         set({
           user,
@@ -91,9 +124,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         });
       } else {
         await firebaseSignOut(auth);
-        throw new Error('Usuario nao encontrado');
+        throw new Error('Usuario nao encontrado no Firestore. Entre em contato com o administrador.');
       }
     } catch (error: any) {
+      console.log('[Auth] =====================');
+      console.log('[Auth] Erro no login:', error);
+      console.log('[Auth] Error code:', error.code);
+      console.log('[Auth] Error message:', error.message);
       let errorMessage = 'Erro ao fazer login';
 
       if (error.message === 'Acesso restrito a profissionais') {
@@ -129,8 +166,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   signOut: async () => {
+    const currentUser = get().user;
     set({ isLoading: true });
     try {
+      if (currentUser) {
+        await auditLogger.logLogout(currentUser.id);
+      }
       await firebaseSignOut(auth);
       set({
         user: null,
@@ -158,13 +199,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  lockSession: () => set({ isLocked: true }),
+  unlockSession: async () => set({ isLocked: false }),
+  clearSession: () => set({ isLocked: false, isAuthenticated: false, user: null, firebaseUser: null }),
+
   initialize: () => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         try {
-          // Try users collection first, then profiles
-          const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+          // Try usuarios collection first, then users, then profiles
+          let userDoc = await getDoc(doc(db, 'usuarios', firebaseUser.uid));
           let userData = userDoc.exists() ? userDoc.data() : null;
+
+          // If not found in usuarios, try users collection
+          if (!userData) {
+            userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+            userData = userDoc.exists() ? userDoc.data() : null;
+          }
 
           // If not found in users, try profiles collection
           if (!userData) {
@@ -175,8 +226,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           }
 
           if (userData) {
-            // Only allow professionals
-            if (userData.role !== 'professional' && userData.role !== 'admin') {
+            // Only allow professionals (fisioterapeuta, professional, or admin)
+            const userRole = userData.role || userData.tipoUsuario || userData.type;
+            if (userRole !== 'professional' && userRole !== 'fisioterapeuta' && userRole !== 'admin') {
               await firebaseSignOut(auth);
               set({
                 user: null,
@@ -190,13 +242,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             const user: User = {
               id: firebaseUser.uid,
               email: firebaseUser.email || '',
-              name: userData.name || userData.displayName || userData.full_name || 'Profissional',
-              role: userData.role,
-              clinicId: userData.clinicId || userData.clinic_id,
+              name: userData.name || userData.nome || userData.displayName || userData.full_name || userData.nomeCompleto || 'Profissional',
+              role: userRole as any,
+              clinicId: userData.clinicId || userData.clinic_id || userData.clinicaId,
               // Use a default organizationId if not set (for development/testing)
-              organizationId: userData.organizationId || userData.organization_id || '11111111-1111-1111-1111-111111111111',
+              organizationId: userData.organizationId || userData.organization_id || 'org-default',
               avatarUrl: userData.avatarUrl || userData.photoURL,
-              specialty: userData.specialty,
+              specialty: userData.specialty || userData.especialidade,
               crefito: userData.crefito,
             };
 

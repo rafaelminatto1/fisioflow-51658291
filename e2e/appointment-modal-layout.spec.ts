@@ -24,8 +24,8 @@ async function dismissTransientOverlays(page: Page) {
 test.describe('Modal de Agendamento - layout Info/Pagamento/Observações', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/auth');
-    await page.fill('input[name="email"], input[type="email"]', testUsers.fisio.email);
-    await page.fill('input[name="password"], input[type="password"]', testUsers.fisio.password);
+    await page.fill('input[name="email"], input[name="email"]', testUsers.fisio.email);
+    await page.fill('input[name="password"], input[name="password"]', testUsers.fisio.password);
     await page.click('button[type="submit"]');
     await page.waitForURL(/^(?!.*\/auth).*$/, { timeout: 20000 });
 

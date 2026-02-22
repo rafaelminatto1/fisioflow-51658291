@@ -263,8 +263,82 @@ service cloud.firestore {
     }
 
     match /audit_logs/{logId} {
-      allow read: if isAdmin();
-      allow write: if false;
+      allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidSize();
+      allow update, delete: if false; // Append-only, immutable
+    }
+
+    // ============================================================================================
+    // LEGAL & COMPLIANCE COLLECTIONS (App Store Compliance)
+    // ============================================================================================
+
+    // User consents - read/create by owner, no delete (append-only for compliance)
+    match /user_consents/{consentId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidSize();
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if false; // No deletion for compliance tracking
+    }
+
+    // Consent history - read by owner, append-only
+    match /consent_history/{historyId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidSize();
+      allow update, delete: if false; // Append-only, immutable
+    }
+
+    // Privacy policy acceptances - read by owner, append-only
+    match /privacy_acceptances/{acceptanceId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidSize();
+      allow update, delete: if false; // Append-only, immutable
+    }
+
+    // Terms of service acceptances - read by owner, append-only
+    match /terms_acceptances/{acceptanceId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidSize();
+      allow update, delete: if false; // Append-only, immutable
+    }
+
+    // Medical disclaimers - read/write by owner
+    match /medical_disclaimers/{disclaimerId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidSize();
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Biometric configurations - read/write by owner
+    match /biometric_configs/{configId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidSize();
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Notification preferences - read/write by owner
+    match /notification_preferences/{preferenceId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidSize();
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Data export requests - read/write by owner
+    match /data_export_requests/{exportId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidSize();
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Data deletion requests - read/write by owner
+    match /data_deletion_requests/{deletionId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidSize();
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }
 
     match /settings/{settingId} {
@@ -592,6 +666,25 @@ service cloud.firestore {
       allow create: if isAuthenticated() && exists(/databases/$(database)/documents/conversations/$(conversationId)/participants/$(request.auth.uid)) && isValidSize();
       allow update: if isAuthenticated() && request.auth.uid == resource.data.senderId;
       allow delete: if isAdmin();
+    }
+
+    // ============================================================================================
+    // ACTIVITY NOTES V2 COLLECTIONS
+    // ============================================================================================
+    match /documents/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+    match /workspaces/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+    match /projects/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+    match /tarefas/{document=**} {
+      allow read, write: if isAuthenticated();
+    }
+    match /comentarios/{document=**} {
+      allow read, write: if isAuthenticated();
     }
 
     match /{document=**} {

@@ -29,9 +29,12 @@ const EXERCISE_HTTP_OPTS: any = {
 };
 
 export const listExercisesHttp = onRequest(EXERCISE_HTTP_OPTS, withErrorHandling(async (req, res) => {
+  if (req.method === 'OPTIONS') { setCorsHeaders(res); res.status(204).send(''); return; }
   if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
-  
-  await authorizeRequest(extractBearerToken(getAuthHeader(req)));
+  setCorsHeaders(res);
+
+  // Remover verificação de autenticação para permitir acesso público
+  // const { category, difficulty, search, limit = 100, offset = 0 } = parseBody(req);
   const { category, difficulty, search, limit = 100, offset = 0 } = parseBody(req);
   const pool = getPool();
   let query = `SELECT id,name,slug,category,description,instructions,muscles,equipment,difficulty,video_url,image_url,duration_minutes,sets_recommended,reps_recommended,precautions,benefits,tags FROM exercises WHERE is_active = true`;

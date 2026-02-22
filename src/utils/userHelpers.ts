@@ -30,7 +30,31 @@ export async function getUserOrganizationId(): Promise<string | null> {
     }
 
     const profileData = profileSnap.data();
-    return profileData?.organization_id || null;
+
+    // Aceitar vários nomes de campo usados em diferentes ambientes
+    const rawOrg = profileData?.organization_id || profileData?.organizationId || profileData?.clinicId || profileData?.organization || null;
+
+    if (!rawOrg) return null;
+
+    // Se o campo vier como objeto (ex.: { id: 'org_xxx' }), extrair id
+    if (typeof rawOrg === 'object') {
+      const id = rawOrg?.id || rawOrg?.organization_id || rawOrg?.organizationId || null;
+      if (id) {
+        logger.info('Organization id resolved from profile object', { resolvedId: id }, 'userHelpers');
+        return id;
+      }
+      return null;
+    }
+
+    // Se for string, usar diretamente
+    if (typeof rawOrg === 'string') {
+      if (rawOrg !== profileData?.organization_id) {
+        logger.warn('Organization id resolved via fallback field', { usedFieldValue: rawOrg }, 'userHelpers');
+      }
+      return rawOrg;
+    }
+
+    return null;
   } catch (error: unknown) {
     logger.error('Erro ao buscar organização do usuário no Firestore', error, 'userHelpers');
     throw new Error(`Erro ao buscar organização do usuário: ${error instanceof Error ? error.message : 'Unknown error'}`);

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>My Progress - Patient Review</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style type="text/tailwindcss">
+        :root {
+            --primary-color: #059669;
+            --accent-soft: #ecfdf5;
+            --text-main: #1f2937;
+            --text-secondary: #6b7280;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            background-color: #ffffff;
+        }
+        .prose-narrative {
+            line-height: 1.8;
+            font-size: 1.125rem;
+        }
+        .pain-indicator {
+            position: absolute;
+            top: -40px;
+            transform: translateX(-50%);
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body class="flex min-h-screen">
+<aside class="w-64 border-r border-gray-100 flex-shrink-0 flex flex-col bg-gray-50/50">
+<div class="p-6">
+<div class="flex items-center gap-2 mb-8">
+<div class="w-8 h-8 bg-[var(--primary-color)] rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-sm">healing</span>
+</div>
+<span class="font-bold tracking-tight text-gray-800">HealthJourney</span>
+</div>
+<nav class="space-y-1">
+<div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 px-3">Main</div>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-900 bg-white rounded-lg shadow-sm" href="#">
+<span class="material-symbols-outlined text-lg">home</span>
+                    Dashboard
+                </a>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-white rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined text-lg">calendar_today</span>
+                    Appointments
+                </a>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-white rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined text-lg">fitness_center</span>
+                    Exercises
+                </a>
+<a class="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-500 hover:text-gray-900 hover:bg-white rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined text-lg">history_edu</span>
+                    My Progress
+                </a>
+</nav>
+</div>
+<div class="mt-auto p-6 border-t border-gray-100">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-xs">JS</div>
+<div class="text-xs">
+<p class="font-semibold">John Smith</p>
+<p class="text-gray-400">Patient ID: #4421</p>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-grow flex flex-col">
+<header class="h-14 flex items-center px-12 border-b border-gray-50 text-xs text-gray-400">
+<div class="flex items-center gap-2">
+<span>HealthJourney</span>
+<span class="material-symbols-outlined text-[12px]">chevron_right</span>
+<span>My Progress</span>
+<span class="material-symbols-outlined text-[12px]">chevron_right</span>
+<span class="text-gray-800 font-medium">Session Recap: Feb 22, 2026</span>
+</div>
+</header>
+<div class="max-w-4xl mx-auto w-full px-12 py-16 flex-grow">
+<div class="mb-16">
+<span class="text-[var(--primary-color)] font-semibold text-sm tracking-wide uppercase">Weekly Review</span>
+<h1 class="text-4xl font-bold mt-2 text-gray-900 tracking-tight">Your Healing Journey</h1>
+<p class="mt-4 text-gray-500 text-lg">Here's a look at how you've progressed during today's session with Dr. Miller.</p>
+</div>
+<section class="mb-20">
+<div class="flex items-center gap-2 mb-10">
+<span class="material-symbols-outlined text-[var(--primary-color)]">analytics</span>
+<h2 class="text-xl font-bold text-gray-900">Current Comfort Level</h2>
+</div>
+<div class="relative pt-12 pb-6">
+<div class="h-2 w-full flex gap-1">
+<div class="h-full flex-grow bg-emerald-400 rounded-l-full"></div>
+<div class="h-full flex-grow bg-emerald-500"></div>
+<div class="h-full flex-grow bg-yellow-400"></div>
+<div class="h-full flex-grow bg-orange-400"></div>
+<div class="h-full flex-grow bg-red-400 rounded-r-full opacity-30"></div>
+</div>
+<div class="pain-indicator" style="left: 60%;">
+<div class="flex flex-col items-center">
+<span class="bg-gray-900 text-white text-[10px] font-bold px-2 py-1 rounded mb-1 uppercase tracking-tighter">You are here</span>
+<div class="w-6 h-6 rounded-full border-4 border-white bg-orange-500 shadow-md ring-2 ring-orange-500/20"></div>
+</div>
+</div>
+<div class="flex justify-between mt-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+<span>Feeling Great (0)</span>
+<span class="text-orange-600">Moderate (6)</span>
+<span>Maximum Pain (10)</span>
+</div>
+</div>
+<div class="mt-8 flex items-start gap-4 p-4 bg-orange-50 rounded-xl border border-orange-100/50">
+<span class="material-symbols-outlined text-orange-500 mt-1">info</span>
+<div>
+<p class="font-semibold text-orange-900">Pain focus area</p>
+<p class="text-orange-700/80 text-sm italic">"Shoulder, right side, anterior region"</p>
+</div>
+</div>
+</section>
+<section class="mb-20">
+<div class="flex items-center gap-2 mb-8">
+<span class="material-symbols-outlined text-[var(--primary-color)]">auto_awesome</span>
+<h2 class="text-xl font-bold text-gray-900">Our Clinical Outlook</h2>
+</div>
+<div class="prose-narrative text-gray-700">
+<p class="mb-6">
+                        During today's evaluation, we saw some <strong class="text-[var(--primary-color)] font-semibold">truly encouraging progress</strong>. You reported feeling significantly better since our last meeting, specifically noting a reduction in that sharp shoulder tension you had been experiencing.
+                    </p>
+<p class="mb-6">
+                        Our measurements today confirmed what you felt: your <span class="bg-emerald-50 text-emerald-800 px-1 rounded">range of motion has improved by nearly 15%</span> compared to two weeks ago. You are moving with much more fluidity and confidence.
+                    </p>
+<p class="mb-8">
+                        The assessment shows you are progressing exactly as expected. To keep this momentum going, we’ll stick with our current protocol but add a slight focus on stabilizing those new ranges of movement.
+                    </p>
+</div>
+<div class="bg-gray-50 rounded-2xl p-8 border border-gray-100">
+<h3 class="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6">Your Next Steps</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="flex gap-4">
+<div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-[var(--primary-color)] shadow-sm">
+<span class="material-symbols-outlined text-xl">task_alt</span>
+</div>
+<div>
+<h4 class="font-bold text-gray-900">Keep Moving</h4>
+<p class="text-sm text-gray-500 leading-relaxed">Continue your current exercise protocol twice daily.</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-blue-500 shadow-sm">
+<span class="material-symbols-outlined text-xl">event</span>
+</div>
+<div>
+<h4 class="font-bold text-gray-900">Next Visit</h4>
+<p class="text-sm text-gray-500 leading-relaxed">See you again on Thursday, March 2nd.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<footer class="h-20 border-t border-gray-100 px-12 flex items-center justify-between bg-white/80 backdrop-blur-sm sticky bottom-0">
+<div class="flex items-center gap-4 text-xs text-gray-400">
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Last updated: 18:41 Today</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-lg transition-all border border-transparent">
+<span class="material-symbols-outlined text-lg">picture_as_pdf</span>
+                    Download Report
+                </button>
+<button class="flex items-center gap-2 px-6 py-2 text-sm font-semibold text-white bg-[var(--primary-color)] hover:bg-emerald-700 rounded-lg transition-all shadow-md shadow-emerald-900/10">
+<span class="material-symbols-outlined text-lg">check_circle</span>
+                    Acknowledge &amp; Save
+                </button>
+</div>
+</footer>
+</main>
+
+</body></html>

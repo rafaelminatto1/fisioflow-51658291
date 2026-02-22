@@ -132,8 +132,8 @@ test.describe('Paciente Login - setValue Error Check', () => {
     console.log('STEP 3: Looking for login form...');
     console.log('========================================\n');
 
-    const emailLocator = page.locator('input[type="email"], input[name="email"]').first();
-    const passwordLocator = page.locator('input[type="password"]').first();
+    const emailLocator = page.locator('input[name="email"], input[name="email"]').first();
+    const passwordLocator = page.locator('input[name="password"]').first();
 
     const hasEmailInput = await emailLocator.count() > 0;
     const hasPasswordInput = await passwordLocator.count() > 0;

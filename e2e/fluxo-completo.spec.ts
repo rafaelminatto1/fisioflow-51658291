@@ -117,7 +117,7 @@ test('fluxo completo: login -> agendamento (avaliação) -> evolução SOAP', as
     }
 
     // Fill email
-    const emailInput = page.locator('input[name="email"], input[type="email"], input[id*="email"]').first();
+    const emailInput = page.locator('input[name="email"], input[name="email"], input[id*="email"]').first();
     if (await emailInput.isVisible({ timeout: 3000 })) {
       await emailInput.fill(TEST_PATIENT.email);
     }

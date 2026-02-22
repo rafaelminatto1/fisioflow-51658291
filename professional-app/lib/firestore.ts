@@ -51,6 +51,57 @@ function convertTimestamp(timestamp: any): Date {
   return new Date();
 }
 
+function normalizeBirthDate(value: any): Date | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  if (value instanceof Timestamp) {
+    return value.toDate();
+  }
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? undefined : value;
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return undefined;
+    }
+
+    const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(trimmed);
+    if (match) {
+      const day = Number(match[1]);
+      const month = Number(match[2]);
+      const year = Number(match[3]);
+      const parsed = new Date(year, month - 1, day);
+      if (
+        parsed.getFullYear() === year &&
+        parsed.getMonth() === month - 1 &&
+        parsed.getDate() === day
+      ) {
+        return parsed;
+      }
+    }
+
+    const parsed = new Date(trimmed);
+    return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+  }
+
+  if (typeof value?.toDate === 'function') {
+    const parsed = value.toDate();
+    return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+  }
+
+  if (typeof value?.seconds === 'number') {
+    const parsed = new Date(value.seconds * 1000);
+    return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+  }
+
+  return undefined;
+}
+
 // ============================================
 // PROFESSIONAL DATA
 // ============================================
@@ -260,7 +311,7 @@ function mapPatients(snapshot: any): Patient[] {
       name: data.name || data.full_name || data.displayName || 'Paciente',
       email: data.email || '',
       phone: data.phone,
-      birthDate: data.birthDate || data.birth_date,
+      birthDate: normalizeBirthDate(data.birthDate || data.birth_date),
       condition: data.condition || data.main_condition,
       diagnosis: data.diagnosis,
       notes: data.notes || data.medical_history,
@@ -285,7 +336,7 @@ export async function getPatientById(patientId: string): Promise<Patient | null>
         name: data.name || data.displayName || 'Paciente',
         email: data.email || '',
         phone: data.phone,
-        birthDate: data.birthDate,
+        birthDate: normalizeBirthDate(data.birthDate),
         condition: data.condition,
         diagnosis: data.diagnosis,
         notes: data.notes,
@@ -309,8 +360,11 @@ export async function createPatient(
 ): Promise<string> {
   try {
     const patientsRef = collection(db, 'patients');
+    const { birthDate, ...rest } = patientData;
+    const normalizedBirthDate = normalizeBirthDate(birthDate);
     const docRef = await addDoc(patientsRef, {
-      ...patientData,
+      ...rest,
+      ...(normalizedBirthDate ? { birthDate: normalizedBirthDate } : {}),
       professionalId,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -328,10 +382,19 @@ export async function updatePatient(
 ): Promise<void> {
   try {
     const docRef = doc(db, 'patients', patientId);
-    await updateDoc(docRef, {
+    const updatePayload: Partial<Patient> & { updatedAt: any; birthDate?: Date | null } = {
       ...data,
       updatedAt: serverTimestamp(),
-    });
+    };
+    if ('birthDate' in data) {
+      const normalizedBirthDate = normalizeBirthDate(data.birthDate);
+      if (normalizedBirthDate) {
+        updatePayload.birthDate = normalizedBirthDate;
+      } else {
+        updatePayload.birthDate = null;
+      }
+    }
+    await updateDoc(docRef, updatePayload);
   } catch (error) {
     console.error('Error updating patient:', error);
     throw error;

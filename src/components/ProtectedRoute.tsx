@@ -37,12 +37,12 @@ export function ProtectedRoute({
     }
   }, [user, loading, initialized, sessionCheckFailed, navigate, redirectTo, location.pathname]);
 
-  // Timeout for profile loading - 2 seconds max
+  // Timeout for profile loading - 5 segundos max
   useEffect(() => {
     if (requireProfile && user && !profile && !profileLoadTimeout) {
       profileTimeoutRef.current = setTimeout(() => {
         setProfileLoadTimeout(true);
-      }, 2000);
+      }, 5000);
     }
 
     if (profile && profileTimeoutRef.current) {

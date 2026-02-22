@@ -35,10 +35,14 @@ function mapApiAppointment(apiAppointment: ApiAppointment): Appointment {
     appointmentDate = new Date();
   }
 
+  // Filter out "grupo" from patient name
+  const patientName = apiAppointment.patient_name || '';
+  const cleanPatientName = (patientName === 'grupo' || patientName === 'Grupo') ? '' : patientName;
+
   return {
     id: apiAppointment.id,
     patientId: apiAppointment.patientId || apiAppointment.patient_id || '',
-    patientName: apiAppointment.patient_name || '',
+    patientName: cleanPatientName,
     professionalId: apiAppointment.therapistId || apiAppointment.therapist_id || '',
     clinicId: undefined,
     date: appointmentDate,

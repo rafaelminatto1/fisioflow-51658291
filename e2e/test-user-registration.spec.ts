@@ -21,8 +21,8 @@ test.describe('Registro de Usuário - Produção', () => {
     await page.screenshot({ path: 'screenshots/auth-page.avif' });
 
     // Verificar se formulário de login está visível
-    await expect(page.locator('input[type="email"]')).toBeVisible();
-    await expect(page.locator('input[type="password"]')).toBeVisible();
+    await expect(page.locator('input[name="email"]')).toBeVisible();
+    await expect(page.locator('input[name="password"]')).toBeVisible();
 
     // Verificar abas de login/cadastro
     const registerTab = page.locator('button:has-text("Cadastro")');
@@ -150,8 +150,8 @@ test.describe('Registro de Usuário - Produção', () => {
     await page.waitForLoadState('domcontentloaded');
 
     // Tentar login com usuário de teste existente
-    await page.fill('input[type="email"]', 'rafaelstarton@gmail.com');
-    await page.fill('input[type="password"]', 'Yukari30@');
+    await page.fill('input[name="email"]', 'rafaelstarton@gmail.com');
+    await page.fill('input[name="password"]', 'Yukari30@');
     await page.click('button[type="submit"]');
 
     // Capturar todos os requests

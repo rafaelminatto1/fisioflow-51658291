@@ -23,8 +23,8 @@ test.describe('FisioFlow Comprehensive Validation', () => {
     
     console.log('Logging in...');
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.rafael.email);
-    await page.fill('input[type="password"]', testUsers.rafael.password);
+    await page.fill('input[name="email"]', testUsers.rafael.email);
+    await page.fill('input[name="password"]', testUsers.rafael.password);
     await page.click('button[type="submit"]');
     
     // Wait for dashboard or home

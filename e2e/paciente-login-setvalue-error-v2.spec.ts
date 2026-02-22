@@ -144,8 +144,8 @@ test.describe('Paciente Login - setValue Error Check (Comprehensive)', () => {
     console.log('STEP 3: Looking for login inputs...');
     console.log('========================================\n');
 
-    const emailInput = page.locator('input[type="email"], input[name="email"], input[placeholder*="email" i]').first();
-    const passwordInput = page.locator('input[type="password"], input[name="password"]').first();
+    const emailInput = page.locator('input[name="email"], input[name="email"], input[placeholder*="email" i]').first();
+    const passwordInput = page.locator('input[name="password"], input[name="password"]').first();
 
     const hasEmailInput = await emailInput.count() > 0;
     const hasPasswordInput = await passwordInput.count() > 0;

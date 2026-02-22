@@ -27,6 +27,8 @@ import {
   UserPlus,
   Percent,
   DollarSign,
+  Sparkles,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -34,6 +36,7 @@ import {
   redeemReferralCode,
   generateReferralCode,
 } from '@/services/marketing/marketingService';
+import { generateMarketingContent } from '@/services/ai/marketingAITemplateService';
 import { collection, getDocs, query } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -67,6 +70,40 @@ export default function ReferralPage() {
     max_uses: 50,
     expires_at: '',
   });
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
+  const handleAIGenerateSuggestion = async () => {
+    setIsGeneratingAI(true);
+    try {
+      const result = await generateMarketingContent({
+        type: 'caption',
+        context: {
+          contentType: 'educational',
+          rewardType: newCodeConfig.reward_type,
+          isReferralProgram: true,
+        },
+        tone: 'professional'
+      });
+
+      if (result.success && result.template) {
+        // Simple logic to extract a number or just suggest based on type
+        if (newCodeConfig.reward_type === 'discount') {
+          setNewCodeConfig(prev => ({ ...prev, reward_value: 15, referrer_reward_value: 10 }));
+        } else {
+          setNewCodeConfig(prev => ({ ...prev, reward_value: 1, referrer_reward_value: 1 }));
+        }
+        
+        toast.success('Sugestão da IA aplicada!');
+        if (result.suggestions && result.suggestions.length > 0) {
+          toast.info(`Estratégia: ${result.suggestions[0]}`);
+        }
+      }
+    } catch (error) {
+      toast.error('Erro ao obter sugestão da IA.');
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
 
   // Load referral stats
   useEffect(() => {
@@ -263,7 +300,23 @@ export default function ReferralPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Valor da Recompensa</Label>
+                    <div className="flex items-center justify-between">
+                      <Label>Valor da Recompensa</Label>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={handleAIGenerateSuggestion}
+                        disabled={isGeneratingAI}
+                        className="h-7 text-purple-600 hover:text-purple-700 hover:bg-purple-50 gap-1 px-2"
+                      >
+                        {isGeneratingAI ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-3 w-3" />
+                        )}
+                        <span className="text-[10px]">Sugerir</span>
+                      </Button>
+                    </div>
                     <Input
                       type="number"
                       value={newCodeConfig.reward_value}

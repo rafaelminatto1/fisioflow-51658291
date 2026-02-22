@@ -5,7 +5,7 @@
  * smooth animations, and professional visual design.
  */
 import React from 'react';
-import { FileText, ClipboardList } from 'lucide-react';
+import { FileText, ClipboardList, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Tooltip,
@@ -21,11 +21,26 @@ interface EvolutionVersionToggleProps {
   className?: string;
 }
 
+const versions: Array<{
+  key: EvolutionVersion;
+  label: string;
+  badge?: string;
+  icon: React.ElementType;
+  tooltip: string;
+}> = [
+    { key: 'v1-soap', label: 'SOAP', icon: ClipboardList, tooltip: 'Formato SOAP tradicional (4 campos)' },
+    { key: 'v2-texto', label: 'Texto Livre', badge: 'V2', icon: FileText, tooltip: 'Formato texto livre (Editor de blocos)' },
+    { key: 'v3-notion', label: 'Notion', badge: 'V3', icon: BookOpen, tooltip: 'Página contínua estilo Notion' },
+  ];
+
 export const EvolutionVersionToggle: React.FC<EvolutionVersionToggleProps> = ({
   version,
   onToggle,
   className,
 }) => {
+  const activeIndex = versions.findIndex((v) => v.key === version) !== -1 ? versions.findIndex((v) => v.key === version) : 0;
+  const itemCount = versions.length;
+
   return (
     <TooltipProvider>
       <div className={cn(
@@ -35,60 +50,45 @@ export const EvolutionVersionToggle: React.FC<EvolutionVersionToggleProps> = ({
       )}>
         {/* Active indicator */}
         <div
-          className={cn(
-            'absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-lg bg-background shadow-sm transition-all duration-300 ease-out',
-            version === 'v1-soap' ? 'left-1' : 'left-1/2'
-          )}
+          className="absolute top-1 bottom-1 rounded-lg bg-background shadow-sm transition-all duration-300 ease-out"
+          style={{
+            width: `calc(${100 / itemCount}% - 4px)`,
+            left: `calc(${(activeIndex / itemCount) * 100}% + 4px)`,
+          }}
         />
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              onClick={() => onToggle('v1-soap')}
-              className={cn(
-                'relative flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200',
-                'hover:text-foreground',
-                version === 'v1-soap'
-                  ? 'text-foreground'
-                  : 'text-muted-foreground'
-              )}
-            >
-              <ClipboardList className="h-4 w-4" />
-              <span>SOAP</span>
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="text-xs">
-            <p>Formato SOAP tradicional (4 campos)</p>
-          </TooltipContent>
-        </Tooltip>
+        {versions.map((v) => {
+          const Icon = v.icon;
+          const isActive = version === v.key;
 
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              onClick={() => onToggle('v2-texto')}
-              className={cn(
-                'relative flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200',
-                'hover:text-foreground',
-                version === 'v2-texto'
-                  ? 'text-foreground'
-                  : 'text-muted-foreground'
-              )}
-            >
-              <FileText className="h-4 w-4" />
-              <span>Texto Livre</span>
-              {/* V2 badge */}
-              {version === 'v2-texto' && (
-                <span className="ml-0.5 px-1.5 py-0.5 rounded-md bg-primary text-white text-[9px] font-bold">
-                  V2
-                </span>
-              )}
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="text-xs">
-            <p>Formato texto livre estilo Notion (blocos)</p>
-          </TooltipContent>
-        </Tooltip>
+          return (
+            <Tooltip key={v.key}>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => onToggle(v.key)}
+                  className={cn(
+                    'relative flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-200',
+                    'hover:text-foreground',
+                    isActive ? 'text-foreground' : 'text-muted-foreground'
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{v.label}</span>
+                  {v.badge && isActive && (
+                    <span className="ml-0.5 px-1.5 py-0.5 rounded-md bg-primary text-white text-[9px] font-bold">
+                      {v.badge}
+                    </span>
+                  )}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">
+                <p>{v.tooltip}</p>
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
       </div>
     </TooltipProvider>
   );
 };
+

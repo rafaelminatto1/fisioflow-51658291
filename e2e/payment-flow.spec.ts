@@ -4,8 +4,8 @@ import { testUsers } from './fixtures/test-data';
 const setupAuth = async (page: Page) => {
     console.log('Starting Auth...');
     await page.goto('/auth');
-    await page.fill('input[type="email"]', testUsers.admin.email);
-    await page.fill('input[type="password"]', testUsers.admin.password);
+    await page.fill('input[name="email"]', testUsers.admin.email);
+    await page.fill('input[name="password"]', testUsers.admin.password);
     await page.click('button[type="submit"]');
     await page.waitForURL((url) => {
         return url.pathname === '/' ||

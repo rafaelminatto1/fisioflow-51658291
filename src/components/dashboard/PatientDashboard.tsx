@@ -114,7 +114,7 @@ export function PatientDashboard({ _lastUpdate, profile }: PatientDashboardProps
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-testid="stats-cards">
         <StatCard
           title="Próximas Consultas"
           value={stats.nextAppointments}
@@ -157,7 +157,7 @@ export function PatientDashboard({ _lastUpdate, profile }: PatientDashboardProps
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-4 mt-6">
+      <div className="flex gap-4 mt-6" data-testid="today-schedule">
         <Button
           onClick={loadDashboardData}
           variant="default"

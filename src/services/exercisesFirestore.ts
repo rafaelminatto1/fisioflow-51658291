@@ -3,7 +3,6 @@
  * Usado pela web para listar e fazer CRUD na coleção `exercises` (dados migrados do Supabase).
  */
 import {
-
   collection,
   doc,
   getDoc,
@@ -18,7 +17,6 @@ import {
 import { db } from '@/integrations/firebase/app';
 import type { Exercise } from '@/types';
 import type { ExerciseFilters } from './exercises';
-import { toProxyUrl } from '@/lib/storageProxy';
 
 const COLLECTION = 'exercises';
 const MAX_LIST = 1000;
@@ -32,15 +30,16 @@ function stripUndefined<T extends Record<string, unknown>>(obj: T): Record<strin
 
 function docToExercise(docSnap: { id: string; data: () => Record<string, unknown> }): Exercise {
   const data = docSnap.data();
-  const imageUrl = (data.image_url as string) ?? (data.thumbnail_url as string) ?? (data.imageUrl as string) ?? undefined;
+  const imageUrl = (data.thumbnail_url as string) ?? (data.image_url as string) ?? (data.imageUrl as string) ?? undefined;
   const videoUrl = (data.video_url as string) ?? (data.videoUrl as string) ?? undefined;
   return {
     id: docSnap.id,
     name: (data.name as string) ?? '',
     category: data.category as string | undefined,
     difficulty: data.difficulty as string | undefined,
-    video_url: toProxyUrl(videoUrl), // Use proxy URL for videos too
-    image_url: toProxyUrl(imageUrl), // Use proxy URL to bypass CORS issues
+    video_url: videoUrl,
+    image_url: imageUrl,
+    thumbnail_url: (data.thumbnail_url as string) ?? undefined,
     description: data.description as string | undefined,
     instructions: data.instructions as string | undefined,
     sets: data.sets as number | undefined,

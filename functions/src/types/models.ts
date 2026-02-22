@@ -33,6 +33,7 @@ export interface Appointment {
     patientId: string;
     professionalId: string;
     date: string; // ISO string
+    time: string;
     status: string;
     type?: string;
     notes?: string;

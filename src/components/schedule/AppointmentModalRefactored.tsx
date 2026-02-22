@@ -442,7 +442,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     return conflictsMap;
   }, [watchedDate, watchedDuration, timeSlots, appointments, appointment?.id, getMinCapacityForInterval]);
 
-  const persistAppointment = async (appointmentData: AppointmentFormData) => {
+  const persistAppointment = async (appointmentData: AppointmentFormData, ignoreCapacity: boolean = false) => {
     const endTime = new Date(new Date(`${appointmentData.appointment_date}T${appointmentData.appointment_time}`).getTime() + appointmentData.duration * 60000);
     const endTimeString = format(endTime, 'HH:mm');
 
@@ -473,10 +473,14 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     if (appointmentId) {
       await updateAppointmentAsync({
         appointmentId: appointmentId,
-        updates: formattedData
+        updates: formattedData,
+        ignoreCapacity
       });
     } else {
-      const newAppointment = await createAppointmentAsync(formattedData as unknown as AppointmentFormData);
+      const newAppointment = await createAppointmentAsync({
+        ...formattedData,
+        ignoreCapacity
+      } as unknown as AppointmentFormData);
       appointmentId = (newAppointment as { id?: string })?.id;
     }
 
@@ -648,7 +652,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     if (!pendingFormData) return;
 
     try {
-      await persistAppointment(pendingFormData);
+      await persistAppointment(pendingFormData, true);
       toast.warning('Agendamento confirmado acima da capacidade configurada.', {
         description: 'Este atendimento será exibido com destaque na agenda.'
       });
@@ -811,7 +815,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                     disabled={currentMode === 'view' || therapistsLoading}
                     aria-label={THERAPIST_PLACEHOLDER}
                   >
-                    <SelectTrigger className="h-10 text-xs sm:text-sm">
+                    <SelectTrigger className="h-10 text-xs sm:text-sm" data-testid="therapist-select">
                       <SelectValue
                         placeholder={therapistsLoading ? 'Carregando...' : THERAPIST_PLACEHOLDER}
                       />

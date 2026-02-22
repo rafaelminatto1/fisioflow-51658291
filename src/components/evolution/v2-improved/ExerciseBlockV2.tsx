@@ -177,109 +177,15 @@ export const ExerciseBlockV2: React.FC<ExerciseBlockV2Props> = ({
 
   return (
     <div className={cn(
-      'rounded-xl border border-border/50 bg-card overflow-hidden transition-all duration-300',
-      'shadow-sm hover:shadow-md',
+      'w-full transition-all duration-300',
       className
     )}>
-      {/* Header with gradient accent */}
-      <div className="relative">
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500/60 via-blue-500 to-blue-500/60" />
-        <div className="flex items-center justify-between p-3.5 border-b border-border/40 bg-gradient-to-r from-blue-500/5 to-transparent">
-          <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/20">
-              <Dumbbell className="h-4 w-4 text-blue-500" />
-            </div>
-            <div className="flex flex-col">
-              <h3 className="text-sm font-semibold text-foreground">Exercícios</h3>
-              <div className="flex items-center gap-2">
-                {exercises.length > 0 && (
-                  <span className="text-[10px] text-muted-foreground">
-                    {completedCount} de {exercises.length} concluídos
-                  </span>
-                )}
-                {issueCount > 0 && (
-                  <Badge variant="destructive" className="text-[10px] h-4 px-1.5 gap-1 rounded-full">
-                    <AlertTriangle className="h-2.5 w-2.5" />
-                    {issueCount}
-                  </Badge>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <Popover open={showAutocomplete} onOpenChange={setShowAutocomplete}>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={disabled}
-                className="gap-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-500/10 rounded-lg"
-              >
-                <Library className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline text-xs font-medium">Biblioteca</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[420px] p-0" align="end">
-              <Command shouldFilter={false}>
-                <CommandInput
-                  placeholder="Buscar exercício..."
-                  value={searchValue}
-                  onValueChange={setSearchValue}
-                />
-                <CommandList className="max-h-[320px]">
-                  <CommandEmpty className="py-8">
-                    <div className="flex flex-col items-center gap-2">
-                      <ImageOff className="h-10 w-10 text-muted-foreground/30" />
-                      <p className="text-sm text-muted-foreground">Nenhum exercício encontrado.</p>
-                    </div>
-                  </CommandEmpty>
-                  <CommandGroup>
-                    {filteredLibrary.map((exercise) => (
-                      <CommandItem
-                        key={exercise.id}
-                        value={exercise.id}
-                        onSelect={() => handleAddFromLibrary(exercise)}
-                        className="flex items-center gap-3 p-2.5 cursor-pointer"
-                      >
-                        <div className="h-10 w-10 flex-shrink-0 rounded-lg bg-muted/50 overflow-hidden border border-border/50">
-                          {exercise.image_url ? (
-                            <img
-                              src={withImageParams(exercise.image_url, {
-                                width: 80,
-                                height: 80,
-                                dpr: 2,
-                                format: 'auto',
-                                fit: 'cover',
-                              })}
-                              alt={exercise.name}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <div className="h-full w-full flex items-center justify-center">
-                              <Dumbbell className="h-5 w-5 text-muted-foreground/50" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex flex-col min-w-0 flex-1">
-                          <span className="font-medium text-sm truncate">{exercise.name}</span>
-                          <span className="text-xs text-muted-foreground truncate">{exercise.category}</span>
-                        </div>
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
-
       {/* Exercise list */}
-      <div className="p-3">
+      <div className="pb-3">
         {exercises.length === 0 ? (
           <div className="text-center py-10 text-muted-foreground">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-muted to-muted/50 mx-auto mb-3 flex items-center justify-center">
-              <Dumbbell className="h-7 w-7 opacity-30" />
+            <div className="w-12 h-12 rounded-lg bg-slate-50 border border-slate-100 mx-auto mb-3 flex items-center justify-center">
+              <Dumbbell className="h-5 w-5 text-slate-300" />
             </div>
             <p className="text-sm font-medium">Nenhum exercício adicionado</p>
             <p className="text-xs mt-1.5 opacity-70">
@@ -313,30 +219,32 @@ export const ExerciseBlockV2: React.FC<ExerciseBlockV2Props> = ({
               onKeyDown={handleQuickAdd}
               placeholder="Digite um exercício e Enter (ex: 'Agachamento 3x10rep') ou Tab para autocomplete..."
               disabled={disabled}
-              className="h-9 pl-10 pr-4 text-sm border-dashed rounded-lg focus:ring-1 focus:ring-blue-500/50"
+              className="h-9 pl-10 pr-4 text-sm border-transparent hover:bg-slate-50 focus:bg-white focus:ring-1 focus:ring-slate-200 focus:shadow-sm rounded-md transition-all duration-200"
             />
           </div>
         </div>
       </div>
 
       {/* Progress bar - Enhanced */}
-      {exercises.length > 0 && (
-        <div className="px-4 pb-3">
-          <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1.5">
-            <span>Progresso</span>
-            <span>{Math.round((completedCount / exercises.length) * 100)}%</span>
+      {
+        exercises.length > 0 && (
+          <div className="px-4 pb-3">
+            <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1.5">
+              <span>Progresso</span>
+              <span>{Math.round((completedCount / exercises.length) * 100)}%</span>
+            </div>
+            <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-500 ease-out rounded-full"
+                style={{
+                  width: `${exercises.length > 0 ? (completedCount / exercises.length) * 100 : 0}%`,
+                }}
+              />
+            </div>
           </div>
-          <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-500 ease-out rounded-full"
-              style={{
-                width: `${exercises.length > 0 ? (completedCount / exercises.length) * 100 : 0}%`,
-              }}
-            />
-          </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 };
 
@@ -375,9 +283,9 @@ const ExerciseV2Row: React.FC<{
     return (
       <div
         className={cn(
-          'group relative flex flex-col rounded-xl transition-all duration-200',
-          'border border-transparent hover:border-border/50 hover:bg-muted/30',
-          expanded && 'border-border/40 bg-muted/20',
+          'group relative flex flex-col rounded-lg transition-all duration-200',
+          'border border-transparent hover:bg-slate-50',
+          expanded && 'bg-slate-50',
           exercise.completed && !expanded && 'opacity-50',
           isRemoving && 'opacity-0 scale-95'
         )}
