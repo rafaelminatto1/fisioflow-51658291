@@ -42,6 +42,11 @@ service firebase.storage {
       return request.resource.size < 10485760;
     }
 
+    // Verificar tamanho do arquivo para PHI (max 50MB - Apple App Store compliance)
+    function isValidPHIFileSize() {
+      return request.resource.size < 52428800; // 50MB in bytes
+    }
+
     // Verificar tipo de conteúdo permitido
     function isAllowedContentType() {
       return request.resource.contentType.matches('image/.*') ||
@@ -64,6 +69,45 @@ service firebase.storage {
     }
 
     // ============================================================================================
+    // FOTOS DE PACIENTES (PHI - Protected Health Information)
+    // Apple App Store Compliance: Requirement 2.4
+    // ============================================================================================
+
+    match /patients/{patientId}/photos/{photoId}/{filename} {
+      // Leitura: apenas o profissional que é dono do paciente (userId-based access control)
+      // PHI deve ser acessível apenas pelo profissional responsável
+      allow read: if isAuthenticated() &&
+                     firestore.exists(/databases/(default)/documents/patients/$(patientId)) &&
+                     firestore.get(/databases/(default)/documents/patients/$(patientId)).data.userId == request.auth.uid;
+
+      // Escrita: apenas o profissional que é dono do paciente
+      allow write: if isAuthenticated() &&
+                      firestore.exists(/databases/(default)/documents/patients/$(patientId)) &&
+                      firestore.get(/databases/(default)/documents/patients/$(patientId)).data.userId == request.auth.uid &&
+                      isValidPHIFileSize() &&
+                      isAllowedContentType();
+    }
+
+    // ============================================================================================
+    // ANEXOS DE NOTAS SOAP (PHI - Protected Health Information)
+    // Apple App Store Compliance: Requirement 2.4
+    // ============================================================================================
+
+    match /soap-notes/{soapNoteId}/attachments/{filename} {
+      // Leitura: apenas o profissional que criou a nota SOAP
+      allow read: if isAuthenticated() &&
+                     firestore.exists(/databases/(default)/documents/soap_notes/$(soapNoteId)) &&
+                     firestore.get(/databases/(default)/documents/soap_notes/$(soapNoteId)).data.userId == request.auth.uid;
+
+      // Escrita: apenas o profissional que criou a nota SOAP
+      allow write: if isAuthenticated() &&
+                      firestore.exists(/databases/(default)/documents/soap_notes/$(soapNoteId)) &&
+                      firestore.get(/databases/(default)/documents/soap_notes/$(soapNoteId)).data.userId == request.auth.uid &&
+                      isValidPHIFileSize() &&
+                      isAllowedContentType();
+    }
+
+    // ============================================================================================
     // FOTOS DE EVOLUÇÃO (ANTES/DEPOIS)
     // ============================================================================================
 
@@ -73,9 +117,9 @@ service firebase.storage {
                      (isAuthenticated() && request.auth.uid == patientId) ||
                      isAdmin();
 
-      // Escrita: apenas profissionais
+      // Escrita: apenas profissionais (PHI - use 50MB limit)
       allow write: if isProfessional() &&
-                     isValidFileSize() &&
+                     isValidPHIFileSize() &&
                      isAllowedContentType();
     }
 
@@ -92,8 +136,9 @@ service firebase.storage {
     }
 
     // Mídia migrada do Supabase (exercise-media/{id}/image.ext, thumbnail.ext, video.ext)
+    // Leitura pública para biblioteca de exercícios (thumbnails e imagens)
     match /exercise-media/{exerciseId}/{filename} {
-      allow read: if isAuthenticated();
+      allow read: if true; // Público para permitir carregamento direto de imagens em <img> tags
       allow write: if false;
     }
 
@@ -107,9 +152,9 @@ service firebase.storage {
                      (isAuthenticated() && request.auth.uid == patientId) ||
                      isAdmin();
 
-      // Escrita: apenas profissionais
+      // Escrita: apenas profissionais (PHI - use 50MB limit)
       allow write: if isProfessional() &&
-                     isValidFileSize() &&
+                     isValidPHIFileSize() &&
                      isAllowedContentType();
     }
 

@@ -2,8 +2,8 @@ import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { testUsers } from './fixtures/test-data';
 
-const EMAIL_INPUT_SELECTOR = 'input[type="email"], input[name="email"], #login-email';
-const PASSWORD_INPUT_SELECTOR = 'input[type="password"], input[name="password"], #login-password';
+const EMAIL_INPUT_SELECTOR = 'input[name="email"], input[name="email"], #login-email';
+const PASSWORD_INPUT_SELECTOR = 'input[name="password"], input[name="password"], #login-password';
 const LOGIN_BUTTON_NAME = /Entrar na Plataforma|Entrar/i;
 const LOGIN_EMAIL = process.env.E2E_LOGIN_EMAIL || testUsers.fisio.email;
 const LOGIN_PASSWORD = process.env.E2E_LOGIN_PASSWORD || testUsers.fisio.password;

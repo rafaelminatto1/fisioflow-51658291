@@ -140,7 +140,7 @@ export type ExerciseFeedback = {
   notes?: string;
 };
 
-export type EvolutionVersion = 'v1-soap' | 'v2-texto';
+export type EvolutionVersion = 'v1-soap' | 'v2-texto' | 'v3-notion';
 
 // ========== Measurements Types ==========
 

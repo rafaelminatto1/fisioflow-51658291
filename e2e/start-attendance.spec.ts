@@ -7,8 +7,8 @@ test('iniciar atendimento - debug', async ({ page }) => {
 
   // Fazer login
   await page.goto('http://localhost:8080/auth/login');
-  await page.fill('input[type="email"]', testUsers.fisio.email);
-  await page.fill('input[type="password"]', testUsers.fisio.password);
+  await page.fill('input[name="email"]', testUsers.fisio.email);
+  await page.fill('input[name="password"]', testUsers.fisio.password);
   await page.click('button[type="submit"]');
 
   // Esperar login completar

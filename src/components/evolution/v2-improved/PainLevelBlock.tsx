@@ -87,53 +87,33 @@ export const PainLevelBlock: React.FC<PainLevelBlockProps> = ({
 
   return (
     <div className={cn(
-      'rounded-xl border border-border/50 bg-card overflow-hidden transition-all duration-300',
-      'shadow-sm hover:shadow-md',
+      'relative transition-all duration-300 group',
       disabled && 'opacity-50'
     )}>
-      {/* Header with gradient accent */}
-      <div className="relative">
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-rose-500/60 via-rose-500 to-rose-500/60" />
-        <div className="flex items-center gap-2.5 p-3.5 border-b border-border/40 bg-gradient-to-r from-rose-500/5 to-transparent">
-          <div className="p-1.5 rounded-lg bg-gradient-to-br from-rose-500/10 to-rose-500/5 border border-rose-500/20">
-            <Activity className="h-3.5 w-3.5 text-rose-500" />
-          </div>
-          <div className="flex flex-col">
-            <h3 className="text-xs font-semibold text-foreground">Nível de Dor</h3>
-            <span className="text-[10px] text-muted-foreground">Escala Visual Analógica (EVA)</span>
-          </div>
-        </div>
-      </div>
+      {/* Removed Header for Panel as it's now handled by NotionSectionTitle */}
 
-      <div className="p-4 space-y-4">
+      <div className="px-2 pb-2 space-y-4">
         {/* Pain Value Display - Enhanced */}
         <div className="flex items-center gap-3">
           <div className={cn(
-            'relative w-16 h-16 rounded-2xl flex items-center justify-center',
-            'transition-all duration-300 shadow-lg',
-            isAnimating && 'scale-110',
-            `bg-gradient-to-br ${colors.gradient}`
+            'relative w-12 h-12 rounded-lg flex items-center justify-center',
+            'transition-all duration-300',
+            isAnimating && 'scale-105',
+            colors.bg,
+            'text-white'
           )}>
-            {/* Animated glow effect */}
-            {isAnimating && (
-              <div className={cn(
-                'absolute inset-0 rounded-2xl animate-ping',
-                colors.bg
-              )} style={{ opacity: 0.3 }} />
-            )}
-            <span className="text-2xl font-bold text-white drop-shadow-sm">{painLevel}</span>
+            <span className="text-xl font-bold">{painLevel}</span>
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <CurrentIcon className={cn('h-4 w-4', colors.text)} />
               <p className={cn(
-                'text-base font-semibold',
+                'text-sm font-semibold',
                 colors.text
               )}>
                 {config.label}
               </p>
             </div>
-            <p className="text-xs text-muted-foreground mt-0.5">Escala de 0 a 10</p>
           </div>
         </div>
 
@@ -193,13 +173,13 @@ export const PainLevelBlock: React.FC<PainLevelBlockProps> = ({
                 onClick={() => handlePresetClick(preset.value)}
                 disabled={disabled}
                 className={cn(
-                  'relative group flex flex-col items-center gap-1.5 py-2.5 px-2 rounded-xl border transition-all duration-200',
-                  'hover:scale-105 active:scale-95',
+                  'relative group flex flex-col items-center gap-1.5 py-2 px-2 rounded-lg transition-all duration-200',
+                  'hover:bg-slate-50 active:scale-95',
                   isActive
-                    ? `${colors.border} bg-gradient-to-br ${colors.gradient} shadow-md`
+                    ? 'bg-white ring-1 ring-slate-200 shadow-sm'
                     : isNearActive
-                      ? 'border-border bg-muted/50 hover:bg-muted'
-                      : 'border-border/50 bg-muted/30 hover:bg-muted/50',
+                      ? 'bg-slate-50/50'
+                      : 'bg-transparent',
                   disabled && 'opacity-50 cursor-not-allowed hover:scale-100'
                 )}
               >
@@ -208,8 +188,8 @@ export const PainLevelBlock: React.FC<PainLevelBlockProps> = ({
                   isActive ? 'text-white' : `text-${preset.color}-500`
                 )} />
                 <span className={cn(
-                  'text-[10px] font-semibold',
-                  isActive ? 'text-white' : 'text-muted-foreground'
+                  'text-[10px] font-medium',
+                  isActive ? colors.text : 'text-slate-500'
                 )}>
                   {preset.value}
                 </span>
@@ -235,10 +215,9 @@ export const PainLevelBlock: React.FC<PainLevelBlockProps> = ({
               disabled={disabled}
               placeholder="Ex: Ombro direito, região anterior"
               className={cn(
-                'w-full px-3.5 py-2.5 text-sm rounded-xl border border-input',
-                'bg-background focus:outline-none focus:ring-2 focus:ring-ring/50 focus:border-ring',
-                'placeholder:text-muted-foreground/50 transition-all duration-200',
-                'hover:border-border/80',
+                'w-full px-3 py-2 text-sm rounded-md border-transparent hover:bg-slate-50',
+                'bg-transparent focus:outline-none focus:ring-1 focus:ring-slate-200 focus:bg-white focus:shadow-sm',
+                'placeholder:text-slate-400 transition-all duration-200',
                 disabled && 'cursor-not-allowed opacity-50'
               )}
             />

@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FisioFlow Dashboard - Patient Evolution</title>
+<!-- Tailwind CSS with plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Inter -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<!-- Custom Config for specific colors -->
+<script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        sidebar: '#F7F7F5',
+                        'sidebar-text': '#444444',
+                        'sidebar-header': '#888888',
+                        'notion-gray': '#D3D3D3',
+                        'pain-green': '#4CAF50',
+                        'pain-yellow': '#FFEB3B',
+                        'pain-orange': '#FF9800',
+                        'pain-red': '#F44336',
+                        'btn-green': '#4CAF50',
+                    }
+                }
+            }
+        }
+    </script>
+<!-- Global Layout Styles -->
+<style data-purpose="layout">
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Custom Scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #e5e7eb; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d1d5db; 
+        }
+
+        .h-marker {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .group:hover .h-marker {
+            opacity: 1;
+        }
+    </style>
+<!-- Specific Component Styles -->
+<style data-purpose="components">
+        /* Notion-like Block Styling */
+        .notion-block {
+            display: flex;
+            align-items: baseline;
+            position: relative;
+            margin-bottom: 0.5rem;
+        }
+        .notion-marker {
+            position: absolute;
+            left: -3rem;
+            width: 2.5rem;
+            text-align: right;
+            color: #D3D3D3;
+            font-family: monospace;
+            font-size: 0.875rem;
+            font-weight: 500;
+            user-select: none;
+        }
+
+        /* Range Slider Styling */
+        .pain-bar-segment {
+            height: 12px;
+            flex-grow: 1;
+            border-radius: 4px;
+        }
+        .slider-thumb {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border: 2px solid #9CA3AF;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-white flex h-screen overflow-hidden text-gray-800">
+<!-- BEGIN: Sidebar -->
+<aside class="w-[240px] bg-sidebar flex-shrink-0 border-r border-gray-200 overflow-y-auto flex flex-col h-full" data-purpose="sidebar">
+<!-- Sidebar Header / Logo Area -->
+<div class="p-4 mb-2 flex items-center gap-2">
+<div class="w-6 h-6 bg-gray-800 rounded-md flex items-center justify-center text-white font-bold text-xs">F</div>
+<span class="font-semibold text-gray-700 tracking-tight">FisioFlow</span>
+</div>
+<!-- Top Activity Link -->
+<div class="px-3 mb-4">
+<a class="flex items-center gap-2 px-2 py-1.5 text-sm text-sidebar-text hover:bg-gray-200/50 rounded-md transition-colors" href="#">
+<i class="w-4 h-4 text-gray-500" data-lucide="activity"></i>
+<span>Activity</span>
+</a>
+</div>
+<!-- Navigation Groups -->
+<nav class="flex-1 px-3 space-y-6 pb-10">
+<!-- Group: NÚCLEO -->
+<div class="space-y-1">
+<h3 class="px-2 text-[11px] font-semibold text-sidebar-header uppercase tracking-wider mb-2">Núcleo</h3>
+<a class="flex items-center gap-2 px-2 py-1.5 text-sm text-sidebar-text hover:bg-gray-200/50 rounded-md" href="#">
+<i class="w-4 h-4 text-gray-500" data-lucide="calendar"></i>
+<span>Agenda</span>
+</a>
+<a class="flex items-center gap-2 px-2 py-1.5 text-sm text-sidebar-text hover:bg-gray-200/50 rounded-md" href="#">
+<i class="w-4 h-4 text-gray-500" data-lucide="layout-dashboard"></i>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-2 px-2 py-1.5 text-sm font-medium bg-gray-200/60 text-gray-900 rounded-md" href="#">
+<i class="w-4 h-4 text-gray-800" data-lucide="users"></i>
+<span>Pacientes</span>
+</a>
+</div>
+<!-- Group: CLÍNICA -->
+<div class="space-y-1">
+<h3 class="px-2 text-[11px] font-semibold text-sidebar-header uppercase tracking-wider mb-2">Clínica</h3>
+<a class="flex items-center gap-2 px-2 py-1.5 text-sm text-sidebar-text hover:bg-gray-200/50 rounded-md" href="#">
+<i class="w-4 h-4 text-gray-500" data-lucide="dumbbell"></i>
+<span>Exercicios</span>
+</a>
+<a class="flex items-center gap-2 px-2 py-1.5 text-sm text-sidebar-text hover:bg-gray-200/50 rounded-md" href="#">
+<i class="w-4 h-4 text-gray-500" data-lucide="file-text"></i>
+<span>Protocolos</span>
+</a>
+<a class="flex items-center gap-2 px-2 py-1.5 text-sm text-sidebar-text hover:bg-gray-200/50 rounded-md" href="#">
+<i class="w-4 h-4 text-gray-500" data-lucide="message-square"></i>
+<span>Comunicação</span>
+</a>
+</div>
+<!-- Group: GESTÃO -->
+<div class="space-y-1">
+<h3 class="px-2 text-[11px] font-semibold text-sidebar-header uppercase tracking-wider mb-2">Gestão</h3>
+<a class="flex items-center gap-2 px-2 py-1.5 text-sm text-sidebar-text hover:bg-gray-200/50 rounded-md" href="#">
+<i class="w-4 h-4 text-gray-500" data-lucide="list"></i>
+<span>Lista de Espera</span>
+</a>
+<a class="flex items-center gap-2 px-2 py-1.5 text-sm text-sidebar-text hover:bg-gray-200/50 rounded-md" href="#">
+<i class="w-4 h-4 text-gray-500" data-lucide="check-square"></i>
+<span>Tarefas</span>
+</a>
+<a class="flex items-center gap-2 px-2 py-1.5 text-sm text-sidebar-text hover:bg-gray-200/50 rounded-md" href="#">
+<i class="w-4 h-4 text-gray-500" data-lucide="check-circle-2"></i>
+<span>Tarefas V2</span>
+</a>
+</div>
+<!-- Group: MÓDULOS -->
+<div class="space-y-1">
+<h3 class="px-2 text-[11px] font-semibold text-sidebar-header uppercase tracking-wider mb-2">Módulos</h3>
+<a class="flex items-center gap-2 px-2 py-1.5 text-sm text-sidebar-text hover:bg-gray-200/50 rounded-md" href="#">
+<i class="w-4 h-4 text-gray-500" data-lucide="clipboard-list"></i>
+<span>Avaliações</span>
+</a>
+<a class="flex items-center gap-2 px-2 py-1.5 text-sm text-sidebar-text hover:bg-gray-200/50 rounded-md" href="#">
+<i class="w-4 h-4 text-gray-500" data-lucide="folder-plus"></i>
+<span>Cadastros</span>
+</a>
+<a class="flex items-center gap-2 px-2 py-1.5 text-sm text-sidebar-text hover:bg-gray-200/50 rounded-md" href="#">
+<i class="w-4 h-4 text-gray-500" data-lucide="contact-2"></i>
+<span>CRM</span>
+</a>
+<a class="flex items-center gap-2 px-2 py-1.5 text-sm text-sidebar-text hover:bg-gray-200/50 rounded-md" href="#">
+<i class="w-4 h-4 text-gray-500" data-lucide="megaphone"></i>
+<span>Marketing</span>
+</a>
+<a class="flex items-center gap-2 px-2 py-1.5 text-sm text-sidebar-text hover:bg-gray-200/50 rounded-md" href="#">
+<i class="w-4 h-4 text-gray-500" data-lucide="settings"></i>
+<span>Operacionais</span>
+</a>
+<a class="flex items-center gap-2 px-2 py-1.5 text-sm font-medium bg-gray-200 text-gray-900 rounded-md" href="#">
+<i class="w-4 h-4 text-gray-500" data-lucide="trending-up"></i>
+<span>Patient Evolution</span>
+</a>
+</div>
+<!-- Group: FINANCEIRO -->
+<div class="space-y-1">
+<h3 class="px-2 text-[11px] font-semibold text-sidebar-header uppercase tracking-wider mb-2">Financeiro</h3>
+<a class="flex items-center gap-2 px-2 py-1.5 text-sm text-sidebar-text hover:bg-gray-200/50 rounded-md" href="#">
+<i class="w-4 h-4 text-gray-500" data-lucide="dollar-sign"></i>
+<span>Financeiro</span>
+</a>
+<a class="flex items-center gap-2 px-2 py-1.5 text-sm text-sidebar-text hover:bg-gray-200/50 rounded-md" href="#">
+<i class="w-4 h-4 text-gray-500" data-lucide="pie-chart"></i>
+<span>Relatórios</span>
+</a>
+</div>
+<!-- Group: SISTEMA -->
+<div class="space-y-1">
+<h3 class="px-2 text-[11px] font-semibold text-sidebar-header uppercase tracking-wider mb-2">Sistema</h3>
+<a class="flex items-center gap-2 px-2 py-1.5 text-sm text-sidebar-text hover:bg-gray-200/50 rounded-md" href="#">
+<i class="w-4 h-4 text-gray-500" data-lucide="cpu"></i>
+<span>Dashboard IA</span>
+</a>
+<a class="flex items-center gap-2 px-2 py-1.5 text-sm text-sidebar-text hover:bg-gray-200/50 rounded-md" href="#">
+<i class="w-4 h-4 text-gray-500" data-lucide="sparkles"></i>
+<span>Google AI Suite</span>
+</a>
+<a class="flex items-center gap-2 px-2 py-1.5 text-sm text-sidebar-text hover:bg-gray-200/50 rounded-md" href="#">
+<i class="w-4 h-4 text-gray-500" data-lucide="activity-square"></i>
+<span>Core Web Vitals</span>
+</a>
+</div>
+</nav>
+</aside>
+<!-- END: Sidebar -->
+<!-- BEGIN: Main Content Area -->
+<main class="flex-1 flex flex-col h-full overflow-hidden relative" data-purpose="main-wrapper">
+<!-- Content Scroll Container -->
+<div class="flex-1 overflow-y-auto px-16 py-10 pb-24">
+<!-- Breadcrumb -->
+<nav class="text-xs text-gray-400 mb-8 font-medium">
+                FisioFlow  &gt;  Patients  &gt;  Patient Evolution  &gt;  <span class="text-gray-500">22/02/2026 - Session #1</span>
+</nav>
+<!-- Page Title -->
+<div class="flex items-start group">
+<div class="group-hover:opacity-100" style="color: #6B7280; font-size: 18px; font-weight: 500; margin-right: 12px; margin-top: 10px; user-select: none; opacity: 0; transition: opacity 0.2s;">H1</div>
+<h1 class="text-[32px] font-bold text-gray-900 leading-tight">Patient Evolution</h1>
+</div>
+<!-- SECTION: Pain Level -->
+<section class="mb-12">
+<div class="flex items-start mb-6 group">
+<div class="group-hover:opacity-100" style="color: #6B7280; font-size: 14px; font-weight: 500; margin-right: 12px; margin-top: 6px; user-select: none; opacity: 0; transition: opacity 0.2s;">H2</div>
+<h2 class="text-2xl font-semibold text-gray-800">Pain Level (EVA)</h2>
+</div>
+<!-- Custom Slider Component -->
+<div class="pl-1 max-w-2xl select-none" data-purpose="eva-slider">
+<!-- The Bar -->
+<div class="relative w-full mb-2">
+<div style="display: flex; gap: 4px; height: 8px; align-items: center;">
+<!-- Green Segment (0-3) -->
+<div style="flex: 3; border-radius: 4px; background-color: #4ADE80;"></div>
+<!-- Yellow Segment (3-6) -->
+<div style="flex: 3; border-radius: 4px; background-color: #FACC15;"></div>
+<!-- Red Segment (6-10) -->
+<div style="flex: 4; border-radius: 4px; background-color: #EF4444;"></div>
+</div>
+<!-- Thumb positioned at 60% (Value 6) -->
+<div class="slider-thumb" style="left: 60%; top: 50%; width: 20px; height: 20px; background: white; border: 2px solid #D1D5DB; border-radius: 50%; position: absolute; transform: translate(-50%, -50%); box-shadow: 0 1px 2px rgba(0,0,0,0.1); cursor: pointer;"></div>
+</div>
+<!-- Labels -->
+<div class="flex justify-between text-xs text-gray-400 font-medium px-0.5 mt-2">
+<div class="w-[30%] text-left">0 - No Pain</div>
+<div class="w-[30%] text-center ml-[-10%]">3</div>
+<div class="w-[40%] text-center ml-[-5%]">6</div>
+<div class="w-[auto] text-right">10 - Maximum</div>
+</div>
+<!-- Value Display -->
+<div class="mt-4 p-4 bg-gray-50 border border-gray-100 rounded-lg">
+<div class="text-sm text-gray-900 mb-1">
+<span class="font-semibold">Moderate Pain:</span> 6 <span class="text-gray-500 font-normal">(Scale of 0 to 10)</span>
+</div>
+<div class="text-sm text-gray-600">
+<span class="font-medium text-gray-700">Location of pain (optional):</span> Shoulder, right side, anterior region
+        </div>
+</div>
+</div>
+</section>
+<!-- SECTION: Patient Report -->
+<section class="mb-10">
+<div class="flex items-start mb-3 group">
+<div class="group-hover:opacity-100" style="color: #6B7280; font-size: 14px; font-weight: 500; margin-right: 12px; margin-top: 6px; user-select: none; opacity: 0; transition: opacity 0.2s;">H2</div>
+<h2 class="text-2xl font-semibold text-gray-800">Patient Report</h2>
+</div>
+<div class="text-gray-700 text-base leading-relaxed max-w-3xl">
+<p>The patient reported feeling better after the last session, with reduced pain in the shoulder. Mentioned slight discomfort during overhead lifting but significant improvement in daily activities.</p>
+</div>
+</section>
+<!-- SECTION: Evolution Text -->
+<section class="mb-10">
+<div class="flex items-start mb-3 group">
+<div class="group-hover:opacity-100" style="color: #6B7280; font-size: 14px; font-weight: 500; margin-right: 12px; margin-top: 6px; user-select: none; opacity: 0; transition: opacity 0.2s;">H2</div>
+<h2 class="text-2xl font-semibold text-gray-800">Evolution</h2>
+</div>
+<div class="text-gray-700 text-base leading-relaxed max-w-3xl whitespace-pre-line">Objective data: Improved range of motion in flexion (160°).
+                Assessment: Progressing as expected. Muscle tone normalized.
+                Plan: Continue current protocol. Increase resistance on external rotation exercises next session.</div>
+</section>
+</div>
+<!-- END: Content Scroll Container -->
+<!-- BEGIN: Floating/Fixed Footer Action Bar -->
+<footer class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+<!-- Left Side Placeholder (empty now as requested to move right) -->
+<div></div>
+<!-- Right Side Actions & Status -->
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2 text-xs text-gray-400 font-mono">
+<span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+<span>18:41 Core Web Vitals</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">
+<i class="w-4 h-4" data-lucide="file-text"></i>
+                PDF
+            </button>
+<button class="flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">
+<i class="w-4 h-4" data-lucide="save"></i>
+                Save
+            </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-[#4CAF50] border border-transparent rounded-md text-sm font-medium text-white hover:bg-green-600 transition-colors shadow-sm">
+<i class="w-4 h-4" data-lucide="check"></i>
+                Conclude
+            </button>
+</div>
+</div>
+</footer>
+<!-- END: Footer Action Bar -->
+</main>
+<!-- END: Main Content Area -->
+<!-- Initialize Lucide Icons -->
+<script data-purpose="icons-init">
+        lucide.createIcons();
+    </script>
+</body></html>

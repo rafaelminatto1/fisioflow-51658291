@@ -15,8 +15,8 @@ test.describe('FisioFlow 2026 - New Features Validation', () => {
     
     // Login rápido para chegar ao dashboard
     await page.goto('/auth');
-    await page.fill('input[type="email"]', 'admin@example.com');
-    await page.fill('input[type="password"]', 'password123');
+    await page.fill('input[name="email"]', 'admin@example.com');
+    await page.fill('input[name="password"]', 'password123');
     await page.click('button[type="submit"]');
 
     // Aguardar o tour (tem um delay de 2s no código)

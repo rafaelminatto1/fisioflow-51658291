@@ -280,19 +280,8 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 
       {/* Blocks */}
       <CardContent className="flex-1 overflow-y-auto p-5 space-y-5">
-        {/* Block 1: Header (auto-filled) */}
-        <div className="animate-in fade-in-0 slide-in-from-top-2 duration-300">
-          <EvolutionHeaderBlock
-            therapistName={data.therapistName}
-            therapistCrefito={data.therapistCrefito}
-            sessionDate={data.sessionDate}
-            sessionNumber={data.sessionNumber}
-            totalSessions={data.totalSessions}
-          />
-        </div>
-
-        {/* Block 2 & 3: Pain Level (EVA) + Patient Report - Side by Side */}
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.5fr)] gap-4 animate-in fade-in-0 slide-in-from-top-3 duration-300 delay-100">
+        {/* Block 1: EVA + Session Header - Side by Side */}
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,2.5fr)] gap-4 items-stretch animate-in fade-in-0 slide-in-from-top-3 duration-300 delay-100">
           {/* Pain Level (EVA) */}
           <PainLevelBlock
             painLevel={data.painLevel}
@@ -302,23 +291,20 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
             disabled={disabled}
           />
 
-          {/* Patient Report */}
-          <TextBlock
-            icon={<MessageCircle className="h-4 w-4 text-sky-600" />}
-            iconBg="bg-sky-500/10 border border-sky-500/20"
-            title="Relato do Paciente"
-            placeholder="O que o paciente relatou? Como se sente desde a última sessão? Mudanças na dor, medicação, sono..."
-            hint="Relato verbal do paciente sobre sua condição atual"
-            value={data.patientReport}
-            onValueChange={(val) => handleFieldChange('patientReport', val)}
-            disabled={disabled}
-            rows={4}
-            className="h-full"
-            accentColor="sky"
-          />
+          {/* Session Header Info */}
+          <div className="animate-in fade-in-0 slide-in-from-top-2 duration-300 h-full">
+            <EvolutionHeaderBlock
+              therapistName={data.therapistName}
+              therapistCrefito={data.therapistCrefito}
+              sessionDate={data.sessionDate}
+              sessionNumber={data.sessionNumber}
+              totalSessions={data.totalSessions}
+              className="h-full"
+            />
+          </div>
         </div>
 
-        {/* Block 4: Main Evolution Text */}
+        {/* Block 2: Main Evolution Text */}
         <div className="animate-in fade-in-0 slide-in-from-top-4 duration-300 delay-150">
           <TextBlock
             icon={<FileText className="h-4 w-4 text-violet-600" />}
@@ -334,28 +320,38 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
           />
         </div>
 
+        {/* Block 3: Patient Report - below Evolution Text */}
+        <div className="animate-in fade-in-0 slide-in-from-top-4 duration-300 delay-200">
+          <TextBlock
+            icon={<MessageCircle className="h-4 w-4 text-sky-600" />}
+            iconBg="bg-sky-500/10 border border-sky-500/20"
+            title="Relato do Paciente"
+            placeholder="O que o paciente relatou? Como se sente desde a última sessão? Mudanças na dor, medicação, sono..."
+            hint="Relato verbal do paciente sobre sua condição atual"
+            value={data.patientReport}
+            onValueChange={(val) => handleFieldChange('patientReport', val)}
+            disabled={disabled}
+            rows={4}
+            accentColor="sky"
+          />
+        </div>
+
         <Separator className="my-3" />
 
-        {/* Block 5: Procedures Checklist */}
-        <div className="animate-in fade-in-0 slide-in-from-top-5 duration-300 delay-200">
+        {/* Block 5, 6 & 6.5: Procedures | Exercises | Measurements - 3 columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 animate-in fade-in-0 slide-in-from-top-5 duration-300 delay-200">
           <ProcedureChecklistBlock
             procedures={data.procedures}
             onChange={(procs) => handleFieldChange('procedures', procs)}
             disabled={disabled}
           />
-        </div>
 
-        {/* Block 6: Exercises */}
-        <div className="animate-in fade-in-0 slide-in-from-top-6 duration-300 delay-250">
           <ExerciseBlockV2
             exercises={data.exercises}
             onChange={(exs) => handleFieldChange('exercises', exs)}
             disabled={disabled}
           />
-        </div>
 
-        {/* Block 6.5: Measurements */}
-        <div className="animate-in fade-in-0 slide-in-from-top-7 duration-300 delay-300">
           <MeasurementsBlock
             measurements={data.measurements || []}
             onChange={(meas) => handleFieldChange('measurements', meas)}

@@ -358,8 +358,41 @@ export const CalendarWeekViewDndKit = memo(({
     if (dayIndex === -1) return null;
 
     const time = normalizeTime(apt.time);
-    const startRowIndex = timeSlots.findIndex(t => t === time);
-    if (startRowIndex === -1) return null;
+    const [hours, minutes] = time.split(':').map(Number);
+    const aptMinutesTotal = hours * 60 + minutes;
+
+    let startRowIndex = -1;
+    let offsetMinutes = 0;
+
+    for (let i = 0; i < timeSlots.length; i++) {
+      const [slotHour, slotMin] = timeSlots[i].split(':').map(Number);
+      const slotMinutesTotal = slotHour * 60 + slotMin;
+
+      const nextSlot = timeSlots[i + 1];
+      let slotDuration = 30;
+      if (nextSlot) {
+        const [nextHour, nextMin] = nextSlot.split(':').map(Number);
+        slotDuration = (nextHour * 60 + nextMin) - slotMinutesTotal;
+      }
+
+      if (aptMinutesTotal >= slotMinutesTotal && aptMinutesTotal < slotMinutesTotal + slotDuration) {
+        startRowIndex = i;
+        offsetMinutes = aptMinutesTotal - slotMinutesTotal;
+        break;
+      }
+    }
+
+    if (startRowIndex === -1 && timeSlots.length > 0) {
+      const lastSlot = timeSlots[timeSlots.length - 1];
+      const [lastHour, lastMin] = lastSlot.split(':').map(Number);
+      const lastMinutesTotal = lastHour * 60 + lastMin;
+      if (aptMinutesTotal >= lastMinutesTotal) {
+        startRowIndex = timeSlots.length - 1;
+        offsetMinutes = aptMinutesTotal - lastMinutesTotal;
+      } else {
+        return null;
+      }
+    }
 
     const duration = Math.max(SLOT_DURATION_MINUTES, apt.duration || 60);
     const slotCount = Math.max(1, Math.ceil(duration / SLOT_DURATION_MINUTES));
@@ -372,6 +405,7 @@ export const CalendarWeekViewDndKit = memo(({
     // Usar percentuais puros para que os cards fiquem colados
     const cardWidthPercent = 100 / count;
     const leftPercent = index * cardWidthPercent;
+    const offsetPx = (offsetMinutes / 30) * slotHeight;
 
     return {
       gridColumn: `${dayIndex + 2} / span 1`,
@@ -379,7 +413,7 @@ export const CalendarWeekViewDndKit = memo(({
       height: `${heightInPixels}px`,
       width: `${cardWidthPercent}%`,
       left: `${leftPercent}%`,
-      top: '0px',
+      marginTop: `${offsetPx}px`,
       zIndex: 10 + index
     };
   }, [weekDays, timeSlots, appointmentsByDayIndex, slotHeight]);
@@ -600,7 +634,7 @@ export const CalendarWeekViewDndKit = memo(({
 
                     const key = `${dayIndex}-${aptTime}`;
                     const cachedBlock = blockedStatusCache.get(key);
-                    const { _blocked } = cachedBlock || checkTimeBlocked(day, aptTime);
+                    const { blocked } = cachedBlock || checkTimeBlocked(day, aptTime);
 
                     const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === aptTime;
                     const dayAppointmentsForGhost = appointmentsByDayIndex.get(dayIndex) ?? [];

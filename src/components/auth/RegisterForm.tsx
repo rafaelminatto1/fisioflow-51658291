@@ -57,19 +57,19 @@ export function RegisterForm({
                     <Input
                         id="register-name"
                         type="text"
-                        placeholder="Seu nome"
+                        placeholder="Ex: Dr. João Silva"
                         value={fullName}
                         onChange={onFullNameChange}
                         required
-                        className="h-11"
+                        className="h-12 bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 rounded-xl focus:ring-primary/20 transition-all duration-200"
                         tabIndex={activeTab === 'register' ? 1 : -1}
                         autoComplete="name"
                     />
-                    {validationErrors.fullName && <span className="text-xs text-destructive font-medium">{validationErrors.fullName}</span>}
+                    {validationErrors.fullName && <span className="text-[11px] text-destructive font-semibold ml-1">{validationErrors.fullName}</span>}
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="register-email" className="text-sm font-medium">Email</Label>
+                    <Label htmlFor="register-email" className="text-sm font-medium">Email Profissional</Label>
                     <Input
                         id="register-email"
                         type="email"
@@ -78,11 +78,11 @@ export function RegisterForm({
                         onChange={onEmailChange}
                         required
                         disabled={!!invitationData}
-                        className="h-11"
+                        className="h-12 bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 rounded-xl focus:ring-primary/20 transition-all duration-200"
                         tabIndex={activeTab === 'register' ? 2 : -1}
                         autoComplete="email"
                     />
-                    {validationErrors.email && <span className="text-xs text-destructive font-medium">{validationErrors.email}</span>}
+                    {validationErrors.email && <span className="text-[11px] text-destructive font-semibold ml-1">{validationErrors.email}</span>}
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -95,7 +95,7 @@ export function RegisterForm({
                             value={password}
                             onChange={onPasswordChange}
                             required
-                            className="h-11"
+                            className="h-12 bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 rounded-xl focus:ring-primary/20 transition-all duration-200"
                             tabIndex={activeTab === 'register' ? 3 : -1}
                             autoComplete="new-password"
                         />
@@ -109,7 +109,7 @@ export function RegisterForm({
                             value={confirmPassword}
                             onChange={onConfirmPasswordChange}
                             required
-                            className="h-11"
+                            className="h-12 bg-white/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 rounded-xl focus:ring-primary/20 transition-all duration-200"
                             tabIndex={activeTab === 'register' ? 4 : -1}
                             autoComplete="new-password"
                         />
@@ -118,10 +118,10 @@ export function RegisterForm({
 
                 {/* Password Requirements */}
                 {password && (
-                    <div className="p-3 bg-muted/50 rounded-lg space-y-1.5">
+                    <div className="p-3 bg-slate-100/50 dark:bg-slate-900/50 rounded-xl border border-slate-200/50 dark:border-slate-800/50 space-y-1.5">
                         {passwordRequirements.map((req, idx) => (
-                            <div key={idx} className={`flex items-center gap-2 text-xs ${req.met ? 'text-green-600 dark:text-green-400 font-medium' : 'text-muted-foreground'}`}>
-                                {req.met ? <CheckCircle className="h-3.5 w-3.5" /> : <div className="h-3.5 w-3.5 rounded-full border border-current opacity-50" />}
+                            <div key={idx} className={`flex items-center gap-2 text-[11px] ${req.met ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-muted-foreground font-medium'}`}>
+                                {req.met ? <CheckCircle className="h-3.5 w-3.5" /> : <div className="h-3.5 w-3.5 rounded-full border border-current opacity-30" />}
                                 {req.label}
                             </div>
                         ))}
@@ -130,19 +130,19 @@ export function RegisterForm({
             </div>
 
             {error && (
-                <Alert variant="destructive">
-                    <AlertDescription className="text-sm">{error}</AlertDescription>
+                <Alert variant="destructive" className="border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-900/30">
+                    <AlertDescription className="text-sm font-medium">{error}</AlertDescription>
                 </Alert>
             )}
 
             <Button
                 type="submit"
-                className="w-full h-11 text-sm font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-150 active:scale-[0.98]"
+                className="w-full h-12 text-sm font-bold bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700 shadow-lg shadow-primary/25 transition-all duration-200 active:scale-[0.98] rounded-xl mt-2"
                 disabled={loading || !fullName.trim() || !email.trim() || !password || !confirmPassword}
                 tabIndex={activeTab === 'register' ? 5 : -1}
             >
                 {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                Criar Conta Gratuita
+                Começar Agora Gratuitamente
             </Button>
         </form>
     );

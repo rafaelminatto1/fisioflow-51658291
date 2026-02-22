@@ -5,8 +5,8 @@ test.describe('Verificação de Bug na Agenda', () => {
     test.beforeEach(async ({ page }) => {
         // 1. Login com credenciais de teste
         await page.goto('/auth');
-        await page.fill('input[type="email"]', testUsers.fisio.email);
-        await page.fill('input[type="password"]', testUsers.fisio.password);
+        await page.fill('input[name="email"]', testUsers.fisio.email);
+        await page.fill('input[name="password"]', testUsers.fisio.password);
         await page.click('button[type="submit"]');
         await page.waitForURL(/\/($|eventos|dashboard|schedule)/);
 
