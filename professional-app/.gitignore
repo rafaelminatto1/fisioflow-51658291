@@ -31,6 +31,9 @@ yarn-error.*
 .env.local
 .env.*.local
 
+# Sentry configuration (may contain auth tokens)
+.sentryclirc
+
 # TypeScript
 *.tsbuildinfo
 

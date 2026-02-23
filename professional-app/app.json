@@ -24,7 +24,12 @@
         "NSFaceIDUsageDescription": "O FisioFlow usa Face ID para proteger o acesso aos dados sensíveis de saúde dos seus pacientes com autenticação biométrica segura."
       },
       "config": {
-        "usesNonExemptEncryption": false
+        "usesNonExemptEncryption": false,
+        "associatedDomains": [
+          "applinks:fisioflow.com.br",
+          "applinks:www.fisioflow.com.br",
+          "applinks:app.fisioflow.com.br"
+        ]
       },
       "runtimeVersion": {
         "policy": "appVersion"
@@ -37,7 +42,16 @@
       },
       "package": "com.fisioflow.professional",
       "googleServicesFile": "./google-services.json",
-      "runtimeVersion": "1.0.0"
+      "runtimeVersion": "1.0.0",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": {
+            "scheme": "fisioflowpro"
+          },
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -49,7 +63,15 @@
       "expo-secure-store",
       "expo-notifications",
       "expo-font",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "sentry-expo",
+        {
+          "organization": "activity-fisioterapia-rg",
+          "project": "fisioflow-professional-app-tm"
+        }
+      ],
+      "@sentry/react-native"
     ],
     "experiments": {
       "typedRoutes": true

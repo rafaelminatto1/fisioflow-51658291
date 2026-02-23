@@ -1,0 +1,21 @@
+[defaults]
+# Organization slug from Sentry dashboard
+org=activity-fisioterapia-rg
+
+# Project name from Sentry dashboard
+project=fisioflow-professional-app-tm
+
+# DSN (optional, can be configured via environment variable)
+# DSN configurado: https://3753422576dd45c58ad5d1917ea8cd26@o4510069182955520.ingest.us.sentry.io/4510933740158976
+#dsn=https://3753422576dd45c58ad5d1917ea8cd26@o4510069182955520.ingest.us.sentry.io/4510933740158976
+
+# Auth token for source maps upload (get from https://sentry.io/settings/account/api/auth-tokens/)
+# Required scopes: project:read, project:releases, org:read
+#auth_token=your_sentry_auth_token_here
+
+# URL for Sentry instance (default is https://sentry.io)
+url=https://sentry.io
+
+[auth]
+# Alternatively, you can set the auth token here
+# token=your_sentry_auth_token_here
