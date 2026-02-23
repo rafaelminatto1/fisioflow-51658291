@@ -22,6 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { getFirebaseAuth, db, doc, getDoc, getDocs, collection, query, where, limit, updateDoc, addDoc } from '@/integrations/firebase/app';
+import { onAuthStateChanged } from 'firebase/auth';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { SOAPFormPanel } from './SOAPFormPanel';
@@ -278,7 +279,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
     } finally {
       setIsLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appointmentId, propPatientId, testsCompleted, toast, db]);
 
   useEffect(() => {
@@ -289,7 +290,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
     let retryCount = 0;
     const maxRetries = 3;
 
-    const unsub = auth.onAuthStateChanged(async (user) => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const attemptLoad = async () => {
           try {
@@ -577,6 +578,56 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
     }
   };
 
+  const handleAutoSaveDraft = async (draftData: {
+    patientReport?: string;
+    evolutionText?: string;
+    homeCareExercises?: string;
+  }) => {
+    if (!patientId) return;
+    if (!currentOrganization?.id) return;
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const now = new Date().toISOString();
+    const recordDate = new Date().toISOString().split('T')[0];
+
+    const soapRecordData = {
+      patient_id: patientId,
+      appointment_id: appointmentId || null,
+      subjective: (draftData.patientReport || '').trim(),
+      objective: (soapData.objective || '').trim(),
+      assessment: (draftData.evolutionText || '').trim(),
+      plan: (draftData.homeCareExercises || '').trim(),
+      created_by: user.uid,
+      record_date: recordDate,
+      status: 'draft' as const,
+      updated_at: now,
+    };
+
+    let soapRecordId: string | null = null;
+    if (appointmentId) {
+      const draftQuery = query(
+        collection(db, 'soap_records'),
+        where('appointment_id', '==', appointmentId),
+        where('status', '==', 'draft'),
+        limit(1)
+      );
+      const draftSnap = await getDocs(draftQuery);
+      if (!draftSnap.empty) {
+        const existingRef = draftSnap.docs[0].ref;
+        soapRecordId = existingRef.id;
+        await updateDoc(existingRef, { ...soapRecordData, updated_at: now });
+      }
+    }
+
+    if (!soapRecordId) {
+      await addDoc(collection(db, 'soap_records'), {
+        ...soapRecordData,
+        created_at: now,
+      });
+    }
+  };
+
   const handleClose = () => {
     if (onClose) {
       onClose();
@@ -744,6 +795,14 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
               therapistName: auth.currentUser?.displayName || 'Fisioterapeuta',
               therapistCrefito: selectedTherapistCrefito || '',
             }}
+            patientId={patientId}
+            onAutoSave={(draft) =>
+              handleAutoSaveDraft({
+                patientReport: draft.patientReport,
+                evolutionText: draft.evolutionText,
+                homeCareExercises: draft.homeCareExercises,
+              })
+            }
             onChange={(newData) => {
               setSoapData({
                 subjective: newData.patientReport,

@@ -192,7 +192,37 @@ export const getSuggestionItems = ({ query }: { query: string }): CommandItem[] 
                     .chain()
                     .focus()
                     .deleteRange(range)
-                    .insertContent('<div class="notion-callout"><span class="notion-callout-icon">💡</span><div class="notion-callout-content"><p></p></div></div>')
+                    .insertContent('<div class="notion-callout notion-callout--info"><span class="notion-callout-icon">💡</span><div class="notion-callout-content"><p><strong>Dica:</strong> </p></div></div>')
+                    .run();
+            },
+        },
+        {
+            title: 'Callout (Sucesso)',
+            description: 'Inserir um bloco de sucesso.',
+            icon: <CheckSquare className="w-4 h-4" />,
+            category: 'media',
+            iconColor: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+            command: ({ editor, range }) => {
+                editor
+                    .chain()
+                    .focus()
+                    .deleteRange(range)
+                    .insertContent('<div class="notion-callout notion-callout--success"><span class="notion-callout-icon">✅</span><div class="notion-callout-content"><p><strong>Sucesso:</strong> </p></div></div>')
+                    .run();
+            },
+        },
+        {
+            title: 'Callout (Alerta)',
+            description: 'Inserir um bloco de alerta.',
+            icon: <Info className="w-4 h-4" />,
+            category: 'media',
+            iconColor: 'bg-amber-50 text-amber-600 border-amber-200',
+            command: ({ editor, range }) => {
+                editor
+                    .chain()
+                    .focus()
+                    .deleteRange(range)
+                    .insertContent('<div class="notion-callout notion-callout--warning"><span class="notion-callout-icon">⚠️</span><div class="notion-callout-content"><p><strong>Atenção:</strong> </p></div></div>')
                     .run();
             },
         },

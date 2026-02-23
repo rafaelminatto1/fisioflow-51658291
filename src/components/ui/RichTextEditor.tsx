@@ -237,6 +237,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
                 isTyping && 'typing-active',
                 className
             )}
+            data-line-height="normal"
             style={
                 isTyping
                     ? {

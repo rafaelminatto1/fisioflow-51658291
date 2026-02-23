@@ -749,6 +749,53 @@ body.font-size-150 {
     flex: 1;
 }
 
+.command-preview {
+    padding: 12px;
+    border-radius: 12px;
+    background: #fafafa;
+    border: 1px dashed #e5e7eb;
+}
+
+.command-preview-image {
+    height: 120px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #eef2ff, #f5f3ff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6366f1;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid #e5e7eb;
+}
+
+.notion-callout--info {
+    background: #f1f8ff;
+    border-color: #d5e6ff;
+}
+
+.notion-callout--success {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.notion-callout--warning {
+    background: #fff7ed;
+    border-color: #fed7aa;
+}
+
+.rich-text-editor[data-line-height="compact"] .ProseMirror {
+    line-height: 1.35;
+}
+
+.rich-text-editor[data-line-height="normal"] .ProseMirror {
+    line-height: 1.6;
+}
+
+.rich-text-editor[data-line-height="comfortable"] .ProseMirror {
+    line-height: 1.8;
+}
+
 /* ============================
    Toolbar Enhancements
    ============================ */
@@ -767,9 +814,23 @@ body.font-size-150 {
     background: hsl(var(--muted) / 0.8);
 }
 
+.rich-text-toolbar-btn:focus-visible,
+.rich-text-toolbar-btn-long:focus-visible {
+    outline: 2px solid hsl(var(--primary) / 0.6);
+    outline-offset: 2px;
+}
+
 /* ============================
    Embeds / Videos
    ============================ */
+.rich-text-editor .ProseMirror img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 12px;
+    margin: 12px 0;
+}
+
 .rich-text-editor .ProseMirror iframe {
     width: 100%;
     aspect-ratio: 16 / 9;
@@ -858,4 +919,73 @@ body.font-size-150 {
 .exercise-quick-add input[type="number"]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
+}
+/* ============================
+   Notion Task List (Checkboxes)
+   ============================ */
+
+ul[data-type="taskList"] {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0;
+}
+
+ul[data-type="taskList"] li {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 4px;
+}
+
+ul[data-type="taskList"] li > label {
+    flex: 0 0 auto;
+    user-select: none;
+    margin-right: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding-top: 3px;
+}
+
+ul[data-type="taskList"] li > label input {
+    cursor: pointer;
+    appearance: none;
+    background-color: transparent;
+    margin: 0;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+ul[data-type="taskList"] li > label input:checked {
+    background-color: hsl(var(--primary));
+    border-color: hsl(var(--primary));
+}
+
+ul[data-type="taskList"] li > label input:checked::after {
+    content: "✓";
+    color: white;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+ul[data-type="taskList"] li > div {
+    flex: 1 1 auto;
+}
+
+ul[data-type="taskList"] li[data-checked="true"] > div p {
+    color: #888;
+    text-decoration: line-through;
+}
+
+.notion-task-list {
+    margin-left: 4px !important;
+}
+
+.notion-task-item {
+    margin-bottom: 0.25rem !important;
 }
