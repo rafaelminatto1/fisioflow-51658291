@@ -14,6 +14,7 @@ const config = getDefaultConfig(projectRoot);
 // ============================================
 // Colocar .native.* no topo da lista de extensões
 // Isso garante que .native.tsx seja resolvido antes de .tsx
+// Mantendo as extensões padrão do Expo
 config.resolver.sourceExts = [
   'native.ts',
   'native.tsx',
@@ -26,6 +27,9 @@ config.resolver.sourceExts = [
   'json',
   'mjs',
   'cjs',
+  // Extensões padrão do Expo
+  'svg',
+  'md',
 ];
 
 // ============================================
@@ -51,9 +55,6 @@ config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(monorepoRoot, 'node_modules'),
 ];
-
-// Não desabilitar hierarchical lookup pois é necessário para pnpm
-// config.resolver.disableHierarchicalLookup = true;
 
 // ============================================
 // 4. TRANSFORMER - GARANTIR TRANSPILAÇÃO DO packages/ui

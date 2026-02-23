@@ -9,6 +9,7 @@ import {
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { auditLogger } from '@/lib/services/auditLogger';
+import { setSentryUser, clearSentryUser } from '@/lib/sentry';
 
 export interface User {
   id: string;
@@ -112,9 +113,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         };
 
         console.log('[Auth] Login completo. Usuario:', user);
-        
+
         // Log audit event
         await auditLogger.logLogin(user.id);
+
+        // Set user in Sentry for error tracking
+        setSentryUser(user.id, user.email, {
+          name: user.name,
+          role: user.role,
+          clinicId: user.clinicId,
+          organizationId: user.organizationId,
+        });
 
         set({
           user,
@@ -173,6 +182,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         await auditLogger.logLogout(currentUser.id);
       }
       await firebaseSignOut(auth);
+      // Clear user from Sentry on logout
+      clearSentryUser();
       set({
         user: null,
         firebaseUser: null,
@@ -251,6 +262,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               specialty: userData.specialty || userData.especialidade,
               crefito: userData.crefito,
             };
+
+            // Set user in Sentry for error tracking
+            setSentryUser(user.id, user.email, {
+              name: user.name,
+              role: user.role,
+              clinicId: user.clinicId,
+              organizationId: user.organizationId,
+            });
 
             set({
               user,

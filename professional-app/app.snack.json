@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "FisioFlow Pro",
+    "slug": "fisioflow-pro",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "fisioflowpro",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#1E40AF"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fisioflow.professional"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1E40AF"
+      },
+      "package": "com.fisioflow.professional"
+    }
+  }
+}
