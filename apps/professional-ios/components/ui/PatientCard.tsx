@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text, StyleSheet, Pressable, ViewStyle } from 'react-native';
 import { differenceInDays } from 'date-fns';
 import { Card } from './Card';
@@ -15,13 +15,20 @@ export interface PatientCardProps {
   style?: ViewStyle;
 }
 
-export function PatientCard({
+/**
+ * PatientCard - Componente otimizado com memoização para listas
+ *
+ * Utiliza React.memo com custom comparison para evitar re-renders desnecessários.
+ * Quando usado com FlatList, renderItem já otimiza, mas memoização
+ * ajuda se o componente for complexo ou tiver computação pesada.
+ */
+export const PatientCard = memo(({
   patient,
   onPress,
   showProgress = true,
   showLastVisit = false,
   style,
-}: PatientCardProps) {
+}: PatientCardProps) => {
   const { colors } = useTheme();
 
   const getStatusColor = () => {
@@ -137,7 +144,15 @@ export function PatientCard({
       </Card>
     </Pressable>
   );
-}
+}, (prev, next) => {
+  // Custom comparison para evitar re-renders desnecessários
+  // Comparar apenas campos que realmente importam para renderização
+  return prev.patient.id === next.patient.id &&
+         prev.patient.name === next.patient.name &&
+         prev.patient.status === next.patient.status &&
+         (prev.patient.progress || 0) === (next.patient.progress || 0) &&
+         prev.patient.updatedAt === next.patient.updatedAt;
+});
 
 const styles = StyleSheet.create({
   container: {
