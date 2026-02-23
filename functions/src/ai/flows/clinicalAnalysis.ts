@@ -5,7 +5,7 @@
  * Replaces direct Vertex AI SDK calls with Genkit abstractions
  */
 
-import { z } from 'genkit';
+import { z } from '../ai/config';
 import { ai, gemini15Flash, gemini15Pro } from '../config';
 
 // ============================================================================

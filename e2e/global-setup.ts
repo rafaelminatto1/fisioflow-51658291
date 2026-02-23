@@ -9,14 +9,17 @@
  *   E2E_AUTO_SEED=true npm run test:e2e
  */
 
-import { FullConfig } from '@playwright/test';
+import { chromium, FullConfig } from '@playwright/test';
 import { execSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { mkdirSync } from 'fs';
+import { testUsers } from './fixtures/test-data';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const SEED_SCRIPT = path.join(__dirname, '../scripts/seed-e2e-data.cjs');
+const AUTH_STATE_PATH = path.join(__dirname, '../playwright/.auth/user.json');
 
 export default async function globalSetup(config: FullConfig) {
   console.log('\n🧪 Playwright Global Setup - Iniciando...');
@@ -50,6 +53,42 @@ export default async function globalSetup(config: FullConfig) {
 
   if (cleanup) {
     console.log('🧹 Limpeza de dados de teste não implementada (use Firebase Console manualmente)');
+  }
+
+  // Build authenticated storageState for E2E to avoid flaky login per test
+  if (process.env.E2E_SKIP_AUTH_SETUP !== 'true') {
+    try {
+      const projectUse = (config.projects?.[0]?.use || {}) as Record<string, unknown>;
+      const baseURL = String(projectUse.baseURL || process.env.BASE_URL || 'http://127.0.0.1:5173?e2e=true');
+      const authBaseURL = baseURL.split('?')[0];
+
+      mkdirSync(path.dirname(AUTH_STATE_PATH), { recursive: true });
+
+      const browser = await chromium.launch({ headless: true });
+      const context = await browser.newContext({ baseURL: authBaseURL });
+      const page = await context.newPage();
+
+      await page.goto('/auth');
+      const currentPath = new URL(page.url()).pathname;
+
+      if (currentPath.startsWith('/auth')) {
+        const formInputs = page.locator('form input');
+        await formInputs.first().waitFor({ state: 'visible', timeout: 20000 });
+        await formInputs.nth(0).fill(testUsers.admin.email);
+        await formInputs.nth(1).fill(testUsers.admin.password);
+        await page.getByRole('button', { name: /Acessar Minha Conta|Entrar na Plataforma/i }).first().click();
+        await page.waitForURL((url) => !url.pathname.startsWith('/auth'), { timeout: 30000 });
+      }
+
+      await context.storageState({ path: AUTH_STATE_PATH });
+      await browser.close();
+      console.log(`🔐 Auth storageState criado: ${AUTH_STATE_PATH}`);
+    } catch (error) {
+      console.warn('⚠️ Não foi possível criar storageState autenticado no global-setup. Testes seguirão com login no próprio spec.');
+      console.warn(error);
+    }
+  } else {
+    console.log('ℹ️  Auth setup automático desativado (E2E_SKIP_AUTH_SETUP=true)');
   }
 
   console.log('✅ Global Setup concluído\n');

@@ -379,8 +379,9 @@ const CalendarDayView = memo(({
                                     const { index: stackIndex, count: stackCount } = getOverlapStackPosition(dayAppointments, apt);
                                     const hasOverlap = stackCount > 1;
 
-                                    const widthPercent = hasOverlap ? (100 / stackCount) - 2 : 100;
-                                    const leftOffset = hasOverlap ? (stackIndex * (100 / stackCount)) + 1 : 0;
+                                    // Margem lateral para garantir que o grid seja clicável
+                                    const widthPercent = hasOverlap ? (96 / stackCount) : 94;
+                                    const leftOffset = hasOverlap ? (stackIndex * (96 / stackCount)) + 2 : 3;
 
                                     const duration = apt.duration ?? DEFAULT_APPOINTMENT_DURATION_MINUTES;
 
@@ -402,9 +403,8 @@ const CalendarDayView = memo(({
                                     const style: React.CSSProperties = {
                                         top: `${topMobile}px`,
                                         height: `${heightMobile}px`,
-                                        left: hasOverlap ? `${leftOffset}%` : '4px',
-                                        right: hasOverlap ? 'auto' : '4px',
-                                        width: hasOverlap ? `${widthPercent}%` : 'calc(100% - 8px)',
+                                        left: `${leftOffset}%`,
+                                        width: `${widthPercent}%`,
                                         zIndex: isDraggingThis ? 5 : (isDropTarget ? 25 : (hasOverlap ? 20 : 1)),
                                         ['--top-desktop' as string]: `${topDesktop}px`,
                                         ['--height-desktop' as string]: `${heightDesktop}px`,

@@ -14,7 +14,7 @@ export function AppLoadingSkeleton({ message }: AppLoadingSkeletonProps) {
 
   const jokes = [
     "Alongando a verdade um pouquinho...",
-    "Resistência não é fútil, é fisioterapia!",
+    "Puxando o sistema pelo tendão de Aquiles...",
     "Trabalhando na sua postura digital...",
     "Fortalecendo os pixels para você.",
     "Só mais uma série de 10 segundos...",
@@ -60,11 +60,11 @@ export function AppLoadingSkeleton({ message }: AppLoadingSkeletonProps) {
 
         {/* Barra de progresso simulada */}
         <div className="w-full max-w-xs h-1 bg-muted rounded-full overflow-hidden">
-          <div 
+          <div
             className="h-full bg-primary rounded-full animate-loading-progress"
-            style={{ 
+            style={{
               width: '60%',
-            }} 
+            }}
           />
         </div>
 

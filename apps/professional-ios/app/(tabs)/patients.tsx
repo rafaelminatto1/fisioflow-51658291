@@ -4,11 +4,12 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
+  FlatList,
   Pressable,
   TextInput,
   ActivityIndicator,
   RefreshControl,
+  ViewToken,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -106,6 +107,10 @@ export default function PatientsScreen() {
     HapticFeedback.light();
     router.push(`/patients/${patientId}`);
   }, [router]);
+
+  // Altura aproximada do PatientCard para getItemLayout do FlatList
+  // Isso otimiza scroll performance drasticamente
+  const ITEM_HEIGHT = 140; // Baseado no card padding + content height
 
   const handleNewPatient = useCallback(() => {
     HapticFeedback.light();
@@ -258,52 +263,65 @@ export default function PatientsScreen() {
         )}
       </View>
 
-      {/* Patients List */}
-      <ScrollView
-        style={styles.scrollView}
-        refreshControl={
-          <RefreshControl
-            refreshing={isLoading}
-            onRefresh={refetch}
-            tintColor={colors.primary}
-          />
-        }
-      >
-        {isLoading ? (
+      {/* Patients List - Using FlatList for optimal performance */}
+      <View style={styles.listContainer}>
+        {isLoading && filteredPatients.length === 0 ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
           </View>
-        ) : filteredPatients.length === 0 ? (
-          <EmptyState
-            icon={searchQuery ? 'search-x' : 'users'}
-            title={searchQuery ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado'}
-            message={
-              searchQuery
-                ? 'Tente outros termos de busca'
-                : 'Comece adicionando seu primeiro paciente'
-            }
-            actionLabel={searchQuery ? undefined : 'Novo Paciente'}
-            onAction={searchQuery ? undefined : handleNewPatient}
-          />
         ) : (
-          <View style={styles.patientsList}>
-            {filteredPatients.map((patient, index) => (
+          <FlatList
+            data={filteredPatients}
+            renderItem={({ item, index }) => (
               <Animated.View
-                key={patient.id}
                 entering={FadeIn.delay(index * 50)}
               >
                 <PatientCard
-                  patient={patient}
-                  onPress={() => handlePatientPress(patient.id)}
+                  patient={item}
+                  onPress={() => handlePatientPress(item.id)}
                   style={styles.patientCard}
                 />
               </Animated.View>
-            ))}
-          </View>
+            )}
+            keyExtractor={(item) => item.id}
+            // Otimizações de performance
+            getItemLayout={(data, index) => ({
+              length: ITEM_HEIGHT,
+              offset: ITEM_HEIGHT * index,
+              index,
+            })}
+            windowSize={5} // Renderiza apenas 5 itens antes/depois da posição de scroll
+            initialNumToRender={5} // Renderiza apenas 5 itens inicialmente
+            maxToRenderPerBatch={10} // Renderiza no máximo 10 itens por batch
+            removeClippedSubviews={true} // Remove views que não estão mais visíveis
+            // Empty state e loading são tratados via ListEmptyComponent e refreshControl
+            ListEmptyComponent={
+              <EmptyState
+                icon={searchQuery ? 'search-x' : 'users'}
+                title={searchQuery ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado'}
+                message={
+                  searchQuery
+                    ? 'Tente outros termos de busca'
+                    : 'Comece adicionando seu primeiro paciente'
+                }
+                actionLabel={searchQuery ? undefined : 'Novo Paciente'}
+                onAction={searchQuery ? undefined : handleNewPatient}
+              />
+            }
+            refreshControl={
+              <RefreshControl
+                refreshing={isLoading}
+                onRefresh={refetch}
+                tintColor={colors.primary}
+              />
+            }
+            // Separador entre itens para melhor visual
+            ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+            contentContainerStyle={styles.patientsList}
+          />
         )}
-
-        <View style={styles.bottomSpacing} />
-      </ScrollView>
+      </View>
+      <View style={styles.bottomSpacing} />
 
       {/* Floating Action Button */}
       <Pressable
@@ -415,7 +433,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
   },
-  scrollView: {
+  listContainer: {
     flex: 1,
   },
   loadingContainer: {

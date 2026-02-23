@@ -16,8 +16,8 @@
 // TYPES
 // ============================================================================
 
-import { onSchedule } from 'firebase-functions/v2/scheduler';
-import { logger } from 'firebase-functions';
+import * as functions from 'firebase-functions/v2';
+import { logger } from '../lib/logger';
 import { getAdminDb } from '../init';
 
 interface InactivePatient {
@@ -53,18 +53,14 @@ interface Organization {
  *
  * Schedule: "every monday 10:00"
  */
-export const patientReactivation = onSchedule(
-  {
-    schedule: 'every monday 10:00',
-    region: 'southamerica-east1',
-    timeZone: 'America/Sao_Paulo',
-  },
-  async (event): Promise<void> => {
+export const patientReactivation = functions.pubsub.schedule('weekly-patient-reactivation', '0 10 * * 1')
+  .timeZone('America/Sao_Paulo')
+  .onRun(async (context) => {
     const db = getAdminDb();
 
     logger.info('[patientReactivation] Starting weekly reactivation campaign', {
-      jobName: 'patientReactivation',
-      scheduleTime: event.scheduleTime,
+      jobId: context.jobId,
+      scheduleTime: context.scheduleTime,
     });
 
     try {
@@ -89,22 +85,22 @@ export const patientReactivation = onSchedule(
       const appointmentsSnapshot = await db
         .collection('appointments')
         .where('status', 'in', ['concluido', 'realizado', 'attended'])
-        .where('date', '>=', new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString())
+        .where('date', '>=', new Date(now.getTime() - 60 * 24 * 60 * 1000).toISOString())
         .get();
 
       // Create map: patientId -> latest appointment
       const latestAppointmentByPatient = new Map<string, { date: string }>();
-      appointmentsSnapshot.docs.forEach((doc) => {
+      for (const doc of appointmentsSnapshot.docs) {
         const appt = { id: doc.id, ...doc.data() } as any;
         const existing = latestAppointmentByPatient.get(appt.patient_id || '');
         if (!existing || new Date(appt.date) > new Date(existing.date)) {
           latestAppointmentByPatient.set(appt.patient_id || '', { date: appt.date });
         }
-      });
+      }
 
       // Find inactive patients (30-37 days since last appointment)
       for (const patientDoc of patientsSnapshot.docs) {
-        const p = { id: patientDoc.id, ...patientDoc.data() } as InactivePatient;
+        const p = { id: patientDoc.id, ...patientDoc.data() } as any;
 
         // Normalize name field
         if (!p.full_name && p.name) {
@@ -113,6 +109,7 @@ export const patientReactivation = onSchedule(
 
         // Check notification preferences
         const prefs = p.notification_preferences || {};
+
         if (prefs.whatsapp === false && prefs.email === false) continue;
         if (!p.phone && !p.email) continue;
 
@@ -131,13 +128,12 @@ export const patientReactivation = onSchedule(
 
       if (inactivePatients.length === 0) {
         logger.info('[patientReactivation] No inactive patients found in window');
-        void {
+        return {
           success: true,
           processed: 0,
           timestamp: new Date().toISOString(),
           message: 'No inactive patients found in window',
         };
-        return;
       }
 
       logger.info('[patientReactivation] Inactive patients found', {
@@ -151,14 +147,13 @@ export const patientReactivation = onSchedule(
       const orgSnapshots = await Promise.all(orgPromises);
 
       const orgMap = new Map<string, Organization>();
-      orgSnapshots
-        .filter((snap) => snap.exists)
-        .forEach((snap) => {
+      for (const snap of orgSnapshots) {
+        if (snap.exists) {
           orgMap.set(snap.id, { id: snap.id, ...snap.data() } as any);
-        });
+        }
+      }
 
       // Queue reactivation messages
-      let messagesQueued = 0;
       const results = await Promise.all(
         inactivePatients.map(async (patient) => {
           const org = orgMap.get(patient.organization_id);
@@ -178,9 +173,9 @@ export const patientReactivation = onSchedule(
               });
 
               // TODO: Send via WhatsApp provider
-              messagesQueued++;
+              // messagesQueued++;
 
-              // Log the reactivation attempt
+              // Log reactivation attempt
               const campaignRef1 = db.collection('reactivation_campaigns').doc();
               await campaignRef1.create({
                 patient_id: patient.id,
@@ -199,9 +194,9 @@ export const patientReactivation = onSchedule(
               });
 
               // TODO: Send via email provider
-              messagesQueued++;
+              // messagesQueued++;
 
-              // Log the reactivation attempt
+              // Log reactivation attempt
               const campaignRef2 = db.collection('reactivation_campaigns').doc();
               await campaignRef2.create({
                 patient_id: patient.id,
@@ -223,8 +218,9 @@ export const patientReactivation = onSchedule(
           } catch (error) {
             logger.error('[patientReactivation] Error processing patient', {
               patientId: patient.id,
-              error,
+              error: error instanceof Error ? error.message : 'Unknown error',
             });
+
             return {
               patientId: patient.id,
               queued: false,
@@ -232,14 +228,16 @@ export const patientReactivation = onSchedule(
             };
           }
         })
-      );
+        );
+
+      const messagesQueued = results.filter(r => r.queued).length;
 
       logger.info('[patientReactivation] Completed', {
         messagesQueued,
         totalPatients: inactivePatients.length,
       });
 
-      void {
+      return {
         success: true,
         processed: inactivePatients.length,
         messagesQueued,
