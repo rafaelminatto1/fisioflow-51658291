@@ -1,0 +1,103 @@
+name: EAS Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'Build profile (development, preview, production)'
+        required: true
+        default: 'preview'
+        type: choice
+        options:
+          - development
+          - preview
+          - production
+      platform:
+        description: 'Platform (ios, android, all)'
+        required: true
+        default: 'ios'
+        type: choice
+        options:
+          - ios
+          - android
+          - all
+      message:
+        description: 'Build message'
+        required: false
+        type: string
+
+  push:
+    branches:
+      - main
+      - develop
+
+env:
+  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+  SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+  SENTRY_ORG: ${{ secrets.SENTRY_ORG || 'activity-fisioterapia-rg' }}
+  SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT || 'fisioflow-professional-app-tm' }}
+
+jobs:
+  build-ios:
+    if: github.event.inputs.platform != 'android'
+    name: Build iOS
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build with EAS
+        run: eas build --platform ios --profile ${{ github.event.inputs.profile || 'preview' }} --non-interactive
+
+  build-android:
+    if: github.event.inputs.platform != 'ios'
+    name: Build Android
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build with EAS
+        run: eas build --platform android --profile ${{ github.event.inputs.profile || 'preview' }} --non-interactive

@@ -10,8 +10,14 @@
       "ios": {
         "simulator": true
       },
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://fisioflow.com.br/api"
+        "EXPO_PUBLIC_API_URL": "https://fisioflow.com.br/api",
+        "EXPO_PUBLIC_ENVIRONMENT": "development",
+        "SENTRY_ORG": "activity-fisioterapia-rg",
+        "SENTRY_PROJECT": "fisioflow-professional-app-tm"
       }
     },
     "preview": {
@@ -20,9 +26,16 @@
         "simulator": false,
         "autoIncrement": true
       },
+      "android": {
+        "buildType": "apk",
+        "autoIncrement": true
+      },
       "credentialsSource": "remote",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://fisioflow.com.br/api"
+        "EXPO_PUBLIC_API_URL": "https://fisioflow.com.br/api",
+        "EXPO_PUBLIC_ENVIRONMENT": "staging",
+        "SENTRY_ORG": "activity-fisioterapia-rg",
+        "SENTRY_PROJECT": "fisioflow-professional-app-tm"
       },
       "cache": {
         "disabled": false
@@ -33,9 +46,15 @@
       "ios": {
         "autoIncrement": true
       },
+      "android": {
+        "autoIncrement": true
+      },
       "credentialsSource": "remote",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://fisioflow.com.br/api"
+        "EXPO_PUBLIC_API_URL": "https://fisioflow.com.br/api",
+        "EXPO_PUBLIC_ENVIRONMENT": "production",
+        "SENTRY_ORG": "activity-fisioterapia-rg",
+        "SENTRY_PROJECT": "fisioflow-professional-app-tm"
       },
       "cache": {
         "disabled": false
