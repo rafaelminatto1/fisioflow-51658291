@@ -34,6 +34,7 @@ export interface SOAPTemplate {
 interface TemplateSelectorProps {
   onSelect: (template: SOAPTemplate) => void;
   onCreate?: () => void;
+  onManage?: () => void;
   onToggleFavorite?: (templateId: string) => void;
   customTemplates?: SOAPTemplate[];
   disabled?: boolean;
@@ -117,6 +118,7 @@ const DEFAULT_TEMPLATES: SOAPTemplate[] = [
 export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   onSelect,
   onCreate,
+  onManage,
   onToggleFavorite,
   customTemplates = [],
   disabled = false,
@@ -155,6 +157,9 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
   ];
 
   const handleSelectTemplate = (template: SOAPTemplate) => {
+    if (import.meta.env.DEV) {
+      console.debug('[TemplateSelector] Selected template', template.id, template.name);
+    }
     onSelect(template);
     setOpen(false);
     setSearchQuery('');
@@ -162,6 +167,11 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
 
   const handleCreateTemplate = () => {
     onCreate?.();
+    setOpen(false);
+  };
+
+  const handleManageTemplates = () => {
+    onManage?.();
     setOpen(false);
   };
 
@@ -180,7 +190,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
             <ChevronDown className="h-4 w-4" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[500px] p-0" align="end">
+        <PopoverContent className="w-[500px] p-0 max-h-[min(85vh,680px)] flex flex-col" align="end">
           {/* Search bar */}
           <div className="p-3 border-b border-border">
             <div className="relative">
@@ -219,7 +229,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
           </div>
 
           {/* Template list */}
-          <div className="max-h-[400px] overflow-y-auto p-2">
+          <div className="flex-1 min-h-0 overflow-y-auto p-2">
             {filteredTemplates.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <FileText className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
@@ -231,6 +241,7 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
                   <div
                     key={template.id}
                     onClick={() => handleSelectTemplate(template)}
+                    data-testid={`soap-template-${template.id}`}
                     className={cn(
                       'group p-3 rounded-lg border border-border/50 hover:border-primary/50 hover:bg-muted/50 cursor-pointer transition-all',
                       disabled && 'opacity-50 cursor-not-allowed'
@@ -292,19 +303,34 @@ export const TemplateSelector: React.FC<TemplateSelectorProps> = ({
             )}
           </div>
 
-          {/* Create new template button */}
-          {onCreate && (
-            <div className="p-3 border-t border-border">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full gap-2"
-                onClick={handleCreateTemplate}
-                disabled={disabled}
-              >
-                <Plus className="h-4 w-4" />
-                <span>Criar Novo Template</span>
-              </Button>
+          {/* Create / Manage template buttons */}
+          {(onCreate || onManage) && (
+            <div className="p-3 border-t border-border space-y-2">
+              {onCreate && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full gap-2"
+                  onClick={handleCreateTemplate}
+                  disabled={disabled}
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Criar Novo Template</span>
+                </Button>
+              )}
+              {onManage && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2"
+                  onClick={handleManageTemplates}
+                  data-testid="manage-soap-templates"
+                  disabled={disabled}
+                >
+                  <FileText className="h-4 w-4" />
+                  <span>Editar Template</span>
+                </Button>
+              )}
             </div>
           )}
         </PopoverContent>

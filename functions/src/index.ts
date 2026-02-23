@@ -803,3 +803,42 @@ export {
     onEvolutionCreated,
     getIndexingStats,
 } from './ai/indexing';
+
+// ============================================================================
+// STORAGE OPTIMIZATION (Cloud Functions Free Tier Otimizations)
+// ============================================================================
+export {
+    optimizeImageOnUpload,
+    cleanupOldImages,
+    cleanupOrphanThumbnails,
+    getOptimizationStats,
+} from './storage/image-optimization';
+
+// ============================================================================
+// DATA RETENTION & TTL MANAGEMENT
+// ============================================================================
+export {
+    enforceDataRetention,
+    scheduledDataRetention,
+    setDocumentTTL,
+    deleteExpiredDocuments,
+    compactLogs,
+    getDataRetentionStats,
+} from './crons/data-retention';
+
+// ============================================================================
+// BIGQUERY ANALYTICS
+// ============================================================================
+export {
+    setupAnalytics,
+    dashboardMetrics,
+    patientEvolution,
+    organizationStats,
+    topExercises,
+    painMapAnalysis,
+    gamificationStats,
+    churnPrediction,
+    usageStats,
+    customQuery,
+} from './api/analytics-http';
+

@@ -402,9 +402,10 @@ export const CalendarWeekViewDndKit = memo(({
     // Keep card sizing stable while dragging; drop preview already communicates target arrangement.
     const { index, count } = getOverlapStackPosition(dayAppointments, apt);
 
-    // Usar percentuais puros para que os cards fiquem colados
-    const cardWidthPercent = 100 / count;
-    const leftPercent = index * cardWidthPercent;
+    // Margem lateral para garantir que o grid seja clicável
+    const innerWidthPercent = 94;
+    const cardWidthPercent = innerWidthPercent / count;
+    const leftPercent = (index * cardWidthPercent) + 3;
     const offsetPx = (offsetMinutes / 30) * slotHeight;
 
     return {

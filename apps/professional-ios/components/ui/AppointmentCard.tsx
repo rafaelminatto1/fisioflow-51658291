@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ViewStyle } from 'react-native';
 import { isPast, isToday } from 'date-fns';
 import { Card } from './Card';
@@ -18,14 +18,19 @@ export interface AppointmentCardProps {
   style?: ViewStyle;
 }
 
-export function AppointmentCard({
+/**
+ * AppointmentCard - Componente otimizado com memoização para listas
+ *
+ * Utiliza React.memo com custom comparison para evitar re-renders desnecessários.
+ */
+export const AppointmentCard = memo(({
   appointment,
   onPress,
   onStartSession,
   onStartEvaluation,
   showActions = false,
   style,
-}: AppointmentCardProps) {
+}: AppointmentCardProps) => {
   const { colors } = useTheme();
   const [actionsPressed, setActionsPressed] = React.useState(false);
 
@@ -216,4 +221,10 @@ const styles = StyleSheet.create({
   actionsColumn: {
     gap: 6,
   },
+}, (prev, next) => {
+  // Custom comparison para evitar re-renders desnecessários
+  return prev.appointment.id === next.appointment.id &&
+         prev.appointment.status === next.appointment.status &&
+         prev.appointment.date === next.appointment.date &&
+         prev.appointment.patientName === next.appointment.patientName;
 });
