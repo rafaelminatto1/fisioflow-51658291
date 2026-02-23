@@ -2,7 +2,7 @@
  * Exercise Suggestion Flow (Genkit)
  */
 
-import { z } from 'genkit';
+import { z } from '../ai/config';
 import { ai, gemini15Flash } from '../config';
 
 const ExerciseSuggestionInputSchema = z.object({

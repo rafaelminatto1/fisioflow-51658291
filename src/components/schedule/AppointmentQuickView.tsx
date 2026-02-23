@@ -303,24 +303,18 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   const Content = (
     <div className="flex flex-col h-full min-w-0 max-w-full overflow-hidden">
       {/* Header */}
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border bg-muted/40 backdrop-blur-sm relative overflow-hidden">
-        {/* Subtle decorative background gradient */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl pointer-events-none" />
-
-        <div className="flex items-center gap-3 relative z-10">
-          <div className="p-2.5 bg-primary/10 rounded-xl shadow-inner ring-1 ring-primary/20">
-            <Clock className="h-5 w-5 text-primary" aria-hidden="true" />
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30 relative overflow-hidden">
+        <div className="flex items-center gap-2.5 relative z-10">
+          <div className="p-2 bg-primary/10 rounded-lg ring-1 ring-primary/15">
+            <Clock className="h-4 w-4 text-primary" aria-hidden="true" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-lg tracking-tight text-foreground">
-                {appointment.time} — {endTime}
-              </span>
-            </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-bold uppercase tracking-widest">
-              <Timer className="h-3 w-3" />
-              {appointment.duration || 60} minutos
+            <span className="font-bold text-base tracking-tight text-foreground">
+              {appointment.time} — {endTime}
+            </span>
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-bold uppercase tracking-widest">
+              <Timer className="h-2.5 w-2.5" />
+              {appointment.duration || 60} min
             </div>
           </div>
         </div>
@@ -328,11 +322,11 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-full hover:bg-muted/80 relative z-10"
+            className="h-7 w-7 rounded-full hover:bg-muted/80 relative z-10"
             onClick={() => onOpenChange?.(false)}
             aria-label="Fechar detalhes"
           >
-            <X className="h-4 w-4 text-muted-foreground" />
+            <X className="h-3.5 w-3.5 text-muted-foreground" />
           </Button>
         )}
       </div>
@@ -363,27 +357,25 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
       )}
 
       {/* Content */}
-      <div className="p-5 space-y-6 flex-1 overflow-y-auto custom-scrollbar">
+      <div className="p-4 space-y-4 flex-1 overflow-y-auto custom-scrollbar">
         {/* Patient Block */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1.5 min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <h3 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 truncate leading-tight tracking-tight">
-                <button
-                  type="button"
-                  onClick={handleOpenPatientProfile}
-                  className="block w-full truncate text-left hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-sm"
-                >
-                  {appointment.patientName}
-                </button>
-              </h3>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="outline" className="font-bold text-[10px] uppercase tracking-wider bg-primary/5 text-primary border-primary/20 bg-blue-50/50 dark:bg-blue-900/20">
+        <div className="flex items-start justify-between gap-3">
+          <div className="space-y-1 min-w-0 flex-1">
+            <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 truncate leading-tight tracking-tight">
+              <button
+                type="button"
+                onClick={handleOpenPatientProfile}
+                className="block w-full truncate text-left hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-sm"
+              >
+                {appointment.patientName}
+              </button>
+            </h3>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Badge variant="outline" className="font-bold text-[10px] uppercase tracking-wider bg-primary/5 text-primary border-primary/20">
                 {appointment.type || 'Sessão Regular'}
               </Badge>
               {appointment.phone && (
-                <span className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
+                <span className="text-[10px] text-muted-foreground font-medium">
                   {appointment.phone}
                 </span>
               )}
@@ -393,29 +385,29 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             <Button
               variant="outline"
               size="icon"
-              className="h-10 w-10 rounded-xl text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-400 shrink-0 shadow-sm transition-all active:scale-95 group"
+              className="h-9 w-9 rounded-lg text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-400 shrink-0 shadow-sm transition-all active:scale-95 group"
               onClick={() => window.open(`https://wa.me/55${appointment.phone?.replace(/\D/g, '')}`, '_blank')}
             >
-              <MessageCircle className="h-5 w-5 group-hover:rotate-12 transition-transform" />
+              <MessageCircle className="h-4 w-4 group-hover:rotate-12 transition-transform" />
             </Button>
           )}
         </div>
 
-        <Separator className="bg-slate-100 dark:bg-slate-800/50" />
+        <Separator className="bg-border/50" />
 
         {/* Configuration Grid */}
-        <div className="grid grid-cols-1 gap-5">
+        <div className="space-y-4">
           {/* Fisioterapeuta */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
               <Users className="h-3 w-3" />
-              Fisioterapeuta Responsável
+              Fisioterapeuta
             </div>
             <Select
               value={localTherapistId || THERAPIST_SELECT_NONE}
               onValueChange={(v) => handleTherapistChange(v === THERAPIST_SELECT_NONE ? '' : v)}
             >
-              <SelectTrigger className="h-10 w-full bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors">
+              <SelectTrigger className="h-9 w-full bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors text-sm">
                 <SelectValue>
                   {getTherapistById(therapists, localTherapistId)?.name ?? 'Activity Fisioterapia'}
                 </SelectValue>
@@ -431,10 +423,10 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 pt-1">
+          <div className="grid grid-cols-2 gap-3">
             {/* Status */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
                 <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                 Status
               </div>
@@ -443,11 +435,11 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
                 onValueChange={handleStatusChange}
                 disabled={isUpdatingStatus}
               >
-                <SelectTrigger className="h-10 w-full bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800">
+                <SelectTrigger className="h-9 w-full bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 text-sm">
                   <SelectValue>
-                    <div className="flex items-center gap-2 truncate">
+                    <div className="flex items-center gap-1.5 truncate">
                       <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: STATUS_CONFIG[localStatus as keyof typeof STATUS_CONFIG]?.color || '#94a3b8' }} />
-                      <span className="truncate">
+                      <span className="truncate text-xs">
                         {STATUS_CONFIG[localStatus as keyof typeof STATUS_CONFIG]?.label ||
                           localStatus.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) ||
                           'Status'}
@@ -476,8 +468,8 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             </div>
 
             {/* Pagamento */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/80">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
                 <CreditCard className="h-3 w-3" />
                 Financeiro
               </div>
@@ -486,18 +478,18 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
                 onValueChange={handlePaymentStatusChange}
               >
                 <SelectTrigger className={cn(
-                  "h-10 w-full border-slate-200 dark:border-slate-800",
+                  "h-9 w-full border-slate-200 dark:border-slate-800",
                   isPaid ? "bg-emerald-50/50 dark:bg-emerald-900/20" : "bg-amber-50/50 dark:bg-amber-900/20"
                 )}>
                   <SelectValue>
                     {isPaid ? (
-                      <span className="flex items-center gap-1.5 font-bold text-emerald-700 dark:text-emerald-400 text-xs">
-                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                      <span className="flex items-center gap-1.5 font-bold text-emerald-700 dark:text-emerald-400 text-[11px]">
+                        <CheckCircle2 className="h-3 w-3 shrink-0" />
                         Pago
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-400 text-xs">
-                        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                      <span className="flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-400 text-[11px]">
+                        <AlertCircle className="h-3 w-3 shrink-0" />
                         Pendente
                       </span>
                     )}
@@ -545,75 +537,70 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
         )}
       </div>
 
-      <div className="p-4 bg-slate-50 dark:bg-slate-900/40 border-t border-border flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          {onEdit && (
-            <>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-10 w-10 rounded-xl bg-background shadow-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
-                onClick={handleEdit}
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-10 flex-1 rounded-xl bg-background shadow-sm font-bold text-xs gap-2 transition-all hover:border-primary/30"
-                onClick={handleEdit}
-              >
-                <Edit className="h-4 w-4 text-primary" />
-                Editar
-              </Button>
-            </>
-          )}
-
-          {onDelete && (
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-10 w-10 rounded-xl text-destructive/70 hover:text-destructive hover:bg-destructive/10 bg-background shadow-sm transition-colors shrink-0 border-destructive/10"
-              onClick={handleDelete}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-
+      <div className="p-3 bg-muted/30 border-t border-border space-y-2">
+        {/* Primary CTA */}
         {canStartAttendance && (
           <Button
             onClick={handleStartAttendance}
             className={cn(
-              "w-full h-11 rounded-xl font-extrabold text-sm shadow-lg shadow-emerald-500/10 transition-all active:scale-[0.98]",
+              "w-full h-11 rounded-xl font-extrabold text-sm shadow-md transition-all active:scale-[0.98]",
               localStatus === 'avaliacao'
-                ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20"
-                : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20"
+                ? "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-blue-500/20"
+                : "bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-emerald-500/20"
             )}
           >
-            <div className="flex items-center justify-center gap-2.5">
+            <div className="flex items-center justify-center gap-2">
               {localStatus === 'avaliacao' ? (
-                <FileText className="h-5 w-5" />
+                <FileText className="h-4.5 w-4.5" />
               ) : (
-                <Play className="h-5 w-5 fill-current" />
+                <Play className="h-4.5 w-4.5 fill-current" />
               )}
               {localStatus === 'avaliacao' ? 'INICIAR AVALIAÇÃO' : 'INICIAR ATENDIMENTO'}
             </div>
           </Button>
         )}
 
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full h-9 rounded-lg text-xs text-muted-foreground hover:text-foreground font-bold uppercase tracking-tight"
-          onClick={() => {
-            setShowWaitlistQuickAdd(true);
-            onOpenChange?.(false);
-          }}
-        >
-          <UserPlus className="h-4 w-4 mr-2" />
-          Outro paciente quer este horário?
-        </Button>
+        {/* Secondary actions */}
+        <div className="flex items-center gap-1.5">
+          {onEdit && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 flex-1 rounded-lg font-semibold text-xs gap-1.5 text-muted-foreground hover:text-foreground transition-all"
+              onClick={handleEdit}
+            >
+              <Edit className="h-3.5 w-3.5" />
+              Editar
+            </Button>
+          )}
+
+          {onDelete && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 rounded-lg text-muted-foreground/60 hover:text-destructive transition-all"
+              onClick={handleDelete}
+              title="Excluir Agendamento"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          )}
+
+          <div className="h-4 w-px bg-border mx-0.5" />
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-9 rounded-lg text-muted-foreground/60 hover:text-foreground text-[10px] font-semibold gap-1 transition-all"
+            onClick={() => {
+              setShowWaitlistQuickAdd(true);
+              onOpenChange?.(false);
+            }}
+          >
+            <UserPlus className="h-3 w-3" />
+            Lista de Espera
+          </Button>
+        </div>
       </div>
 
     </div>
