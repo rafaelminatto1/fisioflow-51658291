@@ -1,0 +1,46 @@
+# Ignore node modules and tests
+node_modules
+test
+e2e
+__tests__
+
+# Ignore config files
+.ts
+.tsx
+.prettierrc
+.eslintrc
+.pnpm-workspace.yaml
+
+# Ignore build artifacts
+dist
+build
+.expo
+
+# Ignore monorepo files
+packages
+pnpm-lock.yaml
+
+# Ignore documentation
+*.md
+*.txt
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore environment files
+.env
+.env.*
+
+# Ignore scripts
+scripts
+hooks
+
+# Ignore misc files
+.claude
+.accessibility-tests
+*.avif
+*.html
+*.png
+*.jpg
+*.jpeg

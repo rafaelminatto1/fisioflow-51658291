@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, FlatList, StyleSheet, SafeAreaView, Text } from 'react-native';
+import React, { useCallback, memo } from 'react';
+import { View, FlatList, StyleSheet, SafeAreaView, Text, ListRenderItemInfo } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { PatientCard } from '@/components/patient/PatientCard'; // Using local component instead of shared package
 
@@ -40,8 +40,8 @@ export default function PatientsScreenV2() {
         
         <FlatList
           data={MOCK_PATIENTS}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
+          keyExtractor={useCallback((item) => item.id, [])}
+          renderItem={useCallback(({ item, index, separators }: ListRenderItemInfo<typeof MOCK_PATIENTS[0]>) => (
             <PatientCard
               name={item.name}
               condition={item.condition}
@@ -49,8 +49,14 @@ export default function PatientsScreenV2() {
               stats={item.stats}
               onClick={() => router.push(`/patient/${item.id}`)}
             />
-          )}
+          ), [router])}
           contentContainerStyle={styles.list}
+          // Otimizações de performance
+          initialNumToRender={10}
+          maxToRenderPerBatch={5}
+          windowSize={5}
+          removeClippedSubviews={true}
+          updateCellsBatchingPeriod={50}
         />
       </View>
     </SafeAreaView>

@@ -177,6 +177,28 @@
       ],
       "disabled": false,
       "autoApprove": []
+    },
+    "fisioflow": {
+      "command": "node",
+      "args": [
+        "./mcp-server/dist/index.js"
+      ],
+      "env": {
+        "SENTRY_DSN": "${SENTRY_DSN}",
+        "NODE_ENV": "${NODE_ENV:-development}"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "get_patient",
+        "list_patients",
+        "create_appointment",
+        "get_appointment",
+        "get_agenda",
+        "get_evolution",
+        "create_evolution",
+        "search_patients",
+        "status"
+      ]
     }
   }
 }

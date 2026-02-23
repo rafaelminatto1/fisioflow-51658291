@@ -1,6 +1,7 @@
 /**
- * Sentry Backend Integration
+ * Sentry Backend Integration - Enhanced
  * Error tracking for Cloud Functions backend
+ * Documentação: https://docs.sentry.io/platforms/javascript/guides/node/
  */
 
 import * as Sentry from '@sentry/node';
@@ -28,6 +29,134 @@ let sentryConfig: SentryConfig | null = null;
 let sentryInitialized = false;
 
 /**
+ * Environment types
+ */
+type SentryEnvironment = 'development' | 'staging' | 'preview' | 'production';
+
+/**
+ * Sampling rates configuration
+ */
+interface SamplingRates {
+  tracesSampleRate: number;
+  profilesSampleRate: number;
+}
+
+/**
+ * Sensitive field patterns for data scrubbing
+ */
+const SENSITIVE_FIELDS = [
+  'password', 'pass', 'pwd',
+  'creditCard', 'cardNumber', 'cvv', 'cvc',
+  'cpf', 'rg', 'cnpj',
+  'phone', 'celular', 'telefone', 'mobile',
+  'ssn', 'socialSecurity',
+  'token', 'secret', 'apiKey', 'api_key',
+  'sessionToken', 'refreshToken', 'accessToken',
+  'address', 'endereço', 'rua', 'numero',
+  'complemento', 'bairro', 'cidade', 'estado',
+];
+
+/**
+ * Gets the current environment
+ */
+function getEnvironment(): SentryEnvironment {
+  const env = (process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV || 'development') as SentryEnvironment;
+  return ['development', 'staging', 'preview', 'production'].includes(env) ? env : 'development';
+}
+
+/**
+ * Gets sampling rates based on environment
+ */
+function getSamplingRates(env: SentryEnvironment): SamplingRates {
+  const isProduction = env === 'production';
+  const isDevelopment = env === 'development';
+
+  return {
+    // Traces: 100% in dev, 10% in production
+    tracesSampleRate: isDevelopment ? 1.0 : 0.1,
+    // Profiling: 50% in dev, 5% in production
+    profilesSampleRate: isDevelopment ? 0.5 : 0.05,
+  };
+}
+
+/**
+ * Scrubs sensitive data from an object recursively
+ */
+function scrubSensitiveData(obj: any): void {
+  if (!obj || typeof obj !== 'object') return;
+
+  for (const key in obj) {
+    if (SENSITIVE_FIELDS.some(field => key.toLowerCase().includes(field))) {
+      obj[key] = '[REDACTED]';
+    } else if (typeof obj[key] === 'object') {
+      scrubSensitiveData(obj[key]);
+    }
+  }
+}
+
+/**
+ * Scrubs sensitive healthcare data from event
+ */
+function scrubHealthcareData(event: any): any {
+  // Remove sensitive medical terms from messages
+  if (event.message) {
+    // Keep only sanitized diagnostic codes
+    event.message = event.message.replace(/\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/g, '[CID]');
+  }
+
+  // Remove patient names
+  if (event.extra?.patientName) {
+    event.extra.patientName = '[REDACTED]';
+  }
+
+  // Scrub medical notes
+  if (event.extra?.medicalNotes) {
+    event.extra.medicalNotes = '[REDACTED]';
+  }
+
+  return event;
+}
+
+/**
+ * Traces sampler based on transaction characteristics
+ */
+function tracesSampler(samplingContext: any): number {
+  const { name, attributes } = samplingContext;
+
+  // Skip health checks
+  if (name?.includes('health') || name?.includes('ping')) {
+    return 0;
+  }
+
+  // Skip scheduled/background jobs
+  if (attributes?.['firebase.function.type'] === 'scheduled') {
+    return 0.01;
+  }
+
+  // Skip background sync operations
+  if (name?.includes('sync') || name?.includes('background')) {
+    return 0.01;
+  }
+
+  // Full sampling for critical API endpoints
+  if (name?.includes('api/')) {
+    return 1.0;
+  }
+
+  // High sampling for webhook handlers
+  if (name?.includes('webhook')) {
+    return 0.5;
+  }
+
+  // Lower sampling for analytics/reporting operations
+  if (name?.includes('analytics') || name?.includes('report')) {
+    return 0.01;
+  }
+
+  return getSamplingRates(getEnvironment()).tracesSampleRate;
+}
+
+/**
  * Checks if Sentry is configured
  */
 export function isSentryConfigured(): boolean {
@@ -45,18 +174,23 @@ export function initSentry(config?: Partial<SentryConfig>): void {
     return;
   }
 
+  const environment = getEnvironment();
+  const samplingRates = getSamplingRates(environment);
+
   sentryConfig = {
     dsn,
-    environment: config?.environment || process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV || 'development',
+    environment,
     release: config?.release || process.env.SENTRY_RELEASE,
-    tracesSampleRate: config?.tracesSampleRate || 0.1,
-    profilesSampleRate: config?.profilesSampleRate || 0.1,
+    tracesSampleRate: config?.tracesSampleRate ?? samplingRates.tracesSampleRate,
+    profilesSampleRate: config?.profilesSampleRate ?? samplingRates.profilesSampleRate,
   };
 
   logger.info('Initializing Sentry', {
     dsn: maskDsn(dsn),
     environment: sentryConfig.environment,
     release: sentryConfig.release,
+    tracesSampleRate: sentryConfig.tracesSampleRate,
+    profilesSampleRate: sentryConfig.profilesSampleRate,
   });
 
   Sentry.init({
@@ -65,9 +199,44 @@ export function initSentry(config?: Partial<SentryConfig>): void {
     release: sentryConfig.release,
     tracesSampleRate: sentryConfig.tracesSampleRate,
     profilesSampleRate: sentryConfig.profilesSampleRate,
+    tracesSampler,
+
+    // DO NOT send default PII
+    sendDefaultPii: false,
 
     // Filter out known errors
     beforeSend(event: any, hint: any) {
+      // Apply healthcare data scrubbing
+      event = scrubHealthcareData(event);
+
+      // Scrub request data
+      if (event.request?.data) {
+        scrubSensitiveData(event.request.data);
+      }
+
+      // Scrub headers
+      if (event.request?.headers) {
+        delete event.request.headers['authorization'];
+        delete event.request.headers['cookie'];
+        delete event.request.headers['x-api-key'];
+        delete event.request.headers['x-auth-token'];
+        delete event.request.headers['x-firebase-auth'];
+      }
+
+      // Scrub extra data
+      if (event.extra) {
+        scrubSensitiveData(event.extra);
+      }
+
+      // Scrub user context in production
+      if (event.user && environment === 'production') {
+        event.user = {
+          id: event.user.id,
+          email: '[REDACTED]',
+        };
+      }
+
+      // Apply additional filtering
       return filterErrorEvent(event, hint);
     },
 
@@ -115,9 +284,15 @@ export function setSentryUser(auth: AuthContext): void {
     id: auth.userId,
     email: auth.email,
     segment: auth.role,
-    // Custom data
+    // Custom data (no PII in production)
     organizationId: auth.organizationId,
     profileId: auth.profileId,
+  });
+
+  // Set additional contexts
+  Sentry.setContext('user_role', {
+    role: auth.role,
+    organizationId: auth.organizationId,
   });
 }
 
@@ -129,10 +304,11 @@ export function clearSentryUser(): void {
 
   logger.debug('Clearing Sentry user context');
   Sentry.setUser(null);
+  Sentry.setContext('user_role', null);
 }
 
 /**
- * Sets custom tags for the current scope
+ * Sets custom tags for current scope
  */
 export function setSentryTags(tags: Record<string, string>): void {
   if (!isSentryConfigured()) return;
@@ -170,6 +346,11 @@ export function captureSentryException(
     return undefined;
   }
 
+  // Scrub sensitive data from extra
+  if (context?.extra) {
+    scrubSensitiveData(context.extra);
+  }
+
   logger.info('Capturing exception in Sentry', {
     error: error.message,
     errorName: error.name,
@@ -191,7 +372,7 @@ export function captureSentryException(
     setSentryContext('error_context', context.extra);
   }
 
-  // Capture the exception
+  // Capture exception
   return Sentry.captureException(error);
 }
 
@@ -244,6 +425,12 @@ function filterErrorEvent(event: any, hint: any): any | null {
   // Skip already-exists errors (duplicate key violations)
   if (event.tags?.['firebase.error.code'] === 'already-exists') {
     logger.debug('Skipping already-exists error in Sentry');
+    return null;
+  }
+
+  // Skip cancelled operations
+  if (event.tags?.['firebase.error.code'] === 'cancelled') {
+    logger.debug('Skipping cancelled error in Sentry');
     return null;
   }
 
@@ -338,6 +525,34 @@ export async function flushSentry(timeout: number = 2000): Promise<void> {
 
   logger.debug('Flushing Sentry events');
   await Sentry.flush(timeout);
+}
+
+/**
+ * Healthcare-specific breadcrumb for tracking business events
+ */
+export function addHealthcareBreadcrumb(
+  type: 'patient_data' | 'prescription' | 'diagnosis' | 'appointment' | 'billing',
+  action: string,
+  metadata?: Record<string, any>
+): void {
+  if (!isSentryConfigured()) return;
+
+  // Scrub sensitive data
+  if (metadata) {
+    scrubSensitiveData(metadata);
+  }
+
+  Sentry.addBreadcrumb({
+    category: 'healthcare',
+    message: `${type}: ${action}`,
+    level: 'info',
+    data: {
+      type,
+      action,
+      timestamp: Date.now(),
+      ...metadata,
+    },
+  });
 }
 
 // Initialize Sentry on module load

@@ -70,8 +70,8 @@ export default defineConfig(({ mode }) => {
       // mode === 'development' && componentTagger(),
       htmlPlugin(appVersion, buildTime),
       isProduction && process.env.SENTRY_AUTH_TOKEN && sentryVitePlugin({
-        org: "fisioflow",
-        project: "fisioflow-web",
+        org: "activity-fisioterapia-rg",
+        project: "fisioflow-web-h5",
         authToken: process.env.SENTRY_AUTH_TOKEN,
       }),
       viteCompression(),

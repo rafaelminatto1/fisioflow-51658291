@@ -43,7 +43,15 @@
           "icon": "./assets/notification-icon.png",
           "color": "#0D9488"
         }
-      ]
+      ],
+      [
+        "sentry-expo",
+        {
+          "organization": "activity-fisioterapia-rg",
+          "project": "fisioflow-patient-app"
+        }
+      ],
+      "@sentry/react-native"
     ],
     "experiments": {
       "typedRoutes": true
