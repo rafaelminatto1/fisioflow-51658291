@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   FlatList,
   ActivityIndicator,
   TouchableOpacity,
+  ListRenderItemInfo,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -45,35 +46,33 @@ export default function AuditLogScreen() {
     loadLogs();
   };
 
-  const getActionLabel = (action: string) => {
-    const labels: Record<string, string> = {
-      login: 'Login',
-      logout: 'Logout',
-      view: 'Visualização',
-      create: 'Criação',
-      update: 'Atualização',
-      delete: 'Exclusão',
-      export: 'Exportação',
-      'consent-granted': 'Consentimento concedido',
-      'consent-withdrawn': 'Consentimento retirado',
-      'settings-changed': 'Configurações alteradas'
-    };
-    return labels[action] || action;
-  };
+  // Memoiza as funções de label para evitar recriação
+  const actionLabels = useMemo(() => ({
+    login: 'Login',
+    logout: 'Logout',
+    view: 'Visualização',
+    create: 'Criação',
+    update: 'Atualização',
+    delete: 'Exclusão',
+    export: 'Exportação',
+    'consent-granted': 'Consentimento concedido',
+    'consent-withdrawn': 'Consentimento retirado',
+    'settings-changed': 'Configurações alteradas'
+  }), []);
 
-  const getResourceLabel = (resource: string) => {
-    const labels: Record<string, string> = {
-      patient: 'Paciente',
-      soap_note: 'Evolução SOAP',
-      photo: 'Foto',
-      protocol: 'Protocolo',
-      exercise: 'Exercício',
-      appointment: 'Consulta',
-      settings: 'Configurações',
-      consent: 'Consentimento'
-    };
-    return labels[resource] || resource;
-  };
+  const resourceLabels = useMemo(() => ({
+    patient: 'Paciente',
+    soap_note: 'Evolução SOAP',
+    photo: 'Foto',
+    protocol: 'Protocolo',
+    exercise: 'Exercício',
+    appointment: 'Consulta',
+    settings: 'Configurações',
+    consent: 'Consentimento'
+  }), []);
+
+  const getActionLabel = (action: string) => actionLabels[action] || action;
+  const getResourceLabel = (resource: string) => resourceLabels[resource] || resource;
 
   const getActionIcon = (action: string): keyof typeof Ionicons.prototype.props.name => {
     switch (action) {
@@ -88,36 +87,59 @@ export default function AuditLogScreen() {
     }
   };
 
-  const renderItem = ({ item }: { item: AuditLogEntry }) => (
-    <Card style={styles.logCard}>
-      <View style={styles.logHeader}>
-        <View style={[styles.iconContainer, { backgroundColor: colors.primary + '10' }]}>
-          <Ionicons name={getActionIcon(item.action) as any} size={20} color={colors.primary} />
+  // Componente de item memoizado para evitar re-renderizações
+  const AuditLogItem = memo(({ item }: ListRenderItemInfo<AuditLogEntry>) => {
+    const itemColors = useColors();
+
+    return (
+      <Card style={styles.logCard}>
+        <View style={styles.logHeader}>
+          <View style={[styles.iconContainer, { backgroundColor: itemColors.primary + '10' }]}>
+            <Ionicons name={getActionIcon(item.action) as any} size={20} color={itemColors.primary} />
+          </View>
+          <View style={styles.logTitleContainer}>
+            <Text style={[styles.logAction, { color: itemColors.text }]}>{getActionLabel(item.action)}</Text>
+            <Text style={[styles.logResource, { color: itemColors.textSecondary }]}>
+              {getResourceLabel(item.resourceType)} {item.resourceId ? `(#${item.resourceId.substring(0, 8)})` : ''}
+            </Text>
+          </View>
         </View>
-        <View style={styles.logTitleContainer}>
-          <Text style={[styles.logAction, { color: colors.text }]}>{getActionLabel(item.action)}</Text>
-          <Text style={[styles.logResource, { color: colors.textSecondary }]}>
-            {getResourceLabel(item.resourceType)} {item.resourceId ? `(#${item.resourceId.substring(0, 8)})` : ''}
-          </Text>
+
+        <View style={styles.logFooter}>
+          <View style={styles.logInfoRow}>
+            <Ionicons name="time-outline" size={14} color={itemColors.textMuted} />
+            <Text style={[styles.logInfoText, { color: itemColors.textMuted }]}>
+              {new Date(item.timestamp).toLocaleString('pt-BR')}
+            </Text>
+          </View>
+          <View style={styles.logInfoRow}>
+            <Ionicons name="phone-portrait-outline" size={14} color={itemColors.textMuted} />
+            <Text style={[styles.logInfoText, { color: itemColors.textMuted }]}>
+              {item.deviceInfo?.model} (v{item.deviceInfo?.appVersion})
+            </Text>
+          </View>
         </View>
-      </View>
-      
-      <View style={styles.logFooter}>
-        <View style={styles.logInfoRow}>
-          <Ionicons name="time-outline" size={14} color={colors.textMuted} />
-          <Text style={[styles.logInfoText, { color: colors.textMuted }]}>
-            {new Date(item.timestamp).toLocaleString('pt-BR')}
-          </Text>
-        </View>
-        <View style={styles.logInfoRow}>
-          <Ionicons name="phone-portrait-outline" size={14} color={colors.textMuted} />
-          <Text style={[styles.logInfoText, { color: colors.textMuted }]}>
-            {item.deviceInfo?.model} (v{item.deviceInfo?.appVersion})
-          </Text>
-        </View>
-      </View>
-    </Card>
-  );
+      </Card>
+    );
+  });
+
+  // Memoiza o keyExtractor
+  const keyExtractor = useCallback((item: AuditLogEntry) => item.id, []);
+
+  // Memoiza o renderItem
+  const renderItem = useCallback(({ item, index, separators }: ListRenderItemInfo<AuditLogEntry>) => {
+    return <AuditLogItem item={item} index={index} separators={separators} />;
+  }, []);
+
+  // Componente Empty memoizado
+  const EmptyComponent = memo(() => (
+    <View style={styles.emptyContainer}>
+      <Ionicons name="shield-checkmark-outline" size={48} color={colors.textMuted} />
+      <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+        Nenhum registro de auditoria encontrado.
+      </Text>
+    </View>
+  ));
 
   if (isLoading) {
     return (
@@ -139,18 +161,19 @@ export default function AuditLogScreen() {
       <FlatList
         data={logs}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={keyExtractor}
         contentContainerStyle={styles.listContent}
         onRefresh={onRefresh}
         refreshing={isRefreshing}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="shield-checkmark-outline" size={48} color={colors.textMuted} />
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              Nenhum registro de auditoria encontrado.
-            </Text>
-          </View>
-        }
+        ListEmptyComponent={<EmptyComponent />}
+        // Otimizações de performance
+        initialNumToRender={10}
+        maxToRenderPerBatch={5}
+        windowSize={5}
+        removeClippedSubviews={true}
+        updateCellsBatchingPeriod={50}
+        scrollEventThrottle={16}
+        onEndReachedThreshold={0.5}
       />
     </SafeAreaView>
   );

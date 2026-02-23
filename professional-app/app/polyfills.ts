@@ -14,6 +14,15 @@ if (typeof global.fetch === 'undefined') {
 
 console.log('Polyfills loaded, fetch available:', typeof global.fetch);
 
+// Inicializar Sentry para rastreamento de erros
+// Deve ser carregado antes de qualquer outro código para capturar erros de inicialização
+try {
+  const { initSentry } = require('@/lib/sentry.tsx');
+  initSentry();
+} catch (error) {
+  console.warn('Failed to initialize Sentry:', error);
+}
+
 // Default export para satisfazer o Expo Router
 export default function Polyfills() {
   return null;
