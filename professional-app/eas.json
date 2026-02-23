@@ -9,24 +9,46 @@
       "distribution": "internal",
       "ios": {
         "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://fisioflow.com.br/api"
       }
     },
     "preview": {
       "distribution": "internal",
       "ios": {
-        "simulator": false
+        "simulator": false,
+        "autoIncrement": true
+      },
+      "credentialsSource": "remote",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://fisioflow.com.br/api"
+      },
+      "cache": {
+        "disabled": false
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "ios": {
+        "autoIncrement": true
+      },
+      "credentialsSource": "remote",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://fisioflow.com.br/api"
+      },
+      "cache": {
+        "disabled": false
+      }
     }
   },
   "submit": {
     "production": {
       "ios": {
-        "appleId": "contato@fisioflow.com.br",
+        "appleId": "rafael.minatto@yahoo.com.br",
+        "appName": "FisioFlow Pro",
         "ascAppId": "6504123456",
-        "appleTeamId": "8E006901CD"
+        "appleTeamId": "G7FDW933SF"
       }
     }
   }

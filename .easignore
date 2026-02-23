@@ -1,0 +1,38 @@
+node_modules
+.git
+.gitignore
+*.md
+!.easignore
+.DS_Store
+*.log
+yarn.lock
+package-lock.json
+npm-shrinkwrap.json
+pnpm-lock.yaml
+
+# Ignorar pasta de UI do web para monorepo
+packages/ui/dist
+packages/ui/node_modules
+packages/ui/.next
+
+# Ignorar arquivos temporários
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Ignorar builds locais
+.expo
+dist
+build
+*.tgz
+*.ipa
+*.apk
+
+# Ignorar testes e docs
+__tests__
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx

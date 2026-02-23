@@ -11,7 +11,8 @@
     "build:prod": "eas build --profile production --platform ios",
     "submit": "eas submit --platform ios",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "eas-build-pre-install": "cd .. && pnpm install"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -21,6 +22,8 @@
     "@react-native-community/slider": "^5.1.2",
     "@tanstack/react-query": "^5.60.0",
     "date-fns": "^3.6.0",
+    "expo-crypto": "~14.0.2",
+    "lucide-react-native": "^0.575.0",
     "expo": "~54.0.33",
     "expo-av": "~16.0.8",
     "expo-camera": "~17.0.10",
@@ -58,7 +61,15 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~19.1.10",
+    "expo-mcp": "~0.2.1",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "pnpm": {
+    "overrides": {
+      "framer-motion": "12.0.0",
+      "motion-utils": "12.29.2",
+      "lucide-react": "0.575.0"
+    }
+  }
 }
