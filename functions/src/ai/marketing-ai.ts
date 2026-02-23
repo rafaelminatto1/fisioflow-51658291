@@ -5,8 +5,8 @@
  * using Gemini Pro via Vertex AI.
  */
 
-import * as logger from 'firebase-functions/logger';
-import { HttpsError } from 'firebase-functions/v2/https';
+import * as logger from '../lib/logger';
+import { HttpsError } from 'firebase-functions/v2';
 
 // ============================================================================
 // MAIN HANDLER

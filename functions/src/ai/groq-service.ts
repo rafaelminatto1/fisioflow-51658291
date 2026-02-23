@@ -1,7 +1,7 @@
-import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { onCall, HttpsError } from 'firebase-functions/v2';
 import { defineString } from 'firebase-functions/params';
 import Groq from 'groq-sdk';
-import * as logger from 'firebase-functions/logger';
+import * as logger from '../lib/logger';
 
 const GROQ_API_KEY = defineString('GROQ_API_KEY');
 

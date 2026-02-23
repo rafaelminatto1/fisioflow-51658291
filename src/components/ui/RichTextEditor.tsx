@@ -12,11 +12,26 @@
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Placeholder from '@tiptap/extension-placeholder';
-import Underline from '@tiptap/extension-underline';
-import TextAlign from '@tiptap/extension-text-align';
-import Highlight from '@tiptap/extension-highlight';
+import { StarterKit } from '@tiptap/starter-kit';
+import { Placeholder } from '@tiptap/extension-placeholder';
+import { Underline } from '@tiptap/extension-underline';
+import { TextAlign } from '@tiptap/extension-text-align';
+import { Highlight } from '@tiptap/extension-highlight';
+import { TaskList } from '@tiptap/extension-task-list';
+import { TaskItem } from '@tiptap/extension-task-item';
+import { Image } from '@tiptap/extension-image';
+import { Link } from '@tiptap/extension-link';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableCell } from '@tiptap/extension-table-cell';
+import { TableHeader } from '@tiptap/extension-table-header';
+import { Color } from '@tiptap/extension-color';
+import { TextStyle } from '@tiptap/extension-text-style';
+import { Subscript } from '@tiptap/extension-subscript';
+import { Superscript } from '@tiptap/extension-superscript';
+import { Youtube } from '@tiptap/extension-youtube';
+import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
+import { common, createLowlight } from 'lowlight';
 import {
     Heading2,
     Heading3,
@@ -32,6 +47,8 @@ import { cn } from '@/lib/utils';
 import { useRichTextContext } from '@/context/RichTextContext';
 import { SlashCommand, suggestionConfig } from './slash-command/suggestion';
 import './rich-text-editor.css';
+
+const lowlight = createLowlight(common);
 
 interface RichTextEditorProps {
     value: string;
@@ -96,7 +113,54 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             Placeholder.configure({ placeholder }),
             Underline,
             TextAlign.configure({ types: ['heading', 'paragraph'] }),
-            Highlight,
+            Highlight.configure({ multicolor: true }),
+            TextStyle,
+            Color,
+            Subscript,
+            Superscript,
+            Link.configure({
+                openOnClick: false,
+                HTMLAttributes: {
+                    class: 'text-primary underline cursor-pointer',
+                },
+            }),
+            Image.configure({
+                allowBase64: true,
+                HTMLAttributes: {
+                    class: 'rounded-lg max-w-full h-auto my-4 mx-auto block',
+                },
+            }),
+            Youtube.configure({
+                HTMLAttributes: {
+                    class: 'rounded-lg max-w-full my-4 mx-auto block aspect-video',
+                },
+            }),
+            TaskList.configure({
+                HTMLAttributes: {
+                    class: 'notion-task-list',
+                },
+            }),
+            TaskItem.configure({
+                nested: true,
+                HTMLAttributes: {
+                    class: 'notion-task-item',
+                },
+            }),
+            Table.configure({
+                resizable: true,
+                HTMLAttributes: {
+                    class: 'notion-table',
+                },
+            }),
+            TableRow,
+            TableHeader,
+            TableCell,
+            CodeBlockLowlight.configure({
+                lowlight,
+                HTMLAttributes: {
+                    class: 'notion-code-block',
+                },
+            }),
             SlashCommand.configure({
                 suggestion: suggestionConfig,
             }),
@@ -107,12 +171,16 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
             if (isUpdatingFromProp.current) return;
             const html = ed.getHTML();
 
-            if (debounceTimer.current) clearTimeout(debounceTimer.current);
+            if (debounceTimer.current) {
+                clearTimeout(debounceTimer.current);
+                debounceTimer.current = null;
+            }
             debounceTimer.current = setTimeout(() => {
                 // Tiptap returns <p></p> for empty, normalize to ''
                 const normalized = html === '<p></p>' ? '' : html;
                 lastSentValue.current = normalized;
                 onValueChange(normalized);
+                debounceTimer.current = null;
             }, 500); // Optimized from 800ms to 500ms for better UX
         },
         onFocus: () => {
@@ -153,7 +221,10 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     // Cleanup
     useEffect(() => {
         return () => {
-            if (debounceTimer.current) clearTimeout(debounceTimer.current);
+            if (debounceTimer.current) {
+                clearTimeout(debounceTimer.current);
+                debounceTimer.current = null;
+            }
         };
     }, []);
 

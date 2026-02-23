@@ -53,6 +53,8 @@ interface NotionEvolutionPanelProps {
   className?: string;
   onTemplateSelect?: (template: SOAPTemplate) => void;
   onTemplateCreate?: () => void;
+  onTemplateManage?: () => void;
+  customTemplates?: SOAPTemplate[];
   showQuickPainSlider?: boolean;
   showQuickExerciseAdd?: boolean;
   exerciseLibrary?: Exercise[];
@@ -71,6 +73,8 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
   className,
   onTemplateSelect,
   onTemplateCreate,
+  onTemplateManage,
+  customTemplates,
   showQuickPainSlider = true,
 }) => {
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
@@ -109,16 +113,36 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
     [data, onChange]
   );
 
+  const toEditorHtml = useCallback((value: string) => {
+    const trimmed = (value || '').trim();
+    if (!trimmed) return '';
+    if (/<[a-z][\s\S]*>/i.test(trimmed)) return trimmed;
+
+    const escapeHtml = (text: string) =>
+      text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    return trimmed
+      .split(/\n{2,}/)
+      .map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, '<br>')}</p>`)
+      .join('');
+  }, []);
+
   const handleTemplateSelect = useCallback(
     (template: SOAPTemplate) => {
+      if (import.meta.env.DEV) {
+        console.debug('[NotionEvolutionPanel] Applying template', template.id, template.name);
+      }
       onTemplateSelect?.(template);
-      handleFieldChange('patientReport', template.subjective);
-      handleFieldChange(
-        'evolutionText',
-        `${template.objective}\n\n${template.assessment}\n\n${template.plan}`
-      );
+      onChange({
+        ...data,
+        patientReport: toEditorHtml(template.subjective),
+        evolutionText: toEditorHtml(`${template.objective}\n\n${template.assessment}\n\n${template.plan}`),
+      });
     },
-    [onTemplateSelect, handleFieldChange]
+    [onTemplateSelect, onChange, data, toEditorHtml]
   );
 
   return (
@@ -137,6 +161,8 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
           <TemplateSelector
             onSelect={handleTemplateSelect}
             onCreate={onTemplateCreate}
+            onManage={onTemplateManage}
+            customTemplates={customTemplates}
             disabled={disabled}
           />
           <Button

@@ -35,6 +35,9 @@
       "@fisioflow/core": [
         "./packages/core/src"
       ],
+      "@fisioflow/config": [
+        "./packages/config/src"
+      ],
       "@fisioflow/skills": [
         "./src/lib/skills"
       ],

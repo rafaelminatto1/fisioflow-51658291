@@ -116,6 +116,74 @@
     margin: 0.15em 0;
 }
 
+/* Task List Style */
+.rich-text-editor .ProseMirror ul[data-type="taskList"] {
+    list-style: none;
+    padding: 0;
+}
+
+.rich-text-editor .ProseMirror ul[data-type="taskList"] li {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 0.25rem;
+}
+
+.rich-text-editor .ProseMirror ul[data-type="taskList"] li>label {
+    flex: 0 0 auto;
+    user-select: none;
+    margin-right: 0.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 0.2rem;
+}
+
+.rich-text-editor .ProseMirror ul[data-type="taskList"] li>div {
+    flex: 1 1 auto;
+}
+
+.rich-text-editor .ProseMirror ul[data-type="taskList"] input[type="checkbox"] {
+    cursor: pointer;
+    appearance: none;
+    background-color: transparent;
+    margin: 0;
+    font: inherit;
+    color: currentColor;
+    width: 1.1em;
+    height: 1.1em;
+    border: 1.5px solid hsl(var(--border) / 1);
+    border-radius: 3px;
+    display: grid;
+    place-content: center;
+    transition: all 0.1s ease;
+}
+
+.rich-text-editor .ProseMirror ul[data-type="taskList"] input[type="checkbox"]::before {
+    content: "";
+    width: 0.65em;
+    height: 0.65em;
+    transform: scale(0);
+    transition: 120ms transform ease-in-out;
+    box-shadow: inset 1em 1em white;
+    background-color: CanvasText;
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+}
+
+.rich-text-editor .ProseMirror ul[data-type="taskList"] input[type="checkbox"]:checked {
+    background-color: hsl(var(--primary));
+    border-color: hsl(var(--primary));
+}
+
+.rich-text-editor .ProseMirror ul[data-type="taskList"] input[type="checkbox"]:checked::before {
+    transform: scale(1);
+}
+
+.rich-text-editor .ProseMirror ul[data-type="taskList"] li[data-checked="true"]>div {
+    text-decoration: line-through;
+    opacity: 0.6;
+}
+
 .rich-text-editor .ProseMirror li p {
     margin: 0;
 }
@@ -182,10 +250,12 @@
         transform: scale(0) rotate(-45deg);
         opacity: 0;
     }
+
     50% {
         transform: scale(1.2) rotate(0deg);
         opacity: 1;
     }
+
     100% {
         transform: scale(1) rotate(0deg);
         opacity: 1;
@@ -198,10 +268,13 @@
 
 /* Required field pulse animation */
 @keyframes requiredPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 1;
         transform: scale(1);
     }
+
     50% {
         opacity: 0.6;
         transform: scale(1.05);
@@ -214,9 +287,12 @@
 
 /* Soft pulse for background emphasis */
 @keyframes pulseSoft {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 1;
     }
+
     50% {
         opacity: 0.7;
     }
@@ -237,6 +313,7 @@
    ============================ */
 
 @media (prefers-reduced-motion: reduce) {
+
     .animate-check-in,
     .animate-required-pulse,
     .animate-pulse-soft {
@@ -291,10 +368,13 @@
 }
 
 @keyframes typingGlow {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 0.3;
         box-shadow: 0 0 10px -3px var(--typing-glow, rgba(0, 0, 0, 0));
     }
+
     50% {
         opacity: 0.6;
         box-shadow: 0 0 20px -3px var(--typing-glow, rgba(0, 0, 0, 0));
@@ -494,6 +574,219 @@ body.font-size-150 {
 /* ============================
    Phase 3-5: Voice Dictation
    ============================ */
+/* ============================
+   Task Lists (Notion Style)
+   ============================ */
+.rich-text-editor .ProseMirror ul.notion-task-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+.rich-text-editor .ProseMirror li.notion-task-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5em;
+    margin-bottom: 0.25em;
+}
+
+.rich-text-editor .ProseMirror li.notion-task-item>label {
+    user-select: none;
+    padding-top: 0.2em;
+}
+
+.rich-text-editor .ProseMirror li.notion-task-item>div {
+    flex: 1;
+}
+
+.rich-text-editor .ProseMirror li.notion-task-item input[type="checkbox"] {
+    appearance: none;
+    width: 1.1em;
+    height: 1.1em;
+    border: 2px solid hsl(var(--border));
+    border-radius: 3px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+    background: transparent;
+}
+
+.rich-text-editor .ProseMirror li.notion-task-item input[type="checkbox"]:checked {
+    background: hsl(var(--primary));
+    border-color: hsl(var(--primary));
+}
+
+.rich-text-editor .ProseMirror li.notion-task-item input[type="checkbox"]:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 0.8em;
+    font-weight: bold;
+}
+
+.rich-text-editor .ProseMirror li.notion-task-item[data-checked="true"]>div>p {
+    text-decoration: line-through;
+    opacity: 0.5;
+}
+
+/* ============================
+   Tables (Notion Style)
+   ============================ */
+.rich-text-editor .ProseMirror table.notion-table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+    margin: 1em 0;
+    overflow: hidden;
+}
+
+.rich-text-editor .ProseMirror table.notion-table td,
+.rich-text-editor .ProseMirror table.notion-table th {
+    min-width: 1em;
+    border: 1px solid hsl(var(--border) / 0.6);
+    padding: 8px 12px;
+    vertical-align: top;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.rich-text-editor .ProseMirror table.notion-table th {
+    font-weight: 600;
+    text-align: left;
+    background-color: hsl(var(--muted) / 0.3);
+}
+
+.rich-text-editor .ProseMirror table.notion-table .selectedCell:after {
+    z-index: 2;
+    position: absolute;
+    content: "";
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: rgba(35, 131, 226, 0.08);
+    pointer-events: none;
+}
+
+/* ============================
+   Code Blocks (Syntax Highlighting)
+   ============================ */
+.rich-text-editor .ProseMirror pre.notion-code-block {
+    background: #1e1e1e;
+    color: #d4d4d4;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    padding: 1.25em;
+    border-radius: 8px;
+    margin: 1.5em 0;
+    overflow-x: auto;
+    font-size: 0.9em;
+    line-height: 1.6;
+}
+
+.rich-text-editor .ProseMirror pre.notion-code-block code {
+    background: none;
+    color: inherit;
+    padding: 0;
+}
+
+/* Lowlight Syntax Colors */
+.hljs-comment,
+.hljs-quote {
+    color: #6a9955;
+}
+
+.hljs-keyword,
+.hljs-selector-tag {
+    color: #569cd6;
+}
+
+.hljs-string,
+.hljs-doctag {
+    color: #ce9178;
+}
+
+.hljs-title,
+.hljs-section {
+    color: #dcdcaa;
+}
+
+.hljs-type,
+.hljs-class {
+    color: #4ec9b0;
+}
+
+.hljs-variable,
+.hljs-template-variable {
+    color: #9cdcfe;
+}
+
+.hljs-number,
+.hljs-literal {
+    color: #b5cea8;
+}
+
+/* ============================
+   Callouts (Notion Style)
+   ============================ */
+.notion-callout {
+    display: flex;
+    gap: 1em;
+    padding: 1.25em;
+    background: hsl(var(--muted) / 0.2);
+    border-radius: 8px;
+    border-left: 4px solid hsl(var(--primary) / 0.5);
+    margin: 1.5em 0;
+}
+
+.notion-callout-icon {
+    font-size: 1.5em;
+    line-height: 1;
+}
+
+.notion-callout-content {
+    flex: 1;
+}
+
+/* ============================
+   Toolbar Enhancements
+   ============================ */
+.rich-text-toolbar-btn-long {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    transition: all 0.15s ease;
+    cursor: pointer;
+}
+
+.rich-text-toolbar-btn-long:hover {
+    background: hsl(var(--muted) / 0.8);
+}
+
+/* ============================
+   Embeds / Videos
+   ============================ */
+.rich-text-editor .ProseMirror iframe {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* ============================
+   Links
+   ============================ */
+.rich-text-editor .ProseMirror a {
+    color: hsl(var(--primary));
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+}
 
 .dictation-indicator {
     display: inline-flex;
@@ -515,9 +808,12 @@ body.font-size-150 {
 }
 
 @keyframes dictationPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 1;
     }
+
     50% {
         opacity: 0.6;
     }

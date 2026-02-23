@@ -6,7 +6,7 @@
  * Economia: ~R$ 15-20/mês em custos de infraestrutura
  */
 
-import { onCall, onRequest } from 'firebase-functions/v2/https';
+import { onCall, onRequest } from 'firebase-functions/v2';
 import { CORS_ORIGINS } from '../lib/cors';
 import { AI_FUNCTION, withCors } from '../lib/function-config';
 

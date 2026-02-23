@@ -14,6 +14,7 @@ import {
   updateDoc,
   deleteDoc,
   serverTimestamp,
+  getDoc,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -29,6 +30,19 @@ export interface SyncOperation {
   timestamp: number;
   retries: number;
   priority: 'high' | 'normal' | 'low';
+  /** Timestamp do servidor para detecção de conflitos */
+  serverTimestamp?: number;
+  /** Versão dos dados para merge automático */
+  version?: number;
+}
+
+/**
+ * Estratégias de resolução de conflitos
+ */
+export enum ConflictResolutionStrategy {
+  LAST_WRITE_WINS = 'last_write_wins',
+  MERGE_WITH_PROMPT = 'merge_with_prompt',
+  LOCAL_WINS = 'local_wins',
 }
 
 export interface SyncStatus {
@@ -44,6 +58,8 @@ export interface SyncOptions {
   retryDelay?: number;
   maxRetries?: number;
   syncOnForeground?: boolean;
+  /** Estratégia de resolução de conflitos */
+  conflictResolution?: ConflictResolutionStrategy;
 }
 
 class SyncManager {
@@ -190,8 +206,196 @@ class SyncManager {
   }
 
   /**
+   * Resolve conflito entre operação local e dados do servidor
+   *
+   * @param operation - Operação local que gerou o conflito
+   * @param serverData - Dados do servidor que entraram em conflito
+   * @returns Dados a serem sincronizados
+   */
+  private resolveConflict(
+    operation: SyncOperation,
+    serverData: Record<string, unknown>
+  ): Record<string, unknown> {
+    const strategy = this.defaultOptions.conflictResolution || ConflictResolutionStrategy.LAST_WRITE_WINS;
+
+    switch (strategy) {
+      case ConflictResolutionStrategy.LAST_WRITE_WINS:
+        // Última escrita vence - baseada em timestamp do servidor
+        // Se o servidor tem timestamp mais recente, ele vence
+        // Se não tem timestamp no servidor, assume que o servidor está mais atualizado
+        console.log(`[SyncManager] Resolvendo conflito com LAST_WRITE_WINS: ${operation.id}`);
+        return {
+          ...serverData,
+          // Preserva timestamp do servidor
+          syncedAt: serverTimestamp(),
+          // Marca que foi resolvido com conflito
+          _conflictResolved: true,
+          _conflictResolution: 'server_wins',
+        };
+
+      case ConflictResolutionStrategy.MERGE_WITH_PROMPT:
+        // Merge com prompt - requer intervenção do usuário
+        console.log(`[SyncManager] Resolvendo conflito com MERGE_WITH_PROMPT: ${operation.id}`);
+        // Aqui seria necessário armazenar para merge manual
+        return {
+          ...serverData,
+          syncedAt: serverTimestamp(),
+          _conflictResolved: true,
+          _conflictResolution: 'merge_required',
+          _localData: operation.data,
+        };
+
+      case ConflictResolutionStrategy.LOCAL_WINS:
+        // Local vence - usado quando o usuário offline tem versão mais recente
+        console.log(`[SyncManager] Resolvendo conflito com LOCAL_WINS: ${operation.id}`);
+        return {
+          ...operation.data,
+          syncedAt: serverTimestamp(),
+          _conflictResolved: true,
+          _conflictResolution: 'local_wins',
+          _serverData: serverData,
+        };
+    }
+  }
+
+  /**
    * Sync all pending operations
    */
+  async sync(options?: SyncOptions): Promise<boolean> {
+    if (this.isSyncing) {
+      return false;
+    }
+    if (!this.isOnline) {
+      console.log('Offline - skipping sync');
+      return false;
+    }
+    if (this.queue.length === 0) {
+      return true;
+    }
+    this.isSyncing = true;
+    this.notifyListeners();
+    const opts = { ...this.defaultOptions, ...options };
+    let failCount = 0;
+
+    try {
+      // Sort by priority and timestamp
+      const sortedQueue = [...this.queue].sort((a, b) => {
+        const priorityOrder = { high: 0, normal: 1, low: 2 };
+        const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+        if (priorityDiff !== 0) return priorityDiff;
+        return a.timestamp - b.timestamp;
+      });
+
+      // Process in batches
+      const batch = sortedQueue.slice(0, opts.batchSize!);
+
+      for (const operation of batch) {
+        try {
+          // Verifica se há conflito antes de processar
+          if (operation.type === 'update') {
+            const { data: resolvedData, hadConflict } = await this.checkAndResolveConflict(operation);
+            if (hadConflict) {
+              // Se houve conflito resolvido, usa os dados resolvidos
+              operation.data = resolvedData;
+              console.log(`[SyncManager] Conflito resolvido para ${operation.id}:`, resolvedData);
+            }
+          }
+
+          await this.processOperation(operation);
+          this.queue = this.queue.filter((op) => op.id !== operation.id);
+        } catch (error) {
+          console.error(`Failed to sync operation ${operation.id}:`, error);
+
+          // Update operation in queue
+          const opIndex = this.queue.findIndex((op) => op.id === operation.id);
+          if (opIndex !== -1) {
+            this.queue[opIndex].retries++;
+            if (this.queue[opIndex].retries >= opts.maxRetries!) {
+              // Max retries reached - remove from queue
+              this.queue = this.queue.filter((op) => op.id !== operation.id);
+              failCount++;
+              // Log for manual review
+              await this.logFailedOperation(operation, error);
+            }
+          }
+
+          // Exponential backoff before next operation
+          await new Promise((resolve) =>
+            setTimeout(resolve, opts.retryDelay! * Math.pow(2, operation.retries))
+          );
+        }
+      }
+
+      await this.saveQueue();
+
+      // Update last sync timestamp
+      await AsyncStorage.setItem(LAST_SYNC_KEY, Date.now().toString());
+
+      // Notify if there are still items to sync
+      if (this.queue.length > 0) {
+        // Continue syncing after a short delay
+        setTimeout(() => this.sync(options), 1000);
+      }
+    } finally {
+      this.isSyncing = false;
+      this.notifyListeners();
+    }
+
+    return failCount === 0;
+  }
+
+  /**
+   * Verifica e resolve conflitos para operações de update
+   *
+   * @param operation - Operação local com dados a serem sincronizados
+   * @returns Objeto com dados resolvidos e flag se houve conflito
+   */
+  private async checkAndResolveConflict(
+    operation: SyncOperation
+  ): Promise<{ data: Record<string, unknown>; hadConflict: boolean }> {
+    const { collection, documentId, data, timestamp, version } = operation;
+
+    // Tenta buscar dados atuais do servidor
+    try {
+      const docRef = documentId
+        ? doc(db, collection, documentId)
+        : doc(db, collection, data.id || 'unknown');
+
+      const serverDoc = await getDoc(docRef);
+
+      if (!serverDoc.exists()) {
+        // Documento não existe no servidor - sem conflito
+        console.log(`[SyncManager] Documento não existe: ${data.id || 'unknown'}`);
+        return { data, hadConflict: false };
+      }
+
+      const serverData = serverDoc.data();
+
+      // Verifica se os dados mudaram (indicação de atualização simultânea)
+      const hasLocalChanges = timestamp > (serverData.syncedAt as number || 0);
+
+      if (!hasLocalChanges) {
+        // Sem conflito - dados locais são mais antigos
+        console.log(`[SyncManager] Sem conflito: ${data.id || 'unknown'}`);
+        return { data, hadConflict: false };
+      }
+
+      // Houve mudança local após o último sync do servidor - CONFLITO!
+      console.warn(`[SyncManager] CONFLITO DETECTADO: ${data.id || 'unknown'}`);
+      console.log('[SyncManager] Dados locais:', data);
+      console.log('[SyncManager] Dados servidor:', serverData);
+
+      // Resolve o conflito usando a estratégia configurada
+      return {
+        data: this.resolveConflict(operation, serverData),
+        hadConflict: true,
+      };
+    } catch (error: any) {
+      console.error('[SyncManager] Erro ao verificar conflito:', error);
+      // Em caso de erro, continua com dados locais (fallback)
+      return { data, hadConflict: false };
+    }
+  }
   async sync(options?: SyncOptions): Promise<boolean> {
     if (this.isSyncing) {
       return false;

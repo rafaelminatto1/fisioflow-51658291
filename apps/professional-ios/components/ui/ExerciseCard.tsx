@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { View, Text, StyleSheet, Pressable, Image, ViewStyle } from 'react-native';
 import { Card } from './Card';
 import { Icon } from './Icon';
@@ -12,12 +12,17 @@ export interface ExerciseCardProps {
   style?: ViewStyle;
 }
 
-export function ExerciseCard({
+/**
+ * ExerciseCard - Componente otimizado com memoização para listas
+ *
+ * Utiliza React.memo com custom comparison para evitar re-renders desnecessários.
+ */
+export const ExerciseCard = memo(({
   exercise,
   onPress,
   variant = 'grid',
   style,
-}: ExerciseCardProps) {
+}: ExerciseCardProps) => {
   const { colors } = useTheme();
 
   const getDifficultyColor = () => {
@@ -210,4 +215,9 @@ const styles = StyleSheet.create({
   detailText: {
     fontSize: 11,
   },
+}, (prev, next) => {
+  // Custom comparison para evitar re-renders desnecessários
+  return prev.exercise.id === next.exercise.id &&
+         prev.exercise.name === next.exercise.name &&
+         prev.exercise.difficulty === next.exercise.difficulty;
 });

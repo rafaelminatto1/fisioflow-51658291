@@ -9,9 +9,9 @@
  * @method onCall
  */
 
-import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { onCall, HttpsError } from 'firebase-functions/v2';
 import * as admin from 'firebase-admin';
-import * as logger from 'firebase-functions/logger';
+import * as logger from '../lib/logger';
 
 const firestore = admin.firestore();
 

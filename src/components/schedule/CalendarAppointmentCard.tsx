@@ -39,53 +39,48 @@ interface CalendarAppointmentCardProps {
 }
 
 const getStatusStyles = (status: string) => {
-    const styles = {
+    const normalized = normalizeStatus(status);
+    const styles: Record<string, { className: string; accent: string }> = {
         confirmado: {
-            border: 'border-emerald-500',
-            bg: 'bg-emerald-50/95 dark:bg-emerald-500/20',
-            text: 'text-emerald-900 dark:text-emerald-400',
+            className: 'calendar-card-confirmado',
             accent: 'bg-emerald-600',
         },
         agendado: {
-            border: 'border-sky-300',
-            bg: 'bg-sky-100/95 dark:bg-sky-200/30',
-            text: 'text-sky-900 dark:text-sky-300',
+            className: 'calendar-card-agendado',
             accent: 'bg-sky-400',
         },
         em_andamento: {
-            border: 'border-amber-500',
-            bg: 'bg-amber-50/95 dark:bg-amber-500/20',
-            text: 'text-amber-900 dark:text-amber-400',
+            className: 'calendar-card-em_andamento',
             accent: 'bg-amber-600',
         },
         cancelado: {
-            border: 'border-red-500',
-            bg: 'bg-red-50/95 dark:bg-red-500/20',
-            text: 'text-red-900 dark:text-red-400',
+            className: 'calendar-card-cancelado',
             accent: 'bg-red-600',
         },
         concluido: {
-            border: 'border-teal-500',
-            bg: 'bg-teal-50/95 dark:bg-teal-500/20',
-            text: 'text-teal-900 dark:text-teal-400',
-            accent: 'bg-teal-600',
+            className: 'calendar-card-concluido',
+            accent: 'bg-slate-600',
+        },
+        falta: {
+            className: 'calendar-card-cancelado',
+            accent: 'bg-red-700',
+        },
+        avaliacao: {
+            className: 'calendar-card-avaliacao',
+            accent: 'bg-purple-600',
         },
         default: {
-            border: 'border-slate-500',
-            bg: 'bg-slate-50/95 dark:bg-slate-500/20',
-            text: 'text-slate-900 dark:text-slate-300',
+            className: 'calendar-card-agendado',
             accent: 'bg-slate-600',
         }
     };
-    return styles[normalizeStatus(status) as keyof typeof styles] || styles.default;
+    return styles[normalized] || styles.default;
 };
 
 const OVERBOOK_MARKER = '[EXCEDENTE]';
 
 const overbookStyles = {
-    border: 'border-red-600',
-    bg: 'bg-red-100/95 dark:bg-red-900/40',
-    text: 'text-red-950 dark:text-red-100',
+    className: 'calendar-card-cancelado ring-2 ring-red-600 ring-offset-2',
     accent: 'bg-red-700',
 };
 
@@ -226,9 +221,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
             // Classes and Styles
             className={cn(
                 "absolute", // Positioning needed for calendar grid
-                statusStyles.bg,
-                statusStyles.border,
-                statusStyles.text,
+                statusStyles.className,
                 draggable && "cursor-grab active:cursor-grabbing"
             )}
             style={{

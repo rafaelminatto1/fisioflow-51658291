@@ -133,8 +133,9 @@
       ]
     ],
     "experiments": {
-      "typedRoutes": true
-    },
+      "typedRoutes": true,
+      "asyncRoutes": true
+      },
     "extra": {
       "router": {
         "origin": false
