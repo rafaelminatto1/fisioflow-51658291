@@ -60,12 +60,17 @@ test.describe('Evolução SOAP (Mocked)', () => {
         const mockAppointment = {
             id: validApptId,
             patient_id: validPatientId,
+            patientId: validPatientId,
             organization_id: validOrgId,
+            organizationId: validOrgId,
             start_time: new Date().toISOString(),
             end_time: new Date(Date.now() + 3600000).toISOString(),
+            appointment_date: new Date().toISOString().slice(0, 10),
+            appointment_time: '10:00',
             status: 'agendado',
             notes: JSON.stringify({ soap: {}, exercises: [] }),
-            patients: mockPatient
+            patients: mockPatient,
+            patient: mockPatient,
         };
 
         // API Routes
@@ -93,14 +98,44 @@ test.describe('Evolução SOAP (Mocked)', () => {
         });
 
         await page.route(/appointmentservicehttp/i, async route => {
-            const method = route.request().method();
-            if (method === 'GET' || method === 'HEAD') {
-                await route.fulfill({ json: mockAppointment, status: 200 });
-            } else if (method === 'PATCH' || method === 'POST') {
-                await route.fulfill({ json: { ...mockAppointment, status: 'Realizado' }, status: 200 });
-            } else {
-                await route.fulfill({ json: { message: 'ok' }, status: 200 });
+            const req = route.request();
+            const method = req.method();
+            if (method !== 'POST') {
+                await route.fulfill({ status: 200, json: { data: mockAppointment } });
+                return;
             }
+
+            let body: Record<string, unknown> = {};
+            try {
+                body = req.postDataJSON() as Record<string, unknown>;
+            } catch {
+                body = {};
+            }
+
+            const action = String(body.action || '');
+            if (action === 'get') {
+                await route.fulfill({ status: 200, json: { data: mockAppointment } });
+                return;
+            }
+
+            if (action === 'list') {
+                await route.fulfill({ status: 200, json: { data: [mockAppointment], total: 1 } });
+                return;
+            }
+
+            await route.fulfill({ status: 200, json: { data: { ...mockAppointment, status: 'Realizado' } } });
+        });
+
+        await page.route('**/getpatienthttp**', async route => {
+            await route.fulfill({ status: 200, json: { data: mockPatient } });
+        });
+
+        await page.route('**/patientservicehttp**', async route => {
+            await route.fulfill({ status: 200, json: { data: [mockPatient], total: 1 } });
+        });
+
+        await page.route('**/getprofile**', async route => {
+            await route.fulfill({ status: 200, json: { data: { id: validUserId, organization_id: validOrgId, role: 'admin', full_name: 'Admin Tester' } } });
         });
 
         await page.route('**/rest/v1/patients*', async route => {
@@ -148,27 +183,18 @@ test.describe('Evolução SOAP (Mocked)', () => {
 
     test('deve carregar dados do agendamento e salvar evolução', async ({ page }) => {
         const validApptId = '123e4567-e89b-12d3-a456-426614174002';
-        await page.goto(`/session-evolution/${validApptId}`);
+        await page.goto(`/patient-evolution/${validApptId}`);
 
         await expect(page.locator('.lucide-loader-2')).toBeHidden({ timeout: 15000 });
-        await expect(page.locator('text=Evolução de Sessão').first()).toBeVisible({ timeout: 10000 });
+        await expect(page.getByRole('heading', { name: /Subjetivo/i }).first()).toBeVisible({ timeout: 10000 });
 
-        // Fill Form
-        // We now use ProseMirror (RichTextEditor) instead of textareas in V3/Improved Modes
-        const editors = page.locator('.ProseMirror');
-
-        // Relato (Subjective)
-        await editors.nth(0).fill('Teste Subjetivo');
-        // Evolução Dinâmica (Objective/Assessment merged or just next block)
-        if (await editors.count() > 1) {
-            await editors.nth(1).fill('Teste Avaliação');
-        }
-        if (await editors.count() > 2) {
-            await editors.nth(2).fill('Teste Plano');
-        }
+        // Fill SOAP fields (current UI exposes them as textboxes)
+        await page.getByRole('textbox', { name: /Campo SOAP: Subjetivo/i }).fill('Teste Subjetivo');
+        await page.getByRole('textbox', { name: /Campo SOAP: Avaliação/i }).fill('Teste Avaliação');
+        await page.getByRole('textbox', { name: /Campo SOAP: Plano/i }).fill('Teste Plano');
 
         // Click Save
-        const saveButtons = page.locator('button', { hasText: 'Salvar Evolução' });
+        const saveButtons = page.locator('button', { hasText: /^Salvar$/i });
         const count = await saveButtons.count();
         // Removed console.log
 
@@ -183,7 +209,7 @@ test.describe('Evolução SOAP (Mocked)', () => {
         await page.waitForTimeout(1000);
 
         try {
-            await expect(page.locator('text=Evolução salva').first()).toBeVisible({ timeout: 10000 });
+            await expect(page.getByText(/salv/i).first()).toBeVisible({ timeout: 10000 });
         } catch (e) {
             // Removed console.error
             // Dump all toasts

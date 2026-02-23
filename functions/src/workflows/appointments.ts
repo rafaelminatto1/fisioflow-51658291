@@ -13,9 +13,8 @@
 // TYPES
 // ============================================================================
 
-import { onSchedule } from 'firebase-functions/v2/scheduler';
-import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
-import { logger } from 'firebase-functions';
+import * as functions from 'firebase-functions/v2';
+import { logger } from '../lib/logger';
 import { getAdminDb, batchFetchDocuments } from '../init';
 import { sendAppointmentConfirmationEmail } from '../communications/resend-templates';
 import { dispatchAppointmentNotification } from './notifications';
@@ -52,7 +51,7 @@ function resolveAppointmentDateTime(appointment: any): Date | null {
   } else if (typeof rawDate === 'string') {
     if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
       const [year, month, day] = rawDate.split('-').map(Number);
-      baseDate = new Date(year, month - 1, day, 0, 0, 0, 0);
+      baseDate = new Date(year, month - 1, day, 0, 0, 0);
     } else {
       const parsed = new Date(rawDate);
       if (!Number.isNaN(parsed.getTime())) {
@@ -81,22 +80,18 @@ function resolveAppointmentDateTime(appointment: any): Date | null {
 
 /**
  * Send Appointment Reminders
- * Runs daily at 08:00 to send reminders for appointments the next day
+ * Runs daily at 08:00 to send reminders for appointments of next day
  *
  * Schedule: "every day 08:00"
  */
-export const appointmentReminders = onSchedule(
-  {
-    schedule: 'every day 08:00',
-    region: 'southamerica-east1',
-    timeZone: 'America/Sao_Paulo',
-  },
-  async (event): Promise<void> => {
+export const appointmentReminders = functions.pubsub.schedule('daily-appointment-reminders', '0 8 * * *')
+  .timeZone('America/Sao_Paulo')
+  .onRun(async (context) => {
     const db = getAdminDb();
 
     logger.info('[appointmentReminders] Starting appointment reminder check', {
-      jobName: 'appointmentReminders',
-      scheduleTime: event.scheduleTime,
+      jobId: context.jobId,
+      scheduleTime: context.scheduleTime,
     });
 
     try {
@@ -117,12 +112,12 @@ export const appointmentReminders = onSchedule(
 
       if (snapshot.empty) {
         logger.info('[appointmentReminders] No appointments found for tomorrow');
-        void {
+        return {
           success: true,
           remindersSent: 0,
           timestamp: new Date().toISOString(),
+          message: 'No appointments found for tomorrow',
         };
-        return;
       }
 
       logger.info('[appointmentReminders] Appointments found', {
@@ -234,8 +229,9 @@ export const appointmentReminders = onSchedule(
           } catch (error) {
             logger.error('[appointmentReminders] Error processing appointment', {
               appointmentId: appointment.id,
-              error,
+              error: error instanceof Error ? error.message : 'Unknown error',
             });
+
             return {
               appointmentId: appointment.id,
               sent: false,
@@ -250,7 +246,7 @@ export const appointmentReminders = onSchedule(
         totalAppointments: snapshot.docs.length,
       });
 
-      void {
+      return {
         success: true,
         remindersSent,
         totalAppointments: snapshot.docs.length,
@@ -268,13 +264,9 @@ export const appointmentReminders = onSchedule(
  * Send 2-hour reminders.
  * Runs every 30 minutes and targets appointments between 90 and 150 minutes from now.
  */
-export const appointmentReminders2h = onSchedule(
-  {
-    schedule: 'every 30 minutes',
-    region: 'southamerica-east1',
-    timeZone: 'America/Sao_Paulo',
-  },
-  async () => {
+export const appointmentReminders2h = functions.pubsub.schedule('hourly-appointment-reminders', '*/30 * * * *')
+  .timeZone('America/Sao_Paulo')
+  .onRun(async () => {
     const db = getAdminDb();
     const now = new Date();
     let snapshot;
@@ -319,6 +311,7 @@ export const appointmentReminders2h = onSchedule(
         .where('reminder_type', '==', 'two_hours')
         .limit(1)
         .get();
+
       if (!reminderSnapshot.empty) {
         return;
       }
@@ -363,7 +356,7 @@ export const appointmentReminders2h = onSchedule(
  * - Send confirmation message to patient
  * - Invalidate caches
  */
-export const onAppointmentCreatedWorkflow = onDocumentCreated(
+export const onAppointmentCreatedWorkflow = functions.firestore.onDocumentCreated(
   'appointments/{appointmentId}',
   async (event) => {
     const snapshot = event.data;
@@ -438,7 +431,7 @@ export const onAppointmentCreatedWorkflow = onDocumentCreated(
         } catch (error) {
           logger.error('[onAppointmentCreatedWorkflow] Failed to send email confirmation', {
             patientEmail: patient.email,
-            error,
+            error: error instanceof Error ? error.message : 'Unknown error',
           });
         }
       }
@@ -475,7 +468,7 @@ export const onAppointmentCreatedWorkflow = onDocumentCreated(
     } catch (error) {
       logger.error('[onAppointmentCreatedWorkflow] Error', {
         appointmentId: appointment.id,
-        error,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return {
         success: false,
@@ -495,7 +488,7 @@ export const onAppointmentCreatedWorkflow = onDocumentCreated(
  * Triggered when an appointment is updated
  * Used to trigger feedback request when appointment is completed
  */
-export const onAppointmentUpdatedWorkflow = onDocumentUpdated(
+export const onAppointmentUpdatedWorkflow = functions.firestore.onDocumentUpdated(
   'appointments/{appointmentId}',
   async (event) => {
     const before = event.data?.before.data();

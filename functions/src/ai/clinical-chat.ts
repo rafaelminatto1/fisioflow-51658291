@@ -10,7 +10,7 @@
  * - Input sanitization
  */
 
-import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { onCall, HttpsError } from 'firebase-functions/v2';
 import { VertexAI } from '@google-cloud/vertexai';
 import * as admin from 'firebase-admin';
 import { getLogger } from '../lib/logger';

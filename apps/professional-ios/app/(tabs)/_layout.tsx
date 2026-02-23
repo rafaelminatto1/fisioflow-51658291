@@ -3,13 +3,28 @@ import { Platform, Pressable, StyleSheet } from 'react-native';
 import { HapticFeedback } from '@/lib/haptics';
 import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/hooks/useTheme';
-import { useState } from 'react';
+import { useState } from 'react-native';
 
 import {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
+import { AuthGuard } from '@/components/navigation/AuthGuard';
+
+/**
+ * AuthGuard é importado mas não aplicado aqui no layout de tabs.
+ *
+ * As tabs principais não precisam de proteção individual (ex: index, agenda básica),
+ * pois já são protegidas no RootLayout (_layout.tsx).
+ *
+ * Use AuthGuard em layouts de drawer para rotas sensíveis que podem precisar de biometria.
+ *
+ * Exemplo de uso em rotas específicas:
+ * <AuthGuard requiresBiometrics={true}>
+ *   <Stack.Screen name="evolution-form" />
+ * </AuthGuard>
+ */
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 

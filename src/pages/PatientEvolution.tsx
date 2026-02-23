@@ -56,6 +56,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { usePDFGenerator } from '@/hooks/usePDFGenerator';
 import { useAuth } from '@/hooks/useAuth';
 import { db, getFirebaseAuth } from '@/integrations/firebase/app';
+import { useEvolutionTemplates, type EvolutionTemplate } from '@/hooks/useEvolutionTemplates';
 
 // Componentes de Evolução
 import { MandatoryTestAlert } from '@/components/session/MandatoryTestAlert';
@@ -102,6 +103,70 @@ const TABS_CONFIG = [
   { value: 'historico', label: 'Histórico', shortLabel: 'Hist', icon: Clock, description: 'Timeline + Relatórios' },
   { value: 'assistente', label: 'Assistente', shortLabel: 'IA', icon: Sparkles, description: 'IA + WhatsApp' },
 ] as const;
+
+type ParsedSoapSections = {
+  subjective: string;
+  objective: string;
+  assessment: string;
+  plan: string;
+};
+
+const parseSoapTemplateContent = (content: string): ParsedSoapSections | null => {
+  const lines = content.replace(/\r\n/g, '\n').split('\n');
+  let current: keyof ParsedSoapSections | null = null;
+  const sections: ParsedSoapSections = {
+    subjective: '',
+    objective: '',
+    assessment: '',
+    plan: '',
+  };
+
+  const mapLabelToKey = (label: string): keyof ParsedSoapSections | null => {
+    const normalized = label.trim().toLowerCase();
+    if (normalized === 's' || normalized.startsWith('subjetiv')) return 'subjective';
+    if (normalized === 'o' || normalized.startsWith('objetiv')) return 'objective';
+    if (normalized === 'a' || normalized.startsWith('avali')) return 'assessment';
+    if (normalized === 'p' || normalized.startsWith('plano')) return 'plan';
+    return null;
+  };
+
+  for (const line of lines) {
+    const match = line.match(/^\s*(subjetivo|subjetiva|s|objetivo|o|avaliação|avaliacao|a|plano|p)\s*[:\-]\s*(.*)$/i);
+    if (match) {
+      const key = mapLabelToKey(match[1]);
+      if (key) {
+        current = key;
+        const remainder = match[2]?.trim();
+        if (remainder) {
+          sections[key] += (sections[key] ? '\n' : '') + remainder;
+        }
+        continue;
+      }
+    }
+
+    if (current) {
+      sections[current] += (sections[current] ? '\n' : '') + line.trim();
+    }
+  }
+
+  const hasAny = Object.values(sections).some((value) => value.trim().length > 0);
+  return hasAny ? sections : null;
+};
+
+const mapEvolutionTemplateToSoapTemplate = (template: EvolutionTemplate) => {
+  const parsed = parseSoapTemplateContent(template.conteudo || '');
+  const objectiveFallback = template.conteudo || '';
+  return {
+    id: template.id,
+    name: template.nome,
+    category: 'custom' as const,
+    subjective: parsed?.subjective || '',
+    objective: parsed?.objective || objectiveFallback,
+    assessment: parsed?.assessment || '',
+    plan: parsed?.plan || '',
+    usageCount: 0,
+  };
+};
 
 const PatientEvolution = () => {
   const { appointmentId } = useParams<{ appointmentId: string }>();
@@ -163,6 +228,7 @@ const PatientEvolution = () => {
   // ========== HOOKS ==========
   const queryClient = useQueryClient();
   const { therapists } = useTherapists();
+  const { data: evolutionTemplates = [] } = useEvolutionTemplates();
   // Ações de agendamento (completar atendimento)
   const { completeAppointment, isCompleting } = useAppointmentActions();
 
@@ -216,6 +282,11 @@ const PatientEvolution = () => {
     activePathologies,
     enabled: !!patientId && !dataLoading,
   });
+
+  const customSoapTemplates = useMemo(
+    () => evolutionTemplates.map(mapEvolutionTemplateToSoapTemplate),
+    [evolutionTemplates]
+  );
 
   // Timeout warning state
   const [showTimeoutWarning, setShowTimeoutWarning] = useState(false);
@@ -890,6 +961,9 @@ const PatientEvolution = () => {
             disabled={false}
             autoSaveEnabled={autoSaveEnabled}
             lastSaved={lastSavedAt}
+            customTemplates={customSoapTemplates}
+            onTemplateCreate={() => navigate('/cadastros/templates-evolucao')}
+            onTemplateManage={() => navigate('/cadastros/templates-evolucao')}
           />
         </Suspense>
       );

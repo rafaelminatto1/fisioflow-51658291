@@ -1,0 +1,232 @@
+# FisioFlow - Cloud Build Pipeline
+# Free Tier: 2.500 minutos de build/mês
+# Docs: https://cloud.google.com/build/docs
+#
+# Usage:
+#   gcloud builds submit --config cloudbuild.yaml .
+#   or automated with GitHub integration
+
+steps:
+  # =========================================================================
+  # STEP 1: Setup e Instalação de Dependências
+  # =========================================================================
+  - id: 'setup'
+    name: 'node:22'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "=== FisioFlow Cloud Build Pipeline ==="
+        echo "Branch: $BRANCH_NAME"
+        echo "Commit: $SHORT_SHA"
+        echo "Build ID: $BUILD_ID"
+        echo ""
+
+        # Install pnpm if not available
+        npm install -g pnpm@latest
+
+        # Install dependencies
+        pnpm install --frozen-lockfile
+    waitFor: ['-']
+
+  # =========================================================================
+  # STEP 2: Lint e Type Checking
+  # =========================================================================
+  - id: 'lint'
+    name: 'node:22'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "=== Running Linting ==="
+        pnpm run lint:fix
+    waitFor: ['setup']
+
+  # =========================================================================
+  # STEP 3: Unit Tests
+  # =========================================================================
+  - id: 'test-unit'
+    name: 'node:22'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "=== Running Unit Tests ==="
+        pnpm run test:unit -- --run
+    waitFor: ['setup']
+
+  # =========================================================================
+  # STEP 4: Build da Web App
+  # =========================================================================
+  - id: 'build-web'
+    name: 'node:22'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "=== Building Web App ==="
+        NODE_OPTIONS='--max-old-space-size=4096' \
+        pnpm run build:prod
+
+        # Verify build output
+        ls -la dist/
+        echo "Build completed successfully"
+    waitFor: ['lint', 'test-unit']
+
+  # =========================================================================
+  # STEP 5: Build da Functions
+  # =========================================================================
+  - id: 'build-functions'
+    name: 'node:22'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "=== Building Cloud Functions ==="
+        cd functions
+        pnpm install --frozen-lockfile
+        pnpm run build
+        cd ..
+        echo "Functions build completed"
+    waitFor: ['lint']
+
+  # =========================================================================
+  # STEP 6: Build das Apps Mobile (Optional)
+  # =========================================================================
+  - id: 'build-patient-app'
+    name: 'node:22'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "=== Building Patient App ==="
+        pnpm patient:build:prod
+    waitFor: ['setup']
+    allowFailure: true
+
+  - id: 'build-professional-app'
+    name: 'node:22'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "=== Building Professional App ==="
+        pnpm professional:build:prod
+    waitFor: ['setup']
+    allowFailure: true
+
+  # =========================================================================
+  # STEP 7: E2E Tests (Only on main branch)
+  # =========================================================================
+  - id: 'test-e2e'
+    name: 'mcr.microsoft.com/playwright:v1.42.0-jammy'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        if [ "$BRANCH_NAME" = "main" ]; then
+          echo "=== Running E2E Tests ==="
+          pnpm install
+          npx playwright install --with-deps
+          pnpm run test:e2e:ci
+        else
+          echo "Skipping E2E tests on feature branches"
+        fi
+    waitFor: ['build-web']
+
+  # =========================================================================
+  # STEP 8: Deploy para Firebase Hosting (Staging on PR, Production on main)
+  # =========================================================================
+  - id: 'deploy-hosting'
+    name: 'node:22'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "=== Deploying to Firebase Hosting ==="
+
+        # Install Firebase CLI
+        npm install -g firebase-tools
+
+        # Determine target site
+        if [ "$BRANCH_NAME" = "main" ]; then
+          TARGETS="fisioflow-migration"
+          echo "Deploying to production sites: $TARGETS"
+        else
+          TARGETS="fisioflow-migration"  # Use preview channels for PRs
+          echo "Deploying to staging: $TARGETS (preview)"
+        fi
+
+        # Deploy hosting
+        firebase deploy --only hosting:$TARGETS --non-interactive
+    waitFor: ['build-web', 'test-e2e']
+    env:
+      - 'FIREBASE_TOKEN=$_FIREBASE_TOKEN'
+
+  # =========================================================================
+  # STEP 9: Deploy para Cloud Functions (Only on main)
+  # =========================================================================
+  - id: 'deploy-functions'
+    name: 'node:22'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        if [ "$BRANCH_NAME" = "main" ]; then
+          echo "=== Deploying Cloud Functions ==="
+          npm install -g firebase-tools
+          firebase deploy --only functions --non-interactive
+        else
+          echo "Skipping function deploy on feature branch"
+        fi
+    waitFor: ['build-functions', 'test-unit']
+    env:
+      - 'FIREBASE_TOKEN=$_FIREBASE_TOKEN'
+
+  # =========================================================================
+  # STEP 10: Build Analytics Report
+  # =========================================================================
+  - id: 'build-report'
+    name: 'node:22'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "=== Generating Build Report ==="
+        cat << EOF > build-report.txt
+        Build ID: $BUILD_ID
+        Branch: $BRANCH_NAME
+        Commit: $SHORT_SHA
+        Build Time: $(date)
+        Status: Success
+        EOF
+        cat build-report.txt
+    waitFor: ['deploy-hosting', 'deploy-functions']
+
+# =========================================================================
+# TIMEOUTS E ARTIFACTS
+# =========================================================================
+
+timeout: '1800s'  # 30 minutos
+
+# Salvar logs e relatórios como artefatos
+logsBucket: 'gs://fisioflow-build-logs'
+
+artifacts:
+  objects:
+    location: 'gs://fisioflow-build-artifacts'
+    paths:
+      - 'dist/**'
+      - 'build-report.txt'
+    naming: '$BUILD_ID-$SHORT_SHA'
+
+# =========================================================================
+# SUBSTITUIÇÕES
+# =========================================================================
+substitutions:
+  _FIREBASE_TOKEN: ''  # Passar via trigger: gcloud builds submit --substitutions=_FIREBASE_TOKEN=xxx
+
+# =========================================================================
+# NOTIFICAÇÕES
+# =========================================================================
+# Configure notificações via Slack ou Email no console do Cloud Build

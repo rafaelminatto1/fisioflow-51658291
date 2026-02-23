@@ -209,3 +209,9 @@ functions/decode-token.js
 functions/lib/
 functions/.env.fisioflow-migrationwhisper_env/
 functions/.env*claude-skills/repo
+
+# Playwright
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
