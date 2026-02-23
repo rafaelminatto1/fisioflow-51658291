@@ -9,6 +9,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef } from 'react';
 import { useAuthStore } from '../store/auth';
 import { phiCacheManager } from '../lib/services/phiCacheManager';
+import { AuthGuard } from '../components/navigation/AuthGuard';
 
 const FisioFlowLightTheme = {
   ...DefaultTheme,

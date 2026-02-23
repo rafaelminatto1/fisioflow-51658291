@@ -53,6 +53,21 @@ export const suggestionConfig = {
                     interactive: true,
                     trigger: 'manual',
                     placement: 'bottom-start',
+                    zIndex: 9999,
+                    maxWidth: 'none',
+                    offset: [0, 8],
+                    popperOptions: {
+                        modifiers: [
+                            {
+                                name: 'flip',
+                                options: { fallbackPlacements: ['top-start'] },
+                            },
+                            {
+                                name: 'preventOverflow',
+                                options: { boundary: 'viewport', padding: 8 },
+                            },
+                        ],
+                    },
                 });
             },
 

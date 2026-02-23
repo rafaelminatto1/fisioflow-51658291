@@ -6,50 +6,76 @@
 
 // Initialize Firebase Admin
 
-import { CORS_ORIGINS } from '../lib/cors';
-import { onCall } from 'firebase-functions/v2/https';
+import * as functions from 'firebase-functions/v2';
 import { getAuth } from 'firebase-admin/auth';
 import { initializeApp, getApps } from 'firebase-admin/app';
+import { getAdminDb } from '../init';
 
 if (!getApps().length) {
   initializeApp();
 }
 
-export const createAdminUserHandler = async () => {
-  const auth = getAuth();
+export const createAdminUser = functions.https.onCall(
+  {
+    region: 'southamerica-east1',
+  },
+  async (request) => {
+    const { email, password, displayName, role } = request.data;
 
-  try {
-    // Verificar se usuário já existe
+    const auth = getAuth();
+    const db = getAdminDb();
+
     try {
-      const existingUser = await auth.getUserByEmail('rafael.minatto@yahoo.com.br');
+      // Check if user already exists
+      try {
+        const userRecord = await auth.getUserByEmail(email);
+        if (userRecord) {
+          throw new functions.https.HttpsError('already-exists', 'User already exists');
+        }
+      } catch (error) {
+        // User doesn't exist - continue
+      }
+
+      // Create user
+      const user = await auth.createUser({
+        email,
+        password,
+        displayName,
+        emailVerified: true,
+      });
+
+      // Create user document in Firestore
+      await db.collection('users').doc(user.uid).set({
+        email,
+        displayName,
+        role: role || 'admin',
+        createdAt: new Date().toISOString(),
+      });
+
       return {
         success: true,
-        message: 'Usuário já existe',
-        uid: existingUser.uid,
-        email: existingUser.email
+        uid: user.uid,
+        message: 'User created successfully',
       };
-    } catch (e) {
-      // Usuário não existe, continuar
+    } catch (error) {
+      if (error instanceof functions.https.HttpsError) {
+        throw error;
+      }
+      throw new functions.https.HttpsError('internal', 'Failed to create user');
     }
+  }
+);
 
-    // Criar novo usuário
-    const user = await auth.createUser({
-      email: 'rafael.minatto@yahoo.com.br',
-      password: 'Yukari30@',
-      emailVerified: true,
-      displayName: 'Rafael Minatto',
-    });
+export const createAdminUserHandler = async () => {
+  const auth = getAuth();
+  console.log('Auth service initialized');
 
-    return {
-      success: true,
-      message: 'Usuário criado com sucesso',
-      uid: user.uid,
-      email: user.email,
-      loginUrl: 'https://fisioflow-migration.web.app/login'
-    };
-  } catch (error: any) {
-    throw new Error(`Erro ao criar usuário: ${error.message}`);
+  try {
+    const users = await auth.listUsers(100);
+    console.log(`Found ${users.users.length} users`);
+    return { success: true, count: users.users.length };
+  } catch (error) {
+    console.error('Error:', error);
+    return { success: false, error: (error as Error).message };
   }
 };
-
-export const createAdminUser = onCall({ cors: CORS_ORIGINS }, createAdminUserHandler);
