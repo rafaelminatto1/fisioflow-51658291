@@ -8,6 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
+import { Sparkles, Loader2 } from 'lucide-react';
+import { api } from '@/integrations/firebase/functions';
+import { toast } from '@/hooks/use-toast';
 import type { Exercise } from '@/hooks/useExercises';
 
 const exerciseSchema = z.object({
@@ -38,6 +41,7 @@ interface ExerciseModalProps {
 }
 
 export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoading }: ExerciseModalProps) {
+  const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const form = useForm<ExerciseFormData>({
     resolver: zodResolver(exerciseSchema),
     defaultValues: {
@@ -95,6 +99,45 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
       });
     }
   }, [exercise, form]);
+
+  const handleAnalyzeImage = async () => {
+    const imageUrl = form.getValues('image_url');
+    if (!imageUrl) {
+      toast({
+        title: 'URL da imagem necessária',
+        description: 'Insira a URL de uma imagem para analisar',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsAnalyzing(true);
+    try {
+      const result = await api.exerciseAnalysis.analyze(imageUrl);
+      if (result.success && result.analysis) {
+        // Preencher campos automaticamente baseados na análise
+        if (result.analysis.labels?.length > 0) {
+          const currentDesc = form.getValues('description') || '';
+          const aiTags = `Tags IA: ${result.analysis.labels.join(', ')}`;
+          form.setValue('description', currentDesc ? `${currentDesc}\n\n${aiTags}` : aiTags);
+        }
+        
+        toast({
+          title: 'Análise concluída',
+          description: 'A imagem foi analisada e as informações foram extraídas.',
+        });
+      }
+    } catch (error) {
+      console.error('Erro na análise:', error);
+      toast({
+        title: 'Erro na análise',
+        description: 'Não foi possível analisar a imagem no momento.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   const handleSubmit = (data: ExerciseFormData) => {
     onSubmit(data as Omit<Exercise, 'id' | 'created_at' | 'updated_at'>);
@@ -270,9 +313,21 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>URL da Imagem</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="https://..." />
-                    </FormControl>
+                    <div className="flex gap-2">
+                      <FormControl>
+                        <Input {...field} placeholder="https://..." className="flex-1" />
+                      </FormControl>
+                      <Button 
+                        type="button" 
+                        variant="secondary" 
+                        size="icon" 
+                        onClick={handleAnalyzeImage}
+                        disabled={isAnalyzing || !field.value}
+                        title="Analisar com IA"
+                      >
+                        {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                      </Button>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}

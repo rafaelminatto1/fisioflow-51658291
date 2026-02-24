@@ -8,9 +8,9 @@
  * @method onCall
  */
 
-import { onCall, HttpsError } from 'firebase-functions/v2';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
-import * as logger from '../lib/logger';
+import { logger } from '../lib/logger';
 import { withIdempotency } from '../lib/idempotency';
 
 const firestore = admin.firestore();

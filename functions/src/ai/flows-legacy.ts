@@ -4,7 +4,7 @@
 import { genkit, z } from '../ai/config';
 import { googleAI, gemini15Flash } from '@genkit-ai/googleai';
 import { logger } from '../lib/logger';
-import { onCall } from 'firebase-functions/v2';
+import { onCall } from 'firebase-functions/v2/https';
 
 const ai = genkit({
   plugins: [googleAI({ apiKey: process.env.GOOGLE_GENAI_API_KEY })],
