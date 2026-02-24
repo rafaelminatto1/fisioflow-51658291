@@ -12,9 +12,9 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { RouteErrorBoundary } from '@/components/error-boundaries/RouteErrorBoundary';
 import { MainLayout } from '@/components/layout/MainLayout';
+import Auth from './pages/Auth';
 
 const Welcome = lazy(() => import(/* webpackChunkName: "auth-welcome" */ "./pages/Welcome"));
-const Auth = lazy(() => import(/* webpackChunkName: "auth" */ "./pages/Auth"));
 const SeedData = lazy(() => import(/* webpackChunkName: "seed-data" */ "./pages/SeedData"));
 const PendingApproval = lazy(() => import(/* webpackChunkName: "auth-pending" */ "./pages/PendingApproval"));
 

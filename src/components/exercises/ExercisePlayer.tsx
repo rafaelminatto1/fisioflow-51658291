@@ -5,14 +5,16 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import {
-
   Play, Plus, Heart, Share2, ExternalLink,
-  Clock, Repeat, Dumbbell, FileText, Video, Image as ImageIcon
+  Clock, Repeat, Dumbbell, FileText, Video, Image as ImageIcon,
+  BrainCircuit, X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
 import type { Exercise } from '@/hooks/useExercises';
 import { buildImageSrcSet } from '@/lib/storageProxy';
+import { ExerciseExecutionScreen } from './ExerciseExecutionScreen';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ExercisePlayerProps {
   exercise: Exercise;
@@ -55,8 +57,10 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
   exercise,
   onAddToPlan
 }) => {
+  const { user } = useAuth();
   const { isFavorite, toggleFavorite } = useExerciseFavorites();
   const [activeTab, setActiveTab] = useState(exercise.video_url ? 'video' : 'info');
+  const [isExecutingIA, setIsExecutingIA] = useState(false);
   
   const embedUrl = exercise.video_url ? getEmbedUrl(exercise.video_url) : null;
   const isDirectVideo = embedUrl?.match(/\.(mp4|webm|ogg)$/i);
@@ -72,6 +76,22 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
       navigator.clipboard.writeText(window.location.href);
     }
   };
+
+  if (isExecutingIA) {
+    return (
+      <Card className="overflow-hidden border-primary/20 shadow-2xl">
+        <ExerciseExecutionScreen 
+          exercise={exercise}
+          patientId={user?.uid || 'anonymous'}
+          onBack={() => setIsExecutingIA(false)}
+          onComplete={(session) => {
+            console.log('Sessão completada:', session);
+            // Aqui poderíamos salvar no Firestore
+          }}
+        />
+      </Card>
+    );
+  }
 
   return (
     <Card className="overflow-hidden">
@@ -94,6 +114,14 @@ export const ExercisePlayer: React.FC<ExercisePlayerProps> = ({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="default"
+              className="bg-primary/90 hover:bg-primary shadow-lg"
+              onClick={() => setIsExecutingIA(true)}
+            >
+              <BrainCircuit className="w-4 h-4 mr-2" />
+              Executar com IA
+            </Button>
             <Button
               variant="ghost"
               size="icon"

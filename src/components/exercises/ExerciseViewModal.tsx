@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,16 +6,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
-
   Heart, Share2, ExternalLink, Edit,
   Clock, Repeat, Dumbbell, FileText, Video, Image as ImageIcon,
-  AlertTriangle, Printer, X, CheckCircle2, ChevronRight
+  AlertTriangle, Printer, X, CheckCircle2, ChevronRight, Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
 import type { Exercise } from '@/hooks/useExercises';
 import { getBestImageUrl } from '@/lib/imageUtils';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
+import { ExerciseType } from '@/types/pose';
+
+// Lazy load the AI screen
+const ExerciseExecutionScreen = lazy(() => import('@/components/exercises/ExerciseExecutionScreen').then(m => ({ default: m.ExerciseExecutionScreen })));
 
 interface ExerciseViewModalProps {
   open: boolean;
@@ -55,6 +58,20 @@ function getEmbedUrl(url: string): string | null {
 
   return null;
 }
+
+// Tentar mapear o nome do exercício para um ExerciseType conhecido
+const getMappedExerciseType = (name: string): ExerciseType => {
+  const lowerName = name.toLowerCase();
+  if (lowerName.includes('agachamento') || lowerName.includes('squat')) return ExerciseType.SQUAT;
+  if (lowerName.includes('flexão') || lowerName.includes('pushup')) return ExerciseType.PUSHUP;
+  if (lowerName.includes('levantamento lateral')) return ExerciseType.LATERAL_RAISE;
+  if (lowerName.includes('prancha') || lowerName.includes('plank')) return ExerciseType.PLANK;
+  if (lowerName.includes('avanço') || lowerName.includes('lunge')) return ExerciseType.LUNGE;
+  if (lowerName.includes('desenvolvimento') || lowerName.includes('shoulder press')) return ExerciseType.SHOULDER_PRESS;
+  if (lowerName.includes('abdução')) return ExerciseType.HIP_ABDUCTION;
+  if (lowerName.includes('joelho')) return ExerciseType.KNEE_FLEXION;
+  return ExerciseType.SQUAT;
+};
 
 export function ExerciseViewModal({
   open,
@@ -184,6 +201,9 @@ export function ExerciseViewModal({
                   <TabsTrigger value="image" disabled={!hasImage} className="gap-2 px-4">
                     <ImageIcon className="h-4 w-4" /> Imagem
                   </TabsTrigger>
+                  <TabsTrigger value="biofeedback" className="gap-2 px-4">
+                    <Sparkles className="h-4 w-4" /> Biofeedback IA
+                  </TabsTrigger>
                 </TabsList>
               </div>
 
@@ -240,6 +260,24 @@ export function ExerciseViewModal({
                       <p className="text-muted-foreground">Sem imagem</p>
                     </div>
                   )}
+                </TabsContent>
+
+                <TabsContent value="biofeedback" className="w-full h-full mt-0 data-[state=active]:flex data-[state=active]:items-center data-[state=active]:justify-center overflow-auto">
+                  <Suspense fallback={
+                    <div className="flex flex-col items-center justify-center p-12 gap-4">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                      <p className="text-muted-foreground">Inicializando Biofeedback IA...</p>
+                    </div>
+                  }>
+                    <div className="w-full max-w-4xl">
+                      <ExerciseExecutionScreen
+                        exerciseId={exercise.id}
+                        patientId="therapist_preview"
+                        exerciseType={getMappedExerciseType(exercise.name)}
+                        exerciseName={exercise.name}
+                      />
+                    </div>
+                  </Suspense>
                 </TabsContent>
               </div>
             </Tabs>

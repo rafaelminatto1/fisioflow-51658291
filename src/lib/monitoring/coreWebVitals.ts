@@ -32,19 +32,23 @@ export async function initCoreWebVitals(): Promise<void> {
     const { onCLS, onFID, onFCP, onLCP, onTTFB, onINP } = await import('web-vitals');
 
     // Track LCP (Largest Contentful Paint)
-    onLCP((metric: Metric) => {
-      metrics.lcp = metric.value;
-      reportMetric('LCP', metric);
-    });
+    if (typeof onLCP === 'function') {
+      onLCP((metric: Metric) => {
+        metrics.lcp = metric.value;
+        reportMetric('LCP', metric);
+      });
+    }
 
     // Track FID (First Input Delay)
-    onFID((metric: Metric) => {
-      metrics.fid = metric.value;
-      reportMetric('FID', metric);
-    });
+    if (typeof onFID === 'function') {
+      onFID((metric: Metric) => {
+        metrics.fid = metric.value;
+        reportMetric('FID', metric);
+      });
+    }
 
     // Track INP (Interaction to Next Paint) - modern replacement for FID
-    if (onINP) {
+    if (typeof onINP === 'function') {
       onINP((metric: Metric) => {
         metrics.inp = metric.value;
         reportMetric('INP', metric);
@@ -52,22 +56,28 @@ export async function initCoreWebVitals(): Promise<void> {
     }
 
     // Track CLS (Cumulative Layout Shift)
-    onCLS((metric: Metric) => {
-      metrics.cls = metric.value;
-      reportMetric('CLS', metric);
-    });
+    if (typeof onCLS === 'function') {
+      onCLS((metric: Metric) => {
+        metrics.cls = metric.value;
+        reportMetric('CLS', metric);
+      });
+    }
 
     // Track FCP (First Contentful Paint)
-    onFCP((metric: Metric) => {
-      metrics.fcp = metric.value;
-      reportMetric('FCP', metric);
-    });
+    if (typeof onFCP === 'function') {
+      onFCP((metric: Metric) => {
+        metrics.fcp = metric.value;
+        reportMetric('FCP', metric);
+      });
+    }
 
     // Track TTFB (Time to First Byte)
-    onTTFB((metric: Metric) => {
-      metrics.ttfb = metric.value;
-      reportMetric('TTFB', metric);
-    });
+    if (typeof onTTFB === 'function') {
+      onTTFB((metric: Metric) => {
+        metrics.ttfb = metric.value;
+        reportMetric('TTFB', metric);
+      });
+    }
 
     logger.debug('✅ Core Web Vitals tracking initialized');
   } catch (error) {
