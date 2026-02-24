@@ -211,6 +211,13 @@ export default function ExercisesScreen() {
                         </Text>
                       </View>
                     )}
+                    {/* IA Badge */}
+                    {['squat', 'pushup', 'plank', 'lunge'].includes(exercise.id?.toLowerCase() || '') && (
+                      <View style={[styles.iaBadge, { backgroundColor: '#8B5CF6' }]}>
+                        <Ionicons name="sparkles" size={10} color="#fff" />
+                        <Text style={styles.iaBadgeText}>IA</Text>
+                      </View>
+                    )}
                   </View>
                   <Text
                     style={[styles.exerciseDescription, { color: colors.textSecondary }]}
@@ -452,6 +459,20 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     textTransform: 'capitalize',
+  },
+  iaBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginLeft: 6,
+    gap: 2,
+  },
+  iaBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   exerciseDescription: {
     fontSize: 14,

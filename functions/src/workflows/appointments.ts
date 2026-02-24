@@ -8,12 +8,8 @@
  * @version 1.0.0 - Firebase Functions v2
  */
 
-
-// ============================================================================
-// TYPES
-// ============================================================================
-
-import * as functions from 'firebase-functions/v2';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { onDocumentCreated, onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { logger } from '../lib/logger';
 import { getAdminDb, batchFetchDocuments } from '../init';
 import { sendAppointmentConfirmationEmail } from '../communications/resend-templates';
@@ -84,14 +80,17 @@ function resolveAppointmentDateTime(appointment: any): Date | null {
  *
  * Schedule: "every day 08:00"
  */
-export const appointmentReminders = functions.pubsub.schedule('daily-appointment-reminders', '0 8 * * *')
-  .timeZone('America/Sao_Paulo')
-  .onRun(async (context) => {
+export const appointmentReminders = onSchedule(
+  {
+    schedule: '0 8 * * *',
+    timeZone: 'America/Sao_Paulo',
+    region: 'southamerica-east1',
+  },
+  async (event) => {
     const db = getAdminDb();
 
     logger.info('[appointmentReminders] Starting appointment reminder check', {
-      jobId: context.jobId,
-      scheduleTime: context.scheduleTime,
+      scheduleTime: event.scheduleTime,
     });
 
     try {
@@ -112,12 +111,7 @@ export const appointmentReminders = functions.pubsub.schedule('daily-appointment
 
       if (snapshot.empty) {
         logger.info('[appointmentReminders] No appointments found for tomorrow');
-        return {
-          success: true,
-          remindersSent: 0,
-          timestamp: new Date().toISOString(),
-          message: 'No appointments found for tomorrow',
-        };
+        return;
       }
 
       logger.info('[appointmentReminders] Appointments found', {
@@ -135,7 +129,7 @@ export const appointmentReminders = functions.pubsub.schedule('daily-appointment
 
       // Process each appointment
       let remindersSent = 0;
-      const results = await Promise.all(
+      await Promise.all(
         snapshot.docs.map(async (docSnap) => {
           const appointment = { id: docSnap.id, ...docSnap.data() } as any;
           const patient = patientMap.get(appointment.patient_id) || {
@@ -165,22 +159,11 @@ export const appointmentReminders = functions.pubsub.schedule('daily-appointment
               .get();
 
             if (!reminderSnapshot.empty) {
-              logger.info('[appointmentReminders] Reminder already sent', {
-                appointmentId: appointment.id,
-              });
-              return {
-                appointmentId: appointment.id,
-                sent: false,
-                reason: 'Already sent',
-              };
+              return;
             }
 
             if ((!emailEnabledByOrg && !whatsappEnabledByOrg) || (!emailEnabledByPatient && !whatsappEnabledByPatient)) {
-              return {
-                appointmentId: appointment.id,
-                sent: false,
-                reason: 'Notifications disabled by preferences',
-              };
+              return;
             }
 
             const dispatchResult = await dispatchAppointmentNotification({
@@ -220,23 +203,11 @@ export const appointmentReminders = functions.pubsub.schedule('daily-appointment
                 push: dispatchResult.push.error || null,
               },
             });
-
-            return {
-              appointmentId: appointment.id,
-              patientId: patient.id,
-              sent: anySent,
-            };
           } catch (error) {
             logger.error('[appointmentReminders] Error processing appointment', {
               appointmentId: appointment.id,
               error: error instanceof Error ? error.message : 'Unknown error',
             });
-
-            return {
-              appointmentId: appointment.id,
-              sent: false,
-              error: error instanceof Error ? error.message : 'Unknown error',
-            };
           }
         })
       );
@@ -245,17 +216,8 @@ export const appointmentReminders = functions.pubsub.schedule('daily-appointment
         remindersSent,
         totalAppointments: snapshot.docs.length,
       });
-
-      return {
-        success: true,
-        remindersSent,
-        totalAppointments: snapshot.docs.length,
-        timestamp: new Date().toISOString(),
-        results,
-      };
     } catch (error) {
       logger.error('[appointmentReminders] Fatal error', { error });
-      throw error;
     }
   }
 );
@@ -264,9 +226,13 @@ export const appointmentReminders = functions.pubsub.schedule('daily-appointment
  * Send 2-hour reminders.
  * Runs every 30 minutes and targets appointments between 90 and 150 minutes from now.
  */
-export const appointmentReminders2h = functions.pubsub.schedule('hourly-appointment-reminders', '*/30 * * * *')
-  .timeZone('America/Sao_Paulo')
-  .onRun(async () => {
+export const appointmentReminders2h = onSchedule(
+  {
+    schedule: '*/30 * * * *',
+    timeZone: 'America/Sao_Paulo',
+    region: 'southamerica-east1',
+  },
+  async () => {
     const db = getAdminDb();
     const now = new Date();
     let snapshot;
@@ -304,6 +270,14 @@ export const appointmentReminders2h = functions.pubsub.schedule('hourly-appointm
       return;
     }
 
+    // Batch fetch patients and orgs for candidates
+    const patientIds = candidates.map(c => c.patient_id).filter(Boolean);
+    const orgIds = candidates.map(c => c.organization_id).filter(Boolean);
+    const [patientMap] = await Promise.all([
+      batchFetchDocuments('patients', patientIds),
+      batchFetchDocuments('organizations', orgIds),
+    ]);
+
     await Promise.all(candidates.map(async (appointment) => {
       const reminderSnapshot = await db
         .collection('appointment_reminders')
@@ -316,6 +290,8 @@ export const appointmentReminders2h = functions.pubsub.schedule('hourly-appointm
         return;
       }
 
+      const patient = patientMap.get(appointment.patient_id) || {};
+
       const dispatch = await dispatchAppointmentNotification({
         kind: 'reminder_2h',
         organizationId: String(appointment.organization_id || 'system'),
@@ -323,6 +299,8 @@ export const appointmentReminders2h = functions.pubsub.schedule('hourly-appointm
         patientId: String(appointment.patient_id),
         date: String(appointment.date || appointment.appointment_date || ''),
         time: String(appointment.time || appointment.start_time || appointment.startTime || appointment.appointment_time || ''),
+        patientName: patient.full_name || patient.name || 'Paciente',
+        therapistName: appointment.therapistName || 'Seu fisioterapeuta',
       });
 
       await db.collection('appointment_reminders').doc().create({
@@ -356,7 +334,7 @@ export const appointmentReminders2h = functions.pubsub.schedule('hourly-appointm
  * - Send confirmation message to patient
  * - Invalidate caches
  */
-export const onAppointmentCreatedWorkflow = functions.firestore.onDocumentCreated(
+export const onAppointmentCreatedWorkflow = onDocumentCreated(
   'appointments/{appointmentId}',
   async (event) => {
     const snapshot = event.data;
@@ -454,27 +432,14 @@ export const onAppointmentCreatedWorkflow = functions.firestore.onDocumentCreate
         });
       }
 
-      // Invalidate cache (if using KV cache)
-      // TODO: Implement cache invalidation
-
       logger.info('[onAppointmentCreatedWorkflow] Processed successfully', {
         appointmentId: appointment.id,
       });
-
-      return {
-        success: true,
-        appointmentId: appointment.id,
-      };
     } catch (error) {
       logger.error('[onAppointmentCreatedWorkflow] Error', {
         appointmentId: appointment.id,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
-      return {
-        success: false,
-        appointmentId: appointment.id,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
     }
   }
 );
@@ -488,7 +453,7 @@ export const onAppointmentCreatedWorkflow = functions.firestore.onDocumentCreate
  * Triggered when an appointment is updated
  * Used to trigger feedback request when appointment is completed
  */
-export const onAppointmentUpdatedWorkflow = functions.firestore.onDocumentUpdated(
+export const onAppointmentUpdatedWorkflow = onDocumentUpdated(
   'appointments/{appointmentId}',
   async (event) => {
     const before = event.data?.before.data();
@@ -528,11 +493,6 @@ export const onAppointmentUpdatedWorkflow = functions.firestore.onDocumentUpdate
       appointmentId,
       scheduledFor: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
     });
-
-    return {
-      success: true,
-      feedbackScheduled: true,
-    };
   }
 );
 

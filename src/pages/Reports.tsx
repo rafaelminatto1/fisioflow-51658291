@@ -1,7 +1,6 @@
 
 // Lazy load AdvancedReportGenerator (contém jsPDF - 442KB) - só carrega quando a tab é acessada
 
-import AdvancedAnalytics from '@/components/analytics/AdvancedAnalytics';
 import React, { useState, useCallback, useMemo, lazy, Suspense } from 'react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -13,6 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const AdvancedReportGenerator = lazy(() => import('@/components/reports/AdvancedReportGenerator').then(m => ({ default: m.AdvancedReportGenerator })));
+const AdvancedAnalytics = lazy(() => import('@/components/analytics/AdvancedAnalytics'));
+const ClinicAIInsights = lazy(() => import('@/components/reports/ClinicAIInsights').then(m => ({ default: m.ClinicAIInsights })));
 import {
   FileText,
   Download,
@@ -33,7 +34,6 @@ import { ptBR } from 'date-fns/locale';
 import { useAppointments } from '@/hooks/useAppointments';
 import { usePatients } from '@/hooks/usePatients';
 import { useFinancial } from '@/hooks/useFinancial';
-import { ClinicAIInsights } from '@/components/reports/ClinicAIInsights';
 
 const Reports = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
@@ -184,7 +184,9 @@ const Reports = () => {
 
         {/* AI Strategic Insights */}
         <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <ClinicAIInsights data={reportsData} />
+          <Suspense fallback={<Card className="h-48 animate-pulse bg-muted/30 border-border/50" />}>
+            <ClinicAIInsights data={reportsData} />
+          </Suspense>
         </section>
 
         {/* Quick Stats */}
@@ -417,7 +419,9 @@ const Reports = () => {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
-            <AdvancedAnalytics />
+            <Suspense fallback={<Card className="h-64 animate-pulse bg-muted/30 border-border/50" />}>
+              <AdvancedAnalytics />
+            </Suspense>
           </TabsContent>
         </Tabs>
       </div>

@@ -347,8 +347,11 @@ export const PoseFeedbackOverlay: React.FC<PoseFeedbackOverlayProps> = ({
       ctx.stroke();
 
       // Desenhar arco do ângulo
+      const startAngle = Math.atan2(aY - pivotY, aX - pivotX);
+      const endAngle = Math.atan2(bY - pivotY, bX - pivotX);
+
       ctx.beginPath();
-      ctx.arc(pivotX, pivotY, 30, Math.atan2(bY - pivotY, bX - pivotX) - Math.atan2(aY - pivotY, aX - pivotX));
+      ctx.arc(pivotX, pivotY, 30, startAngle, endAngle);
       ctx.strokeStyle = inRange ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)';
       ctx.lineWidth = 2;
       ctx.stroke();

@@ -13,7 +13,6 @@ export type { EnhancedAppointment } from './appointment';
 export type {
   ErrorHandler,
   AsyncErrorHandler,
-  UnknownError,
   IconComponent,
   LucideIconType,
   ValueChangeHandler,
@@ -30,7 +29,6 @@ export type {
   ExerciseId,
   SessionId,
   TreatmentId,
-  PaymentStatus,
   UserRole,
   QueryParams,
   PaginationParams,
@@ -45,6 +43,8 @@ export type {
   Dictionary,
   ErrorMap,
 } from './common';
+
+export { getErrorMessage, asError, type UnknownError } from './error';
 
 // API type definitions
 export * from './api';
@@ -464,8 +464,7 @@ export const PatientHelpers = {
   }
 };
 
-// Error handling utility exports (from common.ts) - value exports for runtime
-export { getErrorMessage, asError } from './common';
+// Error handling utility exports moved to top for better visibility and to avoid circular deps
 
 // Appointment utility functions
 export function getPatientName(appointment: AppointmentUnified | { patient?: { name?: string; full_name?: string }; patientName?: string } | null | undefined): string {
@@ -521,59 +520,59 @@ export type PaymentMethod = 'cash' | 'credit_card' | 'debit_card' | 'pix' | 'tra
 export type PaymentStatus = 'pending' | 'paid' | 'partial' | 'cancelled' | 'refunded';
 
 export interface Partnership {
-    id: string;
-    organization_id: string;
-    name: string;
-    cnpj?: string;
-    contact_person?: string;
-    contact_phone?: string;
-    contact_email?: string;
-    address?: string;
-    discount_type: PartnershipDiscountType;
-    discount_value: number;
-    allows_barter: boolean;
-    barter_description?: string;
-    barter_sessions_limit?: number;
-    notes?: string;
-    is_active: boolean;
-    created_at: string;
-    updated_at: string;
+  id: string;
+  organization_id: string;
+  name: string;
+  cnpj?: string;
+  contact_person?: string;
+  contact_phone?: string;
+  contact_email?: string;
+  address?: string;
+  discount_type: PartnershipDiscountType;
+  discount_value: number;
+  allows_barter: boolean;
+  barter_description?: string;
+  barter_sessions_limit?: number;
+  notes?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface PatientFinancialRecord {
-    id: string;
-    organization_id: string;
-    patient_id: string;
-    appointment_id?: string;
-    session_date: string;
-    session_value: number;
+  id: string;
+  organization_id: string;
+  patient_id: string;
+  appointment_id?: string;
+  session_date: string;
+  session_value: number;
+  discount_value: number;
+  discount_type?: 'percentage' | 'fixed' | 'partnership';
+  partnership_id?: string;
+  partnership?: {
+    name: string;
+    discount_type: PartnershipDiscountType;
     discount_value: number;
-    discount_type?: 'percentage' | 'fixed' | 'partnership';
-    partnership_id?: string;
-    partnership?: {
-        name: string;
-        discount_type: PartnershipDiscountType;
-        discount_value: number;
-    };
-    final_value: number;
-    payment_method?: PaymentMethod;
-    payment_status: PaymentStatus;
-    paid_amount: number;
-    paid_date?: string;
-    notes?: string;
-    is_barter: boolean;
-    barter_notes?: string;
-    created_by?: string;
-    created_at: string;
-    updated_at: string;
+  };
+  final_value: number;
+  payment_method?: PaymentMethod;
+  payment_status: PaymentStatus;
+  paid_amount: number;
+  paid_date?: string;
+  notes?: string;
+  is_barter: boolean;
+  barter_notes?: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface PatientFinancialSummary {
-    total_sessions: number;
-    paid_sessions: number;
-    pending_sessions: number;
-    total_value: number;
-    total_paid: number;
-    total_pending: number;
-    average_session_value: number;
+  total_sessions: number;
+  paid_sessions: number;
+  pending_sessions: number;
+  total_value: number;
+  total_paid: number;
+  total_pending: number;
+  average_session_value: number;
 }

@@ -1,0 +1,8 @@
+# Ignore local-only artifacts
+node_modules
+.git
+firebase-debug.log
+firebase-debug.*.log
+
+# Keep compiled output required by package.json "main"
+!lib/**

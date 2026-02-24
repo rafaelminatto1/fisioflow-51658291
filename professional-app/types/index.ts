@@ -77,6 +77,13 @@ export interface Exercise {
   sets?: number;
   reps?: number;
   duration?: number;
+  aiConfig?: {
+    enabled: boolean;
+    type: 'squat' | 'pushup' | 'lateral_raise' | 'plank' | 'lunge';
+    targetAngleMin?: number;
+    targetAngleMax?: number;
+    primaryJoint?: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }

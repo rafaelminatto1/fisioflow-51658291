@@ -68,6 +68,7 @@ export const API_URLS = {
     deleteTransaction: CLOUD_RUN_BASE_URL('deleteTransactionV2'),
     findTransactionByAppointmentId: CLOUD_RUN_BASE_URL('findTransactionByAppointmentIdV2'),
     getEventReport: CLOUD_RUN_BASE_URL('getEventReportV2'),
+    getSummary: CLOUD_RUN_BASE_URL('getFinancialSummaryV2'),
   },
   clinical: {
     listGoals: CLOUD_RUN_BASE_URL('listpatientgoalshttp'),
@@ -78,5 +79,17 @@ export const API_URLS = {
     getAiSummary: CLOUD_RUN_BASE_URL('getpatientaisummaryhttp'),
     transcribe: CLOUD_RUN_BASE_URL('transcribeaudio'),
     scanReport: CLOUD_RUN_BASE_URL('scanmedicalreporthttp'),
+  },
+  analytics: {
+    setup: CLOUD_RUN_BASE_URL('setupAnalytics'),
+    dashboard: CLOUD_RUN_BASE_URL('dashboardMetrics'),
+    evolution: CLOUD_RUN_BASE_URL('patientEvolution'),
+    organization: CLOUD_RUN_BASE_URL('organizationStats'),
+    exercises: CLOUD_RUN_BASE_URL('topExercises'),
+    painMap: CLOUD_RUN_BASE_URL('painMapAnalysis'),
+    usage: CLOUD_RUN_BASE_URL('usageStats'),
+  },
+  external: {
+    exerciseService: 'https://exercise-service-412418905255.us-central1.run.app/',
   }
 };

@@ -18,6 +18,7 @@ import { ExerciseVideoLibrary } from '@/components/exercises/ExerciseVideoLibrar
 import { ExerciseVideoUpload } from '@/components/exercises/ExerciseVideoUpload';
 import { NewExerciseModal } from '@/components/modals/NewExerciseModal';
 import { ExerciseAI } from '@/components/ai/ExerciseAI';
+import { ClinicalAnalyticsDashboard } from '@/components/analytics/ClinicalAnalyticsDashboard';
 import { ComponentErrorBoundary } from '@/components/error/ComponentErrorBoundary';
 import { useExercises, type Exercise } from '@/hooks/useExercises';
 import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
@@ -33,7 +34,7 @@ export default function Exercises() {
   const { templates, loading: loadingTemplates } = useExerciseTemplates();
 
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
-  const [activeTab, setActiveTab] = useState<'library' | 'videos' | 'templates' | 'protocols' | 'ai'>('library');
+  const [activeTab, setActiveTab] = useState<'library' | 'videos' | 'templates' | 'protocols' | 'ai' | 'analytics'>('library');
   const [showNewModal, setShowNewModal] = useState(false);
   const [showVideoUpload, setShowVideoUpload] = useState(false);
 
@@ -95,7 +96,7 @@ export default function Exercises() {
   }, []);
 
   const handleTabChange = useCallback((v: string) => {
-    setActiveTab(v as 'library' | 'videos' | 'templates' | 'protocols' | 'ai');
+    setActiveTab(v as 'library' | 'videos' | 'templates' | 'protocols' | 'ai' | 'analytics');
   }, []);
 
   const handleUploadClick = useCallback(() => {
@@ -330,6 +331,13 @@ export default function Exercises() {
                     NOVO
                   </Badge>
                 </TabsTrigger>
+                <TabsTrigger
+                  value="analytics"
+                  className="gap-1.5 sm:gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-3 sm:px-4 md:px-6 text-xs sm:text-sm"
+                >
+                  <Activity className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                  <span className="hidden xs:inline">Analytics</span>
+                </TabsTrigger>
               </TabsList>
             </div>
 
@@ -365,6 +373,12 @@ export default function Exercises() {
                   logger.debug('Exercises selected', { selectedExercises }, 'Exercises');
                 }}
               />
+              </ComponentErrorBoundary>
+            </TabsContent>
+
+            <TabsContent value="analytics" className="m-0 p-3 sm:p-4 md:p-6">
+              <ComponentErrorBoundary componentName="ClinicalAnalyticsDashboard">
+                <ClinicalAnalyticsDashboard />
               </ComponentErrorBoundary>
             </TabsContent>
           </Tabs>

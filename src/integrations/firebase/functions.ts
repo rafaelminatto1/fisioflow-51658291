@@ -56,9 +56,17 @@ const HTTP_FUNCTION_URLS: Record<string, string> = {
   deleteTransactionV2: API_URLS.financial.deleteTransaction,
   findTransactionByAppointmentIdV2: API_URLS.financial.findTransactionByAppointmentId,
   getEventReportV2: API_URLS.financial.getEventReport,
+  getFinancialSummaryV2: API_URLS.financial.getSummary,
   patientServiceHttp: API_URLS.services.patient,
   appointmentServiceHttp: API_URLS.services.appointment,
   evolutionServiceHttp: API_URLS.services.evolution,
+  setupAnalytics: API_URLS.analytics.setup,
+  dashboardMetrics: API_URLS.analytics.dashboard,
+  patientEvolution: API_URLS.analytics.evolution,
+  organizationStats: API_URLS.analytics.organization,
+  topExercises: API_URLS.analytics.exercises,
+  painMapAnalysis: API_URLS.analytics.painMap,
+  usageStats: API_URLS.analytics.usage,
 };
 const LOCAL_FUNCTIONS_PROXY =
   import.meta.env.DEV && import.meta.env.VITE_USE_FUNCTIONS_PROXY === 'true'
@@ -407,6 +415,8 @@ export namespace ExerciseApi {
  * Tipos para API Financeira
  */
 export namespace FinancialApi {
+  export type Period = 'daily' | 'weekly' | 'monthly' | 'all';
+
   export interface Transaction {
     id: string;
     amount: number;
@@ -447,6 +457,16 @@ export namespace FinancialApi {
       pagoEm: string | null;
     }>;
     [key: string]: unknown;
+  }
+
+  export interface Summary {
+    period: Period;
+    totalRevenue: number;
+    pendingPayments: number;
+    monthlyGrowth: number;
+    paidCount: number;
+    totalCount: number;
+    averageTicket: number;
   }
 }
 
@@ -721,6 +741,10 @@ export const exercisesApi = {
 export const financialApi = {
   list: (limit?: number, offset?: number): Promise<FunctionResponse<FinancialApi.Transaction[]>> =>
     callFunctionHttpWithResponse('listTransactionsV2', { limit, offset }),
+  summary: async (period: FinancialApi.Period = 'monthly'): Promise<FinancialApi.Summary> => {
+    const res = await callFunctionHttp<{ period: FinancialApi.Period }, { data: FinancialApi.Summary }>('getFinancialSummaryV2', { period });
+    return res.data;
+  },
   create: async (transaction: FinancialApi.CreateData): Promise<FinancialApi.Transaction> => {
     const res = await callFunctionHttp<FinancialApi.CreateData, { data: FinancialApi.Transaction }>('createTransactionV2', transaction);
     return res.data;
@@ -942,6 +966,39 @@ export const doctorsApi = {
     callFunctionHttp('searchDoctorsV2', params),
 };
 
+/**
+ * API de Analytics (BigQuery)
+ */
+export const analyticsApi = {
+  setup: () => callFunctionHttp('setupAnalytics', {}),
+  getDashboard: (organizationId: string) => callFunctionHttp('dashboardMetrics', { organizationId }),
+  getPatientEvolution: (patientId: string) => callFunctionHttp('patientEvolution', { patientId }),
+  getOrganizationStats: (organizationId: string) => callFunctionHttp('organizationStats', { organizationId }),
+  getTopExercises: (organizationId: string) => callFunctionHttp('topExercises', { organizationId }),
+  getPainMap: (organizationId: string) => callFunctionHttp('painMapAnalysis', { organizationId }),
+  getUsage: () => callFunctionHttp('usageStats', {}),
+};
+
+/**
+ * API de Análise de Exercícios (Cloud Run Externo)
+ */
+export const exerciseAnalysisApi = {
+  analyze: async (imageUrl: string) => {
+    const auth = getFirebaseAuth();
+    const token = await auth.currentUser?.getIdToken();
+    const response = await fetch(API_URLS.external.exerciseService + 'api/exercises/analyze', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ imageUrl }),
+    });
+    if (!response.ok) throw new Error('Failed to analyze exercise');
+    return response.json();
+  }
+};
+
 // ============================================================================
 // EXPORTS
 // ============================================================================
@@ -958,4 +1015,6 @@ export const api = {
   appointments: appointmentsApi,
   profile: profileApi,
   evolutions: evolutionsApi,
+  analytics: analyticsApi,
+  exerciseAnalysis: exerciseAnalysisApi,
 };

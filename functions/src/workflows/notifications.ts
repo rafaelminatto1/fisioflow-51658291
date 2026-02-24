@@ -9,16 +9,14 @@
  * @version 2.0.0 - Fixed Firestore API usage
  */
 
-
-// Firebase Functions v2 CORS - explicitly list allowed origins
-
 import * as functions from 'firebase-functions/v2';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { onMessagePublished } from 'firebase-functions/v2/pubsub';
 import { logger } from '../lib/logger';
 import { getAdminDb, getAdminMessaging } from '../init';
 import { FieldValue } from 'firebase-admin/firestore';
 import { sendAppointmentConfirmationEmail, sendAppointmentReminderEmail, sendEmail } from '../communications/resend-templates';
 import {
-  WhatsAppTemplate,
   formatPhoneForWhatsApp,
   sendWhatsAppTemplateMessageInternal,
   sendWhatsAppTextMessageInternal,
@@ -38,7 +36,7 @@ const CORS_ORIGINS = [
 interface SendNotificationData {
   userId: string;
   organizationId: string;
-  type: 'email' | 'whatsapp' | 'push';
+  type: 'email' | 'whatsapp' | 'push' | 'all';
   data: {
     to: string;
     subject?: string;
@@ -47,27 +45,28 @@ interface SendNotificationData {
   };
 }
 
-interface DispatchAppointmentNotificationParams {
-  kind: 'reminder_24h' | 'reminder_2h' | 'confirmation' | 'cancellation' | 'feedback_request';
+export interface DispatchAppointmentNotificationParams {
+  kind: 'reminder_24h' | 'reminder_2h' | 'confirmation' | 'cancellation' | 'feedback_request' | 'scheduled' | 'rescheduled' | 'cancelled';
   organizationId: string;
   appointmentId: string;
   patientId: string;
   date: string;
   time: string;
-  patientName: string;
-  therapistName: string;
+  patientName?: string;
+  therapistName?: string;
 }
 
 // ============================================================================
 // CALLABLE FUNCTION: Send Notification
 // ============================================================================
 
-export const sendNotification = functions.https.onCall(
+export const sendNotification = onCall(
   {
     region: 'southamerica-east1',
+    cors: CORS_ORIGINS,
   },
   async (request) => {
-    const { userId, organizationId, type, data }: SendNotificationData = request.data;
+    const { userId, organizationId, type, data } = request.data as SendNotificationData;
 
     logger.info('[sendNotification] Processing notification request', {
       userId,
@@ -83,7 +82,11 @@ export const sendNotification = functions.https.onCall(
       // Send Email
       if (type === 'email' || type === 'all') {
         try {
-          const emailResult = await sendEmail(data.to, data.subject, data.body);
+          const emailResult = await sendEmail({
+            to: data.to,
+            subject: data.subject || 'FisioFlow',
+            html: data.body,
+          });
           results.email = {
             sent: emailResult.success,
             error: emailResult.error || null,
@@ -103,7 +106,7 @@ export const sendNotification = functions.https.onCall(
         try {
           const whatsappResult = await sendWhatsAppTextMessageInternal({
             to: data.to,
-            body: data.body,
+            message: data.body,
           });
           results.whatsapp = {
             sent: whatsappResult.success,
@@ -123,17 +126,15 @@ export const sendNotification = functions.https.onCall(
       if (type === 'push' || type === 'all') {
         try {
           const pushResult = await sendPushNotificationToUser(userId, {
-            notification: {
-              title: data.subject || 'Notificação',
-              body: data.body,
-            },
-            data: data,
+            title: data.subject || 'Notificação',
+            body: data.body,
+            data: data as any,
           });
           results.push = {
-            sent: pushResult.success,
-            error: pushResult.error || null,
+            sent: pushResult.successCount > 0,
+            error: pushResult.errors.length > 0 ? pushResult.errors.join(', ') : null,
           };
-          logger.info('[sendNotification] Push sent', { success: pushResult.success });
+          logger.info('[sendNotification] Push sent', { success: pushResult.successCount > 0 });
         } catch (error) {
           results.push = {
             sent: false,
@@ -159,7 +160,7 @@ export const sendNotification = functions.https.onCall(
       };
     } catch (error) {
       logger.error('[sendNotification] Fatal error', { error });
-      throw new functions.https.HttpsError(
+      throw new HttpsError(
         'internal',
         'Failed to send notification',
         error instanceof Error ? error.message : 'Unknown error'
@@ -172,19 +173,20 @@ export const sendNotification = functions.https.onCall(
 // CALLABLE FUNCTION: Send Batch Notifications
 // ============================================================================
 
-export const sendNotificationBatch = functions.https.onCall(
+export const sendNotificationBatch = onCall(
   {
     region: 'southamerica-east1',
+    cors: CORS_ORIGINS,
   },
   async (request) => {
     const { notifications, organizationId }: { notifications: SendNotificationData[]; organizationId: string } = request.data;
 
     if (!Array.isArray(notifications)) {
-      throw new functions.https.HttpsError('invalid-argument', 'notifications must be an array');
+      throw new HttpsError('invalid-argument', 'notifications must be an array');
     }
 
     if (notifications.length > 100) {
-      throw new functions.https.HttpsError('invalid-argument', 'Maximum 100 notifications per batch');
+      throw new HttpsError('invalid-argument', 'Maximum 100 notifications per batch');
     }
 
     logger.info('[sendNotificationBatch] Processing batch', {
@@ -202,7 +204,11 @@ export const sendNotificationBatch = functions.https.onCall(
           // Send Email
           if (notif.type === 'email' || notif.type === 'all') {
             try {
-              const emailResult = await sendEmail(notif.data.to, notif.data.subject, notif.data.body);
+              const emailResult = await sendEmail({
+                to: notif.data.to,
+                subject: notif.data.subject || 'FisioFlow',
+                html: notif.data.body,
+              });
               result.email = {
                 sent: emailResult.success,
                 error: emailResult.error || null,
@@ -220,7 +226,7 @@ export const sendNotificationBatch = functions.https.onCall(
             try {
               const whatsappResult = await sendWhatsAppTextMessageInternal({
                 to: notif.data.to,
-                body: notif.data.body,
+                message: notif.data.body,
               });
               result.whatsapp = {
                 sent: whatsappResult.success,
@@ -238,15 +244,13 @@ export const sendNotificationBatch = functions.https.onCall(
           if (notif.type === 'push' || notif.type === 'all') {
             try {
               const pushResult = await sendPushNotificationToUser(notif.userId, {
-                notification: {
-                  title: notif.data.subject || 'Notificação',
-                  body: notif.data.body,
-                },
-                data: notif.data,
+                title: notif.data.subject || 'Notificação',
+                body: notif.data.body,
+                data: notif.data as any,
               });
               result.push = {
-                sent: pushResult.success,
-                error: pushResult.error || null,
+                sent: pushResult.successCount > 0,
+                error: pushResult.errors.length > 0 ? pushResult.errors.join(', ') : null,
               };
             } catch (error) {
               result.push = {
@@ -280,7 +284,7 @@ export const sendNotificationBatch = functions.https.onCall(
       };
     } catch (error) {
       logger.error('[sendNotificationBatch] Fatal error', { error });
-      throw new functions.https.HttpsError(
+      throw new HttpsError(
         'internal',
         'Failed to send batch notifications',
         error instanceof Error ? error.message : 'Unknown error'
@@ -293,14 +297,15 @@ export const sendNotificationBatch = functions.https.onCall(
 // PUBSUB: Process Notification Queue
 // ============================================================================
 
-export const processNotificationQueue = functions.pubsub.topic('notifications').onPublish(
+export const processNotificationQueue = onMessagePublished(
   {
+    topic: 'notifications',
     region: 'southamerica-east1',
   },
   async (event) => {
     if (!event.data) return;
 
-    const data = JSON.parse(Buffer.from(event.data, 'base64').toString());
+    const data = JSON.parse(Buffer.from(event.data.message.data, 'base64').toString());
 
     logger.info('[processNotificationQueue] Processing notification', {
       notificationId: data.id,
@@ -314,13 +319,60 @@ export const processNotificationQueue = functions.pubsub.topic('notifications').
 );
 
 // ============================================================================
+// CALLABLE: Appointment Notifications
+// ============================================================================
+
+export const notifyAppointmentScheduled = onCall(
+  { region: 'southamerica-east1', cors: CORS_ORIGINS },
+  async (request) => {
+    return dispatchAppointmentNotification({
+      kind: 'scheduled',
+      ...request.data
+    });
+  }
+);
+
+export const notifyAppointmentReschedule = onCall(
+  { region: 'southamerica-east1', cors: CORS_ORIGINS },
+  async (request) => {
+    return dispatchAppointmentNotification({
+      kind: 'rescheduled',
+      ...request.data
+    });
+  }
+);
+
+export const notifyAppointmentCancellation = onCall(
+  { region: 'southamerica-east1', cors: CORS_ORIGINS },
+  async (request) => {
+    return dispatchAppointmentNotification({
+      kind: 'cancellation',
+      ...request.data
+    });
+  }
+);
+
+// ============================================================================
+// HTTP: Email Webhook
+// ============================================================================
+
+export const emailWebhook = functions.https.onRequest(
+  { region: 'southamerica-east1' },
+  async (req, res) => {
+    logger.info('[emailWebhook] Received webhook', { body: req.body });
+    res.status(200).send('OK');
+  }
+);
+
+// ============================================================================
 // HELPER: Dispatch Appointment Notification
 // ============================================================================
 
 export async function dispatchAppointmentNotification(
   params: DispatchAppointmentNotificationParams
 ): Promise<{ email: any; whatsapp: any; push: any }> {
-  const { kind, organizationId, appointmentId, patientId, date, time, patientName, therapistName } = params;
+  const { kind, patientId, date, time } = params;
+  let { patientName, therapistName } = params;
 
   const results: { email: any; whatsapp: any; push: any } = {
     email: { sent: false, error: null },
@@ -345,21 +397,30 @@ export async function dispatchAppointmentNotification(
     const phone = patient.phone;
     const pushToken = patient.push_token;
 
+    if (!patientName) {
+      patientName = patient.full_name || patient.name || 'Paciente';
+    }
+
+    if (!therapistName) {
+      therapistName = 'Seu fisioterapeuta';
+    }
+
     // Send Email
     if (email) {
       try {
         let emailResult;
-        if (kind === 'confirmation') {
+        if (kind === 'confirmation' || kind === 'scheduled' || kind === 'rescheduled') {
           emailResult = await sendAppointmentConfirmationEmail(email, {
-            patientName,
-            therapistName,
+            patientName: patientName!,
+            therapistName: therapistName!,
             date,
             time,
             clinicName: 'FisioFlow',
           });
         } else {
           emailResult = await sendAppointmentReminderEmail(email, {
-            patientName,
+            patientName: patientName!,
+            therapistName: therapistName!,
             date,
             time,
             clinicName: 'FisioFlow',
@@ -378,16 +439,16 @@ export async function dispatchAppointmentNotification(
     if (phone) {
       try {
         const formattedPhone = formatPhoneForWhatsApp(phone);
-        const template: WhatsAppTemplate = {
-          name: kind === 'confirmation' ? 'appointment_confirmation_v1' : 'appointment_reminder_v1',
+        const template = {
+          name: (kind === 'confirmation' || kind === 'scheduled' || kind === 'rescheduled') ? 'appointment_confirmation_v1' : 'appointment_reminder_v1',
           languageCode: 'pt_BR',
           components: [
             {
               type: 'body',
               parameters: [
-                { type: 'text', text: patientName },
+                { type: 'text', text: patientName! },
                 { type: 'text', text: `${date} às ${time}` },
-                { type: 'text', text: therapistName },
+                { type: 'text', text: therapistName! },
               ],
             },
           ],
@@ -395,7 +456,9 @@ export async function dispatchAppointmentNotification(
 
         const whatsappResult = await sendWhatsAppTemplateMessageInternal({
           to: formattedPhone,
-          template,
+          template: template.name,
+          language: template.languageCode,
+          components: template.components
         });
         results.whatsapp = {
           sent: whatsappResult.success,
@@ -411,13 +474,13 @@ export async function dispatchAppointmentNotification(
       try {
         const message = {
           notification: {
-            title: kind === 'confirmation' ? 'Consulta Agendada' : 'Lembrete de Consulta',
-            body: kind === 'confirmation' ? `Olá ${patientName}, sua consulta está agendada!` : `Olá ${patientName}, lembrete da sua consulta às ${time}`,
+            title: (kind === 'confirmation' || kind === 'scheduled' || kind === 'rescheduled') ? 'Consulta Agendada' : 'Lembrete de Consulta',
+            body: (kind === 'confirmation' || kind === 'scheduled' || kind === 'rescheduled') ? `Olá ${patientName}, sua consulta está agendada!` : `Olá ${patientName}, lembrete da sua consulta às ${time}`,
           },
           data: {
             type: 'appointment',
             kind,
-            appointmentId,
+            appointmentId: params.appointmentId,
             date,
             time,
           },
@@ -478,11 +541,11 @@ export async function sendFeedbackRequest(
 
     // Send notification
     if (patient.email) {
-      await sendEmail(
-        patient.email,
-        'Como foi sua consulta? - FisioFlow',
-        `Olá ${patient.full_name || patient.name},\n\nGostaríamos saber sua opinião sobre a consulta de ${appointment.date} às ${appointment.time}.\n\nPor favor, responda este e-mail ou acesse o aplicativo para deixar seu feedback.\n\nObrigado,\nEquipe FisioFlow`
-      );
+      await sendEmail({
+        to: patient.email,
+        subject: 'Como foi sua consulta? - FisioFlow',
+        html: `Olá ${patient.full_name || patient.name},\n\nGostaríamos saber sua opinião sobre a consulta de ${appointment.date} às ${appointment.time}.\n\nPor favor, responda este e-mail ou acesse o aplicativo para deixar seu feedback.\n\nObrigado,\nEquipe FisioFlow`
+      });
     }
 
     return true;
@@ -533,11 +596,11 @@ export async function sendDailySummary(organizationId: string): Promise<void> {
 
     // Send to admin email if available
     if (org.admin_email) {
-      await sendEmail(
-        org.admin_email,
-        `Resumo do dia - ${today.toLocaleDateString('pt-BR')}`,
-        summary
-      );
+      await sendEmail({
+        to: org.admin_email,
+        subject: `Resumo do dia - ${today.toLocaleDateString('pt-BR')}`,
+        html: summary
+      });
     }
   } catch (error) {
     logger.error('[sendDailySummary] Error', { organizationId, error });

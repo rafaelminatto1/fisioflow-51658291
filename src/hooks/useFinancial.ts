@@ -2,12 +2,13 @@ import React, { useEffect } from 'react';
 import { collection, onSnapshot, query as firestoreQuery, where, db } from '@/integrations/firebase/app';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { FinancialService, Transaction, FinancialStats } from '@/services/financialService';
+import { FinancialService, Transaction, FinancialStats, FinancialPeriod } from '@/services/financialService';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 import { useAuth } from '@/contexts/AuthContext';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export type { Transaction, FinancialStats };
+const ENABLE_FINANCIAL_SUMMARY_API = import.meta.env.VITE_ENABLE_FINANCIAL_SUMMARY_API === 'true';
 
 export const useFinancial = () => {
   const queryClient = useQueryClient();
@@ -28,6 +29,7 @@ export const useFinancial = () => {
       () => {
         logger.debug('Financial data changed, invalidating queries', null, 'useFinancial');
         queryClient.invalidateQueries({ queryKey: ['transactions'] });
+        queryClient.invalidateQueries({ queryKey: ['financial-summary'] });
       },
       (error) => {
         logger.error('Error in financial real-time listener', error, 'useFinancial');
@@ -40,7 +42,14 @@ export const useFinancial = () => {
   // Buscar todas as transações
   const { data: transactions = [], isLoading, error } = useQuery({
     queryKey: ['transactions'],
-    queryFn: FinancialService.fetchTransactions,
+    queryFn: () => FinancialService.fetchTransactions(300),
+  });
+
+  const { data: summaryStats } = useQuery({
+    queryKey: ['financial-summary', period],
+    queryFn: () => FinancialService.fetchSummary(period as FinancialPeriod),
+    staleTime: 60000,
+    enabled: ENABLE_FINANCIAL_SUMMARY_API,
   });
 
   // Filtrar transações baseado no período
@@ -68,6 +77,8 @@ export const useFinancial = () => {
 
   // Calcular estatísticas
   const stats = React.useMemo(() => {
+    if (summaryStats) return summaryStats;
+
     // Estatísticas do período visualizado
     const periodStats = FinancialService.calculateStats(filteredTransactions);
 
@@ -80,13 +91,14 @@ export const useFinancial = () => {
       ...periodStats,
       monthlyGrowth: globalStats.monthlyGrowth // Mantém crescimento mensal global
     };
-  }, [filteredTransactions, transactions]);
+  }, [filteredTransactions, summaryStats, transactions]);
 
   // Criar transação
   const createMutation = useMutation({
     mutationFn: FinancialService.createTransaction,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['financial-summary'] });
       toast.success('Transação criada com sucesso');
     },
     onError: (error: Error) => {
@@ -100,6 +112,7 @@ export const useFinancial = () => {
       FinancialService.updateTransaction(id, transaction),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['financial-summary'] });
       toast.success('Transação atualizada com sucesso');
     },
     onError: (error: Error) => {
@@ -112,6 +125,7 @@ export const useFinancial = () => {
     mutationFn: FinancialService.deleteTransaction,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['financial-summary'] });
       toast.success('Transação excluída com sucesso');
     },
     onError: (error: Error) => {
@@ -124,6 +138,7 @@ export const useFinancial = () => {
     mutationFn: FinancialService.markAsPaid,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['financial-summary'] });
       toast.success('Transação marcada como paga');
     },
     onError: (error: Error) => {
