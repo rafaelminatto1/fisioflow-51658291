@@ -84,6 +84,7 @@
     "changelog:since": "node src/lib/skills/fase1-changelog/generate-changelog.js",
     "test:e2e:critical": "playwright test e2e/critical-flows.spec.ts",
     "test:e2e:a11y": "playwright test e2e/accessibility-extended.spec.ts",
+    "perf:routes": "node scripts/perf-routes.mjs --output test-results/perf-routes-report.json",
     "test:components": "vitest run src/components/**/*.test.tsx",
     "test:hooks": "vitest run src/hooks/**/*.test.ts",
     "test:evolution:direct": "node test-direct-evolution.mjs",

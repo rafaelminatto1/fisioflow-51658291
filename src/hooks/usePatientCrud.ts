@@ -156,7 +156,7 @@ export const usePatient = (id: string | undefined) => {
     queryFn: async (): Promise<Patient | null> => {
       if (!id) return null;
       const response = await patientsApi.get(id);
-      return response.data as Patient;
+      return (response.data as Patient | null) ?? null;
     },
     enabled: !!id,
     staleTime: 1000 * 60 * 10,

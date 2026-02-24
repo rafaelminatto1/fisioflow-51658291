@@ -11,12 +11,7 @@
  * @version 1.0.0 - Firebase Functions v2
  */
 
-
-// ============================================================================
-// TYPES
-// ============================================================================
-
-import * as functions from 'firebase-functions/v2';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from '../lib/logger';
 import { getAdminDb } from '../init';
 
@@ -53,14 +48,17 @@ interface Organization {
  *
  * Schedule: "every monday 10:00"
  */
-export const patientReactivation = functions.pubsub.schedule('weekly-patient-reactivation', '0 10 * * 1')
-  .timeZone('America/Sao_Paulo')
-  .onRun(async (context) => {
+export const patientReactivation = onSchedule(
+  {
+    schedule: '0 10 * * 1',
+    timeZone: 'America/Sao_Paulo',
+    region: 'southamerica-east1',
+  },
+  async (event) => {
     const db = getAdminDb();
 
     logger.info('[patientReactivation] Starting weekly reactivation campaign', {
-      jobId: context.jobId,
-      scheduleTime: context.scheduleTime,
+      scheduleTime: event.scheduleTime,
     });
 
     try {
@@ -128,12 +126,7 @@ export const patientReactivation = functions.pubsub.schedule('weekly-patient-rea
 
       if (inactivePatients.length === 0) {
         logger.info('[patientReactivation] No inactive patients found in window');
-        return {
-          success: true,
-          processed: 0,
-          timestamp: new Date().toISOString(),
-          message: 'No inactive patients found in window',
-        };
+        return;
       }
 
       logger.info('[patientReactivation] Inactive patients found', {
@@ -172,9 +165,6 @@ export const patientReactivation = functions.pubsub.schedule('weekly-patient-rea
                 patientPhone: patient.phone,
               });
 
-              // TODO: Send via WhatsApp provider
-              // messagesQueued++;
-
               // Log reactivation attempt
               const campaignRef1 = db.collection('reactivation_campaigns').doc();
               await campaignRef1.create({
@@ -192,9 +182,6 @@ export const patientReactivation = functions.pubsub.schedule('weekly-patient-rea
                 patientId: patient.id,
                 patientEmail: patient.email,
               });
-
-              // TODO: Send via email provider
-              // messagesQueued++;
 
               // Log reactivation attempt
               const campaignRef2 = db.collection('reactivation_campaigns').doc();
@@ -228,7 +215,7 @@ export const patientReactivation = functions.pubsub.schedule('weekly-patient-rea
             };
           }
         })
-        );
+      );
 
       const messagesQueued = results.filter(r => r.queued).length;
 
@@ -236,17 +223,8 @@ export const patientReactivation = functions.pubsub.schedule('weekly-patient-rea
         messagesQueued,
         totalPatients: inactivePatients.length,
       });
-
-      return {
-        success: true,
-        processed: inactivePatients.length,
-        messagesQueued,
-        timestamp: new Date().toISOString(),
-        results,
-      };
     } catch (error) {
       logger.error('[patientReactivation] Fatal error', { error });
-      throw error;
     }
   }
 );

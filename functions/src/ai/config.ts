@@ -1,6 +1,8 @@
 import { genkit } from 'genkit';
 import { vertexAI } from '@genkit-ai/vertexai';
+import { z } from 'zod';
 
+export { z };
 export const ai = genkit({
   plugins: [
     vertexAI({ location: 'us-central1' }),
