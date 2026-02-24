@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,14 +20,11 @@ import {
   Filter,
   Edit,
   Check,
-  Sparkles,
-  RefreshCw,
   Clock
 } from 'lucide-react';
 import { EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useFinancial, type Transaction } from '@/hooks/useFinancial';
-import { TransactionModal, PackagesManager } from '@/components/financial';
-import { PackageUsageReport } from '@/components/financial/PackageUsageReport';
+import { TransactionModal } from '@/components/financial';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,24 +38,24 @@ import {
 import { exportFinancialReport } from '@/lib/export/excelExport';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { useAI } from "@/integrations/firebase/ai";
-import { fisioLogger as logger } from '@/lib/errors/logger';
+
+const PackagesManager = lazy(() => import('@/components/financial').then(m => ({ default: m.PackagesManager })));
+const PackageUsageReport = lazy(() => import('@/components/financial/PackageUsageReport').then(m => ({ default: m.PackageUsageReport })));
+const FinancialAIAdvisor = lazy(() => import('@/components/financial/FinancialAIAdvisor').then(m => ({ default: m.FinancialAIAdvisor })));
 
 const Financial = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
-  const [aiSummary, setAiSummary] = useState<string | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
   
   const { toast } = useToast();
-  const { generate } = useAI();
 
   const {
     transactions,
     stats,
+    period,
+    setPeriod,
     loading,
     createTransaction,
     updateTransaction,
@@ -68,40 +65,6 @@ const Financial = () => {
     isUpdating,
     _isDeleting,
   } = useFinancial();
-
-  const generateFinancialAdvice = async () => {
-    if (!stats) return;
-    setIsGenerating(true);
-    try {
-      const prompt = `
-        Aja como um consultor financeiro Pro para clínicas. Analise estes dados:
-        - Receita: R$ ${stats.totalRevenue}
-        - Pendente (Inadimplência): R$ ${stats.pendingPayments}
-        - Crescimento: ${stats.monthlyGrowth}%
-        - Ticket Médio: R$ ${stats.averageTicket}
-        
-        Forneça 2 dicas estratégicas e curtas (máximo 20 palavras cada) para aumentar o lucro.
-        Responda em português brasileiro.
-      `;
-      const result = await generate(prompt, { 
-        userId: "financial-module", 
-        feature: "clinical_analysis" as unknown 
-      });
-      setAiSummary(result.content);
-    } catch (error) {
-      logger.error('Erro ao gerar insights', error, 'Financial');
-      setAiSummary("Foco na redução de pendências para otimizar seu caixa!");
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  useEffect(() => {
-    if (stats && !aiSummary && !isGenerating) {
-      generateFinancialAdvice();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stats]);
 
   const handleNewTransaction = () => {
     setEditingTransaction(null);
@@ -188,53 +151,9 @@ const Financial = () => {
 
         {/* AI Financial Advisor - Premium Card */}
         <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <Card className="border-none bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 shadow-premium-md overflow-hidden relative group rounded-2xl">
-            <div className="absolute top-0 right-0 p-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-              <Sparkles className="h-32 w-32 text-emerald-600" />
-            </div>
-            <CardHeader className="pb-2 border-b border-emerald-100/50 dark:border-emerald-900/30">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <CardTitle className="flex items-center gap-2 text-emerald-800 dark:text-emerald-400 font-black tracking-tight text-lg">
-                    <div className="p-1.5 bg-emerald-500/10 rounded-lg">
-                      <Sparkles className="h-4 w-4 animate-pulse" />
-                    </div>
-                    Clinsight AI
-                  </CardTitle>
-                  <CardDescription className="text-[10px] font-black uppercase tracking-widest text-emerald-600/60 dark:text-emerald-500/40">Consultoria Estratégica</CardDescription>
-                </div>
-                <div className="flex gap-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/40" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-6">
-              {isGenerating ? (
-                <div className="space-y-3 py-2">
-                  <div className="h-3 w-3/4 bg-emerald-200/30 animate-pulse rounded-full" />
-                  <div className="h-3 w-1/2 bg-emerald-200/30 animate-pulse rounded-full" />
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <p className="text-sm font-bold text-emerald-900 dark:text-emerald-100 leading-relaxed italic">
-                    "{aiSummary || 'Analise seu faturamento para receber dicas exclusivas de rentabilidade.'}"
-                  </p>
-                  <div className="flex justify-start">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={generateFinancialAdvice}
-                      className="text-[10px] font-black uppercase tracking-[0.2em] h-8 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10"
-                    >
-                      <RefreshCw className="mr-2 h-3 w-3" />
-                      Atualizar Insights
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <Suspense fallback={<Card className="h-48 animate-pulse bg-muted/30 border-border/50 rounded-2xl" />}>
+            <FinancialAIAdvisor stats={stats} />
+          </Suspense>
         </section>
 
         {/* Stats Grid */}
@@ -319,15 +238,18 @@ const Financial = () => {
           <TabsContent value="transactions" className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <h3 className="text-xl font-black tracking-tighter text-slate-900 dark:text-white uppercase tracking-[0.1em]">Fluxo de Caixa</h3>
-              <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <Select
+                value={period}
+                onValueChange={(value: 'daily' | 'weekly' | 'monthly' | 'all') => setPeriod(value)}
+              >
                 <SelectTrigger className="w-[180px] h-10 rounded-xl border-slate-200 dark:border-slate-800 font-bold text-xs">
                   <Filter className="h-3.5 w-3.5 mr-2 text-primary" />
                   <SelectValue placeholder="Período" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl border-slate-200 dark:border-slate-800 shadow-xl">
-                  <SelectItem value="day">Hoje</SelectItem>
-                  <SelectItem value="week">Esta Semana</SelectItem>
-                  <SelectItem value="month">Este Mês</SelectItem>
+                  <SelectItem value="daily">Hoje</SelectItem>
+                  <SelectItem value="weekly">Esta Semana</SelectItem>
+                  <SelectItem value="monthly">Este Mês</SelectItem>
                   <SelectItem value="all">Todo Histórico</SelectItem>
                 </SelectContent>
               </Select>
@@ -399,11 +321,15 @@ const Financial = () => {
           </TabsContent>
 
           <TabsContent value="packages">
-            <PackagesManager />
+            <Suspense fallback={<LoadingSkeleton type="list" rows={4} />}>
+              <PackagesManager />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="reports">
-            <PackageUsageReport />
+            <Suspense fallback={<LoadingSkeleton type="list" rows={4} />}>
+              <PackageUsageReport />
+            </Suspense>
           </TabsContent>
         </Tabs>
       </div>

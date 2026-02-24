@@ -10,20 +10,12 @@
     "deploy": "gcloud run deploy exercise-service --source . --platform managed --region southamerica-east1"
   },
   "dependencies": {
-    "@google-cloud/vision": "^5.3.4",
+    "@google-cloud/vision": "^4.3.2",
     "@google-cloud/translate": "^8.5.0",
-    "@google-cloud/secret-manager": "^5.0.0",
-    "@google-cloud/logging-bunyan": "^4.2.0",
-    "@google-cloud/trace-agent": "^7.2.0",
-    "@google-cloud/profiler": "^5.3.0",
-    "@google-cloud/opentelemetry-resource-detector-gcp": "^1.8.0",
-    "@google-cloud/pubsub": "^4.0.0",
-    "@opentelemetry/api": "^1.9.0",
-    "@opentelemetry/sdk-node": "^0.52.0",
-    "@opentelemetry/exporter-gcp-trace": "^1.23.0",
+    "@google-cloud/secret-manager": "^5.6.0",
     "cors": "^2.8.5",
     "express": "^4.19.2",
-    "firebase-admin": "^13.6.0",
+    "firebase-admin": "^12.7.0",
     "pg": "^8.13.1",
     "sharp": "^0.33.4"
   },

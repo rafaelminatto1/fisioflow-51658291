@@ -73,7 +73,7 @@ export default defineConfig({
   // webServer configuration is disabled in CI to avoid issues
   // In CI, we expect the tests to run without a running dev server
   webServer: process.env.CI ? undefined : {
-    command: 'pnpm preview --port 5173 --host 127.0.0.1',
+    command: 'npm run dev',
     url: 'http://localhost:5173',
     reuseExistingServer: true,
     timeout: 120000,

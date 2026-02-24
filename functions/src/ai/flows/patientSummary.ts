@@ -5,7 +5,7 @@
  * Versão Otimizada com Prompt Avançado.
  */
 
-import { z } from '../ai/config';
+import { z } from '../config';
 import { ai, gemini15Flash } from '../config';
 
 export const patientExecutiveSummaryFlow = ai.defineFlow(

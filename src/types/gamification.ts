@@ -402,12 +402,12 @@ export function parseAchievementRequirements(requirements: AchievementRequiremen
   if (typeof requirements === 'string') {
     try {
       const parsed = JSON.parse(requirements);
-      return achievementRequirementSchema.parse(parsed);
+      return achievementRequirementSchema.parse(parsed) as AchievementRequirement;
     } catch {
       return { type: 'custom', count: 0 };
     }
   }
-  return achievementRequirementSchema.parse(requirements);
+  return achievementRequirementSchema.parse(requirements) as AchievementRequirement;
 }
 
 // ============================================================================

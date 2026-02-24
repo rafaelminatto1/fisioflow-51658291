@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { User } from 'firebase/auth';
 import { onAuthStateChange, signIn as firebaseSignIn, signUp as firebaseSignUp, signOut as firebaseSignOut, resetPassword as firebaseResetPassword, updateUserPassword as firebaseUpdatePassword } from '@/integrations/firebase/auth';
 import { db, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, limit, addDoc } from '@/integrations/firebase/app';
@@ -24,34 +24,46 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [sessionCheckFailed, _setSessionCheckFailed] = useState(false);
   const { _toast } = useToast();
   const queryClient = useQueryClient();
+  const prefetchedOrgIdsRef = useRef(new Set<string>());
 
   // Prefetch dashboard data
   const prefetchDashboardData = useCallback((orgId: string) => {
-    if (!orgId) return;
+    if (!orgId || prefetchedOrgIdsRef.current.has(orgId)) return;
 
-    logger.info('Prefetching dashboard data', { orgId }, 'AuthContextProvider');
+    prefetchedOrgIdsRef.current.add(orgId);
 
-    // Prefetch appointments
-    queryClient.prefetchQuery({
-      queryKey: ['appointments_v2', 'list', orgId],
-      queryFn: async () => {
-        const data = await AppointmentService.fetchAppointments(orgId);
-        return { data, isFromCache: false, cacheTimestamp: null, source: 'firestore' };
-      },
-      staleTime: 1000 * 60 * 5,
-    });
+    const runPrefetch = () => {
+      logger.info('Prefetching dashboard data (idle)', { orgId }, 'AuthContextProvider');
 
-    // Prefetch analytics summary
-    queryClient.prefetchQuery({
-      queryKey: ["analytics-summary", orgId],
-      staleTime: 1000 * 60 * 5,
-    });
+      // Prefetch appointments
+      queryClient.prefetchQuery({
+        queryKey: ['appointments_v2', 'list', orgId],
+        queryFn: async () => {
+          const data = await AppointmentService.fetchAppointments(orgId);
+          return { data, isFromCache: false, cacheTimestamp: null, source: 'firestore' };
+        },
+        staleTime: 1000 * 60 * 5,
+      });
 
-    // Prefetch admin metrics
-    queryClient.prefetchQuery({
-      queryKey: ['dashboard-metrics', orgId],
-      staleTime: 1000 * 60 * 5,
-    });
+      // Prefetch analytics summary
+      queryClient.prefetchQuery({
+        queryKey: ["analytics-summary", orgId],
+        staleTime: 1000 * 60 * 5,
+      });
+
+      // Prefetch admin metrics
+      queryClient.prefetchQuery({
+        queryKey: ['dashboard-metrics', orgId],
+        staleTime: 1000 * 60 * 5,
+      });
+    };
+
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      window.requestIdleCallback(() => runPrefetch(), { timeout: 3000 });
+      return;
+    }
+
+    setTimeout(runPrefetch, 1200);
   }, [queryClient]);
 
   /**
@@ -433,4 +445,3 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-

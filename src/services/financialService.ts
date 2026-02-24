@@ -24,6 +24,8 @@ export interface FinancialStats {
     averageTicket: number;
 }
 
+export type FinancialPeriod = 'daily' | 'weekly' | 'monthly' | 'all';
+
 export interface FinancialReport {
     eventoId: string;
     eventoNome: string;
@@ -47,12 +49,31 @@ export class FinancialService {
     /**
      * Fetch all transactions
      */
-    static async fetchTransactions(): Promise<Transaction[]> {
+    static async fetchTransactions(limit = 300): Promise<Transaction[]> {
         try {
-            const response = await financialApi.list(1000);
+            const response = await financialApi.list(limit);
             return response.data || [];
         } catch (error) {
             throw AppError.from(error, 'FinancialService.fetchTransactions');
+        }
+    }
+
+    /**
+     * Fetch aggregated financial summary from backend cache
+     */
+    static async fetchSummary(period: FinancialPeriod = 'monthly'): Promise<FinancialStats> {
+        try {
+            const summary = await financialApi.summary(period);
+            return {
+                totalRevenue: Number(summary.totalRevenue || 0),
+                pendingPayments: Number(summary.pendingPayments || 0),
+                monthlyGrowth: Number(summary.monthlyGrowth || 0),
+                paidCount: Number(summary.paidCount || 0),
+                totalCount: Number(summary.totalCount || 0),
+                averageTicket: Number(summary.averageTicket || 0),
+            };
+        } catch (error) {
+            throw AppError.from(error, 'FinancialService.fetchSummary');
         }
     }
 

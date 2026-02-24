@@ -22,6 +22,8 @@ import { useQuery } from '@tanstack/react-query';
 import { getPatientByIdHook } from '@/hooks/usePatients';
 import { format, isValid, parse } from 'date-fns';
 import { useEvolutions } from '@/hooks';
+import { useAIExerciseHistory } from '@/hooks/useAIExerciseHistory';
+import { AIExerciseHistoryCard } from '@/components/ai/AIExerciseHistoryCard';
 import {
   usePatientFinancialRecords,
   usePatientFinancialSummary,
@@ -38,7 +40,7 @@ export default function PatientDetailScreen() {
   const colors = useColors();
   const { light, medium } = useHaptics();
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<'info' | 'financial' | 'evolutions' | 'exercises'>((tab as any) || 'info');
+  const [selectedTab, setSelectedTab] = useState<'info' | 'financial' | 'evolutions' | 'biofeedback'>((tab as any) || 'info');
 
   const { data: patient, isLoading: isLoadingPatient, refetch } = useQuery({
     queryKey: ['patient', id],
@@ -46,6 +48,7 @@ export default function PatientDetailScreen() {
     enabled: !!id,
   });
 
+  const { data: aiHistory, isLoading: isLoadingAI } = useAIExerciseHistory(id as string);
   const { evolutions, isLoading: isLoadingEvolutions, refetch: refetchEvolutions } = useEvolutions(id as string);
 
   const { data: financialRecords, isLoading: isLoadingFinancial, refetch: refetchFinancial } = usePatientFinancialRecords(id as string);
@@ -198,7 +201,7 @@ export default function PatientDetailScreen() {
 
         {/* Tab Selector */}
         <View style={[styles.tabContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          {(['info', 'financial', 'evolutions'] as const).map((tabKey) => (
+          {(['info', 'financial', 'evolutions', 'biofeedback'] as const).map((tabKey) => (
             <TouchableOpacity
               key={tabKey}
               style={[
@@ -216,13 +219,49 @@ export default function PatientDetailScreen() {
                   { color: selectedTab === tabKey ? '#FFFFFF' : colors.textSecondary },
                 ]}
               >
-                {tabKey === 'info' ? 'Informações' : tabKey === 'financial' ? 'Financeiro' : 'Evoluções'}
+                {tabKey === 'info' ? 'Info' : tabKey === 'financial' ? 'Fin.' : tabKey === 'evolutions' ? 'Evol.' : 'IA'}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
 
         {/* Tab Content */}
+        {selectedTab === 'biofeedback' && (
+          <View style={styles.aiHistoryContainer}>
+            <TouchableOpacity
+              style={[styles.addEvolutionBtn, { backgroundColor: '#8B5CF6' }]}
+              onPress={() => {
+                medium();
+                router.push(`/patient/${id}/ai-assessment?name=${name}`);
+              }}
+            >
+              <Ionicons name="scan" size={24} color="#FFFFFF" />
+              <Text style={styles.addEvolutionBtnText}>Nova Avaliação IA</Text>
+            </TouchableOpacity>
+
+            {isLoadingAI ? (
+              <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 20 }} />
+            ) : aiHistory && aiHistory.length > 0 ? (
+              aiHistory.map((session) => (
+                <AIExerciseHistoryCard 
+                  key={session.id} 
+                  session={session} 
+                  colors={colors} 
+                />
+              ))
+            ) : (
+              <View style={styles.emptyEvolution}>
+                <Ionicons name="analytics-outline" size={64} color={colors.textMuted} />
+                <Text style={[styles.emptyEvolutionTitle, { color: colors.text }]}>
+                  Sem sessões de IA
+                </Text>
+                <Text style={[styles.emptyEvolutionText, { color: colors.textSecondary }]}>
+                  O paciente ainda não realizou exercícios com monitoramento biomecânico.
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
         {selectedTab === 'info' && (
           <>
             <View style={styles.infoSection}>
@@ -1273,6 +1312,10 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 8,
     fontSize: 14,
+  },
+  aiHistoryContainer: {
+    gap: 16,
+    paddingBottom: 20,
   },
   infoSectionTitle: {
     fontSize: 16,

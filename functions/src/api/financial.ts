@@ -9,6 +9,7 @@ import { withErrorHandling } from '../lib/error-handler';
 import { authorizeRequest, extractBearerToken } from '../middleware/auth';
 import { Transaction } from '../types/models';
 import { logger } from '../lib/logger';
+import { SimpleCache } from '../lib/function-config';
 
 function parseBody(req: any): any {
     return typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })() : (req.body || {});
@@ -37,6 +38,34 @@ const httpOpts = {
   invoker: 'public',
   cors: CORS_ORIGINS,
 };
+
+type FinancialPeriod = 'daily' | 'weekly' | 'monthly' | 'all';
+
+interface FinancialSummary {
+    period: FinancialPeriod;
+    totalRevenue: number;
+    pendingPayments: number;
+    monthlyGrowth: number;
+    paidCount: number;
+    totalCount: number;
+    averageTicket: number;
+}
+
+const FINANCIAL_PERIODS: FinancialPeriod[] = ['daily', 'weekly', 'monthly', 'all'];
+const financialSummaryCache = new SimpleCache<FinancialSummary>(60000);
+
+function parseFinancialPeriod(value: unknown): FinancialPeriod {
+    if (typeof value === 'string' && FINANCIAL_PERIODS.includes(value as FinancialPeriod)) {
+        return value as FinancialPeriod;
+    }
+    return 'monthly';
+}
+
+function invalidateFinancialSummaryCache(organizationId: string) {
+    for (const period of FINANCIAL_PERIODS) {
+        financialSummaryCache.delete(`financial-summary:${organizationId}:${period}`);
+    }
+}
 
 /**
  * Helper para centralizar o tratamento de erros e evitar repetição
@@ -94,6 +123,7 @@ async function createTransactionLogic(auth: any, data: any) {
             auth.userId
         ]
     );
+    invalidateFinancialSummaryCache(auth.organizationId);
     return { data: result.rows[0] as Transaction };
 }
 
@@ -131,7 +161,93 @@ async function updateTransactionLogic(auth: any, data: any) {
     values.push(transactionId, auth.organizationId);
     
     const result = await pool.query(query, values);
+    invalidateFinancialSummaryCache(auth.organizationId);
     return { data: result.rows[0] as Transaction };
+}
+
+async function getFinancialSummaryLogic(auth: any, data: any) {
+    const period = parseFinancialPeriod(data?.period);
+    const cacheKey = `financial-summary:${auth.organizationId}:${period}`;
+    const cached = financialSummaryCache.get(cacheKey);
+    if (cached) return { data: cached };
+
+    const result = await getPool().query(
+        `
+        WITH bounds AS (
+            SELECT
+                CASE
+                    WHEN $2::text = 'daily' THEN date_trunc('day', now())
+                    WHEN $2::text = 'weekly' THEN now() - interval '7 days'
+                    WHEN $2::text = 'monthly' THEN now() - interval '30 days'
+                    ELSE NULL::timestamptz
+                END AS period_start,
+                date_trunc('month', now()) AS current_month_start,
+                date_trunc('month', now()) - interval '1 month' AS previous_month_start
+        ),
+        tx AS (
+            SELECT
+                t.created_at,
+                t.status::text AS status_text,
+                COALESCE(
+                    NULLIF(to_jsonb(t)->>'valor', '')::numeric,
+                    NULLIF(to_jsonb(t)->>'amount', '')::numeric,
+                    0
+                ) AS amount_value
+            FROM transacoes t
+            WHERE t.organization_id = $1
+        )
+        SELECT
+            COALESCE(SUM(CASE
+                WHEN t.status_text IN ('concluido', 'paid') AND (b.period_start IS NULL OR t.created_at >= b.period_start)
+                THEN t.amount_value ELSE 0
+            END), 0) AS total_revenue,
+            COALESCE(SUM(CASE
+                WHEN t.status_text IN ('pendente', 'pending') AND (b.period_start IS NULL OR t.created_at >= b.period_start)
+                THEN t.amount_value ELSE 0
+            END), 0) AS pending_payments,
+            COUNT(*) FILTER (WHERE b.period_start IS NULL OR t.created_at >= b.period_start) AS total_count,
+            COUNT(*) FILTER (WHERE t.status_text IN ('concluido', 'paid') AND (b.period_start IS NULL OR t.created_at >= b.period_start)) AS paid_count,
+            COALESCE(SUM(CASE
+                WHEN t.status_text IN ('concluido', 'paid')
+                    AND t.created_at >= b.current_month_start
+                    AND t.created_at < b.current_month_start + interval '1 month'
+                THEN t.amount_value ELSE 0
+            END), 0) AS current_month_revenue,
+            COALESCE(SUM(CASE
+                WHEN t.status_text IN ('concluido', 'paid')
+                    AND t.created_at >= b.previous_month_start
+                    AND t.created_at < b.current_month_start
+                THEN t.amount_value ELSE 0
+            END), 0) AS last_month_revenue
+        FROM tx t
+        CROSS JOIN bounds b
+        `,
+        [auth.organizationId, period]
+    );
+
+    const row = result.rows[0] || {};
+    const totalRevenue = Number(row.total_revenue || 0);
+    const pendingPayments = Number(row.pending_payments || 0);
+    const totalCount = Number(row.total_count || 0);
+    const paidCount = Number(row.paid_count || 0);
+    const currentMonthRevenue = Number(row.current_month_revenue || 0);
+    const lastMonthRevenue = Number(row.last_month_revenue || 0);
+    const monthlyGrowth = lastMonthRevenue > 0
+        ? ((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100
+        : currentMonthRevenue > 0 ? 100 : 0;
+
+    const summary: FinancialSummary = {
+        period,
+        totalRevenue,
+        pendingPayments,
+        monthlyGrowth,
+        paidCount,
+        totalCount,
+        averageTicket: paidCount > 0 ? totalRevenue / paidCount : 0,
+    };
+
+    financialSummaryCache.set(cacheKey, summary);
+    return { data: summary };
 }
 
 // --- Endpoints HTTP (REST) ---
@@ -160,6 +276,14 @@ export const updateTransactionHttp = onRequest(httpOpts, withErrorHandling(async
     res.json(result);
 }, 'updateTransactionHttp'));
 
+export const getFinancialSummaryHttp = onRequest(httpOpts, withErrorHandling(async (req, res) => {
+    if (req.method !== 'POST') { res.status(405).json({ error: 'Method not allowed' }); return; }
+
+    const auth = await authorizeRequest(extractBearerToken(getAuthHeader(req)));
+    const result = await getFinancialSummaryLogic(auth, parseBody(req));
+    res.json(result);
+}, 'getFinancialSummaryHttp'));
+
 // --- Endpoints Callable (Firebase SDK) ---
 
 export const listTransactionsHandler = async (request: any) => {
@@ -186,10 +310,19 @@ export const updateTransactionHandler = async (request: any) => {
     } catch (e) { return handleError('updateTransactionHandler', e); }
 };
 
+export const getFinancialSummaryHandler = async (request: any) => {
+    if (!request.auth || !request.auth.token) throw new HttpsError('unauthenticated', 'Requisita autenticação.');
+    try {
+        const auth = await authorizeRequest(request.auth.token);
+        return await getFinancialSummaryLogic(auth, request.data);
+    } catch (e) { return handleError('getFinancialSummaryHandler', e); }
+};
+
 // --- Exportações Finais ---
 export const listTransactions = onCall(httpOpts, listTransactionsHandler);
 export const createTransaction = onCall(httpOpts, createTransactionHandler);
 export const updateTransaction = onCall(httpOpts, updateTransactionHandler);
+export const getFinancialSummary = onCall(httpOpts, getFinancialSummaryHandler);
 
 // Mantendo as demais funções com a mesma lógica simplificada...
 export const deleteTransactionHttp = onRequest(httpOpts, async (req, res) => {
@@ -201,6 +334,7 @@ export const deleteTransactionHttp = onRequest(httpOpts, async (req, res) => {
         if (!transactionId) throw new HttpsError('invalid-argument', 'transactionId é obrigatório');
         const result = await getPool().query('DELETE FROM transacoes WHERE id = $1 AND organization_id = $2 RETURNING id', [transactionId, auth.organizationId]);
         if (result.rows.length === 0) throw new HttpsError('not-found', 'Transação não encontrada');
+        invalidateFinancialSummaryCache(auth.organizationId);
         res.json({ success: true });
     } catch (e) { handleError('deleteTransactionHttp', e, res); }
 });
@@ -213,6 +347,7 @@ export const deleteTransactionHandler = async (request: any) => {
         if (!transactionId) throw new HttpsError('invalid-argument', 'transactionId é obrigatório');
         const result = await getPool().query('DELETE FROM transacoes WHERE id = $1 AND organization_id = $2 RETURNING id', [transactionId, auth.organizationId]);
         if (result.rows.length === 0) throw new HttpsError('not-found', 'Transação não encontrada');
+        invalidateFinancialSummaryCache(auth.organizationId);
         return { success: true };
     } catch (e) { return handleError('deleteTransactionHandler', e); }
 };

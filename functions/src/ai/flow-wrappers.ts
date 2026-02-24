@@ -4,7 +4,7 @@
  * Compatibility layer between existing Cloud Functions and new Genkit flows
  */
 
-import type { CallableRequest } from 'firebase-functions/v2';
+import type { CallableRequest } from 'firebase-functions/v2/https';
 import {
     exerciseSuggestionFlow,
     type ExerciseSuggestionInput,

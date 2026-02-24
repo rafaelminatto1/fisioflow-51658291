@@ -10,7 +10,7 @@
  * - Input sanitization
  */
 
-import { onCall, HttpsError } from 'firebase-functions/v2';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { VertexAI } from '@google-cloud/vertexai';
 import * as admin from 'firebase-admin';
 import { getLogger } from '../lib/logger';
@@ -1140,11 +1140,11 @@ async function enrichClinicalContext(baseContext: ClinicalChatContext): Promise<
       await Promise.all(
         uniqueMissingIds.map(async (exerciseId) => {
           try {
-            const exerciseDoc = await db.collection('exercises').doc(exerciseId).get();
+            const exerciseDoc = await db.collection('exercises').doc(exerciseId as string).get();
             if (!exerciseDoc.exists) return;
             const data = exerciseDoc.data() as Record<string, unknown> | undefined;
             const name = getFirstString(data, ['name', 'title']);
-            if (name) exerciseNameById.set(exerciseId, name);
+            if (name) exerciseNameById.set(exerciseId as string, name);
           } catch (error) {
             logger.warn('Failed to resolve exercise name for context enrichment', {
               patientId,

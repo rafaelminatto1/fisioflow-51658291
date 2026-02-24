@@ -4,7 +4,9 @@
  * Indexa evoluções existentes para busca semântica
  */
 
-import * as functions from 'firebase-functions/v2';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
+import { logger } from 'firebase-functions';
 import * as admin from 'firebase-admin';
 import { GoogleAuth } from 'google-auth-library';
 
@@ -78,7 +80,7 @@ async function getAccessToken(): Promise<string> {
 /**
  * Indexa evoluções sem embedding (roda diariamente às 2 AM)
  */
-export const indexExistingEvolutions = functions.scheduler.onSchedule(
+export const indexExistingEvolutions = onSchedule(
   {
     schedule: '0 2 * * *', // 2 AM diário
     region: 'southamerica-east1',
@@ -87,7 +89,7 @@ export const indexExistingEvolutions = functions.scheduler.onSchedule(
     timeoutSeconds: 540, // 9 minutos
   },
   async (event) => {
-    functions.logger.info('[Indexing] Iniciando indexação de evoluções');
+    logger.info('[Indexing] Iniciando indexação de evoluções');
 
     const db = admin.firestore();
 
@@ -100,11 +102,11 @@ export const indexExistingEvolutions = functions.scheduler.onSchedule(
         .get();
 
       if (snapshot.empty) {
-        functions.logger.info('[Indexing] Nenhuma evolução para indexar');
+        logger.info('[Indexing] Nenhuma evolução para indexar');
         return;
       }
 
-      functions.logger.info(`[Indexing] Encontradas ${snapshot.size} evoluções para indexar`);
+      logger.info(`[Indexing] Encontradas ${snapshot.size} evoluções para indexar`);
 
       let success = 0;
       let failed = 0;
@@ -132,7 +134,7 @@ export const indexExistingEvolutions = functions.scheduler.onSchedule(
 
           success++;
         } catch (error) {
-          functions.logger.error(`[Indexing] Erro ao indexar evolução ${doc.id}:`, error);
+          logger.error(`[Indexing] Erro ao indexar evolução ${doc.id}:`, error);
           failed++;
         }
       }
@@ -140,9 +142,9 @@ export const indexExistingEvolutions = functions.scheduler.onSchedule(
       // Commit batch (max 500 operações)
       await batch.commit();
 
-      functions.logger.info(`[Indexing] Concluído: ${success} sucessos, ${failed} falhas`);
+      logger.info(`[Indexing] Concluído: ${success} sucessos, ${failed} falhas`);
     } catch (error) {
-      functions.logger.error('[Indexing] Erro na indexação:', error);
+      logger.error('[Indexing] Erro na indexação:', error);
       throw error;
     }
   }
@@ -151,7 +153,7 @@ export const indexExistingEvolutions = functions.scheduler.onSchedule(
 /**
  * Indexa uma evolução específica (callable)
  */
-export const indexEvolution = functions.https.onCall(
+export const indexEvolution = onCall(
   {
     region: 'southamerica-east1',
     memory: '512MiB',
@@ -160,10 +162,10 @@ export const indexEvolution = functions.https.onCall(
     const { evolutionId } = request.data;
 
     if (!evolutionId) {
-      throw new functions.https.HttpsError('invalid-argument', 'evolutionId is required');
+      throw new HttpsError('invalid-argument', 'evolutionId is required');
     }
 
-    functions.logger.info(`[Indexing] Indexando evolução ${evolutionId}`);
+    logger.info(`[Indexing] Indexando evolução ${evolutionId}`);
 
     const db = admin.firestore();
 
@@ -171,12 +173,12 @@ export const indexEvolution = functions.https.onCall(
       const doc = await db.collection('evolutions').doc(evolutionId).get();
 
       if (!doc.exists) {
-        throw new functions.https.HttpsError('not-found', 'Evolution not found');
+        throw new HttpsError('not-found', 'Evolution not found');
       }
 
       const evolution = doc.data();
       if (!evolution) {
-        throw new functions.https.HttpsError('not-found', 'Evolution data not found');
+        throw new HttpsError('not-found', 'Evolution data not found');
       }
 
       // Gerar embedding
@@ -194,12 +196,12 @@ export const indexEvolution = functions.https.onCall(
         embeddingVersion: 1,
       });
 
-      functions.logger.info(`[Indexing] Evolução ${evolutionId} indexada com sucesso`);
+      logger.info(`[Indexing] Evolução ${evolutionId} indexada com sucesso`);
 
       return { success: true };
     } catch (error) {
-      functions.logger.error(`[Indexing] Erro ao indexar evolução ${evolutionId}:`, error);
-      throw new functions.https.HttpsError('internal', 'Failed to index evolution');
+      logger.error(`[Indexing] Erro ao indexar evolução ${evolutionId}:`, error);
+      throw new HttpsError('internal', 'Failed to index evolution');
     }
   }
 );
@@ -207,7 +209,7 @@ export const indexEvolution = functions.https.onCall(
 /**
  * Reindexa todas as evoluções de um paciente
  */
-export const reindexPatientEvolutions = functions.https.onCall(
+export const reindexPatientEvolutions = onCall(
   {
     region: 'southamerica-east1',
     memory: '512MiB',
@@ -216,14 +218,14 @@ export const reindexPatientEvolutions = functions.https.onCall(
     const { patientId } = request.data;
 
     if (!patientId) {
-      throw new functions.https.HttpsError('invalid-argument', 'patientId is required');
+      throw new HttpsError('invalid-argument', 'patientId is required');
     }
 
     if (!request.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated');
+      throw new HttpsError('unauthenticated', 'Must be authenticated');
     }
 
-    functions.logger.info(`[Indexing] Reindexando evoluções do paciente ${patientId}`);
+    logger.info(`[Indexing] Reindexando evoluções do paciente ${patientId}`);
 
     const db = admin.firestore();
 
@@ -235,11 +237,11 @@ export const reindexPatientEvolutions = functions.https.onCall(
         .get();
 
       if (snapshot.empty) {
-        functions.logger.info(`[Indexing] Nenhuma evolução encontrada para paciente ${patientId}`);
+        logger.info(`[Indexing] Nenhuma evolução encontrada para paciente ${patientId}`);
         return { count: 0 };
       }
 
-      functions.logger.info(`[Indexing] Encontradas ${snapshot.size} evoluções`);
+      logger.info(`[Indexing] Encontradas ${snapshot.size} evoluções`);
 
       let success = 0;
       let failed = 0;
@@ -266,7 +268,7 @@ export const reindexPatientEvolutions = functions.https.onCall(
 
           success++;
         } catch (error) {
-          functions.logger.error(`[Indexing] Erro ao indexar ${doc.id}:`, error);
+          logger.error(`[Indexing] Erro ao indexar ${doc.id}:`, error);
           failed++;
         }
       }
@@ -274,12 +276,12 @@ export const reindexPatientEvolutions = functions.https.onCall(
       // Commit
       await batch.commit();
 
-      functions.logger.info(`[Indexing] Reindexação concluída: ${success} sucessos, ${failed} falhas`);
+      logger.info(`[Indexing] Reindexação concluída: ${success} sucessos, ${failed} falhas`);
 
       return { count: success, failed };
     } catch (error) {
-      functions.logger.error(`[Indexing] Erro ao reindexar paciente ${patientId}:`, error);
-      throw new functions.https.HttpsError('internal', 'Failed to reindex patient evolutions');
+      logger.error(`[Indexing] Erro ao reindexar paciente ${patientId}:`, error);
+      throw new HttpsError('internal', 'Failed to reindex patient evolutions');
     }
   }
 );
@@ -287,7 +289,7 @@ export const reindexPatientEvolutions = functions.https.onCall(
 /**
  * Remove embedding de uma evolução (quando deletada)
  */
-export const removeEvolutionEmbedding = functions.https.onCall(
+export const removeEvolutionEmbedding = onCall(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
@@ -296,7 +298,7 @@ export const removeEvolutionEmbedding = functions.https.onCall(
     const { evolutionId } = request.data;
 
     if (!evolutionId) {
-      throw new functions.https.HttpsError('invalid-argument', 'evolutionId is required');
+      throw new HttpsError('invalid-argument', 'evolutionId is required');
     }
 
     const db = admin.firestore();
@@ -308,12 +310,12 @@ export const removeEvolutionEmbedding = functions.https.onCall(
         embeddingVersion: null,
       });
 
-      functions.logger.info(`[Indexing] Embedding removido da evolução ${evolutionId}`);
+      logger.info(`[Indexing] Embedding removido da evolução ${evolutionId}`);
 
       return { success: true };
     } catch (error) {
-      functions.logger.error(`[Indexing] Erro ao remover embedding ${evolutionId}:`, error);
-      throw new functions.https.HttpsError('internal', 'Failed to remove embedding');
+      logger.error(`[Indexing] Erro ao remover embedding ${evolutionId}:`, error);
+      throw new HttpsError('internal', 'Failed to remove embedding');
     }
   }
 );
@@ -322,7 +324,7 @@ export const removeEvolutionEmbedding = functions.https.onCall(
  * Trigger automático ao criar evolução
  * NOTA: Para usar, configure o trigger no Firestore
  */
-export const onEvolutionCreated = functions.https.onCall(
+export const onEvolutionCreated = onCall(
   {
     region: 'southamerica-east1',
     memory: '512MiB',
@@ -331,10 +333,10 @@ export const onEvolutionCreated = functions.https.onCall(
     const { evolutionId, evolution } = request.data;
 
     if (!evolutionId || !evolution) {
-      throw new functions.https.HttpsError('invalid-argument', 'evolutionId and evolution are required');
+      throw new HttpsError('invalid-argument', 'evolutionId and evolution are required');
     }
 
-    functions.logger.info(`[Indexing] Auto-indexando evolução ${evolutionId}`);
+    logger.info(`[Indexing] Auto-indexando evolução ${evolutionId}`);
 
     try {
       // Gerar embedding
@@ -349,11 +351,11 @@ export const onEvolutionCreated = functions.https.onCall(
         embeddingVersion: 1,
       });
 
-      functions.logger.info(`[Indexing] Evolução ${evolutionId} auto-indexada`);
+      logger.info(`[Indexing] Evolução ${evolutionId} auto-indexada`);
 
       return { success: true };
     } catch (error) {
-      functions.logger.error(`[Indexing] Erro ao auto-indexar ${evolutionId}:`, error);
+      logger.error(`[Indexing] Erro ao auto-indexar ${evolutionId}:`, error);
       // Não lança erro para não quebrar a criação da evolução
       return { success: false, error: String(error) };
     }
@@ -363,14 +365,14 @@ export const onEvolutionCreated = functions.https.onCall(
 /**
  * Estatísticas de indexação
  */
-export const getIndexingStats = functions.https.onCall(
+export const getIndexingStats = onCall(
   {
     region: 'southamerica-east1',
     memory: '256MiB',
   },
   async (request) => {
     if (!request.auth) {
-      throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated');
+      throw new HttpsError('unauthenticated', 'Must be authenticated');
     }
 
     const db = admin.firestore();
@@ -401,8 +403,8 @@ export const getIndexingStats = functions.https.onCall(
         percentage: Math.round(percentage * 10) / 10,
       };
     } catch (error) {
-      functions.logger.error('[Indexing] Erro ao buscar estatísticas:', error);
-      throw new functions.https.HttpsError('internal', 'Failed to get indexing stats');
+      logger.error('[Indexing] Erro ao buscar estatísticas:', error);
+      throw new HttpsError('internal', 'Failed to get indexing stats');
     }
   }
 );

@@ -373,7 +373,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
                     {[1, 2, 3].map(i => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
                   </div>
                 ) : agendamentosProximos.length === 0 ? (
-                  <EmptyState
+                  <EmptyStateEnhanced
                     icon={Clock}
                     title="Agenda livre"
                     description="Não há agendamentos próximos registrados no momento."

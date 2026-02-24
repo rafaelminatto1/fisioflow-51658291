@@ -9,7 +9,8 @@ import {
   MessageSquare, CheckCircle, ArrowRight, X, Heart
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getFirebaseAuth, db } from '@/integrations/firebase/app';
+import { getFirebaseAuth, db, doc, getDoc, setDoc, updateDoc } from '@/integrations/firebase/app';
+import { onAuthStateChanged } from 'firebase/auth';
 
 interface OnboardingStep {
   id: string;
@@ -93,6 +94,7 @@ export const OnboardingTour = () => {
   const { data: onboardingData } = useQuery({
     queryKey: ['onboarding-progress'],
     queryFn: async () => {
+      const auth = getFirebaseAuth();
       return new Promise((resolve) => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
           unsubscribe();
@@ -101,8 +103,8 @@ export const OnboardingTour = () => {
             return;
           }
 
-          const progressRef = docRef(db, 'onboarding_progress', user.uid);
-          const docSnap = await getDocFromFirestore(progressRef);
+          const progressRef = doc(db, 'onboarding_progress', user.uid);
+          const docSnap = await getDoc(progressRef);
 
           if (!docSnap.exists()) {
             resolve({ show: true });
@@ -125,11 +127,11 @@ export const OnboardingTour = () => {
         // Create onboarding record
         const user = auth.currentUser;
         if (user) {
-          const profileRef = docRef(db, 'profiles', user.uid);
-          const profileSnap = await getDocFromFirestore(profileRef);
+          const profileRef = doc(db, 'profiles', user.uid);
+          const profileSnap = await getDoc(profileRef);
 
-          const onboardingRef = docRef(db, 'onboarding_progress', user.uid);
-          await setDocToFirestore(onboardingRef, {
+          const onboardingRef = doc(db, 'onboarding_progress', user.uid);
+          await setDoc(onboardingRef, {
             user_id: user.uid,
             organization_id: profileSnap.data()?.organization_id,
             tour_shown: true,
@@ -139,7 +141,7 @@ export const OnboardingTour = () => {
     };
 
     initOnboarding();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onboardingData, auth, db]);
 
   // Complete onboarding mutation
@@ -148,8 +150,8 @@ export const OnboardingTour = () => {
       const user = auth.currentUser;
       if (!user) return;
 
-      const progressRef = docRef(db, 'onboarding_progress', user.uid);
-      await updateDocInFirestore(progressRef, {
+      const progressRef = doc(db, 'onboarding_progress', user.uid);
+      await updateDoc(progressRef, {
         completed_at: new Date().toISOString(),
         completed_steps: onboardingSteps.map(s => s.id),
       });
@@ -165,8 +167,8 @@ export const OnboardingTour = () => {
       const user = auth.currentUser;
       if (!user) return;
 
-      const progressRef = docRef(db, 'onboarding_progress', user.uid);
-      await updateDocInFirestore(progressRef, {
+      const progressRef = doc(db, 'onboarding_progress', user.uid);
+      await updateDoc(progressRef, {
         skipped_at: new Date().toISOString(),
       });
     },
