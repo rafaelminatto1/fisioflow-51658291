@@ -3,7 +3,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient } from '@tanstack/react-query';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, useLocation } from 'react-router-dom';
 import { DataProvider } from '@/contexts/DataContext';
 import { RealtimeProvider } from '@/contexts/RealtimeContext';
 import { AuthContextProvider } from '@/contexts/AuthContextProvider';
@@ -20,14 +20,12 @@ import { AppLoadingSkeleton } from '@/components/ui/AppLoadingSkeleton';
 let _loggedAppInit = false;
 let _loggedNotificationsInit = false;
 import { notificationManager } from '@/lib/services/NotificationManager';
-import { initMonitoring } from '@/lib/monitoring';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import { get, set, del } from 'idb-keyval';
 import { AppRoutes } from "./routes";
 import { VersionManager } from "@/components/system/VersionManager";
-import { initWebVitalsMonitoring, WebVitalsIndicator } from "@/lib/monitoring/web-vitals";
-import { initPerformanceMonitoring } from "@/lib/monitoring/initPerformanceMonitoring";
+import { WebVitalsIndicator } from "@/lib/monitoring/web-vitals";
 // ============================================================================
 // NOVO: TEMA PROVIDER
 // ============================================================================
@@ -120,6 +118,7 @@ const NotificationInitializer = () => {
 };
 
 import { TourGuide } from '@/components/system/TourGuide';
+import { PosePreloadManager } from '@/components/ai/PosePreloadManager';
 
 // Grouped providers for cleaner structure and better performance
 const AppProviders = ({ children }: { children: React.ReactNode }) => {
@@ -139,6 +138,7 @@ const AppProviders = ({ children }: { children: React.ReactNode }) => {
       >
         <TooltipProvider>
           <AuthContextProvider>
+            <PosePreloadManager />
             <HighContrastProvider>
               <MobileSheetProvider>
                 <TourProvider>
@@ -187,17 +187,30 @@ const App = () => {
     // Remover loader após 2 segundos (fallback se o React não remover)
     const loaderTimeout = setTimeout(removeInitialLoader, 2000);
 
-    initMonitoring();
-    
-    // Initialize our comprehensive performance monitoring system
-    initPerformanceMonitoring(queryClient).catch((error) => {
-      logger.error('Falha ao inicializar monitoramento de performance', error, 'App');
-    });
-    
-    initWebVitalsMonitoring().catch((error) => {
-      logger.error('Falha ao inicializar Core Web Vitals', error, 'App');
-    });
+    // Inicializa monitoramento em baixa prioridade para não competir com render inicial
+    const scheduleMonitoringInit = async () => {
+      try {
+        const [{ initMonitoring }, { initPerformanceMonitoring }] = await Promise.all([
+          import('@/lib/monitoring'),
+          import('@/lib/monitoring/initPerformanceMonitoring'),
+        ]);
 
+        initMonitoring();
+        await initPerformanceMonitoring(queryClient);
+      } catch (error) {
+        logger.error('Falha ao inicializar monitoramento de performance', error, 'App');
+      }
+    };
+
+    const idleId =
+      typeof window !== 'undefined' && 'requestIdleCallback' in window
+        ? window.requestIdleCallback(() => void scheduleMonitoringInit(), { timeout: 3000 })
+        : null;
+
+    const monitoringFallbackTimer = idleId === null
+      ? setTimeout(() => void scheduleMonitoringInit(), 1200)
+      : null;
+    
     const initNotifications = async () => {
       try {
         await notificationManager.initialize();
@@ -215,6 +228,12 @@ const App = () => {
 
     return () => {
       clearTimeout(loaderTimeout);
+      if (monitoringFallbackTimer) {
+        clearTimeout(monitoringFallbackTimer);
+      }
+      if (idleId !== null && typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
+        window.cancelIdleCallback(idleId);
+      }
     };
   }, []);
 
@@ -222,23 +241,46 @@ const App = () => {
     <AppProviders>
       <Toaster />
       <Sonner />
-      <NetworkStatus />
-      <SyncManager />
-      <TourGuide />
       <BrowserRouter
         future={{
           v7_startTransition: true,
           v7_relativeSplatPath: true,
         }}
       >
-        <NotificationInitializer />
+        <RouteAwareInfrastructure />
         <Suspense fallback={<AppLoadingSkeleton message="Carregando sistema..." />}>
           <AppRoutes />
-          <VersionManager />
-          {(import.meta.env.DEV && !window.location.search.includes('e2e=true')) && <WebVitalsIndicator />}
         </Suspense>
       </BrowserRouter>
     </AppProviders>
+  );
+};
+
+const PUBLIC_BOOT_PATH_PREFIXES = [
+  '/auth',
+  '/welcome',
+  '/pre-cadastro',
+  '/prescricoes/publica',
+  '/agendar',
+];
+
+function isPublicBootPath(pathname: string): boolean {
+  return PUBLIC_BOOT_PATH_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+}
+
+const RouteAwareInfrastructure = () => {
+  const location = useLocation();
+  const isPublicRoute = isPublicBootPath(location.pathname);
+
+  return (
+    <>
+      <NetworkStatus />
+      {!isPublicRoute && <SyncManager />}
+      {!isPublicRoute && <TourGuide />}
+      {!isPublicRoute && <NotificationInitializer />}
+      {!isPublicRoute && <VersionManager />}
+      {!isPublicRoute && (import.meta.env.DEV && !window.location.search.includes('e2e=true')) && <WebVitalsIndicator />}
+    </>
   );
 };
 

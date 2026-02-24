@@ -3,7 +3,7 @@
  * Uses Gemini 1.5 Pro to analyze clinical images and videos
  */
 
-import { z } from '../ai/config';
+import { z } from '../config';
 import { ai, gemini15Pro } from '../config';
 
 export const MultimodalAnalysisInputSchema = z.object({
