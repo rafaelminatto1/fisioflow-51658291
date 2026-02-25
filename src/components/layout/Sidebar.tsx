@@ -8,7 +8,6 @@ import { useNavPreload } from '@/hooks/useIntelligentPreload';
 import { useToast } from '@/hooks/use-toast';
 import { TAREFAS_QUERY_KEY, fetchTarefas } from '@/hooks/useTarefas';
 import {
-
   LayoutDashboard,
   Users,
   Calendar,
@@ -87,8 +86,8 @@ const GamificationMiniProfile = ({ collapsed }: { collapsed: boolean }) => {
 
   if (collapsed) {
     return (
-      <div className="flex flex-col items-center py-2 gap-1 group cursor-help">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-yellow-500/20">
+      <div className="flex flex-col items-center py-4 gap-1 group cursor-help transition-all duration-300">
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white font-black text-xs shadow-premium-sm group-hover:shadow-premium-md group-hover:scale-110 transition-all duration-500">
           L{currentLevel}
         </div>
       </div>
@@ -96,23 +95,26 @@ const GamificationMiniProfile = ({ collapsed }: { collapsed: boolean }) => {
   }
 
   return (
-    <div className="mx-3 my-2 p-3 rounded-2xl bg-gradient-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 border border-slate-200/60 dark:border-slate-800/60 shadow-sm">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-yellow-400 flex items-center justify-center text-slate-900 shadow-sm">
-            <Trophy className="w-4 h-4" />
+    <div className="mx-3 my-4 p-4 rounded-[1.5rem] bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-border/40 shadow-premium-sm hover:shadow-premium-md transition-all duration-500 relative overflow-hidden group">
+      <div className="absolute -right-4 -top-4 w-16 h-16 bg-yellow-400/5 rounded-full blur-2xl group-hover:bg-yellow-400/10 transition-colors" />
+      <div className="flex items-center justify-between mb-3 relative z-10">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center text-white shadow-lg shadow-yellow-500/20 group-hover:scale-110 transition-transform duration-500">
+            <Trophy className="w-4.5 h-4.5" />
           </div>
           <div className="flex flex-col">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nível</span>
-            <span className="text-sm font-black text-slate-700 dark:text-slate-200">{currentLevel}</span>
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.1em]">Nível</span>
+            <span className="text-sm font-black text-slate-900 dark:text-white leading-none">{currentLevel}</span>
           </div>
         </div>
         <div className="flex flex-col items-end">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">XP</span>
-          <span className="text-[10px] font-medium text-slate-600 dark:text-slate-400">{currentXp}/{xpPerLevel}</span>
+          <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.1em]">XP</span>
+          <span className="text-[10px] font-black text-slate-700 dark:text-slate-300">{currentXp}/{xpPerLevel}</span>
         </div>
       </div>
-      <Progress value={progressPercentage} className="h-1.5 bg-slate-100 dark:bg-slate-800" />
+      <div className="relative z-10">
+        <Progress value={progressPercentage} className="h-1.5 bg-slate-100 dark:bg-slate-800" />
+      </div>
     </div>
   );
 };
@@ -141,9 +143,6 @@ const avaliacoesSubmenu = [
   { icon: Footprints, label: 'Avaliação de Marcha', href: '/dashboard/imagens?mode=dynamic_demo' },
 ];
 
-
-
-// MÓDULOS OPERACIONAIS - Vendas, estoque, eventos e telemedicina
 const operacionaisSubmenu = [
   { icon: CalendarDays, label: 'Eventos', href: '/eventos' },
   { icon: ShoppingCart, label: 'Treinos/Vouchers', href: '/vouchers' },
@@ -220,7 +219,6 @@ const dashboardIaSubmenu = [
   { icon: BarChart3, label: 'Analytics Avançado', href: '/analytics' },
 ];
 
-// Google AI Suite - Novas ferramentas integradas
 const googleAiSubmenu = [
   { icon: Brain, label: 'IA Clínica (Genkit)', href: '/ai/clinical' },
   { icon: Video, label: 'Lab Movimento (Vision)', href: '/ai/movement' },
@@ -268,7 +266,7 @@ export function Sidebar() {
   const [crmOpen, setCrmOpen] = useState(false);
   const [configuracoesOpen, setConfiguracoesOpen] = useState(false);
   const [dashboardIaOpen, setDashboardIaOpen] = useState(false);
-  const [googleAiOpen, setGoogleAiOpen] = useState(false); // Novo estado
+  const [googleAiOpen, setGoogleAiOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [operacionaisOpen, setOperacionaisOpen] = useState(false);
   const [gamificacaoOpen, setGamificacaoOpen] = useState(false);
@@ -287,21 +285,19 @@ export function Sidebar() {
   const isCrmActive = location.pathname.startsWith('/crm');
   const isConfiguracoesActive = location.pathname.startsWith('/configuracoes') || location.pathname === '/settings';
   const isDashboardIaActive = location.pathname.startsWith('/smart-dashboard') || location.pathname.startsWith('/smart-ai') || location.pathname === '/analytics';
-  const isGoogleAiActive = location.pathname.startsWith('/ai/'); // Novo active state
+  const isGoogleAiActive = location.pathname.startsWith('/ai/');
   const isAdminActive = location.pathname.startsWith('/admin');
   const isOperacionaisActive = location.pathname.startsWith('/eventos') || location.pathname === '/vouchers' || location.pathname === '/inventory' || location.pathname === '/telemedicine' || location.pathname === '/pre-cadastro-admin';
   const isGamificacaoActive = location.pathname.startsWith('/gamification');
   const isMarketingActive = location.pathname.startsWith('/marketing');
   const isMaisActive = location.pathname === '/portal' || location.pathname === '/ocupacao-fisioterapeutas' || location.pathname === '/clinical-tests' || location.pathname.startsWith('/wiki') || location.pathname === '/timetracking' || location.pathname === '/automation' || location.pathname === '/integrations';
 
-  // Função auxiliar para renderizar item do menu
   const renderMenuItem = (item: { icon: React.ComponentType<{ className?: string }>; label: string; href: string; preload?: () => void | Promise<unknown> }, collapsed: boolean, location: { pathname: string }) => {
     const Icon = item.icon;
     const isActive = location.pathname === item.href;
 
     const handleMouseEnter = () => {
       item.preload?.();
-      // Prefetch dados de tarefas ao passar mouse em Tarefas ou Tarefas V2 (melhora velocidade de /tarefas)
       if (item.href === '/tarefas' || item.href === '/tarefas-v2') {
         queryClient.prefetchQuery({ queryKey: TAREFAS_QUERY_KEY, queryFn: fetchTarefas });
       }
@@ -315,27 +311,26 @@ export function Sidebar() {
         aria-label={item.label}
         aria-current={isActive ? 'page' : undefined}
         className={cn(
-          "flex items-center gap-3 rounded-xl transition-all duration-300 group relative overflow-hidden",
-          collapsed ? "justify-center px-2 py-3" : "px-4 py-2.5",
+          "flex items-center gap-3 rounded-2xl transition-all duration-500 group relative overflow-hidden",
+          collapsed ? "justify-center px-2 py-3.5" : "px-4 py-3",
           isActive
-            ? "bg-slate-900 text-white font-bold shadow-xl shadow-slate-900/20"
-            : "text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-white"
+            ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black shadow-premium-md"
+            : "text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-white"
         )}
       >
         <Icon className={cn(
-          "h-5 w-5 transition-all duration-300 flex-shrink-0",
-          isActive ? "text-white" : "group-hover:scale-110 group-hover:rotate-3 group-hover:text-primary"
+          "h-5 w-5 transition-all duration-500 flex-shrink-0 relative z-10",
+          isActive ? "scale-110" : "group-hover:scale-110 group-hover:rotate-3 group-hover:text-primary"
         )} />
-        {!collapsed && <span className="text-sm tracking-tight relative z-10">{item.label}</span>}
+        {!collapsed && <span className="text-xs font-bold uppercase tracking-widest relative z-10">{item.label}</span>}
         
         {isActive && (
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-blue-400 rounded-r-full shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-primary rounded-r-full shadow-[0_0_12px_rgba(var(--primary),0.8)]" />
         )}
       </Link>
     );
   };
 
-  // Função auxiliar para renderizar submenu
   const renderSubmenu = ({
     icon,
     label,
@@ -363,18 +358,15 @@ export function Sidebar() {
           to={items[0]?.href || '#'}
           aria-label={label}
           className={cn(
-            "flex items-center justify-center px-2 py-2.5 rounded-xl transition-all duration-200 group relative overflow-hidden",
+            "flex items-center justify-center px-2 py-3.5 rounded-2xl transition-all duration-500 group relative overflow-hidden",
             isActive
-              ? "bg-slate-900 text-white font-semibold shadow-lg"
-              : "text-muted-foreground/70 hover:bg-slate-100 hover:text-slate-900 grayscale-[0.8] hover:grayscale-0"
+              ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black shadow-premium-md"
+              : "text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-800/50 dark:hover:text-white"
           )}
         >
-          {/* Efeito de ripple no hover */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-
-          <Icon className="h-5 w-5 transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3" />
+          <Icon className="h-5 w-5 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 relative z-10" />
           {isActive && (
-            <div className="absolute left-0 w-1 h-8 bg-primary rounded-r-full shadow-[0_0_8px_rgba(255,255,255,0.5)]" />
+            <div className="absolute left-0 w-1.5 h-8 bg-primary rounded-r-full" />
           )}
         </Link>
       );
@@ -388,18 +380,18 @@ export function Sidebar() {
             aria-expanded={isOpen}
             aria-label={isOpen ? `Fechar menu ${label}` : `Abrir menu ${label}`}
             className={cn(
-              "flex items-center justify-between w-full px-4 py-2.5 rounded-xl transition-all duration-300 group relative overflow-hidden",
+              "flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group relative overflow-hidden",
               isActive
-                ? "bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-bold"
-                : "text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-white"
+                ? "bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black"
+                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-white"
             )}
           >
             <div className="flex items-center gap-3 relative z-10">
               <Icon className={cn(
-                "h-5 w-5 transition-all duration-300",
-                isActive ? "text-primary" : "group-hover:scale-110 group-hover:text-primary"
+                "h-5 w-5 transition-all duration-500",
+                isActive ? "text-primary scale-110" : "group-hover:scale-110 group-hover:text-primary"
               )} />
-              <span className="text-sm tracking-tight">{label}</span>
+              <span className="text-xs font-bold uppercase tracking-widest">{label}</span>
             </div>
             <ChevronDown className={cn(
               "h-3.5 w-3.5 transition-transform duration-500 flex-shrink-0 relative z-10",
@@ -407,7 +399,7 @@ export function Sidebar() {
             )} />
           </button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="pl-12 space-y-1 mt-1 animate-slide-up-fade">
+        <CollapsibleContent className="pl-12 space-y-1.5 mt-1.5 animate-slide-up-fade">
           {items.map((item, index) => {
             const isSubActive = location.pathname === item.href ||
               (location.pathname + location.search === item.href) ||
@@ -417,16 +409,16 @@ export function Sidebar() {
                 key={item.href}
                 to={item.href}
                 className={cn(
-                  "block px-3 py-2 rounded-lg text-xs transition-all duration-200 relative overflow-hidden group font-medium",
+                  "block px-3 py-2.5 rounded-xl text-[11px] transition-all duration-300 relative overflow-hidden group font-bold uppercase tracking-tighter",
                   isSubActive
-                    ? "bg-primary/10 text-primary font-bold shadow-sm"
-                    : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white hover:pl-4"
+                    ? "bg-primary/10 text-primary font-black shadow-sm"
+                    : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/30 hover:text-slate-900 dark:hover:text-white hover:pl-5"
                 )}
-                style={{ transitionDelay: `${index * 20}ms` }}
+                style={{ transitionDelay: `${index * 30}ms` }}
               >
                 <span className="relative z-10">{item.label}</span>
                 {isSubActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-3 bg-primary rounded-r-full" />
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-3 bg-primary rounded-r-full shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
                 )}
               </Link>
             );
@@ -440,370 +432,192 @@ export function Sidebar() {
     try {
       const auth = getFirebaseAuth();
       await signOut(auth);
-
-      toast({
-        title: 'Logout realizado',
-        description: 'Até breve!',
-      });
+      toast({ title: 'Logout realizado', description: 'Até breve!' });
       navigate('/auth');
     } catch (error) {
-      toast({
-        title: 'Erro ao sair',
-        description: error?.message || 'Ocorreu um erro',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erro ao sair', description: error?.message || 'Ocorreu um erro', variant: 'destructive' });
     }
   };
 
   return (
     <div className={cn(
-      "hidden md:flex bg-white/95 dark:bg-card/95 backdrop-blur-xl border-r border-gray-200/60 dark:border-gray-800/60 transition-all duration-300 ease-in-out flex-col h-screen sticky top-0 shadow-xl z-50",
-      collapsed ? "w-[72px]" : "w-[220px]"
+      "hidden md:flex bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl border-r border-border/40 transition-all duration-500 ease-in-out flex-col h-screen sticky top-0 shadow-premium-lg z-50",
+      collapsed ? "w-[84px]" : "w-[240px]"
     )}>
-      {/* Header - Inspirado no shadcn com efeitos melhorados */}
-      <div className={cn(
-        "border-b border-border/60 shrink-0 bg-gradient-to-b from-background via-background/80 to-background/50 relative",
-        collapsed ? "p-3" : "p-3"
-      )}>
-        {/* Efeito de brilho superior */}
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-
-        <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className={cn("shrink-0 p-5 relative", collapsed ? "flex justify-center" : "")}>
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+        
+        <div className="flex items-center justify-between w-full">
+          <Link to="/" className="flex items-center gap-3 group transition-transform duration-500 hover:scale-105">
+            <img src={fisioflowLogo} alt="FisioFlow" className={cn("h-8 w-auto transition-all", collapsed ? "h-10" : "")} />
+            {!collapsed && (
+              <div className="flex flex-col">
+                <span className="text-xs font-black tracking-[0.2em] text-slate-900 dark:text-white">FISIOFLOW</span>
+                <span className="text-[8px] font-black tracking-widest text-primary uppercase">Elite Suite</span>
+              </div>
+            )}
+          </Link>
+          
           {!collapsed && (
-            <Link to="/" className="flex items-center gap-3 group overflow-hidden hover:opacity-90 transition-opacity">
-              <img src={fisioflowLogo} alt="FisioFlow" className="h-8 w-auto" />
-            </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setCollapsed(!collapsed)}
+              className="h-8 w-8 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-90"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
           )}
-          {collapsed && (
-            <Link to="/" className="relative mx-auto block hover:opacity-90 transition-opacity">
-              <img src={fisioflowLogo} alt="FisioFlow" className="h-8 w-auto" />
-            </Link>
-          )}
+        </div>
+        
+        {collapsed && (
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setCollapsed(!collapsed)}
-            aria-label={collapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'}
-            className={cn(
-              "hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 hover:scale-110 active:scale-95 shrink-0 rounded-lg relative overflow-hidden group",
-              !collapsed && "ml-auto"
-            )}
+            className="absolute -right-4 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white dark:bg-slate-900 shadow-premium-md border border-border/40 z-50 hover:scale-110 active:scale-95 transition-all"
           >
-            {/* Efeito de ripple no botão */}
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-current/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-300" />
-            <span className="relative z-10">
-              {collapsed ? <ChevronRight className="w-4 h-4 transition-transform duration-200" /> : <ChevronLeft className="w-4 h-4 transition-transform duration-200" />}
-            </span>
+            <ChevronRight className="w-4 h-4" />
           </Button>
-        </div>
+        )}
       </div>
 
-      {/* Navigation - Com scrollbar personalizada e efeitos melhorados */}
-      <nav id="main-navigation" className="flex-1 overflow-y-auto overflow-x-hidden relative" aria-label="Navegação principal">
-        {/* Efeito de glow no topo */}
-        <div className="absolute top-0 left-0 right-0 h-8 bg-gradient-to-b from-background/80 to-transparent pointer-events-none" />
-
+      {/* Navigation */}
+      <nav id="main-navigation" className="flex-1 overflow-y-auto overflow-x-hidden sidebar-scroll px-3 py-4 space-y-1">
         <style>{`
-          .sidebar-scroll::-webkit-scrollbar {
-            width: 4px;
-          }
-          .sidebar-scroll::-webkit-scrollbar-track {
-            background: transparent;
-          }
-          .sidebar-scroll::-webkit-scrollbar-thumb {
-            background: hsl(var(--border) / 0.25);
-            border-radius: 4px;
-            transition: background 0.2s;
-          }
-          .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-            background: hsl(var(--border) / 0.4);
-          }
+          .sidebar-scroll::-webkit-scrollbar { width: 3px; }
+          .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+          .sidebar-scroll::-webkit-scrollbar-thumb { background: hsl(var(--border) / 0.3); border-radius: 10px; }
+          .sidebar-scroll::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary) / 0.5); }
         `}</style>
-        <div className={cn(
-          "space-y-px sidebar-scroll",
-          collapsed ? "p-2" : "p-3 py-4"
-        )}>
-          {/* === NÚCLEO DO NEGÓCIO === */}
-          {!collapsed && (
-            <div className="px-2 py-1.5 mt-1 mb-2">
-              <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.15em] flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary/40" />
-                Núcleo
-              </span>
-            </div>
-          )}
-          {menuItems.slice(0, 3).map((item) => renderMenuItem(item, collapsed, location))}
 
-          {/* === CLÍNICA DIÁRIA === */}
-          {!collapsed && (
-            <>
-              <div className="mx-2 my-2 h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />
-              <div className="px-2 py-1.5 mb-2">
-                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.15em] flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500/40" />
-                  Clínica
-                </span>
+        {/* Categories with divider lines */}
+        <div className="space-y-4">
+          {/* NÚCLEO */}
+          <div className="space-y-1">
+            {!collapsed && (
+              <div className="px-4 py-2">
+                <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.3em]">Núcleo</span>
               </div>
-            </>
-          )}
-          {collapsed && <div className="mx-2 my-2 h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />}
-          {menuItems.slice(3, 6).map((item) => renderMenuItem(item, collapsed, location))}
+            )}
+            {menuItems.slice(0, 3).map((item) => renderMenuItem(item, collapsed, location))}
+          </div>
 
-          {/* === GESTÃO E OPERAÇÕES === */}
-          {!collapsed && (
-            <>
-              <div className="mx-2 my-2 h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />
-              <div className="px-2 py-1.5 mb-2">
-                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.15em] flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500/40" />
-                  Gestão
-                </span>
+          <div className="space-y-1 pt-2">
+            {!collapsed && (
+              <div className="px-4 py-2 border-t border-border/30">
+                <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] mt-2 block">Clínica</span>
               </div>
-            </>
-          )}
-          {collapsed && <div className="mx-2 my-2 h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />}
-          {menuItems.slice(6).map((item) => renderMenuItem(item, collapsed, location))}
+            )}
+            {menuItems.slice(3, 6).map((item) => renderMenuItem(item, collapsed, location))}
+            
+            {renderSubmenu({
+              icon: ScanFace,
+              label: 'Avaliações',
+              items: avaliacoesSubmenu,
+              isOpen: avaliacoesOpen || isAvaliacoesActive,
+              onOpenChange: setAvaliacoesOpen,
+              isActive: isAvaliacoesActive,
+              collapsed,
+              location
+            })}
+          </div>
 
-          {/* === MÓDULOS === */}
-          {!collapsed && (
-            <>
-              <div className="mx-2 my-2 h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />
-              <div className="px-2 py-1.5 mb-2">
-                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.15em] flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500/40" />
-                  Módulos
-                </span>
+          <div className="space-y-1 pt-2">
+            {!collapsed && (
+              <div className="px-4 py-2 border-t border-border/30">
+                <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] mt-2 block">Gestão</span>
               </div>
-            </>
-          )}
-          {collapsed && <div className="mx-2 my-2 h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />}
+            )}
+            {menuItems.slice(6).map((item) => renderMenuItem(item, collapsed, location))}
+            
+            {renderSubmenu({
+              icon: Star,
+              label: 'Marketing',
+              items: marketingSubmenu,
+              isOpen: marketingOpen || isMarketingActive,
+              onOpenChange: setMarketingOpen,
+              isActive: isMarketingActive,
+              collapsed,
+              location
+            })}
+            
+            {renderSubmenu({
+              icon: DollarSign,
+              label: 'Financeiro',
+              items: financeiroSubmenu,
+              isOpen: financeiroOpen || isFinanceiroActive,
+              onOpenChange: setFinanceiroOpen,
+              isActive: isFinanceiroActive,
+              collapsed,
+              location
+            })}
+          </div>
 
-          {/* Avaliações Submenu */}
-          {renderSubmenu({
-            icon: ScanFace,
-            label: 'Avaliações',
-            items: avaliacoesSubmenu,
-            isOpen: avaliacoesOpen || isAvaliacoesActive,
-            onOpenChange: setAvaliacoesOpen,
-            isActive: isAvaliacoesActive,
-            collapsed,
-            location
-          })}
-
-          {/* Cadastros Submenu */}
-          {renderSubmenu({
-            icon: ClipboardList,
-            label: 'Cadastros',
-            items: cadastrosSubmenu,
-            isOpen: cadastrosOpen || isCadastrosActive,
-            onOpenChange: setCadastrosOpen,
-            isActive: isCadastrosActive,
-            collapsed,
-            location
-          })}
-
-          {/* CRM Submenu */}
-          {renderSubmenu({
-            icon: TrendingUp,
-            label: 'CRM',
-            items: crmSubmenu,
-            isOpen: crmOpen || isCrmActive,
-            onOpenChange: setCrmOpen,
-            isActive: isCrmActive,
-            collapsed,
-            location
-          })}
-
-          {/* Marketing Submenu */}
-          {renderSubmenu({
-            icon: Star,
-            label: 'Marketing',
-            items: marketingSubmenu,
-            isOpen: marketingOpen || isMarketingActive,
-            onOpenChange: setMarketingOpen,
-            isActive: isMarketingActive,
-            collapsed,
-            location
-          })}
-
-          {/* Operacionais Submenu */}
-          {renderSubmenu({
-            icon: Layers,
-            label: 'Operacionais',
-            items: operacionaisSubmenu,
-            isOpen: operacionaisOpen || isOperacionaisActive,
-            onOpenChange: setOperacionaisOpen,
-            isActive: isOperacionaisActive,
-            collapsed,
-            location
-          })}
-
-          {/* === FINANCEIRO === */}
-          {!collapsed && (
-            <>
-              <div className="mx-2 my-2 h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />
-              <div className="px-2 py-1.5 mb-2">
-                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.15em] flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500/40" />
-                  Financeiro
-                </span>
+          <div className="space-y-1 pt-2">
+            {!collapsed && (
+              <div className="px-4 py-2 border-t border-border/30">
+                <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] mt-2 block">Inteligência</span>
               </div>
-            </>
-          )}
-          {collapsed && <div className="mx-2 my-2 h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />}
+            )}
+            {renderSubmenu({
+              icon: Sparkles,
+              label: 'Dashboard IA',
+              items: dashboardIaSubmenu,
+              isOpen: dashboardIaOpen || isDashboardIaActive,
+              onOpenChange: setDashboardIaOpen,
+              isActive: isDashboardIaActive,
+              collapsed,
+              location
+            })}
+            
+            {renderSubmenu({
+              icon: Brain,
+              label: 'Google AI',
+              items: googleAiSubmenu,
+              isOpen: googleAiOpen || isGoogleAiActive,
+              onOpenChange: setGoogleAiOpen,
+              isActive: isGoogleAiActive,
+              collapsed,
+              location
+            })}
+          </div>
 
-          {/* Financeiro Submenu */}
-          {renderSubmenu({
-            icon: DollarSign,
-            label: 'Financeiro',
-            items: financeiroSubmenu,
-            isOpen: financeiroOpen || isFinanceiroActive,
-            onOpenChange: setFinanceiroOpen,
-            isActive: isFinanceiroActive,
-            collapsed,
-            location
-          })}
-
-          {/* Relatórios Submenu */}
-          {renderSubmenu({
-            icon: BarChart3,
-            label: 'Relatórios',
-            items: relatoriosSubmenu,
-            isOpen: relatoriosOpen || isRelatoriosActive,
-            onOpenChange: setRelatoriosOpen,
-            isActive: isRelatoriosActive,
-            collapsed,
-            location
-          })}
-
-          {/* === SISTEMA === */}
-          {!collapsed && (
-            <>
-              <div className="mx-2 my-2 h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />
-              <div className="px-2 py-1.5 mb-2">
-                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.15em] flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-slate-500/40" />
-                  Sistema
-                </span>
+          <div className="space-y-1 pt-2">
+            {!collapsed && (
+              <div className="px-4 py-2 border-t border-border/30">
+                <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] mt-2 block">Avançado</span>
               </div>
-            </>
-          )}
-          {collapsed && <div className="mx-2 my-2 h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />}
-
-          {/* Dashboard IA Submenu */}
-          {renderSubmenu({
-            icon: Sparkles,
-            label: 'Dashboard IA',
-            items: dashboardIaSubmenu,
-            isOpen: dashboardIaOpen || isDashboardIaActive,
-            onOpenChange: setDashboardIaOpen,
-            isActive: isDashboardIaActive,
-            collapsed,
-            location
-          })}
-
-          {/* Google AI Suite Submenu */}
-          {renderSubmenu({
-            icon: Brain,
-            label: 'Google AI Suite',
-            items: googleAiSubmenu,
-            isOpen: googleAiOpen || isGoogleAiActive,
-            onOpenChange: setGoogleAiOpen,
-            isActive: isGoogleAiActive,
-            collapsed,
-            location
-          })}
-
-          {/* Admin Submenu */}
-          {renderSubmenu({
-            icon: Settings,
-            label: 'Administração',
-            items: adminSubmenu,
-            isOpen: adminOpen || isAdminActive,
-            onOpenChange: setAdminOpen,
-            isActive: isAdminActive,
-            collapsed,
-            location
-          })}
-
-          {/* === GAMIFICAÇÃO === */}
-          {!collapsed && (
-            <>
-              <div className="mx-2 my-2 h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />
-              <div className="px-2 py-1.5 mb-2">
-                <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.15em] flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-500/40" />
-                  Gamificação
-                </span>
-              </div>
-            </>
-          )}
-          {collapsed && <div className="mx-2 my-2 h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />}
-
-          {/* Gamificação Submenu */}
-          {renderSubmenu({
-            icon: Trophy,
-            label: 'Gamificação',
-            items: gamificacaoSubmenu,
-            isOpen: gamificacaoOpen || isGamificacaoActive,
-            onOpenChange: setGamificacaoOpen,
-            isActive: isGamificacaoActive,
-            collapsed,
-            location
-          })}
-
-          {/* Mais Submenu - Portal, Ocupação, Wiki, etc. */}
-          {renderSubmenu({
-            icon: MoreHorizontal,
-            label: 'Mais',
-            items: maisSubmenu,
-            isOpen: maisOpen || isMaisActive,
-            onOpenChange: setMaisOpen,
-            isActive: isMaisActive,
-            collapsed,
-            location
-          })}
-
-          {/* Configurações Submenu */}
-          {renderSubmenu({
-            icon: Settings,
-            label: 'Configurações',
-            items: configuracoesSubmenu,
-            isOpen: configuracoesOpen || isConfiguracoesActive,
-            onOpenChange: setConfiguracoesOpen,
-            isActive: isConfiguracoesActive,
-            collapsed,
-            location
-          })}
-
+            )}
+            {renderSubmenu({
+              icon: Settings,
+              label: 'Admin',
+              items: adminSubmenu,
+              isOpen: adminOpen || isAdminActive,
+              onOpenChange: setAdminOpen,
+              isActive: isAdminActive,
+              collapsed,
+              location
+            })}
+          </div>
         </div>
       </nav>
 
-      {/* Footer - Logout com efeitos melhorados */}
-      <div className={cn(
-        "p-3 border-t border-border/60 shrink-0 bg-gradient-to-t from-background/50 to-transparent relative",
-        collapsed && "p-2"
-      )}>
-        {/* Gamification Progress */}
+      {/* Footer */}
+      <div className="shrink-0 p-3 flex flex-col gap-2">
         <GamificationMiniProfile collapsed={collapsed} />
-
-        {/* Efeito de brilho inferior */}
-        <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-
+        
         <Button
           variant="ghost"
           onClick={handleLogout}
-          aria-label="Sair da conta (logout)"
           className={cn(
-            "w-full justify-start gap-3 text-muted-foreground hover:bg-red-50/90 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200 group relative overflow-hidden",
-            collapsed ? "px-2 py-2.5 justify-center" : "px-3 py-2"
+            "w-full justify-start gap-3 text-muted-foreground hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 dark:hover:text-red-400 rounded-2xl transition-all duration-300 group overflow-hidden",
+            collapsed ? "px-0 justify-center h-12" : "px-4 py-6"
           )}
         >
-          {/* Efeito de ripple no hover */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-red-500/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500" />
-
-          <LogOut className="h-5 w-5 group-hover:-translate-x-0.5 transition-transform duration-200 relative z-10" />
-          {!collapsed && <span className="text-sm font-medium relative z-10">Sair</span>}
+          <LogOut className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+          {!collapsed && <span className="text-xs font-black uppercase tracking-widest">Sair do Sistema</span>}
         </Button>
       </div>
     </div>
