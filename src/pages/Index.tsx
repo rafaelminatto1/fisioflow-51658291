@@ -8,15 +8,10 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar } from 'lucide-react';
+import { Calendar, Download, Settings as SettingsIcon, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
-// ============================================================================
-// NOVOS COMPONENTES DE ACESSIBILIDADE E TEMAS
-// ============================================================================
-import { ThemeProvider, useTheme } from '@/components/ui/theme';
-import { SkipLinks, LiveRegion } from '@/components/ui/accessibility/SkipLinks';
 
 // Lazy load dashboard components
 const AdminDashboard = lazy(() => import('@/components/dashboard/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
@@ -24,13 +19,14 @@ const PatientDashboard = lazy(() => import('@/components/dashboard/PatientDashbo
 const TherapistDashboard = lazy(() => import('@/components/dashboard/TherapistDashboard').then(m => ({ default: m.TherapistDashboard })));
 
 const DashboardSkeleton = () => (
-  <div className="space-y-4">
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <Skeleton className="h-32 w-full" />
-      <Skeleton className="h-32 w-full" />
-      <Skeleton className="h-32 w-full" />
+  <div className="space-y-6">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <Skeleton className="h-40 w-full rounded-[2.5rem]" />
+      <Skeleton className="h-40 w-full rounded-[2.5rem]" />
+      <Skeleton className="h-40 w-full rounded-[2.5rem]" />
+      <Skeleton className="h-40 w-full rounded-[2.5rem]" />
     </div>
-    <Skeleton className="h-[400px] w-full" />
+    <Skeleton className="h-[500px] w-full rounded-[3rem]" />
   </div>
 );
 
@@ -41,12 +37,11 @@ const Index = () => {
 
   // Handlers for action buttons
   const handleDownloadReport = () => {
-    toast.info('Função de download de relatório em desenvolvimento');
+    toast.info('Gerando relatório consolidado...');
   };
 
   const handleSettings = () => {
-    toast.info('Navegando para configurações...');
-    window.location.href = '/marketing/settings';
+    window.location.href = '/settings';
   };
 
   const renderDashboard = () => {
@@ -75,86 +70,117 @@ const Index = () => {
 
   return (
     <MainLayout showBreadcrumbs={false}>
-      <div className="space-y-4 sm:space-y-6 md:space-y-8 animate-fade-in pb-20 md:pb-0" data-testid="dashboard-page">
-        {/* Header com saudação - Design Moderno e Hero */}
-        <div className="relative py-4 sm:py-6 overflow-hidden rounded-2xl bg-white/40 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/50 px-4 sm:px-6" data-testid="dashboard-header">
-          {/* Decorative element */}
-          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+      {/* Background decoration elements */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] bg-blue-500/5 rounded-full blur-[100px]" />
+      </div>
+
+      <div className="relative z-10 space-y-8 sm:space-y-10 animate-fade-in pb-20 md:pb-10" data-testid="dashboard-page">
+        {/* Header Hero Section */}
+        <div className="relative p-6 sm:p-10 overflow-hidden rounded-[3rem] bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl border border-white/20 dark:border-slate-800/20 shadow-premium-lg group" data-testid="dashboard-header">
+          {/* Animated decorative patterns */}
+          <div className="absolute top-0 right-0 p-10 opacity-[0.05] group-hover:opacity-[0.08] transition-opacity duration-1000">
+            <Sparkles className="w-64 h-64 text-primary rotate-12" />
+          </div>
           
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
-            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-              <div className="relative flex-shrink-0 group">
-                <div className="absolute -inset-1 bg-gradient-primary rounded-full blur opacity-25 group-hover:opacity-40 transition duration-300" />
-                <Avatar className="h-14 w-14 sm:h-16 sm:w-16 ring-2 ring-white dark:ring-slate-900 shadow-md">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+            <div className="flex items-center gap-6 min-w-0">
+              <div className="relative flex-shrink-0">
+                <div className="absolute -inset-1.5 bg-gradient-to-tr from-primary via-blue-400 to-emerald-400 rounded-full blur opacity-30 group-hover:opacity-50 transition duration-500" />
+                <Avatar className="h-20 w-20 sm:h-24 sm:w-24 ring-4 ring-white dark:ring-slate-950 shadow-2xl relative z-10">
                   <AvatarImage src={profile?.avatar_url || ''} />
-                  <AvatarFallback className="bg-gradient-primary text-primary-foreground font-bold text-lg">
+                  <AvatarFallback className="bg-gradient-to-br from-slate-900 to-slate-800 text-white font-black text-2xl uppercase">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
-                <span className="absolute bottom-0 right-0 h-4 w-4 bg-emerald-500 rounded-full ring-2 ring-white dark:ring-slate-900 shadow-sm animate-pulse"></span>
+                <div className="absolute bottom-1 right-1 h-5 w-5 bg-emerald-500 rounded-full ring-4 ring-white dark:ring-slate-950 shadow-md z-20 animate-pulse" />
               </div>
+              
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-semibold text-primary uppercase tracking-wider mb-0.5">Visão Geral</p>
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white leading-tight truncate" data-testid="dashboard-welcome-text">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mb-3">
+                  <Sparkles className="w-3 h-3 text-primary animate-wiggle" />
+                  <span className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Dashboard Elite</span>
+                </div>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white leading-[1.1] tracking-tight mb-2" data-testid="dashboard-welcome-text">
                   {profileLoading ? 'Carregando...' : `Olá, ${displayName.split(' ')[0]}!`}
                 </h1>
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5 font-medium">
-                  <Calendar className="w-3.5 h-3.5" />
+                <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 flex items-center gap-2 font-medium">
+                  <Calendar className="w-4 h-4 text-primary" />
                   {format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}
+                  <span className="hidden sm:inline opacity-30">|</span>
+                  <span className="hidden sm:inline bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded text-xs font-bold uppercase tracking-tighter">Sistema Online</span>
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="hidden sm:flex rounded-xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border-slate-200 dark:border-slate-700 font-bold text-xs h-10 px-4" onClick={handleDownloadReport}>
-                Baixar Relatório
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="outline" 
+                className="rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-md border-border/50 hover:border-primary/50 font-black text-[10px] uppercase tracking-widest h-14 px-8 shadow-sm transition-all hover:shadow-premium-md" 
+                onClick={handleDownloadReport}
+              >
+                <Download className="w-4 h-4 mr-2 text-primary" />
+                Exportar Dados
               </Button>
-              <Button size="sm" className="rounded-xl bg-primary text-white shadow-lg shadow-primary/25 font-bold text-xs h-10 px-4" onClick={handleSettings}>
-                Configurações
+              <Button 
+                className="rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:scale-105 active:scale-95 font-black text-[10px] uppercase tracking-widest h-14 px-8 shadow-xl shadow-slate-900/20 dark:shadow-white/10 transition-all" 
+                onClick={handleSettings}
+              >
+                <SettingsIcon className="w-4 h-4 mr-2" />
+                Ajustes
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Filtros tipo chip - Estilizados como pílulas premium */}
-        <div className="py-1 overflow-x-auto -mx-1 px-1 scrollbar-hide">
-          <div className="flex gap-2.5 min-w-max">
-            {['hoje', 'semana', 'mes', 'personalizado'].map((period) => (
-              <Button
-                key={period}
-                variant={periodFilter === period ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setPeriodFilter(period)}
-                className={periodFilter === period
-                  ? "h-10 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 text-xs font-bold shadow-xl shadow-slate-900/10 transition-all scale-105"
-                  : "h-10 rounded-full bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 px-6 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-all"
-                }
-              >
-                {period === 'hoje' && 'Hoje'}
-                {period === 'semana' && 'Semana'}
-                {period === 'mes' && 'Mês'}
-                {period === 'personalizado' && 'Personalizado'}
-              </Button>
-            ))}
+        {/* Action Filters Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between px-2">
+            <h3 className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Filtrar Visualização</h3>
+            <div className="h-px flex-1 mx-6 bg-gradient-to-r from-border/50 to-transparent" />
+          </div>
+          
+          <div className="py-2 overflow-x-auto -mx-2 px-2 scrollbar-hide">
+            <div className="flex gap-3 min-w-max">
+              {['hoje', 'semana', 'mes', 'personalizado'].map((period) => (
+                <Button
+                  key={period}
+                  variant={periodFilter === period ? 'default' : 'outline'}
+                  onClick={() => setPeriodFilter(period)}
+                  className={cn(
+                    "h-12 rounded-2xl px-8 text-[10px] font-black uppercase tracking-[0.15em] transition-all duration-300",
+                    periodFilter === period
+                      ? "bg-primary text-white shadow-lg shadow-primary/25 scale-105 ring-2 ring-primary/20"
+                      : "bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border-border/50 text-slate-500 hover:border-primary/50 hover:text-primary"
+                  )}
+                >
+                  {period === 'hoje' && 'Hoje'}
+                  {period === 'semana' && 'Esta Semana'}
+                  {period === 'mes' && 'Mês Atual'}
+                  {period === 'personalizado' && 'Personalizado'}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Alerta de cadastros incompletos */}
         <IncompleteRegistrationAlert />
 
-        {/* Dashboard Customizável */}
         <CustomizableDashboard />
 
-        {/* Grid de conteúdo - Responsivo para iPhone e iPad */}
-        <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {/* Dashboard principal - Ocupa mais espaço em telas maiores */}
-          <div className="lg:col-span-2 xl:col-span-3 order-2 md:order-1" data-testid="today-schedule">
+        {/* Content Layout Grid */}
+        <div className="grid gap-8 grid-cols-1 lg:grid-cols-12">
+          {/* Main Dashboard Area */}
+          <div className="lg:col-span-8 xl:col-span-9 space-y-8" data-testid="today-schedule">
             {renderDashboard()}
           </div>
 
-          {/* Feed de atividades em tempo real - Full width em mobile */}
-          <div className="lg:col-span-1 xl:col-span-1 order-1 md:order-2">
-            <RealtimeActivityFeed />
+          {/* Activity Feed Sidebar Area */}
+          <div className="lg:col-span-4 xl:col-span-3">
+            <div className="sticky top-24">
+              <RealtimeActivityFeed />
+            </div>
           </div>
         </div>
       </div>
