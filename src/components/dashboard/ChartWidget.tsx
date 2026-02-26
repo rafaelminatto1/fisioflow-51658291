@@ -1,5 +1,4 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import {
   LineChart,
   Line,
@@ -11,9 +10,7 @@ import {
   Bar,
   PieChart,
   Pie,
-  Cell,
-  AreaChart,
-  Area
+  Cell
 } from 'recharts';
 import { TrendingUp, Filter } from 'lucide-react';
 import { useState } from 'react';

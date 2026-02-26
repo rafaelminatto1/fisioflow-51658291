@@ -1237,6 +1237,7 @@ function RelatorioMedicoEditor({
 export default function RelatorioMedicoPage() {
   const { user } = useAuth();
   const { currentOrganization: org } = useOrganizations();
+  const organizationId = org?.id;
   const queryClient = useQueryClient();
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [previewRelatorio, setPreviewRelatorio] = useState<RelatorioMedicoData | null>(null);
@@ -1278,15 +1279,18 @@ export default function RelatorioMedicoPage() {
 
   // Buscar relatórios salvos
   const { data: relatorios = [], isLoading } = useQuery({
-    queryKey: ['relatorios-medicos'],
+    queryKey: ['relatorios-medicos', organizationId],
     queryFn: async () => {
+      if (!organizationId) return [];
       const q = firestoreQuery(
         collection(db, 'relatorios_medicos'),
+        where('organization_id', '==', organizationId),
         firestoreOrderBy('data_emissao', 'desc')
       );
       const snapshot = await getDocs(q);
       return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as RelatorioMedicoData[];
     },
+    enabled: !!organizationId,
   });
 
   const { data: pacientes = [] } = usePatients();
@@ -1345,12 +1349,16 @@ export default function RelatorioMedicoPage() {
   // Salvar relatório
   const saveRelatorio = useMutation({
     mutationFn: async (data: RelatorioMedicoData) => {
+      if (!organizationId) throw new Error('Organização não identificada');
       if (data.id) {
         const docRef = doc(db, 'relatorios_medicos', data.id);
-        await setDoc(docRef, data, { merge: true });
+        await setDoc(docRef, { ...data, organization_id: organizationId }, { merge: true });
       } else {
         const { _id, ...rest } = data;
-        const docRef = await addDoc(collection(db, 'relatorios_medicos'), rest);
+        const docRef = await addDoc(collection(db, 'relatorios_medicos'), {
+          ...rest,
+          organization_id: organizationId,
+        });
         (data as RelatorioMedicoData & { id: string }).id = docRef.id;
       }
       // Atualizar paciente: médico/telefone, relatório feito / enviado (para dashboard e evolução)
@@ -1365,7 +1373,7 @@ export default function RelatorioMedicoPage() {
       return data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['relatorios-medicos'] });
+      queryClient.invalidateQueries({ queryKey: ['relatorios-medicos', organizationId] });
       if (data.patientId) {
         queryClient.invalidateQueries({ queryKey: ['patients'] });
         queryClient.invalidateQueries({ queryKey: ['patient', data.patientId] });
@@ -1383,7 +1391,7 @@ export default function RelatorioMedicoPage() {
       return id;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['relatorios-medicos'] });
+      queryClient.invalidateQueries({ queryKey: ['relatorios-medicos', organizationId] });
       toast.success('Relatório excluído');
     },
     onError: () => toast.error('Erro ao excluir relatório'),

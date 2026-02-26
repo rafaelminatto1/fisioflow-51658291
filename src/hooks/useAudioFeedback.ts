@@ -7,7 +7,6 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { MovementPhase } from '@/types/pose';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface UseAudioFeedbackProps {
   enabled?: boolean;

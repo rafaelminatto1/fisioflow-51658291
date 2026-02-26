@@ -7,9 +7,7 @@
 import { 
   PoseDetection, 
   PoseProvider, 
-  AnalysisType, 
-  POSE_LANDMARKS,
-  PoseLandmark 
+  AnalysisType 
 } from '@/types/pose';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { nativePoseProvider } from './nativePoseProvider';
@@ -33,7 +31,7 @@ class MediaPipeWebProvider implements PoseProvider {
       const { PoseLandmarker, FilesetResolver } = vision;
       
       const filesetResolver = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
       );
 
       this.landmarker = await PoseLandmarker.createFromOptions(filesetResolver, {

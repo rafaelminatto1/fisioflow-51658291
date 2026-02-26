@@ -1,15 +1,14 @@
 import React, { memo, useState, forwardRef } from 'react';
 import { Appointment } from '@/types/appointment';
-import { CARD_SIZE_CONFIGS, normalizeStatus } from '@/lib/config/agenda';
+import { normalizeStatus } from '@/lib/config/agenda';
 import { cn } from '@/lib/utils';
-import { MoreVertical, CheckCircle2 } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 import { AppointmentQuickView } from './AppointmentQuickView';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useIsTouch } from '@/hooks/use-touch';
 import { useCardSize } from '@/hooks/useCardSize';
 import { useStatusConfig } from '@/hooks/useStatusConfig';
 import { useReducedMotion } from '@/lib/accessibility/a11y-utils';
-import { getOptimalTextColor } from '@/utils/colorContrast';
 import { normalizeTime, calculateEndTime } from './shared/utils';
 import { AppointmentCard } from '@fisioflow/ui';
 
@@ -127,8 +126,10 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
     const rootDraggable = draggable;
 
     const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
         if (selectionMode && onToggleSelection) {
-            e.stopPropagation();
             onToggleSelection(appointment.id);
             return;
         }

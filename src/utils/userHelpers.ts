@@ -11,7 +11,13 @@
  */
 
 import { getFirebaseAuth, db, doc, getDoc } from '@/integrations/firebase/app';
+import { collection, getDocs, limit, query, where } from 'firebase/firestore';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+
+const isSyntheticOrganizationId = (value: unknown): boolean => {
+  if (typeof value !== 'string') return false;
+  return value === '11111111-1111-1111-1111-111111111111' || value === '00000000-0000-0000-0000-000000000000';
+};
 
 export async function getUserOrganizationId(): Promise<string | null> {
   const auth = getFirebaseAuth();
@@ -39,19 +45,31 @@ export async function getUserOrganizationId(): Promise<string | null> {
     // Se o campo vier como objeto (ex.: { id: 'org_xxx' }), extrair id
     if (typeof rawOrg === 'object') {
       const id = rawOrg?.id || rawOrg?.organization_id || rawOrg?.organizationId || null;
-      if (id) {
+      if (id && !isSyntheticOrganizationId(id)) {
         logger.info('Organization id resolved from profile object', { resolvedId: id }, 'userHelpers');
         return id;
       }
-      return null;
-    }
-
-    // Se for string, usar diretamente
-    if (typeof rawOrg === 'string') {
+    } else if (typeof rawOrg === 'string' && !isSyntheticOrganizationId(rawOrg)) {
       if (rawOrg !== profileData?.organization_id) {
         logger.warn('Organization id resolved via fallback field', { usedFieldValue: rawOrg }, 'userHelpers');
       }
       return rawOrg;
+    }
+
+    // Fallback via membership (evita org sintética no profile)
+    const membershipQuery = query(
+      collection(db, 'organization_members'),
+      where('user_id', '==', user.uid),
+      where('active', '==', true),
+      limit(1)
+    );
+    const membershipSnap = await getDocs(membershipQuery);
+    if (!membershipSnap.empty) {
+      const membershipData = membershipSnap.docs[0].data() as { organization_id?: string; organizationId?: string };
+      const membershipOrgId = membershipData.organization_id || membershipData.organizationId || null;
+      if (membershipOrgId && !isSyntheticOrganizationId(membershipOrgId)) {
+        return membershipOrgId;
+      }
     }
 
     return null;
@@ -75,4 +93,3 @@ export async function requireUserOrganizationId(): Promise<string> {
 
   return organizationId;
 }
-

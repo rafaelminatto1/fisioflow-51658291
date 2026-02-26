@@ -46,16 +46,9 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
       });
 
       // Prefetch analytics summary
-      queryClient.prefetchQuery({
-        queryKey: ["analytics-summary", orgId],
-        staleTime: 1000 * 60 * 5,
-      });
-
-      // Prefetch admin metrics
-      queryClient.prefetchQuery({
-        queryKey: ['dashboard-metrics', orgId],
-        staleTime: 1000 * 60 * 5,
-      });
+      // NOTE: analytics-summary / dashboard-metrics prefetch removed because
+      // these keys do not have a global default queryFn and can throw Missing queryFn.
+      // They are still loaded normally by their own hooks when the dashboard mounts.
     };
 
     if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
