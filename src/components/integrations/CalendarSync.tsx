@@ -10,14 +10,12 @@
  * - Sync history
  */
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Calendar,
   RefreshCw,
   Check,
-  X,
   AlertTriangle,
-  Settings,
   Clock,
   ArrowRightLeft,
   Link2,

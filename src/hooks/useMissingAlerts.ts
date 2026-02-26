@@ -8,7 +8,7 @@
  * - Integrates with patient protocols
  */
 
-import { useMemo, useCallback } from 'react';
+import { useMemo } from 'react';
 
 export interface MissingAlert {
   id: string;

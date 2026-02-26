@@ -10,6 +10,7 @@ import { CalendarAppointmentCard } from './CalendarAppointmentCard';
 import { DroppableTimeSlot } from './DroppableTimeSlot';
 import { DraggableAppointment } from './DraggableAppointment';
 import { CalendarDragOverlay } from './DragOverlay';
+import { VirtualizedCalendarGrid } from './virtualized/VirtualizedCalendarGrid';
 import { useCardSize } from '@/hooks/useCardSize';
 import { calculateSlotHeightFromCardSize } from '@/lib/calendar/cardHeightCalculator';
 import { getOverlapStackPosition } from '@/lib/calendar';
@@ -171,6 +172,7 @@ export const CalendarWeekViewDndKit = memo(({
   const weekScrollRef = useRef<HTMLDivElement | null>(null);
   const weekHeaderRef = useRef<HTMLDivElement | null>(null);
   const [fitSlotHeight, setFitSlotHeight] = useState<number>(MIN_WEEK_SLOT_HEIGHT);
+  const [containerHeight, setContainerHeight] = useState<number>(600);
   const [isSlotHeightMeasured, setIsSlotHeightMeasured] = useState(false);
 
   // Force fit all weekly slots (07:00-21:00) in visible height while respecting user compactness preference.
@@ -204,12 +206,14 @@ export const CalendarWeekViewDndKit = memo(({
     };
 
     const updateSlotHeight = () => {
-      const containerHeight = weekScrollRef.current?.clientHeight ?? weekContainerRef.current?.clientHeight ?? 0;
+      const cHeight = weekScrollRef.current?.clientHeight ?? weekContainerRef.current?.clientHeight ?? 0;
       const headerHeight = weekHeaderRef.current?.clientHeight ?? 0;
 
-      if (containerHeight <= 0 || timeSlots.length === 0) return false;
+      if (cHeight <= 0 || timeSlots.length === 0) return false;
 
-      const availableGridHeight = containerHeight - headerHeight - GRID_HEIGHT_ADJUSTMENT + WEEK_GRID_HEIGHT_BOOST;
+      setContainerHeight(cHeight - headerHeight);
+
+      const availableGridHeight = cHeight - headerHeight - GRID_HEIGHT_ADJUSTMENT + WEEK_GRID_HEIGHT_BOOST;
       if (availableGridHeight <= 0) return false;
 
       const nextFittedHeight = Math.floor(availableGridHeight / timeSlots.length);
@@ -310,6 +314,24 @@ export const CalendarWeekViewDndKit = memo(({
         return d && isSameDay(d, day);
       });
       map.set(dayIndex, dayApts);
+    });
+    return map;
+  }, [weekAppointments, weekDays]);
+
+  // Group appointments by time and day for virtualization
+  const appointmentsByTimeAndDay = useMemo(() => {
+    const map = new Map<string, Map<number, Appointment[]>>();
+    weekAppointments.forEach(apt => {
+      const time = normalizeTime(apt.time);
+      const aptDate = parseAppointmentDate(apt.date);
+      if (!aptDate) return;
+      const dayIndex = weekDays.findIndex(d => isSameDay(d, aptDate));
+      if (dayIndex === -1) return;
+
+      if (!map.has(time)) map.set(time, new Map());
+      const dayMap = map.get(time)!;
+      if (!dayMap.has(dayIndex)) dayMap.set(dayIndex, []);
+      dayMap.get(dayIndex)!.push(apt);
     });
     return map;
   }, [weekAppointments, weekDays]);
@@ -469,37 +491,147 @@ export const CalendarWeekViewDndKit = memo(({
     [activeId, dragState]
   );
 
-  // Memoize the droppable slots to prevent unnecessary re-renders
-  const droppableSlotsMemo = useMemo(() => {
-    return weekDays.map((day, colIndex) => {
-      const isClosed = dayClosedStatus[colIndex];
+  // Render function for virtualization
+  const renderSlot = useCallback((time: string, rowIndex: number) => {
+    const isHour = time.endsWith(':00');
+    const dayAppointmentsMap = appointmentsByTimeAndDay.get(time);
 
-      return timeSlots.map((time, rowIndex) => {
-        const key = `${colIndex}-${time}`;
-        const { blocked } = blockedStatusCache.get(key) || { blocked: false };
+    return (
+      <div
+        className="grid grid-cols-[60px_repeat(6,1fr)] relative"
+        style={{ height: slotHeight }}
+      >
+        {/* Time Label */}
+        <div
+          className={cn(
+            "border-r border-slate-100 dark:border-slate-800 text-[10px] font-medium flex justify-end pr-2 pt-0.5 sticky left-0 z-30 bg-white dark:bg-slate-950",
+            isHour ? "text-slate-900 dark:text-slate-200" : "text-gray-500 dark:text-slate-600 hidden"
+          )}
+        >
+          {isHour ? time : ''}
+        </div>
 
-        const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === time;
-        const isDraggingOver = currentOverId === `slot-${formatDateToLocalISO(day)}-${time}`;
+        {/* Day Columns (Droppable Slots) */}
+        {weekDays.map((day, colIndex) => {
+          const isClosed = dayClosedStatus[colIndex];
+          const key = `${colIndex}-${time}`;
+          const { blocked } = blockedStatusCache.get(key) || { blocked: false };
 
-        // Get appointments for this slot for preview
-        const slotAppointments = isDropTarget || isDraggingOver
-          ? getAppointmentsForSlot(day, time).filter(a => a.id !== draggedAppointment?.id)
-          : [];
+          const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === time;
+          const isDraggingOver = currentOverId === `slot-${formatDateToLocalISO(day)}-${time}`;
 
-        return {
-          day,
-          time,
-          rowIndex,
-          colIndex,
-          isClosed,
-          isBlocked: blocked,
-          isDropTarget,
-          isDraggingOver,
-          slotAppointments,
-        };
-      });
-    });
-  }, [weekDays, timeSlots, dayClosedStatus, blockedStatusCache, dropTarget, currentOverId, getAppointmentsForSlot, draggedAppointment]);
+          const slotAppointments = isDropTarget || isDraggingOver
+            ? getAppointmentsForSlot(day, time).filter(a => a.id !== draggedAppointment?.id)
+            : [];
+
+          const appointmentsInThisCell = dayAppointmentsMap?.get(colIndex) || [];
+
+          return (
+            <DroppableTimeSlot
+              key={`${colIndex}`}
+              day={day}
+              time={time}
+              rowIndex={0} // Use 0 because the row is a single-row grid
+              colIndex={colIndex}
+              isClosed={isClosed}
+              isBlocked={blocked}
+              isDropTarget={!!isDropTarget}
+              isDraggingOver={isDraggingOver}
+              targetAppointments={slotAppointments}
+              draggedAppointment={draggedAppointment}
+              onClick={() => {
+                if (!blocked && !isClosed) {
+                  onTimeSlotClick(day, time);
+                }
+              }}
+            >
+              {/* Appointments starting in this cell */}
+              {appointmentsInThisCell.map(apt => {
+                const style = getAppointmentStyle(apt);
+                if (!style) return null;
+
+                const isDraggingThisOne = isDraggingThis(apt.id);
+                const dayIndex = colIndex;
+                const dayAppointmentsForGhost = appointmentsByDayIndex.get(dayIndex) ?? [];
+                const overlapCount = getOverlapStackPosition(dayAppointmentsForGhost, apt).count;
+                const hideGhostWhenSiblings = isDraggingThisOne && overlapCount > 1;
+
+                // Adjust style for relative positioning in DroppableTimeSlot
+                const cellStyle: React.CSSProperties = {
+                  position: 'absolute',
+                  top: style.marginTop,
+                  height: style.height,
+                  left: style.left,
+                  width: style.width,
+                  zIndex: 10 + (style.zIndex as number || 0),
+                  marginTop: 0,
+                };
+
+                return (
+                  <DraggableAppointment
+                    key={apt.id}
+                    id={apt.id}
+                    style={cellStyle}
+                    isDragging={isDraggingThisOne}
+                    isDragDisabled={!isDraggable || isMobile || selectionMode}
+                    dragData={{ appointment: apt }}
+                    isPopoverOpen={openPopoverId === apt.id}
+                  >
+                    <CalendarAppointmentCard
+                      appointment={apt}
+                      style={{ ...cellStyle, width: '100%', left: '0', top: '0' }}
+                      isDraggable={false}
+                      isDragging={isDraggingThisOne}
+                      isSaving={apt.id === savingAppointmentId}
+                      isDropTarget={!!isDropTarget}
+                      hideGhostWhenSiblings={hideGhostWhenSiblings}
+                      onDragStart={() => { }}
+                      onDragEnd={() => { }}
+                      onDragOver={() => { }}
+                      onDrop={() => { }}
+                      onEditAppointment={onEditAppointment}
+                      onDeleteAppointment={onDeleteAppointment}
+                      onOpenPopover={setOpenPopoverId}
+                      isPopoverOpen={openPopoverId === apt.id}
+                      selectionMode={selectionMode}
+                      isSelected={selectedIds?.has(apt.id)}
+                      onToggleSelection={onToggleSelection}
+                      dragHandleOnly={false}
+                      density="compact"
+                    />
+                  </DraggableAppointment>
+                );
+              })}
+            </DroppableTimeSlot>
+          );
+        })}
+      </div>
+    );
+  }, [
+    slotHeight,
+    appointmentsByTimeAndDay,
+    weekDays,
+    dayClosedStatus,
+    blockedStatusCache,
+    dropTarget,
+    currentOverId,
+    getAppointmentsForSlot,
+    draggedAppointment,
+    onTimeSlotClick,
+    getAppointmentStyle,
+    appointmentsByDayIndex,
+    isDraggingThis,
+    isDraggable,
+    isMobile,
+    selectionMode,
+    openPopoverId,
+    savingAppointmentId,
+    onEditAppointment,
+    onDeleteAppointment,
+    setOpenPopoverId,
+    selectedIds,
+    onToggleSelection
+  ]);
 
   return (
     <TooltipProvider>
@@ -518,172 +650,70 @@ export const CalendarWeekViewDndKit = memo(({
           )}
           aria-busy={!isSlotHeightMeasured}
         >
-          <div ref={weekScrollRef} className="overflow-auto w-full h-full custom-scrollbar">
-            <div className="w-full">
-              {/* Header Row */}
-              <div ref={weekHeaderRef} className="grid grid-cols-[60px_repeat(6,1fr)] bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm min-w-[600px]">
-                {/* Time icon - Sticky Left */}
-                <div className="h-12 border-r border-slate-200 dark:border-slate-800 flex items-center justify-center sticky left-0 z-50 bg-white dark:bg-slate-950">
-                  <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700/50">
-                    <span className="text-[10px] font-bold">GMT-3</span>
-                  </div>
-                </div>
-
-                {/* Days Headers */}
-                {weekDays.map((day, i) => {
-                  const isTodayDate = isSameDay(day, new Date());
-                  return (
-                    <div key={i} className={cn(
-                      "h-12 flex flex-col items-center justify-center border-r border-slate-100 dark:border-slate-800/50 relative group transition-colors",
-                      isTodayDate ? "bg-blue-50/50 dark:bg-blue-900/10" : "hover:bg-slate-50 dark:hover:bg-slate-900/40"
-                    )}>
-                      {isTodayDate && (
-                        <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-500" />
-                      )}
-                      <span className={cn(
-                        "text-[9px] font-medium uppercase tracking-wider mb-0.5",
-                        isTodayDate ? "text-blue-600 dark:text-blue-400" : "text-slate-600 dark:text-gray-500"
-                      )}>
-                        {format(day, 'EEE', { locale: ptBR }).replace('.', '')}
-                      </span>
-                      <div className={cn(
-                        "text-base font-bold w-7 h-7 rounded-full flex items-center justify-center transition-all",
-                        isTodayDate
-                          ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                          : "text-slate-700 dark:text-slate-300 group-hover:bg-slate-200 dark:group-hover:bg-slate-700"
-                      )}>
-                        {format(day, 'd')}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Scrollable Grid Area */}
-              <div className="relative bg-white dark:bg-slate-950" id="calendar-grid-dndkit" data-calendar-drop-zone>
-                <div className="grid grid-cols-[60px_repeat(6,1fr)] relative min-h-0 min-w-[600px]" style={{
-                  gridTemplateRows: `repeat(${timeSlots.length}, ${slotHeight}px)`
-                }}>
-
-                  {/* Current Time Indicator Line */}
-                  {currentTimePosition !== null && (
-                    <div
-                      className="absolute z-20 pointer-events-none flex items-center w-full"
-                      style={{
-                        top: `${currentTimePosition}px`,
-                        left: '60px',
-                        right: 0
-                      }}
-                    >
-                      <div className="w-2 h-2 rounded-full bg-red-500 -ml-1 flex-shrink-0"></div>
-                      <div className="h-px bg-red-500 flex-1 shadow-sm"></div>
-                    </div>
-                  )}
-
-                  {/* Time Labels Column */}
-                  {timeSlots.map((time, index) => {
-                    const isHour = time.endsWith(':00');
-                    return (
-                      <div
-                        key={`time-${time}`}
-                        className={cn(
-                          "border-r border-slate-100 dark:border-slate-800 text-[10px] font-medium flex justify-end pr-2 pt-0.5 sticky left-0 z-30 bg-white dark:bg-slate-950",
-                          isHour ? "text-slate-900 dark:text-slate-200" : "text-gray-500 dark:text-slate-600 hidden"
-                        )}
-                        style={{ gridRow: index + 1, gridColumn: 1 }}
-                      >
-                        {isHour ? time : ''}
-                      </div>
-                    );
-                  })}
-
-                  {/* Droppable Time Slots */}
-                  {droppableSlotsMemo.flat().map((slot, _idx) => (
-                    <DroppableTimeSlot
-                      key={`cell-${slot.colIndex}-${slot.rowIndex}`}
-                      day={slot.day}
-                      time={slot.time}
-                      rowIndex={slot.rowIndex}
-                      colIndex={slot.colIndex}
-                      isClosed={slot.isClosed}
-                      isBlocked={slot.isBlocked}
-                      isDropTarget={!!slot.isDropTarget}
-                      isDraggingOver={slot.isDraggingOver}
-                      targetAppointments={slot.slotAppointments}
-                      draggedAppointment={draggedAppointment}
-                      onClick={() => {
-                        if (!slot.isBlocked && !slot.isClosed) {
-                          onTimeSlotClick(slot.day, slot.time);
-                        }
-                      }}
-                    />
-                  ))}
-
-                  {/* Draggable Appointments */}
-                  {weekAppointments.map(apt => {
-                    const style = getAppointmentStyle(apt);
-                    if (!style) return null;
-
-                    const aptDate = parseAppointmentDate(apt.date);
-                    if (!aptDate) return null;
-
-                    const dayIndex = weekDays.findIndex(d => isSameDay(d, aptDate));
-                    if (dayIndex === -1) return null;
-
-                    const day = weekDays[dayIndex];
-                    const aptTime = normalizeTime(apt.time);
-
-                    const key = `${dayIndex}-${aptTime}`;
-                    const cachedBlock = blockedStatusCache.get(key);
-                    const { blocked } = cachedBlock || checkTimeBlocked(day, aptTime);
-
-                    const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === aptTime;
-                    const dayAppointmentsForGhost = appointmentsByDayIndex.get(dayIndex) ?? [];
-                    const overlapCount = getOverlapStackPosition(dayAppointmentsForGhost, apt).count;
-                    const hideGhostWhenSiblings = isDraggingThis(apt.id) && overlapCount > 1;
-
-                    // When dragging the appointment itself, use DraggableAppointment wrapper
-                    const isDraggingThisOne = isDraggingThis(apt.id);
-
-                    return (
-                      <DraggableAppointment
-                        key={apt.id}
-                        id={apt.id}
-                        style={style}
-                        isDragging={isDraggingThisOne}
-                        isDragDisabled={!isDraggable || isMobile || selectionMode}
-                        dragData={{ appointment: apt }}
-                        isPopoverOpen={openPopoverId === apt.id}
-                      >
-                        <CalendarAppointmentCard
-                          appointment={apt}
-                          style={{ ...style, width: '100%', left: '0' }} // Card preenche o wrapper (posicionamento feito pelo DraggableAppointment)
-                          isDraggable={false} // Disabled - handled by DraggableAppointment wrapper
-                          isDragging={isDraggingThisOne}
-                          isSaving={apt.id === savingAppointmentId}
-                          isDropTarget={!!isDropTarget}
-                          hideGhostWhenSiblings={hideGhostWhenSiblings}
-                          onDragStart={() => { }} // No-op - handled by DraggableAppointment
-                          onDragEnd={() => { }} // No-op
-                          onDragOver={() => { }} // No-op
-                          onDrop={() => { }} // No-op
-                          onEditAppointment={onEditAppointment}
-                          onDeleteAppointment={onDeleteAppointment}
-                          onOpenPopover={setOpenPopoverId}
-                          isPopoverOpen={openPopoverId === apt.id}
-                          selectionMode={selectionMode}
-                          isSelected={selectedIds?.has(apt.id)}
-                          onToggleSelection={onToggleSelection}
-                          dragHandleOnly={false}
-                          density="compact"
-                        />
-                      </DraggableAppointment>
-                    );
-                  })}
-
-                </div>
+          {/* Header Row - Fixed at top */}
+          <div ref={weekHeaderRef} className="grid grid-cols-[60px_repeat(6,1fr)] bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 z-40 shadow-sm min-w-[600px]">
+            {/* Time icon */}
+            <div className="h-12 border-r border-slate-200 dark:border-slate-800 flex items-center justify-center bg-white dark:bg-slate-950">
+              <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700/50">
+                <span className="text-[10px] font-bold">GMT-3</span>
               </div>
             </div>
+
+            {/* Days Headers */}
+            {weekDays.map((day, i) => {
+              const isTodayDate = isSameDay(day, new Date());
+              return (
+                <div key={i} className={cn(
+                  "h-12 flex flex-col items-center justify-center border-r border-slate-100 dark:border-slate-800/50 relative group transition-colors",
+                  isTodayDate ? "bg-blue-50/50 dark:bg-blue-900/10" : "hover:bg-slate-50 dark:hover:bg-slate-900/40"
+                )}>
+                  {isTodayDate && (
+                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-500" />
+                  )}
+                  <span className={cn(
+                    "text-[9px] font-medium uppercase tracking-wider mb-0.5",
+                    isTodayDate ? "text-blue-600 dark:text-blue-400" : "text-slate-600 dark:text-gray-500"
+                  )}>
+                    {format(day, 'EEE', { locale: ptBR }).replace('.', '')}
+                  </span>
+                  <div className={cn(
+                    "text-base font-bold w-7 h-7 rounded-full flex items-center justify-center transition-all",
+                    isTodayDate
+                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                      : "text-slate-700 dark:text-slate-300 group-hover:bg-slate-200 dark:group-hover:bg-slate-700"
+                  )}>
+                    {format(day, 'd')}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Virtualized Grid */}
+          <div className="flex-1 relative bg-white dark:bg-slate-950" id="calendar-grid-dndkit" data-calendar-drop-zone>
+            <VirtualizedCalendarGrid
+              timeSlots={timeSlots}
+              slotHeight={slotHeight}
+              containerHeight={containerHeight}
+              className="custom-scrollbar"
+              renderSlot={renderSlot}
+              overscan={10} // Higher overscan for appointments spanning multiple slots
+            >
+              {/* Current Time Indicator Line */}
+              {currentTimePosition !== null && (
+                <div
+                  className="absolute z-50 pointer-events-none flex items-center w-full"
+                  style={{
+                    top: `${currentTimePosition}px`,
+                    left: '60px',
+                    right: 0
+                  }}
+                >
+                  <div className="w-2 h-2 rounded-full bg-red-500 -ml-1 flex-shrink-0"></div>
+                  <div className="h-px bg-red-500 flex-1 shadow-sm"></div>
+                </div>
+              )}
+            </VirtualizedCalendarGrid>
           </div>
         </div>
 

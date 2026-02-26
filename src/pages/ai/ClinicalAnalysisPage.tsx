@@ -13,6 +13,7 @@
 import React, { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { usePatientsPostgres } from '@/hooks/useDataConnect';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -62,7 +63,9 @@ interface Alert {
 }
 
 export default function ClinicalAnalysisPage() {
-  const { data: patients } = usePatientsPostgres('default');
+  const { profile } = useUserProfile();
+  const organizationId = profile?.organization_id || 'default';
+  const { data: patients } = usePatientsPostgres(organizationId);
   const [selectedPatient, setSelectedPatient] = useState<string>('');
   const [activeTab, setActiveTab] = useState('chat');
   const [analysisHistory, setAnalysisHistory] = useState<AnalysisHistory[]>([]);

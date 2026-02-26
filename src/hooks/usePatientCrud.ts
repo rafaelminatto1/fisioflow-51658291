@@ -173,6 +173,7 @@ export const useCreatePatient = () => {
     mutationFn: async (input: PatientCreateInput): Promise<Patient> => {
       // Sanitize data
       const sanitizedData = {
+        name: sanitizeString(input.full_name, 200),
         full_name: sanitizeString(input.full_name, 200),
         email: input.email ? sanitizeEmail(input.email) : null,
         phone: input.phone ? cleanPhone(input.phone) : null,

@@ -1,5 +1,4 @@
 import { defineConfig, devices } from '@playwright/test';
-import path from 'path';
 
 /**
  * Playwright Configuration para Fisioflow Professional iOS App

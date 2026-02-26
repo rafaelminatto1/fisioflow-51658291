@@ -34,8 +34,9 @@ export default defineConfig({
   globalSetup: './e2e/global-setup.ts',
   timeout: 120000, // Aumentado para 120s
   use: {
-    baseURL: process.env.BASE_URL || 'http://127.0.0.1:5173?e2e=true',
+    baseURL: process.env.BASE_URL || 'http://localhost:5173?e2e=true',
     storageState: 'playwright/.auth/user.json',
+    serviceWorkers: 'block',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     actionTimeout: 30000, // Aumentado para 30s

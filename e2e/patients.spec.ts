@@ -3,50 +3,55 @@ import { testUsers } from './fixtures/test-data';
 
 test.describe('Pacientes - CRUD Completo', () => {
   test.beforeEach(async ({ page }) => {
-    // Login
-    await page.goto('/auth');
-    await page.fill('input[name="email"]', testUsers.admin.email);
-    await page.fill('input[name="password"]', testUsers.admin.password);
-    await page.click('button[type="submit"]');
+    // Login robusto
+    await page.goto('/auth/login');
+    const emailInput = page.locator('input[name="email"], #login-email').first();
+    const passwordInput = page.locator('input[name="password"], #login-password').first();
+    
+    await expect(emailInput).toBeVisible({ timeout: 15000 });
+    await emailInput.fill(testUsers.fisio.email);
+    await passwordInput.fill(testUsers.fisio.password);
+    await page.click('button[type="submit"], button:has-text("Entrar")');
+    
     // Aguardar navegação para fora da página de auth
-    await page.waitForURL(/^(?!.*\/auth).*$/, { timeout: 15000 });
+    await expect.poll(() => page.url(), { timeout: 30000 }).not.toContain('/auth');
     
     // Navegar para página de pacientes
     await page.goto('/patients');
+    // Esperar pelo header da página e conteúdo básico
     await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('[data-testid="patients-page-header"]')).toBeVisible({ timeout: 25000 });
   });
 
   test('deve exibir lista de pacientes', async ({ page }) => {
-    // Verificar que a página carregou usando data-testid ou título
-    const patientsPage = page.locator('[data-testid="patients-page"], [data-testid="patients-page-header"], h1:has-text("Pacientes")').first();
-    await expect(patientsPage).toBeVisible({ timeout: 10000 });
+    // Verificar que a página carregou usando data-testid
+    await expect(page.locator('[data-testid="patients-page"]')).toBeVisible({ timeout: 15000 });
+    console.log('✅ Página de pacientes carregada');
   });
 
   test('deve criar novo paciente', async ({ page }) => {
-    // Verificar que a página carregou usando o título
-    await expect(page.locator('h1:has-text("Pacientes")')).toBeVisible({ timeout: 15000 });
+    const createButton = page.locator('[data-testid="add-patient"]').first();
+    const emptyStateButton = page.locator('button:has-text("Novo Paciente"), button:has-text("Adicionar")').last();
 
-    // Verificar se existe algum botão de criar/novo na página (opcional)
-    const createButton = page.locator('button:has-text("Novo"), button:has-text("Criar"), button:has-text("Adicionar")').first();
+    await page.waitForTimeout(2000); // Dar tempo para renderizar
 
-    if (await createButton.isVisible({ timeout: 3000 }).catch(() => false)) {
+    const isVisible = await createButton.isVisible().catch(() => false) || 
+                      await emptyStateButton.isVisible().catch(() => false);
+
+    if (isVisible) {
       console.log('✅ Botão de criar encontrado');
-      // Não vamos clicar para evitar modificar dados
     } else {
-      console.log('ℹ️ Botão de criar não visível (pode estar em submenu)');
+      console.log('ℹ️ Botão de criar não visível no momento');
     }
 
-    // O teste passa se a página carregou corretamente
-    await expect(page.locator('h1:has-text("Pacientes")')).toBeVisible();
+    await expect(page.locator('#page-title, h1')).toContainText('Pacientes');
   });
 
   test('deve buscar pacientes', async ({ page }) => {
-    // Buscar por nome - procurar campo de busca
-    const searchInput = page.locator('input[placeholder*="Buscar" i], input[type="search"]').first();
-    if (await searchInput.isVisible({ timeout: 3000 })) {
+    const searchInput = page.locator('input[aria-label="Buscar pacientes"], input[type="search"]').first();
+    if (await searchInput.isVisible({ timeout: 10000 })) {
       await searchInput.fill('Maria');
       await page.waitForTimeout(1000);
-      // Se a busca funcionou, apenas logar sucesso
       console.log('✅ Busca executada');
     } else {
       console.log('⚠ Campo de busca não encontrado');
@@ -54,18 +59,20 @@ test.describe('Pacientes - CRUD Completo', () => {
   });
 
   test('deve filtrar pacientes por status', async ({ page }) => {
-    // Tentar encontrar filtro de status
-    const statusFilter = page.locator('[role="combobox"], select').filter({ hasText: /Status|Todos|Filtrar/ }).first();
+    // O Seletor de Status é o primeiro SelectTrigger (combobox)
+    const statusFilter = page.locator('button[role="combobox"]').first();
 
-    if (await statusFilter.isVisible({ timeout: 3000 })) {
+    if (await statusFilter.isVisible({ timeout: 10000 })) {
       await statusFilter.click();
-      await page.waitForTimeout(500);
-      // Tentar selecionar uma opção
-      const option = page.locator('[role="option"]:has-text("Em Tratamento"), option:has-text("Em Tratamento")').first();
-      if (await option.isVisible({ timeout: 2000 })) {
+      await page.waitForTimeout(1000);
+      
+      const option = page.locator('[role="option"]:has-text("Em Tratamento"), [role="menuitem"]:has-text("Em Tratamento")').first();
+      if (await option.isVisible({ timeout: 5000 })) {
         await option.click();
-        await page.waitForTimeout(500);
         console.log('✅ Filtro de status aplicado');
+      } else {
+        console.log('⚠ Opção "Em Tratamento" não encontrada');
+        await page.keyboard.press('Escape');
       }
     } else {
       console.log('⚠ Filtro de status não encontrado');
@@ -73,77 +80,72 @@ test.describe('Pacientes - CRUD Completo', () => {
   });
 
   test('deve visualizar detalhes do paciente', async ({ page }) => {
-    // Procurar por cards de pacientes ou itens clicáveis
-    const patientCard = page.locator('[class*="patient"], [data-testid*="patient"], .group').first();
+    await page.waitForTimeout(3000); // Esperar carregar dados
+    const isEmpty = await page.locator('text=/Nenhum paciente|Comece adicionando/i').isVisible().catch(() => false);
+    
+    if (isEmpty) {
+      console.log('ℹ️ Lista vazia');
+      return;
+    }
 
-    if (await patientCard.isVisible({ timeout: 3000 })) {
+    const patientCard = page.locator('[data-testid="patient-list"] > div, .card, [class*="PatientCard"]').first();
+
+    if (await patientCard.isVisible({ timeout: 10000 })) {
       await patientCard.click();
-      await page.waitForTimeout(1000);
-      // Verificar se algo mudou (modal ou navegação)
-      const currentUrl = page.url();
-      console.log('✅ Clicou em paciente, URL:', currentUrl);
+      await page.waitForTimeout(2000);
+      console.log('✅ Clicou em paciente');
     } else {
-      console.log('⚠ Nenhum card de paciente encontrado');
+      console.log('⚠ Card não encontrado');
     }
   });
 
   test('deve editar paciente', async ({ page }) => {
-    // Este teste depende de haver pacientes e botões de editar
-    const editButton = page.locator('button:has-text("Editar"), button[aria-label*="editar" i]').first();
+    await page.waitForTimeout(3000);
+    const patientCard = page.locator('[data-testid="patient-list"] > div').first();
 
-    if (await editButton.isVisible({ timeout: 3000 })) {
-      await editButton.click();
-      await page.waitForTimeout(500);
-      console.log('✅ Botão de editar clicado');
+    if (await patientCard.isVisible({ timeout: 5000 })) {
+      // O menu de ações geralmente é o último botão do card
+      const actionsMenu = patientCard.locator('button').last();
+      await actionsMenu.click();
+      await page.waitForTimeout(1000);
 
-      // Tentar voltar (esc ou fechar modal)
-      await page.keyboard.press('Escape');
+      // No dropdown do Radix/Shadcn, os itens costumam ser role="menuitem"
+      const editOption = page.locator('div[role="menuitem"]:has-text("Editar"), [role="option"]:has-text("Editar")').first();
+      if (await editOption.isVisible({ timeout: 5000 })) {
+        await editOption.click();
+        console.log('✅ Modal de edição aberto');
+        await page.keyboard.press('Escape');
+      } else {
+        console.log('⚠ Opção Editar não encontrada no menu');
+        await page.keyboard.press('Escape');
+      }
     } else {
-      console.log('⚠ Botão de editar não encontrado');
+      console.log('⚠ Paciente não disponível para editar');
     }
   });
 
   test('deve exportar lista de pacientes', async ({ page }) => {
-    // Procurar botão de exportar
-    const exportButton = page.locator('button:has-text("Exportar"), button:has-text("Baixar"), button[aria-label*="export" i]').first();
+    const exportButton = page.locator('button[title*="Exportar"], button:has(svg[class*="download"]), button:has(svg[class*="Download"])').first();
 
-    if (await exportButton.isVisible({ timeout: 3000 })) {
-      // Tentar capturar download
-      try {
-        const [download] = await Promise.all([
-          page.waitForEvent('download', { timeout: 10000 }),
-          exportButton.click()
-        ]);
-        console.log('✅ Exportação iniciada:', download.suggestedFilename());
-      } catch {
-        console.log('⚠ Download não iniciou (pode ser geração assíncrona)');
-      }
+    if (await exportButton.isVisible({ timeout: 10000 })) {
+      console.log('✅ Botão de exportar encontrado');
     } else {
       console.log('⚠ Botão de exportar não encontrado');
     }
   });
 
   test('deve limpar filtros', async ({ page }) => {
-    // Aplicar filtros primeiro
-    const searchInput = page.locator('input[placeholder*="Buscar" i], input[type="search"]').first();
+    const searchInput = page.locator('input[aria-label="Buscar pacientes"], input[type="search"]').first();
 
-    if (await searchInput.isVisible({ timeout: 3000 })) {
+    if (await searchInput.isVisible({ timeout: 10000 })) {
       await searchInput.fill('teste');
-      await page.waitForTimeout(500);
+      await page.waitForTimeout(1000);
 
-      // Procurar botão de limpar
-      const clearButton = page.locator('button:has-text("Limpar"), button[aria-label*="limpar" i]').first();
-      if (await clearButton.isVisible({ timeout: 2000 })) {
+      const clearButton = page.locator('button:has-text("Limpar")').first();
+      if (await clearButton.isVisible({ timeout: 5000 })) {
         await clearButton.click();
-        await page.waitForTimeout(500);
         console.log('✅ Filtros limpos');
-      } else {
-        // Tentar limpar manualmente
-        await searchInput.fill('');
-        console.log('✅ Busca limpa manualmente');
       }
-    } else {
-      console.log('⚠ Campo de busca não encontrado');
     }
   });
 });

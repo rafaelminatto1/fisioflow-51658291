@@ -10,7 +10,6 @@ import {
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
-import { AuthGuard } from '@/components/navigation/AuthGuard';
 
 /**
  * AuthGuard é importado mas não aplicado aqui no layout de tabs.

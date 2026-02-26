@@ -8,6 +8,8 @@ import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestore
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { useAuth } from '@/contexts/AuthContext';
+import { profileApi } from '@/integrations/firebase/functions';
 
 const auth = getFirebaseAuth();
 
@@ -34,6 +36,7 @@ export interface OrganizationMember {
 
 export const useOrganizations = () => {
   const queryClient = useQueryClient();
+  const { user, profile, organizationId: authOrganizationId } = useAuth();
 
   // Query para listar organizações do usuário
   const { data: organizations, isLoading, error } = useQuery({
@@ -58,38 +61,155 @@ export const useOrganizations = () => {
     isLoading: isCurrentOrgLoading,
     error: currentOrgError
   } = useQuery({
-    queryKey: ['current-organization'],
+    queryKey: ['current-organization', user?.uid, profile?.organization_id, authOrganizationId],
     queryFn: async () => {
       const firebaseUser = auth.currentUser;
       if (!firebaseUser) return null;
 
-      const profileQ = firestoreQuery(
-        collection(db, 'profiles'),
-        where('user_id', '==', firebaseUser.uid),
-        limit(1)
-      );
-      const profileSnap = await getDocs(profileQ);
+      const coerceOrganizationId = (raw: unknown): string | null => {
+        if (!raw) return null;
+        if (typeof raw === 'string') return raw;
+        if (typeof raw === 'object') {
+          const org = raw as Record<string, unknown>;
+          const nested = org.id || org.organization_id || org.organizationId;
+          return typeof nested === 'string' ? nested : null;
+        }
+        return null;
+      };
+      const isSyntheticOrganizationId = (value: string | null): boolean => {
+        if (!value) return false;
+        return value === '11111111-1111-1111-1111-111111111111' || value === '00000000-0000-0000-0000-000000000000';
+      };
 
-      if (profileSnap.empty) return null;
+      // 1) Prefer auth context (Firestore/API/claims already reconciled there)
+      let organizationId =
+        coerceOrganizationId(profile?.organization_id) ||
+        coerceOrganizationId(authOrganizationId);
+      if (isSyntheticOrganizationId(organizationId)) {
+        organizationId = null;
+      }
 
-      const profile = profileSnap.docs[0].data();
-      const organizationId = profile.organization_id;
+      // 2) Fallback to Firestore profile document by UID (common shape)
+      if (!organizationId) {
+        const profileRef = doc(db, 'profiles', firebaseUser.uid);
+        const profileDoc = await getDoc(profileRef).catch(() => null);
+        if (profileDoc?.exists()) {
+          const profileData = normalizeFirestoreData(profileDoc.data());
+          organizationId =
+            coerceOrganizationId(profileData.organization_id) ||
+            coerceOrganizationId(profileData.organizationId) ||
+            coerceOrganizationId(profileData.organization);
+          if (isSyntheticOrganizationId(organizationId)) {
+            organizationId = null;
+          }
+        }
+      }
+
+      // 3) Legacy fallback for profile documents keyed with user_id field
+      if (!organizationId) {
+        const profileQ = firestoreQuery(
+          collection(db, 'profiles'),
+          where('user_id', '==', firebaseUser.uid),
+          limit(1)
+        );
+        const profileSnap = await getDocs(profileQ).catch(() => null);
+        if (profileSnap && !profileSnap.empty) {
+          const profileData = normalizeFirestoreData(profileSnap.docs[0].data());
+          organizationId =
+            coerceOrganizationId(profileData.organization_id) ||
+            coerceOrganizationId(profileData.organizationId) ||
+            coerceOrganizationId(profileData.organization);
+          if (isSyntheticOrganizationId(organizationId)) {
+            organizationId = null;
+          }
+        }
+      }
+
+      // 4) Membership fallback (source of truth when profile has placeholder org)
+      if (!organizationId) {
+        const membershipQ = firestoreQuery(
+          collection(db, 'organization_members'),
+          where('user_id', '==', firebaseUser.uid),
+          where('active', '==', true),
+          limit(1)
+        );
+        const membershipSnap = await getDocs(membershipQ).catch(() => null);
+        if (membershipSnap && !membershipSnap.empty) {
+          const membershipData = normalizeFirestoreData(membershipSnap.docs[0].data()) as { organization_id?: string; organizationId?: string };
+          organizationId =
+            coerceOrganizationId(membershipData.organization_id) ||
+            coerceOrganizationId(membershipData.organizationId);
+        }
+      }
+
+      // 5) API profile fallback (Cloud SQL/source-of-truth)
+      if (!organizationId) {
+        try {
+          const resp = await profileApi.getCurrent();
+          const apiProfile = (resp as { data?: Record<string, unknown> })?.data ?? resp;
+          const apiOrgId = coerceOrganizationId(
+            (apiProfile as Record<string, unknown>)?.organization_id ||
+            (apiProfile as Record<string, unknown>)?.organizationId
+          );
+          if (apiOrgId && !isSyntheticOrganizationId(apiOrgId)) {
+            organizationId = apiOrgId;
+          }
+        } catch (err) {
+          logger.debug('Profile API fallback failed', err, 'useOrganizations');
+        }
+      }
+
+      // 6) Token claims fallback
+      if (!organizationId) {
+        try {
+          const token = await firebaseUser.getIdTokenResult();
+          const claims = token.claims as Record<string, unknown>;
+          const claimOrgId = coerceOrganizationId(claims.organizationId || claims.organization_id);
+          if (claimOrgId) {
+            organizationId = claimOrgId;
+          }
+        } catch (err) {
+          logger.debug('Claims fallback failed', err, 'useOrganizations');
+        }
+      }
+
+      // 7) Last resort: keep non-null organization for UI flows (avoid modal hard block)
+      if (!organizationId) {
+        organizationId =
+          coerceOrganizationId(profile?.organization_id) ||
+          coerceOrganizationId(authOrganizationId) ||
+          null;
+      }
 
       if (!organizationId) return null;
 
-      const orgRef = doc(db, 'organizations', organizationId);
-      const orgSnap = await getDoc(orgRef);
+      try {
+        const orgRef = doc(db, 'organizations', organizationId);
+        const orgSnap = await getDoc(orgRef);
 
-      if (!orgSnap.exists()) {
-        logger.warn('Organization not found for ID', { organizationId }, 'useOrganizations');
-        return null;
+        if (orgSnap.exists()) {
+          return {
+            id: orgSnap.id,
+            ...normalizeFirestoreData(orgSnap.data()),
+          } as Organization;
+        }
+      } catch (err) {
+        logger.warn('Organization read failed, using profile fallback', { organizationId, err }, 'useOrganizations');
       }
 
+      // Fallback resiliente: mantém fluxo de criação/edição de paciente funcional
+      // mesmo quando a coleção organizations está indisponível/permissão negada.
       return {
-        id: orgSnap.id,
-        ...orgSnap.data(),
+        id: organizationId,
+        name: 'Organização',
+        slug: `org-${organizationId.slice(0, 8)}`,
+        settings: {},
+        active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       } as Organization;
     },
+    enabled: !!(user || auth.currentUser),
     staleTime: 1000 * 60 * 15, // 15 minutes
   });
 

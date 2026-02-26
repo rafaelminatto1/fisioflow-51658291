@@ -8,7 +8,10 @@ import { executeQuery } from 'firebase/data-connect';
 import { dc, listPatientsByOrgRef, getPatientByIdRef } from '@/lib/dataconnect';
 import { fisioLogger } from '@/lib/errors/logger';
 
-const mapPatientFromPostgres = (p: unknown): unknown => ({
+const isUUID = (id: string | undefined): id is string => 
+  !!id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+const mapPatientFromPostgres = (p: any): any => ({
   id: p.id,
   name: p.name,
   email: p.email,
@@ -31,11 +34,11 @@ export const usePatientsPostgres = (organizationId: string | undefined) => {
   return useQuery({
     queryKey: ['patients-postgres', organizationId],
     queryFn: async () => {
-      if (!organizationId) return [];
+      if (!isUUID(organizationId)) return [];
       const result = await executeQuery(listPatientsByOrgRef(dc(), { organizationId }));
-      return result.data.patients.map(mapPatientFromPostgres);
+      return (result.data?.patients || []).map(mapPatientFromPostgres);
     },
-    enabled: !!organizationId,
+    enabled: isUUID(organizationId),
   });
 };
 
@@ -46,7 +49,7 @@ export const usePatientExercisesPostgres = (patientId: string | undefined) => {
   return useQuery({
     queryKey: ['patient-exercises-postgres', patientId],
     queryFn: async () => {
-      if (!patientId) return [];
+      if (!isUUID(patientId)) return [];
       
       // Nota: Enquanto o SDK gerado não está 100%, usamos a query manual simulada
       // ou chamamos a query gerada se disponível.
@@ -60,7 +63,7 @@ export const usePatientExercisesPostgres = (patientId: string | undefined) => {
       fisioLogger.debug('Data Connect exercises query pending SDK generation. Using fallback.', undefined, 'useDataConnect');
       return []; 
     },
-    enabled: !!patientId,
+    enabled: isUUID(patientId),
   });
 };
 
@@ -71,10 +74,10 @@ export const usePatientPostgres = (patientId: string | undefined) => {
   return useQuery({
     queryKey: ['patient-postgres', patientId],
     queryFn: async () => {
-      if (!patientId) return null;
+      if (!isUUID(patientId)) return null;
       const result = await executeQuery(getPatientByIdRef(dc(), { id: patientId }));
-      return result.data.patient;
+      return result.data?.patient || null;
     },
-    enabled: !!patientId,
+    enabled: isUUID(patientId),
   });
 };

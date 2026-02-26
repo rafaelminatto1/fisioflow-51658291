@@ -175,7 +175,6 @@ const financeiroSubmenu = [
 
 const relatoriosSubmenu = [
   { icon: BarChart3, label: 'Dashboard', href: '/reports' },
-  { icon: BarChart3, label: 'BI Avançado (Looker)', href: '/analytics/bi' },
   { icon: Users, label: 'Aniversariantes', href: '/relatorios/aniversariantes' },
   { icon: TrendingUp, label: 'Taxa de Comparecimento', href: '/relatorios/comparecimento' },
   { icon: Trophy, label: 'Performance da Equipe', href: '/performance-equipe' },

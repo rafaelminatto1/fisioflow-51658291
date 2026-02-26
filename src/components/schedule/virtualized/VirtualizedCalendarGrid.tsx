@@ -31,6 +31,8 @@ interface VirtualizedCalendarGridProps {
   className?: string;
   /** Optional callback when scroll position changes */
   onScrollChange?: (scrollTop: number) => void;
+  /** Optional children to render inside the scroll container */
+  children?: React.ReactNode;
 }
 
 /**
@@ -47,6 +49,7 @@ export const VirtualizedCalendarGrid: React.FC<VirtualizedCalendarGridProps> = (
   renderSlot,
   className = '',
   onScrollChange,
+  children,
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -87,7 +90,8 @@ export const VirtualizedCalendarGrid: React.FC<VirtualizedCalendarGridProps> = (
           height: containerHeight,
         }}
       >
-        <div style={{ height: totalHeight }}>
+        <div style={{ height: totalHeight, position: 'relative' }}>
+          {children}
           {timeSlots.map((time, index) => (
             <div key={time}>{renderSlot(time, index)}</div>
           ))}
@@ -110,6 +114,7 @@ export const VirtualizedCalendarGrid: React.FC<VirtualizedCalendarGridProps> = (
     >
       {/* Spacer to maintain total scroll height */}
       <div style={{ height: totalHeight, position: 'relative' }}>
+        {children}
         {/* Visible slots container with transform for performance */}
         <div
           style={{

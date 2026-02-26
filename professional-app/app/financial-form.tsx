@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,6 @@ import { useColors } from '@/hooks/useColorScheme';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useCreateFinancialRecord, useUpdateFinancialRecord } from '@/hooks/usePatientFinancial';
 import { usePatients } from '@/hooks/usePatients';
-import { Button } from '@/components';
 import { format } from 'date-fns';
 
 export default function FinancialFormScreen() {

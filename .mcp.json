@@ -5,6 +5,23 @@
       "args": [
         "shadcn@latest",
         "mcp"
+      ],
+      "autoApprove": [
+        "get_components",
+        "add_component"
+      ]
+    },
+    "shadcn-community": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@jpisnice/shadcn-ui-mcp-server",
+        "--framework",
+        "react-native"
+      ],
+      "autoApprove": [
+        "get_components",
+        "add_component"
       ]
     },
     "supabase": {

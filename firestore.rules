@@ -57,6 +57,22 @@ service cloud.firestore {
       return request.resource.data.size() < 1000000; // 1MB max per document
     }
 
+    function triageStatusCount(tags) {
+      return (tags.hasAny(['triage-backlog']) ? 1 : 0) +
+        (tags.hasAny(['triage-in-progress']) ? 1 : 0) +
+        (tags.hasAny(['triage-done']) ? 1 : 0);
+    }
+
+    function isValidWikiTriagePayload() {
+      let isTriageDoc = request.resource.data.category == 'triage' || request.resource.data.tags.hasAny(['triage']);
+      return !isTriageDoc || (
+        request.resource.data.tags.hasAny(['triage']) &&
+        triageStatusCount(request.resource.data.tags) == 1 &&
+        request.resource.data.triage_order is int &&
+        request.resource.data.triage_order >= 1
+      );
+    }
+
     // ============================================================================================
     // USERS COLLECTION
     // ============================================================================================
@@ -109,9 +125,64 @@ service cloud.firestore {
     }
 
     match /patients/{patientId} {
-      allow read: if isAdmin() || isProfessional() || (isPatient() && (request.auth.uid == patientId || request.auth.uid == resource.data.userId));
+      allow read: if isAdmin() || isProfessional() || (isPatient() && (request.auth.uid == patientId || request.auth.uid == resource.data.userId)) || (isAuthenticated() && request.auth.uid == resource.data.userId);
       allow create: if (isProfessional() || isAdmin()) && isValidSize();
       allow update: if isProfessional() || isAdmin() || (isPatient() && isOwner('userId'));
+      allow delete: if isAdmin();
+    }
+
+    match /medical_records/{recordId} {
+      allow read: if isAdmin() || isProfessional() || (isPatient() && (request.auth.uid == resource.data.patientId || request.auth.uid == resource.data.userId));
+      allow create: if (isProfessional() || isAdmin()) && isValidSize();
+      allow update: if isProfessional() || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    match /relatorios_medicos/{id} {
+      allow read: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id));
+      allow create: if isAdmin() || (isProfessional() && isSameOrg(request.resource.data.organization_id));
+      allow update, delete: if isAdmin();
+    }
+
+    match /relatorios_convenio/{id} {
+      allow read: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id));
+      allow create: if isAdmin() || (isProfessional() && isSameOrg(request.resource.data.organization_id));
+      allow update, delete: if isAdmin();
+    }
+
+    match /email_campanhas/{id} {
+      allow read: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id));
+      allow create: if isAdmin() || (isProfessional() && isSameOrg(request.resource.data.organization_id));
+      allow update, delete: if isAdmin();
+    }
+
+    match /email_templates/{id} {
+      allow read: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id));
+      allow create: if isAdmin() || (isProfessional() && isSameOrg(request.resource.data.organization_id));
+      allow update, delete: if isAdmin();
+    }
+
+    match /leads/{id} {
+      allow read: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id));
+      allow create: if isAdmin() || (isProfessional() && isSameOrg(request.resource.data.organization_id));
+      allow update, delete: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id));
+    }
+
+    match /convenios/{id} {
+      allow read: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id));
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /patient_convenios/{id} {
+      allow read: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id));
+      allow create, update: if isAdmin() || (isProfessional() && isSameOrg(request.resource.data.organization_id));
+      allow delete: if isAdmin();
+    }
+
+    match /evolucoes/{id} {
+      allow read: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id)) || (isPatient() && resource.data.patient_id == request.auth.uid);
+      allow create: if isAdmin() || (isProfessional() && isSameOrg(request.resource.data.organization_id));
+      allow update: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id));
       allow delete: if isAdmin();
     }
 
@@ -139,6 +210,12 @@ service cloud.firestore {
     match /patient_pathologies/{docId} { allow read, write: if isAuthenticated(); }
     match /patient_goals/{docId} { allow read, write: if isAuthenticated(); }
     match /soap_records/{docId} { allow read, write: if isAuthenticated(); }
+    match /soap_notes/{docId} {
+      allow read: if isAdmin() || isProfessional() || (isAuthenticated() && request.auth.uid == resource.data.userId);
+      allow create: if (isProfessional() || isAdmin()) && isValidSize();
+      allow update: if isProfessional() || isAdmin() || (isAuthenticated() && request.auth.uid == resource.data.userId);
+      allow delete: if isAdmin();
+    }
     match /treatment_sessions/{docId} { allow read, write: if isAuthenticated(); }
     match /evolution_measurements/{docId} { allow read, write: if isAuthenticated(); }
     match /pathology_required_measurements/{docId} { allow read, write: if isAuthenticated(); }
@@ -179,6 +256,42 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // ============================================================================================
+    // KNOWLEDGE BASE
+    // ============================================================================================
+
+    match /knowledge_articles/{docId} {
+      allow read: if isAuthenticated() && isSameOrg(resource.data.organization_id);
+      allow create: if (isProfessional() || isAdmin()) && isSameOrg(request.resource.data.organization_id) && isValidSize();
+      allow update: if (isProfessional() || isAdmin()) && isSameOrg(request.resource.data.organization_id) && isValidSize();
+      allow delete: if isAdmin();
+    }
+
+    match /knowledge_annotations/{docId} {
+      allow read: if isAuthenticated() && isSameOrg(resource.data.organization_id)
+        && (resource.data.scope == 'organization' || request.auth.uid == resource.data.user_id);
+      allow create, update: if (isProfessional() || isAdmin())
+        && isSameOrg(request.resource.data.organization_id)
+        && (
+          request.resource.data.scope == 'organization'
+          || (request.resource.data.scope == 'user' && request.auth.uid == request.resource.data.user_id)
+        )
+        && isValidSize();
+      allow delete: if isAdmin();
+    }
+
+    match /knowledge_curation/{docId} {
+      allow read: if isAuthenticated() && isSameOrg(resource.data.organization_id);
+      allow create, update: if (isProfessional() || isAdmin()) && isSameOrg(request.resource.data.organization_id) && isValidSize();
+      allow delete: if isAdmin();
+    }
+
+    match /knowledge_audit/{docId} {
+      allow read: if isAuthenticated() && isSameOrg(resource.data.organization_id);
+      allow create: if (isProfessional() || isAdmin()) && isSameOrg(request.resource.data.organization_id) && isValidSize();
+      allow update, delete: if false;
+    }
+
     match /clinical_test_templates/{docId} {
       allow read: if isAuthenticated();
       allow create: if (isProfessional() || isAdmin()) && isValidSize();
@@ -211,8 +324,18 @@ service cloud.firestore {
     // ============================================================================================
 
     match /contas_financeiras/{id} {
-        allow read: if isAdmin() || isProfessional();
-        allow write: if isAdmin() || isProfessional();
+        allow read: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id));
+        allow write: if isAdmin() || (isProfessional() && isSameOrg(request.resource.data.organization_id));
+    }
+
+    match /movimentacoes_caixa/{id} {
+        allow read: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id));
+        allow write: if isAdmin() || (isProfessional() && isSameOrg(request.resource.data.organization_id));
+    }
+
+    match /fluxo_caixa_resumo/{id} {
+        allow read: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id));
+        allow write: if isAdmin();
     }
 
     match /transactions/{transactionId} {
@@ -231,13 +354,30 @@ service cloud.firestore {
     }
 
     match /nfse/{id} {
-      allow read: if isAdmin() || isProfessional();
-      allow write: if isAdmin() || isProfessional();
+      allow read: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id));
+      allow create: if isAdmin() || (isProfessional() && isSameOrg(request.resource.data.organization_id));
+      allow update, delete: if isAdmin();
     }
 
     match /nfse_config/{id} {
-      allow read: if isAdmin() || isProfessional();
-      allow write: if isAdmin();
+      allow read: if isAdmin() || (isProfessional() && isSameOrg(id));
+      allow write: if isAdmin() || (isProfessional() && isSameOrg(id));
+    }
+
+    match /satisfaction_surveys/{id} {
+      allow read: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id));
+      allow write: if isAdmin() || (isProfessional() && isSameOrg(request.resource.data.organization_id));
+    }
+
+    match /whatsapp_config/{id} {
+      allow read: if isAdmin() || (isProfessional() && isSameOrg(id));
+      allow write: if isAdmin() || (isProfessional() && isSameOrg(id));
+    }
+
+    match /whatsapp_messages/{id} {
+      allow read: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id));
+      allow create: if isAdmin() || (isProfessional() && isSameOrg(request.resource.data.organization_id));
+      allow update, delete: if isAdmin();
     }
 
     match /patient_financial_summaries/{id} {
@@ -413,16 +553,20 @@ service cloud.firestore {
       allow write: if canManageSchedule();
     }
     match /schedule_business_hours/{docId} {
-      allow read, write: if isValidSize() && (isAdmin() || canManageSchedule());
+      allow read: if isAuthenticated();
+      allow write: if isValidSize() && (isAdmin() || canManageSchedule());
     }
     match /schedule_cancellation_rules/{docId} {
-      allow read, write: if isValidSize() && (isAdmin() || canManageSchedule());
+      allow read: if isAuthenticated();
+      allow write: if isValidSize() && (isAdmin() || canManageSchedule());
     }
     match /schedule_notification_settings/{docId} {
-      allow read, write: if isValidSize() && (isAdmin() || canManageSchedule());
+      allow read: if isAuthenticated();
+      allow write: if isValidSize() && (isAdmin() || canManageSchedule());
     }
     match /schedule_blocked_times/{docId} {
-      allow read, write: if isValidSize() && (isAdmin() || canManageSchedule());
+      allow read: if isAuthenticated();
+      allow write: if isValidSize() && (isAdmin() || canManageSchedule());
     }
 
     match /waitlist/{waitlistId} {
@@ -443,13 +587,51 @@ service cloud.firestore {
     }
 
     match /wiki_pages/{pageId} {
-      allow read: if isAuthenticated() && (isAdmin() || isProfessional());
-      allow create, update, delete: if isAdmin() || isProfessional();
+      allow read: if isAuthenticated() && (isAdmin() || isProfessional() || request.auth.uid == 'emOUpOG28xOEgj1bPjEr3mca5Vx2');
+      allow create, update: if request.auth.uid == 'emOUpOG28xOEgj1bPjEr3mca5Vx2' || isAdmin() || (
+        isProfessional()
+        && isValidSize()
+        && isSameOrg(request.resource.data.organization_id)
+        && isValidWikiTriagePayload()
+      );
+      allow delete: if isAdmin() || isProfessional() || request.auth.uid == 'emOUpOG28xOEgj1bPjEr3mca5Vx2';
+    }
+
+    match /wiki_versions/{versionId} {
+      allow read: if isAuthenticated() && (isAdmin() || isProfessional() || request.auth.uid == 'emOUpOG28xOEgj1bPjEr3mca5Vx2') && isSameOrg(resource.data.organization_id);
+      allow create, update: if request.auth.uid == 'emOUpOG28xOEgj1bPjEr3mca5Vx2' || (
+        (isAdmin() || isProfessional())
+        && isValidSize()
+        && isSameOrg(request.resource.data.organization_id)
+      );
+      allow delete: if isAdmin() || isProfessional() || request.auth.uid == 'emOUpOG28xOEgj1bPjEr3mca5Vx2';
+    }
+
+    match /wiki_comments/{commentId} {
+      allow read: if isAuthenticated() && (isAdmin() || isProfessional()) && isSameOrg(resource.data.organization_id);
+      allow create, update: if (isAdmin() || isProfessional())
+        && isValidSize()
+        && isSameOrg(request.resource.data.organization_id)
+        && request.resource.data.created_by == request.auth.uid;
+      allow delete: if isAdmin() || isProfessional();
+    }
+
+    match /wiki_triage_events/{eventId} {
+      allow read: if isAuthenticated() && (isAdmin() || isProfessional() || request.auth.uid == 'emOUpOG28xOEgj1bPjEr3mca5Vx2') && isSameOrg(resource.data.organization_id);
+      allow create: if request.auth.uid == 'emOUpOG28xOEgj1bPjEr3mca5Vx2' || (
+        (isAdmin() || isProfessional())
+        && isValidSize()
+        && isSameOrg(request.resource.data.organization_id)
+        && request.resource.data.changed_by == request.auth.uid
+        && request.resource.data.source in ['drag', 'quick-action']
+      );
+      allow update: if false;
+      allow delete: if isAdmin() || request.auth.uid == 'emOUpOG28xOEgj1bPjEr3mca5Vx2';
     }
     
     match /wiki_categories/{categoryId} {
-      allow read: if isAuthenticated() && (isAdmin() || isProfessional());
-      allow create, update, delete: if isAdmin() || isProfessional();
+      allow read: if isAuthenticated() && (isAdmin() || isProfessional() || request.auth.uid == 'emOUpOG28xOEgj1bPjEr3mca5Vx2');
+      allow create, update, delete: if isAdmin() || isProfessional() || request.auth.uid == 'emOUpOG28xOEgj1bPjEr3mca5Vx2';
     }
 
     match /user_invitations/{invitationId} {

@@ -21,6 +21,27 @@
     "exa": {
       "url": "https://server.smithery.ai/exa/mcp",
       "type": "http"
+    },
+    "mcpsemanticscholar": {
+      "url": "https://server.smithery.ai/hamid-vakilzadeh/mcpsemanticscholar/mcp",
+      "type": "http"
+    },
+    "paper-search-mcp-openai": {
+      "url": "https://server.smithery.ai/adamamer20/paper-search-mcp-openai/mcp",
+      "type": "http"
+    },
+    "reference-servers": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "kiennd/reference-servers"
+      ]
+    },
+    "serena": {
+      "url": "https://server.smithery.ai/chris/serena/mcp",
+      "type": "http"
     }
   }
 }

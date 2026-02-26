@@ -1,6 +1,6 @@
 import React from 'react';
 import { MotionCard } from '../MotionCard';
-import { User, Activity, Clock, AlertCircle } from 'lucide-react';
+import { Activity, Clock } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export interface PatientCardProps {

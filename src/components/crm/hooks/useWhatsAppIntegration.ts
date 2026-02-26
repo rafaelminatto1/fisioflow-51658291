@@ -5,25 +5,34 @@
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { db, collection, getDoc, doc, addDoc, updateDoc } from '@/integrations/firebase/app';
+import { useOrganizations } from '@/hooks/useOrganizations';
 
 export function useWhatsAppIntegration() {
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
+
   const sendMessage = useMutation({
     mutationFn: async (data: { recipient: string; message: string; templateId?: string }) => {
+      if (!organizationId) {
+        throw new Error('Organização não identificada');
+      }
+
       // Check config
-      const configRef = doc(db, 'whatsapp_config', 'default');
+      const configRef = doc(db, 'whatsapp_config', organizationId);
       const configSnapshot = await getDoc(configRef);
 
       if (!configSnapshot.exists()) {
-        throw new Error('WhatsApp não está configurado');
+        throw new Error('WhatsApp não está configurado para esta organização');
       }
       const config = configSnapshot.data();
 
       if (!config.enabled) {
-        throw new Error('WhatsApp não está configurado');
+        throw new Error('WhatsApp não está habilitado');
       }
 
       // Salvar mensagem no banco
       const messagesRef = await addDoc(collection(db, 'whatsapp_messages'), {
+        organization_id: organizationId,
         recipient: data.recipient,
         message: data.message,
         template_id: data.templateId,

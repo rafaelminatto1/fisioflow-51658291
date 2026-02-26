@@ -152,7 +152,20 @@ export default defineConfig(({ mode }) => {
       }
     },
     optimizeDeps: {
-      include: ['react', 'react-dom', 'framer-motion', 'lucide-react', 'react-router-dom', '@tanstack/react-query'],
+      include: [
+        'react', 
+        'react-dom', 
+        'framer-motion', 
+        'lucide-react', 
+        'react-router-dom', 
+        '@tanstack/react-query',
+        '@dnd-kit/core',
+        '@dnd-kit/sortable',
+        '@dnd-kit/utilities',
+        'fuse.js',
+        'date-fns',
+        'date-fns/locale'
+      ],
     },
     server: {
       watch: {

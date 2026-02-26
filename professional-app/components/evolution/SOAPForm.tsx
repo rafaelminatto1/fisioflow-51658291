@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface SOAPFormProps {

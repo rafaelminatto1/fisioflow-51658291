@@ -33,6 +33,7 @@ export const db = (typeof window !== 'undefined')
         tabManager: persistentMultipleTabManager(),
         cacheSizeBytes: CACHE_SIZE_UNLIMITED
       }),
+      experimentalForceLongPolling: true,
       experimentalAutoDetectLongPolling: false
     })
   : getFirestore(app);

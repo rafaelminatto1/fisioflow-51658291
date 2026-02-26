@@ -11,8 +11,6 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { FileText, Plus, Edit, Trash2, Copy, Check, X, LayoutTemplate } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
 export interface AppointmentTemplateVariable {

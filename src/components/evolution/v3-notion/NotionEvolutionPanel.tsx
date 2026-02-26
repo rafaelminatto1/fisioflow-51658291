@@ -19,7 +19,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   FileText,
-  MessageCircle,
   Save,
   Loader2,
   CheckCircle2,
@@ -33,9 +32,8 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { RichTextProvider, useRichTextContext } from '@/context/RichTextContext';
 import { RichTextToolbar } from '@/components/ui/RichTextToolbar';
-import { RichTextBlock } from '../v2-improved/RichTextBlock';
 import { RichTextEditor } from '@/components/ui/RichTextEditor';
-import { uploadFile, STORAGE_FOLDERS } from '@/lib/firebase/storage';
+import { uploadFile } from '@/lib/firebase/storage';
 import type { Exercise } from './ExerciseQuickAdd';
 import type { EvolutionV2Data } from '../v2-improved/types';
 import { QuickPainSlider } from './QuickPainSlider';
@@ -65,6 +63,7 @@ interface NotionEvolutionPanelProps {
   pathology?: string;
   onAutoSave?: (data: EvolutionV2Data) => Promise<void> | void;
   patientId?: string;
+  evolutionId?: string;
 }
 
 const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
@@ -82,6 +81,7 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
   showQuickPainSlider = true,
   onAutoSave,
   patientId,
+  evolutionId,
 }) => {
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
@@ -110,6 +110,10 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 
   const patientReportCount = useMemo(() => (data.patientReport || '').replace(/<[^>]+>/g, '').length, [data.patientReport]);
   const evolutionTextCount = useMemo(() => (data.evolutionText || '').replace(/<[^>]+>/g, '').length, [data.evolutionText]);
+  const safeEvolutionId = useMemo(() => {
+    const rawEvolutionId = evolutionId || `sessao-${data.sessionNumber || 'draft'}-${data.sessionDate || 'agora'}`;
+    return rawEvolutionId.replace(/[^a-zA-Z0-9_-]/g, '_');
+  }, [evolutionId, data.sessionNumber, data.sessionDate]);
 
   const localSaveLabel = useMemo(() => {
     if (!resolvedAutoSaveEnabled) return 'Auto-salvar desativado';
@@ -254,20 +258,39 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
       timeSince,
     };
   }, [data.patientReport, data.evolutionText, data.sessionDate]);
+  const painLevel = data.painLevel ?? 0;
+
+  useEffect(() => {
+    // Make user profile available for signature command
+    if (data.therapistName) {
+      (window as any).__USER_PROFILE = { 
+        full_name: data.therapistName, 
+        crefito: data.therapistCrefito || '—' 
+      };
+    }
+  }, [data.therapistName, data.therapistCrefito]);
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
   };
 
   const handleQuickUpload = async (file: File, type: 'attachment' | 'scan') => {
+    if (!patientId) {
+      toast.error('Não foi possível identificar o paciente para salvar o arquivo.');
+      return;
+    }
+
     const isImage = file.type.startsWith('image/');
-    const folder = isImage ? STORAGE_FOLDERS.IMAGES : STORAGE_FOLDERS.DOCUMENTS;
+    const folder = isImage
+      ? `patients/${patientId}/evolutions/${safeEvolutionId}`
+      : `patients/${patientId}/documents/${safeEvolutionId}`;
     const loadingToast = toast.loading('Enviando arquivo...');
     try {
       const result = await uploadFile(file, {
         folder,
         contentType: file.type,
         resumable: true,
+        includeUserIdPath: false,
         metadata: {
           source: type,
           originalName: file.name,
@@ -421,155 +444,219 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
       {/* Content Scrollable Container */}
       <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-32">
         <div className="sticky top-0 z-30 bg-white border-b border-[#E9E9E8]">
-          <RichTextToolbar className="border-t border-transparent" />
+          <RichTextToolbar
+            className="border-t border-transparent"
+            imageUploadFolder={patientId ? `patients/${patientId}/evolutions/${safeEvolutionId}` : undefined}
+          />
         </div>
-        <div className="max-w-[900px] mx-auto mt-12 pl-6 pr-2">
+        <div className="mx-auto mt-12 w-full max-w-[1280px] px-2 lg:px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,860px)_300px] gap-8 items-start">
+            <div className="min-w-0 pl-6 pr-2">
 
-          {/* H1 Header: Patient Evolution */}
-          <div className="flex items-baseline mb-12 group gap-4">
-            <div className="w-8 flex-shrink-0 text-right text-sm font-medium text-[#D3D1CB] select-none">H1</div>
-            <div className="flex-1">
-              <h1 className="font-bold text-[#37352f] leading-tight text-4xl tracking-tight">Evolução Clínica</h1>
-              <p className="text-xs text-muted-foreground mt-2">Use “/” para inserir blocos, tabelas, callouts e mídias.</p>
-            </div>
-          </div>
+              {/* H1 Header: Patient Evolution */}
+              <div className="flex items-baseline mb-12 group gap-4">
+                <div className="w-8 flex-shrink-0 text-right text-sm font-medium text-[#D3D1CB] select-none">H1</div>
+                <div className="flex-1">
+                  <h1 className="font-bold text-[#37352f] leading-tight text-4xl tracking-tight">Evolução Clínica</h1>
+                  <p className="text-xs text-muted-foreground mt-2">Use “/” para inserir blocos, tabelas, callouts e mídias.</p>
+                </div>
+              </div>
 
-          {/* Summary Card */}
-          <div className="mb-10 ml-12">
-            <div className="p-4 rounded-xl border border-[#ECEBEA] bg-[#FBFBFA] flex flex-col gap-3">
-              <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                <span>Última edição: {localLastSaved ? localLastSaved.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—'}</span>
-                <span>Tempo desde a sessão: {summaryStats.timeSince}</span>
-                <span>Palavras‑chave: {summaryStats.keywords.length ? summaryStats.keywords.join(', ') : '—'}</span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {statusTags.map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => toggleTag(tag)}
-                    className={cn(
-                      'px-2.5 py-1 text-xs rounded-full border transition-colors',
-                      selectedTags.includes(tag)
-                        ? 'bg-primary/10 border-primary/30 text-primary'
-                        : 'bg-white border-border text-muted-foreground hover:text-foreground'
-                    )}
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Session Checklist */}
-          <div className="mb-12 ml-12">
-            <div className="p-4 rounded-xl border border-[#ECEBEA] bg-white">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-[#37352f]">Checklist da Sessão</h3>
-                <span className="text-xs text-muted-foreground">{checklistProgress}%</span>
-              </div>
-              <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden mb-3">
-                <div className="h-full bg-primary transition-all" style={{ width: `${checklistProgress}%` }} />
-              </div>
-              <div className="space-y-2">
-                {checklist.map((item) => (
-                  <label key={item.id} className="flex items-center gap-2 text-sm text-[#37352f]">
-                    <input
-                      type="checkbox"
-                      checked={item.done}
-                      onChange={() =>
-                        setChecklist((prev) =>
-                          prev.map((i) => (i.id === item.id ? { ...i, done: !i.done } : i))
-                        )
-                      }
-                    />
-                    <span>{item.label}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* AI Summary Display */}
-          {aiSummary && (
-            <div className="mb-12 ml-12 animate-in fade-in slide-in-from-top-4">
-              <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Sparkles className="h-5 w-5 text-primary" />
+              {/* Mobile summary / checklist */}
+              <div className="lg:hidden space-y-4 mb-10 ml-12">
+                <div className="p-4 rounded-xl border border-[#ECEBEA] bg-[#FBFBFA]">
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                    <span>Última edição: {localLastSaved ? localLastSaved.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—'}</span>
+                    <span>Tempo desde a sessão: {summaryStats.timeSince}</span>
+                    <span>Palavras‑chave: {summaryStats.keywords.length ? summaryStats.keywords.join(', ') : '—'}</span>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-primary mb-1">Resumo Inteligente</h3>
-                    <p className="text-sm text-foreground/80 leading-relaxed">{aiSummary.summary}</p>
+                </div>
+
+                <div className="p-4 rounded-xl border border-[#ECEBEA] bg-white">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-[#37352f]">Checklist da Sessão</h3>
+                    <span className="text-xs text-muted-foreground">{checklistProgress}%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden mb-3">
+                    <div className="h-full bg-primary transition-all" style={{ width: `${checklistProgress}%` }} />
+                  </div>
+                  <div className="space-y-2">
+                    {checklist.map((item) => (
+                      <label key={item.id} className="flex items-center gap-2 text-sm text-[#37352f]">
+                        <input
+                          type="checkbox"
+                          checked={item.done}
+                          onChange={() =>
+                            setChecklist((prev) =>
+                              prev.map((i) => (i.id === item.id ? { ...i, done: !i.done } : i))
+                            )
+                          }
+                        />
+                        <span>{item.label}</span>
+                      </label>
+                    ))}
                   </div>
                 </div>
               </div>
-            </div>
-          )}
 
-          <div className="h-px bg-[#ECEBEA] mb-10 ml-12" />
+              {/* AI Summary Display */}
+              {aiSummary && (
+                <div className="mb-12 ml-12 animate-in fade-in slide-in-from-top-4">
+                  <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 shadow-sm">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-primary/10">
+                        <Sparkles className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-semibold text-primary mb-1">Resumo Inteligente</h3>
+                        <p className="text-sm text-foreground/80 leading-relaxed">{aiSummary.summary}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-          {/* H2 Header: Pain Level */}
-          {showQuickPainSlider && (
-            <div id="pain-section" className="flex items-baseline mb-12 group gap-4">
-              <div className="w-8 flex-shrink-0 text-right text-sm font-medium text-[#D3D1CB] select-none">H2</div>
-              <div className="flex-1">
-                <h2 className="text-2xl font-semibold text-[#37352f] mb-6">Nível de Dor (EVA)</h2>
-                <QuickPainSlider
-                  value={data.painLevel}
-                  onChange={(level) => handleFieldChange('painLevel', level)}
-                  disabled={disabled}
-                  showLabel
-                />
+              <div className="h-px bg-[#ECEBEA] mb-10 ml-12" />
+
+              {/* H2 Header: Pain Level */}
+              {showQuickPainSlider && (
+                <div id="pain-section" className="flex items-baseline mb-12 group gap-4 scroll-mt-28">
+                  <div className="w-8 flex-shrink-0 text-right text-sm font-medium text-[#D3D1CB] select-none">H2</div>
+                  <div className="flex-1">
+                    <h2 className="text-2xl font-semibold text-[#37352f] mb-6">Nível de Dor (EVA)</h2>
+                    <QuickPainSlider
+                      value={data.painLevel}
+                      onChange={(level) => handleFieldChange('painLevel', level)}
+                      disabled={disabled}
+                      showLabel
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="h-px bg-[#ECEBEA] mb-8 ml-12" />
+
+              {/* H2 Header: Evolution Text */}
+              <div id="evolutionText" className="flex items-baseline mb-8 group gap-4">
+                <div className="w-8 flex-shrink-0 text-right text-sm font-medium text-[#D3D1CB] select-none">H2</div>
+                <div className="flex-1">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <h2 className="text-2xl font-semibold text-[#37352f] mb-2 hover:text-[#2383e2] cursor-text transition-colors">Evolução Clínica</h2>
+                    <span className="text-xs text-muted-foreground">{evolutionTextCount} caracteres</span>
+                  </div>
+                  <div className="text-[#37352f]">
+                                    <RichTextEditor
+                                      placeholder="Tecle '/' para comandos ou escreva livremente sua evolução..."
+                                      value={data.evolutionText || ''}
+                                      onValueChange={(val: string) => handleFieldChange('evolutionText', val)}
+                                      disabled={disabled}
+                                      patientId={patientId}
+                                      imageUploadFolder={patientId ? `patients/${patientId}/evolutions/${safeEvolutionId}` : undefined}
+                                      accentColor="violet"
+                                      className="!p-0 !border-0 bg-transparent shadow-none w-full [&_.ProseMirror]:!p-0 [&_.ProseMirror]:!text-[#37352f] [&_.ProseMirror]:!text-base [&_.ProseMirror]:!leading-relaxed [&_.ProseMirror]:!min-h-[300px]"
+                                    />                  </div>
+                </div>
+              </div>
+
+              <div className="h-px bg-[#ECEBEA] mb-8 ml-12" />
+
+              {/* H2 Header: Patient Report */}
+              <div id="patientReport" className="flex items-baseline mb-8 group gap-4">
+                <div className="w-8 flex-shrink-0 text-right text-sm font-medium text-[#D3D1CB] select-none">H2</div>
+                <div className="flex-1">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <h2 className="text-2xl font-semibold text-[#37352f] mb-2 hover:text-[#2383e2] cursor-text transition-colors">Relato do Paciente</h2>
+                    <span className="text-xs text-muted-foreground">{patientReportCount} caracteres</span>
+                  </div>
+                  <div className="text-[#37352f]">
+                                    <RichTextEditor
+                                      placeholder="O que o paciente relatou? Como se sente desde a última sessão?"
+                                      value={data.patientReport || ''}
+                                      onValueChange={(val: string) => handleFieldChange('patientReport', val)}
+                                      disabled={disabled}
+                                      patientId={patientId}
+                                      imageUploadFolder={patientId ? `patients/${patientId}/evolutions/${safeEvolutionId}` : undefined}
+                                      accentColor="sky"
+                                      className="!p-0 !border-0 bg-transparent shadow-none w-full [&_.ProseMirror]:!p-0 [&_.ProseMirror]:!text-[#37352f] [&_.ProseMirror]:!text-base [&_.ProseMirror]:!leading-relaxed [&_.ProseMirror]:!min-h-[100px]"
+                                    />                  </div>
+                </div>
               </div>
             </div>
-          )}
+            <aside className="hidden lg:block lg:translate-x-4">
+              <div className="sticky top-24 space-y-4 pb-28">
+                <div className="p-4 rounded-xl border border-[#ECEBEA] bg-[#FBFBFA] shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
+                  <h3 className="text-sm font-semibold text-[#37352f]">Evolução Clínica</h3>
+                  <p className="text-xs text-muted-foreground mt-1 mb-3">Use “/” para inserir blocos, tabelas, callouts e mídias.</p>
 
-          <div className="h-px bg-[#ECEBEA] mb-8 ml-12" />
+                  <div className="space-y-2 text-xs text-muted-foreground">
+                    <p>Última edição: {localLastSaved ? localLastSaved.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—'}</p>
+                    <p>Tempo desde a sessão: {summaryStats.timeSince}</p>
+                    <p>Palavras‑chave: {summaryStats.keywords.length ? summaryStats.keywords.join(', ') : '—'}</p>
+                  </div>
 
-          {/* H2 Header: Patient Report */}
-          <div id="patientReport" className="flex items-baseline mb-8 group gap-4">
-            <div className="w-8 flex-shrink-0 text-right text-sm font-medium text-[#D3D1CB] select-none">H2</div>
-            <div className="flex-1">
-              <div className="flex items-baseline justify-between gap-2">
-                <h2 className="text-2xl font-semibold text-[#37352f] mb-2 hover:text-[#2383e2] cursor-text transition-colors">Relato do Paciente</h2>
-                <span className="text-xs text-muted-foreground">{patientReportCount} caracteres</span>
-              </div>
-              <div className="text-[#37352f]">
-                <RichTextEditor
-                  placeholder="O que o paciente relatou? Como se sente desde a última sessão?"
-                  value={data.patientReport || ''}
-                  onValueChange={(val: string) => handleFieldChange('patientReport', val)}
-                  disabled={disabled}
-                  accentColor="sky"
-                  className="!p-0 !border-0 bg-transparent shadow-none w-full [&_.ProseMirror]:!p-0 [&_.ProseMirror]:!text-[#37352f] [&_.ProseMirror]:!text-base [&_.ProseMirror]:!leading-relaxed [&_.ProseMirror]:!min-h-[100px]"
-                />
-              </div>
-            </div>
-          </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {statusTags.map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => toggleTag(tag)}
+                        className={cn(
+                          'px-2.5 py-1 text-xs rounded-full border transition-colors',
+                          selectedTags.includes(tag)
+                            ? 'bg-primary/10 border-primary/30 text-primary'
+                            : 'bg-white border-border text-muted-foreground hover:text-foreground'
+                        )}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-          <div className="h-px bg-[#ECEBEA] mb-8 ml-12" />
+                <div className="p-4 rounded-xl border border-[#ECEBEA] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-[#37352f]">Checklist da Sessão</h3>
+                    <span className="text-xs text-muted-foreground">{checklistProgress}%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden mb-3">
+                    <div className="h-full bg-primary transition-all" style={{ width: `${checklistProgress}%` }} />
+                  </div>
+                  <div className="space-y-2">
+                    {checklist.map((item) => (
+                      <label key={item.id} className="flex items-center gap-2 text-xs text-[#37352f]">
+                        <input
+                          type="checkbox"
+                          checked={item.done}
+                          onChange={() =>
+                            setChecklist((prev) =>
+                              prev.map((i) => (i.id === item.id ? { ...i, done: !i.done } : i))
+                            )
+                          }
+                        />
+                        <span>{item.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
 
-          {/* H2 Header: Evolution Text */}
-          <div id="evolutionText" className="flex items-baseline mb-8 group gap-4">
-            <div className="w-8 flex-shrink-0 text-right text-sm font-medium text-[#D3D1CB] select-none">H2</div>
-            <div className="flex-1">
-              <div className="flex items-baseline justify-between gap-2">
-                <h2 className="text-2xl font-semibold text-[#37352f] mb-2 hover:text-[#2383e2] cursor-text transition-colors">Evolução Clínica</h2>
-                <span className="text-xs text-muted-foreground">{evolutionTextCount} caracteres</span>
+                <div className="p-4 rounded-xl border border-[#ECEBEA] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-sm font-semibold text-[#37352f]">Nível de Dor (EVA)</h3>
+                    <span className="text-xs font-semibold text-[#37352f]">{painLevel}/10</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden mt-3">
+                    <div className="h-full bg-[#2383e2] transition-all" style={{ width: `${Math.min(100, painLevel * 10)}%` }} />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('pain-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                    className="mt-3 text-xs text-[#2383e2] hover:underline"
+                  >
+                    Ir para seção
+                  </button>
+                </div>
               </div>
-              <div className="text-[#37352f]">
-                <RichTextEditor
-                  placeholder="Tecle '/' para comandos ou escreva livremente sua evolução..."
-                  value={data.evolutionText || ''}
-                  onValueChange={(val: string) => handleFieldChange('evolutionText', val)}
-                  disabled={disabled}
-                  accentColor="violet"
-                  className="!p-0 !border-0 bg-transparent shadow-none w-full [&_.ProseMirror]:!p-0 [&_.ProseMirror]:!text-[#37352f] [&_.ProseMirror]:!text-base [&_.ProseMirror]:!leading-relaxed [&_.ProseMirror]:!min-h-[300px]"
-                />
-              </div>
-            </div>
+            </aside>
           </div>
         </div>
       </div>

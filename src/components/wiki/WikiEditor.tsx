@@ -50,8 +50,21 @@ import type { WikiComment, WikiPage, WikiPageVersion } from '@/types/wiki';
 
 interface WikiEditorProps {
   page: WikiPage | null;
+  draft?: WikiEditorDraft | null;
   onCancel: () => void;
   onSave: (data: Omit<WikiPage, 'id' | 'created_at' | 'updated_at' | 'version'>) => void;
+}
+
+interface WikiEditorDraft {
+  title?: string;
+  content?: string;
+  html_content?: string;
+  icon?: string;
+  category?: string;
+  tags?: string[];
+  is_published?: boolean;
+  template_id?: string;
+  triage_order?: number;
 }
 
 type WikiBlockType =
@@ -505,17 +518,21 @@ function parseLegacyMarkdownToBlocks(content: string): WikiBlock[] {
   return blocks.length > 0 ? blocks : [createBlock('paragraph')];
 }
 
-function buildBlocksFromPage(page: WikiPage | null): WikiBlock[] {
-  if (!page) {
+function buildBlocksFromSource(source: { content?: string; html_content?: string } | null): WikiBlock[] {
+  if (!source) {
     return [createBlock('paragraph')];
   }
 
-  const parsedDocument = deserializeBlocksDocument(page.html_content);
+  const parsedDocument = deserializeBlocksDocument(source.html_content);
   if (parsedDocument && parsedDocument.length > 0) {
     return parsedDocument;
   }
 
-  return parseLegacyMarkdownToBlocks(page.content || '');
+  return parseLegacyMarkdownToBlocks(source.content || '');
+}
+
+function buildBlocksFromPage(page: WikiPage | null): WikiBlock[] {
+  return buildBlocksFromSource(page);
 }
 
 function databaseToMarkdown(database: WikiDatabaseConfig): string {
@@ -1670,15 +1687,16 @@ function WikiHistoryDiff({ page, versions }: { page: WikiPage; versions: WikiPag
   );
 }
 
-export function WikiEditor({ page, onCancel, onSave }: WikiEditorProps) {
-  const { user } = useAuth();
-  const [title, setTitle] = useState(page?.title || '');
-  const [icon, setIcon] = useState(page?.icon || '');
-  const [category, setCategory] = useState(page?.category || '');
-  const [tags, setTags] = useState(page?.tags?.join(', ') || '');
-  const [isPublished, setIsPublished] = useState(page?.is_published ?? true);
+export function WikiEditor({ page, draft, onCancel, onSave }: WikiEditorProps) {
+  const { user, organizationId } = useAuth();
+  const source = page ?? draft ?? null;
+  const [title, setTitle] = useState(source?.title || '');
+  const [icon, setIcon] = useState(source?.icon || '');
+  const [category, setCategory] = useState(source?.category || '');
+  const [tags, setTags] = useState(source?.tags?.join(', ') || '');
+  const [isPublished, setIsPublished] = useState(source?.is_published ?? true);
   const [showPreview, setShowPreview] = useState(false);
-  const [blocks, setBlocks] = useState<WikiBlock[]>(() => buildBlocksFromPage(page));
+  const [blocks, setBlocks] = useState<WikiBlock[]>(() => buildBlocksFromSource(source));
   const [slashInput, setSlashInput] = useState('');
   const [insertAfterBlockId, setInsertAfterBlockId] = useState<string | null>(null);
   const [draggingBlockId, setDraggingBlockId] = useState<string | null>(null);
@@ -1690,16 +1708,17 @@ export function WikiEditor({ page, onCancel, onSave }: WikiEditorProps) {
   const videoUploadInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    setTitle(page?.title || '');
-    setIcon(page?.icon || '');
-    setCategory(page?.category || '');
-    setTags(page?.tags?.join(', ') || '');
-    setIsPublished(page?.is_published ?? true);
-    setBlocks(buildBlocksFromPage(page));
+    const nextSource = page ?? draft ?? null;
+    setTitle(nextSource?.title || '');
+    setIcon(nextSource?.icon || '');
+    setCategory(nextSource?.category || '');
+    setTags(nextSource?.tags?.join(', ') || '');
+    setIsPublished(nextSource?.is_published ?? true);
+    setBlocks(buildBlocksFromSource(nextSource));
     setSlashInput('');
     setInsertAfterBlockId(null);
     setDraggingBlockId(null);
-  }, [page]);
+  }, [page, draft]);
 
   const slashSearchTerm = slashInput.trim().startsWith('/')
     ? slashInput.trim().slice(1).toLowerCase()
@@ -1848,18 +1867,38 @@ export function WikiEditor({ page, onCancel, onSave }: WikiEditorProps) {
     const markdownContent = blocksToMarkdown(blocks);
     const htmlContent = serializeBlocksDocument(blocks);
 
+    const isE2E = typeof window !== 'undefined' && window.location.search.includes('e2e=true');
+    if (isE2E) {
+      console.info(
+        '[E2E][WikiEditor][handleSave]',
+        JSON.stringify({
+          title,
+          slug,
+          template_id: page?.template_id ?? draft?.template_id,
+          tags: tags ? tags.split(',').map((tag) => tag.trim()).filter(Boolean) : [],
+          category: category || null,
+          is_published: isPublished,
+          blocks_count: blocks.length,
+          organization_id: organizationId,
+          user_id: user?.uid,
+        })
+      );
+    }
+
     onSave({
       slug,
       title,
+      template_id: page?.template_id ?? draft?.template_id,
+      triage_order: page?.triage_order ?? draft?.triage_order,
       content: markdownContent,
       html_content: htmlContent,
       icon: icon || undefined,
       category: category || undefined,
       tags: tags ? tags.split(',').map((tag) => tag.trim()).filter(Boolean) : [],
       is_published: isPublished,
-      organization_id: 'org-1',
-      created_by: 'user-1',
-      updated_by: 'user-1',
+      organization_id: organizationId || 'org-1',
+      created_by: user?.uid || 'user-1',
+      updated_by: user?.uid || 'user-1',
       parent_id: undefined,
       view_count: page?.view_count ?? 0,
       attachments: page?.attachments ?? [],
@@ -2136,7 +2175,7 @@ export function WikiPageViewer({
   page: WikiPage;
   onEdit: () => void;
 }) {
-  const { user } = useAuth();
+  const { user, organizationId } = useAuth();
   const queryClient = useQueryClient();
 
   const blocks = useMemo(() => buildBlocksFromPage(page), [page]);

@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback, memo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar, User, Bell } from 'lucide-react';

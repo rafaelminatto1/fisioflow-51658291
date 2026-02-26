@@ -2,16 +2,12 @@ import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDebounce } from '@/hooks/performance/useDebounce';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { EmptyState, EmptyStateEnhanced } from '@/components/ui';
+import { EmptyState } from '@/components/ui';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { IncompleteRegistrationAlert } from '@/components/dashboard/IncompleteRegistrationAlert';
 // ============================================================================
 // NOVOS COMPONENTES
 // ============================================================================
-import { QuickFilters } from '@/components/schedule/QuickFilters';
-import { DebouncedSearch } from '@/components/schedule/DebouncedSearch';
-import { ThemeProvider, useTheme } from '@/components/ui/theme';
-import { SkipLinks } from '@/components/ui/accessibility/SkipLinks';
 import {
 
   Pagination,
@@ -39,6 +35,7 @@ import { usePatientsPaginated } from '@/hooks/usePatientCrud';
 import { useMultiplePatientStats } from '@/hooks/usePatientStats';
 import { PatientHelpers } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrganizations } from '@/hooks/useOrganizations';
 import { Users, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -53,7 +50,8 @@ import { toast } from '@/hooks/use-toast';
 
 const Patients = () => {
   const { profile } = useAuth();
-  const organizationId = profile?.organization_id;
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id || profile?.organization_id;
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -358,18 +356,20 @@ const Patients = () => {
                     placeholder={<div className="h-[140px] w-full bg-muted/50 rounded-xl animate-pulse" />}
                     rootMargin="200px"
                   >
-                    <PatientCard
-                      name={patientName || 'Sem Nome'}
-                      condition={patient.main_condition}
-                      status={patient.status}
-                      stats={{
-                        sessionsCompleted: patientStats?.sessionsCompleted || 0,
-                        nextAppointment: patientStats?.nextAppointmentDate ? new Date(patientStats.nextAppointmentDate).toLocaleDateString('pt-BR') : undefined
-                      }}
-                      onClick={() => navigate(`/patients/${patient.id}`)}
-                      actions={<PatientActions patient={patient} />}
-                      className="h-full"
-                    />
+                    <div data-testid={`patient-card-${patient.id}`} data-patient-id={patient.id}>
+                      <PatientCard
+                        name={patientName || 'Sem Nome'}
+                        condition={patient.main_condition}
+                        status={patient.status}
+                        stats={{
+                          sessionsCompleted: patientStats?.sessionsCompleted || 0,
+                          nextAppointment: patientStats?.nextAppointmentDate ? new Date(patientStats.nextAppointmentDate).toLocaleDateString('pt-BR') : undefined
+                        }}
+                        onClick={() => navigate(`/patients/${patient.id}`)}
+                        actions={<PatientActions patient={patient} />}
+                        className="h-full"
+                      />
+                    </div>
                   </LazyComponent>
                 );
               })}

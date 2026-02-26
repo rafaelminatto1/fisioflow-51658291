@@ -7,9 +7,7 @@
 import React, { useState, useCallback } from 'react';
 import {
   Ruler,
-  Plus,
   Trash2,
-  Sparkles,
   GripVertical,
   ChevronDown,
   ChevronUp,
@@ -24,7 +22,6 @@ import {
   CheckCircle2,
   Info,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -44,19 +41,10 @@ import {
   MEASUREMENT_TYPES,
   MEASUREMENT_TYPE_LABELS,
 } from './types';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
+
+
+
+
 
 // Vital signs configuration
 const VITAL_SIGNS_FIELDS = [

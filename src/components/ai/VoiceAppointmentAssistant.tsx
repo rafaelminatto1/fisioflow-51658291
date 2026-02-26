@@ -16,10 +16,8 @@ import {
   MicOff,
   Volume2,
   VolumeX,
-  Clock,
   Check,
   X,
-  Loader2,
   Languages,
   Settings,
 } from 'lucide-react';

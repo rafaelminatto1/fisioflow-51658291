@@ -7,7 +7,7 @@ import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import {
   Play, Plus, Heart, Share2, ExternalLink,
   Clock, Repeat, Dumbbell, FileText, Video, Image as ImageIcon,
-  BrainCircuit, X
+  BrainCircuit
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';

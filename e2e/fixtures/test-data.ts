@@ -6,8 +6,8 @@ export const testUsers = {
     expectedOrganizationId: null, // Será preenchido durante os testes
   },
   fisio: {
-    email: 'teste@moocafisio.com.br',
-    password: 'Yukari3030@',
+    email: 'rafael.minatto@yahoo.com.br',
+    password: 'Yukari30@',
     role: 'fisioterapeuta',
     expectedOrganizationId: null,
   },

@@ -103,7 +103,10 @@ export const PatientFormSchema = z.object({
   // Endereço
   address: z.string().max(500, 'Endereço muito longo').optional().nullable(),
   city: z.string().max(100, 'Cidade muito longa').optional().nullable(),
-  state: z.string().length(2, 'Estado deve ter 2 caracteres').optional().nullable(),
+  state: z.preprocess(
+    (val) => (val === '' || val === null ? undefined : val),
+    z.string().length(2, 'Estado deve ter 2 caracteres').optional()
+  ),
   zip_code: z.string().optional().nullable(),
 
   // Contato de Emergência
@@ -116,8 +119,14 @@ export const PatientFormSchema = z.object({
   main_condition: z.string().min(1, 'Condição principal é obrigatória').max(500, 'Condição muito longa'),
   allergies: z.string().max(500, 'Alergias muito longas').optional().nullable(),
   medications: z.string().max(500, 'Medicamentos muito longos').optional().nullable(),
-  weight_kg: z.coerce.number().positive().max(500, 'Peso inválido').optional().nullable(),
-  height_cm: z.coerce.number().positive().max(300, 'Altura inválida').optional().nullable(),
+  weight_kg: z.preprocess(
+    (val) => (val === '' || val === null || Number.isNaN(val) ? undefined : val),
+    z.coerce.number().positive().max(500, 'Peso inválido').optional()
+  ),
+  height_cm: z.preprocess(
+    (val) => (val === '' || val === null || Number.isNaN(val) ? undefined : val),
+    z.coerce.number().positive().max(300, 'Altura inválida').optional()
+  ),
   blood_type: z.string().optional().nullable(),
 
   // Informações Adicionais

@@ -11,7 +11,7 @@
  * - Proteção de rotas
  */
 
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import {
   login,
   logout,
@@ -19,8 +19,6 @@ import {
   registerUser,
   resetPassword,
   isAuthenticated,
-  isOnLoginPage,
-  expectLoginSuccess,
   TEST_CREDENTIALS,
 } from './fixtures/auth';
 import {
@@ -29,9 +27,7 @@ import {
   expectNotAuthenticated,
   expectOnLogin,
   ROUTES,
-  goToHome,
   goToPatients,
-  goToAgenda,
 } from './helpers/navigation';
 
 test.describe('Fluxo de Autenticação', () => {

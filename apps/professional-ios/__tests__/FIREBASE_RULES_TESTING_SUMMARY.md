@@ -51,6 +51,7 @@ pnpm vitest run apps/professional-ios/__tests__/firebase-rules-quick.test.ts
    - Tests actual rule evaluation
    - Requires Firebase CLI and emulators running
    - More comprehensive but slower
+   - Uses Storage auth context with `{ sub: userId }` and flexible Storage error assertions
 
 3. **`run-firebase-rules-tests.sh`**
    - Automated script to run integration tests

@@ -9,7 +9,6 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   Play,
@@ -60,7 +59,6 @@ export const ExerciseExecutionScreen: React.FC<ExerciseExecutionScreenProps> = (
   // MediaPipe modules (lazy loading)
   const [landmarker, setLandmarker] = useState<any>(null);
   const { load: loadMediaPipe, isLoaded: mediaPipeLoaded } = useMediaPipeVision();
-  const { playSuccess, playWarning, announceRepetition } = useAudioFeedback();
 
   // Hook de execução
   const {
@@ -81,22 +79,6 @@ export const ExerciseExecutionScreen: React.FC<ExerciseExecutionScreenProps> = (
     exerciseType,
     onSessionComplete: onComplete,
   });
-
-  /**
-   * Efeitos de Audio
-   */
-  useEffect(() => {
-    if (repCount > 0) {
-      announceRepetition(repCount);
-      if (repCount % 5 === 0) playSuccess();
-    }
-  }, [repCount, announceRepetition, playSuccess]);
-
-  useEffect(() => {
-    if (state === SessionState.EXERCISING && analysisResult.postureIssues.length > 0) {
-      playWarning();
-    }
-  }, [analysisResult.postureIssues, state, playWarning]);
 
   /**
    * Inicializar MediaPipe Landmarker

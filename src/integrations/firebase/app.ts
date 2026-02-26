@@ -112,8 +112,6 @@ function getFirestoreEmulatorHost(): string | null {
  * Por padrão NÃO conecta em dev, a menos que explicitamente habilitado.
  */
 function shouldUseFunctionsEmulator(): boolean {
-  if (!import.meta.env.DEV) return false;
-
   return (
     import.meta.env.VITE_USE_FUNCTIONS_EMULATOR === 'true' ||
     Boolean(import.meta.env.VITE_FIREBASE_FUNCTIONS_EMULATOR_HOST)
@@ -233,7 +231,9 @@ function initializeDbInstance(): Firestore {
     // Configuração base do Firestore
     // Desativamos experimentalAutoDetectLongPolling para evitar o erro de asserção interna (ID: b815)
     // que ocorre em versões recentes do SDK (12.8.0)
+    // Forçamos Long Polling para maior compatibilidade com ad-blockers e firewalls
     const firestoreConfig: any = {
+      experimentalForceLongPolling: true,
       experimentalAutoDetectLongPolling: false
     };
 

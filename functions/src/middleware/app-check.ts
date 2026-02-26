@@ -31,10 +31,10 @@ export function verifyAppCheck(request: { app?: any; rawRequest?: any }): void {
 
   // Em produção, rejeitar requisições sem App Check (se não for emulador)
   if (isProduction && !request.app && process.env.FUNCTIONS_EMULATOR !== 'true') {
-    // Por enquanto, vamos apenas logar e permitir, para evitar quebrar o sistema do usuário
-    // assim que ele fizer o deploy. O usuário deve ativar o App Check no console.
-    console.warn('[App Check] Requisição sem token em produção. Ative o App Check no Console do Firebase.');
-    return;
+    throw new HttpsError(
+      'failed-precondition',
+      'Acesso bloqueado: Este app requer verificação do App Check para chamadas de API.'
+    );
   }
 
   if (!request.app) {

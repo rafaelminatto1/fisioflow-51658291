@@ -1,7 +1,6 @@
 import { 
   collection, 
   doc, 
-  setDoc, 
   getDoc, 
   serverTimestamp, 
   addDoc,
@@ -11,7 +10,7 @@ import {
   updateDoc
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { DataDeletionRequest, DeletionStatus } from '@/types/dataDeletion';
+import { DataDeletionRequest } from '@/types/dataDeletion';
 
 export class DataDeletionService {
   private static instance: DataDeletionService;

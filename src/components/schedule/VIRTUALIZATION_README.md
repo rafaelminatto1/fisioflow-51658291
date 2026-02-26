@@ -55,18 +55,16 @@ Renders only visible appointment cards in list views. Automatically enables virt
 
 ### CalendarView (src/components/schedule/CalendarView.tsx)
 - Delegates rendering to CalendarDayView, CalendarWeekView, CalendarMonthView
-- These child components currently use direct rendering (`.map()`)
-- **Virtualization is available but not integrated** due to:
-  - Default slot counts are below 50 threshold (28 slots for weekdays)
-  - Complex drag-and-drop interactions need careful integration
-  - Current performance is already optimized with memoization
+- **Integrated in CalendarDayView and CalendarWeekViewDndKit**
+- Virtualization activates when slot count exceeds 50 (configurable threshold)
+- Uses `VirtualizedCalendarGrid` for row-based virtualization
+- Correctly handles appointments spanning multiple rows via overscan and absolute positioning
 
-### When to Integrate
-
-Virtualization should be integrated into the view components when:
-1. Business hours are extended significantly (e.g., 24-hour operation = 48 slots)
-2. Slot duration is reduced (e.g., 15-minute slots = 56 slots for 14-hour day)
-3. Performance profiling shows rendering bottlenecks with current slot counts
+### When to Integrate (DONE)
+Virtualization has been integrated to ensure scalability when:
+1. Business hours are extended significantly
+2. Slot duration is reduced
+3. Performance needs to be maintained with large numbers of appointments
 
 ## Integration Guide
 

@@ -49,7 +49,6 @@ import { AgendaAutomationService } from '@/lib/services/AgendaAutomationService'
 import { NotionEvolutionPanel } from './v2-improved/NotionEvolutionPanel';
 import { NotionEvolutionPanel as NotionV3Panel } from './v3-notion/NotionEvolutionPanel';
 import { EvolutionVersionToggle } from './v2-improved/EvolutionVersionToggle';
-import { useHighContrast } from '@/contexts/HighContrastContext';
 
 interface SessionEvolutionContainerProps {
   appointmentId?: string;
@@ -796,6 +795,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
               therapistCrefito: selectedTherapistCrefito || '',
             }}
             patientId={patientId}
+            evolutionId={appointmentId}
             onAutoSave={(draft) =>
               handleAutoSaveDraft({
                 patientReport: draft.patientReport,

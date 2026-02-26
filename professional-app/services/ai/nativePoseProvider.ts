@@ -19,7 +19,7 @@ import {
 import { Platform } from 'react-native';
 
 // Tenta importar o módulo nativo se disponível
-let NativePoseModule: any = null;
+const NativePoseModule: any = null;
 try {
   // Exemplo de importação dinâmica segura
   // NativePoseModule = require('my-native-pose-library');

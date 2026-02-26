@@ -264,7 +264,7 @@ export const suggestOptimalSlotFlow = ai.defineFlow({
   const preferences = await ai.run('getPatientPreferences', () => getPatientPreferences(input));
 
   // 2. Filtrar slots baseado em preferências
-  let prompt = `Analise as preferências do paciente e sugira os melhores horários de agendamento.
+  const prompt = `Analise as preferências do paciente e sugira os melhores horários de agendamento.
 
 Paciente: ${preferences.patientName}
 Taxa de falta: ${preferences.noShowRate.toFixed(1)}%
@@ -342,7 +342,7 @@ export const predictNoShowFlow = ai.defineFlow({
   }
 
   // Usar AI para refinar predição
-  let prompt = `Analise o risco de não comparecimento para este agendamento:
+  const prompt = `Analise o risco de não comparecimento para este agendamento:
 
 Histórico do paciente:
 - Taxa de falta: ${history.stats.noShowRate.toFixed(1)}%

@@ -1,7 +1,7 @@
 import React from 'react';
 import { MotionCard } from '../MotionCard';
 import { cn } from '../../lib/utils';
-import { CheckCircle2, Clock } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 
 export interface AppointmentCardProps extends React.HTMLAttributes<HTMLDivElement> {
   patientName: string;

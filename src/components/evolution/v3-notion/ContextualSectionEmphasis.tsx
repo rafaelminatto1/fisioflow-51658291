@@ -10,7 +10,7 @@
 
 import React, { useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { AlertTriangle, CheckCircle2, Zap } from 'lucide-react';
+import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 export type EmphasisLevel = 'none' | 'low' | 'medium' | 'high' | 'critical';
 

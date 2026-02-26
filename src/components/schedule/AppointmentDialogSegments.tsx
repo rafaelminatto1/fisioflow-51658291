@@ -12,7 +12,6 @@ import {
     User,
     AlertTriangle,
     Check,
-    CreditCard,
     Zap,
     Repeat,
     Bell,
@@ -63,7 +62,11 @@ export const PatientSelectionSection = ({
             <PatientCombobox
                 patients={patients}
                 value={watch('patient_id')}
-                onValueChange={(value) => setValue('patient_id', value)}
+                onValueChange={(value) => setValue('patient_id', value, {
+                    shouldDirty: true,
+                    shouldTouch: true,
+                    shouldValidate: true
+                })}
                 onCreateNew={onCreateNew}
                 fallbackDisplayName={fallbackPatientName}
                 disabled={disabled || isLoading}

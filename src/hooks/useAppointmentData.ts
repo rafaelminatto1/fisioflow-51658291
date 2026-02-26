@@ -4,16 +4,11 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import {
 
-    PATIENT_SELECT,
-    devValidate as devValidatePatient,
-    type PatientDBStandard
-} from '@/lib/constants/patient-queries';
+
 import {
     APPOINTMENT_SELECT,
-    devValidateAppointment,
-    type AppointmentDBStandard
+    devValidateAppointment
 } from '@/lib/constants/appointment-queries';
 import { appointmentsApi, patientsApi } from '@/integrations/firebase/functions';
 import { fisioLogger } from '@/lib/errors/logger';

@@ -23,7 +23,6 @@ import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 import { create } from 'zustand';
 
 import { Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { registerPushToken, clearPushToken } from '@/lib/notificationsSystem';
 import { getOfflineManager } from '@/lib/offlineManager';

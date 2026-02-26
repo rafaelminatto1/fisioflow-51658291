@@ -1,7 +1,6 @@
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import { app } from './src/integrations/firebase/app.ts';
 import { appointmentsApi } from './src/integrations/firebase/functions.ts';
-import { AppointmentService } from './src/services/appointmentService.ts';
 
 async function testFetch() {
     console.log('1. Autenticando...');

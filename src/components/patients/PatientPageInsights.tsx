@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Lightbulb, Phone, AlertTriangle, DollarSign, Users, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react';
+import { Phone, AlertTriangle, DollarSign, Users, TrendingUp, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 

@@ -57,6 +57,18 @@ vi.mock('@/constants/legalVersions', () => ({
 }));
 
 describe('Property 4: Legal Acceptance Required for First Use', () => {
+  beforeEach(() => {
+    (collection as any).mockImplementation((_db: any, collectionPath: string) => ({
+      _query: {
+        path: {
+          segments: [collectionPath],
+        },
+      },
+    }));
+    (query as any).mockImplementation((collectionRef: any) => collectionRef);
+    (where as any).mockImplementation(() => ({}));
+  });
+
   /**
    * Arbitrary generator for user IDs
    * Generates random user IDs in the format: user_<timestamp>_<random>

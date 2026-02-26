@@ -385,6 +385,11 @@ export const CalendarWeekViewFinal = memo(({
                                         draggable={isDraggable}
                                         onDragStart={(e) => handleDragStart(e, apt)}
                                         onDragEnd={handleDragEnd}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setOpenPopoverId(apt.id);
+                                        }}
                                         className={cn(
                                             "m-1.5 rounded-lg p-3 border-l-4 transition-all cursor-pointer shadow-sm hover:shadow-md relative",
                                             "hover:scale-[1.02] hover:z-20",

@@ -14,6 +14,8 @@ export interface WikiPage {
   id: string;
   slug: string;                    // URL-friendly, único por organização
   title: string;
+  template_id?: string;            // Template usado para criar a página
+  triage_order?: number;           // Ordem dos cards no board de triagem
   content: string;                 // Markdown
   html_content?: string;           // Renderizado (cache para performance)
   parent_id?: string;              // Hierarquia: página pai
@@ -41,6 +43,7 @@ export interface WikiPageVersion {
   page_id: string;
   content: string;
   title: string;                   // Título naquela versão
+  template_id?: string;            // Template associado a esta versão
   html_content?: string;           // Estrutura serializada de blocos (quando disponível)
   organization_id?: string;
   created_by: string;
@@ -175,4 +178,20 @@ export interface WikiStats {
   most_viewed: WikiPage[];
   recent_edits: WikiPage[];
   categories_count: number;
+}
+
+export interface WikiTriageEvent {
+  id: string;
+  organization_id: string;
+  page_id: string;
+  page_title?: string;
+  template_id?: string;
+  from_status: 'backlog' | 'in-progress' | 'done';
+  to_status: 'backlog' | 'in-progress' | 'done';
+  previous_order?: number;
+  next_order?: number;
+  changed_by: string;
+  source: 'drag' | 'quick-action' | 'automation-checklist' | 'automation-blocked';
+  reason?: string;
+  created_at: Timestamp;
 }

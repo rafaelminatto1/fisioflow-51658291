@@ -15,7 +15,7 @@ import { useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AppointmentBase } from '@/types/appointment';
 import { PeriodQuery } from '@/utils/periodCalculations';
-import { useAppointmentsByPeriod, appointmentPeriodKeys } from './useAppointmentsByPeriod';
+import { useAppointmentsByPeriod } from './useAppointmentsByPeriod';
 import { useDebounce } from './use-debounce';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
