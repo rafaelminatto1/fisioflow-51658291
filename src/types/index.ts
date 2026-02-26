@@ -501,6 +501,7 @@ export * from './timetracking';
 
 // Wiki/Knowledge Base - Documentação colaborativa estilo Notion
 export * from './wiki';
+export * from './knowledge-base';
 
 // Automation - Sistema de automações visuais (monday.com/Make style)
 export * from './automation';

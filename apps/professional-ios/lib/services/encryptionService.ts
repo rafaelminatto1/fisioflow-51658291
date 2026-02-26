@@ -101,6 +101,10 @@ export class EncryptionService {
       return encryptedData;
     } catch (error) {
       console.error('[EncryptionService] Encryption failed:', error);
+      const message = error instanceof Error ? error.message : '';
+      if (message.includes('Encryption key not found')) {
+        throw new Error('Encryption key not found');
+      }
       throw new Error('Failed to encrypt data');
     }
   }
@@ -144,6 +148,13 @@ export class EncryptionService {
       return decryptedText;
     } catch (error) {
       console.error('[EncryptionService] Decryption failed:', error);
+      const message = error instanceof Error ? error.message : '';
+      if (message.includes('Encryption key not found')) {
+        throw new Error('Encryption key not found');
+      }
+      if (message.includes('Unsupported encryption algorithm')) {
+        throw new Error(message);
+      }
       throw new Error('Failed to decrypt data. Data may be corrupted or tampered with.');
     }
   }
@@ -189,6 +200,16 @@ export class EncryptionService {
       return encryptedData;
     } catch (error) {
       console.error('[EncryptionService] File encryption failed:', error);
+      const message = error instanceof Error ? error.message : '';
+      if (message.includes('Encryption key not found')) {
+        throw new Error('Encryption key not found');
+      }
+      if (message.includes('File not found')) {
+        throw new Error('File not found');
+      }
+      if (message.includes('File size exceeds 50MB limit')) {
+        throw new Error('File size exceeds 50MB limit');
+      }
       throw new Error('Failed to encrypt file');
     }
   }
@@ -218,6 +239,13 @@ export class EncryptionService {
       return tempFileUri;
     } catch (error) {
       console.error('[EncryptionService] File decryption failed:', error);
+      const message = error instanceof Error ? error.message : '';
+      if (message.includes('Encryption key not found')) {
+        throw new Error('Encryption key not found');
+      }
+      if (message.includes('Unsupported encryption algorithm')) {
+        throw new Error(message);
+      }
       throw new Error('Failed to decrypt file');
     }
   }
@@ -319,11 +347,15 @@ export class EncryptionService {
       // Check if key needs rotation
       const metadataStr = await SecureStore.getItemAsync(`${keyName}_metadata`);
       if (metadataStr) {
-        const metadata: EncryptionKey = JSON.parse(metadataStr);
-        if (metadata.expiresAt && new Date(metadata.expiresAt) < new Date()) {
-          console.warn('[EncryptionService] Key expired, rotation needed');
-          // Key expired but still return it for decryption of old data
-          // Rotation should be triggered separately
+        try {
+          const metadata: EncryptionKey = JSON.parse(metadataStr);
+          if (metadata.expiresAt && new Date(metadata.expiresAt) < new Date()) {
+            console.warn('[EncryptionService] Key expired, rotation needed');
+            // Key expired but still return it for decryption of old data
+            // Rotation should be triggered separately
+          }
+        } catch (metadataError) {
+          console.warn('[EncryptionService] Failed to parse key metadata:', metadataError);
         }
       }
 

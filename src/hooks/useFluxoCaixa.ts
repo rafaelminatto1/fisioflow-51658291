@@ -6,6 +6,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { collection, getDocs, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { useOrganizations } from '@/hooks/useOrganizations';
 
 export interface MovimentacaoCaixa {
   id: string;
@@ -45,11 +46,16 @@ const convertDocToFluxoCaixaResumo = (doc: { id: string; data: () => Record<stri
 };
 
 export function useMovimentacoesCaixa(dataInicio?: string, dataFim?: string) {
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
+
   return useQuery({
-    queryKey: ['movimentacoes-caixa', dataInicio, dataFim],
+    queryKey: ['movimentacoes-caixa', organizationId, dataInicio, dataFim],
     queryFn: async () => {
+      if (!organizationId) return [];
       const q = firestoreQuery(
         collection(db, 'movimentacoes_caixa'),
+        where('organization_id', '==', organizationId),
         orderBy('data', 'desc')
       );
 
@@ -66,15 +72,21 @@ export function useMovimentacoesCaixa(dataInicio?: string, dataFim?: string) {
 
       return data;
     },
+    enabled: !!organizationId,
   });
 }
 
 export function useFluxoCaixaResumo() {
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
+
   return useQuery({
-    queryKey: ['fluxo-caixa-resumo'],
+    queryKey: ['fluxo-caixa-resumo', organizationId],
     queryFn: async () => {
+      if (!organizationId) return [];
       const q = firestoreQuery(
         collection(db, 'fluxo_caixa_resumo'),
+        where('organization_id', '==', organizationId),
         orderBy('mes', 'desc'),
         limit(12)
       );
@@ -82,15 +94,21 @@ export function useFluxoCaixaResumo() {
       const snapshot = await getDocs(q);
       return snapshot.docs.map(convertDocToFluxoCaixaResumo);
     },
+    enabled: !!organizationId,
   });
 }
 
 export function useCaixaDiario(data: string) {
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
+
   return useQuery({
-    queryKey: ['caixa-diario', data],
+    queryKey: ['caixa-diario', organizationId, data],
     queryFn: async () => {
+      if (!organizationId) return null;
       const q = firestoreQuery(
         collection(db, 'movimentacoes_caixa'),
+        where('organization_id', '==', organizationId),
         where('data', '==', data),
         orderBy('created_at', 'asc')
       );
@@ -116,5 +134,6 @@ export function useCaixaDiario(data: string) {
         porFormaPagamento,
       };
     },
+    enabled: !!organizationId,
   });
 }

@@ -72,6 +72,8 @@ export const PatientDeleteDialog: React.FC<PatientDeleteDialogProps> = ({
             onClick={handleDelete}
             disabled={deleteMutation.isPending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            data-testid={`patient-delete-confirm-${patientId}`}
+            data-patient-id={patientId}
           >
             {deleteMutation.isPending ? (
               <>

@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
+import { PatientCombobox } from '@/components/ui/patient-combobox';
 import {
   FileSearch,
   Camera,
@@ -38,15 +39,18 @@ import {
   Brain,
   Download,
   RefreshCw,
+  Trash2,
 } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
 import { functions, storage, db } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { usePatientsPostgres } from '@/hooks/useDataConnect';
 import ReactMarkdown from 'react-markdown';
 import { analyzeWithGeminiVision } from '@/services/ai/geminiVisionService';
+import type { Patient } from '@/types';
 
 // Tipos para dados extraídos
 interface ExtractedData {
@@ -99,14 +103,6 @@ interface DocumentTag {
   confidence: number;
 }
 
-interface Patient {
-  id: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  [key: string]: unknown;
-}
-
 interface MedicalRecord {
   id: string;
   patientId: string;
@@ -133,9 +129,11 @@ export default function DocumentScannerPage() {
   const [translateLanguage, setTranslateLanguage] = useState('pt');
   const [previousExams, setPreviousExams] = useState<MedicalRecord[]>([]);
   const { toast } = useToast();
+  const { profile } = useUserProfile();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: patients } = usePatientsPostgres('default');
+  const organizationId = profile?.organization_id || 'default';
+  const { data: patients } = usePatientsPostgres(organizationId);
 
   // Mapeamento de tipos de documentos para exibição
   const documentTypeLabels: Record<string, { label: string; icon: string; color: string }> = {
@@ -182,6 +180,10 @@ export default function DocumentScannerPage() {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
+  };
+
+  const openFilePicker = () => {
+    fileInputRef.current?.click();
   };
 
   // Buscar exames anteriores do paciente para comparação
@@ -258,8 +260,20 @@ export default function DocumentScannerPage() {
     try {
       // 1. Upload para Firebase Storage
       const storageRef = ref(storage, `medical_reports/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, file);
-      const fileUrl = await getDownloadURL(storageRef);
+      let fileUrl = '';
+      try {
+        await uploadBytes(storageRef, file);
+        fileUrl = await getDownloadURL(storageRef);
+      } catch (uploadError) {
+        console.error('Falha no upload para o Storage, usando fallback local', uploadError);
+        toast({
+          title: 'Sem acesso ao Storage',
+          description: 'Processando localmente (permissão necessária para upload).',
+          variant: 'default',
+        });
+        await scanLocally(file);
+        return;
+      }
 
       toast({ title: 'Upload Completo', description: 'Enviando para análise...' });
 
@@ -559,12 +573,23 @@ export default function DocumentScannerPage() {
                   {/* Upload */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium">1. Selecione o Arquivo</label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition cursor-pointer relative">
+                    <div
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition cursor-pointer relative"
+                      role="button"
+                      tabIndex={0}
+                      onClick={openFilePicker}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          openFilePicker();
+                        }
+                      }}
+                    >
                       <Input
                         ref={fileInputRef}
                         type="file"
                         accept="application/pdf,image/*"
-                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        className="hidden"
                         onChange={handleFileChange}
                       />
                       <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
@@ -601,18 +626,11 @@ export default function DocumentScannerPage() {
                         <label className="text-sm font-medium flex items-center gap-2">
                           <User className="w-4 h-4" /> Paciente (Opcional)
                         </label>
-                        <Select onValueChange={setSelectedPatient} value={selectedPatient}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione o paciente..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {(patients as Patient[] | undefined)?.map((p) => (
-                              <SelectItem key={p.id} value={p.id}>
-                                {p.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <PatientCombobox
+                          patients={(patients as Patient[] | undefined) || []}
+                          value={selectedPatient}
+                          onValueChange={setSelectedPatient}
+                        />
                         <p className="text-xs text-gray-500">
                           Selecionar um paciente permite comparar com exames anteriores
                         </p>
@@ -892,8 +910,8 @@ export default function DocumentScannerPage() {
                       {summary.impression && (
                         <div>
                           <h4 className="font-semibold mb-2">Impressão do Exame</h4>
-                          <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                            <ReactMarkdown className="text-sm prose prose-blue max-w-none">
+                          <div className="p-3 bg-blue-50 rounded-lg border border-blue-200 text-sm prose prose-blue max-w-none">
+                            <ReactMarkdown>
                               {summary.impression}
                             </ReactMarkdown>
                           </div>

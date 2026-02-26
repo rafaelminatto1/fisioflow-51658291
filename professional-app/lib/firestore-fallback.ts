@@ -3,7 +3,7 @@
  * Direct Firestore access when Cloud Functions are not available
  */
 
-import { collection, query, where, getDocs, limit as firestoreLimit, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit as firestoreLimit } from 'firebase/firestore';
 import { db } from './firebase';
 import type { ApiPatient, ApiAppointment } from './api';
 

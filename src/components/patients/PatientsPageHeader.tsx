@@ -1,4 +1,3 @@
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
 
@@ -12,21 +11,15 @@ import {
   Plus,
   Search,
   Users,
-  Filter,
   Download,
   Activity,
   AlertTriangle,
-  UserCheck,
-  UserPlus,
-  UserMinus,
   Clock,
-  DollarSign,
   Sparkles,
   CheckCircle2,
 } from 'lucide-react';
 import type { PatientClassification } from '@/hooks/usePatientStats';
 import { cn } from '@/lib/utils';
-import { PatientStatsCard } from './PatientStatsCard';
 
 export interface PatientsPageHeaderStats {
   totalCount: number;
