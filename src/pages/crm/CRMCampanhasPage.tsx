@@ -21,9 +21,10 @@ import {
   XCircle, AlertCircle, TrendingUp, Filter, FileText
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { db, collection, query as firestoreQuery, orderBy, getDocs, addDoc, updateDoc, doc, deleteDoc, QueryDocumentSnapshot } from '@/integrations/firebase/app';
+import { db, collection, query as firestoreQuery, orderBy, getDocs, addDoc, updateDoc, doc, deleteDoc, QueryDocumentSnapshot, where } from '@/integrations/firebase/app';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useOrganizations } from '@/hooks/useOrganizations';
 
 interface EmailCampaign {
   id: string;
@@ -53,6 +54,8 @@ interface EmailTemplate {
 
 export default function CRMCampanhasPage() {
   const queryClient = useQueryClient();
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'campanhas' | 'templates' | 'relatorio'>('campanhas');
@@ -73,45 +76,64 @@ export default function CRMCampanhasPage() {
 
   // Buscar campanhas
   const { data: campanhas = [], isLoading } = useQuery({
-    queryKey: ['email-campanhas'],
+    queryKey: ['email-campanhas', organizationId],
     queryFn: async () => {
-      const q = firestoreQuery(collection(db, 'email_campanhas'), orderBy('created_at', 'desc'));
+      if (!organizationId) return [];
+      const q = firestoreQuery(
+        collection(db, 'email_campanhas'),
+        where('organization_id', '==', organizationId),
+        orderBy('created_at', 'desc')
+      );
       const snapshot = await getDocs(q);
       return snapshot.docs.map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() })) as EmailCampaign[];
     },
+    enabled: !!organizationId,
   });
 
   // Buscar templates
   const { data: templates = [] } = useQuery({
-    queryKey: ['email-templates'],
+    queryKey: ['email-templates', organizationId],
     queryFn: async () => {
-      const q = firestoreQuery(collection(db, 'email_templates'), orderBy('name'));
+      if (!organizationId) return [];
+      const q = firestoreQuery(
+        collection(db, 'email_templates'),
+        where('organization_id', '==', organizationId),
+        orderBy('name')
+      );
       const snapshot = await getDocs(q);
       return snapshot.docs.map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() })) as EmailTemplate[];
     },
+    enabled: !!organizationId,
   });
 
   // Buscar leads para segmentação
   const { data: leads = [] } = useQuery({
-    queryKey: ['leads-segmentacao'],
+    queryKey: ['leads-segmentacao', organizationId],
     queryFn: async () => {
-      const snapshot = await getDocs(collection(db, 'leads'));
+      if (!organizationId) return [];
+      const q = firestoreQuery(
+        collection(db, 'leads'),
+        where('organization_id', '==', organizationId)
+      );
+      const snapshot = await getDocs(q);
       return snapshot.docs.map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() }));
     },
+    enabled: !!organizationId,
   });
 
   // Criar campanha
   const createCampaign = useMutation({
     mutationFn: async (data: typeof formData) => {
+      if (!organizationId) throw new Error('Organização não identificada');
       // Calcular destinatários baseado no segmento
       let recipientCount = leads.length;
       if (data.target_segment === 'novos') {
         recipientCount = leads.filter(l => {
-          const daysSinceCreation = (new Date().getTime() - new Date(l.created_at).getTime()) / (1000 * 60 * 60 * 24);
+          const daysSinceCreation = (new Date().getTime() - new Date(l.created_at as string).getTime()) / (1000 * 60 * 60 * 24);
           return daysSinceCreation <= 7;
         }).length;
       } else if (data.target_segment === 'prospecao') {
-        recipientCount = leads.filter(l => l.stage === 'prospecacao').length;
+        recipientCount = (leads as any[]).filter(l => l.stage === 'prospecacao').length;
       }
 
       const scheduledAt = data.schedule_type === 'agendado' && data.scheduled_date && data.scheduled_time
@@ -119,6 +141,7 @@ export default function CRMCampanhasPage() {
         : undefined;
 
       const campaignData = {
+        organization_id: organizationId,
         name: data.name,
         subject: data.subject,
         preview_text: data.preview_text,
@@ -134,7 +157,7 @@ export default function CRMCampanhasPage() {
       return { id: docRef.id, ...campaignData };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['email-campanhas'] });
+      queryClient.invalidateQueries({ queryKey: ['email-campanhas', organizationId] });
       toast.success('Campanha criada com sucesso!');
       setIsDialogOpen(false);
       setFormData({
@@ -169,7 +192,7 @@ export default function CRMCampanhasPage() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['email-campanhas'] });
+      queryClient.invalidateQueries({ queryKey: ['email-campanhas', organizationId] });
       toast.success('Campanha enviada com sucesso!');
     },
     onError: () => toast.error('Erro ao enviar campanha'),
@@ -178,7 +201,9 @@ export default function CRMCampanhasPage() {
   // Criar template
   const createTemplate = useMutation({
     mutationFn: async (data: typeof formData) => {
+      if (!organizationId) throw new Error('Organização não identificada');
       const templateData = {
+        organization_id: organizationId,
         name: data.name,
         subject: data.subject,
         content: data.content,
@@ -190,7 +215,7 @@ export default function CRMCampanhasPage() {
       return { id: docRef.id, ...templateData };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['email-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['email-templates', organizationId] });
       toast.success('Template salvo com sucesso!');
       setIsTemplateDialogOpen(false);
     },
@@ -203,7 +228,7 @@ export default function CRMCampanhasPage() {
       await deleteDoc(doc(db, 'email_campanhas', id));
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['email-campanhas'] });
+      queryClient.invalidateQueries({ queryKey: ['email-campanhas', organizationId] });
       toast.success('Campanha excluída!');
     },
     onError: () => toast.error('Erro ao excluir campanha'),

@@ -238,10 +238,9 @@ export const CalendarWeekViewRefactored = memo(({
                                     zIndex: 10
                                 }}
                                 onClick={(e) => {
+                                    e.preventDefault();
                                     e.stopPropagation();
-                                    if (onAppointmentClick) {
-                                        onAppointmentClick(apt);
-                                    }
+                                    setOpenPopoverId(apt.id);
                                 }}
                             >
                                 <AppointmentQuickView

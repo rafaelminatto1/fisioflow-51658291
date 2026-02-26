@@ -7,14 +7,11 @@ import {
   query, 
   where, 
   orderBy, 
-  limit, 
   serverTimestamp, 
-  Timestamp,
-  onSnapshot,
-  Unsubscribe
+  Timestamp
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Consent, ConsentHistory, ConsentType, ConsentStatus, ConsentCategory } from '@/types/consent';
+import { Consent, ConsentHistory, ConsentType, ConsentCategory } from '@/types/consent';
 import { CONSENT_TYPES } from '@/constants/consentTypes';
 
 export class ConsentManager {

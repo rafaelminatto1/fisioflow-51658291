@@ -39,20 +39,22 @@ service firebase.storage {
 
     // Verificar tamanho do arquivo (max 10MB)
     function isValidFileSize() {
-      return request.resource.size < 10485760;
+      return request.resource != null && request.resource.size < 10485760;
     }
 
     // Verificar tamanho do arquivo para PHI (max 50MB - Apple App Store compliance)
     function isValidPHIFileSize() {
-      return request.resource.size < 52428800; // 50MB in bytes
+      return request.resource != null && request.resource.size < 52428800; // 50MB in bytes
     }
 
     // Verificar tipo de conteúdo permitido
     function isAllowedContentType() {
-      return request.resource.contentType.matches('image/.*') ||
+      return request.resource != null &&
+             request.resource.contentType != null &&
+             (request.resource.contentType.matches('image/.*') ||
              request.resource.contentType == 'application/pdf' ||
              request.resource.contentType == 'video/mp4' ||
-             request.resource.contentType == 'video/quicktime';
+             request.resource.contentType == 'video/quicktime');
     }
 
     // ============================================================================================
@@ -84,6 +86,22 @@ service firebase.storage {
       allow write: if isAuthenticated() &&
                       firestore.exists(/databases/(default)/documents/patients/$(patientId)) &&
                       firestore.get(/databases/(default)/documents/patients/$(patientId)).data.userId == request.auth.uid &&
+                      isValidPHIFileSize() &&
+                      isAllowedContentType();
+    }
+
+    // ============================================================================================
+    // SOAP NOTES (PHI) - Attachments
+    // ============================================================================================
+
+    match /soap-notes/{soapId}/attachments/{filename} {
+      allow read: if isAuthenticated() &&
+                     firestore.exists(/databases/(default)/documents/soap_notes/$(soapId)) &&
+                     firestore.get(/databases/(default)/documents/soap_notes/$(soapId)).data.userId == request.auth.uid;
+
+      allow write: if isAuthenticated() &&
+                      firestore.exists(/databases/(default)/documents/soap_notes/$(soapId)) &&
+                      firestore.get(/databases/(default)/documents/soap_notes/$(soapId)).data.userId == request.auth.uid &&
                       isValidPHIFileSize() &&
                       isAllowedContentType();
     }
@@ -206,6 +224,26 @@ service firebase.storage {
 
       // Escrita: apenas admin
       allow write: if isAdmin();
+    }
+
+    // ============================================================================================
+    // MEDICAL REPORTS (TEMPORÁRIOS E IA)
+    // ============================================================================================
+
+    match /medical_reports/{filename} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() &&
+                     isValidPHIFileSize() &&
+                     isAllowedContentType();
+    }
+
+    // ============================================================================================
+    // KNOWLEDGE BASE
+    // ============================================================================================
+
+    match /knowledge-base/{orgId}/{filename} {
+      allow read: if isAuthenticated();
+      allow write: if isProfessional() || isAdmin();
     }
 
     // ============================================================================================

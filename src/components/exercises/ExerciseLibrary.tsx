@@ -39,7 +39,7 @@ import { MergeExercisesModal } from './MergeExercisesModal';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CreateTemplateFromSelectionModal } from './CreateTemplateFromSelectionModal';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
-import { getBestImageUrl, getResponsiveImageSizes } from '@/lib/imageUtils';
+import { getBestImageUrl } from '@/lib/imageUtils';
 import * as ReactWindow from 'react-window';
 const { FixedSizeGrid: Grid, FixedSizeList } = ReactWindow;
 import type { ListChildComponentProps, GridChildComponentProps } from 'react-window';

@@ -56,31 +56,6 @@ export const migrateClinicalSchema = onCall({ cors: CORS_ORIGINS }, async (reque
     await client.query(`CREATE INDEX IF NOT EXISTS idx_patient_goals_patient ON patient_goals(patient_id);`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_patient_pathologies_patient ON patient_pathologies(patient_id);`);
 
-    // 3. BI Views for Looker Studio
-    await client.query(`
-      CREATE OR REPLACE VIEW view_bi_revenue AS
-      SELECT 
-        date_trunc('day', created_at) as day,
-        tipo,
-        status,
-        SUM(valor) as total_amount,
-        COUNT(*) as transaction_count
-      FROM transacoes
-      GROUP BY 1, 2, 3;
-    `);
-
-    await client.query(`
-      CREATE OR REPLACE VIEW view_bi_therapist_productivity AS
-      SELECT 
-        p.full_name as therapist_name,
-        date_trunc('month', a.date) as month,
-        a.status,
-        COUNT(*) as appointment_count
-      FROM appointments a
-      JOIN profiles p ON a.therapist_id = p.user_id
-      GROUP BY 1, 2, 3;
-    `);
-
     await client.query('COMMIT');
     logger.info('✅ Clinical migration completed successfully!');
 

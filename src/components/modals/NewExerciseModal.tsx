@@ -8,9 +8,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Sparkles, Loader2 } from 'lucide-react';
+import { Sparkles, Loader2, Upload, X, Film, Image as ImageIcon } from 'lucide-react';
 import { api } from '@/integrations/firebase/functions';
+import { auth, storage } from '@/integrations/firebase/app';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { toast } from '@/hooks/use-toast';
+import { Progress } from '@/components/ui/progress';
 import type { Exercise } from '@/hooks/useExercises';
 
 const exerciseSchema = z.object({
@@ -18,12 +21,12 @@ const exerciseSchema = z.object({
   description: z.string().optional(),
   category: z.string().optional(),
   difficulty: z.enum(['Iniciante', 'Intermediário', 'Avançado']).optional(),
-  video_url: z.string().url('URL inválida').optional().or(z.literal('')),
-  image_url: z.string().url('URL inválida').optional().or(z.literal('')),
+  video_url: z.string().optional().or(z.literal('')),
+  image_url: z.string().optional().or(z.literal('')),
   instructions: z.string().optional(),
-  sets: z.number().int().positive().optional(),
-  repetitions: z.number().int().positive().optional(),
-  duration: z.number().int().positive().optional(),
+  sets: z.number().int().positive().optional().nullable(),
+  repetitions: z.number().int().positive().optional().nullable(),
+  duration: z.number().int().positive().optional().nullable(),
   indicated_pathologies: z.array(z.string()).optional(),
   contraindicated_pathologies: z.array(z.string()).optional(),
   body_parts: z.array(z.string()).optional(),
@@ -40,8 +43,18 @@ interface ExerciseModalProps {
   isLoading?: boolean;
 }
 
-export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoading }: ExerciseModalProps) {
+export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoading: isSaving }: ExerciseModalProps) {
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
+  const [isUploading, setIsUploading] = React.useState(false);
+  const [uploadProgress, setUploadProgress] = React.useState(0);
+  const [imageFile, setImageFile] = React.useState<File | null>(null);
+  const [videoFile, setVideoFile] = React.useState<File | null>(null);
+  const [imagePreview, setImagePreview] = React.useState<string | null>(null);
+  const [videoPreview, setVideoPreview] = React.useState<string | null>(null);
+
+  const imageInputRef = React.useRef<HTMLInputElement>(null);
+  const videoInputRef = React.useRef<HTMLInputElement>(null);
+
   const form = useForm<ExerciseFormData>({
     resolver: zodResolver(exerciseSchema),
     defaultValues: {
@@ -63,6 +76,14 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
   });
 
   useEffect(() => {
+    // Clear files and previews when switching exercises or opening/closing
+    setImageFile(null);
+    setVideoFile(null);
+    setImagePreview(null);
+    setVideoPreview(null);
+    setUploadProgress(0);
+    setIsUploading(false);
+
     if (exercise) {
       form.reset({
         name: exercise.name || '',
@@ -139,9 +160,77 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
     }
   };
 
-  const handleSubmit = (data: ExerciseFormData) => {
-    onSubmit(data as Omit<Exercise, 'id' | 'created_at' | 'updated_at'>);
-    onOpenChange(false);
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video') => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (type === 'image') {
+      if (!file.type.startsWith('image/')) {
+        toast({ title: 'Erro', description: 'Por favor selecione uma imagem', variant: 'destructive' });
+        return;
+      }
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    } else {
+      if (!file.type.startsWith('video/')) {
+        toast({ title: 'Erro', description: 'Por favor selecione um vídeo', variant: 'destructive' });
+        return;
+      }
+      setVideoFile(file);
+      setVideoPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const uploadFile = async (file: File, path: string): Promise<string> => {
+    const user = auth.currentUser;
+    if (!user) throw new Error('Usuário não autenticado');
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const fullPath = `${path}/${user.uid}/${fileName}`;
+    const storageRef = ref(storage, fullPath);
+
+    await uploadBytes(storageRef, file);
+    return getDownloadURL(storageRef);
+  };
+
+  const handleSubmit = async (data: ExerciseFormData) => {
+    setIsUploading(true);
+    setUploadProgress(10);
+    
+    try {
+      let finalImageUrl = data.image_url;
+      let finalVideoUrl = data.video_url;
+
+      if (imageFile) {
+        setUploadProgress(20);
+        finalImageUrl = await uploadFile(imageFile, 'exercise-images');
+      }
+
+      if (videoFile) {
+        setUploadProgress(imageFile ? 50 : 30);
+        finalVideoUrl = await uploadFile(videoFile, 'exercise-videos');
+      }
+
+      setUploadProgress(90);
+      onSubmit({
+        ...data,
+        image_url: finalImageUrl,
+        video_url: finalVideoUrl,
+      } as Omit<Exercise, 'id' | 'created_at' | 'updated_at'>);
+      
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Erro ao salvar exercício:', error);
+      toast({
+        title: 'Erro ao salvar',
+        description: 'Ocorreu um erro ao fazer upload dos arquivos. Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
   };
 
   return (
@@ -298,10 +387,65 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
                 name="video_url"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>URL do Vídeo</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="https://..." />
-                    </FormControl>
+                    <FormLabel>Vídeo</FormLabel>
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <FormControl>
+                          <Input {...field} placeholder="URL do Vídeo (Youtube, Vimeo...)" className="flex-1" />
+                        </FormControl>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => videoInputRef.current?.click()}
+                          title="Fazer upload de vídeo"
+                        >
+                          <Upload className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      <input
+                        type="file"
+                        ref={videoInputRef}
+                        className="hidden"
+                        accept="video/*"
+                        onChange={(e) => handleFileChange(e, 'video')}
+                      />
+
+                      {videoPreview && (
+                        <div className="relative aspect-video rounded-lg overflow-hidden bg-black mt-2">
+                          <video src={videoPreview} className="w-full h-full object-contain" controls />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-2 right-2 h-8 w-8"
+                            onClick={() => {
+                              setVideoFile(null);
+                              setVideoPreview(null);
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+
+                      {videoFile && !videoPreview && (
+                        <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                          <Film className="h-4 w-4" />
+                          <span className="text-sm truncate">{videoFile.name}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 ml-auto"
+                            onClick={() => setVideoFile(null)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -312,21 +456,74 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
                 name="image_url"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>URL da Imagem</FormLabel>
-                    <div className="flex gap-2">
-                      <FormControl>
-                        <Input {...field} placeholder="https://..." className="flex-1" />
-                      </FormControl>
-                      <Button 
-                        type="button" 
-                        variant="secondary" 
-                        size="icon" 
-                        onClick={handleAnalyzeImage}
-                        disabled={isAnalyzing || !field.value}
-                        title="Analisar com IA"
-                      >
-                        {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                      </Button>
+                    <FormLabel>Imagem</FormLabel>
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <FormControl>
+                          <Input {...field} placeholder="URL da Imagem" className="flex-1" />
+                        </FormControl>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          onClick={() => imageInputRef.current?.click()}
+                          title="Fazer upload de imagem"
+                        >
+                          <Upload className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          type="button" 
+                          variant="secondary" 
+                          size="icon" 
+                          onClick={handleAnalyzeImage}
+                          disabled={isAnalyzing || !field.value}
+                          title="Analisar com IA"
+                        >
+                          {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                        </Button>
+                      </div>
+
+                      <input
+                        type="file"
+                        ref={imageInputRef}
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) => handleFileChange(e, 'image')}
+                      />
+
+                      {imagePreview && (
+                        <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted mt-2">
+                          <img src={imagePreview} className="w-full h-full object-contain" alt="Preview" />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            className="absolute top-2 right-2 h-8 w-8"
+                            onClick={() => {
+                              setImageFile(null);
+                              setImagePreview(null);
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+
+                      {imageFile && !imagePreview && (
+                        <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                          <ImageIcon className="h-4 w-4" />
+                          <span className="text-sm truncate">{imageFile.name}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 ml-auto"
+                            onClick={() => setImageFile(null)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                     <FormMessage />
                   </FormItem>
@@ -419,12 +616,23 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
             </form>
           </Form>
         </div>
+        
+        {isUploading && (
+          <div className="px-4 sm:px-6 py-2 border-t">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-medium text-muted-foreground">Fazendo upload...</span>
+              <span className="text-xs font-medium text-muted-foreground">{uploadProgress}%</span>
+            </div>
+            <Progress value={uploadProgress} className="h-1" />
+          </div>
+        )}
+
         <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 p-4 sm:p-6 pt-4 border-t mt-auto bg-background">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto" disabled={isUploading || isSaving}>
             Cancelar
           </Button>
-          <Button type="submit" form="exercise-form" disabled={isLoading} className="w-full sm:w-auto">
-            {isLoading ? 'Salvando...' : exercise ? 'Atualizar' : 'Criar'}
+          <Button type="submit" form="exercise-form" disabled={isSaving || isUploading} className="w-full sm:w-auto">
+            {isUploading ? 'Fazendo Upload...' : isSaving ? 'Salvando...' : exercise ? 'Atualizar' : 'Criar'}
           </Button>
         </div>
       </DialogContent>

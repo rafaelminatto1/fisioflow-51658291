@@ -1,12 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, Video, Loader2, PlayCircle, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getFirebaseApp } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
-import { Progress } from '@/components/ui/progress';
 import { MotionCard } from '@fisioflow/ui';
 
 interface AnalysisResult {

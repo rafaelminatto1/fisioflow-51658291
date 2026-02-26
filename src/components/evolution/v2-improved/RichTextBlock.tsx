@@ -5,7 +5,6 @@
  * but renders RichTextEditor (Tiptap) instead of MagicTextarea.
  */
 import React, { useState } from 'react';
-import { CheckCircle2, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { RichTextEditor } from '@/components/ui/RichTextEditor';
 

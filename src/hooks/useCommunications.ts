@@ -4,64 +4,25 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, orderBy, limit, db } from '@/integrations/firebase/app';
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, orderBy, limit, db, where } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrganizations } from '@/hooks/useOrganizations';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
-type CommunicationType = 'email' | 'whatsapp' | 'sms' | 'push';
-
-interface PatientBasicInfo {
-  id: string;
-  full_name: string;
-  email: string | null;
-  phone: string | null;
-  [key: string]: unknown;
-}
-type CommunicationStatus = 'pendente' | 'enviado' | 'entregue' | 'lido' | 'falha';
-
-export interface Communication {
-  id: string;
-  type: CommunicationType;
-  recipient: string;
-  patient_id: string | null;
-  appointment_id: string | null;
-  subject: string | null;
-  body: string;
-  status: CommunicationStatus;
-  sent_at: string | null;
-  delivered_at: string | null;
-  read_at: string | null;
-  error_message: string | null;
-  created_at: string;
-  organization_id: string;
-  patient?: {
-    id: string;
-    full_name: string;
-    email: string | null;
-    phone: string | null;
-  } | null;
-}
-
-// Helper to convert Firestore doc to Communication
-const _convertDocToCommunication = (
-  doc: { id: string; data: () => Record<string, unknown> },
-  patientData?: { id: string; full_name: string; email: string | null; phone: string | null } | null
-): Communication => {
-  const data = normalizeFirestoreData(doc.data());
-  return {
-    id: doc.id,
-    ...data,
-    patient: patientData,
-  } as Communication;
-};
+// ... (types)
 
 export function useCommunications(filters?: { channel?: string; status?: string }) {
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
+
   return useQuery({
-    queryKey: ['communications', filters],
+    queryKey: ['communications', organizationId, filters],
     queryFn: async () => {
+      if (!organizationId) return [];
       const baseQuery = firestoreQuery(
         collection(db, 'communication_logs'),
+        where('organization_id', '==', organizationId),
         orderBy('created_at', 'desc'),
         limit(100)
       );
@@ -89,9 +50,12 @@ export function useCommunications(filters?: { channel?: string; status?: string 
       for (const patientId of patientIds) {
         const patientDoc = await getDoc(doc(db, 'patients', patientId));
         if (patientDoc.exists()) {
+          const p = patientDoc.data();
           patientMap.set(patientId, {
             id: patientDoc.id,
-            ...patientDoc.data(),
+            full_name: (p.full_name || p.name) as string,
+            email: p.email,
+            phone: p.phone,
           });
         }
       }
@@ -102,14 +66,23 @@ export function useCommunications(filters?: { channel?: string; status?: string 
         patient: c.patient_id ? patientMap.get(c.patient_id) || null : null,
       }));
     },
+    enabled: !!organizationId,
   });
 }
 
 export function useCommunicationStats() {
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
+
   return useQuery({
-    queryKey: ['communication-stats'],
+    queryKey: ['communication-stats', organizationId],
     queryFn: async () => {
-      const snapshot = await getDocs(collection(db, 'communication_logs'));
+      if (!organizationId) return null;
+      const q = firestoreQuery(
+        collection(db, 'communication_logs'),
+        where('organization_id', '==', organizationId)
+      );
+      const snapshot = await getDocs(q);
       const data = snapshot.docs.map(doc => normalizeFirestoreData(doc.data())) as Array<{
         status?: CommunicationStatus;
         type?: CommunicationType;
@@ -131,6 +104,7 @@ export function useCommunicationStats() {
 
       return stats;
     },
+    enabled: !!organizationId,
   });
 }
 
@@ -143,20 +117,13 @@ interface SendCommunicationData {
 }
 
 export function useSendCommunication() {
-  const { user } = useAuth();
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: SendCommunicationData) => {
-      // Get organization_id from profile in Firestore
-      if (!user) throw new Error('Usuário não autenticado');
-
-      const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
-      const profileData = profileDoc.exists() ? profileDoc.data() : null;
-
-      if (!profileData?.organization_id) {
-        throw new Error('Organização não encontrada');
-      }
+      if (!organizationId) throw new Error('Organização não encontrada');
 
       const communicationData = {
         type: data.type,
@@ -165,7 +132,7 @@ export function useSendCommunication() {
         subject: data.subject || null,
         body: data.body,
         status: 'pendente' as CommunicationStatus,
-        organization_id: profileData.organization_id,
+        organization_id: organizationId,
         created_at: new Date().toISOString(),
         sent_at: null,
         delivered_at: null,
@@ -180,8 +147,8 @@ export function useSendCommunication() {
       return { id: docRef.id, ...docSnap.data() };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['communications'] });
-      queryClient.invalidateQueries({ queryKey: ['communication-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['communications', organizationId] });
+      queryClient.invalidateQueries({ queryKey: ['communication-stats', organizationId] });
       toast.success('Comunicação enviada com sucesso');
     },
     onError: (error: Error) => {
@@ -192,14 +159,16 @@ export function useSendCommunication() {
 
 export function useDeleteCommunication() {
   const queryClient = useQueryClient();
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
 
   return useMutation({
     mutationFn: async (id: string) => {
       await deleteDoc(doc(db, 'communication_logs', id));
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['communications'] });
-      queryClient.invalidateQueries({ queryKey: ['communication-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['communications', organizationId] });
+      queryClient.invalidateQueries({ queryKey: ['communication-stats', organizationId] });
       toast.success('Comunicação excluída');
     },
     onError: (error: Error) => {
@@ -210,6 +179,8 @@ export function useDeleteCommunication() {
 
 export function useResendCommunication() {
   const queryClient = useQueryClient();
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
 
   return useMutation({
     mutationFn: async (id: string) => {
@@ -223,7 +194,7 @@ export function useResendCommunication() {
       return { id, ...docSnap.data() };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['communications'] });
+      queryClient.invalidateQueries({ queryKey: ['communications', organizationId] });
       toast.success('Comunicação reenviada');
     },
     onError: (error: Error) => {

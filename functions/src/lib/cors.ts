@@ -32,6 +32,7 @@ export const CORS_ORIGINS = [
   'http://127.0.0.1:5174',
   'https://fisioflow-migration.web.app',
   'https://fisioflow.web.app',
+  'https://fisioflow-professional.web.app',
   'https://moocafisio.com.br',
   'https://www.moocafisio.com.br',
 ];
@@ -41,6 +42,7 @@ export const ALLOWED_ORIGIN_PATTERNS = [
   /^http?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
   /moocafisio\.com\.br$/,
   /fisioflow\.web\.app$/,
+  /fisioflow-professional\.web\.app$/,
 ];
 
 /**
