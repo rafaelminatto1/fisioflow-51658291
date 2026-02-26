@@ -15,10 +15,8 @@ import { test, expect, Page } from '@playwright/test';
 import { login, TEST_CREDENTIALS } from './fixtures/auth';
 import { createPatient, TEST_PATIENT } from './fixtures/patients';
 import {
-  navigateTo,
   goToPatients,
   expectToast,
-  waitForScreenLoad,
 } from './helpers/navigation';
 
 /**

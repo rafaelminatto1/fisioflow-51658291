@@ -26,8 +26,13 @@ export const PatientCreateModal: React.FC<PatientCreateModalProps> = ({
 
   const handleSubmit = async (data: PatientCreateInput) => {
     if (!currentOrganization?.id) {
+      console.error('[PatientCreateModal] Missing organization on submit');
       throw new Error('Organização não encontrada');
     }
+    console.info('[PatientCreateModal] Creating patient', {
+      organization_id: data.organization_id,
+      full_name: data.full_name,
+    });
     await createMutation.mutateAsync(data);
     onOpenChange(false);
   };

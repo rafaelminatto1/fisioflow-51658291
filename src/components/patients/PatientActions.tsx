@@ -89,11 +89,17 @@ export const PatientActions: React.FC<PatientActionsProps> = ({ patient }) => {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            data-testid={`patient-actions-${patient.id}`}
+            data-patient-id={patient.id}
+          >
             <MoreVertical className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuContent align="end" className="w-48" data-testid={`patient-actions-menu-${patient.id}`}>
           {/* Quick Actions */}
           <div className="px-2 py-1.5">
             <p className="text-xs font-semibold text-muted-foreground mb-1">Ações Rápidas</p>
@@ -145,7 +151,7 @@ export const PatientActions: React.FC<PatientActionsProps> = ({ patient }) => {
           <DropdownMenuSeparator />
 
           {/* Edit and Delete */}
-          <DropdownMenuItem onClick={() => setEditModalOpen(true)}>
+          <DropdownMenuItem onClick={() => setEditModalOpen(true)} data-testid={`patient-edit-${patient.id}`}>
             <Edit className="mr-2 h-4 w-4" />
             Editar
           </DropdownMenuItem>
@@ -153,6 +159,7 @@ export const PatientActions: React.FC<PatientActionsProps> = ({ patient }) => {
           <DropdownMenuItem
             onClick={() => setDeleteDialogOpen(true)}
             className="text-destructive focus:text-destructive"
+            data-testid={`patient-delete-${patient.id}`}
           >
             <Trash2 className="mr-2 h-4 w-4" />
             Excluir

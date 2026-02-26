@@ -68,17 +68,23 @@ export default function WhatsAppIntegration() {
   });
 
   // Buscar mensagens
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
+
   const { data: mensagens = [], isLoading } = useQuery({
-    queryKey: ['whatsapp-messages'],
+    queryKey: ['whatsapp-messages', organizationId],
     queryFn: async () => {
+      if (!organizationId) return [];
       const q = firestoreQuery(
         collection(db, 'whatsapp_messages'),
+        where('organization_id', '==', organizationId),
         fsOrderBy('created_at', 'desc'),
         fsLimit(50)
       );
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as WhatsAppMessage[];
     },
+    enabled: !!organizationId,
   });
 
   // Buscar templates (unused but kept for future use)
@@ -95,15 +101,17 @@ export default function WhatsAppIntegration() {
 
   // Buscar configuração
   const { data: config } = useQuery({
-    queryKey: ['whatsapp-config'],
+    queryKey: ['whatsapp-config', organizationId],
     queryFn: async () => {
-      const configRef = doc(db, 'whatsapp_config', 'default');
+      if (!organizationId) return null;
+      const configRef = doc(db, 'whatsapp_config', organizationId);
       const configSnap = await getDoc(configRef);
       if (!configSnap.exists()) {
         return null;
       }
       return configSnap.data() as WhatsAppConfig;
     },
+    enabled: !!organizationId,
   });
 
   // Enviar mensagem

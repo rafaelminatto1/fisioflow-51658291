@@ -14,6 +14,15 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useMemo, useCallback, useEffect, useRef } from 'react';
 import { startTransition } from 'react';
+import {
+  prefetchEvolutionMeasurements,
+  prefetchPatientGoals,
+  prefetchPatientMedicalReturns,
+  prefetchPatientPathologies,
+  prefetchPatientSurgeries,
+  prefetchRequiredMeasurements,
+  prefetchSoapRecords,
+} from './prefetchFetchers';
 
 // Import hooks existentes
 import {
@@ -262,48 +271,31 @@ export function useEvolutionDataOptimized(options: EvolutionDataOptions) {
       dataToPrefetch.forEach(dataType => {
         switch (dataType) {
           case 'goals':
-            queryClient.prefetchQuery({
-              queryKey: evolutionKeys.goals(patientId),
-              staleTime: EVOLUTION_CACHE_CONFIG.GOALS.staleTime,
-            });
+            prefetchPatientGoals(queryClient, patientId, EVOLUTION_CACHE_CONFIG.GOALS.staleTime);
             break;
           case 'pathologies':
-            queryClient.prefetchQuery({
-              queryKey: evolutionKeys.pathologies(patientId),
-              staleTime: EVOLUTION_CACHE_CONFIG.PATHOLOGIES.staleTime,
-            });
+            prefetchPatientPathologies(queryClient, patientId, EVOLUTION_CACHE_CONFIG.PATHOLOGIES.staleTime);
             break;
           case 'measurements':
-            queryClient.prefetchQuery({
-              queryKey: evolutionKeys.measurements(patientId, 50),
-              staleTime: EVOLUTION_CACHE_CONFIG.MEASUREMENTS.staleTime,
-            });
+            prefetchEvolutionMeasurements(queryClient, patientId, 50, EVOLUTION_CACHE_CONFIG.MEASUREMENTS.staleTime);
             break;
           case 'required-measurements':
             if (activePathologies.length > 0) {
-              queryClient.prefetchQuery({
-                queryKey: evolutionKeys.requiredMeasurements(activePathologies.map(p => p.pathology_name)),
-                staleTime: EVOLUTION_CACHE_CONFIG.REQUIRED_MEASUREMENTS.staleTime,
-              });
+              prefetchRequiredMeasurements(
+                queryClient,
+                activePathologies.map((p) => p.pathology_name),
+                EVOLUTION_CACHE_CONFIG.REQUIRED_MEASUREMENTS.staleTime
+              );
             }
             break;
           case 'surgeries':
-            queryClient.prefetchQuery({
-              queryKey: evolutionKeys.surgeries(patientId),
-              staleTime: EVOLUTION_CACHE_CONFIG.SURGERIES.staleTime,
-            });
+            prefetchPatientSurgeries(queryClient, patientId, EVOLUTION_CACHE_CONFIG.SURGERIES.staleTime);
             break;
           case 'medical-returns':
-            queryClient.prefetchQuery({
-              queryKey: evolutionKeys.medicalReturns(patientId),
-              staleTime: EVOLUTION_CACHE_CONFIG.MEDICAL_RETURNS.staleTime,
-            });
+            prefetchPatientMedicalReturns(queryClient, patientId, EVOLUTION_CACHE_CONFIG.MEDICAL_RETURNS.staleTime);
             break;
           case 'soap-records':
-            queryClient.prefetchQuery({
-              queryKey: evolutionKeys.soapRecords(patientId, 50),
-              staleTime: EVOLUTION_CACHE_CONFIG.SOAP_RECORDS.staleTime,
-            });
+            prefetchSoapRecords(queryClient, patientId, 50, EVOLUTION_CACHE_CONFIG.SOAP_RECORDS.staleTime);
             break;
         }
       });
@@ -401,22 +393,13 @@ export function useEvolutionData() {
     prefetch: (patientId: string, dataType: 'goals' | 'pathologies' | 'measurements') => {
       switch (dataType) {
         case 'goals':
-          queryClient.prefetchQuery({
-            queryKey: evolutionKeys.goals(patientId),
-            staleTime: EVOLUTION_CACHE_CONFIG.GOALS.staleTime,
-          });
+          prefetchPatientGoals(queryClient, patientId, EVOLUTION_CACHE_CONFIG.GOALS.staleTime);
           break;
         case 'pathologies':
-          queryClient.prefetchQuery({
-            queryKey: evolutionKeys.pathologies(patientId),
-            staleTime: EVOLUTION_CACHE_CONFIG.PATHOLOGIES.staleTime,
-          });
+          prefetchPatientPathologies(queryClient, patientId, EVOLUTION_CACHE_CONFIG.PATHOLOGIES.staleTime);
           break;
         case 'measurements':
-          queryClient.prefetchQuery({
-            queryKey: evolutionKeys.measurements(patientId),
-            staleTime: EVOLUTION_CACHE_CONFIG.MEASUREMENTS.staleTime,
-          });
+          prefetchEvolutionMeasurements(queryClient, patientId, 50, EVOLUTION_CACHE_CONFIG.MEASUREMENTS.staleTime);
           break;
       }
     },
@@ -438,18 +421,9 @@ export function useEvolutionPrefetch() {
 
     // Prefetch em paralelo para máxima velocidade
     startTransition(() => {
-      queryClient.prefetchQuery({
-        queryKey: evolutionKeys.goals(patientId),
-        staleTime: EVOLUTION_CACHE_CONFIG.GOALS.staleTime,
-      });
-      queryClient.prefetchQuery({
-        queryKey: evolutionKeys.pathologies(patientId),
-        staleTime: EVOLUTION_CACHE_CONFIG.PATHOLOGIES.staleTime,
-      });
-      queryClient.prefetchQuery({
-        queryKey: evolutionKeys.soapRecords(patientId, 10),
-        staleTime: EVOLUTION_CACHE_CONFIG.SOAP_RECORDS.staleTime,
-      });
+      prefetchPatientGoals(queryClient, patientId, EVOLUTION_CACHE_CONFIG.GOALS.staleTime);
+      prefetchPatientPathologies(queryClient, patientId, EVOLUTION_CACHE_CONFIG.PATHOLOGIES.staleTime);
+      prefetchSoapRecords(queryClient, patientId, 10, EVOLUTION_CACHE_CONFIG.SOAP_RECORDS.staleTime);
     });
   }, [queryClient]);
 

@@ -41,7 +41,6 @@ import {
   generateReviewTemplate,
   generateBirthdayTemplate,
   generateRecallTemplate,
-  type GeneratedTemplateResponse,
 } from '@/services/ai/marketingAITemplateService';
 import { useAuth } from '@/contexts/AuthContext';
 

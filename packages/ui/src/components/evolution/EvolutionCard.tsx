@@ -1,7 +1,7 @@
 import React from 'react';
 import { MotionCard } from '../MotionCard';
 import { cn } from '../../lib/utils';
-import { Activity, Calendar, User } from 'lucide-react';
+import { Calendar, User } from 'lucide-react';
 
 export interface EvolutionCardProps extends React.HTMLAttributes<HTMLDivElement> {
   date: string;

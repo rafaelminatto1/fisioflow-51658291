@@ -17,8 +17,6 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import {
   ExerciseMetrics,
-  ExecutionQuality,
-  getFormScoreColor,
 } from '@/types/pose';
 import {
   Activity,

@@ -10,7 +10,7 @@ import {
   Timestamp 
 } from 'firebase/firestore';
 import { db } from '../firebase';
-import { AuditLogEntry, AuditLogQuery, AuditAction, AuditResourceType } from '@/types/audit';
+import { AuditLogEntry, AuditLogQuery, AuditResourceType } from '@/types/audit';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { DeviceInfo } from '@/types/legal';
@@ -107,7 +107,7 @@ export class AuditLogger {
    * Query audit log
    */
   async query(logQuery: AuditLogQuery): Promise<AuditLogEntry[]> {
-    let q = query(
+    const q = query(
       collection(db, 'audit_logs'),
       where('userId', '==', logQuery.userId),
       orderBy('timestamp', 'desc'),
