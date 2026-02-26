@@ -345,8 +345,8 @@ export const PatientDashboard360 = ({
                         </div>
 
                         {insightResult ? (
-                            <div className="text-sm text-foreground/80 bg-white/60 dark:bg-black/20 p-4 rounded-lg border border-indigo-100 dark:border-indigo-900/30">
-                                <ReactMarkdown className="prose prose-sm dark:prose-invert max-w-none">
+                            <div className="text-sm text-foreground/80 bg-white/60 dark:bg-black/20 p-4 rounded-lg border border-indigo-100 dark:border-indigo-900/30 prose prose-sm dark:prose-invert max-w-none">
+                                <ReactMarkdown>
                                     {insightResult}
                                 </ReactMarkdown>
                             </div>

@@ -9,10 +9,9 @@
  * - Sugestão de preenchimento de horários
  */
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   TrendingUp,
-  TrendingDown,
   Clock,
   Users,
   AlertTriangle,
@@ -22,7 +21,7 @@ import {
   Zap,
   Target,
 } from 'lucide-react';
-import { format, differenceInDays, differenceInMinutes } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Appointment } from '@/types';

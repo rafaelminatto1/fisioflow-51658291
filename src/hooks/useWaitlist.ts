@@ -7,6 +7,7 @@ import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestore
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { useOrganizations } from '@/hooks/useOrganizations';
 
 export interface WaitlistEntry {
   id: string;
@@ -76,11 +77,16 @@ export function useWaitlist(filters?: {
   status?: string;
   priority?: string;
 }) {
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
+
   const queryResult = useQuery({
-    queryKey: ['waitlist', filters],
+    queryKey: ['waitlist', organizationId, filters],
     queryFn: async () => {
+      if (!organizationId) return [];
       let q = firestoreQuery(
         collection(db, 'waitlist'),
+        where('organization_id', '==', organizationId),
         orderBy('created_at', 'asc')
       );
 
@@ -88,12 +94,14 @@ export function useWaitlist(filters?: {
       if (filters?.status && filters.status !== 'all') {
         q = firestoreQuery(
           collection(db, 'waitlist'),
+          where('organization_id', '==', organizationId),
           where('status', '==', filters.status),
           orderBy('created_at', 'asc')
         );
       } else if (!filters?.status) {
         q = firestoreQuery(
           collection(db, 'waitlist'),
+          where('organization_id', '==', organizationId),
           where('status', '==', 'waiting'),
           orderBy('created_at', 'asc')
         );
@@ -103,6 +111,7 @@ export function useWaitlist(filters?: {
       if (filters?.priority) {
         q = firestoreQuery(
           collection(db, 'waitlist'),
+          where('organization_id', '==', organizationId),
           where('priority', '==', filters.priority),
           orderBy('created_at', 'asc')
         );
@@ -160,10 +169,18 @@ export function useWaitlist(filters?: {
 
 // Hook para obter contagem por status
 export function useWaitlistCounts() {
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
+
   return useQuery({
-    queryKey: ['waitlist', 'counts'],
+    queryKey: ['waitlist', 'counts', organizationId],
     queryFn: async () => {
-      const snapshot = await getDocs(collection(db, 'waitlist'));
+      if (!organizationId) return null;
+      const q = firestoreQuery(
+        collection(db, 'waitlist'),
+        where('organization_id', '==', organizationId)
+      );
+      const snapshot = await getDocs(q);
       const data = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()));
 
       const counts = {
@@ -185,18 +202,24 @@ export function useWaitlistCounts() {
 
       return counts;
     },
+    enabled: !!organizationId,
   });
 }
 
 // Hook para adicionar à lista de espera
 export function useAddToWaitlist() {
   const queryClient = useQueryClient();
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
 
   return useMutation({
     mutationFn: async (input: AddToWaitlistInput) => {
+      if (!organizationId) throw new Error('Organização não identificada');
+
       // Verificar se paciente já está na lista
       const existingQ = firestoreQuery(
         collection(db, 'waitlist'),
+        where('organization_id', '==', organizationId),
         where('patient_id', '==', input.patient_id),
         where('status', '==', 'waiting'),
         limit(1)
@@ -209,6 +232,7 @@ export function useAddToWaitlist() {
 
       const waitlistData = {
         ...input,
+        organization_id: organizationId,
         status: 'waiting' as const,
         refusal_count: 0,
         created_at: new Date().toISOString(),
@@ -233,7 +257,7 @@ export function useAddToWaitlist() {
       return result;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['waitlist'] });
+      queryClient.invalidateQueries({ queryKey: ['waitlist', organizationId] });
       toast.success(`${data.patient?.name} adicionado à lista de espera`);
     },
     onError: (error: unknown) => {
@@ -246,6 +270,8 @@ export function useAddToWaitlist() {
 // Hook para remover da lista de espera
 export function useRemoveFromWaitlist() {
   const queryClient = useQueryClient();
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
 
   return useMutation({
     mutationFn: async (waitlistId: string) => {
@@ -256,7 +282,7 @@ export function useRemoveFromWaitlist() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['waitlist'] });
+      queryClient.invalidateQueries({ queryKey: ['waitlist', organizationId] });
       toast.success('Removido da lista de espera');
     },
     onError: (error: unknown) => {
@@ -269,6 +295,8 @@ export function useRemoveFromWaitlist() {
 // Hook para oferecer vaga
 export function useOfferSlot() {
   const queryClient = useQueryClient();
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
 
   return useMutation({
     mutationFn: async (input: OfferSlotInput) => {
@@ -309,6 +337,7 @@ export function useOfferSlot() {
 
       // Registrar oferta
       await addDoc(collection(db, 'waitlist_offers'), {
+        organization_id: organizationId,
         patient_id: entryData.patient_id,
         appointment_id: waitlist_id,
         offered_slot: appointment_slot,
@@ -325,7 +354,7 @@ export function useOfferSlot() {
       };
     },
     onSuccess: (data: WaitlistEntry & { patient?: { name?: string } }) => {
-      queryClient.invalidateQueries({ queryKey: ['waitlist'] });
+      queryClient.invalidateQueries({ queryKey: ['waitlist', organizationId] });
       toast.success(`Vaga oferecida para ${data.patient?.name}`);
     },
     onError: (error: unknown) => {
@@ -338,6 +367,8 @@ export function useOfferSlot() {
 // Hook para aceitar oferta
 export function useAcceptOffer() {
   const queryClient = useQueryClient();
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
 
   return useMutation({
     mutationFn: async (waitlistId: string) => {
@@ -366,7 +397,7 @@ export function useAcceptOffer() {
       return { id: waitlistId, status: 'scheduled' };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['waitlist'] });
+      queryClient.invalidateQueries({ queryKey: ['waitlist', organizationId] });
       toast.success('Oferta aceita! Agendamento confirmado.');
     },
     onError: (error: unknown) => {
@@ -379,6 +410,8 @@ export function useAcceptOffer() {
 // Hook para recusar oferta
 export function useRejectOffer() {
   const queryClient = useQueryClient();
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
 
   return useMutation({
     mutationFn: async (waitlistId: string) => {
@@ -430,7 +463,7 @@ export function useRejectOffer() {
       };
     },
     onSuccess: (data: WaitlistEntry & { wasRemoved?: boolean }) => {
-      queryClient.invalidateQueries({ queryKey: ['waitlist'] });
+      queryClient.invalidateQueries({ queryKey: ['waitlist', organizationId] });
       if (data.wasRemoved) {
         toast.info('Paciente removido da lista após 3 recusas');
       } else {
@@ -447,6 +480,8 @@ export function useRejectOffer() {
 // Hook para atualizar prioridade
 export function useUpdatePriority() {
   const queryClient = useQueryClient();
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
 
   return useMutation({
     mutationFn: async ({
@@ -461,7 +496,7 @@ export function useUpdatePriority() {
       return { id: waitlistId, priority };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['waitlist'] });
+      queryClient.invalidateQueries({ queryKey: ['waitlist', organizationId] });
       toast.success('Prioridade atualizada');
     },
     onError: (error: unknown) => {
@@ -473,17 +508,23 @@ export function useUpdatePriority() {
 
 // Hook para listar ofertas feitas
 export function useWaitlistOffers(patientId?: string) {
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
+
   return useQuery({
-    queryKey: ['waitlist-offers', patientId],
+    queryKey: ['waitlist-offers', organizationId, patientId],
     queryFn: async () => {
+      if (!organizationId) return [];
       let q = firestoreQuery(
         collection(db, 'waitlist_offers'),
+        where('organization_id', '==', organizationId),
         orderBy('created_at', 'desc')
       );
 
       if (patientId) {
         q = firestoreQuery(
           collection(db, 'waitlist_offers'),
+          where('organization_id', '==', organizationId),
           where('patient_id', '==', patientId),
           orderBy('created_at', 'desc')
         );
@@ -535,6 +576,7 @@ export function useWaitlistOffers(patientId?: string) {
 
       return offersWithDetails;
     },
+    enabled: !!organizationId,
   });
 }
 

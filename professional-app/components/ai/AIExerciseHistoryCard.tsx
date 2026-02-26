@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../Card';
-import { ExerciseSession, ExecutionQuality } from '../../types/pose';
+import { ExerciseSession } from '../../types/pose';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 

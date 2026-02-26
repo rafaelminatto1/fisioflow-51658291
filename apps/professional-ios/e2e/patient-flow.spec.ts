@@ -17,28 +17,23 @@ import { test, expect, Page } from '@playwright/test';
 import { login, TEST_CREDENTIALS } from './fixtures/auth';
 import {
   createPatient,
-  findPatient,
   goToPatientDetails,
   editPatient,
   updatePatient,
   deletePatient,
   addPatientNote,
   updatePatientProgress,
-  addPatientPhoto,
   expectPatientInList,
   expectPatientNotInList,
   getPatientData,
   createMultiplePatients,
   filterPatients,
-  getPatientCount,
   TEST_PATIENT,
 } from './fixtures/patients';
 import {
-  navigateTo,
   goToPatients,
   waitForScreenLoad,
   expectToast,
-  expectNoErrors,
 } from './helpers/navigation';
 
 test.describe('Fluxo de Pacientes', () => {

@@ -1,4 +1,3 @@
-
 // =============================================================================
 // LAZY LOADED PAGES WITH OPTIMIZED CHUNKS
 // =============================================================================
@@ -13,6 +12,8 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { RouteErrorBoundary } from '@/components/error-boundaries/RouteErrorBoundary';
 import { MainLayout } from '@/components/layout/MainLayout';
 import Auth from './pages/Auth';
+import { WikiLayout, WikiDashboard } from '@/features/wiki';
+import WikiWorkspacePage from '@/pages/Wiki';
 
 const Welcome = lazy(() => import(/* webpackChunkName: "auth-welcome" */ "./pages/Welcome"));
 const SeedData = lazy(() => import(/* webpackChunkName: "seed-data" */ "./pages/SeedData"));
@@ -110,7 +111,6 @@ const SecuritySettings = lazy(() => import(/* webpackChunkName: "settings-securi
 const AdminCRUD = lazy(() => import(/* webpackChunkName: "admin-crud" */ "./pages/AdminCRUD"));
 const OrganizationSettings = lazy(() => import(/* webpackChunkName: "admin-organization" */ "./pages/OrganizationSettings"));
 const Admin = lazy(() => import(/* webpackChunkName: "admin-analytics" */ "./pages/Admin"));
-const SystemHealthPage = lazy(() => import(/* webpackChunkName: "admin-system-health" */ "./pages/admin/SystemHealthPage"));
 const AdvancedAnalytics = lazy(() => import(/* webpackChunkName: "analytics-advanced" */ "./pages/AdvancedAnalytics"));
 const CohortAnalysis = lazy(() => import(/* webpackChunkName: "analytics-cohorts" */ "./pages/CohortAnalysis"));
 // const ApiDocs = lazy(() => import(/* webpackChunkName: "api-docs" */ "./pages/ApiDocs"));
@@ -165,9 +165,6 @@ const ErrorPage = lazy(() => import(/* webpackChunkName: "error-page" */ "./page
 // Time Tracking
 const TimeTracking = lazy(() => import(/* webpackChunkName: "timetracking" */ "./pages/TimeTracking"));
 
-// Wiki / Knowledge Base
-const Wiki = lazy(() => import(/* webpackChunkName: "wiki" */ "./pages/Wiki"));
-
 // Automation
 const Automation = lazy(() => import(/* webpackChunkName: "automation" */ "./pages/Automation"));
 
@@ -200,7 +197,7 @@ const FisioLinkPage = lazy(() => import(/* webpackChunkName: "marketing-fisiolin
 const MarketingReferral = lazy(() => import(/* webpackChunkName: "marketing-referral" */ "./pages/marketing/Referral"));
 const MarketingROI = lazy(() => import(/* webpackChunkName: "marketing-roi" */ "./pages/marketing/ROI"));
 const BeforeAfterPage = lazy(() => import(/* webpackChunkName: "marketing-beforeafter" */ "./pages/marketing/BeforeAfter"));
-const AdvancedBI = lazy(() => import(/* webpackChunkName: "reports-bi" */ "./pages/relatorios/AdvancedBI"));
+const TemplateAnalyticsPage = lazy(() => import(/* webpackChunkName: "wiki-template-analytics" */ "./features/wiki/pages/TemplateAnalyticsPage"));
 
 export function AppRoutes() {
     return (
@@ -351,8 +348,23 @@ export function AppRoutes() {
 
             {/* Enterprise Features */}
             <Route path="/timetracking" element={<ProtectedRoute><TimeTracking /></ProtectedRoute>} />
-            <Route path="/wiki" element={<ProtectedRoute><Wiki /></ProtectedRoute>} />
-            <Route path="/wiki/:slug" element={<ProtectedRoute><Wiki /></ProtectedRoute>} />
+            <Route path="/wiki/template-analytics" element={<ProtectedRoute><TemplateAnalyticsPage /></ProtectedRoute>} />
+            
+            {/* Wiki Routes Refactored */}
+            <Route 
+                path="/wiki/*" 
+                element={
+                    <ProtectedRoute>
+                        <WikiLayout>
+                            <Routes>
+                                <Route index element={<WikiDashboard />} />
+                            </Routes>
+                        </WikiLayout>
+                    </ProtectedRoute>
+                } 
+            />
+            <Route path="/wiki-workspace/:slug?" element={<ProtectedRoute><WikiWorkspacePage /></ProtectedRoute>} />
+
             <Route path="/automation" element={<ProtectedRoute><Automation /></ProtectedRoute>} />
             <Route path="/integrations" element={<ProtectedRoute><Integrations /></ProtectedRoute>} />
 
@@ -381,7 +393,6 @@ export function AppRoutes() {
             <Route path="/marketing/referral" element={<ProtectedRoute><MarketingReferral /></ProtectedRoute>} />
             <Route path="/marketing/roi" element={<ProtectedRoute><MarketingROI /></ProtectedRoute>} />
             <Route path="/marketing/before-after" element={<ProtectedRoute><BeforeAfterPage /></ProtectedRoute>} />
-            <Route path="/analytics/bi" element={<ProtectedRoute><AdvancedBI /></ProtectedRoute>} />
 
             {/* Seed Data Route - Temporary */}
             <Route path="/seed-data" element={<ProtectedRoute><SeedData /></ProtectedRoute>} />
