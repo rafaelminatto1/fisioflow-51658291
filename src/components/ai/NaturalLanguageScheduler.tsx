@@ -17,14 +17,12 @@ import {
   Calendar,
   User,
   Check,
-  X,
   ChevronRight,
   Lightbulb,
 } from 'lucide-react';
 import { parse, isValid, format, addDays, addWeeks, startOfWeek } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { toast } from '@/hooks/use-toast';
 
 // ============================================================================
 // TIPOS
@@ -278,7 +276,7 @@ class NLPParser {
 
   public parse(text: string): ParsedAppointment {
     let confidence = 0;
-    let result: Partial<ParsedAppointment> = {};
+    const result: Partial<ParsedAppointment> = {};
 
     // Extrair em ordem específica
     let currentText = text;

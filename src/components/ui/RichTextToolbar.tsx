@@ -37,6 +37,7 @@ import {
     AlertTriangle,
     CheckCircle2,
     Command as CommandIcon,
+    Dumbbell,
 } from 'lucide-react';
 import { useRichTextContext } from '@/context/RichTextContext';
 import { cn } from '@/lib/utils';
@@ -132,7 +133,12 @@ const LINE_HEIGHTS = [
     { label: 'Confortável', value: 'comfortable' },
 ];
 
-export const RichTextToolbar: React.FC<{ className?: string }> = ({ className }) => {
+interface RichTextToolbarProps {
+    className?: string;
+    imageUploadFolder?: string;
+}
+
+export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ className, imageUploadFolder }) => {
     const { activeEditor: editor } = useRichTextContext();
     const imageInputRef = useRef<HTMLInputElement | null>(null);
     const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -401,9 +407,10 @@ export const RichTextToolbar: React.FC<{ className?: string }> = ({ className })
 
         try {
             const result = await uploadFile(processedFile, {
-                folder: STORAGE_FOLDERS.IMAGES,
+                folder: imageUploadFolder || STORAGE_FOLDERS.IMAGES,
                 contentType: processedFile.type,
                 resumable: true,
+                includeUserIdPath: !imageUploadFolder,
                 onProgress: (progress) => setUploadProgress(progress),
                 metadata: {
                     source: 'rich-text',
@@ -846,6 +853,21 @@ export const RichTextToolbar: React.FC<{ className?: string }> = ({ className })
                     >
                         <CommandIcon className="h-4 w-4" />
                         <span className="text-xs font-semibold">Comandos</span>
+                    </button>
+                    <button
+                        type="button"
+                        className="rich-text-toolbar-btn-long group px-2 flex items-center gap-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100"
+                        title="Biblioteca de Exercícios"
+                        onClick={() => {
+                            (window as any).__OPEN_EXERCISE_LIBRARY = true;
+                            // Trigger slash command to ensure CommandList is mounted or at least signal it
+                            editor.chain().focus().insertContent('/').run();
+                            // Optionally delete the slash immediately if we can, 
+                            // but usually CommandList handles it.
+                        }}
+                    >
+                        <Dumbbell className="h-4 w-4" />
+                        <span className="text-xs font-semibold">Biblioteca</span>
                     </button>
                 </ToolbarGroup>
 

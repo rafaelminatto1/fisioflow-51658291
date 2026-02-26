@@ -110,8 +110,6 @@ pnpm vitest apps/professional-ios/__tests__/firebase-rules-quick.test.ts
 
 #### Option 1: Automated Script
 
-#### Option 1: Automated Script
-
 The script automatically starts emulators, runs tests, and stops emulators:
 
 ```bash
@@ -166,6 +164,13 @@ pnpm vitest run apps/professional-ios/__tests__/firebase-rules-quick.test.ts --c
 
 ### Integration Tests (`firebase-security-rules.test.ts`)
 
+#### Helper Patterns
+
+- **Storage auth context**: use `testEnv.authenticatedContext(userId, { sub: userId }).storage()` so Storage rules that rely on `request.auth.token.sub` behave as expected.
+- **Storage failure assertions**: use a wrapper that accepts `storage/unauthorized`, `storage/unknown`, and `permission-denied` because the emulator can surface different error codes for the same denied operation.
+- **Oversized writes**: when testing size limits, use >= 1MB payloads and accept `INVALID_ARGUMENT` for oversized documents (the emulator can return this before rules evaluation).
+- **Cleanup**: prefer a single `afterAll` cleanup for Firestore/Storage to avoid race conditions between suites.
+
 1. **User Consents Collection**
    - ✓ Deny unauthenticated access
    - ✓ Allow users to read their own consents
@@ -208,23 +213,23 @@ For fast CI/CD pipelines, use the quick logic tests:
 To run integration tests in CI/CD pipelines:
 
 ```yaml
-# Example GitHub Actions workflow
-   - ✓ Deny unauthenticated access
-   - ✓ Allow owner to upload photos
-   - ✓ Deny non-owner access
-   - ✓ Enforce 50MB file size limit
-   - ✓ Allow files under 50MB
-   - ✓ Enforce allowed content types (images, PDFs, videos)
-
-2. **SOAP Note Attachments (PHI)**
-   - ✓ Allow owner to upload attachments
-   - ✓ Deny non-owner access
-   - ✓ Enforce 50MB file size limit
-
-3. **User Avatars (Non-PHI)**
-   - ✓ Allow users to upload their own avatar
-   - ✓ Deny uploading another user's avatar
-   - ✓ Allow authenticated users to read avatars
+jobs:
+  firebase-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install
+      - name: Run Firebase Security Rules Tests (emulators)
+        run: pnpm test:firebase-rules
+```
 
 ## Test Data
 

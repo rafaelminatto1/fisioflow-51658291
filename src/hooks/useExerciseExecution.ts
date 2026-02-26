@@ -12,8 +12,6 @@ import {
   ExerciseSession,
   createExerciseSession,
   PoseDetection,
-  AnalysisResult,
-  Repetition,
   calculateSessionDuration,
 } from '@/types/pose';
 import { useRepCounter } from './useRepCounter';

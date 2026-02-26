@@ -40,20 +40,32 @@ const openDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(CACHE_DB_NAME, CACHE_VERSION);
     request.onupgradeneeded = (event) => {
-      const db = event.target.result as IDBDatabase;
+      const db = (event.target as IDBOpenDBRequest).result;
       if (!db.objectStoreNames.contains(CACHE_STORE_NAME)) {
-        db.createObjectStore(CACHE_STORE_NAME, { keyPath: 'key' });
-        db.createObjectStore(CACHE_STORE_NAME, { keyPath: 'key' }).createIndex('timestamp', 'timestamp', { unique: false });
-        db.createObjectStore(CACHE_STORE_NAME, { keyPath: 'timestamp' }).createIndex('tags', 'tags', { unique: false, multiEntry: true });
+        const store = db.createObjectStore(CACHE_STORE_NAME, { keyPath: 'key' });
+        store.createIndex('timestamp', 'timestamp', { unique: false });
+        store.createIndex('tags', 'tags', { unique: false, multiEntry: true });
       }
 
-      event.target.transaction?.oncomplete = () => resolve(db);
+      const tx = (event.target as IDBOpenDBRequest).transaction;
+      if (tx) {
+        tx.oncomplete = () => resolve(db);
+      } else {
+        resolve(db);
+      }
     };
 
+    request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
     request.onblocked = () => reject(new Error('IndexedDB is blocked'));
   });
 };
+
+const requestToPromise = <T>(request: IDBRequest<T>): Promise<T> =>
+  new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
 
 const openStore = (): Promise<IDBObjectStore> => {
   return openDB().then((db) => {
@@ -76,7 +88,9 @@ const openStoreReadWrite = (): Promise<IDBObjectStore> => {
  */
 export const setCache = async <T>(key: string, data: T, options?: CacheOptions): Promise<void> => {
   try {
-    const store = await openStoreReadWrite();
+    const db = await openDB();
+    const tx = db.transaction(CACHE_STORE_NAME, 'readwrite');
+    const store = tx.objectStore(CACHE_STORE_NAME);
 
     const entry: CacheEntry<T> = {
       key,
@@ -86,7 +100,12 @@ export const setCache = async <T>(key: string, data: T, options?: CacheOptions):
       tags: options?.tags,
     };
 
-    await store.put(entry);
+    await requestToPromise(store.put(entry));
+    await new Promise<void>((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
+    });
 
     // Limpar entradas expiradas com a mesma tag de invalidação
     if (options?.invalidateWithTags) {
@@ -94,7 +113,7 @@ export const setCache = async <T>(key: string, data: T, options?: CacheOptions):
     }
 
     // Limpar entradas expiradas periodicamente
-    await cleanupExpiredEntries(store);
+    await cleanupExpiredEntries();
   } catch (error) {
     console.error('Error setting cache:', error);
   }
@@ -107,11 +126,7 @@ export const getCache = async <T>(key: string): Promise<T | null> => {
   try {
     const store = await openStore();
 
-    const request = store.get(key);
-    const entry = await new Promise<CacheEntry<T> | undefined>((resolve, reject) => {
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
+    const entry = await requestToPromise<CacheEntry<T> | undefined>(store.get(key));
 
     // Verificar se expirou
     if (entry && entry.ttl) {
@@ -163,7 +178,6 @@ export const getMultipleCache = async <T>(keys: string[]): Promise<Map<string, T
         }
       }
     }
-    }
 
     return resultMap;
   } catch (error) {
@@ -178,7 +192,7 @@ export const getMultipleCache = async <T>(keys: string[]): Promise<Map<string, T
 export const deleteCache = async (key: string): Promise<void> => {
   try {
     const store = await openStoreReadWrite();
-    await store.delete(key);
+    await requestToPromise(store.delete(key));
   } catch (error) {
     console.error('Error deleting cache:', error);
   }
@@ -190,9 +204,8 @@ export const deleteCache = async (key: string): Promise<void> => {
 export const clearCache = async (): Promise<void> => {
   try {
     const db = await openDB();
-    await db.transaction(CACHE_STORE_NAME, 'readwrite')
-      .objectStore(CACHE_STORE_NAME)
-      .clear();
+    const store = db.transaction(CACHE_STORE_NAME, 'readwrite').objectStore(CACHE_STORE_NAME);
+    await requestToPromise(store.clear());
   } catch (error) {
     console.error('Error clearing cache:', error);
   }
@@ -206,43 +219,30 @@ export const clearByTags = async (tags: string[]): Promise<void> => {
     const store = await openStoreReadWrite();
     const index = store.index('tags');
 
-    const keysToDelete = await new Promise<string[]>((resolve) => {
-      const keys: string[] = [];
-      const request = index.openCursor(
-        IDBKeyRange.only(tags),
-        undefined,
-        1000
-      );
+    const keysToDelete = new Set<string>();
+    for (const tag of tags) {
+      const keysForTag = await new Promise<string[]>((resolve) => {
+        const keys: string[] = [];
+        const request = index.openCursor(IDBKeyRange.only(tag));
 
-      request.onsuccess = () => {
-        let done = false;
         request.onsuccess = (event) => {
-          const cursor = event.target as IDBCursorWithValue;
-          const value = cursor.value as { key: string };
-
-          if (!done) {
+          const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result;
+          if (cursor) {
+            const value = cursor.value as { key: string };
             keys.push(value.key);
             cursor.continue();
           } else {
             resolve(keys);
           }
         };
+
         request.onerror = () => resolve(keys);
-      };
-
-      await new Promise<void>((resolve) => {
-        // Aguardar cursor terminar
-        setTimeout(() => {
-          request.continue();
-          setTimeout(() => {
-            cursor.close();
-            resolve();
-          }, 100);
-        }, 0);
       });
+      keysForTag.forEach((key) => keysToDelete.add(key));
+    }
 
-      await deleteMultipleCache(keys);
-    } catch (error) {
+    await deleteMultipleCache(Array.from(keysToDelete));
+  } catch (error) {
     console.error('Error clearing cache by tags:', error);
   }
 };
@@ -252,59 +252,38 @@ export const clearByTags = async (tags: string[]): Promise<void> => {
  */
 const deleteMultipleCache = async (keys: string[]): Promise<void> => {
   const store = await openStoreReadWrite();
-  await Promise.all(keys.map(key => store.delete(key)));
+  await Promise.all(keys.map((key) => requestToPromise(store.delete(key))));
 };
 
 /**
  * Cleanup expired entries
  */
-const cleanupExpiredEntries = async (store: IDBObjectStore): Promise<void> => {
+const cleanupExpiredEntries = async (): Promise<void> => {
+  const store = await openStoreReadWrite();
   const now = Date.now();
   const index = store.index('timestamp');
 
-  const request = index.openCursor(
-    IDBKeyRange.upperBound(now),
-    undefined,
-    100
-  );
-
   const keysToDelete = await new Promise<string[]>((resolve) => {
     const keys: string[] = [];
-    const request = index.openCursor(
-      IDBKeyRange.upperBound(now),
-      undefined,
-      100
-    );
+    const request = index.openCursor(IDBKeyRange.upperBound(now));
 
-    request.onsuccess = () => {
-      let done = false;
-      request.onsuccess = (event) => {
-        const cursor = event.target as IDBCursorWithValue;
+    request.onsuccess = (event) => {
+      const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>).result;
+      if (cursor) {
         const entry = cursor.value as CacheEntry<any>;
-
-        if (entry && entry.ttl && (now - entry.timestamp) > entry.ttl) {
-          keysToDelete.push(entry.key);
+        if (entry && entry.ttl && now - entry.timestamp > entry.ttl) {
+          keys.push(entry.key);
         }
-
-        if (!done) {
-          cursor.continue();
-        } else {
-          resolve(keys);
-        }
-      };
-      request.onerror = () => resolve(keys);
+        cursor.continue();
+      } else {
+        resolve(keys);
+      }
     };
 
-    await new Promise<void>((resolve) => {
-      request.continue();
-      setTimeout(() => {
-        cursor.close();
-        resolve();
-      }, 0);
-    });
+    request.onerror = () => resolve(keys);
+  });
 
-    // Deletar entradas expiradas
-    await deleteMultipleCache(keysToDelete);
+  await deleteMultipleCache(keysToDelete);
 };
 
 /**
@@ -351,11 +330,7 @@ export const getCacheStats = async (): Promise<{
   const db = await openDB();
   const store = await openStore();
 
-  const count = await new Promise<number>((resolve) => {
-    const request = store.count();
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => resolve(0);
-  });
+  const count = await requestToPromise(store.count()).catch(() => 0);
 
   return {
     size: await getCacheSize(),
@@ -386,19 +361,28 @@ export const CACHE_TAGS = {
  */
 export const setMultipleCache = async <T>(entries: Array<{ key: string; data: T; options?: CacheOptions }>): Promise<void> => {
   try {
-    const store = await openStoreReadWrite();
+    const db = await openDB();
+    const tx = db.transaction(CACHE_STORE_NAME, 'readwrite');
+    const store = tx.objectStore(CACHE_STORE_NAME);
 
     // Usar Promise.all para operações paralelas
     await Promise.all(
-      entries.map(({ key, data, options }) =>
-        new Promise<void>((resolve, reject) => {
-          const request = store.put({ ...data, key, timestamp: Date.now(), ttl: options?.ttl || 5 * 60 * 1000 });
-          request.onsuccess = () => resolve();
-          request.onerror = () => reject();
-        })
-      )
-    )
+      entries.map(({ key, data, options }) => {
+        const entry: CacheEntry<T> = {
+          key,
+          data,
+          timestamp: Date.now(),
+          ttl: options?.ttl || 5 * 60 * 1000,
+          tags: options?.tags,
+        };
+        return requestToPromise(store.put(entry)).then(() => undefined);
+      })
     );
+    await new Promise<void>((resolve, reject) => {
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
+    });
   } catch (error) {
     console.error('Error setting multiple cache:', error);
   }

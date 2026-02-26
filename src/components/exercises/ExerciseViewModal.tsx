@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from 'react';
-import { Dialog, DialogContent, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogClose, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -119,9 +119,12 @@ export function ExerciseViewModal({
         {/* Header */}
         <div className="flex-none p-4 sm:p-6 border-b bg-background/50 backdrop-blur-sm z-10 flex items-start justify-between gap-4">
           <div className="space-y-1.5 pt-1">
-            <h2 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <DialogTitle className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2">
               {exercise?.name ?? 'Exercício'}
-            </h2>
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Visualização detalhada do exercício {exercise?.name}
+            </DialogDescription>
             <div className="flex items-center gap-2 flex-wrap">
               {exercise.category && (
                 <Badge variant="secondary" className="bg-primary/5 text-primary hover:bg-primary/10 border-primary/10 transition-colors">

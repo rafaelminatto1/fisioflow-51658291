@@ -5,10 +5,8 @@
 import { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
 import { CalendarViewType } from '@/components/schedule/CalendarView';
 import { KeyboardShortcuts } from '@/components/schedule/KeyboardShortcuts';
-import { KeyboardShortcutsEnhanced } from '@/components/schedule/KeyboardShortcutsEnhanced';
 import { BulkActionsBar } from '@/components/schedule/BulkActionsBar';
-import { useAppointments, useRescheduleAppointment } from '@/hooks/useAppointments';
-import { useAppointmentsByPeriod } from '@/hooks/useAppointmentsByPeriod';
+import { useRescheduleAppointment } from '@/hooks/useAppointments';
 import { usePrefetchAdjacentPeriods } from '@/hooks/usePrefetchAdjacentPeriods';
 import { useFilteredAppointments } from '@/hooks/useFilteredAppointments';
 import { ViewType } from '@/utils/periodCalculations';
@@ -18,19 +16,14 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
 import { AlertTriangle } from 'lucide-react';
 import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { EmptyState, EmptyStateEnhanced } from '@/components/ui';
-import { CalendarSkeletonEnhanced, PulseLoader } from '@/components/schedule/skeletons/CalendarSkeletonEnhanced';
+import { EmptyState } from '@/components/ui';
+import { CalendarSkeletonEnhanced } from '@/components/schedule/skeletons/CalendarSkeletonEnhanced';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 // ============================================================================
 // NOVOS COMPONENTES DE QUICK WINS
 // ============================================================================
-import { QuickFilters } from '@/components/schedule/QuickFilters';
-import { PullToRefresh } from '@/components/schedule/PullToRefresh';
-import { SwipeNavigation } from '@/components/schedule/SwipeNavigation';
-import { CalendarHeatMap } from '@/components/schedule/CalendarHeatMap';
-import { DebouncedSearch } from '@/components/schedule/DebouncedSearch';
 // ScheduleToolbar removed - actions merged into CalendarView header
 import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
 import { APPOINTMENT_CONFLICT_MESSAGE, APPOINTMENT_CONFLICT_TITLE, isAppointmentConflictError } from '@/utils/appointmentErrors';

@@ -7,7 +7,7 @@
  * To use: Import from this file instead of appointmentService.ts
  */
 
-import { collection, query, where, getDocs, orderBy, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '@/integrations/firebase/app';
 import { AppointmentBase, AppointmentStatus, AppointmentType } from '@/types/appointment';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -35,7 +35,7 @@ export class AppointmentServiceDirect {
       // Note: orderBy requires a composite index
       // For now, query without orderBy and sort in memory
       const appointmentsRef = collection(db, 'appointments');
-      let q = query(
+      const q = query(
         appointmentsRef,
         where('organization_id', '==', organizationId)
       );

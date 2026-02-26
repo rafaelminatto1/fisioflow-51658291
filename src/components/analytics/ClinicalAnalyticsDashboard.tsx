@@ -10,7 +10,6 @@ import { useClinicalAnalytics } from '@/hooks/useClinicalAnalytics';
 import { 
   Users, 
   Activity, 
-  BarChart3, 
   TrendingUp, 
   AlertCircle,
   Dumbbell,

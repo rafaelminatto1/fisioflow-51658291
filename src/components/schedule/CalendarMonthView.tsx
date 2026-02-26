@@ -115,6 +115,10 @@ const CalendarMonthView = memo(({
                                                     style={{ background: getStatusColor(apt.status, isOverCapacity(apt)) }}
                                                     title={`${apt.patientName} - ${apt.time}`}
                                                     onPointerDownCapture={(e) => e.stopPropagation()}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setOpenPopoverId(apt.id);
+                                                    }}
                                                     role="button"
                                                     tabIndex={0}
                                                     aria-label={`${apt.patientName} às ${apt.time} - ${apt.type || 'Agendamento'}`}

@@ -31,6 +31,7 @@ const { getFirebaseAdmin } = require('./lib/firebase-admin-helper.cjs');
 // Configuration
 const CONFIG = {
   testUserEmail: process.env.E2E_USER_EMAIL || 'teste@moocafisio.com.br',
+  testUserUid: process.env.E2E_USER_UID || null,
   patientsCount: parseInt(process.env.E2E_PATIENTS_COUNT || '10'),
   appointmentsPerPatient: parseInt(process.env.E2E_APPOINTMENTS_PER_PATIENT || '5'),
   orgId: process.env.E2E_ORG_ID || null,
@@ -366,18 +367,37 @@ async function seedScheduleConfig(db, orgId) {
   console.log('   ✅ Schedule configuration created for Mon-Fri');
 }
 
-async function ensureUserRole(db, userEmail) {
+async function ensureUserRole(db, userEmail, userUid = null) {
   console.log(`\n🔐 Ensuring test user has correct role...`);
-
-  const usersSnapshot = await db.collection('profiles')
-    .where('email', '==', userEmail)
-    .limit(1)
-    .get();
 
   let userId;
   let organizationId;
+  let userDoc;
+  let userData;
 
-  if (usersSnapshot.empty) {
+  if (userUid) {
+    const profileByUid = await db.collection('profiles').doc(userUid).get();
+    if (profileByUid.exists) {
+      userDoc = profileByUid;
+      userData = profileByUid.data();
+      userId = profileByUid.id;
+    }
+  }
+
+  if (!userDoc) {
+    const usersSnapshot = await db.collection('profiles')
+      .where('email', '==', userEmail)
+      .limit(1)
+      .get();
+
+    if (!usersSnapshot.empty) {
+      userDoc = usersSnapshot.docs[0];
+      userData = userDoc.data();
+      userId = userDoc.id;
+    }
+  }
+
+  if (!userDoc) {
     console.log(`⚠️  User ${userEmail} not found in profiles collection, creating profile...`);
 
     // First create a default organization
@@ -409,15 +429,11 @@ async function ensureUserRole(db, userEmail) {
       updated_at: now,
     };
 
-    const profileRef = await db.collection('profiles').add(newProfile);
-    userId = profileRef.id;
+    userId = userUid || db.collection('profiles').doc().id;
+    await db.collection('profiles').doc(userId).set(newProfile);
     console.log(`   ✅ Created profile for test user: ${userId}`);
     return { userId, organizationId };
   }
-
-  const userDoc = usersSnapshot.docs[0];
-  const userData = userDoc.data();
-  userId = userDoc.id;
   organizationId = userData.organization_id;
 
   // Create organization if user doesn't have one
@@ -437,7 +453,7 @@ async function ensureUserRole(db, userEmail) {
     organizationId = orgRef.id;
 
     // Update user profile with organization_id
-    await userDoc.ref.update({
+    await db.collection('profiles').doc(userId).update({
       organization_id: organizationId,
       updated_at: now,
     });
@@ -446,7 +462,7 @@ async function ensureUserRole(db, userEmail) {
 
   // Set role to admin if it's pending or missing
   if (userData.role === 'pending' || !userData.role) {
-    await userDoc.ref.update({
+    await db.collection('profiles').doc(userId).update({
       role: 'admin',
       updated_at: new Date().toISOString(),
     });
@@ -599,14 +615,54 @@ async function main() {
     const { db, auth } = getFirebaseAdmin();
     console.log('🔥 Firebase Admin initialized');
 
+    // Ensure Auth user exists
+    let authUser;
+    let isNewUser = false;
+    try {
+      authUser = await auth.getUserByEmail(CONFIG.testUserEmail);
+      console.log(`✅ Auth user found: ${authUser.uid}`);
+    } catch (e) {
+      if (e.code === 'auth/user-not-found' || e.message.includes('no user record')) {
+        authUser = await auth.createUser({
+          uid: CONFIG.testUserUid || undefined,
+          email: CONFIG.testUserEmail,
+          password: 'Yukari3030@', // Padrão E2E
+          emailVerified: true,
+        });
+        isNewUser = true;
+        console.log(`✅ Auth user created: ${authUser.uid}`);
+        
+        // Aguarda o trigger onUserCreated terminar (corrida de escrita de claims)
+        console.log('⏳ Waiting for onUserCreated trigger...');
+        await new Promise(resolve => setTimeout(resolve, 3000));
+      } else {
+        throw e;
+      }
+    }
+
     // Ensure test user has correct role (NOT pending) and get IDs
-    const { userId: therapistId, organizationId: orgId } = await ensureUserRole(db, CONFIG.testUserEmail);
+    const { userId: therapistId, organizationId: orgId } = await ensureUserRole(
+      db,
+      CONFIG.testUserEmail,
+      authUser.uid
+    );
     if (!therapistId) {
       throw new Error(`User ${CONFIG.testUserEmail} not found in profiles collection`);
     }
 
     console.log(`🏢 Organization ID: ${orgId}`);
     console.log(`👨‍⚕️  Therapist ID: ${therapistId}`);
+
+    // Firestore rules are claim-based; ensure emulator user has org/role claims.
+    await auth.setCustomUserClaims(authUser.uid, {
+      role: 'admin',
+      admin: true,
+      isAdmin: true,
+      isProfessional: true,
+      organizationId: orgId,
+      organization_id: orgId,
+    });
+    console.log(`🔑 Custom claims applied to ${authUser.uid}`);
 
     // Seed patients
     const patients = await seedPatients(db, orgId, therapistId, CONFIG.patientsCount);

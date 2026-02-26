@@ -54,6 +54,9 @@ export default defineConfig({
     // Exclude Edge Functions and problematic tests
     exclude: [
       'node_modules/',
+      '**/node_modules/**',
+      'packages/**/node_modules/**',
+      'packages/core/node_modules/**',
       'dist/',
       '.idea/',
       '.git/',
@@ -63,6 +66,7 @@ export default defineConfig({
       // Exclude workspace apps (they have their own test configs)
       'professional-app/**',
       'patient-app/**',
+      'apps/professional-ios/**',
       // Exclude workspace node_modules that have Jest tests
       '**/node_modules/exponential-backoff/**',
       '**/node_modules/wonka/**',
@@ -87,6 +91,7 @@ export default defineConfig({
       'accessibility-tests/**',
       'test-start-attendance.spec.ts',
       'src/lib/a11y/__tests__/index.test.ts',
+      'apps/professional-ios/__tests__/firebase-security-rules.test.ts',
     ],
 
     // Test timeouts

@@ -5,17 +5,14 @@
  * mostrando ângulos de articulações e feedback visual de forma.
  */
 
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import {
   PoseLandmark,
-  POSE_LANDMARKS,
   MainJoint,
   getAngleTriad,
-  getJointNamePT,
 } from '@/types/pose';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // TIPOS

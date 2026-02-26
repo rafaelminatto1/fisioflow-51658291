@@ -7,6 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrganizations } from '@/hooks/useOrganizations';
 import { appointmentsApi } from '@/integrations/firebase/functions';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
@@ -67,12 +68,16 @@ export interface SurveyFilters {
 }
 
 export function useSatisfactionSurveys(filters?: SurveyFilters) {
-  const { _user } = useAuth();
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
+
   return useQuery({
-    queryKey: ['satisfaction-surveys', filters],
+    queryKey: ['satisfaction-surveys', organizationId, filters],
     queryFn: async () => {
+      if (!organizationId) return [];
       const q = firestoreQuery(
         collection(db, 'satisfaction_surveys'),
+        where('organization_id', '==', organizationId),
         orderBy('sent_at', 'desc')
       );
 
@@ -112,7 +117,7 @@ export function useSatisfactionSurveys(filters?: SurveyFilters) {
         if (patientDoc.exists()) {
           patientMap.set(patientId, {
             id: patientDoc.id,
-            full_name: patientDoc.data().full_name as string,
+            full_name: (patientDoc.data().full_name || patientDoc.data().name) as string,
           });
         }
       }));
@@ -127,7 +132,7 @@ export function useSatisfactionSurveys(filters?: SurveyFilters) {
         if (appointmentDoc.exists()) {
           appointmentMap.set(appointmentId, {
             id: appointmentDoc.id,
-            start_time: appointmentDoc.data().start_time as string,
+            start_time: (appointmentDoc.data().start_time || appointmentDoc.data().date) as string,
           });
         } else {
           try {
@@ -166,14 +171,23 @@ export function useSatisfactionSurveys(filters?: SurveyFilters) {
         } : undefined,
       })) as SatisfactionSurvey[];
     },
+    enabled: !!organizationId,
   });
 }
 
 export function useSurveyStats() {
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
+
   return useQuery({
-    queryKey: ['survey-stats'],
+    queryKey: ['survey-stats', organizationId],
     queryFn: async () => {
-      const snapshot = await getDocs(collection(db, 'satisfaction_surveys'));
+      if (!organizationId) return null;
+      const q = firestoreQuery(
+        collection(db, 'satisfaction_surveys'),
+        where('organization_id', '==', organizationId)
+      );
+      const snapshot = await getDocs(q);
       const surveys = snapshot.docs.map(doc => normalizeFirestoreData(doc.data())) as SatisfactionSurvey[];
 
       const total = surveys.length || 0;
@@ -212,27 +226,23 @@ export function useSurveyStats() {
         responseRate,
       };
     },
+    enabled: !!organizationId,
   });
 }
 
 export function useCreateSurvey() {
   const { user } = useAuth();
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (data: CreateSurveyData) => {
-      if (!user) throw new Error('Usuário não autenticado');
-
-      const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
-      const profileData = profileDoc.exists() ? profileDoc.data() : null;
-
-      if (!profileData?.organization_id) {
-        throw new Error('Organização não encontrada');
-      }
+      if (!user || !organizationId) throw new Error('Usuário não autenticado ou organização não encontrada');
 
       const surveyData = {
         ...data,
-        organization_id: profileData.organization_id,
+        organization_id: organizationId,
         sent_at: new Date().toISOString(),
         responded_at: new Date().toISOString(),
         created_at: new Date().toISOString(),
@@ -246,7 +256,7 @@ export function useCreateSurvey() {
       const patientDoc = await getDoc(doc(db, 'patients', data.patient_id));
       const patient = patientDoc.exists() ? {
         id: patientDoc.id,
-        full_name: patientDoc.data().full_name,
+        full_name: (patientDoc.data().full_name || patientDoc.data().name) as string,
       } : null;
 
       return {
@@ -256,8 +266,8 @@ export function useCreateSurvey() {
       } as SatisfactionSurvey;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['satisfaction-surveys'] });
-      queryClient.invalidateQueries({ queryKey: ['survey-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['satisfaction-surveys', organizationId] });
+      queryClient.invalidateQueries({ queryKey: ['survey-stats', organizationId] });
       toast.success('Pesquisa de satisfação registrada');
     },
     onError: (error: unknown) => {
@@ -268,6 +278,8 @@ export function useCreateSurvey() {
 
 export function useUpdateSurvey() {
   const queryClient = useQueryClient();
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
 
   return useMutation({
     mutationFn: async ({ id, ...data }: Partial<CreateSurveyData> & { id: string }) => {
@@ -283,8 +295,8 @@ export function useUpdateSurvey() {
       return { id, ...docSnap.data() } as SatisfactionSurvey;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['satisfaction-surveys'] });
-      queryClient.invalidateQueries({ queryKey: ['survey-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['satisfaction-surveys', organizationId] });
+      queryClient.invalidateQueries({ queryKey: ['survey-stats', organizationId] });
       toast.success('Pesquisa atualizada');
     },
     onError: (error: unknown) => {
@@ -295,14 +307,16 @@ export function useUpdateSurvey() {
 
 export function useDeleteSurvey() {
   const queryClient = useQueryClient();
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
 
   return useMutation({
     mutationFn: async (id: string) => {
       await deleteDoc(doc(db, 'satisfaction_surveys', id));
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['satisfaction-surveys'] });
-      queryClient.invalidateQueries({ queryKey: ['survey-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['satisfaction-surveys', organizationId] });
+      queryClient.invalidateQueries({ queryKey: ['survey-stats', organizationId] });
       toast.success('Pesquisa removida');
     },
     onError: (error: unknown) => {

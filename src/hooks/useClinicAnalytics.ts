@@ -4,8 +4,9 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, orderBy, db } from '@/integrations/firebase/app';
+import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, orderBy, db, limit } from '@/integrations/firebase/app';
 import { subDays, subMonths, startOfDay, endOfDay, startOfWeek, startOfMonth } from 'date-fns';
+import { useOrganizations } from './useOrganizations';
 import {
 
   generateDashboardMetrics,
@@ -100,11 +101,14 @@ interface DashboardMetricsOptions {
 }
 
 export function useDashboardMetrics(options: DashboardMetricsOptions = {}) {
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
   const { period = 'month', startDate, endDate } = options;
 
   return useQuery({
-    queryKey: QUERY_KEYS.dashboard(period),
+    queryKey: [...QUERY_KEYS.dashboard(period), organizationId],
     queryFn: async (): Promise<ClinicDashboardMetrics> => {
+      if (!organizationId) throw new Error('Organização não identificada');
       // Calculate date range
       let start: Date;
       let end: Date;
@@ -139,13 +143,22 @@ export function useDashboardMetrics(options: DashboardMetricsOptions = {}) {
       const [appointmentsSnap, patientsSnap, profilesSnap, paymentsSnap] = await Promise.all([
         getDocs(firestoreQuery(
           collection(db, 'appointments'),
+          where('organization_id', '==', organizationId),
           where('date', '>=', start.toISOString()),
           where('date', '<=', end.toISOString())
         )),
-        getDocs(firestoreQuery(collection(db, 'patients'), orderBy('created_at', 'desc'))),
-        getDocs(collection(db, 'profiles')),
+        getDocs(firestoreQuery(
+          collection(db, 'patients'),
+          where('organization_id', '==', organizationId),
+          orderBy('created_at', 'desc')
+        )),
+        getDocs(firestoreQuery(
+          collection(db, 'profiles'),
+          where('organization_id', '==', organizationId)
+        )),
         getDocs(firestoreQuery(
           collection(db, 'payments'),
+          where('organization_id', '==', organizationId),
           where('date', '>=', start.toISOString()),
           where('date', '<=', end.toISOString())
         )),
@@ -162,10 +175,11 @@ export function useDashboardMetrics(options: DashboardMetricsOptions = {}) {
         patientIds.map(async (patientId: string) => {
           const aptSnap = await getDocs(firestoreQuery(
             collection(db, 'appointments'),
+            where('organization_id', '==', organizationId),
             where('patient_id', '==', patientId),
             where('status', '==', 'atendido'),
             orderBy('date', 'desc'),
-            // Note: Firebase doesn't have limit(1) with getDocs, so we take first from results
+            limit(1)
           ));
 
           return {
@@ -190,6 +204,7 @@ export function useDashboardMetrics(options: DashboardMetricsOptions = {}) {
         BUSINESS_HOURS
       );
     },
+    enabled: !!organizationId,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 15 * 60 * 1000, // 15 minutes
   });
@@ -205,11 +220,14 @@ interface TrendsOptions {
 }
 
 export function useAppointmentTrends(options: TrendsOptions = {}) {
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
   const { period = 'month', groupBy = 'day' } = options;
 
   return useQuery({
-    queryKey: QUERY_KEYS.trends(period, 'appointments'),
+    queryKey: [...QUERY_KEYS.trends(period, 'appointments'), organizationId],
     queryFn: async (): Promise<TrendData[]> => {
+      if (!organizationId) return [];
       const end = new Date();
       let start: Date;
 
@@ -235,6 +253,7 @@ export function useAppointmentTrends(options: TrendsOptions = {}) {
 
       const snap = await getDocs(firestoreQuery(
         collection(db, 'appointments'),
+        where('organization_id', '==', organizationId),
         where('date', '>=', start.toISOString()),
         where('date', '<=', end.toISOString())
       ));
@@ -242,10 +261,11 @@ export function useAppointmentTrends(options: TrendsOptions = {}) {
       const appointments = snap.docs.map(convertDoc) || [];
       const completedAppointments = appointments
         .filter((a) => a.status === 'completed')
-        .map((a) => ({ date: a.date, value: 1 }));
+        .map((a) => ({ date: a.date as string, value: 1 }));
 
       return generateTrendData(completedAppointments, start, end, groupBy);
     },
+    enabled: !!organizationId,
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 }
@@ -255,11 +275,14 @@ export function useAppointmentTrends(options: TrendsOptions = {}) {
 // =====================================================================
 
 export function useRevenueTrends(options: TrendsOptions = {}) {
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
   const { period = 'month', groupBy = 'day' } = options;
 
   return useQuery({
-    queryKey: QUERY_KEYS.trends(period, 'revenue'),
+    queryKey: [...QUERY_KEYS.trends(period, 'revenue'), organizationId],
     queryFn: async (): Promise<TrendData[]> => {
+      if (!organizationId) return [];
       const end = new Date();
       let start: Date;
 
@@ -285,16 +308,18 @@ export function useRevenueTrends(options: TrendsOptions = {}) {
 
       const snap = await getDocs(firestoreQuery(
         collection(db, 'payments'),
+        where('organization_id', '==', organizationId),
         where('date', '>=', start.toISOString()),
         where('date', '<=', end.toISOString()),
         where('status', '==', 'paid')
       ));
 
       const payments = snap.docs.map(convertDoc) || [];
-      const paymentData = payments.map((p) => ({ date: p.date, value: p.amount }));
+      const paymentData = payments.map((p) => ({ date: p.date as string, value: p.amount as number }));
 
       return generateTrendData(paymentData, start, end, groupBy);
     },
+    enabled: !!organizationId,
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 }
@@ -304,11 +329,14 @@ export function useRevenueTrends(options: TrendsOptions = {}) {
 // =====================================================================
 
 export function usePatientTrends(options: TrendsOptions = {}) {
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
   const { period = 'month', groupBy = 'day' } = options;
 
   return useQuery({
-    queryKey: QUERY_KEYS.trends(period, 'patients'),
+    queryKey: [...QUERY_KEYS.trends(period, 'patients'), organizationId],
     queryFn: async (): Promise<TrendData[]> => {
+      if (!organizationId) return [];
       const end = new Date();
       let start: Date;
 
@@ -334,6 +362,7 @@ export function usePatientTrends(options: TrendsOptions = {}) {
 
       const snap = await getDocs(firestoreQuery(
         collection(db, 'patients'),
+        where('organization_id', '==', organizationId),
         where('created_at', '>=', start.toISOString()),
         where('created_at', '<=', end.toISOString())
       ));
@@ -345,6 +374,7 @@ export function usePatientTrends(options: TrendsOptions = {}) {
 
       return generateTrendData(newPatients, start, end, groupBy);
     },
+    enabled: !!organizationId,
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 }
@@ -358,11 +388,14 @@ interface ComparisonMetricsOptions {
 }
 
 export function useComparisonMetrics(options: ComparisonMetricsOptions) {
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
   const { currentPeriod = 'month' } = options;
 
   return useQuery({
-    queryKey: ['analytics', 'comparison', currentPeriod],
+    queryKey: ['analytics', 'comparison', currentPeriod, organizationId],
     queryFn: async () => {
+      if (!organizationId) return null;
       const end = new Date();
       let currentStart: Date;
       let previousEnd: Date;
@@ -404,11 +437,13 @@ export function useComparisonMetrics(options: ComparisonMetricsOptions) {
       const [currentSnap, previousSnap] = await Promise.all([
         getDocs(firestoreQuery(
           collection(db, 'appointments'),
+          where('organization_id', '==', organizationId),
           where('date', '>=', currentStart.toISOString()),
           where('date', '<=', end.toISOString())
         )),
         getDocs(firestoreQuery(
           collection(db, 'appointments'),
+          where('organization_id', '==', organizationId),
           where('date', '>=', previousStart.toISOString()),
           where('date', '<=', previousEnd.toISOString())
         )),
@@ -434,6 +469,7 @@ export function useComparisonMetrics(options: ComparisonMetricsOptions) {
         trend,
       };
     },
+    enabled: !!organizationId,
     staleTime: 15 * 60 * 1000, // 15 minutes
   });
 }
@@ -450,15 +486,20 @@ interface TopPerformer {
 }
 
 export function useTopPerformers(metric: 'appointments' | 'revenue' = 'appointments') {
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
+
   return useQuery({
-    queryKey: ['analytics', 'top-performers', metric],
+    queryKey: ['analytics', 'top-performers', metric, organizationId],
     queryFn: async (): Promise<TopPerformer[]> => {
+      if (!organizationId) return [];
       const start = startOfMonth(new Date());
       const end = new Date();
 
       if (metric === 'appointments') {
         const snap = await getDocs(firestoreQuery(
           collection(db, 'appointments'),
+          where('organization_id', '==', organizationId),
           where('date', '>=', start.toISOString()),
           where('date', '<=', end.toISOString()),
           where('status', '==', 'completed')
@@ -500,6 +541,7 @@ export function useTopPerformers(metric: 'appointments' | 'revenue' = 'appointme
         // Revenue by therapist - requires payment appointments to have therapist_id
         const snap = await getDocs(firestoreQuery(
           collection(db, 'payments'),
+          where('organization_id', '==', organizationId),
           where('date', '>=', start.toISOString()),
           where('date', '<=', end.toISOString()),
           where('status', '==', 'paid')
@@ -512,6 +554,7 @@ export function useTopPerformers(metric: 'appointments' | 'revenue' = 'appointme
         return [];
       }
     },
+    enabled: !!organizationId,
     staleTime: 30 * 60 * 1000, // 30 minutes
   });
 }

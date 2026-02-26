@@ -90,25 +90,6 @@ export default function Integrations() {
             </Button>
           </CardContent>
         </Card>
-
-        {/* Looker Studio */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-yellow-100 rounded-lg"><BarChart3 className="w-6 h-6 text-yellow-600" /></div>
-              <CardTitle>Looker Studio</CardTitle>
-            </div>
-            <CardDescription>Business Intelligence avançado.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 mb-4">
-              Visualize seus dados do Postgres em dashboards personalizados do Google.
-            </p>
-            <Button variant="outline" className="w-full" asChild>
-              <a href="https://lookerstudio.google.com/" target="_blank" rel="noreferrer">Abrir Looker Studio</a>
-            </Button>
-          </CardContent>
-        </Card>
       </div>
       </div>
     </MainLayout>

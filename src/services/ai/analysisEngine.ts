@@ -17,15 +17,12 @@ import {
   SeverityLevel,
   PostureIssueType,
   MainJoint,
-  getAngleTriad,
   ExerciseType,
   ExerciseTemplate,
   getExerciseTemplate,
-  DEFAULT_THRESHOLDS,
   RomData,
 } from '@/types/pose';
 import { calculateAngle } from '@/utils/geometry';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // ============================================================================
 // CONFIGURAÇÕES

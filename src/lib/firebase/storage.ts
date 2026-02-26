@@ -72,6 +72,12 @@ export interface UploadOptions {
    * @default true
    */
   retry?: boolean;
+
+  /**
+   * Include authenticated user id as an extra folder segment.
+   * @default true
+   */
+  includeUserIdPath?: boolean;
 }
 
 export interface UploadResult {
@@ -200,6 +206,7 @@ export async function uploadFile(
     contentType = file.type,
     metadata: customMetadata,
     onProgress,
+    includeUserIdPath = true,
     _retry = true,
   } = options;
 
@@ -209,7 +216,7 @@ export async function uploadFile(
 
   // Build path
   const pathParts = [folder];
-  if (userId) pathParts.push(userId);
+  if (includeUserIdPath && userId) pathParts.push(userId);
   const filename = generateFilename(file.name, customName);
   pathParts.push(filename);
   const path = pathParts.join('/');

@@ -5,7 +5,7 @@
  * para reduzir o tempo de espera quando o usuário inicia um exercício.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { poseDetectionService } from '@/services/ai/poseDetectionService';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 

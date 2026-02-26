@@ -15,30 +15,17 @@ import {
   Flame,
   ChevronDown,
   ChevronUp,
-  Library,
-  ImageOff,
   MoreVertical,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useExercises, type Exercise } from '@/hooks/useExercises';
 import { withImageParams } from '@/lib/storageProxy';
 import type { ExerciseV2Item, ExerciseFeedback } from './types';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
+
+
+
+
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import {
   DropdownMenu,

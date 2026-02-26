@@ -7,8 +7,8 @@ import { doc, updateDoc, collection, getDocs, query as firestoreQuery, where } f
 import { useState, useCallback } from 'react';
 import { addDays, format } from 'date-fns';
 import { useWaitlist, WaitlistEntry } from './useWaitlist';
+import { useOrganizations } from './useOrganizations';
 import {
-
   generateAvailableSlots,
   generateWaitlistRecommendations,
   findBestSlotForPatient,
@@ -37,6 +37,8 @@ interface UseSmartWaitlistOptions {
 }
 
 export function useSmartWaitlist(options: UseSmartWaitlistOptions = {}) {
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
   const { daysAhead = 14, candidatesPerSlot = 3 } = options;
   const [selectedDateRange, setSelectedDateRange] = useState({
     start: new Date(),
@@ -46,15 +48,18 @@ export function useSmartWaitlist(options: UseSmartWaitlistOptions = {}) {
   const { data: waitlist = [], isLoading: isLoadingWaitlist } = useWaitlist({ status: 'waiting' });
 
   const recommendationsQuery = useQuery({
-    queryKey: ['smart-waitlist', 'recommendations', selectedDateRange, waitlist],
+    queryKey: ['smart-waitlist', 'recommendations', organizationId, selectedDateRange, waitlist],
     queryFn: async (): Promise<WaitlistRecommendation[]> => {
+      if (!organizationId) return [];
       // Buscar feriados e bloqueios
       const blockedDates: Date[] = [];
       const blockedTimes: Record<string, string[]> = {};
 
       try {
         // 1. Buscar feriados
-        const feriadosSnap = await getDocs(collection(db, 'feriados'));
+        const feriadosSnap = await getDocs(
+          firestoreQuery(collection(db, 'feriados'), where('organization_id', '==', organizationId))
+        );
         feriadosSnap.docs.forEach(doc => {
           const data = doc.data();
           if (data.date) blockedDates.push(new Date(data.date));
@@ -63,6 +68,7 @@ export function useSmartWaitlist(options: UseSmartWaitlistOptions = {}) {
         // 2. Buscar agendamentos bloqueados ou já ocupados
         const appointmentsQuery = firestoreQuery(
           collection(db, 'appointments'),
+          where('organization_id', '==', organizationId),
           where('date', '>=', format(selectedDateRange.start, 'yyyy-MM-dd')),
           where('date', '<=', format(selectedDateRange.end, 'yyyy-MM-dd'))
         );
@@ -88,7 +94,7 @@ export function useSmartWaitlist(options: UseSmartWaitlistOptions = {}) {
 
       return generateWaitlistRecommendations(waitlist, availableSlots, candidatesPerSlot);
     },
-    enabled: waitlist.length > 0,
+    enabled: !!organizationId && waitlist.length > 0,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 

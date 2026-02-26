@@ -20,6 +20,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font } from '@react-pdf/renderer';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserProfile } from '@/hooks/useUserProfile';
 import { db, collection, query as firestoreQuery, where, getDocs, addDoc, setDoc, doc, getDoc, limit, orderBy as firestoreOrderBy } from '@/integrations/firebase/app';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { Activity } from 'lucide-react';
@@ -719,6 +720,8 @@ function RelatorioEditor({
 
 export default function RelatorioConvenioPage() {
   const { user } = useAuth();
+  const { profile } = useUserProfile();
+  const organizationId = profile?.organization_id;
   const { currentOrganization: orgData } = useOrganizations();
   const queryClient = useQueryClient();
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -728,51 +731,70 @@ export default function RelatorioConvenioPage() {
 
   // Buscar relatórios salvos
   const { data: relatorios = [], isLoading } = useQuery({
-    queryKey: ['relatorios-convenio'],
+    queryKey: ['relatorios-convenio', organizationId],
     queryFn: async () => {
+      if (!organizationId) return [];
       const q = firestoreQuery(
         collection(db, 'relatorios_convenio'),
+        where('organization_id', '==', organizationId),
         firestoreOrderBy('data_emissao', 'desc')
       );
       const snapshot = await getDocs(q);
       return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as RelatorioConvenioData[];
     },
+    enabled: !!organizationId,
   });
 
   // Buscar pacientes
   const { data: pacientes = [] } = useQuery({
-    queryKey: ['pacientes-select'],
+    queryKey: ['pacientes-select', organizationId],
     queryFn: async () => {
-      const q = firestoreQuery(collection(db, 'patients'), firestoreOrderBy('full_name'));
+      if (!organizationId) return [];
+      const q = firestoreQuery(
+        collection(db, 'patients'),
+        where('organization_id', '==', organizationId),
+        firestoreOrderBy('full_name')
+      );
       const snapshot = await getDocs(q);
       return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Array<{ id: string; full_name: string; cpf?: string; birth_date?: string; phone?: string; email?: string }>;
     },
+    enabled: !!organizationId,
   });
 
   // Buscar convênios
   const { data: convenios = [] } = useQuery({
-    queryKey: ['convenios-select'],
+    queryKey: ['convenios-select', organizationId],
     queryFn: async () => {
-      const snapshot = await getDocs(collection(db, 'convenios'));
+      if (!organizationId) return [];
+      const q = firestoreQuery(
+        collection(db, 'convenios'),
+        where('organization_id', '==', organizationId)
+      );
+      const snapshot = await getDocs(q);
       return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Array<{ id: string; nome: string; cnpj?: string; codigo_ans?: string }>;
     },
+    enabled: !!organizationId,
   });
 
   // Salvar relatório
   const saveRelatorio = useMutation({
     mutationFn: async (data: RelatorioConvenioData) => {
+      if (!organizationId) throw new Error('Organização não identificada');
       if (data.id) {
         const docRef = doc(db, 'relatorios_convenio', data.id);
-        await setDoc(docRef, data, { merge: true });
+        await setDoc(docRef, { ...data, organization_id: organizationId }, { merge: true });
         return data;
       } else {
         const { _id, ...rest } = data;
-        const docRef = await addDoc(collection(db, 'relatorios_convenio'), rest);
+        const docRef = await addDoc(collection(db, 'relatorios_convenio'), {
+          ...rest,
+          organization_id: organizationId,
+        });
         return { id: docRef.id, ...rest };
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['relatorios-convenio'] });
+      queryClient.invalidateQueries({ queryKey: ['relatorios-convenio', organizationId] });
       toast.success('Relatório salvo com sucesso!');
       setIsEditorOpen(false);
       setEditingRelatorio(null);
@@ -782,12 +804,14 @@ export default function RelatorioConvenioPage() {
 
   // Criar relatório a partir de atendimentos
   const criarRelatorio = async (pacienteId: string) => {
+    if (!organizationId) return;
     // Buscar atendimentos do paciente
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
     const qAppointments = firestoreQuery(
       collection(db, 'appointments'),
+      where('organization_id', '==', organizationId),
       where('patient_id', '==', pacienteId),
       where('start_time', '>=', oneMonthAgo.toISOString()),
       firestoreOrderBy('start_time', 'asc')
@@ -816,6 +840,7 @@ export default function RelatorioConvenioPage() {
     // Buscar convênio do paciente
     const qConvenio = firestoreQuery(
       collection(db, 'patient_convenios'),
+      where('organization_id', '==', organizationId),
       where('patient_id', '==', pacienteId),
       where('ativo', '==', true),
       limit(1)
@@ -831,11 +856,12 @@ export default function RelatorioConvenioPage() {
       }
     }
 
-    if (!convenio) convenio = convenios[0];
+    if (!convenio) convenio = (convenios as any[])[0];
 
     // Buscar evoluções
     const qEvolucoes = firestoreQuery(
       collection(db, 'evolucoes'),
+      where('organization_id', '==', organizationId),
       where('patient_id', '==', pacienteId),
       firestoreOrderBy('data', 'desc'),
       limit(5)

@@ -8,7 +8,7 @@
  * - Hide/show por viewport
  */
 
-import React, { useMemo, useCallback, useRef, useEffect, useState } from 'react';
+import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { useWindowSize } from '@/hooks/use-mobile';
 
 // ============================================================================

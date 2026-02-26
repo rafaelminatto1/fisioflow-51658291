@@ -194,6 +194,20 @@ export const healthCheck = onRequest(async (req: any, res: any) => {
     return healthCheckHandler(req, res);
 });
 
+export {
+    indexExistingEvolutions,
+    indexEvolution,
+    reindexPatientEvolutions,
+    removeEvolutionEmbedding,
+    getIndexingStats
+} from './ai/indexing';
+
+export {
+    indexKnowledgeArticles,
+    indexKnowledgeArticlesScheduled,
+    semanticSearchKnowledge
+} from './ai/knowledge-indexing';
+
 // Proxy de imagens para evitar problemas de CORS
 export const exerciseImageProxy = onRequest(
     {
@@ -206,3 +220,40 @@ export const exerciseImageProxy = onRequest(
         const { exerciseImageProxy } = await import('./api/exerciseImage');
         return exerciseImageProxy(req, res);
     });
+
+// ============================================================================
+// KNOWLEDGE RAG (NOTEBOOKLM)
+// ============================================================================
+// @ts-ignore - Ignoring type check for new module
+export { processArtifact, queryArtifact } from './ai/knowledge-rag';
+
+// ============================================================================
+// WIKI TRIAGE AUTOMATION
+// ============================================================================
+export { onWikiChecklistCompletedMoveToDone, notifyBlockedWikiTriageCards } from './wiki/triage-automation';
+export { syncWikiTriageEventsToBigQuery } from './wiki/triage-bigquery-sync';
+
+// ============================================================================
+// SECURITY / COMPLIANCE (DLP)
+// ============================================================================
+export { scanDocumentDLP } from './security/dlp-scanner';
+
+// ============================================================================
+// HEALTHCARE & WEARABLES (FHIR)
+// ============================================================================
+export { ingestWearableData } from './healthcare/wearable-ingestion';
+
+// ============================================================================
+// ANALYTICS & BI (BigQuery)
+// ============================================================================
+export { syncFhirToBigQuery } from './analytics/bigquery-sync';
+
+// ============================================================================
+// TELEMEDICINE
+// ============================================================================
+export { 
+    createTelemedicineRoom, 
+    joinTelemedicineRoom, 
+    endTelemedicineRoom, 
+    getTelemedicineHistory 
+} from './integrations/telemedicine';

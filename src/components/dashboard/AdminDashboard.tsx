@@ -234,7 +234,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
                   <div className="flex items-baseline gap-2 mb-2">
                     <p className="text-4xl font-black tracking-tighter text-slate-900 dark:text-white group-hover:scale-105 origin-left transition-transform duration-500">{metrics?.taxaNoShow || 0}%</p>
                     <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-border/50 px-2 py-0 bg-slate-50 dark:bg-slate-800">
-                      META < 10%
+                      META 10%
                     </Badge>
                   </div>
                   <p className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Média móvel (30 dias)</p>

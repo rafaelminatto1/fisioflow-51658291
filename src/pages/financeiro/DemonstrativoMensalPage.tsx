@@ -13,6 +13,7 @@ import { Tooltip, ResponsiveContainer, Cell, PieChart as RechartsPieChart, Pie }
 import { useQuery } from '@tanstack/react-query';
 import { db, collection, query, where, getDocs } from '@/integrations/firebase/app';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { useOrganizations } from '@/hooks/useOrganizations';
 
 interface DemonstrativoData {
   entradas: number;
@@ -30,7 +31,9 @@ interface DemonstrativoData {
 const COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
 
 export default function DemonstrativoMensalPage() {
-  const [mesSelecionado, setMesSelecionado] = useState(format(new Date(), 'yyyy-MM'));
+  const { currentOrganization } = useOrganizations();
+  const organizationId = currentOrganization?.id;
+  const [mesSelecionado, setMesSelecionado] = useState(format(new Date(), 'yyyy-MM').split('-')[1]);
   const [anoSelecionado, setAnoSelecionado] = useState(String(new Date().getFullYear()));
 
   // Gerar lista de meses
@@ -43,8 +46,9 @@ export default function DemonstrativoMensalPage() {
 
   // Buscar dados do demonstrativo
   const { data: demoData, isLoading } = useQuery({
-    queryKey: ['demonstrativo-mensal', anoSelecionado, mesSelecionado],
+    queryKey: ['demonstrativo-mensal', organizationId, anoSelecionado, mesSelecionado],
     queryFn: async (): Promise<DemonstrativoData> => {
+      if (!organizationId) throw new Error('Organização não identificada');
       const dataInicio = startOfMonth(new Date(parseInt(anoSelecionado), parseInt(mesSelecionado) - 1, 1)).toISOString();
       const dataFim = endOfMonth(new Date(parseInt(anoSelecionado), parseInt(mesSelecionado) - 1, 1)).toISOString();
 
@@ -54,6 +58,7 @@ export default function DemonstrativoMensalPage() {
 
       const qMovs = query(
         collection(db, 'movimentacoes_caixa'),
+        where('organization_id', '==', organizationId),
         where('data', '>=', startDay),
         where('data', '<=', endDay)
       );
@@ -88,6 +93,7 @@ export default function DemonstrativoMensalPage() {
       // Buscar contas a receber e pagar
       const qContasReceber = query(
         collection(db, 'contas_financeiras'),
+        where('organization_id', '==', organizationId),
         where('tipo', '==', 'receber'),
         where('status', '==', 'pendente')
       );
@@ -96,6 +102,7 @@ export default function DemonstrativoMensalPage() {
 
       const qContasPagar = query(
         collection(db, 'contas_financeiras'),
+        where('organization_id', '==', organizationId),
         where('tipo', '==', 'pagar'),
         where('status', '==', 'pendente')
       );

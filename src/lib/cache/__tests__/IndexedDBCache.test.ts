@@ -2,8 +2,8 @@
  * IndexedDB Cache Tests - Testes para o sistema de cache
  */
 
-import { describe, beforeEach, afterEach, beforeAll, afterAll, expect, it, jest } from '@jest/globals';
-import * as IDB from 'fake-indexeddb';
+import { describe, beforeEach, afterEach, beforeAll, afterAll, expect, it, vi } from 'vitest';
+import { indexedDB, IDBKeyRange } from 'fake-indexeddb';
 
 import {
   setCache,
@@ -16,120 +16,22 @@ import {
   getCacheSize,
   getCacheStats,
   CACHE_TAGS,
-} from '../cache/IndexedDBCache';
+  getCacheWithFallback,
+  prefetchCache,
+} from '../IndexedDBCache';
 
-// Mock IDB for Node.js environment
-class MockIDBFactory {
-  static open() {
-    return new MockIDBDatabase();
-  }
-}
-
-class MockIDBDatabase {
-  stores: Map<string, MockIDBObjectStore> = new Map();
-  transaction(storeName: string) {
-    return new MockIDBTransaction(this.stores.get(storeName));
-  }
-}
-
-class MockIDBTransaction {
-  store: Map<string, any>;
-  operations: (() => void)[] = [];
-
-  constructor(store: Map<string, any>) {
-    this.store = store;
-  }
-
-  objectStore(name: string) {
-    return this;
-  }
-
-  get(key: string) {
-    return {
-      onsuccess: (callback) => {
-        const value = this.store.get(key);
-        callback({ result: value, target: { result: value } });
-      },
-      onerror: () => {
-        const error = { error: 'IDB error' };
-        const callback = this.operations.shift()!;
-        callback({ error } as any, target: { result: undefined } });
-      },
-    };
-  }
-
-  put(data: any) {
-    return {
-      onsuccess: (callback) => {
-        this.store.set(data.key, { ...data, timestamp: Date.now(), ttl: 300000 });
-        callback({ result: undefined, target: { result: undefined } });
-        this.operations.push(() => callback());
-      },
-      onerror: () => {
-        const callback = this.operations.shift()!;
-        callback({ error } as any, target: { result: undefined } });
-      },
-    };
-  }
-
-  delete(key: string) {
-    return {
-      onsuccess: (callback) => {
-        this.store.delete(key);
-        callback({ result: undefined, target: { result: undefined } });
-      },
-      onerror: () => {
-        const callback = this.operations.shift()!;
-        callback({ error } as any, target: { result: undefined } });
-      },
-    };
-  }
-
-  count() {
-    const count = this.store.size;
-    return {
-      onsuccess: (callback) => {
-        callback({ result: count });
-      },
-      onerror: () => {
-        const callback = this.operations.shift()!;
-        callback({ error } as any, target: { result: 0 } });
-      },
-    };
-  }
-
-  index(name: string) {
-    return {
-      openCursor: () => ({
-        onsuccess: (callback) => {
-          callback({ result: [] });
-        },
-        onerror: () => {
-          const callback = this.operations.shift()!;
-          callback({ error } as any, target: { result: [] });
-        },
-      }),
-      continue: () => {},
-      close: () => {},
-    };
-    };
-  }
-}
-
-// Setup mocks before all tests
 beforeAll(() => {
-  if (typeof indexedDB === 'undefined') {
-    (IDB as any).default = MockIDBFactory;
-  }
+  (globalThis as any).indexedDB = indexedDB;
+  (globalThis as any).IDBKeyRange = IDBKeyRange;
 });
 
 describe('IndexedDB Cache', () => {
-  beforeEach(() => {
-    clearCache();
+  beforeEach(async () => {
+    await clearCache();
   });
 
-  afterEach(() => {
-    clearCache();
+  afterEach(async () => {
+    await clearCache();
   });
 
   describe('Basic Operations', () => {
@@ -147,18 +49,18 @@ describe('IndexedDB Cache', () => {
 
     it('should handle TTL expiration', async () => {
       // Mock Date.now to test expiration
-      const originalNow = Date.now;
-      jest.spyOn(Date, 'now').mockReturnValue(originalNow);
+      const baseNow = Date.now();
+      vi.spyOn(Date, 'now').mockReturnValue(baseNow);
 
       await setCache('expiring-key', { value: 'test' }, { ttl: 100 });
 
       // Fast-forward time beyond TTL
-      jest.spyOn(Date, 'now').mockReturnValue(originalNow + 200);
+      vi.spyOn(Date, 'now').mockReturnValue(baseNow + 200);
 
       const result = await getCache('expiring-key');
       expect(result).toBeNull();
 
-      jest.restoreAllMocks();
+      vi.restoreAllMocks();
     }, 10000);
 
     it('should delete cache entry', async () => {
@@ -189,14 +91,14 @@ describe('IndexedDB Cache', () => {
       await setMultipleCache(entries);
 
       const results = await getMultipleCache<{ value: string }>(['multi-1', 'multi-2']);
-      expect(results.get('multi-1')?.data).toEqual({ value: 'test1' });
-      expect(results.get('multi-2')?.data).toEqual({ value: 'test2' });
+      expect(results.get('multi-1')).toEqual({ value: 'test1' });
+      expect(results.get('multi-2')).toEqual({ value: 'test2' });
     });
 
     it('should get multiple non-existent keys', async () => {
       const results = await getMultipleCache(['non-1', 'non-2']);
-      expect(results.get('non-1')).toBeNull();
-      expect(results.get('non-2')).toBeNull();
+      expect(results.get('non-1')).toBeUndefined();
+      expect(results.get('non-2')).toBeUndefined();
     });
   });
 
@@ -248,20 +150,16 @@ describe('IndexedDB Cache', () => {
 
   describe('Prefetch Pattern', () => {
     it('should not fetch if cached', async () => {
-      const fetcher = jest.fn().mockResolvedValue('fetched-data');
+      const fetcher = vi.fn().mockResolvedValue('fetched-data');
       await setCache('prefetch-key', { value: 'cached-data' });
-
-      const spy = jest.spyOn(Date, 'now');
-      spy.mockReturnValue(Date.now());
 
       await prefetchCache('prefetch-key', fetcher);
 
       expect(fetcher).not.toHaveBeenCalled();
-      spy.mockRestore();
     });
 
     it('should fetch if cache miss', async () => {
-      const fetcher = jest.fn().mockResolvedValue('fresh-data');
+      const fetcher = vi.fn().mockResolvedValue('fresh-data');
       await setCache('prefetch-key', { value: 'old-data' });
       await clearCache();
 
@@ -277,17 +175,17 @@ describe('IndexedDB Cache', () => {
     it('should return cached data with fromCache true', async () => {
       await setCache('fallback-key', { value: 'cached-value' });
 
-      const fetcher = jest.fn().mockResolvedValue('fetched-data');
+      const fetcher = vi.fn().mockResolvedValue('fetched-data');
 
       const result = await getCacheWithFallback('fallback-key', fetcher);
 
-      expect(result.data).toEqual('cached-value');
+      expect(result.data).toEqual({ value: 'cached-value' });
       expect(result.fromCache).toBe(true);
       expect(fetcher).not.toHaveBeenCalled();
     });
 
     it('should fetch and cache on miss', async () => {
-      const fetcher = jest.fn().mockResolvedValue('fetched-data');
+      const fetcher = vi.fn().mockResolvedValue('fetched-data');
       await clearCache();
 
       const result = await getCacheWithFallback('miss-key', fetcher);
@@ -298,7 +196,7 @@ describe('IndexedDB Cache', () => {
     });
 
     it('should handle fetch errors gracefully', async () => {
-      const fetcher = jest.fn().mockRejectedValue(new Error('Network error'));
+      const fetcher = vi.fn().mockRejectedValue(new Error('Network error'));
 
       const result = await getCacheWithFallback('error-key', fetcher);
 

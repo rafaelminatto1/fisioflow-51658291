@@ -12,8 +12,6 @@
 import React, { memo, useCallback } from 'react';
 import { Calendar, Clock, CheckCircle2, DollarSign, SearchX } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format, startOfDay, addDays, endOfWeek, startOfWeek } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 export type QuickFilterType = 'today' | 'tomorrow' | 'thisWeek' | 'noShows' | 'pendingPayment' | 'all';
 

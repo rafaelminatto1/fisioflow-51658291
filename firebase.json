@@ -17,7 +17,8 @@
         {
           "variables": {
             "DB_SOCKET_PATH": "/cloudsql",
-            "NODE_ENV": "production"
+            "NODE_ENV": "production",
+            "WIKI_BLOCKED_DAYS_THRESHOLD": "3"
           }
         }
       ]

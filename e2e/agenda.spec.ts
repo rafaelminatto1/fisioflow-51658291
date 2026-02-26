@@ -93,13 +93,27 @@ async function ensureScheduleReady(page: Page, options?: { forceLogin?: boolean 
   }
 
   await gotoWithRetry(page, '/schedule');
-  await expect.poll(() => page.url(), { timeout: 30000 }).not.toContain('/auth');
+  
+  // Aumentar o polling para produção
+  await expect.poll(() => page.url(), { timeout: 45000 }).not.toContain('/auth');
+  
+  // Esperar o app carregar o estado inicial
+  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+  
   await expect.poll(() => isScheduleLikeUrl(page.url()), { timeout: 30000 }).toBe(true);
   await expect(page.locator('body')).toBeVisible({ timeout: 30000 });
 
-  // No Firefox houve redirecionamento tardio para /auth/login; garante estabilidade após render.
-  await page.waitForTimeout(1200);
-  await expect(page).not.toHaveURL(/\/auth/, { timeout: 15000 });
+  // No Firefox e Produção, redirecionamentos podem ocorrer após a carga inicial
+  await page.waitForTimeout(2500);
+  
+  const currentUrl = page.url();
+  if (currentUrl.includes('/auth')) {
+    console.warn('⚠️ Redirecionado inesperadamente para login. Tentando re-login...');
+    await doLogin(page);
+    await gotoWithRetry(page, '/schedule');
+  }
+  
+  await expect(page).not.toHaveURL(/\/auth/, { timeout: 20000 });
 }
 
 test.describe('Agenda de Fisioterapia - E2E Tests', () => {

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
+import type { FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -52,9 +53,10 @@ export const PatientForm: React.FC<PatientFormProps> = ({
   onSubmit,
   isLoading = false,
   submitLabel = 'Salvar',
-  organizationId: _organizationId,
+  organizationId,
 }) => {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'basic' | 'medical' | 'address' | 'additional'>('basic');
 
   const isEditing = !!patient;
 
@@ -105,6 +107,41 @@ export const PatientForm: React.FC<PatientFormProps> = ({
   const watchedCpf = watch('cpf');
   const watchedCEP = watch('zip_code');
   const watchedEmergencyPhone = watch('emergency_phone');
+
+  const fieldToTabMap: Partial<Record<keyof PatientFormData, typeof activeTab>> = {
+    full_name: 'basic',
+    email: 'basic',
+    phone: 'basic',
+    cpf: 'basic',
+    birth_date: 'basic',
+    gender: 'basic',
+    emergency_contact: 'basic',
+    emergency_contact_relationship: 'basic',
+    emergency_phone: 'basic',
+    main_condition: 'medical',
+    medical_history: 'medical',
+    allergies: 'medical',
+    medications: 'medical',
+    weight_kg: 'medical',
+    height_cm: 'medical',
+    blood_type: 'medical',
+    address: 'address',
+    city: 'address',
+    state: 'address',
+    zip_code: 'address',
+    marital_status: 'additional',
+    profession: 'additional',
+    education_level: 'additional',
+    health_insurance: 'additional',
+    insurance_number: 'additional',
+    observations: 'additional',
+  };
+
+  const errorMessages = useMemo(() => {
+    return Object.entries(errors)
+      .map(([, value]) => value?.message)
+      .filter((msg): msg is string => typeof msg === 'string');
+  }, [errors]);
 
   // Formatters
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -174,15 +211,35 @@ export const PatientForm: React.FC<PatientFormProps> = ({
       insurance_number: data.insurance_number || undefined,
       observations: data.observations || undefined,
       status: data.status,
-      organization_id,
+      organization_id: organizationId,
     };
 
+    console.info('[PatientForm] Submit payload ready', {
+      full_name: submitData.full_name,
+      birth_date: submitData.birth_date,
+      organization_id: submitData.organization_id,
+    });
     await onSubmit(submitData);
   };
 
+  const onFormInvalid = (formErrors: FieldErrors<PatientFormData>) => {
+    const firstField = Object.keys(formErrors)[0] as keyof PatientFormData | undefined;
+    if (firstField) {
+      const targetTab = fieldToTabMap[firstField];
+      if (targetTab) setActiveTab(targetTab);
+    }
+    const firstMsg = (firstField && formErrors[firstField]?.message) || 'Verifique os campos obrigatórios.';
+    console.error('[PatientForm] Validation blocked submit', {
+      firstField,
+      firstMessage: firstMsg,
+      fields: Object.keys(formErrors),
+    });
+    toast.error(`Campo inválido: ${String(firstField || 'formulário')} - ${String(firstMsg)}`);
+  };
+
   return (
-    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-6" data-testid="patient-form">
-      <Tabs defaultValue="basic" className="w-full">
+    <form onSubmit={handleSubmit(onFormSubmit, onFormInvalid)} className="space-y-6" data-testid="patient-form">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)} className="w-full">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 overflow-x-auto -mx-1 px-1 scrollbar-hide">
           <TabsTrigger value="basic">
             <User className="w-4 h-4 mr-2" />
@@ -792,6 +849,11 @@ export const PatientForm: React.FC<PatientFormProps> = ({
           )}
         </Button>
       </div>
+      {errorMessages.length > 0 && (
+        <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+          {errorMessages.slice(0, 3).join(' | ')}
+        </div>
+      )}
     </form>
   );
 };

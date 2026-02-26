@@ -267,9 +267,9 @@ export const endTelemedicineRoom = onCall({
       .where('appointmentId', '==', room!.appointmentId)
       .limit(1)
       .get()
-      .then(snapshot => {
+      .then(async snapshot => {
         if (!snapshot.empty) {
-          return snapshot.docs[0].ref.update({
+          await snapshot.docs[0].ref.update({
             subjective: summary || '',
             sessionType: 'telemedicine',
             duration: duration || null,
@@ -378,7 +378,7 @@ function generateRoomCode(): string {
 /**
  * Verifica se uma sala está ativa
  */
-async function isRoomActive(roomId: string): Promise<boolean> {
+export async function isRoomActive(roomId: string): Promise<boolean> {
   const roomDoc = await firestore()
     .collection('telemedicine_rooms')
     .doc(roomId)
@@ -402,7 +402,7 @@ async function isRoomActive(roomId: string): Promise<boolean> {
 /**
  * Notifica paciente sobre teleconsulta
  */
-async function notifyPatientTelemedicine(patientId: string, roomCode: string, scheduledFor: string) {
+export async function notifyPatientTelemedicine(patientId: string, roomCode: string, scheduledFor: string) {
   const patientDoc = await firestore()
     .collection('patients')
     .doc(patientId)
@@ -417,5 +417,5 @@ async function notifyPatientTelemedicine(patientId: string, roomCode: string, sc
   // Enviar notificação push/email
   // Implementação depende do sistema de notificações configurado
 
-  logger.info(`Telemedicine notification sent to patient ${patientId}`);
+  logger.info(`Telemedicine notification sent to patient ${patient?.name || patientId}`);
 }

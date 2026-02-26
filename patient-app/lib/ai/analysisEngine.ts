@@ -8,8 +8,7 @@ import {
   PoseDetection, 
   AnalysisResult, 
   ExerciseType, 
-  JointAngle,
-  AnalysisType
+  JointAngle
 } from '../../types/ai/pose';
 
 const POSE_LANDMARKS = {

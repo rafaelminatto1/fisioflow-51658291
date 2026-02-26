@@ -41,7 +41,7 @@ export function useVirtualizedTimeSlots({
   slotHeight,
   overscan = 3,
   containerHeight,
-  threshold = 50,
+  threshold = 5,
 }: VirtualizedTimeSlotsConfig): VirtualizedTimeSlotsResult {
   const [scrollTop, setScrollTop] = useState(0);
 

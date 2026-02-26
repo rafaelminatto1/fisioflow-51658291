@@ -13,7 +13,7 @@ import { chromium, FullConfig } from '@playwright/test';
 import { execSync } from 'child_process';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { mkdirSync } from 'fs';
+import { mkdirSync, rmSync } from 'fs';
 import { testUsers } from './fixtures/test-data';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -32,10 +32,19 @@ export default async function globalSetup(config: FullConfig) {
     console.log('📱 Executando seed data automaticamente...');
 
     try {
+      // Configura variáveis de ambiente do emulador para o script de seed
+      const env = {
+        ...process.env,
+        FIRESTORE_EMULATOR_HOST: '127.0.0.1:8080',
+        FIREBASE_AUTH_EMULATOR_HOST: '127.0.0.1:9099',
+        GCLOUD_PROJECT: 'fisioflow-migration',
+      };
+
       // Executa o script de seed data
       execSync(`node "${SEED_SCRIPT}"`, {
         cwd: path.join(__dirname, '..'),
         stdio: 'inherit',
+        env,
         timeout: 60000, // 60 segundos
       });
 
@@ -57,35 +66,126 @@ export default async function globalSetup(config: FullConfig) {
 
   // Build authenticated storageState for E2E to avoid flaky login per test
   if (process.env.E2E_SKIP_AUTH_SETUP !== 'true') {
-    try {
-      const projectUse = (config.projects?.[0]?.use || {}) as Record<string, unknown>;
-      const baseURL = String(projectUse.baseURL || process.env.BASE_URL || 'http://127.0.0.1:5173?e2e=true');
-      const authBaseURL = baseURL.split('?')[0];
+    const projectUse = (config.projects?.[0]?.use || {}) as Record<string, unknown>;
+    const baseURL = String(projectUse.baseURL || process.env.BASE_URL || 'http://localhost:5173?e2e=true');
+    const authBaseURL = baseURL.split('?')[0];
 
-      mkdirSync(path.dirname(AUTH_STATE_PATH), { recursive: true });
+    mkdirSync(path.dirname(AUTH_STATE_PATH), { recursive: true });
+    rmSync(AUTH_STATE_PATH, { force: true });
 
+    const maxAttempts = 3;
+    let lastError: unknown;
+    let created = false;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
       const browser = await chromium.launch({ headless: true });
-      const context = await browser.newContext({ baseURL: authBaseURL });
-      const page = await context.newPage();
+      try {
+        const context = await browser.newContext({
+          baseURL: authBaseURL,
+          serviceWorkers: 'block',
+        });
+        const page = await context.newPage();
 
-      await page.goto('/auth');
-      const currentPath = new URL(page.url()).pathname;
+        const performLogin = async () => {
+          const emailInput = page
+            .locator('input[name="email"], input[type="email"], input[autocomplete="email"]')
+            .first();
+          const passwordInput = page
+            .locator('input[name="password"], input[type="password"], input[autocomplete="current-password"]')
+            .first();
+          await emailInput.waitFor({ state: 'visible', timeout: 20000 });
+          await emailInput.fill(testUsers.admin.email);
+          await passwordInput.fill(testUsers.admin.password);
+          await page.getByRole('button', { name: /Acessar Minha Conta|Entrar na Plataforma|Entrar/i }).first().click();
 
-      if (currentPath.startsWith('/auth')) {
-        const formInputs = page.locator('form input');
-        await formInputs.first().waitFor({ state: 'visible', timeout: 20000 });
-        await formInputs.nth(0).fill(testUsers.admin.email);
-        await formInputs.nth(1).fill(testUsers.admin.password);
-        await page.getByRole('button', { name: /Acessar Minha Conta|Entrar na Plataforma/i }).first().click();
-        await page.waitForURL((url) => !url.pathname.startsWith('/auth'), { timeout: 30000 });
+          const loginError = page.getByTestId('login-error').first();
+          const result = await Promise.race([
+            page
+              .waitForFunction(() => !window.location.pathname.startsWith('/auth'), undefined, { timeout: 15000 })
+              .then(() => 'ok')
+              .catch(() => null),
+            loginError
+              .waitFor({ state: 'visible', timeout: 15000 })
+              .then(() => 'error')
+              .catch(() => null),
+          ]);
+
+          if (result === 'error') {
+            const errorText = (await loginError.textContent())?.trim() || 'Erro de login não identificado';
+            throw new Error(`Falha no login automático: ${errorText}`);
+          }
+        };
+
+        const ensureAuthenticatedWorkspace = async () => {
+          for (let i = 0; i < 4; i += 1) {
+            await page.goto('/wiki-workspace', { waitUntil: 'domcontentloaded' });
+            const currentPath = new URL(page.url()).pathname;
+
+            if (currentPath.startsWith('/auth')) {
+              await performLogin();
+              continue;
+            }
+
+            const authEmailVisible = await page
+              .locator('input[name="email"], input[type="email"], input[autocomplete="email"]')
+              .first()
+              .isVisible()
+              .catch(() => false);
+            if (authEmailVisible) {
+              await performLogin();
+              continue;
+            }
+
+            const createButtonVisible = await page.getByTestId('create-wiki-page-button').isVisible().catch(() => false);
+            if (createButtonVisible) return true;
+
+            if (currentPath.startsWith('/wiki-workspace')) {
+              return true;
+            }
+
+            // Em algumas execuções o shell carrega antes do conteúdo completo da Wiki.
+            const appShellVisible = await page.getByText('FISIOFLOW').first().isVisible().catch(() => false);
+            if (appShellVisible && !currentPath.startsWith('/auth')) {
+              return true;
+            }
+
+            await page.waitForTimeout(1000);
+          }
+          return false;
+        };
+
+        await page.goto('/auth', { waitUntil: 'domcontentloaded' });
+        const initialPath = new URL(page.url()).pathname;
+        if (initialPath.startsWith('/auth')) {
+          await performLogin();
+        }
+
+        const workspaceReady = await ensureAuthenticatedWorkspace();
+        if (!workspaceReady) {
+          throw new Error(`Workspace não ficou pronto após autenticação. URL atual: ${page.url()}`);
+        }
+
+        // Valida que a sessão sobrevive a reload antes de salvar storageState
+        await page.reload({ waitUntil: 'domcontentloaded' });
+        const afterReloadReady = await ensureAuthenticatedWorkspace();
+        if (!afterReloadReady) {
+          throw new Error(`Workspace não ficou pronto após reload. URL atual: ${page.url()}`);
+        }
+
+        await context.storageState({ path: AUTH_STATE_PATH, indexedDB: true });
+        created = true;
+        console.log(`🔐 Auth storageState criado: ${AUTH_STATE_PATH} (tentativa ${attempt}/${maxAttempts})`);
+        await browser.close();
+        break;
+      } catch (error) {
+        lastError = error;
+        await browser.close();
       }
+    }
 
-      await context.storageState({ path: AUTH_STATE_PATH });
-      await browser.close();
-      console.log(`🔐 Auth storageState criado: ${AUTH_STATE_PATH}`);
-    } catch (error) {
-      console.warn('⚠️ Não foi possível criar storageState autenticado no global-setup. Testes seguirão com login no próprio spec.');
-      console.warn(error);
+    if (!created) {
+      console.error('❌ Falha ao criar storageState autenticado após múltiplas tentativas.');
+      throw lastError instanceof Error ? lastError : new Error(String(lastError));
     }
   } else {
     console.log('ℹ️  Auth setup automático desativado (E2E_SKIP_AUTH_SETUP=true)');

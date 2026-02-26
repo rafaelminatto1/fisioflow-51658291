@@ -10,7 +10,7 @@
  * @module hooks/usePatients
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { getDatabase, ref, onValue, off } from 'firebase/database';
 import { app } from '@/integrations/firebase/app';
@@ -31,6 +31,7 @@ import {
   isOnline,
   isNetworkError
 } from '@/lib/utils/query-helpers';
+import { getUserOrganizationId } from '@/utils/userHelpers';
 import type { Patient } from '@/types';
 
 // ==============================================================================
@@ -55,14 +56,43 @@ import type { Patient } from '@/types';
  */
 interface UseActivePatientsOptions {
   enabled?: boolean;
+  organizationId?: string;
 }
 
 export const useActivePatients = (options: UseActivePatientsOptions = {}) => {
-  const { profile } = useAuth();
+  const { profile, organizationId: authOrganizationId, user } = useAuth();
   const { _toast } = useToast();
-  const organizationId = profile?.organization_id;
   const queryClient = useQueryClient();
   const isHookEnabled = options.enabled ?? true;
+  const [resolvedOrganizationId, setResolvedOrganizationId] = useState<string | null>(
+    options.organizationId || profile?.organization_id || authOrganizationId || null
+  );
+
+  useEffect(() => {
+    const nextOrgId = options.organizationId || profile?.organization_id || authOrganizationId || null;
+    if (nextOrgId && nextOrgId !== resolvedOrganizationId) {
+      setResolvedOrganizationId(nextOrgId);
+    }
+  }, [options.organizationId, profile?.organization_id, authOrganizationId, resolvedOrganizationId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!isHookEnabled || !user || resolvedOrganizationId) return;
+
+    getUserOrganizationId()
+      .then((orgId) => {
+        if (!cancelled && orgId) setResolvedOrganizationId(orgId);
+      })
+      .catch((error) => {
+        logger.debug('useActivePatients: fallback getUserOrganizationId falhou', error, 'usePatients');
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isHookEnabled, user, resolvedOrganizationId]);
+
+  const organizationId = resolvedOrganizationId;
 
   // Setup realtime subscription via Firebase Realtime Database
   useEffect(() => {
@@ -158,7 +188,7 @@ export const useActivePatients = (options: UseActivePatientsOptions = {}) => {
         throw error;
       }
     },
-    enabled: isHookEnabled && !!organizationId,
+    enabled: isHookEnabled && !!user && !!organizationId,
     staleTime: PATIENT_QUERY_CONFIG.staleTime,
     retry: PATIENT_QUERY_CONFIG.maxRetries,
   });

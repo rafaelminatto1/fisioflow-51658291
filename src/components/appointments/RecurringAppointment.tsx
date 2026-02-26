@@ -11,7 +11,7 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { Calendar, Repeat, CalendarClock, Check, X } from 'lucide-react';
-import { addDays, addWeeks, addMonths, addYears, format, isSameDay, isWeekend, differenceInDays } from 'date-fns';
+import { addDays, addWeeks, addMonths, addYears, format, isSameDay, isWeekend } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 

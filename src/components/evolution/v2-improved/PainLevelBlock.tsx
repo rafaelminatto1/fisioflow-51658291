@@ -5,7 +5,7 @@
  * smooth animations, and professional visual design.
  */
 import React, { useState } from 'react';
-import { Activity, Smile, Meh, Frown, Angry } from 'lucide-react';
+import { Smile, Meh, Frown, Angry } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PainLevelBlockProps {

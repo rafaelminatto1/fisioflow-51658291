@@ -16,8 +16,6 @@ import {
   ExerciseType,
   ExerciseTemplate,
   getExerciseTemplate,
-  RomData,
-  ExerciseMetrics,
 } from '../../types/pose';
 import { calculateAngle } from './geometry';
 

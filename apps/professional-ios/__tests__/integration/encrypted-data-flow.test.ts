@@ -299,7 +299,7 @@ describe('Encrypted Data Flow Integration Tests', () => {
 
       await expect(
         encryptionService.encryptFile(testPhotoUri, testUserId)
-      ).rejects.toThrow('Failed to encrypt file');
+      ).rejects.toThrow('File size exceeds 50MB limit');
     });
   });
 
@@ -757,9 +757,9 @@ describe('Encrypted Data Flow Integration Tests', () => {
       };
 
       // Should throw error when trying to decrypt without key
-      await expect(
-        encryptionService.decrypt(mockEncryptedData, testUserId)
-      ).rejects.toThrow('Failed to decrypt data');
+    await expect(
+      encryptionService.decrypt(mockEncryptedData, testUserId)
+    ).rejects.toThrow('Encryption key not found');
     });
 
     it('should fail if authentication tag verification fails (tampered data)', async () => {

@@ -14,7 +14,7 @@ import {
   Alert 
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Camera, CameraView, useCameraPermissions } from 'expo-camera';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
 import { useHaptics } from '@/hooks/useHaptics';

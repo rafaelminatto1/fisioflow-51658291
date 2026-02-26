@@ -43,6 +43,7 @@ import {
 import { debounce, SimpleCache } from '@/lib/utils';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useOrganizations } from '@/hooks/useOrganizations';
 import { useActivePatients } from '@/hooks/usePatients';
 import type { Patient } from '@/types';
 import {
@@ -133,11 +134,15 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const [isNotesExpanded, setIsNotesExpanded] = useState(false);
 
   const { user } = useAuth();
+  const { currentOrganization } = useOrganizations();
   const { therapists, isLoading: therapistsLoading } = useTherapists();
   const { mutateAsync: createAppointmentAsync, isPending: isCreating } = useCreateAppointment();
   const { mutateAsync: updateAppointmentAsync, isPending: isUpdating } = useUpdateAppointment();
   const { mutate: deleteAppointmentMutation } = useDeleteAppointment();
-  const { data: activePatients, isLoading: patientsLoading } = useActivePatients({ enabled: isOpen }) as { data: Patient[] | undefined; isLoading: boolean };
+  const { data: activePatients, isLoading: patientsLoading } = useActivePatients({
+    enabled: isOpen,
+    organizationId: currentOrganization?.id,
+  }) as { data: Patient[] | undefined; isLoading: boolean };
   const { data: appointments = [] } = useAppointments({ enabled: isOpen, enableRealtime: false });
   const { getMinCapacityForInterval } = useScheduleCapacity();
   const { mutateAsync: consumeSession } = useUsePackageSession();

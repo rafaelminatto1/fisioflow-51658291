@@ -10,7 +10,7 @@
  * - Meeting links management
  */
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Video,
   Calendar as CalendarIcon,
@@ -21,10 +21,7 @@ import {
   X,
   Clock,
   Users,
-  Mic,
-  MicOff,
   Video as VideoIcon,
-  VideoOff,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';

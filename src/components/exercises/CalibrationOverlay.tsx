@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Check, X, Maximize2, MoveVertical, MoveHorizontal } from 'lucide-react';
+import { Check, Maximize2, MoveHorizontal } from 'lucide-react';
 
 interface CalibrationOverlayProps {
   isVisible: boolean;
