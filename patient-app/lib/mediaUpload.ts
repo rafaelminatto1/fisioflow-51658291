@@ -10,10 +10,11 @@
 import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage } from './firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { log } from '@/lib/logger';
 
 /**
  * Tipos de mídia suportados
@@ -79,7 +80,7 @@ export class MediaUploader {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       return permission.granted;
     } catch (error) {
-      console.error('Error requesting gallery permission:', error);
+      log.error('Error requesting gallery permission:', error);
       return false;
     }
   }
@@ -92,7 +93,7 @@ export class MediaUploader {
       const permission = await ImagePicker.requestCameraPermissionsAsync();
       return permission.granted;
     } catch (error) {
-      console.error('Error requesting camera permission:', error);
+      log.error('Error requesting camera permission:', error);
       return false;
     }
   }
@@ -100,7 +101,10 @@ export class MediaUploader {
   /**
    * Abre o seletor de imagem
    */
-  async pickImage(config: UploadConfig = DEFAULT_CONFIG): Promise<UploadResult | null> {
+  async pickImage(
+    config: UploadConfig = DEFAULT_CONFIG,
+    onProgress?: (progress: UploadProgress) => void
+  ): Promise<UploadResult | null> {
     try {
       // Verificar permissão
       const hasPermission = await this.requestGalleryPermission();
@@ -123,9 +127,9 @@ export class MediaUploader {
       const asset = result.assets[0];
 
       // Processar e fazer upload
-      return await this.uploadImage(asset.uri, asset.fileName || 'image.jpg', config);
+      return await this.uploadImage(asset.uri, asset.fileName || 'image.jpg', config, onProgress);
     } catch (error) {
-      console.error('Error picking image:', error);
+      log.error('Error picking image:', error);
       throw error;
     }
   }
@@ -133,7 +137,10 @@ export class MediaUploader {
   /**
    * Tira uma foto com a câmera
    */
-  async takePhoto(config: UploadConfig = DEFAULT_CONFIG): Promise<UploadResult | null> {
+  async takePhoto(
+    config: UploadConfig = DEFAULT_CONFIG,
+    onProgress?: (progress: UploadProgress) => void
+  ): Promise<UploadResult | null> {
     try {
       // Verificar permissão
       const hasPermission = await this.requestCameraPermission();
@@ -156,9 +163,9 @@ export class MediaUploader {
       const asset = result.assets[0];
 
       // Processar e fazer upload
-      return await this.uploadImage(asset.uri, asset.fileName || 'photo.jpg', config);
+      return await this.uploadImage(asset.uri, asset.fileName || 'photo.jpg', config, onProgress);
     } catch (error) {
-      console.error('Error taking photo:', error);
+      log.error('Error taking photo:', error);
       throw error;
     }
   }
@@ -166,7 +173,7 @@ export class MediaUploader {
   /**
    * Seleciona um vídeo
    */
-  async pickVideo(): Promise<UploadResult | null> {
+  async pickVideo(onProgress?: (progress: UploadProgress) => void): Promise<UploadResult | null> {
     try {
       const hasPermission = await this.requestGalleryPermission();
       if (!hasPermission) {
@@ -184,9 +191,9 @@ export class MediaUploader {
       }
 
       const asset = result.assets[0];
-      return await this.uploadVideo(asset.uri, asset.fileName || 'video.mp4');
+      return await this.uploadVideo(asset.uri, asset.fileName || 'video.mp4', onProgress);
     } catch (error) {
-      console.error('Error picking video:', error);
+      log.error('Error picking video:', error);
       throw error;
     }
   }
@@ -215,7 +222,7 @@ export class MediaUploader {
 
       // Obter tamanho do arquivo
       const fileInfo = await FileSystem.getInfoAsync(processedUri);
-      const size = fileInfo.size || 0;
+      const size = fileInfo.exists && 'size' in fileInfo ? fileInfo.size || 0 : 0;
 
       // Ler arquivo como blob
       const blob = await this.uriToBlob(processedUri);
@@ -255,7 +262,7 @@ export class MediaUploader {
         path,
       };
     } catch (error) {
-      console.error('Error uploading image:', error);
+      log.error('Error uploading image:', error);
       throw error;
     }
   }
@@ -271,7 +278,7 @@ export class MediaUploader {
     try {
       // Obter tamanho do arquivo
       const fileInfo = await FileSystem.getInfoAsync(uri);
-      const size = fileInfo.size || 0;
+      const size = fileInfo.exists && 'size' in fileInfo ? fileInfo.size || 0 : 0;
 
       // Ler arquivo como blob
       const blob = await this.uriToBlob(uri);
@@ -307,7 +314,7 @@ export class MediaUploader {
         path,
       };
     } catch (error) {
-      console.error('Error uploading video:', error);
+      log.error('Error uploading video:', error);
       throw error;
     }
   }
@@ -341,7 +348,7 @@ export class MediaUploader {
 
       const url = await getDownloadURL(storageRef);
       const fileInfo = await FileSystem.getInfoAsync(uri);
-      const size = fileInfo.size || 0;
+      const size = fileInfo.exists && 'size' in fileInfo ? fileInfo.size || 0 : 0;
 
       await this.saveToCache(path, url, 'document', size);
 
@@ -353,7 +360,7 @@ export class MediaUploader {
         path,
       };
     } catch (error) {
-      console.error('Error uploading document:', error);
+      log.error('Error uploading document:', error);
       throw error;
     }
   }
@@ -369,7 +376,7 @@ export class MediaUploader {
       // Remover do cache
       await this.removeFromCache(storagePath);
     } catch (error) {
-      console.error('Error deleting file:', error);
+      log.error('Error deleting file:', error);
       throw error;
     }
   }
@@ -400,7 +407,7 @@ export class MediaUploader {
 
       await AsyncStorage.setItem(cacheKey, JSON.stringify(cache));
     } catch (error) {
-      console.error('Error saving to cache:', error);
+      log.error('Error saving to cache:', error);
     }
   }
 
@@ -418,7 +425,7 @@ export class MediaUploader {
         await AsyncStorage.setItem(cacheKey, JSON.stringify(cache));
       }
     } catch (error) {
-      console.error('Error removing from cache:', error);
+      log.error('Error removing from cache:', error);
     }
   }
 
@@ -435,7 +442,7 @@ export class MediaUploader {
       const cache = JSON.parse(cached);
       return cache[path] || null;
     } catch (error) {
-      console.error('Error getting from cache:', error);
+      log.error('Error getting from cache:', error);
       return null;
     }
   }
@@ -447,7 +454,7 @@ export class MediaUploader {
     try {
       await AsyncStorage.removeItem(`media_cache_${this.userId}`);
     } catch (error) {
-      console.error('Error clearing cache:', error);
+      log.error('Error clearing cache:', error);
     }
   }
 

@@ -53,7 +53,7 @@ test.describe('Validate all pages', () => {
         await page.fill('input[name="password"]', testUsers.rafael.password);
 
         // Click the login button
-        await page.click('button:has-text("Entrar")');
+        await page.click('button:has-text("Acessar Minha Conta")');
 
         console.log('Login clicked, waiting for navigation...');
         // Wait for navigation to complete or error to appear

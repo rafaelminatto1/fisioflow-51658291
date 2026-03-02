@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/auth';
 import { Card, SyncIndicator } from '@/components';
+import { Spacing } from '@/constants/spacing';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -23,6 +24,7 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { log } from '@/lib/logger';
 
 interface Appointment {
   id: string;
@@ -35,6 +37,18 @@ interface Appointment {
   professional_id?: string;
 }
 
+// Helper safely parses dates (Timestamp or String)
+const parseDate = (d: any): Date => {
+  if (!d) return new Date();
+  if (typeof d.toDate === 'function') return d.toDate();
+  if (d instanceof Date) return d;
+  if (typeof d === 'string' || typeof d === 'number') {
+    const parsed = new Date(d);
+    return isNaN(parsed.getTime()) ? new Date() : parsed;
+  }
+  return new Date();
+};
+
 export default function AppointmentsScreen() {
   const colors = useColors();
   const { user } = useAuthStore();
@@ -42,6 +56,7 @@ export default function AppointmentsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'upcoming' | 'past'>('upcoming');
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!user?.id) {
@@ -68,25 +83,25 @@ export default function AppointmentsScreen() {
       setAppointments(appointmentsData);
       setLoading(false);
     }, (error) => {
-      console.error('Error fetching appointments:', error);
+      log.error('Error fetching appointments:', error);
       setLoading(false);
     });
 
     return unsubscribe;
-  }, [user?.id]);
+  }, [user?.id, refreshKey]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // Force refresh by re-subscribing
-    setRefreshing(false);
+    setRefreshKey((prev) => prev + 1);
+    setTimeout(() => setRefreshing(false), 200);
   };
 
   const now = new Date();
   const upcomingAppointments = appointments.filter(
-    a => a.date?.toDate() >= now && a.status !== 'cancelled' && a.status !== 'completed'
+    a => parseDate(a.date) >= now && a.status !== 'cancelled' && a.status !== 'completed'
   );
   const pastAppointments = appointments.filter(
-    a => a.date?.toDate() < now || a.status === 'completed' || a.status === 'cancelled'
+    a => parseDate(a.date) < now || a.status === 'completed' || a.status === 'cancelled'
   );
 
   const getStatusColor = (status: Appointment['status']) => {
@@ -120,7 +135,7 @@ export default function AppointmentsScreen() {
   };
 
   const renderAppointment = (appointment: Appointment) => {
-    const appointmentDate = appointment.date?.toDate() || new Date();
+    const appointmentDate = parseDate(appointment.date);
     return (
       <Card key={appointment.id} style={styles.appointmentCard}>
         <View style={styles.appointmentHeader}>
@@ -128,10 +143,13 @@ export default function AppointmentsScreen() {
             <Ionicons name="medical" size={24} color="#FFFFFF" />
           </View>
           <View style={styles.appointmentInfo}>
-            <Text style={[styles.appointmentType, { color: colors.text }]}>
+            <Text style={[styles.appointmentType, { color: colors.text }]} numberOfLines={1}>
               {appointment.type}
             </Text>
-            <Text style={[styles.appointmentProfessional, { color: colors.textSecondary }]}>
+            <Text
+              style={[styles.appointmentProfessional, { color: colors.textSecondary }]}
+              numberOfLines={1}
+            >
               {appointment.professional_name}
             </Text>
           </View>
@@ -273,8 +291,8 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flexDirection: 'row',
-    marginHorizontal: 16,
-    marginTop: 16,
+    marginHorizontal: Spacing.screen,
+    marginTop: Spacing.screen,
     borderRadius: 12,
     borderWidth: 1,
     padding: 4,
@@ -290,11 +308,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   scrollContent: {
-    padding: 16,
+    padding: Spacing.screen,
   },
   appointmentCard: {
-    marginBottom: 16,
-    padding: 16,
+    marginBottom: Spacing.gap,
+    padding: Spacing.card,
   },
   appointmentHeader: {
     flexDirection: 'row',
@@ -312,11 +330,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   appointmentType: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
   },
   appointmentProfessional: {
-    fontSize: 14,
+    fontSize: 13,
   },
   statusBadge: {
     paddingHorizontal: 10,
@@ -324,7 +342,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   statusText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
   },
   appointmentDetails: {
@@ -339,19 +357,19 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   detailText: {
-    fontSize: 14,
+    fontSize: 13,
   },
   notesContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     marginTop: 12,
-    padding: 12,
+    padding: 10,
     borderRadius: 8,
     gap: 8,
   },
   notesText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 12,
   },
   emptyState: {
     alignItems: 'center',

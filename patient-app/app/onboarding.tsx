@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Button } from '@/components';
+import { log } from '@/lib/logger';
 
 const ONBOARDING_KEY = '@fisioflow_onboarding_completed';
 
@@ -91,7 +92,7 @@ export default function OnboardingScreen() {
       await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
       router.replace('/(auth)/login');
     } catch (error) {
-      console.error('Error saving onboarding:', error);
+      log.error('Error saving onboarding:', error);
     } finally {
       setLoading(false);
     }

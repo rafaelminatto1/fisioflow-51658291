@@ -10,7 +10,7 @@
  */
 
 import { test, expect, Page } from '@playwright/test';
-import { patientLogin, PATIENT_CREDENTIALS } from './auth-flow';
+import { patientLogin, PATIENT_CREDENTIALS } from './auth-flow.spec';
 
 test.describe('Fluxo de Exercícios - App Paciente', () => {
   let page: Page;

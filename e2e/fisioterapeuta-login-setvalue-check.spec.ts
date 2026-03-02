@@ -142,7 +142,7 @@ test.describe('Fisioterapeuta Login - setValue Error Check', () => {
     // Find and click submit button
     const submitSelectors = [
       'button[type="submit"]',
-      'button:has-text("Entrar")',
+      'button:has-text("Acessar Minha Conta")',
       'button:has-text("Login")',
       'button:has-text("Sign")',
       'button:has-text("Logar")',
@@ -176,7 +176,7 @@ test.describe('Fisioterapeuta Login - setValue Error Check', () => {
 
     // Wait for navigation with a longer timeout
     try {
-      await page.waitForNavigation({ waitUntil: 'networkidle', timeout: 15000 });
+      await page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 15000 });
       console.log('Navigation detected');
     } catch (e) {
       console.log('No navigation within timeout - this might be normal for SPA login');

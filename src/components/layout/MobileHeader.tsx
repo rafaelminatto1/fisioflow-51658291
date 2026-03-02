@@ -3,7 +3,7 @@
  */
 
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { Menu } from 'lucide-react';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -69,7 +69,7 @@ export function MobileHeader() {
     } catch (error) {
       toast({
         title: 'Erro ao sair',
-        description: error?.message || 'Ocorreu um erro',
+        description: (error as Error).message || 'Ocorreu um erro',
         variant: 'destructive',
       });
     }
@@ -86,6 +86,7 @@ export function MobileHeader() {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="w-[300px] p-0 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 shadow-2xl">
+            <SheetTitle className="sr-only">Menu principal de navegação</SheetTitle>
             <div className="flex flex-col h-full">
               {/* Header do Menu */}
               <div className="p-6 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-center bg-slate-50/50 dark:bg-slate-900/30">

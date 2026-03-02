@@ -17,7 +17,7 @@ test.describe('FASE 4: Testes de Responsividade - Versão Simplificada', () => {
       await page.click('button[type="submit"]');
 
       // Wait for navigation (more flexible)
-      await page.waitForLoadState('networkidle', { timeout: 15000 });
+      await page.waitForLoadState('domcontentloaded', { timeout: 15000 });
 
       // Check if we're redirected to dashboard or main page
       try {
@@ -40,7 +40,7 @@ test.describe('FASE 4: Testes de Responsividade - Versão Simplificada', () => {
       await page.fill('#login-email', testUsers.rafael.email);
       await page.fill('#login-password', testUsers.rafael.password);
       await page.click('button[type="submit"]');
-      await page.waitForLoadState('networkidle', { timeout: 15000 });
+      await page.waitForLoadState('domcontentloaded', { timeout: 15000 });
       await page.waitForTimeout(2000); // Wait for app to fully load
     });
 
@@ -125,7 +125,7 @@ test.describe('FASE 4: Testes de Responsividade - Versão Simplificada', () => {
       await page.fill('#login-email', testUsers.rafael.email);
       await page.fill('#login-password', testUsers.rafael.password);
       await page.click('button[type="submit"]');
-      await page.waitForLoadState('networkidle', { timeout: 15000 });
+      await page.waitForLoadState('domcontentloaded', { timeout: 15000 });
       await page.waitForTimeout(2000);
     });
 
@@ -178,7 +178,7 @@ test.describe('FASE 4: Testes de Responsividade - Versão Simplificada', () => {
       await page.fill('#login-email', testUsers.rafael.email);
       await page.fill('#login-password', testUsers.rafael.password);
       await page.click('button[type="submit"]');
-      await page.waitForLoadState('networkidle', { timeout: 15000 });
+      await page.waitForLoadState('domcontentloaded', { timeout: 15000 });
       await page.waitForTimeout(2000);
     });
 

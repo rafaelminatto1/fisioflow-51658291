@@ -21,7 +21,7 @@ test('modal mobile - verificar botão agendar visível', async ({ page }) => {
   await page.click('button[type="submit"]');
 
   // Esperar dashboard
-  await page.waitForLoadState('networkidle', { timeout: 15000 });
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 });
 
   // Screenshot após login
   await page.screenshot({ path: 'e2e/screenshots/mobile/02-dashboard.png', fullPage: false });
@@ -40,7 +40,7 @@ test('modal mobile - verificar botão agendar visível', async ({ page }) => {
     await page.goto('http://127.0.0.1:8086/schedule');
   }
 
-  await page.waitForLoadState('networkidle', { timeout: 10000 });
+  await page.waitForLoadState('domcontentloaded', { timeout: 10000 });
   await page.screenshot({ path: 'e2e/screenshots/mobile/03-agenda.png', fullPage: false });
 
   // Procurar botão de novo agendamento

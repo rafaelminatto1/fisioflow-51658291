@@ -14,6 +14,7 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { log } from '@/lib/logger';
 
 // ============================================
 // TYPES
@@ -155,7 +156,7 @@ export async function getPatientProfile(userId: string): Promise<Patient | null>
 
     return null;
   } catch (error) {
-    console.error('Error fetching patient profile:', error);
+    log.error('Error fetching patient profile:', error);
     return null;
   }
 }
@@ -186,7 +187,7 @@ export async function updatePatientProfile(
       });
     }
   } catch (error) {
-    console.error('Error updating patient profile:', error);
+    log.error('Error updating patient profile:', error);
     throw error;
   }
 }
@@ -239,7 +240,7 @@ export async function getPatientAppointments(
       };
     });
   } catch (error) {
-    console.error('Error fetching appointments:', error);
+    log.error('Error fetching appointments:', error);
     return [];
   }
 }
@@ -285,7 +286,7 @@ export async function confirmAppointment(appointmentId: string): Promise<void> {
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
-    console.error('Error confirming appointment:', error);
+    log.error('Error confirming appointment:', error);
     throw error;
   }
 }
@@ -298,7 +299,7 @@ export async function cancelAppointment(appointmentId: string): Promise<void> {
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
-    console.error('Error cancelling appointment:', error);
+    log.error('Error cancelling appointment:', error);
     throw error;
   }
 }
@@ -387,7 +388,7 @@ export async function getPatientExercises(patientId: string): Promise<ExerciseAs
       };
     });
   } catch (error) {
-    console.error('Error fetching exercises:', error);
+    log.error('Error fetching exercises:', error);
     return [];
   }
 }
@@ -405,7 +406,7 @@ export async function markExerciseCompleted(
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
-    console.error('Error updating exercise:', error);
+    log.error('Error updating exercise:', error);
     throw error;
   }
 }
@@ -422,7 +423,7 @@ export async function updateExerciseProgress(
       updatedAt: serverTimestamp(),
     });
   } catch (error) {
-    console.error('Error updating exercise progress:', error);
+    log.error('Error updating exercise progress:', error);
     throw error;
   }
 }
@@ -457,7 +458,7 @@ export async function getNotifications(userId: string): Promise<Notification[]> 
       };
     });
   } catch (error) {
-    console.error('Error fetching notifications:', error);
+    log.error('Error fetching notifications:', error);
     return [];
   }
 }
@@ -469,7 +470,7 @@ export async function markNotificationRead(notificationId: string): Promise<void
       read: true,
     });
   } catch (error) {
-    console.error('Error marking notification as read:', error);
+    log.error('Error marking notification as read:', error);
     throw error;
   }
 }
@@ -490,7 +491,7 @@ export async function markAllNotificationsRead(userId: string): Promise<void> {
 
     await Promise.all(batch);
   } catch (error) {
-    console.error('Error marking all notifications as read:', error);
+    log.error('Error marking all notifications as read:', error);
     throw error;
   }
 }
@@ -558,7 +559,7 @@ export async function getPatientEvolutions(
       };
     });
   } catch (error) {
-    console.error('Error fetching evolutions:', error);
+    log.error('Error fetching evolutions:', error);
     return [];
   }
 }

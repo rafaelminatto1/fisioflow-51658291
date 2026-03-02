@@ -48,7 +48,6 @@ export type CountingMethod =
   | 'phase_flexion_extension' // Flexão/extensão
   | 'hold_position'           // Manter posição (prancha)
   | 'angle_threshold';         // Passar limiar de ângulo
-;
 
 // ============================================================================
 // ESTADO DO CONTADOR
@@ -318,7 +317,7 @@ export class RepetitionCounter {
 
       // Só conta se foi UP -> DOWN ou DOWN -> UP (completou ciclo)
       const shouldCount = (previousPhase === MovementPhase.UP && newPhase === MovementPhase.DOWN) ||
-                        (previousPhase === MovementPhase.DOWN && newPhase === MovementPhase.UP);
+        (previousPhase === MovementPhase.DOWN && newPhase === MovementPhase.UP);
 
       if (shouldCount) {
         const rep = this.completeRepetition();
@@ -378,7 +377,7 @@ export class RepetitionCounter {
 
       // Só conta se completou ciclo
       const shouldCount = (previousPhase === MovementPhase.LEFT && newPhase === MovementPhase.RIGHT) ||
-                        (previousPhase === MovementPhase.RIGHT && newPhase === MovementPhase.LEFT);
+        (previousPhase === MovementPhase.RIGHT && newPhase === MovementPhase.LEFT);
 
       if (shouldCount) {
         const rep = this.completeRepetition();
@@ -436,7 +435,7 @@ export class RepetitionCounter {
       const previousPhase = this.state.previousPhase;
 
       const shouldCount = (previousPhase === MovementPhase.FLEXION && newPhase === MovementPhase.EXTENSION) ||
-                        (previousPhase === MovementPhase.EXTENSION && newPhase === MovementPhase.FLEXION);
+        (previousPhase === MovementPhase.EXTENSION && newPhase === MovementPhase.FLEXION);
 
       if (shouldCount) {
         const rep = this.completeRepetition();
@@ -583,7 +582,7 @@ export class RepetitionCounter {
   /**
    * Registrar callbacks
    */
-  on(event: string, callback: Function): void {
+  on(event: string, callback: (...args: any[]) => void): void {
     switch (event) {
       case 'repCountChanged':
         this.callbacks.onRepCountChanged = callback as any;

@@ -13,7 +13,7 @@ async function login(page: Page) {
 
 async function navigateToExerciseLibrary(page: Page) {
   await page.goto('/exercises');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
   // Default tab is library or we click it
   const libraryTab = page.getByRole('tab', { name: /biblioteca/i });
   if (await libraryTab.isVisible()) {

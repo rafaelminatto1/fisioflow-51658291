@@ -1,32 +1,19 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
 import { 
-  getFirestore, 
   doc, 
   getDoc, 
-  initializeFirestore, 
-  persistentLocalCache, 
-  persistentMultipleTabManager,
-  CACHE_SIZE_UNLIMITED,
-  connectFirestoreEmulator
 } from 'firebase/firestore';
 import {
-  getAuth,
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  initializeAuth,
-  // getReactNativePersistence,
-  connectAuthEmulator
 } from 'firebase/auth';
-import { getStorage, connectStorageEmulator } from 'firebase/storage';
-import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 import { create } from 'zustand';
 
-import { Platform } from 'react-native';
-
-import { registerPushToken, clearPushToken } from '@/lib/notificationsSystem';
-import { getOfflineManager } from '@/lib/offlineManager';
+import { registerPushToken, clearPushToken, removeNotificationListeners } from '@/lib/notificationsSystem';
+import { getOfflineManager, initializeOfflineManager } from '@/lib/offlineManager';
 import Constants from 'expo-constants';
+import { auth, db, storage, functions } from './firebaseConfig';
+import { log } from '@/lib/logger';
 
 // Interface do usuário
 export interface User {
@@ -36,6 +23,7 @@ export interface User {
   role: 'patient' | 'professional' | 'admin';
   clinicId?: string;
   avatarUrl?: string;
+  createdAt?: string | Date;
 }
 
 interface AuthState {
@@ -49,66 +37,7 @@ interface AuthState {
   initialize: () => () => void;
 }
 
-// Firebase configuration
-const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || 'YOUR_API_KEY',
-  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || 'YOUR_AUTH_DOMAIN',
-  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || 'YOUR_PROJECT_ID',
-  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || 'YOUR_STORAGE_BUCKET',
-  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || 'YOUR_MESSAGING_SENDER_ID',
-  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || 'YOUR_APP_ID',
-};
-
-// Initialize Firebase app
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-
-// Initialize Storage
-const storage = getStorage(app);
-
-// Initialize Functions
-const functions = getFunctions(app, 'southamerica-east1');
-
-// Initialize Firestore
-export const db = (Platform.OS === 'web')
-  ? initializeFirestore(app, {
-      localCache: persistentLocalCache({
-        tabManager: persistentMultipleTabManager(),
-        cacheSizeBytes: CACHE_SIZE_UNLIMITED
-      }),
-      experimentalAutoDetectLongPolling: false
-    })
-  : getFirestore(app);
-
-// Initialize Auth based on platform
-let auth: any;
-if (Platform.OS === 'web') {
-  // Web - usar getAuth padrão
-  auth = getAuth(app);
-} else {
-  // React Native - usar AsyncStorage para persistência
-  try {
-    auth = initializeAuth(app, {
-      // persistence: getReactNativePersistence(AsyncStorage),
-    });
-  } catch (error) {
-    // Fallback para getAuth se initializeAuth falhar (auth já inicializado)
-    auth = getAuth(app);
-  }
-}
-
-// Connect to Emulators if configured
-if (process.env.EXPO_PUBLIC_USE_EMULATOR === 'true') {
-  const host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
-  
-  console.log(`[Firebase] Connecting to emulators at ${host}`);
-  
-  connectAuthEmulator(auth, `http://${host}:9099`);
-  connectFirestoreEmulator(db, host, 8080);
-  connectStorageEmulator(storage, host, 9199);
-  connectFunctionsEmulator(functions, host, 5001);
-}
-
-export { auth, storage, functions };
+export { auth, db, storage, functions };
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
@@ -126,6 +55,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       );
       const firebaseUser = userCredential.user;
 
+      // Force refresh to get latest custom claims
+      const idTokenResult = await firebaseUser.getIdTokenResult(true);
+      const claimRole = idTokenResult.claims.role;
+
       // Fetch user profile from Firestore
       const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
 
@@ -135,7 +68,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           id: firebaseUser.uid,
           email: firebaseUser.email || '',
           name: userData.name || userData.displayName || 'Usuario',
-          role: userData.role || 'patient',
+          role: (userData.role === 'patient' || claimRole === 'paciente') ? 'patient' : (userData.role || 'patient'),
           clinicId: userData.clinicId,
           avatarUrl: userData.avatarUrl || userData.photoURL,
         };
@@ -144,6 +77,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           user,
           isAuthenticated: true,
           isLoading: false,
+        });
+
+        initializeOfflineManager(user.id).catch(err => {
+          log.warn('Failed to initialize offline manager:', err);
         });
       } else {
         const user: User = {
@@ -157,6 +94,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           user,
           isAuthenticated: true,
           isLoading: false,
+        });
+
+        initializeOfflineManager(user.id).catch(err => {
+          log.warn('Failed to initialize offline manager:', err);
         });
       }
     } catch (error: any) {
@@ -192,21 +133,45 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     try {
       const { user } = get();
+      
       if (user) {
-        await clearPushToken(user.id);
-        const offlineManager = getOfflineManager();
-        await offlineManager.clearQueue();
-        await offlineManager.clearCache();
+        // Realizar as limpezas em paralelo para evitar travamentos
+        // Usamos Promise.allSettled e um tempo limite (timeout) para garantir
+        // que o logout não fique preso indefinidamente se algum serviço falhar
+        const cleanupTasks = [
+          clearPushToken(user.id).catch(e => log.error('Logout - clearPushToken:', e)),
+          getOfflineManager().clearQueue().catch(e => log.error('Logout - clearQueue:', e)),
+          getOfflineManager().clearCache().catch(e => log.error('Logout - clearCache:', e)),
+        ];
+
+        // Aguardamos as tarefas de limpeza por no máximo 3 segundos
+        const timeout = new Promise(resolve => setTimeout(resolve, 3000));
+        await Promise.race([
+          Promise.all(cleanupTasks),
+          timeout
+        ]);
+
+        removeNotificationListeners();
+        getOfflineManager().destroy();
       }
+
       await signOut(auth);
+      
       set({
         user: null,
         isAuthenticated: false,
         isLoading: false,
+        error: null,
       });
-    } catch (error) {
-      set({ isLoading: false });
-      throw error;
+    } catch (error: any) {
+      log.error('Logout error:', error);
+      // Mesmo com erro, limpamos o estado local para permitir nova tentativa
+      set({ 
+        user: null, 
+        isAuthenticated: false, 
+        isLoading: false,
+        error: error.message || 'Erro ao sair'
+      });
     }
   },
 
@@ -216,6 +181,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: any) => {
       if (firebaseUser) {
         try {
+          // Force refresh to get latest custom claims (like 'role: paciente')
+          const idTokenResult = await firebaseUser.getIdTokenResult(true);
+          const claimRole = idTokenResult.claims.role;
+          
           const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
 
           if (userDoc.exists()) {
@@ -224,7 +193,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               id: firebaseUser.uid,
               email: firebaseUser.email || '',
               name: userData.name || userData.displayName || 'Usuario',
-              role: userData.role || 'patient',
+              role: (userData.role === 'patient' || claimRole === 'paciente') ? 'patient' : (userData.role || 'patient'),
               clinicId: userData.clinicId,
               avatarUrl: userData.avatarUrl || userData.photoURL,
             };
@@ -237,7 +206,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
             const appVersion = Constants.expoConfig?.version || '1.0.0';
             registerPushToken(firebaseUser.uid, appVersion).catch(err => {
-              console.warn('Failed to register push token:', err);
+              log.warn('Failed to register push token:', err);
+            });
+
+            initializeOfflineManager(user.id).catch(err => {
+              log.warn('Failed to initialize offline manager:', err);
             });
           } else {
             const user: User = {
@@ -255,7 +228,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
             const appVersion = Constants.expoConfig?.version || '1.0.0';
             registerPushToken(firebaseUser.uid, appVersion).catch(err => {
-              console.warn('Failed to register push token:', err);
+              log.warn('Failed to register push token:', err);
+            });
+
+            initializeOfflineManager(user.id).catch(err => {
+              log.warn('Failed to initialize offline manager:', err);
             });
           }
         } catch (error) {
