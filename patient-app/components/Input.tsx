@@ -103,7 +103,7 @@ export function Input({
     if (onChangeText) {
       // Pass both masked and unmasked values
       const cleanValue = mask ? text.replace(/\D/g, '') : text;
-      onChangeText(newValue, cleanValue);
+      (onChangeText as any)(newValue, cleanValue);
     }
   };
 

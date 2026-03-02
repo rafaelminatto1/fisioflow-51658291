@@ -7,11 +7,12 @@
  * @module lib/exerciseReminders
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
+import { log } from '@/lib/logger';
 
 /**
  * Configuração de lembrete de exercícios
@@ -81,6 +82,8 @@ export class ExerciseReminders {
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
         shouldShowAlert: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
         shouldPlaySound: true,
         shouldSetBadge: true,
       }),
@@ -97,7 +100,7 @@ export class ExerciseReminders {
         this.config = JSON.parse(stored);
       }
     } catch (error) {
-      console.error('Error loading reminder config:', error);
+      log.error('Error loading reminder config:', error);
     }
   }
 
@@ -119,7 +122,7 @@ export class ExerciseReminders {
         });
       }
     } catch (error) {
-      console.error('Error saving reminder config:', error);
+      log.error('Error saving reminder config:', error);
     }
   }
 
@@ -198,17 +201,14 @@ export class ExerciseReminders {
     dayOfWeek: number;
   }): Promise<string | null> {
     try {
-      const identifier = `exercise-reminder-${dayOfWeek}-${hour}:${minute}`;
-
-      await Notifications.scheduleNotificationAsync({
-        identifier,
+      const scheduledId = await Notifications.scheduleNotificationAsync({
         content: {
           title: '⏰ Hora dos Exercícios',
           body: this.config.message || 'Chegou a hora de realizar seus exercícios!',
           data: { type: 'exercise_reminder' },
         },
         trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.CALENDAR_TRIGGER,
+          type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
           weekday: dayOfWeek + 1, // Notifications API usa 1-7 (Domingo-Sábado)
           hour,
           minute,
@@ -216,9 +216,9 @@ export class ExerciseReminders {
         },
       });
 
-      return identifier;
+      return scheduledId;
     } catch (error) {
-      console.error('Error scheduling reminder:', error);
+      log.error('Error scheduling reminder:', error);
       return null;
     }
   }
@@ -236,7 +236,7 @@ export class ExerciseReminders {
 
       await AsyncStorage.removeItem(STORAGE_KEYS.NOTIFICATION_IDS);
     } catch (error) {
-      console.error('Error canceling reminders:', error);
+      log.error('Error canceling reminders:', error);
     }
   }
 
@@ -294,7 +294,7 @@ export class ExerciseReminders {
 
       return status === 'granted';
     } catch (error) {
-      console.error('Error requesting notification permissions:', error);
+      log.error('Error requesting notification permissions:', error);
       return false;
     }
   }
@@ -326,7 +326,7 @@ export class ExerciseReminders {
       const ids = JSON.parse(storedIds);
       return allScheduled.filter((n) => ids.includes(n.identifier));
     } catch (error) {
-      console.error('Error getting scheduled notifications:', error);
+      log.error('Error getting scheduled notifications:', error);
       return [];
     }
   }
@@ -363,16 +363,13 @@ export async function createSimpleReminder(
   minute: number,
   message?: string
 ): Promise<void> {
-  const identifier = `simple-reminder-${Date.now()}`;
-
   await Notifications.scheduleNotificationAsync({
-    identifier,
     content: {
       title: '⏰ Lembrete de Exercícios',
       body: message || 'Hora de fazer seus exercícios!',
     },
     trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.CALENDAR_TRIGGER,
+      type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
       hour,
       minute,
       repeats: true,

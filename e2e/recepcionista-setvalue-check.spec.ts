@@ -105,7 +105,7 @@ test.describe('Recepcionista Login - SetValue Error Check', () => {
     console.log('========================================\n');
 
     // Wait for login form to be visible
-    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
+    await page.waitForLoadState('domcontentloaded', { timeout: 10000 }).catch(() => {
       console.log('Network did not reach idle state, continuing...');
     });
 
@@ -198,7 +198,7 @@ test.describe('Recepcionista Login - SetValue Error Check', () => {
     // Try to find and click submit button
     const submitSelectors = [
       'button[type="submit"]',
-      'button:has-text("Entrar")',
+      'button:has-text("Acessar Minha Conta")',
       'button:has-text("Login")',
       'button:has-text("Sign in")',
       'button:has-text("Logar")',
@@ -238,7 +238,7 @@ test.describe('Recepcionista Login - SetValue Error Check', () => {
     // Wait for navigation or page update
     try {
       await page.waitForNavigation({
-        waitUntil: 'networkidle',
+        waitUntil: 'domcontentloaded',
         timeout: 15000
       });
       console.log('✓ Navigation occurred');

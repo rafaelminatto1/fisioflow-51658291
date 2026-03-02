@@ -29,6 +29,7 @@ import { db } from '@/lib/firebase';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import * as Haptics from 'expo-haptics';
+import { log } from '@/lib/logger';
 
 interface ExerciseDetail {
   id: string;
@@ -127,7 +128,7 @@ export default function ExerciseDetailScreen() {
         }
       }
     } catch (error) {
-      console.error('Error loading exercise:', error);
+      log.error('Error loading exercise:', error);
       Alert.alert('Erro', 'Não foi possível carregar os detalhes do exercício.');
     } finally {
       setLoading(false);
@@ -167,7 +168,7 @@ export default function ExerciseDetailScreen() {
         Alert.alert('Parabéns!', 'Exercício marcado como completo! 💪');
       }
     } catch (error) {
-      console.error('Error toggling exercise completion:', error);
+      log.error('Error toggling exercise completion:', error);
       Alert.alert('Erro', 'Não foi possível atualizar o exercício.');
     } finally {
       setCompleting(false);
@@ -396,7 +397,7 @@ export default function ExerciseDetailScreen() {
           title={completed ? '✓ Concluído' : 'Marcar como Concluído'}
           onPress={handleToggleComplete}
           loading={completing}
-          variant={completed ? 'solid' : 'primary'}
+          variant={completed ? 'primary' : 'primary'}
           style={[
             styles.completeButton,
             completed && styles.completeButtonDone,
@@ -648,7 +649,7 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(0,0,0,0.1)',
   },
   completeButton: {
-    backgroundColor: colors => colors?.primary || '#0D9488',
+    // Style will be applied by Button component or inline
   },
   completeButtonDone: {
     backgroundColor: '#22c55e',

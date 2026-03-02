@@ -14,9 +14,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/auth';
-import { Card, VideoModal, SyncIndicator, ExerciseFeedbackModal } from '@/components';
-import { ExerciseFeedback } from '@/components';
+import { Card, VideoModal, SyncIndicator, ExerciseFeedbackModal, ExerciseFeedback } from '@/components';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
+import { Spacing } from '@/constants/spacing';
 import {
   updateDoc,
   doc,
@@ -25,6 +25,7 @@ import {
 import { db } from '@/lib/firebase';
 import { usePatientExercisesPostgres } from '@/hooks';
 import { GamificationService } from '@/services/GamificationService';
+import { log } from '@/lib/logger';
 
 interface Exercise {
   id: string;
@@ -63,7 +64,11 @@ export default function ExercisesScreen() {
   const {isOnline, queueOperation} = useOfflineSync();
 
   // --- DATA CONNECT IMPLEMENTATION ---
-  const { data: exercisesPostgres, isLoading: loadingPostgres } = usePatientExercisesPostgres(user?.id);
+  const {
+    data: exercisesPostgres,
+    isLoading: loadingPostgres,
+    refetch: refetchExercises,
+  } = usePatientExercisesPostgres(user?.id);
 
   useEffect(() => {
     if (!user?.id) {
@@ -108,7 +113,7 @@ export default function ExercisesScreen() {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // Force refresh by re-subscribing
+    refetchExercises();
     setRefreshing(false);
   };
 
@@ -130,7 +135,7 @@ export default function ExercisesScreen() {
       // Update local state immediately for responsiveness
       const updatedExercises = exercisePlan.exercises.map((ex: Exercise) =>
         ex.id === exercise.id
-          ? { ...ex, completed: newCompletedState, completed_at: newCompletedState ? new Date() : null }
+          ? { ...ex, completed: newCompletedState, completed_at: newCompletedState ? new Date() : undefined }
           : ex
       );
 
@@ -161,7 +166,7 @@ export default function ExercisesScreen() {
         );
       }
     } catch (error) {
-      console.error('Error toggling exercise:', error);
+      log.error('Error toggling exercise:', error);
       Alert.alert('Erro', 'Nao foi possível atualizar o exercício.');
     } finally {
       setCompletingExercise(null);
@@ -223,7 +228,7 @@ export default function ExercisesScreen() {
         });
       }
     } catch (error) {
-      console.error('Error submitting feedback:', error);
+      log.error('Error submitting feedback:', error);
       Alert.alert('Erro', 'Nao foi possível salvar o feedback.');
     } finally {
       setCompletingExercise(null);
@@ -295,11 +300,14 @@ export default function ExercisesScreen() {
       >
         {/* Plan Info Card */}
         <Card style={styles.planInfoCard}>
-          <Text style={[styles.planName, { color: colors.text }]}>
+          <Text style={[styles.planName, { color: colors.text }]} numberOfLines={1}>
             {exercisePlan.name}
           </Text>
           {exercisePlan.description && (
-            <Text style={[styles.planDescription, { color: colors.textSecondary }]}>
+            <Text
+              style={[styles.planDescription, { color: colors.textSecondary }]}
+              numberOfLines={2}
+            >
               {exercisePlan.description}
             </Text>
           )}
@@ -345,6 +353,7 @@ export default function ExercisesScreen() {
             <Card
               style={[
                 styles.exerciseCard,
+                { borderColor: colors.border },
                 exercise.completed && { opacity: 0.7 },
               ]}
             >
@@ -367,7 +376,7 @@ export default function ExercisesScreen() {
                   )}
                 </View>
                 <View style={styles.exerciseInfo}>
-                  <View style={styles.exerciseNumber}>
+                  <View style={[styles.exerciseNumber, { backgroundColor: colors.surfaceHover }]}>
                     <Text style={[styles.exerciseNumberText, { color: colors.primary }]}>
                       {index + 1}
                     </Text>
@@ -379,6 +388,7 @@ export default function ExercisesScreen() {
                         { color: colors.text },
                         exercise.completed && styles.completedText,
                       ]}
+                      numberOfLines={1}
                     >
                       {exercise.name}
                     </Text>
@@ -463,24 +473,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   scrollContent: {
-    padding: 16,
+    padding: Spacing.screen,
   },
   planInfoCard: {
-    marginBottom: 16,
-    padding: 16,
+    marginBottom: Spacing.gap,
+    padding: Spacing.card,
   },
   planName: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
     marginBottom: 4,
   },
   planDescription: {
-    fontSize: 14,
+    fontSize: 13,
     lineHeight: 20,
   },
   progressCard: {
-    marginBottom: 24,
-    padding: 16,
+    marginBottom: 20,
+    padding: Spacing.card,
   },
   progressHeader: {
     flexDirection: 'row',
@@ -489,11 +499,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   progressTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
   },
   progressCount: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: 'bold',
   },
   progressBar: {
@@ -506,25 +516,26 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   progressText: {
-    fontSize: 14,
+    fontSize: 13,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '600',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   exerciseCard: {
-    marginBottom: 12,
-    padding: 12,
+    marginBottom: 10,
+    padding: Spacing.card,
+    borderWidth: 1,
   },
   exerciseHeader: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
@@ -536,10 +547,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   exerciseNumber: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#f0f0f0',
+    width: 26,
+    height: 26,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
@@ -552,21 +562,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   exerciseName: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     marginBottom: 2,
+    lineHeight: 20,
   },
   completedText: {
     textDecorationLine: 'line-through',
   },
   exerciseSets: {
-    fontSize: 13,
+    fontSize: 12,
   },
   exerciseDescription: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 18,
     marginLeft: 36,
-    marginTop: 8,
+    marginTop: 6,
   },
   videoIndicator: {
     flexDirection: 'row',
@@ -576,11 +587,11 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 16,
     marginLeft: 36,
-    marginTop: 8,
+    marginTop: 6,
     gap: 6,
   },
   videoIndicatorText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
   },
   emptyState: {

@@ -303,7 +303,7 @@ test.describe('Evolution Page - Tablet & Notebook Responsive', () => {
             await page.setViewportSize({ width: 834, height: 1192 });
             await page.goto('/patient-evolution/test-appointment-id');
 
-            await page.waitForLoadState('networkidle');
+            await page.waitForLoadState('domcontentloaded');
 
             const firstLayout = await page.locator('.react-grid-layout').boundingBox();
             await page.waitForTimeout(500);

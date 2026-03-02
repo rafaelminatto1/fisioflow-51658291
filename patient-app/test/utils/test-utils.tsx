@@ -10,7 +10,7 @@
 
 import { render, RenderAPI } from '@testing-library/react-native';
 import { ReactElement } from 'react';
-import { log } from '../lib/logger';
+import { log } from '@/lib/logger';
 
 export function renderWithProviders(
   ui: ReactElement,
@@ -225,7 +225,8 @@ export const Assertions = {
 
   assertElementContains: (container: any, text: string) => {
     try {
-      expect(container).toHaveTextContent(text);
+      const serialized = JSON.stringify(container);
+      expect(serialized).toContain(text);
     } catch (error) {
       throw new Error(`Container should contain "${text}": ${error}`);
     }

@@ -202,7 +202,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                 if (onDragOver && !selectionMode) {
                     e.preventDefault();
                     e.stopPropagation();
-                    // @ts-ignore
+                    // @ts-expect-error dataTransfer drops
                     e.dataTransfer.dropEffect = 'move';
                     onDragOver(e);
                 }
