@@ -7,7 +7,7 @@ const loginPassword = process.env.E2E_LOGIN_PASSWORD || testUsers.admin.password
 test.describe('Autenticação', () => {
   test('deve fazer login com credenciais válidas', async ({ page }) => {
     console.log(`[Test] Iniciando login para: ${loginEmail}`);
-    await page.goto('/auth', { waitUntil: 'networkidle' });
+    await page.goto('/auth', { waitUntil: 'domcontentloaded' });
 
     await page.fill('input[name="email"]', loginEmail);
     await page.fill('input[name="password"]', loginPassword);
@@ -24,7 +24,7 @@ test.describe('Autenticação', () => {
       // 1. Esperar a URL mudar
       await page.waitForURL((url) => url.pathname === '/' || !url.href.includes('/auth'), { 
         timeout: 25000,
-        waitUntil: 'networkidle'
+        waitUntil: 'domcontentloaded'
       });
       console.log(`[Test] Login bem-sucedido, redirecionado para: ${page.url()}`);
     } catch (e) {

@@ -8,17 +8,20 @@
  * Get document directory
  */
 
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
-import { Alert, Linking } from 'react-native';
+import { Alert, Linking, Share } from 'react-native';
 import { log } from './logger';
 import { asyncResult, Result } from './async';
 
 export async function getDocumentDirectory(): Promise<Result<string>> {
   return asyncResult(async () => {
     const dir = FileSystem.documentDirectory;
+    if (!dir) {
+      throw new Error('Document directory unavailable');
+    }
     log.info('FS', 'Document directory accessed', { dir });
     return dir;
   }, 'getDocumentDirectory');
@@ -30,6 +33,9 @@ export async function getDocumentDirectory(): Promise<Result<string>> {
 export async function getCacheDirectory(): Promise<Result<string>> {
   return asyncResult(async () => {
     const dir = FileSystem.cacheDirectory;
+    if (!dir) {
+      throw new Error('Cache directory unavailable');
+    }
     log.info('FS', 'Cache directory accessed', { dir });
     return dir;
   }, 'getCacheDirectory');
@@ -113,8 +119,9 @@ export async function pickDocument(): Promise<Result<string | null>> {
       return null;
     }
 
-    log.info('FS', 'Document picked', { uri: result.uri });
-    return result.uri;
+    const uri = result.assets?.[0]?.uri ?? null;
+    log.info('FS', 'Document picked', { uri });
+    return uri;
   }, 'pickDocument');
 }
 
@@ -124,10 +131,10 @@ export async function pickDocument(): Promise<Result<string | null>> {
 export async function pickImage(): Promise<Result<string | null>> {
   return asyncResult(async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
       allowsEditing: true,
-      aspectRatio: [4, 3],
+      aspect: [4, 3],
     });
 
     if (result.canceled) {
@@ -155,10 +162,10 @@ export async function takePhoto(): Promise<Result<string | null>> {
     }
 
     const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       quality: 0.8,
       allowsEditing: true,
-      aspectRatio: [4, 3],
+      aspect: [4, 3],
     });
 
     if (result.canceled) {
@@ -182,9 +189,8 @@ export async function shareContent(
       return;
     }
 
-    await Sharing.shareAsync({
-      message: url ? `${message}\n${url}` : message,
-      url,
+    await Share.share({
+      message: [message, url].filter(Boolean).join('\n'),
     });
 
     log.info('FS', 'Content shared');
@@ -224,7 +230,7 @@ export async function getFileSize(filePath: string): Promise<string | null> {
       return null;
     }
 
-    const bytes = (info as FileSystem.FileInfo).size || 0;
+    const bytes = 'size' in info ? info.size || 0 : 0;
     return formatBytes(bytes);
   } catch {
     return null;

@@ -95,12 +95,13 @@ export const useGlobalShortcuts = ({
         case '4':
         case '5':
         case '6':
-        case '7':
+        case '7': {
           // Ctrl/Cmd + 1-7: Jump to sections
           event.preventDefault();
           const sectionNumber = parseInt(event.key);
           onJumpToSection?.(sectionNumber);
           break;
+        }
       }
     },
     [enabled, onSave, onNewSection, onShowShortcuts, onJumpToSection]

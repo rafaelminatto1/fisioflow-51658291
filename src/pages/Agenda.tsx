@@ -246,7 +246,7 @@ export const AgendaPage: React.FC<AgendaPageProps> = ({ className }) => {
                 </button>
 
                 {/* Telemedicina */}
-                <button className="p-2 hover:bg-muted rounded-lg transition-colors"">
+                <button className="p-2 hover:bg-muted rounded-lg transition-colors" title="Telemedicina">
                   <Video className="w-5 h-5" />
                 </button>
 

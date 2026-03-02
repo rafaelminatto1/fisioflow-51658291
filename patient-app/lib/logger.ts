@@ -29,27 +29,43 @@ class Logger {
     return `[${timestamp}] [${level}] [${tag}] ${message}`;
   }
 
-  debug(tag: string, message: string, ...args: any[]) {
+  debug(tagOrMessage: string, messageOrData?: any, ...args: any[]) {
     if (this.shouldLog(LogLevel.DEBUG)) {
-      console.log(this.formatMessage('DEBUG', tag, message), ...args);
+      if (typeof messageOrData === 'string') {
+        console.log(this.formatMessage('DEBUG', tagOrMessage, messageOrData), ...args);
+      } else {
+        console.log(this.formatMessage('DEBUG', 'APP', tagOrMessage), messageOrData, ...args);
+      }
     }
   }
 
-  info(tag: string, message: string, ...args: any[]) {
+  info(tagOrMessage: string, messageOrData?: any, ...args: any[]) {
     if (this.shouldLog(LogLevel.INFO)) {
-      console.info(this.formatMessage('INFO', tag, message), ...args);
+      if (typeof messageOrData === 'string') {
+        console.info(this.formatMessage('INFO', tagOrMessage, messageOrData), ...args);
+      } else {
+        console.info(this.formatMessage('INFO', 'APP', tagOrMessage), messageOrData, ...args);
+      }
     }
   }
 
-  warn(tag: string, message: string, ...args: any[]) {
+  warn(tagOrMessage: string, messageOrData?: any, ...args: any[]) {
     if (this.shouldLog(LogLevel.WARN)) {
-      console.warn(this.formatMessage('WARN', tag, message), ...args);
+      if (typeof messageOrData === 'string') {
+        console.warn(this.formatMessage('WARN', tagOrMessage, messageOrData), ...args);
+      } else {
+        console.warn(this.formatMessage('WARN', 'APP', tagOrMessage), messageOrData, ...args);
+      }
     }
   }
 
-  error(tag: string, message: string, error?: Error | unknown, ...args: any[]) {
+  error(tagOrMessage: string, messageOrError?: any, errorOrArg?: any, ...args: any[]) {
     if (this.shouldLog(LogLevel.ERROR)) {
-      console.error(this.formatMessage('ERROR', tag, message), error, ...args);
+      if (typeof messageOrError === 'string') {
+        console.error(this.formatMessage('ERROR', tagOrMessage, messageOrError), errorOrArg, ...args);
+      } else {
+        console.error(this.formatMessage('ERROR', 'APP', tagOrMessage), messageOrError, errorOrArg, ...args);
+      }
     }
   }
 
@@ -128,11 +144,11 @@ export const logger = new Logger();
 
 // Convenience exports
 export const log = {
-  debug: (tag: string, message: string, ...args: any[]) => logger.debug(tag, message, ...args),
-  info: (tag: string, message: string, ...args: any[]) => logger.info(tag, message, ...args),
-  warn: (tag: string, message: string, ...args: any[]) => logger.warn(tag, message, ...args),
-  error: (tag: string, message: string, error?: Error | unknown, ...args: any[]) =>
-    logger.error(tag, message, error, ...args),
+  debug: (tagOrMessage: string, messageOrData?: any, ...args: any[]) => logger.debug(tagOrMessage, messageOrData, ...args),
+  info: (tagOrMessage: string, messageOrData?: any, ...args: any[]) => logger.info(tagOrMessage, messageOrData, ...args),
+  warn: (tagOrMessage: string, messageOrData?: any, ...args: any[]) => logger.warn(tagOrMessage, messageOrData, ...args),
+  error: (tagOrMessage: string, messageOrError?: any, errorOrArg?: any, ...args: any[]) =>
+    logger.error(tagOrMessage, messageOrError, errorOrArg, ...args),
   track: (action: string, properties?: Record<string, any>) => logger.track(action, properties),
   screenView: (screenName: string, properties?: Record<string, any>) =>
     logger.screenView(screenName, properties),

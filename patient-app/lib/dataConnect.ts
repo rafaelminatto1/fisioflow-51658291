@@ -8,7 +8,13 @@
  */
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getConnectors, ConnectorConfig } from 'firebase/data-connect';
+import { log } from '@/lib/logger';
+
+interface ConnectorConfig {
+  connector: string;
+  location: string;
+  service: string;
+}
 
 /**
  * Configuração do DataConnect
@@ -52,11 +58,10 @@ export const dataConnectConfig: ConnectorConfig = {
  */
 export function initializeDataConnect() {
   try {
-    // Verifica se o pacote data-connect está disponível
-    const connectors = getConnectors(app);
-    return connectors;
+    // Placeholder until Data Connect SDK setup is completed.
+    return null;
   } catch (error) {
-    console.warn('Firebase DataConnect not available, using Firestore fallback:', error);
+    log.warn('Firebase DataConnect not available, using Firestore fallback:', error);
     return null;
   }
 }
@@ -132,7 +137,7 @@ export async function getPatientExercises(
 ): Promise<GetPatientExercisesResult> {
   // TODO: Implementar com DataConnect quando disponível
   // Por enquanto, usa Firestore (implementado no hook useDataConnect)
-  console.warn('getPatientExercises: DataConnect not implemented, using Firestore fallback');
+  log.warn('getPatientExercises: DataConnect not implemented, using Firestore fallback');
   return { exercises: [] };
 }
 
@@ -143,7 +148,7 @@ export async function completeExercise(
   variables: { patientExerciseId: string; feedback?: { difficulty: number; pain: number } }
 ): Promise<{ success: boolean }> {
   // TODO: Implementar com DataConnect quando disponível
-  console.warn('completeExercise: DataConnect not implemented');
+  log.warn('completeExercise: DataConnect not implemented');
   return { success: false };
 }
 
@@ -159,7 +164,7 @@ export async function updateExerciseFeedback(
   }
 ): Promise<{ success: boolean }> {
   // TODO: Implementar com DataConnect quando disponível
-  console.warn('updateExerciseFeedback: DataConnect not implemented');
+  log.warn('updateExerciseFeedback: DataConnect not implemented');
   return { success: false };
 }
 
@@ -173,7 +178,7 @@ export async function getPatientStats(variables: { patientId: string }): Promise
   totalSessions: number;
 }> {
   // TODO: Implementar com DataConnect quando disponível
-  console.warn('getPatientStats: DataConnect not implemented');
+  log.warn('getPatientStats: DataConnect not implemented');
   return {
     totalExercises: 0,
     completedExercises: 0,
@@ -231,11 +236,7 @@ export function createCacheKey(operation: string, variables: Record<string, any>
  * Verifica se DataConnect está disponível
  */
 export function isDataConnectAvailable(): boolean {
-  try {
-    return getConnectors(app) !== undefined;
-  } catch {
-    return false;
-  }
+  return false;
 }
 
 export default {

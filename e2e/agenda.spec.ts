@@ -98,7 +98,7 @@ async function ensureScheduleReady(page: Page, options?: { forceLogin?: boolean 
   await expect.poll(() => page.url(), { timeout: 45000 }).not.toContain('/auth');
   
   // Esperar o app carregar o estado inicial
-  await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+  await page.waitForLoadState('domcontentloaded', { timeout: 15000 }).catch(() => {});
   
   await expect.poll(() => isScheduleLikeUrl(page.url()), { timeout: 30000 }).toBe(true);
   await expect(page.locator('body')).toBeVisible({ timeout: 30000 });

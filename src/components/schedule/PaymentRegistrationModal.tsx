@@ -79,7 +79,7 @@ export function PaymentRegistrationModal({
             // 1. Create Financial Transaction
             await FinancialService.createTransaction({
                 tipo: 'income', // 'income' for receiving payment
-                // @ts-ignore - The type definition in FinancialService might be strict string, but 'income' is usually correct for transaction type
+                // @ts-expect-error - Property is required but missing in FinancialService might be strict string, but 'income' is usually correct for transaction type
                 // If type is 'receita' in backend, we should use that. 
                 // Checking existing code, FinancialApi uses 'income' | 'expense'.
                 // But FinancialService.createTransaction Omit<Transaction...> might expect backend DB string.

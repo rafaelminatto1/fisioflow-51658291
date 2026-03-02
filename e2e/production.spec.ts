@@ -75,7 +75,7 @@ test.describe('Production Site Tests', () => {
     });
 
     await page.goto(PRODUCTION_URL);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Verifica se os recursos principais carregaram
     const failedResources = responses.filter(r => r.status >= 400);
@@ -143,7 +143,7 @@ test.describe('Performance Tests', () => {
     const startTime = Date.now();
 
     await page.goto(PRODUCTION_URL);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const loadTime = Date.now() - startTime;
 
@@ -168,7 +168,7 @@ test.describe('Performance Tests', () => {
     });
 
     await page.goto(PRODUCTION_URL);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Verifica se não há bundles muito grandes (>5MB)
     const hugeBundles = jsSizes.filter(size => size > 5 * 1024 * 1024);

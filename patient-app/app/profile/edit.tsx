@@ -30,6 +30,7 @@ import { updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db, storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { validators } from '@/lib/validation';
+import { log } from '@/lib/logger';
 
 interface ProfileFormData {
   name: string;
@@ -120,7 +121,7 @@ export default function ProfileEditScreen() {
       });
       setAvatarUrl(user.avatarUrl || null);
     } catch (error) {
-      console.error('Error loading user data:', error);
+      log.error('Error loading user data:', error);
     }
   };
 
@@ -194,7 +195,7 @@ export default function ProfileEditScreen() {
         { text: 'OK', onPress: () => router.back() }
       ]);
     } catch (error) {
-      console.error('Error saving profile:', error);
+      log.error('Error saving profile:', error);
       Alert.alert('Erro', 'Não foi possível salvar o perfil. Tente novamente.');
     } finally {
       setSaving(false);
@@ -227,7 +228,7 @@ export default function ProfileEditScreen() {
         await uploadAvatar(result.assets[0].uri);
       }
     } catch (error) {
-      console.error('Error picking avatar:', error);
+      log.error('Error picking avatar:', error);
       Alert.alert('Erro', 'Não foi possível selecionar a imagem.');
     } finally {
       setUploadingAvatar(false);
@@ -258,7 +259,7 @@ export default function ProfileEditScreen() {
       setAvatarUrl(downloadURL);
       Alert.alert('Sucesso', 'Foto de perfil atualizada!');
     } catch (error) {
-      console.error('Error uploading avatar:', error);
+      log.error('Error uploading avatar:', error);
       Alert.alert('Erro', 'Não foi possível atualizar a foto de perfil.');
     }
   };

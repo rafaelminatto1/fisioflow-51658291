@@ -36,6 +36,7 @@ import {
   Platform,
   UIManager,
   LayoutChangeEvent,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -617,14 +618,10 @@ const PhotosBlock: React.FC<{
           <View style={styles.photosGrid}>
             {photos.map((photo) => (
               <View key={photo.id} style={styles.photoContainer}>
-                {/* eslint-disable-next-line @typescript-eslint/no-require-imports */}
-                {require('react-native').Image && (
-                  //@ts-ignore
-                  <require('react-native').Image
-                    source={{ uri: photo.uri }}
-                    style={styles.photo}
-                  />
-                )}
+                <Image
+                  source={{ uri: photo.uri }}
+                  style={styles.photo}
+                />
                 <TouchableOpacity
                   style={styles.removePhotoButton}
                   onPress={() => onRemovePhoto(photo.id)}

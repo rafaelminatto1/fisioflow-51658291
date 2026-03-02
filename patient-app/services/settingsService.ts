@@ -26,7 +26,7 @@ export interface AppSettings {
 export async function getSettings(): Promise<Result<AppSettings>> {
   return asyncResult(async () => {
     const settings = await AppStorage.getSettings();
-    return settings;
+    return settings as unknown as AppSettings;
   }, 'getSettings');
 }
 

@@ -105,7 +105,7 @@ export class AnalysisEngine {
   on(event: 'repCountChanged', callback: (count: number) => void): void;
   on(event: 'formScoreChanged', callback: (score: number) => void): void;
 
-  on(event: string, callback: Function): void {
+  on(event: string, callback: (...args: any[]) => void): void {
     switch (event) {
       case 'poseDetected':
         this.state.callbacks.onPoseDetected = callback as any;
@@ -173,7 +173,7 @@ export class AnalysisEngine {
     // Se a largura dos ombros for muito pequena em relação à altura, está de lado
     // Altura do tronco (aproximada)
     const trunkHeight = Math.abs((leftShoulder.y + rightShoulder.y) / 2 - (leftHip.y + rightHip.y) / 2);
-    
+
     // Razão largura/altura
     const ratio = shoulderWidth / trunkHeight;
 
@@ -186,7 +186,7 @@ export class AnalysisEngine {
     // Verificar profundidade (z) para distinguir frente/costas (se disponível e confiável)
     // MediaPipe: z negativo é "perto da câmera". Nariz deve ter z < ombros se de frente.
     if (nose && nose.z !== undefined && leftShoulder.z !== undefined) {
-       if (nose.z > leftShoulder.z) return 'BACK'; // Nariz "atrás" dos ombros
+      if (nose.z > leftShoulder.z) return 'BACK'; // Nariz "atrás" dos ombros
     }
 
     return 'FRONT';
@@ -294,9 +294,9 @@ export class AnalysisEngine {
       const b = landmarks[triad.b];
 
       if (pivot && a && b &&
-          (pivot.visibility || 0) > DEFAULT_CONFIG.visibilityThreshold &&
-          (a.visibility || 0) > DEFAULT_CONFIG.visibilityThreshold &&
-          (b.visibility || 0) > DEFAULT_CONFIG.visibilityThreshold) {
+        (pivot.visibility || 0) > DEFAULT_CONFIG.visibilityThreshold &&
+        (a.visibility || 0) > DEFAULT_CONFIG.visibilityThreshold &&
+        (b.visibility || 0) > DEFAULT_CONFIG.visibilityThreshold) {
 
         const angle = calculateAngle(
           { x: pivot.x, y: pivot.y },

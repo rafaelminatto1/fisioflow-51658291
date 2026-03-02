@@ -16,6 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
+import { log } from '@/lib/logger';
 
 interface NotificationPermissionModalProps {
   visible: boolean;
@@ -37,7 +38,7 @@ export function NotificationPermissionModal({
       await onEnable();
       onClose();
     } catch (error) {
-      console.error('Error enabling notifications:', error);
+      log.error('Error enabling notifications:', error);
     } finally {
       setLoading(false);
     }

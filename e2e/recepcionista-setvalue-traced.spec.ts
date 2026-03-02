@@ -99,7 +99,7 @@ test.describe('Recepcionista SetValue - Full Trace', () => {
     console.log('========================================\n');
 
     await page.goto('https://fisioflow-migration.web.app', {
-      waitUntil: 'networkidle',
+      waitUntil: 'domcontentloaded',
       timeout: 60000
     });
 

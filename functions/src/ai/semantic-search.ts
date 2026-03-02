@@ -32,7 +32,7 @@ export const semanticSearchHandler = async (request: any) => {
     const db = admin.firestore();
     const soapRef = db.collection('soap_records');
 
-    // @ts-ignore - findNearest é um método experimental do Firestore
+    // @ts-expect-error - findNearest é um método experimental do Firestore
     const vectorQuery = soapRef.findNearest({
       vectorField: 'embedding',
       queryVector: queryVector,

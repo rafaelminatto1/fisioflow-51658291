@@ -10,7 +10,7 @@ test.describe('Authentication Flow', () => {
     await page.goto('http://localhost:5173');
     
     // Aguardar a página carregar
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     
     // 2. Verificar se está na página de login ou já logado
     const currentUrl = page.url();
@@ -44,7 +44,7 @@ test.describe('Authentication Flow', () => {
     
     // 5. Clicar no botão de login
     console.log('🔐 Clicando no botão de login...');
-    const loginButton = page.locator('button[type="submit"], button:has-text("Entrar"), button:has-text("Login")').first();
+    const loginButton = page.locator('button[type="submit"], button:has-text("Acessar Minha Conta"), button:has-text("Login")').first();
     await loginButton.click();
     
     // 6. Aguardar navegação ou mudança de estado
@@ -129,7 +129,7 @@ test.describe('Authentication Flow', () => {
     // 10. Tentar navegar para /agenda
     console.log('📅 Navegando para /agenda...');
     await page.goto('http://localhost:5173/agenda');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(3000);
     
     // 11. Verificar se há appointments cards

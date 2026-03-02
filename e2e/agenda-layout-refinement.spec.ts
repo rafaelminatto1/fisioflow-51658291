@@ -4,7 +4,7 @@ import { testUsers } from './fixtures/test-data';
 test.describe('Agenda Layout Refinement - E2E Verification', () => {
     test.beforeEach(async ({ page }) => {
         // Navigate to login page
-        await page.goto('/auth', { waitUntil: 'networkidle' });
+        await page.goto('/auth', { waitUntil: 'domcontentloaded' });
 
         // Login with test user
         // Using explicit IDs from LoginForm.tsx
@@ -17,7 +17,7 @@ test.describe('Agenda Layout Refinement - E2E Verification', () => {
         await page.waitForURL(/^(?!.*\/auth).*$/, { timeout: 15000 });
 
         // Navigate to Schedule
-        await page.goto('/schedule', { waitUntil: 'networkidle' });
+        await page.goto('/schedule', { waitUntil: 'domcontentloaded' });
     });
 
     test('should verify connection status in top header', async ({ page }) => {

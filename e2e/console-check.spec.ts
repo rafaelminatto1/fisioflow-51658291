@@ -118,7 +118,7 @@ test.describe('Fisioflow Console Error Check', () => {
       // Try to find and click submit button
       const submitSelectors = [
         'button[type="submit"]',
-        'button:has-text("Entrar")',
+        'button:has-text("Acessar Minha Conta")',
         'button:has-text("Login")',
         'button:has-text("Sign")',
         'button:has-text("Logar")',
@@ -145,7 +145,7 @@ test.describe('Fisioflow Console Error Check', () => {
 
       // Wait for navigation or timeout
       try {
-        await page.waitForNavigation({ waitUntil: 'networkidle', timeout: 10000 });
+        await page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 10000 });
         console.log('Navigation occurred after login attempt');
       } catch (e) {
         console.log('No navigation detected within timeout - login might have failed or page updated via AJAX');

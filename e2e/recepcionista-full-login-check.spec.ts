@@ -109,7 +109,7 @@ test.describe('Recepcionista Full Login - SetValue Comprehensive Check', () => {
       console.log('Waiting for navigation...');
       try {
         await page.waitForNavigation({
-          waitUntil: 'networkidle',
+          waitUntil: 'domcontentloaded',
           timeout: 15000
         });
         console.log('✓ Navigation successful');

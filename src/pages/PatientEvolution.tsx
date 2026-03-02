@@ -132,7 +132,7 @@ const parseSoapTemplateContent = (content: string): ParsedSoapSections | null =>
   };
 
   for (const line of lines) {
-    const match = line.match(/^\s*(subjetivo|subjetiva|s|objetivo|o|avaliação|avaliacao|a|plano|p)\s*[:\-]\s*(.*)$/i);
+    const match = line.match(/^\s*(subjetivo|subjetiva|s|objetivo|o|avaliação|avaliacao|a|plano|p)\s*[:-]\s*(.*)$/i);
     if (match) {
       const key = mapLabelToKey(match[1]);
       if (key) {
@@ -699,7 +699,7 @@ const PatientEvolution = () => {
           plan: saveData.plan,
           pain_level: painScale.level,
           ...(isV2orV3mode && { v2_data: evolutionV2Data as unknown as Record<string, unknown> }),
-        }, 'manual').catch(() => {/* versão não é crítica */});
+        }, 'manual').catch(() => {/* versão não é crítica */ });
       }
 
       // Salvar sessão de tratamento (exercícios realizados) - Migrado para Firebase

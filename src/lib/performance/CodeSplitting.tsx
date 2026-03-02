@@ -110,7 +110,7 @@ interface LazyLoadOptions<T> {
 /**
  * createLazyComponent - Cria componente lazy com preload configurável
  */
-export function createLazyComponent<T = {}>(
+export function createLazyComponent<T = Record<string, unknown>>(
   options: LazyLoadOptions<T>
 ): ComponentType<T> & { preload: () => void } {
   const { importFn, preloadTrigger = 'viewport', fallback, displayName } = options;

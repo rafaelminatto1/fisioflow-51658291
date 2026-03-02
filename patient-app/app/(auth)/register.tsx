@@ -18,6 +18,7 @@ import { Button, Input, PasswordStrength } from '@/components';
 import { useColors } from '@/hooks/useColorScheme';
 import { auth, db } from '@/lib/firebase';
 import { validators } from '@/lib/validation';
+import { log } from '@/lib/logger';
 
 export default function RegisterScreen() {
   const colors = useColors();
@@ -109,7 +110,7 @@ export default function RegisterScreen() {
         ]
       );
     } catch (error: any) {
-      console.error('Registration error:', error);
+      log.error('Registration error:', error);
 
       let errorMessage = 'Erro ao criar conta. Tente novamente.';
 
@@ -169,6 +170,8 @@ export default function RegisterScreen() {
               error={errors.fullName}
               autoCapitalize="words"
               leftIcon="person-outline"
+              testID="name-input"
+              accessibilityLabel="name-input"
             />
 
             <Input
@@ -184,6 +187,8 @@ export default function RegisterScreen() {
               autoCapitalize="none"
               autoCorrect={false}
               leftIcon="mail-outline"
+              testID="email-input"
+              accessibilityLabel="email-input"
             />
 
             <Input
@@ -197,6 +202,8 @@ export default function RegisterScreen() {
               error={errors.phone}
               keyboardType="phone-pad"
               leftIcon="call-outline"
+              testID="phone-input"
+              accessibilityLabel="phone-input"
             />
 
             <Input
@@ -214,6 +221,8 @@ export default function RegisterScreen() {
               }
               onRightIconPress={() => setShowPassword(!showPassword)}
               leftIcon="lock-closed-outline"
+              testID="password-input"
+              accessibilityLabel="password-input"
             />
 
             <PasswordStrength password={formData.password} />
@@ -233,6 +242,8 @@ export default function RegisterScreen() {
               }
               onRightIconPress={() => setShowConfirmPassword(!showConfirmPassword)}
               leftIcon="lock-closed-outline"
+              testID="confirm-password-input"
+              accessibilityLabel="confirm-password-input"
             />
 
             {/* Terms */}

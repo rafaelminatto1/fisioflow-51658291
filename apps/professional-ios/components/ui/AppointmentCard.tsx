@@ -155,7 +155,13 @@ export const AppointmentCard = memo(({
       </Card>
     </Pressable>
   );
-}
+}, (prev, next) => {
+  // Custom comparison para evitar re-renders desnecessários
+  return prev.appointment.id === next.appointment.id &&
+    prev.appointment.status === next.appointment.status &&
+    prev.appointment.date === next.appointment.date &&
+    prev.appointment.patientName === next.appointment.patientName;
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -221,10 +227,4 @@ const styles = StyleSheet.create({
   actionsColumn: {
     gap: 6,
   },
-}, (prev, next) => {
-  // Custom comparison para evitar re-renders desnecessários
-  return prev.appointment.id === next.appointment.id &&
-         prev.appointment.status === next.appointment.status &&
-         prev.appointment.date === next.appointment.date &&
-         prev.appointment.patientName === next.appointment.patientName;
 });

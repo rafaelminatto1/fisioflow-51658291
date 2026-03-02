@@ -11,7 +11,7 @@ test.describe('Pacientes - CRUD Completo', () => {
     await expect(emailInput).toBeVisible({ timeout: 15000 });
     await emailInput.fill(testUsers.fisio.email);
     await passwordInput.fill(testUsers.fisio.password);
-    await page.click('button[type="submit"], button:has-text("Entrar")');
+    await page.click('button[type="submit"], button:has-text("Acessar Minha Conta")');
     
     // Aguardar navegação para fora da página de auth
     await expect.poll(() => page.url(), { timeout: 30000 }).not.toContain('/auth');

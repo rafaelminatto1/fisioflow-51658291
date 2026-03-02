@@ -144,11 +144,11 @@ test.describe('Professional iOS - Auth Flow', () => {
     await auth.logout(page);
 
     // Verificar se foi para tela de login
-    await expect(page.url()).toMatch(/\(auth)/login$/);
+    await expect(page.url()).toMatch(/\(auth\)\/login$/);
 
     // Tentar navegar para tela protegida (deve redirecionar para login)
     await page.goto('/(drawer)/agenda');
-    await expect(page.url()).toMatch(/\(auth)/login$/);
+    await expect(page.url()).toMatch(/\(auth\)\/login$/);
   });
 
   test('deve rejeitar login com credenciais inválidas', async ({ page }) => {
@@ -162,7 +162,7 @@ test.describe('Professional iOS - Auth Flow', () => {
     await expect(page.locator('text=Email ou senha inválidos')).toBeVisible();
 
     // Verificar que ainda está na tela de login
-    await expect(page.url()).toMatch(/\(auth)/login$/);
+    await expect(page.url()).toMatch(/\(auth\)\/login$/);
   });
 });
 

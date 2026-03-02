@@ -10,12 +10,15 @@ global.__DEV__ = true;
 // Note: jest-expo preset handles most of these, but we can override/customize here
 
 // Mock expo modules
-jest.mock('expo-av', () => ({
-  Video: jest.fn(),
-  Audio: {
-    Sound: jest.fn(),
-  },
-  ResizableVideo: jest.fn(),
+jest.mock('expo-video', () => ({
+  VideoView: jest.fn(),
+  useVideoPlayer: jest.fn(() => ({
+    loop: false,
+    playbackRate: 1,
+    currentTime: 0,
+    play: jest.fn(),
+    pause: jest.fn(),
+  })),
 }));
 
 jest.mock('expo-haptics', () => ({

@@ -46,7 +46,7 @@ export interface PatientExercise {
 /**
  * Interface para o resultado do hook
  */
-interface UsePatientExercisesResult {
+export interface UsePatientExercisesResult {
   data: PatientExercise[] | null;
   isLoading: boolean;
   error: Error | null;
@@ -56,10 +56,27 @@ interface UsePatientExercisesResult {
 /**
  * Opções para o hook
  */
-interface UsePatientExercisesOptions {
+export interface UsePatientExercisesOptions {
   includeCompleted?: boolean;
   includeExpired?: boolean;
   limit?: number;
+}
+
+/**
+ * Helper to safely parse Firestore dates (can be Timestamp or ISO string)
+ */
+function parseDate(date: any): Date | undefined {
+  if (!date) return undefined;
+  if (typeof date.toDate === 'function') return date.toDate();
+  if (date instanceof Date) return date;
+  if (typeof date === 'string' || typeof date === 'number') {
+    const d = new Date(date);
+    return isNaN(d.getTime()) ? undefined : d;
+  }
+  if (date.seconds !== undefined) {
+    return new Date(date.seconds * 1000 + (date.nanoseconds || 0) / 1000000);
+  }
+  return undefined;
 }
 
 /**
@@ -149,9 +166,9 @@ export function usePatientExercisesPostgres(
             restTime: exerciseData.restTime,
             notes: exerciseData.notes,
             completed: exerciseData.completed || false,
-            completedAt: exerciseData.completedAt?.toDate(),
-            prescribedAt: exerciseData.prescribedAt?.toDate() || new Date(),
-            validUntil: exerciseData.validUntil?.toDate(),
+            completedAt: parseDate(exerciseData.completedAt),
+            prescribedAt: parseDate(exerciseData.prescribedAt) || new Date(),
+            validUntil: parseDate(exerciseData.validUntil),
             frequency: exerciseData.frequency,
           };
 

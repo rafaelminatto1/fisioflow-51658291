@@ -140,14 +140,12 @@ const WeekSlotItem = memo(
               format(selectedSlot, 'HH:mm') === format(slotDate, 'HH:mm');
 
             // Encontrar agendamentos neste slot/dia
-            const slotAppointments = useMemo(() => {
-              const slotEnd = new Date(slotDate.getTime() + slotDuration * 60000);
-              return appointments.filter((apt) => {
-                const aptStart = new Date(apt.startTime);
-                const aptEnd = new Date(apt.endTime);
-                return isSameDay(aptStart, dayDate) && aptStart < slotEnd && aptEnd > slotDate;
-              });
-            }, [appointments, slotDate, slotDuration, dayDate]);
+            const slotEnd = new Date(slotDate.getTime() + slotDuration * 60000);
+            const slotAppointments = appointments.filter((apt) => {
+              const aptStart = new Date(apt.startTime);
+              const aptEnd = new Date(apt.endTime);
+              return isSameDay(aptStart, dayDate) && aptStart < slotEnd && aptEnd > slotDate;
+            });
 
             const hasAppointment = slotAppointments.length > 0;
 

@@ -17,7 +17,7 @@ test.describe('Teste de erros Supabase - Criar agendamento e iniciar atendimento
     await passwordInput.fill(testUsers.fisio.password);
 
     // Clicar no botão de login
-    const loginButton = page.locator('button:has-text("Entrar"), button:has-text("Login"), button[type="submit"]').first();
+    const loginButton = page.locator('button:has-text("Acessar Minha Conta"), button:has-text("Login"), button[type="submit"]').first();
     await loginButton.click();
     
     // Aguardar redirecionamento após login
