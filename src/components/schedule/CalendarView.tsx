@@ -729,7 +729,7 @@ export const CalendarView = memo(({
           {liveAnnouncement}
         </div>
       ) : null}
-      <Card className="flex flex-col border-none shadow-premium-lg min-h-[500px] sm:min-h-[600px] bg-slate-50 dark:bg-slate-950/20" role="region" aria-label="Calendário de agendamentos">
+      <Card className="flex flex-col border-none shadow-premium-lg h-full flex-1 min-h-0 bg-slate-50 dark:bg-slate-950/20" role="region" aria-label="Calendário de agendamentos">
         <CardContent className="p-0 flex flex-col h-full">
           {/* Unified Header - Navigation + Actions */}
           <div className="px-3 sm:px-4 py-2.5 border-b bg-white dark:bg-slate-900" role="toolbar" aria-label="Navegação do calendário">
@@ -1018,7 +1018,7 @@ export const CalendarView = memo(({
 
           <div
             ref={calendarGridRef}
-            className="flex-1 relative outline-none"
+            className="flex-1 relative outline-none min-h-0"
             id="calendar-grid"
             role="tabpanel"
             tabIndex={-1}
