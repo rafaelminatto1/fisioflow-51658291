@@ -63,7 +63,7 @@ interface CalendarWeekViewDndKitProps {
 // =====================================================================
 
 const SLOT_DURATION_MINUTES = 30;
-const MIN_WEEK_SLOT_HEIGHT = 31;
+const MIN_WEEK_SLOT_HEIGHT = 14; // low enough to never prevent fit-to-screen
 const GRID_HEIGHT_ADJUSTMENT = 3;
 const WEEK_GRID_HEIGHT_BOOST = 0;
 const INITIAL_MEASUREMENT_SETTLE_MS = 120;
