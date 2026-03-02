@@ -45,9 +45,11 @@ import { ptBR } from 'date-fns/locale';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { RouteKeys, PrefetchStrategy } from '@/lib/routing/routePrefetch';
 
-// Lazy load CalendarView for better initial load performance
+// Kick off the CalendarView chunk download immediately at module evaluation
+// so it runs in parallel with Schedule's own execution (eliminates waterfall).
+const _calendarViewPreload = import('@/components/schedule/CalendarView');
 const CalendarView = lazy(() =>
-  import('@/components/schedule/CalendarView').then(mod => ({ default: mod.CalendarView }))
+  _calendarViewPreload.then(mod => ({ default: mod.CalendarView }))
 );
 
 // Lazy load modals for better initial load performance
