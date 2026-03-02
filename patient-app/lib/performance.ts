@@ -250,7 +250,7 @@ export function useRenderTime(componentName: string): () => number | undefined {
 export class FPSMonitor {
   private frameTimes: number[] = [];
   private isRunning: boolean = false;
-  private intervalId: NodeJS.Timeout | null = null;
+  private intervalId: ReturnType<typeof setInterval> | null = null;
 
   start(callback: (fps: number) => void, sampleInterval: number = 1000): void {
     if (this.isRunning) return;

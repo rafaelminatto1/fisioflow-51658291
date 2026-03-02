@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices, expect } from '@playwright/test';
 
 /**
  * Playwright Configuration para Fisioflow Patient App
@@ -6,6 +6,8 @@ import { defineConfig, devices } from '@playwright/test';
  * Configura testes E2E com emuladores iOS/Android e dispositivos reais
  * quando rodado localmente com Expo Go.
  */
+
+const DEFAULT_BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:19006';
 
 export default defineConfig({
   // Diretório onde estão os testes E2E
@@ -32,7 +34,7 @@ export default defineConfig({
   // Dispositivos para testar
   use: {
     // Em produção/testes de CI, usa baseURL do app web
-    baseURL: process.env.CI ? 'http://localhost:8082' : undefined,
+    baseURL: DEFAULT_BASE_URL,
 
     // Traces de rede para debug
     trace: 'retain-on-failure',
@@ -58,19 +60,20 @@ export default defineConfig({
       use: {
         // URL do app nativo quando testado com Expo Go
         baseURL: process.env.EAS_URL || 'exp://192.168.1.2:8082',
-
-        // Estado do storage persistido entre testes
-        storageState: {
-          email: 'patient.test@fisioflow.test',
-          password: 'Test@123456',
-        },
       },
     },
     {
       // Testes em navegador (web)
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+    name: 'chromium',
+    use: { ...devices['Desktop Chrome'], baseURL: DEFAULT_BASE_URL },
+  },
+  {
+    name: 'mobile',
+    use: {
+      ...devices['iPhone 13 Mini'],
+      baseURL: DEFAULT_BASE_URL,
     },
+  },
   ],
 
   // Emuladores para testes locais
@@ -80,7 +83,7 @@ export default defineConfig({
 /**
  * Criação de fixtures para testes de paciente
  */
-export const patientTestFixtures = async ({ page }, use) => {
+export const patientTestFixtures = async ({ page }: any, use: any) => {
   return {
     page,
     auth: {
@@ -119,7 +122,7 @@ export const patientTestFixtures = async ({ page }, use) => {
           await logoutButton.first().click();
         }
 
-        await expect(page).toHaveURL(/\(auth)\/login$/, { timeout: 10000 });
+        await expect(page).toHaveURL(/\(auth\)\/login$/, { timeout: 10000 });
         console.log('✅ Patient Logout successful');
       },
     },

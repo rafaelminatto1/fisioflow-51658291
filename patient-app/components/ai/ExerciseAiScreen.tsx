@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import { Camera } from 'expo-camera';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { AnalysisEngine } from '../../lib/ai/analysisEngine';
 import { PoseFeedbackOverlay } from './PoseFeedbackOverlay';
@@ -16,16 +16,13 @@ import { ExerciseType, AnalysisResult } from '../../types/ai/pose';
 const { width, height } = Dimensions.get('window');
 
 export const ExerciseAiScreen = ({ exerciseType, onComplete }: { exerciseType: ExerciseType, onComplete: (res: any) => void }) => {
-  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [permission, requestPermission] = useCameraPermissions();
   const [isRecording, setIsRecording] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const engine = useRef(new AnalysisEngine(exerciseType));
 
   useEffect(() => {
-    (async () => {
-      const { status } = await Camera.requestCameraPermissionsAsync();
-      setHasPermission(status === 'granted');
-    })();
+    requestPermission();
   }, []);
 
   const handleStart = () => {
@@ -38,12 +35,12 @@ export const ExerciseAiScreen = ({ exerciseType, onComplete }: { exerciseType: E
     onComplete(result?.metrics);
   };
 
-  if (hasPermission === null) return <View />;
-  if (hasPermission === false) return <Text>Sem acesso à câmera</Text>;
+  if (!permission) return <View />;
+  if (!permission.granted) return <Text>Sem acesso à câmera</Text>;
 
   return (
     <View style={styles.container}>
-      <Camera style={styles.camera} type={Camera.Constants.Type.front}>
+      <CameraView style={styles.camera} facing="front">
         <View style={styles.overlay}>
           {/* Contador de Repetições */}
           <View style={styles.header}>
@@ -72,7 +69,7 @@ export const ExerciseAiScreen = ({ exerciseType, onComplete }: { exerciseType: E
             </TouchableOpacity>
           </View>
         </View>
-      </Camera>
+      </CameraView>
     </View>
   );
 };

@@ -11,14 +11,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
 import { Card } from '@/components';
-import {
-  useHealthKit,
-  getTodaySteps,
-} from '@/lib/healthkit';
+import { Spacing } from '@/constants/spacing';
 import {
   useHealthConnect,
   getTodayStepsHealthConnect,
 } from '@/lib/healthConnect';
+import { useHealthKit, getTodaySteps } from '@/lib/healthkit';
+import { log } from '@/lib/logger';
 
 interface MetricCardProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -95,7 +94,7 @@ export default function WellnessScreen() {
         setSteps(mockSteps || 5000);
       }
     } catch (error) {
-      console.error('Error loading health data:', error);
+      log.error('Error loading health data:', error);
     } finally {
       setSyncing(false);
     }
@@ -155,7 +154,12 @@ export default function WellnessScreen() {
             {getPlatformName()}
           </Text>
         </View>
-        <TouchableOpacity onPress={loadHealthData} style={styles.refreshButton} disabled={syncing}>
+        <TouchableOpacity
+          onPress={loadHealthData}
+          style={styles.refreshButton}
+          disabled={syncing}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
           <Ionicons name="refresh" size={24} color={colors.primary} />
         </TouchableOpacity>
       </View>
@@ -164,7 +168,7 @@ export default function WellnessScreen() {
         {/* Connection Status Card */}
         <Card style={styles.statusCard}>
           <View style={styles.statusContent}>
-            <View style={[styles.statusIcon, { backgroundColor: (healthKitAuthorized || healthConnectAuthorized) ? colors.success + '20' : colors.border }]}>
+            <View style={[styles.statusIcon, { backgroundColor: (healthKitAuthorized || healthConnectAuthorized) ? colors.success + '20' : colors.surfaceHover }]}>
               <Ionicons
                 name={(healthKitAuthorized || healthConnectAuthorized) ? 'checkmark-circle' : 'cloud-offline'}
                 size={20}
@@ -172,7 +176,7 @@ export default function WellnessScreen() {
               />
             </View>
             <View style={styles.statusText}>
-              <Text style={[styles.statusLabel, { color: colors.text }]}>Status</Text>
+              <Text style={[styles.statusLabel, { color: colors.textSecondary }]}>Status</Text>
               <Text style={[styles.statusValue, { color: colors.textSecondary }]}>
                 {syncing ? 'Sincronizando...' : getConnectionStatus()}
               </Text>
@@ -187,7 +191,7 @@ export default function WellnessScreen() {
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
                 <>
-                  <Ionicons name="connect" size={18} color="#FFFFFF" style={styles.connectIcon} />
+                  <Ionicons name="link" size={18} color="#FFFFFF" style={styles.connectIcon} />
                   <Text style={styles.connectButtonText}>Conectar</Text>
                 </>
               )}
@@ -198,8 +202,8 @@ export default function WellnessScreen() {
         {/* Steps Card */}
         <Card style={styles.stepsCard}>
           <View style={styles.stepsHeader}>
-            <View style={[styles.stepsIcon, { backgroundColor: '#FFEDD5' }]}>
-              <Ionicons name="footsteps" size={28} color="#F97316" />
+            <View style={[styles.stepsIcon, { backgroundColor: colors.warningLight }]}>
+              <Ionicons name="footsteps" size={26} color={colors.warning} />
             </View>
             <View style={styles.stepsInfo}>
               <Text style={[styles.stepsLabel, { color: colors.textSecondary }]}>Passos Hoje</Text>
@@ -224,8 +228,8 @@ export default function WellnessScreen() {
         <View style={styles.metricsGrid}>
           {/* Heart Rate */}
           <Card style={styles.metricCard}>
-            <View style={[styles.metricIcon, { backgroundColor: '#FEE2E2' }]}>
-              <Ionicons name="heart" size={24} color="#EF4444" />
+            <View style={[styles.metricIcon, { backgroundColor: colors.errorLight }]}>
+              <Ionicons name="heart" size={22} color={colors.error} />
             </View>
             <View style={styles.metricInfo}>
               <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Frequência Cardíaca</Text>
@@ -237,8 +241,8 @@ export default function WellnessScreen() {
 
           {/* Active Calories */}
           <Card style={styles.metricCard}>
-            <View style={[styles.metricIcon, { backgroundColor: '#DCFCE7' }]}>
-              <Ionicons name="flame" size={24} color="#22c55e" />
+            <View style={[styles.metricIcon, { backgroundColor: colors.successLight }]}>
+              <Ionicons name="flame" size={22} color={colors.success} />
             </View>
             <View style={styles.metricInfo}>
               <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>Calorias Ativas</Text>
@@ -308,25 +312,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
+    padding: Spacing.screen,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 13,
     marginTop: 4,
   },
   refreshButton: {
-    padding: 8,
+    padding: 6,
   },
   content: {
-    padding: 20,
-    gap: 16,
+    padding: Spacing.screen,
+    gap: Spacing.gap,
   },
   statusCard: {
-    padding: 16,
+    padding: Spacing.card,
   },
   statusContent: {
     flexDirection: 'row',
@@ -346,11 +350,10 @@ const styles = StyleSheet.create({
   },
   statusLabel: {
     fontSize: 12,
-    color: '#6b7280',
     marginBottom: 2,
   },
   statusValue: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
   },
   connectButton: {
@@ -358,7 +361,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 9,
     borderRadius: 12,
     marginTop: 12,
     gap: 8,
@@ -366,20 +369,23 @@ const styles = StyleSheet.create({
   connectButtonText: {
     color: '#FFFFFF',
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: 13,
+  },
+  connectIcon: {
+    marginRight: 2,
   },
   stepsCard: {
-    padding: 20,
+    padding: Spacing.card,
   },
   stepsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   stepsIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 48,
+    height: 48,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -388,11 +394,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   stepsLabel: {
-    fontSize: 14,
+    fontSize: 13,
     marginBottom: 4,
   },
   stepsValue: {
-    fontSize: 32,
+    fontSize: 26,
     fontWeight: 'bold',
   },
   stepsProgressContainer: {
@@ -408,44 +414,44 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   stepsProgressText: {
-    fontSize: 13,
+    fontSize: 12,
   },
   metricsGrid: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Spacing.gap,
   },
   metricCard: {
     flex: 1,
-    padding: 16,
+    padding: Spacing.card,
   },
   metricIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   metricInfo: {},
   metricLabel: {
-    fontSize: 13,
+    fontSize: 12,
     marginBottom: 4,
   },
   metricValue: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '600',
   },
   summaryCard: {
-    padding: 16,
+    padding: Spacing.card,
   },
   summaryHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   summaryTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
   },
   weeklyData: {
@@ -457,7 +463,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   dayLabel: {
-    fontSize: 11,
+    fontSize: 10,
     marginBottom: 8,
   },
   dayBar: {
@@ -473,18 +479,18 @@ const styles = StyleSheet.create({
     minHeight: 8,
   },
   dayValue: {
-    fontSize: 11,
+    fontSize: 10,
   },
   infoBox: {
     flexDirection: 'row',
     gap: 12,
-    padding: 16,
+    padding: Spacing.card,
     borderRadius: 12,
     marginTop: 8,
   },
   infoText: {
     flex: 1,
-    fontSize: 13,
+    fontSize: 12,
     lineHeight: 18,
   },
 });

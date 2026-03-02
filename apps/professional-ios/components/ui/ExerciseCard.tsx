@@ -127,7 +127,12 @@ export const ExerciseCard = memo(({
       </Card>
     </Pressable>
   );
-}
+}, (prev, next) => {
+  // Custom comparison para evitar re-renders desnecessários
+  return prev.exercise.id === next.exercise.id &&
+    prev.exercise.name === next.exercise.name &&
+    prev.exercise.difficulty === next.exercise.difficulty;
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -215,9 +220,4 @@ const styles = StyleSheet.create({
   detailText: {
     fontSize: 11,
   },
-}, (prev, next) => {
-  // Custom comparison para evitar re-renders desnecessários
-  return prev.exercise.id === next.exercise.id &&
-         prev.exercise.name === next.exercise.name &&
-         prev.exercise.difficulty === next.exercise.difficulty;
 });

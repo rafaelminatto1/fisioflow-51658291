@@ -22,20 +22,17 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
       }
     });
 
-    await page.goto('/auth?e2e=true');
-    await page.fill('input[name="email"]', testUsers.admin.email);
-    await page.fill('input[name="password"]', testUsers.admin.password);
-    await page.click('button[type="submit"]');
-    
+    await page.goto('/?e2e=true');
+
     // Caminho '/' é válido pois redireciona para agenda por padrão
-    await page.waitForURL((url) => /\/(dashboard|eventos|schedule)?/.test(url.pathname), { timeout: 30000 });
-    
+    await page.waitForURL((url) => /\/(dashboard|eventos|schedule|agenda)?/.test(url.pathname), { timeout: 30000 });
+
     // Esperar o skeleton de carregamento sumir
     const skeleton = page.locator('[data-testid="app-loading-skeleton"]');
     if (await skeleton.isVisible()) {
       await expect(skeleton).not.toBeVisible({ timeout: 15000 });
     }
-    
+
     // Estabilização
     await page.waitForTimeout(1000);
     await page.waitForLoadState('domcontentloaded');
@@ -47,10 +44,10 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
   async function ensureJoaoSilvaExists(page: Page) {
     await page.goto('/patients?e2e=true');
     await page.waitForLoadState('domcontentloaded');
-    
+
     // Esperar a lista ou botão de carregar
     await page.waitForTimeout(2000);
-    
+
     const patientRow = page.locator('text=João Silva').first();
     if (await patientRow.isVisible()) {
       return;
@@ -60,11 +57,30 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
     const addButton = page.locator('button:has-text("Novo Paciente"), [data-testid="add-patient"], a:has-text("Novo Paciente")').first();
     await expect(addButton).toBeVisible({ timeout: 15000 });
     await addButton.click();
-    
-    await expect(page.locator('[data-testid="patient-form"]')).toBeVisible({ timeout: 10000 });
-    await page.fill('[data-testid="patient-name"]', 'João Silva');
-    await page.fill('[data-testid="patient-phone"]', '11999999999');
-    await page.click('button[type="submit"]');
+
+    const patientForm = page.locator('form[data-testid="patient-form"]');
+    await expect(patientForm).toBeVisible({ timeout: 10000 });
+
+    // Aba Básico
+    await patientForm.locator('[data-testid="patient-name"]').fill('João Silva');
+
+    // Data de nascimento
+    const birthdateBtn = patientForm.locator('[data-testid="patient-birthdate"]');
+    await birthdateBtn.click();
+    const dayBtn = page.locator('.rdp-day:not(.rdp-day_outside)').first();
+    await expect(dayBtn).toBeVisible({ timeout: 5000 });
+    await dayBtn.click();
+
+    // Aguarda o popover fechar
+    await expect(page.locator('.rdp')).toBeHidden({ timeout: 5000 });
+
+    await patientForm.locator('[data-testid="patient-phone"]').fill('11999999999');
+
+    // Aba Médico
+    await page.locator('button[role="tab"]:has-text("Médico")').click();
+    await patientForm.locator('input#main_condition').fill('Dor Lombar E2E');
+
+    await patientForm.locator('button[type="submit"]').click();
     await expect(page.locator('text=João Silva').first()).toBeVisible({ timeout: 15000 });
   }
 
@@ -72,7 +88,7 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
    * TESTE 1: Agendamento Completo
    * Verifica o fluxo de criação de um agendamento
    */
-  test.fixme('CRÍTICO: Agendamento - Fluxo completo de criação', async ({ page }) => {
+  test('CRÍTICO: Agendamento - Fluxo completo de criação', async ({ page }) => {
     await ensureJoaoSilvaExists(page);
     await page.goto('/agenda?e2e=true');
     await page.waitForLoadState('domcontentloaded');
@@ -84,7 +100,7 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
     // Selecionar paciente
     await page.click('[data-testid="patient-select"]');
     await page.fill('[data-testid="patient-search"]', 'João Silva');
-    
+
     // Esperar sugestões carregarem
     const patientOption = page.locator('role=option').filter({ hasText: 'João Silva' }).first();
     await expect(patientOption).toBeVisible({ timeout: 10000 });
@@ -116,7 +132,7 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
 
     // Verificar se aparece na agenda
     await page.goto('/schedule');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
     await expect(page.locator('text=João Silva')).toBeVisible();
     await expect(page.locator('text=10:00')).toBeVisible();
   });
@@ -125,7 +141,7 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
    * TESTE 2: Evolução SOAP
    * Verifica o registro de uma evolução SOAP
    */
-  test.fixme('CRÍTICO: Evolução Clínica - Registro SOAP completo', async ({ page }) => {
+  test('CRÍTICO: Evolução Clínica - Registro SOAP completo', async ({ page }) => {
     await ensureJoaoSilvaExists(page);
     await page.goto('/patients?e2e=true');
     await page.waitForLoadState('domcontentloaded');
@@ -152,21 +168,37 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
    * TESTE 3: Cadastro de Paciente
    * Verifica o cadastro completo de um novo paciente
    */
-  test.fixme('CRÍTICO: Pacientes - Cadastro completo', async ({ page }) => {
+  test('CRÍTICO: Pacientes - Cadastro completo', async ({ page }) => {
     await page.goto('/patients?e2e=true');
     await page.waitForLoadState('domcontentloaded');
 
     // Novo paciente
     await page.click('[data-testid="add-patient"]');
-    await expect(page.locator('[data-testid="patient-form"]')).toBeVisible({ timeout: 15000 });
+    const patientForm = page.locator('[data-testid="patient-form"]');
+    await expect(patientForm).toBeVisible({ timeout: 15000 });
 
     // Dados pessoais
-    await page.fill('[data-testid="patient-name"]', 'Paciente Teste E2E');
-    await page.fill('[data-testid="patient-email"]', `teste-${Date.now()}@example.com`);
-    await page.fill('[data-testid="patient-phone"]', '11999999999');
-    await page.fill('[data-testid="patient-cpf"]', '12345678900');
+    await patientForm.locator('[data-testid="patient-name"]').fill('Paciente Teste E2E');
 
-    await page.click('button:has-text("Salvar")');
+    // Data de nascimento
+    const birthdateBtn = patientForm.locator('[data-testid="patient-birthdate"]');
+    await birthdateBtn.click();
+    const dayBtn = page.locator('.rdp-day:not(.rdp-day_outside)').first();
+    await expect(dayBtn).toBeVisible({ timeout: 5000 });
+    await dayBtn.click();
+
+    // Aguarda o popover fechar
+    await expect(page.locator('.rdp')).toBeHidden({ timeout: 5000 });
+
+    await patientForm.locator('[data-testid="patient-email"]').fill(`teste-${Date.now()}@example.com`);
+    await patientForm.locator('[data-testid="patient-phone"]').fill('11999999999');
+    await patientForm.locator('[data-testid="patient-cpf"]').fill('12345678900');
+
+    // Aba Médico
+    await page.locator('button[role="tab"]:has-text("Médico")').click();
+    await patientForm.locator('input#main_condition').fill('Condição E2E Test');
+
+    await patientForm.locator('button[type="submit"]').click();
     await expect(page.locator('text=Paciente cadastrado com sucesso')).toBeVisible();
   });
 
@@ -174,7 +206,7 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
    * TESTE 4: Prescrição de Exercícios
    * Verifica a prescrição de exercícios para um paciente
    */
-  test.fixme('CRÍTICO: Exercícios - Prescrição para paciente', async ({ page }) => {
+  test('CRÍTICO: Exercícios - Prescrição para paciente', async ({ page }) => {
     await ensureJoaoSilvaExists(page);
     await page.goto('/patients?e2e=true');
     await page.waitForLoadState('domcontentloaded');
@@ -196,7 +228,7 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
    * TESTE 5: Telemedicina
    * Verifica o início de uma sessão de telemedicina
    */
-  test.fixme('CRÍTICO: Telemedicina - Início de sessão', async ({ page }) => {
+  test('CRÍTICO: Telemedicina - Início de sessão', async ({ page }) => {
     await page.goto('/schedule?e2e=true');
     await page.waitForLoadState('domcontentloaded');
 
@@ -218,7 +250,7 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
    * TESTE 6: Relatórios
    * Verifica geração de relatório de evolução
    */
-  test.fixme('CRÍTICO: Relatórios - Geração de PDF', async ({ page }) => {
+  test('CRÍTICO: Relatórios - Geração de PDF', async ({ page }) => {
     await ensureJoaoSilvaExists(page);
     await page.goto('/patients?e2e=true');
     await page.waitForLoadState('domcontentloaded');
@@ -235,18 +267,18 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
    * TESTE 7: Busca Global
    * Verifica funcionalidade de busca
    */
-  test.fixme('CRÍTICO: Busca - Busca global de pacientes', async ({ page }) => {
+  test('CRÍTICO: Busca - Busca global de pacientes', async ({ page }) => {
     await ensureJoaoSilvaExists(page);
     await page.goto('/dashboard?e2e=true');
     await page.waitForLoadState('domcontentloaded');
 
     // Atalho de busca (Cmd+K ou Ctrl+K)
     await page.keyboard.press('Control+k');
-    
+
     const searchInput = page.locator('[data-testid="global-search-input"]');
     await expect(searchInput).toBeVisible({ timeout: 10000 });
     await searchInput.fill('João Silva');
-    
+
     await expect(page.locator('text=João Silva').first()).toBeVisible({ timeout: 10000 });
 
     // Enter deve navegar
@@ -263,7 +295,7 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
     await page.goto('/dashboard?e2e=true');
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);
-    
+
     // Se o dashboard principal falhar em carregar, tentar ir direto para o perfil
     const userMenu = page.locator('[data-testid="user-menu"]');
     if (!await userMenu.isVisible()) {
@@ -273,7 +305,7 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
       await userMenu.click({ force: true });
       await page.click('text=Perfil', { force: true });
     }
-    
+
     await page.waitForURL(url => url.pathname.includes('/profile'), { timeout: 10000 });
     await page.waitForLoadState('domcontentloaded');
 
@@ -311,19 +343,15 @@ test.describe('Fluxos Críticos - Mobile', () => {
     // Simular viewport mobile
     await page.setViewportSize({ width: 375, height: 667 });
 
-    await page.goto('/auth?e2e=true');
-    await page.fill('input[name="email"]', testUsers.admin.email);
-    await page.fill('input[name="password"]', testUsers.admin.password);
-    await page.click('button[type="submit"]');
-    
-    await page.waitForURL(url => /\/(dashboard|eventos|schedule)?$/.test(url.pathname), { timeout: 30000 });
-    
+    await page.goto('/?e2e=true');
+    await page.waitForURL(url => /\/(dashboard|eventos|schedule|agenda)?$/.test(url.pathname), { timeout: 30000 });
+
     // Esperar o skeleton de carregamento sumir
     const skeleton = page.locator('[data-testid="app-loading-skeleton"]');
     if (await skeleton.isVisible()) {
       await expect(skeleton).not.toBeVisible({ timeout: 15000 });
     }
-    
+
     await page.waitForTimeout(3000); // Esperar animações de entrada
     await page.waitForLoadState('domcontentloaded');
 
@@ -334,12 +362,12 @@ test.describe('Fluxos Críticos - Mobile', () => {
     // Abrir agenda
     await mobileMenu.click();
     await page.waitForTimeout(1500); // Esperar Sheet abrir completamente
-    
+
     // Tentar clicar no link da agenda no menu
-    const agendaLink = page.locator('nav a:has-text("Agenda")').first();
-    await expect(agendaLink).toBeAttached({ timeout: 10000 });
-    await agendaLink.click({ force: true });
-    
+    const agendaLink = page.locator('[role="dialog"] nav a:has-text("Agenda")').first();
+    await expect(agendaLink).toBeVisible({ timeout: 10000 });
+    await agendaLink.click();
+
     await page.waitForLoadState('domcontentloaded');
 
     // View mobile deve mostrar lista visual ou calendário adaptado
@@ -349,11 +377,8 @@ test.describe('Fluxos Críticos - Mobile', () => {
 
 test.describe('Fluxos Críticos - Performance', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/auth?e2e=true');
-    await page.fill('input[name="email"]', testUsers.admin.email);
-    await page.fill('input[name="password"]', testUsers.admin.password);
-    await page.click('button[type="submit"]');
-    await page.waitForURL(url => /\/(dashboard|eventos|schedule)?$/.test(url.pathname), { timeout: 30000 });
+    await page.goto('/?e2e=true');
+    await page.waitForURL(url => /\/(dashboard|eventos|schedule|agenda)?$/.test(url.pathname), { timeout: 30000 });
   });
 
   /**

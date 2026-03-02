@@ -92,7 +92,7 @@ test.describe('Paciente Login - setValue Error Check (Simple)', () => {
         // Try various button selectors
         const buttons = [
           'button[type="submit"]',
-          'button:has-text("Entrar")',
+          'button:has-text("Acessar Minha Conta")',
           'button:has-text("Acessar")',
           'button:has-text("Login")',
           'form button'

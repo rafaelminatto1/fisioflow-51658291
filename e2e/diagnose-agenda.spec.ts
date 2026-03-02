@@ -31,7 +31,7 @@ test.describe('Diagnose Agenda Errors', () => {
 
         await page.fill('input[name="email"]', testUsers.rafael.email);
         await page.fill('input[name="password"]', testUsers.rafael.password);
-        await page.click('button:has-text("Entrar")');
+        await page.click('button:has-text("Acessar Minha Conta")');
 
         await page.waitForURL(url => !url.pathname.includes('/auth'), { timeout: 45000 });
         console.log('Login successful');

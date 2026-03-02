@@ -19,6 +19,7 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
@@ -29,6 +30,7 @@ import { MessagingManager, Message } from '@/lib/messaging';
 import { format } from 'date-fns';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
+import { log } from '@/lib/logger';
 
 export default function ChatScreen() {
   const colors = useColors();
@@ -83,7 +85,7 @@ export default function ChatScreen() {
 
             // Feedback háptico para nova mensagem
             if (message.senderId !== user?.id) {
-              Haptics.NotificationAsync(Haptics.NotificationFeedbackType.Success);
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             }
 
             // Scroll para o final
@@ -101,7 +103,7 @@ export default function ChatScreen() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error initializing chat:', error);
+      log.error('Error initializing chat:', error);
       setLoading(false);
     }
   };
@@ -135,7 +137,7 @@ export default function ChatScreen() {
         }, 100);
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      log.error('Error sending message:', error);
       Alert.alert('Erro', 'Não foi possível enviar a mensagem.');
     } finally {
       setSending(false);
@@ -179,7 +181,7 @@ export default function ChatScreen() {
         setSending(false);
       }
     } catch (error) {
-      console.error('Error sending image:', error);
+      log.error('Error sending image:', error);
       setSending(false);
     }
   };
