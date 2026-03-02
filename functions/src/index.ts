@@ -142,11 +142,11 @@ export { onExerciseCompleted, onAppointmentCompleted } from './gamification/trig
 // ============================================================================
 // WORKFLOWS E AGENDAMENTOS (CRONS)
 // ============================================================================
-export { 
-    appointmentReminders, 
-    appointmentReminders2h, 
-    onAppointmentCreatedWorkflow, 
-    onAppointmentUpdatedWorkflow 
+export {
+    appointmentReminders,
+    appointmentReminders2h,
+    onAppointmentCreatedWorkflow,
+    onAppointmentUpdatedWorkflow
 } from './workflows/appointments';
 
 export { patientReactivation } from './workflows/reactivation';
@@ -224,7 +224,7 @@ export const exerciseImageProxy = onRequest(
 // ============================================================================
 // KNOWLEDGE RAG (NOTEBOOKLM)
 // ============================================================================
-// @ts-ignore - Ignoring type check for new module
+// @ts-expect-error - Ignoring type check for new module
 export { processArtifact, queryArtifact } from './ai/knowledge-rag';
 
 // ============================================================================
@@ -251,9 +251,9 @@ export { syncFhirToBigQuery } from './analytics/bigquery-sync';
 // ============================================================================
 // TELEMEDICINE
 // ============================================================================
-export { 
-    createTelemedicineRoom, 
-    joinTelemedicineRoom, 
-    endTelemedicineRoom, 
-    getTelemedicineHistory 
+export {
+    createTelemedicineRoom,
+    joinTelemedicineRoom,
+    endTelemedicineRoom,
+    getTelemedicineHistory
 } from './integrations/telemedicine';

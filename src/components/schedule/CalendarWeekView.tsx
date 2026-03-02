@@ -3,7 +3,7 @@
 // TYPES
 // =====================================================================
 
-import React, { memo, useMemo, useState, useCallback, useEffect } from 'react';
+import React, { memo, useMemo, useState, useCallback, useEffect, useRef, useLayoutEffect } from 'react';
 import { format, startOfWeek, addDays, isSameDay, parseISO, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Appointment } from '@/types/appointment';
@@ -145,7 +145,27 @@ export const CalendarWeekView = memo(({
 }: CalendarWeekViewProps) => {
     // Get card size configuration from user preferences
     const { cardSize, heightScale } = useCardSize();
-    const slotHeight = calculateSlotHeightFromCardSize(cardSize, heightScale);
+    const preferredSlotHeight = calculateSlotHeightFromCardSize(cardSize, heightScale);
+
+    // Fit all time slots on screen without scrolling on large screens
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const [containerHeight, setContainerHeight] = useState(600);
+    useLayoutEffect(() => {
+        const el = scrollContainerRef.current;
+        if (!el) return;
+        const observer = new ResizeObserver(([entry]) => {
+            setContainerHeight(entry.contentRect.height);
+        });
+        observer.observe(el);
+        setContainerHeight(el.clientHeight);
+        return () => observer.disconnect();
+    }, []);
+
+    const HEADER_HEIGHT = 56; // h-14 sticky header
+    const MIN_SLOT_HEIGHT = 22;
+    const slotHeight = timeSlots.length > 0
+        ? Math.max(MIN_SLOT_HEIGHT, Math.floor((containerHeight - HEADER_HEIGHT) / timeSlots.length))
+        : preferredSlotHeight;
 
     const weekDays = useMemo(() => {
         const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
@@ -282,9 +302,11 @@ export const CalendarWeekView = memo(({
             }
         }
 
-        // Duration-based height calculation
+        // Duration-based height calculation — cap to fit within dynamic slot height
         const duration = apt.duration || 60;
-        const heightInPixels = calculateAppointmentCardHeight(cardSize, duration, heightScale);
+        const slotCount = Math.max(1, Math.ceil(duration / 30));
+        const maxHeight = slotHeight * slotCount - 4;
+        const heightInPixels = Math.min(calculateAppointmentCardHeight(cardSize, duration, heightScale), maxHeight);
 
         // Overlap by time range (same day): lateral layout so 08:30 and 09:00 show side by side
         const dayAppointments = appointmentsByDayIndex.get(dayIndex) ?? [];
@@ -315,7 +337,7 @@ export const CalendarWeekView = memo(({
         <TooltipProvider>
             <div className="flex flex-col bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-slate-900 dark:text-slate-100 font-display h-full relative overflow-hidden">
                 {/* Wrap everything in a scroll container (both X and Y) */}
-                <div className="overflow-auto w-full h-full custom-scrollbar">
+                <div ref={scrollContainerRef} className="overflow-auto w-full h-full custom-scrollbar">
                     <div className="w-full">
                         {/* Header Row - Responsivo com scroll horizontal em mobile */}
                         <div className="grid grid-cols-[60px_repeat(6,1fr)] bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-40 shadow-sm overflow-x-auto -mx-2 px-2">

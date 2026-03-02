@@ -24,6 +24,7 @@ import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { Card, Button } from '@/components';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { exportAndSharePatientData } from '@/lib/dataExport';
+import { log } from '@/lib/logger';
 
 interface SettingSection {
   title: string;
@@ -66,7 +67,7 @@ export default function SettingsScreen() {
         setSettings(JSON.parse(savedSettings));
       }
     } catch (error) {
-      console.error('Error loading settings:', error);
+      log.error('Error loading settings:', error);
     }
   };
 
@@ -75,7 +76,7 @@ export default function SettingsScreen() {
       await AsyncStorage.setItem('@fisioflow_settings', JSON.stringify(newSettings));
       setSettings(newSettings);
     } catch (error) {
-      console.error('Error saving settings:', error);
+      log.error('Error saving settings:', error);
     }
   };
 
@@ -122,7 +123,7 @@ export default function SettingsScreen() {
             try {
               await exportAndSharePatientData(user.id);
             } catch (error) {
-              console.error('Export error:', error);
+              log.error('Export error:', error);
               Alert.alert(
                 'Erro na Exportação',
                 'Não foi possível exportar seus dados. Tente novamente.'

@@ -29,7 +29,7 @@ test('drag & drop - editar agendamento', async ({ page }) => {
   await expect(passwordInput).toBeVisible({ timeout: 5000 });
   await passwordInput.fill(PASSWORD);
 
-  const loginButton = page.locator('button:has-text("Entrar"), button[type="submit"]').first();
+  const loginButton = page.locator('button:has-text("Acessar Minha Conta"), button[type="submit"]').first();
   await expect(loginButton).toBeVisible({ timeout: 5000 });
   await loginButton.click();
 

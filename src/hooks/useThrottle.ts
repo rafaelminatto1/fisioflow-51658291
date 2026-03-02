@@ -49,6 +49,15 @@ export const useThrottleFn = <T extends (...args: any[]) => any>(
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const argsRef = useRef<any[]>();
 
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
   return useCallback(
     (...args: Parameters<T>) => {
       const now = Date.now();
@@ -80,16 +89,9 @@ export const useThrottleFn = <T extends (...args: any[]) => any>(
     },
     [fn, delay, leading, trailing]
   ) as T;
-
-  // Cleanup
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
 };
+
+
 
 /**
  * useThrottleCallback - Versão simplificada de throttle de callback

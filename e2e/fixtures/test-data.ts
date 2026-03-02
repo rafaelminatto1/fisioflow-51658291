@@ -1,7 +1,7 @@
 export const testUsers = {
   admin: {
-    email: 'teste@moocafisio.com.br',
-    password: 'Yukari3030@',
+    email: process.env.TEST_USER_EMAIL || 'teste@moocafisio.com.br',
+    password: process.env.TEST_USER_PASSWORD || 'Yukari3030@',
     role: 'admin',
     expectedOrganizationId: null, // Será preenchido durante os testes
   },

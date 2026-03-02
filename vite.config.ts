@@ -107,7 +107,7 @@ export default defineConfig(({ mode }) => {
               if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
                 return 'react-core';
               }
-              
+
               // Firebase bundle
               if (id.includes('firebase')) return 'firebase-vendor';
 
@@ -123,25 +123,31 @@ export default defineConfig(({ mode }) => {
               // Charts e visualizações (lazy load)
               if (id.includes('recharts')) return 'charts';
               if (id.includes('react-grid-layout')) return 'grid-layout';
-              
+
               // PDF e Excel (lazy load)
               if (id.includes('jspdf')) return 'pdf-generator';
               if (id.includes('xlsx') || id.includes('exceljs')) return 'excel-generator';
-              
+
               // Utilitários grandes
               if (id.includes('date-fns')) return 'utils-date';
               if (id.includes('lodash')) return 'utils-lodash';
               if (id.includes('zod')) return 'utils-validation';
-              
+
               // Monitoring
               if (id.includes('sentry')) return 'sentry-vendor';
-              
+
               // AI e ML
               if (id.includes('@google/generative-ai') || id.includes('openai')) return 'ai-vendor';
-              
+
+              // Editor e Text
+              if (id.includes('@tiptap') || id.includes('prosemirror')) return 'editor-core';
+
+              // WebGL e Computer Vision
+              if (id.includes('mediapipe') || id.includes('three')) return 'webgl-vendor';
+
               // Router
               if (id.includes('react-router')) return 'router';
-              
+
               // Query
               if (id.includes('@tanstack/react-query')) return 'query';
 
@@ -153,11 +159,11 @@ export default defineConfig(({ mode }) => {
     },
     optimizeDeps: {
       include: [
-        'react', 
-        'react-dom', 
-        'framer-motion', 
-        'lucide-react', 
-        'react-router-dom', 
+        'react',
+        'react-dom',
+        'framer-motion',
+        'lucide-react',
+        'react-router-dom',
         '@tanstack/react-query',
         '@dnd-kit/core',
         '@dnd-kit/sortable',
@@ -173,14 +179,14 @@ export default defineConfig(({ mode }) => {
       },
       ...(useFunctionsProxy
         ? {
-            proxy: {
-              '/functions': {
-                target: 'http://127.0.0.1:5001/fisioflow-migration/southamerica-east1',
-                changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/functions/, ''),
-              },
+          proxy: {
+            '/functions': {
+              target: 'http://127.0.0.1:5001/fisioflow-migration/southamerica-east1',
+              changeOrigin: true,
+              rewrite: (path) => path.replace(/^\/functions/, ''),
             },
-          }
+          },
+        }
         : {}),
     },
   };

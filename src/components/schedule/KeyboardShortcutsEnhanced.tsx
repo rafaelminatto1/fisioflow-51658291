@@ -433,7 +433,8 @@ const KeyboardShortcutsEnhanced = memo(({
                   </p>
                 </div>
               </div>
-            </motion.div>
+            </div>
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>

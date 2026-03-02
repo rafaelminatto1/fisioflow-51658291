@@ -126,9 +126,10 @@ export const aiServiceHandler = async (request: any) => {
       return analyzeProgressHandler({ data: params });
     case 'patientExecutiveSummary':
       return patientSummaryHandler({ data: params });
-    case 'multimodalAnalysis':
+    case 'multimodalAnalysis': {
       const { multimodalAnalysisFlow } = await import('./flows');
       return multimodalAnalysisFlow(params);
+    }
 
     // Movement Analysis
     case 'movementAnalysis':
@@ -153,27 +154,34 @@ export const aiServiceHandler = async (request: any) => {
       return marketingTemplateHandler({ data: params });
 
     // === SCHEDING ACTIONS (Fase 3: AI Scheduling Features) ===
-    case 'suggestOptimalSlot':
+    case 'suggestOptimalSlot': {
       const { suggestOptimalSlotFlow } = await import('./flows/scheduling');
       return suggestOptimalSlotFlow(params);
-    case 'predictNoShow':
+    }
+    case 'predictNoShow': {
       const { predictNoShowFlow } = await import('./flows/scheduling');
       return predictNoShowFlow(params);
-    case 'optimizeCapacity':
+    }
+    case 'optimizeCapacity': {
       const { optimizeCapacityFlow } = await import('./flows/scheduling');
       return optimizeCapacityFlow(params);
-    case 'waitlistPrioritization':
+    }
+    case 'waitlistPrioritization': {
       const { waitlistPrioritizationFlow } = await import('./flows/scheduling');
       return waitlistPrioritizationFlow(params);
-    case 'getPatientAppointmentHistory':
+    }
+    case 'getPatientAppointmentHistory': {
       const { getPatientAppointmentHistory } = await import('./flows/scheduling');
       return getPatientAppointmentHistory(params);
-    case 'getPatientPreferences':
+    }
+    case 'getPatientPreferences': {
       const { getPatientPreferences } = await import('./flows/scheduling');
       return getPatientPreferences(params);
-    case 'checkSlotCapacity':
+    }
+    case 'checkSlotCapacity': {
       const { checkSlotCapacity } = await import('./flows/scheduling');
       return checkSlotCapacity(params);
+    }
     // ============================================================================
 
     default:
@@ -250,10 +258,11 @@ export const aiServiceHttpHandler = async (req: any, res: any) => {
       case 'patientExecutiveSummary':
         result = await patientSummaryHandler(mockRequest);
         break;
-      case 'multimodalAnalysis':
+      case 'multimodalAnalysis': {
         const { multimodalAnalysisFlow: flow } = await import('./flows');
         result = await flow(params);
         break;
+      }
       case 'movementAnalysis':
         result = await movementAnalysisHandler(mockRequest);
         break;

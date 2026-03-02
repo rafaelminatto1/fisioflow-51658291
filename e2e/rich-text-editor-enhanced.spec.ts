@@ -18,7 +18,7 @@ test.describe('Enhanced Rich Text Editor Validation', () => {
 
         // Go to dashboard and find an appointment card
         await page.goto('/');
-        await page.waitForLoadState('networkidle');
+        await page.waitForLoadState('domcontentloaded');
 
         // Find an appointment and click it - use selectors from flux-tres-evolucoes
         const appointmentCard = page.locator('[role="button"][aria-label*="às"], .calendar-appointment-card, .appointment-card, [data-testid="appointment-card"]').first();

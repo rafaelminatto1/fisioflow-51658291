@@ -7,11 +7,12 @@
  * @module lib/appointmentReminders
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, orderBy, query, updateDoc, where } from 'firebase/firestore';
 import { db } from './firebase';
+import { log } from '@/lib/logger';
 
 /**
  * Dados de uma consulta/agendamento
@@ -100,7 +101,7 @@ export class AppointmentReminders {
         this.config = JSON.parse(stored);
       }
     } catch (error) {
-      console.error('Error loading appointment reminder config:', error);
+      log.error('Error loading appointment reminder config:', error);
     }
   }
 
@@ -120,7 +121,7 @@ export class AppointmentReminders {
         });
       }
     } catch (error) {
-      console.error('Error saving appointment reminder config:', error);
+      log.error('Error saving appointment reminder config:', error);
     }
   }
 
@@ -174,9 +175,18 @@ export class AppointmentReminders {
       snapshot.forEach((doc) => {
         const data = doc.data();
         if (data.date) {
+          let parsedDate = new Date();
+          if (typeof data.date.toDate === 'function') {
+            parsedDate = data.date.toDate();
+          } else if (typeof data.date === 'string' || typeof data.date === 'number') {
+            parsedDate = new Date(data.date);
+          } else if (data.date instanceof Date) {
+            parsedDate = data.date;
+          }
+
           appointments.push({
             id: doc.id,
-            date: data.date.toDate(),
+            date: parsedDate,
             time: data.time || '09:00',
             type: data.type || 'Consulta',
             professionalName: data.professional_name || 'Profissional',
@@ -206,7 +216,7 @@ export class AppointmentReminders {
         JSON.stringify(scheduledIds)
       );
     } catch (error) {
-      console.error('Error syncing appointment reminders:', error);
+      log.error('Error syncing appointment reminders:', error);
     }
   }
 
@@ -227,8 +237,6 @@ export class AppointmentReminders {
         return null;
       }
 
-      const identifier = `appointment-reminder-${appointment.id}-${hoursBefore}h`;
-
       let message = '';
       if (hoursBefore >= 24) {
         const days = Math.floor(hoursBefore / 24);
@@ -239,8 +247,7 @@ export class AppointmentReminders {
         message = `Sua consulta de ${appointment.type} é em ${hoursBefore} horas.`;
       }
 
-      await Notifications.scheduleNotificationAsync({
-        identifier,
+      const scheduledId = await Notifications.scheduleNotificationAsync({
         content: {
           title: '📅 Lembrete de Consulta',
           body: `${message}\nCom ${appointment.professionalName} às ${appointment.time}.`,
@@ -250,14 +257,14 @@ export class AppointmentReminders {
           },
         },
         trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DATE_TRIGGER,
+          type: Notifications.SchedulableTriggerInputTypes.DATE,
           date: reminderDate,
         },
       });
 
-      return identifier;
+      return scheduledId;
     } catch (error) {
-      console.error('Error scheduling appointment reminder:', error);
+      log.error('Error scheduling appointment reminder:', error);
       return null;
     }
   }
@@ -277,7 +284,7 @@ export class AppointmentReminders {
 
       await AsyncStorage.removeItem(STORAGE_KEYS.SCHEDULED_REMINDERS);
     } catch (error) {
-      console.error('Error canceling appointment reminders:', error);
+      log.error('Error canceling appointment reminders:', error);
     }
   }
 
@@ -295,7 +302,7 @@ export class AppointmentReminders {
       const { status } = await Notifications.requestPermissionsAsync();
       return status === 'granted';
     } catch (error) {
-      console.error('Error requesting notification permissions:', error);
+      log.error('Error requesting notification permissions:', error);
       return false;
     }
   }
@@ -315,7 +322,7 @@ export class AppointmentReminders {
       const ids = JSON.parse(storedIds);
       return allScheduled.filter((n) => ids.includes(n.identifier));
     } catch (error) {
-      console.error('Error getting scheduled appointment reminders:', error);
+      log.error('Error getting scheduled appointment reminders:', error);
       return [];
     }
   }
@@ -348,8 +355,6 @@ export async function createAppointmentReminder(
   appointment: Appointment,
   hoursBefore: number = 24
 ): Promise<string | null> {
-  const identifier = `appointment-reminder-${appointment.id}-${hoursBefore}h`;
-
   const reminderDate = new Date(appointment.date);
   reminderDate.setHours(reminderDate.getHours() - hoursBefore);
 
@@ -357,8 +362,7 @@ export async function createAppointmentReminder(
     return null;
   }
 
-  await Notifications.scheduleNotificationAsync({
-    identifier,
+  const scheduledId = await Notifications.scheduleNotificationAsync({
     content: {
       title: '📅 Lembrete de Consulta',
       body: `Sua consulta de ${appointment.type} é em ${hoursBefore} horas.\nCom ${appointment.professionalName} às ${appointment.time}.`,
@@ -368,12 +372,12 @@ export async function createAppointmentReminder(
       },
     },
     trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.DATE_TRIGGER,
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
       date: reminderDate,
     },
   });
 
-  return identifier;
+  return scheduledId;
 }
 
 /**
