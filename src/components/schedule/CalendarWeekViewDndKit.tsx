@@ -180,6 +180,13 @@ export const CalendarWeekViewDndKit = memo(({
     return Math.max(MIN_WEEK_SLOT_HEIGHT, Math.min(preferredSlotHeight, fitSlotHeight));
   }, [fitSlotHeight, preferredSlotHeight]);
 
+  // Keep a stable ref to the current slot count so ResizeObserver callbacks always
+  // use the latest value without causing the whole useLayoutEffect to re-run every
+  // time businessHours loads and changes the number of visible time slots.
+  // Re-running the effect after initial measurement causes a visible layout jump.
+  const timeSlotsLengthRef = useRef(timeSlots.length);
+  timeSlotsLengthRef.current = timeSlots.length;
+
   useLayoutEffect(() => {
     let hasCompletedInitialMeasurement = false;
     let retryRafId: number | undefined;
@@ -205,26 +212,38 @@ export const CalendarWeekViewDndKit = memo(({
       }, INITIAL_MEASUREMENT_SETTLE_MS);
     };
 
-    const updateSlotHeight = () => {
+    // updateSlotHeight(forceUpdateFit):
+    // - forceUpdateFit=true  → recalculates fitSlotHeight (used during initial measurement and window resize)
+    // - forceUpdateFit=false → only updates containerHeight (used by ResizeObserver after initial measurement
+    //   to avoid the feedback loop where page-load layout settling inflates slot height)
+    const updateSlotHeight = (forceUpdateFit = false) => {
       const cHeight = weekScrollRef.current?.clientHeight ?? weekContainerRef.current?.clientHeight ?? 0;
       const headerHeight = weekHeaderRef.current?.clientHeight ?? 0;
+      const slotCount = timeSlotsLengthRef.current;
 
-      if (cHeight <= 0 || timeSlots.length === 0) return false;
+      if (cHeight <= 0 || slotCount === 0) return false;
 
       setContainerHeight(cHeight - headerHeight);
 
-      const availableGridHeight = cHeight - headerHeight - GRID_HEIGHT_ADJUSTMENT + WEEK_GRID_HEIGHT_BOOST;
-      if (availableGridHeight <= 0) return false;
+      // Only recalculate fitSlotHeight during the initial measurement phase or on explicit
+      // window resize. After the initial measurement, ResizeObserver callbacks caused by
+      // page-layout settling (async businessHours loading, etc.) must NOT change slot height.
+      if (!hasCompletedInitialMeasurement || forceUpdateFit) {
+        const availableGridHeight = cHeight - headerHeight - GRID_HEIGHT_ADJUSTMENT + WEEK_GRID_HEIGHT_BOOST;
+        if (availableGridHeight <= 0) return false;
+        const nextFittedHeight = Math.floor(availableGridHeight / slotCount);
+        setFitSlotHeight(prevHeight => prevHeight === nextFittedHeight ? prevHeight : nextFittedHeight);
+      }
 
-      const nextFittedHeight = Math.floor(availableGridHeight / timeSlots.length);
-      setFitSlotHeight(prevHeight => prevHeight === nextFittedHeight ? prevHeight : nextFittedHeight);
-      scheduleInitialReveal();
+      if (!hasCompletedInitialMeasurement) {
+        scheduleInitialReveal();
+      }
       return true;
     };
 
     let attemptCount = 0;
     const tryInitialMeasure = () => {
-      const measured = updateSlotHeight();
+      const measured = updateSlotHeight(false);
       if (measured || typeof window === 'undefined' || attemptCount >= INITIAL_MEASUREMENT_MAX_RETRIES) return;
       attemptCount += 1;
       retryRafId = window.requestAnimationFrame(tryInitialMeasure);
@@ -240,13 +259,17 @@ export const CalendarWeekViewDndKit = memo(({
       }, INITIAL_MEASUREMENT_MAX_WAIT_MS)
       : undefined;
 
+    // Window resize = explicit user action → recalculate slot height
+    const handleWindowResize = () => updateSlotHeight(true);
     if (typeof window !== 'undefined') {
-      window.addEventListener('resize', updateSlotHeight);
+      window.addEventListener('resize', handleWindowResize);
     }
 
+    // ResizeObserver fires when the container resizes due to page-load layout changes.
+    // After initial measurement, we pass forceUpdateFit=false to keep fitSlotHeight stable.
     let observer: ResizeObserver | null = null;
     if (typeof ResizeObserver !== 'undefined') {
-      observer = new ResizeObserver(updateSlotHeight);
+      observer = new ResizeObserver(() => updateSlotHeight(false));
       if (weekContainerRef.current) observer.observe(weekContainerRef.current);
       if (weekScrollRef.current) observer.observe(weekScrollRef.current);
       if (weekHeaderRef.current) observer.observe(weekHeaderRef.current);
@@ -263,11 +286,12 @@ export const CalendarWeekViewDndKit = memo(({
         window.clearTimeout(measurementFallbackId);
       }
       if (typeof window !== 'undefined') {
-        window.removeEventListener('resize', updateSlotHeight);
+        window.removeEventListener('resize', handleWindowResize);
       }
       observer?.disconnect();
     };
-  }, [timeSlots.length]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount only — slot count changes are handled via timeSlotsLengthRef
 
   // Current time indicator
   const [currentTimePosition, setCurrentTimePosition] = useState<number | null>(null);
