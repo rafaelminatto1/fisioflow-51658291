@@ -165,6 +165,7 @@ export const ValidationErrors = {
   nameTooShort: 'Nome deve ter pelo menos 2 palavras com 2+ caracteres cada',
   phoneRequired: 'Telefone é obrigatório',
   phoneInvalid: 'Telefone inválido (formato: (XX) XXXXX-XXXX)',
+  cpfRequired: 'CPF é obrigatório',
   cpfInvalid: 'CPF inválido',
   dateRequired: 'Data de nascimento é obrigatória',
   dateInvalid: 'Data de nascimento inválida',
@@ -203,7 +204,7 @@ export const validators = {
     return null;
   },
   cpf: (value: string) => {
-    if (!value?.trim()) return null; // CPF is optional
+    if (!value?.trim()) return ValidationErrors.cpfRequired;
     if (!isValidCPF(value)) return ValidationErrors.cpfInvalid;
     return null;
   },

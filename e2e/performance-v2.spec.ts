@@ -12,7 +12,7 @@ test.describe('Performance V2 - Core Web Vitals', () => {
       const client = await page.context().newCDPSession(page);
       await client.send('Performance.enable');
 
-      await page.goto(pageInfo.path, { waitUntil: 'networkidle' });
+      await page.goto(pageInfo.path, { waitUntil: 'domcontentloaded' });
 
       // Get Web Vitals via page.evaluate
       const vitals = await page.evaluate(async () => {

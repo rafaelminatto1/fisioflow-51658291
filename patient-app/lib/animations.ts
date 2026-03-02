@@ -131,15 +131,20 @@ export function shimmer(
   duration: number = 1500
 ): Animated.CompositeAnimation {
   return Animated.loop(
-    Animated.timing(shimmerValue, {
-      toValue: 1,
-      duration,
-      easing: Easing.linear,
-      useNativeDriver: true,
-    }).reverse((result: Animated.CompositeAnimation) => {
-      shimmerValue.setValue(0);
-      return result;
-    })
+    Animated.sequence([
+      Animated.timing(shimmerValue, {
+        toValue: 1,
+        duration: duration / 2,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shimmerValue, {
+        toValue: 0,
+        duration: duration / 2,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      }),
+    ])
   );
 }
 

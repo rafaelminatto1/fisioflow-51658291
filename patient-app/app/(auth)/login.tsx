@@ -102,6 +102,8 @@ export default function LoginScreen() {
               autoCorrect={false}
               leftIcon="mail-outline"
               error={emailError}
+              testID="email-input"
+              accessibilityLabel="email-input"
             />
 
             <Input
@@ -116,6 +118,8 @@ export default function LoginScreen() {
               secureTextEntry
               leftIcon="lock-closed-outline"
               error={passwordError}
+              testID="password-input"
+              accessibilityLabel="password-input"
             />
 
             <Link href="/(auth)/forgot-password" asChild>

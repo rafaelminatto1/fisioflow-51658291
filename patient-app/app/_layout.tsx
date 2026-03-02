@@ -4,12 +4,18 @@
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, LogBox } from 'react-native';
 import { useAuthStore } from '@/store/auth';
 import { useColors, useColorScheme } from '@/hooks/useColorScheme';
 import { initializeNotifications } from '@/lib/notificationsSystem';
 import { ToastContainer, ErrorBoundary } from '@/components';
 import * as SplashScreen from 'expo-splash-screen';
+
+// Silenciar avisos do Expo Go sobre notificações (esperados em ambiente de dev)
+LogBox.ignoreLogs([
+  'expo-notifications: Android Push notifications',
+  'expo-notifications functionality is not fully supported in Expo Go'
+]);
 
 SplashScreen.preventAutoHideAsync();
 
@@ -24,12 +30,13 @@ export default function RootLayout() {
     // Initialize notifications system
     initializeNotifications();
 
-    // Hide splash screen when auth state is determined
+    return () => unsubscribe();
+  }, [initialize]);
+
+  useEffect(() => {
     if (!isLoading) {
       SplashScreen.hideAsync();
     }
-
-    return () => unsubscribe();
   }, [isLoading]);
 
   if (isLoading) {

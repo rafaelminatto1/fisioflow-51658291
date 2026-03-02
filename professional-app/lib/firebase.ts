@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
@@ -83,13 +84,13 @@ export function getRemoteValue(key: string): any {
 // Connect to Emulators if configured
 if (process.env.EXPO_PUBLIC_USE_EMULATOR === 'true') {
   const host = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
-  
+
   console.log(`[Firebase] Connecting to emulators at ${host}`);
-  
+
   connectAuthEmulator(auth, `http://${host}:9099`);
   connectFirestoreEmulator(db, host, 8080);
   connectStorageEmulator(storage, host, 9199);
-  
+
   if (functions && Platform.OS === 'web') {
     try {
       const { connectFunctionsEmulator } = require('firebase/functions');

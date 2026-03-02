@@ -364,7 +364,7 @@ export const NaturalLanguageScheduler: React.FC<NaturalLanguageSchedulerProps> =
 
   // Inicializar parser
   useEffect(() => {
-    parserRef.current = new NLParser(patientNames, services);
+    parserRef.current = new NLPParser(patientNames, services);
   }, [patientNames, services]);
 
   // Exemplos de comandos
@@ -423,7 +423,7 @@ export const NaturalLanguageScheduler: React.FC<NaturalLanguageSchedulerProps> =
   }, [parsed, onConfirm]);
 
   // Usar exemplo
-  const useExample = useCallback((example: string) => {
+  const handleUseExample = useCallback((example: string) => {
     setInput(example);
     setTimeout(() => inputRef.current?.focus(), 100);
   }, []);
@@ -563,7 +563,7 @@ export const NaturalLanguageScheduler: React.FC<NaturalLanguageSchedulerProps> =
                   <span className={cn(
                     'font-semibold',
                     parsed.confidence > 70 ? 'text-green-600' :
-                    parsed.confidence > 40 ? 'text-amber-600' : 'text-red-600'
+                      parsed.confidence > 40 ? 'text-amber-600' : 'text-red-600'
                   )}>
                     {parsed.confidence}%
                   </span>
@@ -573,7 +573,7 @@ export const NaturalLanguageScheduler: React.FC<NaturalLanguageSchedulerProps> =
                     className={cn(
                       'h-full rounded-full transition-all',
                       parsed.confidence > 70 ? 'bg-green-500' :
-                      parsed.confidence > 40 ? 'bg-amber-500' : 'bg-red-500'
+                        parsed.confidence > 40 ? 'bg-amber-500' : 'bg-red-500'
                     )}
                     style={{ width: `${parsed.confidence}%` }}
                   />
@@ -594,7 +594,7 @@ export const NaturalLanguageScheduler: React.FC<NaturalLanguageSchedulerProps> =
             {examples.map((example, i) => (
               <button
                 key={i}
-                onClick={() => useExample(example)}
+                onClick={() => handleUseExample(example)}
                 className="px-4 py-2 text-left bg-muted/30 hover:bg-muted/50 rounded-lg text-sm transition-colors flex items-center gap-2"
               >
                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
@@ -618,7 +618,7 @@ export const useNaturalLanguageScheduler = (patientNames: string[] = []) => {
   const parserRef = React.useRef<NLPParser | null>(null);
 
   React.useEffect(() => {
-    parserRef.current = new NLParser(patientNames);
+    parserRef.current = new NLPParser(patientNames);
   }, [patientNames]);
 
   const parseInput = useCallback((input: string): ParsedAppointment => {

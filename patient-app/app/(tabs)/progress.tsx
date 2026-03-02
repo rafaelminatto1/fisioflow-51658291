@@ -8,12 +8,15 @@ import {
   RefreshControl,
   ActivityIndicator,
   TouchableOpacity,
+  Alert,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/auth';
 import { Card, SyncIndicator } from '@/components';
+import { Spacing } from '@/constants/spacing';
 import { format, subDays, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -24,6 +27,7 @@ import {
   onSnapshot,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { log } from '@/lib/logger';
 
 interface Evolution {
   id: string;
@@ -48,6 +52,22 @@ interface Stats {
 }
 
 const CHART_DAYS = 30; // Last 30 days
+const SCREEN_PADDING = Spacing.screen;
+const CARD_GAP = Spacing.gap;
+const HALF_CARD_WIDTH = (Dimensions.get('window').width - SCREEN_PADDING * 2 - CARD_GAP) / 2;
+const FULL_CARD_WIDTH = Dimensions.get('window').width - SCREEN_PADDING * 2;
+
+// Helper safely parses dates (Timestamp or String)
+const parseDate = (d: any): Date => {
+  if (!d) return new Date();
+  if (typeof d.toDate === 'function') return d.toDate();
+  if (d instanceof Date) return d;
+  if (typeof d === 'string' || typeof d === 'number') {
+    const parsed = new Date(d);
+    return isNaN(parsed.getTime()) ? new Date() : parsed;
+  }
+  return new Date();
+};
 
 export default function ProgressScreen() {
   const colors = useColors();
@@ -57,6 +77,7 @@ export default function ProgressScreen() {
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'all'>('month');
   const [stats, setStats] = useState<Stats>({
     totalSessions: 0,
@@ -109,7 +130,7 @@ export default function ProgressScreen() {
       calculateStats(evolutionsData);
       setLoading(false);
     }, (error) => {
-      console.error('Error fetching evolutions:', error);
+      log.error('Error fetching evolutions:', error);
       // Fallback to legacy user subcollection if empty
       const legacyRef = collection(db, 'users', user.id, 'evolutions');
       const legacyQuery = query(legacyRef, orderBy('date', 'desc'));
@@ -123,7 +144,7 @@ export default function ProgressScreen() {
     });
 
     return unsubscribe;
-  }, [user?.id]);
+  }, [user?.id, refreshKey]);
 
   const calculateStats = (evolutionsData: Evolution[]) => {
     if (evolutionsData.length === 0) {
@@ -141,7 +162,7 @@ export default function ProgressScreen() {
     // Calculate date range
     const dates = evolutionsData.map(e => {
       if (e.record_date) return new Date(e.record_date);
-      return e.date?.toDate() || new Date();
+      return parseDate(e.date);
     }).sort((a, b) => a.getTime() - b.getTime());
     
     const firstDate = dates[0];
@@ -182,7 +203,7 @@ export default function ProgressScreen() {
     }
 
     return evolutions.filter(e => {
-      const dateStr = e.record_date || (e.date?.toDate()?.toISOString());
+      const dateStr = e.record_date || (parseDate(e.date).toISOString());
       const evoDate = dateStr ? new Date(dateStr) : new Date();
       return evoDate >= startOfDay(startDate);
     });
@@ -215,7 +236,8 @@ export default function ProgressScreen() {
             refreshing={refreshing}
             onRefresh={() => {
               setRefreshing(true);
-              setTimeout(() => setRefreshing(false), 1000);
+              setRefreshKey((prev) => prev + 1);
+              setTimeout(() => setRefreshing(false), 300);
             }}
           />
         }
@@ -244,7 +266,7 @@ export default function ProgressScreen() {
         </View>
 
         {/* Stats Cards */}
-        <View style={styles.statsRow}>
+        <View style={styles.statsGrid}>
           <StatCard
             icon="calendar-outline"
             label="Sessões"
@@ -262,6 +284,7 @@ export default function ProgressScreen() {
             label="Dor Média"
             value={stats.averagePain.toFixed(1)}
             colors={colors}
+            fullWidth
           />
         </View>
 
@@ -294,7 +317,7 @@ export default function ProgressScreen() {
             <Text style={[styles.chartSubtitle, { color: colors.textSecondary }]}>
               Gráficos disponíveis no app nativo
             </Text>
-            <View style={styles.webChartPlaceholder}>
+            <View style={[styles.webChartPlaceholder, { backgroundColor: colors.surfaceHover }]}>
               <Text style={[styles.placeholderText, { color: colors.textSecondary }]}>
                 {`Média de dor: ${stats.averagePain.toFixed(1)}/10`}
               </Text>
@@ -328,7 +351,7 @@ export default function ProgressScreen() {
         {/* Documents Section */}
         {reports.length > 0 && (
           <>
-            <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 24 }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text, marginTop: 20 }]}>
               Documentos e Laudos
             </Text>
             {reports.map((report) => (
@@ -341,10 +364,10 @@ export default function ProgressScreen() {
                     <Ionicons name="document-text" size={24} color={colors.info} />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.evolutionDate, { color: colors.text }]}>
+                    <Text style={[styles.evolutionDate, { color: colors.text }]} numberOfLines={1}>
                       Relatório Médico - {report.tipo_relatorio || 'Geral'}
                     </Text>
-                    <Text style={[styles.evolutionProfessional, { color: colors.textSecondary }]}>
+                    <Text style={[styles.evolutionProfessional, { color: colors.textSecondary }]} numberOfLines={1}>
                       Emitido em {format(new Date(report.data_emissao), "dd/MM/yyyy", { locale: ptBR })}
                     </Text>
                   </View>
@@ -364,17 +387,31 @@ function StatCard({
   label,
   value,
   colors,
+  fullWidth = false,
 }: {
   icon: string;
   label: string;
   value: string;
   colors: any;
+  fullWidth?: boolean;
 }) {
   return (
-    <Card style={[styles.statCard, { backgroundColor: colors.surface }]}>
-      <Ionicons name={icon as any} size={20} color={colors.primary} />
+    <Card
+      style={[
+        styles.statCard,
+        fullWidth && styles.statCardFull,
+        { backgroundColor: colors.surface },
+      ]}
+    >
+      <View style={styles.statHeader}>
+        <View style={[styles.statIconWrap, { backgroundColor: colors.primary + '15' }]}>
+          <Ionicons name={icon as any} size={16} color={colors.primary} />
+        </View>
+        <Text style={[styles.statLabel, { color: colors.textSecondary }]} numberOfLines={1}>
+          {label}
+        </Text>
+      </View>
       <Text style={[styles.statValue, { color: colors.text }]}>{value}</Text>
-      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{label}</Text>
     </Card>
   );
 }
@@ -382,7 +419,7 @@ function StatCard({
 function EvolutionCard({ evolution, colors }: { evolution: Evolution; colors: any }) {
   const [expanded, setExpanded] = useState(false);
 
-  const dateStr = evolution.record_date || (evolution.date?.toDate()?.toISOString());
+  const dateStr = evolution.record_date || (parseDate(evolution.date).toISOString());
   const evoDate = dateStr ? new Date(dateStr) : new Date();
 
   return (
@@ -395,10 +432,10 @@ function EvolutionCard({ evolution, colors }: { evolution: Evolution; colors: an
             </Text>
           </View>
           <View style={styles.evolutionHeaderInfo}>
-            <Text style={[styles.evolutionDate, { color: colors.text }]}>
+            <Text style={[styles.evolutionDate, { color: colors.text }]} numberOfLines={1}>
               {format(evoDate, "EEEE, d 'de' MMMM", { locale: ptBR })}
             </Text>
-            <Text style={[styles.evolutionProfessional, { color: colors.textSecondary }]}>
+            <Text style={[styles.evolutionProfessional, { color: colors.textSecondary }]} numberOfLines={1}>
               {evolution.therapist_name || evolution.professional_name || 'Fisioterapeuta'}
             </Text>
           </View>
@@ -415,7 +452,7 @@ function EvolutionCard({ evolution, colors }: { evolution: Evolution; colors: an
         </View>
 
         {expanded && (
-          <View style={styles.evolutionDetails}>
+          <View style={[styles.evolutionDetails, { borderTopColor: colors.border }]}>
             {evolution.subjective && (
               <SOAPSection label="Relato" content={evolution.subjective} colors={colors} />
             )}
@@ -461,38 +498,56 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   scrollContent: {
-    padding: 16,
+    padding: Spacing.screen,
     paddingBottom: 32,
   },
   periodSelector: {
     flexDirection: 'row',
     borderRadius: 12,
     padding: 4,
-    marginBottom: 16,
+    marginBottom: Spacing.gap,
   },
   periodButton: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: 9,
     alignItems: 'center',
     borderRadius: 8,
   },
   periodButtonText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
-  statsRow: {
+  statsGrid: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 16,
+    flexWrap: 'wrap',
+    gap: CARD_GAP,
+    marginBottom: Spacing.gap,
   },
   statCard: {
-    flex: 1,
-    padding: 16,
+    width: HALF_CARD_WIDTH,
+    padding: Spacing.card,
+    alignItems: 'flex-start',
+    gap: 10,
+    minHeight: 90,
+  },
+  statCardFull: {
+    width: FULL_CARD_WIDTH,
+  },
+  statHeader: {
+    width: '100%',
+    flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
+  statIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   statValue: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
   },
   statLabel: {
@@ -501,8 +556,8 @@ const styles = StyleSheet.create({
   improvementCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    marginBottom: 16,
+    padding: Spacing.card,
+    marginBottom: Spacing.gap,
   },
   improvementContent: {
     flexDirection: 'row',
@@ -513,24 +568,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   improvementLabel: {
-    fontSize: 14,
+    fontSize: 13,
   },
   improvementValue: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
   },
   chartCard: {
-    padding: 16,
-    marginBottom: 16,
+    padding: Spacing.card,
+    marginBottom: Spacing.gap,
   },
   chartTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     marginBottom: 4,
   },
   chartSubtitle: {
-    fontSize: 13,
-    marginBottom: 16,
+    fontSize: 12,
+    marginBottom: 12,
   },
   chart: {
     marginVertical: 8,
@@ -540,46 +595,46 @@ const styles = StyleSheet.create({
     height: 100,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f3f4f6',
+    backgroundColor: 'transparent',
     borderRadius: 12,
   },
   placeholderText: {
-    fontSize: 14,
+    fontSize: 13,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   emptyCard: {
-    padding: 40,
+    padding: 32,
     alignItems: 'center',
   },
   emptyTitle: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     marginTop: 16,
     marginBottom: 4,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: 13,
     textAlign: 'center',
   },
   evolutionCard: {
-    marginBottom: 12,
+    marginBottom: 10,
     padding: 0,
     overflow: 'hidden',
   },
   evolutionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: Spacing.card,
     gap: 12,
   },
   sessionNumber: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -591,11 +646,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   evolutionDate: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
   },
   evolutionProfessional: {
-    fontSize: 13,
+    fontSize: 12,
   },
   painIndicator: {
     paddingHorizontal: 12,
@@ -603,36 +658,36 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   painIndicatorText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
   },
   evolutionDetails: {
-    padding: 16,
+    padding: Spacing.card,
     paddingTop: 0,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: 'transparent',
   },
   soapSection: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   soapLabel: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '600',
     marginBottom: 4,
   },
   soapContent: {
-    fontSize: 14,
-    lineHeight: 20,
+    fontSize: 13,
+    lineHeight: 18,
   },
   reportContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: Spacing.card,
     gap: 12,
   },
   reportIcon: {
-    width: 44,
-    height: 44,
+    width: 40,
+    height: 40,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',

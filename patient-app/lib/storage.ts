@@ -161,6 +161,13 @@ export const Storage = {
  * Typed storage helpers for common app data
  */
 export const AppStorage = {
+  async get<T = string>(key: string): Promise<T | null> {
+    return Storage.get<T>(key);
+  },
+  async set<T>(key: string, value: T): Promise<boolean> {
+    return Storage.set<T>(key, value);
+  },
+
   // Onboarding
   async setOnboardingCompleted(): Promise<boolean> {
     return Storage.set(STORAGE_KEYS.ONBOARDING_COMPLETED, true);
@@ -343,3 +350,5 @@ export const StorageDebug = {
     return Storage.clear();
   },
 };
+
+export { AsyncStorage };

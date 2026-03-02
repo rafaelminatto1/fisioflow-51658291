@@ -408,7 +408,7 @@ class I18nManager {
    * Check if RTL language
    */
   isRTL(): boolean {
-    return this.i18n.isRTL;
+    return ['ar', 'he', 'fa', 'ur'].includes(this.currentLanguage);
   }
 
   /**

@@ -10,6 +10,7 @@ import {
   Image,
   Switch,
   ActivityIndicator,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,11 +18,17 @@ import { router } from 'expo-router';
 import { useColors } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/auth';
 import { Card, Button } from '@/components';
+import { Spacing } from '@/constants/spacing';
 import { usePatientNotifications } from '@/lib/notificationsSystem';
 import { collection, getDocs, getCountFromServer } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { APP_VERSION } from '@/lib/constants';
 import * as Notifications from 'expo-notifications';
+import { log } from '@/lib/logger';
+
+const SCREEN_PADDING = Spacing.screen;
+const CARD_GAP = Spacing.gap;
+const HALF_CARD_WIDTH = (Dimensions.get('window').width - SCREEN_PADDING * 2 - CARD_GAP) / 2;
 
 interface UserStats {
   totalAppointments: number;
@@ -53,7 +60,7 @@ export default function ProfileScreen() {
       const { status } = await Notifications.getPermissionsAsync();
       setNotificationsEnabled(status === 'granted');
     } catch (error) {
-      console.error('Error checking notification status:', error);
+      log.error('Error checking notification status:', error);
     } finally {
       setLoadingNotifications(false);
     }
@@ -96,7 +103,7 @@ export default function ProfileScreen() {
         totalMonths: monthsDiff,
       });
     } catch (error) {
-      console.error('Error fetching user stats:', error);
+      log.error('Error fetching user stats:', error);
     } finally {
       setLoadingStats(false);
     }
@@ -208,16 +215,16 @@ export default function ProfileScreen() {
               </Text>
             )}
           </View>
-          <Text style={[styles.name, { color: colors.text }]}>
-            {user?.name || 'Paciente'}
-          </Text>
-          <Text style={[styles.email, { color: colors.textSecondary }]}>
-            {user?.email || 'email@exemplo.com'}
-          </Text>
+        <Text style={[styles.name, { color: colors.text }]} numberOfLines={1}>
+          {user?.name || 'Paciente'}
+        </Text>
+        <Text style={[styles.email, { color: colors.textSecondary }]} numberOfLines={1}>
+          {user?.email || 'email@exemplo.com'}
+        </Text>
         </View>
 
         {/* Stats */}
-        <View style={styles.statsContainer}>
+        <View style={styles.statsGrid}>
           <Card style={styles.statCard}>
             {loadingStats ? (
               <ActivityIndicator size="small" color={colors.primary} />
@@ -309,7 +316,7 @@ export default function ProfileScreen() {
                   size={22}
                   color={(item as any).color || colors.textSecondary}
                 />
-                <Text style={[styles.menuItemLabel, { color: colors.text }]}>
+                <Text style={[styles.menuItemLabel, { color: colors.text }]} numberOfLines={1}>
                   {item.label}
                 </Text>
               </View>
@@ -324,7 +331,7 @@ export default function ProfileScreen() {
           onPress={handleLogout}
           variant="outline"
           loading={isLoggingOut}
-          style={styles.logoutButton}
+          style={[styles.logoutButton, { borderColor: colors.error }]}
           textStyle={{ color: colors.error }}
         />
 
@@ -342,69 +349,70 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
+    padding: Spacing.screen,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
   },
   avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: 88,
+    height: 88,
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   avatarImage: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
+    width: 88,
+    height: 88,
+    borderRadius: 28,
   },
   avatarText: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: 'bold',
     color: '#FFFFFF',
   },
   name: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 4,
   },
   email: {
-    fontSize: 14,
+    fontSize: 13,
   },
-  statsContainer: {
+  statsGrid: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 24,
+    flexWrap: 'wrap',
+    gap: Spacing.gap,
+    marginBottom: 20,
   },
   statCard: {
-    flex: 1,
+    width: HALF_CARD_WIDTH,
     alignItems: 'center',
-    padding: 16,
+    padding: Spacing.card,
   },
   statValue: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
   },
   statLabel: {
     fontSize: 12,
   },
   settingsCard: {
-    marginBottom: 24,
-    padding: 16,
+    marginBottom: 20,
+    padding: Spacing.card,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderBottomWidth: 1,
   },
   settingItemLeft: {
@@ -414,29 +422,29 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   settingIcon: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   settingLabel: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     marginBottom: 2,
   },
   settingDescription: {
-    fontSize: 13,
+    fontSize: 12,
   },
   menuCard: {
-    marginBottom: 24,
+    marginBottom: 20,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+    paddingVertical: 14,
+    paddingHorizontal: Spacing.card,
   },
   menuItemLeft: {
     flexDirection: 'row',
@@ -444,11 +452,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   menuItemLabel: {
-    fontSize: 16,
+    fontSize: 15,
   },
   logoutButton: {
     marginBottom: 16,
-    borderColor: '#EF4444',
   },
   version: {
     textAlign: 'center',

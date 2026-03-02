@@ -68,7 +68,7 @@ export function SkeletonCard({ style }: SkeletonCardProps) {
   const colors = useColors();
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.card }, style]}>
+    <View style={[styles.card, { backgroundColor: colors.surface }, style]}>
       <View style={styles.cardHeader}>
         <SkeletonAvatar size={40} />
         <View style={styles.cardHeaderText}>
@@ -89,7 +89,7 @@ export function SkeletonExerciseCard({ style }: SkeletonExerciseCardProps) {
   const colors = useColors();
 
   return (
-    <View style={[styles.exerciseCard, { backgroundColor: colors.card }, style]}>
+    <View style={[styles.exerciseCard, { backgroundColor: colors.surface }, style]}>
       <View style={styles.exerciseHeader}>
         <Skeleton width={32} height={32} style={styles.exerciseCheckbox} />
         <Skeleton width={28} height={28} style={styles.exerciseNumber} />

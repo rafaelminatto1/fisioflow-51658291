@@ -49,7 +49,7 @@ const CalendarHeatMap = memo(({
 }: CalendarHeatMapProps) => {
   // Calcular disponibilidade por slot
   const heatMapData = useMemo(() => {
-    const days = eachDayOfInterval(startDate, endDate, { weekStartsOn: 1 });
+    const days = eachDayOfInterval({ start: startDate, end: endDate });
     const result: HeatMapSlot[] = [];
 
     for (const day of days) {
@@ -81,7 +81,6 @@ const CalendarHeatMap = memo(({
           }
         }
       }
-    }
 
       // Determinar disponibilidade de cada slot
       for (const slot of timeSlots) {

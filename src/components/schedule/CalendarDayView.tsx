@@ -82,25 +82,9 @@ const CalendarDayView = memo(({
 }: CalendarDayViewProps) => {
     // Get card size configuration from user preferences
     const { cardSize, heightScale } = useCardSize();
-    const slotHeight = calculateSlotHeightFromCardSize(cardSize, heightScale);
-    const slotHeightMobile = Math.round(slotHeight * 0.96);
+    const preferredSlotHeight = calculateSlotHeightFromCardSize(cardSize, heightScale);
 
-    // Calculate current time position in pixels for virtualization
-    const currentTimePositionPx = React.useMemo(() => {
-        if (!isSameDay(currentDate, currentTime)) return null;
-        const [startH] = (timeSlots[0] || '07:00').split(':').map(Number);
-        const [endH] = (timeSlots[timeSlots.length - 1] || '21:00').split(':').map(Number);
-        
-        const nowH = currentTime.getHours();
-        const nowM = currentTime.getMinutes();
-        
-        if (nowH < startH || nowH > endH) return null;
-        
-        const minutesFromStart = (nowH - startH) * 60 + nowM;
-        // Assuming 30 min slots for the calculation (matches slotHeightMobile)
-        return (minutesFromStart / 30) * slotHeightMobile;
-    }, [currentDate, currentTime, timeSlots, slotHeightMobile]);
-
+    // containerHeight is measured below; use it to compute fit-all slot height
     const [containerHeight, setContainerHeight] = React.useState<number>(600);
     React.useLayoutEffect(() => {
         const updateHeight = () => {
@@ -113,6 +97,43 @@ const CalendarDayView = memo(({
         window.addEventListener('resize', updateHeight);
         return () => window.removeEventListener('resize', updateHeight);
     }, []);
+
+    const DAY_HEADER_HEIGHT = 80; // h-20 sticky day header
+    const MIN_SLOT_HEIGHT = 22;
+    const slotHeight = timeSlots.length > 0
+        ? Math.max(MIN_SLOT_HEIGHT, Math.floor((containerHeight - DAY_HEADER_HEIGHT) / timeSlots.length))
+        : preferredSlotHeight;
+    const slotHeightMobile = slotHeight;
+
+    // Calculate current time position in pixels for virtualization
+    const currentTimePositionPx = React.useMemo(() => {
+        if (!isSameDay(currentDate, currentTime)) return null;
+        const [startH] = (timeSlots[0] || '07:00').split(':').map(Number);
+        const [endH] = (timeSlots[timeSlots.length - 1] || '21:00').split(':').map(Number);
+
+        const nowH = currentTime.getHours();
+        const nowM = currentTime.getMinutes();
+
+        if (nowH < startH || nowH > endH) return null;
+
+        const minutesFromStart = (nowH - startH) * 60 + nowM;
+        // Assuming 30 min slots for the calculation (matches slotHeightMobile)
+        return (minutesFromStart / 30) * slotHeightMobile;
+    }, [currentDate, currentTime, timeSlots, slotHeightMobile]);
+
+    // Logic inconsistency fix: usage of helper passed from parent
+    const dayAppointments = getAppointmentsForDate(currentDate);
+
+    // Group appointments by time for virtualization
+    const appointmentsByTime = React.useMemo(() => {
+        const map = new Map<string, Appointment[]>();
+        dayAppointments.forEach(apt => {
+            const time = apt.time && apt.time.trim() ? apt.time.substring(0, 5) : '09:00';
+            if (!map.has(time)) map.set(time, []);
+            map.get(time)!.push(apt);
+        });
+        return map;
+    }, [dayAppointments]);
 
     const renderSlot = React.useCallback((time: string, rowIndex: number) => {
         const hour = parseInt(time.split(':')[0]);
@@ -323,20 +344,6 @@ const CalendarDayView = memo(({
         selectedIds,
         onToggleSelection
     ]);
-
-    // Logic inconsistency fix: usage of helper passed from parent
-    const dayAppointments = getAppointmentsForDate(currentDate);
-
-    // Group appointments by time for virtualization
-    const appointmentsByTime = React.useMemo(() => {
-        const map = new Map<string, Appointment[]>();
-        dayAppointments.forEach(apt => {
-            const time = apt.time && apt.time.trim() ? apt.time.substring(0, 5) : '09:00';
-            if (!map.has(time)) map.set(time, []);
-            map.get(time)!.push(apt);
-        });
-        return map;
-    }, [dayAppointments]);
 
     // Local state for hover effects (handled by Card now, but might be needed for other things? probably not)
     // const [hoveredAppointmentId, setHoveredAppointmentId] = useState<string | null>(null);

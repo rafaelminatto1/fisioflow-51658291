@@ -30,7 +30,7 @@ test.describe('Mobile Modal Visibility', () => {
     }
 
     // Esperar carregamento da agenda - aumentar timeout e usar seletores mais flexíveis
-    await page.waitForLoadState('networkidle', { timeout: 15000 });
+    await page.waitForLoadState('domcontentloaded', { timeout: 15000 });
 
     // Clicar no botão de novo agendamento - tentar diferentes seletores
     try {

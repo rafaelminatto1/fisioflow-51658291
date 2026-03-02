@@ -164,7 +164,7 @@ test.describe('Paciente Login - setValue Error Check', () => {
       // Try to find and click submit button
       const submitSelectors = [
         'button[type="submit"]',
-        'button:has-text("Entrar")',
+        'button:has-text("Acessar Minha Conta")',
         'button:has-text("Login")',
         'button:has-text("Sign")',
         'button:has-text("Logar")',
@@ -201,7 +201,7 @@ test.describe('Paciente Login - setValue Error Check', () => {
 
       // Wait for navigation or timeout
       try {
-        await page.waitForNavigation({ waitUntil: 'networkidle', timeout: 15000 });
+        await page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 15000 });
         console.log('Navigation occurred after login');
       } catch (e) {
         console.log('No immediate navigation detected - checking if page updated via AJAX...');

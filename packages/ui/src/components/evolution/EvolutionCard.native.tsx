@@ -17,25 +17,25 @@ export interface EvolutionCardProps {
 }
 
 export const EvolutionCard = React.forwardRef<View, EvolutionCardProps>(
-  ({ 
-    date, 
-    therapistName, 
-    subjective, 
-    objective, 
-    assessment, 
+  ({
+    date,
+    therapistName,
+    subjective,
+    objective,
+    assessment,
     plan,
-    sessionNumber, 
+    sessionNumber,
     painLevel,
-    onClick, 
+    onClick,
     compact = false,
     style,
-    ...props 
+    ...props
   }, ref) => {
-    
+
     const getPainColors = (level: number) => {
-        if (level > 7) return { bg: '#fee2e2', text: '#ef4444' }; // red-500
-        if (level > 3) return { bg: '#fef3c7', text: '#f59e0b' }; // amber-500
-        return { bg: '#dcfce7', text: '#22c55e' }; // green-500
+      if (level > 7) return { bg: '#fee2e2', text: '#ef4444' }; // red-500
+      if (level > 3) return { bg: '#fef3c7', text: '#f59e0b' }; // amber-500
+      return { bg: '#dcfce7', text: '#22c55e' }; // green-500
     };
 
     const painColors = painLevel !== undefined ? getPainColors(painLevel) : null;
@@ -54,7 +54,7 @@ export const EvolutionCard = React.forwardRef<View, EvolutionCardProps>(
       >
         <View style={styles.header}>
           <View style={styles.dateContainer}>
-            <Ionicons name="calendar-outline" size={14} color="#64748b" /> 
+            <Ionicons name="calendar-outline" size={14} color="#64748b" />
             <Text style={styles.dateText}>{date}</Text>
             {sessionNumber && <Text style={styles.sessionText}>• Sessão #{sessionNumber}</Text>}
           </View>
@@ -65,7 +65,7 @@ export const EvolutionCard = React.forwardRef<View, EvolutionCardProps>(
               </Text>
             </View>
           )}
-        </div>
+        </View>
 
         <View style={styles.content}>
           {subjective && (
@@ -74,14 +74,14 @@ export const EvolutionCard = React.forwardRef<View, EvolutionCardProps>(
               <Text style={styles.text} numberOfLines={2}>{subjective}</Text>
             </View>
           )}
-          
+
           {!compact && assessment && (
             <View style={styles.section}>
               <Text style={styles.label}>AVALIAÇÃO</Text>
               <Text style={styles.text} numberOfLines={2}>{assessment}</Text>
             </View>
           )}
-        </div>
+        </View>
 
         <View style={styles.footer}>
           <Ionicons name="person-outline" size={12} color="#94a3b8" />

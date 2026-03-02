@@ -19,6 +19,7 @@ import { db } from '@/lib/firebase';
 import { useAuthStore } from '@/store/auth';
 import { useColors } from '@/hooks/useColorScheme';
 import { Card, Button, Input } from '@/components';
+import { log } from '@/lib/logger';
 
 interface Professional {
   id: string;
@@ -60,7 +61,7 @@ export default function LinkProfessionalScreen() {
         }
       }
     } catch (error) {
-      console.error('Error checking link:', error);
+      log.error('Error checking link:', error);
     }
   };
 
@@ -108,7 +109,7 @@ export default function LinkProfessionalScreen() {
         });
       }
     } catch (error) {
-      console.error('Error searching professional:', error);
+      log.error('Error searching professional:', error);
       Alert.alert('Erro', 'Não foi possível buscar o profissional. Tente novamente.');
     } finally {
       setSearching(false);
@@ -153,7 +154,7 @@ export default function LinkProfessionalScreen() {
         ]
       );
     } catch (error) {
-      console.error('Error linking professional:', error);
+      log.error('Error linking professional:', error);
       Alert.alert('Erro', 'Não foi possível vincular ao profissional. Tente novamente.');
     } finally {
       setLoading(false);

@@ -9,9 +9,10 @@
 
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { Alert } from 'react-native';
+import { log } from '@/lib/logger';
 
 /**
  * Estrutura completa dos dados do paciente para exportação
@@ -197,7 +198,7 @@ export class DataExporter {
 
       return exportData;
     } catch (error) {
-      console.error('Error exporting patient data:', error);
+      log.error('Error exporting patient data:', error);
       throw new Error('Falha ao exportar dados: ' + (error as Error).message);
     }
   }
@@ -396,7 +397,7 @@ export class DataExporter {
         dialogTitle: 'Exportar Dados - FisioFlow',
       });
     } catch (error) {
-      console.error('Error sharing data:', error);
+      log.error('Error sharing data:', error);
       throw error;
     }
   }
@@ -466,7 +467,7 @@ export async function exportAndSharePatientData(
     // Compartilhar
     await exporter.shareData(data);
   } catch (error) {
-    console.error('Error in exportAndSharePatientData:', error);
+    log.error('Error in exportAndSharePatientData:', error);
     Alert.alert(
       'Erro na Exportação',
       'Não foi possível exportar seus dados. Tente novamente.'

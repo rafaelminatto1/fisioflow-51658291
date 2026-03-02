@@ -113,7 +113,7 @@ test.describe('Paciente Login - setValue Error Check (Comprehensive)', () => {
     console.log('========================================\n');
 
     await page.goto('https://fisioflow-migration.web.app', {
-      waitUntil: 'networkidle',
+      waitUntil: 'domcontentloaded',
       timeout: 60000
     });
 
@@ -185,10 +185,10 @@ test.describe('Paciente Login - setValue Error Check (Comprehensive)', () => {
       // Look for submit button
       const submitSelectors = [
         'button[type="submit"]',
-        'button:has-text("Entrar")',
+        'button:has-text("Acessar Minha Conta")',
         'button:has-text("Login")',
         'button:has-text("Acessar")',
-        'button:has-text("Entrar")',
+        'button:has-text("Acessar Minha Conta")',
         'form button',
         'button.btn-primary',
         'button:has(.btn-primary)'

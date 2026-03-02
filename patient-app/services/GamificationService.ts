@@ -1,5 +1,6 @@
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/lib/firebase';
+import { log } from '@/lib/logger';
 
 export class GamificationService {
   /**
@@ -10,7 +11,7 @@ export class GamificationService {
       const awardXp = httpsCallable(functions, 'onExerciseCompleted');
       await awardXp({ patientId, exerciseId });
     } catch (error) {
-      console.error('Error awarding exercise XP:', error);
+      log.error('Error awarding exercise XP:', error);
     }
   }
 
@@ -22,7 +23,7 @@ export class GamificationService {
       const awardXp = httpsCallable(functions, 'onDailyLogin');
       await awardXp({ patientId });
     } catch (error) {
-      console.error('Error awarding login XP:', error);
+      log.error('Error awarding login XP:', error);
     }
   }
 }

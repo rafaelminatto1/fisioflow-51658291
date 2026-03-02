@@ -64,7 +64,13 @@ export async function getEvolutions(
     // Filter by date range if provided
     if (startDate || endDate) {
       evolutions = evolutions.filter((evo: any) => {
-        const evoDate = evo.date?.toDate ? evo.date.toDate() : evo.date;
+        let evoDate = new Date();
+        if (evo.date) {
+          if (typeof evo.date.toDate === 'function') evoDate = evo.date.toDate();
+          else if (typeof evo.date === 'string' || typeof evo.date === 'number') evoDate = new Date(evo.date);
+          else if (evo.date instanceof Date) evoDate = evo.date;
+        }
+        
         if (startDate && evoDate < startDate) return false;
         if (endDate && evoDate > endDate) return false;
         return true;
@@ -102,7 +108,13 @@ export async function getEvolutionStats(userId: string): Promise<Result<any>> {
 
     // Calculate date range
     const dates = evolutions
-      .map(e => (e.date?.toDate ? e.date.toDate() : new Date()))
+      .map(e => {
+        if (!e.date) return new Date();
+        if (typeof e.date.toDate === 'function') return e.date.toDate();
+        if (typeof e.date === 'string' || typeof e.date === 'number') return new Date(e.date);
+        if (e.date instanceof Date) return e.date;
+        return new Date();
+      })
       .sort((a, b) => a.getTime() - b.getTime());
 
     const firstDate = dates[0];

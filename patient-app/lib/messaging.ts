@@ -19,9 +19,13 @@ import {
   orderBy,
   serverTimestamp,
   getDoc,
+  getDocs,
+  limit as limitQuery,
+  QueryConstraint,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from './firebase';
+import { log } from '@/lib/logger';
 
 /**
  * Tipos de mensagens
@@ -114,7 +118,7 @@ export class MessagingManager {
 
       return conversations;
     } catch (error) {
-      console.error('Error fetching conversations:', error);
+      log.error('Error fetching conversations:', error);
       return [];
     }
   }
@@ -163,11 +167,11 @@ export class MessagingManager {
    */
   async getMessages(conversationId: string, limit = 50): Promise<Message[]> {
     try {
-      const q = query(
-        collection(db, 'conversations', conversationId, 'messages'),
-        orderBy('createdAt', 'desc'),
-        limit ? where('createdAt', '>=', limit) : null
-      );
+      const constraints: QueryConstraint[] = [orderBy('createdAt', 'desc')];
+      if (limit > 0) {
+        constraints.push(limitQuery(limit));
+      }
+      const q = query(collection(db, 'conversations', conversationId, 'messages'), ...constraints);
 
       const snapshot = await getDocs(q);
       const messages: Message[] = [];
@@ -181,7 +185,7 @@ export class MessagingManager {
 
       return messages.reverse();
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      log.error('Error fetching messages:', error);
       return [];
     }
   }
@@ -291,7 +295,7 @@ export class MessagingManager {
 
       return message;
     } catch (error) {
-      console.error('Error sending message:', error);
+      log.error('Error sending message:', error);
       return null;
     }
   }
@@ -356,7 +360,7 @@ export class MessagingManager {
         createdAt: new Date(),
       };
     } catch (error) {
-      console.error('Error sending message with attachment:', error);
+      log.error('Error sending message with attachment:', error);
       return null;
     }
   }
@@ -385,7 +389,7 @@ export class MessagingManager {
 
       return downloadUrl;
     } catch (error) {
-      console.error('Error uploading attachment:', error);
+      log.error('Error uploading attachment:', error);
       throw error;
     }
   }
@@ -401,7 +405,7 @@ export class MessagingManager {
         status: 'read',
       });
     } catch (error) {
-      console.error('Error marking message as read:', error);
+      log.error('Error marking message as read:', error);
     }
   }
 
@@ -437,7 +441,7 @@ export class MessagingManager {
         [`unreadCount.${this.userId}`]: 0,
       });
     } catch (error) {
-      console.error('Error marking conversation as read:', error);
+      log.error('Error marking conversation as read:', error);
     }
   }
 
@@ -465,7 +469,7 @@ export class MessagingManager {
 
       return conversationRef.id;
     } catch (error) {
-      console.error('Error creating conversation:', error);
+      log.error('Error creating conversation:', error);
       return null;
     }
   }
@@ -489,7 +493,7 @@ export class MessagingManager {
         deletedFor: [...deletedFor, this.userId],
       });
     } catch (error) {
-      console.error('Error deleting message:', error);
+      log.error('Error deleting message:', error);
     }
   }
 
@@ -526,7 +530,7 @@ export function useMessaging(userId: string) {
         });
       },
       onError: (error) => {
-        console.error('Messaging error:', error);
+        log.error('Messaging error:', error);
       },
     });
 

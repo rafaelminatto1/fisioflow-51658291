@@ -266,15 +266,15 @@ export function MultiSelect({
             <ScrollView style={styles.optionsList} nestedScrollEnabled>
               {options.map((option) => {
                 const isSelected = values.includes(option.value);
-                const isDisabled = option.disabled || (max && values.length >= max && !isSelected);
+                const isDisabled = !!option.disabled || !!(max && values.length >= max && !isSelected);
 
                 return (
                   <TouchableOpacity
                     key={option.value}
                     style={[
                       styles.option,
-                      isDisabled && styles.optionDisabled,
-                      isSelected && styles.optionSelected,
+                      isDisabled ? styles.optionDisabled : null,
+                      isSelected ? styles.optionSelected : null,
                       { borderBottomColor: colors.border },
                     ]}
                     onPress={() => handleToggle(option)}
@@ -289,7 +289,7 @@ export function MultiSelect({
                       style={[
                         styles.optionText,
                         { color: isSelected ? colors.primary : colors.text },
-                        isDisabled && { color: colors.textMuted },
+                        isDisabled ? { color: colors.textMuted } : null,
                       ]}
                     >
                       {option.label}
@@ -376,7 +376,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   // MultiSelect
-  selectedItem: {
+  selectedChip: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 10,

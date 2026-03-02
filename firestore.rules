@@ -79,7 +79,7 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isAdmin() || (isAuthenticated() && request.auth.uid == userId);
-      allow create: if isAdmin() && isValidSize();
+      allow create: if (isAdmin() || (isAuthenticated() && request.auth.uid == userId)) && isValidSize();
       allow update: if isAdmin() || (isAuthenticated() && request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'emailVerified']));
       allow delete: if isAdmin();
     }
@@ -132,20 +132,26 @@ service cloud.firestore {
     }
 
     match /medical_records/{recordId} {
-      allow read: if isAdmin() || isProfessional() || (isPatient() && (request.auth.uid == resource.data.patientId || request.auth.uid == resource.data.userId));
+      allow read: if isAdmin() || isProfessional() || (isPatient() && (request.auth.uid == resource.data.patientId || request.auth.uid == resource.data.patient_id || request.auth.uid == resource.data.userId));
       allow create: if (isProfessional() || isAdmin()) && isValidSize();
       allow update: if isProfessional() || isAdmin();
       allow delete: if isAdmin();
     }
 
+    match /relatorios_medicos {
+      allow list: if isAuthenticated();
+    }
     match /relatorios_medicos/{id} {
-      allow read: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id));
+      allow read: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id)) || (isPatient() && (resource.data.patientId == request.auth.uid || resource.data.patient_id == request.auth.uid));
       allow create: if isAdmin() || (isProfessional() && isSameOrg(request.resource.data.organization_id));
       allow update, delete: if isAdmin();
     }
 
+    match /relatorios_convenio {
+      allow list: if isAuthenticated();
+    }
     match /relatorios_convenio/{id} {
-      allow read: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id));
+      allow read: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id)) || (isPatient() && (resource.data.patientId == request.auth.uid || resource.data.patient_id == request.auth.uid));
       allow create: if isAdmin() || (isProfessional() && isSameOrg(request.resource.data.organization_id));
       allow update, delete: if isAdmin();
     }
@@ -179,6 +185,9 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    match /evolucoes {
+      allow list: if isAuthenticated();
+    }
     match /evolucoes/{id} {
       allow read: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id)) || (isPatient() && resource.data.patient_id == request.auth.uid);
       allow create: if isAdmin() || (isProfessional() && isSameOrg(request.resource.data.organization_id));
@@ -191,11 +200,11 @@ service cloud.firestore {
     // ============================================================================================
 
     match /appointments {
-      allow list: if isAdmin() || isProfessional();
+      allow list: if isAuthenticated();
     }
 
     match /appointments/{appointmentId} {
-      allow read: if isAdmin() || isProfessional() || (isPatient() && (request.auth.uid == resource.data.patientId || request.auth.uid == resource.data.userId));
+      allow read: if isAdmin() || isProfessional() || (isPatient() && (request.auth.uid == resource.data.patientId || request.auth.uid == resource.data.patient_id || request.auth.uid == resource.data.userId));
       allow create: if (isProfessional() || isAdmin()) && isValidSize();
       allow update: if isProfessional() || isAdmin();
       allow delete: if isAdmin();
@@ -793,6 +802,11 @@ service cloud.firestore {
     // ============================================================================================
     // USER SUB-COLLECTIONS (Patient App Data)
     // ============================================================================================
+
+    match /users/{userId}/evolutions/{evoId} {
+      allow read: if isProfessional() || (isAuthenticated() && request.auth.uid == userId);
+      allow write: if isProfessional() || isAdmin();
+    }
 
     match /users/{userId}/exercise_plans/{planId} {
       allow read: if isProfessional() || (isAuthenticated() && request.auth.uid == userId);

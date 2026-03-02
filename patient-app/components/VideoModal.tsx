@@ -3,18 +3,16 @@
  * Modal player for exercise videos with controls
  */
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 import {
   View,
   Text,
   StyleSheet,
   Modal,
-  Pressable,
   TouchableOpacity,
-  ActivityIndicator,
 } from 'react-native';
-import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
+import { VideoView, useVideoPlayer } from 'expo-video';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColorScheme';
@@ -37,34 +35,36 @@ export function VideoModal({
   autoPlay = true,
 }: VideoModalProps) {
   const colors = useColors();
-  const videoRef = useRef<Video>(null);
-  const [status, setStatus] = useState<AVPlaybackStatus>();
+  const player = useVideoPlayer(videoUri, (videoPlayer) => {
+    videoPlayer.loop = false;
+    if (autoPlay) {
+      videoPlayer.play();
+    }
+  });
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
   const [showSpeedMenu, setShowSpeedMenu] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
 
   useEffect(() => {
-    if (visible && autoPlay && videoRef.current) {
+    if (visible && autoPlay) {
       playVideo();
+    }
+    if (!visible) {
+      pauseVideo();
+      setShowSpeedMenu(false);
     }
   }, [visible, autoPlay]);
 
   const playVideo = async () => {
-    if (videoRef.current) {
-      await videoRef.current.playAsync();
-      setIsPlaying(true);
-    }
+    player.play();
+    setIsPlaying(true);
   };
 
   const pauseVideo = async () => {
-    if (videoRef.current) {
-      await videoRef.current.pauseAsync();
-      setIsPlaying(false);
-    }
+    player.pause();
+    setIsPlaying(false);
   };
 
   const togglePlayPause = async () => {
@@ -76,43 +76,16 @@ export function VideoModal({
   };
 
   const replayVideo = async () => {
-    if (videoRef.current) {
-      await videoRef.current.replayAsync();
-      setIsPlaying(true);
-      setIsCompleted(false);
-    }
+    player.currentTime = 0;
+    player.play();
+    setIsPlaying(true);
   };
 
   const setSpeed = async (speed: number) => {
-    if (videoRef.current) {
-      await videoRef.current.setRateAsync(speed, true);
-      setPlaybackSpeed(speed);
-      setShowSpeedMenu(false);
-    }
+    player.playbackRate = speed;
+    setPlaybackSpeed(speed);
+    setShowSpeedMenu(false);
   };
-
-  const handlePlaybackStatusUpdate = (status: AVPlaybackStatus) => {
-    setStatus(status);
-    setIsPlaying(status.isPlaying);
-    setIsLoading(status.isBuffering);
-
-    // Check if video is completed
-    if (status.didJustFinish && !isCompleted) {
-      setIsCompleted(true);
-      setIsPlaying(false);
-    }
-  };
-
-  const formatTime = (millis: number) => {
-    const totalSeconds = Math.floor(millis / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-  };
-
-  const position = status?.positionMillis || 0;
-  const duration = status?.durationMillis || 0;
-  const progress = duration > 0 ? position / duration : 0;
 
   return (
     <Modal
@@ -133,30 +106,14 @@ export function VideoModal({
 
         {/* Video Player */}
         <View style={styles.videoContainer}>
-          <Video
-            ref={videoRef}
-            source={{ uri: videoUri }}
+          <VideoView
+            player={player}
             style={styles.video}
-            useNativeControls={false}
-            resizeMode={ResizeMode.CONTAIN}
-            onPlaybackStatusUpdate={handlePlaybackStatusUpdate}
-            isLooping={false}
+            nativeControls={false}
+            contentFit="contain"
+            allowsFullscreen
+            allowsPictureInPicture
           />
-
-          {/* Loading Overlay */}
-          {isLoading && (
-            <View style={styles.loadingOverlay}>
-              <ActivityIndicator size="large" color="#FFFFFF" />
-            </View>
-          )}
-
-          {/* Completed Overlay */}
-          {isCompleted && (
-            <Pressable style={styles.completedOverlay} onPress={replayVideo}>
-              <Ionicons name="play-circle" size={64} color="#FFFFFF" />
-              <Text style={styles.completedText}>Toque para repetir</Text>
-            </Pressable>
-          )}
         </View>
 
         {/* Video Info */}
@@ -167,16 +124,6 @@ export function VideoModal({
             </Text>
           </View>
         )}
-
-        {/* Progress Bar */}
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBarBackground}>
-            <View style={[styles.progressBarFill, { width: `${progress * 100}%` }]} />
-          </View>
-          <Text style={styles.timeText}>
-            {formatTime(position)} / {formatTime(duration)}
-          </Text>
-        </View>
 
         {/* Controls */}
         <View style={styles.controls}>
@@ -215,14 +162,16 @@ export function VideoModal({
           {/* Play/Pause Button */}
           <TouchableOpacity style={styles.playButton} onPress={togglePlayPause}>
             <Ionicons
-              name={isPlaying ? 'pause' : isCompleted ? 'refresh' : 'play'}
+              name={isPlaying ? 'pause' : 'play'}
               size={32}
-              color="#FFFFFF"
+              color="#000000"
             />
           </TouchableOpacity>
 
-          {/* Spacer for balance */}
-          <View style={styles.controlsSpacer} />
+          <TouchableOpacity style={styles.speedButton} onPress={replayVideo}>
+            <Ionicons name="refresh" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+
         </View>
 
         {/* Tips */}
@@ -274,49 +223,12 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
-  loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-  },
-  completedOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  completedText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    marginTop: 16,
-  },
   infoContainer: {
     padding: 16,
   },
   infoText: {
     fontSize: 15,
     lineHeight: 22,
-  },
-  progressContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  progressBarBackground: {
-    height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 2,
-    marginBottom: 8,
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 2,
-  },
-  timeText: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    textAlign: 'center',
   },
   controls: {
     flexDirection: 'row',
@@ -359,9 +271,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  controlsSpacer: {
-    width: 52,
   },
   tipsContainer: {
     paddingHorizontal: 16,

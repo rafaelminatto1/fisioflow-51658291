@@ -111,6 +111,7 @@ export default function LoginScreen() {
           {/* Logo */}
           <View style={styles.logoContainer}>
             <Image
+              // eslint-disable-next-line @typescript-eslint/no-require-imports
               source={require('../../assets/icon.png')}
               style={styles.logoImage}
               resizeMode="contain"

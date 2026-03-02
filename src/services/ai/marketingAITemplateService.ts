@@ -564,7 +564,7 @@ export async function generateMarketingContent(input: GenerateMarketingContentIn
       return generateBirthdayTemplate(input.context as GenerateBirthdayTemplateInput);
     case 'recall':
       return generateRecallTemplate(input.context as GenerateRecallTemplateInput);
-    case 'fisiolink':
+    case 'fisiolink': {
       const fisiolinkResult = await generateFisiolinkTemplates(input.context as GenerateFisiolinkTemplateInput);
       return {
         success: fisiolinkResult.success,
@@ -572,7 +572,8 @@ export async function generateMarketingContent(input: GenerateMarketingContentIn
         suggestions: fisiolinkResult.suggestions,
         error: fisiolinkResult.error,
       };
-    case 'caption':
+    }
+    case 'caption': {
       const captionResult = await generateSocialCaption(
         input.context?.contentType as 'motivational' | 'technical' | 'educational' | 'celebration' || 'motivational',
         input.context || {}
@@ -583,6 +584,7 @@ export async function generateMarketingContent(input: GenerateMarketingContentIn
         suggestions: captionResult.suggestions,
         error: captionResult.error,
       };
+    }
     default:
       return {
         success: false,
