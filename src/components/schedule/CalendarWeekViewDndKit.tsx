@@ -66,8 +66,8 @@ const SLOT_DURATION_MINUTES = 30;
 const MIN_WEEK_SLOT_HEIGHT = 14; // low enough to never prevent fit-to-screen
 const GRID_HEIGHT_ADJUSTMENT = 3;
 const WEEK_GRID_HEIGHT_BOOST = 0;
-const INITIAL_MEASUREMENT_SETTLE_MS = 120;
-const INITIAL_MEASUREMENT_MAX_WAIT_MS = 700;
+const INITIAL_MEASUREMENT_SETTLE_MS = 0;
+const INITIAL_MEASUREMENT_MAX_WAIT_MS = 200;
 const INITIAL_MEASUREMENT_MAX_RETRIES = 8;
 
 /** Margem e espaçamento entre cards sobrepostos (layout lateral, em px). */
@@ -171,7 +171,16 @@ export const CalendarWeekViewDndKit = memo(({
   const weekContainerRef = useRef<HTMLDivElement | null>(null);
   const weekScrollRef = useRef<HTMLDivElement | null>(null);
   const weekHeaderRef = useRef<HTMLDivElement | null>(null);
-  const [fitSlotHeight, setFitSlotHeight] = useState<number>(MIN_WEEK_SLOT_HEIGHT);
+  const [fitSlotHeight, setFitSlotHeight] = useState<number>(() => {
+    // Synchronous estimate before ResizeObserver fires, avoids invisible→visible flash.
+    if (typeof window === 'undefined') return MIN_WEEK_SLOT_HEIGHT;
+    const savedScale = localStorage.getItem('agenda_card_height_multiplier');
+    const scale = savedScale ? Math.min(10, Math.max(0, parseInt(savedScale, 10) || 3)) : 3;
+    const preferred = Math.round(30 + (scale / 10) * 90); // mirrors calculateSlotHeightFromCardSize
+    // Schedule page container = viewport - MainLayout chrome (128px) - header (48px) - adjustment (3px)
+    const estimated = Math.floor((window.innerHeight - 128 - 48 - 3) / 28);
+    return Math.max(MIN_WEEK_SLOT_HEIGHT, Math.min(preferred, estimated > 0 ? estimated : preferred));
+  });
   const [containerHeight, setContainerHeight] = useState<number>(600);
   const [isSlotHeightMeasured, setIsSlotHeightMeasured] = useState(false);
 
