@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import { EvolutionVersionToggle } from './v2/EvolutionVersionToggle';
 import type { EvolutionVersion } from './v2/types';
+import { EvolutionVersionHistoryTrigger } from './EvolutionVersionHistory';
+import type { EvolutionVersion as SoapEvolutionVersion } from '@/hooks/evolution/useEvolutionVersionHistory';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -86,6 +88,9 @@ interface EvolutionHeaderProps {
     // Version toggle (V1 SOAP / V2 Texto Livre)
     evolutionVersion?: EvolutionVersion;
     onVersionChange?: (version: EvolutionVersion) => void;
+    // Version history snapshots (Notion/Evernote-inspired)
+    soapRecordId?: string;
+    onRestoreVersion?: (content: SoapEvolutionVersion['content']) => void;
 }
 
 function getPatientInitials(patient: Patient): string {
@@ -168,6 +173,8 @@ export const EvolutionHeader = memo(({
     upcomingGoalsCount = 0,
     evolutionVersion = 'v1-soap',
     onVersionChange,
+    soapRecordId,
+    onRestoreVersion,
 }: EvolutionHeaderProps) => {
     const showFirstEvolution = previousEvolutionsCount === 0;
     const navigate = useNavigate();
@@ -376,6 +383,12 @@ export const EvolutionHeader = memo(({
 
                 <div className="flex-1 min-w-4" />
                 <div className="flex items-center gap-1 shrink-0">
+                    {onRestoreVersion && (
+                        <EvolutionVersionHistoryTrigger
+                            soapRecordId={soapRecordId}
+                            onRestore={onRestoreVersion}
+                        />
+                    )}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
@@ -451,7 +464,8 @@ export const EvolutionHeader = memo(({
         prevProps.evolutionStats.totalEvolutions === nextProps.evolutionStats.totalEvolutions &&
         prevProps.evolutionStats.completedGoals === nextProps.evolutionStats.completedGoals &&
         prevProps.evolutionStats.totalGoals === nextProps.evolutionStats.totalGoals &&
-        prevProps.evolutionVersion === nextProps.evolutionVersion
+        prevProps.evolutionVersion === nextProps.evolutionVersion &&
+        prevProps.soapRecordId === nextProps.soapRecordId
     );
 });
 
