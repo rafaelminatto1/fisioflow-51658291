@@ -44,7 +44,6 @@ import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { RouteKeys, PrefetchStrategy } from '@/lib/routing/routePrefetch';
-import { ScheduleDiagnostics } from '@/components/schedule/ScheduleDiagnostics';
 
 // Lazy load CalendarView for better initial load performance
 const CalendarView = lazy(() =>
@@ -571,7 +570,7 @@ const Schedule = () => {
 
   return (
     <MainLayout fullWidth noPadding showBreadcrumbs={false}>
-      <div className="flex flex-col min-h-[calc(100vh-128px)] bg-slate-50 dark:bg-slate-950">
+      <div className="flex flex-col h-[calc(100vh-128px)] overflow-hidden bg-slate-50 dark:bg-slate-950">
         {/* Skip link - visible on focus for keyboard users */}
         <a
           href="#calendar-grid"
@@ -582,19 +581,9 @@ const Schedule = () => {
 
         <div className="flex flex-col flex-1 relative min-h-0">
 
-          {/* Diagnostic Component - Remove after debugging */}
-          {import.meta.env.DEV && (
-            <div className="px-4 pt-4">
-              <ScheduleDiagnostics
-                currentDate={currentDate}
-                viewType={viewType as 'day' | 'week' | 'month'}
-              />
-            </div>
-          )}
-
           {/* Calendar Area */}
-          <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-950" data-testid="mobile-schedule-list">
-            <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950 relative min-h-[600px]">
+          <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-white dark:bg-slate-950" data-testid="mobile-schedule-list">
+            <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950 relative min-h-0">
               <Suspense fallback={<CalendarSkeletonEnhanced viewType={viewType as CalendarViewType} />}>
                 <CalendarView
                   appointments={appointments}
