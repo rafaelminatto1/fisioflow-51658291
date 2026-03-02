@@ -65,6 +65,7 @@ import { FloatingActionBar } from '@/components/evolution/FloatingActionBar';
 import { SessionExercise } from '@/components/evolution/SessionExercisesPanel';
 import { EvolutionKeyboardShortcuts } from '@/components/evolution/EvolutionKeyboardShortcuts';
 import { useEvolutionShortcuts } from '@/hooks/evolution/useEvolutionShortcuts';
+import { useEvolutionVersionHistory } from '@/hooks/evolution/useEvolutionVersionHistory';
 import { EvolutionAlerts } from '@/components/evolution/EvolutionAlerts';
 import { PatientEvolutionErrorBoundary } from '@/components/patients/PatientEvolutionErrorBoundary';
 import { ApplyTemplateModal } from '@/components/exercises/ApplyTemplateModal';
@@ -181,6 +182,7 @@ const PatientEvolution = () => {
   // ========== ESTADOS ==========
   // Estados SOAP
   const [currentSoapRecordId, setCurrentSoapRecordId] = useState<string | undefined>();
+  const { saveVersionForRecord } = useEvolutionVersionHistory(currentSoapRecordId);
   const [soapData, setSoapData] = useState({
     subjective: '',
     objective: '',
@@ -589,6 +591,30 @@ const PatientEvolution = () => {
     });
   }, [toast]);
 
+  const handleRestoreVersion = useCallback((content: {
+    subjective?: string;
+    objective?: string;
+    assessment?: string;
+    plan?: string;
+    pain_level?: number;
+    evolution_notes?: string;
+    v2_data?: Record<string, unknown>;
+  }) => {
+    if (evolutionVersion === 'v1-soap') {
+      setSoapData({
+        subjective: content.subjective || '',
+        objective: content.objective || '',
+        assessment: content.assessment || '',
+        plan: content.plan || '',
+      });
+    } else if (evolutionVersion === 'v2-texto' && content.v2_data) {
+      setEvolutionV2Data(content.v2_data as EvolutionV2Data);
+    }
+    if (content.pain_level !== undefined) {
+      setPainScale(prev => ({ ...prev, level: content.pain_level! }));
+    }
+  }, [evolutionVersion]);
+
   const handleSave = async () => {
     // Verificar testes obrigatórios pendentes (hoje)
     const pendingCriticalTests = requiredMeasurements.filter(req => {
@@ -664,6 +690,16 @@ const PatientEvolution = () => {
 
       if (record?.id) {
         setCurrentSoapRecordId(record.id);
+        // Salvar snapshot de versão (Notion/Evernote-inspired)
+        const isV2orV3mode = evolutionVersion === 'v2-texto' || evolutionVersion === 'v3-notion';
+        saveVersionForRecord(record.id, {
+          subjective: saveData.subjective,
+          objective: saveData.objective,
+          assessment: saveData.assessment,
+          plan: saveData.plan,
+          pain_level: painScale.level,
+          ...(isV2orV3mode && { v2_data: evolutionV2Data as unknown as Record<string, unknown> }),
+        }, 'manual').catch(() => {/* versão não é crítica */});
       }
 
       // Salvar sessão de tratamento (exercícios realizados) - Migrado para Firebase
@@ -1247,6 +1283,8 @@ const PatientEvolution = () => {
             upcomingGoalsCount={upcomingGoals.length}
             evolutionVersion={evolutionVersion}
             onVersionChange={handleVersionChange}
+            soapRecordId={currentSoapRecordId}
+            onRestoreVersion={handleRestoreVersion}
           />
 
           {/* Abas de Navegação - OTIMIZADO com lazy loading por aba */}
@@ -1285,6 +1323,8 @@ const PatientEvolution = () => {
                   onExercisesChange={setSessionExercises}
                   goals={goals}
                   pathologies={pathologies}
+                  patientId={patientId || ''}
+                  currentSessionCount={previousEvolutions.length + 1}
                 />
               </Suspense>
             </TabsContent>
@@ -1299,6 +1339,8 @@ const PatientEvolution = () => {
                   onCopyEvolution={handleCopyPreviousEvolution}
                   showComparison={showComparison}
                   onToggleComparison={() => setShowComparison(!showComparison)}
+                  goals={goals}
+                  pathologies={pathologies}
                 />
               </Suspense>
             </TabsContent>
