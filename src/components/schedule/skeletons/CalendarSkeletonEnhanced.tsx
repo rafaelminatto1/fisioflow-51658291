@@ -101,30 +101,51 @@ const DayViewSkeleton = memo(() => {
 
 DayViewSkeleton.displayName = 'DayViewSkeleton';
 
-// Skeleton para view de semana
+// Skeleton para view de semana — replica a estrutura real da grade (60px + 6 colunas)
 const WeekViewSkeleton = memo(() => {
+  const ROW_HEIGHT = 26; // px por slot, próximo do fitSlotHeight calculado
+  const ROWS = 26;       // cobre a tela sem scroll
+
   return (
-    <div className="space-y-4">
-      {Array.from({ length: 5 }).map((_, dayIndex) => (
-        <div key={dayIndex} className="space-y-2">
-          <div className="flex items-center justify-between p-3 border-b border-slate-200 dark:border-slate-800">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 animate-pulse" />
-              <div className="text-sm font-semibold text-slate-400">Dia {dayIndex + 1}</div>
-            </div>
-            <div className="flex gap-2">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="w-12 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 animate-pulse" />
+    <div className="flex flex-col h-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 overflow-hidden">
+      {/* Header — idêntico ao weekHeaderRef real */}
+      <div className="grid grid-cols-[60px_repeat(6,1fr)] border-b border-slate-200 dark:border-slate-800 flex-shrink-0">
+        <div className="h-12 border-r border-slate-200 dark:border-slate-800 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 animate-pulse" />
+        </div>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="h-12 flex flex-col items-center justify-center border-r border-slate-100 dark:border-slate-800/50 gap-1">
+            <div className="w-6 h-2 rounded bg-slate-100 dark:bg-slate-800 animate-pulse" />
+            <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 animate-pulse" />
+          </div>
+        ))}
+      </div>
+
+      {/* Linhas de horário — mesma estrutura do grid real */}
+      <div className="flex-1 overflow-hidden">
+        {Array.from({ length: ROWS }).map((_, row) => {
+          const isHour = row % 2 === 0;
+          return (
+            <div key={row} className="grid grid-cols-[60px_repeat(6,1fr)]" style={{ height: ROW_HEIGHT }}>
+              <div className={cn(
+                'border-r border-slate-100 dark:border-slate-800 flex items-start justify-end pr-2 pt-0.5',
+                isHour ? '' : 'border-t-0'
+              )}>
+                {isHour && <div className="w-8 h-2 rounded bg-slate-100 dark:bg-slate-800 animate-pulse" />}
+              </div>
+              {Array.from({ length: 6 }).map((_, col) => (
+                <div
+                  key={col}
+                  className={cn(
+                    'border-r border-slate-50 dark:border-slate-900/50',
+                    isHour && 'border-t border-slate-100 dark:border-slate-800'
+                  )}
+                />
               ))}
             </div>
-          </div>
-          <div className="py-2 space-y-2">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <SlotSkeleton key={i} />
-            ))}
-          </div>
-        </div>
-      ))}
+          );
+        })}
+      </div>
     </div>
   );
 });
