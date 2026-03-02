@@ -37,7 +37,7 @@ test.describe('Testes Estendidos de Acessibilidade WCAG 2.1 AA', () => {
   for (const pageData of PAGES) {
     test(`Acessibilidade AXE - ${pageData.name}`, async ({ page }) => {
       await page.goto(pageData.path);
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
 
       const accessibilityScanResults = await new AxeBuilder({ page })
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -77,7 +77,7 @@ test.describe('Testes Estendidos de Acessibilidade WCAG 2.1 AA', () => {
    */
   test('Skip Links - Deve permitir pular para conteúdo principal', async ({ page }) => {
     await page.goto('/schedule');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Skip link deve estar presente mas invisível inicialmente
     const skipLink = page.locator('a[href="#main-content"], [data-testid="skip-link"]');
@@ -98,7 +98,7 @@ test.describe('Testes Estendidos de Acessibilidade WCAG 2.1 AA', () => {
    */
   test('Navegação por Teclado - Ordem lógica de tabulação', async ({ page }) => {
     await page.goto('/patients');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const focusableElements = page.locator(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -141,7 +141,7 @@ test.describe('Testes Estendidos de Acessibilidade WCAG 2.1 AA', () => {
    */
   test('Focus Visible - Indicador de foco visível', async ({ page }) => {
     await page.goto('/schedule');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const focusableElements = page.locator(
       'button:not([disabled]), a[href], input:not([disabled])'
@@ -187,7 +187,7 @@ test.describe('Testes Estendidos de Acessibilidade WCAG 2.1 AA', () => {
    */
   test('Modais - Focus trap e fechamento com ESC', async ({ page }) => {
     await page.goto('/patients');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Abrir modal de novo paciente
     await page.click('button:has-text("Novo Paciente")');
@@ -208,7 +208,7 @@ test.describe('Testes Estendidos de Acessibilidade WCAG 2.1 AA', () => {
    */
   test('Formulários - Todos os inputs têm labels associados', async ({ page }) => {
     await page.goto('/patients/new');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const inputs = page.locator(
       'input[type="text"], input[name="email"], input[type="tel"], input[type="date"], textarea, select'
@@ -247,7 +247,7 @@ test.describe('Testes Estendidos de Acessibilidade WCAG 2.1 AA', () => {
    */
   test('Contraste - Verificar contraste mínimo de 4.5:1 para texto', async ({ page }) => {
     await page.goto('/dashboard');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Buscar elementos de texto importantes
     const textElements = page.locator('p, h1, h2, h3, h4, h5, h6, span, a, button');
@@ -330,7 +330,7 @@ test.describe('Testes Estendidos de Acessibilidade WCAG 2.1 AA', () => {
    */
   test('Imagens - Todas têm atributo alt ou role="presentation"', async ({ page }) => {
     await page.goto('/patients');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     const images = page.locator('img');
     const count = await images.count();
@@ -361,7 +361,7 @@ test.describe('Testes Estendidos de Acessibilidade WCAG 2.1 AA', () => {
     // Emular prefers-reduced-motion
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await page.goto('/schedule');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Verificar se animações estão desabilitadas
     const animatedElements = page.locator('.animate-fade-in, .animate-slide-up, [data-animate]');
@@ -387,7 +387,7 @@ test.describe('Testes Estendidos de Acessibilidade WCAG 2.1 AA', () => {
    */
   test('ARIA - Roles e estados corretos em componentes interativos', async ({ page }) => {
     await page.goto('/schedule');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Verificar botões com aria-expanded
     const expandableButtons = page.locator('button[aria-expanded]');

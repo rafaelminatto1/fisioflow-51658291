@@ -12,6 +12,7 @@ import { Calendar, Download, Settings as SettingsIcon, Sparkles } from 'lucide-r
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 // Lazy load dashboard components
 const AdminDashboard = lazy(() => import('@/components/dashboard/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
@@ -56,7 +57,7 @@ const Index = () => {
             case 'fisioterapeuta':
               return <TherapistDashboard lastUpdate={new Date()} profile={profile} />;
             case 'paciente':
-              return <PatientDashboard lastUpdate={new Date()} profile={profile} />;
+              return <PatientDashboard _lastUpdate={new Date()} profile={profile} />;
             default:
               return <AdminDashboard period={periodFilter} />;
           }
@@ -83,7 +84,7 @@ const Index = () => {
           <div className="absolute top-0 right-0 p-10 opacity-[0.05] group-hover:opacity-[0.08] transition-opacity duration-1000">
             <Sparkles className="w-64 h-64 text-primary rotate-12" />
           </div>
-          
+
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             <div className="flex items-center gap-6 min-w-0">
               <div className="relative flex-shrink-0">
@@ -96,7 +97,7 @@ const Index = () => {
                 </Avatar>
                 <div className="absolute bottom-1 right-1 h-5 w-5 bg-emerald-500 rounded-full ring-4 ring-white dark:ring-slate-950 shadow-md z-20 animate-pulse" />
               </div>
-              
+
               <div className="min-w-0 flex-1">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 mb-3">
                   <Sparkles className="w-3 h-3 text-primary animate-wiggle" />
@@ -115,16 +116,16 @@ const Index = () => {
             </div>
 
             <div className="flex items-center gap-3">
-              <Button 
-                variant="outline" 
-                className="rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-md border-border/50 hover:border-primary/50 font-black text-[10px] uppercase tracking-widest h-14 px-8 shadow-sm transition-all hover:shadow-premium-md" 
+              <Button
+                variant="outline"
+                className="rounded-2xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-md border-border/50 hover:border-primary/50 font-black text-[10px] uppercase tracking-widest h-14 px-8 shadow-sm transition-all hover:shadow-premium-md"
                 onClick={handleDownloadReport}
               >
                 <Download className="w-4 h-4 mr-2 text-primary" />
                 Exportar Dados
               </Button>
-              <Button 
-                className="rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:scale-105 active:scale-95 font-black text-[10px] uppercase tracking-widest h-14 px-8 shadow-xl shadow-slate-900/20 dark:shadow-white/10 transition-all" 
+              <Button
+                className="rounded-2xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:scale-105 active:scale-95 font-black text-[10px] uppercase tracking-widest h-14 px-8 shadow-xl shadow-slate-900/20 dark:shadow-white/10 transition-all"
                 onClick={handleSettings}
               >
                 <SettingsIcon className="w-4 h-4 mr-2" />
@@ -140,7 +141,7 @@ const Index = () => {
             <h3 className="text-xs font-black uppercase tracking-[0.3em] text-slate-400">Filtrar Visualização</h3>
             <div className="h-px flex-1 mx-6 bg-gradient-to-r from-border/50 to-transparent" />
           </div>
-          
+
           <div className="py-2 overflow-x-auto -mx-2 px-2 scrollbar-hide">
             <div className="flex gap-3 min-w-max">
               {['hoje', 'semana', 'mes', 'personalizado'].map((period) => (

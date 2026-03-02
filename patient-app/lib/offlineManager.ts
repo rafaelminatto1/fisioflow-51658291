@@ -9,7 +9,8 @@
 import NetInfo from '@react-native-community/netinfo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { doc, updateDoc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db } from './firebaseConfig';
+import { log } from '@/lib/logger';
 
 const OFFLINE_QUEUE_KEY = '@fisioflow_offline_queue';
 const LAST_SYNC_KEY = '@fisioflow_last_sync';
@@ -48,11 +49,23 @@ class OfflineManager {
   private isSyncing: boolean = false;
   private syncListeners: Set<(status: SyncStatus) => void> = new Set();
   private networkUnsubscribe: (() => void) | null = null;
+  private initializedUserId: string | null = null;
 
   /**
    * Initialize the offline manager
    */
   async initialize(userId: string): Promise<void> {
+    if (this.initializedUserId === userId && this.networkUnsubscribe) {
+      return;
+    }
+
+    if (this.networkUnsubscribe) {
+      this.networkUnsubscribe();
+      this.networkUnsubscribe = null;
+    }
+
+    this.initializedUserId = userId;
+
     // Load queued operations from storage
     await this.loadQueue();
 
@@ -95,7 +108,7 @@ class OfflineManager {
         this.queue = JSON.parse(queueJson);
       }
     } catch (error) {
-      console.error('Error loading offline queue:', error);
+      log.error('Error loading offline queue:', error);
       this.queue = [];
     }
   }
@@ -107,7 +120,7 @@ class OfflineManager {
     try {
       await AsyncStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(this.queue));
     } catch (error) {
-      console.error('Error saving offline queue:', error);
+      log.error('Error saving offline queue:', error);
     }
   }
 
@@ -162,7 +175,7 @@ class OfflineManager {
           this.queue = this.queue.filter(op => op.id !== operation.id);
           successCount++;
         } catch (error) {
-          console.error(`Failed to sync operation ${operation.id}:`, error);
+          log.error(`Failed to sync operation ${operation.id}:`, error);
 
           // Increment retry count
           operation.retries++;
@@ -170,7 +183,7 @@ class OfflineManager {
           // Remove if too many retries (older than 7 days or more than 10 retries)
           if (operation.retries >= 10 || Date.now() - operation.timestamp > 7 * 24 * 60 * 60 * 1000) {
             this.queue = this.queue.filter(op => op.id !== operation.id);
-            console.warn(`Removed stale operation ${operation.id}`);
+            log.warn(`Removed stale operation ${operation.id}`);
           }
         }
       }
@@ -182,9 +195,9 @@ class OfflineManager {
         await AsyncStorage.setItem(LAST_SYNC_KEY, new Date().toISOString());
       }
 
-      console.log(`Sync complete: ${successCount}/${operationsToSync.length} operations synced`);
+      log.info(`Sync complete: ${successCount}/${operationsToSync.length} operations synced`);
     } catch (error) {
-      console.error('Error during sync:', error);
+      log.error('Error during sync:', error);
     } finally {
       this.isSyncing = false;
       this.notifyListeners();
@@ -335,7 +348,7 @@ class OfflineManager {
         lastSync = new Date(lastSyncStr);
       }
     } catch (error) {
-      console.error('Error getting last sync time:', error);
+      log.error('Error getting last sync time:', error);
     }
 
     return {
@@ -388,7 +401,7 @@ class OfflineManager {
         }
       }
     } catch (error) {
-      console.error('Error getting cached data:', error);
+      log.error('Error getting cached data:', error);
     }
     return null;
   }
@@ -405,7 +418,7 @@ class OfflineManager {
       };
       await AsyncStorage.setItem(cacheKey, JSON.stringify(cacheValue));
     } catch (error) {
-      console.error('Error setting cached data:', error);
+      log.error('Error setting cached data:', error);
     }
   }
 
@@ -418,7 +431,7 @@ class OfflineManager {
       const cacheKeys = keys.filter(key => key.startsWith('@fisioflow_cache_'));
       await AsyncStorage.multiRemove(cacheKeys);
     } catch (error) {
-      console.error('Error clearing cache:', error);
+      log.error('Error clearing cache:', error);
     }
   }
 }

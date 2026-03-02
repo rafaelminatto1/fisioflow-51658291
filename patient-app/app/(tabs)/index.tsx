@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
+  Dimensions,
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,6 +25,7 @@ import { useColors } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/auth';
 import { useGamification } from '@/hooks/useGamification';
 import { Card, NotificationPermissionModal, SyncIndicator, LinearProgress } from '@/components';
+import { Spacing } from '@/constants/spacing';
 import {
   collection,
   query,
@@ -34,6 +36,12 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import * as Notifications from 'expo-notifications';
+import { log } from '@/lib/logger';
+
+const SCREEN_PADDING = Spacing.screen;
+const CARD_GAP = Spacing.gap;
+const HALF_CARD_WIDTH = (Dimensions.get('window').width - SCREEN_PADDING * 2 - CARD_GAP) / 2;
+const FULL_CARD_WIDTH = Dimensions.get('window').width - SCREEN_PADDING * 2;
 
 interface TodayExercise {
   id: string;
@@ -71,6 +79,18 @@ const quickActions: QuickAction[] = [
   { id: '3', label: 'Consultas', icon: 'calendar-outline', route: '/(tabs)/appointments', color: '#8b5cf6' },
   { id: '4', label: 'Perfil', icon: 'person-outline', route: '/(tabs)/profile', color: '#ec4899' },
 ];
+
+// Helper safely parses dates
+const parseDate = (d: any): Date => {
+  if (!d) return new Date();
+  if (typeof d.toDate === 'function') return d.toDate();
+  if (d instanceof Date) return d;
+  if (typeof d === 'string' || typeof d === 'number') {
+    const parsed = new Date(d);
+    return isNaN(parsed.getTime()) ? new Date() : parsed;
+  }
+  return new Date();
+};
 
 export default function DashboardScreen() {
   const colors = useColors();
@@ -125,7 +145,7 @@ export default function DashboardScreen() {
           id: doc.id,
           ...doc.data()
         } as any));
-        
+
         setTodayPlan({
           id: 'current-plan',
           name: 'Meus Exercícios',
@@ -140,7 +160,7 @@ export default function DashboardScreen() {
       }
       setLoading(false);
     }, (error) => {
-      console.error('Error fetching plans:', error);
+      log.error('HOME', 'Error fetching plans', error);
       // Fallback logic
       setLoading(false);
     });
@@ -156,23 +176,33 @@ export default function DashboardScreen() {
       limit(1)
     );
 
-    const unsubscribeAppointments = onSnapshot(appointmentsQuery, (snapshot) => {
-      if (!snapshot.empty) {
-        const apptDoc = snapshot.docs[0];
-        const apptData = apptDoc.data();
-        setNextAppointment({
-          id: apptDoc.id,
-          date: apptData.date, // ISO string in root collection
-          time: apptData.start_time,
-          type: apptData.type || 'Fisioterapia',
-          professional_name: apptData.therapist_name || 'Fisioterapeuta',
-        } as any);
+    const unsubscribeAppointments = onSnapshot(
+      appointmentsQuery,
+      (snapshot) => {
+        if (!snapshot.empty) {
+          const apptDoc = snapshot.docs[0];
+          const apptData = apptDoc.data();
+          setNextAppointment({
+            id: apptDoc.id,
+            date: apptData.date, // ISO string in root collection
+            time: apptData.start_time,
+            type: apptData.type || 'Fisioterapia',
+            professional_name: apptData.therapist_name || 'Fisioterapeuta',
+          } as any);
+          return;
+        }
+
+        setNextAppointment(null);
+      },
+      (error) => {
+        log.error('HOME', 'Error fetching appointments:', error);
+        setNextAppointment(null);
       }
-    });
+    );
 
     return () => {
-      // unsubscribePlans(); // Commented as it was causing issues
-      // unsubscribeAppointments();
+      unsubscribePlans();
+      unsubscribeAppointments();
     };
   }, [user?.id]);
 
@@ -191,19 +221,14 @@ export default function DashboardScreen() {
   const completedCount = todayPlan?.exercises.filter(e => e.completed).length || 0;
   const totalCount = todayPlan?.exercises.length || 0;
   const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+  const xpRemaining = Math.max(xpPerLevel - currentXp, 0);
 
   const getNextAppointmentLabel = () => {
     if (!nextAppointment) return null;
 
-    let apptDate: Date;
-    if (typeof nextAppointment.date === 'string') {
-      apptDate = new Date(nextAppointment.date);
-    } else {
-      apptDate = nextAppointment.date?.toDate();
-    }
-    
-    if (!apptDate || isNaN(apptDate.getTime())) return null;
+    const apptDate: Date = parseDate(nextAppointment.date);
 
+    if (!apptDate || isNaN(apptDate.getTime())) return null;
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -236,9 +261,9 @@ export default function DashboardScreen() {
               {getTodayLabel()}
             </Text>
           </View>
-          
+
           <View style={styles.headerRight}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.levelBadge, { backgroundColor: colors.primary }]}
               onPress={() => router.push('/(tabs)/profile')}
             >
@@ -264,11 +289,14 @@ export default function DashboardScreen() {
             <Text style={[styles.xpLabel, { color: colors.textSecondary }]}>Progresso do Nível</Text>
             <Text style={[styles.xpValue, { color: colors.text }]}>{currentXp}/{xpPerLevel} XP</Text>
           </View>
-          <LinearProgress 
-            progress={progressPercentage / 100} 
+          <LinearProgress
+            progress={progressPercentage / 100}
             color={colors.primary}
             style={styles.xpBar}
           />
+          <Text style={[styles.xpHint, { color: colors.textSecondary }]}>
+            Faltam {xpRemaining} XP para o próximo nível
+          </Text>
         </View>
 
         {loading ? (
@@ -278,7 +306,7 @@ export default function DashboardScreen() {
         ) : (
           <>
             {/* Today's Progress */}
-            <View style={styles.statsRow}>
+            <View style={styles.statsGrid}>
               <StatCard
                 icon="checkmark-circle"
                 label="Feitos hoje"
@@ -299,6 +327,7 @@ export default function DashboardScreen() {
                 value={getNextAppointmentLabel() || '--'}
                 color={colors.info}
                 colors={colors}
+                fullWidth
               />
             </View>
 
@@ -311,13 +340,21 @@ export default function DashboardScreen() {
                       <Ionicons name="barbell" size={20} color={colors.primary} />
                     </View>
                     <View>
-                      <Text style={[styles.sectionTitle, { color: colors.text }]}>Exercícios de Hoje</Text>
-                      <Text style={[styles.sectionSubtitle, { color: colors.textSecondary }]}>
+                      <Text style={[styles.sectionTitle, { color: colors.text }]} numberOfLines={1}>
+                        Exercícios de Hoje
+                      </Text>
+                      <Text
+                        style={[styles.sectionSubtitle, { color: colors.textSecondary }]}
+                        numberOfLines={1}
+                      >
                         {todayPlan.name}
                       </Text>
                     </View>
                   </View>
-                  <TouchableOpacity onPress={() => router.push('/(tabs)/exercises')}>
+                  <TouchableOpacity
+                    onPress={() => router.push('/(tabs)/exercises')}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
                     <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
                   </TouchableOpacity>
                 </View>
@@ -328,7 +365,10 @@ export default function DashboardScreen() {
                       key={exercise.id}
                       style={[
                         styles.exerciseItem,
-                        { backgroundColor: exercise.completed ? colors.success + '10' : 'transparent' }
+                        {
+                          backgroundColor: exercise.completed ? colors.success + '10' : colors.surfaceHover,
+                          borderColor: exercise.completed ? colors.success + '30' : colors.border,
+                        },
                       ]}
                     >
                       <View
@@ -352,6 +392,7 @@ export default function DashboardScreen() {
                             styles.exerciseName,
                             { color: exercise.completed ? colors.success : colors.text }
                           ]}
+                          numberOfLines={1}
                         >
                           {exercise.name}
                         </Text>
@@ -395,6 +436,15 @@ export default function DashboardScreen() {
               </Card>
             )}
 
+            {!todayPlan && (
+              <Card style={styles.emptyCard}>
+                <Text style={[styles.emptyTitle, { color: colors.text }]}>Sem exercícios hoje</Text>
+                <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
+                  Quando seu plano estiver disponível, ele aparecerá aqui.
+                </Text>
+              </Card>
+            )}
+
             {/* Next Appointment Card */}
             {nextAppointment && (
               <Card style={styles.appointmentCard}>
@@ -409,8 +459,34 @@ export default function DashboardScreen() {
                     <Text style={[styles.appointmentTime, { color: colors.text }]}>
                       {getNextAppointmentLabel() || '--'}
                     </Text>
-                    <Text style={[styles.appointmentDetails, { color: colors.textSecondary }]}>
+                    <Text
+                      style={[styles.appointmentDetails, { color: colors.textSecondary }]}
+                      numberOfLines={1}
+                    >
                       {nextAppointment.type} com {nextAppointment.professional_name}
+                    </Text>
+                  </View>
+                </View>
+              </Card>
+            )}
+            {!nextAppointment && (
+              <Card style={styles.appointmentCard}>
+                <View style={styles.appointmentHeader}>
+                  <View style={[styles.appointmentIcon, { backgroundColor: colors.surfaceHover }]}>
+                    <Ionicons name="calendar" size={22} color={colors.textSecondary} />
+                  </View>
+                  <View style={styles.appointmentInfo}>
+                    <Text style={[styles.appointmentLabel, { color: colors.textSecondary }]}>
+                      Próxima Consulta
+                    </Text>
+                    <Text style={[styles.appointmentTime, { color: colors.text }]}>
+                      Nenhuma consulta agendada
+                    </Text>
+                    <Text
+                      style={[styles.appointmentDetails, { color: colors.textSecondary }]}
+                      numberOfLines={1}
+                    >
+                      Agende uma nova consulta quando precisar
                     </Text>
                   </View>
                 </View>
@@ -457,18 +533,34 @@ function StatCard({
   value,
   color,
   colors,
+  fullWidth = false,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   value: string;
   color: string;
   colors: any;
+  fullWidth?: boolean;
 }) {
   return (
-    <Card style={[styles.statCard, { backgroundColor: colors.surface }]}>
-      <Ionicons name={icon} size={24} color={color} />
-      <Text style={[styles.statValue, { color: colors.text }]}>{value}</Text>
-      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{label}</Text>
+    <Card
+      style={[
+        styles.statCard,
+        fullWidth && styles.statCardFull,
+        { backgroundColor: colors.surface },
+      ]}
+    >
+      <View style={styles.statHeader}>
+        <View style={[styles.statIconWrap, { backgroundColor: color + '15' }]}>
+          <Ionicons name={icon} size={18} color={color} />
+        </View>
+        <Text style={[styles.statLabel, { color: colors.textSecondary }]} numberOfLines={1}>
+          {label}
+        </Text>
+      </View>
+      <Text style={[styles.statValue, { color: colors.text }]} numberOfLines={2}>
+        {value}
+      </Text>
     </Card>
   );
 }
@@ -478,7 +570,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
+    padding: Spacing.screen,
     paddingBottom: 32,
   },
   header: {
@@ -533,6 +625,10 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
   },
+  xpHint: {
+    marginTop: 6,
+    fontSize: 12,
+  },
   greeting: {
     fontSize: 14,
     marginBottom: 4,
@@ -562,34 +658,53 @@ const styles = StyleSheet.create({
     padding: 40,
     alignItems: 'center',
   },
-  statsRow: {
+  statsGrid: {
     flexDirection: 'row',
-    gap: 12,
+    flexWrap: 'wrap',
+    gap: CARD_GAP,
     marginBottom: 20,
   },
   statCard: {
-    flex: 1,
-    padding: 16,
+    width: HALF_CARD_WIDTH,
+    padding: 14,
+    alignItems: 'flex-start',
+    gap: 10,
+    minHeight: 96,
+  },
+  statCardFull: {
+    width: FULL_CARD_WIDTH,
+    minHeight: 88,
+  },
+  statHeader: {
+    width: '100%',
+    flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
+  statIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   statValue: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
+    lineHeight: 22,
   },
   statLabel: {
     fontSize: 12,
-    textAlign: 'center',
   },
   sectionCard: {
-    marginBottom: 20,
-    padding: 16,
+    marginBottom: 16,
+    padding: Spacing.card,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   sectionHeaderLeft: {
     flexDirection: 'row',
@@ -597,68 +712,72 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   sectionIcon: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
+    lineHeight: 22,
   },
   sectionSubtitle: {
-    fontSize: 13,
+    fontSize: 12,
+    marginTop: 2,
   },
   exercisesList: {
-    gap: 8,
+    gap: 10,
   },
   exerciseItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    padding: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     borderRadius: 12,
+    borderWidth: 1,
   },
   exerciseIndex: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   exerciseIndexText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
   },
   exerciseInfo: {
     flex: 1,
   },
   exerciseName: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
     marginBottom: 2,
   },
   exerciseMeta: {
-    fontSize: 13,
+    fontSize: 12,
   },
   seeMoreButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 4,
-    paddingVertical: 12,
-    marginTop: 8,
+    paddingVertical: 10,
+    marginTop: 6,
   },
   seeMoreText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
   completedBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    padding: 16,
+    padding: 14,
     borderRadius: 12,
     marginTop: 12,
   },
@@ -673,9 +792,22 @@ const styles = StyleSheet.create({
   completedSubtitle: {
     fontSize: 13,
   },
+  emptyCard: {
+    padding: Spacing.card,
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  emptySubtitle: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
   appointmentCard: {
-    padding: 16,
-    marginBottom: 20,
+    padding: Spacing.card,
+    marginBottom: 16,
   },
   appointmentHeader: {
     flexDirection: 'row',
@@ -709,10 +841,11 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   quickActionCard: {
-    width: (Dimensions) => ((Dimensions.get('window').width - 32 - 12) / 2) - 6,
-    aspectRatio: 1,
+    width: HALF_CARD_WIDTH,
+    minHeight: 104,
+    aspectRatio: 0.9,
     borderRadius: 16,
-    padding: 16,
+    padding: 14,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,

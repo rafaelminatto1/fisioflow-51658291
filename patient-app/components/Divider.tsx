@@ -85,10 +85,10 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   verticalText: {
-    writingDirection: 'vertical',
     fontSize: 12,
     fontWeight: '500',
     marginVertical: 8,
+    transform: [{ rotate: '90deg' }],
   },
   listDivider: {
     height: 1,

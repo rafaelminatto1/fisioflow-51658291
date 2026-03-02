@@ -187,19 +187,7 @@ export function useFilteredAppointments(
     enabled: enabled && !!periodQuery.organizationId,
   });
 
-  // If no filters are active, return base data directly
-  // This ensures cache restoration when filters are cleared
-  if (!filtersActive) {
-    return {
-      data: baseAppointments,
-      isLoading: baseLoading,
-      error: baseError,
-      refetch: baseRefetch,
-      isFiltered: false,
-      filterCount: 0,
-      totalCount: baseAppointments.length,
-    };
-  }
+
 
   // Use a separate query for filtered results
   // This allows us to cache filtered results independently
@@ -215,6 +203,20 @@ export function useFilteredAppointments(
     // Keep previous data while refetching
     placeholderData: (previousData) => previousData,
   });
+
+  // If no filters are active, return base data directly
+  // This ensures cache restoration when filters are cleared
+  if (!filtersActive) {
+    return {
+      data: baseAppointments,
+      isLoading: baseLoading,
+      error: baseError,
+      refetch: baseRefetch,
+      isFiltered: false,
+      filterCount: 0,
+      totalCount: baseAppointments.length,
+    };
+  }
 
   return {
     data: filteredQuery.data || [],

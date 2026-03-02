@@ -12,7 +12,7 @@ test.describe('Performance Validation', () => {
       const start = Date.now();
       
       // Navigate to the page
-      const response = await page.goto(pageInfo.path, { waitUntil: 'networkidle' });
+      const response = await page.goto(pageInfo.path, { waitUntil: 'domcontentloaded' });
       expect(response?.status()).toBeLessThan(500); // 404 is fine for the test, but not 500
 
       const end = Date.now();

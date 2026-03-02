@@ -276,10 +276,8 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   useEffect(() => {
     let mounted = true;
-    let timeoutId: NodeJS.Timeout;
-
     // Timeout de segurança - se após 10s ainda estiver carregando, força conclusão
-    timeoutId = setTimeout(() => {
+    const timeoutId: NodeJS.Timeout = setTimeout(() => {
       if (mounted && loading) {
         logger.warn('Auth initialization timeout - forcing completion', null, 'AuthContextProvider');
         setLoading(false);
