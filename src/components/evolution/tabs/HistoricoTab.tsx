@@ -40,6 +40,19 @@ interface HistoricoTabProps {
   onCopyEvolution: (evolution: Evolution) => void;
   showComparison: boolean;
   onToggleComparison: () => void;
+  goals?: Array<{
+    id: string;
+    goal_title: string;
+    status: string;
+    current_progress: number;
+    priority: string;
+  }>;
+  pathologies?: Array<{
+    id: string;
+    pathology_name: string;
+    status: string;
+    severity?: string;
+  }>;
 }
 
 export function HistoricoTab({
@@ -49,6 +62,8 @@ export function HistoricoTab({
   onCopyEvolution,
   showComparison,
   onToggleComparison,
+  goals = [],
+  pathologies = [],
 }: HistoricoTabProps) {
   return (
     <div className="mt-4">
@@ -60,6 +75,8 @@ export function HistoricoTab({
           onCopyEvolution={onCopyEvolution}
           showComparison={showComparison}
           onToggleComparison={onToggleComparison}
+          goals={goals}
+          pathologies={pathologies}
         />
       </Suspense>
     </div>
