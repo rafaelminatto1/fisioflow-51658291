@@ -11,7 +11,7 @@ import {
 import { memo } from 'react';
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Início', href: '/' },
+  { icon: LayoutDashboard, label: 'Início', href: '/agenda' },
   { icon: Users, label: 'Pacientes', href: '/patients' },
   { icon: Dumbbell, label: 'Exercícios', href: '/exercises' },
   { icon: DollarSign, label: 'Financeiro', href: '/financial' },
@@ -22,7 +22,7 @@ export const BottomNavigation = memo(function BottomNavigation() {
   const navigate = useNavigate();
 
   return (
-    <nav 
+    <nav
       id="mobile-navigation"
       role="navigation"
       aria-label="Navegação móvel"
@@ -66,7 +66,7 @@ export const BottomNavigation = memo(function BottomNavigation() {
 
         {/* Central Add Button - Otimizado para touch */}
         <button
-          onClick={() => navigate('/schedule')}
+          onClick={() => navigate('/agenda')}
           className="flex items-center justify-center w-14 h-14 sm:w-16 sm:h-14 bg-gradient-to-br from-primary to-primary-hover text-white rounded-2xl shadow-lg shadow-primary/30 -mt-6 border-4 border-white dark:border-background-dark hover:shadow-xl hover:shadow-primary/40 hover:scale-105 active:scale-95 transition-all duration-200 touch-target"
           aria-label="Novo agendamento"
         >

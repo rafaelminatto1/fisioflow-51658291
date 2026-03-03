@@ -145,7 +145,7 @@ export default function NewEvaluationPage() {
                 await AppointmentService.updateStatus(appointmentId, 'realizado');
             }
 
-            navigate('/schedule');
+            navigate('/agenda');
         } catch (error) {
             logger.error('Erro ao salvar avaliação', error, 'NewEvaluationPage');
             toast({
@@ -183,7 +183,7 @@ export default function NewEvaluationPage() {
                 {/* Header Actions */}
                 <div className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b px-6 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="icon" onClick={() => navigate('/schedule')}>
+                        <Button variant="ghost" size="icon" onClick={() => navigate('/agenda')}>
                             <ArrowLeft className="h-5 w-5" />
                         </Button>
                         <div>

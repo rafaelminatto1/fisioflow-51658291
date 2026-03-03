@@ -792,7 +792,7 @@ const PatientEvolution = () => {
             title: 'Atendimento concluído',
             description: 'O atendimento foi marcado como concluído com sucesso.'
           });
-          setTimeout(() => navigate('/schedule'), 1500);
+          setTimeout(() => navigate('/agenda'), 1500);
         }
       });
     }
@@ -1119,7 +1119,7 @@ const PatientEvolution = () => {
             <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
             <p className="text-lg font-semibold">ID do agendamento não fornecido</p>
             <p className="text-muted-foreground">Não foi possível identificar qual atendimento deve ser iniciado.</p>
-            <Button onClick={() => navigate('/schedule')} variant="outline">
+            <Button onClick={() => navigate('/agenda')} variant="outline">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Voltar para Agenda
             </Button>
@@ -1188,6 +1188,18 @@ const PatientEvolution = () => {
                     </ul>
                   </AlertDescription>
                 </Alert>
+                <div className="flex justify-center mt-6">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      window.location.reload();
+                    }}
+                    className="gap-2"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                    Tentar Novamente
+                  </Button>
+                </div>
               </>
             ) : isPermissionError ? (
               <>
@@ -1228,7 +1240,7 @@ const PatientEvolution = () => {
             />
 
             <div className="flex gap-2 justify-center mt-4">
-              <Button onClick={() => navigate('/schedule')} variant="outline">
+              <Button onClick={() => navigate('/agenda')} variant="outline">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Voltar para Agenda
               </Button>
