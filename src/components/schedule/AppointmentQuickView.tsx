@@ -613,16 +613,12 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
         // Mobile: use Drawer (Bottom Sheet)
         <Drawer open={open} onOpenChange={onOpenChange}>
           <DrawerTrigger asChild>
-            <span
-              className="contents"
-              role="button"
-              tabIndex={0}
-              aria-haspopup="dialog"
-              aria-expanded={open}
-              aria-label={`Ver detalhes do agendamento de ${appointment.patientName}`}
-            >
-              {children}
-            </span>
+            {React.isValidElement(children) ? React.cloneElement(children as React.ReactElement<any>, {
+              'data-appointment-popover-anchor': appointment.id,
+              'aria-haspopup': 'dialog',
+              'aria-expanded': open,
+              'aria-label': `Ver detalhes do agendamento de ${appointment.patientName}`
+            }) : <span data-appointment-popover-anchor={appointment.id}>{children}</span>}
           </DrawerTrigger>
           <DrawerContent className="max-h-[90vh]">
             <DrawerHeader className="text-left border-b pb-4 hidden">
@@ -639,9 +635,11 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
         // Desktop: use Popover (side panel)
         <Popover open={open} onOpenChange={onOpenChange}>
           <PopoverAnchor asChild>
-            <div className="contents" style={{ outline: 'none' }} data-appointment-popover-anchor={appointment.id}>
-              {children}
-            </div>
+            {React.isValidElement(children)
+              ? React.cloneElement(children as React.ReactElement<any>, {
+                'data-appointment-popover-anchor': appointment.id
+              })
+              : <div data-appointment-popover-anchor={appointment.id}>{children}</div>}
           </PopoverAnchor>
           <PopoverContent
             className="w-[340px] max-w-sm p-0 bg-card border border-border shadow-2xl z-50 rounded-2xl overflow-hidden"
