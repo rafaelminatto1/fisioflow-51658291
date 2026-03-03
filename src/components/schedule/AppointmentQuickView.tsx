@@ -8,6 +8,7 @@ import {
   Popover,
   PopoverContent,
   PopoverAnchor,
+  PopoverTrigger,
 } from '@/components/ui/popover';
 import {
   Drawer,
@@ -638,7 +639,9 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
         // Desktop: use Popover (side panel)
         <Popover open={open} onOpenChange={onOpenChange}>
           <PopoverAnchor asChild>
-            {children}
+            <div className="contents" style={{ outline: 'none' }} data-appointment-popover-anchor={appointment.id}>
+              {children}
+            </div>
           </PopoverAnchor>
           <PopoverContent
             className="w-[340px] max-w-sm p-0 bg-card border border-border shadow-2xl z-50 rounded-2xl overflow-hidden"
@@ -649,6 +652,13 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             role="dialog"
             aria-modal="false"
             aria-label={`Detalhes do agendamento de ${appointment.patientName}`}
+            onInteractOutside={(e) => {
+              const target = e.target as HTMLElement;
+              // Prevent closing when clicking the card itself (which initially opened the popover)
+              if (target.closest(`[data-appointment-popover-anchor="${appointment.id}"]`)) {
+                e.preventDefault();
+              }
+            }}
           >
             <AnimatePresence mode="wait">
               <motion.div
