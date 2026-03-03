@@ -186,8 +186,8 @@ export const CalendarWeekViewDndKit = memo(({
 
   // Force fit all weekly slots (07:00-21:00) in visible height while respecting user compactness preference.
   const slotHeight = useMemo(() => {
-    return Math.max(MIN_WEEK_SLOT_HEIGHT, Math.min(preferredSlotHeight, fitSlotHeight));
-  }, [fitSlotHeight, preferredSlotHeight]);
+    return Math.max(MIN_WEEK_SLOT_HEIGHT, fitSlotHeight);
+  }, [fitSlotHeight]);
 
   // Keep a stable ref to the current slot count so ResizeObserver callbacks always
   // use the latest value without causing the whole useLayoutEffect to re-run every
@@ -299,7 +299,7 @@ export const CalendarWeekViewDndKit = memo(({
       }
       observer?.disconnect();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount only — slot count changes are handled via timeSlotsLengthRef
 
   // Current time indicator
@@ -597,7 +597,6 @@ export const CalendarWeekViewDndKit = memo(({
                   left: style.left,
                   width: style.width,
                   zIndex: 10 + (style.zIndex as number || 0),
-                  marginTop: 0,
                 };
 
                 return (
@@ -637,8 +636,9 @@ export const CalendarWeekViewDndKit = memo(({
               })}
             </DroppableTimeSlot>
           );
-        })}
-      </div>
+        })
+        }
+      </div >
     );
   }, [
     slotHeight,

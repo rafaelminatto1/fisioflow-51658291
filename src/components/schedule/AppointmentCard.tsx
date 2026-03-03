@@ -17,6 +17,7 @@ interface AppointmentCardProps {
   onClick?: () => void;
   variant?: 'compact' | 'expanded';
   className?: string;
+  'data-appointment-popover-anchor'?: string;
 }
 
 /**
@@ -41,12 +42,13 @@ function arePropsEqual(
   );
 }
 
-export const AppointmentCard: React.FC<AppointmentCardProps> = memo(({
+export const AppointmentCard = memo(React.forwardRef<HTMLDivElement, AppointmentCardProps>(({
   appointment,
   onClick,
   variant = 'expanded',
-  className
-}) => {
+  className,
+  'data-appointment-popover-anchor': dataAnchor
+}, ref) => {
   const isOverbooked = !!appointment.isOverbooked;
   // Use shared status config
   const statusConfig = getStatusConfig(appointment.status);
@@ -89,6 +91,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = memo(({
   if (variant === 'compact') {
     return (
       <motion.div
+        ref={ref}
         whileTap={{ scale: 0.98 }}
         onClick={handleClick}
         className={cn(
@@ -99,6 +102,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = memo(({
           isOverbooked && 'border-red-500 bg-red-50/50 dark:bg-red-900/20',
           className
         )}
+        data-appointment-popover-anchor={dataAnchor}
       >
         {/* Status Indicator Strip */}
         <div className={cn(
@@ -130,6 +134,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = memo(({
 
   return (
     <motion.div
+      ref={ref}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       whileTap={{ scale: 0.99 }}
@@ -145,6 +150,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = memo(({
         'cursor-pointer',
         className
       )}
+      data-appointment-popover-anchor={dataAnchor}
     >
       {/* Top Status Gradient (Refined) */}
       <div className={cn(
@@ -244,6 +250,6 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = memo(({
       </div>
     </motion.div>
   );
-}, arePropsEqual);
+}), arePropsEqual);
 
 AppointmentCard.displayName = 'AppointmentCard';
