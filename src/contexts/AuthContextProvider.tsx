@@ -22,7 +22,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
   const [sessionCheckFailed, _setSessionCheckFailed] = useState(false);
-  const { _toast } = useToast();
+  const { toast: _toast } = useToast();
   const queryClient = useQueryClient();
   const prefetchedOrgIdsRef = useRef(new Set<string>());
 
@@ -44,6 +44,12 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         },
         staleTime: 1000 * 60 * 5,
       });
+
+      // Prefetch critical route JS chunks so they are ready when the user navigates.
+      // This eliminates the lazy-load waterfall on first navigation after login.
+      import('@/pages/PatientEvolution').catch(() => { });
+      import('@/pages/patients/PatientProfilePage').catch(() => { });
+      import('@/pages/patients/NewEvaluationPage').catch(() => { });
 
       // Prefetch analytics summary
       // NOTE: analytics-summary / dashboard-metrics prefetch removed because
@@ -147,7 +153,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
             updateDoc(profileRef, {
               organization_id: pgOrgId,
               updated_at: new Date().toISOString()
-            }).catch(err => logger.error('Failed to update profile organization_id', err, 'AuthContextProvider'));
+            }).catch((err: unknown) => logger.error('Failed to update profile organization_id', err, 'AuthContextProvider'));
           }
         }).catch(err => logger.warn('PG Sync failed', err));
 
@@ -306,7 +312,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
               prefetchDashboardData(profileData.organization_id);
             }
           }
-        }).catch(err => {
+        }).catch((err: unknown) => {
           logger.error('Erro ao carregar perfil', err, 'AuthContextProvider');
           // Não bloquear a UI mesmo se o perfil falhar
         });
