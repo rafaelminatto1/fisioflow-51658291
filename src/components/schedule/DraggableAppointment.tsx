@@ -9,6 +9,7 @@ interface DraggableAppointmentProps {
   isDragging: boolean;
   isDragDisabled?: boolean;
   isPopoverOpen?: boolean;
+  dragData?: Record<string, unknown>;
   'data-appointment-popover-anchor'?: string;
 }
 

@@ -13,9 +13,12 @@ import {
   File,
   Eye,
   Upload,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { uploadFile } from '@/lib/firebase/storage';
+import { toast } from 'sonner';
 import {
   Dialog,
   DialogContent,
@@ -36,6 +39,7 @@ interface Attachment {
 
 interface AttachmentsBlockProps {
   patientId?: string;
+  evolutionId?: string;
   value: string[];
   onChange: (attachments: string[]) => void;
   disabled?: boolean;
@@ -82,6 +86,7 @@ const getFileTypeFromName = (name: string): 'image' | 'document' | 'other' => {
 
 export const AttachmentsBlock: React.FC<AttachmentsBlockProps> = ({
   patientId,
+  evolutionId,
   value = [],
   onChange,
   disabled = false,
@@ -89,6 +94,7 @@ export const AttachmentsBlock: React.FC<AttachmentsBlockProps> = ({
 }) => {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>(() => {
     return value.map((url, i) => {
@@ -138,24 +144,47 @@ export const AttachmentsBlock: React.FC<AttachmentsBlockProps> = ({
     }
   }, []);
 
-  const handleUpload = useCallback(() => {
-    if (!selectedFile) return;
+  const handleUpload = useCallback(async () => {
+    if (!selectedFile || !patientId) {
+      if (!patientId) toast.error('ID do paciente não fornecido.');
+      return;
+    }
 
-    const fakeUrl = URL.createObjectURL(selectedFile);
-    const newAttachment: Attachment = {
-      id: `att_${Date.now()}`,
-      name: selectedFile.name,
-      url: fakeUrl,
-      type: getFileTypeFromName(selectedFile.name),
-      size: selectedFile.size,
-    };
+    setIsUploading(true);
+    const safeEvolutionId = (evolutionId || 'draft').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const folder = selectedFile.type.startsWith('image/')
+      ? `patients/${patientId}/evolutions/${safeEvolutionId}`
+      : `patients/${patientId}/documents/${safeEvolutionId}`;
 
-    const updated = [...attachments, newAttachment];
-    setAttachments(updated);
-    onChange(updated.map((a) => a.url));
-    setSelectedFile(null);
-    setUploadModalOpen(false);
-  }, [selectedFile, attachments, onChange]);
+    try {
+      const result = await uploadFile(selectedFile, {
+        folder,
+        contentType: selectedFile.type,
+        resumable: true,
+        includeUserIdPath: false
+      });
+
+      const newAttachment: Attachment = {
+        id: `att_${Date.now()}`,
+        name: selectedFile.name,
+        url: result.url,
+        type: getFileTypeFromName(selectedFile.name),
+        size: selectedFile.size,
+      };
+
+      const updated = [...attachments, newAttachment];
+      setAttachments(updated);
+      onChange(updated.map((a) => a.url));
+      setSelectedFile(null);
+      setUploadModalOpen(false);
+      toast.success('Arquivo enviado com sucesso!');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Erro ao enviar arquivo.');
+    } finally {
+      setIsUploading(false);
+    }
+  }, [selectedFile, attachments, onChange, patientId, evolutionId]);
 
   const handleRemove = useCallback((id: string) => {
     const updated = attachments.filter((a) => a.id !== id);
@@ -335,10 +364,14 @@ export const AttachmentsBlock: React.FC<AttachmentsBlockProps> = ({
                 </Button>
                 <Button
                   onClick={handleUpload}
-                  disabled={!selectedFile}
+                  disabled={!selectedFile || isUploading}
                   className="rounded-lg"
                 >
-                  <Upload className="h-4 w-4 mr-2" />
+                  {isUploading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4 mr-2" />
+                  )}
                   Anexar Arquivo
                 </Button>
               </DialogFooter>

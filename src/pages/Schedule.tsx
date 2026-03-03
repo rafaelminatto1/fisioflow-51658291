@@ -43,7 +43,7 @@ import {
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { RouteKeys, PrefetchStrategy } from '@/lib/routing/routePrefetch';
+import { RouteKeys } from '@/lib/routing/routePrefetch';
 
 // Kick off the CalendarView chunk download immediately at module evaluation
 // so it runs in parallel with Schedule's own execution (eliminates waterfall).
@@ -424,18 +424,7 @@ const Schedule = () => {
     }, 'Schedule');
   }, [appointments.length, loading, viewType]);
 
-  // Prefetch de rotas relacionadas quando a agenda está carregada
-  useEffect(() => {
-    PrefetchStrategy.onMount(RouteKeys.PATIENT_EVOLUTION,
-      () => import('./PatientEvolution').then(m => ({ default: m.PatientEvolution }))
-    );
-    PrefetchStrategy.onMount(RouteKeys.PATIENT_PROFILE,
-      () => import('./patients/PatientProfilePage').then(m => ({ default: m.PatientProfilePage }))
-    );
-    PrefetchStrategy.onMount(RouteKeys.EVALUATION_NEW,
-      () => import('./patients/NewEvaluationPage').then(m => ({ default: m.NewEvaluationPage }))
-    );
-  }, []);
+
 
   // Clear reschedule success announcement after 3s (screen reader already heard it)
   useEffect(() => {
