@@ -102,62 +102,62 @@ export const useAppointmentData = (
             try {
                 // 1. Try direct get first (most efficient)
                 const data = await patientsApi.get(patientId);
-                return mapPatientDBToApp(data);
+                if (data) return mapPatientDBToApp(data);
+                throw new Error(`Patient API returned empty for ID: ${patientId}`);
             } catch (err) {
-                console.warn(`[useAppointmentData] Direct fetch failed for ${patientId}, trying fallbacks...`, err);
+                fisioLogger.warn(`[useAppointmentData] Direct fetch failed for ${patientId}`, { error: err }, 'useAppointmentData');
 
-                // 2. Smart Fallback: Search by name if available (O(1) lookup effectively)
-                const patientName = appointment?.patientName;
+                // 2. Smart Fallback: Search by name if available
+                const patientName = appointment?.patientName || appointment?.patient?.full_name || options?.initialPatientData?.full_name;
                 if (patientName) {
                     try {
+                        fisioLogger.debug(`[useAppointmentData] Attempting fallback by name: ${patientName}`, undefined, 'useAppointmentData');
                         const searchResult = await patientsApi.list({
                             search: patientName,
-                            limit: 5 // Keep it tight, we expect exact name match or close to it
+                            limit: 10
                         });
                         const found = searchResult.data.find((p: any) =>
-                            p.id === patientId || p.objectID === patientId
+                            p.id === patientId || p.objectID === patientId || p.uuid === patientId
                         );
                         if (found) {
-                            console.log(`[useAppointmentData] Found patient via name search fallback: ${patientName}`);
+                            fisioLogger.info(`[useAppointmentData] Found patient via name search fallback: ${patientName}`, { patientId }, 'useAppointmentData');
                             return mapPatientDBToApp(found);
                         }
                     } catch (searchErr) {
-                        console.warn(`[useAppointmentData] Name search fallback failed`, searchErr);
+                        fisioLogger.warn(`[useAppointmentData] Name search fallback failed`, { error: searchErr }, 'useAppointmentData');
                     }
                 }
 
-                // 3. Last Resort Fallback: List recent/active patients
-                // Reduced limit from 2000 to 100 for performance. 
-                // If the patient isn't in the top 100 active/recent, they likely need manual refresh or there's a bigger issue.
+                // 3. Fallback: List recent patients and filter manually
+                // Sometimes IDs might be indexed differently (objectID vs id vs uuid)
                 try {
+                    fisioLogger.debug('[useAppointmentData] Attempting fallback by listing recent patients', undefined, 'useAppointmentData');
                     const fallbackData = await patientsApi.list({
                         limit: 100,
-                        status: 'Em Tratamento' // Prioritize active patients
+                        status: 'Em Tratamento'
                     });
 
                     const found = fallbackData.data.find((p: any) =>
-                        p.id === patientId || p.objectID === patientId
+                        p.id === patientId || p.objectID === patientId || p.uuid === patientId
                     );
 
                     if (found) {
-                        console.log('[useAppointmentData] Found patient via list fallback');
+                        fisioLogger.info('[useAppointmentData] Found patient via list fallback', { patientId }, 'useAppointmentData');
                         return mapPatientDBToApp(found);
                     }
                 } catch (fallbackErr) {
-                    console.error('[useAppointmentData] All fallbacks failed', fallbackErr);
+                    fisioLogger.error('[useAppointmentData] All patient fallbacks failed', { error: fallbackErr, patientId }, 'useAppointmentData');
                 }
 
-                // If all else fails, throw the original error to let React Query handle retry/error state
-                // OR return initialData if we have it (handled by initialData prop, but query fails)
+                // If all else fails, rethrow to trigger UI error state
                 throw err;
             }
         },
         enabled: !!patientId,
         initialData: (appointment?.patient || options?.initialPatientData) as Patient | undefined,
         initialDataUpdatedAt: (appointment || options?.initialPatientData) ? Date.now() : undefined,
-        retry: 3,
+        retry: 2, // Reducing retries slightly since we have internal fallbacks
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-        // Se veio do appointment ou navigation, considera fresco por 5 min
         staleTime: 1000 * 60 * 5,
     });
 

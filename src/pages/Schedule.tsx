@@ -443,11 +443,29 @@ const Schedule = () => {
 
   // Deep linking: sync view + date to URL for sharing and back/forward
   useEffect(() => {
-    setSearchParams(
-      { view: viewType, date: format(currentDate, 'yyyy-MM-dd') },
-      { replace: true }
-    );
-  }, [viewType, currentDate, setSearchParams]);
+    const params: Record<string, string> = {};
+    const defaultView = isMobile ? 'day' : 'week';
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    const currentDateStr = format(currentDate, 'yyyy-MM-dd');
+
+    // Only add view to URL if it's not the default
+    if (viewType !== defaultView) {
+      params.view = viewType;
+    }
+
+    // Only add date to URL if it's not today
+    if (currentDateStr !== todayStr) {
+      params.date = currentDateStr;
+    }
+
+    // Check if we need to update search params
+    const currentViewParam = searchParams.get('view');
+    const currentDateParam = searchParams.get('date');
+
+    if (currentViewParam !== (params.view || null) || currentDateParam !== (params.date || null)) {
+      setSearchParams(params, { replace: true });
+    }
+  }, [viewType, currentDate, setSearchParams, isMobile, searchParams]);
 
   // Process ?edit= and ?patientId= from URL
   useEffect(() => {
