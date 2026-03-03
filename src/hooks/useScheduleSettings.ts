@@ -92,8 +92,8 @@ export function useScheduleSettings() {
 
   const organizationId = profile?.organization_id;
 
-  // Cache por 2 min para evitar refetch ao trocar de aba
-  const STALE_TIME_MS = 2 * 60 * 1000;
+  // Cache por 10 min — configs de agenda mudam raramente
+  const STALE_TIME_MS = 10 * 60 * 1000;
 
   // Business Hours
   const { data: businessHours, isLoading: isLoadingHours } = useQuery({

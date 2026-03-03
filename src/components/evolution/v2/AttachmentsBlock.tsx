@@ -13,6 +13,7 @@ import {
   File,
   Eye,
   Upload,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -36,6 +37,7 @@ interface Attachment {
 
 interface AttachmentsBlockProps {
   patientId?: string;
+  evolutionId?: string;
   value: string[];
   onChange: (attachments: string[]) => void;
   disabled?: boolean;
@@ -82,6 +84,7 @@ const getFileTypeFromName = (name: string): 'image' | 'document' | 'other' => {
 
 export const AttachmentsBlock: React.FC<AttachmentsBlockProps> = ({
   patientId,
+  evolutionId,
   value = [],
   onChange,
   disabled = false,
@@ -89,6 +92,7 @@ export const AttachmentsBlock: React.FC<AttachmentsBlockProps> = ({
 }) => {
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>(() => {
     return value.map((url, i) => {
@@ -138,24 +142,48 @@ export const AttachmentsBlock: React.FC<AttachmentsBlockProps> = ({
     }
   }, []);
 
-  const handleUpload = useCallback(() => {
+  const handleUpload = useCallback(async () => {
     if (!selectedFile) return;
 
-    const fakeUrl = URL.createObjectURL(selectedFile);
-    const newAttachment: Attachment = {
-      id: `att_${Date.now()}`,
-      name: selectedFile.name,
-      url: fakeUrl,
-      type: getFileTypeFromName(selectedFile.name),
-      size: selectedFile.size,
-    };
+    try {
+      setIsUploading(true);
 
-    const updated = [...attachments, newAttachment];
-    setAttachments(updated);
-    onChange(updated.map((a) => a.url));
-    setSelectedFile(null);
-    setUploadModalOpen(false);
-  }, [selectedFile, attachments, onChange]);
+      const { uploadFile } = await import('@/lib/firebase/storage');
+
+      // Get a safe evolution ID if not provided
+      const safeEvolutionId = evolutionId || `generic_${Date.now()}`;
+
+      // Construct path: patients/${patientId}/evolutions/${safeEvolutionId}/attachments/${filename}
+      // If patientId is missing, it will fallback to images/${userId}/${filename} inside uploadFile
+      const storagePath = patientId
+        ? `patients/${patientId}/evolutions/${safeEvolutionId}/attachments`
+        : 'images';
+
+      const result = await uploadFile(selectedFile, {
+        folder: storagePath,
+        includeUserIdPath: !patientId, // Only include userId if we're not in a patient-specific folder
+      });
+
+      const newAttachment: Attachment = {
+        id: `att_${Date.now()}`,
+        name: selectedFile.name,
+        url: result.url,
+        type: getFileTypeFromName(selectedFile.name),
+        size: selectedFile.size,
+      };
+
+      const updated = [...attachments, newAttachment];
+      setAttachments(updated);
+      onChange(updated.map((a) => a.url));
+      setSelectedFile(null);
+      setUploadModalOpen(false);
+    } catch (error) {
+      console.error('Error uploading attachment:', error);
+      alert('Erro ao fazer upload do arquivo. Por favor, tente novamente.');
+    } finally {
+      setIsUploading(false);
+    }
+  }, [selectedFile, attachments, onChange, patientId, evolutionId]);
 
   const handleRemove = useCallback((id: string) => {
     const updated = attachments.filter((a) => a.id !== id);
@@ -337,11 +365,15 @@ export const AttachmentsBlock: React.FC<AttachmentsBlockProps> = ({
                 </Button>
                 <Button
                   onClick={handleUpload}
-                  disabled={!selectedFile}
+                  disabled={!selectedFile || isUploading}
                   className="rounded-lg"
                 >
-                  <Upload className="h-4 w-4 mr-2" />
-                  Anexar Arquivo
+                  {isUploading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4 mr-2" />
+                  )}
+                  {isUploading ? 'Enviando...' : 'Anexar Arquivo'}
                 </Button>
               </DialogFooter>
             </DialogContent>

@@ -84,7 +84,7 @@ export const scheduleKeys = {
 /**
  * Hook para buscar agendamentos de um dia específico
  */
-function useDayAppointments(date: Date, options?: ScheduleFilterOptions) {
+function useDayAppointments(date: Date, options?: ScheduleFilterOptions, enabled = true) {
   const dateStr = format(date, 'yyyy-MM-dd');
   const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
 
@@ -100,6 +100,7 @@ function useDayAppointments(date: Date, options?: ScheduleFilterOptions) {
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Appointment[];
     },
+    enabled,
     staleTime: isToday ? SCHEDULE_CACHE_CONFIG.TODAY.staleTime : SCHEDULE_CACHE_CONFIG.DAY.staleTime,
     gcTime: isToday ? SCHEDULE_CACHE_CONFIG.TODAY.gcTime : SCHEDULE_CACHE_CONFIG.DAY.gcTime,
   });
@@ -108,7 +109,7 @@ function useDayAppointments(date: Date, options?: ScheduleFilterOptions) {
 /**
  * Hook para buscar agendamentos de uma semana
  */
-function useWeekAppointments(startDate: Date, endDate: Date) {
+function useWeekAppointments(startDate: Date, endDate: Date, enabled = true) {
   const startStr = format(startDate, 'yyyy-MM-dd');
   const endStr = format(endDate, 'yyyy-MM-dd');
 
@@ -138,6 +139,7 @@ function useWeekAppointments(startDate: Date, endDate: Date) {
         snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Appointment[]
       );
     },
+    enabled,
     staleTime: SCHEDULE_CACHE_CONFIG.WEEK.staleTime,
     gcTime: SCHEDULE_CACHE_CONFIG.WEEK.gcTime,
   });
@@ -146,7 +148,7 @@ function useWeekAppointments(startDate: Date, endDate: Date) {
 /**
  * Hook para buscar agendamentos de um mês
  */
-function useMonthAppointments(month: string) {
+function useMonthAppointments(month: string, enabled = true) {
   return useQuery({
     queryKey: scheduleKeys.month(month),
     queryFn: async () => {
@@ -161,6 +163,7 @@ function useMonthAppointments(month: string) {
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Appointment[];
     },
+    enabled,
     staleTime: SCHEDULE_CACHE_CONFIG.MONTH.staleTime,
     gcTime: SCHEDULE_CACHE_CONFIG.MONTH.gcTime,
   });
@@ -179,13 +182,14 @@ export function useScheduleOptimized(options: {
   const queryClient = useQueryClient();
   const prefetchedDatesRef = useRef<Set<string>>(new Set());
 
-  // Buscar dados baseado na view
-  const dayQuery = useDayAppointments(date, filters);
+  // Buscar apenas o que a view ativa precisa — elimina queries desnecessárias
+  const dayQuery = useDayAppointments(date, filters, view === 'day' || view === 'list');
   const weekQuery = useWeekAppointments(
     startOfDay(date),
-    endOfDay(addDays(date, 6))
+    endOfDay(addDays(date, 6)),
+    view === 'week'
   );
-  const monthQuery = useMonthAppointments(format(date, 'yyyy-MM'));
+  const monthQuery = useMonthAppointments(format(date, 'yyyy-MM'), view === 'month');
 
   // Selecionar query ativa baseado na view
   const activeQuery = useMemo(() => {

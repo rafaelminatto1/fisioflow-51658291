@@ -247,6 +247,21 @@ service firebase.storage {
     }
 
     // ============================================================================================
+    // RICH TEXT EDITOR IMAGES (FALLBACK)
+    // ============================================================================================
+
+    match /images/{userId}/{filename} {
+      // Leitura: todos autenticados
+      allow read: if isAuthenticated();
+
+      // Escrita: apenas o próprio usuário
+      allow write: if isAuthenticated() &&
+                     request.auth.uid == userId &&
+                     isValidFileSize() &&
+                     isAllowedContentType();
+    }
+
+    // ============================================================================================
     // DEFAULT DENY
     // ============================================================================================
 
