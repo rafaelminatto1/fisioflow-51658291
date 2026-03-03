@@ -31,20 +31,40 @@ class MediaPipeWebProvider implements PoseProvider {
       const { PoseLandmarker, FilesetResolver } = vision;
       
       const filesetResolver = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
       );
 
-      this.landmarker = await PoseLandmarker.createFromOptions(filesetResolver, {
-        baseOptions: {
-          modelAssetPath: `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,
-          delegate: "GPU"
-        },
-        runningMode: "VIDEO",
-        numPoses: 1,
-        minPoseDetectionConfidence: 0.5,
-        minPosePresenceConfidence: 0.5,
-        minTrackingConfidence: 0.5,
-      });
+      // Silenciar temporariamente avisos internos do MediaPipe WASM (OpenGL diagnostic)
+      const originalWarn = console.warn;
+      const originalLog = console.log;
+      
+      console.warn = (...args) => {
+        if (typeof args[0] === 'string' && (args[0].includes('gl_context.cc') || args[0].includes('W0303'))) return;
+        originalWarn.apply(console, args);
+      };
+      
+      console.log = (...args) => {
+        if (typeof args[0] === 'string' && (args[0].includes('gl_context.cc') || args[0].includes('I0303'))) return;
+        originalLog.apply(console, args);
+      };
+
+      try {
+        this.landmarker = await PoseLandmarker.createFromOptions(filesetResolver, {
+          baseOptions: {
+            modelAssetPath: `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,
+            delegate: "GPU"
+          },
+          runningMode: "VIDEO",
+          numPoses: 1,
+          minPoseDetectionConfidence: 0.5,
+          minPosePresenceConfidence: 0.5,
+          minTrackingConfidence: 0.5,
+        });
+      } finally {
+        // Restaurar console original imediatamente
+        console.warn = originalWarn;
+        console.log = originalLog;
+      }
 
       this.isLoaded = true;
       logger.info('[PoseDetectionService] MediaPipe inicializado', null, 'PoseDetectionService');

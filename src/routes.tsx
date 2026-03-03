@@ -214,18 +214,20 @@ export function AppRoutes() {
             <Route path="/agendar/:slug" element={<BookingPage />} />
 
             {/* Protected routes */}
-            <Route path="/" element={<RouteErrorBoundary routeName="Schedule"><ProtectedRoute><Schedule /></ProtectedRoute></RouteErrorBoundary>} />
+            <Route path="/" element={<Navigate to="/agenda" replace />} />
+            <Route path="/agenda" element={<RouteErrorBoundary routeName="Schedule"><ProtectedRoute><Schedule /></ProtectedRoute></RouteErrorBoundary>} />
+            <Route path="/calendar" element={<Navigate to="/agenda" replace />} />
             <Route path="/dashboard" element={<RouteErrorBoundary routeName="Dashboard"><ProtectedRoute><Index /></ProtectedRoute></RouteErrorBoundary>} />
             <Route path="/ocupacao-fisioterapeutas" element={<ProtectedRoute><TherapistOccupancy /></ProtectedRoute>} />
             <Route path="/patients" element={<RouteErrorBoundary routeName="Patients"><ProtectedRoute><Patients /></ProtectedRoute></RouteErrorBoundary>} />
             <Route path="/pacientes" element={<Navigate to="/patients" replace />} />
-            <Route path="/schedule" element={<Navigate to="/" replace />} />
-            <Route path="/agenda" element={<Navigate to="/" replace />} />
+            <Route path="/schedule" element={<Navigate to="/agenda" replace />} />
             <Route path="/goals" element={<Navigate to="/cadastros/objetivos" replace />} />
             <Route path="/login" element={<Navigate to="/auth" replace />} />
             <Route path="/perfil" element={<Navigate to="/profile" replace />} />
             <Route path="/configuracoes" element={<Navigate to="/settings" replace />} />
-            <Route path="/schedule/settings" element={<ProtectedRoute><ScheduleSettings /></ProtectedRoute>} />
+            <Route path="/agenda/settings" element={<ProtectedRoute><ScheduleSettings /></ProtectedRoute>} />
+            <Route path="/schedule/settings" element={<Navigate to="/agenda/settings" replace />} />
             <Route path="/exercises" element={<RouteErrorBoundary routeName="Exercises"><ProtectedRoute><Exercises /></ProtectedRoute></RouteErrorBoundary>} />
             <Route path="/protocols" element={<ProtectedRoute><ProtocolsPage /></ProtectedRoute>} />
             <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />
@@ -349,10 +351,10 @@ export function AppRoutes() {
             {/* Enterprise Features */}
             <Route path="/timetracking" element={<ProtectedRoute><TimeTracking /></ProtectedRoute>} />
             <Route path="/wiki/template-analytics" element={<ProtectedRoute><TemplateAnalyticsPage /></ProtectedRoute>} />
-            
+
             {/* Wiki Routes Refactored */}
-            <Route 
-                path="/wiki/*" 
+            <Route
+                path="/wiki/*"
                 element={
                     <ProtectedRoute>
                         <WikiLayout>
@@ -361,7 +363,7 @@ export function AppRoutes() {
                             </Routes>
                         </WikiLayout>
                     </ProtectedRoute>
-                } 
+                }
             />
             <Route path="/wiki-workspace/:slug?" element={<ProtectedRoute><WikiWorkspacePage /></ProtectedRoute>} />
 

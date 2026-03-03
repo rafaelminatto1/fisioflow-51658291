@@ -70,7 +70,7 @@ export function CommandPalette({ open, onOpenChange, patientId, patientName }: C
       description: 'Ver agenda de atendimentos',
       icon: Calendar,
       category: 'navigation',
-      action: () => navigate('/schedule'),
+      action: () => navigate('/agenda'),
       shortcut: 'G+A',
       keywords: ['agenda', 'calendario', 'atendimentos', 'marcacoes']
     },

@@ -465,7 +465,7 @@ const ScheduleRefactored = () => {
 
               {/* Right: Actions */}
               <div className="flex items-center gap-3">
-                <Link to="/schedule/settings">
+                <Link to="/agenda/settings">
                   <Button variant="ghost" size="sm" className="text-slate-600">
                     <SettingsIcon className="w-4 h-4 mr-2" />
                     Configurações
