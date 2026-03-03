@@ -46,7 +46,7 @@ service cloud.firestore {
     }
 
     function canManageSchedule() {
-      return isProfessional() || hasRole('recepcionista');
+      return isProfessional() || isAdmin() || hasRole('recepcionista');
     }
 
     function canAccessPatientData() {
@@ -247,6 +247,12 @@ service cloud.firestore {
     }
 
     match /exercise_templates/{templateId} {
+      allow read: if isAuthenticated();
+      allow create: if (isProfessional() || isAdmin()) && isValidSize();
+      allow update, delete: if isProfessional() || isAdmin();
+    }
+
+    match /evolution_templates/{templateId} {
       allow read: if isAuthenticated();
       allow create: if (isProfessional() || isAdmin()) && isValidSize();
       allow update, delete: if isProfessional() || isAdmin();
@@ -559,7 +565,7 @@ service cloud.firestore {
     
     match /schedule_capacity_config/{docId} {
       allow read: if isAuthenticated();
-      allow write: if canManageSchedule();
+      allow write: if isValidSize() && (isAdmin() || canManageSchedule());
     }
     match /schedule_business_hours/{docId} {
       allow read: if isAuthenticated();
@@ -862,6 +868,94 @@ service cloud.firestore {
       allow create: if isAuthenticated() && exists(/databases/$(database)/documents/conversations/$(conversationId)/participants/$(request.auth.uid)) && isValidSize();
       allow update: if isAuthenticated() && request.auth.uid == resource.data.senderId;
       allow delete: if isAdmin();
+    }
+
+    // ============================================================================================
+    // PRE-CADASTRO (LEADS)
+    // ============================================================================================
+
+    match /precadastro_tokens/{tokenId} {
+      allow read: if true; // Public validation
+      allow write: if isAdmin() || isProfessional();
+    }
+
+    match /precadastros/{id} {
+      allow create: if true; // Public capture
+      allow read, update, delete: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id));
+    }
+
+    // ============================================================================================
+    // CRM & LEADS EXTENSION
+    // ============================================================================================
+
+    match /lead_interacoes/{id} {
+      allow read, write: if isAdmin() || (isProfessional() && isSameOrg(resource.data.organization_id));
+    }
+
+    match /lead_scoring_regras/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // ============================================================================================
+    // EVALUATION FORMS
+    // ============================================================================================
+
+    match /evaluation_forms/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isProfessional();
+    }
+
+    match /evaluation_form_fields/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isProfessional();
+    }
+
+    // ============================================================================================
+    // ADDITIONAL GAMIFICATION
+    // ============================================================================================
+
+    match /weekly_challenges/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isProfessional();
+    }
+
+    match /patient_challenges/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isProfessional();
+    }
+
+    match /quest_definitions/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isProfessional();
+    }
+
+    match /rewards/{id} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || isProfessional();
+    }
+
+    // ============================================================================================
+    // ANALYTICS & RISK
+    // ============================================================================================
+
+    match /patient_risk_scores/{id} {
+      allow read: if canAccessPatientData();
+      allow write: if isAdmin() || isProfessional();
+    }
+
+    match /patient_evolution/{id} {
+      allow read: if canAccessPatientData() || (isPatient() && resource.data.patient_id == request.auth.uid);
+      allow write: if isAdmin() || isProfessional();
+    }
+
+    // ============================================================================================
+    // TRANSACOES (ALIAS FOR TRANSACTIONS)
+    // ============================================================================================
+
+    match /transacoes/{id} {
+      allow read: if isAdmin() || (isProfessional() && (resource.data.organization_id == null || isSameOrg(resource.data.organization_id)));
+      allow write: if isAdmin() || isProfessional();
     }
 
     // ============================================================================================

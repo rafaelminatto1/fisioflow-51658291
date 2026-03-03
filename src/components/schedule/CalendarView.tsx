@@ -190,7 +190,6 @@ export const CalendarView = memo(({
 
   // State for appointment quick view popover
   const [openPopoverId, setOpenPopoverId] = useState<string | null>(null);
-
   // Current time indicator
   const [currentTime, setCurrentTime] = useState(new Date());
   const { getMinCapacityForInterval } = useScheduleCapacity();
