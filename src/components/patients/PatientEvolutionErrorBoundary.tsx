@@ -313,7 +313,7 @@ ${errorInfo?.componentStack || 'No component stack'}
   };
 
   private handleGoBack = (): void => {
-    window.location.href = '/schedule';
+    window.location.href = '/agenda';
   };
 
   // ==========================================================================

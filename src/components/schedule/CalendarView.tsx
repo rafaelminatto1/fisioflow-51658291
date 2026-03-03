@@ -928,7 +928,7 @@ export const CalendarView = memo(({
                 />
 
                 {/* Settings */}
-                <Link to="/schedule/settings">
+                <Link to="/agenda/settings">
                   <Button
                     variant="outline"
                     size="icon"

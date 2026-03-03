@@ -31,10 +31,10 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  type TherapistOption,
-  THERAPIST_SELECT_NONE,
-  THERAPIST_PLACEHOLDER,
-  getTherapistById,
+    type TherapistOption,
+    THERAPIST_SELECT_NONE,
+    THERAPIST_PLACEHOLDER,
+    getTherapistById,
 } from '@/hooks/useTherapists';
 import { PatientHelpers } from '@/types';
 import { parseResponseDate } from '@/utils/dateUtils';
@@ -44,11 +44,11 @@ import { cn } from '@/lib/utils';
 const FIRST_EVOLUTION_DISMISS_KEY = 'fisioflow-first-evolution-header-dismissed';
 
 export interface TabConfig {
-  value: string;
-  label: string;
-  shortLabel: string;
-  icon: React.ComponentType<{ className?: string }>;
-  description: string;
+    value: string;
+    label: string;
+    shortLabel: string;
+    icon: React.ComponentType<{ className?: string }>;
+    description: string;
 }
 
 interface EvolutionHeaderProps {
@@ -202,7 +202,7 @@ export const EvolutionHeader = memo(({
                     <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => navigate('/schedule')}
+                        onClick={() => navigate('/agenda')}
                         className="shrink-0 h-10 w-10 hover:bg-primary/10 touch-target min-h-[44px] min-w-[44px]"
                         aria-label="Voltar para agenda"
                     >

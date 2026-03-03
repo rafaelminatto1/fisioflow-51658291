@@ -77,7 +77,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="/">
+              <a href="/agenda">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <Command className="size-4" />
                 </div>
@@ -106,11 +106,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
       <SidebarFooter>
         <div className="p-4">
-           <SidebarMenuButton asChild>
-             <a href="/">
-               <span>Voltar ao Sistema</span>
-             </a>
-           </SidebarMenuButton>
+          <SidebarMenuButton asChild>
+            <a href="/agenda">
+              <span>Voltar ao Sistema</span>
+            </a>
+          </SidebarMenuButton>
         </div>
       </SidebarFooter>
     </Sidebar>

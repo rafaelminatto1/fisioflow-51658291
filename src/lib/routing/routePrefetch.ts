@@ -81,7 +81,7 @@ export const RouteKeys = {
   // Core pages
   DASHBOARD: 'dashboard',
   PATIENTS: 'patients',
-  SCHEDULE: 'schedule',
+  SCHEDULE: '/agenda',
   EXERCISES: 'exercises',
   FINANCIAL: 'financial',
   REPORTS: 'reports',
@@ -147,8 +147,8 @@ export const PrefetchStrategy = {
 export function prefetchRelatedRoutes(currentRoute: string): void {
   // Define related routes for each section
   const routeMap: Record<string, string[]> = {
-    '/patients': ['/schedule', '/exercises', '/medical-record'],
-    '/schedule': ['/patients', '/waitlist'],
+    '/patients': ['/agenda', '/exercises', '/medical-record'],
+    '/agenda': ['/patients', '/waitlist'],
     '/financial': ['/reports', '/patients'],
     '/patients/:id': ['/patient-evolution/:appointmentId', '/medical-record'],
     '/settings': ['/admin/users', '/security-settings'],
