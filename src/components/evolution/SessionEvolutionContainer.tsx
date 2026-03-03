@@ -867,6 +867,8 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
             }}
             onSave={handleSave}
             isSaving={isSaving}
+            patientId={patientId}
+            evolutionId={appointmentId}
           />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full">
