@@ -43,6 +43,8 @@ interface NotionEvolutionPanelProps {
   autoSaveEnabled?: boolean;
   lastSaved?: Date | null;
   className?: string;
+  patientId?: string;
+  evolutionId?: string;
 }
 
 export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
@@ -54,6 +56,8 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
   autoSaveEnabled = false,
   lastSaved,
   className,
+  patientId,
+  evolutionId,
 }) => {
   // Calculate completion
   const filledBlocks = [
@@ -242,7 +246,8 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 
           {/* Attachments */}
           <AttachmentsBlock
-            patientId={data.therapistName}
+            patientId={patientId}
+            evolutionId={evolutionId}
             value={data.attachments || []}
             onChange={(val) => handleFieldChange('attachments', val)}
             disabled={disabled}
