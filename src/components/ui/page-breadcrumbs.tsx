@@ -61,17 +61,17 @@ export const PageBreadcrumbs: React.FC<PageBreadcrumbsProps> = ({
     if (customLabels[fullPath]) {
       return customLabels[fullPath];
     }
-    
+
     // Usar mapeamento padrão
     if (routeLabels[segment]) {
       return routeLabels[segment];
     }
-    
+
     // Para IDs (UUIDs), retornar "Detalhes"
     if (segment.match(/^[0-9a-f-]{36}$/i)) {
       return 'Detalhes';
     }
-    
+
     // Capitalizar primeira letra
     return segment.charAt(0).toUpperCase() + segment.slice(1).replace(/-/g, ' ');
   };
@@ -81,8 +81,8 @@ export const PageBreadcrumbs: React.FC<PageBreadcrumbsProps> = ({
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link 
-              to="/" 
+            <Link
+              to="/agenda"
               className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors"
             >
               <Home className="h-4 w-4" />
@@ -106,7 +106,7 @@ export const PageBreadcrumbs: React.FC<PageBreadcrumbsProps> = ({
                   </BreadcrumbPage>
                 ) : (
                   <BreadcrumbLink asChild>
-                    <Link 
+                    <Link
                       to={path}
                       className="text-muted-foreground hover:text-primary transition-colors"
                     >

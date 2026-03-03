@@ -29,7 +29,7 @@ export function Breadcrumbs({
   const location = useLocation();
 
   // Auto-generate breadcrumbs from route if not provided
-  const breadcrumbItems = items || generateBreadcrumbsFromPath(location.pathname, location);
+  const breadcrumbItems = items || generateBreadcrumbsFromPath(location.pathname);
 
   if (breadcrumbItems.length === 0) {
     return null;
@@ -42,8 +42,8 @@ export function Breadcrumbs({
         {breadcrumbItems.length > 0 && (
           <li className="flex items-center">
             <Link
-              to="/"
-              className="flex items-center text-muted-foreground hover:text-foreground transition-colors"
+              to="/agenda"
+              className="flex items-center gap-1.5 text-muted-foreground hover:text-primary transition-colors"
             >
               <Home className="h-4 w-4" />
               <span className="sr-only">{homeLabel}</span>
@@ -84,7 +84,7 @@ export function Breadcrumbs({
 /**
  * Generate breadcrumbs from the current route path
  */
-function generateBreadcrumbsFromPath(pathname: string, _location: Location): BreadcrumbItem[] {
+function generateBreadcrumbsFromPath(pathname: string): BreadcrumbItem[] {
   // Remove leading/trailing slashes and split
   const pathSegments = pathname.split('/').filter(Boolean);
 
@@ -95,7 +95,6 @@ function generateBreadcrumbsFromPath(pathname: string, _location: Location): Bre
     financeiro: 'Financeiro',
     eventos: 'Eventos',
     relatorios: 'Relatórios',
-    configuracoes: 'Configurações',
     configuracoes: 'Configurações',
     admin: 'Administração',
     telemedicina: 'Telemedicina',

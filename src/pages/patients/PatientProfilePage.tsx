@@ -269,7 +269,7 @@ const ClinicalHistoryTab = ({ patientId }: { patientId: string }) => {
 const FinancialTab = ({ patientId, appointments }: { patientId: string, appointments: any[] }) => {
     // Calculate totals based on appointments (which include payment info in FisioFlow)
     const transactions = appointments;
-    
+
     const totalPaid = useMemo(() => transactions
         .filter((t: any) => t.payment_status === 'paid_single' || t.payment_status === 'paid_package')
         .reduce((sum: number, t: any) => sum + (Number(t.payment_amount) || 0), 0), [transactions]);
@@ -444,7 +444,7 @@ const DocumentsTab = ({ patientId, documents, isLoading }: { patientId: string, 
             <Suspense fallback={<Skeleton className="h-20 w-full" />}>
                 <LazyDocumentScanner onScanComplete={(text) => alert('Texto extraído: ' + text.substring(0, 100) + '...')} />
             </Suspense>
-            
+
             <Card className="border-dashed border-2">
                 <CardContent className="p-8">
                     <div className="flex flex-col items-center justify-center">
@@ -816,7 +816,7 @@ export const PatientProfilePage = () => {
                                 <ClipboardList className="h-4 w-4" />
                                 Avaliar
                             </Button>
-                            <Button onClick={() => navigate('/schedule')} className="flex-1 md:flex-none gap-2 bg-primary/90 hover:bg-primary shadow-sm">
+                            <Button onClick={() => navigate('/agenda')} className="flex-1 md:flex-none gap-2 bg-primary/90 hover:bg-primary shadow-sm">
                                 <CalendarIcon className="h-4 w-4" />
                                 Agendar
                             </Button>
@@ -896,11 +896,11 @@ export const PatientProfilePage = () => {
                         </TabsContent>
 
                         <TabsContent value="analytics" className="mt-0 focus-visible:outline-none animate-in fade-in-50 duration-500 slide-in-from-bottom-2">
-                            <AnalyticsTab 
-                                patientId={id || ''} 
-                                patientName={patientName} 
+                            <AnalyticsTab
+                                patientId={id || ''}
+                                patientName={patientName}
                                 birthDate={(patient as any).birth_date}
-                                condition={(patient as any).main_condition || 'Não informada'} 
+                                condition={(patient as any).main_condition || 'Não informada'}
                             />
                         </TabsContent>
 

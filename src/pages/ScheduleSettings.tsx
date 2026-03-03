@@ -99,7 +99,7 @@ export default function ScheduleSettings() {
       <div className="space-y-6">
         {/* Enhanced Header */}
         <div className="flex items-center gap-4 pb-2">
-          <Link to="/schedule">
+          <Link to="/agenda">
             <Button variant="ghost" size="icon" className="rounded-lg hover:bg-muted">
               <ArrowLeft className="h-5 w-5" />
             </Button>

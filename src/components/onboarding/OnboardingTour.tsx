@@ -49,7 +49,7 @@ const onboardingSteps: OnboardingStep[] = [
     description: 'Organize seus atendimentos com uma agenda visual e intuitiva. Configure horários, salas e lembretes automáticos.',
     icon: <Calendar className="h-12 w-12 text-primary" />,
     action: 'Ver Agenda',
-    route: '/schedule',
+    route: '/agenda',
   },
   {
     id: 'evolution',

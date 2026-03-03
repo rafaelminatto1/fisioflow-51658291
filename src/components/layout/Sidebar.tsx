@@ -122,7 +122,7 @@ const GamificationMiniProfile = ({ collapsed }: { collapsed: boolean }) => {
 // Ordem baseada em frequência de uso e fluxo de trabalho clínico
 const menuItems = [
   // NÚCLEO DO NEGÓCIO - Usado diariamente
-  { icon: Calendar, label: 'Agenda', href: '/' },
+  { icon: Calendar, label: 'Agenda', href: '/agenda' },
   { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
   { icon: Users, label: 'Pacientes', href: '/patients' },
 
@@ -322,7 +322,7 @@ export function Sidebar() {
           isActive ? "scale-110" : "group-hover:scale-110 group-hover:rotate-3 group-hover:text-primary"
         )} />
         {!collapsed && <span className="text-xs font-bold uppercase tracking-widest relative z-10">{item.label}</span>}
-        
+
         {isActive && (
           <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-primary rounded-r-full shadow-[0_0_12px_rgba(var(--primary),0.8)]" />
         )}
@@ -446,9 +446,9 @@ export function Sidebar() {
       {/* Header */}
       <div className={cn("shrink-0 p-5 relative", collapsed ? "flex justify-center" : "")}>
         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-        
+
         <div className="flex items-center justify-between w-full">
-          <Link to="/" className="flex items-center gap-3 group transition-transform duration-500 hover:scale-105">
+          <Link to="/agenda" className="flex items-center gap-3 group transition-transform duration-500 hover:scale-105">
             <img src={fisioflowLogo} alt="FisioFlow" className={cn("h-8 w-auto transition-all", collapsed ? "h-10" : "")} />
             {!collapsed && (
               <div className="flex flex-col">
@@ -457,7 +457,7 @@ export function Sidebar() {
               </div>
             )}
           </Link>
-          
+
           {!collapsed && (
             <Button
               variant="ghost"
@@ -469,7 +469,7 @@ export function Sidebar() {
             </Button>
           )}
         </div>
-        
+
         {collapsed && (
           <Button
             variant="ghost"
@@ -510,7 +510,7 @@ export function Sidebar() {
               </div>
             )}
             {menuItems.slice(3, 6).map((item) => renderMenuItem(item, collapsed, location))}
-            
+
             {renderSubmenu({
               icon: ScanFace,
               label: 'Avaliações',
@@ -530,7 +530,7 @@ export function Sidebar() {
               </div>
             )}
             {menuItems.slice(6).map((item) => renderMenuItem(item, collapsed, location))}
-            
+
             {renderSubmenu({
               icon: Star,
               label: 'Marketing',
@@ -541,7 +541,7 @@ export function Sidebar() {
               collapsed,
               location
             })}
-            
+
             {renderSubmenu({
               icon: DollarSign,
               label: 'Financeiro',
@@ -570,7 +570,7 @@ export function Sidebar() {
               collapsed,
               location
             })}
-            
+
             {renderSubmenu({
               icon: Brain,
               label: 'Google AI',
@@ -606,7 +606,7 @@ export function Sidebar() {
       {/* Footer */}
       <div className="shrink-0 p-3 flex flex-col gap-2">
         <GamificationMiniProfile collapsed={collapsed} />
-        
+
         <Button
           variant="ghost"
           onClick={handleLogout}

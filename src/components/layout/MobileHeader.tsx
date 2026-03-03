@@ -33,9 +33,9 @@ import {
 } from 'lucide-react';
 
 const menuItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
+  { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
   { icon: Users, label: 'Pacientes', href: '/patients' },
-  { icon: Calendar, label: 'Agenda', href: '/' },
+  { icon: Calendar, label: 'Agenda', href: '/agenda' },
   { icon: Activity, label: 'Exercícios', href: '/exercises' },
   { icon: Brain, label: 'Planos IA', href: '/smart-ai' },
   { icon: MessageSquare, label: 'Comunicação', href: '/communications' },
@@ -90,7 +90,7 @@ export function MobileHeader() {
             <div className="flex flex-col h-full">
               {/* Header do Menu */}
               <div className="p-6 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-center bg-slate-50/50 dark:bg-slate-900/30">
-                <Link to="/" className="flex items-center gap-3 active:scale-95 transition-transform">
+                <Link to="/agenda" className="flex items-center gap-3 active:scale-95 transition-transform">
                   <img src={fisioflowLogo} alt="FisioFlow" className="h-9 w-auto" />
                 </Link>
               </div>
@@ -151,7 +151,7 @@ export function MobileHeader() {
         </Sheet>
 
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 active:scale-95 transition-transform">
+        <Link to="/agenda" className="flex items-center gap-2 active:scale-95 transition-transform">
           <img src={fisioflowLogo} alt="FisioFlow" className="h-7 w-auto" />
         </Link>
 
