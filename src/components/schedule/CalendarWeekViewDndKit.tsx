@@ -68,7 +68,7 @@ const GRID_HEIGHT_ADJUSTMENT = 3;
 const WEEK_GRID_HEIGHT_BOOST = 0;
 const INITIAL_MEASUREMENT_SETTLE_MS = 0;
 const INITIAL_MEASUREMENT_MAX_WAIT_MS = 200;
-const INITIAL_MEASUREMENT_MAX_RETRIES = 8;
+const INITIAL_MEASUREMENT_MAX_RETRIES = 3;
 
 /** Margem e espaçamento entre cards sobrepostos (layout lateral, em px). */
 const _OVERLAP_LAYOUT_MARGIN_PX = 1;
@@ -679,7 +679,7 @@ export const CalendarWeekViewDndKit = memo(({
           ref={weekContainerRef}
           className={cn(
             "flex flex-col bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-slate-900 dark:text-slate-100 font-display h-full relative overflow-hidden",
-            !isSlotHeightMeasured && "invisible"
+            !isSlotHeightMeasured && "opacity-0 pointer-events-none"
           )}
           aria-busy={!isSlotHeightMeasured}
         >
