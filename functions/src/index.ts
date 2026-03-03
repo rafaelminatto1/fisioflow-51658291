@@ -224,7 +224,6 @@ export const exerciseImageProxy = onRequest(
 // ============================================================================
 // KNOWLEDGE RAG (NOTEBOOKLM)
 // ============================================================================
-// @ts-expect-error - Ignoring type check for new module
 export { processArtifact, queryArtifact } from './ai/knowledge-rag';
 
 // ============================================================================
