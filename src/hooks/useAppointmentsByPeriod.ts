@@ -122,8 +122,8 @@ export function useAppointmentsByPeriod(
 ) {
   const {
     enabled = true,
-    staleTime = 5 * 60 * 1000, // 5 minutes
-    cacheTime = 10 * 60 * 1000, // 10 minutes (gcTime in newer versions)
+    staleTime = 15 * 60 * 1000, // 15 minutes — agendamentos do período raramente mudam
+    cacheTime = 30 * 60 * 1000, // 30 minutes
   } = options;
 
   const shouldEnable = enabled && !!query.organizationId;
@@ -134,7 +134,7 @@ export function useAppointmentsByPeriod(
     staleTime,
     gcTime: cacheTime, // TanStack Query v5 uses gcTime instead of cacheTime
     enabled: shouldEnable,
-    retry: 3,
+    retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
