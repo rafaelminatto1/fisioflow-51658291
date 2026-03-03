@@ -72,7 +72,7 @@ export default function AdminCRUD() {
           <TabsContent value="agendamentos" className="space-y-4">
             <Card className="p-6">
               <p className="text-muted-foreground text-center py-8">
-                Use a página de <a href="/schedule" className="text-primary hover:underline">Agenda</a> para gerenciar agendamentos
+                Use a página de <a href="/agenda" className="text-primary hover:underline">Agenda</a> para gerenciar agendamentos
               </p>
             </Card>
           </TabsContent>
