@@ -5,23 +5,29 @@
 set -e
 # Restantes que falharam por cota CPU (listTreatmentSessions, createAdminUser, confirmUpload já deployadas)
 FAILED_FUNCTIONS=(
-  findTransactionByAppointmentIdV2
-  testWhatsAppMessage
-  createTransactionV2
-  consumeInvitation
-  createUserInvitation
-  importPatients
-  scheduledWeeklyReport
-  testWhatsAppTemplate
-  deleteTransactionV2
-  exportPatients
-  scheduledDailyReport
-  stripeWebhookHttp
-  getEventReportV2
-  getInvitationByToken
-  syncPatientCalendar
-  createPerformanceIndexes
-  generateAIReport
+  healthCheck
+  topExercises
+  dashboardMetrics
+  queryArtifact
+  ingestWearableData
+  getIndexingStats
+  joinTelemedicineRoom
+  createTelemedicineRoom
+  getTelemedicineHistory
+  dailyExerciseReminder
+  removeEvolutionEmbedding
+  endTelemedicineRoom
+  aiService
+  optimizeImageOnUpload
+  indexKnowledgeArticlesScheduled
+  scanDocumentDLP
+  semanticSearchKnowledge
+  scanMedicalReportHttp
+  indexExistingEvolutions
+  aiServiceHttp
+  processArtifact
+  analyzeMovementVideo
+  indexKnowledgeArticles
 )
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
