@@ -130,7 +130,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
       {/* Left Group: Brand + Date Navigation */}
       <div className="flex items-center gap-4">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <Link to="/agenda" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
           <div className="w-8 h-8 bg-gradient-to-br from-primary to-blue-600 rounded-lg flex items-center justify-center shadow-md">
             <Stethoscope className="w-4 h-4 text-white" />
           </div>
@@ -209,7 +209,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
         )}
 
         {/* Settings */}
-        <Link to="/schedule/settings">
+        <Link to="/agenda/settings">
           <Button
             variant="outline"
             size="icon"
@@ -342,7 +342,7 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
               </DropdownMenuItem>
             )}
             <DropdownMenuItem asChild>
-              <Link to="/schedule/settings">
+              <Link to="/agenda/settings">
                 <SettingsIcon className="w-4 h-4 mr-2" />
                 Configurações
               </Link>

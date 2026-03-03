@@ -615,7 +615,7 @@ export function usePatientEvolutionData() {
               logger.error("Failed to award XP", e, 'usePatientEvolution');
             }
           }
-          setTimeout(() => navigate('/schedule'), 1500);
+          setTimeout(() => navigate('/agenda'), 1500);
         }
       });
     }

@@ -92,7 +92,7 @@ export const DEFAULT_SHORTCUTS: Record<string, KeyboardShortcut[]> = {
       shiftKey: true,
       description: 'Ir para Agenda',
       action: () => {
-        window.location.href = '/schedule';
+        window.location.href = '/agenda';
       },
       category: 'navigation',
       preventDefault: true,
