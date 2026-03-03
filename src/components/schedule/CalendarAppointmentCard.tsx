@@ -35,6 +35,7 @@ interface CalendarAppointmentCardProps {
     dragHandleOnly?: boolean;
     /** Compact visual density for tight weekly grid layouts */
     density?: 'normal' | 'compact';
+    "data-appointment-popover-anchor"?: string;
 }
 
 const getStatusStyles = (status: string) => {
@@ -103,7 +104,8 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
     isSelected = false,
     onToggleSelection,
     dragHandleOnly = false,
-    density = 'normal'
+    density = 'normal',
+    "data-appointment-popover-anchor": dataAnchor
 }, ref) => {
     const isMobile = useIsMobile();
     const isTouch = useIsTouch();
@@ -169,6 +171,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                 color: undefined, // Using classNames instead
                 icon: sharedStatusConfig.icon
             }}
+            data-appointment-popover-anchor={dataAnchor}
             // Animation props passed to MotionCard
             layout={!reducedMotion}
             layoutId={isSaving ? `${appointment.id}-saving` : appointment.id}

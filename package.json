@@ -24,7 +24,7 @@
     "inngest:dev": "inngest dev",
     "configure:apple-signin": "node scripts/configure-firebase-apple-signin.mjs",
     "build:dev": "vite build --mode development",
-    "build:analyze": "ANALYZE=true vite build",
+    "build:analyze": "NODE_OPTIONS='--max-old-space-size=4096' ANALYZE=true vite build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "preview": "vite preview",
@@ -89,7 +89,7 @@
     "test:hooks": "vitest run src/hooks/**/*.test.ts",
     "test:evolution:direct": "node test-direct-evolution.mjs",
     "test:evolution:module": "node test-notion-module-fetch.mjs",
-    "analyze": "ANALYZE=true pnpm build",
+    "analyze": "NODE_OPTIONS='--max-old-space-size=4096' ANALYZE=true pnpm build",
     "lighthouse": "lighthouse http://localhost:4173 --view"
   },
   "dependencies": {

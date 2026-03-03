@@ -103,55 +103,36 @@ export default defineConfig(({ mode }) => {
           assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
           manualChunks: (id) => {
             if (id.includes('node_modules')) {
-              // Core React
-              if (id.includes('react') || id.includes('react-dom') || id.includes('scheduler')) {
+              // Extract base package name from node_modules path
+              const match = id.match(/node_modules\/([^/]+)\//);
+              const packageName = match ? match[1] : '';
+
+              if (packageName.includes('react') || packageName.includes('scheduler')) {
                 return 'react-core';
               }
-
-              // Firebase bundle
-              if (id.includes('firebase')) return 'firebase-vendor';
-
-              // UI & Icons - Separar por biblioteca para melhor tree-shaking
-              if (id.includes('lucide-react')) return 'ui-icons';
-              if (id.includes('@radix-ui/react-dialog')) return 'ui-dialog';
-              if (id.includes('@radix-ui/react-dropdown')) return 'ui-dropdown';
-              if (id.includes('@radix-ui/react-select')) return 'ui-select';
-              if (id.includes('@radix-ui/react-popover')) return 'ui-popover';
-              if (id.includes('@radix-ui')) return 'ui-radix';
-              if (id.includes('framer-motion')) return 'motion';
-
-              // Charts e visualizações (lazy load)
-              if (id.includes('recharts')) return 'charts';
-              if (id.includes('react-grid-layout')) return 'grid-layout';
-
+              if (packageName.includes('firebase')) return 'firebase-vendor';
+              
+              if (packageName.includes('lucide-react')) return 'ui-icons';
+              if (packageName.includes('@radix-ui')) return 'ui-radix';
+              if (packageName.includes('framer-motion')) return 'motion';
+              if (packageName.includes('recharts')) return 'charts';
+              if (packageName.includes('react-grid-layout')) return 'grid-layout';
+              
               // PDF e Excel (lazy load)
-              if (id.includes('jspdf')) return 'pdf-generator';
-              if (id.includes('xlsx') || id.includes('exceljs')) return 'excel-generator';
-
-              // Utilitários grandes
-              if (id.includes('date-fns')) return 'utils-date';
-              if (id.includes('lodash')) return 'utils-lodash';
-              if (id.includes('zod')) return 'utils-validation';
+              if (packageName.includes('jspdf') || packageName.includes('@react-pdf')) return 'pdf-generator';
+              if (packageName.includes('xlsx') || packageName.includes('exceljs')) return 'excel-generator';
 
               // Monitoring
-              if (id.includes('sentry')) return 'sentry-vendor';
+              if (packageName.includes('sentry')) return 'sentry-vendor';
 
               // AI e ML
-              if (id.includes('@google/generative-ai') || id.includes('openai')) return 'ai-vendor';
+              if (packageName.includes('@google') || packageName.includes('openai') || packageName.includes('ai-sdk')) return 'ai-vendor';
 
               // Editor e Text
-              if (id.includes('@tiptap') || id.includes('prosemirror')) return 'editor-core';
+              if (packageName.includes('tiptap') || packageName.includes('prosemirror')) return 'editor-core';
 
               // WebGL e Computer Vision
-              if (id.includes('mediapipe') || id.includes('three')) return 'webgl-vendor';
-
-              // Router
-              if (id.includes('react-router')) return 'router';
-
-              // Query
-              if (id.includes('@tanstack/react-query')) return 'query';
-
-              return 'vendor';
+              if (packageName.includes('mediapipe') || packageName.includes('three') || packageName.includes('konva')) return 'webgl-vendor';
             }
           }
         }

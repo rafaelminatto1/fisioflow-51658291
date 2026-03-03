@@ -129,7 +129,7 @@ const PreCadastro = () => {
       if (formData.convenio) dadosAdicionais.convenio = formData.convenio;
       if (formData.queixa_principal) dadosAdicionais.queixa_principal = formData.queixa_principal;
 
-      await addDoc(collection(db, 'precastros'), {
+      await addDoc(collection(db, 'precadastros'), {
         token_id: tokenData.id,
         organization_id: orgId,
         nome: formData.nome,

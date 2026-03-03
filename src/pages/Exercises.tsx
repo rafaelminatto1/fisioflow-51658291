@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,19 +6,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import {
-
   Plus, BookOpen, Target, FileText,
   Dumbbell, VideoOff, Video,
   Activity, Sparkles
 } from 'lucide-react';
-import { ExerciseLibrary } from '@/components/exercises/ExerciseLibrary';
-import { TemplateManager } from '@/components/exercises/TemplateManager';
-import { ProtocolsManager } from '@/components/exercises/ProtocolsManager';
-import { ExerciseVideoLibrary } from '@/components/exercises/ExerciseVideoLibrary';
-import { ExerciseVideoUpload } from '@/components/exercises/ExerciseVideoUpload';
-import { NewExerciseModal } from '@/components/modals/NewExerciseModal';
-import { ExerciseAI } from '@/components/ai/ExerciseAI';
-import { ClinicalAnalyticsDashboard } from '@/components/analytics/ClinicalAnalyticsDashboard';
 import { ComponentErrorBoundary } from '@/components/error/ComponentErrorBoundary';
 import { useExercises, type Exercise } from '@/hooks/useExercises';
 import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
@@ -26,6 +17,22 @@ import { useExerciseProtocols } from '@/hooks/useExerciseProtocols';
 import { useExerciseTemplates } from '@/hooks/useExerciseTemplates';
 import { Skeleton } from '@/components/ui/skeleton';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+
+// Lazy load heavy components for better performance
+const ExerciseLibrary = lazy(() => import('@/components/exercises/ExerciseLibrary').then(m => ({ default: m.ExerciseLibrary })));
+const TemplateManager = lazy(() => import('@/components/exercises/TemplateManager').then(m => ({ default: m.TemplateManager })));
+const ProtocolsManager = lazy(() => import('@/components/exercises/ProtocolsManager').then(m => ({ default: m.ProtocolsManager })));
+const ExerciseVideoLibrary = lazy(() => import('@/components/exercises/ExerciseVideoLibrary').then(m => ({ default: m.ExerciseVideoLibrary })));
+const ExerciseVideoUpload = lazy(() => import('@/components/exercises/ExerciseVideoUpload').then(m => ({ default: m.ExerciseVideoUpload })));
+const NewExerciseModal = lazy(() => import('@/components/modals/NewExerciseModal').then(m => ({ default: m.NewExerciseModal })));
+const ExerciseAI = lazy(() => import('@/components/ai/ExerciseAI').then(m => ({ default: m.ExerciseAI })));
+const ClinicalAnalyticsDashboard = lazy(() => import('@/components/analytics/ClinicalAnalyticsDashboard').then(m => ({ default: m.ClinicalAnalyticsDashboard })));
+
+const TabFallback = () => (
+  <div className="p-8 flex items-center justify-center">
+    <Skeleton className="w-full h-[400px] rounded-xl" />
+  </div>
+);
 
 export default function Exercises() {
   const { exercises, loading: loadingExercises, createExercise, updateExercise, isCreating, isUpdating } = useExercises();
@@ -343,63 +350,79 @@ export default function Exercises() {
 
             <TabsContent value="library" className="m-0 p-3 sm:p-4 md:p-6">
               <ComponentErrorBoundary componentName="ExerciseLibrary">
-                <ExerciseLibrary onEditExercise={handleEditExercise} />
+                <Suspense fallback={<TabFallback />}>
+                  <ExerciseLibrary onEditExercise={handleEditExercise} />
+                </Suspense>
               </ComponentErrorBoundary>
             </TabsContent>
 
             <TabsContent value="videos" className="m-0 p-3 sm:p-4 md:p-6">
               <ComponentErrorBoundary componentName="ExerciseVideoLibrary">
-                <ExerciseVideoLibrary onUploadClick={handleUploadClick} />
+                <Suspense fallback={<TabFallback />}>
+                  <ExerciseVideoLibrary onUploadClick={handleUploadClick} />
+                </Suspense>
               </ComponentErrorBoundary>
             </TabsContent>
 
             <TabsContent value="templates" className="m-0 p-3 sm:p-4 md:p-6">
               <ComponentErrorBoundary componentName="TemplateManager">
-                <TemplateManager />
+                <Suspense fallback={<TabFallback />}>
+                  <TemplateManager />
+                </Suspense>
               </ComponentErrorBoundary>
             </TabsContent>
 
             <TabsContent value="protocols" className="m-0 p-3 sm:p-4 md:p-6">
               <ComponentErrorBoundary componentName="ProtocolsManager">
-                <ProtocolsManager />
+                <Suspense fallback={<TabFallback />}>
+                  <ProtocolsManager />
+                </Suspense>
               </ComponentErrorBoundary>
             </TabsContent>
 
             <TabsContent value="ai" className="m-0 p-0 sm:p-0">
               <ComponentErrorBoundary componentName="ExerciseAI">
-              <ExerciseAI
-                exerciseLibrary={exercises}
-                onExerciseSelect={(selectedExercises) => {
-                  logger.debug('Exercises selected', { selectedExercises }, 'Exercises');
-                }}
-              />
+              <Suspense fallback={<TabFallback />}>
+                <ExerciseAI
+                  exerciseLibrary={exercises}
+                  onExerciseSelect={(selectedExercises) => {
+                    logger.debug('Exercises selected', { selectedExercises }, 'Exercises');
+                  }}
+                />
+              </Suspense>
               </ComponentErrorBoundary>
             </TabsContent>
 
             <TabsContent value="analytics" className="m-0 p-3 sm:p-4 md:p-6">
               <ComponentErrorBoundary componentName="ClinicalAnalyticsDashboard">
-                <ClinicalAnalyticsDashboard />
+                <Suspense fallback={<TabFallback />}>
+                  <ClinicalAnalyticsDashboard />
+                </Suspense>
               </ComponentErrorBoundary>
             </TabsContent>
           </Tabs>
         </Card>
       </div>
 
-      <NewExerciseModal
-        open={showNewModal}
-        onOpenChange={handleModalOpenChange}
-        onSubmit={handleSubmit}
-        exercise={editingExercise || undefined}
-        isLoading={isCreating || isUpdating}
-      />
+      <Suspense fallback={null}>
+        <NewExerciseModal
+          open={showNewModal}
+          onOpenChange={handleModalOpenChange}
+          onSubmit={handleSubmit}
+          exercise={editingExercise || undefined}
+          isLoading={isCreating || isUpdating}
+        />
+      </Suspense>
 
-      <ExerciseVideoUpload
-        open={showVideoUpload}
-        onOpenChange={handleVideoUploadOpenChange}
-        onSuccess={() => {
-          // Invalidate queries to refresh video list
-        }}
-      />
+      <Suspense fallback={null}>
+        <ExerciseVideoUpload
+          open={showVideoUpload}
+          onOpenChange={handleVideoUploadOpenChange}
+          onSuccess={() => {
+            // Invalidate queries to refresh video list
+          }}
+        />
+      </Suspense>
     </MainLayout>
   );
 }

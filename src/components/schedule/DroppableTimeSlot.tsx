@@ -31,32 +31,14 @@ interface DroppableTimeSlotProps {
 
 const isHourStart = (time: string): boolean => time.endsWith(':00');
 
-/**
- * Comparison function for React.memo to prevent unnecessary re-renders.
- * Only re-render when the actual drop-related props change.
- */
-function droppableTimeSlotAreEqual(
-  prev: DroppableTimeSlotProps,
-  next: DroppableTimeSlotProps
-): boolean {
-  return (
-    prev.day.getTime() === next.day.getTime() &&
-    prev.time === next.time &&
-    prev.isClosed === next.isClosed &&
-    prev.isBlocked === next.isBlocked &&
-    prev.isDropTarget === next.isDropTarget &&
-    prev.isDraggingOver === next.isDraggingOver &&
-    prev.targetAppointments?.length === next.targetAppointments?.length &&
-    prev.draggedAppointment?.id === next.draggedAppointment?.id
-  );
-}
+
 
 /**
  * Enhanced Droppable time slot cell for the week view calendar.
  * Uses @dnd-kit's useDroppable hook to register as a drop target.
  * Shows preview cards during drag to indicate how appointments will be arranged.
  */
-export const DroppableTimeSlot = memo(({
+export const DroppableTimeSlot = ({
   day,
   time,
   rowIndex,
@@ -214,6 +196,6 @@ export const DroppableTimeSlot = memo(({
       )}
     </div>
   );
-}, droppableTimeSlotAreEqual);
+};
 
 DroppableTimeSlot.displayName = 'DroppableTimeSlot';
