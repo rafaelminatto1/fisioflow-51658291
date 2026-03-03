@@ -263,9 +263,9 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
   useEffect(() => {
     // Make user profile available for signature command
     if (data.therapistName) {
-      (window as any).__USER_PROFILE = { 
-        full_name: data.therapistName, 
-        crefito: data.therapistCrefito || '—' 
+      (window as any).__USER_PROFILE = {
+        full_name: data.therapistName,
+        crefito: data.therapistCrefito || '—'
       };
     }
   }, [data.therapistName, data.therapistCrefito]);
@@ -449,9 +449,9 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
             imageUploadFolder={patientId ? `patients/${patientId}/evolutions/${safeEvolutionId}` : undefined}
           />
         </div>
-        <div className="mx-auto mt-12 w-full max-w-[1280px] px-2 lg:px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,860px)_300px] gap-8 items-start">
-            <div className="min-w-0 pl-6 pr-2">
+        <div className="mx-auto mt-12 w-full max-w-[1536px] px-4 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1024px)_340px] gap-8 xl:gap-12 items-start justify-center">
+            <div className="min-w-0">
 
               {/* H1 Header: Patient Evolution */}
               <div className="flex items-baseline mb-12 group gap-4">
@@ -516,11 +516,11 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                 </div>
               )}
 
-              <div className="h-px bg-[#ECEBEA] mb-10 ml-12" />
+              <div className="h-px bg-[#ECEBEA] mb-8 ml-12 lg:hidden" />
 
               {/* H2 Header: Pain Level */}
               {showQuickPainSlider && (
-                <div id="pain-section" className="flex items-baseline mb-12 group gap-4 scroll-mt-28">
+                <div id="pain-section" className="flex items-baseline mb-12 group gap-4 scroll-mt-28 lg:hidden">
                   <div className="w-8 flex-shrink-0 text-right text-sm font-medium text-[#D3D1CB] select-none">H2</div>
                   <div className="flex-1">
                     <h2 className="text-2xl font-semibold text-[#37352f] mb-6">Nível de Dor (EVA)</h2>
@@ -534,6 +534,30 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                 </div>
               )}
 
+              <div className="h-px bg-[#ECEBEA] mb-8 ml-12 lg:hidden" />
+
+              {/* H2 Header: Patient Report */}
+              <div id="patientReport" className="flex items-baseline mb-8 group gap-4">
+                <div className="w-8 flex-shrink-0 text-right text-sm font-medium text-[#D3D1CB] select-none">H2</div>
+                <div className="flex-1">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <h2 className="text-2xl font-semibold text-[#37352f] mb-2 hover:text-[#2383e2] cursor-text transition-colors">Relato do Paciente</h2>
+                    <span className="text-xs text-muted-foreground">{patientReportCount} caracteres</span>
+                  </div>
+                  <div className="text-[#37352f]">
+                    <RichTextEditor
+                      placeholder="O que o paciente relatou? Como se sente desde a última sessão?"
+                      value={data.patientReport || ''}
+                      onValueChange={(val: string) => handleFieldChange('patientReport', val)}
+                      disabled={disabled}
+                      patientId={patientId}
+                      imageUploadFolder={patientId ? `patients/${patientId}/evolutions/${safeEvolutionId}` : undefined}
+                      accentColor="sky"
+                      className="!p-0 !border-0 bg-transparent shadow-none w-full [&_.ProseMirror]:!p-0 [&_.ProseMirror]:!text-[#37352f] [&_.ProseMirror]:!text-base [&_.ProseMirror]:!leading-relaxed [&_.ProseMirror]:!min-h-[100px]"
+                    />                  </div>
+                </div>
+              </div>
+
               <div className="h-px bg-[#ECEBEA] mb-8 ml-12" />
 
               {/* H2 Header: Evolution Text */}
@@ -545,115 +569,150 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
                     <span className="text-xs text-muted-foreground">{evolutionTextCount} caracteres</span>
                   </div>
                   <div className="text-[#37352f]">
-                                    <RichTextEditor
-                                      placeholder="Tecle '/' para comandos ou escreva livremente sua evolução..."
-                                      value={data.evolutionText || ''}
-                                      onValueChange={(val: string) => handleFieldChange('evolutionText', val)}
-                                      disabled={disabled}
-                                      patientId={patientId}
-                                      imageUploadFolder={patientId ? `patients/${patientId}/evolutions/${safeEvolutionId}` : undefined}
-                                      accentColor="violet"
-                                      className="!p-0 !border-0 bg-transparent shadow-none w-full [&_.ProseMirror]:!p-0 [&_.ProseMirror]:!text-[#37352f] [&_.ProseMirror]:!text-base [&_.ProseMirror]:!leading-relaxed [&_.ProseMirror]:!min-h-[300px]"
-                                    />                  </div>
-                </div>
-              </div>
-
-              <div className="h-px bg-[#ECEBEA] mb-8 ml-12" />
-
-              {/* H2 Header: Patient Report */}
-              <div id="patientReport" className="flex items-baseline mb-8 group gap-4">
-                <div className="w-8 flex-shrink-0 text-right text-sm font-medium text-[#D3D1CB] select-none">H2</div>
-                <div className="flex-1">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <h2 className="text-2xl font-semibold text-[#37352f] mb-2 hover:text-[#2383e2] cursor-text transition-colors">Relato do Paciente</h2>
-                    <span className="text-xs text-muted-foreground">{patientReportCount} caracteres</span>
-                  </div>
-                  <div className="text-[#37352f]">
-                                    <RichTextEditor
-                                      placeholder="O que o paciente relatou? Como se sente desde a última sessão?"
-                                      value={data.patientReport || ''}
-                                      onValueChange={(val: string) => handleFieldChange('patientReport', val)}
-                                      disabled={disabled}
-                                      patientId={patientId}
-                                      imageUploadFolder={patientId ? `patients/${patientId}/evolutions/${safeEvolutionId}` : undefined}
-                                      accentColor="sky"
-                                      className="!p-0 !border-0 bg-transparent shadow-none w-full [&_.ProseMirror]:!p-0 [&_.ProseMirror]:!text-[#37352f] [&_.ProseMirror]:!text-base [&_.ProseMirror]:!leading-relaxed [&_.ProseMirror]:!min-h-[100px]"
-                                    />                  </div>
+                    <RichTextEditor
+                      placeholder="Tecle '/' para comandos ou escreva livremente sua evolução..."
+                      value={data.evolutionText || ''}
+                      onValueChange={(val: string) => handleFieldChange('evolutionText', val)}
+                      disabled={disabled}
+                      patientId={patientId}
+                      imageUploadFolder={patientId ? `patients/${patientId}/evolutions/${safeEvolutionId}` : undefined}
+                      accentColor="violet"
+                      className="!p-0 !border-0 bg-transparent shadow-none w-full [&_.ProseMirror]:!p-0 [&_.ProseMirror]:!text-[#37352f] [&_.ProseMirror]:!text-base [&_.ProseMirror]:!leading-relaxed [&_.ProseMirror]:!min-h-[300px]"
+                    />                  </div>
                 </div>
               </div>
             </div>
-            <aside className="hidden lg:block lg:translate-x-4">
-              <div className="sticky top-24 space-y-4 pb-28">
-                <div className="p-4 rounded-xl border border-[#ECEBEA] bg-[#FBFBFA] shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
-                  <h3 className="text-sm font-semibold text-[#37352f]">Evolução Clínica</h3>
-                  <p className="text-xs text-muted-foreground mt-1 mb-3">Use “/” para inserir blocos, tabelas, callouts e mídias.</p>
+            <aside className="hidden lg:block lg:ml-8 w-[340px] flex-shrink-0 relative">
+              <div className="sticky top-24 pb-28">
+                <div className="rounded-[1.5rem] border border-white/50 bg-white/70 backdrop-blur-2xl shadow-[0_12px_45px_-12px_rgba(0,0,0,0.1)] hover:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] overflow-hidden flex flex-col relative z-10 transition-all duration-300">
+                  {/* Decorative gradient top */}
+                  <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-sky-500 opacity-90" />
 
-                  <div className="space-y-2 text-xs text-muted-foreground">
-                    <p>Última edição: {localLastSaved ? localLastSaved.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—'}</p>
-                    <p>Tempo desde a sessão: {summaryStats.timeSince}</p>
-                    <p>Palavras‑chave: {summaryStats.keywords.length ? summaryStats.keywords.join(', ') : '—'}</p>
+                  {/* Status & Info Header */}
+                  <div className="p-6 pb-5 bg-gradient-to-b from-white to-white/50 border-b border-black/[0.03]">
+                    <div className="flex items-center justify-between mb-5">
+                      <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Status da Sessão</h3>
+                      <div className="flex items-center gap-2">
+                        <span className="relative flex h-2 w-2">
+                          <span className={cn(
+                            "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
+                            localSaveStatus === 'saving' ? "bg-amber-400" : "bg-emerald-400"
+                          )}></span>
+                          <span className={cn(
+                            "relative inline-flex rounded-full h-2 w-2",
+                            localSaveStatus === 'saving' ? "bg-amber-500" : "bg-emerald-500"
+                          )}></span>
+                        </span>
+                        <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+                          {localSaveStatus === 'saving' ? 'Salvando' : 'Gravado'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3.5">
+                      <div className="flex justify-between items-center group">
+                        <span className="text-sm text-slate-500 font-medium group-hover:text-slate-600 transition-colors">Tempo decorrido</span>
+                        <span className="text-sm font-bold text-slate-800 bg-white/80 px-2.5 py-1 rounded-md shadow-sm border border-slate-100">{summaryStats.timeSince}</span>
+                      </div>
+                      <div className="flex justify-between items-center group">
+                        <span className="text-sm text-slate-500 font-medium group-hover:text-slate-600 transition-colors">Visto por último</span>
+                        <span className="text-[13px] font-medium text-slate-700">{localLastSaved ? localLastSaved.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—'}</span>
+                      </div>
+                    </div>
+
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      {statusTags.map((tag) => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => toggleTag(tag)}
+                          className={cn(
+                            'px-3 py-1.5 text-xs font-semibold rounded-full transition-all duration-200 border',
+                            selectedTags.includes(tag)
+                              ? 'bg-violet-100 border-violet-200 text-violet-700 shadow-sm shadow-violet-500/10'
+                              : 'bg-white border-[#ECEBEA] text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                          )}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {statusTags.map((tag) => (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => toggleTag(tag)}
-                        className={cn(
-                          'px-2.5 py-1 text-xs rounded-full border transition-colors',
-                          selectedTags.includes(tag)
-                            ? 'bg-primary/10 border-primary/30 text-primary'
-                            : 'bg-white border-border text-muted-foreground hover:text-foreground'
-                        )}
-                      >
-                        {tag}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                  {/* Checklist Section */}
+                  <div className="p-6 border-b border-black/[0.03] bg-white/40">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                        <CheckSquare className="w-4 h-4 text-violet-500" />
+                        Checklist
+                      </h3>
+                      <div className={cn(
+                        "text-[10px] uppercase tracking-wider font-bold px-2.5 py-1 rounded-full border transition-colors",
+                        checklistProgress === 100
+                          ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                          : "bg-white border-slate-200 text-slate-600"
+                      )}>
+                        {checklistProgress}% concl.
+                      </div>
+                    </div>
 
-                <div className="p-4 rounded-xl border border-[#ECEBEA] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-semibold text-[#37352f]">Checklist da Sessão</h3>
-                    <span className="text-xs text-muted-foreground">{checklistProgress}%</span>
+                    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden mb-5 border border-slate-200/50 shadow-inner">
+                      <div className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-500 ease-out" style={{ width: `${checklistProgress}%` }} />
+                    </div>
+
+                    <div className="space-y-3 pl-1">
+                      {checklist.map((item) => (
+                        <label key={item.id} className="flex items-start gap-3.5 group cursor-pointer">
+                          <div className="relative flex items-center justify-center mt-0.5">
+                            <input
+                              type="checkbox"
+                              checked={item.done}
+                              onChange={() =>
+                                setChecklist((prev) =>
+                                  prev.map((i) => (i.id === item.id ? { ...i, done: !i.done } : i))
+                                )
+                              }
+                              className="peer sr-only"
+                            />
+                            <div className="w-[18px] h-[18px] rounded-[5px] border-2 border-slate-300 bg-white peer-checked:bg-violet-500 peer-checked:border-violet-500 transition-all duration-200 shadow-sm group-hover:border-violet-400 relative">
+                              <CheckCircle2 strokeWidth={4} className="w-[10px] h-[10px] text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 peer-checked:opacity-100 transition-opacity" />
+                            </div>
+                          </div>
+                          <span className={cn(
+                            "text-[13px] leading-tight transition-colors duration-200 select-none pt-0.5",
+                            item.done ? "text-slate-400 line-through" : "text-slate-700 font-medium group-hover:text-slate-900"
+                          )}>
+                            {item.label}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
-                  <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden mb-3">
-                    <div className="h-full bg-primary transition-all" style={{ width: `${checklistProgress}%` }} />
-                  </div>
-                  <div className="space-y-2">
-                    {checklist.map((item) => (
-                      <label key={item.id} className="flex items-center gap-2 text-xs text-[#37352f]">
-                        <input
-                          type="checkbox"
-                          checked={item.done}
-                          onChange={() =>
-                            setChecklist((prev) =>
-                              prev.map((i) => (i.id === item.id ? { ...i, done: !i.done } : i))
-                            )
-                          }
+
+                  {/* Pain Slider Section */}
+                  {showQuickPainSlider && (
+                    <div className="p-6 bg-gradient-to-t from-white to-white/60">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-amber-500" />
+                          <h3 className="text-sm font-bold text-slate-800">Dor (EVA)</h3>
+                        </div>
+                        <div className="flex items-baseline gap-0.5 bg-white px-2 py-0.5 rounded shadow-sm border border-slate-100">
+                          <span className="text-sm font-bold text-slate-800">{painLevel}</span>
+                          <span className="text-[10px] font-bold text-slate-400">/10</span>
+                        </div>
+                      </div>
+                      <div className="mt-2 -mx-1">
+                        <QuickPainSlider
+                          value={data.painLevel}
+                          onChange={(level) => handleFieldChange('painLevel', level)}
+                          disabled={disabled}
+                          showLabel
                         />
-                        <span>{item.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
+                      </div>
+                    </div>
+                  )}
 
-                <div className="p-4 rounded-xl border border-[#ECEBEA] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-sm font-semibold text-[#37352f]">Nível de Dor (EVA)</h3>
-                    <span className="text-xs font-semibold text-[#37352f]">{painLevel}/10</span>
-                  </div>
-                  <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden mt-3">
-                    <div className="h-full bg-[#2383e2] transition-all" style={{ width: `${Math.min(100, painLevel * 10)}%` }} />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById('pain-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                    className="mt-3 text-xs text-[#2383e2] hover:underline"
-                  >
-                    Ir para seção
-                  </button>
                 </div>
               </div>
             </aside>

@@ -8,8 +8,8 @@ interface DraggableAppointmentProps {
   children: React.ReactNode;
   isDragging: boolean;
   isDragDisabled?: boolean;
-  dragData?: UseDraggableArguments['data'];
   isPopoverOpen?: boolean;
+  'data-appointment-popover-anchor'?: string;
 }
 
 /**
@@ -20,7 +20,7 @@ function draggableAppointmentAreEqual(
   prev: DraggableAppointmentProps,
   next: DraggableAppointmentProps
 ): boolean {
-  return (
+  const isEqual = (
     prev.id === next.id &&
     prev.isDragging === next.isDragging &&
     prev.isDragDisabled === next.isDragDisabled &&
@@ -32,6 +32,8 @@ function draggableAppointmentAreEqual(
     prev.style.gridRow === next.style.gridRow &&
     prev.style.left === next.style.left
   );
+
+  return isEqual;
 }
 
 /**
@@ -51,7 +53,8 @@ export const DraggableAppointment = memo(({
   isDragging,
   isDragDisabled = false,
   dragData,
-  _isPopoverOpen = false
+  isPopoverOpen = false,
+  'data-appointment-popover-anchor': dataAnchor
 }: DraggableAppointmentProps) => {
   const {
     setNodeRef,
@@ -105,6 +108,7 @@ export const DraggableAppointment = memo(({
         // Smooth scale animation on grab
         "transition-transform duration-75 ease-out will-change-transform"
       )}
+      data-appointment-popover-anchor={dataAnchor}
     >
       {children}
     </div>
