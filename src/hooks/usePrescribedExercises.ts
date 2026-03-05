@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, query as firestoreQuery, where, getDocs, addDoc, updateDoc, doc, db } from '@/integrations/firebase/app';
+import { exercisesApi } from '@/lib/api/workers-client';
 import { useToast } from '@/hooks/use-toast';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
@@ -44,18 +45,11 @@ export const usePrescribedExercises = (patientId: string) => {
             // Get unique exercise IDs
             const exerciseIds = [...new Set(prescriptions.map(p => p.exercise_id))];
 
-            // Fetch exercise details
+            // Fetch exercise details via Workers API (Neon)
             if (exerciseIds.length > 0) {
-                const exercisesQuery = firestoreQuery(
-                    collection(db, 'exercises')
-                );
-                const exercisesSnapshot = await getDocs(exercisesQuery);
-                const exercises = exercisesSnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...normalizeFirestoreData(doc.data())
-                }));
-
-                const exerciseMap = new Map(exercises.map(e => [e.id, e]));
+                const exercisesRes = await exercisesApi.list({ limit: 500 });
+                const exercises = exercisesRes.data ?? [];
+                const exerciseMap = new Map(exercises.map((e: { id: string }) => [e.id, e]));
 
                 // Join exercise data
                 return prescriptions.map(p => ({
