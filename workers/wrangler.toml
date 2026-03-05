@@ -1,0 +1,53 @@
+name = "fisioflow-api"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+# ===== HYPERDRIVE (Neon PostgreSQL) =====
+# Crie com: wrangler hyperdrive create fisioflow-neon \
+#   --connection-string="postgresql://neondb_owner:<PASSWORD>@ep-wandering-bonus-acj4zwvo-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require"
+[[hyperdrive]]
+binding = "HYPERDRIVE"
+id = "12b9fefcfbc04074a63342a9212e1b4f"
+
+# ===== CLOUDFLARE R2 (Media Storage) =====
+# Crie com: wrangler r2 bucket create fisioflow-media
+[[r2_buckets]]
+binding = "MEDIA_BUCKET"
+bucket_name = "fisioflow-media"
+
+# ===== VARIÁVEIS DE AMBIENTE =====
+[vars]
+ENVIRONMENT = "production"
+FIREBASE_PROJECT_ID = "fisioflow-migration"
+# CORS: domínio do frontend em Cloudflare Pages
+ALLOWED_ORIGINS = "https://fisioflow.pages.dev,https://moocafisio.com.br,https://www.moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173"
+# Neon Auth JWT verification (obrigatório para rotas protegidas)
+# Ajuste para os valores reais do seu tenant Neon Auth.
+NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
+# Opcional (habilite apenas se quiser validação estrita de issuer)
+# NEON_AUTH_ISSUER = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth"
+# NEON_AUTH_AUDIENCE = "fisioflow-api"
+
+# ===== AMBIENTE DE STAGING =====
+[env.staging]
+name = "fisioflow-api-staging"
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+FIREBASE_PROJECT_ID = "fisioflow-migration"
+ALLOWED_ORIGINS = "https://fisioflow-staging.pages.dev,http://localhost:5173"
+NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
+
+[[env.staging.hyperdrive]]
+binding = "HYPERDRIVE"
+id = "SUBSTITUA_PELO_ID_STAGING"
+
+[[env.staging.r2_buckets]]
+binding = "MEDIA_BUCKET"
+bucket_name = "fisioflow-media-staging"
+
+# ===== OBSERVABILIDADE =====
+[observability]
+enabled = true
