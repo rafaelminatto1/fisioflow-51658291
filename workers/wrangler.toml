@@ -22,7 +22,7 @@ bucket_name = "fisioflow-media"
 ENVIRONMENT = "production"
 FIREBASE_PROJECT_ID = "fisioflow-migration"
 # CORS: domínio do frontend em Cloudflare Pages
-ALLOWED_ORIGINS = "https://fisioflow.pages.dev,https://moocafisio.com.br,https://www.moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173"
+ALLOWED_ORIGINS = "https://fisioflow.pages.dev,https://moocafisio.com.br,https://www.moocafisio.com.br,https://media.moocafisio.com.br"
 # Neon Auth JWT verification (obrigatório para rotas protegidas)
 # Ajuste para os valores reais do seu tenant Neon Auth.
 NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
@@ -40,9 +40,9 @@ FIREBASE_PROJECT_ID = "fisioflow-migration"
 ALLOWED_ORIGINS = "https://fisioflow-staging.pages.dev,http://localhost:5173"
 NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
 
-[[env.staging.hyperdrive]]
-binding = "HYPERDRIVE"
-id = "SUBSTITUA_PELO_ID_STAGING"
+# [[env.staging.hyperdrive]]
+# binding = "HYPERDRIVE"
+# id = "SUBSTITUA_PELO_ID_STAGING"  # Descomentar e preencher ao criar staging
 
 [[env.staging.r2_buckets]]
 binding = "MEDIA_BUCKET"
