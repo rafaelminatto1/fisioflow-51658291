@@ -1,13 +1,12 @@
 /**
- * useExerciseProtocols - Migrated to Firebase
+ * useExerciseProtocols - Leitura e mutations via Workers API (Neon PostgreSQL)
+ *
+ * Migrado: Firestore → Workers API (POST/PUT/DELETE /api/protocols)
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, orderBy, db } from '@/integrations/firebase/app';
+import { protocolsApi, type Protocol as WorkersProtocol } from '@/lib/api/workers-client';
 import { toast } from 'sonner';
-import { protocolsCacheService } from '@/lib/offline/ProtocolsCacheService';
-import { fisioLogger as logger } from '@/lib/errors/logger';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface ProtocolMilestone {
   week: number;
@@ -25,6 +24,7 @@ export interface ExerciseProtocol {
   name: string;
   condition_name: string;
   protocol_type: 'pos_operatorio' | 'patologia';
+  evidence_level?: string;
   weeks_total?: number;
   milestones: ProtocolMilestone[] | Record<string, unknown>;
   restrictions: ProtocolRestriction[] | Record<string, unknown>;
@@ -36,166 +36,83 @@ export interface ExerciseProtocol {
     url?: string;
     journal?: string;
   }[];
-  clinical_tests?: string[]; // Array of clinical_test_template IDs
+  clinical_tests?: string[];
   organization_id?: string;
   created_by?: string;
   created_at?: string;
   updated_at?: string;
 }
 
-interface ProtocolsQueryResult {
-  data: ExerciseProtocol[];
-  isFromCache: boolean;
-  source: 'firestore' | 'indexeddb' | 'localstorage' | 'memory';
-}
+/**
+ * Mapeia formato camelCase do Worker → snake_case do App
+ */
+const mapWorkerToAppProtocol = (p: WorkersProtocol): ExerciseProtocol => ({
+  id: p.id,
+  name: p.name,
+  condition_name: p.conditionName || '',
+  protocol_type: p.protocolType as any,
+  evidence_level: p.evidenceLevel || undefined,
+  weeks_total: p.weeksTotal || undefined,
+  milestones: [],
+  restrictions: [],
+  progression_criteria: [],
+});
 
-// Helper to convert Firestore doc to ExerciseProtocol
-const convertDocToExerciseProtocol = (doc: { id: string; data: () => Record<string, unknown> }): ExerciseProtocol => {
-  const data = normalizeFirestoreData(doc.data());
+/**
+ * Mapeia formato snake_case do App → camelCase do Worker
+ */
+const mapAppToWorkerProtocol = (
+  p: Omit<ExerciseProtocol, 'id' | 'created_at' | 'updated_at'>,
+): Record<string, unknown> => ({
+  name: p.name,
+  conditionName: p.condition_name,
+  protocolType: p.protocol_type,
+  evidenceLevel: p.evidence_level,
+  weeksTotal: p.weeks_total,
+  milestones: p.milestones,
+  restrictions: p.restrictions,
+  progressionCriteria: p.progression_criteria,
+  references: p.references,
+  clinicalTests: p.clinical_tests,
+});
+
+export const useWorkersProtocols = (filters?: {
+  q?: string;
+  type?: string;
+  evidenceLevel?: string;
+  page?: number;
+  limit?: number;
+}) => {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['workers-protocols', filters],
+    queryFn: () => protocolsApi.list(filters),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const protocols = (data?.data ?? []).map(mapWorkerToAppProtocol);
+
   return {
-    id: doc.id,
-    ...data,
-  } as ExerciseProtocol;
+    protocols,
+    meta: data?.meta,
+    loading: isLoading,
+    error,
+    refetch,
+  };
 };
-
-// Helpers copiados para garantir robustez (DRY seria melhor, mas evita quebra agora)
-function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
-  return Promise.race([
-    Promise.resolve(promise),
-    new Promise<T>((_reject) =>
-      setTimeout(() => _reject(new Error(`Timeout após ${timeoutMs}ms`)), timeoutMs)
-    ),
-  ]);
-}
-
-async function retryWithBackoff<T>(
-  fn: () => Promise<T>,
-  maxRetries: number = 3,
-  initialDelay: number = 1000
-): Promise<T> {
-  let lastError: Error | unknown;
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      return await fn();
-    } catch (error) {
-      lastError = error;
-      if (attempt < maxRetries - 1) {
-        const delay = initialDelay * Math.pow(2, attempt);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
-    }
-  }
-  throw lastError;
-}
-
-function isNetworkError(error: unknown): boolean {
-  if (!error) return false;
-  const message = (error instanceof Error ? error.message : '').toLowerCase();
-  return (
-    message.includes('network') ||
-    message.includes('timeout') ||
-    message.includes('fetch') ||
-    message.includes('failed to fetch') ||
-    message.includes('connection') ||
-    message.includes('offline') ||
-    !navigator.onLine
-  );
-}
-
-// Data Fetching Logic
-async function fetchProtocols(): Promise<ProtocolsQueryResult> {
-  // Checar offline
-  if (!navigator.onLine) {
-    logger.warn('Offline mode detected for protocols', {}, 'useExerciseProtocols');
-    const cacheResult = await protocolsCacheService.getFromCache();
-    return {
-      data: cacheResult.data,
-      isFromCache: true,
-      source: cacheResult.source as 'firestore' | 'indexeddb' | 'localstorage' | 'memory'
-    };
-  }
-
-  try {
-    const q = firestoreQuery(
-      collection(db, 'exercise_protocols'),
-      orderBy('condition_name')
-    );
-
-    const result = await retryWithBackoff(() =>
-      withTimeout(getDocs(q), 10000), // 10s timeout
-      3,
-      1000
-    );
-
-    const protocols = result.docs.map(convertDocToExerciseProtocol);
-
-    // Atualizar cache
-    protocolsCacheService.saveToCache(protocols);
-
-    return {
-      data: protocols,
-      isFromCache: false,
-      source: 'firestore'
-    };
-
-  } catch (error) {
-    if (isNetworkError(error)) {
-      logger.warn('Network error fetching protocols, falling back to cache', { error }, 'useExerciseProtocols');
-    } else {
-      logger.error('Critical error fetching protocols', error, 'useExerciseProtocols');
-    }
-    const cacheResult = await protocolsCacheService.getFromCache<ExerciseProtocol>();
-    // Se o cache estiver vazio, propagar o erro para a UI poder exibir e permitir retry
-    if (!cacheResult.data || cacheResult.data.length === 0) {
-      throw error;
-    }
-    return {
-      data: cacheResult.data,
-      isFromCache: true,
-      source: cacheResult.source as 'firestore' | 'indexeddb' | 'localstorage' | 'memory'
-    };
-  }
-}
 
 export const useExerciseProtocols = () => {
   const queryClient = useQueryClient();
 
-  const protocolsQuery = useQuery({
-    queryKey: ['exercise-protocols'],
-    queryFn: fetchProtocols,
-    staleTime: 1000 * 60 * 60, // 1 hora de frescor (protocolos mudam pouco)
-    gcTime: 1000 * 60 * 60 * 24, // 24 horas em memória
-    placeholderData: (previousData) => previousData, // Manter dados anteriores
-    retry: 3,
-  });
-
-  // Lógica de Falback Multi-camada na leitura
-  const result = protocolsQuery.data;
-  const previousData = queryClient.getQueryData<ProtocolsQueryResult>(['exercise-protocols']);
-
-  let finalProtocols: ExerciseProtocol[] = [];
-
-  if (result?.data && result.data.length > 0) {
-    finalProtocols = result.data;
-  } else if (previousData?.data && previousData.data.length > 0) {
-    finalProtocols = previousData.data;
-  }
+  const { protocols, loading, error, refetch } = useWorkersProtocols({ limit: 500 });
 
   const createMutation = useMutation({
     mutationFn: async (protocol: Omit<ExerciseProtocol, 'id' | 'created_at' | 'updated_at'>) => {
-      const protocolData = {
-        ...protocol,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'exercise_protocols'), protocolData);
-      const docSnap = await getDoc(docRef);
-
-      return convertDocToExerciseProtocol(docSnap);
+      const workerData = mapAppToWorkerProtocol(protocol);
+      const result = await protocolsApi.create(workerData as any);
+      return mapWorkerToAppProtocol(result.data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['exercise-protocols'] });
+      queryClient.invalidateQueries({ queryKey: ['workers-protocols'] });
       toast.success('Protocolo criado com sucesso');
     },
     onError: (error: Error) => {
@@ -205,17 +122,23 @@ export const useExerciseProtocols = () => {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, ...protocol }: Partial<ExerciseProtocol> & { id: string }) => {
-      const docRef = doc(db, 'exercise_protocols', id);
-      await updateDoc(docRef, {
-        ...protocol,
-        updated_at: new Date().toISOString(),
-      });
+      const workerData: Record<string, unknown> = {};
+      if (protocol.name !== undefined) workerData.name = protocol.name;
+      if (protocol.condition_name !== undefined) workerData.conditionName = protocol.condition_name;
+      if (protocol.protocol_type !== undefined) workerData.protocolType = protocol.protocol_type;
+      if (protocol.evidence_level !== undefined) workerData.evidenceLevel = protocol.evidence_level;
+      if (protocol.weeks_total !== undefined) workerData.weeksTotal = protocol.weeks_total;
+      if (protocol.milestones !== undefined) workerData.milestones = protocol.milestones;
+      if (protocol.restrictions !== undefined) workerData.restrictions = protocol.restrictions;
+      if (protocol.progression_criteria !== undefined) workerData.progressionCriteria = protocol.progression_criteria;
+      if (protocol.references !== undefined) workerData.references = protocol.references;
+      if (protocol.clinical_tests !== undefined) workerData.clinicalTests = protocol.clinical_tests;
 
-      const docSnap = await getDoc(docRef);
-      return convertDocToExerciseProtocol(docSnap);
+      const result = await protocolsApi.update(id, workerData as any);
+      return mapWorkerToAppProtocol(result.data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['exercise-protocols'] });
+      queryClient.invalidateQueries({ queryKey: ['workers-protocols'] });
       toast.success('Protocolo atualizado com sucesso');
     },
     onError: (error: Error) => {
@@ -225,10 +148,10 @@ export const useExerciseProtocols = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await deleteDoc(doc(db, 'exercise_protocols', id));
+      await protocolsApi.delete(id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['exercise-protocols'] });
+      queryClient.invalidateQueries({ queryKey: ['workers-protocols'] });
       toast.success('Protocolo excluído com sucesso');
     },
     onError: (error: Error) => {
@@ -236,21 +159,18 @@ export const useExerciseProtocols = () => {
     },
   });
 
-  // Retornar 'loading' APENAS se não tivermos NENHUM dado (nem cache, nem anterior)
-  // Se tivermos fallback, não mostramos loading para evitar flash ou bloqueio da UI
-  const effectiveLoading = protocolsQuery.isLoading && finalProtocols.length === 0;
+  const effectiveLoading = loading && protocols.length === 0;
 
   return {
-    protocols: finalProtocols,
+    protocols,
     loading: effectiveLoading,
-    error: protocolsQuery.error,
-    refetch: protocolsQuery.refetch,
+    error,
+    refetch,
     createProtocol: createMutation.mutate,
     updateProtocol: updateMutation.mutate,
     deleteProtocol: deleteMutation.mutate,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
     isDeleting: deleteMutation.isPending,
-    isOfflineMode: result?.isFromCache || false
   };
 };
