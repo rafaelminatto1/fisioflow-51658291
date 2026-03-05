@@ -5,6 +5,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
+import { templatesApi, type ExerciseTemplate as WorkersTemplate, type ExerciseTemplateItem as WorkersTemplateItem } from '@/lib/api/workers-client';
 import { toast } from 'sonner';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
@@ -52,62 +53,71 @@ export interface ExerciseTemplateItem {
   };
 }
 
-// Helper to convert Firestore doc to ExerciseTemplate
-const convertDocToExerciseTemplate = (doc: { id: string; data: () => Record<string, unknown> }): ExerciseTemplate => {
-  const data = normalizeFirestoreData(doc.data());
-  return {
-    id: doc.id,
-    ...data,
-  } as ExerciseTemplate;
-};
+/**
+ * Mapeia formato do Worker para App legada
+ */
+const mapWorkerToAppTemplate = (t: WorkersTemplate): ExerciseTemplate => ({
+  id: t.id,
+  name: t.name,
+  description: t.description || undefined,
+  category: t.category || '',
+  condition_name: t.conditionName || '',
+  template_variant: t.templateVariant || undefined,
+  organization_id: t.organizationId || undefined,
+  created_by: t.createdBy || undefined,
+  created_at: t.createdAt,
+  updated_at: t.updatedAt,
+  clinical_notes: t.clinicalNotes || undefined,
+  contraindications: t.contraindications || undefined,
+  precautions: t.precautions || undefined,
+  progression_notes: t.progressionNotes || undefined,
+  evidence_level: t.evidenceLevel || undefined,
+  bibliographic_references: t.bibliographicReferences,
+});
 
-// Helper to convert Firestore doc to ExerciseTemplateItem
-const convertDocToExerciseTemplateItem = (doc: { id: string; data: () => Record<string, unknown> }): ExerciseTemplateItem => {
-  const data = normalizeFirestoreData(doc.data());
+const mapWorkerToAppTemplateItem = (i: WorkersTemplateItem): ExerciseTemplateItem => ({
+  id: i.id,
+  template_id: i.templateId,
+  exercise_id: i.exerciseId,
+  order_index: i.orderIndex,
+  sets: i.sets || undefined,
+  repetitions: i.repetitions || undefined,
+  duration: i.duration || undefined,
+  notes: i.notes || undefined,
+  week_start: i.weekStart || undefined,
+  week_end: i.weekEnd || undefined,
+  clinical_notes: i.clinicalNotes || undefined,
+  focus_muscles: i.focusMuscles,
+  purpose: i.purpose || undefined,
+});
+
+export const useWorkersTemplates = (filters?: { q?: string; category?: string; page?: number; limit?: number }) => {
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['workers-templates', filters],
+    queryFn: () => templatesApi.list(filters),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const templates = (data?.data ?? []).map(mapWorkerToAppTemplate);
+
   return {
-    id: doc.id,
-    ...data,
-  } as ExerciseTemplateItem;
+    templates,
+    meta: data?.meta,
+    loading: isLoading,
+    error,
+    refetch,
+  };
 };
 
 export const useExerciseTemplates = (category?: string) => {
   const queryClient = useQueryClient();
 
-  const { data: templates = [], isLoading, error } = useQuery({
-    queryKey: ['exercise-templates', category],
-    queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'exercise_templates'),
-        orderBy('condition_name')
-      );
-
-      const snapshot = await getDocs(q);
-      let data = snapshot.docs.map(convertDocToExerciseTemplate);
-
-      // Filter by category if provided
-      if (category) {
-        data = data.filter(t => t.category === category);
-      }
-
-      return data;
-    },
-  });
+  const { templates, loading, error } = useWorkersTemplates({ category });
 
   const createMutation = useMutation({
-    mutationFn: async (template: Omit<ExerciseTemplate, 'id' | 'created_at' | 'updated_at'>) => {
-      const templateData = {
-        ...template,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'exercise_templates'), templateData);
-      const docSnap = await getDoc(docRef);
-
-      return convertDocToExerciseTemplate(docSnap);
-    },
+    mutationFn: (template: any) => templatesApi.create(template),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['exercise-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['workers-templates'] });
       toast.success('Template criado com sucesso');
     },
     onError: (error: Error) => {
@@ -116,18 +126,9 @@ export const useExerciseTemplates = (category?: string) => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, ...template }: Partial<ExerciseTemplate> & { id: string }) => {
-      const docRef = doc(db, 'exercise_templates', id);
-      await updateDoc(docRef, {
-        ...template,
-        updated_at: new Date().toISOString(),
-      });
-
-      const docSnap = await getDoc(docRef);
-      return convertDocToExerciseTemplate(docSnap);
-    },
+    mutationFn: ({ id, ...template }: any) => templatesApi.update(id, template),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['exercise-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['workers-templates'] });
       toast.success('Template atualizado com sucesso');
     },
     onError: (error: Error) => {
@@ -136,11 +137,9 @@ export const useExerciseTemplates = (category?: string) => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await deleteDoc(doc(db, 'exercise_templates', id));
-    },
+    mutationFn: templatesApi.delete,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['exercise-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['workers-templates'] });
       toast.success('Template excluído com sucesso');
     },
     onError: (error: Error) => {
@@ -150,7 +149,7 @@ export const useExerciseTemplates = (category?: string) => {
 
   return {
     templates,
-    loading: isLoading,
+    loading,
     error,
     createTemplate: createMutation.mutate,
     createTemplateAsync: createMutation.mutateAsync,
@@ -162,65 +161,41 @@ export const useExerciseTemplates = (category?: string) => {
   };
 };
 
+export const useWorkersTemplateDetail = (id: string) => {
+  return useQuery({
+    queryKey: ['workers-template', id],
+    queryFn: () => templatesApi.get(id),
+    enabled: !!id,
+  });
+};
+
 export const useTemplateItems = (templateId?: string) => {
   const queryClient = useQueryClient();
 
-  const { data: items = [], isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['exercise-template-items', templateId],
     queryFn: async () => {
       if (!templateId) return [];
-
-      const q = firestoreQuery(
-        collection(db, 'exercise_template_items'),
-        where('template_id', '==', templateId),
-        orderBy('order_index')
-      );
-
-      const snapshot = await getDocs(q);
-      const templateItems = snapshot.docs.map(convertDocToExerciseTemplateItem);
-
-      // Fetch exercise data for each item
-      const itemsWithExercise = await Promise.all(
-        templateItems.map(async (item) => {
-          if (item.exercise_id) {
-            const exerciseDoc = await getDoc(doc(db, 'exercises', item.exercise_id));
-            if (exerciseDoc.exists()) {
-              const exerciseData = exerciseDoc.data();
-              return {
-                ...item,
-                exercise: {
-                  id: exerciseDoc.id,
-                  name: exerciseData.name,
-                  description: exerciseData.description,
-                  category: exerciseData.category,
-                  difficulty: exerciseData.difficulty,
-                },
-              };
-            }
-          }
-          return item;
-        })
-      );
-
-      return itemsWithExercise as ExerciseTemplateItem[];
+      const res = await templatesApi.get(templateId);
+      return res.data.items.map(mapWorkerToAppTemplateItem);
     },
     enabled: !!templateId,
   });
 
+  const items = data ?? [];
+
   const addItemMutation = useMutation({
     mutationFn: async (item: Omit<ExerciseTemplateItem, 'id' | 'created_at'>) => {
-      const itemData = {
-        ...item,
-        created_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'exercise_template_items'), itemData);
-      const docSnap = await getDoc(docRef);
-
-      return convertDocToExerciseTemplateItem(docSnap);
+      if (!templateId) throw new Error('templateId é obrigatório');
+      const current = await templatesApi.get(templateId);
+      const currentItems = current.data.items;
+      const newItems = [...currentItems, { ...item, order_index: currentItems.length }];
+      const res = await templatesApi.update(templateId, { items: newItems });
+      return res.data.items.map(mapWorkerToAppTemplateItem);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exercise-template-items', templateId] });
+      queryClient.invalidateQueries({ queryKey: ['workers-templates'] });
       toast.success('Exercício adicionado ao template');
     },
     onError: (error: Error) => {
@@ -230,10 +205,14 @@ export const useTemplateItems = (templateId?: string) => {
 
   const removeItemMutation = useMutation({
     mutationFn: async (id: string) => {
-      await deleteDoc(doc(db, 'exercise_template_items', id));
+      if (!templateId) throw new Error('templateId é obrigatório');
+      const current = await templatesApi.get(templateId);
+      const newItems = current.data.items.filter((i: WorkersTemplateItem) => i.id !== id);
+      await templatesApi.update(templateId, { items: newItems });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exercise-template-items', templateId] });
+      queryClient.invalidateQueries({ queryKey: ['workers-templates'] });
       toast.success('Exercício removido do template');
     },
     onError: (error: Error) => {
@@ -242,12 +221,14 @@ export const useTemplateItems = (templateId?: string) => {
   });
 
   const updateItemMutation = useMutation({
-    mutationFn: async ({ id, ...item }: Partial<ExerciseTemplateItem> & { id: string }) => {
-      const docRef = doc(db, 'exercise_template_items', id);
-      await updateDoc(docRef, item);
-
-      const docSnap = await getDoc(docRef);
-      return convertDocToExerciseTemplateItem(docSnap);
+    mutationFn: async ({ id, ...changes }: Partial<ExerciseTemplateItem> & { id: string }) => {
+      if (!templateId) throw new Error('templateId é obrigatório');
+      const current = await templatesApi.get(templateId);
+      const newItems = current.data.items.map((i: WorkersTemplateItem) =>
+        i.id === id ? { ...i, ...changes } : i
+      );
+      const res = await templatesApi.update(templateId, { items: newItems });
+      return res.data.items.map(mapWorkerToAppTemplateItem);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exercise-template-items', templateId] });

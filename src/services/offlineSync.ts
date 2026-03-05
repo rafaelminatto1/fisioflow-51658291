@@ -4,6 +4,7 @@
 
 import { getDB, type FisioFlowDB } from '@/hooks/useOfflineStorage';
 import { collection, getDocs, query, where, limit as limitClause, db } from '@/integrations/firebase/app';
+import { exercisesApi } from '@/lib/api/workers-client';
 import { toast } from 'sonner';
 import type { IDBPDatabase } from 'idb';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -517,23 +518,14 @@ class OfflineSyncService {
         logger.debug('[OfflineSyncService] No appointments to cache for today', undefined, 'offlineSync');
       }
 
-      // 2. Cache common exercises (first 100)
+      // 2. Cache all exercises via Workers API (Neon)
       let exercises;
       try {
-        const exercisesQ = query(
-          collection(db, 'exercises'),
-          limitClause(100)
-        );
-        const exercisesSnapshot = await getDocs(exercisesQ);
-        exercises = exercisesSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
+        const exercisesRes = await exercisesApi.list({ limit: 500 });
+        exercises = exercisesRes.data ?? [];
       } catch (error) {
-        if ((error as { code?: string })?.code === 'permission-denied') {
-          logger.debug('[OfflineSyncService] Permission denied for exercises. Skipping.', undefined, 'offlineSync');
-          exercises = [];
-        } else {
-          logger.warn('[OfflineSyncService] Error fetching exercises', { error }, 'offlineSync');
-          exercises = [];
-        }
+        logger.warn('[OfflineSyncService] Error fetching exercises from Workers API', { error }, 'offlineSync');
+        exercises = [];
       }
 
       if (exercises && exercises.length > 0) {
