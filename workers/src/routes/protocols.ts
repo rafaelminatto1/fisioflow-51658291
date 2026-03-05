@@ -114,7 +114,7 @@ app.get('/:id', async (c) => {
     db
       .select()
       .from(exerciseProtocols)
-      .where(and(condition, eq(exerciseProtocols.isActive, true)))
+      .where(and(condition, eq(exerciseProtocols.isActive, true), eq(exerciseProtocols.isPublic, true)))
       .limit(1),
     db
       .select()

@@ -234,4 +234,35 @@ app.delete('/:id', requireAuth, async (c) => {
   return c.json({ ok: true });
 });
 
+// ===== BUSCA SEMÂNTICA (por nome, descrição e tags) =====
+app.get('/search/semantic', async (c) => {
+  const db = createDb(c.env);
+  const { q, limit = '10' } = c.req.query();
+
+  if (!q || q.trim().length < 2) {
+    return c.json({ error: 'Parâmetro q obrigatório (mínimo 2 caracteres)' }, 400);
+  }
+
+  const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
+
+  const rows = await db
+    .select()
+    .from(exercises)
+    .where(
+      and(
+        eq(exercises.isActive, true),
+        eq(exercises.isPublic, true),
+        sql`(
+          ${exercises.name} ILIKE ${'%' + q + '%'}
+          OR ${exercises.description} ILIKE ${'%' + q + '%'}
+          OR ${exercises.tags}::text ILIKE ${'%' + q + '%'}
+          OR ${exercises.bodyParts}::text ILIKE ${'%' + q + '%'}
+        )`,
+      ),
+    )
+    .limit(limitNum);
+
+  return c.json({ data: rows });
+});
+
 export { app as exercisesRoutes };
