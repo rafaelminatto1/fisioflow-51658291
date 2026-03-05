@@ -3,10 +3,10 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDoc, getDocs, addDoc, doc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
+import { collection, getDoc, addDoc, db } from '@/integrations/firebase/app';
+import { templatesApi } from '@/lib/api/workers-client';
 import { toast } from 'sonner';
 import { useAuth } from './useAuth';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface ApplyTemplateParams {
   templateId: string;
@@ -32,21 +32,13 @@ export const useApplyExerciseTemplate = () => {
     }: ApplyTemplateParams) => {
       if (!user?.uid) throw new Error('Usuário não autenticado');
 
-      // 1. Buscar template
-      const templateDoc = await getDoc(doc(db, 'exercise_templates', templateId));
-      if (!templateDoc.exists()) {
+      // 1. Buscar template + itens via Workers API (Neon)
+      const templateRes = await templatesApi.get(templateId);
+      if (!templateRes.data) {
         throw new Error('Template não encontrado');
       }
-      const template = { id: templateDoc.id, ...templateDoc.data() };
-
-      // 2. Buscar itens do template
-      const itemsQuery = firestoreQuery(
-        collection(db, 'exercise_template_items'),
-        where('template_id', '==', templateId),
-        orderBy('order_index')
-      );
-      const itemsSnap = await getDocs(itemsQuery);
-      const templateItems = itemsSnap.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
+      const template = templateRes.data;
+      const templateItems = template.items ?? [];
 
       // 3. Calcular semanas pós-operatórias se aplicável
       let currentWeek = 0;
