@@ -194,6 +194,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
                   <DropdownMenuSeparator className="my-2" />
                   <DropdownMenuItem
                     onClick={handleLogout}
+                    data-testid="user-menu-logout"
                     className="rounded-2xl px-4 py-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer transition-all duration-300 focus:bg-red-50 focus:text-red-500 group"
                   >
                     <div className="p-2 bg-red-50 dark:bg-red-950/10 rounded-xl mr-3 group-hover:bg-red-100 transition-colors">

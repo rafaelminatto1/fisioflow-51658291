@@ -1,14 +1,10 @@
 /**
- * Goals Admin Service - Migrated to Firebase
+ * Goals Admin Service — Cloudflare Workers + Neon
  */
-
-import { getFirebaseFunctions } from '@/integrations/firebase/functions';
-import { httpsCallable } from 'firebase/functions';
-import { getFirebaseAuth } from '@/integrations/firebase/app';
+import { goalProfilesApi, type GoalProfileRow } from '@/lib/api/workers-client';
 import { GoalProfile, GoalTarget } from '@/lib/goals/goalProfiles.seed';
 
-const functions = getFirebaseFunctions();
-const auth = getFirebaseAuth();
+export type { GoalProfileRow };
 
 export interface ProfileListItem {
     id: string;
@@ -29,103 +25,89 @@ export interface ProfileDetail extends ProfileListItem {
     targets: GoalTarget[];
 }
 
-interface FunctionsResponse<T> {
-    data?: T;
-    error?: string;
+function rowToListItem(row: GoalProfileRow): ProfileListItem {
+    return {
+        id: row.id,
+        name: row.name,
+        description: row.description ?? '',
+        status: row.status,
+        version: row.version,
+        published_at: row.published_at ?? null,
+        updated_at: row.updated_at,
+        created_at: row.created_at,
+    };
 }
 
-async function getAuthToken(): Promise<string> {
-    const user = auth.currentUser;
-    if (!user) {
-        throw new Error('User not authenticated');
-    }
-    return user.getIdToken();
+function rowToDetail(row: GoalProfileRow): ProfileDetail {
+    return {
+        ...rowToListItem(row),
+        applicable_tests: row.applicable_tests ?? [],
+        quality_gate: row.quality_gate,
+        evidence: row.evidence ?? [],
+        tags: row.tags ?? [],
+        targets: (row.targets ?? []) as GoalTarget[],
+    };
 }
 
 export const goalsAdminService = {
     async listProfiles(): Promise<ProfileListItem[]> {
-        const token = await getAuthToken();
-
-        const goalsAdminFunction = httpsCallable(functions, 'goals-admin-profiles');
-        const { data } = await goalsAdminFunction({
-            action: 'list',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-            }
-        });
-
-        return (data as FunctionsResponse<ProfileListItem>)?.data as ProfileListItem[];
+        const res = await goalProfilesApi.list();
+        return (res.data ?? []).map(rowToListItem);
     },
 
-    /**
-     * Get a specific profile with targets
-     */
     async getProfile(id: string): Promise<ProfileDetail> {
-        const token = await getAuthToken();
-
-        const goalsAdminFunction = httpsCallable(functions, 'goals-admin-profiles');
-        const { data } = await goalsAdminFunction({
-            action: 'get',
-            profileId: id,
-            headers: {
-                'Authorization': `Bearer ${token}`,
-            }
-        });
-
-        return (data as FunctionsResponse<ProfileDetail>)?.data as ProfileDetail;
+        const res = await goalProfilesApi.get(id);
+        return rowToDetail(res.data);
     },
 
-    /**
-     * Create a new draft profile
-     */
     async createProfile(id: string, name: string, description: string): Promise<GoalProfile> {
-        const token = await getAuthToken();
-
-        const goalsAdminFunction = httpsCallable(functions, 'goals-admin-profiles');
-        const { data } = await goalsAdminFunction({
-            action: 'create',
-            profileData: { id, name, description },
-            headers: {
-                'Authorization': `Bearer ${token}`,
-            }
-        });
-
-        return (data as FunctionsResponse<GoalProfile>)?.data as GoalProfile;
+        const res = await goalProfilesApi.create({ id, name, description });
+        const row = res.data;
+        return {
+            id: row.id,
+            name: row.name,
+            description: row.description ?? '',
+            applicableTests: row.applicable_tests as any[] ?? [],
+            targets: (row.targets ?? []) as GoalTarget[],
+            tags: row.tags ?? [],
+        } as GoalProfile;
     },
 
-    /**
-     * Update profile metadata and targets
-     */
     async updateProfile(id: string, updates: Partial<GoalProfile>): Promise<GoalProfile> {
-        const token = await getAuthToken();
+        const payload: Record<string, unknown> = {};
+        if (updates.name !== undefined) payload.name = updates.name;
+        if (updates.description !== undefined) payload.description = updates.description;
+        if (updates.applicableTests !== undefined) payload.applicable_tests = updates.applicableTests;
+        if (updates.qualityGate !== undefined) payload.quality_gate = updates.qualityGate;
+        if (updates.targets !== undefined) payload.targets = updates.targets;
+        if (updates.clinicianNotesTemplate !== undefined) payload.clinician_notes_template = updates.clinicianNotesTemplate;
+        if (updates.patientNotesTemplate !== undefined) payload.patient_notes_template = updates.patientNotesTemplate;
+        if (updates.evidence !== undefined) payload.evidence = updates.evidence;
+        if (updates.defaultPinnedMetricKeys !== undefined) payload.default_pinned_metric_keys = updates.defaultPinnedMetricKeys;
+        if (updates.tags !== undefined) payload.tags = updates.tags;
 
-        const goalsAdminFunction = httpsCallable(functions, 'goals-admin-profiles');
-        const { data } = await goalsAdminFunction({
-            action: 'update',
-            profileId: id,
-            updates,
-            headers: {
-                'Authorization': `Bearer ${token}`,
-            }
-        });
-
-        return (data as FunctionsResponse<GoalProfile>)?.data as GoalProfile;
+        const res = await goalProfilesApi.update(id, payload);
+        const row = res.data;
+        return {
+            id: row.id,
+            name: row.name,
+            description: row.description ?? '',
+            applicableTests: row.applicable_tests as any[] ?? [],
+            targets: (row.targets ?? []) as GoalTarget[],
+            tags: row.tags ?? [],
+        } as GoalProfile;
     },
 
-    /**
-     * Publish a draft profile
-     */
     async publishProfile(id: string): Promise<GoalProfile> {
-        const token = await getAuthToken();
-
-        const goalsAdminFunction = httpsCallable(functions, 'goals-admin-publish');
-        const { data } = await goalsAdminFunction({
-            profileId: id,
-            headers: {
-                'Authorization': `Bearer ${token}`,
-            }
-        });
-
-        return (data as FunctionsResponse<GoalProfile>)?.data as GoalProfile;
+        const res = await goalProfilesApi.publish(id);
+        const row = res.data;
+        return {
+            id: row.id,
+            name: row.name,
+            description: row.description ?? '',
+            applicableTests: row.applicable_tests as any[] ?? [],
+            targets: (row.targets ?? []) as GoalTarget[],
+            tags: row.tags ?? [],
+        } as GoalProfile;
     },
 };
