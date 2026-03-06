@@ -1,20 +1,17 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { User } from 'firebase/auth';
-import { onAuthStateChange, signIn as firebaseSignIn, signUp as firebaseSignUp, signOut as firebaseSignOut, resetPassword as firebaseResetPassword, updateUserPassword as firebaseUpdatePassword } from '@/integrations/firebase/auth';
-import { db, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, limit, addDoc } from '@/integrations/firebase/app';
-import { profileApi } from '@/integrations/firebase/functions';
+import { onAuthStateChange as onFirebaseAuthStateChange, signIn as firebaseSignIn, signUp as firebaseSignUp, signOut as firebaseSignOut, resetPassword as firebaseResetPassword, updateUserPassword as firebaseUpdatePassword } from '@/integrations/firebase/auth';
+import { authClient, isNeonAuthEnabled } from '@/integrations/neon/auth';
+import { db, doc, getDoc, updateDoc } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { useToast } from '@/hooks/use-toast';
+import { getNeonAccessToken } from '@/lib/auth/neon-token';
 import { AuthContextType, AuthContext, AuthError } from './AuthContext';
 import { Profile, RegisterFormData, UserRole } from '@/types/auth';
 import { useQueryClient } from '@tanstack/react-query';
 import { AppointmentService } from '@/services/appointmentService';
 
-const isPermissionDeniedError = (error: unknown): boolean => {
-  const code = (error as { code?: string })?.code;
-  const message = (error as Error)?.message?.toLowerCase?.() ?? '';
-  return code === 'permission-denied' || message.includes('insufficient permissions');
-};
+/** ID da Organização Padrão (Clínica Única) */
+export const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
 
 export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -22,406 +19,275 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
   const [sessionCheckFailed, _setSessionCheckFailed] = useState(false);
-  const { toast: _toast } = useToast();
   const queryClient = useQueryClient();
   const prefetchedOrgIdsRef = useRef(new Set<string>());
 
-  // Prefetch dashboard data
+  const adaptNeonUser = useCallback((neonUser: any): User => {
+    if (!neonUser) return null as any;
+    return {
+      uid: neonUser.id,
+      email: neonUser.email,
+      displayName: neonUser.name,
+      photoURL: neonUser.image,
+      emailVerified: neonUser.emailVerified,
+      getIdToken: async () => {
+        return getNeonAccessToken();
+      },
+      metadata: {},
+      providerData: [],
+      refreshToken: '',
+      tenantId: null,
+      delete: async () => {},
+      getIdTokenResult: async () => ({ claims: {}, expirationTime: '', authTime: '', issuedAtTime: '', signInProvider: '', token: '' }),
+      reload: async () => {},
+      toJSON: () => ({}),
+      phoneNumber: null,
+      isAnonymous: false,
+    } as unknown as User;
+  }, []);
+
   const prefetchDashboardData = useCallback((orgId: string) => {
     if (!orgId || prefetchedOrgIdsRef.current.has(orgId)) return;
-
     prefetchedOrgIdsRef.current.add(orgId);
 
     const runPrefetch = () => {
-      logger.info('Prefetching dashboard data (idle)', { orgId }, 'AuthContextProvider');
-
-      // Prefetch appointments
       queryClient.prefetchQuery({
         queryKey: ['appointments_v2', 'list', orgId],
         queryFn: async () => {
           const data = await AppointmentService.fetchAppointments(orgId);
-          return { data, isFromCache: false, cacheTimestamp: null, source: 'firestore' };
+          return { data, isFromCache: false, cacheTimestamp: null, source: 'workers' };
         },
         staleTime: 1000 * 60 * 5,
       });
-
-      // Prefetch critical route JS chunks so they are ready when the user navigates.
-      // This eliminates the lazy-load waterfall on first navigation after login.
-      import('@/pages/PatientEvolution').catch(() => { });
-      import('@/pages/patients/PatientProfilePage').catch(() => { });
-      import('@/pages/patients/NewEvaluationPage').catch(() => { });
-
-      // Prefetch analytics summary
-      // NOTE: analytics-summary / dashboard-metrics prefetch removed because
-      // these keys do not have a global default queryFn and can throw Missing queryFn.
-      // They are still loaded normally by their own hooks when the dashboard mounts.
     };
 
     if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
       window.requestIdleCallback(() => runPrefetch(), { timeout: 3000 });
-      return;
+    } else {
+      setTimeout(runPrefetch, 1200);
     }
-
-    setTimeout(runPrefetch, 1200);
   }, [queryClient]);
 
-  /**
-   * Obtém ou cria a organização padrão para o usuário
-   * Busca por uma organização ativa existente ou cria uma nova
-   */
-  const _getOrCreateDefaultOrganization = async (): Promise<string | null> => {
+  const fetchProfile = useCallback(async (firebaseUser: User): Promise<Profile | null> => {
     try {
-      // Buscar a primeira organização ativa disponível
-      const orgQuery = query(
-        collection(db, 'organizations'),
-        where('active', '==', true),
-        limit(1)
-      );
-      const orgSnapshot = await getDocs(orgQuery);
+      if (isNeonAuthEnabled()) {
+        const session = await authClient.getSession();
+        const neonUser = session?.data?.user as Record<string, unknown> | undefined;
+        const userMeta = (neonUser?.user_metadata ?? neonUser?.metadata ?? {}) as Record<string, unknown>;
 
-      if (!orgSnapshot.empty) {
-        // Retornar a primeira organização encontrada
-        return orgSnapshot.docs[0].id;
+        const organizationId =
+          (typeof neonUser?.organization_id === 'string' && neonUser.organization_id) ||
+          (typeof neonUser?.organizationId === 'string' && neonUser.organizationId) ||
+          (typeof userMeta.organization_id === 'string' && userMeta.organization_id) ||
+          (typeof userMeta.organizationId === 'string' && userMeta.organizationId) ||
+          DEFAULT_ORG_ID;
+
+        const role =
+          (typeof neonUser?.role === 'string' && neonUser.role) ||
+          (typeof userMeta.role === 'string' && userMeta.role) ||
+          'admin';
+
+        return {
+          id: String(neonUser?.id ?? firebaseUser.uid),
+          user_id: String(neonUser?.id ?? firebaseUser.uid),
+          full_name: String(neonUser?.name ?? firebaseUser.displayName ?? firebaseUser.email?.split('@')[0] ?? 'Usuário'),
+          role: role as UserRole,
+          organization_id: organizationId,
+          onboarding_completed: true,
+          is_active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
       }
 
-      // Se não existir, criar a organização padrão
-      const now = new Date().toISOString();
-      const orgRef = await addDoc(collection(db, 'organizations'), {
-        name: 'Clínica Padrão',
-        slug: 'clinica-padrao',
-        active: true,
-        settings: {
-          timezone: 'America/Sao_Paulo',
-          language: 'pt-BR',
-        },
-        created_at: now,
-        updated_at: now,
-      });
-
-      logger.info('Default organization created:', orgRef.id, 'AuthContextProvider');
-      return orgRef.id;
-    } catch (err) {
-      logger.error('Erro ao obter ou criar organização padrão', err, 'AuthContextProvider');
-      return null;
-    }
-  };
-
-  /**
-   * Waits for the profile to be created by the backend trigger
-   */
-  const waitForProfile = async (firebaseUser: User, _attempts = 0): Promise<Profile | null> => {
-    try {
+      // 1. Tentar Firestore (legado)
       const profileRef = doc(db, 'profiles', firebaseUser.uid);
       const profileSnap = await getDoc(profileRef);
 
       if (profileSnap.exists()) {
-        return { id: profileSnap.id, ...profileSnap.data() } as Profile;
+        const data = profileSnap.data();
+        return { 
+          id: profileSnap.id, 
+          user_id: firebaseUser.uid,
+          full_name: data.full_name || firebaseUser.displayName || 'Usuário',
+          role: data.role || 'fisioterapeuta',
+          organization_id: data.organization_id || DEFAULT_ORG_ID,
+          ...data 
+        } as Profile;
       }
 
-      // If profile doesn't exist yet, wait and retry (logic handled in fetchProfile recursion)
-      // This is expected immediately after registration while the backend trigger runs
-      return null;
+      // 2. Fallback: Gerar perfil básico a partir do User (Neon/Firebase)
+      // Em modo Single-Tenant, isso é seguro.
+      return {
+        id: firebaseUser.uid,
+        user_id: firebaseUser.uid,
+        full_name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Usuário',
+        role: 'admin', // Default para o dono da clínica
+        organization_id: DEFAULT_ORG_ID,
+        onboarding_completed: true,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
     } catch (err) {
-      if (isPermissionDeniedError(err)) {
-        logger.warn('Sem permissão para ler perfil no Firestore', { uid: firebaseUser.uid }, 'AuthContextProvider');
-        throw err;
-      }
       logger.error('Error fetching profile', err, 'AuthContextProvider');
-      return null;
-    }
-  };
-
-  const fetchProfile = useCallback(async (firebaseUser: User, attempt = 1): Promise<Profile | null> => {
-    const MAX_ATTEMPTS = 3; // Reduzido de 5 para 3
-    const RETRY_DELAY = 1000; // 1 segundo
-
-    try {
-      logger.debug(`Fetching profile from Firestore (Attempt ${attempt}/${MAX_ATTEMPTS})`, null, 'AuthContextProvider');
-      const profile = await waitForProfile(firebaseUser);
-
-      if (profile) {
-        // Sync organization logic (kept from original)
-        profileApi.getCurrent().then((resp: unknown) => {
-          if (!profile) return;
-          const pgProfile = (resp as { data?: { organization_id?: string } })?.data ?? resp;
-          const pgOrgId = pgProfile && typeof pgProfile === 'object' && 'organization_id' in pgProfile ? pgProfile.organization_id : undefined;
-          if (!pgOrgId) return;
-
-          const hasOrgChanged = !profile.organization_id || profile.organization_id !== pgOrgId;
-          if (hasOrgChanged) {
-            const profileRef = doc(db, 'profiles', firebaseUser.uid);
-            updateDoc(profileRef, {
-              organization_id: pgOrgId,
-              updated_at: new Date().toISOString()
-            }).catch((err: unknown) => logger.error('Failed to update profile organization_id', err, 'AuthContextProvider'));
-          }
-        }).catch(err => logger.warn('PG Sync failed', err));
-
-        return profile;
-      } else {
-        // Profile not found in Firestore. Retry a few times, then try Cloud SQL fallback.
-        if (attempt < MAX_ATTEMPTS) {
-          logger.info(`Profile not found in Firestore, retrying... (${attempt}/${MAX_ATTEMPTS})`, null, 'AuthContextProvider');
-          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY));
-          return fetchProfile(firebaseUser, attempt + 1);
-        }
-
-        // Fallback: buscar perfil no Cloud SQL (quando usuário existe só lá)
-        try {
-          logger.info('Profile not in Firestore, trying Cloud SQL fallback', null, 'AuthContextProvider');
-          const response = await profileApi.getCurrent();
-          const pgProfile = (response as { data?: Record<string, unknown> })?.data ?? response;
-          if (pgProfile && typeof pgProfile === 'object' && pgProfile.user_id) {
-            const mapped: Profile = {
-              id: String(pgProfile.id ?? firebaseUser.uid),
-              user_id: String(pgProfile.user_id),
-              full_name: String(pgProfile.full_name ?? firebaseUser.displayName ?? firebaseUser.email ?? 'Usuário'),
-              organization_id: pgProfile.organization_id ? String(pgProfile.organization_id) : undefined,
-              role: (pgProfile.role as Profile['role']) ?? 'fisioterapeuta',
-              phone: pgProfile.phone ? String(pgProfile.phone) : undefined,
-              avatar_url: pgProfile.avatar_url ? String(pgProfile.avatar_url) : undefined,
-              onboarding_completed: Boolean(pgProfile.onboarding_completed),
-              is_active: pgProfile.is_active !== false,
-              created_at: String(pgProfile.created_at ?? new Date().toISOString()),
-              updated_at: String(pgProfile.updated_at ?? new Date().toISOString()),
-            };
-            // Sincronizar para Firestore para próximas cargas
-            try {
-              const profileRef = doc(db, 'profiles', firebaseUser.uid);
-              await setDoc(profileRef, { ...mapped, updated_at: new Date().toISOString() }, { merge: true });
-            } catch {
-              // Ignorar erro de sync - perfil já está em memória
-            }
-            return mapped;
-          }
-        } catch (pgErr) {
-          logger.warn('Cloud SQL fallback failed', pgErr, 'AuthContextProvider');
-        }
-
-        logger.warn('Profile not found after retries and Cloud SQL fallback.', null, 'AuthContextProvider');
-        return null;
-      }
-    } catch (err) {
-      if (isPermissionDeniedError(err)) {
-        logger.warn('Busca de perfil interrompida por permissão insuficiente', { uid: firebaseUser.uid }, 'AuthContextProvider');
-        try {
-          const response = await profileApi.getCurrent();
-          const pgProfile = (response as { data?: Record<string, unknown> })?.data ?? response;
-          if (pgProfile && typeof pgProfile === 'object' && pgProfile.user_id) {
-            return {
-              id: String(pgProfile.id ?? firebaseUser.uid),
-              user_id: String(pgProfile.user_id),
-              full_name: String(pgProfile.full_name ?? firebaseUser.displayName ?? firebaseUser.email ?? 'Usuário'),
-              organization_id: pgProfile.organization_id ? String(pgProfile.organization_id) : undefined,
-              role: (pgProfile.role as Profile['role']) ?? 'fisioterapeuta',
-              phone: pgProfile.phone ? String(pgProfile.phone) : undefined,
-              avatar_url: pgProfile.avatar_url ? String(pgProfile.avatar_url) : undefined,
-              onboarding_completed: Boolean(pgProfile.onboarding_completed),
-              is_active: pgProfile.is_active !== false,
-              created_at: String(pgProfile.created_at ?? new Date().toISOString()),
-              updated_at: String(pgProfile.updated_at ?? new Date().toISOString()),
-            };
-          }
-        } catch (pgErr) {
-          logger.warn('Fallback via profileApi também falhou após permission-denied', pgErr, 'AuthContextProvider');
-        }
-
-        try {
-          const token = await firebaseUser.getIdTokenResult();
-          const claims = token.claims as Record<string, unknown>;
-          const claimOrganization =
-            (typeof claims.organizationId === 'string' && claims.organizationId) ||
-            (typeof claims.organization_id === 'string' && claims.organization_id) ||
-            undefined;
-          const claimRole =
-            (typeof claims.role === 'string' && claims.role) ||
-            'fisioterapeuta';
-
-          if (claimOrganization || claimRole) {
-            return {
-              id: firebaseUser.uid,
-              user_id: firebaseUser.uid,
-              full_name: firebaseUser.displayName ?? firebaseUser.email ?? 'Usuário',
-              organization_id: claimOrganization,
-              role: claimRole as Profile['role'],
-              onboarding_completed: false,
-              is_active: true,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            };
-          }
-        } catch (tokenErr) {
-          logger.warn('Fallback por custom claims falhou após permission-denied', tokenErr, 'AuthContextProvider');
-        }
-
-        return null;
-      }
-      logger.error('Erro crítico ao buscar perfil', err, 'AuthContextProvider');
       return null;
     }
   }, []);
 
-  // ... (refreshProfile implementation adjusting to take user from state or arg)
-
-  const refreshProfile = useCallback(async () => {
-    if (!user) {
-      setProfile(null);
-      return;
-    }
-
-    try {
-      const profileData = await fetchProfile(user);
+  const loadUserAndProfile = useCallback(async (newUser: User | null) => {
+    setUser(newUser);
+    if (newUser) {
+      const profileData = await fetchProfile(newUser);
       setProfile(profileData);
-      if (profileData?.organization_id) {
-        prefetchDashboardData(profileData.organization_id);
-      }
-    } catch (err) {
-      logger.error('Erro ao atualizar perfil', err, 'AuthContextProvider');
+      const orgId = profileData?.organization_id || DEFAULT_ORG_ID;
+      prefetchDashboardData(orgId);
+    } else {
+      setProfile(null);
     }
-  }, [user, fetchProfile, prefetchDashboardData]);
+    setInitialized(true);
+    setLoading(false);
+  }, [fetchProfile, prefetchDashboardData]);
 
   useEffect(() => {
     let mounted = true;
-    // Timeout de segurança - se após 10s ainda estiver carregando, força conclusão
-    const timeoutId: NodeJS.Timeout = setTimeout(() => {
-      if (mounted && loading) {
-        logger.warn('Auth initialization timeout - forcing completion', null, 'AuthContextProvider');
-        setLoading(false);
-        setInitialized(true);
+    
+    const initializeAuth = async () => {
+      if (!isNeonAuthEnabled()) {
+        if (!mounted) return;
+        await loadUserAndProfile(null);
+        return;
       }
-    }, 10000); // 10 segundos
 
-    // Firebase Auth State Listener
-    const unsubscribe = onAuthStateChange((firebaseUser) => {
-      if (!mounted) return;
-      clearTimeout(timeoutId);
+      try {
+        const { data } = await authClient.getSession();
+        if (!mounted) return;
 
-      if (firebaseUser) {
-        setUser(firebaseUser);
-        setInitialized(true);
-
-        // OTIMIZAÇÃO: Definir loading=false imediatamente para renderizar a UI
-        // O perfil será carregado em background
-        setLoading(false);
-
-        // Carregar perfil do Firestore em background (não bloqueia a UI)
-        fetchProfile(firebaseUser).then(profileData => {
-          if (mounted) {
-            setProfile(profileData);
-            if (profileData?.organization_id) {
-              prefetchDashboardData(profileData.organization_id);
-            }
-          }
-        }).catch((err: unknown) => {
-          logger.error('Erro ao carregar perfil', err, 'AuthContextProvider');
-          // Não bloquear a UI mesmo se o perfil falhar
-        });
-      } else {
-        setUser(null);
-        setProfile(null);
-        setLoading(false);
-        setInitialized(true);
+        if (data?.user) {
+          const adaptedUser = adaptNeonUser(data.user);
+          await loadUserAndProfile(adaptedUser);
+        } else {
+          onFirebaseAuthStateChange(async (firebaseUser) => {
+            if (!mounted) return;
+            await loadUserAndProfile(firebaseUser);
+          });
+        }
+      } catch (e) {
+        if (!mounted) return;
+        await loadUserAndProfile(null);
       }
-    });
-
-    return () => {
-      mounted = false;
-      clearTimeout(timeoutId);
-      unsubscribe();
     };
-  }, [fetchProfile, prefetchDashboardData, loading]);
 
-  const signIn = async (email: string, password: string, _remember?: boolean): Promise<{ error?: AuthError | null }> => {
+    initializeAuth();
+    return () => { mounted = false; };
+  }, [adaptNeonUser, loadUserAndProfile]);
+
+  const signIn = async (email: string, password: string): Promise<{ error?: AuthError | null }> => {
     try {
       setLoading(true);
-      await firebaseSignIn(email, password);
-      return { error: null };
-    } catch (err: unknown) {
-      const error = err as Error;
-      logger.error('Erro no login', error, 'AuthContextProvider');
+      if (isNeonAuthEnabled()) {
+        const { data, error } = await authClient.signIn.email({ email, password });
+        if (error) throw new Error(error.message || 'Erro ao fazer login no Neon Auth');
+        if (data?.user) {
+          await loadUserAndProfile(adaptNeonUser(data.user));
+        }
+        return { error: null };
+      } else {
+        const result = await firebaseSignIn(email, password);
+        await loadUserAndProfile(result.user);
+        return { error: null };
+      }
+    } catch (err: any) {
+      logger.error('Erro no login', err, 'AuthContextProvider');
       setLoading(false);
-      return { error: { message: error.message || 'Erro ao fazer login' } };
+      return { error: { message: err.message || 'Erro ao fazer login' } };
     }
   };
 
   const signUp = async (data: RegisterFormData): Promise<{ error?: AuthError | null; user?: User | null }> => {
     try {
       setLoading(true);
-      const result = await firebaseSignUp(data.email, data.password, data.full_name);
-      return { user: result.user, error: null };
-    } catch (err: unknown) {
-      const error = err as Error;
-      logger.error('Erro no cadastro', error, 'AuthContextProvider');
+      if (isNeonAuthEnabled()) {
+        const { data: neonData, error } = await authClient.signUp.email({
+          email: data.email,
+          password: data.password,
+          name: data.full_name,
+        });
+        if (error) throw new Error(error.message || 'Erro ao cadastrar no Neon Auth');
+        const adapted = adaptNeonUser(neonData.user);
+        await loadUserAndProfile(adapted);
+        return { user: adapted, error: null };
+      } else {
+        const result = await firebaseSignUp(data.email, data.password, data.full_name);
+        await loadUserAndProfile(result.user);
+        return { user: result.user, error: null };
+      }
+    } catch (err: any) {
+      logger.error('Erro no cadastro', err, 'AuthContextProvider');
       setLoading(false);
-      return { error: { message: error.message || 'Erro ao cadastrar' } };
+      return { error: { message: err.message || 'Erro ao cadastrar' } };
     }
   };
 
   const signOut = async (): Promise<void> => {
     try {
+      setLoading(true);
+      if (isNeonAuthEnabled()) await authClient.signOut();
       await firebaseSignOut();
-      setUser(null);
-      setProfile(null);
+      await loadUserAndProfile(null);
     } catch (err) {
       logger.error('Erro ao sair', err, 'AuthContextProvider');
+      setLoading(false);
     }
   };
 
-  const resetPassword = async (email: string): Promise<{ error?: AuthError | null }> => {
+  const resetPassword = async (email: string) => {
     try {
-      await firebaseResetPassword(email);
-      return { error: null };
-    } catch (err: unknown) {
-      const error = err as Error;
-      // Dado sensível removido: operação de reset de senha registrada sem expor a senha (LGPD)
-      logger.error('Erro ao resetar senha: operação falhou', error, 'AuthContextProvider');
-      return { error: { message: error.message || 'Erro ao resetar senha' } };
-    }
-  };
-
-  const updatePassword = async (password: string): Promise<{ error?: AuthError | null }> => {
-    try {
-      await firebaseUpdatePassword(password);
-      return { error: null };
-    } catch (err: unknown) {
-      const error = err as Error;
-      // Dado sensível removido: operação de atualização de senha registrada sem expor a senha (LGPD)
-      logger.error('Erro ao atualizar senha: operação falhou', error, 'AuthContextProvider');
-      return { error: { message: error.message || 'Erro ao atualizar senha' } };
-    }
-  };
-
-  const updateProfile = async (updates: Partial<Profile>): Promise<{ error?: AuthError | null }> => {
-    try {
-      if (!user) {
-        return { error: { message: 'Usuário não autenticado' } };
+      if (isNeonAuthEnabled()) {
+        await authClient.forgetPassword({ email, redirectTo: window.location.origin + '/auth/reset-password' });
+      } else {
+        await firebaseResetPassword(email);
       }
-
-      const profileRef = doc(db, 'profiles', user.uid);
-      await updateDoc(profileRef, {
-        ...updates,
-        updated_at: new Date().toISOString()
-      });
-
-      // const response = await profileApi.update(updates); // Removed
-
-      // if (response.error) ... removed
-
-      // Atualizar estado local
-      if (profile) {
-        setProfile({ ...profile, ...updates });
-      }
-
       return { error: null };
-    } catch (err: unknown) {
-      const error = err as Error;
-      logger.error('Erro ao atualizar perfil', error, 'AuthContextProvider');
-      return { error: { message: error.message || 'Erro ao atualizar perfil' } };
+    } catch (err: any) {
+      return { error: { message: err.message || 'Erro ao resetar senha' } };
+    }
+  };
+
+  const updatePassword = async (password: string) => {
+    try {
+      if (isNeonAuthEnabled()) {
+        await authClient.changePassword({ newPassword: password });
+      } else {
+        await firebaseUpdatePassword(password);
+      }
+      return { error: null };
+    } catch (err: any) {
+      return { error: { message: err.message || 'Erro ao atualizar senha' } };
+    }
+  };
+
+  const updateProfile = async (updates: Partial<Profile>) => {
+    try {
+      if (!user) return { error: { message: 'Usuário não autenticado' } };
+      if (isNeonAuthEnabled() && (updates.full_name || updates.avatar_url)) {
+        await authClient.updateUser({ name: updates.full_name, image: updates.avatar_url });
+      }
+      // Sync to Firestore if possible
+      try {
+        const profileRef = doc(db, 'profiles', user.uid);
+        await updateDoc(profileRef, { ...updates, updated_at: new Date().toISOString() });
+      } catch (e) { logger.warn('Firestore profile sync skipped', e); }
+
+      if (profile) setProfile({ ...profile, ...updates });
+      return { error: null };
+    } catch (err: any) {
+      return { error: { message: err.message || 'Erro ao atualizar perfil' } };
     }
   };
 
   const role: UserRole | undefined = profile?.role as UserRole | undefined;
-  const organizationId = profile?.organization_id;
+  const organizationId = profile?.organization_id || DEFAULT_ORG_ID;
 
   const value: AuthContextType = {
     user,
@@ -437,7 +303,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     resetPassword,
     updatePassword,
     updateProfile,
-    refreshProfile,
+    refreshProfile: () => loadUserAndProfile(user),
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

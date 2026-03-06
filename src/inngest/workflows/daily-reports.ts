@@ -11,6 +11,7 @@ import { fisioLogger as logger } from '../../lib/errors/logger.js';
 import { getAdminDb } from '../../lib/firebase/admin.js';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 import { ResendService } from '../../lib/email/resend.js';
+import { countPatientsCreatedBetween } from './_shared/neon-patients-appointments';
 
 interface Organization {
   id: string;
@@ -121,12 +122,12 @@ export const dailyReportsWorkflow = inngest.createFunction(
 
               const sessions = sessionsSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
-              // Get new patients for yesterday
-              const newPatientsSnapshot = await db.collection('patients')
-                .where('organization_id', '==', org.id)
-                .where('created_at', '>=', yesterday.toISOString())
-                .where('created_at', '<', today.toISOString())
-                .get();
+              // Get new patients for yesterday (Neon)
+              const newPatientsCount = await countPatientsCreatedBetween(
+                org.id,
+                yesterday.toISOString(),
+                today.toISOString(),
+              );
 
               const completedSessions = sessions.filter((s) => s.status === 'concluido' || s.status === 'atendido').length;
               const cancelledSessions = sessions.filter((s) => s.status === 'cancelado').length;
@@ -138,7 +139,7 @@ export const dailyReportsWorkflow = inngest.createFunction(
                 totalSessions: sessions.length,
                 completedSessions,
                 cancelledSessions,
-                newPatients: newPatientsSnapshot.size,
+                newPatients: newPatientsCount,
                 sessionsByTherapist: sessions.reduce((acc: Record<string, number>, session: SessionRecord) => {
                   const therapistId = session.therapist_id || 'unassigned';
                   acc[therapistId] = (acc[therapistId] || 0) + 1;

@@ -1,16 +1,10 @@
 /**
  * Cloud Cache Service
  *
- * Uses Firebase Storage to store a snapshot of appointments for cross-device persistence.
- * This acts as a secondary cache layer when:
- * 1. Firebase is unreachable/slow
- * 2. User switches devices (local IndexedDB is empty)
- *
- * Migrated from Vercel Blob to Firebase Storage
+ * Uses Cloudflare R2 to store a snapshot of appointments for cross-device persistence.
  */
 
-import { ref, uploadBytes, getBytes } from 'firebase/storage';
-import { getFirebaseStorage } from '@/integrations/firebase/storage';
+import { uploadFile, deleteFile } from '@/lib/storage/upload';
 import type { AppointmentBase } from '@/types/appointment';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
@@ -18,12 +12,11 @@ const STORAGE_CACHE_PREFIX = 'cache/appointments/';
 
 export class CloudCacheService {
     /**
-     * Save appointments snapshot to Firebase Storage
+     * Save appointments snapshot to Cloudflare R2
      */
     async saveSnapshot(userId: string, appointments: AppointmentBase[]): Promise<void> {
         try {
-            const storage = getFirebaseStorage();
-            const filename = `${STORAGE_CACHE_PREFIX}${userId}.json`;
+            const filename = `${userId}.json`;
             const data = JSON.stringify({
                 timestamp: Date.now(),
                 userId,
@@ -31,31 +24,33 @@ export class CloudCacheService {
                 data: appointments,
             });
 
-            const storageRef = ref(storage, filename);
             const blob = new Blob([data], { type: 'application/json' });
+            const file = new File([blob], filename, { type: 'application/json' });
 
-            await uploadBytes(storageRef, blob);
+            await uploadFile(file, { folder: STORAGE_CACHE_PREFIX });
 
-            logger.info('Cloud snapshot saved', { userId, count: appointments.length });
+            logger.info('Cloud snapshot saved to R2', { userId, count: appointments.length });
         } catch (error) {
-            logger.error('Failed to save cloud snapshot', error);
-            // Don't throw - this is an auxiliary service
+            logger.error('Failed to save cloud snapshot to R2', error);
         }
     }
 
     /**
-     * Fetch appointments snapshot from Firebase Storage
+     * Fetch appointments snapshot from Cloudflare R2
      */
     async getSnapshot(userId: string): Promise<AppointmentBase[] | null> {
         try {
-            const storage = getFirebaseStorage();
-            const filename = `${STORAGE_CACHE_PREFIX}${userId}.json`;
-            const storageRef = ref(storage, filename);
+            // R2 public bucket URL (from .env R2_PUBLIC_DOMAIN)
+            const publicDomain = import.meta.env.VITE_R2_PUBLIC_DOMAIN || 'https://media.moocafisio.com.br';
+            const url = `${publicDomain}/${STORAGE_CACHE_PREFIX}${userId}.json`;
 
-            // Download the file content
-            const bytes = await getBytes(storageRef);
-            const text = new TextDecoder().decode(bytes);
-            const snapshot = JSON.parse(text);
+            const response = await fetch(url);
+            if (!response.ok) {
+                if (response.status === 404) return null;
+                throw new Error(`Failed to fetch snapshot: ${response.statusText}`);
+            }
+
+            const snapshot = await response.json();
 
             // Basic validation
             if (snapshot.userId !== userId) return null;
@@ -67,8 +62,19 @@ export class CloudCacheService {
 
             return snapshot.data;
         } catch (error) {
-            logger.warn('Failed to fetch cloud snapshot', error);
+            logger.warn('Failed to fetch cloud snapshot from R2', error);
             return null;
+        }
+    }
+
+    /**
+     * Clean up snapshot
+     */
+    async deleteSnapshot(userId: string): Promise<void> {
+        try {
+            await deleteFile(`${STORAGE_CACHE_PREFIX}${userId}.json`);
+        } catch (error) {
+            logger.error('Failed to delete cloud snapshot', error);
         }
     }
 }

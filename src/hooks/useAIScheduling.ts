@@ -11,6 +11,7 @@
 import { useState, useCallback } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { callFunctionHttp } from '@/integrations/firebase/functions';
 
 interface SuggestOptimalSlotParams {
   patientId: string;
@@ -57,20 +58,15 @@ export function useAIScheduling({ organizationId: propOrganizationId }: UseAISch
   const callAIService = useCallback(async (action: string, params: any) => {
     setIsLoading(true);
     try {
-      const response = await fetch('/.netlify/functions/api/ai', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('authToken') || ''}`,
-        },
-        body: JSON.stringify({ action, ...params, organizationId: finalOrgId }),
-      });
+      const data = await callFunctionHttp<
+        Record<string, unknown>,
+        { data?: unknown; success?: boolean; error?: string }
+      >('aiServiceHttp', { action, ...params, organizationId: finalOrgId });
 
-      if (!response.ok) {
-        throw new Error('Failed to call AI service');
+      if (data?.success === false) {
+        throw new Error(data.error || 'Falha ao processar IA');
       }
 
-      const data = await response.json();
       return data.data;
     } catch (error) {
       console.error('AI service error:', error);

@@ -11,6 +11,7 @@ import { z } from 'zod';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { getAdminDb } from '../../lib/firebase/admin.js';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { getPatientById } from './_shared/neon-patients-appointments';
 
 type PatientData = {
   id: string;
@@ -52,13 +53,10 @@ export const aiPatientInsightsWorkflow = inngest.createFunction(
 
     // Step 1: Fetch patient data
     const patient = await step.run('fetch-patient-data', async (): Promise<PatientData> => {
-      const patientSnap = await db.collection('patients').doc(patientId).get();
-
-      if (!patientSnap.exists) {
+      const patientData = await getPatientById(String(patientId));
+      if (!patientData) {
         throw new Error('Patient not found');
       }
-
-      const patientData = { id: patientSnap.id, ...patientSnap.data() } as Record<string, unknown>;
 
       // Fetch sessions for this patient (last 10)
       const sessionsSnapshot = await db.collection('soap_records')
@@ -70,7 +68,9 @@ export const aiPatientInsightsWorkflow = inngest.createFunction(
       const sessions = sessionsSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
       return {
-        ...patientData,
+        id: patientData.id,
+        name: patientData.full_name,
+        date_of_birth: patientData.birth_date || '',
         sessions,
       };
     });

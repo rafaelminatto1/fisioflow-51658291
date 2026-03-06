@@ -1,5 +1,4 @@
-import { apiClient } from '@/lib/api/v2/client';
-import { API_URLS } from '@/lib/api/v2/config';
+import { patientsApi } from '@/integrations/firebase/functions';
 
 export interface PatientV2 {
   id: string;
@@ -36,43 +35,52 @@ export const PatientServiceV2 = {
    * Lista pacientes com paginação e busca
    */
   list: async (params: ListPatientsParams = {}): Promise<ListPatientsResponse> => {
-    // V2 usa POST para listagem para suportar body complexo, ou query params.
-    // Nossa implementação backend aceita POST.
-    return apiClient.post<ListPatientsResponse>(API_URLS.patients.list, params);
+    const response = await patientsApi.list(params);
+    const perPage = params.limit ?? 50;
+    const total = response.total ?? response.data.length;
+    return {
+      data: response.data as unknown as PatientV2[],
+      total,
+      page: Math.floor((params.offset ?? 0) / perPage) + 1,
+      perPage,
+    };
   },
 
   /**
    * Busca um paciente pelo ID
    */
   get: async (patientId: string): Promise<{ data: PatientV2 }> => {
-    return apiClient.post<{ data: PatientV2 }>(API_URLS.patients.get, { patientId });
+    const data = await patientsApi.get(patientId);
+    return { data: data as unknown as PatientV2 };
   },
 
   /**
    * Cria um novo paciente
    */
   create: async (data: Partial<PatientV2>): Promise<{ data: PatientV2 }> => {
-    return apiClient.post<{ data: PatientV2 }>(API_URLS.patients.create, data);
+    const created = await patientsApi.create(data as Record<string, unknown>);
+    return { data: created as unknown as PatientV2 };
   },
 
   /**
    * Atualiza um paciente
    */
   update: async (patientId: string, data: Partial<PatientV2>): Promise<{ data: PatientV2 }> => {
-    return apiClient.post<{ data: PatientV2 }>(API_URLS.patients.update, { patientId, ...data });
+    const updated = await patientsApi.update(patientId, data as Record<string, unknown>);
+    return { data: updated as unknown as PatientV2 };
   },
 
   /**
    * Deleta (soft delete) um paciente
    */
   delete: async (patientId: string): Promise<{ success: boolean }> => {
-    return apiClient.post<{ success: boolean }>(API_URLS.patients.delete, { patientId });
+    return patientsApi.delete(patientId);
   },
 
   /**
    * Busca estatísticas do paciente
    */
   getStats: async (patientId: string) => {
-    return apiClient.post(API_URLS.patients.stats, { patientId });
+    return patientsApi.getStats(patientId);
   }
 };
