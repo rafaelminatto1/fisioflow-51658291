@@ -600,6 +600,24 @@ export function Sidebar() {
               location
             })}
           </div>
+
+          <div className="space-y-1 pt-2">
+            {!collapsed && (
+              <div className="px-4 py-2 border-t border-border/30">
+                <span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] mt-2 block">Extra</span>
+              </div>
+            )}
+            {renderSubmenu({
+              icon: MoreHorizontal,
+              label: 'Mais',
+              items: maisSubmenu,
+              isOpen: maisOpen || isMaisActive,
+              onOpenChange: setMaisOpen,
+              isActive: isMaisActive,
+              collapsed,
+              location
+            })}
+          </div>
         </div>
       </nav>
 

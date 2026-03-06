@@ -1,14 +1,13 @@
 import { FilesetResolver, PoseLandmarker, PoseLandmarkerResult } from '@mediapipe/tasks-vision';
 import { Point3D, UnifiedLandmark, POSE_LANDMARKS } from '@/utils/geometry';
+import { resolveMediaPipeVisionFileset } from '@/lib/ai/mediapipe';
 
 let poseLandmarker: PoseLandmarker | null = null;
 
 const initializePoseLandmarker = async () => {
     if (poseLandmarker) return poseLandmarker;
 
-    const vision = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
-    );
+    const vision = await resolveMediaPipeVisionFileset(FilesetResolver);
 
     poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
         baseOptions: {

@@ -1,11 +1,5 @@
-import {
-  ref,
-  uploadBytesResumable,
-  getDownloadURL,
-  deleteObject,
-  getStorage
-} from 'firebase/storage';
 import { auth } from '@/integrations/firebase/app';
+import { uploadToR2, deleteFromR2 } from './r2-storage';
 
 export type StorageBucket = 'avatars' | 'comprovantes' | 'prontuarios' | 'evolucao';
 
@@ -87,49 +81,40 @@ export async function uploadFile(
     filePath = `${options.bucket}/${user.uid}/${folder}/${timestamp}_${sanitizedName}`;
   }
 
-  // Create storage reference
-  const storageRef = ref(storage, filePath);
-
-  // Upload with progress
-  const uploadTask = uploadBytesResumable(storageRef, file);
-
-  return new Promise((resolve, reject) => {
-    uploadTask.on(
-      'state_changed',
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+  try {
+    const { publicUrl, key } = await uploadToR2(file, folder, {
+      onProgress: (progress) => {
         if (options.onProgress) options.onProgress(progress);
-      },
-      (error) => reject(error),
-      async () => {
-        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-        resolve({
-          url: downloadURL,
-          path: filePath,
-          fullPath: filePath, // Firebase fullPath is just the path from root
-        });
       }
-    );
-  });
+    });
+
+    return {
+      url: publicUrl,
+      path: key,
+      fullPath: key,
+    };
+  } catch (error) {
+    throw error;
+  }
 }
 
 export async function deleteFile(_bucket: StorageBucket, path: string): Promise<void> {
-  const storage = getStorage();
-  const storageRef = ref(storage, path);
-  await deleteObject(storageRef);
+  await deleteFromR2(path);
 }
 
 /**
- * Get a temporary access URL. In Firebase Storage, default getDownloadURL() 
- * is practically a permanent link unless signed URLs are used via Admin SDK.
- * For client-side, we use getDownloadURL but we can wrap it for consistency.
+ * Get a temporary access URL.
+ * R2 public URLs are returned by default.
  */
 export async function getSignedUrl(
   _bucket: StorageBucket,
   path: string,
   _expiresIn: number = 3600
 ): Promise<string> {
-  const storage = getStorage();
-  const storageRef = ref(storage, path);
-  return getDownloadURL(storageRef);
+  // If the path is already a full URL, return it
+  if (path.startsWith('http')) return path;
+
+  // Otherwise, construct the R2 public URL
+  const publicDomain = import.meta.env.VITE_R2_PUBLIC_DOMAIN || 'https://media.moocafisio.com.br';
+  return `${publicDomain}/${path}`;
 }

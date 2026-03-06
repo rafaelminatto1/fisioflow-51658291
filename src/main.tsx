@@ -58,7 +58,35 @@ if (typeof window !== 'undefined') {
 // ============================================================================
 // ERROR HANDLERS (Global)
 // ============================================================================
-window.addEventListener('vite:preloadError', () => {
-  logger.error('Vite preload error - Recarregando deployment', null, 'main.tsx');
+const CHUNK_RELOAD_GUARD_KEY = '__fisioflow_chunk_reload_once__';
+
+function isChunkLoadError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error ?? '');
+  return /chunk|dynamically imported module|failed to fetch/i.test(message);
+}
+
+function reloadOnChunkError(reason: string) {
+  if (sessionStorage.getItem(CHUNK_RELOAD_GUARD_KEY) === '1') {
+    logger.error(`Chunk reload já executado (evitando loop): ${reason}`, null, 'main.tsx');
+    return;
+  }
+
+  sessionStorage.setItem(CHUNK_RELOAD_GUARD_KEY, '1');
+  logger.error(`Erro de chunk detectado (${reason}) - recarregando`, null, 'main.tsx');
   window.location.reload();
+}
+
+window.addEventListener('vite:preloadError', (event) => {
+  event.preventDefault();
+  reloadOnChunkError('vite:preloadError');
+});
+
+window.addEventListener('error', (event) => {
+  if (!isChunkLoadError(event.error ?? event.message)) return;
+  reloadOnChunkError('window.error');
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  if (!isChunkLoadError(event.reason)) return;
+  reloadOnChunkError('unhandledrejection');
 });

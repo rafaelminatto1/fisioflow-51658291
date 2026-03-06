@@ -33,6 +33,7 @@ import {
 } from '@/types/pose';
 import { useMediaPipeVision } from '@/hooks/performance';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { resolveMediaPipeVisionFileset } from '@/lib/ai/mediapipe';
 
 interface ExerciseExecutionScreenProps {
   exerciseId: string;
@@ -88,9 +89,7 @@ export const ExerciseExecutionScreen: React.FC<ExerciseExecutionScreenProps> = (
       if (mediaPipeLoaded && !landmarker) {
         try {
           const { PoseLandmarker, FilesetResolver } = await import('@mediapipe/tasks-vision');
-          const vision = await FilesetResolver.forVisionTasks(
-            "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
-          );
+          const vision = await resolveMediaPipeVisionFileset(FilesetResolver);
           const instance = await PoseLandmarker.createFromOptions(vision, {
             baseOptions: {
               modelAssetPath: `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,

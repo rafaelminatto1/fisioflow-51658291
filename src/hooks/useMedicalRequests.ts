@@ -1,135 +1,62 @@
 /**
- * useMedicalRequests - Migrated to Firebase
+ * useMedicalRequests — Neon via Workers API
  */
-
-
-
-// Helper to convert doc
-
 import { useState, useEffect, useCallback } from 'react';
-import { collection, query as firestoreQuery, where, getDocs, addDoc, deleteDoc, doc, orderBy, db, getFirebaseStorage } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
+import { uploadToR2, deleteFromR2 } from '@/lib/storage/r2-storage';
+import { medicalRequestsApi, type MedicalRequest, type MedicalRequestFile } from '@/lib/api/workers-client';
 import { useAuth } from '@/contexts/AuthContext';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { fisioLogger as logger } from '@/lib/errors/logger';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
-const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }) => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) });
-
-export interface MedicalRequestFile {
-  id: string;
-  file_path: string;
-  file_name: string;
-  file_type: string;
-  file_size: number;
-}
-
-export interface MedicalRequest {
-  id: string;
-  patient_id: string;
-  doctor_name: string | null;
-  request_date: string | null;
-  notes: string | null;
-  created_at: string;
-  files?: MedicalRequestFile[];
-}
+export type { MedicalRequest, MedicalRequestFile };
 
 export const useMedicalRequests = (patientId?: string | null) => {
   const [requests, setRequests] = useState<MedicalRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { profile } = useAuth();
-  const organizationId = profile?.organization_id;
 
   const fetchRequests = useCallback(async () => {
-    if (!patientId || !organizationId) {
+    if (!patientId || !profile?.organization_id) {
       setIsLoading(false);
       return;
     }
-
     try {
-      const q = firestoreQuery(
-        collection(db, 'medical_requests'),
-        where('patient_id', '==', patientId),
-        where('organization_id', '==', organizationId),
-        orderBy('request_date', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-      const requestsData = await Promise.all(
-        snapshot.docs.map(async (requestDoc) => {
-          const requestData = convertDoc(requestDoc);
-
-          // Fetch files for this request
-          const filesQ = firestoreQuery(
-            collection(db, 'medical_request_files'),
-            where('medical_request_id', '==', requestDoc.id)
-          );
-          const filesSnap = await getDocs(filesQ);
-          const files = filesSnap.docs.map(convertDoc);
-
-          return { ...requestData, files };
-        })
-      );
-
-      setRequests(requestsData || []);
+      const res = await medicalRequestsApi.list(patientId);
+      setRequests(res.data);
+    } catch (e) {
+      console.error('useMedicalRequests fetch error', e);
     } finally {
       setIsLoading(false);
     }
-  }, [patientId, organizationId]);
+  }, [patientId, profile?.organization_id]);
 
-  useEffect(() => {
-    fetchRequests();
-  }, [fetchRequests]);
+  useEffect(() => { fetchRequests(); }, [fetchRequests]);
 
   const addRequest = async (
     data: { doctorName: string; date: Date; notes: string },
-    files: File[]
+    files: File[],
   ) => {
-    if (!patientId || !organizationId) return false;
-
+    if (!patientId) return false;
     try {
-      // 1. Create request
-      const requestRef = await addDoc(collection(db, 'medical_requests'), {
+      const res = await medicalRequestsApi.create({
         patient_id: patientId,
-        organization_id: organizationId,
         doctor_name: data.doctorName,
         request_date: data.date.toISOString(),
         notes: data.notes,
-        created_at: new Date().toISOString()
       });
+      const requestId = res.data.id;
 
-      const requestData = { id: requestRef.id };
-
-      // 2. Upload files
       if (files.length > 0) {
-        const storage = getFirebaseStorage();
-
-        const fileUploads = files.map(async (file) => {
-          const fileExt = file.name.split('.').pop();
-          const fileName = `${requestData.id}/${crypto.randomUUID()}.${fileExt}`;
-          const storageRef = ref(storage, `medical-requests/${fileName}`);
-
-          await uploadBytes(storageRef, file);
-          const downloadUrl = await getDownloadURL(storageRef);
-
-          return {
-            medical_request_id: requestData.id,
-            organization_id: organizationId,
-            file_path: fileName,
-            file_name: file.name,
-            file_type: file.type,
-            file_size: file.size,
-            download_url: downloadUrl
-          };
-        });
-
-        const uploadedFilesData = await Promise.all(fileUploads);
-
-        // Insert file records
         await Promise.all(
-          uploadedFilesData.map(fileData =>
-            addDoc(collection(db, 'medical_request_files'), fileData)
-          )
+          files.map(async (file) => {
+            const { publicUrl, key } = await uploadToR2(file, 'medical-requests');
+            await medicalRequestsApi.addFile(requestId, {
+              file_path: key,
+              file_name: file.name,
+              file_type: file.type,
+              file_size: file.size,
+              storage_url: publicUrl,
+            });
+          }),
         );
       }
 
@@ -137,50 +64,24 @@ export const useMedicalRequests = (patientId?: string | null) => {
       fetchRequests();
       return true;
     } catch (error) {
-      logger.error('Error adding medical request', error, 'useMedicalRequests');
+      console.error('Error adding medical request', error);
       toast.error('Erro ao salvar pedido médico');
       return false;
     }
   };
 
   const deleteRequest = async (requestId: string) => {
-    if (!organizationId) return;
-
     try {
-      // Get files to delete from storage
-      const filesQ = firestoreQuery(
-        collection(db, 'medical_request_files'),
-        where('medical_request_id', '==', requestId)
-      );
-      const filesSnap = await getDocs(filesQ);
-
-      if (!filesSnap.empty) {
-        const storage = getFirebaseStorage();
-
-        // Delete files from storage
+      const res = await medicalRequestsApi.delete(requestId);
+      if (res.deleted_files?.length) {
         await Promise.all(
-          filesSnap.docs.map(async (fileDoc) => {
-            const fileData = convertDoc(fileDoc);
-            const storageRef = ref(storage, `medical-requests/${fileData.file_path}`);
-            await deleteObject(storageRef);
-          })
-        );
-
-        // Delete file records
-        await Promise.all(
-          filesSnap.docs.map(fileDoc =>
-            deleteDoc(doc(db, 'medical_request_files', fileDoc.id))
-          )
+          res.deleted_files.map(fp => deleteFromR2(fp).catch(() => {})),
         );
       }
-
-      // Delete request
-      await deleteDoc(doc(db, 'medical_requests', requestId));
-
       toast.success('Pedido removido');
       fetchRequests();
     } catch (error) {
-      logger.error('Error deleting request', error, 'useMedicalRequests');
+      console.error('Error deleting medical request', error);
       toast.error('Erro ao remover pedido');
     }
   };

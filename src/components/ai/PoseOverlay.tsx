@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Camera, Video, RefreshCw, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PoseLandmarker, FilesetResolver, Landmark } from '@mediapipe/tasks-vision';
+import { resolveMediaPipeVisionFileset } from '@/lib/ai/mediapipe';
 
 interface PoseKeypoint {
   x: number;
@@ -72,9 +73,7 @@ export function PoseOverlay({ videoRef, imageUrl, onPoseDetected, className }: P
   useEffect(() => {
     const initializePoseLandmarker = async () => {
       try {
-        const vision = await FilesetResolver.forVisionTasks(
-          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-        );
+        const vision = await resolveMediaPipeVisionFileset(FilesetResolver);
         const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
           baseOptions: {
             modelAssetPath: `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,

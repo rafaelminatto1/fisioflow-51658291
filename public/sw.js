@@ -12,7 +12,7 @@
 
 const CONFIG = {
   // Nome do cache (versão)
-  CACHE_VERSION: 'v2.4.0',
+  CACHE_VERSION: 'v2.5.0',
   CACHE_PREFIX: 'fisioflow',
 
   // URLs para cache imediato (core resources)
@@ -112,6 +112,27 @@ function isNavigationRequest(request) {
 }
 
 /**
+ * Evita gravar HTML em requests de assets (JS/CSS/font), que causa erro de MIME e loop de loading.
+ */
+function isCacheableStaticResponse(request, response) {
+  if (!response || !response.ok) return false;
+  const pathname = new URL(request.url).pathname;
+  const contentType = (response.headers.get('content-type') || '').toLowerCase();
+
+  if (pathname.match(/\.js($|\?)/)) return contentType.includes('javascript');
+  if (pathname.match(/\.css($|\?)/)) return contentType.includes('text/css');
+  if (pathname.match(/\.(woff2?|ttf|otf|eot)($|\?)/)) {
+    return (
+      contentType.includes('font/') ||
+      contentType.includes('application/font') ||
+      contentType.includes('application/octet-stream')
+    );
+  }
+
+  return true;
+}
+
+/**
  * Converte stream para texto
  */
 async function streamToText(stream) {
@@ -152,7 +173,7 @@ async function cacheFirst(request, cacheName) {
     const clone = response.clone();
 
     // Salvar no cache
-    if (response.ok) {
+    if (isCacheableStaticResponse(request, response)) {
       await cache.put(request, clone);
     }
 
@@ -210,7 +231,7 @@ async function staleWhileRevalidate(request, cacheName) {
   // Iniciar requisição de rede
   const networkPromise = fetch(request).then(response => {
     // Atualizar cache se resposta válida
-    if (response.ok) {
+    if (isCacheableStaticResponse(request, response)) {
       cache.put(request, response.clone());
     }
     return response;

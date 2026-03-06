@@ -1,15 +1,15 @@
 export const testUsers = {
   admin: {
-    email: process.env.TEST_USER_EMAIL || 'teste@moocafisio.com.br',
-    password: process.env.TEST_USER_PASSWORD || 'Yukari3030@',
+    email: process.env.E2E_LOGIN_EMAIL || 'rafael.minatto@yahoo.com.br',
+    password: process.env.E2E_LOGIN_PASSWORD || 'Yukari30@',
     role: 'admin',
-    expectedOrganizationId: null, // Será preenchido durante os testes
+    expectedOrganizationId: '00000000-0000-0000-0000-000000000001',
   },
   fisio: {
     email: 'rafael.minatto@yahoo.com.br',
     password: 'Yukari30@',
     role: 'fisioterapeuta',
-    expectedOrganizationId: null,
+    expectedOrganizationId: '00000000-0000-0000-0000-000000000001',
   },
   estagiario: {
     email: 'teste@moocafisio.com.br',
@@ -17,19 +17,19 @@ export const testUsers = {
     role: 'estagiario',
     expectedOrganizationId: null,
   },
-  // Firebase test user
+  // User for specialized tests
   rafael: {
     email: 'rafael.minatto@yahoo.com.br',
     password: 'Yukari30@',
     role: 'professional',
-    expectedOrganizationId: null,
+    expectedOrganizationId: '00000000-0000-0000-0000-000000000001',
   },
 };
 
 // Dados de teste para organização
 export const testOrganization = {
-  name: 'Activity Fisio Test',
-  slug: 'activity-fisio-test',
+  name: 'FisioFlow',
+  slug: 'fisioflow',
 };
 
 export const testEvento = {

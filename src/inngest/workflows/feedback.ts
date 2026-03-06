@@ -6,6 +6,7 @@
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb } from '../../lib/firebase/admin.js';
+import { getAppointmentById, getPatientById } from './_shared/neon-patients-appointments';
 
 interface AppointmentRecord {
   id: string;
@@ -49,21 +50,16 @@ export const appointmentCompletedWorkflow = inngest.createFunction(
 
     // Step 2: Fetch details
     const details = await step.run('fetch-details', async () => {
-      const appointmentSnap = await db.collection('appointments').doc(appointmentId).get();
-
-      if (!appointmentSnap.exists) {
+      const appointment = await getAppointmentById(appointmentId);
+      if (!appointment) {
         throw new Error('Appointment not found');
       }
-
-      const appointment = { id: appointmentSnap.id, ...appointmentSnap.data() } as { id: string; patient_id: string; organization_id: string; status: string };
-
-      // Fetch patient
-      const patientSnap = await db.collection('patients').doc(appointment.patient_id).get();
-      const patient = patientSnap.exists ? { id: patientSnap.id, ...patientSnap.data() } : null;
+      const patient = await getPatientById(appointment.patient_id);
 
       // Fetch organization
-      const orgSnap = await db.collection('organizations').doc(appointment.organization_id).get();
-      const organization = orgSnap.exists ? { id: orgSnap.id, ...orgSnap.data() } : null;
+      const organization = appointment.organization_id
+        ? await db.collection('organizations').doc(appointment.organization_id).get().then((snap) => (snap.exists ? { id: snap.id, ...snap.data() } : null))
+        : null;
 
       return {
         ...appointment,
@@ -81,7 +77,9 @@ export const appointmentCompletedWorkflow = inngest.createFunction(
     const org = details.organization;
 
     if (!patient?.phone) return { skipped: true, reason: 'No phone' };
-    if (patient.notification_preferences?.whatsapp === false) return { skipped: true, reason: 'Opt-out' };
+    if ((patient as { notification_preferences?: { whatsapp?: boolean } })?.notification_preferences?.whatsapp === false) {
+      return { skipped: true, reason: 'Opt-out' };
+    }
     if (org?.settings?.whatsapp_enabled === false) return { skipped: true, reason: 'Org disabled WA' };
 
     await step.run('send-feedback-request', async () => {
@@ -96,7 +94,7 @@ export const appointmentCompletedWorkflow = inngest.createFunction(
             {
               type: 'body',
               parameters: [
-                { type: 'text', text: patient.name.split(' ')[0] },
+                { type: 'text', text: (patient.full_name || 'Paciente').split(' ')[0] },
                 { type: 'text', text: org?.name || 'FisioFlow' }
               ]
             }

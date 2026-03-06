@@ -9,6 +9,7 @@ import { getAdminDb } from '../../lib/firebase/admin.js';
 import { logger } from '@/lib/errors/logger.js';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 import { ResendService } from '../../lib/email/resend.js';
+import { countPatientsCreatedBetween } from './_shared/neon-patients-appointments';
 
 type DateRange = { start: string; end: string };
 type Organization = { id: string; name?: string };
@@ -69,20 +70,18 @@ export const weeklySummaryWorkflow = inngest.createFunction(
 
             const sessions = sessionsSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
 
-            // Get new patients for the week
-            const patientsSnapshot = await db.collection('patients')
-              .where('organization_id', '==', org.id)
-              .where('created_at', '>=', lastWeek.start)
-              .where('created_at', '<=', lastWeek.end)
-              .get();
-
-            const newPatients = patientsSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
+            // Get new patients for the week (Neon)
+            const newPatientsCount = await countPatientsCreatedBetween(
+              org.id,
+              lastWeek.start,
+              new Date(new Date(lastWeek.end).getTime() + 1).toISOString(),
+            );
 
             return {
               organizationId: org.id,
               organizationName: org.name,
               totalSessions: sessions.length,
-              newPatients: newPatients.length,
+              newPatients: newPatientsCount,
               dateRange: lastWeek,
             };
           } catch (error) {

@@ -22,13 +22,12 @@ bucket_name = "fisioflow-media"
 ENVIRONMENT = "production"
 FIREBASE_PROJECT_ID = "fisioflow-migration"
 # CORS: domínio do frontend em Cloudflare Pages
-ALLOWED_ORIGINS = "https://fisioflow.pages.dev,https://moocafisio.com.br,https://www.moocafisio.com.br,https://media.moocafisio.com.br"
+ALLOWED_ORIGINS = "https://fisioflow.pages.dev,https://moocafisio.com.br,https://www.moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173"
 # Neon Auth JWT verification (obrigatório para rotas protegidas)
 # Ajuste para os valores reais do seu tenant Neon Auth.
 NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
-# Opcional (habilite apenas se quiser validação estrita de issuer)
-# NEON_AUTH_ISSUER = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth"
-# NEON_AUTH_AUDIENCE = "fisioflow-api"
+NEON_AUTH_ISSUER = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth"
+# NEON_AUTH_AUDIENCE = "fisioflow-api"  # habilitar se Neon Auth configurar audience
 
 # ===== AMBIENTE DE STAGING =====
 [env.staging]
