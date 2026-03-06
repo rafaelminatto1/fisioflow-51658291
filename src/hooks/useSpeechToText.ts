@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { API_URLS } from '@/lib/api/v2/config';
 import { useToast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { getNeonAccessToken } from '@/lib/auth/neon-token';
 
 export const useSpeechToText = () => {
   const [isRecording, setIsRecording] = useState(false);
@@ -21,13 +22,14 @@ export const useSpeechToText = () => {
       });
       reader.readAsDataURL(audioBlob);
       const audioBase64 = await base64Promise;
+      const token = await getNeonAccessToken();
 
       // Chamar API do Google Cloud via nossa Function
       const response = await fetch(API_URLS.clinical.transcribe, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${await (await import('firebase/auth')).getAuth().currentUser?.getIdToken()}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ audio: audioBase64 })
       });

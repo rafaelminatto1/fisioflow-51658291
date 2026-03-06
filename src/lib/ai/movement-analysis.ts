@@ -18,8 +18,7 @@
 // ============================================================================
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { storage, db, doc, setDoc, collection, serverTimestamp } from '@/integrations/firebase/app';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { uploadFile, deleteFile } from '@/lib/storage/upload';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface ExerciseFormDeviation {
@@ -98,7 +97,7 @@ export interface AnalysisProgress {
 // ============================================================================
 
 const GEMINI_API_KEY = import.meta.env.VITE_GOOGLE_GENERATIVE_AI_API_KEY ||
-                       import.meta.env.NEXT_PUBLIC_GOOGLE_AI_API_KEY;
+  import.meta.env.NEXT_PUBLIC_GOOGLE_AI_API_KEY;
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
@@ -465,7 +464,7 @@ Respond in valid JSON with this structure:
     progression: analysisData.progression,
 
     modelUsed: VIDEO_MODELS.pro,
-    processingTime: Date.now() - startTime,
+    processingTime: Date.now() - _startTime,
     confidence: analysisData.confidence || 0.8
   };
 
@@ -485,29 +484,29 @@ async function uploadExerciseVideo(
   exerciseId: string
 ): Promise<string> {
   const timestamp = Date.now();
-  const filename = `exercise-analysis/${patientId}/${exerciseId}/${timestamp}.mp4`;
-  const storageRef = ref(storage, filename);
+  const folder = `exercise-analysis/${patientId}/${exerciseId}`;
+  const filename = `${timestamp}.mp4`;
 
-  await uploadBytes(storageRef, file, {
-    contentType: 'video/mp4',
-    customMetadata: {
-      uploadedAt: new Date().toISOString(),
-      originalName: file.name
-    }
-  });
+  // Create a new File with the desired filename if needed, 
+  // or just pass it to our R2 upload function which handles the path
+  const renamedFile = new File([file], filename, { type: 'video/mp4' });
 
-  return getDownloadURL(storageRef);
+  const result = await uploadFile(renamedFile, { folder });
+  return result.url;
 }
 
 /**
  * Busca vídeo demo padrão para um exercício
  */
 async function getDefaultDemoVideo(exerciseId: string): Promise<string> {
-  // Tenta buscar do Storage
-  const demoRef = ref(storage, `exercise-demos/${exerciseId}/demo.mp4`);
+  // R2 public bucket URL
+  const publicDomain = import.meta.env.VITE_R2_PUBLIC_DOMAIN || 'https://media.moocafisio.com.br';
+  const demoUrl = `${publicDomain}/exercise-demos/${exerciseId}/demo.mp4`;
 
   try {
-    return await getDownloadURL(demoRef);
+    const response = await fetch(demoUrl, { method: 'HEAD' });
+    if (response.ok) return demoUrl;
+    throw new Error('Demo not found on R2');
   } catch {
     // Se não encontrar, retorna URL de placeholder
     logger.warn(`Demo video not found for exercise ${exerciseId}`, undefined, 'movement-analysis');

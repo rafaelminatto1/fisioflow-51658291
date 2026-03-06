@@ -43,6 +43,13 @@ export class DoctorService {
      * Get doctor by ID
      */
     static async getDoctorById(doctorId: string): Promise<Doctor | null> {
+        try {
+            const doctor = await doctorsApi.get(doctorId);
+            return doctor as unknown as Doctor;
+        } catch (apiError) {
+            console.warn('Doctor API get failed, fallback Firestore:', apiError);
+        }
+
         const docRef = doc(db, 'doctors', doctorId);
         const docSnap = await getDoc(docRef);
 
@@ -73,6 +80,13 @@ export class DoctorService {
      * Create a new doctor
      */
     static async createDoctor(data: DoctorFormData): Promise<Doctor> {
+        try {
+            const created = await doctorsApi.create(data as unknown as Record<string, unknown>);
+            return created as unknown as Doctor;
+        } catch (apiError) {
+            console.warn('Doctor API create failed, fallback Firestore:', apiError);
+        }
+
         const now = new Date().toISOString();
         const dataToSave = {
             ...data,
@@ -107,6 +121,13 @@ export class DoctorService {
      * Update an existing doctor
      */
     static async updateDoctor(doctorId: string, data: Partial<DoctorFormData>): Promise<Doctor> {
+        try {
+            const updated = await doctorsApi.update(doctorId, data as unknown as Record<string, unknown>);
+            return updated as unknown as Doctor;
+        } catch (apiError) {
+            console.warn('Doctor API update failed, fallback Firestore:', apiError);
+        }
+
         const docRef = doc(db, 'doctors', doctorId);
 
         await updateDoc(docRef, {
@@ -139,6 +160,13 @@ export class DoctorService {
      * Soft delete a doctor (set is_active to false)
      */
     static async deleteDoctor(doctorId: string): Promise<void> {
+        try {
+            await doctorsApi.delete(doctorId);
+            return;
+        } catch (apiError) {
+            console.warn('Doctor API delete failed, fallback Firestore:', apiError);
+        }
+
         const docRef = doc(db, 'doctors', doctorId);
         await updateDoc(docRef, {
             is_active: false,

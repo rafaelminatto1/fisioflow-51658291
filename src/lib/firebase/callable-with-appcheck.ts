@@ -10,6 +10,7 @@
 import { getFunctions } from 'firebase/functions';
 import { getAppCheck } from 'firebase/app-check';
 import { getApp } from 'firebase/app';
+import { getNeonAccessToken } from '@/lib/auth/neon-token';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export async function callableWithAppCheck<T = unknown, R = unknown>(
@@ -26,18 +27,25 @@ export async function callableWithAppCheck<T = unknown, R = unknown>(
   if (isAppCheckEnabled) {
     try {
       const appCheck = getAppCheck(app);
-      appCheckToken = await appCheck.getToken();
+      const appCheckResult = await appCheck.getToken();
+      appCheckToken = appCheckResult?.token;
     } catch (error) {
       logger.warn('Could not get AppCheck token', error, 'callableWithAppCheck');
     }
   }
 
-  // Obter token de autenticação
-  const auth = (await import('firebase/auth')).getAuth();
-  const authToken = await auth.currentUser?.getIdToken();
+  // Obter token de autenticação (Neon JWT)
+  const authToken = await getNeonAccessToken().catch(() => undefined);
 
-  // Construir URL da função
-  const url = `https://southamerica-east1-fisioflow-migration.cloudfunctions.net/${name}`;
+  // Construir URL da função via configuração de ambiente
+  const explicitBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '');
+  const region = import.meta.env.VITE_FIREBASE_REGION || _region || 'southamerica-east1';
+  const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
+  const baseUrl = explicitBase || (projectId ? `https://${region}-${projectId}.cloudfunctions.net` : '');
+  if (!baseUrl) {
+    throw new Error('Não foi possível resolver URL base de Cloud Functions (VITE_API_BASE_URL/VITE_FIREBASE_PROJECT_ID).');
+  }
+  const url = `${baseUrl}/${name}`;
 
   // Fazer requisição com fetch para incluir custom headers
   const response = await fetch(url, {

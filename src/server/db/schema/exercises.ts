@@ -1,0 +1,140 @@
+/**
+ * Exercises Schema
+ *
+ * Biblioteca de exercícios de fisioterapia com:
+ * - Categorias hierárquicas (por região corporal e especialidade)
+ * - Imagens e vídeos no Firebase Storage
+ * - Patologias indicadas/contraindicadas
+ * - Músculos e equipamentos
+ */
+
+import {
+  pgTable,
+  uuid,
+  varchar,
+  text,
+  boolean,
+  timestamp,
+  integer,
+  pgEnum,
+} from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
+import { protocolExercises } from './protocols';
+
+// ===== ENUMS =====
+export const difficultyEnum = pgEnum('exercise_difficulty', [
+  'iniciante',
+  'intermediario',
+  'avancado',
+]);
+
+export const exerciseProtocolTypeEnum = pgEnum('exercise_protocol_type', [
+  'pos_operatorio',
+  'patologia',
+  'preventivo',
+  'esportivo',
+  'funcional',
+]);
+
+// ===== EXERCISE CATEGORIES =====
+export const exerciseCategories = pgTable('exercise_categories', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  slug: varchar('slug', { length: 100 }).unique().notNull(),
+  name: varchar('name', { length: 200 }).notNull(),
+  description: text('description'),
+  icon: varchar('icon', { length: 50 }),        // emoji ex: "🦵"
+  color: varchar('color', { length: 20 }),       // hex ex: "#3B82F6"
+  orderIndex: integer('order_index').default(0),
+  parentId: uuid('parent_id'),                   // subcategoria
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const exerciseCategoriesRelations = relations(exerciseCategories, ({ one, many }) => ({
+  parent: one(exerciseCategories, {
+    fields: [exerciseCategories.parentId],
+    references: [exerciseCategories.id],
+    relationName: 'subcategories',
+  }),
+  subcategories: many(exerciseCategories, { relationName: 'subcategories' }),
+  exercises: many(exercises),
+}));
+
+// ===== EXERCISES =====
+export const exercises = pgTable('exercises', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  slug: varchar('slug', { length: 250 }).unique(),
+  name: varchar('name', { length: 250 }).notNull(),
+
+  // Classificação
+  categoryId: uuid('category_id').references(() => exerciseCategories.id),
+  subcategory: varchar('subcategory', { length: 100 }),
+  difficulty: difficultyEnum('difficulty').default('iniciante'),
+
+  // Descrição
+  description: text('description'),
+  instructions: text('instructions'),             // markdown com passo a passo
+  tips: text('tips'),                            // dicas clínicas
+  precautions: text('precautions'),              // precauções e avisos
+  benefits: text('benefits'),                    // benefícios clínicos
+
+  // Anatomia
+  musclesPrimary: text('muscles_primary').array().default([]),
+  musclesSecondary: text('muscles_secondary').array().default([]),
+  bodyParts: text('body_parts').array().default([]),
+
+  // Equipamentos
+  equipment: text('equipment').array().default([]),
+
+  // Parâmetros padrão
+  setsRecommended: integer('sets_recommended'),
+  repsRecommended: integer('reps_recommended'),
+  durationSeconds: integer('duration_seconds'),
+  restSeconds: integer('rest_seconds'),
+
+  // Mídia (Firebase Storage)
+  imageUrl: text('image_url'),
+  thumbnailUrl: text('thumbnail_url'),
+  videoUrl: text('video_url'),
+
+  // Clínico
+  pathologiesIndicated: text('pathologies_indicated').array().default([]),
+  pathologiesContraindicated: text('pathologies_contraindicated').array().default([]),
+  icd10Codes: text('icd10_codes').array().default([]),
+  tags: text('tags').array().default([]),
+
+  // Referências
+  references: text('references'),                // JSON string com {title, authors, year, url}
+
+  // Controle
+  isActive: boolean('is_active').default(true).notNull(),
+  isPublic: boolean('is_public').default(true).notNull(),   // false = privado da organização
+  organizationId: uuid('organization_id'),                   // null = padrão da plataforma
+  createdBy: text('created_by'),
+
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const exercisesRelations = relations(exercises, ({ one, many }) => ({
+  category: one(exerciseCategories, {
+    fields: [exercises.categoryId],
+    references: [exerciseCategories.id],
+  }),
+  protocolExercises: many(protocolExercises),
+}));
+
+// ===== EXERCISE FAVORITES =====
+export const exerciseFavorites = pgTable('exercise_favorites', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  exerciseId: uuid('exercise_id').notNull().references(() => exercises.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),             // Firebase Auth UID
+  organizationId: uuid('organization_id'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const exerciseFavoritesRelations = relations(exerciseFavorites, ({ one }) => ({
+  exercise: one(exercises, {
+    fields: [exerciseFavorites.exerciseId],
+    references: [exercises.id],
+  }),
+}));

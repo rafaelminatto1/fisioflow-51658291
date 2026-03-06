@@ -14,6 +14,7 @@
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { callFunctionHttp } from '@/integrations/firebase/functions';
 
 export interface TranslationOptions {
   text: string | string[];
@@ -47,6 +48,18 @@ export interface SupportedLanguage {
 // ============================================================================
 
 class TranslationService {
+  private getFunctionBaseUrl(): string {
+    const explicitBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '');
+    if (explicitBase) return explicitBase;
+
+    const region = import.meta.env.VITE_FIREBASE_REGION || 'southamerica-east1';
+    const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
+    if (!projectId) {
+      throw new Error('VITE_FIREBASE_PROJECT_ID ausente para montar URL das functions.');
+    }
+    return `https://${region}-${projectId}.cloudfunctions.net`;
+  }
+
   /**
    * Translate text
    */
@@ -136,12 +149,8 @@ class TranslationService {
    */
   async getSupportedLanguages(displayLanguage: string = 'pt'): Promise<SupportedLanguage[]> {
     try {
-      const response = await fetch(
-        `${
-          import.meta.env.VITE_API_BASE_URL ||
-          'https://southamerica-east1-fisioflow-migration.cloudfunctions.net'
-        }/getSupportedLanguages?display=${displayLanguage}`
-      );
+      const baseUrl = this.getFunctionBaseUrl();
+      const response = await fetch(`${baseUrl}/getSupportedLanguages?display=${displayLanguage}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch supported languages');
@@ -194,6 +203,11 @@ class TranslationService {
         `Falha na tradução do exercício: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
       );
     }
+  }
+
+  async translateHttp(options: TranslationOptions): Promise<TranslationResult> {
+    const result = await callFunctionHttp<TranslationOptions, TranslationResult>('translate', options);
+    return result;
   }
 }
 

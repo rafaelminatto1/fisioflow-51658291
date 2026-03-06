@@ -11,6 +11,7 @@ import {
 } from '@/types/pose';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { nativePoseProvider } from './nativePoseProvider';
+import { resolveMediaPipeVisionFileset } from '@/lib/ai/mediapipe';
 
 class MediaPipeWebProvider implements PoseProvider {
   // ... (código existente da classe permanece o mesmo)
@@ -30,9 +31,7 @@ class MediaPipeWebProvider implements PoseProvider {
       const vision = await import('@mediapipe/tasks-vision');
       const { PoseLandmarker, FilesetResolver } = vision;
       
-      const filesetResolver = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
-      );
+      const filesetResolver = await resolveMediaPipeVisionFileset(FilesetResolver);
 
       // Silenciar temporariamente avisos internos do MediaPipe WASM (OpenGL diagnostic)
       const originalWarn = console.warn;

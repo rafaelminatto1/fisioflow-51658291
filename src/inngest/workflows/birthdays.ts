@@ -10,6 +10,7 @@ import { Events, BirthdayMessagePayload, InngestStep } from '../../lib/inngest/t
 import { getAdminDb } from '../../lib/firebase/admin.js';
 import { logger } from '@/lib/errors/logger.js';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { getPatientsByBirthdayMMDD } from './_shared/neon-patients-appointments';
 
 interface Patient {
   id: string;
@@ -65,41 +66,16 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
       const month = String(today.getMonth() + 1).padStart(2, '0');
       const day = String(today.getDate()).padStart(2, '0');
       const todayMMDD = `${month}-${day}`;
-
-      // Try to use optimized field first (if it exists)
-      const optimizedSnapshot = await db.collection('patients')
-        .where('active', '==', true)
-        .where('birthday_MMDD', '==', todayMMDD)
-        .limit(1)
-        .get();
-
-      let birthdayPatients: Patient[] = [];
-
-      if (!optimizedSnapshot.empty) {
-        // Field exists, use it for all patients
-        const fullSnapshot = await db.collection('patients')
-          .where('active', '==', true)
-          .where('birthday_MMDD', '==', todayMMDD)
-          .get();
-
-        birthdayPatients = fullSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
-      } else {
-        // Fall back to client-side filtering (less efficient)
-        logger.warn('[Birthday] birthday_MMDD field not found, using client-side filtering', undefined, 'birthdays-workflow');
-        const snapshot = await db.collection('patients')
-          .where('active', '==', true)
-          .select('id', 'name', 'email', 'phone', 'date_of_birth', 'organization_id', 'settings', 'notification_preferences')
-          .get();
-
-        birthdayPatients = snapshot.docs
-          .map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }))
-          .filter((patient: Patient) => {
-            const dob = patient.date_of_birth;
-            return dob && dob.includes(`-${todayMMDD}`);
-          });
-      }
-
-      return birthdayPatients;
+      const rows = await getPatientsByBirthdayMMDD(todayMMDD);
+      return rows.map((row) => ({
+        id: row.id,
+        name: row.full_name,
+        email: row.email,
+        phone: row.phone,
+        date_of_birth: row.birth_date,
+        organization_id: row.organization_id || '',
+        notification_preferences: {},
+      }));
     });
 
     if (patients.length === 0) {

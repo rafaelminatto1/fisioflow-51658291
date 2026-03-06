@@ -6,9 +6,14 @@
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { fisioLogger as logger } from '../../lib/errors/logger.js';
-import { getAdminDb, documentExists } from '../../lib/firebase/admin.js';
+import { getAdminDb } from '../../lib/firebase/admin.js';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 import { ResendService } from '../../lib/email/resend.js';
+import {
+  countOrphanedAppointments,
+  countOrphanedPatientsFromOrganizations,
+  getExistingAppointmentIds,
+} from './_shared/neon-patients-appointments';
 
 export const dataIntegrityWorkflow = inngest.createFunction(
   {
@@ -25,41 +30,9 @@ export const dataIntegrityWorkflow = inngest.createFunction(
 
     const issues: string[] = [];
 
-    // OPTIMIZATION: Batch validate documents
-    const _validateRefs = async (collectionPath: string, refField: string, targetCollection: string, limit: number) => {
-      const snapshot = await db.collection(collectionPath).limit(limit).get();
-
-      const orphanedIds: string[] = [];
-      const refIds = snapshot.docs.map(doc => normalizeFirestoreData(doc.data())[refField]).filter(Boolean);
-
-      // Batch check existence
-      for (const refId of refIds) {
-        const exists = await documentExists(targetCollection, refId);
-        if (!exists) {
-          orphanedIds.push(refId);
-        }
-      }
-
-      return orphanedIds.length;
-    };
-
     // Check 1: Appointments without valid patients
     await step.run('check-orphaned-appointments', async (): Promise<number> => {
-      const snapshot = await db.collection('appointments').limit(100).get();
-
-      let orphanedCount = 0;
-      const patientIds = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()).patient_id).filter(Boolean);
-      const uniquePatientIds = [...new Set(patientIds)];
-
-      // Batch check patients
-      for (const patientId of uniquePatientIds) {
-        const exists = await documentExists('patients', patientId);
-        if (!exists) {
-          // Count how many appointments reference this patient
-          const count = snapshot.docs.filter(doc => normalizeFirestoreData(doc.data()).patient_id === patientId).length;
-          orphanedCount += count;
-        }
-      }
+      const orphanedCount = await countOrphanedAppointments(100);
 
       if (orphanedCount > 0) {
         issues.push(`Found ${orphanedCount} appointments with invalid patients`);
@@ -81,14 +54,12 @@ export const dataIntegrityWorkflow = inngest.createFunction(
 
       const appointmentIds = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()).appointment_id).filter(Boolean);
       const uniqueAppointmentIds = [...new Set(appointmentIds)];
-
+      const existingIds = await getExistingAppointmentIds(uniqueAppointmentIds as string[]);
       let orphanedCount = 0;
       for (const appointmentId of uniqueAppointmentIds) {
-        const exists = await documentExists('appointments', appointmentId);
-        if (!exists) {
-          const count = snapshot.docs.filter(doc => normalizeFirestoreData(doc.data()).appointment_id === appointmentId).length;
-          orphanedCount += count;
-        }
+        if (existingIds.has(String(appointmentId))) continue;
+        const count = snapshot.docs.filter(doc => normalizeFirestoreData(doc.data()).appointment_id === appointmentId).length;
+        orphanedCount += count;
       }
 
       if (orphanedCount > 0) {
@@ -111,14 +82,12 @@ export const dataIntegrityWorkflow = inngest.createFunction(
 
       const appointmentIds = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()).appointment_id).filter(Boolean);
       const uniqueAppointmentIds = [...new Set(appointmentIds)];
-
+      const existingIds = await getExistingAppointmentIds(uniqueAppointmentIds as string[]);
       let orphanedCount = 0;
       for (const appointmentId of uniqueAppointmentIds) {
-        const exists = await documentExists('appointments', appointmentId);
-        if (!exists) {
-          const count = snapshot.docs.filter(doc => normalizeFirestoreData(doc.data()).appointment_id === appointmentId).length;
-          orphanedCount += count;
-        }
+        if (existingIds.has(String(appointmentId))) continue;
+        const count = snapshot.docs.filter(doc => normalizeFirestoreData(doc.data()).appointment_id === appointmentId).length;
+        orphanedCount += count;
       }
 
       if (orphanedCount > 0) {
@@ -130,19 +99,7 @@ export const dataIntegrityWorkflow = inngest.createFunction(
 
     // Check 4: Patients with invalid organizations
     await step.run('check-orphaned-patients', async () => {
-      const snapshot = await db.collection('patients').limit(100).get();
-
-      const orgIds = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()).organization_id).filter(Boolean);
-      const uniqueOrgIds = [...new Set(orgIds)];
-
-      let orphanedCount = 0;
-      for (const orgId of uniqueOrgIds) {
-        const exists = await documentExists('organizations', orgId);
-        if (!exists) {
-          const count = snapshot.docs.filter(doc => normalizeFirestoreData(doc.data()).organization_id === orgId).length;
-          orphanedCount += count;
-        }
-      }
+      const orphanedCount = await countOrphanedPatientsFromOrganizations(100);
 
       if (orphanedCount > 0) {
         issues.push(`Found ${orphanedCount} patients with invalid organizations`);
