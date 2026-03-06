@@ -1,5 +1,13 @@
 {
   "mcpServers": {
+    "neon": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote@latest",
+        "https://mcp.neon.tech/mcp"
+      ]
+    },
     "context7-mcp": {
       "url": "https://server.smithery.ai/@upstash/context7-mcp/mcp",
       "type": "http"

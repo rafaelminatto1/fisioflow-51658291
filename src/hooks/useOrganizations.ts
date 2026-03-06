@@ -42,12 +42,30 @@ export const useOrganizations = () => {
   const { data: organizations, isLoading, error } = useQuery({
     queryKey: ['organizations'],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'organizations'),
-        where('active', '==', true),
-        orderBy('name')
-      );
+      try {
+        const currentFromApi = await profileApi.getCurrent();
+        const apiProfile = (currentFromApi as Record<string, unknown>)?.data
+          ? (currentFromApi as Record<string, unknown>).data as Record<string, unknown>
+          : (currentFromApi as Record<string, unknown>);
+        const orgId =
+          (apiProfile?.organization_id as string | undefined) ||
+          (apiProfile?.organizationId as string | undefined);
+        if (orgId) {
+          return [{
+            id: orgId,
+            name: (apiProfile?.organization_name as string | undefined) || 'Organização',
+            slug: `org-${orgId.slice(0, 8)}`,
+            settings: {},
+            active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          }] as Organization[];
+        }
+      } catch (apiError) {
+        logger.debug('Organizations API bootstrap failed, fallback Firestore', apiError, 'useOrganizations');
+      }
 
+      const q = firestoreQuery(collection(db, 'organizations'), where('active', '==', true), orderBy('name'));
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as Organization[];
     },
@@ -63,8 +81,8 @@ export const useOrganizations = () => {
   } = useQuery({
     queryKey: ['current-organization', user?.uid, profile?.organization_id, authOrganizationId],
     queryFn: async () => {
-      const firebaseUser = auth.currentUser;
-      if (!firebaseUser) return null;
+      const activeUser = user ?? auth.currentUser;
+      if (!activeUser) return null;
 
       const coerceOrganizationId = (raw: unknown): string | null => {
         if (!raw) return null;
@@ -91,7 +109,7 @@ export const useOrganizations = () => {
 
       // 2) Fallback to Firestore profile document by UID (common shape)
       if (!organizationId) {
-        const profileRef = doc(db, 'profiles', firebaseUser.uid);
+        const profileRef = doc(db, 'profiles', activeUser.uid);
         const profileDoc = await getDoc(profileRef).catch(() => null);
         if (profileDoc?.exists()) {
           const profileData = normalizeFirestoreData(profileDoc.data());
@@ -109,7 +127,7 @@ export const useOrganizations = () => {
       if (!organizationId) {
         const profileQ = firestoreQuery(
           collection(db, 'profiles'),
-          where('user_id', '==', firebaseUser.uid),
+          where('user_id', '==', activeUser.uid),
           limit(1)
         );
         const profileSnap = await getDocs(profileQ).catch(() => null);
@@ -129,7 +147,7 @@ export const useOrganizations = () => {
       if (!organizationId) {
         const membershipQ = firestoreQuery(
           collection(db, 'organization_members'),
-          where('user_id', '==', firebaseUser.uid),
+          where('user_id', '==', activeUser.uid),
           where('active', '==', true),
           limit(1)
         );
@@ -162,7 +180,7 @@ export const useOrganizations = () => {
       // 6) Token claims fallback
       if (!organizationId) {
         try {
-          const token = await firebaseUser.getIdTokenResult();
+          const token = await activeUser.getIdTokenResult();
           const claims = token.claims as Record<string, unknown>;
           const claimOrgId = coerceOrganizationId(claims.organizationId || claims.organization_id);
           if (claimOrgId) {

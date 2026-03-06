@@ -185,25 +185,25 @@ app.put('/:id', requireAuth, async (c) => {
 
   let updatedItems: Array<Record<string, unknown>> = [];
   if (items && Array.isArray(items)) {
-    // Apaga os items existentes e insere os novos (substituição completa)
-    await db.delete(exerciseTemplateItems).where(eq(exerciseTemplateItems.templateId, template.id));
-
-    if (items.length > 0) {
-      updatedItems = await db
-        .insert(exerciseTemplateItems)
-        .values(
-          items.map((item: any, index: number) => {
-            delete item.id;
-            delete item.createdAt;
-            return {
-              ...item,
-              templateId: template.id,
-              orderIndex: item.orderIndex ?? index,
-            };
-          })
-        )
-        .returning();
-    }
+    // Substituição atômica dos itens dentro de uma transaction
+    await db.transaction(async (tx) => {
+      await tx.delete(exerciseTemplateItems).where(eq(exerciseTemplateItems.templateId, template.id));
+      if (items.length > 0) {
+        updatedItems = await tx
+          .insert(exerciseTemplateItems)
+          .values(
+            items.map((item: any, index: number) => {
+              const { id: _id, createdAt: _ca, ...rest } = item;
+              return {
+                ...rest,
+                templateId: template.id,
+                orderIndex: item.orderIndex ?? index,
+              };
+            })
+          )
+          .returning();
+      }
+    });
   } else {
     // Se não enviou items, recupera os existentes para retornar no objeto
     updatedItems = await db

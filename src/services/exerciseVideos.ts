@@ -3,12 +3,10 @@
  */
 
 import { db, collection, getDocs, where, orderBy, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, QueryConstraint, getFirebaseAuth } from '@/integrations/firebase/app';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { getFirebaseStorage } from '@/integrations/firebase/storage';
+import { uploadToR2, deleteFromR2 } from '@/lib/storage/r2-storage';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 
-const storage = getFirebaseStorage();
 const auth = getFirebaseAuth();
 
 // ============================================================================
@@ -393,36 +391,13 @@ export const exerciseVideosService = {
         .replace(/^_+|_+$/g, '');
 
       // Upload video file
-      const videoExt = data.file.name.split('.').pop() || 'mp4';
-      const timestamp = Date.now();
-      const videoFileName = `${timestamp}_${sanitizedTitle}.${videoExt}`;
-      const videoPath = `videos/${user.uid}/${videoFileName}`;
-
-      const videoRef = ref(storage, `exercise-videos/${videoPath}`);
-      await uploadBytes(videoRef, data.file, {
-        customMetadata: {
-          contentType: data.file.type,
-          cacheControl: 'public, max-age=31536000', // 1 ano
-        }
-      });
-
-      const videoUrl = await getDownloadURL(videoRef);
+      const { publicUrl: videoUrl } = await uploadToR2(data.file, 'exercise-videos/videos');
 
       // Upload thumbnail if available
       if (thumbnailFile) {
-        const thumbnailExt = thumbnailFile.name.split('.').pop() || 'jpg';
-        const thumbnailFileName = `${timestamp}_${sanitizedTitle}_thumb.${thumbnailExt}`;
-        const thumbnailPath = `thumbnails/${user.uid}/${thumbnailFileName}`;
-
         try {
-          const thumbnailRef = ref(storage, `exercise-videos/${thumbnailPath}`);
-          await uploadBytes(thumbnailRef, thumbnailFile, {
-            customMetadata: {
-              contentType: thumbnailFile.type,
-              cacheControl: 'public, max-age=31536000',
-            }
-          });
-          thumbnailUrl = await getDownloadURL(thumbnailRef);
+          const { publicUrl: thumbUrl } = await uploadToR2(thumbnailFile, 'exercise-videos/thumbnails');
+          thumbnailUrl = thumbUrl;
         } catch (thumbError) {
           logger.warn('[exerciseVideosService] Thumbnail upload error', thumbError, 'exerciseVideos');
         }
@@ -508,20 +483,17 @@ export const exerciseVideosService = {
 
       // Delete files from storage (fire and forget, log errors only)
       const filesToDelete: string[] = [];
-      const videoPath = this.extractPathFromUrl(video.video_url);
-      if (videoPath) filesToDelete.push(`exercise-videos/${videoPath}`);
+      const videoKey = this.extractR2KeyFromUrl(video.video_url);
+      if (videoKey) filesToDelete.push(videoKey);
 
       if (video.thumbnail_url) {
-        const thumbPath = this.extractPathFromUrl(video.thumbnail_url);
-        if (thumbPath) filesToDelete.push(`exercise-videos/${thumbPath}`);
+        const thumbKey = this.extractR2KeyFromUrl(video.thumbnail_url);
+        if (thumbKey) filesToDelete.push(thumbKey);
       }
 
       if (filesToDelete.length > 0) {
         await Promise.allSettled(
-          filesToDelete.map(path => {
-            const fileRef = ref(storage, path);
-            return deleteObject(fileRef);
-          })
+          filesToDelete.map(key => deleteFromR2(key))
         ).catch((err) => {
           logger.warn('[exerciseVideosService] Failed to delete storage files', err, 'exerciseVideos');
         });
@@ -539,18 +511,13 @@ export const exerciseVideosService = {
   // ------------------------------------------------------------------------
 
   /**
-   * Extract storage path from public URL
+   * Extract R2 key from public URL
    */
-  extractPathFromUrl(url: string): string | null {
+  extractR2KeyFromUrl(url: string): string | null {
     try {
-      // Firebase Storage URLs format: https://firebasestorage.googleapis.com/v0/b/bucket/o/path?token=...
-      // We need to extract the path after /o/ and before the query string
+      // R2 public URL format: https://domain/path/to/file.ext
       const urlObj = new URL(url);
-      const pathMatch = urlObj.pathname.match(/\/o\/(.+)$/);
-      if (pathMatch) {
-        return decodeURIComponent(pathMatch[1]);
-      }
-      return null;
+      return decodeURIComponent(urlObj.pathname.substring(1));
     } catch {
       return null;
     }

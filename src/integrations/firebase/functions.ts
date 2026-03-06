@@ -14,8 +14,9 @@
 /** Região padrão para as Cloud Functions */
 
 import { getFunctions, httpsCallable, HttpsCallableResult } from 'firebase/functions';
-import { app, getFirebaseAuth } from './app';
+import { app } from './app';
 import { API_URLS } from '@/lib/api/v2/config';
+import { getNeonAccessToken } from '@/lib/auth/neon-token';
 
 const DEFAULT_REGION = 'southamerica-east1';
 
@@ -74,6 +75,50 @@ const LOCAL_FUNCTIONS_PROXY =
     : undefined;
 const ENABLE_CANONICAL_FUNCTION_FALLBACK =
   import.meta.env.VITE_ENABLE_CANONICAL_FUNCTION_FALLBACK !== 'false';
+const WORKERS_API_BASE = (import.meta.env.VITE_WORKERS_API_URL || '').replace(/\/$/, '');
+
+async function callWorkersApi<TResponse>(path: string, init?: RequestInit): Promise<TResponse> {
+  if (!WORKERS_API_BASE) {
+    throw new Error('VITE_WORKERS_API_URL não configurada');
+  }
+
+  const token = await getNeonAccessToken();
+  const endpoint = `${WORKERS_API_BASE}${path}`;
+  const response = await fetch(endpoint, {
+    ...init,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      ...(init?.headers || {}),
+    },
+  });
+
+  if (response.status === 401) {
+    const refreshedToken = await getNeonAccessToken({ forceSessionReload: true });
+    const retry = await fetch(endpoint, {
+      ...init,
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${refreshedToken}`,
+        ...(init?.headers || {}),
+      },
+    });
+
+    if (!retry.ok) {
+      const retryBody = await retry.text().catch(() => '');
+      throw new Error(retryBody || `Workers API error ${retry.status}`);
+    }
+
+    return retry.json() as Promise<TResponse>;
+  }
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => '');
+    throw new Error(body || `Workers API error ${response.status}`);
+  }
+
+  return response.json() as Promise<TResponse>;
+}
 
 /**
  * Get Firebase Functions instance
@@ -184,12 +229,7 @@ export async function callFunctionHttp<TRequest, TResponse>(
   data: TRequest,
   options?: CallFunctionOptions
 ): Promise<TResponse> {
-  const auth = getFirebaseAuth();
-  const token = await auth.currentUser?.getIdToken();
-
-  if (!token) {
-    throw new FunctionCallError(functionName, 'No authentication token available');
-  }
+  const token = await getNeonAccessToken();
 
   const region = DEFAULT_REGION;
   const projectId = app.options.projectId;
@@ -643,57 +683,67 @@ export namespace DoctorApi {
  */
 export const patientsApi = {
   /**
-   * Lista pacientes com filtros opcionais (uses Unified Service)
+   * Lista pacientes com filtros opcionais (Workers API + Neon JWT)
    */
-  list: (params: PatientApi.ListParams = {}): Promise<FunctionResponse<PatientApi.Patient[]>> =>
-    callFunctionHttpWithResponse('patientServiceHttp', { ...params, action: 'list' }),
+  list: async (params: PatientApi.ListParams = {}): Promise<FunctionResponse<PatientApi.Patient[]>> => {
+    const query = new URLSearchParams();
+    if (params.status) query.set('status', params.status);
+    if (params.search) query.set('search', params.search);
+    if (params.limit != null) query.set('limit', String(params.limit));
+    if (params.offset != null) query.set('offset', String(params.offset));
+    const res = await callWorkersApi<{ data: PatientApi.Patient[]; total?: number }>(
+      `/api/patients${query.toString() ? `?${query.toString()}` : ''}`,
+      { method: 'GET' },
+    );
+    return { data: res.data ?? [], total: res.total };
+  },
 
   /**
-   * Obtém um paciente por ID (uses Unified Service)
+   * Obtém um paciente por ID
    */
   get: (idOrParams: string | PatientApi.GetParams): Promise<PatientApi.Patient> => {
     const data = typeof idOrParams === 'string' ? { patientId: idOrParams } : idOrParams;
-    return callFunctionHttp<{ action: string } & PatientApi.GetParams, { data: PatientApi.Patient }>(
-      'patientServiceHttp', 
-      { ...data, action: 'get' }
-    ).then(res => res.data);
+    return callWorkersApi<{ data: PatientApi.Patient }>(
+      `/api/patients/${encodeURIComponent(data.patientId)}`,
+      { method: 'GET' },
+    ).then((res) => res.data);
   },
 
   /**
-   * Cria um novo paciente (uses Unified Service)
+   * Cria um novo paciente
    */
   create: async (patient: PatientApi.CreateData): Promise<PatientApi.Patient> => {
-    const res = await callFunctionHttp<any, { data: PatientApi.Patient }>(
-      'patientServiceHttp',
-      { ...patient, action: 'create' }
-    );
+    const res = await callWorkersApi<{ data: PatientApi.Patient }>('/api/patients', {
+      method: 'POST',
+      body: JSON.stringify(patient),
+    });
     return res.data;
   },
 
   /**
-   * Atualiza um paciente existente (uses Unified Service)
+   * Atualiza um paciente existente
    */
   update: async (patientId: string, updates: PatientApi.UpdateData): Promise<PatientApi.Patient> => {
-    const res = await callFunctionHttp<any, { data: PatientApi.Patient }>(
-      'patientServiceHttp',
-      { patientId, ...updates, action: 'update' }
+    const res = await callWorkersApi<{ data: PatientApi.Patient }>(
+      `/api/patients/${encodeURIComponent(patientId)}`,
+      { method: 'PUT', body: JSON.stringify(updates) },
     );
     return res.data;
   },
 
   /**
-   * Remove um paciente (uses Unified Service)
+   * Remove um paciente (soft delete)
    */
   delete: (patientId: string): Promise<{ success: boolean }> =>
-    callFunctionHttp('patientServiceHttp', { patientId, action: 'delete' }),
+    callWorkersApi(`/api/patients/${encodeURIComponent(patientId)}`, { method: 'DELETE' }),
 
   /**
-   * Obtém estatísticas de um paciente (uses Unified Service)
+   * Obtém estatísticas de um paciente
    */
   getStats: async (patientId: string): Promise<PatientApi.Stats> => {
-    const res = await callFunctionHttp<any, { data: PatientApi.Stats }>(
-      'patientServiceHttp',
-      { patientId, action: 'stats' }
+    const res = await callWorkersApi<{ data: PatientApi.Stats }>(
+      `/api/patients/${encodeURIComponent(patientId)}/stats`,
+      { method: 'GET' },
     );
     return res.data;
   },
@@ -858,18 +908,31 @@ export const evolutionsApi = {
  */
 export const appointmentsApi = {
   /**
-   * Lista agendamentos com filtros opcionais (uses Unified Service)
+   * Lista agendamentos com filtros opcionais (Workers API + Neon JWT)
    */
-  list: (params: AppointmentApi.ListParams = {}): Promise<FunctionResponse<AppointmentApi.Appointment[]>> =>
-    callFunctionHttpWithResponse('appointmentServiceHttp', { ...params, action: 'list' }),
+  list: async (params: AppointmentApi.ListParams = {}): Promise<FunctionResponse<AppointmentApi.Appointment[]>> => {
+    const query = new URLSearchParams();
+    if (params.dateFrom) query.set('dateFrom', String(params.dateFrom));
+    if (params.dateTo) query.set('dateTo', String(params.dateTo));
+    if (params.therapistId) query.set('therapistId', String(params.therapistId));
+    if (params.status) query.set('status', String(params.status));
+    if (params.patientId) query.set('patientId', String(params.patientId));
+    if (params.limit != null) query.set('limit', String(params.limit));
+    if (params.offset != null) query.set('offset', String(params.offset));
+    const res = await callWorkersApi<{ data: AppointmentApi.Appointment[] }>(
+      `/api/appointments${query.toString() ? `?${query.toString()}` : ''}`,
+      { method: 'GET' },
+    );
+    return { data: res.data ?? [] };
+  },
 
   /**
    * Obtém um agendamento por ID (uses Unified Service)
    */
   get: async (appointmentId: string): Promise<AppointmentApi.Appointment> => {
-    const res = await callFunctionHttp<any, { data: AppointmentApi.Appointment }>(
-      'appointmentServiceHttp',
-      { appointmentId, action: 'get' }
+    const res = await callWorkersApi<{ data: AppointmentApi.Appointment }>(
+      `/api/appointments/${encodeURIComponent(appointmentId)}`,
+      { method: 'GET' },
     );
     return res.data;
   },
@@ -878,10 +941,19 @@ export const appointmentsApi = {
    * Cria um novo agendamento (uses Unified Service)
    */
   create: async (appointment: AppointmentApi.CreateData): Promise<AppointmentApi.Appointment> => {
-    const res = await callFunctionHttp<any, { data: AppointmentApi.Appointment }>(
-      'appointmentServiceHttp',
-      { ...appointment, action: 'create' }
-    );
+    const payload = {
+      ...appointment,
+      patientId: (appointment as any).patient_id ?? (appointment as any).patientId,
+      therapistId: (appointment as any).therapist_id ?? (appointment as any).therapistId,
+      date: (appointment as any).appointment_date ?? (appointment as any).date,
+      startTime: (appointment as any).start_time ?? (appointment as any).appointment_time,
+      endTime: (appointment as any).end_time ?? (appointment as any).endTime,
+      session_type: (appointment as any).session_type ?? (appointment as any).type,
+    };
+    const res = await callWorkersApi<{ data: AppointmentApi.Appointment }>('/api/appointments', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
     return res.data;
   },
 
@@ -889,9 +961,16 @@ export const appointmentsApi = {
    * Atualiza um agendamento existente (uses Unified Service)
    */
   update: async (appointmentId: string, updates: AppointmentApi.UpdateData): Promise<AppointmentApi.Appointment> => {
-    const res = await callFunctionHttp<any, { data: AppointmentApi.Appointment }>(
-      'appointmentServiceHttp',
-      { appointmentId, ...updates, action: 'update' }
+    const payload = {
+      ...updates,
+      date: (updates as any).appointment_date ?? (updates as any).date,
+      startTime: (updates as any).start_time ?? (updates as any).appointment_time,
+      endTime: (updates as any).end_time ?? (updates as any).endTime,
+      therapistId: (updates as any).therapist_id ?? (updates as any).therapistId,
+    };
+    const res = await callWorkersApi<{ data: AppointmentApi.Appointment }>(
+      `/api/appointments/${encodeURIComponent(appointmentId)}`,
+      { method: 'PUT', body: JSON.stringify(payload) },
     );
     return res.data;
   },
@@ -900,13 +979,19 @@ export const appointmentsApi = {
    * Cancela um agendamento (uses Unified Service)
    */
   cancel: (appointmentId: string, reason?: string): Promise<{ success: boolean }> =>
-    callFunctionHttp('appointmentServiceHttp', { appointmentId, reason, action: 'cancel' }),
+    callWorkersApi(`/api/appointments/${encodeURIComponent(appointmentId)}/cancel`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    }),
 
   /**
    * Verifica conflitos de horário (uses Unified Service)
    */
   checkTimeConflict: (params: AppointmentApi.CheckConflictParams): Promise<AppointmentApi.ConflictResult> =>
-    callFunctionHttp('appointmentServiceHttp', { ...params, action: 'checkConflict' }),
+    callWorkersApi('/api/appointments/check-conflict', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }),
 };
 
 /**
@@ -914,39 +999,23 @@ export const appointmentsApi = {
  */
 export const profileApi = {
   /**
-   * Obtém o perfil do usuário atual.
-   * Usa endpoint HTTP com bearer token para manter compatibilidade CORS.
+   * Obtém o perfil do usuário atual (Worker API + Neon JWT).
    */
   getCurrent: async (): Promise<ProfileApi.Profile> => {
-    try {
-      const res = await callFunctionHttp<Record<string, never>, { data: ProfileApi.Profile }>('getProfile', {});
-      return res.data;
-    } catch (error) {
-      // Compatibilidade com deployments antigos que ainda expõem getProfile como callable.
-      const status = (error as FunctionCallError & { status?: number })?.status;
-      const message = error instanceof Error ? error.message : String(error);
-      const isLegacyCallableError =
-        status === 400 &&
-        /invalid_argument|bad request/i.test(message);
-
-      if (isLegacyCallableError) {
-        const fallback = await callFunction<Record<string, never>, { data: ProfileApi.Profile } | ProfileApi.Profile>(
-          'getProfile',
-          {}
-        );
-        const payload = (fallback as { data?: ProfileApi.Profile })?.data ?? fallback;
-        return payload as ProfileApi.Profile;
-      }
-
-      throw error;
-    }
+    const res = await callWorkersApi<{ data: ProfileApi.Profile }>('/api/profile/me', { method: 'GET' });
+    return res.data;
   },
 
   /**
    * Atualiza o perfil do usuário atual
    */
-  update: (updates: ProfileApi.UpdateData): Promise<ProfileApi.Profile> =>
-    callFunctionHttp('updateProfile', updates),
+  update: async (updates: ProfileApi.UpdateData): Promise<ProfileApi.Profile> => {
+    const res = await callWorkersApi<{ data: ProfileApi.Profile }>('/api/profile/me', {
+      method: 'PUT',
+      body: JSON.stringify(updates),
+    });
+    return res.data;
+  },
 };
 
 /**
@@ -954,16 +1023,59 @@ export const profileApi = {
  */
 export const doctorsApi = {
   /**
-   * Lista médicos (Cloud SQL)
+   * Lista médicos (Worker API + Neon JWT)
    */
-  list: (params: DoctorApi.ListParams = {}): Promise<FunctionResponse<DoctorApi.Doctor[]>> =>
-    callFunctionHttpWithResponse('listDoctors', params),
+  list: async (params: DoctorApi.ListParams = {}): Promise<FunctionResponse<DoctorApi.Doctor[]>> => {
+    const query = new URLSearchParams();
+    if (params.search) query.set('search', params.search);
+    if (params.limit != null) query.set('limit', String(params.limit));
+    if (params.offset != null) query.set('offset', String(params.offset));
+    const res = await callWorkersApi<{ data: DoctorApi.Doctor[]; total?: number }>(
+      `/api/doctors${query.toString() ? `?${query.toString()}` : ''}`,
+      { method: 'GET' },
+    );
+    return { data: res.data ?? [], total: res.total };
+  },
 
   /**
-   * Busca médicos para autocomplete (Cloud SQL - High Performance)
+   * Busca médicos para autocomplete (Worker API + Neon JWT)
    */
-  search: (params: DoctorApi.SearchParams): Promise<{ data: DoctorApi.Doctor[] }> =>
-    callFunctionHttp('searchDoctorsV2', params),
+  search: async (params: DoctorApi.SearchParams): Promise<{ data: DoctorApi.Doctor[] }> => {
+    const query = new URLSearchParams();
+    query.set('q', params.searchTerm);
+    if (params.limit != null) query.set('limit', String(params.limit));
+    const res = await callWorkersApi<{ data: DoctorApi.Doctor[] }>(`/api/doctors?${query.toString()}`, {
+      method: 'GET',
+    });
+    return { data: res.data ?? [] };
+  },
+
+  get: async (doctorId: string): Promise<DoctorApi.Doctor> => {
+    const res = await callWorkersApi<{ data: DoctorApi.Doctor }>(
+      `/api/doctors/${encodeURIComponent(doctorId)}`,
+      { method: 'GET' },
+    );
+    return res.data;
+  },
+
+  create: async (doctor: Partial<DoctorApi.Doctor>): Promise<DoctorApi.Doctor> => {
+    const res = await callWorkersApi<{ data: DoctorApi.Doctor }>('/api/doctors', {
+      method: 'POST',
+      body: JSON.stringify(doctor),
+    });
+    return res.data;
+  },
+
+  update: async (doctorId: string, updates: Partial<DoctorApi.Doctor>): Promise<DoctorApi.Doctor> => {
+    const res = await callWorkersApi<{ data: DoctorApi.Doctor }>(
+      `/api/doctors/${encodeURIComponent(doctorId)}`,
+      { method: 'PUT', body: JSON.stringify(updates) },
+    );
+    return res.data;
+  },
+
+  delete: async (doctorId: string): Promise<{ success: boolean }> =>
+    callWorkersApi(`/api/doctors/${encodeURIComponent(doctorId)}`, { method: 'DELETE' }),
 };
 
 /**
@@ -984,8 +1096,7 @@ export const analyticsApi = {
  */
 export const exerciseAnalysisApi = {
   analyze: async (imageUrl: string) => {
-    const auth = getFirebaseAuth();
-    const token = await auth.currentUser?.getIdToken();
+    const token = await getNeonAccessToken();
     const response = await fetch(API_URLS.external.exerciseService + 'api/exercises/analyze', {
       method: 'POST',
       headers: {

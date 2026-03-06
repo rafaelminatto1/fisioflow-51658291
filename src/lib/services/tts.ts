@@ -32,9 +32,16 @@ class TextToSpeechService {
   private readonly baseUrl: string;
 
   constructor() {
-    // Use the Firebase Functions URL
-    this.baseUrl = import.meta.env.VITE_API_BASE_URL ||
-      'https://southamerica-east1-fisioflow-migration.cloudfunctions.net';
+    const explicitBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/$/, '');
+    if (explicitBase) {
+      this.baseUrl = explicitBase;
+      return;
+    }
+
+    const region = import.meta.env.VITE_FIREBASE_REGION || 'southamerica-east1';
+    const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
+    const resolvedProjectId = projectId || 'fisioflow-migration';
+    this.baseUrl = `https://${region}-${resolvedProjectId}.cloudfunctions.net`;
   }
 
   /**

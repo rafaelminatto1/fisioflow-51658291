@@ -6,7 +6,11 @@
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb, batchFetchDocuments } from '../../lib/firebase/admin.js';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import {
+  getAppointmentById,
+  getAppointmentsForReminder,
+  getPatientsByIds,
+} from './_shared/neon-patients-appointments';
 
 type AppointmentWithRelations = {
   id: string;
@@ -30,51 +34,54 @@ type AppointmentWithRelations = {
   };
 };
 
-type AppointmentDocument = {
-  id: string;
-  date: string;
-  time: string;
-  patient_id: string;
-  organization_id: string;
-  therapist_id?: string;
-};
-
 async function getAppointmentsWithRelations(startDate: Date, endDate: Date): Promise<AppointmentWithRelations[]> {
   const db = getAdminDb();
-
-  const snapshot = await db.collection('appointments')
-    .where('status', '==', 'agendado')
-    .where('date', '>=', startDate.toISOString())
-    .where('date', '<', endDate.toISOString())
-    .get();
-
-  if (snapshot.empty) {
+  const appointmentsFromNeon = await getAppointmentsForReminder(startDate, endDate);
+  if (!appointmentsFromNeon.length) {
     return [];
   }
 
-  // Buscar dados relacionados em lote
-  const patientIds = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()).patient_id).filter(Boolean);
-  const orgIds = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()).organization_id).filter(Boolean);
-  const therapistIds = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()).therapist_id).filter(Boolean);
+  // Buscar dados relacionados em lote (pacientes no Neon, org/perfis ainda no Firebase)
+  const patientIds = appointmentsFromNeon.map((a) => a.patient_id).filter(Boolean);
+  const orgIds = appointmentsFromNeon.map((a) => a.organization_id).filter(Boolean);
+  const therapistIds = appointmentsFromNeon.map((a) => a.therapist_id).filter(Boolean);
 
   const [patientMap, orgMap, therapistMap] = await Promise.all([
-    batchFetchDocuments('patients', patientIds),
+    getPatientsByIds(patientIds),
     batchFetchDocuments('organizations', orgIds),
     batchFetchDocuments('profiles', therapistIds),
   ]);
 
   const appointments: AppointmentWithRelations[] = [];
 
-  for (const docSnap of snapshot.docs) {
-    const appointment = { id: docSnap.id, ...docSnap.data() } as AppointmentDocument;
+  for (const appointment of appointmentsFromNeon) {
+    const patient = patientMap.get(appointment.patient_id);
+    const org = appointment.organization_id ? orgMap.get(appointment.organization_id) : null;
+    const therapist = appointment.therapist_id ? therapistMap.get(appointment.therapist_id) : undefined;
 
     appointments.push({
       id: appointment.id,
       date: appointment.date,
-      time: appointment.time,
-      patient: patientMap.get(appointment.patient_id) || { id: appointment.patient_id, full_name: 'Unknown' },
-      organization: orgMap.get(appointment.organization_id) || { id: appointment.organization_id, name: 'Unknown' },
-      therapist: appointment.therapist_id ? therapistMap.get(appointment.therapist_id) : undefined,
+      time: appointment.start_time ?? '08:00:00',
+      patient: {
+        id: appointment.patient_id,
+        full_name: patient?.full_name || 'Unknown',
+        email: patient?.email,
+        phone: patient?.phone,
+      },
+      organization: {
+        id: appointment.organization_id || 'unknown',
+        name: (org as { name?: string } | null)?.name || 'Unknown',
+        settings: (org as { settings?: { email_enabled?: boolean; whatsapp_enabled?: boolean } } | null)?.settings,
+      },
+      therapist: appointment.therapist_id
+        ? {
+          id: appointment.therapist_id,
+          full_name: (therapist as { full_name?: string; name?: string } | undefined)?.full_name
+            || (therapist as { full_name?: string; name?: string } | undefined)?.name
+            || 'Fisioterapeuta',
+        }
+        : undefined,
     });
   }
 
@@ -195,22 +202,21 @@ export const appointmentCreatedWorkflow = inngest.createFunction(
 
     // 1. Fetch complete appointment details
     const appointment = await step.run('get-appointment-details', async () => {
-      const appointmentSnap = await db.collection('appointments').doc(appointmentId).get();
-
-      if (!appointmentSnap.exists) {
+      const appointmentData = await getAppointmentById(appointmentId);
+      if (!appointmentData) {
         throw new Error('Appointment not found');
       }
 
-      const appointmentData = { id: appointmentSnap.id, ...appointmentSnap.data() } as AppointmentDocument;
-
       // Buscar relações em lote
       const [patientSnap, orgSnap, therapistSnap] = await Promise.all([
-        db.collection('patients').doc(appointmentData.patient_id).get(),
-        db.collection('organizations').doc(appointmentData.organization_id).get(),
+        Promise.resolve(appointmentData.patient_id).then((id) => getPatientsByIds([id])).then((map) => map.get(appointmentData.patient_id) ?? null),
+        appointmentData.organization_id
+          ? db.collection('organizations').doc(appointmentData.organization_id).get()
+          : Promise.resolve({ exists: false } as { exists: false }),
         appointmentData.therapist_id ? db.collection('profiles').doc(appointmentData.therapist_id).get() : Promise.resolve({ exists: false }),
       ]);
 
-      const patient = patientSnap.exists ? { id: patientSnap.id, ...patientSnap.data() } : null;
+      const patient = patientSnap ? { id: patientSnap.id, ...patientSnap } : null;
       const organization = orgSnap.exists ? { id: orgSnap.id, ...orgSnap.data() } : null;
       const therapist = therapistSnap.exists ? { id: therapistSnap.id, ...therapistSnap.data() } : null;
 
@@ -240,14 +246,15 @@ export const appointmentCreatedWorkflow = inngest.createFunction(
       const whatsappEnabled = org?.settings?.whatsapp_enabled ?? true;
 
       if (whatsappEnabled && patient?.phone) {
+        const dateTime = new Date(`${appointment.date}T${appointment.start_time ?? '08:00:00'}`);
         await inngest.send({
           name: 'whatsapp/appointment.confirmation',
           data: {
             to: patient.phone,
             patientName: patient.full_name,
             therapistName: therapist?.full_name || 'Fisioterapeuta',
-            date: new Date(appointment.start_time).toLocaleDateString('pt-BR'),
-            time: new Date(appointment.start_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            date: dateTime.toLocaleDateString('pt-BR'),
+            time: dateTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
             organizationName: org?.name || 'FisioFlow',
             location: 'Consultório'
           }

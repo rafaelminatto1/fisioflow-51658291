@@ -231,14 +231,15 @@ export const prefetchPatients = (queryClient: QueryClient) => {
 };
 
 /**
- * prefetchExercises - Prefetch exercícios
+ * prefetchExercises - Prefetch exercícios (Desativado durante migração Neon)
  */
 export const prefetchExercises = (queryClient: QueryClient) => {
-  queryClient.prefetchQuery({
-    queryKey: ['exercises'],
-    queryFn: async () => [], // Substituir por query real
-    staleTime: CACHE_CONFIG.exercises.staleTime,
-  });
+  // Desativado para evitar sobreposição com o novo useWorkersExercises
+  // queryClient.prefetchQuery({
+  //   queryKey: ['exercises'],
+  //   queryFn: async () => [], 
+  //   staleTime: CACHE_CONFIG.exercises.staleTime,
+  // });
 };
 
 // ============================================================================

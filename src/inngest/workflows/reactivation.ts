@@ -6,7 +6,10 @@
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { InngestStep } from '../../lib/inngest/types.js';
 import { getAdminDb } from '../../lib/firebase/admin.js';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import {
+  getActivePatients,
+  getLatestCompletedAppointmentByPatient,
+} from './_shared/neon-patients-appointments';
 
 interface Appointment {
   date: string;
@@ -58,37 +61,23 @@ export const reactivationWorkflow = inngest.createFunction(
 
     // Step 1: Find patients inactive > 30 days
     const patients = await step.run('find-inactive-patients', async () => {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-      // Get active patients
-      const patientsSnapshot = await db.collection('patients')
-        .where('active', '==', true)
-        .select('id', 'name', 'phone', 'email', 'organization_id', 'notification_preferences')
-        .get();
+      const activePatients = await getActivePatients();
 
       const inactivePatients: Patient[] = [];
       const now = new Date();
 
-      // OPTIMIZATION: Fetch all completed appointments in one query
-      // Then filter by date client-side
-      const appointmentsSnapshot = await db.collection('appointments')
-        .where('status', 'in', ['concluido', 'realizado', 'attended'])
-        .where('date', '>=', new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString()) // Last 60 days max
-        .get();
+      // Create a map: patientId -> latest appointment (Neon)
+      const latestAppointmentByPatient = await getLatestCompletedAppointmentByPatient(60);
 
-      // Create a map: patientId -> latest appointment
-      const latestAppointmentByPatient = new Map<string, Appointment>();
-      appointmentsSnapshot.docs.forEach(doc => {
-        const appt = { id: doc.id, ...normalizeFirestoreData(doc.data()) } as Appointment;
-        const existing = latestAppointmentByPatient.get(appt.patient_id || '');
-        if (!existing || new Date(appt.date) > new Date(existing.date)) {
-          latestAppointmentByPatient.set(appt.patient_id || '', appt);
-        }
-      });
-
-      for (const patientDoc of patientsSnapshot.docs) {
-        const p = { id: patientDoc.id, ...patientDoc.data() } as Patient;
+      for (const row of activePatients) {
+        const p = {
+          id: row.id,
+          name: row.full_name,
+          phone: row.phone,
+          email: row.email,
+          organization_id: row.organization_id || '',
+          notification_preferences: {},
+        } as Patient;
 
         // Check preferences
         const prefs = p.notification_preferences || {};

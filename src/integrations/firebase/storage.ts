@@ -1,50 +1,52 @@
 /**
- * Firebase Storage Integration
- *
- * Provides access to Firebase Storage for file uploads.
+ * Firebase Storage Integration - Bridge/Fallback
+ * 
+ * TODO: Migrate to Cloudflare R2 as per MIGRACAO_CLOUDFLARE_NEON_2026.md
  */
 
-
-/**
- * Get Firebase Storage instance
- */
-
-import { ref, uploadBytes, getDownloadURL, getStorage } from 'firebase/storage';
+import { 
+  getStorage, 
+  ref, 
+  uploadBytes, 
+  getDownloadURL, 
+  deleteObject,
+  listAll
+} from 'firebase/storage';
 import { getFirebaseApp } from './app';
 
-export function getFirebaseStorage() {
-  const app = getFirebaseApp();
-  return getStorage(app);
-}
-
-// Re-export for convenience
-export { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
+// Obter instância do Storage
+export const getFirebaseStorage = () => getStorage(getFirebaseApp());
 
 /**
- * Upload a file to Firebase Storage
- * @param path Storage path
- * @param file File to upload
- * @returns Download URL
+ * Upload de arquivo para o Firebase Storage
  */
-export async function uploadFile(path: string, file: File): Promise<string> {
+export async function uploadFile(path: string, file: File | Blob): Promise<string> {
   const storage = getFirebaseStorage();
   const storageRef = ref(storage, path);
-
-  await uploadBytes(storageRef, file);
-  const downloadURL = await getDownloadURL(storageRef);
-
+  
+  const snapshot = await uploadBytes(storageRef, file);
+  const downloadURL = await getDownloadURL(snapshot.ref);
+  
   return downloadURL;
 }
 
 /**
- * Delete a file from Firebase Storage
- * @param path Storage path
+ * Deletar arquivo do Firebase Storage
  */
 export async function deleteFile(path: string): Promise<void> {
   const storage = getFirebaseStorage();
-  const _storageRef = ref(storage, path);
-
-  // Note: This requires proper Firebase Storage security rules
-  // import { deleteObject } from 'firebase/storage';
-  // await deleteObject(storageRef);
+  const storageRef = ref(storage, path);
+  await deleteObject(storageRef);
 }
+
+/**
+ * Obter URL pública de um arquivo
+ */
+export async function getFileUrl(path: string): Promise<string> {
+  const storage = getFirebaseStorage();
+  const storageRef = ref(storage, path);
+  return getDownloadURL(storageRef);
+}
+
+// Re-exportar funções nativas úteis
+export { ref, getDownloadURL, listAll };
