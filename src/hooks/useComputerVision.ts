@@ -3,6 +3,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { resolveMediaPipeVisionFileset } from '@/lib/ai/mediapipe';
 import { useMediaPipeVision } from '@/hooks/performance';
 
 export interface PoseKeypoint {
@@ -158,9 +159,7 @@ export const useComputerVision = () => {
       if (!mediaPipeLoaded) await loadMediaPipe();
 
       const { PoseLandmarker, FilesetResolver } = await import('@mediapipe/tasks-vision');
-      const vision = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
-      );
+      const vision = await resolveMediaPipeVisionFileset(FilesetResolver);
       
       landmarkerRef.current = await PoseLandmarker.createFromOptions(vision, {
         baseOptions: {

@@ -1,10 +1,10 @@
 
 /**
  * Cliente HTTP genérico para consumir Cloud Functions V2
- * Gerencia automaticamente o token de autenticação do Firebase
+ * Gerencia automaticamente o token JWT do Neon Auth
  */
 
-import { getAuth } from 'firebase/auth';
+import { getNeonAccessToken } from '@/lib/auth/neon-token';
 import { fisioLogger } from '@/lib/errors/logger';
 
 interface RequestOptions extends RequestInit {
@@ -17,15 +17,7 @@ class ApiClient {
    * Realiza uma requisição autenticada
    */
   async request<T>(url: string, options: RequestOptions = {}): Promise<T> {
-    const auth = getAuth();
-    const user = auth.currentUser;
-
-    if (!user) {
-      throw new Error('Usuário não autenticado');
-    }
-
-    // Obter token atualizado
-    const token = await user.getIdToken();
+    const token = await getNeonAccessToken();
 
     const headers = new Headers(options.headers);
     headers.set('Authorization', `Bearer ${token}`);

@@ -10,8 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { Sparkles, Loader2, Upload, X, Film, Image as ImageIcon } from 'lucide-react';
 import { api } from '@/integrations/firebase/functions';
-import { auth, storage } from '@/integrations/firebase/app';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { uploadToR2 } from '@/lib/storage/r2-storage';
 import { toast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import type { Exercise } from '@/hooks/useExercises';
@@ -142,7 +141,7 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
           const aiTags = `Tags IA: ${result.analysis.labels.join(', ')}`;
           form.setValue('description', currentDesc ? `${currentDesc}\n\n${aiTags}` : aiTags);
         }
-        
+
         toast({
           title: 'Análise concluída',
           description: 'A imagem foi analisada e as informações foram extraídas.',
@@ -182,22 +181,14 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
   };
 
   const uploadFile = async (file: File, path: string): Promise<string> => {
-    const user = auth.currentUser;
-    if (!user) throw new Error('Usuário não autenticado');
-
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-    const fullPath = `${path}/${user.uid}/${fileName}`;
-    const storageRef = ref(storage, fullPath);
-
-    await uploadBytes(storageRef, file);
-    return getDownloadURL(storageRef);
+    const { publicUrl } = await uploadToR2(file, path);
+    return publicUrl;
   };
 
   const handleSubmit = async (data: ExerciseFormData) => {
     setIsUploading(true);
     setUploadProgress(10);
-    
+
     try {
       let finalImageUrl = data.image_url;
       let finalVideoUrl = data.video_url;
@@ -218,7 +209,7 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
         image_url: finalImageUrl,
         video_url: finalVideoUrl,
       } as Omit<Exercise, 'id' | 'created_at' | 'updated_at'>);
-      
+
       onOpenChange(false);
     } catch (error) {
       console.error('Erro ao salvar exercício:', error);
@@ -403,7 +394,7 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
                           <Upload className="h-4 w-4" />
                         </Button>
                       </div>
-                      
+
                       <input
                         type="file"
                         ref={videoInputRef}
@@ -471,10 +462,10 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
                         >
                           <Upload className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          type="button" 
-                          variant="secondary" 
-                          size="icon" 
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="icon"
                           onClick={handleAnalyzeImage}
                           disabled={isAnalyzing || !field.value}
                           title="Analisar com IA"
@@ -616,7 +607,7 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
             </form>
           </Form>
         </div>
-        
+
         {isUploading && (
           <div className="px-4 sm:px-6 py-2 border-t">
             <div className="flex items-center justify-between mb-1">

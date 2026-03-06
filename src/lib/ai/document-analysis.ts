@@ -18,8 +18,7 @@
 // ============================================================================
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage, db, doc, setDoc, collection, serverTimestamp, updateDoc, arrayUnion } from '@/integrations/firebase/app';
+import { uploadFile, deleteFile } from '@/lib/storage/upload';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export type DocumentType =
@@ -134,7 +133,7 @@ export interface BatchAnalysisOptions {
 // ============================================================================
 
 const GEMINI_API_KEY = import.meta.env.VITE_GOOGLE_GENERATIVE_AI_API_KEY ||
-                       import.meta.env.NEXT_PUBLIC_GOOGLE_AI_API_KEY;
+  import.meta.env.NEXT_PUBLIC_GOOGLE_AI_API_KEY;
 
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
@@ -641,22 +640,15 @@ async function uploadDocument(
   file: File,
   patientId: string
 ): Promise<string> {
-
   const timestamp = Date.now();
   const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-  const filename = `medical-documents/${patientId}/${timestamp}-${sanitizedFileName}`;
-  const storageRef = ref(storage, filename);
+  const folder = `medical-documents/${patientId}`;
+  const filename = `${timestamp}-${sanitizedFileName}`;
 
-  await uploadBytes(storageRef, file, {
-    contentType: file.type || 'application/pdf',
-    customMetadata: {
-      uploadedAt: new Date().toISOString(),
-      originalName: file.name,
-      size: file.size.toString()
-    }
-  });
+  const renamedFile = new File([file], filename, { type: file.type || 'application/pdf' });
 
-  return getDownloadURL(storageRef);
+  const result = await uploadFile(renamedFile, { folder });
+  return result.url;
 }
 
 /**
@@ -777,9 +769,10 @@ async function fileToBase64(file: File): Promise<string> {
  * Extrai ID da URL do Storage
  */
 function extractIdFromUrl(url: string): string {
-
-  const matches = url.match(/\/([0-9]+-[^/]+)/);
-  return matches ? matches[1] : `doc_${Date.now()}`;
+  // Extract key after the domain
+  const path = url.split('.br/')[1] || url.split('.dev/')[1] || url;
+  const parts = path.split('/');
+  return parts[parts.length - 1] || `doc_${Date.now()}`;
 }
 
 /**

@@ -1,6 +1,6 @@
 import { chromium } from 'playwright';
 
-const BASE_URL = 'https://moocafisio.com.br';
+const BASE_URL = 'https://www.moocafisio.com.br';
 const EMAIL = 'rafael.minatto@yahoo.com.br';
 const PASSWORD = 'Yukari30@';
 const suffix = String(Date.now()).slice(-6);

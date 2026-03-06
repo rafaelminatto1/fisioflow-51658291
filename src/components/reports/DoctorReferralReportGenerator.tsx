@@ -9,6 +9,7 @@ import { useGamification } from '@/hooks/useGamification';
 import { useSoapRecordsV2 } from '@/hooks/useSoapRecordsV2';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { callFunctionHttp } from '@/integrations/firebase/functions';
 
 interface DoctorReferralReportGeneratorProps {
   patientId: string;
@@ -38,18 +39,26 @@ export function DoctorReferralReportGenerator({
         objective: r.objective,
       }));
 
-      const response = await fetch('https://southamerica-east1-fisioflow-migration.cloudfunctions.net/aiServiceHttp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const result = await callFunctionHttp<{
+        action: string;
+        patientId: string;
+        patientName: string;
+        condition: string;
+        history: Array<{
+          date: string;
+          subjective?: string;
+          objective?: string;
+        }>;
+      }, {
+        success?: boolean;
+        data?: { summary?: string };
+      }>('aiServiceHttp', {
           action: 'patientExecutiveSummary',
+          patientId,
           patientName,
           condition,
           history,
-        }),
       });
-
-      const result = await response.json();
       if (result.success && result.data) {
         setAiSummary(result.data.summary);
         toast.success('Sumário IA preparado para o relatório!');

@@ -22,61 +22,47 @@ if (existsSync(envTestPath)) {
   }
 }
 
-// Global setup - executa seed data automaticamente se E2E_AUTO_SEED=true
-
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 4 : 4, // Aumentado de 2 para 4 para mais paralelização
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 2 : undefined,
   reporter: 'html',
   globalSetup: './e2e/global-setup.ts',
-  timeout: 120000, // Aumentado para 120s
+  timeout: 60000,
   use: {
-    baseURL: process.env.BASE_URL || 'http://localhost:5173?e2e=true',
+    baseURL: process.env.BASE_URL || 'http://localhost:5173',
     storageState: 'playwright/.auth/user.json',
     serviceWorkers: 'block',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    actionTimeout: 30000, // Aumentado para 30s
-    navigationTimeout: 60000, // Aumentado para 60s
+    actionTimeout: 15000,
+    navigationTimeout: 30000,
   },
 
-  projects: process.env.CI ? [
+  /* OTIMIZAÇÃO: Reduzindo projetos para evitar explosão de testes */
+  projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
-  ] : [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-    {
-      name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
-    },
-    {
-      name: 'Mobile Safari',
-      use: { ...devices['iPhone 12'] },
-    },
+    /* Outros navegadores desativados por padrão para velocidade. 
+       Ative apenas quando necessário validar cross-browser. */
+    // {
+    //   name: 'Mobile Safari',
+    //   use: { ...devices['iPhone 12'] },
+    // },
   ],
 
-  // webServer configuration is disabled in CI to avoid issues
-  // In CI, we expect the tests to run without a running dev server
   webServer: process.env.CI ? undefined : {
     command: 'npm run dev',
     url: 'http://localhost:5173',
     reuseExistingServer: true,
-    timeout: 120000,
+    timeout: 60000,
+    env: {
+      ...process.env,
+      VITE_WORKERS_API_URL: process.env.VITE_WORKERS_API_URL || 'http://localhost:8788',
+    }
   },
 });

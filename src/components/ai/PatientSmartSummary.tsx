@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Brain, Sparkles, TrendingUp, TrendingDown, AlertCircle, CheckCircle2, ChevronRight, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { callFunctionHttp } from '@/integrations/firebase/functions';
 
 interface PatientSmartSummaryProps {
   patientId: string;
@@ -48,24 +49,30 @@ export function PatientSmartSummary({
 
     setLoading(true);
     try {
-      // Usar a URL do Cloud Functions
-      const response = await fetch('https://southamerica-east1-fisioflow-migration.cloudfunctions.net/aiServiceHttp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const data = await callFunctionHttp<{
+        action: string;
+        patientId: string;
+        patientName: string;
+        condition: string;
+        history: Array<{
+          date: string;
+          subjective?: string;
+          objective?: string;
+          exercises?: string[];
+        }>;
+        goals?: string[];
+      }, {
+        success?: boolean;
+        data?: SummaryResult;
+        error?: string;
+      }>('aiServiceHttp', {
           action: 'patientExecutiveSummary',
+          patientId,
           patientName,
           condition,
           history: history.slice(0, 5), // Enviar as 5 mais recentes
           goals,
-        }),
       });
-
-      if (!response.ok) throw new Error('Falha na chamada da IA');
-      
-      const data = await response.json();
       if (data.success && data.data) {
         setResult(data.data);
         toast.success('Resumo gerado com sucesso!');
