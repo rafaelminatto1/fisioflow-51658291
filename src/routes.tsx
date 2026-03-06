@@ -153,7 +153,6 @@ const PreCadastroAdmin = lazy(() => import(/* webpackChunkName: "pre-cadastro-ad
 const Notifications = lazy(() => import(/* webpackChunkName: "notifications" */ "./pages/Notifications"));
 const TherapistOccupancy = lazy(() => import(/* webpackChunkName: "occupancy" */ "./pages/TherapistOccupancy"));
 const PublicPrescriptionPage = lazy(() => import(/* webpackChunkName: "prescription-public" */ "./pages/prescricoes/PublicPrescriptionPage"));
-const FileUploadTest = lazy(() => import(/* webpackChunkName: "test-upload" */ "./pages/FileUploadTest"));
 const ClinicalTestsLibrary = lazy(() => import(/* webpackChunkName: "clinical-tests" */ "./pages/ClinicalTestsLibrary"));
 const NotFound = lazy(() => import(/* webpackChunkName: "not-found" */ "./pages/NotFound"));
 const ErrorPage = lazy(() => import(/* webpackChunkName: "error-page" */ "./pages/ErrorPage"));
@@ -258,7 +257,6 @@ export function AppRoutes() {
             <Route path="/eventos" element={<ProtectedRoute><Eventos /></ProtectedRoute>} />
             <Route path="/eventos/analytics" element={<ProtectedRoute><EventosAnalytics /></ProtectedRoute>} />
             <Route path="/eventos/:id" element={<ProtectedRoute><EventoDetalhes /></ProtectedRoute>} />
-            <Route path="/file-upload-test" element={<ProtectedRoute><FileUploadTest /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin']}><UserManagement /></ProtectedRoute>} />
             <Route path="/admin/audit-logs" element={<ProtectedRoute allowedRoles={['admin']}><AuditLogs /></ProtectedRoute>} />
             <Route path="/admin/invitations" element={<ProtectedRoute allowedRoles={['admin']}><InvitationManagement /></ProtectedRoute>} />

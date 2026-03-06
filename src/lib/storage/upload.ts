@@ -1,133 +1,113 @@
 /**
- * File Upload Service - Migrated to Firebase Storage
+ * File Upload Service - Migrated to Cloudflare R2
  *
- * Migration from Vercel Blob to Firebase Storage:
- * - uploadToBlob() → uploadFile() with public option
- * - uploadToFirebase() → uploadFile()
- * - All uploads now go through Firebase Storage
+ * All uploads now go through Cloudflare R2 via pre-signed URLs.
+ * Maintains compatibility with existing Firebase-style interfaces.
  *
- * @version 2.0.0 - Firebase Storage (replaces Vercel Blob)
- *
- * @deprecated Import from @/lib/firebase/storage instead
- * This file is kept for backward compatibility
+ * @version 3.0.0 - Cloudflare R2 Migration
  */
 import {
-
-  uploadFile,
-  uploadFiles,
-  uploadBase64,
-  uploadFromUrl,
-  getDownloadUrl,
-  deleteFile,
-  deleteFiles,
-  deleteFolder,
-  getFileMetadata,
-  listFiles,
-  updateFileMetadata,
-  getStorageStats,
-  copyFile,
-  moveFile,
-  STORAGE_FOLDERS,
-  SIZE_LIMITS,
-  type UploadOptions,
-  type UploadResult,
-  type StorageStats,
-} from '@/lib/firebase/storage';
+  uploadToR2 as uploadFileR2,
+  deleteFromR2,
+  type R2UploadResult as UploadResult
+} from './r2-storage';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-// ============================================================================
-// RE-EXPORTS FOR BACKWARD COMPATIBILITY
-// ============================================================================
+// Re-export types for backward compatibility
+export type { UploadResult };
 
-// Upload functions
-export { uploadFile, uploadFiles, uploadBase64, uploadFromUrl };
-
-// Download functions
-export { getDownloadUrl, getFileMetadata, listFiles };
-
-// Delete functions
-export { deleteFile, deleteFiles, deleteFolder };
-
-// Metadata functions
-export { updateFileMetadata, getStorageStats };
-
-// Utility functions
-export { copyFile, moveFile };
-
-// Types
-export type { UploadOptions, UploadResult, StorageStats };
-
-// Constants
-export { STORAGE_FOLDERS, SIZE_LIMITS };
-
-// ============================================================================
-// LEGACY FUNCTIONS (deprecated, maintained for compatibility)
-// ============================================================================
-
-/**
- * @deprecated Use uploadFile() with { public: true } instead
- */
-export async function uploadToBlob(file: File, folder: string = 'uploads') {
-  logger.warn('[uploadToBlob] Deprecated - use uploadFile() with { public: true }', undefined, 'upload');
-  return uploadFile(file, { folder, public: true });
+export interface UploadOptions {
+  folder?: string;
+  onProgress?: (progress: number) => void;
+  public?: boolean;
 }
 
 /**
- * @deprecated Use uploadFile() instead
+ * Upload a file to Cloudflare R2
  */
-export async function uploadToFirebase(file: File, folder: string = 'documents') {
-  logger.warn('[uploadToFirebase] Deprecated - use uploadFile()', undefined, 'upload');
+export async function uploadFile(
+  file: File,
+  options: UploadOptions = {}
+): Promise<UploadResult> {
+  const folder = options.folder || 'uploads';
+  return uploadFileR2(file, folder, {
+    onProgress: options.onProgress
+  });
+}
+
+/**
+ * Upload multiple files
+ */
+export async function uploadFiles(
+  files: File[],
+  options: UploadOptions = {}
+): Promise<UploadResult[]> {
+  const results: UploadResult[] = [];
+  for (const file of files) {
+    results.push(await uploadFile(file, options));
+  }
+  return results;
+}
+
+/**
+ * Upload from base64 (converts to File first)
+ */
+export async function uploadBase64(
+  base64: string,
+  filename: string,
+  options: UploadOptions = {}
+): Promise<UploadResult> {
+  let data = base64;
+  let contentType = 'application/octet-stream';
+
+  if (base64.startsWith('data:')) {
+    const match = base64.match(/^data:([^;]+);base64,/);
+    if (match) {
+      contentType = match[1];
+      data = base64.replace(/^data:([^;]+);base64,/, '');
+    }
+  }
+
+  const byteCharacters = atob(data);
+  const byteNumbers = new Array(byteCharacters.length);
+  for (let i = 0; i < byteCharacters.length; i++) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i);
+  }
+  const byteArray = new Uint8Array(byteNumbers);
+  const blob = new Blob([byteArray], { type: contentType });
+  const file = new File([blob], filename, { type: contentType });
+
+  return uploadFile(file, options);
+}
+
+/**
+ * Delete a file from R2
+ */
+export async function deleteFile(path: string): Promise<void> {
+  return deleteFromR2(path);
+}
+
+// ============================================================================
+// LEGACY COMPATIBILITY
+// ============================================================================
+
+export const STORAGE_FOLDERS = {
+  UPLOADS: 'uploads',
+  DOCUMENTS: 'documents',
+  IMAGES: 'images',
+  VIDEOS: 'videos',
+  PATIENTS: 'patients',
+  EXERCISES: 'exercises',
+} as const;
+
+export async function uploadToBlob(file: File, folder: string = 'uploads') {
   return uploadFile(file, { folder });
 }
 
-/**
- * @deprecated All uploads now use Firebase Storage
- */
-export function getStorageStrategy(_fileType: 'video' | 'image' | 'document'): 'firebase' {
-  // All uploads now go through Firebase Storage
-  // Public/private is controlled by the 'public' option
-  return 'firebase';
+export async function uploadToFirebase(file: File, folder: string = 'documents') {
+  return uploadFile(file, { folder });
 }
 
-// ============================================================================
-// EXPORT EVERYTHING FROM FIREBASE STORAGE
-// ============================================================================
-
-// This allows a smooth migration:
-// Old code: import { uploadToBlob } from '@/lib/storage/upload'
-// New code: import { uploadFile } from '@/lib/firebase/storage'
-
-export {
-  // Upload
-  uploadFile,
-  uploadFiles,
-  uploadBase64,
-  uploadFromUrl,
-
-  // Download
-  getDownloadUrl,
-  getFileMetadata,
-  listFiles,
-
-  // Delete
-  deleteFile,
-  deleteFiles,
-  deleteFolder,
-
-  // Metadata
-  updateFileMetadata,
-  getStorageStats,
-
-  // Utility
-  copyFile,
-  moveFile,
-
-  // Types
-  type UploadOptions,
-  type UploadResult,
-  type StorageStats,
-
-  // Constants
-  STORAGE_FOLDERS,
-  SIZE_LIMITS,
-} from '@/lib/firebase/storage';
+// Other Firebase-specific exports are stubbed or removed if not used
+export const getDownloadUrl = async (path: string) => path; // R2 URLs are direct
+export const deleteFiles = async (paths: string[]) => Promise.all(paths.map(deleteFile));
