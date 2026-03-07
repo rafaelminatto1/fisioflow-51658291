@@ -49,6 +49,7 @@ import { AgendaAutomationService } from '@/lib/services/AgendaAutomationService'
 import { NotionEvolutionPanel } from './v2-improved/NotionEvolutionPanel';
 import { NotionEvolutionPanel as NotionV3Panel } from './v3-notion/NotionEvolutionPanel';
 import { EvolutionVersionToggle } from './v2-improved/EvolutionVersionToggle';
+import { NotionEvolutionEditor } from './NotionEvolutionEditor';
 
 interface SessionEvolutionContainerProps {
   appointmentId?: string;
@@ -82,7 +83,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   const [, setAppointment] = useState<Record<string, unknown> | null>(null);
   const [appointmentLoadedFromApi, setAppointmentLoadedFromApi] = useState(false);
   const [activeTab, setActiveTab] = useState('evolution');
-  const [viewVersion, setViewVersion] = useState<'classic' | 'improved' | 'v3-notion'>('improved');
+  const [viewVersion, setViewVersion] = useState<'classic' | 'improved' | 'v3-notion' | 'v4-tiptap'>('v4-tiptap');
 
   // Patient data
   // Using any[] to avoid strict type conflicts with child components that expect specific interfaces
@@ -687,8 +688,8 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
                   Evolução de Sessão
                 </h1>
                 <EvolutionVersionToggle
-                  version={viewVersion === 'classic' ? 'v1-soap' : viewVersion === 'v3-notion' ? 'v3-notion' : 'v2-texto'}
-                  onToggle={(v) => setViewVersion(v === 'v1-soap' ? 'classic' : v === 'v3-notion' ? 'v3-notion' : 'improved')}
+                  version={viewVersion === 'classic' ? 'v1-soap' : viewVersion === 'v3-notion' ? 'v3-notion' : viewVersion === 'v4-tiptap' ? 'v4-tiptap' : 'v2-texto'}
+                  onToggle={(v) => setViewVersion(v === 'v1-soap' ? 'classic' : v === 'v3-notion' ? 'v3-notion' : v === 'v4-tiptap' ? 'v4-tiptap' : 'improved')}
                 />
               </div>
               {patient && (
@@ -769,7 +770,22 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
 
       {/* Main Content */}
       <div className="p-4 h-[calc(100vh-80px)] overflow-hidden">
-        {viewVersion === 'v3-notion' ? (
+        {viewVersion === 'v4-tiptap' ? (
+          <div className="h-full overflow-y-auto">
+            <NotionEvolutionEditor
+              initialContent={soapData.assessment}
+              soapData={soapData}
+              evolutionId={appointmentId}
+              isSaving={isSaving}
+              onSave={(content) => {
+                handleSoapChange({ ...soapData, assessment: content });
+                // We simulate saving process, but handleSave is separate and triggerable here
+                // if we want to save immediately. For now we will call handleSave to match logic.
+                setTimeout(() => handleSave(), 100);
+              }}
+            />
+          </div>
+        ) : viewVersion === 'v3-notion' ? (
           <NotionV3Panel
             data={{
               patientReport: soapData.subjective,
