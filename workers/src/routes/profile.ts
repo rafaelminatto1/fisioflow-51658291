@@ -5,6 +5,25 @@ import { createPool } from '../lib/db';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
+async function hasColumn(
+  pool: ReturnType<typeof createPool>,
+  table: string,
+  column: string,
+): Promise<boolean> {
+  const result = await pool.query(
+    `
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = $1
+      AND column_name = $2
+    LIMIT 1
+    `,
+    [table, column],
+  );
+  return result.rows.length > 0;
+}
+
 async function hasProfilesTable(env: Env): Promise<boolean> {
   const pool = createPool(env);
   try {
@@ -69,6 +88,75 @@ app.get('/me', requireAuth, async (c) => {
   } catch (error) {
     console.error('[profile/me] fallback due to query error:', error);
     return c.json({ data: fallbackProfile });
+  } finally {
+    await pool.end();
+  }
+});
+
+app.get('/therapists', requireAuth, async (c) => {
+  const user = c.get('user');
+  const fallback = [
+    {
+      id: user.uid,
+      name: user.email?.split('@')[0] ?? 'Usuário',
+      crefito: undefined as string | undefined,
+    },
+  ];
+
+  if (!(await hasProfilesTable(c.env))) {
+    return c.json({ data: fallback });
+  }
+
+  const pool = createPool(c.env);
+  try {
+    const [hasOrganizationId, hasRole, hasIsActive, hasCrefito] = await Promise.all([
+      hasColumn(pool, 'profiles', 'organization_id'),
+      hasColumn(pool, 'profiles', 'role'),
+      hasColumn(pool, 'profiles', 'is_active'),
+      hasColumn(pool, 'profiles', 'crefito'),
+    ]);
+
+    const params: unknown[] = [];
+    const where: string[] = [];
+
+    if (hasOrganizationId) {
+      params.push(user.organizationId);
+      where.push(`organization_id = $${params.length}`);
+    }
+    if (hasRole) {
+      where.push(`role IN ('admin', 'fisioterapeuta')`);
+    }
+    if (hasIsActive) {
+      where.push(`is_active = true`);
+    }
+
+    const crefitoSelect = hasCrefito ? 'crefito' : 'NULL::text AS crefito';
+    const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
+
+    const result = await pool.query(
+      `
+      SELECT
+        COALESCE(NULLIF(user_id, ''), id::text) AS id,
+        full_name,
+        email,
+        ${crefitoSelect}
+      FROM profiles
+      ${whereClause}
+      ORDER BY full_name ASC NULLS LAST, email ASC NULLS LAST
+      `,
+      params,
+    );
+
+    const data = result.rows.map((row: { id: string; full_name?: string | null; email?: string | null; crefito?: string | null }) => ({
+      id: row.id,
+      name: row.full_name || row.email?.split('@')[0] || 'Sem nome',
+      crefito: row.crefito ?? undefined,
+    }));
+
+    return c.json({ data: data.length ? data : fallback });
+  } catch (error) {
+    console.error('[profile/therapists] fallback due to query error:', error);
+    return c.json({ data: fallback });
   } finally {
     await pool.end();
   }

@@ -1,54 +1,19 @@
 /**
- * useTransacoes - Migrated to Firebase
+ * useTransacoes - Rewritten to use Workers API (financialApi.transacoes)
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
+import { financialApi, Transacao } from '@/lib/api/workers-client';
 import { toast } from 'sonner';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
-export interface Transacao {
-  id: string;
-  user_id?: string;
-  tipo: string;
-  valor: number;
-  descricao?: string;
-  status: string;
-  stripe_payment_intent_id?: string;
-  stripe_refund_id?: string;
-  metadata?: Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
-}
+export type { Transacao };
 
-// Helper: Convert Firestore doc to Transacao
-const convertDocToTransacao = (doc: { id: string; data: () => Record<string, unknown> }): Transacao => {
-  const data = normalizeFirestoreData(doc.data());
-  return {
-    id: doc.id,
-    ...data,
-  } as Transacao;
-};
-
-export function useTransacoes(userId?: string) {
+export function useTransacoes(params?: { tipo?: string; status?: string; limit?: number }) {
   return useQuery({
-    queryKey: ['transacoes', userId],
+    queryKey: ['transacoes', params],
     queryFn: async () => {
-      let q = firestoreQuery(
-        collection(db, 'transacoes'),
-        orderBy('created_at', 'desc')
-      );
-
-      if (userId) {
-        q = firestoreQuery(
-          collection(db, 'transacoes'),
-          where('user_id', '==', userId),
-          orderBy('created_at', 'desc')
-        );
-      }
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDocToTransacao);
+      const res = await financialApi.transacoes.list(params);
+      return (res?.data ?? res ?? []) as Transacao[];
     },
   });
 }
@@ -57,17 +22,9 @@ export function useCreateTransacao() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (transacao: Omit<Transacao, 'id' | 'created_at' | 'updated_at'>) => {
-      const transacaoData = {
-        ...transacao,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'transacoes'), transacaoData);
-      const docSnap = await getDoc(docRef);
-
-      return convertDocToTransacao(docSnap);
+    mutationFn: async (transacao: Partial<Transacao>) => {
+      const res = await financialApi.transacoes.create(transacao);
+      return (res?.data ?? res) as Transacao;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transacoes'] });
@@ -84,14 +41,8 @@ export function useUpdateTransacao() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<Transacao> }) => {
-      const docRef = doc(db, 'transacoes', id);
-      await updateDoc(docRef, {
-        ...data,
-        updated_at: new Date().toISOString(),
-      });
-
-      const docSnap = await getDoc(docRef);
-      return convertDocToTransacao(docSnap);
+      const res = await financialApi.transacoes.update(id, data);
+      return (res?.data ?? res) as Transacao;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transacoes'] });
@@ -108,7 +59,7 @@ export function useDeleteTransacao() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      await deleteDoc(doc(db, 'transacoes', id));
+      await financialApi.transacoes.delete(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transacoes'] });

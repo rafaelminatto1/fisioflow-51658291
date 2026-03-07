@@ -108,7 +108,7 @@ async function findCardColumn(
 }
 
 async function ensureWorkspaceReady(page: Page) {
-  await page.goto('/wiki-workspace', { waitUntil: 'domcontentloaded' });
+  await page.goto('/wiki', { waitUntil: 'domcontentloaded' });
   await expect(page.locator('input[name="email"]').first()).toHaveCount(0);
   await page.getByTestId('create-wiki-page-button').waitFor({ state: 'visible', timeout: 30000 });
   await resetTriageFilters(page);
@@ -120,7 +120,7 @@ async function waitForStableBoardState(
   cardB: string,
   capture: SaveCapture
 ) {
-  await page.goto('/wiki-workspace', { waitUntil: 'domcontentloaded' });
+  await page.goto('/wiki', { waitUntil: 'domcontentloaded' });
   await resetTriageFilters(page);
 
   for (let attempt = 1; attempt <= 24; attempt += 1) {
@@ -224,10 +224,10 @@ async function createTriagePageFromTemplate(page: Page, title: string, capture: 
   }
 
   // Explicit URL assertion before proceeding
-  await expect(page).toHaveURL(/\/wiki-workspace(?:\/[^/?#]+)?(?:\?.*)?$/);
+  await expect(page).toHaveURL(/\/wiki(?:\/[^/?#]+)?(?:\?.*)?$/);
   console.log(`[E2E][Spec] Página "${title}" salva com sucesso e redirecionada para o workspace.`);
 
-  await page.goto('/wiki-workspace', { waitUntil: 'domcontentloaded' });
+  await page.goto('/wiki', { waitUntil: 'domcontentloaded' });
   await resetTriageFilters(page);
 
   // A presença no backlog é validada após criar todos os cards para reduzir flake de render inicial.

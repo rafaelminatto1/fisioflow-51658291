@@ -17,12 +17,11 @@
 // TYPES
 // ============================================================================
 
-import { getAdminDb } from '@/lib/firebase/admin';
 import { generateObject } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { z } from 'zod';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { analyticsApi } from '@/lib/api/workers-client';
 
 export interface RecoveryPrediction {
   patientId: string;
@@ -176,15 +175,16 @@ function getGoogleAI() {
 // ============================================================================
 
 /**
- * Fetch anonymized similar cases from Firestore
+ * Fetch anonymized similar cases from Neon
  */
 interface SimilarCase {
-  id: string;
-  primary_pathology: string;
-  age_group: string;
+  primary_pathology?: string;
+  age_group?: string;
   sessions_to_discharge?: number;
   outcome_category?: string;
   pain_reduction_percentage?: number;
+  functional_improvement_percentage?: number;
+  patient_satisfaction_score?: number;
 }
 
 async function fetchSimilarCases(
@@ -192,36 +192,14 @@ async function fetchSimilarCases(
   ageRange: { min: number; max: number },
   limit: number = 50
 ): Promise<SimilarCase[]> {
-  const db = getAdminDb();
-
   try {
-    // Query similar cases from anonymized predictions collection
-    const snapshot = await db
-      .collection('ml_training_data')
-      .where('primary_pathology', '==', condition)
-      .where('age_group', '>=', ageRange.min.toString())
-      .where('age_group', '<=', ageRange.max.toString())
-      .limit(limit)
-      .get();
-
-    if (snapshot.empty) {
-      // Fallback to all cases with same condition
-      const fallbackSnapshot = await db
-        .collection('ml_training_data')
-        .where('primary_pathology', '==', condition)
-        .limit(limit * 2)
-        .get();
-
-      return fallbackSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...normalizeFirestoreData(doc.data()),
-      }));
-    }
-
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...normalizeFirestoreData(doc.data()),
-    }));
+    const response = await analyticsApi.mlTrainingData.similar({
+      condition,
+      minAge: ageRange.min,
+      maxAge: ageRange.max,
+      limit,
+    });
+    return response?.data ?? [];
   } catch (error) {
     logger.error('[Predictive Analytics] Error fetching similar cases', error, 'predictive-analytics');
     return [];
@@ -598,33 +576,41 @@ function generateFallbackPrediction(
 // STORAGE
 // ============================================================================
 
-async function storePrediction(
-  patientId: string,
-  prediction: RecoveryPrediction
-): Promise<void> {
-  const db = getAdminDb();
-
+async function storePrediction(patientId: string, prediction: RecoveryPrediction): Promise<void> {
   try {
-    await db.collection('patient_predictions').add({
+    await analyticsApi.patientPredictions.upsert({
       patient_id: patientId,
-      prediction_type: 'recovery_timeline',
-      prediction_date: new Date().toISOString(),
-      features: {
-        condition: prediction.condition,
-        predictedAt: prediction.predictedAt,
-      },
-      predicted_value: prediction.confidenceInterval.expectedDays,
-      confidence_score: prediction.confidenceScore,
-      confidence_interval: prediction.confidenceInterval,
-      target_date: prediction.predictedRecoveryDate,
-      timeframe_days: prediction.confidenceInterval.expectedDays,
-      model_version: prediction.modelVersion,
-      model_name: 'RecoveryPredictor',
-      is_active: true,
-      created_at: new Date().toISOString(),
+      predictions: [
+        {
+          prediction_type: 'recovery_timeline',
+          prediction_date: prediction.predictedAt,
+          features: {
+            condition: prediction.condition,
+            predictedAt: prediction.predictedAt,
+          },
+          predicted_value: prediction.confidenceInterval.expectedDays,
+          confidence_score: prediction.confidenceScore,
+          confidence_interval: {
+            lower: prediction.confidenceInterval.lowerDays,
+            upper: prediction.confidenceInterval.upperDays,
+          },
+          target_date: prediction.predictedRecoveryDate,
+          timeframe_days: prediction.confidenceInterval.expectedDays,
+          model_version: prediction.modelVersion,
+          model_name: 'RecoveryPredictor',
+          milestones: prediction.milestones,
+          risk_factors: prediction.riskFactors,
+          treatment_recommendations: prediction.treatmentRecommendations,
+          similar_cases: prediction.similarCases,
+        },
+      ],
     });
 
-    logger.info(`[Predictive Analytics] Prediction stored for patient ${patientId}`, undefined, 'predictive-analytics');
+    logger.info(
+      `[Predictive Analytics] Prediction stored for patient ${patientId}`,
+      undefined,
+      'predictive-analytics',
+    );
   } catch (error) {
     logger.error('[Predictive Analytics] Error storing prediction', error, 'predictive-analytics');
   }

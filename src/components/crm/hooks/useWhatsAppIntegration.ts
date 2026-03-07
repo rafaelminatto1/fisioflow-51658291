@@ -4,8 +4,8 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { db, collection, getDoc, doc, addDoc, updateDoc } from '@/integrations/firebase/app';
 import { useOrganizations } from '@/hooks/useOrganizations';
+import { whatsappApi } from '@/lib/api/workers-client';
 
 export function useWhatsAppIntegration() {
   const { currentOrganization } = useOrganizations();
@@ -17,40 +17,26 @@ export function useWhatsAppIntegration() {
         throw new Error('Organização não identificada');
       }
 
-      // Check config
-      const configRef = doc(db, 'whatsapp_config', organizationId);
-      const configSnapshot = await getDoc(configRef);
-
-      if (!configSnapshot.exists()) {
-        throw new Error('WhatsApp não está configurado para esta organização');
-      }
-      const config = configSnapshot.data();
+      const configResponse = await whatsappApi.getConfig();
+      const config = configResponse?.data ?? { enabled: false };
 
       if (!config.enabled) {
         throw new Error('WhatsApp não está habilitado');
       }
 
-      // Salvar mensagem no banco
-      const messagesRef = await addDoc(collection(db, 'whatsapp_messages'), {
-        organization_id: organizationId,
-        recipient: data.recipient,
-        message: data.message,
-        template_id: data.templateId,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-      });
-
-      // Enviar via API (simulado)
-      // Em produção, chamaria a API do WhatsApp Business
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Atualizar status
-      await updateDoc(doc(db, 'whatsapp_messages', messagesRef.id), {
+      await whatsappApi.createMessage({
+        patient_id: null,
+        appointment_id: null,
+        message_type: 'confirmation',
+        message_content: data.message,
+        metadata: {
+          recipient: data.recipient,
+          template_id: data.templateId,
+        },
         status: 'sent',
-        sent_at: new Date().toISOString()
       });
 
-      return { id: messagesRef.id, ...data };
+      return data;
     },
     onSuccess: () => {
       toast.success('Mensagem enviada com sucesso!');

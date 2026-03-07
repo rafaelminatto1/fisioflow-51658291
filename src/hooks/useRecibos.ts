@@ -1,47 +1,17 @@
 /**
- * useRecibos - Migrated to Firebase
- *
+ * useRecibos - Migrated to Neon/Workers
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, query as firestoreQuery, orderBy, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
-
-export interface Recibo {
-  id: string;
-  numero_recibo: number;
-  patient_id: string | null;
-  valor: number;
-  valor_extenso: string | null;
-  referente: string;
-  data_emissao: string;
-  emitido_por: string;
-  cpf_cnpj_emitente: string | null;
-  assinado: boolean;
-  created_at: string;
-}
-
-// Helper to convert Firestore doc to Recibo
-const convertDocToRecibo = (doc: { id: string; data: () => Record<string, unknown> }): Recibo => {
-  const data = normalizeFirestoreData(doc.data());
-  return {
-    id: doc.id,
-    ...data,
-  } as Recibo;
-};
+import { recibosApi, type Recibo } from '@/lib/api/workers-client';
 
 export function useRecibos() {
   return useQuery({
     queryKey: ['recibos'],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'recibos'),
-        orderBy('numero_recibo', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDocToRecibo);
+      const res = await recibosApi.list();
+      return res?.data ?? [];
     },
   });
 }
@@ -49,19 +19,12 @@ export function useRecibos() {
 export function useCreateRecibo() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (recibo: Omit<Recibo, 'id' | 'numero_recibo' | 'created_at'>) => {
-      const reciboData = {
+    mutationFn: async (recibo: Omit<Recibo, 'id' | 'numero_recibo' | 'created_at' | 'updated_at'>) => {
+      const res = await recibosApi.create({
         ...recibo,
-        numero_recibo: Date.now(), // Generate sequential number
-        created_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'recibos'), reciboData);
-      const snapshot = await getDocs(firestoreQuery(collection(db, 'recibos')));
-      const newDoc = snapshot.docs.find(doc => doc.id === docRef.id);
-
-      if (!newDoc) throw new Error('Failed to create recibo');
-      return convertDocToRecibo(newDoc);
+        assinado: recibo.assinado ?? true,
+      });
+      return (res?.data ?? res) as Recibo;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['recibos'] });

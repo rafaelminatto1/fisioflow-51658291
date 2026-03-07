@@ -39,7 +39,7 @@ export default function HelpScreen() {
   const colors = useColors();
 
   const handleContactSupport = () => {
-    Linking.openURL('mailto:suporte@fisioflow.com.br');
+    Linking.openURL('mailto:suporte@moocafisio.com.br');
   };
 
   return (

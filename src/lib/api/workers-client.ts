@@ -6,6 +6,17 @@
  * Inclui automaticamente o token JWT do Neon Auth.
  */
 import { getNeonAccessToken } from '@/lib/auth/neon-token';
+import type {
+  PatientLifecycleEvent as PatientLifecycleEventType,
+  PatientOutcomeMeasure as PatientOutcomeMeasureType,
+  PatientSessionMetrics as PatientSessionMetricsType,
+  PatientPrediction as PatientPredictionType,
+  PatientRiskScore as PatientRiskScoreType,
+  PatientInsight as PatientInsightType,
+  PatientGoalTracking as PatientGoalTrackingType,
+  ClinicalBenchmark as ClinicalBenchmarkType,
+  MLTrainingData,
+} from '@/types/patientAnalytics';
 
 const BASE_URL = (import.meta.env.VITE_WORKERS_API_URL ?? 'http://localhost:8788').replace(
   /\/$/,
@@ -51,6 +62,28 @@ async function request<T>(
 
     return retry.json() as Promise<T>;
   }
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(body?.error ?? `HTTP ${res.status}`);
+  }
+
+  return res.json() as Promise<T>;
+}
+
+async function requestPublic<T>(
+  path: string,
+  options: RequestInit = {},
+): Promise<T> {
+  const url = `${BASE_URL}${path}`;
+
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: res.statusText }));
@@ -672,6 +705,1078 @@ export const goalProfilesApi = {
 
   delete: (id: string) =>
     request<{ ok: boolean }>(`/api/goal-profiles/${id}`, { method: 'DELETE' }),
+};
+
+// ===== API PROFILE =====
+export interface TherapistSummary {
+  id: string;
+  name: string;
+  crefito?: string;
+}
+
+export interface PatientRow {
+  id: string;
+  name: string;
+  full_name?: string;
+  cpf?: string;
+  email?: string;
+  phone?: string;
+  birth_date?: string;
+  gender?: string | null;
+  main_condition?: string | null;
+  status?: string;
+  progress?: number;
+  incomplete_registration?: boolean;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface PatientStats {
+  totalSessions: number;
+  upcomingAppointments: number;
+  lastVisit?: string;
+}
+
+export const patientsApi = {
+  list: (params?: {
+    status?: string;
+    search?: string;
+    createdFrom?: string;
+    createdTo?: string;
+    incompleteRegistration?: boolean;
+    sortBy?: 'name_asc' | 'created_at_desc' | 'created_at_asc';
+    limit?: number;
+    offset?: number;
+  }) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(
+        Object.entries(params ?? {})
+          .filter(([, v]) => v != null)
+          .map(([k, v]) => [k, String(v)]),
+      ),
+    ).toString();
+    return request<{ data: PatientRow[]; total?: number }>(`/api/patients${qs ? `?${qs}` : ''}`);
+  },
+  get: (id: string) => request<{ data: PatientRow }>(`/api/patients/${id}`),
+  create: (data: Partial<PatientRow>) =>
+    request<{ data: PatientRow }>('/api/patients', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: string, data: Partial<PatientRow>) =>
+    request<{ data: PatientRow }>(`/api/patients/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id: string) => request<{ success: boolean }>(`/api/patients/${id}`, { method: 'DELETE' }),
+  stats: (id: string) => request<{ data: PatientStats }>(`/api/patients/${id}/stats`),
+  lastUpdated: () => request<{ data: { last_updated_at: string | null } }>('/api/patients/last-updated'),
+};
+
+export interface OrganizationMember {
+  id: string;
+  organization_id: string;
+  user_id: string;
+  role: 'admin' | 'fisioterapeuta' | 'estagiario' | 'paciente';
+  active: boolean;
+  joined_at: string;
+  profiles?: {
+    full_name?: string | null;
+    email?: string | null;
+  } | null;
+}
+
+export const organizationMembersApi = {
+  list: (params?: { organizationId?: string; userId?: string; limit?: number }) => {
+    const qs = new URLSearchParams(
+      Object.entries(params ?? {})
+        .filter(([, v]) => v != null)
+        .map(([k, v]) => [k, String(v)]),
+    ).toString();
+    return request<{ data: OrganizationMember[]; total?: number }>(`/api/organization-members${qs ? `?${qs}` : ''}`);
+  },
+  create: (data: {
+    organizationId?: string;
+    userId: string;
+    role: OrganizationMember['role'];
+  }) =>
+    request<{ data: OrganizationMember }>('/api/organization-members', {
+      method: 'POST',
+      body: JSON.stringify({
+        organizationId: data.organizationId,
+        userId: data.userId,
+        role: data.role,
+      }),
+    }),
+  update: (id: string, data: Partial<Pick<OrganizationMember, 'role' | 'active'>>) =>
+    request<{ data: OrganizationMember }>(`/api/organization-members/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  remove: (id: string) =>
+    request<{ success: boolean }>(`/api/organization-members/${id}`, {
+      method: 'DELETE',
+    }),
+};
+
+export interface WorkerOrganization {
+  id: string;
+  name: string;
+  slug: string;
+  settings: Record<string, unknown>;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export const organizationsApi = {
+  get: (id: string) => request<{ data: WorkerOrganization }>(`/api/organizations/${id}`),
+  create: (data: {
+    name: string;
+    slug: string;
+    settings?: Record<string, unknown>;
+    active?: boolean;
+  }) =>
+    request<{ data: WorkerOrganization }>('/api/organizations', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  update: (
+    id: string,
+    data: Partial<Omit<WorkerOrganization, 'id' | 'created_at' | 'updated_at'>>,
+  ) =>
+    request<{ data: WorkerOrganization }>(`/api/organizations/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+};
+
+export const profileApi = {
+  me: () => request<{ data: { organization_id?: string; organizationId?: string } }>('/api/profile/me'),
+  listTherapists: () =>
+    request<{ data: TherapistSummary[] }>('/api/profile/therapists'),
+};
+
+export interface DashboardResponse {
+  data: {
+    activePatients: number;
+    monthlyRevenue: number;
+    occupancyRate: number;
+    noShowRate: number;
+    confirmationRate: number;
+    npsScore: number;
+    appointmentsToday: number;
+    revenueChart: { date: string; revenue: number }[];
+  };
+}
+
+export interface FinancialReportResponse {
+  data: {
+    totalRevenue: number;
+    totalExpenses: number;
+    netIncome: number;
+    revenueByMethod: Record<string, number>;
+    revenueByTherapist: { therapistId: string; therapistName: string; revenue: number; sessions: number }[];
+    delinquencyRate: number;
+  };
+}
+
+export interface PatientEvolutionPoint {
+  id: string;
+  date: string;
+  averageEva: number;
+}
+
+export type PatientLifecycleEvent = PatientLifecycleEventType;
+export type PatientOutcomeMeasure = PatientOutcomeMeasureType;
+export type PatientSessionMetrics = PatientSessionMetricsType;
+export type PatientPrediction = PatientPredictionType;
+export type PatientRiskScore = PatientRiskScoreType;
+export type PatientInsight = PatientInsightType;
+export type PatientGoalTracking = PatientGoalTrackingType;
+export type ClinicalBenchmark = ClinicalBenchmarkType;
+
+export interface PatientProgressSummary {
+  total_sessions: number;
+  avg_pain_reduction: number | null;
+  total_pain_reduction: number;
+  avg_functional_improvement: number | null;
+  current_pain_level: number | null;
+  initial_pain_level: number | null;
+  goals_achieved: number;
+  goals_in_progress: number;
+  overall_progress_percentage: number | null;
+}
+
+export interface MlTrainingPatientRecord {
+  id: string;
+  created_at: string;
+}
+
+export interface MlTrainingStats {
+  totalRecords: number;
+  outcomeCounts: Record<string, number>;
+  ageDistribution: Record<string, number>;
+  avgPainReduction: number;
+  avgFunctionalImprovement: number;
+  successRate: number;
+}
+
+export interface PopulationHealthAppointment {
+  id: string;
+  patient_id?: string;
+  date: string;
+  status?: string;
+  type?: string;
+}
+
+export interface PopulationHealthResponse {
+  patients: Array<{ id: string; full_name: string; gender?: string; created_at?: string; birth_date?: string }>;
+  mlData: MLTrainingData[];
+  appointments: PopulationHealthAppointment[];
+  totalRecords: number;
+}
+
+export const analyticsApi = {
+  dashboard: (params?: { period?: string; startDate?: string; endDate?: string }) => {
+    const qs = new URLSearchParams(
+      Object.entries(params ?? {}).map(([k, v]) => [k, String(v)]),
+    ).toString();
+    return request<DashboardResponse>(`/api/analytics/dashboard${qs ? `?${qs}` : ''}`);
+  },
+  financial: (params: { startDate: string; endDate: string }) =>
+    request<FinancialReportResponse>(`/api/analytics/financial?startDate=${encodeURIComponent(
+      params.startDate,
+    )}&endDate=${encodeURIComponent(params.endDate)}`),
+  patientEvolution: (patientId: string) =>
+    request<{ data: PatientEvolutionPoint[] }>(`/api/analytics/patient-evolution/${patientId}`),
+  patientProgress: (patientId: string) =>
+    request<{ data: PatientProgressSummary }>(`/api/analytics/patient-progress/${patientId}`),
+  patientLifecycleEvents: {
+    list: (patientId: string) =>
+      request<{ data: PatientLifecycleEvent[] }>(`/api/analytics/patient-lifecycle-events/${patientId}`),
+    create: (data: {
+      patient_id: string;
+      event_type: string;
+      event_date?: string;
+      notes?: string;
+    }) =>
+      request<{ data: PatientLifecycleEvent }>('/api/analytics/patient-lifecycle-events', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+  },
+  patientOutcomeMeasures: {
+    list: (patientId: string, params?: { measureType?: string; limit?: number }) => {
+      const qs = new URLSearchParams(
+        Object.entries(params ?? {})
+          .filter(([, v]) => v != null)
+          .map(([k, v]) => [k, String(v)]),
+      ).toString();
+      return request<{ data: PatientOutcomeMeasure[] }>(
+        `/api/analytics/patient-outcome-measures/${patientId}${qs ? `?${qs}` : ''}`,
+      );
+    },
+    create: (data: {
+      patient_id: string;
+      measure_type: string;
+      measure_name: string;
+      score: number;
+      normalized_score?: number;
+      min_score?: number;
+      max_score?: number;
+      measurement_date?: string;
+      body_part?: string;
+      context?: string;
+      notes?: string;
+    }) =>
+      request<{ data: PatientOutcomeMeasure }>('/api/analytics/patient-outcome-measures', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+  },
+  patientSessionMetrics: {
+    list: (patientId: string, params?: { limit?: number }) => {
+      const qs = new URLSearchParams(
+        Object.entries(params ?? {})
+          .filter(([, v]) => v != null)
+          .map(([k, v]) => [k, String(v)]),
+      ).toString();
+      return request<{ data: PatientSessionMetrics[] }>(
+        `/api/analytics/patient-session-metrics/${patientId}${qs ? `?${qs}` : ''}`,
+      );
+    },
+    create: (data: Partial<PatientSessionMetricsType & { patient_id: string }>) =>
+      request<{ data: PatientSessionMetrics }>('/api/analytics/patient-session-metrics', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+  },
+  patientPredictions: {
+    list: (patientId: string, params?: { predictionType?: string; limit?: number }) => {
+      const qs = new URLSearchParams(
+        Object.entries(params ?? {})
+          .filter(([, v]) => v != null)
+          .map(([k, v]) => [k, String(v)]),
+      ).toString();
+      return request<{ data: PatientPrediction[] }>(
+        `/api/analytics/patient-predictions/${patientId}${qs ? `?${qs}` : ''}`,
+      );
+    },
+    upsert: (payload: {
+      patient_id: string;
+      predictions: Array<{
+        prediction_type: string;
+        features?: Record<string, unknown>;
+        predicted_value?: number;
+        predicted_class?: string;
+        confidence_score: number;
+        confidence_interval?: Record<string, number>;
+        target_date?: string;
+        timeframe_days?: number;
+        model_version: string;
+        model_name?: string;
+        milestones?: unknown[];
+        risk_factors?: unknown[];
+        treatment_recommendations?: Record<string, unknown>;
+        similar_cases?: Record<string, unknown>;
+      }>;
+    }) =>
+      request<{ data: PatientPrediction[] }>('/api/analytics/patient-predictions/upsert', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+  },
+  patientRisk: (patientId: string) =>
+    request<{ data: PatientRiskScore | null }>(`/api/analytics/patient-risk/${patientId}`),
+  patientInsights: {
+    list: (patientId: string, params?: { includeAcknowledged?: boolean }) => {
+      const qs = new URLSearchParams(
+        Object.entries(params ?? {})
+          .filter(([, v]) => v != null)
+          .map(([k, v]) => [k, String(v)]),
+      ).toString();
+      return request<{ data: PatientInsight[] }>(
+        `/api/analytics/patient-insights/${patientId}${qs ? `?${qs}` : ''}`,
+      );
+    },
+    acknowledge: (insightId: string) =>
+      request<{ data: PatientInsight }>(`/api/analytics/patient-insights/${insightId}/acknowledge`, {
+        method: 'PATCH',
+      }),
+  },
+  patientGoals: {
+    list: (patientId: string) =>
+      request<{ data: PatientGoalTracking[] }>(`/api/analytics/patient-goals/${patientId}`),
+    create: (data: Partial<PatientGoalTracking & { patient_id: string }>) =>
+      request<{ data: PatientGoalTracking }>('/api/analytics/patient-goals', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: Partial<PatientGoalTracking>) =>
+      request<{ data: PatientGoalTracking }>(`/api/analytics/patient-goals/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    complete: (id: string) =>
+      request<{ data: PatientGoalTracking }>(`/api/analytics/patient-goals/${id}/complete`, {
+        method: 'PATCH',
+      }),
+  },
+  clinicalBenchmarks: {
+    list: (category?: string) => {
+      const qs = category ? `?category=${encodeURIComponent(category)}` : '';
+      return request<{ data: ClinicalBenchmark[] }>(`/api/analytics/clinical-benchmarks${qs}`);
+    },
+  },
+  mlTrainingData: {
+    collect: (patientId: string) =>
+      request<{ data: MLTrainingData }>(`/api/analytics/ml-training-data/patient/${patientId}`),
+    upsert: (data: Partial<MLTrainingData>) =>
+      request<{ data: MLTrainingData }>('/api/analytics/ml-training-data', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    stats: () => request<{ data: MlTrainingStats }>('/api/analytics/ml-training-data/stats'),
+    patients: (params?: { limit?: number }) => {
+      const qs = params?.limit ? `?limit=${encodeURIComponent(String(params.limit))}` : '';
+      return request<{ data: MlTrainingPatientRecord[] }>(`/api/analytics/ml-training-data/patients${qs}`);
+    },
+    similar: (options: {
+      condition: string;
+      minAge?: number;
+      maxAge?: number;
+      limit?: number;
+    }) => {
+      const qs = new URLSearchParams(
+        Object.entries({
+          condition: options.condition,
+          minAge: options.minAge,
+          maxAge: options.maxAge,
+          limit: options.limit,
+        }).filter(([, v]) => v != null).map(([k, v]) => [k, String(v)]),
+      ).toString();
+      return request<{ data: MLTrainingData[] }>(
+        `/api/analytics/ml-training-data/similar${qs ? `?${qs}` : ''}`,
+      );
+    },
+  },
+  populationHealth: {
+    query: (params: { startDate: string; endDate: string }) => {
+      const qs = new URLSearchParams({
+        startDate: params.startDate,
+        endDate: params.endDate,
+      }).toString();
+      return request<{ data: PopulationHealthResponse }>(
+        `/api/analytics/population-health?${qs}`,
+      );
+    },
+  },
+};
+
+// ===== API APPOINTMENTS =====
+export interface AppointmentRow {
+  id: string;
+  patient_id?: string;
+  therapist_id?: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
+  patient_name?: string;
+  patient_phone?: string;
+  session_type?: string;
+}
+
+export interface AppointmentsLastUpdated {
+  last_updated_at: string | null;
+}
+
+export const appointmentsApi = {
+  list: (params?: {
+    dateFrom?: string;
+    dateTo?: string;
+    therapistId?: string;
+    status?: string;
+    patientId?: string;
+    limit?: number;
+    offset?: number;
+  }) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(
+        Object.entries(params ?? {})
+          .filter(([, v]) => v != null)
+          .map(([k, v]) => [k, String(v)]),
+      ),
+    ).toString();
+    return request<{ data: AppointmentRow[] }>(`/api/appointments${qs ? `?${qs}` : ''}`);
+  },
+  lastUpdated: () => request<{ data: AppointmentsLastUpdated }>('/api/appointments/last-updated'),
+};
+
+// ===== API FINANCIAL =====
+export interface Transacao { id: string; organization_id?: string; user_id?: string; tipo: string; valor: number; descricao?: string; status?: string; categoria?: string; metadata?: Record<string,unknown>; created_at: string; updated_at: string; }
+export interface ContaFinanceira { id: string; organization_id: string; tipo: string; valor: number; status?: string; descricao?: string; data_vencimento?: string; pago_em?: string; patient_id?: string; appointment_id?: string; observacoes?: string; created_at: string; updated_at: string; }
+export interface CentroCusto { id: string; organization_id: string; nome: string; descricao?: string; codigo?: string; ativo: boolean; created_at: string; updated_at: string; }
+export interface Convenio { id: string; organization_id: string; nome: string; cnpj?: string; telefone?: string; email?: string; contato_responsavel?: string; valor_repasse?: number; prazo_pagamento_dias?: number; observacoes?: string; ativo: boolean; created_at: string; updated_at: string; }
+export interface Pagamento { id: string; organization_id?: string; evento_id?: string; appointment_id?: string; valor: number; forma_pagamento?: string; pago_em?: string; observacoes?: string; patient_id?: string; created_at: string; updated_at: string; }
+
+const fin = (path: string, opts?: RequestInit) => request<any>(`/api/financial${path}`, opts);
+export const financialApi = {
+  transacoes: { list: (p?: {tipo?:string;status?:string;limit?:number}) => fin(`/transacoes?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`) , create: (d: Partial<Transacao>) => fin('/transacoes',{method:'POST',body:JSON.stringify(d)}), update: (id:string,d:Partial<Transacao>)=>fin(`/transacoes/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete: (id:string)=>fin(`/transacoes/${id}`,{method:'DELETE'}) },
+  contas: { list: (p?: {tipo?:string;status?:string;limit?:number;offset?:number}) => fin(`/contas?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`) , create: (d: Partial<ContaFinanceira>) => fin('/contas',{method:'POST',body:JSON.stringify(d)}), update: (id:string,d:Partial<ContaFinanceira>)=>fin(`/contas/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete: (id:string)=>fin(`/contas/${id}`,{method:'DELETE'}) },
+  centrosCusto: { list: () => fin('/centros-custo'), create: (d:Partial<CentroCusto>)=>fin('/centros-custo',{method:'POST',body:JSON.stringify(d)}), update:(id:string,d:Partial<CentroCusto>)=>fin(`/centros-custo/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete:(id:string)=>fin(`/centros-custo/${id}`,{method:'DELETE'}) },
+  convenios: { list: () => fin('/convenios'), create: (d:Partial<Convenio>)=>fin('/convenios',{method:'POST',body:JSON.stringify(d)}), update:(id:string,d:Partial<Convenio>)=>fin(`/convenios/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete:(id:string)=>fin(`/convenios/${id}`,{method:'DELETE'}) },
+  pagamentos: {
+    list: (p?: string | {eventoId?:string;patientId?:string;appointmentId?:string;limit?:number;offset?:number}) => {
+      const params = typeof p === 'string' ? { eventoId: p } : (p ?? {});
+      const query = new URLSearchParams(
+        Object.fromEntries(
+          Object.entries(params)
+            .filter(([,v]) => v != null)
+            .map(([k,v]) => [k, String(v)]),
+        ),
+      );
+      return fin(`/pagamentos${query.toString() ? `?${query.toString()}` : ''}`);
+    },
+    create:(d:Partial<Pagamento>)=>fin('/pagamentos',{method:'POST',body:JSON.stringify(d)}),
+    update:(id:string,d:Partial<Pagamento>)=>fin(`/pagamentos/${id}`,{method:'PUT',body:JSON.stringify(d)}),
+    delete:(id:string)=>fin(`/pagamentos/${id}`,{method:'DELETE'}),
+  },
+};
+
+export interface Recibo {
+  id: string;
+  organization_id: string;
+  numero_recibo: number;
+  patient_id: string | null;
+  valor: number;
+  valor_extenso: string | null;
+  referente: string | null;
+  data_emissao: string;
+  emitido_por: string | null;
+  cpf_cnpj_emitente: string | null;
+  assinado: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RecibosLastNumber {
+  last_number: number;
+}
+
+export const recibosApi = {
+  list: (params?: { limit?: number; offset?: number }) => {
+    const qs = new URLSearchParams(
+      Object.entries(params ?? {})
+        .filter(([, v]) => v != null)
+        .map(([k, v]) => [k, String(v)]),
+    ).toString();
+    return request<{ data: Recibo[] }>(`/api/recibos${qs ? `?${qs}` : ''}`);
+  },
+  create: (data: {
+    patient_id?: string | null;
+    valor: number;
+    valor_extenso?: string | null;
+    referente?: string | null;
+    data_emissao?: string;
+    emitido_por?: string | null;
+    cpf_cnpj_emitente?: string | null;
+    assinado?: boolean;
+  }) =>
+    request<{ data: Recibo }>('/api/recibos', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  lastNumber: () => request<{ data: RecibosLastNumber }>('/api/recibos/last-number'),
+};
+
+// ===== API SCHEDULING =====
+export interface RecurringSeries { id: string; organization_id: string; patient_id?: string; therapist_id?: string; recurrence_type: string; recurrence_interval?: number; recurrence_days_of_week?: number[]; appointment_date?: string; appointment_time?: string; duration?: number; appointment_type?: string; notes?: string; auto_confirm?: boolean; is_active: boolean; created_by?: string; canceled_at?: string; created_at: string; updated_at: string; }
+export interface WaitlistEntry { id: string; organization_id: string; patient_id?: string; preferred_days?: number[]; preferred_periods?: string[]; preferred_therapist_id?: string; priority: string; status: string; refusal_count?: number; offered_slot?: unknown; offered_at?: string; offer_expires_at?: string; notes?: string; created_at: string; updated_at: string; }
+export interface ScheduleCapacityConfig { id: string; day_of_week: number; start_time: string; end_time: string; max_patients: number; created_at?: string; updated_at?: string; }
+export interface ScheduleBusinessHour { id: string; day_of_week: number; is_open: boolean; open_time: string; close_time: string; break_start?: string | null; break_end?: string | null; }
+export interface ScheduleCancellationRule { id: string; min_hours_before: number; allow_patient_cancellation: boolean; max_cancellations_month: number; charge_late_cancellation: boolean; late_cancellation_fee: number; }
+export interface ScheduleNotificationSetting { id: string; send_confirmation_email: boolean; send_confirmation_whatsapp: boolean; send_reminder_24h: boolean; send_reminder_2h: boolean; send_cancellation_notice: boolean; custom_confirmation_message?: string; custom_reminder_message?: string; }
+export interface ScheduleBlockedTime { id: string; therapist_id?: string; title: string; reason?: string; start_date: string; end_date: string; start_time?: string; end_time?: string; is_all_day: boolean; is_recurring: boolean; recurring_days: number[]; created_by: string; created_at?: string; }
+
+const sched = (path: string, opts?: RequestInit) => request<any>(`/api/scheduling${path}`, opts);
+export const schedulingApi = {
+  recurringSeries: { list: (p?:{patientId?:string;isActive?:boolean}) => sched(`/recurring-series?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`), create:(d:Partial<RecurringSeries>)=>sched('/recurring-series',{method:'POST',body:JSON.stringify(d)}), update:(id:string,d:Partial<RecurringSeries>)=>sched(`/recurring-series/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete:(id:string)=>sched(`/recurring-series/${id}`,{method:'DELETE'}), occurrences:(id:string)=>sched(`/recurring-series/${id}/occurrences`) },
+  waitlist: { list: (p?:{status?:string;priority?:string}) => sched(`/waitlist?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`), create:(d:Partial<WaitlistEntry>)=>sched('/waitlist',{method:'POST',body:JSON.stringify(d)}), update:(id:string,d:Partial<WaitlistEntry>)=>sched(`/waitlist/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete:(id:string)=>sched(`/waitlist/${id}`,{method:'DELETE'}) },
+  waitlistOffers: { list: (waitlistId?:string)=>sched(`/waitlist-offers${waitlistId?`?waitlistId=${waitlistId}`:''}`), create:(d:unknown)=>sched('/waitlist-offers',{method:'POST',body:JSON.stringify(d)}), respond:(id:string,response:string)=>sched(`/waitlist-offers/${id}`,{method:'PUT',body:JSON.stringify({response})}) },
+  capacity: {
+    list: () => sched('/capacity-config'),
+    create: (data: Partial<ScheduleCapacityConfig> | Partial<ScheduleCapacityConfig>[]) =>
+      sched('/capacity-config', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: Partial<ScheduleCapacityConfig>) =>
+      sched(`/capacity-config/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: string) => sched(`/capacity-config/${id}`, { method: 'DELETE' }),
+  },
+  settings: {
+    businessHours: {
+      list: () => sched('/settings/business-hours'),
+      upsert: (hours: Partial<ScheduleBusinessHour>[]) =>
+        sched('/settings/business-hours', { method: 'PUT', body: JSON.stringify(hours) }),
+    },
+    cancellationRules: {
+      get: () => sched('/settings/cancellation-rules'),
+      upsert: (rules: Partial<ScheduleCancellationRule>) =>
+        sched('/settings/cancellation-rules', { method: 'PUT', body: JSON.stringify(rules) }),
+    },
+    notificationSettings: {
+      get: () => sched('/settings/notification-settings'),
+      upsert: (settings: Partial<ScheduleNotificationSetting>) =>
+        sched('/settings/notification-settings', { method: 'PUT', body: JSON.stringify(settings) }),
+    },
+    blockedTimes: {
+      list: () => sched('/settings/blocked-times'),
+      create: (blocked: Partial<ScheduleBlockedTime>) =>
+        sched('/settings/blocked-times', { method: 'POST', body: JSON.stringify(blocked) }),
+      delete: (id: string) => sched(`/settings/blocked-times/${id}`, { method: 'DELETE' }),
+    },
+  },
+  blockedTimes: {
+    list: () => sched('/settings/blocked-times'),
+    create: (data: Partial<ScheduleBlockedTime>) =>
+      sched('/settings/blocked-times', { method: 'POST', body: JSON.stringify(data) }),
+    delete: (id: string) => sched(`/settings/blocked-times/${id}`, { method: 'DELETE' }),
+  },
+};
+
+export interface AutomationLogEntry {
+  id: string;
+  automation_id: string;
+  automation_name: string;
+  status: 'success' | 'failed' | 'skipped';
+  started_at: string;
+  completed_at: string | null;
+  duration_ms: number;
+  error?: string | null;
+}
+
+export const automationApi = {
+  logs: (params?: { limit?: number }) => {
+    const qs = new URLSearchParams(
+      Object.entries(params ?? {})
+        .filter(([, v]) => v != null)
+        .map(([k, v]) => [k, String(v)]),
+    ).toString();
+    return request<{ data: AutomationLogEntry[] }>(`/api/automation/logs${qs ? `?${qs}` : ''}`);
+  },
+};
+
+export interface PushSubscription {
+  id: string;
+  user_id: string;
+  organization_id?: string | null;
+  endpoint: string;
+  p256dh?: string | null;
+  auth?: string | null;
+  device_info?: Record<string, unknown> | null;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export const pushSubscriptionsApi = {
+  list: (params?: { userId?: string; activeOnly?: boolean }) => {
+    const qs = new URLSearchParams(
+      Object.entries(params ?? {})
+        .filter(([, v]) => v != null)
+        .map(([k, v]) => [k, String(v)]),
+    ).toString();
+    return request<{ data: PushSubscription[] }>(`/api/push-subscriptions${qs ? `?${qs}` : ''}`);
+  },
+  upsert: (data: {
+    endpoint: string;
+    userId?: string;
+    organizationId?: string;
+    p256dh?: string;
+    auth?: string;
+    deviceInfo?: Record<string, unknown>;
+    active?: boolean;
+  }) =>
+    request<{ data: PushSubscription }>('/api/push-subscriptions', {
+      method: 'POST',
+      body: JSON.stringify({
+        endpoint: data.endpoint,
+        p256dh: data.p256dh,
+        auth: data.auth,
+        device_info: data.deviceInfo,
+        organization_id: data.organizationId,
+        active: data.active ?? true,
+        user_id: data.userId,
+      }),
+    }),
+  deactivate: (endpoint: string, userId?: string) =>
+    request<{ data: PushSubscription | null }>('/api/push-subscriptions/deactivate', {
+      method: 'PUT',
+      body: JSON.stringify({ endpoint, userId }),
+    }),
+};
+
+export interface WhatsAppMessage {
+  id: string;
+  appointment_id?: string | null;
+  patient_id?: string | null;
+  message_type?: string | null;
+  message_content?: string;
+  status?: string;
+  sent_at?: string | null;
+  delivered_at?: string | null;
+  read_at?: string | null;
+  response_received_at?: string | null;
+  response_content?: string | null;
+  metadata?: Record<string, unknown>;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface PendingConfirmation {
+  appointment_id: string;
+  appointment_date: string | null;
+  appointment_time: string | null;
+  confirmation_status: 'pending';
+  patient: { id: string; name?: string | null; phone?: string | null } | null;
+  therapist_id?: string | null;
+}
+
+export const whatsappApi = {
+  listMessages: (params?: {
+    appointmentId?: string;
+    patientId?: string;
+    limit?: number;
+  }) => {
+    const qs = new URLSearchParams(
+      Object.entries(params ?? {})
+        .filter(([, v]) => v != null)
+        .map(([k, v]) => [k === 'appointmentId' ? 'appointmentId' : k, String(v)]),
+    ).toString();
+    return request<{ data: WhatsAppMessage[] }>(`/api/whatsapp/messages${qs ? `?${qs}` : ''}`);
+  },
+  createMessage: (data: {
+    appointment_id?: string;
+    patient_id?: string;
+    message_type?: string;
+    message_content: string;
+    from_phone?: string;
+    to_phone?: string;
+    status?: string;
+    metadata?: Record<string, unknown>;
+  }) =>
+    request<{ data: WhatsAppMessage }>('/api/whatsapp/messages', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  pendingConfirmations: (params?: { limit?: number }) => {
+    const qs = new URLSearchParams(
+      Object.entries(params ?? {})
+        .filter(([, v]) => v != null)
+        .map(([k, v]) => [k, String(v)]),
+    ).toString();
+    return request<{ data: PendingConfirmation[] }>(
+      `/api/whatsapp/pending-confirmations${qs ? `?${qs}` : ''}`,
+    );
+  },
+  getConfig: () => request<{ data: Record<string, unknown> }>('/api/whatsapp/config'),
+};
+
+// ===== API CRM =====
+export interface Lead { id: string; organization_id: string; nome: string; telefone?: string; email?: string; origem?: string; estagio: string; responsavel_id?: string; data_primeiro_contato?: string; data_ultimo_contato?: string; interesse?: string; observacoes?: string; motivo_nao_efetivacao?: string; created_at: string; updated_at: string; }
+export interface LeadHistorico { id: string; lead_id: string; tipo_contato?: string; descricao?: string; resultado?: string; proximo_contato?: string; created_by?: string; created_at: string; }
+export interface CrmTarefa { id: string; organization_id: string; titulo: string; descricao?: string; status: string; responsavel_id?: string; lead_id?: string; due_date?: string; created_at: string; updated_at: string; }
+
+const crm = (path: string, opts?: RequestInit) => request<any>(`/api/crm${path}`, opts);
+export const crmApi = {
+  leads: { list: (p?:{estagio?:string})=>crm(`/leads?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`), get:(id:string)=>crm(`/leads/${id}`), create:(d:Partial<Lead>)=>crm('/leads',{method:'POST',body:JSON.stringify(d)}), update:(id:string,d:Partial<Lead>)=>crm(`/leads/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete:(id:string)=>crm(`/leads/${id}`,{method:'DELETE'}), historico:(id:string)=>crm(`/leads/${id}/historico`), addHistorico:(id:string,d:Partial<LeadHistorico>)=>crm(`/leads/${id}/historico`,{method:'POST',body:JSON.stringify(d)}) },
+  tarefas: { list:(p?:{status?:string;leadId?:string})=>crm(`/tarefas?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`), create:(d:Partial<CrmTarefa>)=>crm('/tarefas',{method:'POST',body:JSON.stringify(d)}), update:(id:string,d:Partial<CrmTarefa>)=>crm(`/tarefas/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete:(id:string)=>crm(`/tarefas/${id}`,{method:'DELETE'}) },
+};
+
+// ===== API CLINICAL =====
+export interface PainMap { id: string; organization_id?: string; patient_id?: string; evolution_id?: string; body_region?: string; pain_level?: number; color_code?: string; notes?: string; points?: PainMapPoint[]; created_at: string; updated_at: string; }
+export interface PainMapPoint { id: string; pain_map_id: string; x_coordinate?: number; y_coordinate?: number; intensity?: number; region?: string; created_at: string; }
+export interface EvolutionTemplate { id: string; organization_id: string; name: string; description?: string; blocks: unknown[]; tags?: string[]; ativo: boolean; created_by?: string; created_at: string; updated_at: string; }
+export interface ExercisePrescription { id: string; organization_id?: string; patient_id?: string; therapist_id?: string; qr_code?: string; title: string; exercises: unknown[]; notes?: string; validity_days?: number; valid_until?: string; status: string; view_count?: number; last_viewed_at?: string; completed_exercises?: unknown[]; created_at: string; updated_at: string; }
+export interface PrescribedExercise {
+  id: string;
+  patient_id: string;
+  exercise_id: string;
+  frequency?: string;
+  sets: number;
+  reps: number;
+  duration_seconds?: number;
+  notes?: string;
+  is_active: boolean;
+  created_at?: string;
+  updated_at?: string;
+  exercise?: {
+    id?: string;
+    name?: string;
+    image_url?: string;
+    video_url?: string;
+  };
+}
+
+const clin = (path: string, opts?: RequestInit) => request<any>(`/api/clinical${path}`, opts);
+const clinPublic = (path: string, opts?: RequestInit) =>
+  requestPublic<any>(`/api/clinical${path}`, opts);
+export const clinicalApi = {
+  painMaps: { list:(p?:{patientId?:string;evolutionId?:string})=>clin(`/pain-maps?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`), get:(id:string)=>clin(`/pain-maps/${id}`), create:(d:Partial<PainMap>)=>clin('/pain-maps',{method:'POST',body:JSON.stringify(d)}), update:(id:string,d:Partial<PainMap>)=>clin(`/pain-maps/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete:(id:string)=>clin(`/pain-maps/${id}`,{method:'DELETE'}), addPoint:(mapId:string,pt:Partial<PainMapPoint>)=>clin(`/pain-maps/${mapId}/points`,{method:'POST',body:JSON.stringify(pt)}), deletePoint:(mapId:string,ptId:string)=>clin(`/pain-maps/${mapId}/points/${ptId}`,{method:'DELETE'}) },
+  evolutionTemplates: { list:(p?:{ativo?:boolean})=>clin(`/evolution-templates${p?.ativo!=null?`?ativo=${p.ativo}`:''}`), get:(id:string)=>clin(`/evolution-templates/${id}`), create:(d:Partial<EvolutionTemplate>)=>clin('/evolution-templates',{method:'POST',body:JSON.stringify(d)}), update:(id:string,d:Partial<EvolutionTemplate>)=>clin(`/evolution-templates/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete:(id:string)=>clin(`/evolution-templates/${id}`,{method:'DELETE'}) },
+  prescriptions: { list:(p?:{patientId?:string;status?:string})=>clin(`/prescriptions?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`), get:(id:string)=>clin(`/prescriptions/${id}`), getByQr:(qr:string)=>clin(`/prescriptions/qr/${qr}`), create:(d:Partial<ExercisePrescription>)=>clin('/prescriptions',{method:'POST',body:JSON.stringify(d)}), update:(id:string,d:Partial<ExercisePrescription>)=>clin(`/prescriptions/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete:(id:string)=>clin(`/prescriptions/${id}`,{method:'DELETE'}) },
+  prescribedExercises: {
+    list: (params?: { patientId?: string; active?: boolean }) =>
+      clin(`/prescribed-exercises?${new URLSearchParams(
+        Object.fromEntries(
+          Object.entries(params ?? {})
+            .filter(([, v]) => v != null)
+            .map(([k, v]) => [k, String(v)]),
+        ),
+      )}`),
+    create: (data: Partial<PrescribedExercise>) =>
+      clin('/prescribed-exercises', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: Partial<PrescribedExercise>) =>
+      clin(`/prescribed-exercises/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: string) =>
+      clin(`/prescribed-exercises/${id}`, { method: 'DELETE' }),
+  },
+};
+
+export const clinicalPublicApi = {
+  prescriptions: {
+    getByQr: (qr: string) => clinPublic(`/prescriptions/qr/${qr}`),
+    updateByQr: (qr: string, data: Partial<ExercisePrescription>) =>
+      clinPublic(`/prescriptions/qr/${qr}`, { method: 'PUT', body: JSON.stringify(data) }),
+  },
+};
+
+// ===== API EVALUATION FORMS =====
+export interface EvaluationFormRow {
+  id: string;
+  organization_id?: string | null;
+  created_by?: string | null;
+  nome: string;
+  descricao?: string | null;
+  referencias?: string | null;
+  tipo: string;
+  ativo: boolean;
+  is_favorite?: boolean;
+  usage_count?: number;
+  last_used_at?: string | null;
+  cover_image?: string | null;
+  estimated_time?: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EvaluationFormFieldRow {
+  id: string;
+  form_id: string;
+  tipo_campo: string;
+  label: string;
+  placeholder?: string | null;
+  opcoes?: unknown[] | null;
+  ordem: number;
+  obrigatorio: boolean;
+  grupo?: string | null;
+  descricao?: string | null;
+  minimo?: number | null;
+  maximo?: number | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface EvaluationFormWithFieldsRow extends EvaluationFormRow {
+  fields: EvaluationFormFieldRow[];
+}
+
+const evalForms = (path: string, opts?: RequestInit) => request<any>(`/api/evaluation-forms${path}`, opts);
+export const evaluationFormsApi = {
+  list: (p?: { tipo?: string; ativo?: boolean; favorite?: boolean }) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(
+        Object.entries(p ?? {})
+          .filter(([, v]) => v != null)
+          .map(([k, v]) => [k, String(v)]),
+      ),
+    ).toString();
+    return evalForms(qs ? `?${qs}` : '');
+  },
+  get: (id: string) => evalForms(`/${id}`),
+  create: (d: Partial<EvaluationFormRow>) =>
+    evalForms('', { method: 'POST', body: JSON.stringify(d) }),
+  update: (id: string, d: Partial<EvaluationFormRow>) =>
+    evalForms(`/${id}`, { method: 'PUT', body: JSON.stringify(d) }),
+  delete: (id: string) =>
+    evalForms(`/${id}`, { method: 'DELETE' }),
+  duplicate: (id: string) =>
+    evalForms(`/${id}/duplicate`, { method: 'POST' }),
+  addField: (formId: string, d: Partial<EvaluationFormFieldRow>) =>
+    evalForms(`/${formId}/fields`, { method: 'POST', body: JSON.stringify(d) }),
+  updateField: (fieldId: string, d: Partial<EvaluationFormFieldRow>) =>
+    evalForms(`/fields/${fieldId}`, { method: 'PUT', body: JSON.stringify(d) }),
+  deleteField: (fieldId: string) =>
+    evalForms(`/fields/${fieldId}`, { method: 'DELETE' }),
+};
+
+export interface FeriadoRow {
+  id: string;
+  organization_id?: string | null;
+  nome: string;
+  data: string;
+  tipo: 'nacional' | 'estadual' | 'municipal' | 'ponto_facultativo';
+  recorrente: boolean;
+  bloqueia_agenda: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export const feriadosApi = {
+  list: (params?: { year?: number }) => {
+    const qs = new URLSearchParams(
+      Object.entries(params ?? {})
+        .filter(([, v]) => v != null)
+        .map(([k, v]) => [k, String(v)]),
+    ).toString();
+    return request<{ data: FeriadoRow[] }>(`/api/feriados${qs ? `?${qs}` : ''}`);
+  },
+  create: (data: Partial<FeriadoRow>) =>
+    request<{ data: FeriadoRow }>('/api/feriados', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: Partial<FeriadoRow>) =>
+    request<{ data: FeriadoRow }>(`/api/feriados/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  delete: (id: string) =>
+    request<{ ok: boolean }>(`/api/feriados/${id}`, {
+      method: 'DELETE',
+    }),
+};
+
+// ===== API NOTIFICATIONS =====
+export interface Notification { id: string; organization_id?: string; user_id: string; type: string; title: string; message?: string; link?: string; is_read: boolean; metadata?: Record<string,unknown>; created_at: string; }
+export const notificationsApi = {
+  list: (p?:{unreadOnly?:boolean;limit?:number}) => request<{data:Notification[]}>(`/api/notifications?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`),
+  create: (d:Partial<Notification>) => request<{data:Notification}>('/api/notifications',{method:'POST',body:JSON.stringify(d)}),
+  markRead: (id:string) => request<{ok:boolean}>(`/api/notifications/${id}/read`,{method:'PUT'}),
+  markAllRead: () => request<{ok:boolean}>('/api/notifications/read-all',{method:'PUT'}),
+  delete: (id:string) => request<{ok:boolean}>(`/api/notifications/${id}`,{method:'DELETE'}),
+};
+
+export interface GamificationNotification {
+  id: string;
+  patient_id: string;
+  type: string;
+  title: string;
+  message?: string;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+  expires_at?: string;
+  read_at?: string | null;
+}
+
+export const gamificationNotificationsApi = {
+  list: (params: { patientId: string; limit?: number }) => {
+    const qs = new URLSearchParams(
+      Object.entries(params ?? {})
+        .filter(([, value]) => value != null)
+        .map(([key, value]) => [key === 'patientId' ? 'patientId' : key, String(value)]),
+    ).toString();
+    return request<{ data: GamificationNotification[] }>(`/api/gamification-notifications?${qs}`);
+  },
+  markRead: (id: string) =>
+    request<{ ok: boolean }>(`/api/gamification-notifications/${id}/read`, { method: 'PUT' }),
+  markAllRead: (patientId: string) =>
+    request<{ ok: boolean }>('/api/gamification-notifications/read-all', {
+      method: 'PUT',
+      body: JSON.stringify({ patientId }),
+    }),
+  delete: (id: string) =>
+    request<{ ok: boolean }>(`/api/gamification-notifications/${id}`, { method: 'DELETE' }),
+};
+
+export interface NotificationPreferences {
+  user_id: string;
+  organization_id: string;
+  appointment_reminders: boolean;
+  exercise_reminders: boolean;
+  progress_updates: boolean;
+  system_alerts: boolean;
+  therapist_messages: boolean;
+  payment_reminders: boolean;
+  quiet_hours_start: string;
+  quiet_hours_end: string;
+  weekend_notifications: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export const notificationPreferencesApi = {
+  get: () => request<{ data: NotificationPreferences | null }>('/api/notification-preferences'),
+  update: (data: Partial<NotificationPreferences>) =>
+    request<{ data: NotificationPreferences }>('/api/notification-preferences', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+};
+
+// ===== API EVENTOS/SALAS/SERVICOS =====
+export interface Evento { id: string; organization_id: string; nome: string; descricao?: string; categoria?: string; local?: string; data_inicio?: string; data_fim?: string; hora_inicio?: string; hora_fim?: string; gratuito?: boolean; link_whatsapp?: string; valor_padrao_prestador?: number; status: string; created_at: string; updated_at: string; }
+export interface Sala { id: string; organization_id: string; nome: string; capacidade?: number; descricao?: string; cor?: string; ativo: boolean; created_at: string; updated_at: string; }
+export interface Servico { id: string; organization_id: string; nome: string; descricao?: string; duracao?: number; valor?: number; cor?: string; ativo: boolean; created_at: string; updated_at: string; }
+export interface Contratado { id: string; organization_id?: string; nome: string; contato?: string | null; cpf_cnpj?: string | null; especialidade?: string | null; observacoes?: string | null; created_at?: string; updated_at?: string; }
+export interface EventoContratado { id: string; evento_id: string; contratado_id: string; funcao?: string | null; valor_acordado?: number | null; horario_inicio?: string | null; horario_fim?: string | null; status_pagamento?: 'PENDENTE' | 'PAGO'; created_at?: string; updated_at?: string; }
+export interface Participante { id: string; evento_id: string; nome: string; contato?: string | null; instagram?: string | null; segue_perfil?: boolean; observacoes?: string | null; created_at?: string; updated_at?: string; }
+export const eventosApi = {
+  list: (p?:{status?:string;categoria?:string;limit?:number;offset?:number}) => request<{data:Evento[]}>(`/api/eventos?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`),
+  get: (id:string) => request<{data:Evento}>(`/api/eventos/${id}`),
+  create: (d:Partial<Evento>) => request<{data:Evento}>('/api/eventos',{method:'POST',body:JSON.stringify(d)}),
+  update: (id:string,d:Partial<Evento>) => request<{data:Evento}>(`/api/eventos/${id}`,{method:'PUT',body:JSON.stringify(d)}),
+  delete: (id:string) => request<{ok:boolean}>(`/api/eventos/${id}`,{method:'DELETE'}),
+};
+export const salasApi = {
+  list: () => request<{data:Sala[]}>('/api/salas'),
+  create: (d:Partial<Sala>) => request<{data:Sala}>('/api/salas',{method:'POST',body:JSON.stringify(d)}),
+  update: (id:string,d:Partial<Sala>) => request<{data:Sala}>(`/api/salas/${id}`,{method:'PUT',body:JSON.stringify(d)}),
+  delete: (id:string) => request<{ok:boolean}>(`/api/salas/${id}`,{method:'DELETE'}),
+};
+export const servicosApi = {
+  list: () => request<{data:Servico[]}>('/api/servicos'),
+  create: (d:Partial<Servico>) => request<{data:Servico}>('/api/servicos',{method:'POST',body:JSON.stringify(d)}),
+  update: (id:string,d:Partial<Servico>) => request<{data:Servico}>(`/api/servicos/${id}`,{method:'PUT',body:JSON.stringify(d)}),
+  delete: (id:string) => request<{ok:boolean}>(`/api/servicos/${id}`,{method:'DELETE'}),
+};
+export const contratadosApi = {
+  list: () => request<{data:Contratado[]}>('/api/contratados'),
+  create: (d:Partial<Contratado>) => request<{data:Contratado}>('/api/contratados',{method:'POST',body:JSON.stringify(d)}),
+  update: (id:string,d:Partial<Contratado>) => request<{data:Contratado}>(`/api/contratados/${id}`,{method:'PUT',body:JSON.stringify(d)}),
+  delete: (id:string) => request<{ok:boolean}>(`/api/contratados/${id}`,{method:'DELETE'}),
+};
+export const eventoContratadosApi = {
+  list: (p?:{eventoId?:string;contratadoId?:string}) => request<{data:EventoContratado[]}>(`/api/evento-contratados?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`),
+  create: (d:Partial<EventoContratado>) => request<{data:EventoContratado}>('/api/evento-contratados',{method:'POST',body:JSON.stringify(d)}),
+  update: (id:string,d:Partial<EventoContratado>) => request<{data:EventoContratado}>(`/api/evento-contratados/${id}`,{method:'PUT',body:JSON.stringify(d)}),
+  delete: (id:string) => request<{ok:boolean}>(`/api/evento-contratados/${id}`,{method:'DELETE'}),
+};
+export const participantesApi = {
+  list: (p?:{eventoId?:string;limit?:number;offset?:number}) => request<{data:Participante[]}>(`/api/participantes?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`),
+  create: (d:Partial<Participante>) => request<{data:Participante}>('/api/participantes',{method:'POST',body:JSON.stringify(d)}),
+  update: (id:string,d:Partial<Participante>) => request<{data:Participante}>(`/api/participantes/${id}`,{method:'PUT',body:JSON.stringify(d)}),
+  delete: (id:string) => request<{ok:boolean}>(`/api/participantes/${id}`,{method:'DELETE'}),
+};
+
+export interface Prestador {
+  id: string;
+  evento_id: string;
+  nome: string;
+  contato?: string | null;
+  cpf_cnpj?: string | null;
+  valor_acordado: number;
+  status_pagamento: 'PENDENTE' | 'PAGO';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PrestadoresMetrics {
+  count: number;
+  last_updated_at: string | null;
+}
+
+const PRESTADORES_BASE = '/api/prestadores';
+
+export const prestadoresApi = {
+  list: (params: { eventoId: string }) =>
+    request<{ data: Prestador[] }>(`${PRESTADORES_BASE}?eventoId=${encodeURIComponent(params.eventoId)}`),
+  metrics: (eventoId: string) =>
+    request<{ data: PrestadoresMetrics }>(`${PRESTADORES_BASE}/metrics?eventoId=${encodeURIComponent(eventoId)}`),
+  create: (data: Partial<Prestador> & { evento_id: string }) =>
+    request<{ data: Prestador }>(PRESTADORES_BASE, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: Partial<Prestador>) =>
+    request<{ data: Prestador }>(`${PRESTADORES_BASE}/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  delete: (id: string) =>
+    request<{ ok: boolean }>(`${PRESTADORES_BASE}/${id}`, {
+      method: 'DELETE',
+    }),
+  toggleStatus: (id: string, status?: 'PENDENTE' | 'PAGO') =>
+    request<{ data: Prestador }>(`${PRESTADORES_BASE}/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+    }),
+};
+
+// ===== API AUDIT LOGS =====
+export interface AuditLog { id: string; organization_id?: string; action: string; entity_type?: string; entity_id?: string; user_id?: string; changes?: unknown; ip_address?: string; created_at: string; }
+export const auditApi = {
+  list: (p?:{entityType?:string;entityId?:string;limit?:number}) => request<{data:AuditLog[]}>(`/api/audit-logs?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`),
+  create: (d:Partial<AuditLog>) => request<{data:AuditLog}>('/api/audit-logs',{method:'POST',body:JSON.stringify(d)}),
 };
 
 // ===== HEALTH CHECK =====

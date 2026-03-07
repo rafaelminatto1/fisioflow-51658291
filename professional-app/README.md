@@ -354,8 +354,8 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 ## 📞 Contato
 
-- **Website**: https://fisioflow.com.br
-- **Email**: contato@fisioflow.com.br
+- **Website**: https://moocafisio.com.br
+- **Email**: contato@moocafisio.com.br
 - **Slack**: #fisioflow-mobile
 - **Issues**: [GitHub Issues](https://github.com/fisioflow/issues)
 

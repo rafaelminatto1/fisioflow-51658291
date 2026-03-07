@@ -56,13 +56,17 @@ export default defineConfig({
   ],
 
   webServer: process.env.CI ? undefined : {
+    // Frontend Vite
     command: 'npm run dev',
     url: 'http://localhost:5173',
     reuseExistingServer: true,
     timeout: 60000,
     env: {
       ...process.env,
-      VITE_WORKERS_API_URL: process.env.VITE_WORKERS_API_URL || 'http://localhost:8788',
+      // Use production Worker URL for E2E tests so they go through the real deployed Worker.
+      // This avoids Miniflare/Hyperdrive SSL connectivity issues with Neon in local dev.
+      VITE_WORKERS_API_URL: process.env.VITE_WORKERS_API_URL || 'https://fisioflow-api.rafalegollas.workers.dev',
     }
   },
+
 });

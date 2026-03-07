@@ -1,4 +1,3 @@
-import { auth } from '@/integrations/firebase/app';
 import { uploadToR2, deleteFromR2 } from './r2-storage';
 
 export type StorageBucket = 'avatars' | 'comprovantes' | 'prontuarios' | 'evolucao';
@@ -41,7 +40,6 @@ export async function uploadFile(
   options: UploadOptions
 ): Promise<UploadResult> {
   const bucketLimits = BUCKET_LIMITS[options.bucket];
-  const storage = getStorage();
 
   // Validate file size
   const maxSize = options.maxSize || bucketLimits.maxSize;
@@ -59,43 +57,23 @@ export async function uploadFile(
     );
   }
 
-  // Get current user
-  const user = auth.currentUser;
-  if (!user) {
-    throw new Error('Usuário não autenticado');
-  }
+  // O Worker já anexa userId no key; aqui enviamos apenas uma pasta lógica segura.
+  const logicalFolderBase = options.bucket === 'avatars'
+    ? 'avatars'
+    : `${options.bucket}_${options.folder || 'geral'}`;
+  const folder = logicalFolderBase.replace(/[^a-zA-Z0-9_-]/g, '_');
 
-  // Generate file path
-  const timestamp = Date.now();
-  const fileExt = file.name.split('.').pop()?.toLowerCase();
-  const sanitizedName = file.name
-    .replace(/[^a-zA-Z0-9.-]/g, '_')
-    .substring(0, 50);
+  const { url, path } = await uploadToR2(file, folder, {
+    onProgress: (progress) => {
+      if (options.onProgress) options.onProgress(progress);
+    }
+  });
 
-  let filePath: string;
-
-  if (options.bucket === 'avatars') {
-    filePath = `avatars/${user.uid}/avatar.${fileExt}`;
-  } else {
-    const folder = options.folder || 'geral';
-    filePath = `${options.bucket}/${user.uid}/${folder}/${timestamp}_${sanitizedName}`;
-  }
-
-  try {
-    const { publicUrl, key } = await uploadToR2(file, folder, {
-      onProgress: (progress) => {
-        if (options.onProgress) options.onProgress(progress);
-      }
-    });
-
-    return {
-      url: publicUrl,
-      path: key,
-      fullPath: key,
-    };
-  } catch (error) {
-    throw error;
-  }
+  return {
+    url,
+    path,
+    fullPath: path,
+  };
 }
 
 export async function deleteFile(_bucket: StorageBucket, path: string): Promise<void> {
