@@ -34,36 +34,24 @@ export function toProxyUrl(storageUrl: string | null | undefined): string {
         return '';
     }
 
-    // TEMPORÁRIO: Usar URLs diretas do Firebase Storage em vez de proxy
-    // O proxy /api/exercise-image não está implementado
-    // Isso resolve o problema de imagens não carregarem
-    // Descomente o código abaixo quando o proxy estiver funcionando
-    return storageUrl;
+    // Check if it's already a proxy URL or a cloudflare-served URL
+    if (storageUrl.startsWith(PROXY_BASE) || storageUrl.includes('moocafisio.com.br')) {
+        return storageUrl;
+    }
 
-    // Check if it's already a proxy URL
-    // if (storageUrl.startsWith(PROXY_BASE)) {
-    //     return storageUrl;
-    // }
+    // Check if it's a Firebase Storage URL to convert
+    const match = storageUrl.match(FIREBASE_STORAGE_PATTERN);
+    if (match && match[1]) {
+        // The encoded path looks like: exercise-media%2Fid%2Ffile.png
+        const encodedPath = match[1];
+        const decodedPath = decodeURIComponent(encodedPath);
 
-    // Check if it's a Firebase Storage URL
-    // const match = storageUrl.match(FIREBASE_STORAGE_PATTERN);
-    // if (match && match[1]) {
-    //     // The encoded path looks like: exercise-media%2Fid%2Ffile.png
-    //     // Decode it to: exercise-media/id/file.png
-    //     const encodedPath = match[1];
-    //     const decodedPath = decodeURIComponent(encodedPath);
-
-    //     // Always remove the 'exercise-media/' prefix if present
-    //     // The proxy expects: /api/exercise-image/id/filename
-    //     const pathWithoutPrefix = decodedPath.startsWith('exercise-media/')
-    //         ? decodedPath.substring('exercise-media/'.length)
-    //         : decodedPath;
-
-    //     return `${PROXY_BASE}/${pathWithoutPrefix}`;
-    // }
+        // If it's a Firebase URL, we proxy it through our worker which can optimize it
+        return `${PROXY_BASE}/${decodedPath}`;
+    }
 
     // Not a Firebase Storage URL, return as-is
-    // return storageUrl;
+    return storageUrl;
 }
 
 /**

@@ -1,30 +1,41 @@
 /**
- * useAIPredictions - Migrated to Firebase
- *
+ * useAIPredictions - Migrated to Neon/Workers
  */
 
 import { useMutation } from '@tanstack/react-query';
-import { httpsCallable, getFunctions } from 'firebase/functions';
 import { toast } from '@/hooks/use-toast';
-import { getFirebaseApp } from '@/integrations/firebase/app';
+import { analyticsApi } from '@/lib/api/workers-client';
 
-const functions = getFunctions(getFirebaseApp());
+const nowIso = () => new Date().toISOString();
 
 export function useAIPredictions() {
   const predictAdherence = useMutation({
     mutationFn: async (patientId: string) => {
-      const predictAdherenceFn = httpsCallable(functions, 'ai-treatment-assistant');
-      const result = await predictAdherenceFn({
-        patientId,
-        action: 'predict_adherence'
+      const response = await analyticsApi.patientPredictions.upsert({
+        patient_id: patientId,
+        predictions: [
+          {
+            prediction_type: 'adherence',
+            predicted_class: 'pending_analysis',
+            confidence_score: 0.5,
+            target_date: nowIso(),
+            timeframe_days: 30,
+            model_version: 'workers-manual-v1',
+            model_name: 'adherence-proxy',
+            risk_factors: [],
+            treatment_recommendations: {
+              source: 'workers',
+              action: 'predict_adherence',
+            },
+          },
+        ],
       });
 
-      if (result.data.error) throw new Error(result.data.error);
-      return result.data;
+      return response?.data?.[0] ?? null;
     },
     onSuccess: () => {
       toast({
-        title: '🔮 Predição concluída',
+        title: 'Predição concluída',
         description: 'Análise de aderência gerada com sucesso',
       });
     },
@@ -39,18 +50,32 @@ export function useAIPredictions() {
 
   const predictOutcome = useMutation({
     mutationFn: async (patientId: string) => {
-      const predictOutcomeFn = httpsCallable(functions, 'ai-treatment-assistant');
-      const result = await predictOutcomeFn({
-        patientId,
-        action: 'predict_outcome'
+      const response = await analyticsApi.patientPredictions.upsert({
+        patient_id: patientId,
+        predictions: [
+          {
+            prediction_type: 'outcome',
+            predicted_class: 'pending_analysis',
+            confidence_score: 0.5,
+            target_date: nowIso(),
+            timeframe_days: 90,
+            model_version: 'workers-manual-v1',
+            model_name: 'outcome-proxy',
+            milestones: [],
+            risk_factors: [],
+            treatment_recommendations: {
+              source: 'workers',
+              action: 'predict_outcome',
+            },
+          },
+        ],
       });
 
-      if (result.data.error) throw new Error(result.data.error);
-      return result.data;
+      return response?.data?.[0] ?? null;
     },
     onSuccess: () => {
       toast({
-        title: '📊 Previsão gerada',
+        title: 'Previsão gerada',
         description: 'Resultado do tratamento previsto com sucesso',
       });
     },

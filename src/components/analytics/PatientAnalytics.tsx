@@ -1,74 +1,71 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
-import { db, collection, getDocs, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
-import { ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { patientsApi, type PatientRow } from '@/lib/api/workers-client';
+import { ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
 
-const COLORS = ["hsl(var(--primary))", "hsl(var(--secondary))", "hsl(var(--accent))", "hsl(var(--muted))"];
+const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
 
-interface PatientData {
-  id: string;
-  birth_date?: string;
-}
+const getPatientAge = (birthDate?: string) => {
+  if (!birthDate) return null;
+  const date = new Date(birthDate);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Date().getFullYear() - date.getFullYear();
+};
+
+const listAllPatients = async () => {
+  const all: PatientRow[] = [];
+  let offset = 0;
+  const limit = 1000;
+
+  while (offset < 10000) {
+    const response = await patientsApi.list({ limit, offset, sortBy: 'name_asc' });
+    const chunk = response?.data ?? [];
+    all.push(...chunk);
+    if (chunk.length < limit) break;
+    offset += limit;
+  }
+
+  return all;
+};
 
 export function PatientAnalytics() {
-  const { data: genderData } = useQuery({
-    queryKey: ["patient-status-analytics"],
+  const { data: statusData } = useQuery({
+    queryKey: ['patient-status-analytics'],
     queryFn: async () => {
-
-      // Usar status dos pacientes ao invés de gender
-      const activeQuery = firestoreQuery(
-        collection(db, "patients"),
-        where("status", "==", "ativo")
-      );
-      const activeSnapshot = await getDocs(activeQuery);
-      const activeCount = activeSnapshot.docs.length;
-
-      const inactiveQuery = firestoreQuery(
-        collection(db, "patients"),
-        where("status", "==", "inativo")
-      );
-      const inactiveSnapshot = await getDocs(inactiveQuery);
-      const inactiveCount = inactiveSnapshot.docs.length;
+      const patients = await listAllPatients();
+      const activeCount = patients.filter((patient) => patient.status === 'ativo' || patient.is_active === true).length;
+      const inactiveCount = patients.length - activeCount;
 
       return [
-        { name: "Ativos", value: activeCount },
-        { name: "Inativos", value: inactiveCount },
+        { name: 'Ativos', value: activeCount },
+        { name: 'Inativos', value: inactiveCount },
       ];
     },
   });
 
   const { data: ageData } = useQuery({
-    queryKey: ["patient-age-analytics"],
+    queryKey: ['patient-age-analytics'],
     queryFn: async () => {
-      const patientsQuery = firestoreQuery(
-        collection(db, "patients"),
-        orderBy("full_name")
-      );
-      const snapshot = await getDocs(patientsQuery);
-
-      const patients = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
-
+      const patients = await listAllPatients();
       const ageRanges = {
-        "0-17": 0,
-        "18-30": 0,
-        "31-50": 0,
-        "51-70": 0,
-        "70+": 0,
+        '0-17': 0,
+        '18-30': 0,
+        '31-50': 0,
+        '51-70': 0,
+        '70+': 0,
       };
 
-      patients.forEach((p: PatientData) => {
-        if (p.birth_date) {
-          const age = new Date().getFullYear() - new Date(p.birth_date).getFullYear();
-          if (age < 18) ageRanges["0-17"]++;
-          else if (age <= 30) ageRanges["18-30"]++;
-          else if (age <= 50) ageRanges["31-50"]++;
-          else if (age <= 70) ageRanges["51-70"]++;
-          else ageRanges["70+"]++;
-        }
+      patients.forEach((patient) => {
+        const age = getPatientAge(patient.birth_date);
+        if (age == null) return;
+        if (age < 18) ageRanges['0-17'] += 1;
+        else if (age <= 30) ageRanges['18-30'] += 1;
+        else if (age <= 50) ageRanges['31-50'] += 1;
+        else if (age <= 70) ageRanges['51-70'] += 1;
+        else ageRanges['70+'] += 1;
       });
 
-      return Object.entries(ageRanges).map(([faixa, total]) => ({ faixa, total: total as number }));
+      return Object.entries(ageRanges).map(([faixa, total]) => ({ faixa, total }));
     },
   });
 
@@ -85,7 +82,7 @@ export function PatientAnalytics() {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={genderData}
+                    data={statusData}
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -93,7 +90,7 @@ export function PatientAnalytics() {
                     paddingAngle={5}
                     dataKey="value"
                   >
-                    {genderData?.map((_, index) => (
+                    {statusData?.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -104,7 +101,7 @@ export function PatientAnalytics() {
               </ResponsiveContainer>
             </div>
             <div className="flex justify-center gap-4 mt-4">
-              {genderData?.map((entry, index) => (
+              {statusData?.map((entry, index) => (
                 <div key={entry.name} className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
                   <span className="text-sm font-medium text-muted-foreground">{entry.name}</span>

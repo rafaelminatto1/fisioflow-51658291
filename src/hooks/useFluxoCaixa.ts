@@ -1,12 +1,9 @@
 /**
- * useFluxoCaixa - Migrated to Firebase
- *
+ * useFluxoCaixa - Migrated to Neon/Workers
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
-import { useOrganizations } from '@/hooks/useOrganizations';
+import { financialApi, type Transacao } from '@/lib/api/workers-client';
 
 export interface MovimentacaoCaixa {
   id: string;
@@ -27,103 +24,82 @@ export interface FluxoCaixaResumo {
   saldo: number;
 }
 
-// Helper to convert Firestore doc to MovimentacaoCaixa
-const convertDocToMovimentacaoCaixa = (doc: { id: string; data: () => Record<string, unknown> }): MovimentacaoCaixa => {
-  const data = normalizeFirestoreData(doc.data());
+function normalizeMovimentacao(row: Transacao): MovimentacaoCaixa {
+  const metadata = (row.metadata ?? {}) as Record<string, unknown>;
   return {
-    id: doc.id,
-    ...data,
-  } as MovimentacaoCaixa;
-};
-
-// Helper to convert Firestore doc to FluxoCaixaResumo
-const convertDocToFluxoCaixaResumo = (doc: { id: string; data: () => Record<string, unknown> }): FluxoCaixaResumo => {
-  const data = normalizeFirestoreData(doc.data());
-  return {
-    id: doc.id,
-    ...data,
-  } as FluxoCaixaResumo;
-};
+    id: row.id,
+    data: String(row.created_at).slice(0, 10),
+    tipo: row.tipo as 'entrada' | 'saida',
+    valor: Number(row.valor),
+    descricao: row.descricao ?? '',
+    categoria: row.categoria ?? null,
+    forma_pagamento:
+      typeof metadata.forma_pagamento === 'string' ? metadata.forma_pagamento : null,
+    created_at: row.created_at,
+  };
+}
 
 export function useMovimentacoesCaixa(dataInicio?: string, dataFim?: string) {
-  const { currentOrganization } = useOrganizations();
-  const organizationId = currentOrganization?.id;
-
   return useQuery({
-    queryKey: ['movimentacoes-caixa', organizationId, dataInicio, dataFim],
+    queryKey: ['movimentacoes-caixa', dataInicio, dataFim],
     queryFn: async () => {
-      if (!organizationId) return [];
-      const q = firestoreQuery(
-        collection(db, 'movimentacoes_caixa'),
-        where('organization_id', '==', organizationId),
-        orderBy('data', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-      let data = snapshot.docs.map(convertDocToMovimentacaoCaixa);
-
-      // Filter by date range if provided
-      if (dataInicio) {
-        data = data.filter(m => m.data >= dataInicio);
-      }
-      if (dataFim) {
-        data = data.filter(m => m.data <= dataFim);
-      }
-
-      return data;
+      const res = await financialApi.transacoes.list({
+        dateFrom: dataInicio,
+        dateTo: dataFim,
+        limit: 1000,
+      });
+      return ((res?.data ?? []) as Transacao[]).map(normalizeMovimentacao);
     },
-    enabled: !!organizationId,
   });
 }
 
 export function useFluxoCaixaResumo() {
-  const { currentOrganization } = useOrganizations();
-  const organizationId = currentOrganization?.id;
-
   return useQuery({
-    queryKey: ['fluxo-caixa-resumo', organizationId],
+    queryKey: ['fluxo-caixa-resumo'],
     queryFn: async () => {
-      if (!organizationId) return [];
-      const q = firestoreQuery(
-        collection(db, 'fluxo_caixa_resumo'),
-        where('organization_id', '==', organizationId),
-        orderBy('mes', 'desc'),
-        limit(12)
-      );
+      const res = await financialApi.transacoes.list({ limit: 2000 });
+      const movimentacoes = ((res?.data ?? []) as Transacao[]).map(normalizeMovimentacao);
+      const grouped = new Map<string, FluxoCaixaResumo>();
 
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDocToFluxoCaixaResumo);
+      movimentacoes.forEach((mov) => {
+        const mes = mov.data.slice(0, 7);
+        const current = grouped.get(mes) ?? { id: mes, mes, entradas: 0, saidas: 0, saldo: 0 };
+        if (mov.tipo === 'entrada') current.entradas += Number(mov.valor);
+        else current.saidas += Number(mov.valor);
+        current.saldo = current.entradas - current.saidas;
+        grouped.set(mes, current);
+      });
+
+      return Array.from(grouped.values())
+        .sort((a, b) => b.mes.localeCompare(a.mes))
+        .slice(0, 12);
     },
-    enabled: !!organizationId,
   });
 }
 
 export function useCaixaDiario(data: string) {
-  const { currentOrganization } = useOrganizations();
-  const organizationId = currentOrganization?.id;
-
   return useQuery({
-    queryKey: ['caixa-diario', organizationId, data],
+    queryKey: ['caixa-diario', data],
     queryFn: async () => {
-      if (!organizationId) return null;
-      const q = firestoreQuery(
-        collection(db, 'movimentacoes_caixa'),
-        where('organization_id', '==', organizationId),
-        where('data', '==', data),
-        orderBy('created_at', 'asc')
-      );
+      const res = await financialApi.transacoes.list({
+        dateFrom: data,
+        dateTo: data,
+        limit: 500,
+      });
+      const movimentacoes = ((res?.data ?? []) as Transacao[]).map(normalizeMovimentacao);
 
-      const snapshot = await getDocs(q);
-      const movimentacoes = snapshot.docs.map(convertDocToMovimentacaoCaixa);
+      const entradas = movimentacoes
+        .filter((m) => m.tipo === 'entrada')
+        .reduce((acc, m) => acc + Number(m.valor), 0);
+      const saidas = movimentacoes
+        .filter((m) => m.tipo === 'saida')
+        .reduce((acc, m) => acc + Number(m.valor), 0);
 
-      const entradas = movimentacoes.filter(m => m.tipo === 'entrada').reduce((acc, m) => acc + Number(m.valor), 0);
-      const saidas = movimentacoes.filter(m => m.tipo === 'saida').reduce((acc, m) => acc + Number(m.valor), 0);
-
-      // Agrupar por forma de pagamento
       const porFormaPagamento: Record<string, number> = {};
-      movimentacoes.forEach(m => {
+      movimentacoes.forEach((m) => {
         const forma = m.forma_pagamento || 'Não informado';
-        porFormaPagamento[forma] = (porFormaPagamento[forma] || 0) + Number(m.valor) * (m.tipo === 'entrada' ? 1 : -1);
+        porFormaPagamento[forma] =
+          (porFormaPagamento[forma] || 0) + Number(m.valor) * (m.tipo === 'entrada' ? 1 : -1);
       });
 
       return {
@@ -134,6 +110,6 @@ export function useCaixaDiario(data: string) {
         porFormaPagamento,
       };
     },
-    enabled: !!organizationId,
+    enabled: !!data,
   });
 }

@@ -277,7 +277,7 @@ export const PatientService = {
 
         try {
             const response = await patientsApi.get(id);
-            const mapped = this.mapToApp(response as unknown);
+            const mapped = this.mapToApp((response?.data ?? response) as unknown);
             return { data: mapped, error: null };
         } catch (error: UnknownError) {
             return { data: null, error: error instanceof Error ? error : new Error(String(error)) };

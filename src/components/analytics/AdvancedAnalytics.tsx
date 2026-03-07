@@ -2,28 +2,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { useQuery } from '@tanstack/react-query';
-import { db, collection, getDocs, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
-import type { Timestamp } from '@/integrations/firebase/app';
+import {
+  analyticsApi,
+  appointmentsApi,
+  eventosApi,
+  financialApi,
+  patientsApi,
+  type AppointmentRow,
+  type Pagamento,
+  type Transacao,
+} from '@/lib/api/workers-client';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { TrendingUp, Users, Calendar, DollarSign, Sparkles, Brain, AlertCircle } from 'lucide-react';
 import { AIInsightsWidget } from '@/components/dashboard/AIInsightsWidget';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
-
+import { addMonths, eachMonthOfInterval, format, startOfMonth, subDays, subMonths } from 'date-fns';
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
-
-// Types for analytics data
-interface TransactionRecord {
-  id: string;
-  tipo: 'receita' | 'despesa';
-  valor: number;
-  created_at: Timestamp | Date;
-}
-
-interface AppointmentRecord {
-  id: string;
-  created_at: Timestamp | Date;
-  status: string;
-}
 
 interface AnalyticsMetrics {
   totalPatients: number;
@@ -59,43 +52,36 @@ export default function AdvancedAnalytics() {
   const { data: metrics } = useQuery<AnalyticsMetrics>({
     queryKey: ['analytics-metrics'],
     queryFn: async () => {
-
-      const [patientsSnapshot, appointmentsSnapshot, eventsSnapshot, transactionsSnapshot] = await Promise.all([
-        getDocs(firestoreQuery(collection(db, 'patients'))),
-        getDocs(firestoreQuery(collection(db, 'appointments'), orderBy('created_at', 'desc'))),
-        getDocs(firestoreQuery(collection(db, 'eventos'))),
-        getDocs(firestoreQuery(collection(db, 'transacoes')))
+      const [patientsResponse, appointmentsResponse, eventsResponse, financialResponse] = await Promise.all([
+        patientsApi.list({ limit: 5000 }),
+        appointmentsApi.list({ limit: 5000 }),
+        eventosApi.list(),
+        analyticsApi.financial({
+          startDate: format(subMonths(new Date(), 12), 'yyyy-MM-dd'),
+          endDate: format(new Date(), 'yyyy-MM-dd'),
+        }),
       ]);
 
-      const transactions: TransactionRecord[] = [];
-      transactionsSnapshot.forEach((doc) => transactions.push({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as TransactionRecord));
+      const patients = patientsResponse?.data ?? [];
+      const appointments = (appointmentsResponse?.data ?? []) as AppointmentRow[];
+      const events = eventsResponse?.data ?? [];
+      const totalRevenue = Number(financialResponse?.data?.totalRevenue ?? 0);
+      const totalExpenses = Number(financialResponse?.data?.totalExpenses ?? 0);
 
-      const totalRevenue = transactions.reduce((sum, t) =>
-        t.tipo === 'receita' ? sum + (t.valor || 0) : sum, 0
-      ) || 0;
-
-      const totalExpenses = transactions.reduce((sum, t) =>
-        t.tipo === 'despesa' ? sum + (t.valor || 0) : sum, 0
-      ) || 0;
-
-      const appointments: AppointmentRecord[] = [];
-      appointmentsSnapshot.forEach((doc) => appointments.push({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as AppointmentRecord));
-
-      const thisMonth = new Date();
-      thisMonth.setDate(1);
-      const appointmentsThisMonth = appointments.filter(a =>
-        new Date(a.created_at instanceof Date ? a.created_at : a.created_at.toDate()) >= thisMonth
-      ).length || 0;
+      const thisMonth = startOfMonth(new Date());
+      const appointmentsThisMonth = appointments.filter((appointment) => new Date(appointment.date) >= thisMonth).length || 0;
 
       return {
-        totalPatients: patientsSnapshot.size,
-        totalAppointments: appointmentsSnapshot.size,
-        totalEvents: eventsSnapshot.size,
+        totalPatients: patients.length,
+        totalAppointments: appointments.length,
+        totalEvents: events.length,
         totalRevenue,
         totalExpenses,
         netProfit: totalRevenue - totalExpenses,
         appointmentsThisMonth,
-        completedAppointments: appointments.filter(a => a.status === 'completed').length || 0,
+        completedAppointments: appointments.filter((appointment) =>
+          ['completed', 'concluido', 'realizado', 'atendido'].includes(String(appointment.status ?? '').toLowerCase()),
+        ).length || 0,
       };
     },
   });
@@ -103,27 +89,26 @@ export default function AdvancedAnalytics() {
   const { data: appointmentsByMonth } = useQuery<MonthlyAppointments[]>({
     queryKey: ['appointments-by-month'],
     queryFn: async () => {
-      const startDate = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
-
-      const q = firestoreQuery(
-        collection(db, 'appointments'),
-        where('created_at', '>=', startDate),
-        orderBy('created_at', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-      const data: AppointmentRecord[] = [];
-      snapshot.forEach((doc) => data.push({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as AppointmentRecord));
+      const last6Months = eachMonthOfInterval({
+        start: startOfMonth(subMonths(new Date(), 5)),
+        end: startOfMonth(new Date()),
+      });
+      const response = await appointmentsApi.list({
+        dateFrom: format(last6Months[0], 'yyyy-MM-dd'),
+        dateTo: format(new Date(), 'yyyy-MM-dd'),
+        limit: 5000,
+      });
+      const data = (response?.data ?? []) as AppointmentRow[];
 
       const monthlyData: Record<string, { total: number; completed: number; cancelled: number }> = {};
 
       data.forEach(apt => {
-        const date = apt.created_at instanceof Date ? apt.created_at : apt.created_at.toDate();
+        const date = new Date(apt.date);
         const month = date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
         if (!monthlyData[month]) monthlyData[month] = { total: 0, completed: 0, cancelled: 0 };
         monthlyData[month].total++;
-        if (apt.status === 'completed') monthlyData[month].completed++;
-        if (apt.status === 'cancelled') monthlyData[month].cancelled++;
+        if (['completed', 'concluido', 'realizado', 'atendido'].includes(String(apt.status ?? '').toLowerCase())) monthlyData[month].completed++;
+        if (['cancelled', 'cancelado'].includes(String(apt.status ?? '').toLowerCase())) monthlyData[month].cancelled++;
       });
 
       return Object.entries(monthlyData).map(([month, data]) => ({ month, ...data }));
@@ -133,12 +118,11 @@ export default function AdvancedAnalytics() {
   const { data: appointmentStatus } = useQuery<StatusDistribution[]>({
     queryKey: ['appointment-status'],
     queryFn: async () => {
-      const snapshot = await getDocs(firestoreQuery(collection(db, 'appointments')));
-
+      const response = await appointmentsApi.list({ limit: 5000 });
+      const appointments = response?.data ?? [];
       const statusCount: Record<string, number> = {};
-      snapshot.forEach((doc) => {
-        const data = normalizeFirestoreData(doc.data());
-        const status = data.status || 'unknown';
+      appointments.forEach((appointment) => {
+        const status = appointment.status || 'unknown';
         statusCount[status] = (statusCount[status] || 0) + 1;
       });
 
@@ -149,22 +133,13 @@ export default function AdvancedAnalytics() {
   const { data: financialByMonth } = useQuery<MonthlyFinancial[]>({
     queryKey: ['financial-by-month'],
     queryFn: async () => {
-      const startDate = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000);
-
-      const q = firestoreQuery(
-        collection(db, 'transacoes'),
-        where('created_at', '>=', startDate),
-        orderBy('created_at', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-      const data: TransactionRecord[] = [];
-      snapshot.forEach((doc) => data.push({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as TransactionRecord));
+      const response = await financialApi.transacoes.list({ limit: 5000 });
+      const data = (response?.data ?? []) as Transacao[];
 
       const monthlyData: Record<string, { receita: number; despesa: number }> = {};
 
       data.forEach(t => {
-        const date = t.created_at instanceof Date ? t.created_at : t.created_at.toDate();
+        const date = new Date(t.created_at);
         const month = date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
         if (!monthlyData[month]) monthlyData[month] = { receita: 0, despesa: 0 };
         if (t.tipo === 'receita') monthlyData[month].receita += t.valor || 0;
