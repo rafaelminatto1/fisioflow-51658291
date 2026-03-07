@@ -109,7 +109,7 @@ export async function verifyToken(
     }
 
     if (!verifiedPayload) {
-      console.error('JWT Verification Failed:', lastError);
+      console.error('JWT Verification Failed. Issuer candidates used:', issuerCandidates, 'Error:', lastError);
       return null;
     }
 

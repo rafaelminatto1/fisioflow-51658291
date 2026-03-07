@@ -21,27 +21,14 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useWhatsAppIntegration } from './hooks/useWhatsAppIntegration';
-import { db, collection, getDocs, getDoc, doc, query as firestoreQuery, orderBy as fsOrderBy, limit as fsLimit } from '@/integrations/firebase/app';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
-
-interface WhatsAppMessage {
-  id: string;
-  recipient: string;
-  recipient_name?: string;
-  message: string;
-  status: 'pending' | 'sent' | 'delivered' | 'read' | 'failed';
-  template_id?: string;
-  scheduled_at?: string;
-  sent_at?: string;
-  created_at: string;
-}
+import { whatsappApi } from '@/lib/api/workers-client';
 
 interface WhatsAppConfig {
-  api_key: string;
-  phone_number_id: string;
-  business_account_id: string;
+  api_key?: string;
+  phone_number_id?: string;
+  business_account_id?: string;
   webhook_url?: string;
-  enabled: boolean;
+  enabled?: boolean;
 }
 
 export default function WhatsAppIntegration() {
@@ -71,45 +58,32 @@ export default function WhatsAppIntegration() {
   const { currentOrganization } = useOrganizations();
   const organizationId = currentOrganization?.id;
 
-  const { data: mensagens = [], isLoading } = useQuery({
+  const { data: mensagensData = [], isLoading } = useQuery({
     queryKey: ['whatsapp-messages', organizationId],
     queryFn: async () => {
-      if (!organizationId) return [];
-      const q = firestoreQuery(
-        collection(db, 'whatsapp_messages'),
-        where('organization_id', '==', organizationId),
-        fsOrderBy('created_at', 'desc'),
-        fsLimit(50)
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as WhatsAppMessage[];
+      const res = await whatsappApi.listMessages({ limit: 50 });
+      return res.data ?? [];
     },
     enabled: !!organizationId,
   });
 
-  // Buscar templates (unused but kept for future use)
-  // const { data: templates = [] } = useQuery({
-  //   queryKey: ['whatsapp-templates'],
-  //   queryFn: async () => {
-  //     const { data, error } = await supabase
-  //       .from('whatsapp_templates')
-  //       .select('*');
-  //     if (error) throw error;
-  //     return data as WhatsAppTemplate[];
-  //   },
-  // });
+  const mensagens = mensagensData.map((msg) => ({
+    id: msg.id,
+    recipient: String(msg.metadata?.recipient ?? 'Paciente'),
+    recipient_name: String(msg.metadata?.recipient_name ?? msg.metadata?.recipient ?? ''),
+    message: msg.message_content ?? msg.message ?? '',
+    status: msg.status ?? 'sent',
+    template_id: msg.metadata?.template_id as string | undefined,
+    scheduled_at: msg.metadata?.scheduled_at as string | null,
+    sent_at: msg.sent_at ?? msg.created_at ?? null,
+    created_at: msg.created_at ?? msg.sent_at ?? new Date().toISOString(),
+  }));
 
-  // Buscar configuração
   const { data: config } = useQuery({
     queryKey: ['whatsapp-config', organizationId],
     queryFn: async () => {
-      if (!organizationId) return null;
-      const configRef = doc(db, 'whatsapp_config', organizationId);
-      const configSnap = await getDoc(configRef);
-      if (!configSnap.exists()) {
-        return null;
-      }
-      return configSnap.data() as WhatsAppConfig;
+      const res = await whatsappApi.getConfig();
+      return (res?.data as WhatsAppConfig) ?? null;
     },
     enabled: !!organizationId,
   });

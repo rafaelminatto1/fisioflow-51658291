@@ -1,154 +1,137 @@
-import React, { useEffect } from 'react';
-import { collection, onSnapshot, query as firestoreQuery, where, db } from '@/integrations/firebase/app';
+/**
+ * useFinancial - Rewritten to use Workers API (financialApi.transacoes)
+ *
+ * Simplified: uses financialApi.transacoes for all financial operations.
+ * The FinancialService / Firestore onSnapshot listener has been removed.
+ */
+
+import React, { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { FinancialService, Transaction, FinancialStats, FinancialPeriod } from '@/services/financialService';
-import { ErrorHandler } from '@/lib/errors/ErrorHandler';
-import { useAuth } from '@/contexts/AuthContext';
-import { fisioLogger as logger } from '@/lib/errors/logger';
+import { financialApi, Transacao } from '@/lib/api/workers-client';
 
-export type { Transaction, FinancialStats };
-const ENABLE_FINANCIAL_SUMMARY_API = import.meta.env.VITE_ENABLE_FINANCIAL_SUMMARY_API === 'true';
+export interface Transaction {
+  id: string;
+  tipo: string;
+  valor: number;
+  descricao?: string;
+  status?: string;
+  categoria?: string;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FinancialStats {
+  totalRevenue: number;
+  totalExpenses: number;
+  netProfit: number;
+  pendingAmount: number;
+  monthlyGrowth: number;
+}
+
+function calculateStats(transactions: Transaction[]): FinancialStats {
+  const revenue = transactions.filter(t => t.tipo === 'receita').reduce((s, t) => s + Number(t.valor), 0);
+  const expenses = transactions.filter(t => t.tipo === 'despesa').reduce((s, t) => s + Number(t.valor), 0);
+  const pending = transactions.filter(t => t.status === 'pendente').reduce((s, t) => s + Number(t.valor), 0);
+  return {
+    totalRevenue: revenue,
+    totalExpenses: expenses,
+    netProfit: revenue - expenses,
+    pendingAmount: pending,
+    monthlyGrowth: 0,
+  };
+}
 
 export const useFinancial = () => {
   const queryClient = useQueryClient();
-  const { profile } = useAuth();
   const [period, setPeriod] = React.useState<'daily' | 'weekly' | 'monthly' | 'all'>('monthly');
 
-  // Registrar listener para atualizações em tempo real
-  useEffect(() => {
-    if (!db || !profile?.organization_id) return;
-
-    const q = firestoreQuery(
-      collection(db, 'contas_financeiras'),
-      where('organization_id', '==', profile.organization_id)
-    );
-
-    const unsubscribe = onSnapshot(
-      q, 
-      () => {
-        logger.debug('Financial data changed, invalidating queries', null, 'useFinancial');
-        queryClient.invalidateQueries({ queryKey: ['transactions'] });
-        queryClient.invalidateQueries({ queryKey: ['financial-summary'] });
-      },
-      (error) => {
-        logger.error('Error in financial real-time listener', error, 'useFinancial');
-      }
-    );
-
-    return () => unsubscribe();
-  }, [profile?.organization_id, queryClient]);
-
-  // Buscar todas as transações
-  const { data: transactions = [], isLoading, error } = useQuery({
+  const { data: rawTransactions = [], isLoading, error } = useQuery({
     queryKey: ['transactions'],
-    queryFn: () => FinancialService.fetchTransactions(300),
+    queryFn: async () => {
+      const res = await financialApi.transacoes.list({ limit: 300 });
+      return (res?.data ?? res ?? []) as Transaction[];
+    },
   });
 
-  const { data: summaryStats } = useQuery({
-    queryKey: ['financial-summary', period],
-    queryFn: () => FinancialService.fetchSummary(period as FinancialPeriod),
-    staleTime: 60000,
-    enabled: ENABLE_FINANCIAL_SUMMARY_API,
-  });
-
-  // Filtrar transações baseado no período
-  const filteredTransactions = React.useMemo(() => {
-    if (period === 'all') return transactions;
+  const transactions = useMemo(() => {
+    const all = rawTransactions as Transaction[];
+    if (period === 'all') return all;
 
     const now = new Date();
     const start = new Date();
-    start.setHours(0, 0, 0, 0); // Zera hora para comparação justa de início
+    start.setHours(0, 0, 0, 0);
 
-    if (period === 'daily') {
-      // Já é hoje 00:00
-    } else if (period === 'weekly') {
-      start.setDate(now.getDate() - 7);
-    } else if (period === 'monthly') {
-      start.setDate(now.getDate() - 30);
-    }
+    if (period === 'weekly') start.setDate(now.getDate() - 7);
+    else if (period === 'monthly') start.setDate(now.getDate() - 30);
 
-    return transactions.filter(t => {
+    return all.filter(t => {
       if (!t.created_at) return false;
-      const tDate = new Date(t.created_at);
-      return tDate >= start;
+      return new Date(t.created_at) >= start;
     });
-  }, [transactions, period]);
+  }, [rawTransactions, period]);
 
-  // Calcular estatísticas
-  const stats = React.useMemo(() => {
-    if (summaryStats) return summaryStats;
+  const stats = useMemo(() => calculateStats(transactions), [transactions]);
 
-    // Estatísticas do período visualizado
-    const periodStats = FinancialService.calculateStats(filteredTransactions);
-
-    // Estatísticas globais para crescimento (preserva o cálculo de mês atual vs anterior)
-    // Se o período for 'mensal' ou 'all', o crescimento faz sentido ser o global
-    // Se for diário, growth talvez devesse comparar com ontem, mas vamos manter o global mensal por enquanto como indicativo macro
-    const globalStats = FinancialService.calculateStats(transactions);
-
-    return {
-      ...periodStats,
-      monthlyGrowth: globalStats.monthlyGrowth // Mantém crescimento mensal global
-    };
-  }, [filteredTransactions, summaryStats, transactions]);
-
-  // Criar transação
   const createMutation = useMutation({
-    mutationFn: FinancialService.createTransaction,
+    mutationFn: async (transacao: Partial<Transacao>) => {
+      const res = await financialApi.transacoes.create(transacao);
+      return res?.data ?? res;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['financial-summary'] });
       toast.success('Transação criada com sucesso');
     },
     onError: (error: Error) => {
-      ErrorHandler.handle(error, 'useFinancial.create');
+      toast.error('Erro ao criar transação: ' + error.message);
     },
   });
 
-  // Atualizar transação
   const updateMutation = useMutation({
-    mutationFn: ({ id, ...transaction }: Partial<Transaction> & { id: string }) =>
-      FinancialService.updateTransaction(id, transaction),
+    mutationFn: async ({ id, ...data }: Partial<Transacao> & { id: string }) => {
+      const res = await financialApi.transacoes.update(id, data);
+      return res?.data ?? res;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['financial-summary'] });
       toast.success('Transação atualizada com sucesso');
     },
     onError: (error: Error) => {
-      ErrorHandler.handle(error, 'useFinancial.update');
+      toast.error('Erro ao atualizar transação: ' + error.message);
     },
   });
 
-  // Excluir transação
   const deleteMutation = useMutation({
-    mutationFn: FinancialService.deleteTransaction,
+    mutationFn: async (id: string) => {
+      await financialApi.transacoes.delete(id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['financial-summary'] });
       toast.success('Transação excluída com sucesso');
     },
     onError: (error: Error) => {
-      ErrorHandler.handle(error, 'useFinancial.delete');
+      toast.error('Erro ao excluir transação: ' + error.message);
     },
   });
 
-  // Marcar como pago
   const markAsPaidMutation = useMutation({
-    mutationFn: FinancialService.markAsPaid,
+    mutationFn: async (id: string) => {
+      const res = await financialApi.transacoes.update(id, { status: 'pago' });
+      return res?.data ?? res;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['financial-summary'] });
       toast.success('Transação marcada como paga');
     },
     onError: (error: Error) => {
-      ErrorHandler.handle(error, 'useFinancial.markAsPaid');
+      toast.error('Erro ao marcar como paga: ' + error.message);
     },
   });
 
   return {
-    transactions: filteredTransactions, // Retorna filtradas para listas
-    allTransactions: transactions, // Acesso bruto se precisar
+    transactions,
+    allTransactions: rawTransactions,
     stats,
     period,
     setPeriod,

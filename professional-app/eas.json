@@ -11,7 +11,7 @@
         "simulator": true
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://fisioflow.com.br/api"
+        "EXPO_PUBLIC_API_URL": "https://moocafisio.com.br/api"
       }
     },
     "preview": {
@@ -22,23 +22,25 @@
       },
       "credentialsSource": "remote",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://fisioflow.com.br/api"
+        "EXPO_PUBLIC_API_URL": "https://moocafisio.com.br/api"
       },
       "cache": {
-        "disabled": false
+        "disabled": true
       }
     },
     "production": {
+      "node": "22.11.0",
       "autoIncrement": true,
       "ios": {
         "autoIncrement": true
       },
       "credentialsSource": "remote",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://fisioflow.com.br/api"
+        "EXPO_PUBLIC_API_URL": "https://moocafisio.com.br/api",
+        "EXPO_USE_SYMLINKS": "1"
       },
       "cache": {
-        "disabled": false
+        "disabled": true
       }
     }
   },

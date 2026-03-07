@@ -17,12 +17,11 @@
 // TYPES
 // ============================================================================
 
-import { getAdminDb } from '@/lib/firebase/admin';
 import { generateObject } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { z } from 'zod';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { analyticsApi } from '@/lib/api/workers-client';
 
 export interface PopulationHealthAnalysis {
   clinicId: string;
@@ -229,41 +228,38 @@ async function aggregatePopulationData(
   const db = getAdminDb();
 
   try {
-    // Fetch patient data
-    const patientsSnapshot = await db
-      .collection('patients')
-      .where('created_at', '>=', startDate.toISOString())
-      .where('created_at', '<=', endDate.toISOString())
-      .get();
+    const startIso = startDate.toISOString().split('T')[0];
+    const endIso = endDate.toISOString().split('T')[0];
 
-    const patients = patientsSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...normalizeFirestoreData(doc.data()),
-    }));
-
-    // Fetch session/progress data
-    const mlDataSnapshot = await db
-      .collection('ml_training_data')
-      .where('data_collection_period_start', '>=', startDate.toISOString())
-      .where('data_collection_period_end', '<=', endDate.toISOString())
-      .get();
-
-    const mlData = mlDataSnapshot.docs.map(doc => normalizeFirestoreData(doc.data()));
-
-    // Fetch appointments for volume analysis
-    const appointmentsSnapshot = await db
-      .collection('appointments')
-      .where('date', '>=', startDate.toISOString())
-      .where('date', '<=', endDate.toISOString())
-      .get();
-
-    const appointments = appointmentsSnapshot.docs.map(doc => normalizeFirestoreData(doc.data()));
+    const response = await analyticsApi.populationHealth.query({
+      startDate: startIso,
+      endDate: endIso,
+    });
+    const payload = response?.data ?? {
+      patients: [],
+      mlData: [],
+      appointments: [],
+      totalRecords: 0,
+    };
 
     return {
-      patients,
-      mlData,
-      appointments,
-      totalRecords: patients.length + mlData.length + appointments.length,
+      patients: payload.patients.map((patient) => ({
+        id: patient.id,
+        status: undefined,
+        date_of_birth: patient.birth_date,
+        gender: patient.gender,
+        main_condition: undefined,
+      })),
+      mlData: payload.mlData.map((record) => ({
+        primary_pathology: record.primary_pathology,
+        treatment_type: record.treatment_type,
+        outcome_category: record.outcome_category,
+        total_sessions: record.total_sessions,
+        functional_improvement_percentage: record.functional_improvement_percentage,
+        patient_satisfaction_score: record.patient_satisfaction_score,
+      })),
+      appointments: payload.appointments,
+      totalRecords: payload.totalRecords,
     };
   } catch (error) {
     logger.error('[Population Health] Error aggregating data', error, 'population-health');

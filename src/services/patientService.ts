@@ -1,4 +1,4 @@
-import { patientsApi } from '@/integrations/firebase/functions';
+import { patientsApi } from '@/lib/api/workers-client';
 import { PatientSchema } from '@/schemas/patient';
 import { AppError } from '@/lib/errors/AppError';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';

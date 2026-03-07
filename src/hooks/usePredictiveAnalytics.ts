@@ -9,7 +9,6 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
 import {
 
@@ -17,7 +16,8 @@ import {
   RecoveryPrediction,
   PredictionInput,
 } from '@/lib/ai/predictive-analytics';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import type { PatientPrediction, RiskLevel } from '@/types/patientAnalytics';
+import { analyticsApi } from '@/lib/api/workers-client';
 
 // ============================================================================
 // QUERY KEYS
@@ -62,6 +62,101 @@ interface RiskFactorEntry {
   factor: string;
   impact: string;
 }
+
+const ensureArray = <T>(value: unknown): T[] => (Array.isArray(value) ? (value as T[]) : []);
+
+const mapPredictionToRecoveryPrediction = (
+  prediction: PatientPrediction &
+    Partial<Record<'milestones' | 'risk_factors' | 'treatment_recommendations' | 'similar_cases', unknown>> &
+    Record<string, unknown>,
+): RecoveryPrediction => {
+  const features = prediction.features ?? {};
+  const confidenceRaw = prediction.confidence_interval ?? (prediction as any).confidenceInterval ?? {};
+  const interval = {
+    lower: String(confidenceRaw?.lower ?? prediction.prediction_date ?? ''),
+    upper: String(
+      confidenceRaw?.upper ?? prediction.target_date ?? prediction.prediction_date ?? new Date().toISOString(),
+    ),
+    lowerDays:
+      Number(confidenceRaw?.lowerDays ?? confidenceRaw?.lower_days ?? 0) || Number(prediction.predicted_value ?? 0),
+    expectedDays:
+      Number(confidenceRaw?.expectedDays ?? confidenceRaw?.expected_days ?? 0) || Number(prediction.predicted_value ?? 0),
+    upperDays:
+      Number(confidenceRaw?.upperDays ?? confidenceRaw?.upper_days ?? 0) || Number(prediction.predicted_value ?? 0),
+  };
+
+  const rawMilestones = prediction.milestones ?? (prediction as any).milestones;
+  const rawRiskFactors = prediction.risk_factors ?? (prediction as any).risk_factors;
+  const rawTreatment = prediction.treatment_recommendations ?? (prediction as any).treatment_recommendations;
+  const rawSimilarCases = prediction.similar_cases ?? (prediction as any).similar_cases;
+
+  return {
+    patientId: prediction.patient_id,
+    condition: features.condition ?? (prediction as any).condition ?? 'unknown',
+    predictedAt: prediction.prediction_date,
+    predictedRecoveryDate: prediction.target_date ?? new Date().toISOString(),
+    confidenceInterval: {
+      lower: interval.lower,
+      upper: interval.upper,
+      lowerDays: interval.lowerDays,
+      expectedDays: interval.expectedDays,
+      upperDays: interval.upperDays,
+    },
+    confidenceScore: prediction.confidence_score ?? 0,
+    milestones: ensureArray<FirestoreMilestone>(rawMilestones),
+    riskFactors: ensureArray<RiskFactorEntry>(rawRiskFactors),
+    treatmentRecommendations: {
+      optimalFrequency:
+        (rawTreatment as any)?.optimal_frequency ??
+        (rawTreatment as any)?.optimalFrequency ??
+        '',
+      sessionsPerWeek:
+        Number((rawTreatment as any)?.sessions_per_week ?? (rawTreatment as any)?.sessionsPerWeek ?? 0),
+      estimatedTotalSessions:
+        Number(
+          (rawTreatment as any)?.estimated_total_sessions ??
+            (rawTreatment as any)?.estimatedTotalSessions ??
+            0,
+        ),
+      intensity:
+        ((rawTreatment as any)?.intensity ??
+          (prediction as any).intensity ??
+          'moderate') as 'low' | 'moderate' | 'high',
+      focusAreas: ensureArray<string>((rawTreatment as any)?.focus_areas ?? (rawTreatment as any)?.focusAreas),
+    },
+    similarCases: {
+      totalAnalyzed:
+        Number((rawSimilarCases as any)?.total_analyzed ?? (rawSimilarCases as any)?.totalAnalyzed ?? 0),
+      matchingCriteria:
+        (rawSimilarCases as any)?.matching_criteria ??
+        (rawSimilarCases as any)?.matchingCriteria ??
+        [],
+      averageRecoveryTime:
+        Number(
+          (rawSimilarCases as any)?.average_recovery_time ??
+            (rawSimilarCases as any)?.averageRecoveryTime ??
+            0,
+        ),
+      successRate:
+        Number(
+          (rawSimilarCases as any)?.success_rate ??
+            (rawSimilarCases as any)?.successRate ??
+            0,
+        ),
+      keyInsights:
+        (rawSimilarCases as any)?.key_insights ??
+        (rawSimilarCases as any)?.keyInsights ??
+        [],
+    },
+    modelVersion: prediction.model_version ?? 'unknown',
+    dataSource:
+      (prediction as any).data_source ??
+      (prediction as any).dataSource ??
+      'historical',
+    requiresValidation:
+      (prediction as any).requires_validation ?? (prediction as any).requiresValidation ?? true,
+  };
+};
 
 // ============================================================================
 // HOOK: RECOVERY PREDICTION
@@ -110,69 +205,20 @@ export function useRecoveryPrediction(
 // HOOK: FETCH STORED PREDICTION
 // ============================================================================
 
-/**
- * Hook to fetch previously stored prediction from Firestore
- */
 export function useStoredPrediction(patientId: string) {
-
   return useQuery({
     queryKey: PREDICTIVE_ANALYTICS_KEYS.prediction(patientId),
     queryFn: async (): Promise<RecoveryPrediction | null> => {
-      const q = firestoreQuery(
-        collection(db, 'patient_predictions'),
-        where('patient_id', '==', patientId),
-        where('prediction_type', '==', 'recovery_timeline'),
-        where('is_active', '==', true),
-        orderBy('created_at', 'desc'),
-        limit(1)
-      );
-
-      const snapshot = await getDocs(q);
-
-      if (snapshot.empty) {
-        return null;
-      }
-
-      const doc = snapshot.docs[0];
-      const data = normalizeFirestoreData(doc.data());
-
-      // Transform Firestore data to RecoveryPrediction format
-      return {
-        patientId: data.patient_id,
-        condition: data.features?.condition || 'Unknown',
-        predictedAt: data.prediction_date,
-        predictedRecoveryDate: data.target_date || '',
-        confidenceInterval: data.confidence_interval || {
-          lower: '',
-          upper: '',
-          lowerDays: 0,
-          expectedDays: data.predicted_value || 0,
-          upperDays: 0,
-        },
-        confidenceScore: data.confidence_score || 0,
-        milestones: [], // Would need to be stored separately
-        riskFactors: [],
-        treatmentRecommendations: {
-          optimalFrequency: '',
-          sessionsPerWeek: 0,
-          estimatedTotalSessions: 0,
-          intensity: 'moderate',
-          focusAreas: [],
-        },
-        similarCases: {
-          totalAnalyzed: 0,
-          matchingCriteria: [],
-          averageRecoveryTime: 0,
-          successRate: 0,
-          keyInsights: [],
-        },
-        modelVersion: data.model_version || 'unknown',
-        dataSource: 'historical',
-        requiresValidation: true,
-      };
+      const response = await analyticsApi.patientPredictions.list(patientId, {
+        predictionType: 'recovery_timeline',
+        limit: 1,
+      });
+      const prediction = response?.data?.[0];
+      if (!prediction) return null;
+      return mapPredictionToRecoveryPrediction(prediction);
     },
     enabled: !!patientId,
-    staleTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 30 * 60 * 1000,
   });
 }
 
@@ -180,40 +226,28 @@ export function useStoredPrediction(patientId: string) {
 // HOOK: RISK FACTORS
 // ============================================================================
 
-/**
- * Hook to get risk factors for delayed recovery
- */
 export function useRiskFactors(patientId: string) {
-
   return useQuery({
     queryKey: PREDICTIVE_ANALYTICS_KEYS.riskFactors(patientId),
     queryFn: async () => {
-      const docRef = doc(db, 'patient_risk_scores', patientId);
-      const docSnap = await getDoc(docRef);
-
-      if (!docSnap.exists()) {
-        return {
-          dropoutRisk: 0,
-          riskLevel: 'low' as const,
-          factors: [],
-          recommendations: [],
-        };
-      }
-
-      const data = docSnap.data();
+      const response = await analyticsApi.patientRisk(patientId);
+      const data = response?.data ?? {
+        dropout_risk: 0,
+        no_show_risk: 0,
+        poor_outcome_risk: 0,
+        overall_risk: 0,
+        risk_level: 'low' as RiskLevel,
+      };
 
       return {
-        dropoutRisk: data.dropout_risk_score || 0,
-        riskLevel: data.risk_level || 'low',
-        factors: Object.entries(data.risk_factors || {}).map(([key, value]): RiskFactorEntry => ({
-          factor: key,
-          impact: String(value),
-        })),
-        recommendations: data.recommended_actions || [],
+        dropoutRisk: Number(data.dropout_risk ?? 0),
+        riskLevel: (data.risk_level ?? 'low') as RiskLevel,
+        factors: [],
+        recommendations: [],
       };
     },
     enabled: !!patientId,
-    staleTime: 60 * 60 * 1000, // 1 hour
+    staleTime: 60 * 60 * 1000,
   });
 }
 
@@ -225,53 +259,24 @@ export function useRiskFactors(patientId: string) {
  * Hook to track milestones progress
  */
 export function useMilestonesProgress(patientId: string) {
+  const storedPrediction = useStoredPrediction(patientId);
+  const milestones = storedPrediction.data?.milestones ?? [];
+  const achievedCount = milestones.filter((m) => m.achieved).length;
 
-  return useQuery({
-    queryKey: PREDICTIVE_ANALYTICS_KEYS.milestones(patientId),
-    queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'patient_predictions'),
-        where('patient_id', '==', patientId),
-        where('prediction_type', '==', 'recovery_timeline'),
-        where('is_active', '==', true),
-        orderBy('created_at', 'desc'),
-        limit(1)
-      );
+  const data = {
+    milestones,
+    achievedCount,
+    totalCount: milestones.length,
+    progressPercentage: milestones.length > 0 ? Math.round((achievedCount / milestones.length) * 100) : 0,
+  };
 
-      const snapshot = await getDocs(q);
-
-      if (snapshot.empty) {
-        return {
-          milestones: [],
-          achievedCount: 0,
-          totalCount: 0,
-          progressPercentage: 0,
-        };
-      }
-
-      const prediction = snapshot.docs[0].data();
-      const milestones = (prediction.milestones || []) as FirestoreMilestone[];
-
-      const achievedCount = milestones.filter((m) => m.achieved).length;
-
-      return {
-        milestones: milestones.map((m): FirestoreMilestone => ({
-          name: m.name,
-          description: m.description,
-          expectedDate: m.expectedDate,
-          achieved: m.achieved,
-          criteria: m.criteria || [],
-        })),
-        achievedCount,
-        totalCount: milestones.length,
-        progressPercentage: milestones.length > 0
-          ? Math.round((achievedCount / milestones.length) * 100)
-          : 0,
-      };
-    },
-    enabled: !!patientId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+  return {
+    data,
+    isLoading: storedPrediction.isLoading,
+    isError: storedPrediction.isError,
+    error: storedPrediction.error,
+    refetch: storedPrediction.refetch,
+  };
 }
 
 // ============================================================================

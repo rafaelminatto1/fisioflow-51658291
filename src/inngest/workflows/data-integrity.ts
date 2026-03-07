@@ -115,7 +115,7 @@ export const dataIntegrityWorkflow = inngest.createFunction(
         
         try {
           await ResendService.sendEmail({
-            to: 'admin@fisioflow.com.br',
+            to: 'admin@moocafisio.com.br',
             subject: '⚠️ Alerta de Integridade de Dados - FisioFlow',
             html: `
               <h1>Problemas de Integridade Detectados</h1>

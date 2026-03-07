@@ -1,67 +1,60 @@
 /**
- * useRealtimeEventos - Migrated to Firebase
+ * useRealtimeEventos - Migrated to Neon/Workers (polling)
  */
 
 import { useEffect } from 'react';
-import { collection, query as firestoreQuery, orderBy, limit, onSnapshot, db } from '@/integrations/firebase/app';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { eventosApi, type Evento } from '@/lib/api/workers-client';
 
 export function useRealtimeEventos() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Firestore onSnapshot for real-time updates
-    const q = firestoreQuery(
-      collection(db, 'eventos'),
-      orderBy('created_at', 'desc'),
-      limit(100)
-    );
+    let previousIds = new Set<string>();
+    let isFirstPoll = true;
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        snapshot.docChanges().forEach((change) => {
-          if (change.type === 'added') {
-            const newEvento = { id: change.doc.id, ...normalizeFirestoreData(change.doc.data()) };
-            logger.info('Novo evento criado', { eventId: newEvento.id }, 'useRealtimeEventos');
-            queryClient.invalidateQueries({ queryKey: ['eventos'] });
-            queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
+    const poll = async () => {
+      try {
+        const res = await eventosApi.list({ limit: 50, offset: 0 });
+        const eventos = (res?.data ?? []) as Evento[];
+        const currentIds = new Set(eventos.map((e) => e.id));
 
-            toast({
-              title: '🎉 Novo evento criado',
-              description: `${newEvento.nome} foi adicionado`,
-            });
-          } else if (change.type === 'modified') {
-            const updatedEvento = { id: change.doc.id, ...normalizeFirestoreData(change.doc.data()) };
-            logger.info('Evento atualizado', { eventId: updatedEvento.id }, 'useRealtimeEventos');
-            queryClient.invalidateQueries({ queryKey: ['eventos'] });
-            queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
-            queryClient.invalidateQueries({ queryKey: ['eventos', updatedEvento.id] });
-          } else if (change.type === 'removed') {
-            const deletedEvento = { id: change.doc.id, ...normalizeFirestoreData(change.doc.data()) };
-            logger.info('Evento deletado', { eventId: deletedEvento.id }, 'useRealtimeEventos');
-            queryClient.invalidateQueries({ queryKey: ['eventos'] });
-            queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
+        if (!isFirstPoll) {
+          for (const evento of eventos) {
+            if (!previousIds.has(evento.id)) {
+              logger.info('Novo evento detectado por polling', { eventId: evento.id }, 'useRealtimeEventos');
+              toast({
+                title: '🎉 Novo evento criado',
+                description: `${evento.nome} foi adicionado`,
+              });
+            }
+          }
 
+          const removedCount = [...previousIds].filter((id) => !currentIds.has(id)).length;
+          if (removedCount > 0) {
+            logger.info('Evento removido detectado por polling', { removedCount }, 'useRealtimeEventos');
             toast({
               title: 'Evento removido',
               description: 'Um evento foi excluído',
               variant: 'destructive',
             });
           }
-        });
-      },
-      (error) => {
-        logger.error('Real-time eventos error', error, 'useRealtimeEventos');
-      }
-    );
+        }
 
-    return () => {
-      unsubscribe();
+        previousIds = currentIds;
+        isFirstPoll = false;
+        queryClient.invalidateQueries({ queryKey: ['eventos'] });
+        queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
+      } catch (error) {
+        logger.error('Erro no polling de eventos', error, 'useRealtimeEventos');
+      }
     };
+
+    void poll();
+    const interval = window.setInterval(() => void poll(), 30000);
+    return () => window.clearInterval(interval);
   }, [queryClient, toast]);
 }

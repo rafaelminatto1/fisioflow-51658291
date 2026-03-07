@@ -199,7 +199,7 @@ export const validators = {
     return null;
   },
   phone: (value: string) => {
-    if (!value?.trim()) return ValidationErrors.phoneRequired;
+    if (!value?.trim()) return null;
     if (!isValidPhone(value)) return ValidationErrors.phoneInvalid;
     return null;
   },

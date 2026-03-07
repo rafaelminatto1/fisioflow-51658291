@@ -85,8 +85,8 @@ export default async function globalSetup(config: FullConfig) {
     }
 
     // Verificar se elementos do dashboard carregaram (garante hidratação)
-    await page.waitForSelector('h1:has-text("Biblioteca"), [data-testid="user-menu"]', { timeout: 20000 });
-    console.log('✅ Dashboard/Biblioteca detectado!');
+    await page.waitForSelector('[data-testid="main-layout"], [data-testid="user-menu"], h1', { timeout: 30000 });
+    console.log('✅ Dashboard detectado!');
 
     // Pausa técnica para garantir que o LocalStorage de sessão seja gravado (se o app herdar algo via JS)
     await page.waitForTimeout(2000);

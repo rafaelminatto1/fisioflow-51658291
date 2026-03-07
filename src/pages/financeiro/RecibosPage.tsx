@@ -20,7 +20,7 @@ import { ReciboPreview, ReciboPDF, ReciboData } from '@/components/financial/Rec
 import { useRecibos, useCreateRecibo, valorPorExtenso } from '@/hooks/useRecibos';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { useAuth } from '@/contexts/AuthContext';
-import { db, collection, query as firestoreQuery, orderBy, getDocs, doc, getDoc, limit } from '@/integrations/firebase/app';
+import { patientsApi, profileApi } from '@/lib/api/workers-client';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
 
 interface PatientSelect {
@@ -59,9 +59,8 @@ export default function RecibosPage() {
     queryKey: ['clinica-config', user?.uid],
     queryFn: async () => {
       if (!user) return null;
-      const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
-      const profile = profileDoc.exists() ? profileDoc.data() : null;
-      return { profile, org: orgData };
+      const res = await profileApi.me();
+      return { profile: res?.data ?? null, org: orgData };
     },
     enabled: !!user,
   });
@@ -70,9 +69,12 @@ export default function RecibosPage() {
   const { data: pacientes = [] } = useQuery({
     queryKey: ['pacientes-select'],
     queryFn: async () => {
-      const q = firestoreQuery(collection(db, 'patients'), orderBy('full_name'));
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as PatientSelect[];
+      const res = await patientsApi.list({ limit: 500, sortBy: 'name_asc' });
+      return (res?.data ?? []).map((p) => ({
+        id: p.id,
+        full_name: p.name || p.full_name || 'Paciente',
+        cpf: p.cpf,
+      }));
     },
   });
 
@@ -84,12 +86,6 @@ export default function RecibosPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Buscar último número de recibo
-    const q = firestoreQuery(collection(db, 'recibos'), orderBy('numero_recibo', 'desc'), limit(1));
-    const snapshot = await getDocs(q);
-    const ultimoRecibo = snapshot.empty ? null : snapshot.docs[0].data();
-
-    const novoNumero = (ultimoRecibo?.numero_recibo || 0) + 1;
     const valorNumerico = parseFloat(formData.valor);
 
     // Buscar dados do paciente se selecionado
@@ -104,31 +100,7 @@ export default function RecibosPage() {
       }
     }
 
-    const novoRecibo: ReciboData = {
-      numero: novoNumero,
-      valor: valorNumerico,
-      valor_extenso: valorPorExtenso(valorNumerico),
-      referente: formData.referente,
-      dataEmissao: new Date(),
-      emitente: {
-        nome: formData.usar_dados_clinica
-          ? (clinicaConfig?.org?.name || clinicaConfig?.profile?.full_name || 'Profissional de Saúde')
-          : (clinicaConfig?.profile?.full_name || 'Profissional'),
-        cpfCnpj: clinicaConfig?.profile?.cpf_cnpj,
-        telefone: clinicaConfig?.profile?.phone,
-        email: clinicaConfig?.profile?.email,
-        endereco: (clinicaConfig?.org as OrganizationData | undefined)?.address,
-      },
-      pagador: pagadorNome ? {
-        nome: pagadorNome,
-        cpfCnpj: pagadorCpf,
-      } : undefined,
-      assinado: true,
-      logoUrl: (clinicaConfig?.org as OrganizationData | undefined)?.logo_url,
-    };
-
-    // Salvar no banco
-    await createRecibo.mutateAsync({
+    const created = await createRecibo.mutateAsync({
       patient_id: formData.patient_id || null,
       valor: valorNumerico,
       valor_extenso: valorPorExtenso(valorNumerico),
@@ -138,6 +110,31 @@ export default function RecibosPage() {
       cpf_cnpj_emitente: clinicaConfig?.profile?.cpf_cnpj,
       assinado: true,
     });
+
+    const novoRecibo: ReciboData = {
+      numero: created.numero_recibo,
+      valor: created.valor,
+      valor_extenso: created.valor_extenso ?? valorPorExtenso(valorNumerico),
+      referente: created.referente ?? formData.referente,
+      dataEmissao: created.data_emissao,
+      emitente: {
+        nome: formData.usar_dados_clinica
+          ? (clinicaConfig?.org?.name || clinicaConfig?.profile?.full_name || 'Profissional de Saúde')
+          : (clinicaConfig?.profile?.full_name || 'Profissional'),
+        cpfCnpj: created.cpf_cnpj_emitente ?? clinicaConfig?.profile?.cpf_cnpj,
+        telefone: clinicaConfig?.profile?.phone,
+        email: clinicaConfig?.profile?.email,
+        endereco: (clinicaConfig?.org as OrganizationData | undefined)?.address,
+      },
+      pagador: pagadorNome
+        ? {
+            nome: pagadorNome,
+            cpfCnpj: pagadorCpf,
+          }
+        : undefined,
+      assinado: created.assinado,
+      logoUrl: (clinicaConfig?.org as OrganizationData | undefined)?.logo_url,
+    };
 
     // Mostrar preview
     setPreviewRecibo(novoRecibo as ReciboData);

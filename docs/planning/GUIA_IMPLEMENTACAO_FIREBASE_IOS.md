@@ -444,7 +444,7 @@ firebase deploy --only hosting:fisioflow-migration
 
 ```
 Produção:     https://fisioflow-migration.web.app
-Custom:       https://app.fisioflow.com.br (configurar)
+Custom:       https://app.moocafisio.com.br (configurar)
 ```
 
 ---

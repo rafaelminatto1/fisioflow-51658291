@@ -190,7 +190,7 @@ async function getProfile(userId: string): Promise<ProfileData> {
         `INSERT INTO organizations (id, name, slug, active, email)
            VALUES ($1, 'Clínica Principal', $2, true, $3)
            ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug`,
-        [organizationId, orgSlug, 'admin@fisioflow.com.br']
+        [organizationId, orgSlug, 'admin@moocafisio.com.br']
       );
       logger.info(`[Auth Middleware] Created/updated organization: ${organizationId}`);
     } catch (orgError: any) {
@@ -204,7 +204,7 @@ async function getProfile(userId: string): Promise<ProfileData> {
       `INSERT INTO profiles (user_id, organization_id, role, full_name, email, is_active)
          VALUES ($1, $2, $3, $4, $5, $6)
          RETURNING id, user_id, organization_id, role, full_name, email, is_active`,
-      [userId, organizationId, 'admin', 'Usuário Principal', 'admin@fisioflow.com.br', true]
+      [userId, organizationId, 'admin', 'Usuário Principal', 'admin@moocafisio.com.br', true]
     );
 
     logger.info(`[Auth Middleware] Created default profile: ${newProfile.rows[0].id}`);

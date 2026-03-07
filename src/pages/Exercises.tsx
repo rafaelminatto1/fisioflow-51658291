@@ -36,7 +36,7 @@ const TabFallback = () => (
 
 export default function Exercises() {
   const { exercises, loading: loadingExercises, createExercise, updateExercise, isCreating, isUpdating } = useExercises();
-  const { _favorites } = useExerciseFavorites();
+  const { favorites } = useExerciseFavorites();
   const { protocols, loading: loadingProtocols } = useExerciseProtocols();
   const { templates, loading: loadingTemplates } = useExerciseTemplates();
 
@@ -128,7 +128,7 @@ export default function Exercises() {
                   <Dumbbell className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                 </div>
                 <div className="min-w-0">
-                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight">
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight" data-testid="exercise-library-title">
                     Biblioteca de Exercícios
                   </h1>
                   <p className="text-xs sm:text-sm text-muted-foreground hidden sm:block">
@@ -157,23 +157,27 @@ export default function Exercises() {
 
             {/* Action Buttons - Full width on mobile */}
             <div className="flex gap-2 w-full lg:w-auto">
-              <Button
-                onClick={handleNewExercise}
-                size="default"
-                className="flex-1 lg:flex-auto shadow-lg shadow-primary/20 gap-2 group touch-target"
-              >
-                <Plus className="h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:rotate-90" />
-                <span>Novo Exercício</span>
-              </Button>
-              <Button
-                onClick={handleUploadClick}
-                variant="outline"
-                size="default"
-                className="flex-1 lg:flex-auto gap-2 touch-target"
-              >
-                <Video className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span>Upload Vídeo</span>
-              </Button>
+              {(activeTab === 'library' || activeTab === 'videos') && (
+                <>
+                  <Button
+                    onClick={handleNewExercise}
+                    size="default"
+                    className="flex-1 lg:flex-auto shadow-lg shadow-primary/20 gap-2 group touch-target"
+                  >
+                    <Plus className="h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:rotate-90" />
+                    <span>Novo Exercício</span>
+                  </Button>
+                  <Button
+                    onClick={handleUploadClick}
+                    variant="outline"
+                    size="default"
+                    className="flex-1 lg:flex-auto gap-2 touch-target"
+                  >
+                    <Video className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span>Upload Vídeo</span>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -293,6 +297,7 @@ export default function Exercises() {
               <TabsList className="w-full justify-start rounded-none border-0 bg-transparent h-12 sm:h-14 p-0">
                 <TabsTrigger
                   value="library"
+                  data-testid="tab-library"
                   className="gap-1.5 sm:gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-3 sm:px-4 md:px-6 text-xs sm:text-sm"
                 >
                   <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -310,6 +315,7 @@ export default function Exercises() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="templates"
+                  data-testid="tab-templates"
                   className="gap-1.5 sm:gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-3 sm:px-4 md:px-6 text-xs sm:text-sm"
                 >
                   <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -320,6 +326,7 @@ export default function Exercises() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="protocols"
+                  data-testid="tab-protocols"
                   className="gap-1.5 sm:gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-3 sm:px-4 md:px-6 text-xs sm:text-sm"
                 >
                   <Target className="h-3.5 w-3.5 sm:h-4 sm:w-4" />

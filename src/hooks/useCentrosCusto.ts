@@ -1,45 +1,21 @@
 /**
- * useCentrosCusto - Migrated to Firebase
- *
+ * useCentrosCusto - Rewritten to use Workers API (financialApi.centrosCusto)
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, orderBy, db } from '@/integrations/firebase/app';
-import { toast } from '@/hooks/use-toast';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { financialApi, CentroCusto } from '@/lib/api/workers-client';
+import { toast } from 'sonner';
 
-export interface CentroCusto {
-  id: string;
-  organization_id: string | null;
-  nome: string;
-  descricao: string | null;
-  ativo: boolean;
-  created_at: string;
-  updated_at: string;
-}
+export type { CentroCusto };
 
 export type CentroCustoFormData = Pick<CentroCusto, 'nome' | 'descricao' | 'ativo'>;
-
-// Helper to convert Firestore doc to CentroCusto
-const convertDocToCentroCusto = (doc: { id: string; data: () => Record<string, unknown> }): CentroCusto => {
-  const data = normalizeFirestoreData(doc.data());
-  return {
-    id: doc.id,
-    ...data,
-  } as CentroCusto;
-};
 
 export function useCentrosCusto() {
   return useQuery({
     queryKey: ['centros_custo'],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'centros_custo'),
-        orderBy('nome')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDocToCentroCusto);
+      const res = await financialApi.centrosCusto.list();
+      return (res?.data ?? res ?? []) as CentroCusto[];
     },
   });
 }
@@ -49,24 +25,15 @@ export function useCreateCentroCusto() {
 
   return useMutation({
     mutationFn: async (centro: CentroCustoFormData) => {
-      const centroData = {
-        ...centro,
-        organization_id: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'centros_custo'), centroData);
-      const docSnap = await getDoc(docRef);
-
-      return convertDocToCentroCusto(docSnap);
+      const res = await financialApi.centrosCusto.create(centro);
+      return (res?.data ?? res) as CentroCusto;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['centros_custo'] });
-      toast({ title: 'Centro de custo criado com sucesso' });
+      toast.success('Centro de custo criado com sucesso');
     },
     onError: (error: Error) => {
-      toast({ title: 'Erro ao criar centro de custo', description: error.message, variant: 'destructive' });
+      toast.error('Erro ao criar centro de custo: ' + error.message);
     },
   });
 }
@@ -76,21 +43,15 @@ export function useUpdateCentroCusto() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<CentroCusto> & { id: string }) => {
-      const docRef = doc(db, 'centros_custo', id);
-      await updateDoc(docRef, {
-        ...updates,
-        updated_at: new Date().toISOString(),
-      });
-
-      const docSnap = await getDoc(docRef);
-      return convertDocToCentroCusto(docSnap);
+      const res = await financialApi.centrosCusto.update(id, updates);
+      return (res?.data ?? res) as CentroCusto;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['centros_custo'] });
-      toast({ title: 'Centro de custo atualizado' });
+      toast.success('Centro de custo atualizado');
     },
     onError: (error: Error) => {
-      toast({ title: 'Erro ao atualizar', description: error.message, variant: 'destructive' });
+      toast.error('Erro ao atualizar: ' + error.message);
     },
   });
 }
@@ -100,14 +61,14 @@ export function useDeleteCentroCusto() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      await deleteDoc(doc(db, 'centros_custo', id));
+      await financialApi.centrosCusto.delete(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['centros_custo'] });
-      toast({ title: 'Centro de custo removido' });
+      toast.success('Centro de custo removido');
     },
     onError: (error: Error) => {
-      toast({ title: 'Erro ao remover', description: error.message, variant: 'destructive' });
+      toast.error('Erro ao remover: ' + error.message);
     },
   });
 }

@@ -192,7 +192,7 @@ function getProfile(userId) {
                     _c.label = 8;
                 case 8:
                     _c.trys.push([8, 10, , 13]);
-                    return [4 /*yield*/, pool.query("INSERT INTO organizations (id, name, slug, active, email)\n           VALUES ($1, 'Cl\u00EDnica Principal', $2, true, $3)\n           ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug", [organizationId, orgSlug, 'admin@fisioflow.com.br'])];
+                    return [4 /*yield*/, pool.query("INSERT INTO organizations (id, name, slug, active, email)\n           VALUES ($1, 'Cl\u00EDnica Principal', $2, true, $3)\n           ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug", [organizationId, orgSlug, 'admin@moocafisio.com.br'])];
                 case 9:
                     _c.sent();
                     logger_1.logger.info("[Auth Middleware] Created/updated organization: ".concat(organizationId));
@@ -206,7 +206,7 @@ function getProfile(userId) {
                     _c.sent();
                     _c.label = 12;
                 case 12: return [3 /*break*/, 13];
-                case 13: return [4 /*yield*/, pool.query("INSERT INTO profiles (user_id, organization_id, role, full_name, email, is_active)\n         VALUES ($1, $2, $3, $4, $5, $6)\n         RETURNING id, user_id, organization_id, role, full_name, email, is_active", [userId, organizationId, 'admin', 'Usuário Principal', 'admin@fisioflow.com.br', true])];
+                case 13: return [4 /*yield*/, pool.query("INSERT INTO profiles (user_id, organization_id, role, full_name, email, is_active)\n         VALUES ($1, $2, $3, $4, $5, $6)\n         RETURNING id, user_id, organization_id, role, full_name, email, is_active", [userId, organizationId, 'admin', 'Usuário Principal', 'admin@moocafisio.com.br', true])];
                 case 14:
                     newProfile = _c.sent();
                     logger_1.logger.info("[Auth Middleware] Created default profile: ".concat(newProfile.rows[0].id));

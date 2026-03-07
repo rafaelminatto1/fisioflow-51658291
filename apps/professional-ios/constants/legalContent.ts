@@ -212,8 +212,8 @@ Em caso de violação de dados que possa representar risco aos seus direitos:
 
 Para exercer seus direitos ou esclarecer dúvidas sobre privacidade:
 
-**Email**: privacidade@fisioflow.com.br
-**Encarregado de Proteção de Dados (DPO)**: dpo@fisioflow.com.br
+**Email**: privacidade@moocafisio.com.br
+**Encarregado de Proteção de Dados (DPO)**: dpo@moocafisio.com.br
 **Telefone**: +55 11 XXXX-XXXX
 **Endereço**: [Endereço da empresa]
 
@@ -382,7 +382,7 @@ O FisioFlow Professional opera em modelo B2B (Business-to-Business):
 - Pode haver manutenções programadas com aviso prévio
 
 ### 11.2 Suporte Técnico
-- Suporte está disponível por email: suporte@fisioflow.com.br
+- Suporte está disponível por email: suporte@moocafisio.com.br
 - Tempo de resposta: até 48 horas em dias úteis
 - Suporte prioritário pode estar disponível em planos premium
 
@@ -449,8 +449,8 @@ Você não pode ceder ou transferir seus direitos sob estes Termos sem nosso con
 
 Para questões sobre estes Termos de Uso:
 
-**Email**: legal@fisioflow.com.br
-**Suporte**: suporte@fisioflow.com.br
+**Email**: legal@moocafisio.com.br
+**Suporte**: suporte@moocafisio.com.br
 **Telefone**: +55 11 XXXX-XXXX
 **Endereço**: [Endereço da empresa]
 
@@ -702,8 +702,8 @@ export function shouldFetchRemoteLegalContent(): boolean {
  * Remote URLs for legal documents (for web viewing and updates)
  */
 export const LEGAL_DOCUMENT_URLS = {
-  PRIVACY_POLICY: 'https://fisioflow.com.br/privacidade',
-  TERMS_OF_SERVICE: 'https://fisioflow.com.br/termos',
-  SUPPORT: 'https://fisioflow.com.br/suporte',
-  CONTACT: 'mailto:privacidade@fisioflow.com.br',
+  PRIVACY_POLICY: 'https://moocafisio.com.br/privacidade',
+  TERMS_OF_SERVICE: 'https://moocafisio.com.br/termos',
+  SUPPORT: 'https://moocafisio.com.br/suporte',
+  CONTACT: 'mailto:privacidade@moocafisio.com.br',
 } as const;

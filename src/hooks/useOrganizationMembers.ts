@@ -4,22 +4,8 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, doc, getDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
-
-export interface OrganizationMember {
-  id: string;
-  organization_id: string;
-  user_id: string;
-  role: 'admin' | 'fisioterapeuta' | 'estagiario' | 'paciente';
-  active: boolean;
-  joined_at: string;
-  profiles?: {
-    full_name: string;
-    email: string | null;
-  } | null;
-}
+import { organizationMembersApi, type OrganizationMember } from '@/lib/api/workers-client';
 
 export const useOrganizationMembers = (organizationId?: string) => {
   const queryClient = useQueryClient();
@@ -29,40 +15,8 @@ export const useOrganizationMembers = (organizationId?: string) => {
     queryKey: ['organization-members', organizationId],
     queryFn: async () => {
       if (!organizationId) return [];
-
-      const q = firestoreQuery(
-        collection(db, 'organization_members'),
-        where('organization_id', '==', organizationId),
-        where('active', '==', true),
-        orderBy('joined_at', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-
-      // Fetch profile data for all members
-      const membersWithProfiles = await Promise.all(
-        snapshot.docs.map(async (doc) => {
-          const data = { id: doc.id, ...normalizeFirestoreData(doc.data()) };
-          let profileData = null;
-
-          if (data.user_id) {
-            const profileDoc = await getDoc(doc(db, 'profiles', data.user_id));
-            if (profileDoc.exists()) {
-              profileData = {
-                full_name: profileDoc.data().full_name,
-                email: profileDoc.data().email,
-              };
-            }
-          }
-
-          return {
-            ...data,
-            profiles: profileData,
-          } as OrganizationMember;
-        })
-      );
-
-      return membersWithProfiles;
+      const res = await organizationMembersApi.list({ organizationId });
+      return res.data ?? [];
     },
     enabled: !!organizationId,
   });
@@ -70,20 +24,16 @@ export const useOrganizationMembers = (organizationId?: string) => {
   // Mutation para adicionar membro
   const addMember = useMutation({
     mutationFn: async (memberData: {
-      organization_id: string;
+      organization_id?: string;
       user_id: string;
       role: 'admin' | 'fisioterapeuta' | 'estagiario' | 'paciente';
     }) => {
-      const data = {
-        ...memberData,
-        active: true,
-        joined_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'organization_members'), data);
-      const docSnap = await getDoc(docRef);
-
-      return { id: docRef.id, ...docSnap.data() };
+      const res = await organizationMembersApi.create({
+        organizationId: memberData.organization_id,
+        userId: memberData.user_id,
+        role: memberData.role,
+      });
+      return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organization-members'] });
@@ -98,16 +48,13 @@ export const useOrganizationMembers = (organizationId?: string) => {
   const updateMemberRole = useMutation({
     mutationFn: async ({
       id,
-      role
+      role,
     }: {
       id: string;
       role: 'admin' | 'fisioterapeuta' | 'estagiario' | 'paciente';
     }) => {
-      const docRef = doc(db, 'organization_members', id);
-      await updateDoc(docRef, { role });
-
-      const docSnap = await getDoc(docRef);
-      return { id, ...docSnap.data() };
+      const res = await organizationMembersApi.update(id, { role });
+      return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organization-members'] });
@@ -121,8 +68,7 @@ export const useOrganizationMembers = (organizationId?: string) => {
   // Mutation para remover membro
   const removeMember = useMutation({
     mutationFn: async (memberId: string) => {
-      const docRef = doc(db, 'organization_members', memberId);
-      await updateDoc(docRef, { active: false });
+      await organizationMembersApi.remove(memberId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['organization-members'] });
