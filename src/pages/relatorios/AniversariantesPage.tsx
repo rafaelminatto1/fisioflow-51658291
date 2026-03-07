@@ -10,8 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Cake, Gift, Phone, Mail, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { db, collection, query, where, getDocs } from '@/integrations/firebase/app';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { patientsApi, type PatientRow } from '@/lib/api/workers-client';
 
 interface Aniversariante {
   id: string;
@@ -23,14 +22,6 @@ interface Aniversariante {
   email: string | null;
 }
 
-interface PatientDocument {
-  id: string;
-  name: string;
-  birth_date?: string;
-  phone?: string | null;
-  email?: string | null;
-}
-
 export default function AniversariantesPage() {
   const [search, setSearch] = useState('');
   const [mesSelecionado, setMesSelecionado] = useState(new Date().getMonth() + 1);
@@ -38,29 +29,24 @@ export default function AniversariantesPage() {
   const { data: aniversariantes = [], isLoading } = useQuery({
     queryKey: ['aniversariantes', mesSelecionado],
     queryFn: async () => {
-      const q = query(
-        collection(db, 'patients'),
-        where('status', '==', 'ativo')
-      );
-
-      const snapshot = await getDocs(q);
+      const res = await patientsApi.list({ status: 'ativo', limit: 1000 });
+      const patients = (res?.data ?? []) as PatientRow[];
 
       // Filtrar por mês e calcular dados
-      return snapshot.docs
-        .map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }))
-        .filter((p: PatientDocument) => {
+      return patients
+        .filter((p) => {
           if (!p.birth_date) return false;
           const birthMonth = new Date(p.birth_date).getMonth() + 1;
           return birthMonth === mesSelecionado;
         })
-        .map((p: PatientDocument) => ({
+        .map((p) => ({
           id: p.id,
-          name: p.name,
-          birth_date: p.birth_date,
-          phone: p.phone,
-          email: p.email,
-          dia: new Date(p.birth_date).getDate(),
-          idade: new Date().getFullYear() - new Date(p.birth_date).getFullYear(),
+          name: p.name ?? p.full_name ?? 'Paciente',
+          birth_date: p.birth_date!,
+          phone: p.phone ?? null,
+          email: p.email ?? null,
+          dia: new Date(p.birth_date!).getDate(),
+          idade: new Date().getFullYear() - new Date(p.birth_date!).getFullYear(),
         }))
         .sort((a, b) => a.dia - b.dia) as Aniversariante[];
     },

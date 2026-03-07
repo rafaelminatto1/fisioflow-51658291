@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-
   Calendar,
   Activity,
   MessageSquare,
@@ -16,15 +15,17 @@ import {
   Clock,
   Plus
 } from 'lucide-react';
-import { format, isSameDay, differenceInDays } from 'date-fns';
+import { format, isSameDay, isWithinInterval, startOfWeek, endOfWeek, startOfMonth, differenceInDays } from 'date-fns';
 import { useAppointments } from '@/hooks/useAppointments';
+import type { DashboardPeriod } from '@/hooks/useDashboardMetrics';
 
 interface TherapistDashboardProps {
   lastUpdate: Date;
   profile: Profile;
+  period?: DashboardPeriod;
 }
 
-export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardProps) {
+export function TherapistDashboard({ lastUpdate, profile, period = 'hoje' }: TherapistDashboardProps) {
   const { data: allAppointments = [], isLoading: appointmentsLoading } = useAppointments();
 
   // Calculate stats using useMemo for better performance
@@ -41,7 +42,8 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
           avgSessionsPerPatient: 0,
           patientsAtRisk: 0
         },
-        progressData: []
+        progressData: [],
+        periodLabel: 'Hoje',
       };
     }
 
@@ -49,9 +51,28 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    // Filter today's appointments
+    // Determine primary date range based on period
+    const periodRange =
+      period === 'semana'
+        ? { start: startOfWeek(today, { weekStartsOn: 1 }), end: endOfWeek(today, { weekStartsOn: 1 }) }
+        : period === 'mes'
+        ? { start: startOfMonth(today), end: today }
+        : { start: today, end: today };
+
+    const periodLabel =
+      period === 'semana' ? 'Esta Semana' :
+      period === 'mes' ? 'Mês Atual' :
+      'Hoje';
+
+    // Filter appointments for selected period
     const todayApts = allAppointments
-      .filter(apt => isSameDay(new Date(apt.date), today) && apt.therapistId === profile.id)
+      .filter(apt => {
+        const aptDate = new Date(apt.date);
+        const inPeriod = period === 'hoje'
+          ? isSameDay(aptDate, today)
+          : isWithinInterval(aptDate, periodRange);
+        return inPeriod && apt.therapistId === profile.id;
+      })
       .map(apt => ({
         id: apt.id,
         patient_name: apt.patientName,
@@ -128,11 +149,12 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
         avgSessionsPerPatient,
         patientsAtRisk
       },
-      progressData: progressChartData
+      progressData: progressChartData,
+      periodLabel,
     };
-  }, [allAppointments, profile.id]);
+  }, [allAppointments, profile.id, period]);
 
-  const { todayAppointments, stats, progressData } = dashboardStats;
+  const { todayAppointments, stats, progressData, periodLabel } = dashboardStats;
 
   const getOccupancyLevel = (rate: number) => {
     if (rate < 30) return { label: 'Baixa ocupação', color: 'text-amber-600' };
@@ -174,7 +196,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
               </span>
               <span className="text-xl font-black text-primary/40">%</span>
             </div>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 font-medium">Capacidade utilizada hoje</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 font-medium">Capacidade utilizada — {periodLabel}</p>
             <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5 inner-border">
               <div
                 className="bg-gradient-to-r from-primary to-blue-400 h-2.5 rounded-full transition-all duration-1000 ease-out shadow-lg shadow-primary/20"
@@ -261,7 +283,7 @@ export function TherapistDashboard({ lastUpdate, profile }: TherapistDashboardPr
                   value="schedule"
                   className="flex-1 px-4 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium text-gray-500 border-b-2 border-transparent data-[state=active]:text-blue-600 data-[state=active]:border-blue-600 rounded-none hover:text-gray-700 whitespace-nowrap focus-visible:outline-none focus-visible:ring-0 data-[state=active]:bg-transparent"
                 >
-                  Próximo Agendamento
+                  Agenda — {periodLabel}
                 </TabsTrigger>
                 <TabsTrigger
                   value="actions"

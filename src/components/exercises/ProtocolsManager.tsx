@@ -7,17 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-
-  Plus, Edit, Trash2, Search, ChevronRight, Calendar,
-  AlertTriangle, CheckCircle2, Clock, Target, Milestone
+  Plus, Search, ChevronRight, Calendar,
+  AlertTriangle, Clock, Target, Milestone,
+  Activity, ArrowRight, Trash2, Filter,
+  Layers,
+  Sparkles
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,13 +24,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { NewProtocolModal } from '@/components/modals/NewProtocolModal';
+import ProtocolDetailView from './ProtocolDetailView';
+import { cn } from "@/lib/utils";
 
 export const ProtocolsManager = memo(function ProtocolsManager() {
   const [activeTab, setActiveTab] = useState<'patologia' | 'pos_operatorio'>('pos_operatorio');
@@ -55,7 +48,7 @@ export const ProtocolsManager = memo(function ProtocolsManager() {
 
   // Agrupar por condição
   const groupedProtocols = useMemo(() => filteredProtocols.reduce((acc, protocol) => {
-    const key = protocol.condition_name;
+    const key = protocol.condition_name || 'Geral';
     if (!acc[key]) {
       acc[key] = [];
     }
@@ -81,312 +74,261 @@ export const ProtocolsManager = memo(function ProtocolsManager() {
     setShowModal(true);
   };
 
-  const handleSubmit = (data: Omit<ExerciseProtocol, 'id' | 'created_at' | 'updated_at'>) => {
+  const handleSubmit = (data: any) => {
     if (editingProtocol) {
       updateProtocol({ id: editingProtocol.id, ...data });
     } else {
       createProtocol(data);
     }
-    setShowModal(false);
-    setEditingProtocol(null);
-  };
-
-  const getMilestones = (protocol: ExerciseProtocol) => {
-    if (!protocol.milestones) return [];
-    if (Array.isArray(protocol.milestones)) return protocol.milestones;
-    return [];
-  };
-
-  const getRestrictions = (protocol: ExerciseProtocol) => {
-    if (!protocol.restrictions) return [];
-    if (Array.isArray(protocol.restrictions)) return protocol.restrictions;
-    return [];
   };
 
   return (
-    <>
-      <Card className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold">Protocolos de Progressão</h2>
-            <p className="text-muted-foreground">
-              Gerencie protocolos com marcos e restrições temporais
+    <div className="space-y-8 animate-fade-in p-2">
+      {/* Header Deck */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#13ecc8]/10 via-[#0f172a] to-[#0f172a] p-8 sm:p-10 border border-white/5">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <h2 className="text-4xl font-black text-white tracking-tighter flex items-center gap-3">
+              <Layers className="h-10 w-10 text-[#13ecc8]" />
+              PROTOCOLOS
+            </h2>
+            <p className="text-white/50 text-lg max-w-lg leading-relaxed">
+              Diretrizes inteligentes de reabilitação e progressão funcional baseadas em evidência.
             </p>
           </div>
-          <Button onClick={handleNewProtocol}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Protocolo
+          <Button 
+            onClick={handleNewProtocol} 
+            className="bg-[#13ecc8] hover:bg-[#11d8b7] text-black font-black h-14 px-8 rounded-2xl shadow-[0_0_30px_rgba(19,236,200,0.2)] hover:shadow-[0_0_40px_rgba(19,236,200,0.4)] transition-all group"
+          >
+            <Plus className="h-5 w-5 mr-2 group-hover:rotate-90 transition-transform" />
+            NOVO PROTOCOLO
           </Button>
         </div>
+        
+        {/* Decorative backdrop elements */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[#13ecc8]/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+      </div>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'patologia' | 'pos_operatorio')}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="pos_operatorio">
-              <Calendar className="h-4 w-4 mr-2" />
-              Pós-Operatórios
-            </TabsTrigger>
-            <TabsTrigger value="patologia">
-              <Target className="h-4 w-4 mr-2" />
-              Patologias
-            </TabsTrigger>
-          </TabsList>
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+        {/* Sidebar Controls */}
+        <div className="xl:col-span-1 space-y-6">
+          <div className="glass-card p-6 rounded-2xl border-white/10">
+            <h3 className="text-sm font-bold text-white/40 uppercase tracking-widest mb-6 flex items-center gap-2">
+              <Filter className="w-4 h-4" /> Filtros e Busca
+            </h3>
+            
+            <div className="space-y-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20" />
+                <Input
+                  placeholder="Buscar protocolo..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="bg-white/5 border-white/10 text-white pl-10 h-12 rounded-xl focus-visible:ring-[#13ecc8]"
+                />
+              </div>
 
-          <div className="mb-4">
-            <div className="relative max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar protocolos..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
-              />
+              <div className="space-y-3">
+                <Label className="text-white/50 text-xs font-bold uppercase ml-1">Categoria de Atuação</Label>
+                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+                  <TabsList className="grid grid-cols-2 bg-white/5 p-1 h-12 rounded-xl border border-white/5">
+                    <TabsTrigger 
+                      value="pos_operatorio" 
+                      className="rounded-lg data-[state=active]:bg-[#13ecc8] data-[state=active]:text-black font-bold transition-all"
+                    >
+                      Pós-Op
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="patologia" 
+                      className="rounded-lg data-[state=active]:bg-[#13ecc8] data-[state=active]:text-black font-bold transition-all"
+                    >
+                      Patologia
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+
+              <div className="pt-4 border-t border-white/5">
+                <div className="flex items-center justify-between text-xs text-white/40 mb-4 px-1">
+                  <span>Total de Protocolos</span>
+                  <span className="text-[#13ecc8] font-bold">{protocols.length}</span>
+                </div>
+                <div className="p-4 rounded-xl bg-[#13ecc8]/5 border border-[#13ecc8]/10 flex items-center gap-3">
+                  <Sparkles className="w-5 h-5 text-[#13ecc8]" />
+                  <p className="text-[10px] text-white/50 leading-tight">
+                    Novos marcos podem ser adicionados em tempo real durante a sessão.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
+        </div>
 
-          <TabsContent value={activeTab} className="space-y-6">
-            {loading ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <Card key={i} className="p-4">
-                    <Skeleton className="h-6 w-48 mb-4" />
-                    <div className="grid gap-3 md:grid-cols-2">
-                      <Skeleton className="h-32" />
-                      <Skeleton className="h-32" />
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            ) : Object.keys(groupedProtocols).length === 0 ? (
-              <div className="text-center py-12">
-                <Target className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Nenhum protocolo encontrado</h3>
-                <p className="text-muted-foreground mb-4">
-                  {search ? 'Tente outra busca' : 'Crie seu primeiro protocolo de progressão'}
-                </p>
-                <Button onClick={handleNewProtocol}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Criar Protocolo
-                </Button>
-              </div>
-            ) : (
-              Object.entries(groupedProtocols).map(([condition, protocols]) => (
-                <Card key={condition} className="p-4 bg-card">
-                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <div className="h-2 w-2 rounded-full bg-primary" />
-                    {condition}
-                  </h3>
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {protocols.map((protocol) => (
-                      <Card
-                        key={protocol.id}
-                        className="p-4 hover:shadow-md transition-all hover:border-primary/30 cursor-pointer group"
-                        onClick={() => setViewProtocol(protocol)}
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <h4 className="font-medium group-hover:text-primary transition-colors">
-                              {protocol?.name ?? 'Sem nome'}
-                            </h4>
-                            {protocol.weeks_total && (
-                              <Badge variant="secondary" className="mt-1">
-                                <Clock className="h-3 w-3 mr-1" />
-                                {protocol.weeks_total} semanas
-                              </Badge>
-                            )}
-                          </div>
-                          <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                        </div>
-
-                        <div className="space-y-2 text-sm text-muted-foreground">
-                          {getMilestones(protocol).length > 0 && (
-                            <div className="flex items-center gap-2">
-                              <Milestone className="h-4 w-4 text-green-500" />
-                              <span>{getMilestones(protocol).length} marcos</span>
-                            </div>
-                          )}
-                          {getRestrictions(protocol).length > 0 && (
-                            <div className="flex items-center gap-2">
-                              <AlertTriangle className="h-4 w-4 text-amber-500" />
-                              <span>{getRestrictions(protocol).length} restrições</span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex gap-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setViewProtocol(protocol);
-                            }}
-                          >
-                            Ver detalhes
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDeleteId(protocol.id);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </Card>
-              ))
-            )}
-          </TabsContent>
-        </Tabs>
-      </Card>
-
-      {/* Protocol Details Modal */}
-      <Dialog open={!!viewProtocol} onOpenChange={(open) => !open && setViewProtocol(null)}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl">{viewProtocol?.name}</DialogTitle>
-            <div className="flex items-center gap-2 mt-2">
-              <Badge variant="outline">{viewProtocol?.condition_name}</Badge>
-              {viewProtocol?.weeks_total && (
-                <Badge variant="secondary">
-                  <Clock className="h-3 w-3 mr-1" />
-                  {viewProtocol.weeks_total} semanas
-                </Badge>
-              )}
-            </div>
-          </DialogHeader>
-
-          {viewProtocol && (
-            <div className="space-y-6 mt-4">
-              {/* Timeline Visual */}
-              {viewProtocol.weeks_total && (
-                <div className="p-4 bg-muted/50 rounded-lg">
-                  <h4 className="font-semibold mb-3 flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    Linha do Tempo
-                  </h4>
-                  <div className="relative">
-                    <div className="h-2 bg-muted rounded-full">
-                      <div className="h-2 bg-gradient-to-r from-amber-500 via-yellow-500 to-green-500 rounded-full" style={{ width: '100%' }} />
-                    </div>
-                    <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-                      <span>Semana 1</span>
-                      <span>Semana {Math.round(viewProtocol.weeks_total / 2)}</span>
-                      <span>Semana {viewProtocol.weeks_total}</span>
-                    </div>
+        {/* Main Content Area */}
+        <div className="xl:col-span-3 space-y-8">
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="glass-card p-6 rounded-2xl border-white/10 h-48">
+                  <Skeleton className="h-6 w-3/4 mb-4 bg-white/5" />
+                  <Skeleton className="h-4 w-1/2 bg-white/5" />
+                  <div className="mt-8 flex gap-2">
+                    <Skeleton className="h-10 grow bg-white/5" />
                   </div>
                 </div>
-              )}
-
-              {/* Milestones */}
-              <Accordion type="single" collapsible defaultValue="milestones">
-                <AccordionItem value="milestones">
-                  <AccordionTrigger className="hover:no-underline">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-5 w-5 text-green-500" />
-                      <span>Marcos de Progressão ({getMilestones(viewProtocol).length})</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-3 pt-2">
-                      {getMilestones(viewProtocol).length === 0 ? (
-                        <p className="text-muted-foreground text-sm">Nenhum marco definido</p>
-                      ) : (
-                        getMilestones(viewProtocol).map((milestone: { week: number; description: string }, index: number) => (
-                          <div key={index} className="flex items-start gap-3 p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-                            <div className="flex-shrink-0 h-8 w-8 rounded-full bg-green-500 text-white flex items-center justify-center text-sm font-bold">
-                              {milestone.week}
-                            </div>
-                            <div>
-                              <p className="font-medium text-sm">Semana {milestone.week}</p>
-                              <p className="text-muted-foreground text-sm">{milestone.description}</p>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-
-                <AccordionItem value="restrictions">
-                  <AccordionTrigger className="hover:no-underline">
-                    <div className="flex items-center gap-2">
-                      <AlertTriangle className="h-5 w-5 text-amber-500" />
-                      <span>Restrições ({getRestrictions(viewProtocol).length})</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-3 pt-2">
-                      {getRestrictions(viewProtocol).length === 0 ? (
-                        <p className="text-muted-foreground text-sm">Nenhuma restrição definida</p>
-                      ) : (
-                        getRestrictions(viewProtocol).map((restriction: { week_start: number; week_end?: number; description: string }, index: number) => (
-                          <div key={index} className="flex items-start gap-3 p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
-                            <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
-                            <div>
-                              <p className="font-medium text-sm">
-                                Semana {restriction.week_start}
-                                {restriction.week_end ? (' - ' + restriction.week_end + ' ') : null}
-                              </p>
-                              <p className="text-muted-foreground text-sm">{restriction.description}</p>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-
-              {/* Actions */}
-              <div className="flex gap-2 pt-4 border-t">
-                <Button className="flex-1" onClick={() => handleEditProtocol(viewProtocol)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Editar Protocolo
-                </Button>
-                <Button
-                  variant="outline"
-                  className="text-destructive"
-                  onClick={() => {
-                    setDeleteId(viewProtocol.id);
-                    setViewProtocol(null);
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+              ))}
+            </div>
+          ) : Object.keys(groupedProtocols).length === 0 ? (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex flex-col items-center justify-center py-20 glass-card rounded-3xl border-white/5 border-dashed border-2"
+            >
+              <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-6">
+                <Target className="h-10 w-10 text-white/20" />
               </div>
+              <h3 className="text-xl font-bold text-white mb-2">Nenhum protocolo encontrado</h3>
+              <p className="text-white/40 mb-8 max-w-sm text-center">
+                Refine sua busca ou crie um novo protocolo clínico para começar.
+              </p>
+              <Button onClick={handleNewProtocol} className="bg-white/10 hover:bg-white/20 text-white border border-white/10">
+                <Plus className="w-4 h-4 mr-2" /> Criar Protocolo
+              </Button>
+            </motion.div>
+          ) : (
+            <div className="space-y-12">
+              <AnimatePresence mode="popLayout">
+                {Object.entries(groupedProtocols).map(([condition, protocols], groupIdx) => (
+                  <motion.div 
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ delay: groupIdx * 0.1 }}
+                    key={condition} 
+                    className="space-y-6"
+                  >
+                    <div className="flex items-center gap-4 px-2">
+                      <div className="h-px grow bg-gradient-to-r from-transparent via-white/10 to-white/10" />
+                      <h3 className="text-xl font-black text-white/80 tracking-tight flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-[#13ecc8]" />
+                        {condition.toUpperCase()}
+                      </h3>
+                      <div className="h-px grow bg-gradient-to-l from-transparent via-white/10 to-white/10" />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
+                      {protocols.map((protocol) => (
+                        <motion.div
+                          key={protocol.id}
+                          whileHover={{ y: -5 }}
+                          className="group relative"
+                        >
+                          <div 
+                            className="glass-card p-6 rounded-2xl border-white/10 hover:border-[#13ecc8]/40 transition-all cursor-pointer h-full flex flex-col justify-between overflow-hidden"
+                            onClick={() => setViewProtocol(protocol)}
+                          >
+                            <div className="space-y-3 mb-6 relative z-10">
+                              <div className="flex items-start justify-between">
+                                <h4 className="text-xl font-bold text-white group-hover:text-[#13ecc8] transition-colors leading-tight">
+                                  {protocol.name}
+                                </h4>
+                                <ChevronRight className="h-5 w-5 text-white/20 group-hover:text-[#13ecc8] group-hover:translate-x-1 transition-all" />
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                <Badge variant="outline" className="bg-white/5 border-white/10 text-[10px] text-white/50 px-2 py-0">
+                                  <Clock className="w-3 h-3 mr-1" /> {protocol.weeks_total} semanas
+                                </Badge>
+                                {Array.isArray(protocol.milestones) && protocol.milestones.length > 0 && (
+                                  <Badge variant="outline" className="bg-[#13ecc8]/5 border-[#13ecc8]/20 text-[10px] text-[#13ecc8]/70 px-2 py-0">
+                                    <Milestone className="w-3 h-3 mr-1" /> {protocol.milestones.length} marcos
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between mt-auto relative z-10 pt-4 border-t border-white/5">
+                              <p className="text-[10px] font-bold text-white/20 tracking-widest uppercase">
+                                FISIOFLOW PROTOCOL
+                              </p>
+                              <div className="flex gap-2">
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditProtocol(protocol);
+                                  }}
+                                  className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/30 hover:text-white transition-all"
+                                >
+                                  <Activity className="w-4 h-4" />
+                                </button>
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setDeleteId(protocol.id);
+                                  }}
+                                  className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-white/30 hover:text-red-400 transition-all"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Hover accent decoration */}
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-[#13ecc8]/5 rounded-full blur-[40px] translate-x-1/2 -translate-y-1/2 group-hover:bg-[#13ecc8]/10 transition-all pointer-events-none" />
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
+
+      {/* Protocol Details Full View */}
+      <AnimatePresence>
+        {viewProtocol && (
+          <ProtocolDetailView 
+            protocol={viewProtocol} 
+            onClose={() => setViewProtocol(null)}
+            onEdit={handleEditProtocol}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="glass-card border-white/10 rounded-3xl bg-[#0f172a] overflow-hidden">
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir este protocolo? Esta ação não pode ser desfeita.
+            <AlertDialogTitle className="text-2xl font-black text-white">CONFIRMAR EXCLUSÃO</AlertDialogTitle>
+            <AlertDialogDescription className="text-white/50 text-base">
+              Você está prestes a remover permanentemente o protocolo de reabilitação. Esta ação é irreversível.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
-              {isDeleting ? 'Excluindo...' : 'Excluir'}
+          <AlertDialogFooter className="mt-8 gap-3 sm:gap-0">
+            <AlertDialogCancel className="bg-white/5 border-white/10 text-white hover:bg-white/10 rounded-xl h-12 px-6">
+              CANCELAR
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete} 
+              disabled={isDeleting}
+              className="bg-red-500 hover:bg-red-600 text-white font-black rounded-xl h-12 px-8 flex items-center gap-2"
+            >
+              {isDeleting ? 'EXCLUINDO...' : 'CONFIRMAR EXCLUSÃO'}
+              <Trash2 className="w-4 h-4" />
             </AlertDialogAction>
           </AlertDialogFooter>
+          {/* Decorative glow */}
+          <div className="absolute bottom-0 left-0 w-full h-1 bg-red-500 opacity-50 shadow-[0_0_15px_rgba(239,68,68,0.5)]" />
         </AlertDialogContent>
       </AlertDialog>
 
       {/* Protocol Create/Edit Modal */}
       <NewProtocolModal
         open={showModal}
-        onOpenChange={(open) => {
+        onOpenChange={(open: boolean) => {
           setShowModal(open);
           if (!open) setEditingProtocol(null);
         }}
@@ -394,6 +336,10 @@ export const ProtocolsManager = memo(function ProtocolsManager() {
         protocol={editingProtocol || undefined}
         isLoading={isCreating || isUpdating}
       />
-    </>
+    </div>
   );
 });
+
+const Label = ({ children, className }: { children: React.ReactNode, className?: string }) => (
+  <label className={cn("block text-sm font-medium", className)}>{children}</label>
+);

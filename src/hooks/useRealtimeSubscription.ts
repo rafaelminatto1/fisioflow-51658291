@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react';
-import { collection, query as firestoreQuery, where, onSnapshot, Query, db } from '@/integrations/firebase/app';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -33,7 +32,6 @@ export function useRealtimeSubscription({
     const isSubscribedRef = useRef(false);
 
     useEffect(() => {
-        // Só inscrever se estiver habilitado e tivermos o ID da organização (se necessário)
         const effectiveFilter = filter !== undefined
             ? filter
             : organizationId
@@ -45,49 +43,20 @@ export function useRealtimeSubscription({
         }
 
         const channelName = `${table}-changes-${organizationId || 'all'}`;
-        logger.info(`Configurando Realtime (Firestore) para ${table}`, { channelName, filter: effectiveFilter }, 'useRealtimeSubscription');
+        logger.info(`Configurando pseudo-realtime para ${table}`, { channelName, filter: effectiveFilter }, 'useRealtimeSubscription');
+        isSubscribedRef.current = true;
 
-        isSubscribedRef.current = true; // Optimistic
-
-        // Build Query
-        const colRef = collection(db, table);
-        let q: Query = colRef;
-
-        // Try to parse Supabase filter: "field=eq.value"
-        if (effectiveFilter) {
-            const match = effectiveFilter.match(/^(.+)=eq\.(.+)$/);
-            if (match) {
-                const [, field, value] = match;
-                // Clean quotes if present
-                const effectiveValue = value.replace(/^['"]|['"]$/g, '');
-                if (effectiveValue) {
-                    q = firestoreQuery(colRef, where(field, '==', effectiveValue));
-                }
-            } else if (effectiveFilter === 'organization_id=eq.undefined') {
-                // Skip if organization_id is undefined string
-                isSubscribedRef.current = false;
-                return;
-            }
-        }
-
-        // Firestore listener
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            // Check if there are changes (though snapshot always means update or local init)
-            // Invalidating queries
+        const interval = window.setInterval(() => {
             if (queryKey) {
                 queryClient.invalidateQueries({ queryKey });
             }
-            logger.debug(`Realtime update on ${table}`, { docs: snapshot.size }, 'useRealtimeSubscription');
-
-        }, (error) => {
-            logger.error(`Erro no listener Realtime: ${channelName}`, error, 'useRealtimeSubscription');
-            isSubscribedRef.current = false;
-        });
+            logger.debug(`Pseudo-realtime refresh on ${table}`, { filter: effectiveFilter }, 'useRealtimeSubscription');
+        }, 15000);
 
         return () => {
             logger.debug(`Cleanup subscription ${channelName}`, {}, 'useRealtimeSubscription');
             isSubscribedRef.current = false;
-            unsubscribe();
+            window.clearInterval(interval);
         };
     }, [table, schema, event, filter, enabled, queryClient, organizationId, queryKey]);
 }

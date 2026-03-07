@@ -3,8 +3,8 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { collection, getDocs, limit, query as firestoreQuery, db } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { healthApi } from '@/lib/api/workers-client';
 
 export type ConnectionState = 'online' | 'offline' | 'checking' | 'reconnecting';
 
@@ -34,13 +34,9 @@ async function checkRealConnectivity(): Promise<boolean> {
         return false;
     }
 
-    // Fazer ping real ao Firestore
+    // Fazer ping real à API Workers
     try {
-        // Usar health check simples com query leve ao Firestore
-        const q = firestoreQuery(collection(db, 'organizations'), limit(1));
-        await getDocs(q);
-
-        // Se não há erro, está conectado
+        await healthApi.check();
         return true;
     } catch (error) {
         // Erros de rede/timeout = offline

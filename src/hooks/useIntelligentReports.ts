@@ -1,46 +1,28 @@
 /**
- * useIntelligentReports - Migrated to Firebase
- *
+ * useIntelligentReports - Migrated to Neon/Workers
  */
 
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { collection, query as firestoreQuery, where, getDocs, orderBy, limit, getFirebaseApp } from '@/integrations/firebase/app';
 import { toast } from '@/hooks/use-toast';
-import { httpsCallable, getFunctions } from 'firebase/functions';
-import { useAuth } from '@/contexts/AuthContext';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
-
-const functions = getFunctions(getFirebaseApp());
-const db = getFirebaseApp().firestore() || null;
-
-// Helper to convert doc
-const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as T);
+import { analyticsApi } from '@/lib/api/workers-client';
 
 export function useIntelligentReports(patientId?: string) {
-  const { user } = useAuth();
-
   const generateReport = useMutation({
     mutationFn: async ({
       patientId,
       reportType,
-      dateRange
+      dateRange,
     }: {
       patientId: string;
       reportType: string;
-      dateRange: { start: string; end: string }
+      dateRange: { start: string; end: string };
     }) => {
-      if (!user) throw new Error('User not authenticated');
-
-      const generateReportFn = httpsCallable(functions, 'intelligent-reports');
-      const result = await generateReportFn({
+      const response = await analyticsApi.intelligentReports.generate({
         patientId,
         reportType,
         dateRange,
-        userId: user.uid
       });
-
-      if (result.data.error) throw new Error(result.data.error);
-      return result.data;
+      return response?.data;
     },
     onError: (error: Error) => {
       toast({
@@ -54,19 +36,11 @@ export function useIntelligentReports(patientId?: string) {
   const { data: recentReports, isLoading } = useQuery({
     queryKey: ['recent-reports', patientId],
     queryFn: async () => {
-      if (!patientId || !db) return [];
-
-      const q = firestoreQuery(
-        collection(db, 'generated_reports'),
-        where('patient_id', '==', patientId),
-        orderBy('created_at', 'desc'),
-        limit(10)
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDoc);
+      if (!patientId) return [];
+      const response = await analyticsApi.intelligentReports.list(patientId);
+      return response?.data ?? [];
     },
-    enabled: !!patientId && !!db,
+    enabled: !!patientId,
   });
 
   return {

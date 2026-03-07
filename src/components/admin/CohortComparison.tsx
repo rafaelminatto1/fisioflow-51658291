@@ -43,8 +43,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { db, collection, getDocs, query as firestoreQuery, where, limit as fsLimit } from '@/integrations/firebase/app';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { appointmentsApi, patientsApi, type AppointmentRow, type PatientRow } from '@/lib/api/workers-client';
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -463,12 +462,6 @@ export function CohortComparison({
   const { data: patients, isLoading, error } = useQuery({
     queryKey: ['admin-cohort-patients', timeRange],
     queryFn: async (): Promise<PatientWithCohortData[]> => {
-      const toTimestampMs = (value: unknown): number => {
-        if (!value) return 0;
-        const parsed = new Date(String(value)).getTime();
-        return Number.isFinite(parsed) ? parsed : 0;
-      };
-
       const completedStatuses = new Set([
         'atendido',
         'confirmado',
@@ -476,22 +469,27 @@ export function CohortComparison({
         'realizado',
       ]);
 
-      // Build query for Firebase
-      const patientsQuery = firestoreQuery(
-        collection(db, 'patients'),
-        fsLimit(500)
-      );
-
-      // Apply time range filter - note: Firestore doesn't support >= on strings without indexes
-      // We'll filter client-side for now
       const startDate = timeRange !== 'all' ? subMonths(new Date(), TIME_RANGE_CONFIGS[timeRange].months) : null;
+      const allPatients: PatientRow[] = [];
+      let patientsOffset = 0;
 
-      const patientsSnap = await getDocs(patientsQuery);
-      let data = patientsSnap.docs.map(doc => ({
-        id: doc.id,
-        full_name: normalizeFirestoreData(doc.data()).full_name || '',
-        created_at: normalizeFirestoreData(doc.data()).created_at || new Date().toISOString(),
-        birth_date: normalizeFirestoreData(doc.data()).birth_date,
+      while (patientsOffset < 5000) {
+        const response = await patientsApi.list({
+          limit: 500,
+          offset: patientsOffset,
+          sortBy: 'name_asc',
+        });
+        const chunk = response?.data ?? [];
+        allPatients.push(...chunk);
+        if (chunk.length < 500) break;
+        patientsOffset += 500;
+      }
+
+      let data = allPatients.map((patient) => ({
+        id: patient.id,
+        full_name: patient.full_name || '',
+        created_at: patient.created_at || new Date().toISOString(),
+        birth_date: patient.birth_date || undefined,
       }));
 
       // Filter by time range client-side
@@ -499,47 +497,53 @@ export function CohortComparison({
         data = data.filter(p => new Date(p.created_at) >= startDate);
       }
 
-      // Fetch analytics data for each patient in parallel
+      const appointments: AppointmentRow[] = [];
+      let appointmentsOffset = 0;
+      while (appointmentsOffset < 20000) {
+        const response = await appointmentsApi.list({
+          limit: 1000,
+          offset: appointmentsOffset,
+        });
+        const chunk = response?.data ?? [];
+        appointments.push(...chunk);
+        if (chunk.length < 1000) break;
+        appointmentsOffset += 1000;
+      }
+
+      const appointmentsByPatient = new Map<string, AppointmentRow[]>();
+      appointments.forEach((appointment) => {
+        if (!appointment.patient_id) return;
+        const current = appointmentsByPatient.get(appointment.patient_id) ?? [];
+        current.push(appointment);
+        appointmentsByPatient.set(appointment.patient_id, current);
+      });
+
       const patientsWithAnalytics = await Promise.all(
         data.map(async (p) => {
-          // Get session count (avoid composite index by filtering status client-side)
-          const appointmentsQuery = firestoreQuery(
-            collection(db, 'appointments'),
-            where('patient_id', '==', p.id)
-          );
-          const appointmentsSnap = await getDocs(appointmentsQuery);
-          const totalSessions = appointmentsSnap.docs.reduce((count, appointmentDoc) => {
-            const appointment = normalizeFirestoreData(appointmentDoc.data()) as Record<string, unknown>;
+          const patientAppointments = appointmentsByPatient.get(p.id) ?? [];
+          const totalSessions = patientAppointments.reduce((count, appointment) => {
             const status = String(appointment.status || '').toLowerCase();
             return completedStatuses.has(status) ? count + 1 : count;
           }, 0);
 
-          // Get latest risk score (avoid composite index by sorting client-side)
-          const riskQuery = firestoreQuery(
-            collection(db, 'patient_risk_scores'),
-            where('patient_id', '==', p.id)
-          );
-          const riskSnap = await getDocs(riskQuery);
-          const latestRiskScore = riskSnap.docs
-            .map((doc) => normalizeFirestoreData(doc.data()) as Record<string, unknown>)
-            .sort(
-              (a, b) => toTimestampMs(b.calculated_at) - toTimestampMs(a.calculated_at)
-            )[0];
-          const overallProgress = Number(latestRiskScore?.overall_progress_percentage || 0);
-          const dropoutRisk = Number(latestRiskScore?.dropout_risk_score || 50);
+          const lastAppointment = patientAppointments
+            .map((appointment) => appointment.date)
+            .filter(Boolean)
+            .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
+          const daysSinceLastSession = lastAppointment
+            ? Math.floor((Date.now() - new Date(lastAppointment).getTime()) / (1000 * 60 * 60 * 24))
+            : undefined;
 
-          // Get pathology from latest evolution (avoid composite index by sorting client-side)
-          const evolutionQuery = firestoreQuery(
-            collection(db, 'patient_evolution'),
-            where('patient_id', '==', p.id)
-          );
-          const evolutionSnap = await getDocs(evolutionQuery);
-          const latestEvolution = evolutionSnap.docs
-            .map((doc) => normalizeFirestoreData(doc.data()) as Record<string, unknown>)
-            .sort(
-              (a, b) => toTimestampMs(b.created_at) - toTimestampMs(a.created_at)
-            )[0];
-          const pathology = String(latestEvolution?.pathology || 'Não especificado');
+          let dropoutRisk = Math.max(0, 100 - totalSessions * 5);
+          if (daysSinceLastSession !== undefined) {
+            if (daysSinceLastSession > 30) dropoutRisk += 20;
+            else if (daysSinceLastSession > 14) dropoutRisk += 10;
+          }
+          dropoutRisk = Math.min(100, Math.round(dropoutRisk));
+          const overallProgress = Math.min(100, totalSessions * 8);
+
+          const pathologiesResponse = await patientsApi.pathologies(p.id).catch(() => ({ data: [] }));
+          const pathology = String(pathologiesResponse.data?.[0]?.name || 'Não especificado');
 
           return {
             id: p.id,

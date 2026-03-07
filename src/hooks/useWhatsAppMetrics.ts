@@ -1,36 +1,23 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, query as firestoreQuery, where, getDocs, orderBy, limit, updateDoc, doc, db } from '@/integrations/firebase/app';
-import { WhatsAppService } from '@/lib/services/WhatsAppService';
 import { toast } from 'sonner';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { WhatsAppService } from '@/lib/services/WhatsAppService';
+import {
+  whatsappApi,
+  type WhatsAppMessage,
+  type WhatsAppTemplateRecord,
+  type WhatsAppWebhookLog,
+} from '@/lib/api/workers-client';
 
-export interface WhatsAppMetric {
-  id: string;
-  phone_number: string;
-  patient_id: string | null;
-  appointment_id: string | null;
-  template_key: string | null;
-  message_type: string;
-  status: string;
-  sent_at: string | null;
-  delivered_at: string | null;
-  read_at: string | null;
-  replied_at: string | null;
-  reply_content: string | null;
-  error_message: string | null;
-  retry_count: number;
-  created_at: string;
-}
+export type WhatsAppMetric = WhatsAppMessage & {
+  phone_number?: string | null;
+  template_key?: string | null;
+  reply_content?: string | null;
+  error_message?: string | null;
+  retry_count?: number;
+  patients?: { name?: string | null } | null;
+};
 
-export interface WhatsAppTemplate {
-  id: string;
-  name: string;
-  template_key: string;
-  content: string;
-  variables: string[];
-  category: string;
-  status: string;
-}
+export type WhatsAppTemplate = WhatsAppTemplateRecord;
 
 export interface MetricsSummary {
   totalSent: number;
@@ -43,126 +30,193 @@ export interface MetricsSummary {
   readRate: number;
 }
 
-// Hook for connection status
+type DailyStat = {
+  date: string;
+  sent: number;
+  delivered: number;
+  read: number;
+  failed: number;
+};
+
+const toMinutes = (start?: string | null, end?: string | null) => {
+  if (!start || !end) return null;
+  const startMs = new Date(start).getTime();
+  const endMs = new Date(end).getTime();
+  if (Number.isNaN(startMs) || Number.isNaN(endMs)) return null;
+  return (endMs - startMs) / (1000 * 60);
+};
+
+const normalizeStatus = (status?: string | null) => {
+  const raw = String(status ?? '').toLowerCase();
+  if (raw === 'delivered' || raw === 'entregue') return 'entregue';
+  if (raw === 'read' || raw === 'lido') return 'lido';
+  if (raw === 'failed' || raw === 'falhou') return 'falhou';
+  if (raw === 'sent' || raw === 'enviado') return 'enviado';
+  return raw || 'pendente';
+};
+
+const mapMessage = (message: WhatsAppMessage): WhatsAppMetric => {
+  const metadata = (message.metadata ?? {}) as Record<string, unknown>;
+  return {
+    ...message,
+    phone_number:
+      (metadata.to_phone as string | undefined) ??
+      (metadata.phone_number as string | undefined) ??
+      null,
+    template_key:
+      (metadata.template_key as string | undefined) ??
+      (metadata.message_type as string | undefined) ??
+      message.message_type ??
+      null,
+    reply_content:
+      (metadata.response_content as string | undefined) ??
+      message.response_content ??
+      null,
+    error_message: (metadata.error_message as string | undefined) ?? null,
+    retry_count: Number(metadata.retry_count ?? 0) || 0,
+    patients:
+      typeof metadata.patient_name === 'string'
+        ? { name: metadata.patient_name }
+        : null,
+  };
+};
+
+const summarizeMetrics = (messages: WhatsAppMetric[]): MetricsSummary => {
+  const outbound = messages.filter((message) => !message.metadata?.direction || message.metadata?.direction === 'outbound');
+  const totalSent = outbound.length;
+  const delivered = outbound.filter((message) => message.delivered_at || normalizeStatus(message.status) === 'entregue' || normalizeStatus(message.status) === 'lido').length;
+  const read = outbound.filter((message) => message.read_at || normalizeStatus(message.status) === 'lido').length;
+  const failed = outbound.filter((message) => normalizeStatus(message.status) === 'falhou').length;
+  const replied = outbound.filter((message) => message.response_received_at || message.reply_content).length;
+  const responseTimes = outbound
+    .map((message) => toMinutes(message.sent_at ?? message.created_at, message.response_received_at))
+    .filter((value): value is number => value != null && value >= 0);
+  const avgResponseTime = responseTimes.length > 0
+    ? Math.round(responseTimes.reduce((sum, value) => sum + value, 0) / responseTimes.length)
+    : 0;
+
+  return {
+    totalSent,
+    delivered,
+    read,
+    failed,
+    responseRate: totalSent > 0 ? Math.round((replied / totalSent) * 100) : 0,
+    avgResponseTime,
+    deliveryRate: totalSent > 0 ? Math.round((delivered / totalSent) * 100) : 0,
+    readRate: delivered > 0 ? Math.round((read / delivered) * 100) : 0,
+  };
+};
+
+const buildDailyStats = (messages: WhatsAppMetric[], days: number): DailyStat[] => {
+  const grouped = new Map<string, DailyStat>();
+  for (let i = 0; i < days; i += 1) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const key = date.toISOString().split('T')[0];
+    grouped.set(key, { date: key, sent: 0, delivered: 0, read: 0, failed: 0 });
+  }
+
+  messages.forEach((message) => {
+    const dateKey = (message.created_at ?? message.sent_at ?? '').slice(0, 10);
+    const entry = grouped.get(dateKey);
+    if (!entry) return;
+    entry.sent += 1;
+    if (message.delivered_at || normalizeStatus(message.status) === 'entregue' || normalizeStatus(message.status) === 'lido') {
+      entry.delivered += 1;
+    }
+    if (message.read_at || normalizeStatus(message.status) === 'lido') {
+      entry.read += 1;
+    }
+    if (normalizeStatus(message.status) === 'falhou') {
+      entry.failed += 1;
+    }
+  });
+
+  return Array.from(grouped.values()).reverse();
+};
+
 export function useWhatsAppConnection() {
   return useQuery({
     queryKey: ['whatsapp', 'connection'],
     queryFn: async () => {
-      // Assuming WhatsAppService internally handles connection logic or uses Firebase Functions
-      return await WhatsAppService.testConnection();
+      const [config, test] = await Promise.allSettled([
+        whatsappApi.getConfig(),
+        WhatsAppService.testConnection(),
+      ]);
+
+      const base =
+        config.status === 'fulfilled'
+          ? { connected: Boolean(config.value?.data?.enabled), config: config.value?.data ?? {} }
+          : { connected: false, config: {} };
+
+      if (test.status === 'fulfilled') {
+        return {
+          ...base,
+          connected: base.connected && test.value.connected,
+          error: test.value.error,
+        };
+      }
+
+      return {
+        ...base,
+        error: test.reason instanceof Error ? test.reason.message : undefined,
+      };
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: 1,
   });
 }
 
-// Hook for metrics summary
 export function useWhatsAppMetricsSummary(days: number = 30) {
   return useQuery({
     queryKey: ['whatsapp', 'metrics-summary', days],
     queryFn: async (): Promise<MetricsSummary> => {
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - days);
-
-      const q = firestoreQuery(
-        collection(db, 'whatsapp_metrics'),
-        where('created_at', '>=', startDate.toISOString()),
-        where('message_type', '==', 'outbound')
-      );
-
-      const snapshot = await getDocs(q);
-      const metrics = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()) as WhatsAppMetric);
-
-      const totalSent = metrics.length;
-      const delivered = metrics.filter(m => m.delivered_at).length;
-      const read = metrics.filter(m => m.read_at).length;
-      const failed = metrics.filter(m => m.status === 'falhou').length;
-      const replied = metrics.filter(m => m.replied_at).length;
-
-      // Calculate avg response time
-      const responseTimes = metrics
-        .filter(m => m.sent_at && m.replied_at)
-        .map(m => {
-          const sent = new Date(m.sent_at!).getTime();
-          const repliedAt = new Date(m.replied_at!).getTime();
-          return (repliedAt - sent) / (1000 * 60);
-        });
-
-      const avgResponseTime = responseTimes.length > 0
-        ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length
-        : 0;
-
-      return {
-        totalSent,
-        delivered,
-        read,
-        failed,
-        responseRate: totalSent > 0 ? Math.round((replied / totalSent) * 100) : 0,
-        avgResponseTime: Math.round(avgResponseTime),
-        deliveryRate: totalSent > 0 ? Math.round((delivered / totalSent) * 100) : 0,
-        readRate: delivered > 0 ? Math.round((read / delivered) * 100) : 0,
-      };
+      const res = await whatsappApi.listMessages({ limit: Math.max(days * 50, 200) });
+      const messages = (res?.data ?? []).map(mapMessage).filter((message) => {
+        const createdAt = message.created_at ?? message.sent_at;
+        if (!createdAt) return false;
+        const age = Date.now() - new Date(createdAt).getTime();
+        return age <= days * 24 * 60 * 60 * 1000;
+      });
+      return summarizeMetrics(messages);
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 2 * 60 * 1000,
   });
 }
 
-// Hook for recent messages
 export function useWhatsAppMessages(limitCount: number = 50) {
   return useQuery({
     queryKey: ['whatsapp', 'messages', limitCount],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'whatsapp_metrics'),
-        orderBy('created_at', 'desc'),
-        limit(limitCount)
-      );
-
-      const snapshot = await getDocs(q);
-      // Note: We need to join with patients manually in NoSQL usually, or store patient name in metrics.
-      // Assuming for now metrics have basic info or we fetch patients separately if needed.
-      // To mimic the join, we'll fetch basic data. If 'patients' detail is needed, we might need a second query.
-      // For simplicity in migration, returning metrics. If the UI needs patient names, 
-      // ideally 'patient_name' should be stored in 'whatsapp_metrics' or fetched.
-      // Let's assume we return data and if UI breaks we'll add 'patient_name' fetch.
-
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
+      const res = await whatsappApi.listMessages({ limit: limitCount });
+      return (res?.data ?? []).map(mapMessage);
     },
-    staleTime: 60 * 1000, // 1 minute
+    staleTime: 60 * 1000,
   });
 }
 
-// Hook for templates
 export function useWhatsAppTemplates() {
   return useQuery({
     queryKey: ['whatsapp', 'templates'],
     queryFn: async () => {
-      const q = firestoreQuery(collection(db, 'whatsapp_templates'), orderBy('name'));
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as WhatsAppTemplate[];
+      const res = await whatsappApi.listTemplates();
+      return res?.data ?? [];
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 10 * 60 * 1000,
   });
 }
 
-// Hook for webhook logs
 export function useWhatsAppWebhookLogs(limitCount: number = 100) {
   return useQuery({
     queryKey: ['whatsapp', 'webhook-logs', limitCount],
-    queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'whatsapp_webhook_logs'),
-        orderBy('created_at', 'desc'),
-        limit(limitCount)
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
+    queryFn: async (): Promise<WhatsAppWebhookLog[]> => {
+      const res = await whatsappApi.listWebhookLogs({ limit: limitCount });
+      return res?.data ?? [];
     },
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: 30 * 1000,
   });
 }
 
-// Mutation for sending test message
 export function useSendTestMessage() {
   const queryClient = useQueryClient();
 
@@ -170,82 +224,52 @@ export function useSendTestMessage() {
     mutationFn: async ({ phone, message }: { phone: string; message: string }) => {
       const result = await WhatsAppService.sendMessage({ to: phone, message });
       if (!result.success) {
-        throw new Error(result.error);
+        throw new Error(result.error ?? 'Falha ao enviar mensagem');
       }
       return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['whatsapp', 'messages'] });
+      queryClient.invalidateQueries({ queryKey: ['whatsapp', 'metrics-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['whatsapp', 'daily-stats'] });
       toast.success('Mensagem de teste enviada!');
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error('Erro ao enviar: ' + error.message);
     },
   });
 }
 
-// Mutation for updating template
 export function useUpdateTemplate() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, content }: { id: string; content: string }) => {
-      const docRef = doc(db, 'whatsapp_templates', id);
-      await updateDoc(docRef, {
-        content,
-        updated_at: new Date().toISOString()
-      });
+      const res = await whatsappApi.updateTemplate(id, { content });
+      return res?.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['whatsapp', 'templates'] });
       toast.success('Template atualizado!');
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast.error('Erro ao atualizar: ' + error.message);
     },
   });
 }
 
-// Hook for daily stats chart data
 export function useWhatsAppDailyStats(days: number = 7) {
   return useQuery({
     queryKey: ['whatsapp', 'daily-stats', days],
     queryFn: async () => {
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - days);
-
-      const q = firestoreQuery(
-        collection(db, 'whatsapp_metrics'),
-        where('created_at', '>=', startDate.toISOString()),
-        where('message_type', '==', 'outbound')
-      );
-      const snapshot = await getDocs(q);
-      const data = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()));
-
-      // Group by date
-      const grouped = new Map<string, { sent: number; delivered: number; read: number; failed: number }>();
-
-      for (let i = 0; i < days; i++) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        const key = date.toISOString().split('T')[0];
-        grouped.set(key, { sent: 0, delivered: 0, read: 0, failed: 0 });
-      }
-
-      data.forEach(m => {
-        const key = m.created_at.split('T')[0];
-        const entry = grouped.get(key);
-        if (entry) {
-          entry.sent++;
-          if (m.delivered_at) entry.delivered++;
-          if (m.read_at) entry.read++;
-          if (m.status === 'falhou') entry.failed++;
-        }
+      const res = await whatsappApi.listMessages({ limit: Math.max(days * 50, 200) });
+      const messages = (res?.data ?? []).map(mapMessage).filter((message) => {
+        const createdAt = message.created_at ?? message.sent_at;
+        if (!createdAt) return false;
+        const age = Date.now() - new Date(createdAt).getTime();
+        return age <= days * 24 * 60 * 60 * 1000;
       });
-
-      return Array.from(grouped.entries())
-        .map(([date, stats]) => ({ date, ...stats }))
-        .reverse();
+      return buildDailyStats(messages, days);
     },
     staleTime: 5 * 60 * 1000,
   });

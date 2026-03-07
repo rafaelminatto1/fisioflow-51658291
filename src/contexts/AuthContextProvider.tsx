@@ -4,7 +4,7 @@ import { onAuthStateChange as onFirebaseAuthStateChange, signIn as firebaseSignI
 import { authClient, isNeonAuthEnabled } from '@/integrations/neon/auth';
 import { db, doc, getDoc, updateDoc } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { getNeonAccessToken } from '@/lib/auth/neon-token';
+import { getNeonAccessToken, invalidateNeonTokenCache } from '@/lib/auth/neon-token';
 import { AuthContextType, AuthContext, AuthError } from './AuthContext';
 import { Profile, RegisterFormData, UserRole } from '@/types/auth';
 import { useQueryClient } from '@tanstack/react-query';
@@ -159,22 +159,27 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
         return;
       }
 
+      let neonUser: ReturnType<typeof adaptNeonUser> | null = null;
       try {
-        const { data } = await authClient.getSession();
-        if (!mounted) return;
-
-        if (data?.user) {
-          const adaptedUser = adaptNeonUser(data.user);
-          await loadUserAndProfile(adaptedUser);
-        } else {
-          onFirebaseAuthStateChange(async (firebaseUser) => {
-            if (!mounted) return;
-            await loadUserAndProfile(firebaseUser);
-          });
+        // Limita a 4s para não travar o carregamento quando o endpoint retorna 404 lentamente
+        const timeout = new Promise<null>((res) => setTimeout(() => res(null), 4000));
+        const result = await Promise.race([authClient.getSession(), timeout]);
+        if (result && 'data' in result && result.data?.user) {
+          neonUser = adaptNeonUser(result.data.user);
         }
-      } catch (e) {
-        if (!mounted) return;
-        await loadUserAndProfile(null);
+      } catch {
+        // authClient.getSession() pode falhar (ex: endpoint 404) — usa Firebase como fallback
+      }
+
+      if (!mounted) return;
+
+      if (neonUser) {
+        await loadUserAndProfile(neonUser);
+      } else {
+        onFirebaseAuthStateChange(async (firebaseUser) => {
+          if (!mounted) return;
+          await loadUserAndProfile(firebaseUser);
+        });
       }
     };
 
@@ -230,15 +235,20 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const signOut = async (): Promise<void> => {
-    try {
-      setLoading(true);
-      if (isNeonAuthEnabled()) await authClient.signOut();
-      await firebaseSignOut();
-      await loadUserAndProfile(null);
-    } catch (err) {
-      logger.error('Erro ao sair', err, 'AuthContextProvider');
-      setLoading(false);
+    setLoading(true);
+    // Sempre tenta invalidar sessões remotas, mas nunca deixa falha impedir a limpeza local
+    if (isNeonAuthEnabled()) {
+      try { await authClient.signOut(); } catch (e) {
+        logger.warn('Neon Auth signOut remoto falhou (ignorado)', e, 'AuthContextProvider');
+      }
     }
+    try { await firebaseSignOut(); } catch (e) {
+      logger.warn('Firebase signOut remoto falhou (ignorado)', e, 'AuthContextProvider');
+    }
+    // Limpa JWT cache, dados em memória e estado local
+    invalidateNeonTokenCache();
+    queryClient.clear();
+    await loadUserAndProfile(null);
   };
 
   const resetPassword = async (email: string) => {

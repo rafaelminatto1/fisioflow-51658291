@@ -55,7 +55,7 @@ function mockMobileModules() {
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production';
   const buildTime = Date.now().toString();
-  const VERSION_SUFFIX = '-v2.4.4-chunk-fix';
+  const VERSION_SUFFIX = '-v2.4.5-react-core-fix';
   const appVersion = (process.env.GIT_COMMIT_SHA || process.env.VITE_APP_VERSION || buildTime) + VERSION_SUFFIX;
   const useFunctionsProxy = process.env.VITE_USE_FUNCTIONS_PROXY === 'true';
 
@@ -107,8 +107,14 @@ export default defineConfig(({ mode }) => {
               const match = id.match(/node_modules\/([^/]+)\//);
               const packageName = match ? match[1] : '';
 
-              if (packageName.includes('react') || packageName.includes('scheduler')) {
-                return 'react-core';
+              // React core and its common ecosystem MUST be in the same chunk
+              // to avoid "Cannot read properties of undefined (reading 'forwardRef')" errors
+              if (packageName === 'react' || 
+                  packageName === 'react-dom' || 
+                  packageName === 'scheduler' ||
+                  packageName.startsWith('react-') || 
+                  packageName.includes('react-')) {
+                return 'react-lib';
               }
               if (packageName.includes('firebase')) return 'firebase-vendor';
               

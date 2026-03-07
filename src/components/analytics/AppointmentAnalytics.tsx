@@ -1,65 +1,81 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
-import { db, collection, getDocs, query as firestoreQuery, where } from '@/integrations/firebase/app';
+import { appointmentsApi, type AppointmentRow } from '@/lib/api/workers-client';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, BarChart, Bar } from 'recharts';
-import { format, subDays, eachDayOfInterval, startOfDay, endOfDay } from 'date-fns';
+import { format, subDays, eachDayOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+
+const COMPLETED_STATUSES = new Set(['concluido', 'completed', 'realizado', 'atendido']);
+const CANCELED_STATUSES = new Set(['cancelado', 'cancelled']);
+const SCHEDULED_STATUSES = new Set(['agendado', 'scheduled']);
+const CONFIRMED_STATUSES = new Set(['confirmado', 'confirmed']);
+
+const listAppointments = async (dateFrom: string, dateTo: string) => {
+  const all: AppointmentRow[] = [];
+  let offset = 0;
+  const limit = 1000;
+
+  while (offset < 10000) {
+    const response = await appointmentsApi.list({ dateFrom, dateTo, limit, offset });
+    const chunk = response?.data ?? [];
+    all.push(...chunk);
+    if (chunk.length < limit) break;
+    offset += limit;
+  }
+
+  return all;
+};
 
 export function AppointmentAnalytics() {
   const { data: dailyData } = useQuery({
-    queryKey: ["appointment-daily-analytics"],
+    queryKey: ['appointment-daily-analytics'],
     queryFn: async () => {
       const last30Days = eachDayOfInterval({
         start: subDays(new Date(), 29),
         end: new Date(),
       });
+      const appointments = await listAppointments(
+        format(last30Days[0], 'yyyy-MM-dd'),
+        format(last30Days[last30Days.length - 1], 'yyyy-MM-dd'),
+      );
 
-      const promises = last30Days.map(async (day) => {
-        const dayStart = startOfDay(day);
-        const dayEnd = endOfDay(day);
-
-        const q = firestoreQuery(
-          collection(db, "appointments"),
-          where("appointment_date", ">=", dayStart.toISOString()),
-          where("appointment_date", "<=", dayEnd.toISOString())
-        );
-
-        const snapshot = await getDocs(q);
-        const count = snapshot.docs.length;
-
-        return {
-          date: format(day, "dd/MM", { locale: ptBR }),
-          agendamentos: count,
-        };
+      const counts = new Map<string, number>();
+      appointments.forEach((appointment) => {
+        counts.set(appointment.date, (counts.get(appointment.date) ?? 0) + 1);
       });
 
-      return Promise.all(promises);
+      return last30Days.map((day) => ({
+        date: format(day, 'dd/MM', { locale: ptBR }),
+        agendamentos: counts.get(format(day, 'yyyy-MM-dd')) ?? 0,
+      }));
     },
   });
 
   const { data: statusData } = useQuery({
-    queryKey: ["appointment-status-analytics"],
+    queryKey: ['appointment-status-analytics'],
     queryFn: async () => {
       const thirtyDaysAgo = subDays(new Date(), 30);
-      const statuses = ["agendado", "confirmado", "concluido", "cancelado"];
+      const appointments = await listAppointments(
+        format(thirtyDaysAgo, 'yyyy-MM-dd'),
+        format(new Date(), 'yyyy-MM-dd'),
+      );
 
-      const promises = statuses.map(async (status) => {
-        const q = firestoreQuery(
-          collection(db, "appointments"),
-          where("status", "==", status),
-          where("appointment_date", ">=", thirtyDaysAgo.toISOString())
-        );
+      const totals = {
+        Agendado: 0,
+        Confirmado: 0,
+        Concluido: 0,
+        Cancelado: 0,
+      };
 
-        const snapshot = await getDocs(q);
-        const count = snapshot.docs.length;
-
-        return {
-          status: status.charAt(0).toUpperCase() + status.slice(1),
-          total: count,
-        };
+      appointments.forEach((appointment) => {
+        const status = String(appointment.status ?? '').toLowerCase();
+        if (COMPLETED_STATUSES.has(status)) totals.Concluido += 1;
+        else if (CANCELED_STATUSES.has(status)) totals.Cancelado += 1;
+        else if (CONFIRMED_STATUSES.has(status)) totals.Confirmado += 1;
+        else if (SCHEDULED_STATUSES.has(status)) totals.Agendado += 1;
       });
 
-      return Promise.all(promises);
+      return Object.entries(totals).map(([status, total]) => ({ status, total }));
     },
   });
 
