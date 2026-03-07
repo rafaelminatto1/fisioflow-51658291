@@ -75,8 +75,8 @@ export function ChecklistTab({ eventoId }: ChecklistTabProps) {
     }
   };
 
-  const handleToggle = async (id: string) => {
-    await toggleItem.mutateAsync({ id, eventoId });
+  const handleToggle = async (id: string, status: 'ABERTO' | 'OK') => {
+    await toggleItem.mutateAsync({ id, eventoId, status });
   };
 
   const itemsFiltrados = filtroTipo === 'todos' 
@@ -245,7 +245,7 @@ export function ChecklistTab({ eventoId }: ChecklistTabProps) {
                   <TableCell>
                     <Checkbox
                       checked={item.status === 'OK'}
-                      onCheckedChange={() => canWrite('eventos') && handleToggle(item.id)}
+                      onCheckedChange={() => canWrite('eventos') && handleToggle(item.id, item.status)}
                       disabled={!canWrite('eventos')}
                     />
                   </TableCell>
