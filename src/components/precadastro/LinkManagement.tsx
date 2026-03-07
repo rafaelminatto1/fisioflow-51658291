@@ -12,16 +12,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { QRCodeCanvas } from 'qrcode.react';
 import { toast } from 'sonner';
-
-interface PreCadastroToken {
-  id: string;
-  token: string;
-  expires_at: string;
-  created_at: string;
-  is_active: boolean;
-  max_uses: number;
-  usage_count: number;
-}
+import type { PrecadastroToken } from '@/lib/api/workers-client';
 
 interface CreateLinkData {
   nome: string;

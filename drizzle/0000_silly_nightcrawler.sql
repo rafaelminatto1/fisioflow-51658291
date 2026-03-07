@@ -110,6 +110,57 @@ CREATE TABLE "medical_records" (
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "medical_records_patient_id_unique" UNIQUE("patient_id")
 );
+
+CREATE TABLE "patient_medical_returns" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"patient_id" uuid NOT NULL,
+	"organization_id" uuid,
+	"doctor_name" text,
+	"doctor_phone" text,
+	"return_date" date,
+	"return_period" text,
+	"notes" text,
+	"report_done" boolean DEFAULT false,
+	"report_sent" boolean DEFAULT false,
+	"created_by" text,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+
+CREATE INDEX idx_patient_medical_returns_patient ON "patient_medical_returns" ("organization_id", "patient_id", "return_date" DESC);
+
+CREATE TABLE "pathology_required_measurements" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"pathology_name" text NOT NULL,
+	"measurement_name" text NOT NULL,
+	"measurement_unit" text,
+	"alert_level" text,
+	"instructions" text,
+	"organization_id" uuid,
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+
+CREATE INDEX idx_pathology_required_measurements ON "pathology_required_measurements" ("organization_id", "pathology_name", "measurement_name");
+
+CREATE TABLE "evolution_measurements" (
+	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"patient_id" uuid NOT NULL,
+	"organization_id" uuid,
+	"soap_record_id" uuid,
+	"measurement_type" text NOT NULL,
+	"measurement_name" text NOT NULL,
+	"value" numeric,
+	"unit" text,
+	"notes" text,
+	"custom_data" jsonb,
+	"measured_at" timestamptz DEFAULT now() NOT NULL,
+	"created_by" text,
+	"created_at" timestamptz DEFAULT now() NOT NULL,
+	"updated_at" timestamptz DEFAULT now() NOT NULL
+);
+
+CREATE INDEX idx_evolution_measurements_patient ON "evolution_measurements" ("organization_id", "patient_id", "measured_at" DESC);
 --> statement-breakpoint
 CREATE TABLE "pathologies" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,

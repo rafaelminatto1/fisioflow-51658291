@@ -51,6 +51,7 @@ import { notificationsRoutes } from './routes/notifications';
 import { eventosRoutes } from './routes/eventos';
 import { auditRoutes } from './routes/auditRoutes';
 import { analyticsRoutes } from './routes/analytics';
+import { evolutionRoutes } from './routes/evolution';
 import { evaluationFormsRoutes } from './routes/evaluationForms';
 import { organizationsRoutes } from './routes/organizations';
 import { organizationMembersRoutes } from './routes/organizationMembers';
@@ -62,6 +63,9 @@ import { pushSubscriptionsRoutes } from './routes/pushSubscriptions';
 import { automationRoutes } from './routes/automation';
 import { gamificationNotificationsRoutes } from './routes/gamificationNotifications';
 import { whatsappRoutes } from './routes/whatsapp';
+import { precadastroRoutes } from './routes/precadastro';
+import { telemedicineRoutes } from './routes/telemedicine';
+import { imageProcessorRoutes } from './routes/imageProcessor';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -136,6 +140,7 @@ app.route('/api/clinical', clinicalRoutes);
 app.route('/api/notifications', notificationsRoutes);
 app.route('/api', eventosRoutes);
 app.route('/api/analytics', analyticsRoutes);
+app.route('/api/evolution', evolutionRoutes);
 app.route('/api/audit-logs', auditRoutes);
 app.route('/api/evaluation-forms', evaluationFormsRoutes);
 app.route('/api/organizations', organizationsRoutes);
@@ -148,6 +153,9 @@ app.route('/api/push-subscriptions', pushSubscriptionsRoutes);
 app.route('/api/automation', automationRoutes);
 app.route('/api/gamification-notifications', gamificationNotificationsRoutes);
 app.route('/api/whatsapp', whatsappRoutes);
+app.route('/api/precadastro', precadastroRoutes);
+app.route('/api/telemedicine', telemedicineRoutes);
+app.route('/api/exercise-image', imageProcessorRoutes);
 
 // 404 handler
 app.notFound((c) => c.json({ error: 'Rota não encontrada' }, 404));
@@ -162,6 +170,15 @@ app.onError((err, c) => {
     },
     500,
   );
+});
+
+// Middleware para Early Hints (Cloudflare interpreta headers Link)
+app.use('*', async (c, next) => {
+  await next();
+  // Só adiciona hints se for uma requisição GET de sucesso
+  if (c.req.method === 'GET' && c.res.status === 200) {
+    c.res.headers.append('Link', '</api/health>; rel=preload; as=fetch');
+  }
 });
 
 export default app;

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { collection, query, where, getDocs, orderBy as firestoreOrderBy, db } from '@/integrations/firebase/app';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +14,7 @@ import { Video, Plus, Clock, Users, Play, Copy, Loader2, Calendar, PhoneCall } f
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PatientHelpers } from '@/types';
+import { patientsApi } from '@/lib/api/workers-client';
 
 interface PatientListItem {
   id: string;
@@ -34,14 +34,9 @@ const Telemedicine = () => {
   const { data: patients } = useQuery({
     queryKey: ['patients-for-telemedicine'],
     queryFn: async () => {
-      const q = query(
-        collection(db, 'patients'),
-        where('status', '==', 'ativo'),
-        firestoreOrderBy('full_name')
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as PatientListItem[];
-    }
+      const res = await patientsApi.list({ status: 'ativo', limit: 1000 });
+      return (res?.data ?? []) as PatientListItem[];
+    },
   });
 
   const handleCreateRoom = async () => {

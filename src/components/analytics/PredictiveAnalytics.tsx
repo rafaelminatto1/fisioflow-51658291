@@ -1,96 +1,76 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
-import { db, collection, getDocs, query as firestoreQuery, where } from '@/integrations/firebase/app';
-import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { format, addDays, subDays, eachDayOfInterval, startOfDay, endOfDay } from 'date-fns';
+import { appointmentsApi, type AppointmentRow } from '@/lib/api/workers-client';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
+import { format, addDays, subDays, eachDayOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { TrendingUp, AlertCircle, CheckCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
+const buildDailyCounts = (appointments: AppointmentRow[], interval: Date[]) => {
+  const counts = new Map<string, number>();
+  appointments.forEach((appointment) => {
+    const key = appointment.date;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  });
+  return interval.map((day) => counts.get(format(day, 'yyyy-MM-dd')) ?? 0);
+};
+
 export function PredictiveAnalytics() {
   const { data: predictions } = useQuery({
-    queryKey: ["predictive-analytics"],
+    queryKey: ['predictive-analytics'],
     queryFn: async () => {
-
-      // Buscar dados dos últimos 30 dias
       const last30Days = eachDayOfInterval({
         start: subDays(new Date(), 29),
         end: new Date(),
       });
-
-      const historicalPromises = last30Days.map(async (day) => {
-        const dayStart = startOfDay(day);
-        const dayEnd = endOfDay(day);
-
-        const q = firestoreQuery(
-          collection(db, "appointments"),
-          where("appointment_date", ">=", dayStart.toISOString()),
-          where("appointment_date", "<=", dayEnd.toISOString())
-        );
-
-        const snapshot = await getDocs(q);
-        return snapshot.docs.length;
+      const response = await appointmentsApi.list({
+        dateFrom: format(last30Days[0], 'yyyy-MM-dd'),
+        dateTo: format(last30Days[last30Days.length - 1], 'yyyy-MM-dd'),
+        limit: 3000,
       });
-
-      const historicalCounts = await Promise.all(historicalPromises);
-
-      // Calcular média móvel simples para previsão
+      const historicalCounts = buildDailyCounts(response?.data ?? [], last30Days);
       const average = historicalCounts.reduce((a, b) => a + b, 0) / historicalCounts.length;
       const trend = (historicalCounts[historicalCounts.length - 1] - historicalCounts[0]) / historicalCounts.length;
-
-      // Prever próximos 7 dias
-      const predictions = Array.from({ length: 7 }, (_, i) => {
+      const forecast = Array.from({ length: 7 }, (_, i) => {
         const predictedValue = Math.max(0, Math.round(average + trend * (30 + i)));
         return {
-          date: format(addDays(new Date(), i + 1), "dd/MM", { locale: ptBR }),
+          date: format(addDays(new Date(), i + 1), 'dd/MM', { locale: ptBR }),
           real: null,
           previsto: predictedValue,
         };
       });
-
-      // Adicionar dados históricos dos últimos 7 dias para comparação
       const last7Days = historicalCounts.slice(-7).map((count, i) => ({
-        date: format(subDays(new Date(), 6 - i), "dd/MM", { locale: ptBR }),
+        date: format(subDays(new Date(), 6 - i), 'dd/MM', { locale: ptBR }),
         real: count,
         previsto: null,
       }));
 
-      return [...last7Days, ...predictions];
+      return [...last7Days, ...forecast];
     },
   });
 
   const { data: insights } = useQuery({
-    queryKey: ["predictive-insights"],
+    queryKey: ['predictive-insights'],
     queryFn: async () => {
       const thirtyDaysAgo = subDays(new Date(), 30);
-
-      // Taxa de cancelamento
-      const totalAppointmentsQuery = firestoreQuery(
-        collection(db, "appointments"),
-        where("appointment_date", ">=", thirtyDaysAgo.toISOString())
-      );
-      const totalAppointmentsSnapshot = await getDocs(totalAppointmentsQuery);
-      const totalAppointments = totalAppointmentsSnapshot.docs.length;
-
-      const canceledAppointmentsQuery = firestoreQuery(
-        collection(db, "appointments"),
-        where("status", "==", "cancelado"),
-        where("appointment_date", ">=", thirtyDaysAgo.toISOString())
-      );
-      const canceledAppointmentsSnapshot = await getDocs(canceledAppointmentsQuery);
-      const canceledAppointments = canceledAppointmentsSnapshot.docs.length;
-
-      const cancellationRate = totalAppointments
-        ? Math.round(canceledAppointments / totalAppointments * 100)
-        : 0;
-
-      // Taxa de comparecimento
+      const response = await appointmentsApi.list({
+        dateFrom: format(thirtyDaysAgo, 'yyyy-MM-dd'),
+        dateTo: format(new Date(), 'yyyy-MM-dd'),
+        limit: 3000,
+      });
+      const appointments = response?.data ?? [];
+      const totalAppointments = appointments.length;
+      const canceledAppointments = appointments.filter((appointment) =>
+        ['cancelado', 'cancelled', 'no_show', 'faltou'].includes(String(appointment.status).toLowerCase()),
+      ).length;
+      const cancellationRate = totalAppointments ? Math.round((canceledAppointments / totalAppointments) * 100) : 0;
       const attendanceRate = 100 - cancellationRate;
 
       return {
         cancellationRate,
         attendanceRate,
-        riskLevel: cancellationRate > 15 ? "high" : cancellationRate > 10 ? "medium" : "low",
+        riskLevel: cancellationRate > 15 ? 'high' : cancellationRate > 10 ? 'medium' : 'low',
       };
     },
   });

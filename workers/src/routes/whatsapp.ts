@@ -5,6 +5,63 @@ import type { Env } from '../types/env';
 
 const app = new Hono<{ Bindings: Env }>();
 
+const DEFAULT_TEMPLATES = [
+  {
+    id: 'confirmacao_agendamento',
+    name: 'Confirmacao de agendamento',
+    template_key: 'confirmacao_agendamento',
+    content: 'Ola {{name}}, sua sessao com {{therapist}} foi confirmada para {{date}} as {{time}}.',
+    variables: ['name', 'therapist', 'date', 'time'],
+    category: 'appointment',
+    status: 'ativo',
+  },
+  {
+    id: 'lembrete_sessao',
+    name: 'Lembrete de sessao',
+    template_key: 'lembrete_sessao',
+    content: 'Lembrete: sua sessao sera as {{time}} com {{therapist}}.',
+    variables: ['time', 'therapist'],
+    category: 'reminder',
+    status: 'ativo',
+  },
+  {
+    id: 'cancelamento',
+    name: 'Cancelamento',
+    template_key: 'cancelamento',
+    content: 'Sua sessao do dia {{date}} foi cancelada. Entre em contato para reagendar.',
+    variables: ['date'],
+    category: 'appointment',
+    status: 'ativo',
+  },
+  {
+    id: 'prescricao',
+    name: 'Prescricao',
+    template_key: 'prescricao',
+    content: 'Sua prescricao esta disponivel em {{link}}.',
+    variables: ['link'],
+    category: 'clinical',
+    status: 'ativo',
+  },
+  {
+    id: 'solicitar_confirmacao',
+    name: 'Solicitar confirmacao',
+    template_key: 'solicitar_confirmacao',
+    content: 'Ola {{name}}, confirme sua sessao em {{date}} as {{time}}.',
+    variables: ['name', 'date', 'time'],
+    category: 'appointment',
+    status: 'ativo',
+  },
+  {
+    id: 'oferta_vaga',
+    name: 'Oferta de vaga',
+    template_key: 'oferta_vaga',
+    content: 'Temos uma vaga em {{date}} as {{time}} com {{therapist}}. Responda em ate {{expires}} horas.',
+    variables: ['date', 'time', 'therapist', 'expires'],
+    category: 'waitlist',
+    status: 'ativo',
+  },
+] as const;
+
 async function loadOrganizationSettings(pool: ReturnType<typeof createPool>, organizationId: string) {
   try {
     const result = await pool.query(
@@ -26,6 +83,54 @@ app.get('/config', requireAuth, async (c) => {
   const settings = await loadOrganizationSettings(pool, user.organizationId);
   const config = (settings.whatsapp_config as Record<string, unknown>) ?? { enabled: false };
   return c.json({ data: config });
+});
+
+app.get('/templates', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const settings = await loadOrganizationSettings(pool, user.organizationId);
+  const rawTemplates = (settings.whatsapp_templates as unknown[]) ?? DEFAULT_TEMPLATES;
+  const templates = Array.isArray(rawTemplates) && rawTemplates.length > 0 ? rawTemplates : DEFAULT_TEMPLATES;
+  return c.json({ data: templates });
+});
+
+app.put('/templates/:id', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id } = c.req.param();
+  const body = (await c.req.json()) as { content?: string; status?: string };
+  if (!body.content && !body.status) {
+    return c.json({ error: 'Nenhum campo para atualizar' }, 400);
+  }
+
+  const settings = await loadOrganizationSettings(pool, user.organizationId);
+  const existingTemplates = Array.isArray(settings.whatsapp_templates)
+    ? [...(settings.whatsapp_templates as Array<Record<string, unknown>>)]
+    : DEFAULT_TEMPLATES.map((template) => ({ ...template }));
+
+  const currentIndex = existingTemplates.findIndex((template) => String(template.id) === id);
+  if (currentIndex === -1) {
+    return c.json({ error: 'Template nao encontrado' }, 404);
+  }
+
+  existingTemplates[currentIndex] = {
+    ...existingTemplates[currentIndex],
+    ...(body.content !== undefined ? { content: body.content } : {}),
+    ...(body.status !== undefined ? { status: body.status } : {}),
+    updated_at: new Date().toISOString(),
+  };
+
+  const nextSettings = {
+    ...settings,
+    whatsapp_templates: existingTemplates,
+  };
+
+  await pool.query(
+    `UPDATE organizations SET settings = $1::jsonb, updated_at = NOW() WHERE id = $2`,
+    [JSON.stringify(nextSettings), user.organizationId],
+  );
+
+  return c.json({ data: existingTemplates[currentIndex] });
 });
 
 const parseMetadata = (value: unknown): Record<string, unknown> => {
@@ -95,6 +200,39 @@ app.get('/messages', requireAuth, async (c) => {
       metadata,
       created_at: row.created_at?.toISOString?.() ?? null,
       updated_at: row.updated_at?.toISOString?.() ?? null,
+    };
+  });
+
+  return c.json({ data: rows });
+});
+
+app.get('/webhook-logs', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { limit = '100' } = c.req.query();
+
+  const result = await pool.query(
+    `
+      SELECT id, patient_id, message, type, status, metadata, created_at
+      FROM whatsapp_messages
+      WHERE organization_id = $1
+      ORDER BY created_at DESC
+      LIMIT $2
+    `,
+    [user.organizationId, Number(limit)],
+  );
+
+  const rows = result.rows.map((row) => {
+    const metadata = parseMetadata(row.metadata);
+    return {
+      id: row.id,
+      event_type: metadata.event_type ?? row.status ?? 'message_updated',
+      phone_number: metadata.to_phone ?? null,
+      message_content: row.message ?? null,
+      processed: metadata.processed ?? true,
+      payload: metadata,
+      created_at: row.created_at?.toISOString?.() ?? null,
+      patient_id: row.patient_id ?? null,
     };
   });
 

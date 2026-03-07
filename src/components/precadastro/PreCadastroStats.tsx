@@ -1,21 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Link2, Clock, CheckCircle, Users, Activity } from 'lucide-react';
-
-interface PreCadastroToken {
-  id: string;
-  expires_at: string;
-  created_at: string;
-  is_active: boolean;
-  usage_count: number;
-  max_uses: number;
-}
-
-interface PreCadastro {
-  id: string;
-  nome: string;
-  email: string;
-  status: string;
-}
+import type { Precadastro, PrecadastroToken } from '@/lib/api/workers-client';
 
 interface StatsProps {
     tokens: PreCadastroToken[];
