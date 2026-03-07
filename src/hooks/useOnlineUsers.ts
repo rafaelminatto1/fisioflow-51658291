@@ -1,14 +1,10 @@
 /**
- * useOnlineUsers - Migrated to Firebase Presence
- *
+ * useOnlineUsers - Migrated to Neon/Workers
  */
 
-import { useState, useEffect } from 'react';
-import { doc, getDoc, getFirebaseAuth, db } from '@/integrations/firebase/app';
-import { onAuthStateChanged } from 'firebase/auth';
-import { fisioLogger as logger } from '@/lib/errors/logger';
-
-const auth = getFirebaseAuth();
+import { useQuery } from '@tanstack/react-query';
+import { auditApi, organizationMembersApi, type AuditLog, type OrganizationMember } from '@/lib/api/workers-client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface PresenceUser {
   userId: string;
@@ -23,134 +19,69 @@ export interface PresenceState {
   isConnected: boolean;
 }
 
-const isPermissionDeniedError = (error: unknown): boolean => {
-  const code = (error as { code?: string })?.code;
-  const message = (error as Error)?.message?.toLowerCase?.() ?? '';
-  return code === 'permission-denied' || message.includes('permission');
-};
+const ONLINE_WINDOW_MS = 15 * 60 * 1000;
 
-// Firebase Presence class implementation
-class FirebasePresence {
-  private channelName: string;
-  private _presenceRef: unknown | null;
+function mapOnlineUsers(members: OrganizationMember[], logs: AuditLog[]): PresenceUser[] {
+  const latestByUser = new Map<string, AuditLog>();
 
-  constructor(channelName: string) {
-    this.channelName = channelName;
-    this._presenceRef = null;
-  }
-
-  async track(user: PresenceUser) {
-    // Implement presence tracking using Firestore
-    const { doc, setDoc } = await import('firebase/firestore');
-
-    this._presenceRef = doc(db, 'presence', this.channelName, 'users', user.userId);
-    await setDoc(this._presenceRef as Parameters<typeof setDoc>[0], {
-      ...user,
-      lastSeen: new Date().toISOString(),
-    });
-  }
-
-  subscribe(callback: (state: PresenceState) => void) {
-    // Implement presence subscription
-    // This would use Firestore onSnapshot in a real implementation
-    callback({ onlineUsers: [], isConnected: true });
-  }
-
-  unsubscribePresence() {
-    // Cleanup
-  }
-
-  untrack() {
-    // Remove presence tracking
-  }
-}
-
-export function useOnlineUsers(channelName: string = 'online-users') {
-  const [state, setState] = useState<PresenceState>({
-    onlineUsers: [],
-    isConnected: false,
+  logs.forEach((log) => {
+    if (!log.user_id) return;
+    const current = latestByUser.get(log.user_id);
+    if (!current || new Date(log.created_at).getTime() > new Date(current.created_at).getTime()) {
+      latestByUser.set(log.user_id, log);
+    }
   });
 
-  const [_currentUser, setCurrentUser] = useState<PresenceUser | null>(null);
+  const now = Date.now();
+  return members
+    .filter((member) => member.active)
+    .map((member) => {
+      const latest = latestByUser.get(member.user_id);
+      if (!latest) return null;
+      const lastSeen = new Date(latest.created_at);
+      if (now - lastSeen.getTime() > ONLINE_WINDOW_MS) return null;
 
-  useEffect(() => {
-    let mounted = true;
-    let presence: FirebasePresence | null = null;
-    const authUnsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (!mounted) return;
+      return {
+        userId: member.user_id,
+        userName: member.profiles?.full_name || member.profiles?.email || 'Usuário',
+        role: member.role,
+        joinedAt: lastSeen,
+        lastSeen,
+      } satisfies PresenceUser;
+    })
+    .filter((value): value is PresenceUser => value !== null)
+    .sort((a, b) => b.lastSeen.getTime() - a.lastSeen.getTime());
+}
 
-      if (!firebaseUser) {
-        setCurrentUser(null);
-        setState({ onlineUsers: [], isConnected: false });
-        if (presence) {
-          presence.unsubscribePresence();
-          presence.untrack();
-          presence = null;
-        }
-        return;
+export function useOnlineUsers(_channelName: string = 'online-users') {
+  const { organizationId } = useAuth();
+
+  const query = useQuery({
+    queryKey: ['online-users', organizationId],
+    queryFn: async (): Promise<PresenceState> => {
+      if (!organizationId) {
+        return { onlineUsers: [], isConnected: false };
       }
 
-      try {
-        const profileRef = doc(db, 'profiles', firebaseUser.uid);
-        const roleRef = doc(db, 'user_roles', firebaseUser.uid);
-        const [profileSnap, roleSnap] = await Promise.all([getDoc(profileRef), getDoc(roleRef)]);
+      const [membersRes, logsRes] = await Promise.all([
+        organizationMembersApi.list({ organizationId, limit: 100 }),
+        auditApi.list({ limit: 200 }),
+      ]);
 
-        const role = roleSnap.data()?.role || 'paciente';
-        const userName = profileSnap.data()?.full_name || firebaseUser.email || 'Usuário';
+      const members = (membersRes?.data ?? []) as OrganizationMember[];
+      const logs = (logsRes?.data ?? []) as AuditLog[];
 
-        const presenceUser: PresenceUser = {
-          userId: firebaseUser.uid,
-          userName,
-          role,
-          joinedAt: new Date(),
-          lastSeen: new Date(),
-        };
+      return {
+        onlineUsers: mapOnlineUsers(members, logs),
+        isConnected: true,
+      };
+    },
+    enabled: !!organizationId,
+    refetchInterval: 30000,
+    refetchOnWindowFocus: false,
+  });
 
-        if (!mounted) return;
-        setCurrentUser(presenceUser);
-
-        logger.info('Configurando Firebase Presence', { userId: presenceUser.userId, userName, role }, 'useOnlineUsers');
-
-        presence = new FirebasePresence(channelName);
-
-        try {
-          await presence.track(presenceUser);
-        } catch (error) {
-          if (isPermissionDeniedError(error)) {
-            logger.warn('Presence: escrita em Firestore não permitida pelas regras (ignorando)', { userId: presenceUser.userId }, 'useOnlineUsers');
-          } else {
-            logger.error('Erro ao rastrear presença', error, 'useOnlineUsers');
-          }
-        }
-
-        presence.subscribe((newState) => {
-          if (!mounted) return;
-          logger.info('Usuários online atualizados', { count: newState.onlineUsers.length }, 'useOnlineUsers');
-          setState(newState);
-        });
-      } catch (error) {
-        if (!mounted) return;
-        if (isPermissionDeniedError(error)) {
-          logger.warn('Presence: leitura em Firestore não permitida pelas regras (desativando indicador)', { uid: firebaseUser.uid }, 'useOnlineUsers');
-        } else {
-          logger.error('Erro ao configurar Firebase Presence', error, 'useOnlineUsers');
-        }
-        setCurrentUser(null);
-        setState({ onlineUsers: [], isConnected: false });
-      }
-    });
-
-    // Cleanup
-    return () => {
-      mounted = false;
-      authUnsubscribe();
-      if (presence) {
-        logger.info('Removendo Firebase Presence', { channelName }, 'useOnlineUsers');
-        presence.unsubscribePresence();
-        presence.untrack();
-      }
-    };
-  }, [channelName]);
+  const state = query.data ?? { onlineUsers: [], isConnected: !!organizationId };
 
   return {
     onlineUsers: state.onlineUsers,

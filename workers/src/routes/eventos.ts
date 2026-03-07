@@ -6,6 +6,7 @@
  * GET/POST/PUT/DELETE /api/contratados
  * GET/POST/PUT/DELETE /api/evento-contratados
  * GET/POST/PUT/DELETE /api/participantes
+ * GET/POST/PUT/DELETE /api/checklist
  */
 import { Hono } from 'hono';
 import { createPool } from '../lib/db';
@@ -275,6 +276,97 @@ app.put('/contratados/:id', requireAuth, async (c) => {
   );
   if (!result.rows.length) return c.json({ error: 'Contratado não encontrado' }, 404);
   return c.json({ data: result.rows[0] });
+});
+
+// ===== CHECKLIST =====
+
+app.get('/checklist', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const eventoId = c.req.query('eventoId');
+  if (!eventoId) return c.json({ error: 'eventoId é obrigatório' }, 400);
+
+  const result = await pool.query(
+    `
+      SELECT *
+      FROM checklist_items
+      WHERE organization_id = $1 AND evento_id = $2
+      ORDER BY created_at DESC
+    `,
+    [user.organizationId, eventoId],
+  );
+
+  return c.json({ data: result.rows });
+});
+
+app.post('/checklist', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const body = (await c.req.json()) as Record<string, unknown>;
+  if (!body.evento_id) return c.json({ error: 'evento_id é obrigatório' }, 400);
+  if (!body.titulo) return c.json({ error: 'titulo é obrigatório' }, 400);
+
+  const result = await pool.query(
+    `
+      INSERT INTO checklist_items (
+        organization_id, evento_id, titulo, tipo, quantidade, custo_unitario, status, created_at, updated_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,NOW(),NOW())
+      RETURNING *
+    `,
+    [
+      user.organizationId,
+      body.evento_id,
+      body.titulo,
+      body.tipo ?? 'levar',
+      Number(body.quantidade ?? 1),
+      Number(body.custo_unitario ?? 0),
+      body.status ?? 'ABERTO',
+    ],
+  );
+
+  return c.json({ data: result.rows[0] }, 201);
+});
+
+app.put('/checklist/:id', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id } = c.req.param();
+  const body = (await c.req.json()) as Record<string, unknown>;
+
+  const sets: string[] = ['updated_at = NOW()'];
+  const params: unknown[] = [];
+  if (body.titulo !== undefined) { params.push(body.titulo); sets.push(`titulo = $${params.length}`); }
+  if (body.tipo !== undefined) { params.push(body.tipo); sets.push(`tipo = $${params.length}`); }
+  if (body.quantidade !== undefined) { params.push(Number(body.quantidade)); sets.push(`quantidade = $${params.length}`); }
+  if (body.custo_unitario !== undefined) { params.push(Number(body.custo_unitario)); sets.push(`custo_unitario = $${params.length}`); }
+  if (body.status !== undefined) { params.push(body.status); sets.push(`status = $${params.length}`); }
+
+  params.push(id, user.organizationId);
+  const result = await pool.query(
+    `
+      UPDATE checklist_items
+      SET ${sets.join(', ')}
+      WHERE id = $${params.length - 1} AND organization_id = $${params.length}
+      RETURNING *
+    `,
+    params,
+  );
+
+  if (!result.rows.length) return c.json({ error: 'Não encontrado' }, 404);
+  return c.json({ data: result.rows[0] });
+});
+
+app.delete('/checklist/:id', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id } = c.req.param();
+
+  await pool.query('DELETE FROM checklist_items WHERE id = $1 AND organization_id = $2', [
+    id,
+    user.organizationId,
+  ]);
+
+  return c.json({ ok: true });
 });
 
 app.delete('/contratados/:id', requireAuth, async (c) => {

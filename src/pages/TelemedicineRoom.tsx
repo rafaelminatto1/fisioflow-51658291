@@ -1,29 +1,44 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
-import { Video, Copy, ExternalLink } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { telemedicineApi, type TelemedicineRoomRecord } from '@/lib/api/workers-client';
+import { Video, Copy, ExternalLink, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function TelemedicineRoom() {
   const { roomId } = useParams();
-  const [meetLink, setMeetLink] = useState<string>('');
-  const [loading, setLoading] = useState(false);
+  const queryClient = useQueryClient();
 
-  const createMeeting = async () => {
-    setLoading(true);
-    try {
-      const createLink = httpsCallable(functions, 'createMeetLink');
-      const result = await createLink({ appointmentId: roomId });
-      setMeetLink((result.data as unknown).meetLink);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: room, isLoading } = useQuery({
+    queryKey: ['telemedicine-room', roomId],
+    queryFn: async () => {
+      if (!roomId) return null;
+      const res = await telemedicineApi.rooms.get(roomId);
+      return (res?.data ?? null) as TelemedicineRoomRecord | null;
+    },
+    enabled: !!roomId,
+  });
+
+  const startMeeting = useMutation({
+    mutationFn: async () => {
+      if (!roomId) throw new Error('Sala inválida');
+      const res = await telemedicineApi.rooms.start(roomId);
+      return (res?.data ?? null) as TelemedicineRoomRecord | null;
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(['telemedicine-room', roomId], data);
+      queryClient.invalidateQueries({ queryKey: ['telemedicine-rooms'] });
+      toast.success('Sala iniciada');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao iniciar sala');
+    },
+  });
+
+  const meetingLink = room?.meeting_url ?? '';
 
   return (
     <MainLayout>
@@ -35,41 +50,50 @@ export default function TelemedicineRoom() {
 
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Sala de Telemedicina</h1>
-            <p className="text-gray-500 mt-2">Atendimento via Google Meet</p>
+            <p className="text-gray-500 mt-2">
+              {room?.patients?.name ? `Paciente: ${room.patients.name}` : 'Consulta online'}
+            </p>
           </div>
 
-          {!meetLink ? (
+          {isLoading ? (
+            <div className="flex justify-center py-4">
+              <Loader2 className="w-6 h-6 animate-spin text-green-600" />
+            </div>
+          ) : !meetingLink ? (
             <Button
-              onClick={createMeeting}
-              disabled={loading}
+              onClick={() => startMeeting.mutate()}
+              disabled={startMeeting.isPending}
               className="w-full bg-green-600 hover:bg-green-700 h-12 text-lg"
             >
-              {loading ? 'Gerando Link...' : 'Iniciar Reunião'}
+              {startMeeting.isPending ? 'Iniciando...' : 'Iniciar Reunião'}
             </Button>
           ) : (
             <div className="space-y-4">
               <div className="p-4 bg-gray-100 rounded-lg break-all text-sm">
-                {meetLink}
+                {meetingLink}
               </div>
 
               <div className="flex gap-3">
                 <Button
                   variant="outline"
                   className="flex-1"
-                  onClick={() => navigator.clipboard.writeText(meetLink)}
+                  onClick={() => {
+                    navigator.clipboard.writeText(meetingLink);
+                    toast.success('Link copiado');
+                  }}
                 >
                   <Copy className="w-4 h-4 mr-2" /> Copiar
                 </Button>
                 <Button
                   className="flex-1 bg-green-600 hover:bg-green-700"
-                  onClick={() => window.open(meetLink, '_blank')}
+                  onClick={() => window.open(meetingLink, '_blank')}
                 >
                   <ExternalLink className="w-4 h-4 mr-2" /> Entrar
                 </Button>
               </div>
 
               <p className="text-xs text-gray-500">
-                O link abrirá em uma nova aba segura do Google Meet.
+                O link abrirá em uma nova aba segura da sala de videoconferência.
               </p>
             </div>
           )}
