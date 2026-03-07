@@ -148,6 +148,7 @@ const PatientPortal = lazy(() => import(/* webpackChunkName: "portal-patient" */
 // Pre-cadastro
 const PreCadastro = lazy(() => import(/* webpackChunkName: "pre-cadastro" */ "./pages/PreCadastro"));
 const PreCadastroAdmin = lazy(() => import(/* webpackChunkName: "pre-cadastro-admin" */ "./pages/PreCadastroAdmin"));
+const FeedbackPreCadastro = lazy(() => import(/* webpackChunkName: "feedback-pre-cadastro" */ "./pages/FeedbackPreCadastro"));
 
 // Misc
 const Notifications = lazy(() => import(/* webpackChunkName: "notifications" */ "./pages/Notifications"));
@@ -209,6 +210,7 @@ export function AppRoutes() {
 
             <Route path="/pre-cadastro" element={<PreCadastro />} />
             <Route path="/pre-cadastro/:token" element={<PreCadastro />} />
+            <Route path="/feedback-pre-cadastro" element={<FeedbackPreCadastro />} />
             <Route path="/prescricoes/publica/:qrCode" element={<PublicPrescriptionPage />} />
             <Route path="/agendar/:slug" element={<BookingPage />} />
 

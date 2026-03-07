@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Bell, Mail, MessageSquare, TrendingUp, Moon } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -8,13 +8,11 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { doc, getDoc, setDoc, updateDoc, db } from '@/integrations/firebase/app';
-import { useAuth } from '@/contexts/AuthContext';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { Skeleton } from '@/components/ui/skeleton';
-import { fisioLogger as logger } from '@/lib/errors/logger';
+import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 
-interface NotificationPreferences {
+interface NotificationPreferencesForm {
   appointmentReminders: boolean;
   exerciseReminders: boolean;
   progressUpdates: boolean;
@@ -31,7 +29,9 @@ interface NotificationPreferences {
   weekendNotifications: boolean;
 }
 
-const defaultPreferences: NotificationPreferences = {
+const LOCAL_STORAGE_KEY = 'fisioflow.notification_preferences.local';
+
+const defaultPreferences: NotificationPreferencesForm = {
   appointmentReminders: true,
   exerciseReminders: true,
   progressUpdates: true,
@@ -48,67 +48,78 @@ const defaultPreferences: NotificationPreferences = {
   weekendNotifications: true,
 };
 
+function readLocalPrefs() {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as Partial<NotificationPreferencesForm>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeLocalPrefs(prefs: NotificationPreferencesForm) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(
+    LOCAL_STORAGE_KEY,
+    JSON.stringify({
+      emailNotifications: prefs.emailNotifications,
+      smsNotifications: prefs.smsNotifications,
+      quietHours: prefs.quietHours,
+    }),
+  );
+}
+
 export default function NotificationPreferencesPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { subscribe, unsubscribe, isSubscribed, permission } = usePushNotifications();
+  const {
+    preferences: workerPreferences,
+    isLoading,
+    updatePreferences,
+    isUpdating,
+  } = useNotificationPreferences();
+  const [preferences, setPreferences] = useState<NotificationPreferencesForm>(defaultPreferences);
 
-  const [preferences, setPreferences] = useState<NotificationPreferences>(defaultPreferences);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const mappedWorkerPrefs = useMemo<NotificationPreferencesForm>(() => {
+    const localPrefs = readLocalPrefs();
+    return {
+      appointmentReminders: workerPreferences?.appointment_reminders ?? defaultPreferences.appointmentReminders,
+      exerciseReminders: workerPreferences?.exercise_reminders ?? defaultPreferences.exerciseReminders,
+      progressUpdates: workerPreferences?.progress_updates ?? defaultPreferences.progressUpdates,
+      systemAlerts: workerPreferences?.system_alerts ?? defaultPreferences.systemAlerts,
+      therapistMessages: workerPreferences?.therapist_messages ?? defaultPreferences.therapistMessages,
+      paymentReminders: workerPreferences?.payment_reminders ?? defaultPreferences.paymentReminders,
+      weekendNotifications: workerPreferences?.weekend_notifications ?? defaultPreferences.weekendNotifications,
+      emailNotifications:
+        localPrefs.emailNotifications ?? defaultPreferences.emailNotifications,
+      smsNotifications: localPrefs.smsNotifications ?? defaultPreferences.smsNotifications,
+      quietHours: {
+        enabled: localPrefs.quietHours?.enabled ?? false,
+        start: workerPreferences?.quiet_hours_start ?? defaultPreferences.quietHours.start,
+        end: workerPreferences?.quiet_hours_end ?? defaultPreferences.quietHours.end,
+      },
+    };
+  }, [workerPreferences]);
 
   useEffect(() => {
-    loadPreferences();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
-
-  const loadPreferences = async () => {
-    if (!user) return;
-
-    setIsLoading(true);
-    try {
-      const prefsRef = doc(db, 'user_notification_preferences', user.uid);
-      const prefsDoc = await getDoc(prefsRef);
-
-      if (prefsDoc.exists()) {
-        setPreferences({ ...defaultPreferences, ...prefsDoc.data() } as NotificationPreferences);
-      }
-    } catch (error) {
-      logger.error('Error loading notification preferences', error, 'NotificationPreferencesPage');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    setPreferences(mappedWorkerPrefs);
+  }, [mappedWorkerPrefs]);
 
   const savePreferences = async () => {
-    if (!user) return;
-
-    setIsSaving(true);
-    try {
-      const prefsRef = doc(db, 'user_notification_preferences', user.uid);
-      const prefsDoc = await getDoc(prefsRef);
-
-      const data = {
-        ...preferences,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (prefsDoc.exists()) {
-        await updateDoc(prefsRef, data);
-      } else {
-        await setDoc(prefsRef, {
-          ...data,
-          created_at: new Date().toISOString(),
-        });
-      }
-
-      toast.success('Preferências salvas com sucesso!');
-    } catch (error) {
-      logger.error('Error saving notification preferences', error, 'NotificationPreferencesPage');
-      toast.error('Erro ao salvar preferências');
-    } finally {
-      setIsSaving(false);
-    }
+    writeLocalPrefs(preferences);
+    updatePreferences({
+      appointment_reminders: preferences.appointmentReminders,
+      exercise_reminders: preferences.exerciseReminders,
+      progress_updates: preferences.progressUpdates,
+      system_alerts: preferences.systemAlerts,
+      therapist_messages: preferences.therapistMessages,
+      payment_reminders: preferences.paymentReminders,
+      quiet_hours_start: preferences.quietHours.start,
+      quiet_hours_end: preferences.quietHours.end,
+      weekend_notifications: preferences.weekendNotifications,
+    });
+    toast.success('Preferências salvas com sucesso!');
   };
 
   const handlePushToggle = async (enabled: boolean) => {
@@ -134,7 +145,6 @@ export default function NotificationPreferencesPage() {
   return (
     <MainLayout>
       <div className="min-h-screen bg-background/50 pb-20">
-        {/* Header */}
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b px-6 py-3">
           <div className="flex items-center gap-4 max-w-3xl mx-auto">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
@@ -148,7 +158,6 @@ export default function NotificationPreferencesPage() {
         </div>
 
         <div className="container max-w-3xl mx-auto pt-6 px-4 space-y-6">
-          {/* Push Notifications */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -167,8 +176,8 @@ export default function NotificationPreferencesPage() {
                     {permission === 'granted'
                       ? 'Notificações ativadas no navegador'
                       : permission === 'denied'
-                      ? 'Notificações bloqueadas no navegador'
-                      : 'Ative para receber alertas no navegador'}
+                        ? 'Notificações bloqueadas no navegador'
+                        : 'Ative para receber alertas no navegador'}
                   </p>
                 </div>
                 <Switch
@@ -178,25 +187,16 @@ export default function NotificationPreferencesPage() {
                   disabled={permission === 'denied' || permission === 'unsupported'}
                 />
               </div>
-
-              {permission === 'denied' && (
-                <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-                  As notificações estão bloqueadas no seu navegador. Habilite-as nas configurações do navegador para ativar.
-                </div>
-              )}
             </CardContent>
           </Card>
 
-          {/* Email Notifications */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Mail className="h-5 w-5" />
                 Email
               </CardTitle>
-              <CardDescription>
-                Receba atualizações e lembretes por email
-              </CardDescription>
+              <CardDescription>Receba atualizações e lembretes por email</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
@@ -212,16 +212,13 @@ export default function NotificationPreferencesPage() {
             </CardContent>
           </Card>
 
-          {/* SMS Notifications */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
                 SMS
               </CardTitle>
-              <CardDescription>
-                Receba alertas via WhatsApp/SMS
-              </CardDescription>
+              <CardDescription>Receba alertas via WhatsApp/SMS</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
@@ -237,24 +234,19 @@ export default function NotificationPreferencesPage() {
             </CardContent>
           </Card>
 
-          {/* Notification Types */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
                 Tipos de Notificação
               </CardTitle>
-              <CardDescription>
-                Escolha quais eventos você deseja ser notificado
-              </CardDescription>
+              <CardDescription>Escolha quais eventos você deseja ser notificado</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="appointment-reminders">Lembretes de Agendamento</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Lembretes 24h antes das sessões
-                  </p>
+                  <p className="text-sm text-muted-foreground">Lembretes 24h antes das sessões</p>
                 </div>
                 <Switch
                   id="appointment-reminders"
@@ -270,9 +262,7 @@ export default function NotificationPreferencesPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="exercise-reminders">Lembretes de Exercícios</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Lembretes diários de exercícios
-                  </p>
+                  <p className="text-sm text-muted-foreground">Lembretes diários de exercícios</p>
                 </div>
                 <Switch
                   id="exercise-reminders"
@@ -288,9 +278,7 @@ export default function NotificationPreferencesPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="progress-updates">Atualizações de Progresso</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Novas metas e conquistas alcançadas
-                  </p>
+                  <p className="text-sm text-muted-foreground">Novas metas e conquistas alcançadas</p>
                 </div>
                 <Switch
                   id="progress-updates"
@@ -306,9 +294,7 @@ export default function NotificationPreferencesPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="therapist-messages">Mensagens do Terapeuta</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Mensagens e atualizações do seu fisioterapeuta
-                  </p>
+                  <p className="text-sm text-muted-foreground">Mensagens e atualizações do seu fisioterapeuta</p>
                 </div>
                 <Switch
                   id="therapist-messages"
@@ -324,9 +310,7 @@ export default function NotificationPreferencesPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="payment-reminders">Lembretes de Pagamento</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Vencimentos e pagamentos pendentes
-                  </p>
+                  <p className="text-sm text-muted-foreground">Vencimentos e pagamentos pendentes</p>
                 </div>
                 <Switch
                   id="payment-reminders"
@@ -339,16 +323,13 @@ export default function NotificationPreferencesPage() {
             </CardContent>
           </Card>
 
-          {/* Quiet Hours */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Moon className="h-5 w-5" />
                 Horário de Silêncio
               </CardTitle>
-              <CardDescription>
-                Configure períodos para não receber notificações
-              </CardDescription>
+              <CardDescription>Configure períodos para não receber notificações</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
@@ -362,7 +343,10 @@ export default function NotificationPreferencesPage() {
                   id="quiet-hours-enabled"
                   checked={preferences.quietHours.enabled}
                   onCheckedChange={(checked) =>
-                    setPreferences({ ...preferences, quietHours: { ...preferences.quietHours, enabled: checked } })
+                    setPreferences({
+                      ...preferences,
+                      quietHours: { ...preferences.quietHours, enabled: checked },
+                    })
                   }
                 />
               </div>
@@ -404,7 +388,6 @@ export default function NotificationPreferencesPage() {
             </CardContent>
           </Card>
 
-          {/* Weekend */}
           <Card>
             <CardHeader>
               <CardTitle>Fim de Semana</CardTitle>
@@ -426,13 +409,12 @@ export default function NotificationPreferencesPage() {
             </CardContent>
           </Card>
 
-          {/* Save Button */}
           <div className="flex justify-end gap-4">
             <Button variant="outline" onClick={() => navigate(-1)}>
               Cancelar
             </Button>
-            <Button onClick={savePreferences} disabled={isSaving}>
-              {isSaving ? 'Salvando...' : 'Salvar Preferências'}
+            <Button onClick={savePreferences} disabled={isUpdating}>
+              {isUpdating ? 'Salvando...' : 'Salvar Preferências'}
             </Button>
           </div>
         </div>
