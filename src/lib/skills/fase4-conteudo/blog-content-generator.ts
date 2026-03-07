@@ -347,7 +347,7 @@ Se você está passando por algum desconforto ou quer orientações personalizad
     return `---
 *Gostou deste artigo? Compartilhe com alguém que precisa ler essas informações.*
 
-*Quer saber mais sobre como a fisioterapia pode ajudar você? [Agende uma consulta](https://fisioflow.com.br/contato)*`;
+*Quer saber mais sobre como a fisioterapia pode ajudar você? [Agende uma consulta](https://moocafisio.com.br/contato)*`;
   }
 
   /**
@@ -486,7 +486,7 @@ ${article.excerpt}
 
 ${article.excerpt}
 
-📚 Artigo completo: https://fisioflow.com.br/blog/${article.slug}
+📚 Artigo completo: https://moocafisio.com.br/blog/${article.slug}
 
 Compartilhe com alguém que precisa ler isso! 👇`;
   }
@@ -498,14 +498,14 @@ ${article.excerpt}
 
 Neste artigo, discutimos como ${article.tags[0] || 'a fisioterapia'} pode impactar positivamente sua qualidade de vida.
 
-📖 Leia o artigo completo: https://fisioflow.com.br/blog/${article.slug}
+📖 Leia o artigo completo: https://moocafisio.com.br/blog/${article.slug}
 
 #Fisioterapia #SaúdeOcupacional #QualidadeDeVida`;
   }
 
   private generateTwitterPost(article: Article): string {
     const maxLength = 280;
-    const link = ' https://fisioflow.com.br/blog/' + article.slug;
+    const link = ' https://moocafisio.com.br/blog/' + article.slug;
     const remaining = maxLength - link.length - 10;
 
     let content = `${article.title}\n\n${article.excerpt}`;
@@ -560,7 +560,7 @@ Neste artigo, discutimos como ${article.tags[0] || 'a fisioterapia'} pode impact
         <div class="article">
           <h3>${index + 1}. ${article.title}</h3>
           <p>${article.excerpt}</p>
-          <a href="https://fisioflow.com.br/blog/${article.slug}" style="color: #005293; text-decoration: none; font-weight: bold;">Ler artigo completo →</a>
+          <a href="https://moocafisio.com.br/blog/${article.slug}" style="color: #005293; text-decoration: none; font-weight: bold;">Ler artigo completo →</a>
         </div>
       `).join('')}
 
@@ -586,9 +586,9 @@ Neste artigo, discutimos como ${article.tags[0] || 'a fisioterapia'} pode impact
       articles: articles.map(a => ({
         title: a.title,
         excerpt: a.excerpt,
-        url: `https://fisioflow.com.br/blog/${a.slug}`,
+        url: `https://moocafisio.com.br/blog/${a.slug}`,
       })),
-      unsubscribeUrl: 'https://fisioflow.com.br/unsubscribe',
+      unsubscribeUrl: 'https://moocafisio.com.br/unsubscribe',
     };
   }
 

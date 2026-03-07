@@ -87,12 +87,12 @@ VITE_WORKERS_API_URL=https://fisioflow-api.workers.dev
 ## Domínio Customizado
 
 No painel Cloudflare Pages > Custom Domains:
-- Adicione `fisioflow.com.br` (ou subdomínio)
+- Adicione `moocafisio.com.br` (ou subdomínio)
 - DNS aponta automaticamente
 
 Para o Worker (API):
 - Em Workers > fisioflow-api > Triggers > Custom Domains
-- Adicione `api.fisioflow.com.br`
+- Adicione `api.moocafisio.com.br`
 
 ---
 

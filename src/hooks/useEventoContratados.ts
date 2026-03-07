@@ -1,57 +1,31 @@
+/**
+ * useEventoContratados - Migrated to Neon/Workers
+ */
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
-
-  collection,
-  addDoc,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  doc,
-  query as firestoreQuery,
-  where,
-  orderBy,
-  getDoc,
-} from '@/integrations/firebase/app';
-import { useToast } from '@/hooks/use-toast';
+  eventoContratadosApi,
+  eventosApi,
+  type EventoContratado,
+  type Evento,
+} from '@/lib/api/workers-client';
 import { EventoContratadoCreate, EventoContratadoUpdate } from '@/lib/validations/evento-contratado';
-import { db } from '@/integrations/firebase/app';
 
-export interface EventoContratado {
-  id: string;
-  evento_id: string;
-  contratado_id: string;
-  funcao?: string | null;
-  valor_acordado?: number | null;
-  horario_inicio: string;
-  horario_fim: string;
-  status_pagamento?: 'PENDENTE' | 'PAGO';
-  created_at?: string;
-  updated_at?: string;
-}
+export type { EventoContratado };
 
-type EventoSnapshot = {
-  id: string;
-  nome?: string;
-  data_inicio?: string;
-  data_fim?: string;
-  hora_inicio?: string | null;
-  hora_fim?: string | null;
-};
+type EventoSnapshot = Pick<Evento, 'id' | 'nome' | 'data_inicio' | 'data_fim' | 'hora_inicio' | 'hora_fim'>;
 
-const convertDoc = <T>(docSnap: { id: string; data: () => Record<string, unknown> }): T =>
-  ({ id: docSnap.id, ...docSnap.data() } as T);
-
-const buildRange = (evento: EventoSnapshot, horario_inicio?: string, horario_fim?: string) => {
-  const startDate = evento.data_inicio;
-  const endDate = evento.data_fim;
-  if (!startDate || !endDate) return null;
-
-  const startTime = horario_inicio || evento.hora_inicio || '00:00';
-  const endTime = horario_fim || evento.hora_fim || '23:59';
-
-  const start = new Date(`${startDate}T${startTime}:00`);
-  const end = new Date(`${endDate}T${endTime}:00`);
-
+const buildRange = (
+  evento: EventoSnapshot,
+  horarioInicio?: string | null,
+  horarioFim?: string | null,
+) => {
+  if (!evento.data_inicio || !evento.data_fim) return null;
+  const startTime = horarioInicio || evento.hora_inicio || '00:00';
+  const endTime = horarioFim || evento.hora_fim || '23:59';
+  const start = new Date(`${evento.data_inicio}T${startTime}:00`);
+  const end = new Date(`${evento.data_fim}T${endTime}:00`);
   return { start, end };
 };
 
@@ -64,39 +38,33 @@ async function checkContratadoConflict(params: {
   horario_inicio: string;
   horario_fim: string;
 }) {
-  const eventoRef = doc(db, 'eventos', params.eventoId);
-  const eventoSnap = await getDoc(eventoRef);
-  if (!eventoSnap.exists()) {
-    throw new Error('Evento não encontrado para verificação de conflito.');
-  }
-  const evento = convertDoc<EventoSnapshot>(eventoSnap);
-  const targetRange = buildRange(evento, params.horario_inicio, params.horario_fim);
-  if (!targetRange) {
-    throw new Error('Evento sem datas definidas para verificação de conflito.');
-  }
+  const eventoRes = await eventosApi.get(params.eventoId);
+  const evento = (eventoRes?.data ?? null) as EventoSnapshot | null;
+  if (!evento) throw new Error('Evento não encontrado para verificação de conflito.');
 
-  const q = firestoreQuery(
-    collection(db, 'evento_contratados'),
-    where('contratado_id', '==', params.contratadoId),
-    orderBy('created_at', 'desc')
-  );
-  const snapshot = await getDocs(q);
-  const assignments = snapshot.docs.map(convertDoc<EventoContratado>);
+  const targetRange = buildRange(evento, params.horario_inicio, params.horario_fim);
+  if (!targetRange) throw new Error('Evento sem datas definidas para verificação de conflito.');
+
+  const assignmentsRes = await eventoContratadosApi.list({ contratadoId: params.contratadoId });
+  const assignments = (assignmentsRes?.data ?? []) as EventoContratado[];
 
   for (const assignment of assignments) {
-    if (assignment.evento_id === params.eventoId) continue;
+    if (!assignment.evento_id || assignment.evento_id === params.eventoId) continue;
 
-    const otherEventoRef = doc(db, 'eventos', assignment.evento_id);
-    const otherSnap = await getDoc(otherEventoRef);
-    if (!otherSnap.exists()) continue;
-    const otherEvento = convertDoc<EventoSnapshot>(otherSnap);
+    try {
+      const otherEventoRes = await eventosApi.get(assignment.evento_id);
+      const otherEvento = (otherEventoRes?.data ?? null) as EventoSnapshot | null;
+      if (!otherEvento) continue;
 
-    const otherRange = buildRange(otherEvento, assignment.horario_inicio, assignment.horario_fim);
-    if (!otherRange) continue;
+      const otherRange = buildRange(otherEvento, assignment.horario_inicio, assignment.horario_fim);
+      if (!otherRange) continue;
 
-    if (rangesOverlap(targetRange, otherRange)) {
-      const nome = otherEvento.nome || 'Outro evento';
-      throw new Error(`Conflito de horário: contratado já alocado em ${nome}.`);
+      if (rangesOverlap(targetRange, otherRange)) {
+        const nome = otherEvento.nome || 'Outro evento';
+        throw new Error(`Conflito de horário: contratado já alocado em ${nome}.`);
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('Conflito de horário')) throw error;
     }
   }
 }
@@ -105,13 +73,8 @@ export function useEventoContratados(eventoId: string) {
   return useQuery({
     queryKey: ['evento-contratados', eventoId],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'evento_contratados'),
-        where('evento_id', '==', eventoId),
-        orderBy('created_at', 'desc')
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDoc<EventoContratado>);
+      const res = await eventoContratadosApi.list({ eventoId });
+      return (res?.data ?? []) as EventoContratado[];
     },
     enabled: !!eventoId,
   });
@@ -119,19 +82,15 @@ export function useEventoContratados(eventoId: string) {
 
 export function useCreateEventoContratado() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (data: EventoContratadoCreate) => {
-      const existingQ = firestoreQuery(
-        collection(db, 'evento_contratados'),
-        where('evento_id', '==', data.evento_id),
-        where('contratado_id', '==', data.contratado_id)
-      );
-      const existingSnap = await getDocs(existingQ);
-      if (!existingSnap.empty) {
-        throw new Error('Este contratado já está vinculado ao evento.');
-      }
+      const existingRes = await eventoContratadosApi.list({
+        eventoId: data.evento_id,
+        contratadoId: data.contratado_id,
+      });
+      const existing = (existingRes?.data ?? []) as EventoContratado[];
+      if (existing.length > 0) throw new Error('Este contratado já está vinculado ao evento.');
 
       await checkContratadoConflict({
         contratadoId: data.contratado_id,
@@ -140,41 +99,25 @@ export function useCreateEventoContratado() {
         horario_fim: data.horario_fim,
       });
 
-      const now = new Date().toISOString();
-      const docRef = await addDoc(collection(db, 'evento_contratados'), {
-        ...data,
-        created_at: now,
-        updated_at: now,
-      });
-      const snapshot = await getDoc(docRef);
-      return convertDoc<EventoContratado>(snapshot);
+      const res = await eventoContratadosApi.create(data as Partial<EventoContratado>);
+      return (res?.data ?? res) as EventoContratado;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['evento-contratados', data.evento_id] });
-      toast({
-        title: 'Contratado vinculado!',
-        description: 'Contratado adicionado ao evento com sucesso.',
-      });
+    onSuccess: (created) => {
+      queryClient.invalidateQueries({ queryKey: ['evento-contratados', created.evento_id] });
+      toast.success('Contratado vinculado ao evento com sucesso.');
     },
-    onError: (error: unknown) => {
-      toast({
-        title: 'Erro ao vincular contratado',
-        description: error instanceof Error ? error.message : 'Erro desconhecido',
-        variant: 'destructive',
-      });
-    },
+    onError: (error: Error) => toast.error(`Erro ao vincular contratado: ${error.message}`),
   });
 }
 
 export function useUpdateEventoContratado() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (params: { id: string; data: EventoContratadoUpdate; eventoId: string; contratadoId: string }) => {
       const { id, data, eventoId, contratadoId } = params;
-      const hasTime = data.horario_inicio || data.horario_fim;
-      if (hasTime && data.horario_inicio && data.horario_fim) {
+
+      if (data.horario_inicio && data.horario_fim) {
         await checkContratadoConflict({
           contratadoId,
           eventoId,
@@ -183,50 +126,29 @@ export function useUpdateEventoContratado() {
         });
       }
 
-      const docRef = doc(db, 'evento_contratados', id);
-      await updateDoc(docRef, { ...data, updated_at: new Date().toISOString() });
-      const snapshot = await getDoc(docRef);
-      return { ...convertDoc<EventoContratado>(snapshot), evento_id: eventoId };
+      const res = await eventoContratadosApi.update(id, data as Partial<EventoContratado>);
+      return { ...(res?.data ?? res), evento_id: eventoId } as EventoContratado;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['evento-contratados', data.evento_id] });
-      toast({
-        title: 'Contratado atualizado!',
-        description: 'Alterações salvas com sucesso.',
-      });
+    onSuccess: (updated) => {
+      queryClient.invalidateQueries({ queryKey: ['evento-contratados', updated.evento_id] });
+      toast.success('Vínculo de contratado atualizado com sucesso.');
     },
-    onError: (error: unknown) => {
-      toast({
-        title: 'Erro ao atualizar contratado',
-        description: error instanceof Error ? error.message : 'Erro desconhecido',
-        variant: 'destructive',
-      });
-    },
+    onError: (error: Error) => toast.error(`Erro ao atualizar contratado: ${error.message}`),
   });
 }
 
 export function useDeleteEventoContratado() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async ({ id, eventoId }: { id: string; eventoId: string }) => {
-      await deleteDoc(doc(db, 'evento_contratados', id));
+      await eventoContratadosApi.delete(id);
       return eventoId;
     },
     onSuccess: (eventoId) => {
       queryClient.invalidateQueries({ queryKey: ['evento-contratados', eventoId] });
-      toast({
-        title: 'Contratado removido!',
-        description: 'Vínculo removido com sucesso.',
-      });
+      toast.success('Contratado removido do evento com sucesso.');
     },
-    onError: (error: unknown) => {
-      toast({
-        title: 'Erro ao remover contratado',
-        description: error instanceof Error ? error.message : 'Erro desconhecido',
-        variant: 'destructive',
-      });
-    },
+    onError: (error: Error) => toast.error(`Erro ao remover contratado: ${error.message}`),
   });
 }

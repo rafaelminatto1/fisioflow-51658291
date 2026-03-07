@@ -1,55 +1,61 @@
-const https = require('https');
-const { URL } = require('url');
+const TIMEOUT_MS = Number(process.env.HEALTH_TIMEOUT_MS ?? 5000);
 
-const CONFIG = {
-    endpoints: [
-        { name: 'Frontend', url: 'https://fisioflow-migration.web.app' },
-        { name: 'API Health', url: 'https://us-central1-fisioflow-migration.cloudfunctions.net/healthCheck' }
-    ],
-    timeout: 5000
-};
+const frontendUrl = process.env.HEALTH_FRONTEND_URL ?? 'https://fisioflow.pages.dev';
+const configuredApiBase =
+  process.env.HEALTH_API_URL ??
+  process.env.VITE_WORKERS_API_URL ??
+  'https://fisioflow-api.rafalegollas.workers.dev';
+
+const apiHealthUrl = configuredApiBase.endsWith('/api/health')
+  ? configuredApiBase
+  : `${configuredApiBase.replace(/\/$/, '')}/api/health`;
+
+const endpoints = [
+  { name: 'Frontend', url: frontendUrl },
+  { name: 'API Health', url: apiHealthUrl },
+];
 
 async function checkEndpoint(endpoint) {
-    return new Promise((resolve) => {
-        const start = Date.now();
-        const req = https.get(endpoint.url, { timeout: CONFIG.timeout }, (res) => {
-            const duration = Date.now() - start;
-            if (res.statusCode >= 200 && res.statusCode < 400) {
-                console.log(`✅ ${endpoint.name}: OK (${res.statusCode}) - ${duration}ms`);
-                resolve(true);
-            } else {
-                console.error(`❌ ${endpoint.name}: FAILED (${res.statusCode}) - ${endpoint.url}`);
-                resolve(false);
-            }
-        });
+  const startedAt = Date.now();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-        req.on('error', (err) => {
-            console.error(`❌ ${endpoint.name}: ERROR - ${err.message}`);
-            resolve(false);
-        });
-
-        req.on('timeout', () => {
-            req.destroy();
-            console.error(`❌ ${endpoint.name}: TIMEOUT (> ${CONFIG.timeout}ms)`);
-            resolve(false);
-        });
+  try {
+    const response = await fetch(endpoint.url, {
+      method: 'GET',
+      signal: controller.signal,
     });
+
+    const durationMs = Date.now() - startedAt;
+    if (response.status >= 200 && response.status < 400) {
+      console.log(`OK | ${endpoint.name}: ${response.status} (${durationMs}ms)`);
+      return true;
+    }
+
+    console.error(`FAIL | ${endpoint.name}: ${response.status} - ${endpoint.url}`);
+    return false;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`FAIL | ${endpoint.name}: ${message}`);
+    return false;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 async function run() {
-    console.log('🏥 Starting FisioFlow Health Check...\n');
+  console.log('FisioFlow Health Check');
 
-    const results = await Promise.all(CONFIG.endpoints.map(checkEndpoint));
-    const success = results.every(r => r);
+  const results = await Promise.all(endpoints.map(checkEndpoint));
+  const success = results.every(Boolean);
 
-    console.log('\n----------------------------------------');
-    if (success) {
-        console.log('✨ All systems GO! Deployment looks healthy.');
-        process.exit(0);
-    } else {
-        console.error('⚠️  Some checks failed. Investigate immediately.');
-        process.exit(1);
-    }
+  if (success) {
+    console.log('Resultado: todos os checks passaram.');
+    process.exit(0);
+  }
+
+  console.error('Resultado: há checks com falha.');
+  process.exit(1);
 }
 
 run();

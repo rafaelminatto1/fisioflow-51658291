@@ -5,6 +5,25 @@ import { createPool } from '../lib/db';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
+async function hasColumn(
+  pool: ReturnType<typeof createPool>,
+  table: string,
+  column: string,
+): Promise<boolean> {
+  const result = await pool.query(
+    `
+    SELECT 1
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = $1
+      AND column_name = $2
+    LIMIT 1
+    `,
+    [table, column],
+  );
+  return result.rows.length > 0;
+}
+
 function normalizeGender(value: unknown): 'M' | 'F' | 'O' | null {
   if (value == null) return null;
   const raw = String(value).trim().toLowerCase();
@@ -19,11 +38,22 @@ app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = createPool(c.env);
 
-  const { status, search, limit = '50', offset = '0' } = c.req.query();
+  const {
+    status,
+    search,
+    createdFrom,
+    createdTo,
+    incompleteRegistration,
+    sortBy,
+    limit = '50',
+    offset = '0',
+  } = c.req.query();
   const limitNum = Math.min(1000, Math.max(1, Number.parseInt(limit, 10) || 50));
   const offsetNum = Math.max(0, Number.parseInt(offset, 10) || 0);
 
-  const params: Array<string | number> = [user.organizationId];
+  const hasIncompleteRegistration = await hasColumn(pool, 'patients', 'incomplete_registration');
+
+  const params: Array<string | number | boolean> = [user.organizationId];
   let where = 'WHERE organization_id = $1 AND is_active = true';
 
   if (status) {
@@ -33,14 +63,46 @@ app.get('/', requireAuth, async (c) => {
 
   if (search) {
     params.push(`%${search}%`);
-    where += ` AND (name ILIKE $${params.length} OR cpf ILIKE $${params.length} OR email ILIKE $${params.length})`;
+    where += ` AND (full_name ILIKE $${params.length} OR cpf ILIKE $${params.length} OR email ILIKE $${params.length})`;
   }
+
+  if (createdFrom) {
+    params.push(createdFrom);
+    where += ` AND created_at >= $${params.length}`;
+  }
+
+  if (createdTo) {
+    params.push(createdTo);
+    where += ` AND created_at <= $${params.length}`;
+  }
+
+  if (incompleteRegistration !== undefined) {
+    const shouldBeIncomplete = incompleteRegistration === 'true' || incompleteRegistration === '1';
+    if (hasIncompleteRegistration) {
+      params.push(shouldBeIncomplete);
+      where += ` AND incomplete_registration = $${params.length}`;
+    } else if (shouldBeIncomplete) {
+      where += ' AND 1 = 0';
+    }
+  }
+
+  const orderByClause =
+    sortBy === 'created_at_desc'
+      ? 'created_at DESC'
+      : sortBy === 'created_at_asc'
+        ? 'created_at ASC'
+        : 'full_name ASC';
+
+  const incompleteSelect = hasIncompleteRegistration
+    ? 'COALESCE(incomplete_registration, false) AS incomplete_registration'
+    : 'false AS incomplete_registration';
 
   const dataParams = [...params, limitNum, offsetNum];
   const dataQuery = `
     SELECT
       id,
       full_name AS name,
+      full_name,
       cpf,
       email,
       phone,
@@ -49,12 +111,13 @@ app.get('/', requireAuth, async (c) => {
       main_condition,
       status,
       progress,
+      ${incompleteSelect},
       is_active,
       created_at,
       updated_at
     FROM patients
     ${where}
-    ORDER BY full_name ASC
+    ORDER BY ${orderByClause}
     LIMIT $${dataParams.length - 1}
     OFFSET $${dataParams.length}
   `;
@@ -136,6 +199,16 @@ app.get('/:id/stats', requireAuth, async (c) => {
   });
 });
 
+app.get('/last-updated', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const result = await pool.query(
+    'SELECT MAX(updated_at)::text AS last_updated_at FROM patients WHERE organization_id = $1',
+    [user.organizationId],
+  );
+  return c.json({ data: { last_updated_at: result.rows[0]?.last_updated_at ?? null } });
+});
+
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = createPool(c.env);
@@ -144,7 +217,6 @@ app.post('/', requireAuth, async (c) => {
   const name = String(body.name ?? body.full_name ?? '').trim();
   const phone = String(body.phone ?? '').trim();
   if (!name) return c.json({ error: 'Nome é obrigatório' }, 400);
-  if (!phone) return c.json({ error: 'Telefone é obrigatório' }, 400);
 
   const result = await pool.query(
     `
@@ -185,7 +257,7 @@ app.post('/', requireAuth, async (c) => {
       name,
       body.cpf ? String(body.cpf) : null,
       body.email ? String(body.email) : null,
-      phone,
+      phone ? phone : null,
       body.birth_date ? String(body.birth_date) : null,
       normalizeGender(body.gender),
       body.main_condition ? String(body.main_condition) : null,

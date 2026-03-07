@@ -1,40 +1,42 @@
 /**
- * useTemplateFavorites - Migrated to Firebase
+ * useTemplateFavorites - Migrated to Neon/Workers
  */
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, updateDoc, doc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { evaluationFormsApi, type EvaluationFormRow } from '@/lib/api/workers-client';
 
 export function useToggleFavorite() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ templateId, isFavorite }: { templateId: string; isFavorite: boolean }) => {
-      const docRef = doc(db, 'evaluation_forms', templateId);
-      await updateDoc(docRef, { is_favorite: !isFavorite });
+      await evaluationFormsApi.update(templateId, {
+        is_favorite: !isFavorite,
+      } as Partial<EvaluationFormRow>);
+
       return { templateId, newFavoriteStatus: !isFavorite };
     },
     onMutate: async ({ templateId, isFavorite }) => {
-      // Optimistic update
       await queryClient.cancelQueries({ queryKey: ['evaluation-forms'] });
 
       const previousForms = queryClient.getQueryData(['evaluation-forms']);
 
-      queryClient.setQueryData(['evaluation-forms'], (old: { id: string; is_favorite: boolean }[] | undefined) => {
-        if (!old) return old;
-        return old.map((form) =>
-          form.id === templateId
-            ? { ...form, is_favorite: !isFavorite }
-            : form
-        );
-      });
+      queryClient.setQueryData(
+        ['evaluation-forms'],
+        (old: { id: string; is_favorite?: boolean }[] | undefined) => {
+          if (!old) return old;
+          return old.map((form) =>
+            form.id === templateId
+              ? { ...form, is_favorite: !isFavorite }
+              : form,
+          );
+        },
+      );
 
       return { previousForms };
     },
-    onError: (error, variables, context) => {
-      // Rollback on error
+    onError: (_error, _variables, context) => {
       if (context?.previousForms) {
         queryClient.setQueryData(['evaluation-forms'], context.previousForms);
       }
@@ -47,8 +49,8 @@ export function useToggleFavorite() {
       toast.success(message);
     },
     onSettled: () => {
-      // Refetch to ensure consistency
       queryClient.invalidateQueries({ queryKey: ['evaluation-forms'] });
+      queryClient.invalidateQueries({ queryKey: ['evaluation-forms', 'favorites'] });
     },
   });
 }
@@ -57,15 +59,9 @@ export function useFavoriteTemplates() {
   return useQuery({
     queryKey: ['evaluation-forms', 'favorites'],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'evaluation_forms'),
-        where('is_favorite', '==', true),
-        where('ativo', '==', true),
-        orderBy('nome', 'asc')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
+      const res = await evaluationFormsApi.list({ ativo: true, favorite: true });
+      const data = (res?.data ?? []) as EvaluationFormRow[];
+      return data.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
     },
   });
 }

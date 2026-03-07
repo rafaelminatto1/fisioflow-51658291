@@ -350,9 +350,9 @@ export function AppRoutes() {
             <Route path="/timetracking" element={<ProtectedRoute><TimeTracking /></ProtectedRoute>} />
             <Route path="/wiki/template-analytics" element={<ProtectedRoute><TemplateAnalyticsPage /></ProtectedRoute>} />
 
-            {/* Wiki Routes Refactored */}
+            <Route path="/wiki/:slug?" element={<ProtectedRoute><WikiWorkspacePage /></ProtectedRoute>} />
             <Route
-                path="/wiki/*"
+                path="/wiki-hub/*"
                 element={
                     <ProtectedRoute>
                         <WikiLayout>
@@ -363,7 +363,6 @@ export function AppRoutes() {
                     </ProtectedRoute>
                 }
             />
-            <Route path="/wiki-workspace/:slug?" element={<ProtectedRoute><WikiWorkspacePage /></ProtectedRoute>} />
 
             <Route path="/automation" element={<ProtectedRoute><Automation /></ProtectedRoute>} />
             <Route path="/integrations" element={<ProtectedRoute><Integrations /></ProtectedRoute>} />

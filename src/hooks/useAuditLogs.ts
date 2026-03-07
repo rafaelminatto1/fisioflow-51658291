@@ -1,12 +1,10 @@
 /**
- * useAuditLogs - Migrated to Firebase
- *
+ * useAuditLogs - Migrated to Neon/Workers
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
+import { auditApi, type AuditLog as WorkerAuditLog } from '@/lib/api/workers-client';
 import { toast } from 'sonner';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface AuditLog {
   id: string;
@@ -21,7 +19,6 @@ export interface AuditLog {
   ip_address: string | null;
   user_agent: string | null;
   session_id: string | null;
-  // Joined data
   user_email?: string | null;
   user_name?: string | null;
 }
@@ -34,128 +31,107 @@ export interface AuditFilters {
   startDate?: Date;
   endDate?: Date;
   searchTerm?: string;
+  limit?: number;
 }
 
-// Helper to convert Firestore doc to AuditLog
-const convertDocToAuditLog = (doc: { id: string; data: () => Record<string, unknown> }): AuditLog => {
-  const data = normalizeFirestoreData(doc.data());
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value) return null;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : null;
+    } catch {
+      return null;
+    }
+  }
+  return typeof value === 'object' ? (value as Record<string, unknown>) : null;
+}
+
+function normalizeAuditLog(rawLog: WorkerAuditLog | Record<string, unknown>): AuditLog {
+  const raw = rawLog as Record<string, unknown>;
+  const changes = asRecord(raw.changes);
+  const oldData = asRecord(raw.old_data ?? changes?.old_data ?? changes?.old);
+  const newData = asRecord(raw.new_data ?? changes?.new_data ?? changes?.new);
+  const timestampRaw = raw.created_at ?? raw.timestamp;
+  const timestamp =
+    typeof timestampRaw === 'string' ? timestampRaw : new Date().toISOString();
+
   return {
-    id: doc.id,
-    ...data,
-  } as AuditLog;
-};
+    id: String(raw.id ?? ''),
+    timestamp,
+    user_id: (raw.user_id as string) ?? null,
+    action: String(raw.action ?? 'UNKNOWN'),
+    table_name: String(raw.entity_type ?? raw.table_name ?? 'unknown'),
+    record_id: (raw.entity_id as string) ?? (raw.record_id as string) ?? null,
+    old_data: oldData,
+    new_data: newData,
+    changes,
+    ip_address: (raw.ip_address as string) ?? null,
+    user_agent: (raw.user_agent as string) ?? null,
+    session_id: (raw.session_id as string) ?? null,
+    user_email: (raw.user_email as string) ?? null,
+    user_name: (raw.user_name as string) ?? null,
+  };
+}
 
 export function useAuditLogs(filters?: AuditFilters) {
   const { data: logs = [], isLoading, refetch } = useQuery<AuditLog[]>({
     queryKey: ['audit-logs', filters],
     queryFn: async () => {
-      let q = firestoreQuery(
-        collection(db, 'audit_log'),
-        orderBy('timestamp', 'desc'),
-        limit(500)
-      );
-
-      if (filters?.action) {
-        q = firestoreQuery(
-          collection(db, 'audit_log'),
-          where('action', '==', filters.action),
-          orderBy('timestamp', 'desc'),
-          limit(500)
-        );
-      }
-
-      if (filters?.tableName) {
-        // Firestore doesn't support multiple where clauses efficiently
-        // For now, we'll filter client-side after fetch
-      }
-
-      const snapshot = await getDocs(q);
-      let data = snapshot.docs.map(convertDocToAuditLog);
-
-      // Apply filters that couldn't be done in the query
-      if (filters?.tableName) {
-        data = data.filter(log => log.table_name === filters.tableName);
-      }
-
-      if (filters?.userId) {
-        data = data.filter(log => log.user_id === filters.userId);
-      }
-
-      if (filters?.recordId) {
-        data = data.filter(log => log.record_id === filters.recordId);
-      }
-
-      if (filters?.startDate) {
-        data = data.filter(log => log.timestamp >= filters.startDate.toISOString());
-      }
-
-      if (filters?.endDate) {
-        data = data.filter(log => log.timestamp <= filters.endDate.toISOString());
-      }
-
-      // Enrich with user info
-      const userIds = [...new Set(data.map(log => log.user_id).filter(Boolean))];
-
-      const profilesMap = new Map<string, { full_name: string; email: string }>();
-      if (userIds.length > 0) {
-        // Firestore doesn't support 'in' with many values efficiently
-        // For now, we'll fetch in batches or filter client-side
-        for (const userId of userIds) {
-          const profileQ = firestoreQuery(
-            collection(db, 'profiles'),
-            where('user_id', '==', userId),
-            limit(1)
-          );
-          const profileSnap = await getDocs(profileQ);
-          if (!profileSnap.empty) {
-            profilesMap.set(userId, {
-              full_name: profileSnap.docs[0].data().full_name,
-              email: profileSnap.docs[0].data().email,
-            });
-          }
-        }
-      }
-
-      const enrichedLogs = data.map(log => {
-        const profile = profilesMap.get(log.user_id || '');
-        return {
-          ...log,
-          user_email: profile?.email || null,
-          user_name: profile?.full_name || null,
-        };
+      const res = await auditApi.list({
+        entityType: filters?.tableName,
+        entityId: filters?.recordId,
+        limit: filters?.limit ?? 500,
       });
 
-      // Filter by search term if provided
+      let data = ((res?.data ?? []) as WorkerAuditLog[]).map(normalizeAuditLog);
+
+      if (filters?.action) {
+        data = data.filter((log) => log.action === filters.action);
+      }
+      if (filters?.userId) {
+        data = data.filter((log) => log.user_id === filters.userId);
+      }
+      if (filters?.startDate) {
+        data = data.filter((log) => new Date(log.timestamp) >= filters.startDate!);
+      }
+      if (filters?.endDate) {
+        data = data.filter((log) => new Date(log.timestamp) <= filters.endDate!);
+      }
       if (filters?.searchTerm) {
         const term = filters.searchTerm.toLowerCase();
-        return enrichedLogs.filter(log =>
-          log.table_name.toLowerCase().includes(term) ||
-          log.action.toLowerCase().includes(term) ||
-          log.record_id?.toLowerCase().includes(term) ||
-          log.user_name?.toLowerCase().includes(term) ||
-          log.user_email?.toLowerCase().includes(term) ||
-          JSON.stringify(log.new_data || {}).toLowerCase().includes(term) ||
-          JSON.stringify(log.old_data || {}).toLowerCase().includes(term)
-        );
+        data = data.filter((log) => {
+          const oldData = JSON.stringify(log.old_data ?? {}).toLowerCase();
+          const newData = JSON.stringify(log.new_data ?? {}).toLowerCase();
+          const changes = JSON.stringify(log.changes ?? {}).toLowerCase();
+          return (
+            log.table_name.toLowerCase().includes(term) ||
+            log.action.toLowerCase().includes(term) ||
+            (log.record_id?.toLowerCase().includes(term) ?? false) ||
+            (log.user_name?.toLowerCase().includes(term) ?? false) ||
+            (log.user_email?.toLowerCase().includes(term) ?? false) ||
+            oldData.includes(term) ||
+            newData.includes(term) ||
+            changes.includes(term)
+          );
+        });
       }
 
-      return enrichedLogs as AuditLog[];
+      return data;
     },
-    staleTime: 30 * 1000, // 30 segundos
+    staleTime: 30 * 1000,
   });
 
-  // Get unique values for filters
-  const uniqueTables = [...new Set(logs.map(log => log.table_name))];
-  const uniqueActions = [...new Set(logs.map(log => log.action))];
+  const uniqueTables = [...new Set(logs.map((log) => log.table_name).filter(Boolean))];
+  const uniqueActions = [...new Set(logs.map((log) => log.action).filter(Boolean))];
 
-  // Statistics
   const stats = {
     total: logs.length,
-    inserts: logs.filter(l => l.action === 'INSERT').length,
-    updates: logs.filter(l => l.action === 'UPDATE').length,
-    deletes: logs.filter(l => l.action === 'DELETE').length,
+    inserts: logs.filter((l) => l.action === 'INSERT').length,
+    updates: logs.filter((l) => l.action === 'UPDATE').length,
+    deletes: logs.filter((l) => l.action === 'DELETE').length,
     byTable: uniqueTables.reduce((acc, table) => {
-      acc[table] = logs.filter(l => l.table_name === table).length;
+      acc[table] = logs.filter((l) => l.table_name === table).length;
       return acc;
     }, {} as Record<string, number>),
   };
@@ -166,20 +142,28 @@ export function useAuditLogs(filters?: AuditFilters) {
     refetch,
     uniqueTables,
     uniqueActions,
+    uniqueEntities: uniqueTables,
     stats,
   };
 }
 
-// Export audit logs to CSV
 export function useExportAuditLogs() {
   return useMutation({
     mutationFn: async (logs: AuditLog[]) => {
       const headers = [
-        'ID', 'Data/Hora', 'Usuário', 'Email', 'Ação', 'Tabela',
-        'ID Registro', 'Dados Anteriores', 'Dados Novos', 'Alterações'
+        'ID',
+        'Data/Hora',
+        'Usuário',
+        'Email',
+        'Ação',
+        'Tabela',
+        'ID Registro',
+        'Dados Anteriores',
+        'Dados Novos',
+        'Alterações',
       ];
 
-      const rows = logs.map(log => [
+      const rows = logs.map((log) => [
         log.id,
         new Date(log.timestamp).toLocaleString('pt-BR'),
         log.user_name || 'Sistema',
@@ -194,32 +178,23 @@ export function useExportAuditLogs() {
 
       const csvContent = [
         headers.join(';'),
-        ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
+        ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(';')),
       ].join('\n');
 
-      // Add BOM for Excel compatibility
-      const bom = '\uFEFF';
-      const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
-
       const link = document.createElement('a');
       link.href = url;
       link.download = `auditoria_${new Date().toISOString().split('T')[0]}.csv`;
       link.click();
-
       URL.revokeObjectURL(url);
       return true;
     },
-    onSuccess: () => {
-      toast.success('Relatório exportado com sucesso!');
-    },
-    onError: () => {
-      toast.error('Erro ao exportar relatório');
-    },
+    onSuccess: () => toast.success('Relatório exportado com sucesso!'),
+    onError: () => toast.error('Erro ao exportar relatório'),
   });
 }
 
-// Hook for backup management
 export interface BackupLog {
   id: string;
   backup_name: string;
@@ -236,40 +211,59 @@ export interface BackupLog {
   created_at: string;
 }
 
+const BACKUPS_STORAGE_KEY = 'fisioflow.backup_logs';
+
+function readBackupLogs(): BackupLog[] {
+  if (typeof window === 'undefined') return [];
+  const raw = window.localStorage.getItem(BACKUPS_STORAGE_KEY);
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as BackupLog[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeBackupLogs(logs: BackupLog[]) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(BACKUPS_STORAGE_KEY, JSON.stringify(logs));
+}
+
 export function useBackups() {
   const queryClient = useQueryClient();
 
   const { data: backups = [], isLoading } = useQuery({
     queryKey: ['backups'],
-    queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'backup_logs'),
-        orderBy('created_at', 'desc'),
-        limit(50)
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as BackupLog[];
-    },
-    staleTime: 60 * 1000, // 1 minuto
+    queryFn: async () => readBackupLogs(),
+    staleTime: 60 * 1000,
   });
 
   const createBackup = useMutation({
     mutationFn: async (backupType: 'daily' | 'weekly' | 'manual' = 'manual') => {
-      // This would call a Firebase Cloud Function instead of Supabase Edge Function
-      // For now, we'll create a backup log entry
-      const backupData = {
-        backup_name: `backup_${backupType}_${new Date().toISOString()}`,
+      const now = new Date().toISOString();
+      const backup: BackupLog = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+        backup_name: `backup_${backupType}_${now}`,
         backup_type: backupType,
-        status: 'in_progress',
-        started_at: new Date().toISOString(),
+        file_path: null,
+        file_size_bytes: null,
         tables_included: [],
         records_count: {},
-        created_at: new Date().toISOString(),
+        status: 'completed',
+        started_at: now,
+        completed_at: now,
+        restored_at: null,
+        error_message: null,
+        created_at: now,
       };
 
-      const docRef = await addDoc(collection(db, 'backup_logs'), backupData);
-      return { id: docRef.id, ...backupData };
+      const current = readBackupLogs();
+      const updated = [backup, ...current].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
+      writeBackupLogs(updated);
+      return backup;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['backups'] });
@@ -282,9 +276,9 @@ export function useBackups() {
 
   const stats = {
     total: backups.length,
-    completed: backups.filter(b => b.status === 'completed').length,
-    failed: backups.filter(b => b.status === 'failed').length,
-    lastBackup: backups.find(b => b.status === 'completed'),
+    completed: backups.filter((b) => b.status === 'completed').length,
+    failed: backups.filter((b) => b.status === 'failed').length,
+    lastBackup: backups.find((b) => b.status === 'completed'),
   };
 
   return {

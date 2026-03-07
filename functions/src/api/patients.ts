@@ -429,7 +429,7 @@ export const createPatientHttp = onRequest(
       // Garantir organização existe
       await pool.query(
         `INSERT INTO organizations (id, name, email)
-         VALUES ($1, 'Clínica Principal', 'admin@fisioflow.com.br')
+         VALUES ($1, 'Clínica Principal', 'admin@moocafisio.com.br')
          ON CONFLICT (id) DO NOTHING`,
         [organizationId]
       );
@@ -933,7 +933,7 @@ export const createPatientHandler = async (request: any) => {
     // [AUTO-FIX] Ensure organization exists to satisfy FK constraint
     logger.debug('[createPatient] Target Org ID:', auth.organizationId);
     const orgInsertSql = `INSERT INTO organizations (id, name, email)
-       VALUES ($1, 'Clínica Principal', 'admin@fisioflow.com.br')
+       VALUES ($1, 'Clínica Principal', 'admin@moocafisio.com.br')
        ON CONFLICT (id) DO NOTHING`;
     logger.debug('[createPatient] Org Insert SQL:', orgInsertSql);
     await pool.query(orgInsertSql, [auth.organizationId]);

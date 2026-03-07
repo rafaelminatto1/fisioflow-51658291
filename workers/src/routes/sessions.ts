@@ -88,15 +88,15 @@ app.get('/', requireAuth, async (c) => {
   const offsetNum = Math.max(0, parseInt(offset) || 0);
 
   const params: Array<string | number> = [patientId, user.organizationId];
-  let where = 'WHERE s.patient_id = $1 AND s.organization_id = $2';
+  let where = 'WHERE patient_id = $1 AND organization_id = $2';
 
   if (status) {
     params.push(status);
-    where += ` AND s.status = $${params.length}`;
+    where += ` AND status = $${params.length}`;
   }
   if (appointmentId) {
     params.push(appointmentId);
-    where += ` AND s.appointment_id = $${params.length}`;
+    where += ` AND appointment_id = $${params.length}`;
   }
 
   params.push(limitNum, offsetNum);
@@ -455,7 +455,7 @@ app.delete('/:id/attachments/:attachmentId', requireAuth, async (c) => {
   const check = await pool.query(
     `SELECT a.file_url FROM session_attachments a
      JOIN sessions s ON s.id = a.session_id
-     WHERE a.id = $1 AND a.session_id = $2 AND s.organization_id = $3`,
+     WHERE a.id = $1 AND a.session_id = $2 AND organization_id = $3`,
     [attachmentId, id, user.organizationId],
   );
   if (!check.rows.length) return c.json({ error: 'Anexo não encontrado' }, 404);

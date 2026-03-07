@@ -3,8 +3,32 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import {
+  clinicalApi,
+  profileApi,
+  sessionsApi,
+  type PainMap,
+  type SessionRecord,
+} from '@/lib/api/workers-client';
+
+const fetchEvolutionMeasurements = async (_patientId: string) => {
+  // TODO: Replace this placeholder with a dedicated Workers endpoint that exposes
+  // evolution measurements once the backend route is ready.
+  return [] as Array<{
+    measurement_type: string;
+    measurement_name: string;
+    value: number | string;
+    unit?: string;
+    measured_at: string;
+    custom_data?: Record<string, unknown>;
+  }>;
+};
+
+const fetchPrescribedSessions = async (_patientId: string) => {
+  // TODO: Replace this placeholder with a Workers call (e.g., financial summary)
+  // that returns the current package balance for the patient.
+  return 0;
+};
 
 export interface PatientEvolutionData {
   sessions: {
@@ -32,37 +56,56 @@ export interface PatientEvolutionData {
   }[];
 }
 
+const fetchSessions = async (patientId: string, limit = 1000): Promise<SessionRecord[]> => {
+  const sessions: SessionRecord[] = [];
+  let offset = 0;
+
+  while (true) {
+    const res = await sessionsApi.list({
+      patientId,
+      status: 'finalized',
+      limit,
+      offset,
+    });
+    const chunk = (res?.data ?? []) as SessionRecord[];
+    sessions.push(...chunk);
+    if (chunk.length < limit) break;
+    offset += limit;
+  }
+
+  return sessions.sort((a, b) => {
+    const dateA = new Date(a.record_date).getTime();
+    const dateB = new Date(b.record_date).getTime();
+    return dateA - dateB;
+  });
+};
+
 export const usePatientEvolutionReport = (patientId: string) => {
   return useQuery({
     queryKey: ["patient-evolution-report", patientId],
     queryFn: async (): Promise<PatientEvolutionData> => {
-      // Buscar registros SOAP do paciente
-      const soapQ = firestoreQuery(
-        collection(db, 'soap_records'),
-        where('patient_id', '==', patientId),
-        orderBy('record_date', 'asc')
-      );
-      const soapSnap = await getDocs(soapQ);
-      const soapRecords = soapSnap.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
+      // Buscar registros SOAP do paciente via sessions API
+      const sessionRecords = await fetchSessions(patientId);
+      const soapRecords = sessionRecords.map((record) => ({
+        id: record.id,
+        patient_id: record.patient_id,
+        created_at: record.created_at,
+        status: record.status,
+        subjective: record.subjective,
+        objective: record.objective,
+        assessment: record.assessment,
+        plan: record.plan,
+        pain_level: record.pain_level,
+        pain_location: record.pain_location,
+        pain_character: record.pain_character,
+        record_date: record.record_date,
+      }));
 
       // Buscar medições de evolução
-      const measurementsQ = firestoreQuery(
-        collection(db, 'evolution_measurements'),
-        where('patient_id', '==', patientId),
-        orderBy('measured_at', 'asc')
-      );
-      const measurementsSnap = await getDocs(measurementsQ);
-      const measurements = measurementsSnap.docs.map(doc => normalizeFirestoreData(doc.data()));
+      const measurements = await fetchEvolutionMeasurements(patientId);
 
       // Buscar sessões prescritas (pacotes)
-      const packagesQ = firestoreQuery(
-        collection(db, 'session_packages'),
-        where('patient_id', '==', patientId),
-        orderBy('created_at', 'desc')
-      );
-      const packagesSnap = await getDocs(packagesQ);
-      const packageData = packagesSnap.docs.length > 0 ? packagesSnap.docs[0].data() : null;
-      const prescribedSessions = packageData?.total_sessions || 0;
+      const prescribedSessions = await fetchPrescribedSessions(patientId);
 
       if (soapRecords.length === 0 && measurements.length === 0) {
         return {
@@ -108,45 +151,26 @@ export const usePatientEvolutionReport = (patientId: string) => {
         };
       });
 
-      // Buscar mapas de dor associados às sessões
-      const soapIds = soapRecords.map(r => r.id);
-
-      let painMaps: Array<{ session_id: string; global_pain_level?: number }> = [];
-      if (soapIds.length > 0) {
-        // Firestore has a limit of 10 items per 'in' query
-        const chunkSize = 10;
-        const chunks = [];
-        for (let i = 0; i < soapIds.length; i += chunkSize) {
-          chunks.push(soapIds.slice(i, i + chunkSize));
-        }
-
-        const painMapsResults = await Promise.all(
-          chunks.map(chunk =>
-            getDocs(
-              firestoreQuery(collection(db, 'pain_maps'), where('session_id', 'in', chunk))
-            )
-          )
-        );
-        painMaps = painMapsResults.flatMap(snapshot =>
-          snapshot.docs.map(doc => ({ session_id: normalizeFirestoreData(doc.data()).session_id, global_pain_level: normalizeFirestoreData(doc.data()).global_pain_level }))
-        );
-      }
+      // Buscar mapas de dor associados
+      const painMapsResponse = await clinicalApi.painMaps.list({ patientId });
+      const allPainMaps = (painMapsResponse?.data ?? []) as PainMap[];
+      const painMaps = allPainMaps
+        .filter((map) => !!map.session_id)
+        .map((map) => ({
+          session_id: map.session_id ?? '',
+          global_pain_level: map.pain_level,
+        }));
 
       const painMapsBySession = new Map(
         painMaps.map(pm => [pm.session_id, pm.global_pain_level])
       );
 
       // Buscar informações dos terapeutas
-      const therapistIds = [...new Set(soapRecords.map(r => r.created_by))];
-
       const therapistMap = new Map<string, string>();
-      if (therapistIds.length > 0) {
-        const profilesQ = firestoreQuery(collection(db, 'profiles'), where('user_id', 'in', therapistIds));
-        const profilesSnap = await getDocs(profilesQ);
-        profilesSnap.forEach(doc => {
-          therapistMap.set(normalizeFirestoreData(doc.data()).user_id, normalizeFirestoreData(doc.data()).full_name);
-        });
-      }
+      const therapistsRes = await profileApi.therapists();
+      (therapistsRes?.data ?? []).forEach((therapist) => {
+        therapistMap.set(therapist.id, therapist.name);
+      });
 
       // Processar sessões
       interface SoapRecord {

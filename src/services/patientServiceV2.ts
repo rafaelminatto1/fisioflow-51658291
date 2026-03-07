@@ -1,4 +1,4 @@
-import { patientsApi } from '@/integrations/firebase/functions';
+import { patientsApi } from '@/lib/api/workers-client';
 
 export interface PatientV2 {
   id: string;
@@ -81,6 +81,6 @@ export const PatientServiceV2 = {
    * Busca estatísticas do paciente
    */
   getStats: async (patientId: string) => {
-    return patientsApi.getStats(patientId);
+    return patientsApi.stats(patientId);
   }
 };

@@ -3,44 +3,22 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, query, where, db, getFirebaseAuth, doc, getDoc } from '@/integrations/firebase/app';
-import { getUserOrganizationId } from '@/utils/userHelpers';
+import { organizationMembersApi } from '@/lib/api/workers-client';
 import { TeamMember } from '@/types/tarefas';
-import { fisioLogger } from '@/lib/errors/logger';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
-
-const auth = getFirebaseAuth();
 
 export function useTeamMembers() {
   return useQuery({
     queryKey: ['team-members'],
     queryFn: async (): Promise<TeamMember[]> => {
-      const user = auth.currentUser;
-      if (!user) return [];
-
-      const organizationId = await getUserOrganizationId();
-      if (!organizationId) {
-        fisioLogger.debug('No organization_id found', undefined, 'useTeamMembers');
-        return [];
-      }
-
-      // Query profiles collection for team members
-      const q = query(
-        collection(db, 'profiles'),
-        where('organization_id', '==', organizationId)
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => {
-        const data = normalizeFirestoreData(doc.data());
-        return {
-          id: doc.id,
-          full_name: data.full_name || data.email || 'Usuário',
-          email: data.email,
-          avatar_url: data.avatar_url,
-          role: data.role
-        };
-      });
+      const res = await organizationMembersApi.list({ limit: 1000 });
+      const members = res?.data ?? [];
+      return members.map((member) => ({
+        id: member.user_id ?? member.id,
+        full_name: member.profiles?.full_name ?? 'Usuário',
+        email: member.profiles?.email ?? undefined,
+        avatar_url: undefined,
+        role: member.role,
+      }));
     },
     staleTime: 1000 * 60 * 10, // 10 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes
@@ -54,18 +32,15 @@ export function useTeamMember(userId: string | undefined) {
     queryFn: async (): Promise<TeamMember | null> => {
       if (!userId) return null;
 
-      const docRef = doc(db, 'profiles', userId);
-      const snapshot = await getDoc(docRef);
-
-      if (!snapshot.exists()) return null;
-
-      const data = snapshot.data();
+      const res = await organizationMembersApi.list({ userId, limit: 1 });
+      const member = res?.data?.[0];
+      if (!member) return null;
       return {
-        id: snapshot.id,
-        full_name: data.full_name || data.email || 'Usuário',
-        email: data.email,
-        avatar_url: data.avatar_url,
-        role: data.role
+        id: member.user_id ?? member.id,
+        full_name: member.profiles?.full_name ?? 'Usuário',
+        email: member.profiles?.email ?? undefined,
+        avatar_url: undefined,
+        role: member.role,
       };
     },
     enabled: !!userId,

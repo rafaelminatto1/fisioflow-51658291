@@ -167,8 +167,8 @@ Tornar o FisioFlow Professional App compatível com as diretrizes da Apple App S
 
 ## 📞 Support & Documentation
 
-- **Privacy Email**: privacidade@fisioflow.com.br
-- **Support Email**: suporte@fisioflow.com.br
+- **Privacy Email**: privacidade@moocafisio.com.br
+- **Support Email**: suporte@moocafisio.com.br
 - **Privacy Policy URL**: https://fisioflow.app/privacidade
 - **Terms URL**: https://fisioflow.app/termos
 - **Support URL**: https://fisioflow.app/ajuda

@@ -259,6 +259,8 @@ app.put('/:id', requireAuth, async (c) => {
   const nextStatus = normalizeStatus(body.status ?? a.status);
   const nextNotes = body.notes !== undefined ? body.notes : a.notes;
   const nextReason = body.cancellationReason ?? body.reason ?? a.cancellation_reason ?? null;
+  const nextConfirmedAt = body.confirmed_at ?? body.confirmedAt ?? a.confirmed_at ?? null;
+  const nextConfirmedVia = body.confirmed_via ?? body.confirmedVia ?? a.confirmed_via ?? null;
 
   const result = await pool.query(
     `
@@ -272,8 +274,10 @@ app.put('/:id', requireAuth, async (c) => {
         status = $6,
         notes = $7,
         cancellation_reason = $8,
+        confirmed_at = $9,
+        confirmed_via = $10,
         updated_at = NOW()
-      WHERE id = $9 AND organization_id = $10
+      WHERE id = $11 AND organization_id = $12
       RETURNING *
     `,
     [
@@ -285,6 +289,8 @@ app.put('/:id', requireAuth, async (c) => {
       nextStatus,
       nextNotes ? String(nextNotes) : null,
       nextReason ? String(nextReason) : null,
+      nextConfirmedAt ? String(nextConfirmedAt) : null,
+      nextConfirmedVia ? String(nextConfirmedVia) : null,
       id,
       user.organizationId,
     ],
@@ -317,6 +323,16 @@ app.post('/:id/cancel', requireAuth, async (c) => {
 
   if (!result.rows.length) return c.json({ error: 'Agendamento não encontrado' }, 404);
   return c.json({ success: true });
+});
+
+app.get('/last-updated', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const result = await pool.query(
+    'SELECT MAX(updated_at)::text AS last_updated_at FROM appointments WHERE organization_id = $1',
+    [user.organizationId],
+  );
+  return c.json({ data: { last_updated_at: result.rows[0]?.last_updated_at ?? null } });
 });
 
 export { app as appointmentsRoutes };

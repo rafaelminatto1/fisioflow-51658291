@@ -218,7 +218,7 @@ export class EmailNotificationService {
   }): Promise<void> {
     if (this.config.provider === 'resend' && this.resend) {
       await this.resend.emails.send({
-        from: this.config.from || 'FisioFlow <contato@fisioflow.com.br>',
+        from: this.config.from || 'FisioFlow <contato@moocafisio.com.br>',
         to: params.to,
         subject: params.subject,
         html: params.html,
@@ -564,7 +564,7 @@ export class EmailNotificationService {
       </div>
 
       <p style="text-align: center;">
-        <a href="https://app.fisioflow.com.br" style="display: inline-block; background: #005293; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px;">Acessar o App</a>
+        <a href="https://app.moocafisio.com.br" style="display: inline-block; background: #005293; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px;">Acessar o App</a>
       </p>
 
       <p>Se tiver alguma dúvida, não hesite em entrar em contato conosco.</p>
@@ -768,7 +768,7 @@ export class EmailServiceFactory {
   static async createFromEnv(): Promise<EmailNotificationService> {
     const provider = (process.env.EMAIL_PROVIDER || 'resend') as 'resend' | 'gmail' | 'sendgrid';
     const apiKey = process.env.RESEND_API_KEY || process.env.SENDGRID_API_KEY;
-    const from = process.env.EMAIL_FROM || 'contato@fisioflow.com.br';
+    const from = process.env.EMAIL_FROM || 'contato@moocafisio.com.br';
     const fromName = process.env.EMAIL_FROM_NAME || 'FisioFlow';
 
     return new EmailNotificationService({

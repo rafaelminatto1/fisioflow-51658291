@@ -354,7 +354,7 @@ firebase deploy --only hosting --message "Release v1.0.0"
 | Tipo | URL |
 |------|-----|
 | **Produção** | `https://fisioflow-migration.web.app` |
-| **Custom Domain** | `https://app.fisioflow.com.br` (configurar) |
+| **Custom Domain** | `https://app.moocafisio.com.br` (configurar) |
 | **Preview** | `https://fisioflow-migration--<pr>.web.app` |
 
 ---

@@ -1,15 +1,17 @@
 /**
- * useEvaluationForms - Migrated to Firebase
- *
+ * useEvaluationForms - Migrated to Neon/Workers
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
+import {
+  evaluationFormsApi,
+  type EvaluationFormRow,
+  type EvaluationFormFieldRow,
+  type EvaluationFormWithFieldsRow,
+} from '@/lib/api/workers-client';
 import { EvaluationForm, EvaluationFormWithFields, EvaluationFormField } from '@/types/clinical-forms';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
-import { callFunctionHttpWithResponse } from '@/integrations/firebase/functions';
 
 export type EvaluationFormFormData = {
   nome: string;
@@ -21,73 +23,49 @@ export type EvaluationFormFormData = {
 
 export type EvaluationFormFieldFormData = Omit<EvaluationFormField, 'id' | 'created_at' | 'form_id'>;
 
-type AssessmentTemplateApiItem = {
-  id: string;
-  name: string;
-  description?: string | null;
-  category?: string | null;
-  is_active?: boolean;
-  [key: string]: unknown;
-};
+const mapForm = (row: EvaluationFormRow): EvaluationForm => ({
+  id: row.id,
+  organization_id: row.organization_id ?? null,
+  created_by: row.created_by ?? null,
+  nome: row.nome,
+  descricao: row.descricao ?? null,
+  referencias: row.referencias ?? null,
+  tipo: row.tipo,
+  ativo: Boolean(row.ativo),
+  created_at: row.created_at,
+  updated_at: row.updated_at,
+});
 
-// Helper to convert Firestore doc to EvaluationForm
-const convertDocToEvaluationForm = (doc: { id: string; data: () => Record<string, unknown> }): EvaluationForm => {
-  const data = normalizeFirestoreData(doc.data());
-  return {
-    id: doc.id,
-    ...data,
-  } as EvaluationForm;
-};
+const mapField = (row: EvaluationFormFieldRow): EvaluationFormField => ({
+  id: row.id,
+  form_id: row.form_id,
+  tipo_campo: row.tipo_campo as EvaluationFormField['tipo_campo'],
+  label: row.label,
+  placeholder: row.placeholder ?? null,
+  opcoes: Array.isArray(row.opcoes) ? (row.opcoes as string[]) : null,
+  ordem: Number(row.ordem ?? 0),
+  obrigatorio: Boolean(row.obrigatorio),
+  grupo: row.grupo ?? null,
+  descricao: row.descricao ?? null,
+  minimo: row.minimo ?? null,
+  maximo: row.maximo ?? null,
+  created_at: row.created_at,
+});
 
-// Helper to convert Firestore doc to EvaluationFormField
-const convertDocToEvaluationFormField = (doc: { id: string; data: () => Record<string, unknown> }): EvaluationFormField => {
-  const data = normalizeFirestoreData(doc.data());
-  return {
-    id: doc.id,
-    ...data,
-  } as EvaluationFormField;
-};
+const mapFormWithFields = (row: EvaluationFormWithFieldsRow): EvaluationFormWithFields => ({
+  ...mapForm(row),
+  fields: (row.fields ?? []).map(mapField),
+});
 
 export function useEvaluationForms(tipo?: string) {
   return useQuery({
     queryKey: ['evaluation-forms', tipo],
     queryFn: async () => {
-      try {
-        // Tentar API V2 (Postgres)
-        const response = await callFunctionHttpWithResponse<Record<string, never>, AssessmentTemplateApiItem[]>(
-          'listAssessmentTemplatesV2',
-          {}
-        );
-        if (response.data) {
-          // Adaptar formato Postgres (id, name, description) para formato esperado (nome, descricao)
-          return response.data.map((f) => ({
-            ...f,
-            nome: f.name,
-            descricao: f.description,
-            tipo: f.category || 'anamnese',
-            ativo: f.is_active
-          })) as EvaluationForm[];
-        }
-        throw new Error('Falha na API V2');
-      } catch (error) {
-        console.warn('[useEvaluationForms] API V2 falhou, usando fallback Firestore:', error);
-        
-        const q = firestoreQuery(
-          collection(db, 'evaluation_forms'),
-          where('ativo', '==', true),
-          orderBy('nome')
-        );
-
-        const snapshot = await getDocs(q);
-        let data = snapshot.docs.map(convertDocToEvaluationForm);
-
-        // Filter by tipo if provided
-        if (tipo) {
-          data = data.filter(f => f.tipo === tipo);
-        }
-
-        return data;
-      }
+      const res = await evaluationFormsApi.list({ tipo, ativo: true });
+      const data = (res?.data ?? []) as EvaluationFormRow[];
+      return data
+        .map(mapForm)
+        .filter((form) => (!tipo ? true : form.tipo === tipo));
     },
   });
 }
@@ -97,22 +75,8 @@ export function useEvaluationFormWithFields(formId: string | undefined) {
     queryKey: ['evaluation-form', formId],
     queryFn: async () => {
       if (!formId) return null;
-
-      const formDoc = await getDoc(doc(db, 'evaluation_forms', formId));
-      if (!formDoc.exists()) {
-        throw new Error('Ficha não encontrada');
-      }
-
-      const q = firestoreQuery(
-        collection(db, 'evaluation_form_fields'),
-        where('form_id', '==', formId),
-        orderBy('ordem')
-      );
-
-      const fieldsSnap = await getDocs(q);
-      const fields = fieldsSnap.docs.map(convertDocToEvaluationFormField);
-
-      return { ...convertDocToEvaluationForm(formDoc), fields } as unknown as EvaluationFormWithFields;
+      const res = await evaluationFormsApi.get(formId);
+      return mapFormWithFields((res?.data ?? null) as EvaluationFormWithFieldsRow);
     },
     enabled: !!formId,
   });
@@ -123,17 +87,11 @@ export function useCreateEvaluationForm() {
 
   return useMutation({
     mutationFn: async (form: EvaluationFormFormData) => {
-      const formData = {
+      const res = await evaluationFormsApi.create({
         ...form,
-        ativo: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'evaluation_forms'), formData);
-      const docSnap = await getDoc(docRef);
-
-      return convertDocToEvaluationForm(docSnap);
+        ativo: form.ativo ?? true,
+      });
+      return mapForm((res?.data ?? res) as EvaluationFormRow);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['evaluation-forms'] });
@@ -150,14 +108,8 @@ export function useUpdateEvaluationForm() {
 
   return useMutation({
     mutationFn: async ({ id, ...form }: Partial<EvaluationForm> & { id: string }) => {
-      const docRef = doc(db, 'evaluation_forms', id);
-      await updateDoc(docRef, {
-        ...form,
-        updated_at: new Date().toISOString(),
-      });
-
-      const docSnap = await getDoc(docRef);
-      return convertDocToEvaluationForm(docSnap);
+      const res = await evaluationFormsApi.update(id, form as Partial<EvaluationFormRow>);
+      return mapForm((res?.data ?? res) as EvaluationFormRow);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['evaluation-forms'] });
@@ -174,8 +126,7 @@ export function useDeleteEvaluationForm() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const docRef = doc(db, 'evaluation_forms', id);
-      await updateDoc(docRef, { ativo: false });
+      await evaluationFormsApi.delete(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['evaluation-forms'] });
@@ -192,61 +143,15 @@ export function useDuplicateEvaluationForm() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      // 1. Get original form
-      const originalDoc = await getDoc(doc(db, 'evaluation_forms', id));
-      if (!originalDoc.exists()) {
-        throw new Error('Ficha não encontrada');
+      const duplicated = await evaluationFormsApi.duplicate(id);
+      const duplicatedId = (duplicated?.data?.id ?? duplicated?.data?.data?.id) as string | undefined;
+
+      if (!duplicatedId) {
+        throw new Error('Não foi possível duplicar ficha');
       }
 
-      const originalForm = convertDocToEvaluationForm(originalDoc);
-
-      // 2. Create new form
-      const formData = {
-        nome: `${originalForm.nome} (Cópia)`,
-        descricao: originalForm.descricao,
-        referencias: originalForm.referencias,
-        tipo: originalForm.tipo,
-        ativo: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      const newFormRef = await addDoc(collection(db, 'evaluation_forms'), formData);
-      const newFormSnap = await getDoc(newFormRef);
-      const newForm = convertDocToEvaluationForm(newFormSnap);
-
-      // 3. Get original fields
-      const q = firestoreQuery(
-        collection(db, 'evaluation_form_fields'),
-        where('form_id', '==', id)
-      );
-      const fieldsSnap = await getDocs(q);
-      const fields = fieldsSnap.docs.map(convertDocToEvaluationFormField);
-
-      // 4. Insert new fields
-      if (fields && fields.length > 0) {
-        const newFields = fields.map(f => ({
-          form_id: newForm.id,
-          tipo_campo: f.tipo_campo,
-          label: f.label,
-          placeholder: f.placeholder,
-          opcoes: f.opcoes,
-          ordem: f.ordem,
-          obrigatorio: f.obrigatorio,
-          grupo: f.grupo,
-          descricao: f.descricao,
-          minimo: f.minimo,
-          maximo: f.maximo,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }));
-
-        await Promise.all(
-          newFields.map(field => addDoc(collection(db, 'evaluation_form_fields'), field))
-        );
-      }
-
-      return newForm;
+      const full = await evaluationFormsApi.get(duplicatedId);
+      return mapForm((full?.data ?? full) as EvaluationFormRow);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['evaluation-forms'] });
@@ -259,24 +164,16 @@ export function useDuplicateEvaluationForm() {
   });
 }
 
-// Field mutations
 export function useAddFormField() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ formId, field }: { formId: string; field: EvaluationFormFieldFormData }) => {
-      const fieldData = {
+      const res = await evaluationFormsApi.addField(formId, {
         ...field,
-        form_id: formId,
-        opcoes: field.opcoes ? JSON.stringify(field.opcoes) : null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'evaluation_form_fields'), fieldData);
-      const docSnap = await getDoc(docRef);
-
-      return convertDocToEvaluationFormField(docSnap);
+        opcoes: field.opcoes ?? null,
+      });
+      return mapField((res?.data ?? res) as EvaluationFormFieldRow);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['evaluation-form', variables.formId] });
@@ -292,20 +189,12 @@ export function useUpdateFormField() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, _formId, ...field }: Partial<EvaluationFormField> & { id: string; formId: string }) => {
-      const docRef = doc(db, 'evaluation_form_fields', id);
-      const updateData: Record<string, unknown> = { ...field };
-
-      if (updateData.opcoes) {
-        updateData.opcoes = JSON.stringify(updateData.opcoes);
-      }
-
-      updateData.updated_at = new Date().toISOString();
-
-      await updateDoc(docRef, updateData);
-
-      const docSnap = await getDoc(docRef);
-      return convertDocToEvaluationFormField(docSnap);
+    mutationFn: async ({ id, formId: _formId, ...field }: Partial<EvaluationFormField> & { id: string; formId: string }) => {
+      const res = await evaluationFormsApi.updateField(id, {
+        ...field,
+        opcoes: field.opcoes ?? null,
+      });
+      return mapField((res?.data ?? res) as EvaluationFormFieldRow);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['evaluation-form', variables.formId] });
@@ -321,8 +210,8 @@ export function useDeleteFormField() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, _formId }: { id: string; formId: string }) => {
-      await deleteDoc(doc(db, 'evaluation_form_fields', id));
+    mutationFn: async ({ id, formId: _formId }: { id: string; formId: string }) => {
+      await evaluationFormsApi.deleteField(id);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['evaluation-form', variables.formId] });
@@ -347,45 +236,28 @@ export function useImportEvaluationForm() {
 
   return useMutation({
     mutationFn: async (data: EvaluationFormImportData) => {
-      // 1. Create form
-      const formData = {
+      const formRes = await evaluationFormsApi.create({
         nome: data.nome,
         descricao: data.descricao,
         referencias: data.referencias,
         tipo: data.tipo,
         ativo: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+      });
 
-      const formRef = await addDoc(collection(db, 'evaluation_forms'), formData);
-      const formSnap = await getDoc(formRef);
-      const form = convertDocToEvaluationForm(formSnap);
+      const form = (formRes?.data ?? formRes) as EvaluationFormRow;
 
-      // 2. Insert fields
       if (data.fields && data.fields.length > 0) {
-        const fieldsToInsert = data.fields.map(f => ({
-          form_id: form.id,
-          tipo_campo: f.tipo_campo,
-          label: f.label,
-          placeholder: f.placeholder,
-          opcoes: typeof f.opcoes === 'object' && f.opcoes !== null ? JSON.stringify(f.opcoes) : f.opcoes,
-          ordem: f.ordem,
-          obrigatorio: f.obrigatorio,
-          grupo: f.grupo,
-          descricao: f.descricao,
-          minimo: f.minimo,
-          maximo: f.maximo,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }));
-
         await Promise.all(
-          fieldsToInsert.map(field => addDoc(collection(db, 'evaluation_form_fields'), field))
+          data.fields.map((field) =>
+            evaluationFormsApi.addField(form.id, {
+              ...field,
+              opcoes: field.opcoes ?? null,
+            }),
+          ),
         );
       }
 
-      return form;
+      return mapForm(form);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['evaluation-forms'] });

@@ -3,10 +3,8 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, limit, getFirebaseAuth, db } from '@/integrations/firebase/app';
+import { analyticsApi, type PatientProgressSummary } from '@/lib/api/workers-client';
 import { toast } from 'sonner';
-
-const auth = getFirebaseAuth();
 
 import {
   PatientLifecycleEvent,
@@ -17,13 +15,11 @@ import {
   PatientGoalTracking,
   PatientInsight,
   ClinicalBenchmark,
-  PatientProgressSummary,
   PatientAnalyticsData,
   OutcomeMeasureTrend,
   LifecycleEventType,
   PredictionType,
 } from '@/types/patientAnalytics';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 // ============================================================================
 // QUERY KEYS
@@ -44,6 +40,18 @@ export const PATIENT_ANALYTICS_KEYS = {
   dashboard: (patientId: string) => [...PATIENT_ANALYTICS_KEYS.all, patientId, 'dashboard'] as const,
 };
 
+const DEFAULT_PROGRESS_SUMMARY: PatientProgressSummary = {
+  total_sessions: 0,
+  avg_pain_reduction: null,
+  total_pain_reduction: 0,
+  avg_functional_improvement: null,
+  current_pain_level: null,
+  initial_pain_level: null,
+  goals_achieved: 0,
+  goals_in_progress: 0,
+  overall_progress_percentage: null,
+};
+
 // ============================================================================
 // PROGRESS SUMMARY
 // ============================================================================
@@ -52,22 +60,12 @@ export function usePatientProgressSummary(patientId: string) {
   return useQuery({
     queryKey: PATIENT_ANALYTICS_KEYS.progress(patientId),
     queryFn: async (): Promise<PatientProgressSummary> => {
-      // Firebase doesn't support RPC functions directly
-      // This would need to be implemented as a Cloud Function or computed client-side
-      const defaultSummary = {
-        total_sessions: 0,
-        avg_pain_reduction: null,
-        total_pain_reduction: 0,
-        avg_functional_improvement: null,
-        current_pain_level: null,
-        initial_pain_level: null,
-        goals_achieved: 0,
-        goals_in_progress: 0,
-        overall_progress_percentage: null,
-      };
-
-      // For now, return default. In production, this should call a Cloud Function
-      return defaultSummary;
+      try {
+        const response = await analyticsApi.patientProgress(patientId);
+        return response?.data ?? DEFAULT_PROGRESS_SUMMARY;
+      } catch {
+        return DEFAULT_PROGRESS_SUMMARY;
+      }
     },
     enabled: !!patientId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -82,14 +80,9 @@ export function usePatientLifecycleEvents(patientId: string) {
   return useQuery({
     queryKey: PATIENT_ANALYTICS_KEYS.lifecycleEvents(patientId),
     queryFn: async (): Promise<PatientLifecycleEvent[]> => {
-      const q = firestoreQuery(
-        collection(db, 'patient_lifecycle_events'),
-        where('patient_id', '==', patientId),
-        orderBy('event_date', 'asc')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientLifecycleEvent[];
+      if (!patientId) return [];
+      const response = await analyticsApi.patientLifecycleEvents.list(patientId);
+      return response?.data ?? [];
     },
     enabled: !!patientId,
     staleTime: 10 * 60 * 1000, // 10 minutes
@@ -162,17 +155,13 @@ export function useCreateLifecycleEvent() {
 
   return useMutation({
     mutationFn: async (event: Omit<PatientLifecycleEvent, 'id' | 'created_at'>) => {
-      const firebaseUser = auth.currentUser;
-      if (!firebaseUser) throw new Error('Usuário não autenticado');
-
-      const eventData = {
-        ...event,
-        created_by: firebaseUser.uid,
-        created_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'patient_lifecycle_events'), eventData);
-      return { id: docRef.id, ...eventData };
+      const response = await analyticsApi.patientLifecycleEvents.create({
+        patient_id: event.patient_id,
+        event_type: event.event_type,
+        event_date: event.event_date,
+        notes: event.notes,
+      });
+      return response?.data ?? event;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: PATIENT_ANALYTICS_KEYS.lifecycleEvents(variables.patient_id) });
@@ -197,30 +186,12 @@ export function usePatientOutcomeMeasures(
   return useQuery({
     queryKey: [...PATIENT_ANALYTICS_KEYS.outcomes(patientId), measureType, limitValue],
     queryFn: async (): Promise<PatientOutcomeMeasure[]> => {
-      let q = firestoreQuery(
-        collection(db, 'patient_outcome_measures'),
-        where('patient_id', '==', patientId),
-        orderBy('measurement_date', 'asc')
-      );
-
-      if (measureType) {
-        q = firestoreQuery(
-          collection(db, 'patient_outcome_measures'),
-          where('patient_id', '==', patientId),
-          where('measure_type', '==', measureType),
-          orderBy('measurement_date', 'asc')
-        );
-      }
-
-      if (limitValue) {
-        // Firestore doesn't have a direct limit after where, need to apply client-side
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }))
-          .slice(0, limitValue) as PatientOutcomeMeasure[];
-      }
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientOutcomeMeasure[];
+      if (!patientId) return [];
+      const response = await analyticsApi.patientOutcomeMeasures.list(patientId, {
+        measureType,
+        limit: limitValue,
+      });
+      return response?.data ?? [];
     },
     enabled: !!patientId,
     staleTime: 5 * 60 * 1000,
@@ -300,18 +271,23 @@ export function useCreateOutcomeMeasure() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (measure: Omit<PatientOutcomeMeasure, 'id' | 'created_at' | 'normalized_score' | 'min_score' | 'max_score'>) => {
-      const firebaseUser = auth.currentUser;
-      if (!firebaseUser) throw new Error('Usuário não autenticado');
-
-      const measureData = {
-        ...measure,
-        recorded_by: firebaseUser.uid,
-        created_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'patient_outcome_measures'), measureData);
-      return { id: docRef.id, ...measureData };
+    mutationFn: async (measure: Omit<PatientOutcomeMeasure, 'id' | 'created_at'>) => {
+      const response = await analyticsApi.patientOutcomeMeasures.create({
+        patient_id: measure.patient_id,
+        measure_type: measure.measure_type,
+        measure_name: measure.measure_name,
+        score: measure.score,
+        normalized_score: measure.normalized_score,
+        min_score: measure.min_score,
+        max_score: measure.max_score,
+        measurement_date: measure.measurement_date,
+        body_part: measure.body_part,
+        context: measure.context,
+        notes: measure.notes,
+      });
+      const data = response?.data;
+      if (!data) throw new Error('Falha ao registrar medida');
+      return data;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: PATIENT_ANALYTICS_KEYS.outcomes(variables.patient_id) });
@@ -332,20 +308,9 @@ export function usePatientSessionMetrics(patientId: string, limitValue?: number)
   return useQuery({
     queryKey: [...PATIENT_ANALYTICS_KEYS.sessions(patientId), limitValue],
     queryFn: async (): Promise<PatientSessionMetrics[]> => {
-      const q = firestoreQuery(
-        collection(db, 'patient_session_metrics'),
-        where('patient_id', '==', patientId),
-        orderBy('session_date', 'asc')
-      );
-
-      const snapshot = await getDocs(q);
-      let data = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientSessionMetrics[];
-
-      if (limitValue) {
-        data = data.slice(-limitValue);
-      }
-
-      return data;
+      if (!patientId) return [];
+      const response = await analyticsApi.patientSessionMetrics.list(patientId, { limit: limitValue });
+      return response?.data ?? [];
     },
     enabled: !!patientId,
     staleTime: 5 * 60 * 1000,
@@ -356,18 +321,29 @@ export function useCreateSessionMetrics() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (metrics: Omit<PatientSessionMetrics, 'id' | 'pain_reduction' | 'functional_improvement' | 'created_at'>) => {
-      const firebaseUser = auth.currentUser;
-      if (!firebaseUser) throw new Error('Usuário não autenticado');
-
-      const metricsData = {
-        ...metrics,
-        therapist_id: firebaseUser.uid,
-        created_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'patient_session_metrics'), metricsData);
-      return { id: docRef.id, ...metricsData };
+    mutationFn: async (metrics: Omit<PatientSessionMetrics, 'id' | 'created_at'>) => {
+      const response = await analyticsApi.patientSessionMetrics.create({
+        patient_id: metrics.patient_id,
+        session_id: metrics.session_id,
+        session_date: metrics.session_date,
+        session_number: metrics.session_number,
+        pain_level_before: metrics.pain_level_before,
+        functional_score_before: metrics.functional_score_before,
+        mood_before: metrics.mood_before,
+        duration_minutes: metrics.duration_minutes,
+        treatment_type: metrics.treatment_type,
+        techniques_used: metrics.techniques_used,
+        areas_treated: metrics.areas_treated,
+        pain_level_after: metrics.pain_level_after,
+        functional_score_after: metrics.functional_score_after,
+        mood_after: metrics.mood_after,
+        patient_satisfaction: metrics.patient_satisfaction,
+        pain_reduction: metrics.pain_reduction,
+        functional_improvement: metrics.functional_improvement,
+        notes: metrics.notes,
+        therapist_id: metrics.therapist_id,
+      });
+      return response?.data ?? metrics;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: PATIENT_ANALYTICS_KEYS.sessions(variables.patient_id) });
@@ -388,25 +364,12 @@ export function usePatientPredictions(patientId: string, predictionType?: Predic
   return useQuery({
     queryKey: [...PATIENT_ANALYTICS_KEYS.predictions(patientId), predictionType],
     queryFn: async (): Promise<PatientPrediction[]> => {
-      let q = firestoreQuery(
-        collection(db, 'patient_predictions'),
-        where('patient_id', '==', patientId),
-        where('is_active', '==', true),
-        orderBy('prediction_date', 'desc')
-      );
-
-      if (predictionType) {
-        q = firestoreQuery(
-          collection(db, 'patient_predictions'),
-          where('patient_id', '==', patientId),
-          where('prediction_type', '==', predictionType),
-          where('is_active', '==', true),
-          orderBy('prediction_date', 'desc')
-        );
-      }
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientPrediction[];
+      if (!patientId) return [];
+      const response = await analyticsApi.patientPredictions.list(patientId, {
+        predictionType,
+        limit: 50,
+      });
+      return response?.data ?? [];
     },
     enabled: !!patientId,
     staleTime: 15 * 60 * 1000, // 15 minutes
@@ -421,18 +384,9 @@ export function usePatientRiskScore(patientId: string) {
   return useQuery({
     queryKey: PATIENT_ANALYTICS_KEYS.risk(patientId),
     queryFn: async (): Promise<PatientRiskScore | null> => {
-      const q = firestoreQuery(
-        collection(db, 'patient_risk_scores'),
-        where('patient_id', '==', patientId),
-        orderBy('calculated_at', 'desc'),
-        limit(1)
-      );
-
-      const snapshot = await getDocs(q);
-
-      if (snapshot.empty) return null;
-
-      return { id: snapshot.docs[0].id, ...snapshot.docs[0].data() } as PatientRiskScore;
+      if (!patientId) return null;
+      const response = await analyticsApi.patientRisk(patientId);
+      return response?.data ?? null;
     },
     enabled: !!patientId,
     staleTime: 30 * 60 * 1000, // 30 minutes
@@ -466,14 +420,9 @@ export function usePatientGoals(patientId: string) {
   return useQuery({
     queryKey: PATIENT_ANALYTICS_KEYS.goals(patientId),
     queryFn: async (): Promise<PatientGoalTracking[]> => {
-      const q = firestoreQuery(
-        collection(db, 'patient_goal_tracking'),
-        where('patient_id', '==', patientId),
-        orderBy('target_date', 'asc')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientGoalTracking[];
+      if (!patientId) return [];
+      const response = await analyticsApi.patientGoals.list(patientId);
+      return response?.data ?? [];
     },
     enabled: !!patientId,
     staleTime: 5 * 60 * 1000,
@@ -484,19 +433,9 @@ export function useCreateGoal() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (goal: Omit<PatientGoalTracking, 'id' | 'progress_percentage' | 'achieved_at' | 'created_at' | 'updated_at' | 'created_by'>) => {
-      const firebaseUser = auth.currentUser;
-      if (!firebaseUser) throw new Error('Usuário não autenticado');
-
-      const goalData = {
-        ...goal,
-        created_by: firebaseUser.uid,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'patient_goal_tracking'), goalData);
-      return { id: docRef.id, ...goalData };
+    mutationFn: async (goal: Omit<PatientGoalTracking, 'id' | 'created_at' | 'updated_at'>) => {
+      const response = await analyticsApi.patientGoals.create(goal);
+      return response?.data ?? goal;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: PATIENT_ANALYTICS_KEYS.goals(variables.patient_id) });
@@ -513,15 +452,8 @@ export function useUpdateGoal() {
 
   return useMutation({
     mutationFn: async ({ goalId, data }: { goalId: string; data: Partial<PatientGoalTracking> }) => {
-      const docRef = doc(db, 'patient_goal_tracking', goalId);
-
-      await updateDoc(docRef, {
-        ...data,
-        updated_at: new Date().toISOString(),
-      });
-
-      const snapshot = await getDoc(docRef);
-      return { id: snapshot.id, ...snapshot.data() };
+      const response = await analyticsApi.patientGoals.update(goalId, data);
+      return response?.data ?? { id: goalId, ...data };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: PATIENT_ANALYTICS_KEYS.goals(data.patient_id) });
@@ -538,16 +470,8 @@ export function useCompleteGoal() {
 
   return useMutation({
     mutationFn: async (goalId: string) => {
-      const docRef = doc(db, 'patient_goal_tracking', goalId);
-
-      await updateDoc(docRef, {
-        status: 'achieved',
-        achieved_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-
-      const snapshot = await getDoc(docRef);
-      return { id: snapshot.id, ...snapshot.data() };
+      const response = await analyticsApi.patientGoals.complete(goalId);
+      return response?.data ?? { id: goalId, status: 'achieved' };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: PATIENT_ANALYTICS_KEYS.goals(data.patient_id) });
@@ -567,23 +491,9 @@ export function usePatientInsights(patientId: string, includeAcknowledged = fals
   return useQuery({
     queryKey: [...PATIENT_ANALYTICS_KEYS.insights(patientId), includeAcknowledged],
     queryFn: async (): Promise<PatientInsight[]> => {
-      let q = firestoreQuery(
-        collection(db, 'patient_insights'),
-        where('patient_id', '==', patientId),
-        orderBy('created_at', 'desc')
-      );
-
-      if (!includeAcknowledged) {
-        q = firestoreQuery(
-          collection(db, 'patient_insights'),
-          where('patient_id', '==', patientId),
-          where('is_acknowledged', '==', false),
-          orderBy('created_at', 'desc')
-        );
-      }
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientInsight[];
+      if (!patientId) return [];
+      const response = await analyticsApi.patientInsights.list(patientId, { includeAcknowledged });
+      return response?.data ?? [];
     },
     enabled: !!patientId,
     staleTime: 5 * 60 * 1000,
@@ -594,20 +504,9 @@ export function useAcknowledgeInsight() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ insightId, _patientId }: { insightId: string; patientId: string }) => {
-      const firebaseUser = auth.currentUser;
-      if (!firebaseUser) throw new Error('Usuário não autenticado');
-
-      const docRef = doc(db, 'patient_insights', insightId);
-
-      await updateDoc(docRef, {
-        is_acknowledged: true,
-        acknowledged_at: new Date().toISOString(),
-        acknowledged_by: firebaseUser.uid,
-      });
-
-      const snapshot = await getDoc(docRef);
-      return { id: snapshot.id, ...snapshot.data() };
+    mutationFn: async ({ insightId, patientId }: { insightId: string; patientId: string }) => {
+      const response = await analyticsApi.patientInsights.acknowledge(insightId);
+      return response?.data;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: PATIENT_ANALYTICS_KEYS.insights(variables.patientId) });
@@ -626,21 +525,8 @@ export function useClinicalBenchmarks(benchmarkCategory?: string) {
   return useQuery({
     queryKey: [...PATIENT_ANALYTICS_KEYS.benchmarks(), benchmarkCategory],
     queryFn: async (): Promise<ClinicalBenchmark[]> => {
-      let q = firestoreQuery(
-        collection(db, 'clinical_benchmarks'),
-        orderBy('benchmark_name', 'asc')
-      );
-
-      if (benchmarkCategory) {
-        q = firestoreQuery(
-          collection(db, 'clinical_benchmarks'),
-          where('benchmark_category', '==', benchmarkCategory),
-          orderBy('benchmark_name', 'asc')
-        );
-      }
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as ClinicalBenchmark[];
+      const response = await analyticsApi.clinicalBenchmarks.list(benchmarkCategory);
+      return response?.data ?? [];
     },
     staleTime: 60 * 60 * 1000, // 1 hour
   });

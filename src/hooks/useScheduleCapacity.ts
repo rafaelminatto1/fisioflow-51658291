@@ -1,15 +1,12 @@
 /**
- * useScheduleCapacity - Migrated to Firebase
- *
+ * useScheduleCapacity - Migrated to Neon/Workers
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDoc, getDocs, setDoc, query as firestoreQuery, where, db } from '@/integrations/firebase/app';
+import { schedulingApi, type ScheduleCapacityConfig } from '@/lib/api/workers-client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { z } from 'zod';
-import { fisioLogger as logger } from '@/lib/errors/logger';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 const capacitySchema = z.object({
   day_of_week: z.number().min(0).max(6),
@@ -40,61 +37,39 @@ export interface CapacityGroup {
   days: number[];
 }
 
-// Helper to convert doc
-const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }): ScheduleCapacity => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as ScheduleCapacity);
-const isPermissionDeniedError = (error: unknown): boolean => {
-  const code = (error as { code?: string })?.code;
-  const message = (error as Error)?.message?.toLowerCase?.() ?? '';
-  return (
-    code === 'permission-denied' ||
-    code === 'failed-precondition' ||
-    message.includes('insufficient permissions') ||
-    message.includes('requires an index')
-  );
-};
-
 export function useScheduleCapacity() {
   const { toast } = useToast();
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
 
-  // Validate user ID format (must be UUID) - Firebase IDs are not UUIDs usually, but generic check
   const isValidUserId = !!user?.uid;
-
   const organizationId = profile?.organization_id;
 
-  // Cache por 2 min para evitar refetch ao trocar de aba
   const STALE_TIME_MS = 2 * 60 * 1000;
 
   const { data: capacities, isLoading } = useQuery({
     queryKey: ['schedule-capacity', organizationId],
     queryFn: async () => {
-      if (!organizationId) return [];
-
-      const q = firestoreQuery(
-        collection(db, 'schedule_capacity_config'),
-        where('organization_id', '==', organizationId)
-      );
-
-      try {
-        const snapshot = await getDocs(q);
-        return snapshot.docs
-          .map(convertDoc)
-          .sort((a, b) => {
-            if (a.day_of_week !== b.day_of_week) return a.day_of_week - b.day_of_week;
-            return timeToMinutes(a.start_time) - timeToMinutes(b.start_time);
-          });
-      } catch (error) {
-        if (isPermissionDeniedError(error)) {
-          logger.warn('[useScheduleCapacity] Sem permissão para listar configurações de capacidade', { organizationId }, 'useScheduleCapacity');
-          return [];
-        }
-        throw error;
-      }
+      const res = await schedulingApi.capacity.list();
+      const data = (res?.data ?? []) as ScheduleCapacityConfig[];
+      return data
+        .map((row) => ({
+          id: String(row.id),
+          day_of_week: Number(row.day_of_week ?? 0),
+          start_time: String(row.start_time ?? '07:00'),
+          end_time: String(row.end_time ?? '19:00'),
+          max_patients: Number(row.max_patients ?? 1),
+          created_at: String(row.created_at ?? ''),
+          updated_at: String(row.updated_at ?? ''),
+        }))
+        .sort((a, b) => {
+          if (a.day_of_week !== b.day_of_week) return a.day_of_week - b.day_of_week;
+          return timeToMinutes(a.start_time) - timeToMinutes(b.start_time);
+        });
     },
     enabled: !!organizationId,
     staleTime: STALE_TIME_MS,
-    retry: (failureCount, error) => !isPermissionDeniedError(error) && failureCount < 2,
+    retry: 2,
   });
 
   const createCapacity = useMutation({
@@ -102,41 +77,10 @@ export function useScheduleCapacity() {
       if (!organizationId) {
         throw new Error('Organização não encontrada. Tente novamente.');
       }
-
-      // Garantir que o perfil no Firestore tenha organization_id e role para as regras de segurança
-      if (user?.uid) {
-        logger.debug('[useScheduleCapacity] Syncing profile to Firestore before save', { uid: user.uid, organizationId, role: profile?.role }, 'useScheduleCapacity');
-        try {
-          await setDoc(
-            doc(db, 'profiles', user.uid),
-            {
-              organization_id: organizationId,
-              role: profile?.role ?? 'fisioterapeuta',
-              updated_at: new Date().toISOString(),
-            },
-            { merge: true }
-          );
-          logger.debug('[useScheduleCapacity] Profile synced successfully', {}, 'useScheduleCapacity');
-        } catch (profileErr) {
-          logger.warn('[useScheduleCapacity] Profile sync failed (continuing with addDoc)', { error: profileErr }, 'useScheduleCapacity');
-        }
-      }
-
       const validated = capacitySchema.parse(formData);
-      logger.debug('[useScheduleCapacity] Adding capacity doc to Firestore', { organization_id: organizationId, day_of_week: validated.day_of_week }, 'useScheduleCapacity');
-
-      const docRef = await addDoc(collection(db, 'schedule_capacity_config'), {
-        day_of_week: validated.day_of_week,
-        start_time: validated.start_time,
-        end_time: validated.end_time,
-        max_patients: validated.max_patients,
-        organization_id: organizationId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
-
-      const newDoc = await getDoc(docRef);
-      return convertDoc(newDoc);
+      const res = await schedulingApi.capacity.create(validated);
+      const created = (res?.data ?? []) as ScheduleCapacity[];
+      return created[0];
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedule-capacity', organizationId] });
@@ -145,8 +89,7 @@ export function useScheduleCapacity() {
         description: 'A capacidade de horário foi configurada com sucesso.',
       });
     },
-    onError: (error: Error & { code?: string }) => {
-      logger.error('[useScheduleCapacity] createCapacity failed', { message: error.message, code: error.code, stack: error.stack }, 'useScheduleCapacity');
+    onError: (error: Error) => {
       toast({
         title: 'Erro ao salvar configuração',
         description: error.message,
@@ -155,49 +98,15 @@ export function useScheduleCapacity() {
     },
   });
 
-  // Criar múltiplas configurações (uma para cada dia selecionado)
   const createMultipleCapacities = useMutation({
     mutationFn: async (formDataArray: CapacityFormData[]) => {
       if (!organizationId) {
         throw new Error('Organização não encontrada. Tente novamente.');
       }
 
-      // Garantir que o perfil no Firestore tenha organization_id e role para as regras de segurança
-      if (user?.uid) {
-        logger.debug('[useScheduleCapacity] createMultiple: syncing profile', { uid: user.uid, organizationId }, 'useScheduleCapacity');
-        try {
-          await setDoc(
-            doc(db, 'profiles', user.uid),
-            {
-              organization_id: organizationId,
-              role: profile?.role ?? 'fisioterapeuta',
-              updated_at: new Date().toISOString(),
-            },
-            { merge: true }
-          );
-          logger.debug('[useScheduleCapacity] createMultiple: profile synced', {}, 'useScheduleCapacity');
-        } catch (profileErr) {
-          logger.warn('[useScheduleCapacity] createMultiple: profile sync failed', { error: profileErr }, 'useScheduleCapacity');
-        }
-      }
-
-      logger.debug('[useScheduleCapacity] createMultiple: adding capacity docs', { count: formDataArray.length }, 'useScheduleCapacity');
-      const promises = formDataArray.map(async formData => {
-        const validated = capacitySchema.parse(formData);
-        const docRef = await addDoc(collection(db, 'schedule_capacity_config'), {
-          day_of_week: validated.day_of_week,
-          start_time: validated.start_time,
-          end_time: validated.end_time,
-          max_patients: validated.max_patients,
-          organization_id: organizationId,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
-        const newDoc = await getDoc(docRef);
-        return convertDoc(newDoc);
-      });
-
-      return await Promise.all(promises);
+      const payload = formDataArray.map((formData) => capacitySchema.parse(formData));
+      const res = await schedulingApi.capacity.create(payload);
+      return (res?.data ?? []) as ScheduleCapacity[];
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['schedule-capacity', organizationId] });
@@ -207,8 +116,7 @@ export function useScheduleCapacity() {
         description: `${count} configuração(ões) de capacidade foram salvas com sucesso.`,
       });
     },
-    onError: (error: Error & { code?: string }) => {
-      logger.error('[useScheduleCapacity] createMultipleCapacities failed', { message: error.message, code: error.code }, 'useScheduleCapacity');
+    onError: (error: Error) => {
       toast({
         title: 'Erro ao salvar configurações',
         description: error.message,
@@ -222,9 +130,8 @@ export function useScheduleCapacity() {
       if (!organizationId) {
         throw new Error('Organização não encontrada. Tente novamente.');
       }
-
-      const docRef = doc(db, 'schedule_capacity_config', id);
-      await updateDoc(docRef, { ...data, updated_at: new Date().toISOString() });
+      const res = await schedulingApi.capacity.update(id, data);
+      return (res?.data ?? res) as ScheduleCapacity;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedule-capacity'] });
@@ -247,8 +154,7 @@ export function useScheduleCapacity() {
       if (!organizationId) {
         throw new Error('Organização não encontrada. Tente novamente.');
       }
-
-      await deleteDoc(doc(db, 'schedule_capacity_config', id));
+      await schedulingApi.capacity.delete(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedule-capacity'] });
@@ -271,9 +177,8 @@ export function useScheduleCapacity() {
       if (!organizationId) {
         throw new Error('Organização não encontrada. Tente novamente.');
       }
-      const updated_at = new Date().toISOString();
       await Promise.all(
-        ids.map((id) => updateDoc(doc(db, 'schedule_capacity_config', id), { max_patients, updated_at }))
+        ids.map((id) => schedulingApi.capacity.update(id, { max_patients })),
       );
     },
     onSuccess: () => {
@@ -297,7 +202,7 @@ export function useScheduleCapacity() {
       if (!organizationId) {
         throw new Error('Organização não encontrada. Tente novamente.');
       }
-      await Promise.all(ids.map((id) => deleteDoc(doc(db, 'schedule_capacity_config', id))));
+      await Promise.all(ids.map((id) => schedulingApi.capacity.delete(id)));
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schedule-capacity'] });
@@ -326,17 +231,13 @@ export function useScheduleCapacity() {
     start1: string,
     end1: string,
     start2: string,
-    end2: string
+    end2: string,
   ): boolean => {
     const start1Min = timeToMinutes(start1);
     const end1Min = timeToMinutes(end1);
     const start2Min = timeToMinutes(start2);
     const end2Min = timeToMinutes(end2);
 
-    // Dois intervalos se sobrepõem se:
-    // - O início do novo está dentro do existente, OU
-    // - O fim do novo está dentro do existente, OU
-    // - O novo contém completamente o existente
     return (
       (start2Min >= start1Min && start2Min < end1Min) ||
       (end2Min > start1Min && end2Min <= end1Min) ||
@@ -348,7 +249,7 @@ export function useScheduleCapacity() {
   const checkConflicts = (
     selectedDays: number[],
     startTime: string,
-    endTime: string
+    endTime: string,
   ): { hasConflict: boolean; conflicts: Array<{ day: number; dayLabel: string; start: string; end: string }> } => {
     if (!capacities || capacities.length === 0) {
       return { hasConflict: false, conflicts: [] };
@@ -366,7 +267,7 @@ export function useScheduleCapacity() {
     };
 
     for (const day of selectedDays) {
-      const existingConfigs = capacities.filter(c => c.day_of_week === day);
+      const existingConfigs = capacities.filter((c) => c.day_of_week === day);
 
       for (const config of existingConfigs) {
         if (checkTimeOverlap(config.start_time, config.end_time, startTime, endTime)) {
@@ -388,11 +289,11 @@ export function useScheduleCapacity() {
 
   // Helper para obter capacidade de um horário específico
   const getCapacityForTime = (dayOfWeek: number, time: string): number => {
-    if (!capacities) return 1; // Default: 1 paciente por horário
+    if (!capacities) return 1;
 
     const timeMinutes = timeToMinutes(time);
 
-    const matchingConfig = capacities.find(config => {
+    const matchingConfig = capacities.find((config) => {
       if (config.day_of_week !== dayOfWeek) return false;
 
       const startTime = timeToMinutes(config.start_time);
@@ -406,8 +307,7 @@ export function useScheduleCapacity() {
 
   /**
    * Obtém a menor capacidade configurada em um intervalo de tempo.
-   * Útil para garantir que um agendamento longo não exceda a capacidade em nenhum momento.
-   * Se houver "buracos" sem configuração no intervalo, assume capacidade padrão (1).
+   * Se houver qualquer minuto sem configuração, assume capacidade padrão (1).
    */
   const getMinCapacityForInterval = (dayOfWeek: number, startTimeStr: string, duration: number): number => {
     if (!capacities || capacities.length === 0) return 1;
@@ -415,8 +315,7 @@ export function useScheduleCapacity() {
     const startMinutes = timeToMinutes(startTimeStr);
     const endMinutes = startMinutes + duration;
 
-    // 1. Encontrar todas as configurações que tocam no intervalo
-    const overlappingConfigs = capacities.filter(config => {
+    const overlappingConfigs = capacities.filter((config) => {
       if (config.day_of_week !== dayOfWeek) return false;
 
       const configStart = timeToMinutes(config.start_time);
@@ -431,36 +330,28 @@ export function useScheduleCapacity() {
 
     if (overlappingConfigs.length === 0) return 1;
 
-    // 2. Verificar se o intervalo está TOTALMENTE coberto pelas configurações
-    // Se houver qualquer minuto não coberto, a capacidade desse minuto é 1 (padrão)
-    
-    // Ordenar por início
     overlappingConfigs.sort((a, b) => timeToMinutes(a.start_time) - timeToMinutes(b.start_time));
 
     let currentPointer = startMinutes;
-    
+
     for (const config of overlappingConfigs) {
       const configStart = timeToMinutes(config.start_time);
       const configEnd = timeToMinutes(config.end_time);
 
-      // Se há um buraco entre o ponteiro atual e o início desta config
       if (configStart > currentPointer) {
-        return 1; // Gap detectado -> capacidade 1
+        return 1;
       }
 
-      // Avançar ponteiro
       if (configEnd > currentPointer) {
         currentPointer = configEnd;
       }
     }
 
-    // Se após todas as configs, ainda não chegamos ao fim do agendamento
     if (currentPointer < endMinutes) {
-      return 1; // Gap no final -> capacidade 1
+      return 1;
     }
 
-    // Se coberto totalmente, retorna a menor capacidade encontrada
-    return Math.min(...overlappingConfigs.map(c => c.max_patients));
+    return Math.min(...overlappingConfigs.map((c) => c.max_patients));
   };
 
   const daysOfWeek = [
@@ -473,17 +364,19 @@ export function useScheduleCapacity() {
     { value: 6, label: 'Sábado' },
   ];
 
-  // Agrupa capacidades por (start_time, end_time, max_patients); ordenado por horário e dias
   const capacityGroups: CapacityGroup[] = (() => {
     const list = capacities || [];
     if (list.length === 0) return [];
+
     const key = (c: ScheduleCapacity) => `${c.start_time}|${c.end_time}|${c.max_patients}`;
     const map = new Map<string, ScheduleCapacity[]>();
+
     for (const c of list) {
       const k = key(c);
       if (!map.has(k)) map.set(k, []);
       map.get(k)!.push(c);
     }
+
     const groups: CapacityGroup[] = Array.from(map.entries()).map(([, items]) => ({
       start_time: items[0].start_time,
       end_time: items[0].end_time,
@@ -491,6 +384,7 @@ export function useScheduleCapacity() {
       ids: items.map((i) => i.id),
       days: [...new Set(items.map((i) => i.day_of_week))].sort((a, b) => a - b),
     }));
+
     groups.sort((a, b) => {
       const tA = timeToMinutes(a.start_time);
       const tB = timeToMinutes(b.start_time);
@@ -499,6 +393,7 @@ export function useScheduleCapacity() {
       const dB = b.days[0] ?? 0;
       return dA - dB;
     });
+
     return groups;
   })();
 

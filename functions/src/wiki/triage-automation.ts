@@ -231,7 +231,7 @@ export const notifyBlockedWikiTriageCards = onSchedule(
           title,
           message,
           body: message,
-          link: page.slug ? `/wiki-workspace/${page.slug}` : '/wiki-workspace',
+          link: page.slug ? `/wiki/${page.slug}` : '/wiki',
           metadata: {
             page_id: pageDoc.id,
             template_id: page.template_id || null,

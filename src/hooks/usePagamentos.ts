@@ -1,145 +1,89 @@
 /**
- * usePagamentos - Migrated to Firebase
- *
+ * usePagamentos - Rewritten to use Workers API (financialApi.pagamentos)
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
-import { useToast } from '@/hooks/use-toast';
-import { PagamentoCreate, PagamentoUpdate } from '@/lib/validations/pagamento';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { financialApi, Pagamento } from '@/lib/api/workers-client';
+import { toast } from 'sonner';
 
-export interface Pagamento {
-  id: string;
-  evento_id: string;
-  valor: number;
-  forma_pagamento: string;
-  pago_em: string;
-  observacoes?: string;
-  created_at?: string;
-  updated_at?: string;
-}
+export type { Pagamento };
 
-// Helper: Convert Firestore doc to Pagamento
-const convertDocToPagamento = (doc: { id: string; data: () => Record<string, unknown> }): Pagamento => {
-  const data = normalizeFirestoreData(doc.data());
-  return {
-    id: doc.id,
-    ...data,
-  } as Pagamento;
-};
-
-export function usePagamentos(eventoId: string) {
+export function usePagamentos(eventoId?: string) {
   return useQuery({
     queryKey: ['pagamentos', eventoId],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'pagamentos'),
-        where('evento_id', '==', eventoId),
-        orderBy('pago_em', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDocToPagamento);
+      const res = await financialApi.pagamentos.list(eventoId);
+      return (res?.data ?? res ?? []) as Pagamento[];
     },
-    enabled: !!eventoId,
+    enabled: eventoId !== undefined ? !!eventoId : true,
   });
 }
 
 export function useCreatePagamento() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (pagamento: PagamentoCreate & { pago_em: Date }) => {
-      const dataToInsert = {
+    mutationFn: async (pagamento: Partial<Pagamento> & { pago_em?: Date | string }) => {
+      const data: Partial<Pagamento> = {
         ...pagamento,
-        pago_em: pagamento.pago_em.toISOString().split('T')[0],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        pago_em: pagamento.pago_em instanceof Date
+          ? pagamento.pago_em.toISOString().split('T')[0]
+          : pagamento.pago_em,
       };
-
-      const docRef = await addDoc(collection(db, 'pagamentos'), dataToInsert);
-
-      return {
-        id: docRef.id,
-        ...dataToInsert,
-      } as Pagamento;
+      const res = await financialApi.pagamentos.create(data);
+      return (res?.data ?? res) as Pagamento;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['pagamentos', data.evento_id] });
-      toast({
-        title: 'Pagamento adicionado!',
-        description: 'Pagamento registrado com sucesso.',
-      });
+      queryClient.invalidateQueries({ queryKey: ['pagamentos', data?.evento_id] });
+      queryClient.invalidateQueries({ queryKey: ['pagamentos'] });
+      toast.success('Pagamento adicionado!');
     },
     onError: (error: unknown) => {
-      toast({
-        title: 'Erro ao adicionar pagamento',
-        description: error instanceof Error ? error.message : 'Erro desconhecido',
-        variant: 'destructive',
-      });
+      toast.error('Erro ao adicionar pagamento: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
     },
   });
 }
 
 export function useUpdatePagamento() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ id, data, eventoId }: { id: string; data: PagamentoUpdate & { pago_em?: Date }; eventoId: string }) => {
-      const docRef = doc(db, 'pagamentos', id);
-
-      const dataToUpdate = data.pago_em
-        ? { ...data, pago_em: data.pago_em.toISOString().split('T')[0], updated_at: new Date().toISOString() }
-        : { ...data, updated_at: new Date().toISOString() };
-
-      await updateDoc(docRef, dataToUpdate);
-
-      // Fetch updated document
-      const snapshot = await getDoc(docRef);
-      return { ...convertDocToPagamento(snapshot), evento_id: eventoId };
+    mutationFn: async ({ id, data, eventoId }: { id: string; data: Partial<Pagamento> & { pago_em?: Date | string }; eventoId: string }) => {
+      const updateData: Partial<Pagamento> = {
+        ...data,
+        pago_em: data.pago_em instanceof Date
+          ? data.pago_em.toISOString().split('T')[0]
+          : data.pago_em,
+      };
+      const res = await financialApi.pagamentos.update(id, updateData);
+      return { ...(res?.data ?? res), evento_id: eventoId } as Pagamento & { evento_id: string };
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['pagamentos', data.evento_id] });
-      toast({
-        title: 'Pagamento atualizado!',
-        description: 'Alterações salvas com sucesso.',
-      });
+      queryClient.invalidateQueries({ queryKey: ['pagamentos', data?.evento_id] });
+      queryClient.invalidateQueries({ queryKey: ['pagamentos'] });
+      toast.success('Pagamento atualizado!');
     },
     onError: (error: unknown) => {
-      toast({
-        title: 'Erro ao atualizar pagamento',
-        description: error instanceof Error ? error.message : 'Erro desconhecido',
-        variant: 'destructive',
-      });
+      toast.error('Erro ao atualizar pagamento: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
     },
   });
 }
 
 export function useDeletePagamento() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async ({ id, eventoId }: { id: string; eventoId: string }) => {
-      await deleteDoc(doc(db, 'pagamentos', id));
+      await financialApi.pagamentos.delete(id);
       return eventoId;
     },
     onSuccess: (eventoId) => {
       queryClient.invalidateQueries({ queryKey: ['pagamentos', eventoId] });
-      toast({
-        title: 'Pagamento removido!',
-        description: 'Pagamento excluído com sucesso.',
-      });
+      queryClient.invalidateQueries({ queryKey: ['pagamentos'] });
+      toast.success('Pagamento removido!');
     },
     onError: (error: unknown) => {
-      toast({
-        title: 'Erro ao remover pagamento',
-        description: error instanceof Error ? error.message : 'Erro desconhecido',
-        variant: 'destructive',
-      });
+      toast.error('Erro ao remover pagamento: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
     },
   });
 }

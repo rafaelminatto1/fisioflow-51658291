@@ -3,38 +3,42 @@
  * Versão Native do Hook de Sincronização
  */
 
-import { useEffect } from 'react';
-import { getDatabase, ref, onValue, off } from 'firebase/database';
+import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { app } from '@/integrations/firebase/app';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
+import { appointmentsApi } from '@/lib/api/workers-client';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export const useRealtimeAppointments = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const lastTimestampRef = useRef<string | null>(null);
 
   useEffect(() => {
-    // No mobile, pegamos o orgId do profile/context
-    const orgId = 'default'; // Idealmente viria do context
-
     if (!user) return;
 
-    const db = getDatabase(app);
-    const triggerRef = ref(db, `orgs/${orgId}/agenda/refresh_trigger`);
+    let active = true;
 
-    const unsubscribe = onValue(triggerRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const val = snapshot.val();
-        queryClient.invalidateQueries({ queryKey: ['appointments_v2'] });
-
-        const now = Date.now();
-        if (val._timestamp && (now - val._timestamp < 5000)) {
-          // Feedback silencioso no mobile ou um log
-          console.log('[Realtime] Agenda synced');
+    const poll = async () => {
+      try {
+        const res = await appointmentsApi.lastUpdated();
+        if (!active) return;
+        const next = res?.data?.last_updated_at ?? null;
+        if (next && next !== lastTimestampRef.current) {
+          lastTimestampRef.current = next;
+          queryClient.invalidateQueries({ queryKey: ['appointments_v2'] });
+          logger.info('[Realtime Native] Agenda synced', { timestamp: next }, 'useRealtimeAppointments.native');
         }
+      } catch (error) {
+        logger.debug('Erro restrito ao polling mobile', error, 'useRealtimeAppointments.native');
       }
-    });
+    };
 
-    return () => off(triggerRef, 'value', unsubscribe);
+    void poll();
+    const interval = setInterval(() => void poll(), 15000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
   }, [user, queryClient]);
 };

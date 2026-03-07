@@ -54,7 +54,7 @@ O aplicativo atualmente apresenta lacunas críticas de compliance que impedem su
 11. THE Terms_of_Service SHALL be available in Portuguese (Brazil)
 12. THE App SHALL store a timestamp of when Professional_User accepted Privacy_Policy and Terms_of_Service
 13. WHEN Privacy_Policy or Terms_of_Service are updated, THE App SHALL require Professional_User to review and accept changes before continued use
-14. THE Privacy_Policy SHALL include contact information for privacy inquiries (email: privacidade@fisioflow.com.br)
+14. THE Privacy_Policy SHALL include contact information for privacy inquiries (email: privacidade@moocafisio.com.br)
 15. THE Privacy_Policy SHALL include information about Professional_User rights under LGPD (access, correction, deletion, portability)
 
 

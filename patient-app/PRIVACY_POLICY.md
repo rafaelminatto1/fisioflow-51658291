@@ -84,7 +84,7 @@ Você tem direito a:
 
 ### Para exercer seus direitos:
 - Acesse: Configurações > Privacidade > "Meus Dados"
-- Ou entre em contato: privacidade@fisioflow.com.br
+- Ou entre em contato: privacidade@moocafisio.com.br
 
 ## 6. Uso offline
 
@@ -115,8 +115,8 @@ Podemos atualizar esta política periodicamente. Notificaremos você sobre:
 
 Para dúvidas, preocupações ou exercer seus direitos:
 
-**E-mail**: privacidade@fisioflow.com.br
-**Site**: https://fisioflow.com.br/privacidade
+**E-mail**: privacidade@moocafisio.com.br
+**Site**: https://moocafisio.com.br/privacidade
 **Endereço**: [Seu endereço completo]
 
 Última atualização: Fevereiro de 2026

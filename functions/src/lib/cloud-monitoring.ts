@@ -22,7 +22,7 @@ interface CloudMonitoringConfig {
  */
 const DEFAULT_CONFIG: CloudMonitoringConfig = {
   projectId: process.env.GCLOUD_PROJECT || process.env.GOOGLE_CLOUD_PROJECT || '',
-  metricDomain: 'fisioflow.com.br',
+  metricDomain: 'moocafisio.com.br',
   metricPrefix: 'custom.googleapis.com',
 };
 

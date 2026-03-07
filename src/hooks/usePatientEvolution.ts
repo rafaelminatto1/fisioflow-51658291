@@ -16,6 +16,7 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
 import { getAuth } from 'firebase/auth';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
 import { getErrorMessage } from '@/types';
+import { clinicalApi, goalsApi } from '@/lib/api/workers-client';
 
 const auth = getAuth();
 
@@ -172,14 +173,8 @@ export const usePatientGoals = (patientId: string) => {
   return useQuery({
     queryKey: ['patient-goals', patientId],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'patient_goals'),
-        where('patient_id', '==', patientId),
-        orderBy('created_at', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientGoal[];
+      const res = await clinicalApi.goals.list(patientId);
+      return (res?.data ?? []) as PatientGoal[];
     },
     enabled: !!patientId,
     // OTIMIZAÇÃO: Aumentado staleTime - objetivos mudam pouco durante uma sessão
@@ -327,14 +322,8 @@ export const useUpdateGoal = () => {
 
   return useMutation({
     mutationFn: async ({ goalId, data }: { goalId: string; data: Partial<PatientGoal> }) => {
-      const docRef = doc(db, 'patient_goals', goalId);
-      await updateDoc(docRef, {
-        ...data,
-        updated_at: new Date().toISOString(),
-      });
-
-      const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...(docSnap.data() as PatientGoal) } as PatientGoal;
+      const res = await goalsApi.update(goalId, data);
+      return (res?.data ?? res) as PatientGoal;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient-goals', data.patient_id] });
@@ -350,17 +339,11 @@ export const useCompleteGoal = () => {
 
   return useMutation({
     mutationFn: async (goalId: string) => {
-      const docRef = doc(db, 'patient_goals', goalId);
-      const updateData = {
+      const res = await goalsApi.update(goalId, {
         status: 'concluido',
-        completed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      await updateDoc(docRef, updateData);
-
-      const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...(docSnap.data() as PatientGoal) } as PatientGoal;
+        achieved_at: new Date().toISOString(),
+      });
+      return (res?.data ?? res) as PatientGoal;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient-goals', data.patient_id] });
@@ -376,19 +359,15 @@ export const useCreateGoal = () => {
 
   return useMutation({
     mutationFn: async (goal: Omit<PatientGoal, 'id' | 'created_at' | 'updated_at' | 'created_by' | 'status'> & { status?: PatientGoal['status'] }) => {
-      const user = getCurrentUser();
-      if (!user) throw new Error('Usuário não autenticado');
-
-      const docRef = await addDoc(collection(db, 'patient_goals'), {
-        ...goal,
+      const payload = {
+        patient_id: goal.patient_id,
+        description: goal.description,
+        target_date: goal.target_date,
+        priority: goal.priority,
         status: goal.status || 'em_andamento',
-        created_by: user.uid,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-
-      const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...(docSnap.data() as PatientGoal) };
+      };
+      const res = await goalsApi.create(payload);
+      return (res?.data ?? res) as PatientGoal;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient-goals', (data as PatientGoal).patient_id] });
@@ -414,17 +393,14 @@ export const useUpdateGoalStatus = () => {
 
   return useMutation({
     mutationFn: async ({ goalId, status }: { goalId: string; status: 'em_andamento' | 'concluido' | 'cancelado' }) => {
-      const docRef = doc(db, 'patient_goals', goalId);
-      const updates: Record<string, string | boolean | undefined> = {
+      const updates: Record<string, unknown> = {
         status,
-        updated_at: new Date().toISOString(),
-        completed_at: status === 'concluido' ? new Date().toISOString() : undefined,
       };
-
-      await updateDoc(docRef, updates);
-
-      const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...docSnap.data() };
+      if (status === 'concluido') {
+        updates.achieved_at = new Date().toISOString();
+      }
+      const res = await goalsApi.update(goalId, updates);
+      return (res?.data ?? res);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient-goals', (data as PatientGoal).patient_id] });
@@ -443,8 +419,7 @@ export const useDeleteGoal = () => {
 
   return useMutation({
     mutationFn: async (goalId: string) => {
-      const docRef = doc(db, 'patient_goals', goalId);
-      await deleteDoc(docRef);
+      await goalsApi.delete(goalId);
       return goalId;
     },
     onSuccess: () => {

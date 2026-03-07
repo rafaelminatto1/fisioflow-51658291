@@ -29,62 +29,29 @@ function isExpired(token: string): boolean {
   return payload.exp <= nowSeconds;
 }
 
-function pickTokenFromSession(sessionResult: unknown): string | null {
-  const raw = sessionResult as Record<string, any>;
-  const session = raw?.data?.session ?? raw?.session ?? null;
-  const candidates = [
-    raw?.token,
-    raw?.accessToken,
-    raw?.access_token,
-    raw?.idToken,
-    raw?.id_token,
-    session?.token,
-    session?.accessToken,
-    session?.access_token,
-    session?.idToken,
-    session?.id_token,
-  ];
+/** In-memory cache so we don't call /get-session on every request */
+let cachedJwt: string | null = null;
+let cachedJwtExpiry = 0;
 
-  for (const candidate of candidates) {
-    if (typeof candidate === 'string' && candidate.trim().length > 0) {
-      return candidate.trim();
-    }
-  }
-
-  return null;
+function getCachedJwt(): string | null {
+  if (!cachedJwt) return null;
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  // Keep a 30-second buffer
+  if (cachedJwtExpiry > 0 && nowSeconds >= cachedJwtExpiry - 30) return null;
+  return cachedJwt;
 }
 
-async function getTokenFromClient(forceSessionReload = false): Promise<string | null> {
-  const client = authClient as any;
-
-  if (!forceSessionReload) {
-    const storeSession = client?.useSession?.getState?.();
-    const fromStore = pickTokenFromSession(storeSession);
-    if (fromStore) return fromStore;
-  }
-
-  // Alguns SDKs expõem helpers diretos para token.
-  try {
-    const directToken = await client?.getToken?.();
-    if (typeof directToken === 'string' && directToken.trim().length > 0) {
-      return directToken.trim();
-    }
-    const directTokenFromData = pickTokenFromSession(directToken);
-    if (directTokenFromData) return directTokenFromData;
-  } catch {
-    // segue para getSession
-  }
-
-  // Neon auth instances may not expose /auth/get-token on all environments.
-  // getSession() is the stable path and already carries JWT when authenticated.
-  const liveSession = await authClient.getSession();
-  const tokenFromSession = pickTokenFromSession(liveSession);
-  if (tokenFromSession) return tokenFromSession;
-
-  const liveSessionFromStore = client?.useSession?.getState?.();
-  return pickTokenFromSession(liveSessionFromStore);
+function setCachedJwt(token: string): void {
+  cachedJwt = token;
+  const payload = decodeJwtPayload(token);
+  cachedJwtExpiry = payload?.exp ?? 0;
 }
 
+/**
+ * Fetches the real JWT from the Neon Auth `/get-session` endpoint.
+ * Neon Auth puts the JWT in the `set-auth-jwt` response header (not the JSON body).
+ * The JSON body only contains an opaque session token.
+ */
 async function getJwtFromSessionEndpoint(): Promise<string | null> {
   const authBase = import.meta.env.VITE_NEON_AUTH_URL as string | undefined;
   if (!authBase) return null;
@@ -97,25 +64,20 @@ async function getJwtFromSessionEndpoint(): Promise<string | null> {
 
     if (!response.ok) return null;
 
+    // JWT is in the set-auth-jwt header (as confirmed from Neon Auth response analysis)
     const headerCandidates = [
       response.headers.get('set-auth-jwt'),
       response.headers.get('x-auth-jwt'),
       response.headers.get('authorization')?.replace(/^Bearer\s+/i, ''),
     ];
+
     for (const headerToken of headerCandidates) {
-      if (typeof headerToken === 'string' && headerToken.trim().length > 0) {
+      if (typeof headerToken === 'string' && looksLikeJwt(headerToken.trim())) {
         return headerToken.trim();
       }
     }
-
-    // Fallback: alguns ambientes retornam o token no payload JSON.
-    const payload = await response.json().catch(() => null);
-    const tokenFromPayload = pickTokenFromSession(payload);
-    if (tokenFromPayload) {
-      return tokenFromPayload;
-    }
   } catch {
-    return null;
+    // Network error, fail silently
   }
 
   return null;
@@ -126,27 +88,37 @@ export async function getNeonAccessToken(options: GetNeonAccessTokenOptions = {}
     throw new Error('Neon Auth não está habilitado (VITE_NEON_AUTH_URL ausente).');
   }
 
-  let token = await getTokenFromClient(Boolean(options.forceSessionReload));
-  if (!token || !looksLikeJwt(token) || isExpired(token)) {
-    const jwtFromHeader = await getJwtFromSessionEndpoint();
-    if (jwtFromHeader) token = jwtFromHeader;
+  // 1. Return from memory cache if still valid
+  if (!options.forceSessionReload) {
+    const cached = getCachedJwt();
+    if (cached) return cached;
   }
 
-  if (!token) {
-    throw new Error('Token JWT do Neon Auth indisponível.');
+  // 2. Fetch the real JWT from Neon Auth's /get-session (set-auth-jwt header)
+  const jwt = await getJwtFromSessionEndpoint();
+
+  if (!jwt) {
+    throw new Error('Token JWT do Neon Auth indisponível. Certifique-se de estar logado.');
   }
 
-  if (!looksLikeJwt(token)) {
-    throw new Error('Token do Neon Auth em formato inválido.');
+  if (!looksLikeJwt(jwt)) {
+    throw new Error('Token do Neon Auth em formato inválido (não é um JWT).');
   }
 
-  if (isExpired(token)) {
-    const refreshed = await getTokenFromClient(true);
-    if (!refreshed || !looksLikeJwt(refreshed) || isExpired(refreshed)) {
-      throw new Error('Token JWT do Neon Auth expirado.');
-    }
-    return refreshed;
+  if (isExpired(jwt)) {
+    throw new Error('Token JWT do Neon Auth expirado. Faça login novamente.');
   }
 
-  return token;
+  // Cache for subsequent calls
+  setCachedJwt(jwt);
+  return jwt;
 }
+
+/** Call this after successful login to clear the cache and force a fresh JWT fetch */
+export function invalidateNeonTokenCache(): void {
+  cachedJwt = null;
+  cachedJwtExpiry = 0;
+}
+
+// Re-export for backwards compatibility (some hooks call getSession via authClient directly)
+export { authClient };

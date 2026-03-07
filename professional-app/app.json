@@ -7,7 +7,7 @@
     "icon": "./assets/icon.png",
     "scheme": "fisioflowpro",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -26,9 +26,7 @@
       "config": {
         "usesNonExemptEncryption": false
       },
-      "runtimeVersion": {
-        "policy": "appVersion"
-      }
+      "runtimeVersion": "1.0.0"
     },
     "android": {
       "adaptiveIcon": {
