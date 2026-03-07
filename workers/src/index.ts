@@ -43,6 +43,25 @@ import { goalsRoutes } from './routes/goals';
 import { profileRoutes } from './routes/profile';
 import { doctorsRoutes } from './routes/doctors';
 import { goalProfilesRoutes } from './routes/goalProfiles';
+import { financialRoutes } from './routes/financial';
+import { schedulingRoutes } from './routes/scheduling';
+import { crmRoutes } from './routes/crm';
+import { clinicalRoutes } from './routes/clinical';
+import { notificationsRoutes } from './routes/notifications';
+import { eventosRoutes } from './routes/eventos';
+import { auditRoutes } from './routes/auditRoutes';
+import { analyticsRoutes } from './routes/analytics';
+import { evaluationFormsRoutes } from './routes/evaluationForms';
+import { organizationsRoutes } from './routes/organizations';
+import { organizationMembersRoutes } from './routes/organizationMembers';
+import { notificationPreferencesRoutes } from './routes/notificationPreferences';
+import { prestadoresRoutes } from './routes/prestadores';
+import { recibosRoutes } from './routes/recibos';
+import { feriadosRoutes } from './routes/feriados';
+import { pushSubscriptionsRoutes } from './routes/pushSubscriptions';
+import { automationRoutes } from './routes/automation';
+import { gamificationNotificationsRoutes } from './routes/gamificationNotifications';
+import { whatsappRoutes } from './routes/whatsapp';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -92,6 +111,9 @@ app.get('/api/health', async (c) => {
 });
 
 // ===== ROTAS =====
+// Ping simples para health checks de infraestrutura (Playwright webServer, load balancers, etc.)
+app.get('/api/ping', (c) => c.json({ ok: true }, 200));
+
 app.route('/api/exercises', exercisesRoutes);
 app.route('/api/protocols', protocolsRoutes);
 app.route('/api/wiki', wikiRoutes);
@@ -107,6 +129,25 @@ app.route('/api/goals', goalsRoutes);
 app.route('/api/profile', profileRoutes);
 app.route('/api/doctors', doctorsRoutes);
 app.route('/api/goal-profiles', goalProfilesRoutes);
+app.route('/api/financial', financialRoutes);
+app.route('/api/scheduling', schedulingRoutes);
+app.route('/api/crm', crmRoutes);
+app.route('/api/clinical', clinicalRoutes);
+app.route('/api/notifications', notificationsRoutes);
+app.route('/api', eventosRoutes);
+app.route('/api/analytics', analyticsRoutes);
+app.route('/api/audit-logs', auditRoutes);
+app.route('/api/evaluation-forms', evaluationFormsRoutes);
+app.route('/api/organizations', organizationsRoutes);
+app.route('/api/organization-members', organizationMembersRoutes);
+app.route('/api/notification-preferences', notificationPreferencesRoutes);
+app.route('/api/prestadores', prestadoresRoutes);
+app.route('/api/recibos', recibosRoutes);
+app.route('/api/feriados', feriadosRoutes);
+app.route('/api/push-subscriptions', pushSubscriptionsRoutes);
+app.route('/api/automation', automationRoutes);
+app.route('/api/gamification-notifications', gamificationNotificationsRoutes);
+app.route('/api/whatsapp', whatsappRoutes);
 
 // 404 handler
 app.notFound((c) => c.json({ error: 'Rota não encontrada' }, 404));

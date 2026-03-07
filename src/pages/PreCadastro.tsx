@@ -83,8 +83,8 @@ const PreCadastro = () => {
 
         setTokenData({
           ...data,
-          campos_obrigatorios: data.campos_obrigatorios as string[] || ['nome', 'email', 'telefone'],
-          campos_opcionais: data.campos_opcionais as string[] || []
+          campos_obrigatorios: data.campos_obrigatorios as string[] || ['nome', 'email'],
+          campos_opcionais: data.campos_opcionais as string[] || ['telefone']
         });
       } catch (err) {
         // Dado sensível removido: erro de validação de token registrado sem expor o token completo (LGPD)
@@ -104,7 +104,7 @@ const PreCadastro = () => {
     if (!tokenData) return;
 
     // Validate required fields
-    const requiredFields = tokenData.campos_obrigatorios || ['nome', 'email', 'telefone'];
+    const requiredFields = tokenData.campos_obrigatorios || ['nome', 'email'];
     for (const field of requiredFields) {
       if (!formData[field as keyof typeof formData]) {
         toast.error(`O campo ${field} é obrigatório`);

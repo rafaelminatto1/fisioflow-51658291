@@ -68,7 +68,7 @@ var logger = (0, logger_1.getLogger)('cloud-monitoring');
  */
 var DEFAULT_CONFIG = {
     projectId: process.env.GCLOUD_PROJECT || process.env.GOOGLE_CLOUD_PROJECT || '',
-    metricDomain: 'fisioflow.com.br',
+    metricDomain: 'moocafisio.com.br',
     metricPrefix: 'custom.googleapis.com',
 };
 /**

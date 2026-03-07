@@ -8,9 +8,8 @@
 // Definição das fichas padrão
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, query as firestoreQuery, where, limit, db } from '@/integrations/firebase/app';
+import { evaluationFormsApi } from '@/lib/api/workers-client';
 import { toast } from 'sonner';
-
 export const STANDARD_FORMS = {
   ANAMNESE: {
     nome: 'Anamnese Completa',
@@ -605,52 +604,32 @@ export function useCreateStandardForm() {
     mutationFn: async (formType: keyof typeof STANDARD_FORMS) => {
       const formConfig = STANDARD_FORMS[formType];
 
-      // Criar a ficha
-      const formRef = await addDoc(collection(db, 'evaluation_forms'), {
+      const form = await evaluationFormsApi.create({
         nome: formConfig.nome,
         tipo: formConfig.tipo,
         descricao: formConfig.descricao,
         ativo: true,
-        created_at: new Date().toISOString(),
       });
 
-      // Criar os campos
-      interface FormFieldConfig {
-        rotulo: string;
-        pergunta: string;
-        tipo_campo: string;
-        secao: string;
-        ordem: number;
-        obrigatorio: boolean;
-        descricao?: string;
-        opcoes?: string[];
-        minimo?: number;
-        maximo?: number;
-      }
-
-      const fieldsToAdd = formConfig.campos.map((campo: FormFieldConfig) => ({
-        form_id: formRef.id,
-        rotulo: campo.rotulo,
-        pergunta: campo.pergunta,
-        tipo_campo: campo.tipo_campo,
-        secao: campo.secao,
-        ordem: campo.ordem,
-        obrigatorio: campo.obrigatorio,
-        descricao: campo.descricao || null,
-        opcoes: campo.opcoes ? JSON.stringify(campo.opcoes) : null,
-        minimo: campo.minimo || null,
-        maximo: campo.maximo || null,
-      }));
-
-      // Firestore doesn't support batch insert, so we insert each field
-      for (const field of fieldsToAdd) {
-        await addDoc(collection(db, 'evaluation_form_fields'), field);
+      for (const field of formConfig.campos) {
+        await evaluationFormsApi.addField(form.data.id, {
+          tipo_campo: field.tipo_campo,
+          label: field.rotulo,
+          placeholder: field.pergunta,
+          grupo: field.secao,
+          ordem: field.ordem,
+          obrigatorio: field.obrigatorio,
+          descricao: field.descricao ?? null,
+          minimo: field.minimo ?? null,
+          maximo: field.maximo ?? null,
+          opcoes: field.opcoes ?? [],
+        });
       }
 
       return {
-        id: formRef.id,
-        nome: formConfig.nome,
-        tipo: formConfig.tipo,
+        id: form.data.id,
+        nome: form.data.nome,
+        tipo: form.data.tipo,
       };
     },
     onSuccess: () => {
@@ -670,16 +649,12 @@ export function useStandardFormExists(formType: keyof typeof STANDARD_FORMS) {
     queryFn: async () => {
       const formConfig = STANDARD_FORMS[formType];
 
-      const q = firestoreQuery(
-        collection(db, 'evaluation_forms'),
-        where('nome', '==', formConfig.nome),
-        where('tipo', '==', formConfig.tipo),
-        where('ativo', '==', true),
-        limit(1)
-      );
-
-      const snapshot = await getDocs(q);
-      return !snapshot.empty;
+      const response = await evaluationFormsApi.list({
+        tipo: formConfig.tipo,
+        ativo: true,
+      });
+      const forms = (response?.data ?? []) as Array<{ nome: string }>;
+      return forms.some((form) => form.nome === formConfig.nome);
     },
   });
 }

@@ -3,11 +3,10 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, query as firestoreQuery, where, getDocs, db } from '@/integrations/firebase/app';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 import { useAuth } from '@/contexts/AuthContext';
 import type { AvailableHours } from '@/types/auth';
+import { appointmentsApi, profileApi, type AppointmentRow } from '@/lib/api/workers-client';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface TherapistOccupancyData {
@@ -101,11 +100,22 @@ const getCapacityHoursForPeriod = (start: Date, end: Date, availableHours?: Avai
   return Math.round(total * 10) / 10;
 };
 
-const getAppointmentHour = (appointment: { appointment_time?: string; start_time?: string }): number | null => {
-  const value = appointment.appointment_time || appointment.start_time;
+const getAppointmentHour = (appointment: { start_time?: string }): number | null => {
+  const value = appointment.start_time;
   if (!value || typeof value !== 'string') return null;
   const hour = Number.parseInt(value.split(':')[0], 10);
   return Number.isNaN(hour) ? null : hour;
+};
+
+const getAppointmentDurationMinutes = (start?: string, end?: string): number | null => {
+  if (!start || !end) return null;
+  const [startHour, startMinute] = start.split(':').map(Number);
+  const [endHour, endMinute] = end.split(':').map(Number);
+  if ([startHour, startMinute, endHour, endMinute].some(Number.isNaN)) return null;
+  const startTotal = startHour * 60 + startMinute;
+  const endTotal = endHour * 60 + endMinute;
+  const diff = endTotal - startTotal;
+  return diff > 0 ? diff : null;
 };
 
 const getDateRange = (period: PeriodFilter, startDate?: Date, endDate?: Date) => {
@@ -160,30 +170,17 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
         available_hours?: AvailableHoursLike;
       }
 
-      const profilesQ = firestoreQuery(
-        collection(db, 'profiles'),
-        where('organization_id', '==', organizationId)
-      );
-      const profilesSnap = await getDocs(profilesQ);
-
-      const therapists: TherapistProfile[] = profilesSnap.docs
-        .map((doc) => {
-          const data = normalizeFirestoreData(doc.data()) as Record<string, unknown>;
-          return {
-            id: doc.id,
-            user_id: typeof data.user_id === 'string' ? data.user_id : undefined,
-            full_name: typeof data.full_name === 'string' ? data.full_name : undefined,
-            avatar_url: typeof data.avatar_url === 'string' ? data.avatar_url : undefined,
-            role: typeof data.role === 'string' ? data.role.toLowerCase() : undefined,
-            is_active: data.is_active as boolean | undefined,
-            available_hours: data.available_hours as AvailableHoursLike
-          };
-        })
-        .filter((profile) =>
-          profile.is_active !== false &&
-          profile.role !== 'pending' &&
-          (profile.role ? THERAPIST_ROLES.has(profile.role) : false)
-        );
+      const therapistsRes = await profileApi.therapists();
+      const therapists: TherapistProfile[] = (therapistsRes?.data ?? [])
+        .map((therapist) => ({
+          id: therapist.id,
+          user_id: therapist.id,
+          full_name: therapist.name,
+          avatar_url: undefined,
+          role: 'fisioterapeuta',
+          is_active: true,
+          available_hours: undefined,
+        }));
 
       if (therapists.length === 0) {
         logger.info('[useTherapistOccupancy] No active therapists found for organization', { organizationId }, 'useTherapistOccupancy');
@@ -204,44 +201,11 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
         if (therapist.user_id) therapistLookup.set(therapist.user_id, therapist);
       });
 
-      interface Appointment {
-        id: string;
-        therapist_id?: string;
-        appointment_date?: string;
-        appointment_time?: string;
-        start_time?: string;
-        status?: string;
-        duration?: number;
-        organization_id?: string;
-      }
-
-      let rawAppointments: Appointment[] = [];
       const dateFrom = format(start, 'yyyy-MM-dd');
       const dateTo = format(end, 'yyyy-MM-dd');
 
-      try {
-        const appointmentsQ = firestoreQuery(
-          collection(db, 'appointments'),
-          where('organization_id', '==', organizationId),
-          where('appointment_date', '>=', dateFrom),
-          where('appointment_date', '<=', dateTo)
-        );
-        const appointmentsSnap = await getDocs(appointmentsQ);
-        rawAppointments = appointmentsSnap.docs.map((doc) => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as Appointment));
-      } catch (error) {
-        logger.warn('[useTherapistOccupancy] Date-range query failed, falling back to org-only query', { organizationId, error }, 'useTherapistOccupancy');
-        const appointmentsFallbackQ = firestoreQuery(
-          collection(db, 'appointments'),
-          where('organization_id', '==', organizationId)
-        );
-        const appointmentsFallbackSnap = await getDocs(appointmentsFallbackQ);
-        rawAppointments = appointmentsFallbackSnap.docs
-          .map((doc) => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as Appointment))
-          .filter((appointment) => {
-            const date = appointment.appointment_date;
-            return typeof date === 'string' && date >= dateFrom && date <= dateTo;
-          });
-      }
+      const res = await appointmentsApi.list({ dateFrom, dateTo, limit: 3000 });
+      const rawAppointments = (res?.data ?? []) as AppointmentRow[];
 
       const appointments = rawAppointments.flatMap((appointment) => {
         const therapistId = typeof appointment.therapist_id === 'string' ? appointment.therapist_id : '';
@@ -266,8 +230,9 @@ export const useTherapistOccupancy = (options: UseTherapistOccupancyOptions = { 
 
         // Calcular horas trabalhadas
         const totalMinutes = therapistAppointments.reduce((acc, apt) => {
-          const duration = Number(apt.duration);
-          return acc + (Number.isFinite(duration) && duration > 0 ? duration : 50);
+          const duration = getAppointmentDurationMinutes(apt.start_time, (apt as AppointmentRow).end_time);
+          const normalized = Number.isFinite(duration ?? 0) && (duration ?? 0) > 0 ? duration ?? 0 : 50;
+          return acc + normalized;
         }, 0);
         const horasTrabalhadas = totalMinutes / 60;
 

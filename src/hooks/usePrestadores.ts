@@ -1,39 +1,21 @@
 /**
- * usePrestadores - Migrated to Firebase
- *
+ * usePrestadores - Migrated to Neon/Workers
  */
 
+import { useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
+import { prestadoresApi, type Prestador } from '@/lib/api/workers-client';
 import { PrestadorCreate, PrestadorUpdate } from '@/lib/validations/prestador';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
-
-interface Prestador {
-  id: string;
-  evento_id: string;
-  status_pagamento: string;
-  [key: string]: unknown;
-}
-
-// Helper to convert doc
-const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T =>
-  ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as T);
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export function usePrestadores(eventoId: string) {
-  return useQuery({
+  return useQuery<Prestador[]>({
     queryKey: ['prestadores', eventoId],
     queryFn: async () => {
       if (!eventoId) return [];
-
-      const q = firestoreQuery(
-        collection(db, 'prestadores'),
-        where('evento_id', '==', eventoId),
-        orderBy('created_at', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDoc<Prestador>);
+      const res = await prestadoresApi.list({ eventoId });
+      return (res?.data ?? []) as Prestador[];
     },
     enabled: !!eventoId,
   });
@@ -41,121 +23,104 @@ export function usePrestadores(eventoId: string) {
 
 export function useCreatePrestador() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (prestador: PrestadorCreate) => {
-      const docRef = await addDoc(collection(db, 'prestadores'), {
-        ...prestador,
-        created_at: new Date().toISOString()
-      });
-      const newDoc = await getDoc(docRef);
-      return convertDoc<Prestador>(newDoc);
+      const res = await prestadoresApi.create(prestador);
+      return (res?.data ?? res) as Prestador;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['prestadores', data.evento_id] });
-      toast({
-        title: 'Prestador adicionado!',
-        description: 'Prestador cadastrado com sucesso.',
-      });
+      toast.success('Prestador cadastrado com sucesso.');
     },
-    onError: (error: unknown) => {
-      toast({
-        title: 'Erro ao adicionar prestador',
-        description: error instanceof Error ? error.message : 'Erro desconhecido',
-        variant: 'destructive',
-      });
+    onError: (error: Error) => {
+      toast.error('Erro ao adicionar prestador: ' + error.message);
     },
   });
 }
 
 export function useUpdatePrestador() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async ({ id, data, eventoId }: { id: string; data: PrestadorUpdate; eventoId: string }) => {
-      const docRef = doc(db, 'prestadores', id);
-      await updateDoc(docRef, data);
-
-      const updated = await getDoc(docRef);
-      return { ...convertDoc<Prestador>(updated), evento_id: eventoId };
+      const res = await prestadoresApi.update(id, data);
+      return (res?.data ?? res) as Prestador;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['prestadores', data.evento_id] });
-      toast({
-        title: 'Prestador atualizado!',
-        description: 'Alterações salvas com sucesso.',
-      });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['prestadores', variables.eventoId] });
+      toast.success('Prestador atualizado com sucesso.');
     },
-    onError: (error: unknown) => {
-      toast({
-        title: 'Erro ao atualizar prestador',
-        description: error instanceof Error ? error.message : 'Erro desconhecido',
-        variant: 'destructive',
-      });
+    onError: (error: Error) => {
+      toast.error('Erro ao atualizar prestador: ' + error.message);
     },
   });
 }
 
 export function useDeletePrestador() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ id, eventoId }: { id: string; eventoId: string }) => {
-      await deleteDoc(doc(db, 'prestadores', id));
-      return eventoId;
+    mutationFn: async ({ id }: { id: string; eventoId: string }) => {
+      await prestadoresApi.delete(id);
+      return id;
     },
-    onSuccess: (eventoId) => {
-      queryClient.invalidateQueries({ queryKey: ['prestadores', eventoId] });
-      toast({
-        title: 'Prestador removido!',
-        description: 'Prestador excluído com sucesso.',
-      });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['prestadores', variables.eventoId] });
+      toast.success('Prestador removido com sucesso.');
     },
-    onError: (error: unknown) => {
-      toast({
-        title: 'Erro ao remover prestador',
-        description: error instanceof Error ? error.message : 'Erro desconhecido',
-        variant: 'destructive',
-      });
+    onError: (error: Error) => {
+      toast.error('Erro ao remover prestador: ' + error.message);
     },
   });
 }
 
 export function useMarcarPagamento() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async ({ id, eventoId }: { id: string; eventoId: string }) => {
-      const docRef = doc(db, 'prestadores', id);
-      const snapshot = await getDoc(docRef);
-
-      if (!snapshot.exists()) throw new Error('Prestador não encontrado');
-      const prestador = snapshot.data();
-
-      const novoStatus = prestador.status_pagamento === 'PAGO' ? 'PENDENTE' : 'PAGO';
-
-      await updateDoc(docRef, { status_pagamento: novoStatus });
-      const updated = await getDoc(docRef);
-
-      return { ...convertDoc<Prestador>(updated), eventoId };
+      const res = await prestadoresApi.toggleStatus(id);
+      return (res?.data ?? res) as Prestador;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['prestadores', data.eventoId] });
-      toast({
-        title: 'Status atualizado!',
-        description: `Pagamento marcado como ${data.status_pagamento.toLowerCase()}.`,
-      });
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['prestadores', variables.eventoId] });
+      toast.success(`Pagamento marcado como ${data.status_pagamento.toLowerCase()}.`);
     },
-    onError: (error: unknown) => {
-      toast({
-        title: 'Erro ao atualizar status',
-        description: error instanceof Error ? error.message : 'Erro desconhecido',
-        variant: 'destructive',
-      });
+    onError: (error: Error) => {
+      toast.error('Erro ao atualizar status: ' + error.message);
     },
   });
+}
+
+export function useRealtimePrestadores(eventoId: string) {
+  const queryClient = useQueryClient();
+  const lastUpdatedRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!eventoId) return;
+
+    let active = true;
+    const pollMetrics = async () => {
+      try {
+        const res = await prestadoresApi.metrics(eventoId);
+        const nextUpdated = res?.data?.last_updated_at ?? null;
+        if (active && nextUpdated && nextUpdated !== lastUpdatedRef.current) {
+          lastUpdatedRef.current = nextUpdated;
+          queryClient.invalidateQueries({ queryKey: ['prestadores', eventoId] });
+          queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
+        }
+      } catch (error) {
+        logger.error('Erro ao verificar prestadores realtime', error as Error, 'useRealtimePrestadores');
+      }
+    };
+
+    pollMetrics();
+    const interval = setInterval(pollMetrics, 15000);
+
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [eventoId, queryClient]);
 }

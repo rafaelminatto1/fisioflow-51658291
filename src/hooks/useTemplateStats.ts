@@ -1,42 +1,49 @@
 /**
- * useTemplateStats - Migrated to Firebase
- *
+ * useTemplateStats - Migrated to Neon/Workers
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, updateDoc, doc, getDoc, query as firestoreQuery, where, db } from '@/integrations/firebase/app';
 import { EvaluationForm } from '@/types/clinical-forms';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { evaluationFormsApi, type EvaluationFormRow } from '@/lib/api/workers-client';
+
+const toForm = (row: EvaluationFormRow): EvaluationForm => ({
+  id: row.id,
+  organization_id: row.organization_id ?? null,
+  created_by: row.created_by ?? null,
+  nome: row.nome,
+  descricao: row.descricao ?? null,
+  referencias: row.referencias ?? null,
+  tipo: row.tipo,
+  ativo: Boolean(row.ativo),
+  created_at: row.created_at,
+  updated_at: row.updated_at,
+  is_favorite: Boolean((row as unknown as { is_favorite?: boolean }).is_favorite),
+  usage_count: Number((row as unknown as { usage_count?: number }).usage_count ?? 0),
+  last_used_at: (row as unknown as { last_used_at?: string | null }).last_used_at ?? null,
+  cover_image: (row as unknown as { cover_image?: string | null }).cover_image ?? null,
+  estimated_time: (row as unknown as { estimated_time?: number }).estimated_time,
+});
 
 export function useTemplateStats() {
   return useQuery({
     queryKey: ['template-stats'],
     queryFn: async () => {
-      // Get all active forms
-      const q = firestoreQuery(
-        collection(db, 'evaluation_forms'),
-        where('ativo', '==', true)
-      );
+      const res = await evaluationFormsApi.list({ ativo: true });
+      const forms = ((res?.data ?? []) as EvaluationFormRow[]).map(toForm);
 
-      const snapshot = await getDocs(q);
-      const forms = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
-
-      // Calculate stats
       const total = forms.length;
       const favorites = forms.filter((f) => f.is_favorite).length;
 
-      // Get recently used (last 30 days)
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       const recentlyUsed = forms
         .filter((f) => {
           const lastUsed = f.last_used_at ? new Date(f.last_used_at) : null;
-          return lastUsed && lastUsed >= thirtyDaysAgo;
+          return lastUsed && !Number.isNaN(lastUsed.getTime()) && lastUsed >= thirtyDaysAgo;
         })
-        .reduce((sum, f) => sum + (f.usage_count || 0), 0);
+        .reduce((sum, f) => sum + Number(f.usage_count || 0), 0);
 
-      // Get templates by category
       const byCategory: Record<string, number> = {};
       forms.forEach((form) => {
         const tipo = form.tipo;
@@ -58,27 +65,20 @@ export function useIncrementTemplateUsage() {
 
   return useMutation({
     mutationFn: async (templateId: string) => {
-      const docRef = doc(db, 'evaluation_forms', templateId);
-      const docSnap = await getDoc(docRef);
+      const currentRes = await evaluationFormsApi.get(templateId);
+      const current = toForm((currentRes?.data ?? currentRes) as EvaluationFormRow);
+      const nextUsage = Number(current.usage_count || 0) + 1;
 
-      if (!docSnap.exists()) {
-        throw new Error('Template não encontrado');
-      }
-
-      const currentData = docSnap.data();
-      const currentUsage = currentData?.usage_count || 0;
-
-      await updateDoc(docRef, {
-        usage_count: currentUsage + 1,
+      await evaluationFormsApi.update(templateId, {
+        usage_count: nextUsage,
         last_used_at: new Date().toISOString(),
-      });
+      } as Partial<EvaluationFormRow>);
 
-      // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ['template-stats'] });
       queryClient.invalidateQueries({ queryKey: ['evaluation-forms', 'most-used'] });
       queryClient.invalidateQueries({ queryKey: ['evaluation-forms', 'recently-used'] });
 
-      return { id: templateId, usage_count: currentUsage + 1 };
+      return { id: templateId, usage_count: nextUsage };
     },
   });
 }
@@ -87,23 +87,11 @@ export function useMostUsedTemplates(limitNum = 10) {
   return useQuery({
     queryKey: ['evaluation-forms', 'most-used', limitNum],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'evaluation_forms'),
-        where('ativo', '==', true)
-      );
-
-      const snapshot = await getDocs(q);
-      let forms = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
-
-      // Filter and sort by usage_count client-side
-      interface FormWithUsage {
-        usage_count?: number | null;
-        [key: string]: unknown;
-      }
-
-      forms = forms
-        .filter((f: FormWithUsage) => f.usage_count !== null && f.usage_count > 0)
-        .sort((a: FormWithUsage, b: FormWithUsage) => (b.usage_count || 0) - (a.usage_count || 0))
+      const res = await evaluationFormsApi.list({ ativo: true });
+      const forms = ((res?.data ?? []) as EvaluationFormRow[])
+        .map(toForm)
+        .filter((f) => Number(f.usage_count || 0) > 0)
+        .sort((a, b) => Number(b.usage_count || 0) - Number(a.usage_count || 0))
         .slice(0, limitNum);
 
       return forms as EvaluationForm[];
@@ -115,22 +103,11 @@ export function useRecentlyUsedTemplates(limitNum = 6) {
   return useQuery({
     queryKey: ['evaluation-forms', 'recently-used', limitNum],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'evaluation_forms'),
-        where('ativo', '==', true)
-      );
-
-      const snapshot = await getDocs(q);
-      let forms = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
-
-      // Filter and sort by last_used_at client-side
-      interface FormWithLastUsed {
-        last_used_at: string | null;
-      }
-
-      forms = forms
-        .filter((f: FormWithLastUsed) => f.last_used_at !== null)
-        .sort((a: FormWithLastUsed, b: FormWithLastUsed) => {
+      const res = await evaluationFormsApi.list({ ativo: true });
+      const forms = ((res?.data ?? []) as EvaluationFormRow[])
+        .map(toForm)
+        .filter((f) => Boolean(f.last_used_at))
+        .sort((a, b) => {
           const aTime = new Date(a.last_used_at || '').getTime();
           const bTime = new Date(b.last_used_at || '').getTime();
           return bTime - aTime;

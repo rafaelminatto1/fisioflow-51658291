@@ -1,67 +1,41 @@
 /**
- * useIncompletePatients - Migrated to Firebase
+ * useIncompletePatients - Migrated to Neon/Workers
  *
  */
 
-import { useState, useEffect } from 'react';
-import { collection, query as firestoreQuery, where, orderBy, onSnapshot, db } from '@/integrations/firebase/app';
-import { fisioLogger as logger } from '@/lib/errors/logger';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { useQuery } from '@tanstack/react-query';
+import { patientsApi } from '@/lib/api/workers-client';
 
 interface IncompletePatient {
   id: string;
   name: string;
-  phone?: string;
+  phone?: string | null;
 }
 
 export const useIncompletePatients = () => {
-  const [data, setData] = useState<IncompletePatient[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, isLoading, error } = useQuery<IncompletePatient[], Error | null>({
+    queryKey: ['incomplete-patients'],
+    queryFn: async () => {
+      const response = await patientsApi.list({
+        incompleteRegistration: true,
+        sortBy: 'created_at_desc',
+        limit: 100,
+      });
+      const patients = response?.data ?? [];
+      return patients.map((patient) => ({
+        id: patient.id,
+        name: patient.full_name ?? patient.name ?? 'Paciente sem nome',
+        phone: patient.phone ?? null,
+      }));
+    },
+    staleTime: 1000 * 60 * 2,
+    refetchInterval: 1000 * 60,
+  });
 
-  useEffect(() => {
-    setIsLoading(true);
-
-    const q = firestoreQuery(
-      collection(db, 'patients'),
-      where('incomplete_registration', '==', true),
-      orderBy('created_at', 'desc')
-    );
-
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        try {
-          // Map full_name to name for the frontend
-          const mappedPatients = snapshot.docs.map(doc => {
-            const data = normalizeFirestoreData(doc.data());
-            return {
-              id: doc.id,
-              name: data.full_name,
-              phone: data.phone,
-            };
-          });
-
-          setData(mappedPatients);
-          setError(null);
-        } catch (err) {
-          logger.error('Erro ao processar pacientes incompletos', err, 'useIncompletePatients');
-          setError(err instanceof Error ? err.message : 'Erro desconhecido');
-        } finally {
-          setIsLoading(false);
-        }
-      },
-      (err) => {
-        logger.error('Erro ao buscar pacientes incompletos', err, 'useIncompletePatients');
-        setError(err.message);
-        setIsLoading(false);
-      }
-    );
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
-
-  return { data, isLoading, error, count: data.length };
+  return {
+    data: data ?? [],
+    isLoading,
+    error: error ? error.message : null,
+    count: data?.length ?? 0,
+  };
 };

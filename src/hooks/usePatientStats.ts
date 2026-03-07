@@ -1,5 +1,5 @@
 /**
- * usePatientStats - Migrated to Firebase
+ * usePatientStats - Migrated to Neon/Workers
  */
 
 
@@ -10,9 +10,13 @@
 // ============================================================================================
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { differenceInDays } from 'date-fns';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import {
+  appointmentsApi,
+  sessionsApi,
+  type AppointmentRow,
+  type SessionRecord,
+} from '@/lib/api/workers-client';
 
 export interface PatientStats {
   sessionsCompleted: number;
@@ -45,19 +49,14 @@ export interface PatientClassificationFilter {
   color: string;
 }
 
-export interface Appointment {
-  id: string;
-  patient_id: string;
-  appointment_date: string;
-  status: string;
-  payment_status?: string;
-}
+export type Appointment = AppointmentRow;
 
 export interface SOAPRecord {
   id: string;
   patient_id: string;
   created_at: string;
   status: string;
+  record_date: string;
 }
 
 interface PatientStatsInput {
@@ -283,22 +282,59 @@ function classifyPatient(stats: ClassificationStats): PatientClassification {
   return 'active';
 }
 
-// Helper to convert Firestore doc to Appointment
-const convertDocToAppointment = (doc: { id: string; data: () => Record<string, unknown> }): Appointment => {
-  const data = normalizeFirestoreData(doc.data());
-  return {
-    id: doc.id,
-    ...data,
-  } as Appointment;
+const sessionToSOAPRecord = (session: SessionRecord): SOAPRecord => ({
+  id: session.id,
+  patient_id: session.patient_id,
+  created_at: session.created_at,
+  status: session.status,
+  record_date: session.record_date,
+});
+
+const sortAppointmentsDesc = (appointments: Appointment[]) =>
+  [...appointments].sort((a, b) => {
+    const dateA = new Date(a.appointment_date).getTime();
+    const dateB = new Date(b.appointment_date).getTime();
+    return dateB - dateA;
+  });
+
+const sortSoapRecordsDesc = (records: SOAPRecord[]) =>
+  [...records].sort((a, b) => new Date(b.record_date).getTime() - new Date(a.record_date).getTime());
+
+const fetchAllAppointments = async (patientId: string): Promise<Appointment[]> => {
+  const pageSize = 1000;
+  const appointments: Appointment[] = [];
+  let offset = 0;
+
+  while (true) {
+    const res = await appointmentsApi.list({ patientId, limit: pageSize, offset });
+    const chunk = (res?.data ?? []) as Appointment[];
+    appointments.push(...chunk);
+    if (chunk.length < pageSize) break;
+    offset += pageSize;
+  }
+
+  return sortAppointmentsDesc(appointments);
 };
 
-// Helper to convert Firestore doc to SOAPRecord
-const convertDocToSOAPRecord = (doc: { id: string; data: () => Record<string, unknown> }): SOAPRecord => {
-  const data = normalizeFirestoreData(doc.data());
-  return {
-    id: doc.id,
-    ...data,
-  } as SOAPRecord;
+const fetchFinalizedSessions = async (patientId: string): Promise<SOAPRecord[]> => {
+  const pageSize = 200;
+  const records: SOAPRecord[] = [];
+  let offset = 0;
+
+  while (true) {
+    const res = await sessionsApi.list({
+      patientId,
+      status: 'finalized',
+      limit: pageSize,
+      offset,
+    });
+    const chunk = (res?.data ?? []) as SessionRecord[];
+    records.push(...chunk.map(sessionToSOAPRecord));
+    if (chunk.length < pageSize) break;
+    offset += pageSize;
+  }
+
+  return sortSoapRecordsDesc(records);
 };
 
 // ============================================================================================
@@ -313,23 +349,10 @@ export const usePatientStats = (patientId: string | undefined) => {
         throw new Error('ID do paciente não fornecido');
       }
 
-      // Fetch all patient appointments
-      const appointmentsQ = firestoreQuery(
-        collection(db, 'appointments'),
-        where('patient_id', '==', patientId),
-        orderBy('appointment_date', 'desc')
-      );
-      const appointmentsSnap = await getDocs(appointmentsQ);
-      const appointments = appointmentsSnap.docs.map(convertDocToAppointment);
-
-      // Fetch finalized SOAP records
-      const soapQ = firestoreQuery(
-        collection(db, 'soap_records'),
-        where('patient_id', '==', patientId),
-        where('status', '==', 'finalized')
-      );
-      const soapSnap = await getDocs(soapQ);
-      const soapRecords = soapSnap.docs.map(convertDocToSOAPRecord);
+      const [appointments, soapRecords] = await Promise.all([
+        fetchAllAppointments(patientId),
+        fetchFinalizedSessions(patientId),
+      ]);
 
       // Calculate statistics
       const stats = calculatePatientStats({
@@ -358,51 +381,24 @@ export const useMultiplePatientStats = (patientIds: string[]) => {
         return {};
       }
 
-      // Firestore has limit of 10 items in 'in' query, so we need to batch
-      const batchSize = 10;
-      const allAppointments: Appointment[] = [];
-      const allSoapRecords: SOAPRecord[] = [];
-
-      for (let i = 0; i < patientIds.length; i += batchSize) {
-        const batch = patientIds.slice(i, i + batchSize);
-
-        // Fetch appointments - filter by patient_id, not documentId
-        const appointmentsQ = firestoreQuery(
-          collection(db, 'appointments'),
-          where('patient_id', 'in', batch)
-        );
-        const appointmentsSnap = await getDocs(appointmentsQ);
-        allAppointments.push(...appointmentsSnap.docs.map(convertDocToAppointment));
-
-        // Fetch SOAP records
-        const soapQ = firestoreQuery(
-          collection(db, 'soap_records'),
-          where('patient_id', 'in', batch),
-          where('status', '==', 'finalized')
-        );
-        const soapSnap = await getDocs(soapQ);
-        allSoapRecords.push(...soapSnap.docs.map(convertDocToSOAPRecord));
-      }
-
-      // Process each patient
       const statsMap: Record<string, PatientStats> = {};
 
-      for (const id of patientIds) {
-        const patientAppointments = allAppointments.filter(a => a.patient_id === id);
-        const patientSoapRecords = allSoapRecords.filter(s => s.patient_id === id);
+      await Promise.all(
+        patientIds.map(async (id) => {
+          const [appointments, soapRecords] = await Promise.all([
+            fetchAllAppointments(id),
+            fetchFinalizedSessions(id),
+          ]);
 
-        const stats = calculatePatientStats({
-          appointments: patientAppointments,
-          soapRecords: patientSoapRecords,
-        });
+          const stats = calculatePatientStats({
+            appointments,
+            soapRecords,
+          });
 
-        const classification = classifyPatient(stats);
-
-        statsMap[id] = {
-          ...stats,
-          classification,
-        } as PatientStats;
-      }
+          const classification = classifyPatient(stats);
+          statsMap[id] = { ...stats, classification };
+        }),
+      );
 
       return statsMap;
     },

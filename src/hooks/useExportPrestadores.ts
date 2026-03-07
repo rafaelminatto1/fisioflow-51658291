@@ -1,41 +1,29 @@
 /**
- * useExportPrestadores - Migrated to Firebase
+ * useExportPrestadores - Migrated to Neon/Workers
  */
 
 import { useMutation } from '@tanstack/react-query';
-import { collection, getDocs, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
-import { useToast } from '@/hooks/use-toast';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { toast } from 'sonner';
+import { prestadoresApi, type Prestador } from '@/lib/api/workers-client';
 
 export function useExportPrestadores() {
-  const { toast } = useToast();
-
   return useMutation({
     mutationFn: async (eventoId: string) => {
-      const q = firestoreQuery(
-        collection(db, 'prestadores'),
-        where('evento_id', '==', eventoId),
-        orderBy('nome', 'asc')
-      );
+      const res = await prestadoresApi.list({ eventoId });
+      const prestadores = (res?.data ?? []) as Prestador[];
 
-      const snapshot = await getDocs(q);
-
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
-
-      // Criar CSV
       const headers = ['Nome', 'Contato', 'CPF/CNPJ', 'Valor Acordado', 'Status Pagamento'];
       const csvContent = [
         headers.join(','),
-        ...data.map(p => [
+        ...prestadores.map((p) => [
           `"${p.nome}"`,
           `"${p.contato || ''}"`,
           `"${p.cpf_cnpj || ''}"`,
-          Number(p.valor_acordado).toFixed(2),
-          p.status_pagamento
-        ].join(','))
+          Number(p.valor_acordado ?? 0).toFixed(2),
+          p.status_pagamento,
+        ].join(',')),
       ].join('\n');
 
-      // Download
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
@@ -46,20 +34,13 @@ export function useExportPrestadores() {
       link.click();
       document.body.removeChild(link);
 
-      return data;
+      return prestadores;
     },
     onSuccess: () => {
-      toast({
-        title: 'Exportação concluída!',
-        description: 'CSV de prestadores baixado com sucesso.',
-      });
+      toast.success('CSV de prestadores baixado com sucesso.');
     },
-    onError: (error: unknown) => {
-      toast({
-        title: 'Erro ao exportar',
-        description: error.message,
-        variant: 'destructive',
-      });
+    onError: (error: Error) => {
+      toast.error('Erro ao exportar prestadores: ' + error.message);
     },
   });
 }

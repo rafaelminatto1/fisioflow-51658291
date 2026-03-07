@@ -1,23 +1,16 @@
 // Gráfico de receita em tempo real
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { db, collection, query, where, orderBy, onSnapshot, Timestamp } from '@/integrations/firebase/app';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { financialApi, type Pagamento } from '@/lib/api/workers-client';
 
 interface RevenueData {
   date: string;
   revenue: number;
-}
-
-interface PaymentDocument {
-  amount: number;
-  created_at: Timestamp;
-  status: string;
 }
 
 export function RevenueChart() {
@@ -27,46 +20,34 @@ export function RevenueChart() {
   const loadRevenueData = useCallback(async () => {
     try {
       const startDate = new Date();
-      startDate.setDate(startDate.getDate() - 7); // Últimos 7 dias
+      startDate.setDate(startDate.getDate() - 7);
 
-      const paymentsQuery = query(
-        collection(db, 'payments'),
-        where('status', '==', 'paid'),
-        where('created_at', '>=', Timestamp.fromDate(startDate)),
-        orderBy('created_at', 'asc')
-      );
+      const response = await financialApi.pagamentos.list({ limit: 1000, offset: 0 });
+      const payments = (response?.data ?? []) as Pagamento[];
+      const grouped = payments.reduce((acc: Record<string, number>, payment) => {
+        if (!payment.pago_em) return acc;
+        const date = payment.pago_em.slice(0, 10);
+        const status = String(payment.status ?? '').toLowerCase();
+        if (status !== 'paid' && status !== 'pago') return acc;
+        if (new Date(date) < startDate) return acc;
+        acc[date] = (acc[date] || 0) + Number(payment.valor ?? payment.valor ?? 0);
+        return acc;
+      }, {});
 
-      // Use onSnapshot for realtime updates
-      const unsubscribe = onSnapshot(paymentsQuery, (snapshot) => {
-        const payments: PaymentDocument[] = [];
-        snapshot.forEach((doc) => {
-          payments.push(normalizeFirestoreData(doc.data()) as PaymentDocument);
-        });
-
-        // Agrupar por dia
-        const grouped = payments.reduce((acc: Record<string, number>, payment: PaymentDocument) => {
-          const date = format(payment.created_at.toDate(), 'yyyy-MM-dd');
-          acc[date] = (acc[date] || 0) + (payment.amount || 0);
-          return acc;
-        }, {});
-
-        const chartData = Object.entries(grouped).map(([date, revenue]) => ({
+      const chartData = Object.entries(grouped)
+        .map(([date, revenue]) => ({
           date: format(new Date(date), 'dd/MM', { locale: ptBR }),
           revenue: Number(revenue),
-        }));
+        }))
+        .sort((a, b) => Number(b.date.replace('/', '')) - Number(a.date.replace('/', '')))
+        .reverse();
 
-        setData(chartData);
-        setLoading(false);
-      }, (error) => {
-        logger.error('Erro ao carregar dados de receita', error, 'RevenueChart');
-        setLoading(false);
-      });
-
-      return unsubscribe;
+      setData(chartData);
+      setLoading(false);
+      return () => undefined;
     } catch (error) {
       logger.error('Erro ao carregar dados de receita', error, 'RevenueChart');
       setLoading(false);
-      return () => {};
     }
   }, []);
 
