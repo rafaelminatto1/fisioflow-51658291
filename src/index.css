@@ -89,6 +89,10 @@ All colors MUST be HSL.
     /* Appointment Shadows */
     --shadow-apt: 0 4px 12px -2px;
     --shadow-apt-hover: 0 8px 20px -4px;
+
+    /* Premium Accents */
+    --accent-teal: 170 85% 50%; /* #13ecc8 */
+    --accent-teal-glow: 170 85% 50% / 0.3;
   }
 
   .dark {
@@ -340,6 +344,19 @@ All colors MUST be HSL.
   }
 
   /* Visual Depth Utilities */
+  .glass-morphism {
+    @apply backdrop-blur-md saturate-150;
+    background: rgba(17, 25, 40, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-card {
+    @apply backdrop-blur-xl saturate-200;
+    background: rgba(17, 25, 40, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.125);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  }
+
   .shadow-premium-sm {
     box-shadow: var(--shadow-premium-sm);
   }

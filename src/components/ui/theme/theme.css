@@ -88,6 +88,49 @@
   --ring-primary: rgba(99, 102, 241, 0.4);
 }
 
+/* Premium Dark Mode (Carbon & Teal) */
+.premium-dark {
+  --bg-primary: #0a0a0c;
+  --bg-secondary: #121214;
+  --bg-tertiary: #1a1a1c;
+  --bg-hover: #161618;
+  --bg-active: #1e1e20;
+  --bg-muted: #121214;
+  --bg-accent: #13ecc8;
+
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --text-tertiary: rgba(255, 255, 255, 0.5);
+  --text-muted: rgba(255, 255, 255, 0.3);
+  --text-inverted: #0a0a0c;
+
+  --border-primary: rgba(255, 255, 255, 0.1);
+  --border-secondary: rgba(255, 255, 255, 0.05);
+  --border-muted: rgba(255, 255, 255, 0.03);
+
+  --ring-primary: rgba(19, 236, 200, 0.4);
+  
+  /* Premium Glows */
+  --glow-teal: 0 0 20px rgba(19, 236, 200, 0.3);
+  --glow-teal-intense: 0 0 40px rgba(19, 236, 200, 0.5);
+}
+
+/* Glassmorphism Utilities */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
 /* High Contrast Mode */
 .high-contrast {
   --bg-primary: #ffffff;

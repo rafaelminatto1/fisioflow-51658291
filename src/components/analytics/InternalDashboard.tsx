@@ -2,7 +2,14 @@ import React, { memo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
-import { db, collection, getDocs, query as firestoreQuery, where, orderBy, limit, getDoc, doc } from '@/integrations/firebase/app';
+import {
+  appointmentsApi,
+  financialApi,
+  patientsApi,
+  type AppointmentRow,
+  type PatientPackageRow,
+  type PatientRow,
+} from '@/lib/api/workers-client';
 import { Users, UserMinus, UserPlus, TrendingUp, Clock, CreditCard } from 'lucide-react';
 import { format, subDays, subMonths, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -18,7 +25,38 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import { PatientHelpers } from '@/types';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+
+const listPatients = async () => {
+  const items: PatientRow[] = [];
+  let offset = 0;
+  const limit = 1000;
+
+  while (offset < 10000) {
+    const response = await patientsApi.list({ sortBy: 'name_asc', limit, offset });
+    const chunk = response?.data ?? [];
+    items.push(...chunk);
+    if (chunk.length < limit) break;
+    offset += limit;
+  }
+
+  return items;
+};
+
+const listAppointments = async (dateFrom?: string) => {
+  const items: AppointmentRow[] = [];
+  let offset = 0;
+  const limit = 1000;
+
+  while (offset < 10000) {
+    const response = await appointmentsApi.list({ dateFrom, limit, offset });
+    const chunk = response?.data ?? [];
+    items.push(...chunk);
+    if (chunk.length < limit) break;
+    offset += limit;
+  }
+
+  return items;
+};
 
 function InternalDashboardComponent() {
   // Pacientes ativos (com consulta nos últimos 30 dias)
@@ -26,15 +64,11 @@ function InternalDashboardComponent() {
     queryKey: ["active-patients-dashboard"],
     queryFn: async () => {
       const thirtyDaysAgo = subDays(new Date(), 30);
-
-      const q = firestoreQuery(
-        collection(db, "appointments"),
-        where("appointment_date", ">=", thirtyDaysAgo.toISOString())
-      );
-
-      const snapshot = await getDocs(q);
+      const snapshot = await listAppointments(format(thirtyDaysAgo, 'yyyy-MM-dd'));
       const patientIds = new Set(
-        snapshot.docs.map(doc => (normalizeFirestoreData(doc.data()) as { patient_id?: string }).patient_id).filter(Boolean)
+        snapshot
+          .map((appointment) => appointment.patient_id)
+          .filter(Boolean)
       );
 
       return patientIds.size;
@@ -47,47 +81,32 @@ function InternalDashboardComponent() {
     queryFn: async () => {
       const thirtyDaysAgo = subDays(new Date(), 30);
 
-      // Buscar todos os pacientes
-      const allPatientsQuery = firestoreQuery(
-        collection(db, "patients"),
-        orderBy("full_name")
-      );
-      const allPatientsSnapshot = await getDocs(allPatientsQuery);
-      const allPatients = allPatientsSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
-
-      // Buscar pacientes com agendamentos recentes
-      const recentAppointmentsQuery = firestoreQuery(
-        collection(db, "appointments"),
-        where("appointment_date", ">=", thirtyDaysAgo.toISOString())
-      );
-      const recentAppointmentsSnapshot = await getDocs(recentAppointmentsQuery);
+      const [allPatients, recentAppointments] = await Promise.all([
+        listPatients(),
+        listAppointments(format(thirtyDaysAgo, 'yyyy-MM-dd')),
+      ]);
 
       const activePatientIds = new Set(
-        recentAppointmentsSnapshot.docs.map(doc => (normalizeFirestoreData(doc.data()) as { patient_id?: string }).patient_id).filter(Boolean)
+        recentAppointments.map((appointment) => appointment.patient_id).filter(Boolean)
       );
 
       // Filtrar inativos
       const inactive = allPatients.filter(p => !activePatientIds.has(p.id));
 
-      // Buscar última consulta de cada paciente inativo
-      const inactiveWithLastAppointment = await Promise.all(
-        inactive.slice(0, 20).map(async (patient: { id: string }) => {
-          const lastApptQuery = firestoreQuery(
-            collection(db, "appointments"),
-            where("patient_id", "==", patient.id),
-            orderBy("appointment_date", "desc"),
-            limit(1)
-          );
-          const lastApptSnapshot = await getDocs(lastApptQuery);
+      const allAppointments = await listAppointments();
+      const lastAppointmentMap = new Map<string, string>();
+      allAppointments.forEach((appointment) => {
+        if (!appointment.patient_id || !appointment.date) return;
+        const current = lastAppointmentMap.get(appointment.patient_id);
+        if (!current || new Date(appointment.date) > new Date(current)) {
+          lastAppointmentMap.set(appointment.patient_id, appointment.date);
+        }
+      });
 
-          const lastAppt = !lastApptSnapshot.empty ? lastApptSnapshot.docs[0].data() : null;
-
-          return {
-            ...patient,
-            lastAppointment: lastAppt?.appointment_date || null,
-          };
-        })
-      );
+      const inactiveWithLastAppointment = inactive.slice(0, 20).map((patient) => ({
+        ...patient,
+        lastAppointment: lastAppointmentMap.get(patient.id) || null,
+      }));
 
       return {
         total: inactive.length,
@@ -100,45 +119,23 @@ function InternalDashboardComponent() {
   const { data: patientsWithSessions, isLoading: loadingSessions } = useQuery({
     queryKey: ["patients-with-sessions"],
     queryFn: async () => {
+      const response = await financialApi.patientPackages.list({
+        status: 'active',
+        limit: 500,
+      });
+      const packages = (response?.data ?? []) as PatientPackageRow[];
 
-      const q = firestoreQuery(
-        collection(db, "session_packages"),
-        where("status", "==", "ativo"),
-        where("remaining_sessions", ">", 0)
-      );
-
-      const snapshot = await getDocs(q);
-
-      const packages = await Promise.all(
-        snapshot.docs.map(async (pkgDoc) => {
-          const pkg = { id: pkgDoc.id, ...pkgDoc.data() } as { id: string; patient_id?: string; total_sessions?: number; used_sessions?: number; remaining_sessions?: number };
-
-          // Get patient data
-          let patientName = "N/A";
-          let patientPhone = null;
-
-          if (pkg.patient_id) {
-            const patientDoc = await getDoc(doc(db, "patients", pkg.patient_id));
-            if (patientDoc.exists()) {
-              const patientData = patientDoc.data();
-              patientName = patientData.full_name || "N/A";
-              patientPhone = patientData.phone || null;
-            }
-          }
-
-          return {
-            id: pkg.id,
-            patientId: pkg.patient_id,
-            patientName,
-            patientPhone,
-            totalSessions: pkg.total_sessions,
-            usedSessions: pkg.used_sessions,
-            remainingSessions: pkg.remaining_sessions,
-          };
-        })
-      );
-
-      return packages;
+      return packages
+        .filter((pkg) => Number(pkg.remaining_sessions ?? 0) > 0)
+        .map((pkg) => ({
+          id: pkg.id,
+          patientId: pkg.patient_id,
+          patientName: pkg.patient_name || "N/A",
+          patientPhone: pkg.patient_phone || null,
+          totalSessions: pkg.total_sessions,
+          usedSessions: pkg.used_sessions,
+          remainingSessions: pkg.remaining_sessions,
+        }));
     },
   });
 
@@ -150,51 +147,26 @@ function InternalDashboardComponent() {
       const todayStart = startOfDay(now);
       const weekStart = startOfWeek(now, { locale: ptBR });
       const monthStart = startOfMonth(now);
+      const patients = await listPatients();
 
-      // Hoje
-      const todayQuery = firestoreQuery(
-        collection(db, "patients"),
-        where("created_at", ">=", todayStart.toISOString())
-      );
-      const todaySnapshot = await getDocs(todayQuery);
-      const todayCount = todaySnapshot.docs.length;
-
-      // Semana
-      const weekQuery = firestoreQuery(
-        collection(db, "patients"),
-        where("created_at", ">=", weekStart.toISOString())
-      );
-      const weekSnapshot = await getDocs(weekQuery);
-      const weekCount = weekSnapshot.docs.length;
-
-      // Mês
-      const monthQuery = firestoreQuery(
-        collection(db, "patients"),
-        where("created_at", ">=", monthStart.toISOString())
-      );
-      const monthSnapshot = await getDocs(monthQuery);
-      const monthCount = monthSnapshot.docs.length;
+      const todayCount = patients.filter((patient) => new Date(patient.created_at) >= todayStart).length;
+      const weekCount = patients.filter((patient) => new Date(patient.created_at) >= weekStart).length;
+      const monthCount = patients.filter((patient) => new Date(patient.created_at) >= monthStart).length;
 
       // Últimos 6 meses para gráfico
-      const sixMonthsData = await Promise.all(
-        Array.from({ length: 6 }, async (_, i) => {
-          const monthDate = subMonths(now, 5 - i);
-          const start = startOfMonth(monthDate);
-          const end = startOfMonth(subMonths(monthDate, -1));
+      const sixMonthsData = Array.from({ length: 6 }, (_, i) => {
+        const monthDate = subMonths(now, 5 - i);
+        const start = startOfMonth(monthDate);
+        const end = startOfMonth(subMonths(monthDate, -1));
 
-          const monthQuery = firestoreQuery(
-            collection(db, "patients"),
-            where("created_at", ">=", start.toISOString()),
-            where("created_at", "<", end.toISOString())
-          );
-          const monthSnapshot = await getDocs(monthQuery);
-
-          return {
-            month: format(monthDate, "MMM", { locale: ptBR }),
-            count: monthSnapshot.docs.length,
-          };
-        })
-      );
+        return {
+          month: format(monthDate, "MMM", { locale: ptBR }),
+          count: patients.filter((patient) => {
+            const createdAt = new Date(patient.created_at);
+            return createdAt >= start && createdAt < end;
+          }).length,
+        };
+      });
 
       return {
         today: todayCount,
@@ -209,8 +181,8 @@ function InternalDashboardComponent() {
   const { data: totalPatients } = useQuery({
     queryKey: ["total-patients-count"],
     queryFn: async () => {
-      const snapshot = await getDocs(collection(db, "patients"));
-      return snapshot.docs.length;
+      const patients = await listPatients();
+      return patients.length;
     },
   });
 

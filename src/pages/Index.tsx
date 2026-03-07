@@ -3,6 +3,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { IncompleteRegistrationAlert } from '@/components/dashboard/IncompleteRegistrationAlert';
 import { CustomizableDashboard } from '@/components/dashboard/CustomizableDashboard';
 import { RealtimeActivityFeed } from '@/components/dashboard/RealtimeActivityFeed';
+import { DashboardNotificationWidget } from '@/components/dashboard/DashboardNotificationWidget';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -13,6 +14,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import type { DashboardPeriod } from '@/hooks/useDashboardMetrics';
 
 // Lazy load dashboard components
 const AdminDashboard = lazy(() => import('@/components/dashboard/AdminDashboard').then(m => ({ default: m.AdminDashboard })));
@@ -34,7 +36,7 @@ const DashboardSkeleton = () => (
 const Index = () => {
   const { profile } = useAuth();
   const { getDisplayName, getInitials, loading: profileLoading } = useUserProfile();
-  const [periodFilter, setPeriodFilter] = useState('hoje');
+  const [periodFilter, setPeriodFilter] = useState<DashboardPeriod>('hoje');
 
   // Handlers for action buttons
   const handleDownloadReport = () => {
@@ -55,7 +57,7 @@ const Index = () => {
             case 'admin':
               return <AdminDashboard period={periodFilter} />;
             case 'fisioterapeuta':
-              return <TherapistDashboard lastUpdate={new Date()} profile={profile} />;
+              return <TherapistDashboard lastUpdate={new Date()} profile={profile} period={periodFilter} />;
             case 'paciente':
               return <PatientDashboard _lastUpdate={new Date()} profile={profile} />;
             default:
@@ -144,7 +146,7 @@ const Index = () => {
 
           <div className="py-2 overflow-x-auto -mx-2 px-2 scrollbar-hide">
             <div className="flex gap-3 min-w-max">
-              {['hoje', 'semana', 'mes', 'personalizado'].map((period) => (
+              {(['hoje', 'semana', 'mes', 'personalizado'] as DashboardPeriod[]).map((period) => (
                 <Button
                   key={period}
                   variant={periodFilter === period ? 'default' : 'outline'}
@@ -177,9 +179,10 @@ const Index = () => {
             {renderDashboard()}
           </div>
 
-          {/* Activity Feed Sidebar Area */}
+          {/* Sidebar: Notifications + Activity Feed */}
           <div className="lg:col-span-4 xl:col-span-3">
-            <div className="sticky top-24">
+            <div className="sticky top-24 space-y-6">
+              <DashboardNotificationWidget />
               <RealtimeActivityFeed />
             </div>
           </div>

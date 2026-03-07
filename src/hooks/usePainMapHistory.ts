@@ -1,8 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
-import { collection, query as firestoreQuery, where, orderBy, getDocs, db } from '@/integrations/firebase/app';
-import type { PainMapRecord, BodyRegion, PainMapPoint } from '@/types/painMap';
+import type { PainMapRecord, BodyRegion, PainMapPoint, PainIntensity, PainType } from '@/types/painMap';
 import { PainMapService } from '@/lib/services/painMapService';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { clinicalApi } from '@/lib/api/workers-client';
 
 export interface PainMapInsight {
   type: 'improvement' | 'stable' | 'worsening';
@@ -42,21 +41,53 @@ export interface ComparisonResult {
   status: 'improved' | 'stable' | 'worsened';
 }
 
+const mapPoint = (point: Record<string, unknown>): PainMapPoint => ({
+  region: (point.region as BodyRegion) ?? 'lombar',
+  intensity: Number(point.intensity ?? 0) as PainIntensity,
+  painType: (point.pain_type as PainType) ?? 'aguda',
+  description: (point.description as string) ?? undefined,
+  x: Number(point.x_coordinate ?? point.x ?? 0),
+  y: Number(point.y_coordinate ?? point.y ?? 0),
+});
+
+const mapPainMap = (map: Record<string, unknown>): PainMapRecord => ({
+  id: String(map.id),
+  patient_id: String(map.patient_id),
+  session_id: map.evolution_id ? String(map.evolution_id) : undefined,
+  appointment_id: map.appointment_id ? String(map.appointment_id) : undefined,
+  recorded_at: (map.recorded_at as string) ?? (map.created_at as string) ?? new Date().toISOString(),
+  pain_points: Array.isArray(map.points)
+    ? map.points.map((point) => mapPoint(point as Record<string, unknown>))
+    : [],
+  global_pain_level: Number(map.pain_level ?? map.global_pain_level ?? 0) as PainIntensity,
+  notes: (map.notes as string) ?? undefined,
+  created_by: (map.created_by as string) ?? '',
+  created_at: (map.created_at as string) ?? new Date().toISOString(),
+  updated_at: (map.updated_at as string) ?? new Date().toISOString(),
+});
+
 export function usePainMapHistory(patientId: string) {
   return useQuery({
     queryKey: ['pain-map-history', patientId],
     queryFn: async (): Promise<PainMapHistoryData> => {
-      const q = firestoreQuery(
-        collection(db, 'pain_maps'),
-        where('patient_id', '==', patientId),
-        orderBy('recorded_at', 'desc')
-      );
+      if (!patientId) {
+        return {
+          painMaps: [],
+          evolutionData: [],
+          regionRanking: [],
+          insights: [],
+          statistics: {
+            totalSessions: 0,
+            avgPainLevel: 0,
+            painReduction: 0,
+            mostAffectedRegion: 'N/A',
+            estimatedWeeksToRecovery: null,
+          },
+        };
+      }
 
-      const snapshot = await getDocs(q);
-      const painMaps = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...normalizeFirestoreData(doc.data())
-      })) as PainMapRecord[];
+      const res = await clinicalApi.painMaps.list({ patientId });
+      const painMaps = (res?.data ?? []).map(mapPainMap);
 
       // Calculate evolution data
       const evolutionData = painMaps

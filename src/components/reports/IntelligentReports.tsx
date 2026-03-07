@@ -5,12 +5,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { getFirebaseFunctions } from '@/integrations/firebase/app';
-import { httpsCallable } from 'firebase/functions';
 import { toast } from '@/hooks/use-toast';
 import { FileText, Calendar as CalendarIcon, Loader2, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { analyticsApi } from '@/lib/api/workers-client';
 
 interface IntelligentReportsProps {
   patientId: string;
@@ -29,20 +28,17 @@ export default function IntelligentReports({ patientId, patientName }: Intellige
       setLoading(true);
       setReport(null);
 
-      const functions = getFirebaseFunctions();
-      const intelligentReportsFunction = httpsCallable(functions, 'intelligent-reports');
-
-      const result = await intelligentReportsFunction({
+      const result = await analyticsApi.intelligentReports.generate({
         patientId,
         reportType,
         dateRange: {
           start: startDate.toISOString(),
           end: endDate.toISOString(),
-        }
+        },
       });
 
-      const data = result.data as { report?: string };
-      setReport(data.report || '');
+      const data = result.data;
+      setReport(data?.report || '');
 
       toast({
         title: '📄 Relatório gerado com sucesso',

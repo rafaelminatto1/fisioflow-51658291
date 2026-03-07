@@ -226,7 +226,11 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
     root.classList.remove('scheme-default', 'scheme-blue', 'scheme-green', 'scheme-purple', 'scheme-orange', 'scheme-rose');
 
     // Aplicar modo
-    root.classList.add(resolvedMode);
+    if (resolvedMode === 'dark') {
+      root.classList.add('premium-dark');
+    } else {
+      root.classList.add('light');
+    }
 
     // Aplicar alto contraste
     if (preferences.highContrast) {

@@ -24,8 +24,12 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit2, Trash2, Check, X } from 'lucide-react';
 import { toast } from 'sonner';
-import { db, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query as firestoreQuery, orderBy as fsOrderBy } from '@/integrations/firebase/app';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import {
+  useCreateEvaluationForm,
+  useDeleteEvaluationForm,
+  useEvaluationForms,
+  useUpdateEvaluationForm,
+} from '@/hooks/useEvaluationForms';
 
 interface Template {
     id: string;
@@ -48,17 +52,18 @@ export const EvaluationTemplateManager = () => {
         content: '{}'
     });
 
-    const { data: templates = [], isLoading } = useQuery({
-        queryKey: ['evaluation-templates-admin'],
-        queryFn: async () => {
-            const q = firestoreQuery(
-                collection(db, 'evaluation_templates'),
-                fsOrderBy('category', 'asc')
-            );
-            const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
-        }
-    });
+    const { data: forms = [], isLoading } = useEvaluationForms();
+    const createTemplate = useCreateEvaluationForm();
+    const updateTemplate = useUpdateEvaluationForm();
+    const deleteTemplate = useDeleteEvaluationForm();
+    const templates: Template[] = forms.map((form) => ({
+        id: form.id,
+        title: form.nome,
+        description: form.descricao || '',
+        category: form.tipo || '',
+        content: {},
+        is_active: Boolean(form.ativo),
+    }));
 
     const saveMutation = useMutation({
         mutationFn: async (data: typeof formData) => {
@@ -68,25 +73,25 @@ export const EvaluationTemplateManager = () => {
                 : data.content;
 
             const payload = {
-                title: data.title,
+                nome: data.title,
                 description: data.description,
-                category: data.category,
-                content: contentJson,
-                is_active: true,
-                updated_at: new Date().toISOString(),
+                tipo: data.category || 'geral',
+                configuracao: contentJson,
+                ativo: true,
             };
 
             if (editingTemplate) {
-                const docRef = doc(db, 'evaluation_templates', editingTemplate.id);
-                await updateDoc(docRef, payload);
+                await updateTemplate.mutateAsync({
+                    id: editingTemplate.id,
+                    ...payload,
+                });
             } else {
-                payload.created_at = new Date().toISOString();
-                await addDoc(collection(db, 'evaluation_templates'), payload);
+                await createTemplate.mutateAsync(payload);
             }
         },
         onSuccess: () => {
             toast.success(editingTemplate ? 'Template atualizado!' : 'Template criado!');
-            queryClient.invalidateQueries({ queryKey: ['evaluation-templates-admin'] });
+            queryClient.invalidateQueries({ queryKey: ['evaluation-forms'] });
             setIsOpen(false);
             resetForm();
         },
@@ -97,12 +102,11 @@ export const EvaluationTemplateManager = () => {
 
     const deleteMutation = useMutation({
         mutationFn: async (id: string) => {
-            const docRef = doc(db, 'evaluation_templates', id);
-            await deleteDoc(docRef);
+            await deleteTemplate.mutateAsync(id);
         },
         onSuccess: () => {
             toast.success('Template removido.');
-            queryClient.invalidateQueries({ queryKey: ['evaluation-templates-admin'] });
+            queryClient.invalidateQueries({ queryKey: ['evaluation-forms'] });
         }
     });
 

@@ -17,6 +17,7 @@ import type {
   ClinicalBenchmark as ClinicalBenchmarkType,
   MLTrainingData,
 } from '@/types/patientAnalytics';
+import type { PathologyRequiredMeasurement, MedicalReturn } from '@/types/evolution';
 
 const BASE_URL = (import.meta.env.VITE_WORKERS_API_URL ?? 'http://localhost:8788').replace(
   /\/$/,
@@ -732,6 +733,28 @@ export interface PatientRow {
   updated_at?: string;
 }
 
+export interface PatientSurgery {
+  id: string;
+  name: string;
+  surgery_date?: string | null;
+  surgeon?: string | null;
+  hospital?: string | null;
+  post_op_protocol?: string | null;
+  notes?: string | null;
+  created_at: string;
+}
+
+export interface PatientPathology {
+  id: string;
+  name: string;
+  icd_code?: string | null;
+  status?: string | null;
+  diagnosed_at?: string | null;
+  treated_at?: string | null;
+  notes?: string | null;
+  created_at: string;
+}
+
 export interface PatientStats {
   totalSessions: number;
   upcomingAppointments: number;
@@ -766,6 +789,16 @@ export const patientsApi = {
   delete: (id: string) => request<{ success: boolean }>(`/api/patients/${id}`, { method: 'DELETE' }),
   stats: (id: string) => request<{ data: PatientStats }>(`/api/patients/${id}/stats`),
   lastUpdated: () => request<{ data: { last_updated_at: string | null } }>('/api/patients/last-updated'),
+  surgeries: (patientId: string) =>
+    request<{ data: PatientSurgery[] }>(
+      `/api/patients/${encodeURIComponent(patientId)}/surgeries`,
+    ),
+  pathologies: (patientId: string) =>
+    request<{ data: PatientPathology[] }>(
+      `/api/patients/${encodeURIComponent(patientId)}/pathologies`,
+    ),
+  medicalReturns: (patientId: string) =>
+    request<{ data: MedicalReturn[] }>(`/api/patients/${encodeURIComponent(patientId)}/medical-returns`),
 };
 
 export interface OrganizationMember {
@@ -932,6 +965,34 @@ export interface PopulationHealthResponse {
   totalRecords: number;
 }
 
+export interface AnalyticsExerciseUsage {
+  name: string;
+  count: number;
+}
+
+export interface AnalyticsPainRegion {
+  name: string;
+  value: number;
+}
+
+export interface IntelligentReportRecord {
+  id?: string;
+  patient_id: string;
+  report_type: string;
+  report_content: string;
+  date_range_start?: string;
+  date_range_end?: string;
+  created_at?: string;
+}
+
+export interface IntelligentReportResponse {
+  report: string;
+  patientId: string;
+  reportType: string;
+  dateRange: { start: string; end: string };
+  generatedAt: string;
+}
+
 export const analyticsApi = {
   dashboard: (params?: { period?: string; startDate?: string; endDate?: string }) => {
     const qs = new URLSearchParams(
@@ -943,6 +1004,27 @@ export const analyticsApi = {
     request<FinancialReportResponse>(`/api/analytics/financial?startDate=${encodeURIComponent(
       params.startDate,
     )}&endDate=${encodeURIComponent(params.endDate)}`),
+  topExercises: (limit?: number) =>
+    request<{ data: AnalyticsExerciseUsage[] }>(
+      `/api/analytics/top-exercises${limit ? `?limit=${encodeURIComponent(String(limit))}` : ''}`,
+    ),
+  painMap: (limit?: number) =>
+    request<{ data: AnalyticsPainRegion[] }>(
+      `/api/analytics/pain-map${limit ? `?limit=${encodeURIComponent(String(limit))}` : ''}`,
+    ),
+  intelligentReports: {
+    list: (patientId: string) =>
+      request<{ data: IntelligentReportRecord[] }>(`/api/analytics/intelligent-reports/${patientId}`),
+    generate: (payload: {
+      patientId: string;
+      reportType: string;
+      dateRange: { start: string; end: string };
+    }) =>
+      request<{ data: IntelligentReportResponse }>('/api/analytics/intelligent-reports', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+  },
   patientEvolution: (patientId: string) =>
     request<{ data: PatientEvolutionPoint[] }>(`/api/analytics/patient-evolution/${patientId}`),
   patientProgress: (patientId: string) =>
@@ -1129,6 +1211,100 @@ export const analyticsApi = {
   },
 };
 
+export interface EvolutionMeasurementRecord {
+  id: string;
+  patient_id: string;
+  measurement_type: string;
+  measurement_name: string;
+  value?: number | null;
+  unit?: string | null;
+  notes?: string | null;
+  custom_data?: Record<string, unknown> | null;
+  measured_at: string;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TreatmentSessionRecord {
+  id: string;
+  patient_id: string;
+  therapist_id: string;
+  appointment_id: string;
+  session_date: string;
+  subjective?: string | null;
+  objective?: Record<string, unknown> | string | null;
+  assessment?: string | null;
+  plan?: string | null;
+  observations?: string | null;
+  pain_level_before?: number | null;
+  pain_level_after?: number | null;
+  next_session_goals?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export const evolutionApi = {
+  measurements: {
+    list: (patientId: string, params?: { limit?: number }) => {
+      const query = new URLSearchParams(
+        Object.entries({
+          patientId,
+          limit: params?.limit ? String(params.limit) : undefined,
+        }).filter(([, value]) => value != null) as [string, string][],
+      ).toString();
+
+      return request<{ data: EvolutionMeasurementRecord[] }>(
+        `/api/evolution/measurements${query ? `?${query}` : ''}`,
+      );
+    },
+    create: (data: {
+      patient_id: string;
+      measurement_type: string;
+      measurement_name: string;
+      value?: number;
+      unit?: string;
+      notes?: string;
+      custom_data?: Record<string, unknown>;
+      measured_at?: string;
+    }) =>
+      request<{ data: EvolutionMeasurementRecord }>('/api/evolution/measurements', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+  },
+  requiredMeasurements: {
+    list: (pathologies: string[]) => {
+      const query = new URLSearchParams();
+      if (pathologies.length > 0) {
+        query.set('pathologies', pathologies.join(','));
+      }
+      return request<{ data: PathologyRequiredMeasurement[] }>(
+        `/api/evolution/required-measurements${query.toString() ? `?${query.toString()}` : ''}`,
+      );
+    },
+  },
+  treatmentSessions: {
+    upsert: (data: {
+      patient_id: string;
+      appointment_id: string;
+      therapist_id?: string;
+      subjective?: string;
+      objective?: Record<string, unknown> | string;
+      assessment?: string;
+      plan?: string;
+      observations?: string;
+      pain_level_before?: number;
+      pain_level_after?: number;
+      session_date?: string;
+    }) =>
+      request<{ data: TreatmentSessionRecord }>('/api/evolution/treatment-sessions', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+  },
+};
+
 // ===== API APPOINTMENTS =====
 export interface AppointmentRow {
   id: string;
@@ -1174,19 +1350,37 @@ export const appointmentsApi = {
 
 // ===== API FINANCIAL =====
 export interface Transacao { id: string; organization_id?: string; user_id?: string; tipo: string; valor: number; descricao?: string; status?: string; categoria?: string; metadata?: Record<string,unknown>; created_at: string; updated_at: string; }
-export interface ContaFinanceira { id: string; organization_id: string; tipo: string; valor: number; status?: string; descricao?: string; data_vencimento?: string; pago_em?: string; patient_id?: string; appointment_id?: string; observacoes?: string; created_at: string; updated_at: string; }
+export interface ContaFinanceira { id: string; organization_id: string; tipo: string; valor: number; status?: string; descricao?: string; categoria?: string | null; forma_pagamento?: string | null; data_vencimento?: string; pago_em?: string; data_pagamento?: string | null; patient_id?: string; appointment_id?: string; observacoes?: string; created_at: string; updated_at: string; }
 export interface CentroCusto { id: string; organization_id: string; nome: string; descricao?: string; codigo?: string; ativo: boolean; created_at: string; updated_at: string; }
 export interface Convenio { id: string; organization_id: string; nome: string; cnpj?: string; telefone?: string; email?: string; contato_responsavel?: string; valor_repasse?: number; prazo_pagamento_dias?: number; observacoes?: string; ativo: boolean; created_at: string; updated_at: string; }
 export interface Pagamento { id: string; organization_id?: string; evento_id?: string; appointment_id?: string; valor: number; forma_pagamento?: string; pago_em?: string; observacoes?: string; patient_id?: string; created_at: string; updated_at: string; }
+export interface EmpresaParceira { id: string; organization_id?: string | null; nome: string; contato?: string | null; email?: string | null; telefone?: string | null; contrapartidas?: string | null; observacoes?: string | null; ativo: boolean; created_at: string; updated_at: string; }
+export interface Fornecedor { id: string; organization_id?: string | null; tipo_pessoa: 'pf' | 'pj'; razao_social: string; nome_fantasia?: string | null; cpf_cnpj?: string | null; inscricao_estadual?: string | null; email?: string | null; telefone?: string | null; celular?: string | null; endereco?: string | null; cidade?: string | null; estado?: string | null; cep?: string | null; observacoes?: string | null; categoria?: string | null; ativo: boolean; created_at: string; updated_at: string; }
+export interface FormaPagamento { id: string; organization_id?: string | null; nome: string; tipo: 'geral' | 'entrada' | 'saida'; taxa_percentual: number; dias_recebimento: number; ativo: boolean; created_at: string; updated_at: string; }
+export interface PatientPackageRow {
+  id: string;
+  patient_id: string;
+  name: string;
+  total_sessions: number;
+  used_sessions: number;
+  remaining_sessions: number;
+  price?: number | null;
+  status?: string | null;
+  purchased_at?: string | null;
+  expires_at?: string | null;
+  created_at: string;
+  patient_name?: string | null;
+  patient_phone?: string | null;
+}
 
 const fin = (path: string, opts?: RequestInit) => request<any>(`/api/financial${path}`, opts);
 export const financialApi = {
-  transacoes: { list: (p?: {tipo?:string;status?:string;limit?:number}) => fin(`/transacoes?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`) , create: (d: Partial<Transacao>) => fin('/transacoes',{method:'POST',body:JSON.stringify(d)}), update: (id:string,d:Partial<Transacao>)=>fin(`/transacoes/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete: (id:string)=>fin(`/transacoes/${id}`,{method:'DELETE'}) },
-  contas: { list: (p?: {tipo?:string;status?:string;limit?:number;offset?:number}) => fin(`/contas?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`) , create: (d: Partial<ContaFinanceira>) => fin('/contas',{method:'POST',body:JSON.stringify(d)}), update: (id:string,d:Partial<ContaFinanceira>)=>fin(`/contas/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete: (id:string)=>fin(`/contas/${id}`,{method:'DELETE'}) },
+  transacoes: { list: (p?: {tipo?:string;status?:string;dateFrom?:string;dateTo?:string;limit?:number;offset?:number}) => fin(`/transacoes?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`) , create: (d: Partial<Transacao>) => fin('/transacoes',{method:'POST',body:JSON.stringify(d)}), update: (id:string,d:Partial<Transacao>)=>fin(`/transacoes/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete: (id:string)=>fin(`/transacoes/${id}`,{method:'DELETE'}) },
+  contas: { list: (p?: {tipo?:string;status?:string;dateFrom?:string;dateTo?:string;limit?:number;offset?:number}) => fin(`/contas?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`) , create: (d: Partial<ContaFinanceira>) => fin('/contas',{method:'POST',body:JSON.stringify(d)}), update: (id:string,d:Partial<ContaFinanceira>)=>fin(`/contas/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete: (id:string)=>fin(`/contas/${id}`,{method:'DELETE'}) },
   centrosCusto: { list: () => fin('/centros-custo'), create: (d:Partial<CentroCusto>)=>fin('/centros-custo',{method:'POST',body:JSON.stringify(d)}), update:(id:string,d:Partial<CentroCusto>)=>fin(`/centros-custo/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete:(id:string)=>fin(`/centros-custo/${id}`,{method:'DELETE'}) },
   convenios: { list: () => fin('/convenios'), create: (d:Partial<Convenio>)=>fin('/convenios',{method:'POST',body:JSON.stringify(d)}), update:(id:string,d:Partial<Convenio>)=>fin(`/convenios/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete:(id:string)=>fin(`/convenios/${id}`,{method:'DELETE'}) },
   pagamentos: {
-    list: (p?: string | {eventoId?:string;patientId?:string;appointmentId?:string;limit?:number;offset?:number}) => {
+    list: (p?: string | {eventoId?:string;patientId?:string;appointmentId?:string;dateFrom?:string;dateTo?:string;limit?:number;offset?:number}) => {
       const params = typeof p === 'string' ? { eventoId: p } : (p ?? {});
       const query = new URLSearchParams(
         Object.fromEntries(
@@ -1200,6 +1394,36 @@ export const financialApi = {
     create:(d:Partial<Pagamento>)=>fin('/pagamentos',{method:'POST',body:JSON.stringify(d)}),
     update:(id:string,d:Partial<Pagamento>)=>fin(`/pagamentos/${id}`,{method:'PUT',body:JSON.stringify(d)}),
     delete:(id:string)=>fin(`/pagamentos/${id}`,{method:'DELETE'}),
+  },
+  empresasParceiras: {
+    list: () => fin('/empresas-parceiras'),
+    create: (d: Partial<EmpresaParceira>) => fin('/empresas-parceiras', { method: 'POST', body: JSON.stringify(d) }),
+    update: (id: string, d: Partial<EmpresaParceira>) => fin(`/empresas-parceiras/${id}`, { method: 'PUT', body: JSON.stringify(d) }),
+    delete: (id: string) => fin(`/empresas-parceiras/${id}`, { method: 'DELETE' }),
+  },
+  fornecedores: {
+    list: () => fin('/fornecedores'),
+    create: (d: Partial<Fornecedor>) => fin('/fornecedores', { method: 'POST', body: JSON.stringify(d) }),
+    update: (id: string, d: Partial<Fornecedor>) => fin(`/fornecedores/${id}`, { method: 'PUT', body: JSON.stringify(d) }),
+    delete: (id: string) => fin(`/fornecedores/${id}`, { method: 'DELETE' }),
+  },
+  formasPagamento: {
+    list: () => fin('/formas-pagamento'),
+    create: (d: Partial<FormaPagamento>) => fin('/formas-pagamento', { method: 'POST', body: JSON.stringify(d) }),
+    update: (id: string, d: Partial<FormaPagamento>) => fin(`/formas-pagamento/${id}`, { method: 'PUT', body: JSON.stringify(d) }),
+    delete: (id: string) => fin(`/formas-pagamento/${id}`, { method: 'DELETE' }),
+  },
+  patientPackages: {
+    list: (params?: { patientId?: string; status?: string; limit?: number; offset?: number }) => {
+      const query = new URLSearchParams(
+        Object.fromEntries(
+          Object.entries(params ?? {})
+            .filter(([, v]) => v != null)
+            .map(([k, v]) => [k, String(v)]),
+        ),
+      );
+      return fin(`/patient-packages${query.toString() ? `?${query.toString()}` : ''}`);
+    },
   },
 };
 
@@ -1257,6 +1481,25 @@ export interface ScheduleBusinessHour { id: string; day_of_week: number; is_open
 export interface ScheduleCancellationRule { id: string; min_hours_before: number; allow_patient_cancellation: boolean; max_cancellations_month: number; charge_late_cancellation: boolean; late_cancellation_fee: number; }
 export interface ScheduleNotificationSetting { id: string; send_confirmation_email: boolean; send_confirmation_whatsapp: boolean; send_reminder_24h: boolean; send_reminder_2h: boolean; send_cancellation_notice: boolean; custom_confirmation_message?: string; custom_reminder_message?: string; }
 export interface ScheduleBlockedTime { id: string; therapist_id?: string; title: string; reason?: string; start_date: string; end_date: string; start_time?: string; end_time?: string; is_all_day: boolean; is_recurring: boolean; recurring_days: number[]; created_by: string; created_at?: string; }
+export interface TelemedicineRoomRecord {
+  id: string;
+  organization_id: string;
+  patient_id: string;
+  therapist_id: string;
+  appointment_id?: string | null;
+  room_code: string;
+  status: 'aguardando' | 'ativo' | 'encerrado';
+  scheduled_at?: string | null;
+  started_at?: string | null;
+  ended_at?: string | null;
+  duration_minutes?: number | null;
+  recording_url?: string | null;
+  notas?: string | null;
+  created_at: string;
+  updated_at?: string;
+  patients?: { name?: string | null; email?: string | null; phone?: string | null } | null;
+  profiles?: { full_name?: string | null } | null;
+}
 
 const sched = (path: string, opts?: RequestInit) => request<any>(`/api/scheduling${path}`, opts);
 export const schedulingApi = {
@@ -1299,6 +1542,22 @@ export const schedulingApi = {
     create: (data: Partial<ScheduleBlockedTime>) =>
       sched('/settings/blocked-times', { method: 'POST', body: JSON.stringify(data) }),
     delete: (id: string) => sched(`/settings/blocked-times/${id}`, { method: 'DELETE' }),
+  },
+};
+
+export const telemedicineApi = {
+  rooms: {
+    list: () => request<{ data: TelemedicineRoomRecord[] }>('/api/telemedicine/rooms'),
+    create: (data: Partial<TelemedicineRoomRecord>) =>
+      request<{ data: TelemedicineRoomRecord }>('/api/telemedicine/rooms', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: Partial<TelemedicineRoomRecord>) =>
+      request<{ data: TelemedicineRoomRecord }>(`/api/telemedicine/rooms/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
   },
 };
 
@@ -1400,6 +1659,28 @@ export interface PendingConfirmation {
   therapist_id?: string | null;
 }
 
+export interface WhatsAppTemplateRecord {
+  id: string;
+  name: string;
+  template_key: string;
+  content: string;
+  variables?: string[];
+  category?: string;
+  status: string;
+  updated_at?: string;
+}
+
+export interface WhatsAppWebhookLog {
+  id: string;
+  event_type: string;
+  phone_number?: string | null;
+  message_content?: string | null;
+  processed: boolean;
+  payload?: Record<string, unknown>;
+  created_at?: string | null;
+  patient_id?: string | null;
+}
+
 export const whatsappApi = {
   listMessages: (params?: {
     appointmentId?: string;
@@ -1438,6 +1719,22 @@ export const whatsappApi = {
     );
   },
   getConfig: () => request<{ data: Record<string, unknown> }>('/api/whatsapp/config'),
+  listTemplates: () => request<{ data: WhatsAppTemplateRecord[] }>('/api/whatsapp/templates'),
+  updateTemplate: (id: string, data: { content?: string; status?: string }) =>
+    request<{ data: WhatsAppTemplateRecord }>(`/api/whatsapp/templates/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  listWebhookLogs: (params?: { limit?: number }) => {
+    const qs = new URLSearchParams(
+      Object.entries(params ?? {})
+        .filter(([, v]) => v != null)
+        .map(([k, v]) => [k, String(v)]),
+    ).toString();
+    return request<{ data: WhatsAppWebhookLog[] }>(
+      `/api/whatsapp/webhook-logs${qs ? `?${qs}` : ''}`,
+    );
+  },
 };
 
 // ===== API CRM =====
@@ -1777,6 +2074,93 @@ export interface AuditLog { id: string; organization_id?: string; action: string
 export const auditApi = {
   list: (p?:{entityType?:string;entityId?:string;limit?:number}) => request<{data:AuditLog[]}>(`/api/audit-logs?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`),
   create: (d:Partial<AuditLog>) => request<{data:AuditLog}>('/api/audit-logs',{method:'POST',body:JSON.stringify(d)}),
+};
+
+export interface PrecadastroToken {
+  id: string;
+  organization_id: string;
+  nome: string;
+  descricao: string | null;
+  token: string;
+  ativo: boolean;
+  max_usos: number | null;
+  usos_atuais: number;
+  expires_at: string | null;
+  campos_obrigatorios: string[];
+  campos_opcionais: string[];
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface Precadastro {
+  id: string;
+  token_id: string;
+  organization_id: string;
+  nome: string;
+  email: string | null;
+  telefone: string | null;
+  data_nascimento: string | null;
+  endereco: string | null;
+  observacoes: string | null;
+  status: string;
+  converted_at: string | null;
+  patient_id: string | null;
+  dados_adicionais: Record<string, unknown> | null;
+  cpf?: string;
+  convenio?: string;
+  queixa_principal?: string;
+  token_nome?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export const precadastroApi = {
+  public: {
+    getToken: (token: string) =>
+      requestPublic<{ data: PrecadastroToken }>(`/api/precadastro/public/${encodeURIComponent(token)}`),
+    submit: (
+      token: string,
+      data: {
+        nome: string;
+        email?: string;
+        telefone?: string;
+        data_nascimento?: string;
+        endereco?: string;
+        cpf?: string;
+        convenio?: string;
+        queixa_principal?: string;
+        observacoes?: string;
+      },
+    ) =>
+      requestPublic<{ data: Precadastro }>(
+        `/api/precadastro/public/${encodeURIComponent(token)}/submissions`,
+        {
+          method: 'POST',
+          body: JSON.stringify(data),
+        },
+      ),
+  },
+  tokens: {
+    list: () => request<{ data: PrecadastroToken[] }>('/api/precadastro/tokens'),
+    create: (data: Partial<PrecadastroToken>) =>
+      request<{ data: PrecadastroToken }>('/api/precadastro/tokens', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: Partial<PrecadastroToken>) =>
+      request<{ data: PrecadastroToken }>(`/api/precadastro/tokens/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+  },
+  submissions: {
+    list: () => request<{ data: Precadastro[] }>('/api/precadastro/submissions'),
+    update: (id: string, data: Partial<Precadastro>) =>
+      request<{ data: Precadastro }>(`/api/precadastro/submissions/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+  },
 };
 
 // ===== HEALTH CHECK =====
