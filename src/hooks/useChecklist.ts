@@ -1,26 +1,18 @@
 /**
- * useChecklist - Migrated to Firebase
- *
+ * useChecklist - Migrated to Neon/Workers
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
+import { checklistApi, type ChecklistItem } from '@/lib/api/workers-client';
 import { useToast } from '@/hooks/use-toast';
 import { ChecklistItemCreate, ChecklistItemUpdate } from '@/lib/validations/checklist';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export function useChecklist(eventoId: string) {
   return useQuery({
     queryKey: ['checklist', eventoId],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'checklist_items'),
-        where('evento_id', '==', eventoId),
-        orderBy('created_at', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
+      const res = await checklistApi.list(eventoId);
+      return (res?.data ?? []) as ChecklistItem[];
     },
     enabled: !!eventoId,
   });
@@ -32,10 +24,8 @@ export function useCreateChecklistItem() {
 
   return useMutation({
     mutationFn: async (item: ChecklistItemCreate) => {
-      const docRef = await addDoc(collection(db, 'checklist_items'), item);
-
-      const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...docSnap.data() };
+      const res = await checklistApi.create(item);
+      return (res?.data ?? res) as ChecklistItem;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['checklist', data.evento_id] });
@@ -60,11 +50,8 @@ export function useUpdateChecklistItem() {
 
   return useMutation({
     mutationFn: async ({ id, data, eventoId }: { id: string; data: ChecklistItemUpdate; eventoId: string }) => {
-      const docRef = doc(db, 'checklist_items', id);
-      await updateDoc(docRef, data);
-
-      const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...docSnap.data(), eventoId };
+      const res = await checklistApi.update(id, data);
+      return { ...((res?.data ?? res) as ChecklistItem), eventoId };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['checklist', data.evento_id] });
@@ -88,16 +75,10 @@ export function useToggleChecklistItem() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ id, eventoId }: { id: string; eventoId: string }) => {
-      const docRef = doc(db, 'checklist_items', id);
-      const docSnap = await getDoc(docRef);
-
-      const item = { id: docSnap.id, ...docSnap.data() } as { id: string; status: string };
-      const novoStatus = item.status === 'OK' ? 'ABERTO' : 'OK';
-
-      await updateDoc(docRef, { status: novoStatus });
-
-      return { ...item, status: novoStatus, eventoId };
+    mutationFn: async ({ id, eventoId, status }: { id: string; eventoId: string; status: 'ABERTO' | 'OK' }) => {
+      const novoStatus = status === 'OK' ? 'ABERTO' : 'OK';
+      const res = await checklistApi.update(id, { status: novoStatus });
+      return { ...((res?.data ?? res) as ChecklistItem), eventoId };
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['checklist', data.evento_id] });
@@ -118,7 +99,7 @@ export function useDeleteChecklistItem() {
 
   return useMutation({
     mutationFn: async ({ id, eventoId }: { id: string; eventoId: string }) => {
-      await deleteDoc(doc(db, 'checklist_items', id));
+      await checklistApi.delete(id);
       return eventoId;
     },
     onSuccess: (eventoId) => {
