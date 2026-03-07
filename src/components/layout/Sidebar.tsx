@@ -72,6 +72,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useGamification } from '@/hooks/useGamification';
 import { Progress } from '@/components/ui/progress';
 import { getFirebaseAuth } from '@/integrations/firebase/app';
+import { GlobalCommandPalette } from "@/components/evolution/search/GlobalCommandPalette";
 import { signOut } from 'firebase/auth';
 
 const GamificationMiniProfile = ({ collapsed }: { collapsed: boolean }) => {
@@ -439,10 +440,12 @@ export function Sidebar() {
   };
 
   return (
-    <div className={cn(
-      "hidden md:flex bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl border-r border-border/40 transition-all duration-500 ease-in-out flex-col h-screen sticky top-0 shadow-premium-lg z-50",
-      collapsed ? "w-[84px]" : "w-[240px]"
-    )}>
+    <>
+      <GlobalCommandPalette />
+      <div className={cn(
+        "hidden md:flex bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl border-r border-border/40 transition-all duration-500 ease-in-out flex-col h-screen sticky top-0 shadow-premium-lg z-50",
+        collapsed ? "w-[84px]" : "w-[240px]"
+      )}>
       {/* Header */}
       <div className={cn("shrink-0 p-5 relative", collapsed ? "flex justify-center" : "")}>
         <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
@@ -638,5 +641,6 @@ export function Sidebar() {
         </Button>
       </div>
     </div>
+    </>
   );
 }
