@@ -136,6 +136,93 @@ app.get('/', requireAuth, async (c) => {
   });
 });
 
+app.get('/:id/surgeries', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id: patientId } = c.req.param();
+
+  const result = await pool.query(
+    `
+      SELECT
+        s.id,
+        s.name,
+        s.surgery_date,
+        s.surgeon,
+        s.hospital,
+        s.post_op_protocol,
+        s.notes,
+        s.created_at
+        , p.id AS patient_id
+      FROM surgeries s
+      JOIN medical_records mr ON mr.id = s.medical_record_id
+      JOIN patients p ON p.id = mr.patient_id
+      WHERE p.id = $1 AND p.organization_id = $2
+      ORDER BY s.surgery_date DESC NULLS LAST, s.created_at DESC
+    `,
+    [patientId, user.organizationId],
+  );
+
+  return c.json({ data: result.rows });
+});
+
+app.get('/:id/pathologies', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id: patientId } = c.req.param();
+
+  const result = await pool.query(
+    `
+      SELECT
+        pth.id,
+        pth.name,
+        pth.icd_code,
+        pth.status,
+        pth.diagnosed_at,
+        pth.treated_at,
+        pth.notes,
+        pth.created_at
+        , p.id AS patient_id
+      FROM pathologies pth
+      JOIN medical_records mr ON mr.id = pth.medical_record_id
+      JOIN patients p ON p.id = mr.patient_id
+      WHERE p.id = $1 AND p.organization_id = $2
+      ORDER BY pth.created_at DESC
+    `,
+    [patientId, user.organizationId],
+  );
+
+  return c.json({ data: result.rows });
+});
+
+app.get('/:id/medical-returns', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id: patientId } = c.req.param();
+
+  const result = await pool.query(
+    `
+      SELECT
+        id,
+        patient_id,
+        doctor_name,
+        doctor_phone,
+        return_date,
+        return_period,
+        notes,
+        report_done,
+        report_sent,
+        created_at,
+        updated_at
+      FROM patient_medical_returns
+      WHERE patient_id = $1 AND organization_id = $2
+      ORDER BY return_date DESC NULLS LAST, created_at DESC
+    `,
+    [patientId, user.organizationId],
+  );
+
+  return c.json({ data: result.rows });
+});
+
 app.get('/:id', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = createPool(c.env);

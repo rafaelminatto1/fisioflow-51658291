@@ -1,13 +1,11 @@
 /**
- * useExerciseTemplates - Migrated to Firebase
+ * useExerciseTemplates - Migrated to Neon/Workers
  *
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { templatesApi, type ExerciseTemplate as WorkersTemplate, type ExerciseTemplateItem as WorkersTemplateItem } from '@/lib/api/workers-client';
 import { toast } from 'sonner';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface ExerciseTemplate {
   id: string;

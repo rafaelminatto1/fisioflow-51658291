@@ -6,6 +6,20 @@ import { determineOutcomeCategory, getAgeGroup, hashPatientId, roundTo } from '.
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
+const hasTable = async (pool: ReturnType<typeof createPool>, tableName: string) => {
+  const result = await pool.query(
+    `
+      SELECT EXISTS (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_name = $1
+      ) AS exists
+    `,
+    [tableName],
+  );
+  return Boolean(result.rows[0]?.exists);
+};
+
 const parseDate = (input: string | undefined): string | null => {
   if (!input) return null;
   const date = new Date(input);
@@ -24,7 +38,7 @@ app.get('/dashboard', requireAuth, async (c) => {
     return now.toISOString().split('T')[0];
   })();
 
-  const [activePatientsRes, paymentsRes, appointmentsRes, todayRes] = await Promise.all([
+  const [activePatientsRes, paymentsRes, appointmentsRes, todayRes, sessionStatsRes] = await Promise.all([
     pool.query(
       `SELECT COUNT(*)::int AS total
        FROM patients
@@ -59,6 +73,15 @@ app.get('/dashboard', requireAuth, async (c) => {
          AND start_time BETWEEN $2::timestamp AND $3::timestamp`,
       [user.organizationId, `${endDate}T00:00:00`, `${endDate}T23:59:59`],
     ),
+    pool.query(
+      `SELECT
+         COUNT(*)::int AS total_sessions,
+         AVG(duration_minutes)::numeric AS avg_session_duration
+       FROM sessions
+       WHERE organization_id = $1
+         AND started_at BETWEEN $2::timestamp AND $3::timestamp`,
+      [user.organizationId, `${startDate}T00:00:00`, `${endDate}T23:59:59`],
+    ),
   ]);
 
   const activePatients = Number(activePatientsRes.rows[0]?.total ?? 0);
@@ -86,15 +109,52 @@ app.get('/dashboard', requireAuth, async (c) => {
   const occupancyRate = totalAppointments > 0 ? (completedAppointments / totalAppointments) * 100 : 0;
   const absenceRate = totalAppointments > 0 ? (noShowAppointments / totalAppointments) * 100 : 0;
   const confirmationRate = totalAppointments > 0 ? (confirmedAppointments / totalAppointments) * 100 : 0;
+  const avgSessionDuration = Number(sessionStatsRes.rows[0]?.avg_session_duration ?? 0);
+  const engagementScore = Math.max(
+    0,
+    Math.min(
+      100,
+      Math.round((((100 - absenceRate) * 0.6) + (confirmationRate * 0.4)) * 10) / 10,
+    ),
+  );
+
+  let topPainRegions: Array<{ name: string; value: number }> = [];
+  try {
+    const painRegionsRes = await pool.query(
+      `
+        SELECT COALESCE(NULLIF(TRIM(pmp.region), ''), 'Nao informado') AS name,
+               COUNT(*)::int AS value
+        FROM pain_map_points pmp
+        INNER JOIN pain_maps pm ON pm.id = pmp.pain_map_id
+        WHERE pm.organization_id = $1
+        GROUP BY 1
+        ORDER BY value DESC
+        LIMIT 5
+      `,
+      [user.organizationId],
+    );
+    topPainRegions = painRegionsRes.rows.map((row) => ({
+      name: String(row.name),
+      value: Number(row.value ?? 0),
+    }));
+  } catch (error) {
+    console.warn('[analytics] topPainRegions fallback:', error);
+  }
 
   const dashboard: Record<string, unknown> = {
+    totalPatients: activePatients,
     activePatients,
     monthlyRevenue: Number(
       payments.reduce((sum, item) => sum + item.amount, 0).toFixed(2),
     ),
+    totalAppointments,
+    completedAppointments,
     occupancyRate: Number((Math.round(occupancyRate * 10) / 10).toFixed(1)),
     noShowRate: Number((Math.round(absenceRate * 10) / 10).toFixed(1)),
     confirmationRate: Number((Math.round(confirmationRate * 10) / 10).toFixed(1)),
+    avgSessionDuration: Number((Math.round(avgSessionDuration * 10) / 10).toFixed(1)),
+    engagementScore,
+    topPainRegions,
     npsScore: 0,
     appointmentsToday: Number(todayRes.rows[0]?.count ?? 0),
     revenueChart,
@@ -168,6 +228,228 @@ app.get('/financial', requireAuth, async (c) => {
       revenueByMethod,
       revenueByTherapist,
       delinquencyRate: Number((Math.round(delinquencyRate * 10) / 10).toFixed(1)),
+    },
+  });
+});
+
+app.get('/top-exercises', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const limitValue = Math.min(Number(c.req.query('limit') ?? 5) || 5, 20);
+
+  if (!(await hasTable(pool, 'prescribed_exercises'))) {
+    return c.json({ data: [] });
+  }
+
+  const result = await pool.query(
+    `
+      SELECT COALESCE(e.name, 'Exercicio sem nome') AS name, COUNT(*)::int AS count
+      FROM prescribed_exercises pe
+      LEFT JOIN exercises e ON e.id = pe.exercise_id
+      WHERE pe.organization_id = $1 AND pe.is_active = true
+      GROUP BY 1
+      ORDER BY count DESC, name ASC
+      LIMIT $2
+    `,
+    [user.organizationId, limitValue],
+  );
+
+  return c.json({
+    data: result.rows.map((row) => ({
+      name: String(row.name),
+      count: Number(row.count ?? 0),
+    })),
+  });
+});
+
+app.get('/pain-map', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const limitValue = Math.min(Number(c.req.query('limit') ?? 5) || 5, 20);
+
+  try {
+    const result = await pool.query(
+      `
+        SELECT COALESCE(NULLIF(TRIM(pmp.region), ''), 'Nao informado') AS name,
+               COUNT(*)::int AS value
+        FROM pain_map_points pmp
+        INNER JOIN pain_maps pm ON pm.id = pmp.pain_map_id
+        WHERE pm.organization_id = $1
+        GROUP BY 1
+        ORDER BY value DESC, name ASC
+        LIMIT $2
+      `,
+      [user.organizationId, limitValue],
+    );
+
+    return c.json({
+      data: result.rows.map((row) => ({
+        name: String(row.name),
+        value: Number(row.value ?? 0),
+      })),
+    });
+  } catch (error) {
+    console.warn('[analytics] pain-map fallback:', error);
+    return c.json({ data: [] });
+  }
+});
+
+app.get('/intelligent-reports/:patientId', requireAuth, async (c) => {
+  const { patientId } = c.req.param();
+  const user = c.get('user');
+  const pool = createPool(c.env);
+
+  const reports = await pool.query(
+    `
+      SELECT id, patient_id, report_type, report_content, date_range_start, date_range_end, created_at
+      FROM generated_reports
+      WHERE organization_id = $1 AND patient_id = $2
+      ORDER BY created_at DESC
+      LIMIT 10
+    `,
+    [user.organizationId, patientId],
+  ).catch(() => ({ rows: [] as Array<Record<string, unknown>> }));
+
+  return c.json({ data: reports.rows });
+});
+
+app.post('/intelligent-reports', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const body = (await c.req.json()) as {
+    patientId?: string;
+    reportType?: string;
+    dateRange?: { start?: string; end?: string };
+  };
+
+  if (!body.patientId) {
+    return c.json({ error: 'patientId e obrigatorio' }, 400);
+  }
+
+  const startDate = parseDate(body.dateRange?.start) ?? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const endDate = parseDate(body.dateRange?.end) ?? new Date().toISOString().split('T')[0];
+  const reportType = body.reportType ?? 'evolution';
+
+  const [patientRes, metricsRes, outcomesRes, goalsRes] = await Promise.all([
+    pool.query(
+      `
+        SELECT id, full_name, email, phone, main_condition
+        FROM patients
+        WHERE organization_id = $1 AND id = $2
+        LIMIT 1
+      `,
+      [user.organizationId, body.patientId],
+    ),
+    pool.query(
+      `
+        SELECT session_date, pain_level_before, pain_level_after, functional_improvement, pain_reduction, notes
+        FROM patient_session_metrics
+        WHERE organization_id = $1 AND patient_id = $2
+          AND session_date BETWEEN $3::timestamp AND $4::timestamp
+        ORDER BY session_date ASC
+      `,
+      [user.organizationId, body.patientId, `${startDate}T00:00:00`, `${endDate}T23:59:59`],
+    ),
+    pool.query(
+      `
+        SELECT measure_name, measure_type, score, normalized_score, measurement_date
+        FROM patient_outcome_measures
+        WHERE organization_id = $1 AND patient_id = $2
+          AND measurement_date BETWEEN $3::date AND $4::date
+        ORDER BY measurement_date DESC
+        LIMIT 20
+      `,
+      [user.organizationId, body.patientId, startDate, endDate],
+    ),
+    pool.query(
+      `
+        SELECT goal_title, status, progress_percentage, target_date
+        FROM patient_goal_tracking
+        WHERE organization_id = $1 AND patient_id = $2
+        ORDER BY target_date ASC NULLS LAST, created_at DESC
+        LIMIT 20
+      `,
+      [user.organizationId, body.patientId],
+    ),
+  ]);
+
+  const patient = patientRes.rows[0];
+  if (!patient) {
+    return c.json({ error: 'Paciente nao encontrado' }, 404);
+  }
+
+  const metrics = metricsRes.rows;
+  const outcomes = outcomesRes.rows;
+  const goals = goalsRes.rows;
+
+  const firstMetric = metrics[0];
+  const lastMetric = metrics[metrics.length - 1];
+  const averagePainReduction =
+    metrics.length > 0
+      ? roundTo(metrics.reduce((sum, row) => sum + Number(row.pain_reduction ?? 0), 0) / metrics.length, 1)
+      : 0;
+  const averageFunctionalImprovement =
+    metrics.length > 0
+      ? roundTo(metrics.reduce((sum, row) => sum + Number(row.functional_improvement ?? 0), 0) / metrics.length, 1)
+      : 0;
+
+  const reportLines = [
+    `# Relatorio Inteligente - ${patient.full_name ?? 'Paciente'}`,
+    '',
+    `**Tipo:** ${reportType}`,
+    `**Periodo:** ${startDate} ate ${endDate}`,
+    `**Condicao principal:** ${patient.main_condition ?? 'Nao informada'}`,
+    '',
+    '## Resumo clinico',
+    `- Total de sessoes analisadas: ${metrics.length}`,
+    `- Dor inicial registrada: ${firstMetric?.pain_level_before ?? 'n/d'}`,
+    `- Dor final registrada: ${lastMetric?.pain_level_after ?? 'n/d'}`,
+    `- Reducao media da dor: ${averagePainReduction}%`,
+    `- Melhora funcional media: ${averageFunctionalImprovement}%`,
+    '',
+    '## Desfechos recentes',
+    ...(outcomes.length > 0
+      ? outcomes.slice(0, 5).map((row) =>
+          `- ${row.measure_name}: ${row.normalized_score ?? row.score} (${String(row.measurement_date).slice(0, 10)})`,
+        )
+      : ['- Nenhuma medida de desfecho encontrada no periodo.']),
+    '',
+    '## Objetivos do tratamento',
+    ...(goals.length > 0
+      ? goals.slice(0, 5).map((row) =>
+          `- ${row.goal_title}: status ${row.status}, progresso ${Number(row.progress_percentage ?? 0)}%`,
+        )
+      : ['- Nenhum objetivo registrado.']),
+    '',
+    '## Recomendacoes',
+    ...(averagePainReduction < 15
+      ? ['- Reavaliar adesao ao tratamento e frequencia das sessoes.']
+      : ['- Manter o plano atual, com foco em progressao funcional gradual.']),
+    ...(averageFunctionalImprovement < 10
+      ? ['- Considerar ajuste de exercicios domiciliares e metas semanais.']
+      : ['- Continuar monitorando os ganhos funcionais obtidos.']),
+  ];
+
+  const report = reportLines.join('\n');
+
+  if (await hasTable(pool, 'generated_reports')) {
+    await pool.query(
+      `
+        INSERT INTO generated_reports (
+          organization_id, patient_id, report_type, report_content, date_range_start, date_range_end, created_by, created_at
+        ) VALUES ($1,$2,$3,$4,$5,$6,$7,NOW())
+      `,
+      [user.organizationId, body.patientId, reportType, report, startDate, endDate, user.uid],
+    ).catch(() => null);
+  }
+
+  return c.json({
+    data: {
+      report,
+      patientId: body.patientId,
+      reportType,
+      dateRange: { start: startDate, end: endDate },
+      generatedAt: new Date().toISOString(),
     },
   });
 });

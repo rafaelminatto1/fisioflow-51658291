@@ -9,7 +9,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { db, doc, getDoc } from '@/integrations/firebase/app';
+import { patientsApi, type PatientRow } from '@/lib/api/workers-client';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -105,10 +105,8 @@ export default function PainMapHistoryPage() {
     queryKey: ['patient', patientId],
     queryFn: async () => {
       if (!patientId) return null;
-      const docRef = doc(db, 'patients', patientId);
-      const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) return null;
-      return { id: docSnap.id, ...docSnap.data() } as Patient;
+      const res = await patientsApi.get(patientId);
+      return (res?.data ?? null) as PatientRow | null;
     },
     enabled: !!patientId
   });

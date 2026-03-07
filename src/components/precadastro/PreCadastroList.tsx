@@ -9,16 +9,7 @@ import { CheckCircle, XCircle, UserPlus, Search, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-
-interface PreCadastro {
-  id: string;
-  nome: string;
-  email: string;
-  telefone?: string;
-  status: string;
-  created_at: string;
-  data_agendamento?: string;
-}
+import type { Precadastro } from '@/lib/api/workers-client';
 
 interface PreCadastroListProps {
     precadastros: PreCadastro[];

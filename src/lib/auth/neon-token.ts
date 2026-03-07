@@ -48,39 +48,22 @@ function setCachedJwt(token: string): void {
 }
 
 /**
- * Fetches the real JWT from the Neon Auth `/get-session` endpoint.
- * Neon Auth puts the JWT in the `set-auth-jwt` response header (not the JSON body).
- * The JSON body only contains an opaque session token.
+ * Fetches the real JWT from the Neon Auth session.
+ * The SDK intercepts the `set-auth-jwt` response header from /get-session
+ * and stores it in data.session.token — we use that instead of a raw fetch
+ * to avoid CORS header-exposure issues.
  */
 async function getJwtFromSessionEndpoint(): Promise<string | null> {
-  const authBase = import.meta.env.VITE_NEON_AUTH_URL as string | undefined;
-  if (!authBase) return null;
-
   try {
-    const response = await fetch(`${authBase.replace(/\/$/, '')}/get-session`, {
-      method: 'GET',
-      credentials: 'include',
-    });
-
-    if (!response.ok) return null;
-
-    // JWT is in the set-auth-jwt header (as confirmed from Neon Auth response analysis)
-    const headerCandidates = [
-      response.headers.get('set-auth-jwt'),
-      response.headers.get('x-auth-jwt'),
-      response.headers.get('authorization')?.replace(/^Bearer\s+/i, ''),
-    ];
-
-    for (const headerToken of headerCandidates) {
-      if (typeof headerToken === 'string' && looksLikeJwt(headerToken.trim())) {
-        return headerToken.trim();
-      }
+    const { data } = await authClient.getSession();
+    const token = data?.session?.token;
+    if (typeof token === 'string' && looksLikeJwt(token)) {
+      return token;
     }
+    return null;
   } catch {
-    // Network error, fail silently
+    return null;
   }
-
-  return null;
 }
 
 export async function getNeonAccessToken(options: GetNeonAccessTokenOptions = {}): Promise<string> {
