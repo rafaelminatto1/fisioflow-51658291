@@ -10,7 +10,12 @@ import {
 } from 'lucide-react';
 import { EventosStatsWidget } from '@/components/eventos/EventosStatsWidget';
 import { useNavigate } from 'react-router-dom';
-import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
+import { useDashboardMetrics, type DashboardPeriod } from '@/hooks/useDashboardMetrics';
+import { useQuery } from '@tanstack/react-query';
+import { appointmentsApi, type AppointmentRow } from '@/lib/api/workers-client';
+import { useAuth } from '@/contexts/AuthContext';
+import { formatDateToLocalISO } from '@/utils/dateUtils';
+import { startOfWeek, endOfWeek, startOfMonth } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Cell, ResponsiveContainer } from 'recharts';
 import { AIInsightsWidget } from './AIInsightsWidget';
 import { EmptyStateEnhanced } from '@/components/ui/EmptyStateEnhanced';
@@ -19,7 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 interface AdminDashboardProps {
-  period?: string;
+  period?: DashboardPeriod;
 }
 
 interface AnimatedCardProps {
@@ -77,9 +82,46 @@ const AnimatedCard = React.memo(({ children, delay = 0, className = '' }: Animat
 
 AnimatedCard.displayName = 'AnimatedCard';
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period = 'hoje' }) => {
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' }) => {
   const navigate = useNavigate();
-  const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics();
+  const { organizationId } = useAuth();
+  const { data: metrics, isLoading: metricsLoading } = useDashboardMetrics(period);
+
+  // Load real appointments for "Agenda do Dia" based on selected period
+  const { data: agendamentosData, isLoading: appointmentsLoading } = useQuery({
+    queryKey: ['admin-agenda', organizationId, period],
+    enabled: !!organizationId,
+    staleTime: 1000 * 60 * 2,
+    queryFn: async () => {
+      const now = new Date();
+      const dateFrom =
+        period === 'semana' ? formatDateToLocalISO(startOfWeek(now, { weekStartsOn: 1 })) :
+        period === 'mes' ? formatDateToLocalISO(startOfMonth(now)) :
+        formatDateToLocalISO(now);
+      const dateTo =
+        period === 'semana' ? formatDateToLocalISO(endOfWeek(now, { weekStartsOn: 1 })) :
+        formatDateToLocalISO(now);
+      const res = await appointmentsApi.list({ dateFrom, dateTo, limit: 20, offset: 0 });
+      return (res?.data ?? []) as AppointmentRow[];
+    },
+  });
+
+  const agendamentosProximos = useMemo(() => {
+    return (agendamentosData ?? [])
+      .filter(a => a.status !== 'cancelado')
+      .sort((a, b) => {
+        const ta = String(a.appointment_time ?? a.time ?? '');
+        const tb = String(b.appointment_time ?? b.time ?? '');
+        return ta.localeCompare(tb);
+      })
+      .slice(0, 6)
+      .map(a => ({
+        id: a.id,
+        horario: String(a.appointment_time ?? a.time ?? '--:--'),
+        paciente: String(a.patient_name ?? 'Paciente'),
+        status: String(a.status ?? 'agendado'),
+      }));
+  }, [agendamentosData]);
 
   const formattedRevenue = useMemo(() => {
     const revenue = metrics?.receitaMensal || 0;
@@ -101,9 +143,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
       default: return 'default';
     }
   };
-
-  const appointmentsLoading = false;
-  const agendamentosProximos = useMemo(() => [], []);
 
   const loading = metricsLoading || appointmentsLoading;
 
@@ -159,7 +198,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
                 <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl group-hover:bg-blue-500/10 transition-colors" />
                 <CardHeader className="pb-2 px-6 pt-6 relative z-10">
                   <CardTitle className="flex items-center justify-between text-[11px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-blue-500 transition-colors">
-                    <span>Ocupação Hoje</span>
+                    <span>Ocupação {metrics?.periodLabel ?? 'Hoje'}</span>
                     <div className="p-2.5 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-border/50 group-hover:border-blue-500/50 group-hover:shadow-blue-500/10 transition-all duration-500">
                       <Calendar className="h-4 w-4 text-blue-500" />
                     </div>
@@ -387,7 +426,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period: _period 
                     <div className="p-2 bg-primary/10 rounded-xl">
                       <Clock className="h-4 w-4 text-primary" />
                     </div>
-                    Agenda do Dia
+                    Agenda — {metrics?.periodLabel ?? 'Hoje'}
                   </div>
                   <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/5 px-3 h-8 rounded-full" onClick={() => navigate('/agenda')}>
                     Ver Todos

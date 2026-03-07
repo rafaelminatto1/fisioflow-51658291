@@ -53,6 +53,7 @@ export interface DashboardMetrics {
   ticketMedio: number;
   agendamentosSemana: number;
   cancelamentosSemana: number;
+  periodLabel: string;
 }
 
 const isCompletedStatus = (status: unknown): boolean => {
@@ -93,7 +94,9 @@ const isDateInRange = (value: unknown, from: Date, to: Date): boolean => {
 const sumRevenue = (rows: Array<{ valor?: number }>): number =>
   rows.reduce((acc, row) => acc + Number(row.valor ?? 0), 0);
 
-export const useDashboardMetrics = () => {
+export type DashboardPeriod = 'hoje' | 'semana' | 'mes' | 'personalizado';
+
+export const useDashboardMetrics = (period: DashboardPeriod = 'hoje') => {
   const queryClient = useQueryClient();
   const { organizationId } = useAuth();
 
@@ -110,7 +113,7 @@ export const useDashboardMetrics = () => {
   }, [queryClient, organizationId]);
 
   return useQuery({
-    queryKey: ['dashboard-metrics', organizationId],
+    queryKey: ['dashboard-metrics', organizationId, period],
     enabled: !!organizationId,
     staleTime: 1000 * 60 * 5,
     queryFn: async (): Promise<DashboardMetrics> => {
@@ -128,6 +131,15 @@ export const useDashboardMetrics = () => {
       const weekStart = formatDateToLocalISO(weekStartDate);
       const weekEnd = formatDateToLocalISO(weekEndDate);
 
+      // Adjust primary date range based on selected period
+      const primaryDateFrom =
+        period === 'semana' ? weekStart :
+        period === 'mes' ? startCurrentMonth :
+        today;
+      const primaryDateTo =
+        period === 'semana' ? weekEnd :
+        today;
+
       const [
         patientsRes,
         appointmentsTodayRes,
@@ -139,7 +151,7 @@ export const useDashboardMetrics = () => {
         pagamentosRes,
       ] = await Promise.all([
         patientsApi.list({ limit: 3000, offset: 0 }),
-        appointmentsApi.list({ dateFrom: today, dateTo: today, limit: 3000, offset: 0 }),
+        appointmentsApi.list({ dateFrom: primaryDateFrom, dateTo: primaryDateTo, limit: 3000, offset: 0 }),
         appointmentsApi.list({ dateFrom: thirtyDaysAgo, dateTo: today, limit: 3000, offset: 0 }),
         appointmentsApi.list({ dateFrom: weekStart, dateTo: weekEnd, limit: 3000, offset: 0 }),
         appointmentsApi.list({ dateFrom: startCurrentMonth, dateTo: today, limit: 3000, offset: 0 }),
@@ -295,6 +307,10 @@ export const useDashboardMetrics = () => {
         ticketMedio: totalSessions30d > 0 ? Math.round((receitaMensal / totalSessions30d) * 100) / 100 : 0,
         agendamentosSemana,
         cancelamentosSemana,
+        periodLabel:
+          period === 'semana' ? 'Esta Semana' :
+          period === 'mes' ? 'Mês Atual' :
+          'Hoje',
       };
     },
   });

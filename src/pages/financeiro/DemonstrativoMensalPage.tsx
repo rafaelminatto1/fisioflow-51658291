@@ -11,11 +11,16 @@ import { format, subMonths, startOfMonth, endOfMonth } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Tooltip, ResponsiveContainer, Cell, PieChart as RechartsPieChart, Pie } from 'recharts';
 import { useQuery } from '@tanstack/react-query';
-import { db, collection, query, where, getDocs } from '@/integrations/firebase/app';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import {
+  appointmentsApi,
+  financialApi,
+  type ContaFinanceira,
+  type Transacao,
+} from '@/lib/api/workers-client';
 import { useOrganizations } from '@/hooks/useOrganizations';
 
 interface DemonstrativoData {
+  periodo: string;
   entradas: number;
   saidas: number;
   saldo: number;
@@ -29,6 +34,18 @@ interface DemonstrativoData {
 }
 
 const COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
+
+function toDayRange(year: string, month: string) {
+  const date = new Date(Number.parseInt(year, 10), Number.parseInt(month, 10) - 1, 1);
+  return {
+    dateFrom: format(startOfMonth(date), 'yyyy-MM-dd'),
+    dateTo: format(endOfMonth(date), 'yyyy-MM-dd'),
+  };
+}
+
+function sumValores(items: Array<{ valor?: string | number }>) {
+  return items.reduce((acc, item) => acc + Number(item.valor ?? 0), 0);
+}
 
 export default function DemonstrativoMensalPage() {
   const { currentOrganization } = useOrganizations();
@@ -49,24 +66,34 @@ export default function DemonstrativoMensalPage() {
     queryKey: ['demonstrativo-mensal', organizationId, anoSelecionado, mesSelecionado],
     queryFn: async (): Promise<DemonstrativoData> => {
       if (!organizationId) throw new Error('Organização não identificada');
-      const dataInicio = startOfMonth(new Date(parseInt(anoSelecionado), parseInt(mesSelecionado) - 1, 1)).toISOString();
-      const dataFim = endOfMonth(new Date(parseInt(anoSelecionado), parseInt(mesSelecionado) - 1, 1)).toISOString();
+      const { dateFrom, dateTo } = toDayRange(anoSelecionado, mesSelecionado);
 
-      // Buscar movimentações do caixa
-      const startDay = dataInicio.split('T')[0];
-      const endDay = dataFim.split('T')[0];
+      const [transacoesRes, contasReceberRes, contasPagarRes, appointmentsRes] =
+        await Promise.all([
+          financialApi.transacoes.list({ dateFrom, dateTo, limit: 1000 }),
+          financialApi.contas.list({
+            tipo: 'receber',
+            status: 'pendente',
+            dateFrom,
+            dateTo,
+            limit: 1000,
+          }),
+          financialApi.contas.list({
+            tipo: 'pagar',
+            status: 'pendente',
+            dateFrom,
+            dateTo,
+            limit: 1000,
+          }),
+          appointmentsApi.list({
+            dateFrom,
+            dateTo,
+            status: 'atendido',
+            limit: 1000,
+          }),
+        ]);
 
-      const qMovs = query(
-        collection(db, 'movimentacoes_caixa'),
-        where('organization_id', '==', organizationId),
-        where('data', '>=', startDay),
-        where('data', '<=', endDay)
-      );
-
-      const snapshotMovs = await getDocs(qMovs);
-      const movs = snapshotMovs.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as Array<{ id: string; tipo: string; valor: string | number; categoria?: string; forma_pagamento?: string; data: string }>;
-
-      const movimentacoes = movs || [];
+      const movimentacoes = (transacoesRes?.data ?? []) as Transacao[];
       const entradas = movimentacoes.filter(m => m.tipo === 'entrada');
       const saidas = movimentacoes.filter(m => m.tipo === 'saida');
 
@@ -81,7 +108,9 @@ export default function DemonstrativoMensalPage() {
       entradas.forEach(m => {
         const cat = m.categoria || 'Outros';
         entradasPorCategoria[cat] = (entradasPorCategoria[cat] || 0) + Number(m.valor);
-        const forma = m.forma_pagamento || 'Não informado';
+        const metadata = (m.metadata ?? {}) as Record<string, unknown>;
+        const forma =
+          typeof metadata.forma_pagamento === 'string' ? metadata.forma_pagamento : 'Não informado';
         entradasPorFormaPagamento[forma] = (entradasPorFormaPagamento[forma] || 0) + Number(m.valor);
       });
 
@@ -90,34 +119,9 @@ export default function DemonstrativoMensalPage() {
         saidasPorCategoria[cat] = (saidasPorCategoria[cat] || 0) + Number(m.valor);
       });
 
-      // Buscar contas a receber e pagar
-      const qContasReceber = query(
-        collection(db, 'contas_financeiras'),
-        where('organization_id', '==', organizationId),
-        where('tipo', '==', 'receber'),
-        where('status', '==', 'pendente')
-      );
-      const snapshotContasReceber = await getDocs(qContasReceber);
-      const contasReceber = snapshotContasReceber.docs.map(doc => normalizeFirestoreData(doc.data()));
-
-      const qContasPagar = query(
-        collection(db, 'contas_financeiras'),
-        where('organization_id', '==', organizationId),
-        where('tipo', '==', 'pagar'),
-        where('status', '==', 'pendente')
-      );
-      const snapshotContasPagar = await getDocs(qContasPagar);
-      const contasPagar = snapshotContasPagar.docs.map(doc => normalizeFirestoreData(doc.data()));
-
-      // Buscar total de atendimentos (sessões concluídas)
-      const qAppointments = query(
-        collection(db, 'appointments'),
-        where('start_time', '>=', dataInicio),
-        where('start_time', '<=', dataFim),
-        where('status', '==', 'atendido')
-      );
-      const snapshotAppointments = await getDocs(qAppointments);
-      const totalAtendimentos = snapshotAppointments.size;
+      const contasReceber = (contasReceberRes?.data ?? []) as ContaFinanceira[];
+      const contasPagar = (contasPagarRes?.data ?? []) as ContaFinanceira[];
+      const totalAtendimentos = (appointmentsRes?.data ?? []).length;
 
       return {
         periodo: `${meses.find(m => m.value === mesSelecionado)?.label} de ${anoSelecionado}`,
@@ -127,13 +131,13 @@ export default function DemonstrativoMensalPage() {
         entradasPorCategoria,
         saidasPorCategoria,
         entradasPorFormaPagamento,
-        contasReceber: contasReceber?.reduce((acc, c: { valor?: string | number }) => acc + Number(c.valor), 0) || 0,
-        contasPagar: contasPagar?.reduce((acc, c: { valor?: string | number }) => acc + Number(c.valor), 0) || 0,
-        totalAtendimentos: totalAtendimentos || 0,
+        contasReceber: sumValores(contasReceber),
+        contasPagar: sumValores(contasPagar),
+        totalAtendimentos,
         ticketMedio: totalAtendimentos ? totalEntradas / totalAtendimentos : 0,
       };
     },
-    enabled: !!anoSelecionado && !!mesSelecionado,
+    enabled: !!organizationId && !!anoSelecionado && !!mesSelecionado,
   });
 
   // Preparar dados para gráficos
@@ -155,22 +159,12 @@ export default function DemonstrativoMensalPage() {
     queryFn: async () => {
       const dataAtual = new Date(parseInt(anoSelecionado), parseInt(mesSelecionado) - 1, 1);
       const dataAnterior = subMonths(dataAtual, 1);
-
-      const dataInicio = startOfMonth(dataAnterior).toISOString();
-      const dataFim = endOfMonth(dataAnterior).toISOString();
-
-      const startDayAnterior = dataInicio.split('T')[0];
-      const endDayAnterior = dataFim.split('T')[0];
-
-      const qMovsAnterior = query(
-        collection(db, 'movimentacoes_caixa'),
-        where('data', '>=', startDayAnterior),
-        where('data', '<=', endDayAnterior)
-      );
-      const snapshotMovsAnterior = await getDocs(qMovsAnterior);
-      const movs = snapshotMovsAnterior.docs.map(doc => normalizeFirestoreData(doc.data())) as Array<{ tipo: string; valor: string | number }>;
-
-      const movimentacoes = movs || [];
+      const { dateFrom, dateTo } = {
+        dateFrom: format(startOfMonth(dataAnterior), 'yyyy-MM-dd'),
+        dateTo: format(endOfMonth(dataAnterior), 'yyyy-MM-dd'),
+      };
+      const res = await financialApi.transacoes.list({ dateFrom, dateTo, limit: 1000 });
+      const movimentacoes = (res?.data ?? []) as Array<{ tipo: string; valor: string | number }>;
       const totalEntradas = movimentacoes.filter(m => m.tipo === 'entrada').reduce((acc, m) => acc + Number(m.valor), 0);
       const totalSaidas = movimentacoes.filter(m => m.tipo === 'saida').reduce((acc, m) => acc + Number(m.valor), 0);
 

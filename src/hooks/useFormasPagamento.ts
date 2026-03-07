@@ -1,46 +1,20 @@
 /**
- * useFormasPagamento - Migrated to Firebase
+ * useFormasPagamento - Migrated to Neon/Workers
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, orderBy, db } from '@/integrations/firebase/app';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { financialApi, type FormaPagamento } from '@/lib/api/workers-client';
 
-export interface FormaPagamento {
-  id: string;
-  organization_id: string | null;
-  nome: string;
-  tipo: 'geral' | 'entrada' | 'saida';
-  taxa_percentual: number;
-  dias_recebimento: number;
-  ativo: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
+export type { FormaPagamento };
 export type FormaPagamentoFormData = Pick<FormaPagamento, 'nome' | 'tipo' | 'taxa_percentual' | 'dias_recebimento' | 'ativo'>;
-
-// Helper to convert Firestore doc to FormaPagamento
-const convertDocToFormaPagamento = (doc: { id: string; data: () => Record<string, unknown> }): FormaPagamento => {
-  const data = normalizeFirestoreData(doc.data());
-  return {
-    id: doc.id,
-    ...data,
-  } as FormaPagamento;
-};
 
 export function useFormasPagamento() {
   return useQuery({
     queryKey: ['formas_pagamento'],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'formas_pagamento'),
-        orderBy('nome')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDocToFormaPagamento);
+      const res = await financialApi.formasPagamento.list();
+      return (res?.data ?? []) as FormaPagamento[];
     },
   });
 }
@@ -50,17 +24,8 @@ export function useCreateFormaPagamento() {
 
   return useMutation({
     mutationFn: async (forma: FormaPagamentoFormData) => {
-      const formaData = {
-        ...forma,
-        organization_id: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'formas_pagamento'), formaData);
-      const docSnap = await getDoc(docRef);
-
-      return convertDocToFormaPagamento(docSnap);
+      const res = await financialApi.formasPagamento.create(forma);
+      return (res?.data ?? res) as FormaPagamento;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['formas_pagamento'] });
@@ -77,14 +42,8 @@ export function useUpdateFormaPagamento() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<FormaPagamento> & { id: string }) => {
-      const docRef = doc(db, 'formas_pagamento', id);
-      await updateDoc(docRef, {
-        ...updates,
-        updated_at: new Date().toISOString(),
-      });
-
-      const docSnap = await getDoc(docRef);
-      return convertDocToFormaPagamento(docSnap);
+      const res = await financialApi.formasPagamento.update(id, updates);
+      return (res?.data ?? res) as FormaPagamento;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['formas_pagamento'] });
@@ -101,7 +60,7 @@ export function useDeleteFormaPagamento() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      await deleteDoc(doc(db, 'formas_pagamento', id));
+      await financialApi.formasPagamento.delete(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['formas_pagamento'] });

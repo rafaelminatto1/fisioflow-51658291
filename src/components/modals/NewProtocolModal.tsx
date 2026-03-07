@@ -1,473 +1,436 @@
-import { useEffect, useState } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  X, 
+  ChevronRight, 
+  ChevronLeft, 
+  Info, 
+  Timer, 
+  AlertTriangle, 
+  Plus, 
+  Trash2,
+  CheckCircle2,
+  Activity,
+  Loader2
+} from 'lucide-react';
 import {
-
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Plus, Trash2, Milestone, AlertTriangle } from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import type { ExerciseProtocol, ProtocolMilestone, ProtocolRestriction } from '@/hooks/useExerciseProtocols';
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { type ExerciseProtocol } from '@/hooks/useExerciseProtocols';
 
-const milestoneSchema = z.object({
-  week: z.coerce.number().min(1, 'Semana deve ser pelo menos 1'),
-  description: z.string().min(1, 'Descrição obrigatória'),
-});
+interface Milestone {
+  week: number;
+  description: string;
+}
 
-const restrictionSchema = z.object({
-  week_start: z.coerce.number().min(1, 'Semana inicial obrigatória'),
-  week_end: z.coerce.number().optional(),
-  description: z.string().min(1, 'Descrição obrigatória'),
-});
+interface Restriction {
+  week_start: number;
+  week_end?: number;
+  description: string;
+}
 
-const protocolSchema = z.object({
-  name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
-  condition_name: z.string().min(2, 'Condição obrigatória'),
-  protocol_type: z.enum(['pos_operatorio', 'patologia']),
-  weeks_total: z.coerce.number().min(1, 'Duração obrigatória').optional(),
-  milestones: z.array(milestoneSchema),
-  restrictions: z.array(restrictionSchema),
-});
+interface ProtocolFormData {
+  name: string;
+  protocol_type: 'patologia' | 'pos_operatorio';
+  condition_name: string;
+  weeks_total: number;
+  milestones: Milestone[];
+  restrictions: Restriction[];
+}
 
-type ProtocolFormData = z.infer<typeof protocolSchema>;
-
-interface ProtocolModalProps {
+interface NewProtocolModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: Omit<ExerciseProtocol, 'id' | 'created_at' | 'updated_at'>) => void;
+  onSubmit: (protocol: any) => void;
   protocol?: ExerciseProtocol;
   isLoading?: boolean;
 }
 
-const CONDITIONS_POS_OP = [
-  'Reconstrução do LCA',
-  'Reconstrução do LCP',
-  'Prótese Total de Quadril',
-  'Prótese Total de Joelho',
-  'Artroscopia de Ombro',
-  'Artroscopia de Joelho',
-  'Reparo do Manguito Rotador',
-  'Liberação do Túnel do Carpo',
-  'Fusão Lombar',
-  'Discectomia',
-  'Outro',
-];
-
-const CONDITIONS_PATOLOGIA = [
-  'Cervicalgia',
-  'Lombalgia',
-  'Tendinopatia de Ombro',
-  'Tendinopatia Patelar',
-  'Epicondilite Lateral',
-  'Epicondilite Medial',
-  'Síndrome do Impacto',
-  'Capsulite Adesiva',
-  'Fascite Plantar',
-  'Síndrome Patelofemoral',
-  'Pata de Ganso',
-  'Entorse de Tornozelo',
-  'Outro',
-];
-
-export function NewProtocolModal({
-  open,
-  onOpenChange,
-  onSubmit,
+export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({ 
+  open, 
+  onOpenChange, 
+  onSubmit, 
   protocol,
-  isLoading
-}: ProtocolModalProps) {
-  const [customCondition, setCustomCondition] = useState('');
-
-  const form = useForm<ProtocolFormData>({
-    resolver: zodResolver(protocolSchema),
-    defaultValues: {
-      name: '',
-      condition_name: '',
-      protocol_type: 'pos_operatorio',
-      weeks_total: 12,
-      milestones: [],
-      restrictions: [],
-    },
+  isLoading 
+}) => {
+  const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState<ProtocolFormData>({
+    name: '',
+    protocol_type: 'pos_operatorio',
+    condition_name: '',
+    weeks_total: 12,
+    milestones: [],
+    restrictions: []
   });
 
-  const { fields: milestoneFields, append: appendMilestone, remove: removeMilestone } = useFieldArray({
-    control: form.control,
-    name: 'milestones',
-  });
-
-  const { fields: restrictionFields, append: appendRestriction, remove: removeRestriction } = useFieldArray({
-    control: form.control,
-    name: 'restrictions',
-  });
-
-  const protocolType = form.watch('protocol_type');
-  const conditionName = form.watch('condition_name');
-  const conditions = protocolType === 'pos_operatorio' ? CONDITIONS_POS_OP : CONDITIONS_PATOLOGIA;
-
+  // Sync with protocol prop when editing
   useEffect(() => {
-    if (protocol) {
-      const milestones = Array.isArray(protocol.milestones) ? protocol.milestones : [];
-      const restrictions = Array.isArray(protocol.restrictions) ? protocol.restrictions : [];
-
-      form.reset({
+    if (protocol && open) {
+      setFormData({
         name: protocol.name || '',
+        protocol_type: (protocol.protocol_type as any) || 'pos_operatorio',
         condition_name: protocol.condition_name || '',
-        protocol_type: protocol.protocol_type || 'pos_operatorio',
         weeks_total: protocol.weeks_total || 12,
-        milestones: milestones.map((m: ProtocolMilestone) => ({
-          week: m.week,
-          description: m.description,
-        })),
-        restrictions: restrictions.map((r: ProtocolRestriction) => ({
-          week_start: r.week_start,
-          week_end: r.week_end,
-          description: r.description,
-        })),
+        milestones: Array.isArray(protocol.milestones) ? (protocol.milestones as any) : [],
+        restrictions: Array.isArray(protocol.restrictions) ? (protocol.restrictions as any) : []
       });
-
-      const localConditions = (protocol.protocol_type || 'pos_operatorio') === 'pos_operatorio'
-        ? CONDITIONS_POS_OP
-        : CONDITIONS_PATOLOGIA;
-
-      if (!localConditions.includes(protocol.condition_name)) {
-        setCustomCondition(protocol.condition_name);
-      }
-    } else {
-      form.reset({
+      setStep(1);
+    } else if (!protocol && open) {
+      setFormData({
         name: '',
-        condition_name: '',
         protocol_type: 'pos_operatorio',
+        condition_name: '',
         weeks_total: 12,
         milestones: [],
-        restrictions: [],
+        restrictions: []
       });
-      setCustomCondition('');
+      setStep(1);
     }
-  }, [protocol, form, open]);
+  }, [protocol, open]);
 
-  const handleSubmit = (data: ProtocolFormData) => {
-    const finalCondition = data.condition_name === 'Outro' ? customCondition : data.condition_name;
+  const nextStep = () => setStep(s => Math.min(s + 1, 3));
+  const prevStep = () => setStep(s => Math.max(s - 1, 1));
 
-    onSubmit({
-      name: data.name,
-      condition_name: finalCondition,
-      protocol_type: data.protocol_type,
-      weeks_total: data.weeks_total,
-      milestones: data.milestones,
-      restrictions: data.restrictions,
-      progression_criteria: [],
-    });
-    onOpenChange(false);
+  const handleSave = () => {
+    onSubmit(formData);
   };
+
+  const addMilestone = () => {
+    setFormData(prev => ({
+      ...prev,
+      milestones: [...prev.milestones, { week: prev.milestones.length + 1, description: '' }]
+    }));
+  };
+
+  const removeMilestone = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      milestones: prev.milestones.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateMilestone = (index: number, field: keyof Milestone, value: any) => {
+    const newMilestones = [...formData.milestones];
+    newMilestones[index] = { ...newMilestones[index], [field]: value };
+    setFormData(prev => ({ ...prev, milestones: newMilestones }));
+  };
+
+  const addRestriction = () => {
+    setFormData(prev => ({
+      ...prev,
+      restrictions: [...prev.restrictions, { week_start: 1, week_end: 4, description: '' }]
+    }));
+  };
+
+  const removeRestriction = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      restrictions: prev.restrictions.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateRestriction = (index: number, field: keyof Restriction, value: any) => {
+    const newRestrictions = [...formData.restrictions];
+    newRestrictions[index] = { ...newRestrictions[index], [field]: value };
+    setFormData(prev => ({ ...prev, restrictions: newRestrictions }));
+  };
+
+  const steps = [
+    { id: 1, name: 'Informações', icon: Info },
+    { id: 2, name: 'Marcos', icon: Timer },
+    { id: 3, name: 'Restrições', icon: AlertTriangle },
+  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[85vh] flex flex-col p-0">
-        <DialogHeader className="p-6 pb-0">
-          <DialogTitle>{protocol ? 'Editar Protocolo' : 'Novo Protocolo'}</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-2xl p-0 overflow-hidden bg-transparent border-none shadow-premium-lg">
+        <div className="relative w-full overflow-hidden glass-card rounded-2xl">
+          {/* Header with Stepper */}
+          <div className="relative p-6 border-b border-white/10 bg-white/5">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                  <Activity className="w-6 h-6 text-[#13ecc8]" />
+                  {protocol ? 'Editar Protocolo' : 'Criar Novo Protocolo'}
+                </h2>
+                <p className="text-sm text-white/50">Personalize a jornada de recuperação do paciente</p>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="text-white/40 hover:text-white hover:bg-white/10">
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
 
-        <ScrollArea className="flex-1 px-6">
-          <Form {...form}>
-            <form id="protocol-form" onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 pb-4 pt-4">
-              {/* Basic Info */}
-              <div className="grid grid-cols-12 gap-4">
-                <div className="col-span-3">
-                  <FormField
-                    control={form.control}
-                    name="protocol_type"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Tipo*</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="pos_operatorio">Pós-Operatório</SelectItem>
-                            <SelectItem value="patologia">Patologia</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="col-span-2">
-                  <FormField
-                    control={form.control}
-                    name="weeks_total"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Duração (sem)</FormLabel>
-                        <FormControl>
-                          <Input type="number" {...field} min={1} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="col-span-4">
-                  <FormField
-                    control={form.control}
-                    name="condition_name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Condição/Patologia*</FormLabel>
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Selecione" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {conditions.map((c) => (
-                              <SelectItem key={c} value={c}>{c}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="col-span-3">
-                  {conditionName === 'Outro' ? (
-                    <FormItem>
-                      <FormLabel>Nome da Condição</FormLabel>
-                      <FormControl>
-                        <Input
-                          value={customCondition}
-                          onChange={(e) => setCustomCondition(e.target.value)}
-                          placeholder="Digite o nome"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  ) : (
-                    <div className="h-full" /> /* Spacer if not 'Outro' */
+            <div className="flex items-center justify-between px-4">
+              {steps.map((s, idx) => (
+                <React.Fragment key={s.id}>
+                  <div 
+                    className="flex flex-col items-center gap-2 group cursor-pointer" 
+                    onClick={() => step > s.id && setStep(s.id)}
+                  >
+                    <div className={cn(
+                      "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2",
+                      step >= s.id 
+                        ? "bg-[#13ecc8]/20 border-[#13ecc8] text-[#13ecc8] shadow-[0_0_15px_rgba(19,236,200,0.3)]" 
+                        : "bg-white/5 border-white/10 text-white/40"
+                    )}>
+                      <s.icon className="w-5 h-5" />
+                    </div>
+                    <span className={cn(
+                      "text-[10px] font-semibold transition-colors uppercase tracking-wider",
+                      step >= s.id ? "text-white" : "text-white/30"
+                    )}>
+                      {s.name}
+                    </span>
+                  </div>
+                  {idx < steps.length - 1 && (
+                    <div className={cn(
+                      "flex-1 h-0.5 mx-4 transition-colors",
+                      step > s.id ? "bg-[#13ecc8]" : "bg-white/10"
+                    )} />
                   )}
-                </div>
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
 
-                <div className="col-span-12">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Nome do Protocolo*</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="Ex: Protocolo Padrão - Fase 1 a 4" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-              </div>
-
-              {/* Lists Grid */}
-              <div className="grid grid-cols-2 gap-6">
-
-                {/* Milestones Section */}
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Milestone className="h-5 w-5 text-green-500" />
-                      <h4 className="font-semibold">Marcos de Progressão</h4>
+          {/* Content Area */}
+          <div className="relative p-8 min-h-[400px]">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+              >
+                {step === 1 && (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="col-span-2 space-y-2">
+                        <Label className="text-white/70">Nome do Protocolo</Label>
+                        <Input 
+                          placeholder="Ex: Reabilitação LCA - Fase Pós-Op" 
+                          className="bg-white/5 border-white/10 text-white placeholder:text-white/20 h-12 focus-visible:ring-[#13ecc8] focus-visible:ring-offset-0 focus:border-[#13ecc8]"
+                          value={formData.name}
+                          onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                        />
+                      </div>
+                      <div className="col-span-2 space-y-2">
+                        <Label className="text-white/70">Condição / Patologia</Label>
+                        <Input 
+                          placeholder="Ex: LCA, Menisco, Manguito Rotador" 
+                          className="bg-white/5 border-white/10 text-white placeholder:text-white/20 h-12 focus-visible:ring-[#13ecc8] focus-visible:ring-offset-0 focus:border-[#13ecc8]"
+                          value={formData.condition_name}
+                          onChange={e => setFormData(prev => ({ ...prev, condition_name: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-white/70">Tipo</Label>
+                        <Select 
+                          value={formData.protocol_type} 
+                          onValueChange={v => setFormData(prev => ({ ...prev, protocol_type: v as any }))}
+                        >
+                          <SelectTrigger className="bg-white/5 border-white/10 text-white h-12">
+                            <SelectValue placeholder="Selecione o tipo" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-[#111928] border-white/10 text-white">
+                            <SelectItem value="patologia">Patologia</SelectItem>
+                            <SelectItem value="pos_operatorio">Pós-Operatório</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-white/70">Duração Total (Semanas)</Label>
+                        <Input 
+                          type="number"
+                          className="bg-white/5 border-white/10 text-white h-12"
+                          value={formData.weeks_total}
+                          onChange={e => setFormData(prev => ({ ...prev, weeks_total: parseInt(e.target.value) || 0 }))}
+                        />
+                      </div>
                     </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => appendMilestone({ week: 1, description: '' })}
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add
-                    </Button>
                   </div>
+                )}
 
-                  <Card className="p-0 border-0 shadow-none bg-transparent">
-                    <div className="space-y-3">
-                      {milestoneFields.length === 0 ? (
-                        <div className="text-sm text-muted-foreground text-center py-8 border rounded-lg border-dashed bg-muted/30">
-                          Nenhum marco definido
+                {step === 2 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-white/70">Marcos de Evolução</Label>
+                      <Button 
+                        size="sm" 
+                        onClick={addMilestone}
+                        className="bg-[#13ecc8] hover:bg-[#11d8b7] text-black font-bold h-8"
+                      >
+                        <Plus className="w-4 h-4 mr-1" /> Add Marco
+                      </Button>
+                    </div>
+
+                    <div className="max-h-[300px] overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-white/10">
+                      {formData.milestones.length === 0 && (
+                        <div className="text-center py-8 border-2 border-dashed border-white/5 rounded-xl text-white/30">
+                          Nenhum marco adicionado ainda.
                         </div>
-                      ) : (
-                        milestoneFields.map((field, index) => (
-                          <div key={field.id} className="flex gap-2 items-start bg-muted/50 p-3 rounded-lg border">
-                            <FormField
-                              control={form.control}
-                              name={`milestones.${index}.week`}
-                              render={({ field }) => (
-                                <FormItem className="w-20 shrink-0">
-                                  <FormLabel className="text-xs text-muted-foreground">Semana</FormLabel>
-                                  <FormControl>
-                                    <Input type="number" {...field} min={1} className="h-8 text-sm" />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name={`milestones.${index}.description`}
-                              render={({ field }) => (
-                                <FormItem className="flex-1">
-                                  <FormLabel className="text-xs text-muted-foreground">Descrição</FormLabel>
-                                  <FormControl>
-                                    <Input {...field} placeholder="Descrição do marco" className="h-8 text-sm" />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 mt-5 shrink-0 hover:bg-destructive/10 hover:text-destructive"
-                              onClick={() => removeMilestone(index)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))
                       )}
+                      {formData.milestones.map((m, idx) => (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          key={idx} 
+                          className="flex gap-2 p-3 bg-white/5 border border-white/10 rounded-xl items-start"
+                        >
+                          <div className="w-16">
+                            <Input 
+                              type="number" 
+                              placeholder="Sem"
+                              className="bg-white/5 border-white/10 text-white p-2 h-9 text-xs"
+                              value={m.week}
+                              onChange={e => updateMilestone(idx, 'week', parseInt(e.target.value) || 0)}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <Input 
+                              placeholder="Descrição do marco..."
+                              className="bg-white/5 border-white/10 text-white p-2 h-9 text-xs"
+                              value={m.description}
+                              onChange={e => updateMilestone(idx, 'description', e.target.value)}
+                            />
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-9 w-9 text-white/20 hover:text-red-400 hover:bg-red-400/10"
+                            onClick={() => removeMilestone(idx)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </motion.div>
+                      ))}
                     </div>
-                  </Card>
-                </div>
-
-                {/* Restrictions Section */}
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <AlertTriangle className="h-5 w-5 text-amber-500" />
-                      <h4 className="font-semibold">Restrições</h4>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => appendRestriction({ week_start: 1, week_end: undefined, description: '' })}
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      Add
-                    </Button>
                   </div>
+                )}
 
-                  <Card className="p-0 border-0 shadow-none bg-transparent">
-                    <div className="space-y-3">
-                      {restrictionFields.length === 0 ? (
-                        <div className="text-sm text-muted-foreground text-center py-8 border rounded-lg border-dashed bg-muted/30">
-                          Nenhuma restrição definida
-                        </div>
-                      ) : (
-                        restrictionFields.map((field, index) => (
-                          <div key={field.id} className="flex gap-2 items-start bg-amber-500/5 p-3 rounded-lg border border-amber-500/20">
-                            <div className="flex flex-col gap-1 shrink-0 w-32">
-                              <div className="flex items-center gap-1">
-                                <FormField
-                                  control={form.control}
-                                  name={`restrictions.${index}.week_start`}
-                                  render={({ field }) => (
-                                    <FormItem className="flex-1">
-                                      <FormControl>
-                                        <Input type="number" {...field} min={1} placeholder="Início" className="h-8 text-sm bg-white" />
-                                      </FormControl>
-                                    </FormItem>
-                                  )}
-                                />
-                                <span className="text-muted-foreground text-xs">-</span>
-                                <FormField
-                                  control={form.control}
-                                  name={`restrictions.${index}.week_end`}
-                                  render={({ field }) => (
-                                    <FormItem className="flex-1">
-                                      <FormControl>
-                                        <Input
-                                          type="number"
-                                          {...field}
-                                          value={field.value || ''}
-                                          onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : undefined)}
-                                          placeholder="Fim"
-                                          className="h-8 text-sm bg-white"
-                                        />
-                                      </FormControl>
-                                    </FormItem>
-                                  )}
-                                />
-                              </div>
-                              <span className="text-[10px] text-muted-foreground text-center">Semanas (Início - Fim)</span>
-                            </div>
-
-                            <FormField
-                              control={form.control}
-                              name={`restrictions.${index}.description`}
-                              render={({ field }) => (
-                                <FormItem className="flex-1">
-                                  <FormControl>
-                                    <Input {...field} placeholder="Descrição da restrição" className="h-[38px] text-sm bg-white" style={{ marginTop: 0 }} />
-                                  </FormControl>
-                                </FormItem>
-                              )}
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 mt-1 shrink-0 hover:bg-destructive/10 hover:text-destructive"
-                              onClick={() => removeRestriction(index)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))
-                      )}
+                {step === 3 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-white/70">Restrições Clínicas</Label>
+                      <Button 
+                        size="sm" 
+                        onClick={addRestriction}
+                        className="bg-red-500/80 hover:bg-red-500 text-white font-bold h-8"
+                      >
+                        <Plus className="w-4 h-4 mr-1" /> Add Restrição
+                      </Button>
                     </div>
-                  </Card>
-                </div>
 
-              </div>
-            </form>
-          </Form>
-        </ScrollArea>
+                    <div className="max-h-[300px] overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-white/10">
+                      {formData.restrictions.length === 0 && (
+                        <div className="text-center py-8 border-2 border-dashed border-white/5 rounded-xl text-white/30">
+                          Nenhuma restrição clínica definida.
+                        </div>
+                      )}
+                      {formData.restrictions.map((r, idx) => (
+                        <motion.div 
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          key={idx} 
+                          className="flex gap-2 p-3 bg-red-500/5 border border-red-500/20 rounded-xl items-start"
+                        >
+                          <div className="flex gap-1 w-32">
+                            <Input 
+                              type="number"
+                              className="bg-white/5 border-white/10 text-white p-2 h-9 text-xs font-mono"
+                              value={r.week_start}
+                              onChange={e => updateRestriction(idx, 'week_start', parseInt(e.target.value) || 0)}
+                            />
+                            <span className="text-white/30 self-center">/</span>
+                            <Input 
+                              type="number"
+                              className="bg-white/5 border-white/10 text-white p-2 h-9 text-xs font-mono"
+                              value={r.week_end}
+                              onChange={e => updateRestriction(idx, 'week_end', parseInt(e.target.value) || 0)}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <Input 
+                              placeholder="Descreva a restrição..."
+                              className="bg-white/5 border-white/10 text-white p-2 h-9 text-xs"
+                              value={r.description}
+                              onChange={e => updateRestriction(idx, 'description', e.target.value)}
+                            />
+                          </div>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-9 w-9 text-white/20 hover:text-red-400 hover:bg-red-400/10"
+                            onClick={() => removeRestriction(idx)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
 
-        <div className="flex justify-end gap-2 p-6 pt-4 border-t shrink-0 bg-background/50 backdrop-blur-sm">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
-          <Button type="submit" form="protocol-form" disabled={isLoading}>
-            {isLoading ? 'Salvando...' : (protocol ? 'Salvar Alterações' : 'Criar Protocolo')}
-          </Button>
+          {/* Footer Navigation */}
+          <div className="p-6 border-t border-white/10 flex items-center justify-between bg-white/5">
+            <Button
+              variant="ghost"
+              onClick={prevStep}
+              disabled={step === 1 || isLoading}
+              className={cn(
+                "text-white/60 hover:text-white hover:bg-white/10",
+                step === 1 && "opacity-0 pointer-events-none"
+              )}
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" /> Anterior
+            </Button>
+
+            <div className="flex gap-3">
+              {step < 3 ? (
+                <Button 
+                  onClick={nextStep}
+                  disabled={step === 1 && (!formData.name || !formData.condition_name)}
+                  className="bg-[#13ecc8] hover:bg-[#11d8b7] text-black font-bold px-8 shadow-[0_0_20px_rgba(19,236,200,0.2)] hover:shadow-[0_0_25px_rgba(19,236,200,0.4)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Continuar <ChevronRight className="w-4 h-4 ml-2" />
+                </Button>
+              ) : (
+                <Button 
+                  onClick={handleSave}
+                  disabled={isLoading}
+                  className="bg-[#13ecc8] hover:bg-[#11d8b7] text-black font-bold px-8 shadow-[0_0_20px_rgba(19,236,200,0.2)] group"
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      {protocol ? 'Salvar Alterações' : 'Confirmar'} 
+                      <CheckCircle2 className="w-4 h-4 ml-2 group-hover:scale-110 transition-transform" />
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
   );
-}
+};
+

@@ -31,6 +31,8 @@ import { WebVitalsIndicator } from "@/lib/monitoring/web-vitals";
 // ============================================================================
 import { ThemeProvider } from '@/components/ui/theme';
 
+import { PremiumThemeToggle } from '@/components/ui/PremiumThemeToggle';
+
 import { FeatureFlagProvider } from "@/lib/featureFlags/hooks";
 // DESABILITADO: import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
 import { SkipLink, FocusVisibleHandler } from "@/components/accessibility";
@@ -239,6 +241,7 @@ const App = () => {
 
   return (
     <AppProviders>
+      <PremiumThemeToggle />
       <Toaster />
       <Sonner />
       <BrowserRouter

@@ -3,7 +3,6 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { doc, updateDoc, collection, getDocs, query as firestoreQuery, where } from '@/integrations/firebase/app';
 import { useState, useCallback } from 'react';
 import { addDays, format } from 'date-fns';
 import { useWaitlist, WaitlistEntry } from './useWaitlist';
@@ -20,7 +19,7 @@ import {
   WaitlistRecommendation,
   WaitlistAnalytics,
 } from '@/lib/waitlist/smart-waitlist';
-import { db } from '@/integrations/firebase/app';
+import { appointmentsApi, feriadosApi, schedulingApi, type AppointmentRow } from '@/lib/api/workers-client';
 
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
@@ -56,29 +55,23 @@ export function useSmartWaitlist(options: UseSmartWaitlistOptions = {}) {
       const blockedTimes: Record<string, string[]> = {};
 
       try {
-        // 1. Buscar feriados
-        const feriadosSnap = await getDocs(
-          firestoreQuery(collection(db, 'feriados'), where('organization_id', '==', organizationId))
-        );
-        feriadosSnap.docs.forEach(doc => {
-          const data = doc.data();
-          if (data.date) blockedDates.push(new Date(data.date));
+        const [feriadosResponse, appointmentsResponse] = await Promise.all([
+          feriadosApi.list({ year: selectedDateRange.start.getFullYear() }),
+          appointmentsApi.list({
+            dateFrom: format(selectedDateRange.start, 'yyyy-MM-dd'),
+            dateTo: format(selectedDateRange.end, 'yyyy-MM-dd'),
+            limit: 5000,
+          }),
+        ]);
+
+        (feriadosResponse?.data ?? []).forEach((feriado) => {
+          if (feriado.data) blockedDates.push(new Date(feriado.data));
         });
 
-        // 2. Buscar agendamentos bloqueados ou já ocupados
-        const appointmentsQuery = firestoreQuery(
-          collection(db, 'appointments'),
-          where('organization_id', '==', organizationId),
-          where('date', '>=', format(selectedDateRange.start, 'yyyy-MM-dd')),
-          where('date', '<=', format(selectedDateRange.end, 'yyyy-MM-dd'))
-        );
-        const appointmentsSnap = await getDocs(appointmentsQuery);
-        
-        appointmentsSnap.docs.forEach(doc => {
-          const data = doc.data();
-          if (data.date && data.start_time) {
-            if (!blockedTimes[data.date]) blockedTimes[data.date] = [];
-            blockedTimes[data.date].push(data.start_time);
+        ((appointmentsResponse?.data ?? []) as AppointmentRow[]).forEach((appointment) => {
+          if (appointment.date && appointment.start_time) {
+            if (!blockedTimes[appointment.date]) blockedTimes[appointment.date] = [];
+            blockedTimes[appointment.date].push(appointment.start_time);
           }
         });
       } catch (error) {
@@ -215,9 +208,7 @@ export function useAutoOfferSlots() {
           continue;
         }
 
-        // Update waitlist entry status to 'offered' using Firestore
-        const waitlistRef = doc(db, 'waitlist', entry.id);
-        await updateDoc(waitlistRef, {
+        await schedulingApi.waitlist.update(entry.id, {
           status: 'offered',
           offered_slot: `${slot.dateString} ${slot.time}`,
           offered_at: new Date().toISOString(),

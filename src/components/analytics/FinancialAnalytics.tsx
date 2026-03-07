@@ -1,80 +1,66 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
-import { db, collection, getDocs, query as firestoreQuery, where } from '@/integrations/firebase/app';
-import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { format, subMonths, eachMonthOfInterval, startOfMonth, addMonths } from 'date-fns';
+import { analyticsApi, financialApi, type Pagamento } from '@/lib/api/workers-client';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, LineChart, Line } from 'recharts';
+import { format, subMonths, eachMonthOfInterval, startOfMonth, addMonths, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
-interface AppointmentData {
-  payment_amount?: number;
-}
-
-interface PaymentData {
-  payment_method?: string;
-  amount?: string | number;
-}
+const normalizeMethod = (value?: string | null) => value?.trim() || 'Outros';
 
 export function FinancialAnalytics() {
   const { data: monthlyRevenue } = useQuery({
-    queryKey: ["financial-monthly-revenue"],
+    queryKey: ['financial-monthly-revenue'],
     queryFn: async () => {
       const last6Months = eachMonthOfInterval({
         start: subMonths(new Date(), 5),
         end: new Date(),
       });
 
-      const promises = last6Months.map(async (month) => {
-        const monthStart = startOfMonth(month);
-        const monthEnd = startOfMonth(addMonths(month, 1));
+      const items = await Promise.all(
+        last6Months.map(async (month) => {
+          const monthStart = startOfMonth(month);
+          const monthEnd = startOfMonth(addMonths(month, 1));
+          const response = await analyticsApi.financial({
+            startDate: format(monthStart, 'yyyy-MM-dd'),
+            endDate: format(subDays(monthEnd, 1), 'yyyy-MM-dd'),
+          });
 
-        const q = firestoreQuery(
-          collection(db, "appointments"),
-          where("appointment_date", ">=", monthStart.toISOString()),
-          where("appointment_date", "<", monthEnd.toISOString()),
-          where("payment_status", "==", "pago")
-        );
+          return {
+            mes: format(month, 'MMM/yy', { locale: ptBR }),
+            receita: Number(response?.data?.totalRevenue ?? 0),
+          };
+        }),
+      );
 
-        const snapshot = await getDocs(q);
-        const appointments = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()));
-
-        const receita = appointments.reduce((sum, appt: AppointmentData) => sum + (appt.payment_amount || 0), 0);
-
-        return {
-          mes: format(month, "MMM/yy", { locale: ptBR }),
-          receita: Number(receita.toFixed(2)),
-        };
-      });
-
-      return Promise.all(promises);
+      return items;
     },
   });
 
   const { data: paymentMethods } = useQuery({
-    queryKey: ["financial-payment-methods"],
+    queryKey: ['financial-payment-methods'],
     queryFn: async () => {
       const oneMonthAgo = subMonths(new Date(), 1);
-
-      const q = firestoreQuery(
-        collection(db, "payments"),
-        where("created_at", ">=", oneMonthAgo.toISOString())
-      );
-
-      const snapshot = await getDocs(q);
-      const payments = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()));
-
-      const paymentMap = new Map<string, number>();
-
-      payments.forEach((payment: PaymentData) => {
-        const method = payment.payment_method || "Outros";
-        const amount = Number(payment.amount) || 0;
-        paymentMap.set(method, (paymentMap.get(method) || 0) + amount);
+      const response = await financialApi.pagamentos.list({
+        limit: 3000,
       });
 
-      return Array.from(paymentMap.entries()).map(([metodo, valor]) => ({
-        metodo,
-        valor: Number(valor.toFixed(2)),
-      })).sort((a, b) => b.valor - a.valor);
+      const payments = ((response?.data ?? []) as Pagamento[]).filter((payment) => {
+        if (!payment.created_at) return false;
+        return new Date(payment.created_at) >= oneMonthAgo;
+      });
+
+      const paymentMap = new Map<string, number>();
+      payments.forEach((payment) => {
+        const method = normalizeMethod(payment.forma_pagamento);
+        paymentMap.set(method, (paymentMap.get(method) ?? 0) + Number(payment.valor ?? 0));
+      });
+
+      return Array.from(paymentMap.entries())
+        .map(([metodo, valor]) => ({
+          metodo,
+          valor: Number(valor.toFixed(2)),
+        }))
+        .sort((a, b) => b.valor - a.valor);
     },
   });
 

@@ -57,8 +57,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { db, collection, getDocs, query as firestoreQuery, where, orderBy as fsOrderBy, limit as fsLimit } from '@/integrations/firebase/app';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import {
+  appointmentsApi,
+  patientsApi,
+  type AppointmentRow,
+  type PatientRow,
+} from '@/lib/api/workers-client';
 
 // ============================================================================
 // TYPES
@@ -144,118 +148,59 @@ function useAdminAnalytics() {
       patients: PatientWithAnalytics[];
       metrics: ClinicMetrics;
     }> => {
-      // Get all patients with their session counts and recent activity from Firebase
-      const patientsQuery = firestoreQuery(
-        collection(db, 'patients'),
-        fsOrderBy('full_name', 'asc'),
-        fsLimit(500)
-      );
-      const patientsSnap = await getDocs(patientsQuery);
-      const patients = patientsSnap.docs.map(doc => ({
-        id: doc.id,
-        full_name: normalizeFirestoreData(doc.data()).full_name || '',
-        email: normalizeFirestoreData(doc.data()).email,
-        phone: normalizeFirestoreData(doc.data()).phone,
-        created_at: normalizeFirestoreData(doc.data()).created_at || new Date().toISOString(),
+      const allPatients: PatientRow[] = [];
+      let patientsOffset = 0;
+      const batchLimit = 500;
+
+      while (patientsOffset < 5000) {
+        const response = await patientsApi.list({
+          sortBy: 'name_asc',
+          limit: batchLimit,
+          offset: patientsOffset,
+        });
+        const chunk = response?.data ?? [];
+        allPatients.push(...chunk);
+        if (chunk.length < batchLimit) break;
+        patientsOffset += batchLimit;
+      }
+
+      const patients = allPatients.map((patient) => ({
+        id: patient.id,
+        full_name: patient.full_name || '',
+        email: patient.email || undefined,
+        phone: patient.phone || undefined,
+        created_at: patient.created_at || new Date().toISOString(),
       }));
 
-      // Get session counts per patient
-      const patientIds = patients.map(p => p.id);
+      const appointments: AppointmentRow[] = [];
+      let appointmentsOffset = 0;
 
-      // Get completed sessions count - batch queries for Firestore limit
-      const appointments: Array<{ patient_id: string; appointment_date: string; status: string }> = [];
-      const batchSize = 10;
-      for (let i = 0; i < patientIds.length; i += batchSize) {
-        const batch = patientIds.slice(i, i + batchSize);
-        const appointmentsQuery = firestoreQuery(
-          collection(db, 'appointments'),
-          where('patient_id', 'in', batch.slice(0, 10))
-        );
-        const appointmentsSnap = await getDocs(appointmentsQuery);
-        appointmentsSnap.forEach(doc => {
-          const data = normalizeFirestoreData(doc.data());
-          if (data.patient_id && data.appointment_date) {
-            appointments.push({
-              patient_id: data.patient_id,
-              appointment_date: data.appointment_date,
-              status: data.status || 'scheduled',
-            });
-          }
+      while (appointmentsOffset < 20000) {
+        const response = await appointmentsApi.list({
+          limit: 1000,
+          offset: appointmentsOffset,
         });
-      }
-
-      // Get risk scores - batch queries
-      const riskScores: Array<{ patient_id: string; dropout_risk_score: number; success_probability: number; calculated_at: string }> = [];
-      for (let i = 0; i < patientIds.length; i += batchSize) {
-        const batch = patientIds.slice(i, i + batchSize);
-        const riskQuery = firestoreQuery(
-          collection(db, 'patient_risk_scores'),
-          where('patient_id', 'in', batch.slice(0, 10))
-        );
-        const riskSnap = await getDocs(riskQuery);
-        riskSnap.forEach(doc => {
-          const data = normalizeFirestoreData(doc.data());
-          if (data.patient_id) {
-            riskScores.push({
-              patient_id: data.patient_id,
-              dropout_risk_score: data.dropout_risk_score || 0,
-              success_probability: data.success_probability || 0,
-              calculated_at: data.calculated_at || new Date().toISOString(),
-            });
-          }
-        });
-      }
-
-      // Get latest evolution for pathology - batch queries
-      const evolutions: Array<{ patient_id: string; pathology: string; created_at: string }> = [];
-      for (let i = 0; i < patientIds.length; i += batchSize) {
-        const batch = patientIds.slice(i, i + batchSize);
-        const evolutionQuery = firestoreQuery(
-          collection(db, 'patient_evolution'),
-          where('patient_id', 'in', batch.slice(0, 10)),
-          fsOrderBy('created_at', 'desc')
-        );
-        const evolutionSnap = await getDocs(evolutionQuery);
-        evolutionSnap.forEach(doc => {
-          const data = normalizeFirestoreData(doc.data());
-          if (data.patient_id && data.pathology) {
-            evolutions.push({
-              patient_id: data.patient_id,
-              pathology: data.pathology,
-              created_at: data.created_at || new Date().toISOString(),
-            });
-          }
-        });
+        const chunk = response?.data ?? [];
+        appointments.push(...chunk);
+        if (chunk.length < 1000) break;
+        appointmentsOffset += 1000;
       }
 
       // Process data
       const patientMap = new Map<string, number>();
       const lastSessionMap = new Map<string, string>();
-      appointments?.forEach(a => {
-        if (a.status === 'completed') {
-          const currentCount = patientMap.get(a.patient_id) || 0;
-          patientMap.set(a.patient_id, currentCount + 1);
+      appointments.forEach((appointment) => {
+        const patientId = appointment.patient_id;
+        const date = appointment.date;
+        const status = String(appointment.status ?? '').toLowerCase();
+        if (patientId && date && ['completed', 'concluido', 'realizado', 'atendido'].includes(status)) {
+          const currentCount = patientMap.get(patientId) || 0;
+          patientMap.set(patientId, currentCount + 1);
 
-          const currentDate = lastSessionMap.get(a.patient_id);
-          if (!currentDate || new Date(a.appointment_date) > new Date(currentDate)) {
-            lastSessionMap.set(a.patient_id, a.appointment_date);
+          const currentDate = lastSessionMap.get(patientId);
+          if (!currentDate || new Date(date) > new Date(currentDate)) {
+            lastSessionMap.set(patientId, date);
           }
-        }
-      });
-
-      const riskMap = new Map<string, { dropout_risk_score: number; success_probability: number; calculated_at: string }>();
-      riskScores?.forEach(r => {
-        // Only keep the most recent risk score per patient
-        const existing = riskMap.get(r.patient_id);
-        if (!existing || new Date(r.calculated_at) > new Date(existing.calculated_at)) {
-          riskMap.set(r.patient_id, r);
-        }
-      });
-
-      const pathologyMap = new Map<string, string>();
-      evolutions?.forEach(e => {
-        if (!pathologyMap.has(e.patient_id) && e.pathology) {
-          pathologyMap.set(e.patient_id, e.pathology);
         }
       });
 
@@ -272,7 +217,6 @@ function useAdminAnalytics() {
       };
 
       const patientsWithAnalytics: PatientWithAnalytics[] = (patients || []).map(p => {
-        const riskScore = riskMap.get(p.id);
         const sessions = patientMap.get(p.id) || 0;
 
         const lastSession = lastSessionMap.get(p.id);
@@ -280,8 +224,8 @@ function useAdminAnalytics() {
           ? Math.floor((Date.now() - new Date(lastSession).getTime()) / (1000 * 60 * 60 * 24))
           : undefined;
 
-        const dropoutRisk = riskScore?.dropout_risk_score ?? calculateDropoutRisk(sessions, daysSinceLastSession);
-        const successProbability = riskScore?.success_probability ?? Math.max(0, 100 - dropoutRisk);
+        const dropoutRisk = calculateDropoutRisk(sessions, daysSinceLastSession);
+        const successProbability = Math.max(0, 100 - dropoutRisk);
 
         // Determine risk level
         let riskLevel: 'low' | 'medium' | 'high' | 'critical' = 'low';
@@ -307,7 +251,6 @@ function useAdminAnalytics() {
           success_probability: successProbability,
           risk_level: riskLevel,
           status,
-          pathology: pathologyMap.get(p.id),
         };
       });
 
@@ -322,8 +265,9 @@ function useAdminAnalytics() {
       const monthStart = startOfMonth(now);
       const monthEnd = endOfMonth(now);
       const totalSessionsThisMonth = appointments?.filter(a => {
-        const date = new Date(a.appointment_date);
-        return date >= monthStart && date <= monthEnd && a.status === 'completed';
+        const date = new Date(a.date);
+        const status = String(a.status ?? '').toLowerCase();
+        return date >= monthStart && date <= monthEnd && ['completed', 'concluido', 'realizado', 'atendido'].includes(status);
       }).length || 0;
 
       // New patients this month
@@ -336,7 +280,10 @@ function useAdminAnalytics() {
       const thirtyDaysAgo = subMonths(now, 1);
       const activeInLast30Days = new Set(
         appointments
-          ?.filter(a => new Date(a.appointment_date) >= thirtyDaysAgo && a.status === 'completed')
+          ?.filter(a => {
+            const status = String(a.status ?? '').toLowerCase();
+            return new Date(a.date) >= thirtyDaysAgo && ['completed', 'concluido', 'realizado', 'atendido'].includes(status);
+          })
           .map(a => a.patient_id) || []
       );
       const retentionRate = activePatients > 0 ? (activeInLast30Days.size / activePatients) * 100 : 0;

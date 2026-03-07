@@ -1,10 +1,9 @@
 /**
- * usePatientEvolution - Migrated to Firebase
+ * usePatientEvolution - Migrated to Neon/Workers
  *
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMemo, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -12,13 +11,10 @@ import { useAppointmentData } from '@/hooks/useAppointmentData';
 import { useCreateSoapRecord, useSoapRecords } from '@/hooks/useSoapRecords';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { useGamification } from '@/hooks/useGamification';
+import { useAuth } from '@/contexts/AuthContext';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { getAuth } from 'firebase/auth';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 import { getErrorMessage } from '@/types';
-import { clinicalApi, goalsApi } from '@/lib/api/workers-client';
-
-const auth = getAuth();
+import { clinicalApi, goalsApi, patientsApi, evolutionApi } from '@/lib/api/workers-client';
 
 // Types
 import { Surgery, MedicalReturn, PatientGoal, Pathology } from '@/types/evolution';
@@ -92,24 +88,26 @@ export interface UseEvolutionMeasurementsOptions {
   enabled?: boolean;
 }
 
-// Helper para obter usuário atual
-const getCurrentUser = () => {
-  return auth.currentUser;
-};
-
 // Hook para cirurgias
 export const usePatientSurgeries = (patientId: string) => {
   return useQuery({
     queryKey: ['patient-surgeries', patientId],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'patient_surgeries'),
-        where('patient_id', '==', patientId),
-        orderBy('surgery_date', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as Surgery[];
+      const res = await patientsApi.surgeries(patientId);
+      return (res?.data ?? []).map((row) => ({
+        id: row.id,
+        patient_id: patientId,
+        surgery_name: row.name,
+        surgery_date: row.surgery_date ?? row.created_at,
+        affected_side: 'nao_aplicavel',
+        notes: row.notes ?? undefined,
+        surgeon: row.surgeon ?? undefined,
+        hospital: row.hospital ?? undefined,
+        surgery_type: row.post_op_protocol ?? undefined,
+        complications: undefined,
+        created_at: row.created_at,
+        updated_at: row.created_at,
+      })) as Surgery[];
     },
     enabled: !!patientId,
     // OTIMIZAÇÃO: Aumentado staleTime para reduzir requisições
@@ -123,44 +121,8 @@ export const usePatientMedicalReturns = (patientId: string) => {
   return useQuery({
     queryKey: ['patient-medical-returns', patientId],
     queryFn: async () => {
-      const mapSnapshot = (snapshot: Awaited<ReturnType<typeof getDocs>>) =>
-        snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as MedicalReturn[];
-
-      const sortByReturnDateDesc = (returns: MedicalReturn[]) =>
-        returns.sort(
-          (a, b) => new Date(b.return_date).getTime() - new Date(a.return_date).getTime()
-        );
-
-      try {
-        const q = firestoreQuery(
-          collection(db, 'patient_medical_returns'),
-          where('patient_id', '==', patientId),
-          orderBy('return_date', 'desc')
-        );
-
-        const snapshot = await getDocs(q);
-        return mapSnapshot(snapshot);
-      } catch (error) {
-        const maybeCode = (error as { code?: string })?.code;
-
-        // Fallback para evitar travamento quando o índice composto ainda não existe.
-        if (maybeCode === 'failed-precondition') {
-          logger.warn(
-            'Missing Firestore index for patient_medical_returns. Falling back to client-side sort.',
-            { patientId },
-            'usePatientEvolution'
-          );
-
-          const fallbackQuery = firestoreQuery(
-            collection(db, 'patient_medical_returns'),
-            where('patient_id', '==', patientId)
-          );
-          const snapshot = await getDocs(fallbackQuery);
-          return sortByReturnDateDesc(mapSnapshot(snapshot));
-        }
-
-        throw error;
-      }
+      const res = await patientsApi.medicalReturns(patientId);
+      return (res?.data ?? []) as MedicalReturn[];
     },
     enabled: !!patientId,
     staleTime: 1000 * 60 * 10, // 10 minutos
@@ -184,18 +146,32 @@ export const usePatientGoals = (patientId: string) => {
 };
 
 // Hook para patologias
+const mapPathologyStatus = (value?: string | null): Pathology['status'] => {
+  if (!value) return 'cronica';
+  if (value === 'active') return 'em_tratamento';
+  if (value === 'treated') return 'tratada';
+  if (value === 'monitoring') return 'cronica';
+  return 'cronica';
+};
+
 export const usePatientPathologies = (patientId: string) => {
   return useQuery({
     queryKey: ['patient-pathologies', patientId],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'patient_pathologies'),
-        where('patient_id', '==', patientId),
-        orderBy('created_at', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as Pathology[];
+      const res = await patientsApi.pathologies(patientId);
+      return (res?.data ?? []).map((row) => ({
+        id: row.id,
+        patient_id: patientId,
+        pathology_name: row.name,
+        cid_code: row.icd_code ?? undefined,
+        diagnosis_date: row.diagnosed_at ?? undefined,
+        severity: undefined,
+        affected_region: undefined,
+        status: mapPathologyStatus(row.status),
+        notes: row.notes ?? undefined,
+        created_at: row.created_at,
+        updated_at: row.created_at,
+      })) as Pathology[];
     },
     enabled: !!patientId,
     // OTIMIZAÇÃO: Aumentado staleTime - patologias mudam muito raramente
@@ -214,33 +190,9 @@ export const useRequiredMeasurements = (pathologyNames: string[]) => {
   return useQuery({
     queryKey: ['required-measurements', uniquePathologies],
     queryFn: async () => {
-      // Executa queries em paralelo para reduzir latência total
-      const snapshots = await Promise.all(
-        uniquePathologies.map((name) => {
-          const q = firestoreQuery(
-            collection(db, 'pathology_required_measurements'),
-            where('pathology_name', '==', name)
-          );
-          return getDocs(q);
-        })
-      );
-
-      const allResults = snapshots.flatMap((snapshot) =>
-        snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as PathologyRequiredMeasurement))
-      );
-
-      // Remove duplicatas (mesma patologia + medição) para evitar renders extras
-      const deduped: PathologyRequiredMeasurement[] = [];
-      const seen = new Set<string>();
-
-      for (const measurement of allResults) {
-        const key = `${measurement.pathology_name}|${measurement.measurement_name}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        deduped.push(measurement);
-      }
-
-      return deduped;
+      if (uniquePathologies.length === 0) return [];
+      const res = await evolutionApi.requiredMeasurements.list(uniquePathologies);
+      return (res?.data ?? []) as PathologyRequiredMeasurement[];
     },
     enabled: uniquePathologies.length > 0,
     // OTIMIZAÇÃO: Cache maior pois medições obrigatórias mudam raramente
@@ -259,18 +211,22 @@ export const useEvolutionMeasurements = (
   return useQuery({
     queryKey: ['evolution-measurements', patientId, resultsLimit ?? 'all'],
     queryFn: async () => {
-      const baseQuery = [
-        collection(db, 'evolution_measurements'),
-        where('patient_id', '==', patientId),
-        orderBy('measured_at', 'desc'),
-      ] as const;
-
-      const q = resultsLimit
-        ? firestoreQuery(...baseQuery, limit(resultsLimit))
-        : firestoreQuery(...baseQuery);
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as EvolutionMeasurement[];
+      const res = await evolutionApi.measurements.list(patientId, resultsLimit ? { limit: resultsLimit } : undefined);
+      const data = res?.data ?? [];
+      return data.map((row) => ({
+        id: row.id,
+        soap_record_id: row.soap_record_id ?? undefined,
+        patient_id: row.patient_id,
+        measurement_type: row.measurement_type,
+        measurement_name: row.measurement_name,
+        value: Number(row.value ?? 0),
+        unit: row.unit ?? undefined,
+        notes: row.notes ?? undefined,
+        custom_data: row.custom_data ?? undefined,
+        measured_at: row.measured_at,
+        created_by: row.created_by,
+        created_at: row.created_at,
+      })) as EvolutionMeasurement[];
     },
     enabled: !!patientId && enabled,
     // OTIMIZAÇÃO: Cache mais curto para medições pois podem ser adicionadas durante a sessão
@@ -286,17 +242,32 @@ export const useCreateMeasurement = () => {
 
   return useMutation({
     mutationFn: async (measurement: Omit<EvolutionMeasurement, 'id' | 'created_at'>) => {
-      const user = getCurrentUser();
-      if (!user) throw new Error('Usuário não autenticado');
-
-      const docRef = await addDoc(collection(db, 'evolution_measurements'), {
-        ...measurement,
-        created_by: user.uid,
-        created_at: new Date().toISOString(),
+      const res = await evolutionApi.measurements.create({
+        patient_id: measurement.patient_id,
+        measurement_type: measurement.measurement_type,
+        measurement_name: measurement.measurement_name,
+        value: measurement.value,
+        unit: measurement.unit,
+        notes: measurement.notes,
+        custom_data: measurement.custom_data,
+        measured_at: measurement.measured_at,
       });
-
-      const docSnap = await getDoc(docRef);
-      return { id: docSnap.id, ...(docSnap.data() as EvolutionMeasurement) };
+      const data = res?.data;
+      if (!data) throw new Error('Falha ao registrar medição');
+      return {
+        id: data.id,
+        soap_record_id: measurement.soap_record_id,
+        patient_id: data.patient_id,
+        measurement_type: data.measurement_type,
+        measurement_name: data.measurement_name,
+        value: Number(data.value ?? 0),
+        unit: data.unit ?? undefined,
+        notes: data.notes ?? undefined,
+        custom_data: data.custom_data ?? undefined,
+        measured_at: data.measured_at,
+        created_by: data.created_by,
+        created_at: data.created_at,
+      } as EvolutionMeasurement;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['evolution-measurements', (data as EvolutionMeasurement).patient_id] });
@@ -455,6 +426,7 @@ export interface PatientEvolutionData {
 export function usePatientEvolutionData() {
   const { appointmentId } = useParams<{ appointmentId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Data fetching
   const {
@@ -519,38 +491,19 @@ export function usePatientEvolutionData() {
       // Save to treatment_sessions (Firebase)
       const user = getCurrentUser();
       if (user && appointmentId) {
-        // Check if session exists
-        const q = firestoreQuery(
-          collection(db, 'treatment_sessions'),
-          where('appointment_id', '==', appointmentId),
-          limit(1)
-        );
-
-        const snapshot = await getDocs(q);
-        const existingSession = snapshot.empty ? null : { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
-
-        const sessionData = {
+        await evolutionApi.treatmentSessions.upsert({
           patient_id: patientId,
-          therapist_id: user.uid,
           appointment_id: appointmentId,
-          session_date: new Date().toISOString(),
-          session_type: 'treatment',
+          therapist_id: user.uid,
+          subjective: soapData.subjective,
+          objective: soapData.objective,
+          assessment: soapData.assessment,
+          plan: soapData.plan,
+          observations: soapData.assessment || '',
           pain_level_before: 0,
           pain_level_after: 0,
-          functional_score_before: 0,
-          functional_score_after: 0,
-          exercises_performed: [],
-          observations: soapData.assessment || '',
-          status: 'completed',
-          created_by: user.uid,
-          updated_at: new Date().toISOString(),
-        };
-
-        if (existingSession) {
-          await updateDoc(doc(db, 'treatment_sessions', existingSession.id), sessionData);
-        } else {
-          await addDoc(collection(db, 'treatment_sessions'), sessionData);
-        }
+          session_date: new Date().toISOString().split('T')[0],
+        });
       }
 
       return { data: record, error: null };
