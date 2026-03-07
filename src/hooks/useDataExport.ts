@@ -1,70 +1,67 @@
 /**
- * useDataExport - Migrated to Firebase
+ * useDataExport - Migrated to Neon/Workers API
+ *
+ * Fetches all patient-related data via the Workers clients, then serializes a
+ * JSON snapshot for download. This avoids any Firestore dependency inside the hook.
  */
 
 import { useState } from 'react';
-import { doc, getDoc, getDocs, query as firestoreQuery, where, db } from '@/integrations/firebase/app';
-import { useToast } from '@/hooks/use-toast';
-import { fisioLogger as logger } from '@/lib/errors/logger';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { toast } from 'sonner';
+import {
+  appointmentsApi,
+  clinicalApi,
+  documentsApi,
+  medicalRequestsApi,
+  patientsApi,
+} from '@/lib/api/workers-client';
 
 export function useDataExport() {
   const [isExporting, setIsExporting] = useState(false);
-  const { toast } = useToast();
 
   const exportPatientData = async (patientId: string) => {
     setIsExporting(true);
     try {
-      // 1. Fetch patient profile
-      const patientDoc = await getDoc(doc(db, 'patients', patientId));
-      if (!patientDoc.exists()) {
-        throw new Error('Paciente não encontrado');
-      }
+      const [patientRes, appointmentsRes, medicalRecordsRes, documentsRes, exercisesRes] =
+        await Promise.all([
+          patientsApi.get(patientId),
+          appointmentsApi.list({ patientId, limit: 1000 }),
+          medicalRequestsApi.list(patientId),
+          documentsApi.list(patientId),
+          clinicalApi.prescribedExercises.list({ patientId }),
+        ]);
 
-      const patient = { id: patientDoc.id, ...patientDoc.data() };
-
-      // 2. Fetch related data (appointments, records, etc) in parallel
-      const [appointmentsSnap, recordsSnap, exercisesSnap] = await Promise.all([
-        getDocs(firestoreQuery(collection(db, 'appointments'), where('patient_id', '==', patientId))),
-        getDocs(firestoreQuery(collection(db, 'medical_records'), where('patient_id', '==', patientId))),
-        getDocs(firestoreQuery(collection(db, 'prescribed_exercises'), where('patient_id', '==', patientId)))
-      ]);
-
-      const appointments = appointmentsSnap.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
-      const records = recordsSnap.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
-      const exercises = exercisesSnap.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
+      const patient = patientRes?.data ?? null;
+      if (!patient) throw new Error('Paciente não encontrado');
 
       const fullData = {
         exportedAt: new Date().toISOString(),
         patient,
-        appointments,
-        medicalRecords: records,
-        prescribedExercises: exercises,
+        appointments: appointmentsRes?.data ?? [],
+        medicalRecords: medicalRecordsRes?.data ?? [],
+        documents: documentsRes?.data ?? [],
+        prescribedExercises: exercisesRes?.data ?? [],
       };
 
-      // 3. Trigger download
       const blob = new Blob([JSON.stringify(fullData, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `patient_export_${patient.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.json`;
+
+      const patientNameSlug = (patient.full_name ?? patient.name ?? 'patient')
+        .replace(/\s+/g, '_')
+        .replace(/[^\w-]/g, '')
+        .toLowerCase();
+      a.download = `patient_export_${patientNameSlug}_${new Date().toISOString().split('T')[0]}.json`;
+
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      toast({
-        title: "Exportação concluída",
-        description: "O download do arquivo JSON iniciou.",
-      });
-
+      toast.success('Exportação concluída — o download do JSON deve começar em instantes.');
     } catch (error) {
-      logger.error('Export erro', error, 'useDataExport');
-      toast({
-        title: "Erro na exportação",
-        description: "Não foi possível gerar o arquivo de dados.",
-        variant: "destructive"
-      });
+      console.error('Export erro', error);
+      toast.error('Erro na exportação: não foi possível gerar o arquivo de dados.');
     } finally {
       setIsExporting(false);
     }

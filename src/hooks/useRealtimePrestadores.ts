@@ -2,39 +2,43 @@
 
 
 /**
- * Hook para inscrições Realtime na tabela prestadores (Firestore)
+ * Hook to keep prestadores data fresh by polling the Worker metrics endpoint.
  */
 
-import { useEffect } from 'react';
-import { collection, query as firestoreQuery, where, onSnapshot, db } from '@/integrations/firebase/app';
+import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { prestadoresApi } from '@/lib/api/workers-client';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export function useRealtimePrestadores(eventoId: string) {
   const queryClient = useQueryClient();
+  const lastUpdatedRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!eventoId) return;
 
-    const q = firestoreQuery(
-      collection(db, 'prestadores'),
-      where('evento_id', '==', eventoId)
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      // Snapshot changes invoke this callback
-      // We don't necessarily need the data here if we just want to invalidate queries
-      // But we can check if there are changes
-      if (!snapshot.metadata.hasPendingWrites) {
-        queryClient.invalidateQueries({ queryKey: ['prestadores', eventoId] });
-        queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
+    let active = true;
+    const pollMetrics = async () => {
+      try {
+        const res = await prestadoresApi.metrics(eventoId);
+        if (!active) return;
+        const nextUpdated = res?.data?.last_updated_at ?? null;
+        if (!nextUpdated) return;
+        if (nextUpdated !== lastUpdatedRef.current) {
+          lastUpdatedRef.current = nextUpdated;
+          queryClient.invalidateQueries({ queryKey: ['prestadores', eventoId] });
+          queryClient.invalidateQueries({ queryKey: ['eventos-stats'] });
+        }
+      } catch (error) {
+        logger.error('Error polling prestadores metrics', error as Error, 'useRealtimePrestadores');
       }
-    }, (error) => {
-      logger.error("Error in useRealtimePrestadores subscription", error, 'useRealtimePrestadores');
-    });
+    };
 
+    pollMetrics();
+    const interval = setInterval(pollMetrics, 15000);
     return () => {
-      unsubscribe();
+      active = false;
+      clearInterval(interval);
     };
   }, [eventoId, queryClient]);
 }

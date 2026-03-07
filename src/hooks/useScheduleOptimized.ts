@@ -12,8 +12,8 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useCallback, useRef, useEffect } from 'react';
-import { collection, query as firestoreQuery, where, orderBy, getDocs, limit as firestoreLimit, db } from '@/integrations/firebase/app';
 import { startOfDay, endOfDay, addDays, subDays, format } from 'date-fns';
+import { appointmentsApi, type AppointmentRow } from '@/lib/api/workers-client';
 
 // Tipos
 export type ScheduleView = 'day' | 'week' | 'month' | 'list';
@@ -90,16 +90,7 @@ function useDayAppointments(date: Date, options?: ScheduleFilterOptions, enabled
 
   return useQuery({
     queryKey: scheduleKeys.day(dateStr),
-    queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'appointments'),
-        where('appointment_date', '==', dateStr),
-        orderBy('appointment_time', 'asc')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Appointment[];
-    },
+    queryFn: () => fetchAppointments({ dateFrom: dateStr, dateTo: dateStr }),
     enabled,
     staleTime: isToday ? SCHEDULE_CACHE_CONFIG.TODAY.staleTime : SCHEDULE_CACHE_CONFIG.DAY.staleTime,
     gcTime: isToday ? SCHEDULE_CACHE_CONFIG.TODAY.gcTime : SCHEDULE_CACHE_CONFIG.DAY.gcTime,
@@ -115,30 +106,7 @@ function useWeekAppointments(startDate: Date, endDate: Date, enabled = true) {
 
   return useQuery({
     queryKey: scheduleKeys.week(startStr, endStr),
-    queryFn: async () => {
-      // Para simplificar, buscar dia a dia (Firestore não tem between para datas)
-      const dates = [];
-      let current = startDate;
-      while (current <= endDate) {
-        dates.push(format(current, 'yyyy-MM-dd'));
-        current = addDays(current, 1);
-      }
-
-      // Buscar em paralelo
-      const results = await Promise.all(
-        dates.map(dateStr =>
-          getDocs(firestoreQuery(
-            collection(db, 'appointments'),
-            where('appointment_date', '==', dateStr),
-            orderBy('appointment_time', 'asc')
-          ))
-        )
-      );
-
-      return results.flatMap(snapshot =>
-        snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Appointment[]
-      );
-    },
+    queryFn: () => fetchAppointments({ dateFrom: startStr, dateTo: endStr }),
     enabled,
     staleTime: SCHEDULE_CACHE_CONFIG.WEEK.staleTime,
     gcTime: SCHEDULE_CACHE_CONFIG.WEEK.gcTime,
@@ -151,18 +119,7 @@ function useWeekAppointments(startDate: Date, endDate: Date, enabled = true) {
 function useMonthAppointments(month: string, enabled = true) {
   return useQuery({
     queryKey: scheduleKeys.month(month),
-    queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'appointments'),
-        where('appointment_date', '>=', `${month}-01`),
-        where('appointment_date', '<=', `${month}-31`),
-        orderBy('appointment_date', 'asc'),
-        orderBy('appointment_time', 'asc')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Appointment[];
-    },
+    queryFn: () => fetchAppointments({ dateFrom: `${month}-01`, dateTo: `${month}-31` }),
     enabled,
     staleTime: SCHEDULE_CACHE_CONFIG.MONTH.staleTime,
     gcTime: SCHEDULE_CACHE_CONFIG.MONTH.gcTime,
@@ -172,6 +129,34 @@ function useMonthAppointments(month: string, enabled = true) {
 /**
  * Hook principal para agenda otimizada
  */
+const mapAppointmentRow = (row: AppointmentRow): Appointment => ({
+  id: row.id,
+  patient_id: row.patient_id ?? '',
+  patient_name: row.patient_name,
+  therapist_id: row.therapist_id,
+  appointment_date: row.date,
+  appointment_time: row.start_time,
+  status: row.status as AppointmentStatus,
+  type: row.session_type,
+  notes: row.notes,
+  ...row,
+});
+
+const sortAndMapAppointments = (rows: AppointmentRow[]) =>
+  rows
+    .slice()
+    .sort((a, b) => {
+      if (a.date !== b.date) return a.date.localeCompare(b.date);
+      return (a.start_time ?? '').localeCompare(b.start_time ?? '');
+    })
+    .map(mapAppointmentRow);
+
+const fetchAppointments = async (params: { dateFrom?: string; dateTo?: string; limit?: number }) => {
+  const response = await appointmentsApi.list(params);
+  const rows = (response?.data ?? []) as AppointmentRow[];
+  return sortAndMapAppointments(rows);
+};
+
 export function useScheduleOptimized(options: {
   view: ScheduleView;
   date: Date;
@@ -309,18 +294,7 @@ export function useVirtualizedSchedule(options: {
 
   const query = useQuery({
     queryKey: ['schedule', 'virtualized', format(date, 'yyyy-MM-dd'), limitCount],
-    queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'appointments'),
-        where('appointment_date', '>=', format(date, 'yyyy-MM-dd')),
-        orderBy('appointment_date', 'asc'),
-        orderBy('appointment_time', 'asc'),
-        firestoreLimit(limitCount)
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Appointment[];
-    },
+    queryFn: () => fetchAppointments({ dateFrom: format(date, 'yyyy-MM-dd'), limit: limitCount }),
     staleTime: SCHEDULE_CACHE_CONFIG.LIST.staleTime,
     gcTime: SCHEDULE_CACHE_CONFIG.LIST.gcTime,
   });

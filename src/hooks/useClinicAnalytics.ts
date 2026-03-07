@@ -4,17 +4,20 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { collection, query as firestoreQuery, where, getDocs, doc, getDoc, orderBy, db, limit } from '@/integrations/firebase/app';
-import { subDays, subMonths, startOfDay, endOfDay, startOfWeek, startOfMonth } from 'date-fns';
+import { subDays, subMonths, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
 import { useOrganizations } from './useOrganizations';
 import {
-
   generateDashboardMetrics,
   generateTrendData,
   ClinicDashboardMetrics,
   TrendData,
 } from '@/lib/analytics/clinic-metrics';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import {
+  appointmentsApi,
+  patientsApi,
+  profileApi,
+  financialApi,
+} from '@/lib/api/workers-client';
 
 // =====================================================================
 // CONFIG
@@ -31,6 +34,88 @@ const QUERY_KEYS = {
   all: ['analytics'] as const,
   dashboard: (period: string) => [...QUERY_KEYS.all, 'dashboard', period] as const,
   trends: (period: string, metric: string) => [...QUERY_KEYS.all, 'trends', period, metric] as const,
+};
+
+const isoDate = (date: Date) => date.toISOString().split('T')[0];
+
+const clampDateRange = (
+  period: PeriodType,
+  startOverride?: Date,
+  endOverride?: Date
+) => {
+  if (startOverride && endOverride) {
+    return { start: startOverride, end: endOverride };
+  }
+  const end = endOverride ?? new Date();
+  let start: Date;
+
+  switch (period) {
+    case 'today':
+      start = startOfDay(end);
+      break;
+    case 'week':
+      start = startOfWeek(end, { weekStartsOn: 1 });
+      break;
+    case 'month':
+      start = startOfMonth(end);
+      break;
+    case 'quarter':
+      start = subMonths(end, 3);
+      break;
+    case 'year':
+      start = subMonths(end, 12);
+      break;
+    default:
+      start = startOfMonth(end);
+  }
+
+  return { start, end };
+};
+
+const toAppointmentSummary = (row: {
+  date?: string;
+  start_time?: string;
+  end_time?: string;
+  status?: string;
+  therapist_id?: string;
+  patient_id?: string;
+}) => {
+  const duration =
+    row.start_time && row.end_time
+      ? (new Date(`1970-01-01T${row.end_time}`).getTime() -
+          new Date(`1970-01-01T${row.start_time}`).getTime()) /
+        (60 * 1000)
+      : undefined;
+  return {
+    date: row.date ?? '',
+    time: row.start_time ?? '',
+    status: row.status ?? '',
+    therapist_id: row.therapist_id,
+    patient_id: row.patient_id,
+    duration: duration && duration > 0 ? duration : undefined,
+  };
+};
+
+const isDateBetween = (value: string | undefined, start: Date, end: Date) => {
+  if (!value) return false;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return false;
+  return parsed >= start && parsed <= end;
+};
+
+const isCompletedStatus = (status: string | undefined) => {
+  const normalized = (status ?? '').toLowerCase();
+  return ['completed', 'concluido', 'realizado', 'atendido'].includes(normalized);
+};
+
+const isNoShowStatus = (status: string | undefined) => {
+  const normalized = (status ?? '').toLowerCase();
+  return ['no_show', 'falta', 'paciente_faltou', 'faltou'].includes(normalized);
+};
+
+const isCancelledStatus = (status: string | undefined) => {
+  const normalized = (status ?? '').toLowerCase();
+  return ['cancelled', 'cancelado'].includes(normalized);
 };
 
 // ============================================================================
@@ -52,42 +137,6 @@ interface _Appointment {
   [key: string]: unknown;
 }
 
-interface Patient {
-  id: string;
-  full_name?: string;
-  email?: string;
-  phone?: string;
-  created_at?: string;
-  last_appointment?: string;
-  [key: string]: unknown;
-}
-
-interface _Payment {
-  id: string;
-  date: string;
-  amount: number;
-  status: string;
-  [key: string]: unknown;
-}
-
-interface _Profile {
-  id: string;
-  full_name?: string;
-  email?: string;
-  [key: string]: unknown;
-}
-
-interface _LastAppointmentInfo {
-  patientId: string;
-  lastAppointment: string | null;
-}
-
-// Helper to convert doc with generic type
-const convertDoc = <T extends Record<string, unknown>>(doc: { id: string; data: () => T }): T & { id: string } => ({
-  id: doc.id,
-  ...normalizeFirestoreData(doc.data())
-});
-
 // =====================================================================
 // HOOK: DASHBOARD METRICS
 // =====================================================================
@@ -105,108 +154,74 @@ export function useDashboardMetrics(options: DashboardMetricsOptions = {}) {
   const organizationId = currentOrganization?.id;
   const { period = 'month', startDate, endDate } = options;
 
+  const { start, end } = clampDateRange(period, startDate, endDate);
+
   return useQuery({
     queryKey: [...QUERY_KEYS.dashboard(period), organizationId],
     queryFn: async (): Promise<ClinicDashboardMetrics> => {
       if (!organizationId) throw new Error('Organização não identificada');
-      // Calculate date range
-      let start: Date;
-      let end: Date;
 
-      if (startDate && endDate) {
-        start = startOfDay(startDate);
-        end = endOfDay(endDate);
-      } else {
-        end = new Date();
-        switch (period) {
-          case 'today':
-            start = startOfDay(end);
-            break;
-          case 'week':
-            start = startOfWeek(end, { weekStartsOn: 1 });
-            break;
-          case 'month':
-            start = startOfMonth(end);
-            break;
-          case 'quarter':
-            start = subMonths(end, 3);
-            break;
-          case 'year':
-            start = subMonths(end, 12);
-            break;
-          default:
-            start = startOfMonth(end);
-        }
-      }
+      const startIso = isoDate(start);
+      const endIso = isoDate(end);
 
-      // Fetch all data in parallel
-      const [appointmentsSnap, patientsSnap, profilesSnap, paymentsSnap] = await Promise.all([
-        getDocs(firestoreQuery(
-          collection(db, 'appointments'),
-          where('organization_id', '==', organizationId),
-          where('date', '>=', start.toISOString()),
-          where('date', '<=', end.toISOString())
-        )),
-        getDocs(firestoreQuery(
-          collection(db, 'patients'),
-          where('organization_id', '==', organizationId),
-          orderBy('created_at', 'desc')
-        )),
-        getDocs(firestoreQuery(
-          collection(db, 'profiles'),
-          where('organization_id', '==', organizationId)
-        )),
-        getDocs(firestoreQuery(
-          collection(db, 'payments'),
-          where('organization_id', '==', organizationId),
-          where('date', '>=', start.toISOString()),
-          where('date', '<=', end.toISOString())
-        )),
+      const [appointmentsRes, patientsRes, therapistsRes, paymentsRes] = await Promise.all([
+        appointmentsApi.list({ dateFrom: startIso, dateTo: endIso, limit: 5000 }),
+        patientsApi.list({ limit: 5000, offset: 0, sortBy: 'created_at_desc' }),
+        profileApi.listTherapists().catch(() => ({ data: [] })),
+        financialApi.pagamentos.list({ limit: 5000 }),
       ]);
 
-      const appointments = appointmentsSnap.docs.map(convertDoc);
-      const patients = patientsSnap.docs.map(convertDoc);
-      const profiles = profilesSnap.docs.map(convertDoc);
-      const payments = paymentsSnap.docs.map(convertDoc);
+      const appointments = (appointmentsRes?.data ?? []).map(toAppointmentSummary);
+      const lastAppointmentByPatient: Record<string, string> = {};
+      appointments.forEach((apt) => {
+        if (!apt.patient_id) return;
+        const timestamp = new Date(`${apt.date}T${apt.time || '00:00:00'}`).toISOString();
+        const previous = lastAppointmentByPatient[apt.patient_id];
+        if (!previous || timestamp > previous) {
+          lastAppointmentByPatient[apt.patient_id] = timestamp;
+        }
+      });
 
-      // Get last appointment date for each patient
-      const patientIds = (patients as Patient[]).map((p) => p.id);
-      const lastAppointments = await Promise.all(
-        patientIds.map(async (patientId: string) => {
-          const aptSnap = await getDocs(firestoreQuery(
-            collection(db, 'appointments'),
-            where('organization_id', '==', organizationId),
-            where('patient_id', '==', patientId),
-            where('status', '==', 'atendido'),
-            orderBy('date', 'desc'),
-            limit(1)
-          ));
-
-          return {
-            patientId,
-            lastAppointment: aptSnap.docs[0]?.data()?.date || null,
-          };
-        })
-      );
-
-      const patientsWithLastAppointment = (patients as Patient[]).map((p) => ({
-        ...p,
-        last_appointment: lastAppointments.find((la) => la.patientId === p.id)?.lastAppointment || undefined,
+      const patients = (patientsRes?.data ?? []).map((patient) => ({
+        id: patient.id,
+        created_at: patient.created_at ?? '',
+        status: patient.status,
+        last_appointment: lastAppointmentByPatient[patient.id]
+          ? lastAppointmentByPatient[patient.id].split('T')[0]
+          : undefined,
       }));
 
+      const therapists = (therapistsRes?.data ?? []).map((therapist) => ({
+        id: therapist.id,
+        name: therapist.full_name ?? therapist.name ?? 'Fisioterapeuta',
+      }));
+
+      const payments = (paymentsRes?.data ?? [])
+        .filter(
+          (payment) =>
+            payment.status === 'paid' &&
+            isDateBetween(payment.pago_em ?? payment.created_at, start, end),
+        )
+        .map((payment) => ({
+          date: (payment.pago_em ?? payment.created_at) ?? '',
+          amount: Number(payment.valor ?? 0),
+          status: payment.status ?? 'paid',
+          appointment_id: payment.appointment_id ?? undefined,
+        }));
+
       return generateDashboardMetrics(
-        appointments || [],
-        patientsWithLastAppointment || [],
-        profiles || [],
-        payments || [],
+        appointments,
+        patients,
+        therapists,
+        payments,
         start,
         end,
-        BUSINESS_HOURS
+        BUSINESS_HOURS,
       );
     },
     enabled: !!organizationId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 15 * 60 * 1000, // 15 minutes
+    staleTime: 5 * 60 * 1000,
+    gcTime: 15 * 60 * 1000,
   });
 }
 
@@ -228,41 +243,15 @@ export function useAppointmentTrends(options: TrendsOptions = {}) {
     queryKey: [...QUERY_KEYS.trends(period, 'appointments'), organizationId],
     queryFn: async (): Promise<TrendData[]> => {
       if (!organizationId) return [];
-      const end = new Date();
-      let start: Date;
-
-      switch (period) {
-        case 'today':
-          start = startOfDay(end);
-          break;
-        case 'week':
-          start = startOfWeek(end, { weekStartsOn: 1 });
-          break;
-        case 'month':
-          start = startOfMonth(end);
-          break;
-        case 'quarter':
-          start = subMonths(end, 3);
-          break;
-        case 'year':
-          start = subMonths(end, 12);
-          break;
-        default:
-          start = startOfMonth(end);
-      }
-
-      const snap = await getDocs(firestoreQuery(
-        collection(db, 'appointments'),
-        where('organization_id', '==', organizationId),
-        where('date', '>=', start.toISOString()),
-        where('date', '<=', end.toISOString())
-      ));
-
-      const appointments = snap.docs.map(convertDoc) || [];
-      const completedAppointments = appointments
-        .filter((a) => a.status === 'completed')
-        .map((a) => ({ date: a.date as string, value: 1 }));
-
+      const { start, end } = clampDateRange(period);
+      const appointmentsRes = await appointmentsApi.list({
+        dateFrom: isoDate(start),
+        dateTo: isoDate(end),
+        limit: 5000,
+      });
+      const completedAppointments = (appointmentsRes?.data ?? [])
+        .filter((appointment) => isCompletedStatus(appointment.status))
+        .map((appointment) => ({ date: appointment.date ?? '', value: 1 }));
       return generateTrendData(completedAppointments, start, end, groupBy);
     },
     enabled: !!organizationId,
@@ -283,40 +272,17 @@ export function useRevenueTrends(options: TrendsOptions = {}) {
     queryKey: [...QUERY_KEYS.trends(period, 'revenue'), organizationId],
     queryFn: async (): Promise<TrendData[]> => {
       if (!organizationId) return [];
-      const end = new Date();
-      let start: Date;
-
-      switch (period) {
-        case 'today':
-          start = startOfDay(end);
-          break;
-        case 'week':
-          start = startOfWeek(end, { weekStartsOn: 1 });
-          break;
-        case 'month':
-          start = startOfMonth(end);
-          break;
-        case 'quarter':
-          start = subMonths(end, 3);
-          break;
-        case 'year':
-          start = subMonths(end, 12);
-          break;
-        default:
-          start = startOfMonth(end);
-      }
-
-      const snap = await getDocs(firestoreQuery(
-        collection(db, 'payments'),
-        where('organization_id', '==', organizationId),
-        where('date', '>=', start.toISOString()),
-        where('date', '<=', end.toISOString()),
-        where('status', '==', 'paid')
-      ));
-
-      const payments = snap.docs.map(convertDoc) || [];
-      const paymentData = payments.map((p) => ({ date: p.date as string, value: p.amount as number }));
-
+      const { start, end } = clampDateRange(period);
+      const paymentsRes = await financialApi.pagamentos.list({ limit: 5000 });
+      const paymentData = (paymentsRes?.data ?? [])
+        .filter(
+          (payment) =>
+            payment.status === 'paid' && isDateBetween(payment.pago_em ?? payment.created_at, start, end),
+        )
+        .map((payment) => ({
+          date: (payment.pago_em ?? payment.created_at) ?? '',
+          value: Number(payment.valor ?? 0),
+        }));
       return generateTrendData(paymentData, start, end, groupBy);
     },
     enabled: !!organizationId,
@@ -337,41 +303,16 @@ export function usePatientTrends(options: TrendsOptions = {}) {
     queryKey: [...QUERY_KEYS.trends(period, 'patients'), organizationId],
     queryFn: async (): Promise<TrendData[]> => {
       if (!organizationId) return [];
-      const end = new Date();
-      let start: Date;
-
-      switch (period) {
-        case 'today':
-          start = startOfDay(end);
-          break;
-        case 'week':
-          start = startOfWeek(end, { weekStartsOn: 1 });
-          break;
-        case 'month':
-          start = startOfMonth(end);
-          break;
-        case 'quarter':
-          start = subMonths(end, 3);
-          break;
-        case 'year':
-          start = subMonths(end, 12);
-          break;
-        default:
-          start = startOfMonth(end);
-      }
-
-      const snap = await getDocs(firestoreQuery(
-        collection(db, 'patients'),
-        where('organization_id', '==', organizationId),
-        where('created_at', '>=', start.toISOString()),
-        where('created_at', '<=', end.toISOString())
-      ));
-
-      const newPatients = snap.docs.map(doc => ({
-        date: normalizeFirestoreData(doc.data()).created_at || '',
-        value: 1
+      const { start, end } = clampDateRange(period);
+      const patientsRes = await patientsApi.list({
+        createdFrom: isoDate(start),
+        createdTo: isoDate(end),
+        limit: 5000,
+      });
+      const newPatients = (patientsRes?.data ?? []).map((patient) => ({
+        date: patient.created_at ?? '',
+        value: 1,
       }));
-
       return generateTrendData(newPatients, start, end, groupBy);
     },
     enabled: !!organizationId,
@@ -433,24 +374,21 @@ export function useComparisonMetrics(options: ComparisonMetricsOptions) {
           previousStart = startOfMonth(previousEnd);
       }
 
-      // Fetch current period data
       const [currentSnap, previousSnap] = await Promise.all([
-        getDocs(firestoreQuery(
-          collection(db, 'appointments'),
-          where('organization_id', '==', organizationId),
-          where('date', '>=', currentStart.toISOString()),
-          where('date', '<=', end.toISOString())
-        )),
-        getDocs(firestoreQuery(
-          collection(db, 'appointments'),
-          where('organization_id', '==', organizationId),
-          where('date', '>=', previousStart.toISOString()),
-          where('date', '<=', previousEnd.toISOString())
-        )),
+        appointmentsApi.list({
+          dateFrom: isoDate(currentStart),
+          dateTo: isoDate(end),
+          limit: 5000,
+        }),
+        appointmentsApi.list({
+          dateFrom: isoDate(previousStart),
+          dateTo: isoDate(previousEnd),
+          limit: 5000,
+        }),
       ]);
 
-      const currentTotal = currentSnap.size;
-      const previousTotal = previousSnap.size;
+      const currentTotal = currentSnap?.data?.length ?? 0;
+      const previousTotal = previousSnap?.data?.length ?? 0;
 
       const change = currentTotal - previousTotal;
       const changePercent = previousTotal > 0
@@ -497,34 +435,29 @@ export function useTopPerformers(metric: 'appointments' | 'revenue' = 'appointme
       const end = new Date();
 
       if (metric === 'appointments') {
-        const snap = await getDocs(firestoreQuery(
-          collection(db, 'appointments'),
-          where('organization_id', '==', organizationId),
-          where('date', '>=', start.toISOString()),
-          where('date', '<=', end.toISOString()),
-          where('status', '==', 'completed')
-        ));
+        const [appointmentsRes, therapistsRes] = await Promise.all([
+          appointmentsApi.list({
+            dateFrom: isoDate(start),
+            dateTo: isoDate(end),
+            limit: 5000,
+          }),
+          profileApi.listTherapists().catch(() => ({ data: [] })),
+        ]);
 
-        const appointments = snap.docs.map(convertDoc);
-
-        // Fetch profile names from Firestore
-        const therapistIds = [...new Set(appointments.map((apt) => apt.therapist_id as string | undefined).filter((id): id is string => id !== undefined))];
-        const profileNames = new Map<string, string>();
-
-        await Promise.all(therapistIds.map(async (id) => {
-          const profSnap = await getDoc(doc(db, 'profiles', id));
-          if (profSnap.exists()) {
-            profileNames.set(id, profSnap.data().full_name as string);
-          }
-        }));
+        const therapistNames = new Map<string, string>();
+        (therapistsRes?.data ?? []).forEach((therapist) => {
+          therapistNames.set(therapist.id, therapist.full_name ?? therapist.name ?? 'Desconhecido');
+        });
 
         const counts = new Map<string, { name: string; count: number }>();
-        appointments.forEach((apt) => {
-          const therapistId = apt.therapist_id as string | undefined;
+        (appointmentsRes?.data ?? []).forEach((apt) => {
+          if (!isCompletedStatus(apt.status)) return;
+          const therapistId = apt.therapist_id;
           if (!therapistId) return;
-
-          const name = profileNames.get(therapistId) || 'Unknown';
-          const current = counts.get(therapistId) || { name, count: 0 };
+          const current = counts.get(therapistId) || {
+            name: therapistNames.get(therapistId) ?? 'Unknown',
+            count: 0,
+          };
           counts.set(therapistId, { ...current, count: current.count + 1 });
         });
 
@@ -537,22 +470,9 @@ export function useTopPerformers(metric: 'appointments' | 'revenue' = 'appointme
           }))
           .sort((a, b) => b.value - a.value)
           .slice(0, 5);
-      } else {
-        // Revenue by therapist - requires payment appointments to have therapist_id
-        const snap = await getDocs(firestoreQuery(
-          collection(db, 'payments'),
-          where('organization_id', '==', organizationId),
-          where('date', '>=', start.toISOString()),
-          where('date', '<=', end.toISOString()),
-          where('status', '==', 'paid')
-        ));
-
-        const _payments = snap.docs.map(convertDoc);
-
-        // Note: Need to join with appointments to get therapist_id
-        // This is simplified - in production you'd structure this differently
-        return [];
       }
+
+      return [];
     },
     enabled: !!organizationId,
     staleTime: 30 * 60 * 1000, // 30 minutes

@@ -3,12 +3,11 @@
  */
 
 import { useMemo } from 'react';
-import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
 import { useQuery } from '@tanstack/react-query';
 import type { BusinessHour, BlockedTime } from './useScheduleSettings';
 import { useAuth } from './useAuth';
 import { generateTimeSlots, TimeSlotInfo } from '@/utils/scheduleHelpers';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { profileApi, schedulingApi } from '@/lib/api/workers-client';
 
 export type { TimeSlotInfo };
 
@@ -20,28 +19,28 @@ export function useAvailableTimeSlots(date: Date | null) {
     queryKey: ['profile-org', user?.uid],
     queryFn: async () => {
       if (!user?.uid) return null;
-      const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
-      if (profileDoc.exists()) {
-        return profileDoc.data();
-      }
-      return null;
+      const res = await profileApi.me();
+      return res.data ?? null;
     },
     enabled: !!user?.uid,
   });
 
-  const organizationId = profile?.organization_id;
+  const organizationId = profile?.organization_id ?? profile?.organizationId;
 
   // Fetch business hours
   const { data: businessHours } = useQuery({
     queryKey: ['business-hours', organizationId],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'schedule_business_hours'),
-        where('organization_id', '==', organizationId),
-        orderBy('day_of_week')
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as BusinessHour[];
+      const res = await schedulingApi.settings.businessHours.list();
+      return (res?.data ?? []).map((hour) => ({
+        id: String(hour.id),
+        day_of_week: Number(hour.day_of_week ?? 0),
+        is_open: hour.is_open !== false,
+        open_time: String(hour.open_time ?? '07:00'),
+        close_time: String(hour.close_time ?? '19:00'),
+        break_start: hour.break_start ?? undefined,
+        break_end: hour.break_end ?? undefined,
+      })) as BusinessHour[];
     },
     enabled: !!organizationId,
   });
@@ -50,12 +49,8 @@ export function useAvailableTimeSlots(date: Date | null) {
   const { data: blockedTimes } = useQuery({
     queryKey: ['blocked-times', organizationId],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'schedule_blocked_times'),
-        where('organization_id', '==', organizationId)
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as BlockedTime[];
+      const res = await schedulingApi.blockedTimes.list();
+      return (res?.data ?? []) as BlockedTime[];
     },
     enabled: !!organizationId,
   });

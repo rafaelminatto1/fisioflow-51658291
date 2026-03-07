@@ -1,17 +1,17 @@
 /**
- * useScheduleSettings - Migrated to Firebase
- *
+ * useScheduleSettings - Migrated to Neon/Workers
  */
 
-
-
-// Types
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, setDoc, addDoc, deleteDoc, query as firestoreQuery, where, db } from '@/integrations/firebase/app';
+import {
+  schedulingApi,
+  type ScheduleBusinessHour,
+  type ScheduleCancellationRule,
+  type ScheduleNotificationSetting,
+  type ScheduleBlockedTime,
+} from '@/lib/api/workers-client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from './useAuth';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface BusinessHour {
   id: string;
@@ -72,51 +72,34 @@ const DAYS_OF_WEEK = [
   { value: 6, label: 'Sábado' },
 ];
 
-// Helper to convert doc
-const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as T);
-const isPermissionDeniedError = (error: unknown): boolean => {
-  const code = (error as { code?: string })?.code;
-  const message = (error as Error)?.message?.toLowerCase?.() ?? '';
-  return (
-    code === 'permission-denied' ||
-    code === 'failed-precondition' ||
-    message.includes('insufficient permissions') ||
-    message.includes('requires an index')
-  );
-};
-
 export function useScheduleSettings() {
   const { toast } = useToast();
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
 
   const organizationId = profile?.organization_id;
-
-  // Cache por 10 min — configs de agenda mudam raramente
   const STALE_TIME_MS = 10 * 60 * 1000;
 
-  // Business Hours
   const { data: businessHours, isLoading: isLoadingHours } = useQuery({
     queryKey: ['business-hours', organizationId],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'schedule_business_hours'),
-        where('organization_id', '==', organizationId)
-      );
-      try {
-        const snapshot = await getDocs(q);
-        const hours = snapshot.docs.map(convertDoc) as BusinessHour[];
-        return hours.sort((a, b) => a.day_of_week - b.day_of_week);
-      } catch (error) {
-        if (isPermissionDeniedError(error)) {
-          return [];
-        }
-        throw error;
-      }
+      const res = await schedulingApi.settings.businessHours.list();
+      const data = (res?.data ?? []) as ScheduleBusinessHour[];
+      return data
+        .map((hour) => ({
+          id: String(hour.id),
+          day_of_week: Number(hour.day_of_week ?? 0),
+          is_open: hour.is_open !== false,
+          open_time: String(hour.open_time ?? '07:00'),
+          close_time: String(hour.close_time ?? '21:00'),
+          break_start: hour.break_start ?? undefined,
+          break_end: hour.break_end ?? undefined,
+        }))
+        .sort((a, b) => a.day_of_week - b.day_of_week) as BusinessHour[];
     },
     enabled: !!organizationId,
     staleTime: STALE_TIME_MS,
-    retry: (failureCount, error) => !isPermissionDeniedError(error) && failureCount < 2,
+    retry: 2,
   });
 
   const upsertBusinessHours = useMutation({
@@ -124,26 +107,18 @@ export function useScheduleSettings() {
       if (!organizationId) {
         throw new Error('Organização não encontrada.');
       }
-      const validHours = hours.filter(h => h.day_of_week !== undefined);
+      const validHours = hours.filter((h) => h.day_of_week !== undefined);
+      const payload = validHours.map((h) => ({
+        id: h.id,
+        day_of_week: h.day_of_week,
+        is_open: h.is_open ?? true,
+        open_time: h.open_time ?? '07:00',
+        close_time: h.close_time ?? '21:00',
+        break_start: h.break_start ?? null,
+        break_end: h.break_end ?? null,
+      }));
 
-      const promises = validHours.map(async (h) => {
-        const docId = `${organizationId}_${h.day_of_week}`;
-        const docRef = doc(db, 'schedule_business_hours', docId);
-
-        const hourData = {
-          day_of_week: h.day_of_week,
-          is_open: h.is_open ?? true,
-          open_time: h.open_time ?? '07:00',
-          close_time: h.close_time ?? '21:00',
-          break_start: h.break_start || null,
-          break_end: h.break_end || null,
-          organization_id: organizationId,
-        };
-
-        await setDoc(docRef, hourData, { merge: true });
-      });
-
-      await Promise.all(promises);
+      await schedulingApi.settings.businessHours.upsert(payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['business-hours'] });
@@ -154,25 +129,24 @@ export function useScheduleSettings() {
     },
   });
 
-  // Cancellation Rules
   const { data: cancellationRules, isLoading: isLoadingRules } = useQuery({
     queryKey: ['cancellation-rules', organizationId],
     queryFn: async () => {
-      const docRef = doc(db, 'schedule_cancellation_rules', organizationId!);
-      try {
-        const snapshot = await getDoc(docRef);
-        if (!snapshot.exists()) return null;
-        return convertDoc(snapshot) as CancellationRule;
-      } catch (error) {
-        if (isPermissionDeniedError(error)) {
-          return null;
-        }
-        throw error;
-      }
+      const res = await schedulingApi.settings.cancellationRules.get();
+      const row = (res?.data ?? null) as ScheduleCancellationRule | null;
+      if (!row) return null;
+      return {
+        id: String(row.id),
+        min_hours_before: Number(row.min_hours_before ?? 24),
+        allow_patient_cancellation: row.allow_patient_cancellation !== false,
+        max_cancellations_month: Number(row.max_cancellations_month ?? 3),
+        charge_late_cancellation: row.charge_late_cancellation === true,
+        late_cancellation_fee: Number(row.late_cancellation_fee ?? 0),
+      } as CancellationRule;
     },
     enabled: !!organizationId,
     staleTime: STALE_TIME_MS,
-    retry: (failureCount, error) => !isPermissionDeniedError(error) && failureCount < 2,
+    retry: 2,
   });
 
   const upsertCancellationRules = useMutation({
@@ -180,8 +154,7 @@ export function useScheduleSettings() {
       if (!organizationId) {
         throw new Error('Organização não encontrada.');
       }
-      const docRef = doc(db, 'schedule_cancellation_rules', organizationId!);
-      await setDoc(docRef, { ...rules, organization_id: organizationId }, { merge: true });
+      await schedulingApi.settings.cancellationRules.upsert(rules);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cancellation-rules'] });
@@ -192,25 +165,26 @@ export function useScheduleSettings() {
     },
   });
 
-  // Notification Settings
   const { data: notificationSettings, isLoading: isLoadingNotifications } = useQuery({
     queryKey: ['notification-settings', organizationId],
     queryFn: async () => {
-      const docRef = doc(db, 'schedule_notification_settings', organizationId!);
-      try {
-        const snapshot = await getDoc(docRef);
-        if (!snapshot.exists()) return null;
-        return convertDoc(snapshot) as NotificationSettings;
-      } catch (error) {
-        if (isPermissionDeniedError(error)) {
-          return null;
-        }
-        throw error;
-      }
+      const res = await schedulingApi.settings.notificationSettings.get();
+      const row = (res?.data ?? null) as ScheduleNotificationSetting | null;
+      if (!row) return null;
+      return {
+        id: String(row.id),
+        send_confirmation_email: row.send_confirmation_email !== false,
+        send_confirmation_whatsapp: row.send_confirmation_whatsapp !== false,
+        send_reminder_24h: row.send_reminder_24h !== false,
+        send_reminder_2h: row.send_reminder_2h !== false,
+        send_cancellation_notice: row.send_cancellation_notice !== false,
+        custom_confirmation_message: row.custom_confirmation_message ?? '',
+        custom_reminder_message: row.custom_reminder_message ?? '',
+      } as NotificationSettings;
     },
     enabled: !!organizationId,
     staleTime: STALE_TIME_MS,
-    retry: (failureCount, error) => !isPermissionDeniedError(error) && failureCount < 2,
+    retry: 2,
   });
 
   const upsertNotificationSettings = useMutation({
@@ -218,8 +192,7 @@ export function useScheduleSettings() {
       if (!organizationId) {
         throw new Error('Organização não encontrada.');
       }
-      const docRef = doc(db, 'schedule_notification_settings', organizationId!);
-      await setDoc(docRef, { ...settings, organization_id: organizationId }, { merge: true });
+      await schedulingApi.settings.notificationSettings.upsert(settings);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notification-settings'] });
@@ -230,29 +203,33 @@ export function useScheduleSettings() {
     },
   });
 
-  // Blocked Times
   const { data: blockedTimes, isLoading: isLoadingBlocked } = useQuery({
     queryKey: ['blocked-times', organizationId],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'schedule_blocked_times'),
-        where('organization_id', '==', organizationId)
-      );
-      try {
-        const snapshot = await getDocs(q);
-        return (snapshot.docs.map(convertDoc) as BlockedTime[]).sort(
-          (a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
-        );
-      } catch (error) {
-        if (isPermissionDeniedError(error)) {
-          return [];
-        }
-        throw error;
-      }
+      const res = await schedulingApi.settings.blockedTimes.list();
+      const data = (res?.data ?? []) as ScheduleBlockedTime[];
+      return data
+        .map((blocked) => ({
+          id: String(blocked.id),
+          therapist_id: blocked.therapist_id ?? undefined,
+          title: String(blocked.title ?? 'Bloqueio'),
+          reason: blocked.reason ?? undefined,
+          start_date: String(blocked.start_date),
+          end_date: String(blocked.end_date),
+          start_time: blocked.start_time ?? undefined,
+          end_time: blocked.end_time ?? undefined,
+          is_all_day: blocked.is_all_day !== false,
+          is_recurring: blocked.is_recurring === true,
+          recurring_days: Array.isArray(blocked.recurring_days)
+            ? blocked.recurring_days.map((d) => Number(d))
+            : [],
+          created_by: String(blocked.created_by ?? user?.uid ?? ''),
+        }))
+        .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime()) as BlockedTime[];
     },
     enabled: !!organizationId,
     staleTime: STALE_TIME_MS,
-    retry: (failureCount, error) => !isPermissionDeniedError(error) && failureCount < 2,
+    retry: 2,
   });
 
   const createBlockedTime = useMutation({
@@ -260,12 +237,7 @@ export function useScheduleSettings() {
       if (!organizationId) {
         throw new Error('Organização não encontrada.');
       }
-      await addDoc(collection(db, 'schedule_blocked_times'), {
-        ...blocked,
-        organization_id: organizationId,
-        created_by: user?.uid,
-        created_at: new Date().toISOString()
-      });
+      await schedulingApi.settings.blockedTimes.create(blocked);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blocked-times'] });
@@ -281,7 +253,7 @@ export function useScheduleSettings() {
       if (!organizationId) {
         throw new Error('Organização não encontrada.');
       }
-      await deleteDoc(doc(db, 'schedule_blocked_times', id));
+      await schedulingApi.settings.blockedTimes.delete(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['blocked-times'] });
@@ -293,7 +265,6 @@ export function useScheduleSettings() {
   });
 
   return {
-    // Data
     businessHours: businessHours || [],
     cancellationRules,
     notificationSettings,
@@ -301,20 +272,17 @@ export function useScheduleSettings() {
     daysOfWeek: DAYS_OF_WEEK,
     organizationId,
 
-    // Loading states
     isLoadingHours: !!organizationId && isLoadingHours,
     isLoadingRules: !!organizationId && isLoadingRules,
     isLoadingNotifications: !!organizationId && isLoadingNotifications,
     isLoadingBlocked: !!organizationId && isLoadingBlocked,
 
-    // Mutations
     upsertBusinessHours,
     upsertCancellationRules,
     upsertNotificationSettings,
     createBlockedTime,
     deleteBlockedTime,
 
-    // Pending states
     isSavingHours: upsertBusinessHours.isPending,
     isSavingRules: upsertCancellationRules.isPending,
     isSavingNotifications: upsertNotificationSettings.isPending,

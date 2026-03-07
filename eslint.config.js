@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint';
 import unusedImports from 'eslint-plugin-unused-imports';
 
 export default tseslint.config(
-  { ignores: ["dist", "**/dist/**", "**/*.mjs", "test-*.js", "manual-test.js", "create-test-users.mjs", "public/sw.js", "scripts/**", "supabase/**", "src/test/**", "src/**/__tests__/**", "**/*.test.ts", "**/*.test.tsx", "e2e/**", "vitest.setup.ts"] },
+  { ignores: ["dist", "**/dist/**", "**/*.mjs", "test-*.js", "manual-test.js", "create-test-users.mjs", "public/sw.js", "scripts/**", "supabase/**", "src/test/**", "src/**/__tests__/**", "**/*.test.ts", "**/*.test.tsx", "e2e/**", "vitest.setup.ts", "workers/.wrangler/**", "**/.wrangler/**"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],

@@ -1,62 +1,44 @@
 
 /**
- * usePushNotifications - Migrated to Firebase
+ * usePushNotifications - Migrated to Neon/Workers
  */
 
 import { useState, useEffect } from 'react';
-import { collection, doc, getDoc, getDocs, updateDoc, query as firestoreQuery, where, addDoc, db } from '@/integrations/firebase/app';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useAuth } from '@/contexts/AuthContext';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { pushSubscriptionsApi } from '@/lib/api/workers-client';
 
-export interface PushSubscription {
-  id: string;
-  user_id: string;
-  organization_id?: string;
-  endpoint: string;
-  p256dh: string;
-  auth: string;
-  device_info?: {
-    userAgent: string;
-    platform: string;
+type PushSubscriptionJSON = {
+  endpoint?: string;
+  keys?: {
+    p256dh?: string;
+    auth?: string;
   };
-  active: boolean;
-  created_at: string;
-}
+};
 
 export const usePushNotifications = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   const [permission, setPermission] = useState<NotificationPermission>('default');
   const [isSupported, setIsSupported] = useState(false);
 
   useEffect(() => {
-    // Check if push notifications are supported
     setIsSupported('Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window);
-
     if ('Notification' in window) {
       setPermission(Notification.permission);
     }
   }, []);
 
-  // Fetch user's push subscriptions
   const { data: subscriptions } = useQuery({
-    queryKey: ['push-subscriptions'],
+    queryKey: ['push-subscriptions', user?.uid],
     queryFn: async () => {
       if (!user) return [];
-
-      const q = firestoreQuery(
-        collection(db, 'push_subscriptions'),
-        where('user_id', '==', user.uid),
-        where('active', '==', true)
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
+      const res = await pushSubscriptionsApi.list({ userId: user.uid, activeOnly: true });
+      return res?.data ?? [];
     },
-    enabled: !!user
+    enabled: !!user?.uid,
   });
 
   // Request notification permission
@@ -92,107 +74,71 @@ export const usePushNotifications = () => {
         if (!granted) throw new Error('Permission not granted');
       }
 
-      // Get service worker registration
-      const registration = await navigator.serviceWorker.ready;
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
 
-      // Check for existing subscription
+      const registration = await navigator.serviceWorker.ready;
       let subscription = await registration.pushManager.getSubscription();
 
       if (!subscription) {
-        // Create new subscription
-        // Note: In production, you'd use a VAPID public key from your server
         const vapidPublicKey = 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U';
-
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: vapidPublicKey
+          applicationServerKey: vapidPublicKey,
         });
       }
 
-      const subscriptionJson = subscription.toJSON();
+      const subscriptionJson = subscription?.toJSON() as PushSubscriptionJSON;
+      const endpoint = subscriptionJson?.endpoint;
 
-      // Save subscription to database
-      if (!user) throw new Error('User not authenticated');
+      if (!endpoint) {
+        throw new Error('Push endpoint not available');
+      }
 
-      const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
-      const profileData = profileDoc.exists() ? profileDoc.data() : null;
-      const endpoint = subscriptionJson.endpoint!;
-
-      // Use endpoint as ID or composite ID to prevent duplicates if possible, 
-      // but here we just query to check existence or use a generated ID with where clause.
-      // Better strategy: Use a hash of endpoint as ID, or just query first.
-
-      // We will check if it exists:
-      const q = firestoreQuery(collection(db, 'push_subscriptions'), where('user_id', '==', user.uid), where('endpoint', '==', endpoint));
-      const existingSnap = await getDocs(q);
-
-      const subscriptionData = {
-        user_id: user.uid,
-        organization_id: profileData?.organization_id,
-        endpoint: endpoint,
-        p256dh: subscriptionJson.keys?.p256dh || '',
-        auth: subscriptionJson.keys?.auth || '',
-        device_info: {
+      await pushSubscriptionsApi.upsert({
+        endpoint,
+        userId: user.uid,
+        organizationId: profile?.organization_id,
+        p256dh: subscriptionJson.keys?.p256dh,
+        auth: subscriptionJson.keys?.auth,
+        deviceInfo: {
           userAgent: navigator.userAgent,
           platform: navigator.platform,
         },
         active: true,
-        updated_at: new Date().toISOString()
-      };
-
-      if (!existingSnap.empty) {
-        // Update existing
-        const docRef = existingSnap.docs[0].ref;
-        await updateDoc(docRef, subscriptionData);
-      } else {
-        // Create new
-        await addDoc(collection(db, 'push_subscriptions'), {
-          ...subscriptionData,
-          created_at: new Date().toISOString()
-        });
-      }
+      });
 
       return subscription;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['push-subscriptions'] });
+      queryClient.invalidateQueries({ queryKey: ['push-subscriptions', user?.uid] });
       toast.success('Notificações push ativadas!');
     },
     onError: (error) => {
       logger.error('Erro ao inscrever em notificações push', error, 'usePushNotifications');
       toast.error('Erro ao ativar notificações');
-    }
+    },
   });
 
   // Unsubscribe from push notifications
   const unsubscribe = useMutation({
     mutationFn: async () => {
+      if (!user) return;
+
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
 
-      if (subscription) {
-        await subscription.unsubscribe();
+      if (!subscription) return;
 
-        // Deactivate in database
-        if (user) {
-          const q = firestoreQuery(
-            collection(db, 'push_subscriptions'),
-            where('user_id', '==', user.uid),
-            where('endpoint', '==', subscription.endpoint)
-          );
-          const existingSnap = await getDocs(q);
-
-          if (!existingSnap.empty) {
-            const docRef = existingSnap.docs[0].ref;
-            await updateDoc(docRef, { active: false });
-          }
-        }
-      }
+      const endpoint = subscription.endpoint;
+      await subscription.unsubscribe();
+      await pushSubscriptionsApi.deactivate(endpoint, user.uid);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['push-subscriptions'] });
+      queryClient.invalidateQueries({ queryKey: ['push-subscriptions', user?.uid] });
       toast.success('Notificações desativadas');
-    }
+    },
   });
 
   // Send a test notification

@@ -804,7 +804,7 @@ export const PatientProfilePage = () => {
                         </div>
 
                         <div className="flex flex-wrap gap-2 w-full md:w-auto">
-                            <Button onClick={() => navigate(`/patients/${id}/evolution/report`)} variant="outline" className="flex-1 md:flex-none gap-2 border-primary/20 hover:bg-primary/5 hover:text-primary transition-colors">
+                            <Button onClick={() => navigate(`/patient-evolution-report/${id}`)} variant="outline" className="flex-1 md:flex-none gap-2 border-primary/20 hover:bg-primary/5 hover:text-primary transition-colors">
                                 <FileText className="h-4 w-4" />
                                 Relatório
                             </Button>

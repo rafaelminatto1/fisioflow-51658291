@@ -12,9 +12,7 @@
 
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { getDatabase, ref, onValue, off } from 'firebase/database';
-import { app } from '@/integrations/firebase/app';
-import { patientsApi } from '@/integrations/firebase/functions';
+import { patientsApi } from '@/lib/api/workers-client';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -33,6 +31,16 @@ import {
 } from '@/lib/utils/query-helpers';
 import { getUserOrganizationId } from '@/utils/userHelpers';
 import type { Patient } from '@/types';
+
+const fetchPatientStats = async (patientId: string) => {
+  try {
+    const res = await patientsApi.stats(patientId);
+    return res?.data ?? null;
+  } catch (error) {
+    logger.debug('useActivePatients: failed to fetch patient stats', { patientId }, 'usePatients');
+    return null;
+  }
+};
 
 // ==============================================================================
 // MAPPING FUNCTIONS
@@ -93,39 +101,6 @@ export const useActivePatients = (options: UseActivePatientsOptions = {}) => {
   }, [isHookEnabled, user, resolvedOrganizationId]);
 
   const organizationId = resolvedOrganizationId;
-
-  // Setup realtime subscription via Firebase Realtime Database
-  useEffect(() => {
-    if (!isHookEnabled || !organizationId) {
-      logger.debug('useActivePatients: Missing organizationId', undefined, 'usePatients');
-      return;
-    }
-
-    logger.debug('useActivePatients: subscribing via RTDB', { organizationId }, 'usePatients');
-
-    let db;
-    try {
-      db = getDatabase(app);
-    } catch (error) {
-      // Realtime Database não configurado ou indisponível
-      logger.debug('RTDB not available, patients sync disabled', error, 'usePatients');
-      return;
-    }
-
-    const triggerRef = ref(db, `orgs/${organizationId}/patients/refresh_trigger`);
-
-    const unsubscribe = onValue(triggerRef, (snapshot) => {
-      if (snapshot.exists()) {
-        logger.debug('Realtime (RTDB): Pacientes atualizados', { organizationId }, 'usePatients');
-        queryClient.invalidateQueries({ queryKey: ['patients', organizationId] });
-      }
-    });
-
-    return () => {
-      logger.debug('Realtime (RTDB): Unsubscribing from patients trigger', { organizationId }, 'usePatients');
-      off(triggerRef, 'value', unsubscribe);
-    };
-  }, [organizationId, queryClient, isHookEnabled]);
 
   const result = useQuery({
     queryKey: ['patients', organizationId],
@@ -193,38 +168,33 @@ export const useActivePatients = (options: UseActivePatientsOptions = {}) => {
     retry: PATIENT_QUERY_CONFIG.maxRetries,
   });
 
-  // Optimized prefetch of related data - removed stagger for better performance
   useEffect(() => {
-    if (result.data && result.data.length > 0) {
-      // Use requestIdleCallback for non-blocking prefetch when available
-      const prefetchIfNeeded = () => {
-        // Prefetch stats for first 10 patients in parallel (no stagger)
-        const patientsToPrefetch = result.data.slice(0, 10);
+    if (!result.data || result.data.length === 0) return undefined;
 
-        patientsToPrefetch.forEach((patient) => {
-          // Fire and forget prefetch - don't await
-          queryClient.prefetchQuery({
+    const prefetchIfNeeded = () => {
+      const patientsToPrefetch = result.data.slice(0, 10);
+
+      patientsToPrefetch.forEach((patient) => {
+        queryClient
+          .prefetchQuery({
             queryKey: ['patient-stats', patient.id],
-            queryFn: async () => {
-              return patientsApi.getStats(patient.id);
-            },
+            queryFn: () => fetchPatientStats(patient.id),
             staleTime: PATIENT_QUERY_CONFIG.staleTime,
-          }).catch(() => {
+          })
+          .catch(() => {
             // Silently fail prefetch - not critical
           });
-        });
-      };
+      });
+    };
 
-      // Use requestIdleCallback if available for better scheduling
-      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-        const id = window.requestIdleCallback(() => prefetchIfNeeded());
-        return () => window.cancelIdleCallback(id);
-      } else {
-        const timer = setTimeout(() => prefetchIfNeeded(), 100);
-        return () => clearTimeout(timer);
-      }
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(() => prefetchIfNeeded());
+      return () => window.cancelIdleCallback(id);
     }
-  }, [result.data, queryClient]);
+
+    const timer = setTimeout(() => prefetchIfNeeded(), 100);
+    return () => clearTimeout(timer);
+  }, [queryClient, result.data]);
 
   return result;
 };

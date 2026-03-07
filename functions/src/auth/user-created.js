@@ -60,7 +60,7 @@ exports.onUserCreated = functionsV1.auth.user().onCreate(function (user) { retur
                 db = (0, init_1.getAdminDb)();
                 pool = (0, init_1.getPool)();
                 DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000000';
-                ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@fisioflow.com.br';
+                ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@moocafisio.com.br';
                 _a.label = 1;
             case 1:
                 _a.trys.push([1, 16, , 17]);

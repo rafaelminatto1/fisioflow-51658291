@@ -24,7 +24,7 @@ export const onUserCreated = functionsV1.auth.user().onCreate(async (user) => {
     const pool = getPool();
     const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000000';
     // Email do administrador - movido para .env por segurança
-    const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@fisioflow.com.br';
+    const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@moocafisio.com.br';
 
     try {
         // Dados sensíveis removidos: UID completo e email mascarado (LGPD)
