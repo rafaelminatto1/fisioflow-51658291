@@ -156,7 +156,7 @@ export const OnlineUsersIndicator: React.FC = () => {
         {/* Footer */}
         <div className="px-4 py-2 border-t bg-muted/30 text-center">
           <p className="text-xs text-muted-foreground">
-            Atualizado em tempo real via Supabase Realtime
+            Baseado em atividade recente dos usuários
           </p>
         </div>
       </PopoverContent>
