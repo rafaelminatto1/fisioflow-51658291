@@ -126,63 +126,76 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
 
   // For desktop - show all controls
   const DesktopToolbar = () => (
-    <div className="flex items-center justify-between px-6 py-3 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 sticky top-0 z-40">
+    <div className="flex items-center justify-between px-8 py-4 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl sticky top-0 z-40">
       {/* Left Group: Brand + Date Navigation */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-6">
         {/* Logo */}
-        <Link to="/agenda" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-          <div className="w-8 h-8 bg-gradient-to-br from-primary to-blue-600 rounded-lg flex items-center justify-center shadow-md">
-            <Stethoscope className="w-4 h-4 text-white" />
+        <Link to="/agenda" className="flex items-center gap-3 hover:opacity-80 transition-all group">
+          <div className="w-10 h-10 bg-slate-900 dark:bg-white rounded-xl flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+            <Stethoscope className="w-5 h-5 text-white dark:text-slate-900" />
           </div>
-          <span className="text-sm font-semibold text-gray-900 dark:text-white hidden xl:block">
-            FisioFlow
-          </span>
+          <div className="flex flex-col leading-none">
+            <span className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter">
+                FisioFlow
+            </span>
+            <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                Professional
+            </span>
+          </div>
         </Link>
 
+        <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 mx-2" />
+
         {/* Date Navigation */}
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => window.dispatchEvent(new CustomEvent('schedule-navigate', { detail: { direction: 'prev' } }))}
-            className="h-8 w-8 p-0 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-            aria-label="Data anterior"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          <div className="px-3 min-w-[140px] text-center" />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => window.dispatchEvent(new CustomEvent('schedule-navigate', { detail: { direction: 'next' } }))}
-            className="h-8 w-8 p-0 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-            aria-label="Próxima data"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
+        <div className="flex items-center gap-2">
+          <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl shadow-inner-border">
+            <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.dispatchEvent(new CustomEvent('schedule-navigate', { detail: { direction: 'prev' } }))}
+                className="h-8 w-8 p-0 rounded-lg hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm transition-all"
+                aria-label="Data anterior"
+            >
+                <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => window.dispatchEvent(new CustomEvent('schedule-navigate', { detail: { direction: 'next' } }))}
+                className="h-8 w-8 p-0 rounded-lg hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm transition-all"
+                aria-label="Próxima data"
+            >
+                <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+          
           <Button
             variant="outline"
             size="sm"
             onClick={() => window.dispatchEvent(new CustomEvent('schedule-today-click'))}
-            className="h-8 px-3 rounded-lg ml-1"
+            className="h-10 px-4 rounded-xl font-bold text-xs uppercase tracking-widest border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900"
           >
             Hoje
           </Button>
+
+          <h2 className="ml-4 text-lg font-black text-slate-900 dark:text-white capitalize tracking-tight">
+            {formattedDateRange}
+          </h2>
         </div>
       </div>
 
-      {/* Center Group: View Switcher */}
-      <div className="flex items-center">
-        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg" role="group" aria-label="Tipo de visualização">
+      {/* Center Group: View Switcher (Premium) */}
+      <div className="absolute left-1/2 -translate-x-1/2 hidden 2xl:block">
+        <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200/50 dark:border-slate-800/50" role="group">
           {(['day', 'week', 'month'] as const).map((view) => (
             <button
               key={view}
               onClick={() => onViewChange(view)}
               className={cn(
-                "px-4 py-1.5 text-sm font-medium rounded-md transition-all",
+                "px-6 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
                 viewType === view
-                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-gray-700/50"
+                  ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-premium-sm ring-1 ring-slate-200/50 dark:ring-white/10"
+                  : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
               )}
               aria-pressed={viewType === view}
             >
@@ -193,79 +206,47 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
       </div>
 
       {/* Right Group: Actions */}
-      <div className="flex items-center gap-2">
-        {/* Cancel All Button */}
-        {onCancelAllToday && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onCancelAllToday}
-            className="h-9 px-3 rounded-lg border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/50"
-            title="Cancelar todos os agendamentos da data exibida"
-          >
-            <Trash2 className="w-4 h-4" />
-            <span className="hidden lg:inline ml-2">Cancelar todos</span>
-          </Button>
-        )}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 mr-2">
+            <AdvancedFilters
+                filters={filters}
+                onChange={onFiltersChange}
+                onClear={onClearFilters}
+            />
+            
+            <Link to="/agenda/settings">
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900"
+                    title="Configurações"
+                >
+                    <SettingsIcon className="w-4 h-4" />
+                </Button>
+            </Link>
+        </div>
 
-        {/* Settings */}
-        <Link to="/agenda/settings">
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-9 w-9 rounded-lg"
-            title="Configurações da Agenda"
-            aria-label="Configurações da Agenda"
-          >
-            <SettingsIcon className="w-4 h-4" />
-          </Button>
-        </Link>
-
-        {/* Filters */}
-        <AdvancedFilters
-          filters={filters}
-          onChange={onFiltersChange}
-          onClear={onClearFilters}
-        />
-
-        {/* AI Optimization */}
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-9 px-3 rounded-lg border-cyan-300 dark:border-cyan-700 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/40 hidden xl:flex"
-          onClick={() => toast({
-            title: "IA Analisando...",
-            description: "Verificando disponibilidade e padrões de agendamento."
-          })}
-          aria-label="Otimizar agenda com IA"
-        >
-          <Sparkles className="mr-2 h-4 w-4" />
-          <span className="hidden 2xl:inline">Otimizar</span>
-        </Button>
-
-        {/* Selection Mode Toggle */}
+        {/* Selection Mode */}
         <Button
           variant={isSelectionMode ? "default" : "outline"}
           size="icon"
           className={cn(
-            "h-9 w-9 rounded-lg",
-            isSelectionMode && "bg-primary"
+            "h-10 w-10 rounded-xl transition-all",
+            isSelectionMode ? "bg-blue-600 shadow-lg shadow-blue-500/40 border-blue-500" : "border-slate-200 dark:border-slate-800"
           )}
           onClick={onToggleSelection}
-          title="Modo de Seleção (atalho: A)"
-          aria-label="Alternar modo de seleção"
+          title="Modo Seleção"
         >
           <CheckSquare className="w-4 h-4" />
         </Button>
 
-        {/* New Appointment - Primary CTA */}
+        {/* New Appointment - High End CTA */}
         <Button
           onClick={onCreateAppointment}
-          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white gap-2 shadow-md rounded-lg px-4"
-          aria-label="Criar novo agendamento"
+          className="h-11 px-6 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-black text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-slate-900/20 gap-2"
         >
           <Plus className="w-4 h-4" />
-          <span className="hidden lg:inline">Novo Agendamento</span>
+          Agendar
         </Button>
       </div>
     </div>
