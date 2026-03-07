@@ -500,7 +500,7 @@ exports.createPatientHttp = (0, https_1.onRequest)({
                 _d.label = 5;
             case 5: 
             // Garantir organização existe
-            return [4 /*yield*/, pool.query("INSERT INTO organizations (id, name, email)\n         VALUES ($1, 'Cl\u00EDnica Principal', 'admin@fisioflow.com.br')\n         ON CONFLICT (id) DO NOTHING", [organizationId])];
+            return [4 /*yield*/, pool.query("INSERT INTO organizations (id, name, email)\n         VALUES ($1, 'Cl\u00EDnica Principal', 'admin@moocafisio.com.br')\n         ON CONFLICT (id) DO NOTHING", [organizationId])];
             case 6:
                 // Garantir organização existe
                 _d.sent();
@@ -1049,7 +1049,7 @@ var createPatientHandler = function (request) { return __awaiter(void 0, void 0,
             case 8:
                 // [AUTO-FIX] Ensure organization exists to satisfy FK constraint
                 logger_1.logger.debug('[createPatient] Target Org ID:', auth.organizationId);
-                orgInsertSql = "INSERT INTO organizations (id, name, email)\n       VALUES ($1, 'Cl\u00EDnica Principal', 'admin@fisioflow.com.br')\n       ON CONFLICT (id) DO NOTHING";
+                orgInsertSql = "INSERT INTO organizations (id, name, email)\n       VALUES ($1, 'Cl\u00EDnica Principal', 'admin@moocafisio.com.br')\n       ON CONFLICT (id) DO NOTHING";
                 logger_1.logger.debug('[createPatient] Org Insert SQL:', orgInsertSql);
                 return [4 /*yield*/, pool.query(orgInsertSql, [auth.organizationId])];
             case 9:

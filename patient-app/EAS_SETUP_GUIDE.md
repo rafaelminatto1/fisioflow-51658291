@@ -188,12 +188,12 @@ fisioterapia, exercícios, reabilitação, saúde, fisioterapeuta, tratamento, d
 
 ### URL de Suporte:
 ```
-https://fisioflow.com.br/suporte
+https://moocafisio.com.br/suporte
 ```
 
 ### URL de Política de Privacidade:
 ```
-https://fisioflow.com.br/privacidade
+https://moocafisio.com.br/privacidade
 ```
 
 ## Checklist de Preparação

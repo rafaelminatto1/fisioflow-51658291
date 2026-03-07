@@ -14,6 +14,8 @@ export interface Env {
   NEON_AUTH_JWKS_URL?: string;
   NEON_AUTH_ISSUER?: string;
   NEON_AUTH_AUDIENCE?: string;
+  ML_SALT?: string;
+  VITE_ML_SALT?: string;
 
   // Cloudflare R2 Config
   MEDIA_BUCKET: R2Bucket;

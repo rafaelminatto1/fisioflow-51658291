@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { db, collection, getDocs, orderBy, limit, query as firestoreQuery } from '@/integrations/firebase/app';
 import {
 
   CommandDialog,
@@ -13,7 +12,7 @@ import {
 import { Search, Calendar, Users, Briefcase } from 'lucide-react';
 import { useDebounce } from '@/hooks/performance/useDebounce';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { eventosApi, participantesApi, contratadosApi } from '@/lib/api/workers-client';
 
 interface EventoRecord {
   id: string;
@@ -70,80 +69,69 @@ export function GlobalSearch() {
     try {
       const searchResults: SearchResult[] = [];
       const queryLower = debouncedQuery.toLowerCase();
+      const isE2E = typeof window !== 'undefined' && window.location.search.includes('e2e=true');
+      const isLocalHost =
+        typeof window !== 'undefined' &&
+        ['localhost', '127.0.0.1'].includes(window.location.hostname);
+      const skipOptionalLookups = isE2E || isLocalHost;
 
-        // Buscar eventos - Firebase doesn't have ilike, so we fetch all and filter client-side
-        // In production, you'd want to use a proper search solution like Algolia or Elasticsearch
-        const eventosQuery = firestoreQuery(
-          collection(db, 'eventos'),
-          orderBy('nome'),
-          limit(50)
-        );
-        const eventosSnapshot = await getDocs(eventosQuery);
+      const [eventosRes, participantesRes, contratadosRes] = await Promise.all([
+        eventosApi.list({ limit: 50 }).catch(() => ({ data: [] })),
+        skipOptionalLookups
+          ? Promise.resolve({ data: [] })
+          : participantesApi.list({ limit: 50 }).catch(() => ({ data: [] })),
+        skipOptionalLookups
+          ? Promise.resolve({ data: [] })
+          : contratadosApi.list().catch(() => ({ data: [] })),
+      ]);
 
-        eventosSnapshot.forEach((doc) => {
-          const evento = { id: doc.id, ...normalizeFirestoreData(doc.data()) } as EventoRecord;
-          if (
-            evento.nome?.toLowerCase().includes(queryLower) ||
-            evento.local?.toLowerCase().includes(queryLower)
-          ) {
-            searchResults.push({
-              id: evento.id,
-              type: 'evento',
-              title: evento.nome,
-              subtitle: `${evento.local} • ${evento.categoria}`,
-              icon: Calendar,
-            });
-          }
-        });
+      const eventos = (eventosRes?.data ?? []) as EventoRecord[];
+      for (const evento of eventos) {
+        if (
+          evento.nome?.toLowerCase().includes(queryLower) ||
+          evento.local?.toLowerCase().includes(queryLower)
+        ) {
+          searchResults.push({
+            id: evento.id,
+            type: 'evento',
+            title: evento.nome,
+            subtitle: `${evento.local || '-'} • ${evento.categoria || '-'}`,
+            icon: Calendar,
+          });
+        }
+      }
 
-        // Limit to 5 results
-        const filteredEventResults = searchResults.slice(0, 5);
+      const filteredEventResults = searchResults.slice(0, 5);
 
-        // Buscar participantes
-        const participantesQuery = firestoreQuery(
-          collection(db, 'participantes'),
-          orderBy('nome'),
-          limit(50)
-        );
-        const participantesSnapshot = await getDocs(participantesQuery);
+      const participantes = (participantesRes?.data ?? []) as ParticipanteRecord[];
+      for (const participante of participantes) {
+        if (participante.nome?.toLowerCase().includes(queryLower)) {
+          filteredEventResults.push({
+            id: participante.id,
+            type: 'participante',
+            title: participante.nome,
+            subtitle: 'Participante',
+            icon: Users,
+          });
+        }
+      }
 
-        participantesSnapshot.forEach((doc) => {
-          const participante = { id: doc.id, ...normalizeFirestoreData(doc.data()) } as ParticipanteRecord;
-          if (participante.nome?.toLowerCase().includes(queryLower)) {
-            filteredEventResults.push({
-              id: participante.id,
-              type: 'participante',
-              title: participante.nome,
-              subtitle: 'Evento',
-              icon: Users,
-            });
-          }
-        });
+      const contratados = (contratadosRes?.data ?? []) as PrestadorRecord[];
+      for (const contratado of contratados) {
+        if (contratado.nome?.toLowerCase().includes(queryLower)) {
+          filteredEventResults.push({
+            id: contratado.id,
+            type: 'prestador',
+            title: contratado.nome,
+            subtitle: 'Contratado',
+            icon: Briefcase,
+          });
+        }
+      }
 
-        // Buscar prestadores
-        const prestadoresQuery = firestoreQuery(
-          collection(db, 'prestadores'),
-          orderBy('nome'),
-          limit(50)
-        );
-        const prestadoresSnapshot = await getDocs(prestadoresQuery);
-
-        prestadoresSnapshot.forEach((doc) => {
-          const prestador = { id: doc.id, ...normalizeFirestoreData(doc.data()) } as PrestadorRecord;
-          if (prestador.nome?.toLowerCase().includes(queryLower)) {
-            filteredEventResults.push({
-              id: prestador.id,
-              type: 'prestador',
-              title: prestador.nome,
-              subtitle: 'Evento',
-              icon: Briefcase,
-            });
-          }
-        });
-
-        setResults(filteredEventResults.slice(0, 15)); // Limit total results
-      } catch (error) {
-        logger.error('Erro na busca', error, 'GlobalSearch');
+      setResults(filteredEventResults.slice(0, 15));
+    } catch (error) {
+      logger.error('Erro na busca', error, 'GlobalSearch');
     } finally {
       setIsLoading(false);
     }

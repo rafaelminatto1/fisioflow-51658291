@@ -107,10 +107,10 @@ export default function PatientFormScreen() {
       newErrors.name = 'Nome é obrigatório';
     }
 
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Telefone é obrigatório';
-    } else if (formData.phone.replace(/\D/g, '').length < 10) {
-      newErrors.phone = 'Telefone inválido';
+    if (formData.phone && formData.phone.trim()) {
+      if (formData.phone.replace(/\D/g, '').length < 10) {
+        newErrors.phone = 'Telefone inválido';
+      }
     }
 
     if (formData.birthDate && formData.birthDate.length > 0) {
@@ -224,7 +224,7 @@ export default function PatientFormScreen() {
             />
 
             <Input
-              label="Telefone *"
+              label="Telefone"
               value={formData.phone}
               onChangeText={(value) => updateField('phone', maskPhone(value))}
               placeholder="(00) 00000-0000"

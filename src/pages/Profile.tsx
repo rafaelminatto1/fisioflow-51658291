@@ -207,7 +207,7 @@ export const Profile = () => {
                     <div className="space-y-2">
                       <Label htmlFor="slug">Link Público</Label>
                       <div className="flex gap-2 items-center">
-                        <span className="text-sm text-muted-foreground whitespace-nowrap">fisioflow.com.br/agendar/</span>
+                        <span className="text-sm text-muted-foreground whitespace-nowrap">moocafisio.com.br/agendar/</span>
                         <Input
                           id="slug"
                           value={profileData.slug}

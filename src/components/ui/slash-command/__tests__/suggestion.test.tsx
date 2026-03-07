@@ -59,24 +59,18 @@ describe('Suggestion Logic', () => {
 
     it('should execute all default slash commands without throwing', () => {
         const items = getSuggestionItems({ query: '' });
+        const chainProxy = new Proxy(
+            {},
+            {
+                get: (_target, prop) => {
+                    if (prop === 'run') return () => {};
+                    return () => chainProxy;
+                },
+            },
+        );
+
         const mockEditor = {
-            chain: () => ({
-                focus: () => ({
-                    deleteRange: () => ({
-                        setNode: () => ({ run: () => {} }),
-                        toggleBulletList: () => ({ run: () => {} }),
-                        toggleOrderedList: () => ({ run: () => {} }),
-                        toggleTaskList: () => ({ run: () => {} }),
-                        toggleBlockquote: () => ({ run: () => {} }),
-                        insertTable: () => ({ run: () => {} }),
-                        setHorizontalRule: () => ({ run: () => {} }),
-                        toggleCodeBlock: () => ({ run: () => {} }),
-                        insertContent: () => ({ run: () => {} }),
-                        run: () => {}
-                    }),
-                    run: () => {}
-                })
-            })
+            chain: () => chainProxy,
         };
 
         items.forEach(item => {

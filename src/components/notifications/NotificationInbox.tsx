@@ -13,21 +13,12 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { pt } from 'date-fns/locale';
-import { doc, updateDoc, deleteDoc, getDocs, collection, query, where, orderBy } from '@/integrations/firebase/app';
-import { db } from '@/integrations/firebase/app';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { notificationsApi, type Notification as NotificationRecord } from '@/lib/api/workers-client';
 
-interface Notification {
-  id: string;
-  type: string;
-  title: string;
-  body: string;
-  data?: Record<string, unknown>;
-  read: boolean;
-  created_at: string;
+interface Notification extends NotificationRecord {
   read_at?: string;
 }
 
@@ -50,21 +41,14 @@ export function NotificationInbox() {
 
     setIsLoading(true);
     try {
-      const q = query(
-        collection(db, 'notifications'),
-        where('user_id', '==', user.uid),
-        orderBy('created_at', 'desc'),
-        where('created_at', '>', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-      );
-
-      const snapshot = await getDocs(q);
-      const notificationList = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...normalizeFirestoreData(doc.data()),
+      const response = await notificationsApi.list({ limit: 60 });
+      const notificationList = (response?.data ?? []).map((notification) => ({
+        ...notification,
+        created_at: notification.created_at ? String(notification.created_at) : new Date().toISOString(),
       })) as Notification[];
 
       setNotifications(notificationList);
-      setUnreadCount(notificationList.filter((n) => !n.read).length);
+      setUnreadCount(notificationList.filter((n) => !n.is_read).length);
     } catch (error) {
       logger.error('Error loading notifications', error, 'NotificationInbox');
     } finally {
@@ -74,18 +58,15 @@ export function NotificationInbox() {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      const notifRef = doc(db, 'notifications', notificationId);
-      await updateDoc(notifRef, {
-        read: true,
-        read_at: new Date().toISOString(),
+      await notificationsApi.markRead(notificationId);
+      const now = new Date().toISOString();
+      setNotifications((prev) => {
+        const updated = prev.map((n) =>
+          n.id === notificationId ? { ...n, is_read: true, read_at: now } : n
+        );
+        setUnreadCount(updated.filter((n) => !n.is_read).length);
+        return updated;
       });
-
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notificationId ? { ...n, read: true, read_at: new Date().toISOString() } : n
-        )
-      );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
       logger.error('Error marking notification as read', error, 'NotificationInbox');
     }
@@ -93,8 +74,13 @@ export function NotificationInbox() {
 
   const markAllAsRead = async () => {
     try {
-      const unread = notifications.filter((n) => !n.read);
-      await Promise.all(unread.map((n) => markAsRead(n.id)));
+      await notificationsApi.markAllRead();
+      const now = new Date().toISOString();
+      setNotifications((prev) => {
+        const updated = prev.map((n) => ({ ...n, is_read: true, read_at: now }));
+        setUnreadCount(0);
+        return updated;
+      });
       toast.success('Todas as notificações marcadas como lidas');
     } catch (error) {
       logger.error('Error marking all as read', error, 'NotificationInbox');
@@ -103,11 +89,11 @@ export function NotificationInbox() {
 
   const deleteNotification = async (notificationId: string) => {
     try {
-      await deleteDoc(doc(db, 'notifications', notificationId));
-      setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
-      setUnreadCount((prev) => {
-        const notif = notifications.find((n) => n.id === notificationId);
-        return !notif?.read ? Math.max(0, prev - 1) : prev;
+      await notificationsApi.delete(notificationId);
+      setNotifications((prev) => {
+        const updated = prev.filter((n) => n.id !== notificationId);
+        setUnreadCount(updated.filter((n) => !n.is_read).length);
+        return updated;
       });
     } catch (error) {
       logger.error('Error deleting notification', error, 'NotificationInbox');
@@ -181,9 +167,9 @@ export function NotificationInbox() {
                 <div
                   key={notification.id}
                   className={`flex gap-3 p-4 hover:bg-muted/50 transition-colors ${
-                    !notification.read ? 'bg-muted/30' : ''
+                    !notification.is_read ? 'bg-muted/30' : ''
                   }`}
-                  onClick={() => !notification.read && markAsRead(notification.id)}
+                  onClick={() => !notification.is_read && markAsRead(notification.id)}
                 >
                   <div className="text-2xl flex-shrink-0">
                     {getNotificationIcon(notification.type)}
@@ -193,7 +179,7 @@ export function NotificationInbox() {
                       {notification.title}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
-                      {notification.body}
+                      {notification.message ?? ''}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {formatDistanceToNow(new Date(notification.created_at), {
@@ -209,7 +195,7 @@ export function NotificationInbox() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      {!notification.read && (
+                      {!notification.is_read && (
                         <DropdownMenuItem onClick={(e) => {
                           e.stopPropagation();
                           markAsRead(notification.id);

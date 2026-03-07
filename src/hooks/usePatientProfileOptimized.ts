@@ -13,8 +13,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useCallback, useEffect, useRef } from 'react';
 import { startTransition } from 'react';
-import { collection, query as firestoreQuery, where, getDocs, orderBy, limit, doc, getDoc, db } from '@/integrations/firebase/app';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { PatientService } from '@/services/patientService';
+import { appointmentsApi, documentsApi } from '@/lib/api/workers-client';
 
 // Tipos
 export type ProfileTab = 'overview' | 'evolucao' | 'exames' | 'financeiro' | 'gamification' | 'documentos' | 'analytics';
@@ -78,14 +78,11 @@ function usePatientInfo(patientId: string) {
   return useQuery({
     queryKey: patientProfileKeys.patient(patientId),
     queryFn: async () => {
-      const docRef = doc(db, 'patients', patientId);
-      const snapshot = await getDoc(docRef);
-
-      if (!snapshot.exists()) {
+      const { data, error } = await PatientService.getPatientById(patientId);
+      if (error || !data) {
         throw new Error('Paciente não encontrado');
       }
-
-      return { id: snapshot.id, ...normalizeFirestoreData(snapshot.data()) };
+      return data;
     },
     enabled: !!patientId,
     staleTime: PATIENT_PROFILE_CACHE_CONFIG.PATIENT.staleTime,
@@ -101,18 +98,21 @@ function useUpcomingAppointments(patientId: string, enabled: boolean) {
     queryKey: patientProfileKeys.appointments(patientId),
     queryFn: async () => {
       const today = new Date().toISOString().split('T')[0];
-      const q = firestoreQuery(
-        collection(db, 'appointments'),
-        where('patient_id', '==', patientId),
-        where('status', 'in', ['agendado', 'confirmado']),
-        where('appointment_date', '>=', today),
-        orderBy('appointment_date', 'asc'),
-        orderBy('appointment_time', 'asc'),
-        limit(5)
-      );
+      const res = await appointmentsApi.list({
+        patientId,
+        dateFrom: today,
+        limit: 50,
+        offset: 0,
+      });
 
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
+      return (res?.data ?? [])
+        .filter((a) => ['scheduled', 'confirmed', 'agendado', 'confirmado'].includes(String(a.status ?? '').toLowerCase()))
+        .sort((a, b) => {
+          const da = `${a.date ?? ''}T${a.start_time ?? '00:00:00'}`;
+          const db = `${b.date ?? ''}T${b.start_time ?? '00:00:00'}`;
+          return new Date(da).getTime() - new Date(db).getTime();
+        })
+        .slice(0, 5);
     },
     enabled: enabled && !!patientId,
     staleTime: PATIENT_PROFILE_CACHE_CONFIG.EVOLUTION.staleTime,
@@ -127,14 +127,8 @@ function usePatientDocuments(patientId: string, enabled: boolean) {
   return useQuery({
     queryKey: patientProfileKeys.documents(patientId),
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'patient_documents'),
-        where('patient_id', '==', patientId),
-        orderBy('uploaded_at', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
+      const res = await documentsApi.list(patientId);
+      return res?.data ?? [];
     },
     enabled: enabled && !!patientId,
     staleTime: PATIENT_PROFILE_CACHE_CONFIG.DOCUMENTS.staleTime,
@@ -149,24 +143,12 @@ function usePatientGamification(patientId: string, enabled: boolean) {
   return useQuery({
     queryKey: patientProfileKeys.gamification(patientId),
     queryFn: async () => {
-      // Buscar dados de gamificação do paciente
-      const q = firestoreQuery(
-        collection(db, 'gamification_data'),
-        where('patient_id', '==', patientId),
-        limit(1)
-      );
-
-      const snapshot = await getDocs(q);
-      if (snapshot.empty) {
-        return {
-          points: 0,
-          level: 1,
-          streak: 0,
-          achievements: [],
-        };
-      }
-
-      return normalizeFirestoreData(snapshot.docs[0].data());
+      return {
+        points: 0,
+        level: 1,
+        streak: 0,
+        achievements: [],
+      };
     },
     enabled: enabled && !!patientId,
     staleTime: PATIENT_PROFILE_CACHE_CONFIG.GAMIFICATION.staleTime,

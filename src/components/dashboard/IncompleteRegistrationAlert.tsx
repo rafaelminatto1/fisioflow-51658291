@@ -3,12 +3,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, X, ChevronDown, ChevronUp, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { db, collection, query, where, limit, onSnapshot } from '@/integrations/firebase/app';
+import { patientsApi } from '@/lib/api/workers-client';
 import { cn } from '@/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { PatientHelpers } from '@/types';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface Patient {
   id: string;
@@ -22,28 +21,52 @@ export const IncompleteRegistrationAlert: React.FC = () => {
   const navigate = useNavigate();
 
   React.useEffect(() => {
+    let isMounted = true;
 
-    const q = query(
-      collection(db, 'patients'),
-      where('incomplete_registration', '==', true),
-      limit(10)
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const patients: Patient[] = [];
-      snapshot.forEach((doc) => {
-        const data = normalizeFirestoreData(doc.data());
-        patients.push({
-          id: doc.id,
-          name: data.full_name || data.name || 'Paciente',
+    const fetchPatients = async () => {
+      try {
+        const res = await patientsApi.list({
+          incompleteRegistration: true,
+          sortBy: 'created_at_desc',
+          limit: 10,
+          offset: 0,
         });
-      });
-      setIncompletePatients(patients);
-    }, (error) => {
-      logger.error('Error fetching incomplete patients', error, 'IncompleteRegistrationAlert');
-    });
 
-    return () => unsubscribe();
+        const patients: Patient[] = (res?.data ?? []).map((item) => ({
+          id: item.id,
+          name: item.full_name || item.name || 'Paciente',
+        }));
+
+        if (patients.length === 0) {
+          const fallback = await patientsApi.list({ limit: 200, sortBy: 'created_at_desc' });
+          const fallbackPatients = (fallback?.data ?? [])
+            .filter((item) => Boolean(item.incomplete_registration))
+            .slice(0, 10)
+            .map((item) => ({
+              id: item.id,
+              name: item.full_name || item.name || 'Paciente',
+            }));
+
+          if (!isMounted) return;
+          setIncompletePatients(fallbackPatients);
+          return;
+        }
+
+        if (!isMounted) return;
+        setIncompletePatients(patients);
+      } catch (error) {
+        if (isMounted) setIncompletePatients([]);
+        logger.warn('Could not fetch incomplete patients', error, 'IncompleteRegistrationAlert');
+      }
+    };
+
+    fetchPatients();
+    const intervalId = window.setInterval(fetchPatients, 30000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(intervalId);
+    };
   }, []);
 
   const visiblePatients = incompletePatients.filter(
