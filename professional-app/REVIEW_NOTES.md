@@ -20,7 +20,7 @@ O acesso aos dados de saúde requer obrigatoriamente Face ID ou Touch ID (com fa
 - **Face ID**: Usado para proteger o acesso a dados de saúde sensíveis.
 
 ## Conta de Teste para Revisores
-- **E-mail**: reviewer@fisioflow.com.br
+- **E-mail**: reviewer@moocafisio.com.br
 - **Senha**: ReviewTest2026!
 - **PIN de Fallback**: 123456
 

@@ -713,7 +713,7 @@ const Settings = () => {
                   </div>
                   <div className="space-y-1.5 sm:space-y-2">
                     <Label htmlFor="email" className="text-xs sm:text-sm">E-mail</Label>
-                    <Input id="email" type="email" defaultValue="joao@fisioflow.com.br" className="text-sm" />
+                    <Input id="email" type="email" defaultValue="joao@moocafisio.com.br" className="text-sm" />
                   </div>
                   <div className="space-y-1.5 sm:space-y-2">
                     <Label htmlFor="phone" className="text-xs sm:text-sm">Telefone</Label>

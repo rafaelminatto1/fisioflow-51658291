@@ -738,7 +738,7 @@ export default function WikiPage() {
 
   const handlePageSelect = (page: WikiPage) => {
     setSelectedPage(page);
-    navigate(`/wiki-workspace/${page.slug}`);
+    navigate(`/wiki/${page.slug}`);
   };
 
   const handleEdit = () => {
@@ -899,9 +899,9 @@ export default function WikiPage() {
         .replace(/--+/g, '-');
 
       if (savedPage) {
-        navigate(`/wiki-workspace/${savedPage.slug}`);
+        navigate(`/wiki/${savedPage.slug}`);
       } else {
-        navigate(`/wiki-workspace/${fallbackSlug}`);
+        navigate(`/wiki/${fallbackSlug}`);
       }
 
       if (isE2E) {
@@ -909,7 +909,7 @@ export default function WikiPage() {
           '[E2E][Wiki][handleSave:navigate]',
           JSON.stringify({
             traceId: saveTraceId,
-            target_path: savedPage ? `/wiki-workspace/${savedPage.slug}` : `/wiki-workspace/${fallbackSlug}`,
+            target_path: savedPage ? `/wiki/${savedPage.slug}` : `/wiki/${fallbackSlug}`,
           })
         );
       }

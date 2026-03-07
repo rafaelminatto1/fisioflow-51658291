@@ -1,52 +1,23 @@
 /**
- * useServicos - Migrated to Firebase
+ * useServicos - Migrated to Neon/Workers
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, orderBy, db } from '@/integrations/firebase/app';
-import { toast } from '@/hooks/use-toast';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { servicosApi, type Servico } from '@/lib/api/workers-client';
+import { toast } from 'sonner';
 
-export interface Servico {
-  id: string;
-  organization_id: string | null;
-  nome: string;
-  descricao: string | null;
-  duracao_padrao: number;
-  tipo_cobranca: 'unitario' | 'mensal' | 'pacote';
-  valor: number;
-  centro_custo: string | null;
-  permite_agendamento_online: boolean;
-  cor: string | null;
-  ativo: boolean;
-  created_at: string;
-  updated_at: string;
-}
+export type { Servico };
 
-export type ServicoFormData = Omit<Servico, 'id' | 'created_at' | 'updated_at'>;
-
-// Helper to convert Firestore doc to Servico
-const convertDocToServico = (doc: { id: string; data: () => Record<string, unknown> }): Servico => {
-  const data = normalizeFirestoreData(doc.data());
-  return {
-    id: doc.id,
-    ...data,
-  } as Servico;
-};
+export type ServicoFormData = Omit<Servico, 'id' | 'created_at' | 'updated_at' | 'organization_id'>;
 
 export function useServicos() {
   return useQuery({
     queryKey: ['servicos'],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'servicos'),
-        orderBy('nome')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDocToServico);
+      const res = await servicosApi.list();
+      return (res?.data ?? []) as Servico[];
     },
-    staleTime: 1000 * 60 * 15, // 15 minutos - serviços mudam pouco
+    staleTime: 1000 * 60 * 15,
     gcTime: 1000 * 60 * 30,
   });
 }
@@ -56,45 +27,25 @@ export function useCreateServico() {
 
   return useMutation({
     mutationFn: async (servico: ServicoFormData) => {
-      const servicoData = {
-        ...servico,
-        organization_id: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'servicos'), servicoData);
-      const docSnap = await getDoc(docRef);
-
-      return convertDocToServico(docSnap);
+      const res = await servicosApi.create(servico);
+      return (res?.data ?? res) as Servico;
     },
-    // Optimistic update - adiciona serviço antes da resposta do servidor
     onMutate: async (newServico) => {
       await queryClient.cancelQueries({ queryKey: ['servicos'] });
-
       const previousServicos = queryClient.getQueryData<Servico[]>(['servicos']);
-
-      const optimisticServico: Servico = {
-        ...newServico,
-        id: `temp-${Date.now()}`,
-        organization_id: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      queryClient.setQueryData<Servico[]>(['servicos'], (old) => {
-        const newData = [...(old || []), optimisticServico];
-        return newData.sort((a, b) => a.nome.localeCompare(b.nome));
-      });
-
+      const optimistic = { ...newServico, id: `temp-${Date.now()}`, organization_id: '', created_at: new Date().toISOString(), updated_at: new Date().toISOString() } as Servico;
+      queryClient.setQueryData<Servico[]>(['servicos'], (old) =>
+        [...(old ?? []), optimistic].sort((a, b) => a.nome.localeCompare(b.nome)),
+      );
       return { previousServicos };
     },
-    onError: (err, variables, context) => {
+    onError: (err: Error, _vars, context) => {
       queryClient.setQueryData(['servicos'], context?.previousServicos);
-      toast({ title: 'Erro ao criar serviço', description: err instanceof Error ? err.message : 'Erro desconhecido', variant: 'destructive' });
+      toast.error('Erro ao criar serviço: ' + err.message);
     },
     onSuccess: () => {
-      toast({ title: 'Serviço criado com sucesso' });
+      queryClient.invalidateQueries({ queryKey: ['servicos'] });
+      toast.success('Serviço criado com sucesso');
     },
   });
 }
@@ -104,38 +55,22 @@ export function useUpdateServico() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Servico> & { id: string }) => {
-      const docRef = doc(db, 'servicos', id);
-      await updateDoc(docRef, {
-        ...updates,
-        updated_at: new Date().toISOString(),
-      });
-
-      const docSnap = await getDoc(docRef);
-      return convertDocToServico(docSnap);
+      const res = await servicosApi.update(id, updates);
+      return (res?.data ?? res) as Servico;
     },
-    // Optimistic update - atualiza serviço antes da resposta do servidor
     onMutate: async ({ id, ...updates }) => {
       await queryClient.cancelQueries({ queryKey: ['servicos'] });
-
       const previousServicos = queryClient.getQueryData<Servico[]>(['servicos']);
-
       queryClient.setQueryData<Servico[]>(['servicos'], (old) =>
-        (old || []).map((s) =>
-          s.id === id
-            ? { ...s, ...updates, updated_at: new Date().toISOString() }
-            : s
-        )
+        (old ?? []).map((s) => (s.id === id ? { ...s, ...updates, updated_at: new Date().toISOString() } : s)),
       );
-
       return { previousServicos };
     },
-    onError: (err, variables, context) => {
+    onError: (err: Error, _vars, context) => {
       queryClient.setQueryData(['servicos'], context?.previousServicos);
-      toast({ title: 'Erro ao atualizar serviço', description: err instanceof Error ? err.message : 'Erro desconhecido', variant: 'destructive' });
+      toast.error('Erro ao atualizar serviço: ' + err.message);
     },
-    onSuccess: () => {
-      toast({ title: 'Serviço atualizado com sucesso' });
-    },
+    onSuccess: () => toast.success('Serviço atualizado com sucesso'),
   });
 }
 
@@ -143,27 +78,17 @@ export function useDeleteServico() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      await deleteDoc(doc(db, 'servicos', id));
-    },
-    // Optimistic update - remove serviço da lista visualmente
+    mutationFn: (id: string) => servicosApi.delete(id),
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: ['servicos'] });
-
       const previousServicos = queryClient.getQueryData<Servico[]>(['servicos']);
-
-      queryClient.setQueryData<Servico[]>(['servicos'], (old) =>
-        (old || []).filter((s) => s.id !== id)
-      );
-
+      queryClient.setQueryData<Servico[]>(['servicos'], (old) => (old ?? []).filter((s) => s.id !== id));
       return { previousServicos };
     },
-    onError: (err, id, context) => {
+    onError: (err: Error, _id, context) => {
       queryClient.setQueryData(['servicos'], context?.previousServicos);
-      toast({ title: 'Erro ao remover serviço', description: err instanceof Error ? err.message : 'Erro desconhecido', variant: 'destructive' });
+      toast.error('Erro ao remover serviço: ' + err.message);
     },
-    onSuccess: () => {
-      toast({ title: 'Serviço removido com sucesso' });
-    },
+    onSuccess: () => toast.success('Serviço removido com sucesso'),
   });
 }

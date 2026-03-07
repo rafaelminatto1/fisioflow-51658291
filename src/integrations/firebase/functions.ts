@@ -943,11 +943,11 @@ export const appointmentsApi = {
   create: async (appointment: AppointmentApi.CreateData): Promise<AppointmentApi.Appointment> => {
     const payload = {
       ...appointment,
-      patientId: (appointment as any).patient_id ?? (appointment as any).patientId,
-      therapistId: (appointment as any).therapist_id ?? (appointment as any).therapistId,
-      date: (appointment as any).appointment_date ?? (appointment as any).date,
-      startTime: (appointment as any).start_time ?? (appointment as any).appointment_time,
-      endTime: (appointment as any).end_time ?? (appointment as any).endTime,
+      patientId: (appointment as any).patientId ?? (appointment as any).patient_id,
+      therapistId: (appointment as any).therapistId ?? (appointment as any).therapist_id,
+      date: (appointment as any).date ?? (appointment as any).appointment_date,
+      startTime: (appointment as any).startTime ?? (appointment as any).start_time ?? (appointment as any).appointment_time,
+      endTime: (appointment as any).endTime ?? (appointment as any).end_time,
       session_type: (appointment as any).session_type ?? (appointment as any).type,
     };
     const res = await callWorkersApi<{ data: AppointmentApi.Appointment }>('/api/appointments', {
@@ -963,10 +963,10 @@ export const appointmentsApi = {
   update: async (appointmentId: string, updates: AppointmentApi.UpdateData): Promise<AppointmentApi.Appointment> => {
     const payload = {
       ...updates,
-      date: (updates as any).appointment_date ?? (updates as any).date,
-      startTime: (updates as any).start_time ?? (updates as any).appointment_time,
-      endTime: (updates as any).end_time ?? (updates as any).endTime,
-      therapistId: (updates as any).therapist_id ?? (updates as any).therapistId,
+      date: (updates as any).date ?? (updates as any).appointment_date,
+      startTime: (updates as any).startTime ?? (updates as any).start_time ?? (updates as any).appointment_time,
+      endTime: (updates as any).endTime ?? (updates as any).end_time,
+      therapistId: (updates as any).therapistId ?? (updates as any).therapist_id,
     };
     const res = await callWorkersApi<{ data: AppointmentApi.Appointment }>(
       `/api/appointments/${encodeURIComponent(appointmentId)}`,

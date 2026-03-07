@@ -1,40 +1,27 @@
 /**
- * useWaitlist - Migrated to Firebase
+ * useWaitlist - Rewritten to use Workers API (schedulingApi.waitlist + schedulingApi.waitlistOffers)
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
-import { fisioLogger as logger } from '@/lib/errors/logger';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
-import { useOrganizations } from '@/hooks/useOrganizations';
+import { schedulingApi, WaitlistEntry } from '@/lib/api/workers-client';
 
-export interface WaitlistEntry {
-  id: string;
-  patient_id: string;
-  preferred_days: string[];
-  preferred_periods: string[];
-  preferred_therapist_id?: string;
-  priority: 'normal' | 'high' | 'urgent';
-  status: 'waiting' | 'offered' | 'scheduled' | 'removed';
-  refusal_count: number;
-  offered_slot?: string;
-  offered_at?: string;
-  offer_expires_at?: string;
-  notes?: string;
-  created_at: string;
-  // Relações
-  patient?: {
-    id: string;
-    name: string;
-    phone?: string;
-    email?: string;
-  };
-  preferred_therapist?: {
-    id: string;
-    name: string;
-  };
-}
+export type { WaitlistEntry };
+
+const DAY_NAMES: Record<string, string> = {
+  MON: 'Segunda', TUE: 'Terça', WED: 'Quarta',
+  THU: 'Quinta', FRI: 'Sexta', SAT: 'Sábado', SUN: 'Domingo',
+};
+
+const PERIOD_NAMES: Record<string, string> = {
+  morning: 'Manhã', afternoon: 'Tarde', evening: 'Noite',
+};
+
+export const PRIORITY_CONFIG = {
+  urgent: { label: 'Urgente', color: 'destructive', order: 0 },
+  high: { label: 'Alta', color: 'warning', order: 1 },
+  normal: { label: 'Normal', color: 'secondary', order: 2 },
+} as const;
 
 interface AddToWaitlistInput {
   patient_id: string;
@@ -50,567 +37,231 @@ interface OfferSlotInput {
   appointment_slot: string;
 }
 
-const DAY_NAMES: Record<string, string> = {
-  MON: 'Segunda',
-  TUE: 'Terça',
-  WED: 'Quarta',
-  THU: 'Quinta',
-  FRI: 'Sexta',
-  SAT: 'Sábado',
-  SUN: 'Domingo',
-};
-
-const PERIOD_NAMES: Record<string, string> = {
-  morning: 'Manhã',
-  afternoon: 'Tarde',
-  evening: 'Noite',
-};
-
-export const PRIORITY_CONFIG = {
-  urgent: { label: 'Urgente', color: 'destructive', order: 0 },
-  high: { label: 'Alta', color: 'warning', order: 1 },
-  normal: { label: 'Normal', color: 'secondary', order: 2 },
-} as const;
-
-// Hook para listar a lista de espera
-export function useWaitlist(filters?: {
-  status?: string;
-  priority?: string;
-}) {
-  const { currentOrganization } = useOrganizations();
-  const organizationId = currentOrganization?.id;
-
+export function useWaitlist(filters?: { status?: string; priority?: string }) {
   const queryResult = useQuery({
-    queryKey: ['waitlist', organizationId, filters],
+    queryKey: ['waitlist', filters],
     queryFn: async () => {
-      if (!organizationId) return [];
-      let q = firestoreQuery(
-        collection(db, 'waitlist'),
-        where('organization_id', '==', organizationId),
-        orderBy('created_at', 'asc')
-      );
+      const res = await schedulingApi.waitlist.list({
+        status: filters?.status && filters.status !== 'all' ? filters.status : undefined,
+        priority: filters?.priority,
+      });
+      const list = (res?.data ?? res ?? []) as WaitlistEntry[];
 
-      // Apply status filter
-      if (filters?.status && filters.status !== 'all') {
-        q = firestoreQuery(
-          collection(db, 'waitlist'),
-          where('organization_id', '==', organizationId),
-          where('status', '==', filters.status),
-          orderBy('created_at', 'asc')
-        );
-      } else if (!filters?.status) {
-        q = firestoreQuery(
-          collection(db, 'waitlist'),
-          where('organization_id', '==', organizationId),
-          where('status', '==', 'waiting'),
-          orderBy('created_at', 'asc')
-        );
-      }
-
-      // Apply priority filter
-      if (filters?.priority) {
-        q = firestoreQuery(
-          collection(db, 'waitlist'),
-          where('organization_id', '==', organizationId),
-          where('priority', '==', filters.priority),
-          orderBy('created_at', 'asc')
-        );
-      }
-
-      const snapshot = await getDocs(q);
-      const waitlistData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...normalizeFirestoreData(doc.data())
-      })) as WaitlistEntry[];
-
-      // Fetch patient data for each entry
-      const entriesWithPatients = await Promise.all(
-        waitlistData.map(async (entry) => {
-          if (entry.patient_id) {
-            const patientRef = doc(db, 'patients', entry.patient_id);
-            const patientSnap = await getDoc(patientRef);
-            if (patientSnap.exists()) {
-              const p = patientSnap.data();
-              return {
-                ...entry,
-                patient: {
-                  id: patientSnap.id,
-                  name: p.name || p.full_name || 'Desconhecido',
-                  phone: p.phone,
-                  email: p.email,
-                },
-              };
-            }
-          }
-          return entry;
-        })
-      );
-
-      // Ordenar por prioridade (urgent > high > normal) e depois por data
-      const sorted = entriesWithPatients.sort((a: WaitlistEntry, b: WaitlistEntry) => {
-        const priorityDiff = PRIORITY_CONFIG[a.priority as keyof typeof PRIORITY_CONFIG].order -
-          PRIORITY_CONFIG[b.priority as keyof typeof PRIORITY_CONFIG].order;
-        if (priorityDiff !== 0) return priorityDiff;
+      // Sort by priority
+      return list.sort((a, b) => {
+        const pa = PRIORITY_CONFIG[a.priority as keyof typeof PRIORITY_CONFIG]?.order ?? 2;
+        const pb = PRIORITY_CONFIG[b.priority as keyof typeof PRIORITY_CONFIG]?.order ?? 2;
+        if (pa !== pb) return pa - pb;
         return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       });
-
-      return sorted;
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 24 * 60 * 60 * 1000, // 24 hours
+    staleTime: 5 * 60 * 1000,
+    gcTime: 24 * 60 * 60 * 1000,
   });
 
   return {
     ...queryResult,
     isFromCache: queryResult.isStale && !queryResult.isLoading && !!queryResult.data,
-    cacheTimestamp: queryResult.dataUpdatedAt
+    cacheTimestamp: queryResult.dataUpdatedAt,
   };
 }
 
-// Hook para obter contagem por status
 export function useWaitlistCounts() {
-  const { currentOrganization } = useOrganizations();
-  const organizationId = currentOrganization?.id;
-
   return useQuery({
-    queryKey: ['waitlist', 'counts', organizationId],
+    queryKey: ['waitlist', 'counts'],
     queryFn: async () => {
-      if (!organizationId) return null;
-      const q = firestoreQuery(
-        collection(db, 'waitlist'),
-        where('organization_id', '==', organizationId)
-      );
-      const snapshot = await getDocs(q);
-      const data = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()));
+      const res = await schedulingApi.waitlist.list();
+      const data = (res?.data ?? res ?? []) as WaitlistEntry[];
 
-      const counts = {
-        total: data.length || 0,
-        waiting: 0,
-        offered: 0,
-        scheduled: 0,
-        urgent: 0,
-        high: 0,
-      };
-
-      data.forEach((item: { status: string; priority?: string }) => {
+      const counts = { total: data.length, waiting: 0, offered: 0, scheduled: 0, urgent: 0, high: 0 };
+      data.forEach((item) => {
         if (item.status === 'waiting') counts.waiting++;
         if (item.status === 'offered') counts.offered++;
         if (item.status === 'scheduled') counts.scheduled++;
         if (item.priority === 'urgent' && item.status === 'waiting') counts.urgent++;
         if (item.priority === 'high' && item.status === 'waiting') counts.high++;
       });
-
       return counts;
     },
-    enabled: !!organizationId,
   });
 }
 
-// Hook para adicionar à lista de espera
 export function useAddToWaitlist() {
   const queryClient = useQueryClient();
-  const { currentOrganization } = useOrganizations();
-  const organizationId = currentOrganization?.id;
 
   return useMutation({
     mutationFn: async (input: AddToWaitlistInput) => {
-      if (!organizationId) throw new Error('Organização não identificada');
-
-      // Verificar se paciente já está na lista
-      const existingQ = firestoreQuery(
-        collection(db, 'waitlist'),
-        where('organization_id', '==', organizationId),
-        where('patient_id', '==', input.patient_id),
-        where('status', '==', 'waiting'),
-        limit(1)
-      );
-      const existingSnap = await getDocs(existingQ);
-
-      if (!existingSnap.empty) {
-        throw new Error('Paciente já está na lista de espera');
-      }
-
-      const waitlistData = {
+      const res = await schedulingApi.waitlist.create({
         ...input,
-        organization_id: organizationId,
-        status: 'waiting' as const,
+        status: 'waiting',
+        priority: input.priority ?? 'normal',
         refusal_count: 0,
-        created_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'waitlist'), waitlistData);
-
-      // Fetch patient data for response
-      const patientRef = doc(db, 'patients', input.patient_id);
-      const patientSnap = await getDoc(patientRef);
-
-      const result = {
-        id: docRef.id,
-        ...waitlistData,
-        patient: patientSnap.exists() ? {
-          id: patientSnap.id,
-          name: patientSnap.data().name || patientSnap.data().full_name,
-          phone: patientSnap.data().phone,
-        } : undefined,
-      };
-
-      return result;
+      });
+      return (res?.data ?? res) as WaitlistEntry;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['waitlist', organizationId] });
-      toast.success(`${data.patient?.name} adicionado à lista de espera`);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['waitlist'] });
+      toast.success('Adicionado à lista de espera');
     },
     onError: (error: unknown) => {
-      logger.error('Erro ao adicionar à lista de espera', error, 'useWaitlist');
       toast.error(error instanceof Error ? error.message : 'Erro ao adicionar à lista de espera');
     },
   });
 }
 
-// Hook para remover da lista de espera
 export function useRemoveFromWaitlist() {
   const queryClient = useQueryClient();
-  const { currentOrganization } = useOrganizations();
-  const organizationId = currentOrganization?.id;
 
   return useMutation({
     mutationFn: async (waitlistId: string) => {
-      const docRef = doc(db, 'waitlist', waitlistId);
-      await updateDoc(docRef, {
-        status: 'removed',
-        removed_at: new Date().toISOString(),
-      });
+      await schedulingApi.waitlist.update(waitlistId, { status: 'removed' });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['waitlist', organizationId] });
+      queryClient.invalidateQueries({ queryKey: ['waitlist'] });
       toast.success('Removido da lista de espera');
     },
-    onError: (error: unknown) => {
-      logger.error('Erro ao remover da lista de espera', error, 'useWaitlist');
+    onError: () => {
       toast.error('Erro ao remover da lista de espera');
     },
   });
 }
 
-// Hook para oferecer vaga
 export function useOfferSlot() {
   const queryClient = useQueryClient();
-  const { currentOrganization } = useOrganizations();
-  const organizationId = currentOrganization?.id;
 
   return useMutation({
     mutationFn: async (input: OfferSlotInput) => {
       const { waitlist_id, appointment_slot } = input;
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
-      // Buscar entrada da lista
-      const entryRef = doc(db, 'waitlist', waitlist_id);
-      const entrySnap = await getDoc(entryRef);
-
-      if (!entrySnap.exists() || entrySnap.data()?.status !== 'waiting') {
-        throw new Error('Entrada não encontrada ou já processada');
-      }
-
-      const entryData = entrySnap.data();
-
-      // Fetch patient data
-      let patientData = null;
-      if (entryData.patient_id) {
-        const patientRef = doc(db, 'patients', entryData.patient_id);
-        const patientSnap = await getDoc(patientRef);
-        if (patientSnap.exists()) {
-          const p = patientSnap.data();
-          patientData = {
-            id: patientSnap.id,
-            name: p.name || p.full_name,
-            phone: p.phone,
-          };
-        }
-      }
-
-      // Atualizar status
-      await updateDoc(entryRef, {
+      await schedulingApi.waitlist.update(waitlist_id, {
         status: 'offered',
         offered_slot: appointment_slot,
         offered_at: new Date().toISOString(),
-        offer_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        offer_expires_at: expiresAt,
       });
 
-      // Registrar oferta
-      await addDoc(collection(db, 'waitlist_offers'), {
-        organization_id: organizationId,
-        patient_id: entryData.patient_id,
-        appointment_id: waitlist_id,
+      await schedulingApi.waitlistOffers.create({
+        waitlist_id,
         offered_slot: appointment_slot,
         response: 'pending',
         status: 'pending',
-        expiration_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        created_at: new Date().toISOString(),
+        expiration_time: expiresAt,
       });
 
-      return {
-        id: waitlist_id,
-        ...entryData,
-        patient: patientData,
-      };
+      return { id: waitlist_id };
     },
-    onSuccess: (data: WaitlistEntry & { patient?: { name?: string } }) => {
-      queryClient.invalidateQueries({ queryKey: ['waitlist', organizationId] });
-      toast.success(`Vaga oferecida para ${data.patient?.name}`);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['waitlist'] });
+      toast.success('Vaga oferecida com sucesso');
     },
     onError: (error: unknown) => {
-      logger.error('Erro ao oferecer vaga', error, 'useWaitlist');
       toast.error(error instanceof Error ? error.message : 'Erro ao oferecer vaga');
     },
   });
 }
 
-// Hook para aceitar oferta
 export function useAcceptOffer() {
   const queryClient = useQueryClient();
-  const { currentOrganization } = useOrganizations();
-  const organizationId = currentOrganization?.id;
 
   return useMutation({
     mutationFn: async (waitlistId: string) => {
-      const docRef = doc(db, 'waitlist', waitlistId);
-
-      await updateDoc(docRef, {
-        status: 'scheduled',
-        updated_at: new Date().toISOString(),
-      });
-
-      // Atualizar histórico de ofertas
-      const offersQ = firestoreQuery(
-        collection(db, 'waitlist_offers'),
-        where('appointment_id', '==', waitlistId),
-        where('response', '==', 'pending')
-      );
-      const offersSnap = await getDocs(offersQ);
-
-      if (!offersSnap.empty) {
-        await updateDoc(offersSnap.docs[0].ref, {
-          response: 'accepted',
-          responded_at: new Date().toISOString(),
-        });
-      }
-
+      await schedulingApi.waitlist.update(waitlistId, { status: 'scheduled' });
       return { id: waitlistId, status: 'scheduled' };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['waitlist', organizationId] });
+      queryClient.invalidateQueries({ queryKey: ['waitlist'] });
       toast.success('Oferta aceita! Agendamento confirmado.');
     },
-    onError: (error: unknown) => {
-      logger.error('Erro ao aceitar oferta', error, 'useWaitlist');
+    onError: () => {
       toast.error('Erro ao aceitar oferta');
     },
   });
 }
 
-// Hook para recusar oferta
 export function useRejectOffer() {
   const queryClient = useQueryClient();
-  const { currentOrganization } = useOrganizations();
-  const organizationId = currentOrganization?.id;
 
   return useMutation({
     mutationFn: async (waitlistId: string) => {
-      // Buscar entrada atual
-      const docRef = doc(db, 'waitlist', waitlistId);
-      const snap = await getDoc(docRef);
-
-      if (!snap.exists()) {
-        throw new Error('Entrada não encontrada');
-      }
-
-      const current = snap.data();
-      const newRefusalCount = ((current.refusal_count as number | undefined) ?? 0) + 1;
+      // Get current data
+      const res = await schedulingApi.waitlist.list();
+      const all = (res?.data ?? res ?? []) as WaitlistEntry[];
+      const entry = all.find(e => e.id === waitlistId);
+      const refusalCount = ((entry?.refusal_count as number | undefined) ?? 0) + 1;
       const maxRefusals = 3;
+      const newStatus = refusalCount >= maxRefusals ? 'removed' : 'waiting';
 
-      // Se atingiu máximo de recusas, remover da lista
-      const newStatus = newRefusalCount >= maxRefusals ? 'removed' : 'waiting';
-
-      await updateDoc(docRef, {
+      await schedulingApi.waitlist.update(waitlistId, {
         status: newStatus,
-        offered_slot: null,
-        offered_at: null,
-        offer_expires_at: null,
-        refusal_count: newRefusalCount,
-        updated_at: new Date().toISOString(),
+        refusal_count: refusalCount,
+        offered_slot: undefined,
+        offered_at: undefined,
+        offer_expires_at: undefined,
       });
 
-      // Atualizar histórico de ofertas
-      const offersQ = firestoreQuery(
-        collection(db, 'waitlist_offers'),
-        where('appointment_id', '==', waitlistId),
-        where('response', '==', 'pending')
-      );
-      const offersSnap = await getDocs(offersQ);
-
-      if (!offersSnap.empty) {
-        await updateDoc(offersSnap.docs[0].ref, {
-          response: 'rejected',
-          responded_at: new Date().toISOString(),
-        });
-      }
-
-      return {
-        id: waitlistId,
-        ...current,
-        refusal_count: newRefusalCount,
-        status: newStatus,
-        wasRemoved: newStatus === 'removed',
-      };
+      return { id: waitlistId, refusal_count: refusalCount, status: newStatus, wasRemoved: newStatus === 'removed' };
     },
-    onSuccess: (data: WaitlistEntry & { wasRemoved?: boolean }) => {
-      queryClient.invalidateQueries({ queryKey: ['waitlist', organizationId] });
+    onSuccess: (data: { wasRemoved?: boolean }) => {
+      queryClient.invalidateQueries({ queryKey: ['waitlist'] });
       if (data.wasRemoved) {
         toast.info('Paciente removido da lista após 3 recusas');
       } else {
         toast.success('Oferta recusada. Paciente retornou à lista.');
       }
     },
-    onError: (error: unknown) => {
-      logger.error('Erro ao recusar oferta', error, 'useWaitlist');
+    onError: () => {
       toast.error('Erro ao recusar oferta');
     },
   });
 }
 
-// Hook para atualizar prioridade
 export function useUpdatePriority() {
   const queryClient = useQueryClient();
-  const { currentOrganization } = useOrganizations();
-  const organizationId = currentOrganization?.id;
 
   return useMutation({
-    mutationFn: async ({
-      waitlistId,
-      priority
-    }: {
-      waitlistId: string;
-      priority: 'normal' | 'high' | 'urgent';
-    }) => {
-      const docRef = doc(db, 'waitlist', waitlistId);
-      await updateDoc(docRef, { priority });
+    mutationFn: async ({ waitlistId, priority }: { waitlistId: string; priority: 'normal' | 'high' | 'urgent' }) => {
+      await schedulingApi.waitlist.update(waitlistId, { priority });
       return { id: waitlistId, priority };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['waitlist', organizationId] });
+      queryClient.invalidateQueries({ queryKey: ['waitlist'] });
       toast.success('Prioridade atualizada');
     },
-    onError: (error: unknown) => {
-      logger.error('Erro ao atualizar prioridade', error, 'useWaitlist');
+    onError: () => {
       toast.error('Erro ao atualizar prioridade');
     },
   });
 }
 
-// Hook para listar ofertas feitas
-export function useWaitlistOffers(patientId?: string) {
-  const { currentOrganization } = useOrganizations();
-  const organizationId = currentOrganization?.id;
-
+export function useWaitlistOffers(waitlistId?: string) {
   return useQuery({
-    queryKey: ['waitlist-offers', organizationId, patientId],
+    queryKey: ['waitlist-offers', waitlistId],
     queryFn: async () => {
-      if (!organizationId) return [];
-      let q = firestoreQuery(
-        collection(db, 'waitlist_offers'),
-        where('organization_id', '==', organizationId),
-        orderBy('created_at', 'desc')
-      );
-
-      if (patientId) {
-        q = firestoreQuery(
-          collection(db, 'waitlist_offers'),
-          where('organization_id', '==', organizationId),
-          where('patient_id', '==', patientId),
-          orderBy('created_at', 'desc')
-        );
-      }
-
-      const snapshot = await getDocs(q);
-
-      // Fetch waitlist and patient data for each offer
-      const offersWithDetails = await Promise.all(
-        snapshot.docs.map(async (docSnapshot) => {
-          const offer = { id: docSnapshot.id, ...docSnapshot.data() };
-
-          if (offer.appointment_id) {
-            const waitlistRef = doc(db, 'waitlist', offer.appointment_id);
-            const waitlistSnap = await getDoc(waitlistRef);
-
-            if (waitlistSnap.exists()) {
-              const waitlist = waitlistSnap.data();
-
-              // Fetch patient
-              let patient = null;
-              if (waitlist.patient_id) {
-                const patientRef = doc(db, 'patients', waitlist.patient_id);
-                const patientSnap = await getDoc(patientRef);
-                if (patientSnap.exists()) {
-                  const p = patientSnap.data();
-                  patient = {
-                    id: patientSnap.id,
-                    name: p.name || p.full_name,
-                    phone: p.phone,
-                  };
-                }
-              }
-
-              return {
-                ...offer,
-                waitlist: {
-                  id: waitlistSnap.id,
-                  patient_id: waitlist.patient_id,
-                  patient,
-                },
-              };
-            }
-          }
-
-          return offer;
-        })
-      );
-
-      return offersWithDetails;
+      const res = await schedulingApi.waitlistOffers.list(waitlistId);
+      return (res?.data ?? res ?? []) as unknown[];
     },
-    enabled: !!organizationId,
   });
 }
 
-// Helper para formatar preferências
 export function formatPreferences(entry: WaitlistEntry): string {
-  const days = entry.preferred_days
-    .map(d => DAY_NAMES[d] || d)
-    .join(', ');
-
-  const periods = entry.preferred_periods
-    .map(p => PERIOD_NAMES[p] || p)
-    .join(', ');
-
+  const days = (entry.preferred_days ?? []).map(d => DAY_NAMES[d] || d).join(', ');
+  const periods = (entry.preferred_periods ?? []).map(p => PERIOD_NAMES[p] || p).join(', ');
   return `${days} - ${periods}`;
 }
 
-// Helper para verificar se uma vaga é compatível
-export function isSlotCompatible(
-  entry: WaitlistEntry,
-  slotDate: Date
-): boolean {
+export function isSlotCompatible(entry: WaitlistEntry, slotDate: Date): boolean {
   const dayOfWeek = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][slotDate.getDay()];
   const hour = slotDate.getHours();
-
   let period: string;
   if (hour < 12) period = 'morning';
   else if (hour < 18) period = 'afternoon';
   else period = 'evening';
 
-  return entry.preferred_days.includes(dayOfWeek) &&
-    entry.preferred_periods.includes(period);
+  return (entry.preferred_days ?? []).includes(dayOfWeek) &&
+    (entry.preferred_periods ?? []).includes(period);
 }
 
-// Encontrar candidatos para uma vaga cancelada
 export function findCandidatesForSlot(
   waitlist: WaitlistEntry[],
   slotDate: Date,
@@ -619,7 +270,7 @@ export function findCandidatesForSlot(
   return waitlist
     .filter(entry => {
       if (entry.status !== 'waiting') return false;
-      if (entry.refusal_count >= 3) return false;
+      if ((entry.refusal_count ?? 0) >= 3) return false;
       return isSlotCompatible(entry, slotDate);
     })
     .slice(0, limit);

@@ -1910,7 +1910,7 @@ Firebase Storage:
   "submit": {
     "production": {
       "ios": {
-        "appleId": "developer@fisioflow.com.br",
+        "appleId": "developer@moocafisio.com.br",
         "ascAppId": "6504123456",
         "appleTeamId": "ABC123XYZ"
       }
@@ -2681,7 +2681,7 @@ O FisioFlow Professional é uma ferramenta de gerenciamento clínico...
 [Retention periods for each data category]
 
 ## 8. Contato
-Email: privacidade@fisioflow.com.br
+Email: privacidade@moocafisio.com.br
 Telefone: [Phone]
 ```
 
@@ -2722,7 +2722,7 @@ in Brazil. The app handles Protected Health Information (PHI) including
 patient records, SOAP notes, photos, and exercise prescriptions.
 
 ## Test Account
-Email: reviewer@fisioflow.com.br
+Email: reviewer@moocafisio.com.br
 Password: ReviewTest2024!
 
 The test account includes:
@@ -2763,8 +2763,8 @@ website (external billing). No in-app purchases. The app does not
 collect payment information.
 
 ## Privacy & Legal
-- Privacy Policy: https://fisioflow.com.br/privacidade
-- Terms of Service: https://fisioflow.com.br/termos
+- Privacy Policy: https://moocafisio.com.br/privacidade
+- Terms of Service: https://moocafisio.com.br/termos
 - Both accessible from login screen and settings
 - Users must accept before first use
 
@@ -2790,7 +2790,7 @@ Users can:
 6. Review Settings → Data Transparency to see data collection
 
 ## Contact for Questions
-Developer: dev@fisioflow.com.br
+Developer: dev@moocafisio.com.br
 Phone: +55 11 XXXX-XXXX
 Available 9am-6pm BRT (UTC-3)
 ```

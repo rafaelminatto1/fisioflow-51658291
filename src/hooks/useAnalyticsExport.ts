@@ -1,15 +1,4 @@
-/**
- * Analytics Export Hook - Migrated to Firebase
- *
- */
-
-
-// ============================================================================
-// TYPES
-// ============================================================================
-
 import { useState } from 'react';
-import { collection, doc, getDoc, getDocs, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -17,7 +6,11 @@ import { ptBR } from 'date-fns/locale';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import XLSX from '@/lib/export/exceljsWrapper';
-import type { PatientAnalyticsData } from '@/types/patientAnalytics';
+import {
+  analyticsApi,
+  patientsApi,
+} from '@/lib/api/workers-client';
+import type { PatientAnalyticsData, PatientGoalTracking } from '@/types/patientAnalytics';
 
 export type ExportFormat = 'pdf' | 'csv' | 'json' | 'excel';
 

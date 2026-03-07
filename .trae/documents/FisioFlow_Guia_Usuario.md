@@ -408,7 +408,7 @@ O FisioFlow é um sistema completo de gestão para clínicas de fisioterapia que
 
 ### 6.1 Canais de Suporte
 
-- **Email**: suporte@fisioflow.com.br
+- **Email**: suporte@moocafisio.com.br
 - **Telefone**: (11) 9999-9999
 - **Chat online**: Disponível no sistema durante horário comercial
 - **WhatsApp**: (11) 99999-9999

@@ -1,10 +1,8 @@
 
 // Pagination types
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { getDatabase, ref, onValue, off } from 'firebase/database';
-import { app } from '@/integrations/firebase/app';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { PatientServiceV2, type PatientV2 } from '@/services/patientServiceV2';
@@ -12,6 +10,7 @@ import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 import { fisioLogger } from '@/lib/errors/logger';
 import { isOnline } from '@/lib/utils/query-helpers';
 import { type Patient } from '@/schemas/patient';
+import { patientsApi } from '@/lib/api/workers-client';
 
 export interface PaginatedPatientsResult {
   data: Patient[];
@@ -58,33 +57,34 @@ export const useActivePatientsV2 = () => {
   const { profile } = useAuth();
   const organizationId = profile?.organization_id;
   const queryClient = useQueryClient();
-  const [retryCount, _setRetryCount] = useState(0);
+  const lastUpdatedRef = useRef<string | null>(null);
 
   // Setup realtime subscription via Firebase Realtime Database
   useEffect(() => {
     if (!organizationId) return;
+    let active = true;
 
-    let db;
-    try {
-      db = getDatabase(app);
-    } catch (error) {
-      fisioLogger.debug('RTDB not available, patients V2 sync disabled', error, 'usePatientsV2');
-      return;
-    }
-
-    const triggerRef = ref(db, `orgs/${organizationId}/patients-v2/refresh_trigger`);
-
-    const unsubscribe = onValue(triggerRef, (snapshot) => {
-      if (snapshot.exists()) {
-        fisioLogger.debug('Realtime (RTDB): Pacientes V2 atualizados', { organizationId }, 'usePatientsV2');
-        queryClient.invalidateQueries({ queryKey: ['patients-v2', organizationId] });
+    const poll = async () => {
+      try {
+        const res = await patientsApi.lastUpdated();
+        if (!active) return;
+        const next = res?.data?.last_updated_at ?? null;
+        if (next && next !== lastUpdatedRef.current) {
+          lastUpdatedRef.current = next;
+          queryClient.invalidateQueries({ queryKey: ['patients-v2', organizationId] });
+        }
+      } catch (error) {
+        fisioLogger.debug('Pacientes V2 polling falhou', error, 'usePatientsV2');
       }
-    });
-
-    return () => {
-      off(triggerRef, 'value', unsubscribe);
     };
-  }, [organizationId, queryClient, retryCount]);
+
+    void poll();
+    const interval = window.setInterval(() => void poll(), 15000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [organizationId, queryClient]);
 
   return useQuery({
     queryKey: ['patients-v2', organizationId],

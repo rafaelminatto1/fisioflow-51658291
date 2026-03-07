@@ -17,7 +17,7 @@ async function createOrganization() {
       name: 'Clínica Principal',
       slug: 'default-org',
       active: true,
-      email: 'admin@fisioflow.com.br',
+      email: 'admin@moocafisio.com.br',
       created_at: admin.firestore.FieldValue.serverTimestamp(),
       updated_at: admin.firestore.FieldValue.serverTimestamp()
     });
