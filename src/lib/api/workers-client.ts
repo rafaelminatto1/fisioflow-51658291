@@ -1494,6 +1494,8 @@ export interface TelemedicineRoomRecord {
   ended_at?: string | null;
   duration_minutes?: number | null;
   recording_url?: string | null;
+  meeting_provider?: string | null;
+  meeting_url?: string | null;
   notas?: string | null;
   created_at: string;
   updated_at?: string;
@@ -1548,10 +1550,16 @@ export const schedulingApi = {
 export const telemedicineApi = {
   rooms: {
     list: () => request<{ data: TelemedicineRoomRecord[] }>('/api/telemedicine/rooms'),
+    get: (id: string) =>
+      request<{ data: TelemedicineRoomRecord }>(`/api/telemedicine/rooms/${id}`),
     create: (data: Partial<TelemedicineRoomRecord>) =>
       request<{ data: TelemedicineRoomRecord }>('/api/telemedicine/rooms', {
         method: 'POST',
         body: JSON.stringify(data),
+      }),
+    start: (id: string) =>
+      request<{ data: TelemedicineRoomRecord }>(`/api/telemedicine/rooms/${id}/start`, {
+        method: 'POST',
       }),
     update: (id: string, data: Partial<TelemedicineRoomRecord>) =>
       request<{ data: TelemedicineRoomRecord }>(`/api/telemedicine/rooms/${id}`, {
@@ -1986,12 +1994,30 @@ export interface Servico { id: string; organization_id: string; nome: string; de
 export interface Contratado { id: string; organization_id?: string; nome: string; contato?: string | null; cpf_cnpj?: string | null; especialidade?: string | null; observacoes?: string | null; created_at?: string; updated_at?: string; }
 export interface EventoContratado { id: string; evento_id: string; contratado_id: string; funcao?: string | null; valor_acordado?: number | null; horario_inicio?: string | null; horario_fim?: string | null; status_pagamento?: 'PENDENTE' | 'PAGO'; created_at?: string; updated_at?: string; }
 export interface Participante { id: string; evento_id: string; nome: string; contato?: string | null; instagram?: string | null; segue_perfil?: boolean; observacoes?: string | null; created_at?: string; updated_at?: string; }
+export interface ChecklistItem {
+  id: string;
+  organization_id?: string;
+  evento_id: string;
+  titulo: string;
+  tipo: 'levar' | 'alugar' | 'comprar';
+  quantidade: number;
+  custo_unitario: number;
+  status: 'ABERTO' | 'OK';
+  created_at: string;
+  updated_at?: string;
+}
 export const eventosApi = {
   list: (p?:{status?:string;categoria?:string;limit?:number;offset?:number}) => request<{data:Evento[]}>(`/api/eventos?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`),
   get: (id:string) => request<{data:Evento}>(`/api/eventos/${id}`),
   create: (d:Partial<Evento>) => request<{data:Evento}>('/api/eventos',{method:'POST',body:JSON.stringify(d)}),
   update: (id:string,d:Partial<Evento>) => request<{data:Evento}>(`/api/eventos/${id}`,{method:'PUT',body:JSON.stringify(d)}),
   delete: (id:string) => request<{ok:boolean}>(`/api/eventos/${id}`,{method:'DELETE'}),
+};
+export const checklistApi = {
+  list: (eventoId: string) => request<{ data: ChecklistItem[] }>(`/api/checklist?eventoId=${encodeURIComponent(eventoId)}`),
+  create: (d: Partial<ChecklistItem>) => request<{ data: ChecklistItem }>('/api/checklist', { method: 'POST', body: JSON.stringify(d) }),
+  update: (id: string, d: Partial<ChecklistItem>) => request<{ data: ChecklistItem }>(`/api/checklist/${id}`, { method: 'PUT', body: JSON.stringify(d) }),
+  delete: (id: string) => request<{ ok: boolean }>(`/api/checklist/${id}`, { method: 'DELETE' }),
 };
 export const salasApi = {
   list: () => request<{data:Sala[]}>('/api/salas'),
