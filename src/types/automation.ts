@@ -8,7 +8,12 @@
  * Automação completa
  */
 
-import { Timestamp } from '@/integrations/firebase/app';
+type TimestampLikeLike =
+  | string
+  | Date
+  | {
+      toDate?: () => Date;
+    };
 
 export interface Automation {
   id: string;
@@ -21,12 +26,12 @@ export interface Automation {
   actions: AutomationAction[];
   logic?: AutomationCondition;             // Para conditional logic
   execution_count: number;
-  last_executed_at?: Timestamp;
+  last_executed_at?: TimestampLike;
   last_status?: 'success' | 'error' | 'running';
   last_error?: string;
-  created_at: Timestamp;
-  updated_at: Timestamp;
-  deleted_at?: Timestamp;
+  created_at: TimestampLike;
+  updated_at: TimestampLike;
+  deleted_at?: TimestampLike;
 }
 
 /**
@@ -150,8 +155,8 @@ export interface AutomationExecutionLog {
   trigger_type: AutomationTriggerType;
   trigger_data: Record<string, unknown>;
   status: 'running' | 'success' | 'error' | 'partial_success';
-  started_at: Timestamp;
-  completed_at?: Timestamp;
+  started_at: TimestampLike;
+  completed_at?: TimestampLike;
   duration_seconds?: number;
   results: ExecutionStepResult[];
   error?: string;
@@ -164,8 +169,8 @@ export interface ExecutionStepResult {
   action_id: string;
   action_type: AutomationActionType;
   status: 'pending' | 'running' | 'success' | 'error' | 'skipped';
-  started_at?: Timestamp;
-  completed_at?: Timestamp;
+  started_at?: TimestampLike;
+  completed_at?: TimestampLike;
   result?: Record<string, unknown>;
   error?: string;
 }
@@ -185,7 +190,7 @@ export interface AutomationRecipe {
   action_templates: Omit<AutomationAction, 'id'>[];
   variables: RecipeVariable[];
   created_by: string;
-  created_at: Timestamp;
+  created_at: TimestampLike;
 }
 
 /**

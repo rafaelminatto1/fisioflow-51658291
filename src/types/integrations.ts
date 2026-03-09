@@ -8,7 +8,12 @@
  * Integração configurada
  */
 
-import { Timestamp } from '@/integrations/firebase/app';
+type TimestampLikeLike =
+  | string
+  | Date
+  | {
+      toDate?: () => Date;
+    };
 
 export interface Integration {
   id: string;
@@ -18,9 +23,9 @@ export interface Integration {
   is_active: boolean;
   config: IntegrationConfig;       // Config específica do provider
   created_by: string;
-  created_at: Timestamp;
-  updated_at: Timestamp;
-  last_sync_at?: Timestamp;
+  created_at: TimestampLike;
+  updated_at: TimestampLike;
+  last_sync_at?: TimestampLike;
   sync_status?: 'synced' | 'syncing' | 'pending' | 'error';
   error_message?: string;
 }
@@ -68,7 +73,7 @@ export interface GoogleCalendarConfig {
   refresh_token: string;           // OAuth refresh token (encrypt)
   calendar_id?: string;            // null = primary calendar
   sync_direction: 'bidirectional' | 'import_only' | 'export_only';
-  sync_created_before?: Timestamp; // Não sync eventos antes desta data
+  sync_created_before?: TimestampLike; // Não sync eventos antes desta data
   default_calendar_id?: string;    // Calendar padrão para criar eventos
 }
 
@@ -87,8 +92,8 @@ export interface GoogleCalendarEvent {
   attendees?: Array<{ email: string; response?: string }>;
   location?: string;
   hangout_link?: string;           // Google Meet link
-  created_at: Timestamp;
-  updated_at: Timestamp;
+  created_at: TimestampLike;
+  updated_at: TimestampLike;
 }
 
 /**
@@ -120,7 +125,7 @@ export interface ZoomMeeting {
   topic: string;
   start_time: Date;
   duration: number;                // Minutos
-  created_at: Timestamp;
+  created_at: TimestampLike;
 }
 
 /**
@@ -146,7 +151,7 @@ export interface StripeCustomer {
   email: string;
   name?: string;
   phone?: string;
-  created_at: Timestamp;
+  created_at: TimestampLike;
 }
 
 /**
@@ -159,10 +164,10 @@ export interface StripeSubscription {
   stripe_customer_id: string;
   price_id: string;
   status: 'active' | 'canceled' | 'past_due' | 'trialing' | 'incomplete' | 'unpaid';
-  current_period_start: Timestamp;
-  current_period_end: Timestamp;
+  current_period_start: TimestampLike;
+  current_period_end: TimestampLike;
   cancel_at_period_end: boolean;
-  created_at: Timestamp;
+  created_at: TimestampLike;
 }
 
 /**
@@ -187,9 +192,9 @@ export interface WhatsAppMessage {
   template_language?: string;
   content: string;
   status: 'queued' | 'sent' | 'delivered' | 'read' | 'failed';
-  sent_at: Timestamp;
-  delivered_at?: Timestamp;
-  read_at?: Timestamp;
+  sent_at: TimestampLike;
+  delivered_at?: TimestampLike;
+  read_at?: TimestampLike;
   error?: string;
 }
 
@@ -200,7 +205,7 @@ export interface HealthKitConfig {
   enable_sync: boolean;
   data_types: HealthDataType[];
   sync_frequency: 'realtime' | 'daily' | 'weekly';
-  last_sync?: Timestamp;
+  last_sync?: TimestampLike;
 }
 
 /**
@@ -227,7 +232,7 @@ export interface HealthDataPoint {
   unit: string;
   date: Date;                      // Data/hora da medição
   source: 'healthkit' | 'google_fit';
-  synced_at: Timestamp;
+  synced_at: TimestampLike;
 }
 
 /**
@@ -238,7 +243,7 @@ export interface GoogleFitConfig {
   refresh_token: string;
   data_types: HealthDataType[];
   sync_frequency: 'realtime' | 'daily' | 'weekly';
-  last_sync?: Timestamp;
+  last_sync?: TimestampLike;
 }
 
 /**
@@ -305,9 +310,9 @@ export interface WebhookEvent {
   status: 'pending' | 'sent' | 'failed';
   status_code?: number;
   attempt_number: number;
-  sent_at?: Timestamp;
+  sent_at?: TimestampLike;
   error?: string;
-  created_at: Timestamp;
+  created_at: TimestampLike;
 }
 
 /**
@@ -321,8 +326,8 @@ export interface IncomingWebhook {
   payload: Record<string, unknown>;
   signature?: string;              // HMAC para verificação
   processed: boolean;
-  processed_at?: Timestamp;
-  created_at: Timestamp;
+  processed_at?: TimestampLike;
+  created_at: TimestampLike;
 }
 
 /**

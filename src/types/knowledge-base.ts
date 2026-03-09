@@ -1,5 +1,11 @@
-import { Timestamp } from '@/integrations/firebase/app';
 import type { EvidenceTier } from '@/data/knowledgeBase';
+
+export type KnowledgeTimestampLike =
+  | string
+  | Date
+  | {
+      toDate?: () => Date;
+    };
 
 export type KnowledgeScope = 'organization' | 'user';
 export type KnowledgeCurationStatus = 'pending' | 'review' | 'verified' | 'rejected';
@@ -16,8 +22,8 @@ export interface KnowledgeAnnotation {
   evidence?: EvidenceTier;
   created_by: string;
   updated_by: string;
-  created_at: Timestamp;
-  updated_at: Timestamp;
+  created_at: KnowledgeTimestampLike;
+  updated_at: KnowledgeTimestampLike;
 }
 
 export interface KnowledgeCuration {
@@ -29,8 +35,8 @@ export interface KnowledgeCuration {
   assigned_to?: string;
   created_by: string;
   updated_by: string;
-  created_at: Timestamp;
-  updated_at: Timestamp;
+  created_at: KnowledgeTimestampLike;
+  updated_at: KnowledgeTimestampLike;
 }
 
 export interface KnowledgeAuditEntry {
@@ -41,7 +47,7 @@ export interface KnowledgeAuditEntry {
   action: 'create_annotation' | 'update_annotation' | 'update_curation';
   before?: Record<string, unknown>;
   after?: Record<string, unknown>;
-  created_at: Timestamp;
+  created_at: KnowledgeTimestampLike;
   context?: Record<string, unknown>;
 }
 
