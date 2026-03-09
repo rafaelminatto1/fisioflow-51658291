@@ -11,7 +11,7 @@ import GamificationHeader from '@/components/gamification/GamificationHeader';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { db, collection, query as firestoreQuery, where, getDocs, limit, orderBy } from '@/integrations/firebase/app';
+import { gamificationApi } from '@/lib/api/workers-client';
 
 interface LeaderboardEntry {
   patient_id: string;
@@ -62,43 +62,12 @@ export default function GamificationLeaderboardPage() {
   const { data: leaderboard = [], isLoading } = useQuery({
     queryKey: ['gamification-leaderboard', period],
     queryFn: async () => {
-      const gamificationRef = collection(db, 'patient_gamification');
-      let q;
-
-      if (period === 'weekly') {
-        q = firestoreQuery(gamificationRef, orderBy('current_streak', 'desc'), limit(50));
-      } else if (period === 'monthly') {
-        q = firestoreQuery(gamificationRef, orderBy('current_streak', 'desc'), limit(50));
-      } else {
-        q = firestoreQuery(gamificationRef, orderBy('total_points', 'desc'), limit(50));
-      }
-
-      const snapshot = await getDocs(q);
-      const data = snapshot.docs.map(d => ({ patient_id: d.id, ...d.data() })) as GamificationData[];
-
-      const patientIds = data.map(d => d.patient_id);
-      if (patientIds.length === 0) return [];
-
-      // Fetch patient names in chunks of 30 (Firestore limit for 'in' operator is 30)
-      const patientMap = new Map<string, string>();
-      const chunks = [];
-      for (let i = 0; i < patientIds.length; i += 30) {
-        chunks.push(patientIds.slice(i, i + 30));
-      }
-
-      for (const chunk of chunks) {
-        const qPatients = firestoreQuery(collection(db, 'patients'), where('__name__', 'in', chunk));
-        const snapshotPatients = await getDocs(qPatients);
-        snapshotPatients.docs.forEach(d => {
-          patientMap.set(d.id, d.data().full_name);
-        });
-      }
-
-      return data.map(entry => ({
+      const res = await gamificationApi.getLeaderboard({ period, limit: 50 });
+      return (res.data ?? []).map((entry) => ({
         patient_id: entry.patient_id,
-        patient_name: patientMap.get(entry.patient_id) || 'Paciente',
-        current_level: entry.level,
-        total_xp: entry.total_points,
+        patient_name: entry.patient_name,
+        current_level: entry.current_level,
+        total_xp: entry.total_xp,
         current_streak: entry.current_streak,
       })) as LeaderboardEntry[];
     },

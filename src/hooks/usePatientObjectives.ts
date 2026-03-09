@@ -1,12 +1,10 @@
 /**
- * usePatientObjectives - Migrated to Firebase
- *
+ * usePatientObjectives - Migrated to Neon/Workers
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { clinicalApi } from '@/lib/api/workers-client';
 
 export interface PatientObjective {
   id: string;
@@ -34,15 +32,8 @@ export function usePatientObjectives() {
   return useQuery({
     queryKey: ['patient-objectives'],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'patient_objectives'),
-        where('ativo', '==', true),
-        orderBy('categoria', 'asc'),
-        orderBy('nome', 'asc')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as PatientObjective[];
+      const res = await clinicalApi.patientObjectives.list();
+      return (res.data ?? []) as PatientObjective[];
     },
   });
 }
@@ -52,33 +43,8 @@ export function usePatientAssignedObjectives(patientId: string | undefined) {
     queryKey: ['patient-assigned-objectives', patientId],
     queryFn: async () => {
       if (!patientId) return [];
-
-      const q = firestoreQuery(
-        collection(db, 'patient_objective_assignments'),
-        where('patient_id', '==', patientId),
-        orderBy('prioridade', 'asc')
-      );
-
-      const snapshot = await getDocs(q);
-      const assignments = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
-
-      // Fetch objective data for each assignment
-      const assignmentsWithObjectives = await Promise.all(
-        assignments.map(async (assignment: { id: string; objective_id?: string }) => {
-          if (assignment.objective_id) {
-            const objectiveDoc = await getDoc(doc(db, 'patient_objectives', assignment.objective_id));
-            if (objectiveDoc.exists()) {
-              return {
-                ...assignment,
-                objective: { id: objectiveDoc.id, ...objectiveDoc.data() } as PatientObjective,
-              };
-            }
-          }
-          return assignment;
-        })
-      );
-
-      return assignmentsWithObjectives as PatientObjectiveAssignment[];
+      const res = await clinicalApi.patientObjectiveAssignments.list(patientId);
+      return (res.data ?? []) as PatientObjectiveAssignment[];
     },
     enabled: !!patientId,
   });
@@ -89,15 +55,8 @@ export function useCreatePatientObjective() {
 
   return useMutation({
     mutationFn: async (objective: PatientObjectiveFormData) => {
-      const data = {
-        ...objective,
-        created_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'patient_objectives'), data);
-      const docSnap = await getDoc(docRef);
-
-      return { id: docRef.id, ...docSnap.data() };
+      const res = await clinicalApi.patientObjectives.create(objective);
+      return res.data as PatientObjective;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patient-objectives'] });
@@ -114,11 +73,8 @@ export function useUpdatePatientObjective() {
 
   return useMutation({
     mutationFn: async ({ id, ...objective }: Partial<PatientObjective> & { id: string }) => {
-      const docRef = doc(db, 'patient_objectives', id);
-      await updateDoc(docRef, objective);
-
-      const docSnap = await getDoc(docRef);
-      return { id, ...docSnap.data() };
+      const res = await clinicalApi.patientObjectives.update(id, objective);
+      return res.data as PatientObjective;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patient-objectives'] });
@@ -135,8 +91,7 @@ export function useDeletePatientObjective() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const docRef = doc(db, 'patient_objectives', id);
-      await updateDoc(docRef, { ativo: false });
+      await clinicalApi.patientObjectives.delete(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patient-objectives'] });
@@ -148,7 +103,6 @@ export function useDeletePatientObjective() {
   });
 }
 
-// Assignment mutations
 export function useAssignObjective() {
   const queryClient = useQueryClient();
 
@@ -157,25 +111,20 @@ export function useAssignObjective() {
       patientId,
       objectiveId,
       prioridade = 2,
-      notas
+      notas,
     }: {
       patientId: string;
       objectiveId: string;
       prioridade?: number;
       notas?: string;
     }) => {
-      const data = {
+      const res = await clinicalApi.patientObjectiveAssignments.create({
         patient_id: patientId,
         objective_id: objectiveId,
         prioridade,
         notas,
-        created_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'patient_objective_assignments'), data);
-      const docSnap = await getDoc(docRef);
-
-      return { id: docRef.id, ...docSnap.data() };
+      });
+      return res.data as PatientObjectiveAssignment;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['patient-assigned-objectives', variables.patientId] });
@@ -191,8 +140,8 @@ export function useRemoveObjectiveAssignment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, patientId: _patientId }: { id: string; patientId: string }) => {
-      await deleteDoc(doc(db, 'patient_objective_assignments', id));
+    mutationFn: async ({ id }: { id: string; patientId: string }) => {
+      await clinicalApi.patientObjectiveAssignments.delete(id);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['patient-assigned-objectives', variables.patientId] });

@@ -1,47 +1,58 @@
-
 /**
  * Hook para gerenciar configurações dinâmicas e Feature Flags
+ *
+ * Migrado para env/local overrides, sem Firebase Remote Config.
  */
 
-import { useState, useEffect } from 'react';
-import { getRemoteConfig, getValue, fetchAndActivate } from 'firebase/remote-config';
-import { app } from '@/integrations/firebase/app';
+import { useEffect, useMemo, useState } from 'react';
+
+function readOverride(key: string): string | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    return window.localStorage.getItem(`remote-config:${key}`);
+  } catch {
+    return null;
+  }
+}
+
+function readEnv(key: string): string | undefined {
+  const envKey = `VITE_${key.toUpperCase()}`;
+  return (import.meta.env as Record<string, string | undefined>)[envKey];
+}
+
+function normalizeValue(raw: string | null | undefined, defaultValue: unknown): unknown {
+  if (raw == null) return defaultValue;
+
+  if (typeof defaultValue === 'boolean') {
+    return raw === 'true';
+  }
+
+  if (typeof defaultValue === 'number') {
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? parsed : defaultValue;
+  }
+
+  return raw;
+}
 
 export const useRemoteConfig = (key: string, defaultValue: unknown) => {
-  const [value, setValue] = useState(defaultValue);
+  const resolvedDefault = useMemo(
+    () => normalizeValue(readEnv(key), defaultValue),
+    [key, defaultValue],
+  );
+  const [value, setValue] = useState(resolvedDefault);
 
   useEffect(() => {
-    const remoteConfig = getRemoteConfig(app);
-    remoteConfig.settings.minimumFetchIntervalMillis = 3600000; // 1 hora em cache
-
-    const fetchConfig = async () => {
-      try {
-        await fetchAndActivate(remoteConfig);
-        const val = getValue(remoteConfig, key);
-        
-        if (typeof defaultValue === 'boolean') {
-          setValue(val.asBoolean());
-        } else if (typeof defaultValue === 'number') {
-          setValue(val.asNumber());
-        } else {
-          setValue(val.asString());
-        }
-      } catch (err) {
-        console.warn(`RemoteConfig error for key ${key}:`, err);
-      }
-    };
-
-    fetchConfig();
+    setValue(normalizeValue(readOverride(key) ?? readEnv(key), defaultValue));
   }, [key, defaultValue]);
 
   return value;
 };
 
-// Exemplos de flags para o FisioFlow
 export const useFeatureFlags = () => {
-  const enableAI = useRemoteConfig('feature_ai_summary', true);
-  const enableGoniometry = useRemoteConfig('feature_goniometry_v2', false); // Pode ser liberado gradualmente
-  const maintenanceMode = useRemoteConfig('maintenance_mode', false);
+  const enableAI = useRemoteConfig('feature_ai_summary', true) as boolean;
+  const enableGoniometry = useRemoteConfig('feature_goniometry_v2', false) as boolean;
+  const maintenanceMode = useRemoteConfig('maintenance_mode', false) as boolean;
 
   return { enableAI, enableGoniometry, maintenanceMode };
 };

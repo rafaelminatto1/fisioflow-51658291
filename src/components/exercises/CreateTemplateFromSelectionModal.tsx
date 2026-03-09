@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useExerciseTemplates } from '@/hooks/useExerciseTemplates';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { db, collection, addDoc } from '@/integrations/firebase/app';
 
 interface CreateTemplateFromSelectionModalProps {
     open: boolean;
@@ -30,15 +29,6 @@ export function CreateTemplateFromSelectionModal({
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { createTemplateAsync } = useExerciseTemplates();
-    // We need a way to add items, but hook requires templateId.
-    // Actually, useTemplateItems hook depends on templateId query key.
-    // We can't really use it easily here without mounting it for the new template ID.
-    // Better approach: Create a specialized service function or use direct Firebase call here for efficiency.
-    // OR: Refactor useTemplateItems to not require templateId for the mutation itself, or use a separate hook.
-    // For simplicity and speed given constraints: I'll use direct Firebase call for batch insert of items.
-
-    // Actually, looking at useExerciseTemplates structure, I can just use Firebase client directly for items
-    // to avoid complex hook orchestration in this modal.
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -53,24 +43,16 @@ export function CreateTemplateFromSelectionModal({
                 description,
                 category,
                 condition_name: conditionName,
-                template_variant: 'Personalizado'
+                template_variant: 'Personalizado',
+                items: selectedExerciseIds.map((exerciseId, index) => ({
+                    exercise_id: exerciseId,
+                    order_index: index,
+                    sets: 3,
+                    repetitions: 10,
+                })),
             });
 
             if (newTemplate?.id) {
-                // 2. Add Selected Exercises to Template
-                const items = selectedExerciseIds.map((exerciseId, index) => ({
-                    template_id: newTemplate.id,
-                    exercise_id: exerciseId,
-                    order_index: index,
-                    sets: 3, // Default values
-                    repetitions: 10
-                }));
-
-                // Insert items into Firebase
-                await Promise.all(
-                    items.map(item => addDoc(collection(db, 'exercise_template_items'), item))
-                );
-
                 toast.success('Template criado com sucesso!');
                 onOpenChange(false);
                 if (onSuccess) onSuccess();

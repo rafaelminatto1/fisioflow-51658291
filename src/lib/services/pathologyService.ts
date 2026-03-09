@@ -1,140 +1,65 @@
-import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy } from '@/integrations/firebase/app';
-import type { Pathology } from '@/types/evolution';
+import { patientsApi, type PatientPathology } from '@/lib/api/workers-client';
+import type { Pathology, PathologyFormData } from '@/types/evolution';
+
+const mapStatus = (value?: string | null): Pathology['status'] => {
+  if (value === 'active' || value === 'em_tratamento') return 'em_tratamento';
+  if (value === 'treated' || value === 'tratada') return 'tratada';
+  return 'cronica';
+};
+
+const serializePathology = (row: PatientPathology): Pathology => ({
+  id: row.id,
+  patient_id: (row as PatientPathology & { patient_id?: string }).patient_id ?? '',
+  pathology_name: row.name,
+  cid_code: row.icd_code ?? undefined,
+  diagnosis_date: row.diagnosed_at ?? undefined,
+  severity: (row as PatientPathology & { severity?: Pathology['severity'] | null }).severity ?? undefined,
+  affected_region: (row as PatientPathology & { affected_region?: string | null }).affected_region ?? undefined,
+  status: mapStatus(row.status),
+  notes: row.notes ?? undefined,
+  created_at: row.created_at,
+  updated_at: (row as PatientPathology & { updated_at?: string | null }).updated_at ?? row.created_at,
+});
 
 export class PathologyService {
-  // Optimized: Select only required columns instead of *
   static async getPathologiesByPatientId(patientId: string): Promise<Pathology[]> {
-    const q = query(
-      collection(db, 'patient_pathologies'),
-      where('patient_id', '==', patientId),
-      orderBy('created_at', 'desc')
-    );
-    const snapshot = await getDocs(q);
-
-    return snapshot.docs.map(docSnap => {
-      const data = docSnap.data();
-      return {
-        id: docSnap.id,
-        patient_id: data.patient_id,
-        diagnosis: data.diagnosis,
-        status: data.status,
-        notes: data.notes,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-      } as Pathology;
-    });
+    const res = await patientsApi.pathologies(patientId);
+    return (res.data ?? []).map(serializePathology).map((item) => ({ ...item, patient_id: patientId }));
   }
 
-  // Optimized: Select only required columns instead of *
   static async getActivePathologies(patientId: string): Promise<Pathology[]> {
-    const q = query(
-      collection(db, 'patient_pathologies'),
-      where('patient_id', '==', patientId),
-      where('status', '==', 'em_tratamento'),
-      orderBy('created_at', 'desc')
-    );
-    const snapshot = await getDocs(q);
-
-    return snapshot.docs.map(docSnap => {
-      const data = docSnap.data();
-      return {
-        id: docSnap.id,
-        patient_id: data.patient_id,
-        diagnosis: data.diagnosis,
-        status: data.status,
-        notes: data.notes,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-      } as Pathology;
-    });
+    const data = await this.getPathologiesByPatientId(patientId);
+    return data.filter((item) => item.status === 'em_tratamento');
   }
 
-  // Optimized: Select only required columns instead of *
   static async getResolvedPathologies(patientId: string): Promise<Pathology[]> {
-    const q = query(
-      collection(db, 'patient_pathologies'),
-      where('patient_id', '==', patientId),
-      orderBy('created_at', 'desc')
-    );
-    const snapshot = await getDocs(q);
-
-    // Client-side filter for resolved pathologies (Firestore doesn't support 'in' with arrays well)
-    return snapshot.docs
-      .map(docSnap => {
-        const data = docSnap.data();
-        return {
-          id: docSnap.id,
-          patient_id: data.patient_id,
-          diagnosis: data.diagnosis,
-          status: data.status,
-          notes: data.notes,
-          created_at: data.created_at,
-          updated_at: data.updated_at,
-        } as Pathology;
-      })
-      .filter(p => p.status === 'tratada' || p.status === 'cronica');
+    const data = await this.getPathologiesByPatientId(patientId);
+    return data.filter((item) => item.status === 'tratada' || item.status === 'cronica');
   }
 
-  // Optimized: Select only required columns
   static async addPathology(data: PathologyFormData): Promise<Pathology> {
-    const now = new Date().toISOString();
-    const dataToSave = {
-      ...data,
-      created_at: now,
-      updated_at: now,
-    };
-
-    const docRef = await addDoc(collection(db, 'patient_pathologies'), dataToSave);
-    const docSnap = await getDoc(docRef);
-
-    const savedData = docSnap.data();
-    return {
-      id: docSnap.id,
-      patient_id: savedData.patient_id,
-      diagnosis: savedData.diagnosis,
-      status: savedData.status,
-      notes: savedData.notes,
-      created_at: savedData.created_at,
-      updated_at: savedData.updated_at,
-    } as Pathology;
+    const res = await patientsApi.createPathology(data.patient_id, data);
+    return { ...serializePathology(res.data), patient_id: data.patient_id };
   }
 
-  // Optimized: Select only required columns
   static async updatePathology(pathologyId: string, data: Partial<PathologyFormData>): Promise<Pathology> {
-    const docRef = doc(db, 'patient_pathologies', pathologyId);
+    const patientId = String(data.patient_id ?? '').trim();
+    if (!patientId) throw new Error('patient_id é obrigatório para atualizar patologia');
 
-    await updateDoc(docRef, {
-      ...data,
-      updated_at: new Date().toISOString(),
-    });
-
-    const docSnap = await getDoc(docRef);
-    const updatedData = docSnap.data();
-
-    return {
-      id: docSnap.id,
-      patient_id: updatedData.patient_id,
-      diagnosis: updatedData.diagnosis,
-      status: updatedData.status,
-      notes: updatedData.notes,
-      created_at: updatedData.created_at,
-      updated_at: updatedData.updated_at,
-    } as Pathology;
+    const res = await patientsApi.updatePathology(patientId, pathologyId, data);
+    return { ...serializePathology(res.data), patient_id: patientId };
   }
 
-  // Optimized: Select only required columns
-  static async markAsResolved(pathologyId: string): Promise<Pathology> {
-    return this.updatePathology(pathologyId, { status: 'tratada' });
+  static async markAsResolved(pathologyId: string, patientId: string): Promise<Pathology> {
+    return this.updatePathology(pathologyId, { patient_id: patientId, status: 'tratada' });
   }
 
-  // Optimized: Select only required columns
-  static async markAsActive(pathologyId: string): Promise<Pathology> {
-    return this.updatePathology(pathologyId, { status: 'em_tratamento' });
+  static async markAsActive(pathologyId: string, patientId: string): Promise<Pathology> {
+    return this.updatePathology(pathologyId, { patient_id: patientId, status: 'em_tratamento' });
   }
 
-  static async deletePathology(pathologyId: string): Promise<void> {
-    const docRef = doc(db, 'patient_pathologies', pathologyId);
-    await deleteDoc(docRef);
+  static async deletePathology(pathologyId: string, patientId: string): Promise<void> {
+    await patientsApi.deletePathology(patientId, pathologyId);
   }
 
   static getStatusColor(status: string): string {
