@@ -6,8 +6,7 @@
  */
 
 import { differenceInDays } from 'date-fns';
-import { httpsCallable } from 'firebase/functions';
-import { getFirebaseFunctions } from '@/integrations/firebase/functions';
+import { appointmentsApi, clinicalApi } from '@/lib/api/workers-client';
 
 export type GeneratedQuest = {
   id: string; // unique code like 'pain_map_update'
@@ -135,14 +134,13 @@ export async function generateSmartQuests(
  */
 async function checkTodayAppointment(patientId: string, today: string): Promise<boolean> {
   try {
-    const checkAppointmentsFn = httpsCallable(getFirebaseFunctions(), 'checkPatientAppointments');
-    const result = await checkAppointmentsFn({
+    const result = await appointmentsApi.list({
       patientId,
       startDate: today,
       endDate: today,
+      limit: 1,
     });
-
-    return !!result.data?.hasAppointments;
+    return (result.data ?? []).length > 0;
   } catch (error) {
     console.error('Error checking appointments:', error);
     return false;
@@ -154,11 +152,12 @@ async function checkTodayAppointment(patientId: string, today: string): Promise<
  */
 async function getDaysSinceLastPainMap(patientId: string): Promise<number> {
   try {
-    const checkPainMapFn = httpsCallable(getFirebaseFunctions(), 'getLastPainMapDate');
-    const result = await checkPainMapFn({ patientId });
-
-    if (result.data?.lastDate) {
-      return differenceInDays(new Date(), new Date(result.data.lastDate));
+    const result = await clinicalApi.painMaps.list({ patientId });
+    const maps = (result.data ?? []).sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
+    if (maps[0]?.created_at) {
+      return differenceInDays(new Date(), new Date(maps[0].created_at));
     }
     return 999; // Large number if no pain map found
   } catch (error) {

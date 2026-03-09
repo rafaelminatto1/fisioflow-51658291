@@ -8,8 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
-import { getFirebaseFunctions } from '@/integrations/firebase/functions';
-import { httpsCallable } from 'firebase/functions';
+import { aiApi } from '@/lib/api/workers-client';
 import {
 
   Brain,
@@ -47,11 +46,7 @@ export function TreatmentAssistant({ patientId, patientName, onApplyToSoap }: Tr
       setActiveAction(action);
       setSuggestion(null);
 
-      // Call Firebase Cloud Function
-      const functions = getFirebaseFunctions();
-      const treatmentAssistantFunction = httpsCallable(functions, 'ai-treatment-assistant');
-      const result = await treatmentAssistantFunction({ patientId, action });
-
+      const result = await aiApi.treatmentAssistant({ patientId, action });
       const data = result.data as TreatmentAssistantResponse;
 
       if (data?.error) {

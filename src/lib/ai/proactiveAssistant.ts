@@ -1,6 +1,6 @@
-import { db, collection, getDocs, query as firestoreQuery, where, orderBy, limit, getDoc, doc } from '@/integrations/firebase/app';
-import { differenceInDays, subDays, addDays, format } from 'date-fns';
+import { differenceInDays, addDays, format, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { appointmentsApi, financialApi, patientsApi } from '@/lib/api/workers-client';
 
 export interface ProactiveSuggestion {
   id: string;
@@ -17,7 +17,7 @@ export interface ProactiveSuggestion {
 export interface ScheduleSuggestion {
   date: Date;
   timeSlots: Array<{ start: string; end: string; availability: 'high' | 'medium' | 'low' }>;
-  recommendedFor?: string[]; // patient IDs
+  recommendedFor?: string[];
   reason: string;
 }
 
@@ -30,18 +30,15 @@ export interface InventoryAlert {
   suggestedOrderQuantity: number;
 }
 
-/**
- * Analyze practice data and generate proactive suggestions
- */
 export async function generateProactiveSuggestions(
-  organizationId: string,
+  _organizationId: string,
   options?: {
     includeNoShows?: boolean;
     includeScheduleOptimization?: boolean;
     includeInventoryAlerts?: boolean;
     includeRetentionWarnings?: boolean;
     daysAhead?: number;
-  }
+  },
 ): Promise<ProactiveSuggestion[]> {
   const suggestions: ProactiveSuggestion[] = [];
   const opts = {
@@ -53,403 +50,145 @@ export async function generateProactiveSuggestions(
     ...options,
   };
 
-  // 1. No-show alerts
-  if (opts.includeNoShows) {
-    const noShowSuggestions = await generateNoShowAlerts(organizationId);
-    suggestions.push(...noShowSuggestions);
-  }
+  if (opts.includeNoShows) suggestions.push(...await generateNoShowAlerts());
+  if (opts.includeScheduleOptimization) suggestions.push(...await generateScheduleOptimization(opts.daysAhead));
+  if (opts.includeRetentionWarnings) suggestions.push(...await generateRetentionWarnings());
+  if (opts.includeInventoryAlerts) suggestions.push(...await generateInventoryAlerts());
 
-  // 2. Schedule optimization
-  if (opts.includeScheduleOptimization) {
-    const scheduleSuggestions = await generateScheduleOptimization(organizationId, opts.daysAhead);
-    suggestions.push(...scheduleSuggestions);
-  }
-
-  // 3. Retention warnings
-  if (opts.includeRetentionWarnings) {
-    const retentionSuggestions = await generateRetentionWarnings(organizationId);
-    suggestions.push(...retentionSuggestions);
-  }
-
-  // Sort by priority
   const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
-  suggestions.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
-
-  return suggestions.slice(0, 10); // Limit to top 10 suggestions
+  return suggestions.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]).slice(0, 10);
 }
 
-/**
- * Generate alerts for patients at risk of no-show
- */
-async function generateNoShowAlerts(organizationId: string): Promise<ProactiveSuggestion[]> {
+async function generateNoShowAlerts(): Promise<ProactiveSuggestion[]> {
+  const tomorrow = addDays(new Date(), 1).toISOString();
+  const threeDaysLater = addDays(new Date(), 3).toISOString();
+  const upcoming = (await appointmentsApi.list({ dateFrom: tomorrow, dateTo: threeDaysLater, status: 'agendado', limit: 100 })).data ?? [];
   const suggestions: ProactiveSuggestion[] = [];
-  const tomorrow = addDays(new Date(), 1);
-  const threeDaysLater = addDays(new Date(), 3);
 
-  // Get appointments in the next 3 days
-  const upcomingAppointmentsQuery = firestoreQuery(
-    collection(db, 'appointments'),
-    where('organization_id', '==', organizationId),
-    where('appointment_date', '>=', tomorrow.toISOString()),
-    where('appointment_date', '<=', threeDaysLater.toISOString()),
-    where('status', '==', 'agendado')
-  );
+  for (const appointment of upcoming) {
+    if (!appointment.patient_id) continue;
+    const noShows = (await appointmentsApi.list({ patientId: appointment.patient_id, status: 'falta', limit: 5 })).data ?? [];
+    const latestAppointments = (await appointmentsApi.list({ patientId: appointment.patient_id, limit: 1 })).data ?? [];
+    const lastWasNoShow = latestAppointments[0]?.status === 'falta';
+    if (!lastWasNoShow && noShows.length < 3) continue;
 
-  const upcomingSnapshot = await getDocs(upcomingAppointmentsQuery);
-
-  for (const appointmentDoc of upcomingSnapshot.docs) {
-    const appointment = appointmentDoc.data();
-    const patientId = appointment.patient_id;
-    if (!patientId) continue;
-
-    // Check patient's no-show history
-    const patientHistoryQuery = firestoreQuery(
-      collection(db, 'appointments'),
-      where('patient_id', '==', patientId),
-      where('status', '==', 'falta'),
-      orderBy('appointment_date', 'desc'),
-      // @ts-expect-error - firestore limit typing mismatch
-      limit(5)
-    );
-
-    const historySnapshot = await getDocs(patientHistoryQuery);
-    const noShowCount = historySnapshot.size;
-
-    // Check if patient has missed last appointment
-    const lastApptQuery = firestoreQuery(
-      collection(db, 'appointments'),
-      where('patient_id', '==', patientId),
-      orderBy('appointment_date', 'desc'),
-      // @ts-expect-error - firestore limit typing mismatch
-      limit(1)
-    );
-
-    const lastApptSnapshot = await getDocs(lastApptQuery);
-    let lastWasNoShow = false;
-    if (!lastApptSnapshot.empty) {
-      lastWasNoShow = lastApptSnapshot.docs[0].data().status === 'falta';
-    }
-
-    // High risk: missed last appointment OR 3+ no-shows
-    if (lastWasNoShow || noShowCount >= 3) {
-      const patientDoc = await getDoc(doc(db, 'patients', patientId));
-      const patientName = patientDoc.exists()
-        ? patientDoc.data()?.full_name || patientDoc.data()?.name
-        : 'Paciente';
-
-      suggestions.push({
-        id: `noshow-${appointmentDoc.id}`,
-        type: 'no-show-alert',
-        priority: lastWasNoShow ? 'urgent' : 'high',
-        title: 'Risco de não comparecimento',
-        description: `${patientName} tem ${noShowCount} faltas${lastWasNoShow ? ' e faltou à última consulta' : ''}. Considere confirmar o agendamento de ${format(new Date(appointment.appointment_date), 'dd/MM/yyyy', { locale: ptBR })}.`,
-        actionLabel: 'Entrar em Contato',
-        actionUrl: `/pacientes/${patientId}`,
-        metadata: {
-          patientId,
-          appointmentId: appointmentDoc.id,
-          appointmentDate: appointment.appointment_date,
-          noShowCount,
-          lastWasNoShow,
-        },
-        createdAt: new Date(),
-      });
-    }
+    suggestions.push({
+      id: `noshow-${appointment.id}`,
+      type: 'no-show-alert',
+      priority: lastWasNoShow ? 'urgent' : 'high',
+      title: 'Risco de não comparecimento',
+      description: `${appointment.patient_name ?? 'Paciente'} tem ${noShows.length} faltas${lastWasNoShow ? ' e faltou à última consulta' : ''}. Considere confirmar o agendamento de ${format(new Date(appointment.date || appointment.start_time), 'dd/MM/yyyy', { locale: ptBR })}.`,
+      actionLabel: 'Entrar em Contato',
+      actionUrl: appointment.patient_id ? `/pacientes/${appointment.patient_id}` : '/agenda',
+      metadata: {
+        patientId: appointment.patient_id,
+        appointmentId: appointment.id,
+        noShowCount: noShows.length,
+        lastWasNoShow,
+      },
+      createdAt: new Date(),
+    });
   }
 
   return suggestions;
 }
 
-/**
- * Generate schedule optimization suggestions
- */
-async function generateScheduleOptimization(
-  organizationId: string,
-  daysAhead: number = 14
-): Promise<ProactiveSuggestion[]> {
-  const suggestions: ProactiveSuggestion[] = [];
+async function generateScheduleOptimization(daysAhead = 14): Promise<ProactiveSuggestion[]> {
   const startDate = new Date();
   const endDate = addDays(startDate, daysAhead);
+  const appointments = (await appointmentsApi.list({
+    dateFrom: startDate.toISOString(),
+    dateTo: endDate.toISOString(),
+    limit: 500,
+  })).data ?? [];
 
-  // Analyze each day in the range
-  for (let day = startDate; day <= endDate; day = addDays(day, 1)) {
-    // Skip weekends
-    const dayOfWeek = day.getDay();
-    if (dayOfWeek === 0 || dayOfWeek === 6) continue;
+  const grouped = new Map<string, typeof appointments>();
+  appointments.forEach((appointment) => {
+    const key = (appointment.date || appointment.start_time || '').slice(0, 10);
+    if (!key) return;
+    const list = grouped.get(key) ?? [];
+    list.push(appointment);
+    grouped.set(key, list);
+  });
 
-    const dayStart = new Date(day);
-    dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date(day);
-    dayEnd.setHours(23, 59, 59, 999);
-
-    // Get appointments for this day
-    const dayAppointmentsQuery = firestoreQuery(
-      collection(db, 'appointments'),
-      where('organization_id', '==', organizationId),
-      where('appointment_date', '>=', dayStart.toISOString()),
-      where('appointment_date', '<=', dayEnd.toISOString())
-    );
-
-    const daySnapshot = await getDocs(dayAppointmentsQuery);
-    const appointments = daySnapshot.docs.map((d) => d.data());
-
-    // Analyze time slots
+  const suggestions: ProactiveSuggestion[] = [];
+  for (const [date, dayAppointments] of grouped.entries()) {
     const hourCounts = new Map<number, number>();
-    appointments.forEach((apt: unknown) => {
-      const hour = new Date(apt.appointment_date).getHours();
+    dayAppointments.forEach((appointment) => {
+      const hour = Number((appointment.start_time || '00:00').split(':')[0]);
       hourCounts.set(hour, (hourCounts.get(hour) || 0) + 1);
     });
-
-    // Find gaps and peaks
     const workingHours = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
     let maxConcurrent = 0;
     let minConcurrent = Infinity;
-
     workingHours.forEach((hour) => {
       const count = hourCounts.get(hour) || 0;
       maxConcurrent = Math.max(maxConcurrent, count);
       minConcurrent = Math.min(minConcurrent, count);
     });
-
-    // Suggest if there's a significant gap (more than 3x difference)
     if (maxConcurrent > 0 && minConcurrent < maxConcurrent / 3 && maxConcurrent >= 2) {
-      // Find the quiet hours
-      const quietHours = workingHours.filter((h) => (hourCounts.get(h) || 0) <= minConcurrent + 1);
-      const quietRange = `${Math.min(...quietHours)}:00 - ${Math.max(...quietHours) + 1}:00`;
-
+      const quietHours = workingHours.filter((hour) => (hourCounts.get(hour) || 0) <= minConcurrent + 1);
       suggestions.push({
-        id: `schedule-gap-${format(day, 'yyyy-MM-dd')}`,
+        id: `schedule-gap-${date}`,
         type: 'schedule-optimization',
         priority: 'medium',
-        title: 'Horário disponível detectedado',
-        description: `O dia ${format(day, 'dd/MM MMM', { locale: ptBR })} tem horários livres das ${quietRange}. Considere agendar pacientes de retorno ou sessões de avaliação.`,
+        title: 'Horário disponível detectado',
+        description: `O dia ${format(new Date(date), 'dd/MM MMM', { locale: ptBR })} tem baixa ocupação entre ${Math.min(...quietHours)}:00 e ${Math.max(...quietHours) + 1}:00.`,
         actionLabel: 'Ver Agenda',
         actionUrl: '/agenda',
-        metadata: {
-          date: day.toISOString(),
-          quietHours,
-          appointmentCount: appointments.length,
-        },
+        metadata: { date, quietHours, appointmentCount: dayAppointments.length },
         createdAt: new Date(),
       });
     }
   }
-
   return suggestions;
 }
 
-/**
- * Generate retention warnings for inactive patients
- */
-async function generateRetentionWarnings(organizationId: string): Promise<ProactiveSuggestion[]> {
-  const suggestions: ProactiveSuggestion[] = [];
-  const _thirtyDaysAgo = subDays(new Date(), 30);
-  const _sixtyDaysAgo = subDays(new Date(), 60);
-  const ninetyDaysAgo = subDays(new Date(), 90);
+async function generateRetentionWarnings(): Promise<ProactiveSuggestion[]> {
+  const recentCutoff = subDays(new Date(), 45);
+  const patients = (await patientsApi.list({ limit: 300 })).data ?? [];
+  const recentAppointments = (await appointmentsApi.list({ dateFrom: recentCutoff.toISOString(), limit: 500 })).data ?? [];
+  const activePatients = new Set(recentAppointments.map((appointment) => appointment.patient_id).filter(Boolean));
 
-  // Get patients who haven't returned in 30+ days
-  const recentAppointmentsQuery = firestoreQuery(
-    collection(db, 'appointments'),
-    where('organization_id', '==', organizationId),
-    where('appointment_date', '>=', ninetyDaysAgo.toISOString()),
-    orderBy('appointment_date', 'desc')
-  );
-
-  const recentSnapshot = await getDocs(recentAppointmentsQuery);
-  const recentPatientIds = new Set(
-    recentSnapshot.docs.map((d) => d.data().patient_id).filter(Boolean)
-  );
-
-  // Get all patients
-  const allPatientsSnapshot = await getDocs(
-    firestoreQuery(
-      collection(db, 'patients'),
-      where('organization_id', '==', organizationId)
-    )
-  );
-
-  for (const patientDoc of allPatientsSnapshot.docs) {
-    const patientId = patientDoc.id;
-    if (recentPatientIds.has(patientId)) continue;
-
-    // This patient hasn't had any appointment in 90+ days
-    const patientData = patientDoc.data();
-
-    // Get last appointment ever
-    const lastApptQuery = firestoreQuery(
-      collection(db, 'appointments'),
-      where('patient_id', '==', patientId),
-      orderBy('appointment_date', 'desc'),
-      // @ts-expect-error - firestore limit typing mismatch
-      limit(1)
-    );
-
-    const lastApptSnapshot = await getDocs(lastApptQuery);
-    if (!lastApptSnapshot.empty) {
-      const lastAppt = lastApptSnapshot.docs[0].data();
-      const daysSinceLastAppt = differenceInDays(new Date(), new Date(lastAppt.appointment_date));
-
-      let priority: ProactiveSuggestion['priority'] = 'low';
-
-      if (daysSinceLastAppt >= 90) {
-        priority = 'high';
-      } else if (daysSinceLastAppt >= 60) {
-        priority = 'medium';
-      } else if (daysSinceLastAppt >= 30) {
-        priority = 'low';
-      }
-
-      suggestions.push({
-        id: `retention-${patientId}`,
-        type: 'retention-warning',
-        priority,
-        title: 'Paciente inativo detectado',
-        description: `${patientData.full_name || patientData.name || 'Um paciente'} não comparece há ${daysSinceLastAppt} dias. Considere entrar em contato para reagendar.`,
-        actionLabel: 'Ver Paciente',
-        actionUrl: `/pacientes/${patientId}`,
-        metadata: {
-          patientId,
-          daysInactive: daysSinceLastAppt,
-          lastAppointment: lastAppt.appointment_date,
-        },
-        createdAt: new Date(),
-      });
-    }
-  }
-
-  return suggestions;
+  return patients
+    .filter((patient) => !activePatients.has(patient.id))
+    .slice(0, 10)
+    .map((patient) => ({
+      id: `retention-${patient.id}`,
+      type: 'retention-warning',
+      priority: 'medium',
+      title: 'Paciente sem retorno recente',
+      description: `${patient.full_name ?? patient.name ?? 'Paciente'} não aparece em atendimentos recentes. Vale acionar retorno ou follow-up.`,
+      actionLabel: 'Abrir paciente',
+      actionUrl: `/pacientes/${patient.id}`,
+      metadata: { patientId: patient.id },
+      createdAt: new Date(),
+    }));
 }
 
-/**
- * Analyze appointment patterns to detect scheduling gaps
- */
-export async function detectAppointmentGaps(
-  organizationId: string,
-  lookbackDays: number = 30
-): Promise<Array<{ day: Date; gapStart: string; gapEnd: string; gapMinutes: number }>> {
-  const gaps: Array<{ day: Date; gapStart: string; gapEnd: string; gapMinutes: number }> = [];
-  const startDate = subDays(new Date(), lookbackDays);
-
-  const appointmentsQuery = firestoreQuery(
-    collection(db, 'appointments'),
-    where('organization_id', '==', organizationId),
-    where('appointment_date', '>=', startDate.toISOString()),
-    orderBy('appointment_date', 'asc')
-  );
-
-  const snapshot = await getDocs(appointmentsQuery);
-  const appointments = snapshot.docs.map((d) => {
-    const data = d.data();
-    return { ...data, date: new Date(data.appointment_date) };
-  });
-
-  // Group by day
-  const appointmentsByDay = new Map<string, typeof appointments>();
-  appointments.forEach((apt) => {
-    const dayKey = format(apt.date, 'yyyy-MM-dd');
-    if (!appointmentsByDay.has(dayKey)) {
-      appointmentsByDay.set(dayKey, []);
-    }
-    appointmentsByDay.get(dayKey)!.push(apt);
-  });
-
-  // Find gaps for each day
-  appointmentsByDay.forEach((dayAppointments, dayKey) => {
-    if (dayAppointments.length < 2) return;
-
-    const sorted = dayAppointments.sort((a, b) => a.date.getTime() - b.date.getTime());
-
-    for (let i = 0; i < sorted.length - 1; i++) {
-      const current = sorted[i];
-      const next = sorted[i + 1];
-      const gapMinutes = (next.date.getTime() - current.date.getTime()) / (1000 * 60);
-
-      // Consider gaps of 60+ minutes (typical session duration)
-      if (gapMinutes >= 60) {
-        gaps.push({
-          day: new Date(dayKey),
-          gapStart: format(current.date, 'HH:mm'),
-          gapEnd: format(next.date, 'HH:mm'),
-          gapMinutes: Math.round(gapMinutes),
-        });
-      }
-    }
-  });
-
-  return gaps.sort((a, b) => b.gapMinutes - a.gapMinutes);
+async function generateInventoryAlerts(): Promise<ProactiveSuggestion[]> {
+  const items = (await financialApi.inventory.list({ activeOnly: true })).data ?? [];
+  return items
+    .filter((item) => item.current_quantity <= item.minimum_quantity)
+    .slice(0, 5)
+    .map((item) => ({
+      id: `inventory-${item.id}`,
+      type: 'inventory-alert',
+      priority: item.current_quantity === 0 ? 'urgent' : 'high',
+      title: 'Item com estoque baixo',
+      description: `${item.item_name} está com ${item.current_quantity} ${item.unit}(s), abaixo do mínimo de ${item.minimum_quantity}.`,
+      actionLabel: 'Ver estoque',
+      actionUrl: '/financeiro',
+      metadata: { inventoryId: item.id },
+      createdAt: new Date(),
+    }));
 }
 
-/**
- * Generate proactive insights for dashboard
- */
-export async function generateDashboardInsights(
-  organizationId: string
-): Promise<{
-  suggestions: ProactiveSuggestion[];
-  stats: {
-    upcomingAppointments: number;
-    atRiskPatients: number;
-    scheduleGaps: number;
-    retentionRate: number;
-  };
-}> {
-  // Get suggestions
-  const suggestions = await generateProactiveSuggestions(organizationId, {
-    daysAhead: 7,
-  });
-
-  // Get quick stats
-  const tomorrow = addDays(new Date(), 1);
-  const weekFromNow = addDays(new Date(), 7);
-
-  const upcomingQuery = firestoreQuery(
-    collection(db, 'appointments'),
-    where('organization_id', '==', organizationId),
-    where('appointment_date', '>=', tomorrow.toISOString()),
-    where('appointment_date', '<=', weekFromNow.toISOString()),
-    where('status', '==', 'agendado')
-  );
-
-  const upcomingSnapshot = await getDocs(upcomingQuery);
-  const upcomingAppointments = upcomingSnapshot.size;
-
-  // Count at-risk patients (30+ days inactive)
-  const thirtyDaysAgo = subDays(new Date(), 30);
-  const recentQuery = firestoreQuery(
-    collection(db, 'appointments'),
-    where('organization_id', '==', organizationId),
-    where('appointment_date', '>=', thirtyDaysAgo.toISOString())
-  );
-
-  const recentSnapshot = await getDocs(recentQuery);
-  const activePatientIds = new Set(
-    recentSnapshot.docs.map((d) => d.data().patient_id).filter(Boolean)
-  );
-
-  const allPatientsSnapshot = await getDocs(
-    firestoreQuery(
-      collection(db, 'patients'),
-      where('organization_id', '==', organizationId)
-    )
-  );
-  const atRiskPatients = allPatientsSnapshot.size - activePatientIds.size;
-
-  // Get schedule gaps
-  const gaps = await detectAppointmentGaps(organizationId, 7);
-
-  // Calculate retention rate (active / total)
-  const retentionRate =
-    allPatientsSnapshot.size > 0
-      ? Math.round((activePatientIds.size / allPatientsSnapshot.size) * 100)
-      : 0;
-
-  return {
-    suggestions: suggestions.slice(0, 5), // Top 5 for dashboard
-    stats: {
-      upcomingAppointments,
-      atRiskPatients,
-      scheduleGaps: gaps.length,
-      retentionRate,
-    },
-  };
+export function calculatePatientRetentionRate(lastVisitDate?: string | null): number {
+  if (!lastVisitDate) return 0;
+  const days = differenceInDays(new Date(), new Date(lastVisitDate));
+  if (days <= 30) return 100;
+  if (days <= 60) return 70;
+  if (days <= 90) return 40;
+  return 10;
 }

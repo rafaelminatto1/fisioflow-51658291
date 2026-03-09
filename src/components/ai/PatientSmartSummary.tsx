@@ -5,7 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Brain, Sparkles, TrendingUp, TrendingDown, AlertCircle, CheckCircle2, ChevronRight, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { callFunctionHttp } from '@/integrations/firebase/functions';
+import { aiApi } from '@/lib/api/workers-client';
 
 interface PatientSmartSummaryProps {
   patientId: string;
@@ -49,35 +49,18 @@ export function PatientSmartSummary({
 
     setLoading(true);
     try {
-      const data = await callFunctionHttp<{
-        action: string;
-        patientId: string;
-        patientName: string;
-        condition: string;
-        history: Array<{
-          date: string;
-          subjective?: string;
-          objective?: string;
-          exercises?: string[];
-        }>;
-        goals?: string[];
-      }, {
-        success?: boolean;
-        data?: SummaryResult;
-        error?: string;
-      }>('aiServiceHttp', {
-          action: 'patientExecutiveSummary',
-          patientId,
-          patientName,
-          condition,
-          history: history.slice(0, 5), // Enviar as 5 mais recentes
-          goals,
+      const response = await aiApi.executiveSummary({
+        patientId,
+        patientName,
+        condition,
+        history: history.slice(0, 5),
+        goals,
       });
-      if (data.success && data.data) {
-        setResult(data.data);
+      if (response.data) {
+        setResult(response.data as SummaryResult);
         toast.success('Resumo gerado com sucesso!');
       } else {
-        throw new Error(data.error || 'Erro desconhecido');
+        throw new Error('Erro desconhecido');
       }
     } catch (error) {
       console.error('[SmartSummary] Error:', error);

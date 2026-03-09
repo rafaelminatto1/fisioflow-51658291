@@ -26,7 +26,7 @@ import { ClinicalFieldType, EvaluationForm } from '@/types/clinical-forms';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { getFirebaseAuth, db } from '@/integrations/firebase/app';
+import { evaluationFormsApi } from '@/lib/api/workers-client';
 
 interface FormBuilderProps {
     formId?: string;
@@ -52,7 +52,6 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ formId, initialData, o
     const [descricao, setDescricao] = useState(initialData?.descricao || '');
     const [isSaving, setIsSaving] = useState(false);
     const { toast } = useToast();
-    const auth = getFirebaseAuth();
 
     useEffect(() => {
         if (initialData) {
@@ -83,77 +82,51 @@ export const FormBuilder: React.FC<FormBuilderProps> = ({ formId, initialData, o
 
         setIsSaving(true);
         try {
-            const user = auth.currentUser;
-            if (!user) throw new Error('Usuário não autenticado');
-
             let currentFormId = formId;
 
-            // 1. Update or Create Form
             if (formId) {
-                const formRef = docRef(db, 'evaluation_forms', formId);
-                await updateDocInFirestore(formRef, {
+                await evaluationFormsApi.update(formId, {
                     nome,
                     descricao,
-                    updated_at: new Date().toISOString()
                 });
             } else {
-                // Create new form
-                const newFormRef = docRef(collectionRef(db, 'evaluation_forms'));
-                currentFormId = newFormRef.id;
-
-                await setDocToFirestore(newFormRef, {
+                const created = await evaluationFormsApi.create({
                     nome,
                     descricao,
-                    tipo: 'custom', // Default for new builder forms
+                    tipo: 'custom',
                     ativo: true,
-                    created_at: new Date().toISOString(),
-                    // organization_id usually handled by trigger or RLS provided context, or we fetch user's org
                 });
+                currentFormId = created?.data?.id ?? created?.id;
             }
 
-            // 2. Sync Fields (Delete all and recreate is easiest for order/updates, but might break responses references?
-            // Better: Upsert. But simpler for now:
-            // Strategy: Delete all existing fields for this form and re-insert.
-            // WARNING: This changes IDs. If records depend on field IDs, this is bad.
-            // Better Strategy: Upsert based on some criteria? No, we have dragging ordering.
-            // Let's rely on matching IDs if they exist (were loaded from DB), otherwise create new.
+            if (!currentFormId) {
+                throw new Error('Não foi possível identificar o formulário salvo');
+            }
 
-            // For now, to ensure clean state and order, we might delete-insert if no data exists yet.
-            // But if there's data, we must preserve IDs.
-            // Our `useFormBuilder` uses generic UUIDs for new fields. Existing fields have DB IDs.
+            const existingFieldIds = new Set((initialData?.fields ?? []).map((field) => field.id));
+            const currentFieldIds = new Set(fields.map((field) => field.id));
 
-            // Let's try upserting.
-
-            const fieldsToUpsert = fields.map((f, index) => ({
-                form_id: currentFormId,
-                tipo_campo: f.tipo_campo,
-                label: f.label,
-                placeholder: f.placeholder,
-                opcoes: f.opcoes || null, // Array of strings is valid Json.
-                ordem: index,
-                obrigatorio: f.obrigatorio
-            }));
-
-            // We need to handle deletions. Fields in DB that are NOT in `fields` array should be deleted.
-            if (formId) {
-                const q = queryFromFirestore(collectionRef(db, 'evaluation_form_fields'), whereFn('form_id', '==', formId));
-                const existingFieldsSnap = await getDocsFromCollection(q);
-
-                const currentIds = new Set(fields.map(f => f.id));
-                const idsToDelete = existingFieldsSnap.docs.filter(docSnap => !currentIds.has(docSnap.id)).map(docSnap => docSnap.id);
-
-                if (idsToDelete.length > 0) {
-                    for (const id of idsToDelete) {
-                        await deleteDocFromFirestore(docRef(db, 'evaluation_form_fields', id));
-                    }
+            for (const existingField of initialData?.fields ?? []) {
+                if (!currentFieldIds.has(existingField.id)) {
+                    await evaluationFormsApi.deleteField(existingField.id);
                 }
             }
 
-            // Upsert each field
-            for (const f of fieldsToUpsert) {
-                const fieldId = fields[fieldsToUpsert.indexOf(f)].id;
-                const fieldRef = docRef(db, 'evaluation_form_fields', fieldId);
-                await setDocToFirestore(fieldRef, f, { merge: true });
+            for (const [index, field] of fields.entries()) {
+                const payload = {
+                    tipo_campo: field.tipo_campo,
+                    label: field.label,
+                    placeholder: field.placeholder,
+                    opcoes: field.opcoes || null,
+                    ordem: index,
+                    obrigatorio: field.obrigatorio,
+                };
+
+                if (existingFieldIds.has(field.id)) {
+                    await evaluationFormsApi.updateField(field.id, payload);
+                } else {
+                    await evaluationFormsApi.addField(currentFormId, payload);
+                }
             }
 
             toast({

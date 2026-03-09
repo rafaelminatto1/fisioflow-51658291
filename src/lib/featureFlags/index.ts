@@ -47,7 +47,7 @@ export {
   type FeatureFlagConfig,
   REMOTE_CONFIG_KEYS,
   REMOTE_CONFIG_DEFAULTS,
-} from '@/lib/firebase/remote-config';
+} from '@/lib/remote-config-manager';
 
 // ============================================================================
 // STATSIG (Optional - Secondary)

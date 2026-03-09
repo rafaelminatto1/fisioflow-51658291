@@ -9,7 +9,7 @@ import { useGamification } from '@/hooks/useGamification';
 import { useSoapRecordsV2 } from '@/hooks/useSoapRecordsV2';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { callFunctionHttp } from '@/integrations/firebase/functions';
+import { aiApi } from '@/lib/api/workers-client';
 
 interface DoctorReferralReportGeneratorProps {
   patientId: string;
@@ -39,28 +39,14 @@ export function DoctorReferralReportGenerator({
         objective: r.objective,
       }));
 
-      const result = await callFunctionHttp<{
-        action: string;
-        patientId: string;
-        patientName: string;
-        condition: string;
-        history: Array<{
-          date: string;
-          subjective?: string;
-          objective?: string;
-        }>;
-      }, {
-        success?: boolean;
-        data?: { summary?: string };
-      }>('aiServiceHttp', {
-          action: 'patientExecutiveSummary',
-          patientId,
-          patientName,
-          condition,
-          history,
+      const result = await aiApi.executiveSummary({
+        patientId,
+        patientName,
+        condition,
+        history,
       });
-      if (result.success && result.data) {
-        setAiSummary(result.data.summary);
+      if (result.data) {
+        setAiSummary((result.data as { summary?: string }).summary ?? null);
         toast.success('Sumário IA preparado para o relatório!');
       }
     } catch (error) {

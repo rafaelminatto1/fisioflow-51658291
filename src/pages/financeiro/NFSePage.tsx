@@ -30,7 +30,6 @@ import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-
 import { useAuth } from '@/contexts/AuthContext';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { db, doc, getDoc, setDoc, query as firestoreQuery, collection, orderBy, getDocs, limit, addDoc, QueryDocumentSnapshot, where } from '@/integrations/firebase/app';
 
 interface NFSe {
   id: string;
@@ -70,6 +69,57 @@ interface NFSConfig {
   inscricao_municipal: string;
   aliquota_iss: number;
   auto_emissao: boolean;
+}
+
+const DEFAULT_NFSE_CONFIG: NFSConfig = {
+  ambiente: 'homologacao',
+  municipio_codigo: '',
+  cnpj_prestador: '',
+  inscricao_municipal: '',
+  aliquota_iss: 5,
+  auto_emissao: false,
+};
+
+function getNFSeStorageKey(organizationId: string) {
+  return `nfse:list:${organizationId}`;
+}
+
+function getNFSeConfigStorageKey(organizationId: string) {
+  return `nfse:config:${organizationId}`;
+}
+
+function readNFSeList(organizationId: string): NFSe[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(getNFSeStorageKey(organizationId));
+    return raw ? (JSON.parse(raw) as NFSe[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeNFSeList(organizationId: string, items: NFSe[]) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(getNFSeStorageKey(organizationId), JSON.stringify(items));
+}
+
+function readNFSeConfig(organizationId: string): NFSConfig {
+  if (typeof window === 'undefined') return DEFAULT_NFSE_CONFIG;
+  try {
+    const raw = window.localStorage.getItem(getNFSeConfigStorageKey(organizationId));
+    return raw ? { ...DEFAULT_NFSE_CONFIG, ...(JSON.parse(raw) as Partial<NFSConfig>) } : DEFAULT_NFSE_CONFIG;
+  } catch {
+    return DEFAULT_NFSE_CONFIG;
+  }
+}
+
+function writeNFSeConfig(organizationId: string, patch: Partial<NFSConfig>) {
+  const current = readNFSeConfig(organizationId);
+  const next = { ...current, ...patch };
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem(getNFSeConfigStorageKey(organizationId), JSON.stringify(next));
+  }
+  return next;
 }
 
 // Estilos para PDF
@@ -449,6 +499,7 @@ function NFSePreview({ nfse, onEdit }: { nfse: NFSe; onEdit?: () => void }) {
 export default function NFSePage() {
   const { user } = useAuth();
   const { currentOrganization: orgData } = useOrganizations();
+  const { profile } = useUserProfile();
   const organizationId = orgData?.id;
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -476,13 +527,7 @@ export default function NFSePage() {
     queryKey: ['nfse-list', organizationId],
     queryFn: async () => {
       if (!organizationId) return [];
-      const q = firestoreQuery(
-        collection(db, 'nfse'),
-        where('organization_id', '==', organizationId),
-        orderBy('data_emissao', 'desc')
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() })) as NFSe[];
+      return readNFSeList(organizationId).sort((a, b) => b.data_emissao.localeCompare(a.data_emissao));
     },
     enabled: !!organizationId,
   });
@@ -492,38 +537,36 @@ export default function NFSePage() {
     queryKey: ['nfse-config', organizationId],
     queryFn: async () => {
       if (!organizationId) return null;
-      const docRef = doc(db, 'nfse_config', organizationId);
-      const docSnap = await getDoc(docRef);
-      return docSnap.exists() ? docSnap.data() as NFSConfig : null;
+      return readNFSeConfig(organizationId);
     },
     enabled: !!organizationId,
   });
+
+  const updateConfig = (patch: Partial<NFSConfig>) => {
+    if (!organizationId) return;
+    writeNFSeConfig(organizationId, patch);
+    queryClient.invalidateQueries({ queryKey: ['nfse-config', organizationId] });
+    toast.success('Configuração atualizada!');
+  };
 
   // Criar NFSe
   const createNFSe = useMutation({
     mutationFn: async (data: typeof formData) => {
       // Buscar dados do prestador
       if (!user || !organizationId) throw new Error('Not authenticated or organization not found');
-      const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
-      const profile = profileDoc.exists() ? profileDoc.data() : null;
 
       const valorNumerico = parseFloat(data.valor);
       const aliquota = config?.aliquota_iss || 5;
       const valorISS = (valorNumerico * aliquota) / 100;
 
       // Gerar número
-      const q = firestoreQuery(
-        collection(db, 'nfse'),
-        where('organization_id', '==', organizationId),
-        orderBy('numero', 'desc'),
-        limit(1)
-      );
-      const snapshot = await getDocs(q);
-      const lastNFSe = snapshot.empty ? null : snapshot.docs[0].data();
+      const currentItems = readNFSeList(organizationId);
+      const lastNFSe = [...currentItems].sort((a, b) => b.numero.localeCompare(a.numero))[0] ?? null;
       const novoNumero = (Number(lastNFSe?.numero) || 0) + 1;
+      const profileData = profile as Record<string, unknown> | null;
 
-      const nfse: Omit<NFSe, 'id'> = {
-        organization_id: organizationId,
+      const nfse: NFSe = {
+        id: `nfse-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         numero: novoNumero.toString().padStart(10, '0'),
         serie: '1',
         tipo: data.tipo,
@@ -536,8 +579,12 @@ export default function NFSePage() {
           endereco: data.destinatario_endereco,
         },
         prestador: {
-          nome: orgData?.name || profile?.full_name || '',
-          cnpj: profile?.cpf_cnpj || profile?.cnpj_cnpj || '',
+          nome: orgData?.name || (profileData?.full_name as string) || '',
+          cnpj:
+            (profileData?.cpf_cnpj as string) ||
+            (profileData?.cnpj_cnpj as string) ||
+            (profileData?.cpf as string) ||
+            '',
           inscricao_municipal: config?.inscricao_municipal,
         },
         servico: {
@@ -550,8 +597,11 @@ export default function NFSePage() {
         status: config?.auto_emissao ? 'emitida' : 'rascunho',
       };
 
-      const docRef = await addDoc(collection(db, 'nfse'), nfse);
-      return { id: docRef.id, ...nfse };
+      writeNFSeList(
+        organizationId,
+        [nfse, ...currentItems].sort((a, b) => b.data_emissao.localeCompare(a.data_emissao)),
+      );
+      return nfse;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['nfse-list', organizationId] });
@@ -747,10 +797,7 @@ export default function NFSePage() {
                       checked={config?.auto_emissao || false}
                       onCheckedChange={(checked) => {
                         // Atualizar configuração
-                        setDoc(doc(db, 'nfse_config', organizationId!), { auto_emissao: checked }, { merge: true }).then(() => {
-                          queryClient.invalidateQueries({ queryKey: ['nfse-config'] });
-                          toast.success('Configuração atualizada!');
-                        });
+                        updateConfig({ auto_emissao: checked });
                       }}
                     />
                   </div>
@@ -760,7 +807,7 @@ export default function NFSePage() {
                     <Select
                       defaultValue={config?.ambiente || 'homologacao'}
                       onValueChange={(v: 'homologacao' | 'producao') => {
-                        setDoc(doc(db, 'nfse_config', organizationId!), { ambiente: v }, { merge: true });
+                        updateConfig({ ambiente: v });
                       }}
                     >
                       <SelectTrigger>
@@ -779,7 +826,7 @@ export default function NFSePage() {
                       defaultValue={config?.municipio_codigo || ''}
                       placeholder="Ex: 3550308 (São Paulo)"
                       onBlur={(e) => {
-                        setDoc(doc(db, 'nfse_config', organizationId!), { municipio_codigo: e.target.value }, { merge: true });
+                        updateConfig({ municipio_codigo: e.target.value });
                       }}
                     />
                   </div>
@@ -790,7 +837,7 @@ export default function NFSePage() {
                       defaultValue={config?.inscricao_municipal || ''}
                       placeholder="Número da inscrição municipal"
                       onBlur={(e) => {
-                        setDoc(doc(db, 'nfse_config', organizationId!), { inscricao_municipal: e.target.value }, { merge: true });
+                        updateConfig({ inscricao_municipal: e.target.value });
                       }}
                     />
                   </div>
@@ -802,7 +849,7 @@ export default function NFSePage() {
                       step="0.01"
                       defaultValue={config?.aliquota_iss?.toString() || '5'}
                       onBlur={(e) => {
-                        setDoc(doc(db, 'nfse_config', organizationId!), { aliquota_iss: parseFloat(e.target.value) }, { merge: true });
+                        updateConfig({ aliquota_iss: parseFloat(e.target.value) || 0 });
                       }}
                     />
                   </div>

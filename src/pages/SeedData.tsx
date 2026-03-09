@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { addDoc, collection, db } from '@/integrations/firebase/app';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { api } from '@/integrations/firebase/functions';
+import { clinicalApi, patientsApi } from '@/lib/api/workers-client';
 import { SessionEvolutionService } from '@/lib/services/sessionEvolutionService';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -76,36 +75,12 @@ export default function SeedData() {
                         gender: 'outro'
                     };
 
-                    // Try via API first
-                    const newPatient = await api.patients.create(patientData);
+                    const newPatient = await patientsApi.create(patientData);
                     patientId = newPatient.id;
                     addLog(`✅ Paciente criado via API: ${patientName} (${patientId})`);
                 } catch (err) {
-                    addLog(`⚠️ Erro ao criar via API: ${err instanceof Error ? err.message : 'Erro desconhecido'}. Tentando via Firestore direto...`);
-
-                    // Fallback via Firestore
-                    try {
-                        const patientData = {
-                            name: patientName,
-                            full_name: patientName,
-                            email: `paciente${Date.now()}_${i}@teste.com`,
-                            phone: `119${Math.floor(Math.random() * 100000000)}`,
-                            status: 'Em Tratamento',
-                            organization_id: orgId,
-                            birth_date: '1990-01-01',
-                            gender: 'outro'
-                        };
-                        const docRef = await addDoc(collection(db, 'patients'), {
-                            ...patientData,
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString(),
-                        });
-                        patientId = docRef.id;
-                        addLog(`✅ Paciente criado via Firestore: ${patientName} (${patientId})`);
-                    } catch (fsErr) {
-                        addLog(`❌ Falha total ao criar paciente: ${fsErr instanceof Error ? fsErr.message : 'Erro desconhecido'}`);
-                        continue;
-                    }
+                    addLog(`❌ Falha ao criar paciente via Workers: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
+                    continue;
                 }
 
                 if (!patientId) continue;
@@ -197,7 +172,7 @@ export default function SeedData() {
                     // `SessionEvolutionService` only writes to `soap_records`.
                     // But `usePatientEvolution.firebase.ts` writes to `treatment_sessions` too.
                     // I should duplicate to `treatment_sessions` to ensure all views work.
-                    await addDoc(collection(db, 'treatment_sessions'), {
+                    await clinicalApi.treatmentSessions.upsert({
                         patient_id: patientId,
                         therapist_id: user.uid,
                         appointment_id: `seed-evol-${patientId}-${sessionNum}`,
@@ -211,7 +186,6 @@ export default function SeedData() {
                         observations: "Evolução padrão seed.",
                         status: 'completed',
                         created_by: user.uid,
-                        updated_at: new Date().toISOString(),
                     });
 
                     addLog(`   - Evolução ${sessionNum} criada (${date}) - Dor: ${painRounded}`);

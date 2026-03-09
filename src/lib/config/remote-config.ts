@@ -1,235 +1,110 @@
 /**
- * Firebase Remote Config
+ * Remote config sem Firebase.
  *
- * Gerencia feature flags e configurações remotas
+ * Fonte de verdade:
+ * - overrides em localStorage (`remote-config:<key>`)
+ * - variáveis de ambiente VITE_*
+ * - defaults locais
  */
 
-import {
-  getRemoteConfig,
-  fetchAndActivate,
-  getBoolean,
-  getNumber,
-  getString,
-  getAll,
-  type RemoteConfig,
-} from 'firebase/remote-config';
-import { app as firebaseApp } from '@/integrations/firebase/app';
 import { logger } from '@/lib/errors/logger';
 
-let remoteConfigInstance: RemoteConfig | null = null;
+const DEFAULTS: Record<string, string | number | boolean> = {
+  ai_features_enabled: true,
+  semantic_search_enabled: false,
+  rag_enabled: false,
+  telemedicine_enabled: true,
+  gamification_enabled: true,
+  maintenance_mode: false,
+  max_daily_appointments: 50,
+  brand_primary_color: '#3b82f6',
+  debug_logging_enabled: import.meta.env.DEV,
+  onboarding_variant: 'v1',
+  ai_show_suggestions: true,
+};
 
-/**
- * Inicializa o Remote Config
- */
+function getOverride(key: string): string | null {
+  if (typeof window === 'undefined') return null;
+  return window.localStorage.getItem(`remote-config:${key}`);
+}
+
+function readRawValue(key: string): string | number | boolean | undefined {
+  const override = getOverride(key);
+  if (override != null) return override;
+
+  const envKey = `VITE_${key.toUpperCase()}`;
+  const envValue = import.meta.env[envKey];
+  if (envValue != null) return envValue;
+
+  return DEFAULTS[key];
+}
+
+function coerceBoolean(value: string | number | boolean | undefined, fallback: boolean): boolean {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value !== 0;
+  if (typeof value === 'string') return value === 'true' || value === '1';
+  return fallback;
+}
+
+function coerceNumber(value: string | number | boolean | undefined, fallback: number): number {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  }
+  if (typeof value === 'boolean') return value ? 1 : 0;
+  return fallback;
+}
+
+function coerceString(value: string | number | boolean | undefined, fallback: string): string {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  return fallback;
+}
+
 export async function initRemoteConfig() {
-  try {
-    if (remoteConfigInstance) return remoteConfigInstance;
-
-    const rc = getRemoteConfig(firebaseApp);
-
-    // Configurações para desenvolvimento
-    if (import.meta.env.DEV) {
-      rc.settings.minimumFetchIntervalMillis = 60000; // 1 minuto em dev
-      rc.settings.fetchTimeoutMillis = 60000;
-    } else {
-      rc.settings.minimumFetchIntervalMillis = 3600000; // 1 hora em produção
-      rc.settings.fetchTimeoutMillis = 60000;
-    }
-
-    // Buscar e ativar configurações
-    await fetchAndActivate(rc);
-
-    remoteConfigInstance = rc;
-    logger.info('[RemoteConfig] Config inicializado e ativado');
-    return rc;
-  } catch (error) {
-    logger.error('[RemoteConfig] Erro ao inicializar:', error);
-    return null;
-  }
+  logger.info('[RemoteConfig] Inicializado via env/localStorage');
+  return true;
 }
 
-/**
- * Garante que o Remote Config está inicializado
- */
-async function ensureInitialized(): Promise<RemoteConfig | null> {
-  if (!remoteConfigInstance) {
-    return await initRemoteConfig();
-  }
-  return remoteConfigInstance;
+export async function getRemoteBoolean(key: string, defaultValue = false): Promise<boolean> {
+  return coerceBoolean(readRawValue(key), defaultValue);
 }
 
-/**
- * Obtém um valor booleano do Remote Config
- */
-export async function getRemoteBoolean(key: string, defaultValue: boolean = false): Promise<boolean> {
-  try {
-    const rc = await ensureInitialized();
-    if (!rc) return defaultValue;
-
-    return getBoolean(rc, key);
-  } catch (error) {
-    logger.error(`[RemoteConfig] Erro ao obter boolean "${key}":`, error);
-    return defaultValue;
-  }
+export async function getRemoteNumber(key: string, defaultValue = 0): Promise<number> {
+  return coerceNumber(readRawValue(key), defaultValue);
 }
 
-/**
- * Obtém um valor numérico do Remote Config
- */
-export async function getRemoteNumber(key: string, defaultValue: number = 0): Promise<number> {
-  try {
-    const rc = await ensureInitialized();
-    if (!rc) return defaultValue;
-
-    return getNumber(rc, key);
-  } catch (error) {
-    logger.error(`[RemoteConfig] Erro ao obter número "${key}":`, error);
-    return defaultValue;
-  }
+export async function getRemoteString(key: string, defaultValue = ''): Promise<string> {
+  return coerceString(readRawValue(key), defaultValue);
 }
 
-/**
- * Obtém um valor string do Remote Config
- */
-export async function getRemoteString(key: string, defaultValue: string = ''): Promise<string> {
-  try {
-    const rc = await ensureInitialized();
-    if (!rc) return defaultValue;
-
-    return getString(rc, key);
-  } catch (error) {
-    logger.error(`[RemoteConfig] Erro ao obter string "${key}":`, error);
-    return defaultValue;
-  }
+export async function getAllRemoteConfig(): Promise<Record<string, string | number | boolean>> {
+  return { ...DEFAULTS };
 }
 
-/**
- * Obtém todos os valores do Remote Config
- */
-export async function getAllRemoteConfig(): Promise<Record<string, any>> {
-  try {
-    const rc = await ensureInitialized();
-    if (!rc) return {};
-
-    const all = getAll(rc);
-    const result: Record<string, any> = {};
-
-    Object.entries(all).forEach(([key, value]) => {
-      if (value.asSource() === 'remote') {
-        result[key] = value.asString();
-      }
-    });
-
-    return result;
-  } catch (error) {
-    logger.error('[RemoteConfig] Erro ao obter todos os valores:', error);
-    return {};
-  }
-}
-
-/**
- * Feature flags específicas do FisioFlow
- */
 export const featureFlags = {
-  /**
-   * Verifica se features de IA estão habilitadas
-   */
-  isAIEnabled: async () => {
-    return await getRemoteBoolean('ai_features_enabled', true);
-  },
-
-  /**
-   * Verifica se a busca semântica está habilitada
-   */
-  isSemanticSearchEnabled: async () => {
-    return await getRemoteBoolean('semantic_search_enabled', false);
-  },
-
-  /**
-   * Verifica se o RAG para sugestões clínicas está habilitado
-   */
-  isRAGEabled: async () => {
-    return await getRemoteBoolean('rag_enabled', false);
-  },
-
-  /**
-   * Verifica se a telemedicina está habilitada
-   */
-  isTelemedicineEnabled: async () => {
-    return await getRemoteBoolean('telemedicine_enabled', false);
-  },
-
-  /**
-   * Verifica se a gamificação está habilitada
-   */
-  isGamificationEnabled: async () => {
-    return await getRemoteBoolean('gamification_enabled', true);
-  },
-
-  /**
-   * Verifica se o app está em modo de manutenção
-   */
-  isMaintenanceMode: async () => {
-    return await getRemoteBoolean('maintenance_mode', false);
-  },
-
-  /**
-   * Obtém o número máximo de agendamentos diários
-   */
-  getMaxDailyAppointments: async () => {
-    return await getRemoteNumber('max_daily_appointments', 50);
-  },
-
-  /**
-   * Obtém a cor primária da marca
-   */
-  getBrandPrimaryColor: async () => {
-    return await getRemoteString('brand_primary_color', '#3b82f6');
-  },
-
-  /**
-   * Verifica se o debug logging está habilitado
-   */
-  isDebugLoggingEnabled: async () => {
-    return await getRemoteBoolean('debug_logging_enabled', import.meta.env.DEV);
-  },
-
-  /**
-   * Obtém a variante de onboarding (para A/B testing)
-   */
-  getOnboardingVariant: async () => {
-    return await getRemoteString('onboarding_variant', 'v1');
-  },
-
-  /**
-   * Verifica se sugestões de IA devem ser mostradas
-   */
+  isAIEnabled: async () => getRemoteBoolean('ai_features_enabled', true),
+  isSemanticSearchEnabled: async () => getRemoteBoolean('semantic_search_enabled', false),
+  isRAGEabled: async () => getRemoteBoolean('rag_enabled', false),
+  isTelemedicineEnabled: async () => getRemoteBoolean('telemedicine_enabled', true),
+  isGamificationEnabled: async () => getRemoteBoolean('gamification_enabled', true),
+  isMaintenanceMode: async () => getRemoteBoolean('maintenance_mode', false),
+  getMaxDailyAppointments: async () => getRemoteNumber('max_daily_appointments', 50),
+  getBrandPrimaryColor: async () => getRemoteString('brand_primary_color', '#3b82f6'),
+  isDebugLoggingEnabled: async () => getRemoteBoolean('debug_logging_enabled', import.meta.env.DEV),
+  getOnboardingVariant: async () => getRemoteString('onboarding_variant', 'v1'),
   showAISuggestions: async () => {
-    const aiEnabled = await featureFlags.isAIEnabled();
+    const aiEnabled = await getRemoteBoolean('ai_features_enabled', true);
     const showSuggestions = await getRemoteBoolean('ai_show_suggestions', true);
     return aiEnabled && showSuggestions;
   },
 };
 
-/**
- * Hook React para usar Remote Config
- */
 export function useRemoteConfig() {
-  const [config, setConfig] = React.useState<Record<string, any>>({});
-  const [loading, setLoading] = React.useState(true);
-
-  React.useEffect(() => {
-    async function loadConfig() {
-      setLoading(true);
-      const all = await getAllRemoteConfig();
-      setConfig(all);
-      setLoading(false);
-    }
-
-    loadConfig();
-  }, []);
-
-  return { config, loading };
+  return {
+    config: DEFAULTS,
+    loading: false,
+    refresh: initRemoteConfig,
+  };
 }
-
-import React from 'react';

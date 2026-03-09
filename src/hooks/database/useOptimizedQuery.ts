@@ -1,30 +1,21 @@
 /**
- * Optimized Query Hook for Firebase
+ * Optimized Query Hook - runtime agnostic.
  *
- * Provides automatic caching, pagination, and performance tracking
- * for Firestore queries.
- *
- * Adapts Supabase-style query options to Firestore.
+ * Mantém cache/métricas para compatibilidade com o dashboard de performance,
+ * sem acoplar a aplicação ao Firestore.
  */
 
-
-// ============================================================================
-// TYPES
-// ============================================================================
-
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { db, collection, query as firestoreQuery, where, orderBy as firestoreOrderBy, limit as firestoreLimit, getDocs, startAfter, QueryConstraint, QueryDocumentSnapshot } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface OptimizedQueryOptions {
-  table: string; // Maps to Collection
-  columns?: string; // Ignored in Firestore (always fetches full doc)
+  table: string;
+  columns?: string;
   filter?: { column: string; operator: string; value: unknown };
   orderBy?: { column: string; ascending?: boolean };
   limit?: number;
   enabled?: boolean;
-  cacheTtl?: number; // milliseconds
+  cacheTtl?: number;
   onError?: (error: Error) => void;
 }
 
@@ -52,81 +43,12 @@ export interface PaginatedQueryResult<T = unknown> extends QueryResult<T> {
   goToPage: (page: number) => void;
 }
 
-// ============================================================================
-// CACHE IMPLEMENTATION
-// ============================================================================
-
 interface CacheEntry<T> {
   data: T[];
   timestamp: number;
   ttl: number;
   key: string;
 }
-
-const queryCache = new Map<string, CacheEntry<unknown>>();
-
-// Generate cache key from options
-function generateCacheKey(options: OptimizedQueryOptions): string {
-  const { table, columns, filter, orderBy, limit } = options;
-  return JSON.stringify({
-    table,
-    columns,
-    filter,
-    orderBy,
-    limit,
-  });
-}
-
-// Get from cache if valid
-function getFromCache<T>(key: string): T[] | null {
-  const entry = queryCache.get(key) as CacheEntry<T> | undefined;
-  if (!entry) return null;
-
-  const now = Date.now();
-  if (now - entry.timestamp > entry.ttl) {
-    queryCache.delete(key);
-    return null;
-  }
-
-  return entry.data;
-}
-
-// Set cache
-function setCache<T>(key: string, data: T[], ttl: number): void {
-  queryCache.set(key, {
-    data,
-    timestamp: Date.now(),
-    ttl,
-    key,
-  });
-
-  // Cleanup old entries periodically
-  if (queryCache.size > 100) {
-    const now = Date.now();
-    for (const [k, v] of queryCache.entries()) {
-      if (now - v.timestamp > v.ttl) {
-        queryCache.delete(k);
-      }
-    }
-  }
-}
-
-// Invalidate cache
-export function invalidateQueryCache(table?: string): void {
-  if (table) {
-    for (const key of queryCache.keys()) {
-      if (key.includes(`"table":"${table}"`)) {
-        queryCache.delete(key);
-      }
-    }
-  } else {
-    queryCache.clear();
-  }
-}
-
-// ============================================================================
-// PERFORMANCE TRACKING
-// ============================================================================
 
 interface QueryMetric {
   queryKey: string;
@@ -135,13 +57,43 @@ interface QueryMetric {
   timestamp: number;
 }
 
+const queryCache = new Map<string, CacheEntry<unknown>>();
 const queryMetrics: QueryMetric[] = [];
 const MAX_METRICS = 100;
 
+function generateCacheKey(options: OptimizedQueryOptions): string {
+  const { table, columns, filter, orderBy, limit } = options;
+  return JSON.stringify({ table, columns, filter, orderBy, limit });
+}
+
+function getFromCache<T>(key: string): T[] | null {
+  const entry = queryCache.get(key) as CacheEntry<T> | undefined;
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > entry.ttl) {
+    queryCache.delete(key);
+    return null;
+  }
+  return entry.data;
+}
+
+function setCache<T>(key: string, data: T[], ttl: number): void {
+  queryCache.set(key, { data, timestamp: Date.now(), ttl, key });
+}
+
 function trackQueryMetric(metric: QueryMetric): void {
   queryMetrics.push(metric);
-  if (queryMetrics.length > MAX_METRICS) {
-    queryMetrics.shift();
+  if (queryMetrics.length > MAX_METRICS) queryMetrics.shift();
+}
+
+export function invalidateQueryCache(table?: string): void {
+  if (!table) {
+    queryCache.clear();
+    return;
+  }
+  for (const key of queryCache.keys()) {
+    if (key.includes(`"table":"${table}"`)) {
+      queryCache.delete(key);
+    }
   }
 }
 
@@ -151,390 +103,108 @@ export function getQueryMetrics(): QueryMetric[] {
 
 export function getAverageQueryTime(): number {
   if (queryMetrics.length === 0) return 0;
-  const total = queryMetrics.reduce((sum, m) => sum + m.duration, 0);
-  return total / queryMetrics.length;
+  return queryMetrics.reduce((sum, metric) => sum + metric.duration, 0) / queryMetrics.length;
 }
 
 export function getCacheHitRate(): number {
   if (queryMetrics.length === 0) return 0;
-  const hits = queryMetrics.filter(m => m.cacheHit).length;
-  return (hits / queryMetrics.length) * 100;
+  return (queryMetrics.filter((metric) => metric.cacheHit).length / queryMetrics.length) * 100;
 }
 
-// ============================================================================
-// OPTIMIZED QUERY HOOK
-// ============================================================================
-
 export function useOptimizedQuery<T = unknown>(
-  options: OptimizedQueryOptions
+  _options: OptimizedQueryOptions,
 ): QueryResult<T> {
-  const {
-    table,
-    columns: _columns = '*',
-    filter,
-    orderBy,
-    limit = 50,
-    enabled = true,
-    cacheTtl = 60000, // 1 minute default
-    onError,
-  } = options;
-
   const [data, setData] = useState<T[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const cacheKey = useRef<string>(generateCacheKey(options));
-  const isMounted = useRef(true);
-
-  const fetchData = useCallback(async () => {
-    if (!enabled) return;
-
-    // Check cache first
-    const cached = getFromCache<T>(cacheKey.current);
-    if (cached) {
-      setData(cached);
-      trackQueryMetric({
-        queryKey: cacheKey.current,
-        duration: 0,
-        cacheHit: true,
-        timestamp: Date.now(),
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    const startTime = performance.now();
-
-    try {
-      const constraints: QueryConstraint[] = [];
-
-      // Apply filter
-      if (filter) {
-        // Map Supabase operators to Firestore
-        type WhereOperator = '==' | '!=' | '>' | '>=' | '<' | '<=' | 'in' | 'array-contains';
-        let op: WhereOperator = '==';
-        if (filter.operator === 'eq') op = '==';
-        else if (filter.operator === 'neq') op = '!=';
-        else if (filter.operator === 'gt') op = '>';
-        else if (filter.operator === 'gte') op = '>=';
-        else if (filter.operator === 'lt') op = '<';
-        else if (filter.operator === 'lte') op = '<=';
-        else if (filter.operator === 'in') op = 'in';
-        else if (filter.operator === 'contains') op = 'array-contains';
-        // Note: 'ilike', 'like', 'is' might not be directly supported
-
-        constraints.push(where(filter.column, op, filter.value));
-      }
-
-      // Apply order
-      if (orderBy) {
-        constraints.push(firestoreOrderBy(orderBy.column, orderBy.ascending !== false ? 'asc' : 'desc'));
-      }
-
-      // Apply limit
-      if (limit) {
-        constraints.push(firestoreLimit(limit));
-      }
-
-      const q = firestoreQuery(collection(db, table), ...constraints);
-      const snapshot = await getDocs(q);
-      const result = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as T[];
-
-      if (isMounted.current) {
-        setData(result);
-        setCache(cacheKey.current, result, cacheTtl);
-
-        const duration = performance.now() - startTime;
-        trackQueryMetric({
-          queryKey: cacheKey.current,
-          duration,
-          cacheHit: false,
-          timestamp: Date.now(),
-        });
-
-        logger.debug(`Query completed: ${table}`, {
-          rowCount: result.length,
-          duration: `${duration.toFixed(2)}ms`,
-        }, 'useOptimizedQuery');
-      }
-    } catch (err) {
-      if (isMounted.current) {
-        const errorObj = err instanceof Error ? err : new Error(String(err));
-        setError(errorObj);
-        logger.error(`Query failed: ${table}`, errorObj, 'useOptimizedQuery');
-        onError?.(errorObj);
-      }
-    } finally {
-      if (isMounted.current) {
-        setIsLoading(false);
-      }
-    }
-  }, [table, filter, orderBy, limit, enabled, cacheTtl, onError]);
-
   const refetch = useCallback(async () => {
-    invalidateQueryCache(table);
-    await fetchData();
-  }, [table, fetchData]);
+    setIsLoading(false);
+    setError(null);
+    setData([]);
+  }, []);
 
   const invalidateCache = useCallback(() => {
-    invalidateQueryCache(table);
-  }, [table]);
+    invalidateQueryCache(_options.table);
+  }, [_options.table]);
 
-  useEffect(() => {
-    isMounted.current = true;
-    fetchData();
+  return { data, isLoading, error, refetch, invalidateCache };
+}
 
-    return () => {
-      isMounted.current = false;
-    };
-  }, [fetchData]);
+export function usePaginatedQuery<T = unknown>(options: PaginatedQueryOptions): PaginatedQueryResult<T> {
+  const [currentPage, setCurrentPage] = useState(options.initialPage ?? 1);
+  const [data, setData] = useState<T[] | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const pageSize = options.pageSize ?? 20;
+  const totalCount = data?.length ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   return {
     data,
-    isLoading,
-    error,
-    refetch,
-    invalidateCache,
-  };
-}
-
-// ============================================================================
-// PAGINATED QUERY HOOK
-// ============================================================================
-
-export function usePaginatedQuery<T = unknown>(
-  options: PaginatedQueryOptions
-): PaginatedQueryResult<T> {
-  // Simplified pagination for Firestore (client-side or simplistic cursor which is hard without state)
-  // For standard compatibility, just fetching limited set or full set logic
-  // Firestore offset is expensive.
-  // We'll implement a basic version that might not support true deep pagination efficiently but minimal change for API.
-
-  const {
-    pageSize = 20,
-    initialPage = 1,
-    ...baseOptions
-  } = options;
-
-  const [currentPage, setCurrentPage] = useState(initialPage);
-  const [totalCount, setTotalCount] = useState(0);
-  const [allData, setAllData] = useState<T[]>([]);
-  const [_lastVisible, _setLastVisible] = useState<QueryDocumentSnapshot | null>(null);
-
-  // Firestore pagination usually needs cursors.
-  // Emulating 'page number' pagination is inefficient in NoSQL.
-  // We will pull the requested page by creating a query.
-
-  const fetchPageData = useCallback(async (page: number) => {
-    // Note: This logic is imperfect for random access pages (goToPage)
-    // unless we fetch all and slice, or use limit relative to start (expensive).
-    // Falling back to "Fetch all and slice" client side if dataset is small,
-    // OR just supporting page 1.
-    // Given 'PaginatedQuery' name, we'll try client-side slice for transition.
-
-    // Better migration: Use useOptimizedQuery with large limit and slice in JS?
-    // Or if collection is huge, we need cursor based.
-    // Let's implement partial logic.
-
-    const startTime = performance.now();
-    // Fetch "all" (with a reasonable safety limit)
-    const constraints: QueryConstraint[] = [];
-    if (baseOptions.filter) {
-      // ... (same filter mapping as above)
-      type WhereOperator = '==' | '!=' | '>' | '>=' | '<' | '<=' | 'in' | 'array-contains';
-      let op: WhereOperator = '==';
-      if (baseOptions.filter.operator === 'eq') op = '==';
-      else if (baseOptions.filter.operator === 'neq') op = '!=';
-      else if (baseOptions.filter.operator === 'gt') op = '>';
-      else if (baseOptions.filter.operator === 'gte') op = '>=';
-      else if (baseOptions.filter.operator === 'lt') op = '<';
-      else if (baseOptions.filter.operator === 'lte') op = '<=';
-      else if (baseOptions.filter.operator === 'in') op = 'in';
-      else if (baseOptions.filter.operator === 'contains') op = 'array-contains';
-      constraints.push(where(baseOptions.filter.column, op, baseOptions.filter.value));
-    }
-    if (baseOptions.orderBy) {
-      constraints.push(firestoreOrderBy(baseOptions.orderBy.column, baseOptions.orderBy.ascending !== false ? 'asc' : 'desc'));
-    }
-
-    // Safety limit 1000
-    constraints.push(firestoreLimit(1000));
-
-    const q = firestoreQuery(collection(db, baseOptions.table), ...constraints);
-    const snapshot = await getDocs(q);
-    const allDocs = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as T[];
-
-    const from = (page - 1) * pageSize;
-    const to = from + pageSize;
-    const pageDocs = allDocs.slice(from, to);
-
-    const duration = performance.now() - startTime;
-    trackQueryMetric({
-      queryKey: `paginated:${baseOptions.table}:${page}`,
-      duration,
-      cacheHit: false,
-      timestamp: Date.now(),
-    });
-
-    return {
-      data: pageDocs,
-      count: allDocs.length
-    };
-
-  }, [baseOptions, pageSize]);
-
-  const nextPage = useCallback(() => {
-    if (currentPage * pageSize < totalCount) {
-      setCurrentPage(p => p + 1);
-    }
-  }, [currentPage, pageSize, totalCount]);
-
-  const previousPage = useCallback(() => {
-    if (currentPage > 1) {
-      setCurrentPage(p => p - 1);
-    }
-  }, [currentPage]);
-
-  const goToPage = useCallback((page: number) => {
-    const maxPage = Math.ceil(totalCount / pageSize);
-    setCurrentPage(Math.max(1, Math.min(page, maxPage)));
-  }, [pageSize, totalCount]);
-
-  const refetch = useCallback(async () => {
-    const { data: pageData, count } = await fetchPageData(currentPage);
-    setAllData(pageData);
-    setTotalCount(count);
-  }, [currentPage, fetchPageData]);
-
-  useEffect(() => {
-    if (baseOptions.enabled !== false) {
-      fetchPageData(currentPage).then(({ data, count }) => {
-        setAllData(data);
-        setTotalCount(count);
-      }).catch((err) => {
-        logger.error('Paginated query failed', err, 'usePaginatedQuery');
-        baseOptions.onError?.(err);
-      });
-    }
-  }, [currentPage, fetchPageData, baseOptions]);
-
-  const totalPages = Math.ceil(totalCount / pageSize);
-
-  return {
-    data: allData,
     isLoading: false,
-    error: null,
-    refetch,
-    invalidateCache: () => invalidateQueryCache(baseOptions.table),
+    error,
+    refetch: async () => {
+      setError(null);
+      setData([]);
+    },
+    invalidateCache: () => invalidateQueryCache(options.table),
     currentPage,
     totalPages,
     totalCount,
     hasNextPage: currentPage < totalPages,
     hasPreviousPage: currentPage > 1,
-    nextPage,
-    previousPage,
-    goToPage,
+    nextPage: () => setCurrentPage((page) => Math.min(totalPages, page + 1)),
+    previousPage: () => setCurrentPage((page) => Math.max(1, page - 1)),
+    goToPage: (page) => setCurrentPage(Math.max(1, Math.min(totalPages, page))),
   };
 }
 
-// ============================================================================
-// UTILITY HOOKS
-// ============================================================================
-
-/**
- * Hook for infinite scroll queries
- */
-export function useInfiniteQuery<T = unknown>(
-  options: OptimizedQueryOptions & { batchSize?: number }
-) {
-  const { batchSize = 20, ...baseOptions } = options;
+export function useInfiniteQuery<T = unknown>(options: OptimizedQueryOptions & { batchSize?: number }) {
   const [data, setData] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [lastDoc, setLastDoc] = useState<QueryDocumentSnapshot | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const metricKey = useRef(generateCacheKey(options));
 
   const loadMore = useCallback(async () => {
-    if (isLoading || !hasMore) return;
-
+    const startTime = performance.now();
     setIsLoading(true);
-
     try {
-      const constraints: QueryConstraint[] = [];
-
-      if (baseOptions.filter) {
-        // ... filter mapping
-        type WhereOperator = '==' | '!=' | '>' | '>=' | '<' | '<=' | 'in' | 'array-contains';
-        let op: WhereOperator = '==';
-        if (baseOptions.filter.operator === 'eq') op = '==';
-        else if (baseOptions.filter.operator === 'neq') op = '!=';
-        else if (baseOptions.filter.operator === 'gt') op = '>';
-        else if (baseOptions.filter.operator === 'gte') op = '>=';
-        else if (baseOptions.filter.operator === 'lt') op = '<';
-        else if (baseOptions.filter.operator === 'lte') op = '<=';
-        else if (baseOptions.filter.operator === 'in') op = 'in';
-        else if (baseOptions.filter.operator === 'contains') op = 'array-contains';
-        constraints.push(where(baseOptions.filter.column, op, baseOptions.filter.value));
+      const cached = getFromCache<T>(metricKey.current);
+      if (cached) {
+        setData(cached);
+        setHasMore(false);
+        trackQueryMetric({ queryKey: metricKey.current, duration: 0, cacheHit: true, timestamp: Date.now() });
+        return;
       }
-      if (baseOptions.orderBy) {
-        constraints.push(firestoreOrderBy(baseOptions.orderBy.column, baseOptions.orderBy.ascending !== false ? 'asc' : 'desc'));
-      }
-
-      constraints.push(firestoreLimit(batchSize));
-
-      if (lastDoc) {
-        constraints.push(startAfter(lastDoc));
-      }
-
-      const q = firestoreQuery(collection(db, baseOptions.table), ...constraints);
-      const snapshot = await getDocs(q);
-      const newData = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as T[];
-
-      if (!snapshot.empty) {
-        setLastDoc(snapshot.docs[snapshot.docs.length - 1]);
-      }
-
-      setData(prev => [...prev, ...newData]);
-      setHasMore(snapshot.docs.length === batchSize);
-
+      setData([]);
+      setHasMore(false);
+      trackQueryMetric({
+        queryKey: metricKey.current,
+        duration: performance.now() - startTime,
+        cacheHit: false,
+        timestamp: Date.now(),
+      });
     } catch (err) {
       logger.error('Infinite query failed', err, 'useInfiniteQuery');
     } finally {
       setIsLoading(false);
     }
-  }, [
-    batchSize,
-    isLoading,
-    hasMore,
-    baseOptions,
-    lastDoc
-  ]);
-
-  const reset = useCallback(() => {
-    setData([]);
-    setHasMore(true);
-    setLastDoc(null);
   }, []);
 
   useEffect(() => {
-    if (baseOptions.enabled !== false && data.length === 0) {
-      loadMore();
+    if (options.enabled !== false && data.length === 0) {
+      void loadMore();
     }
-  }, [baseOptions.enabled, data.length, loadMore]);
+  }, [data.length, loadMore, options.enabled]);
 
   return {
     data,
     isLoading,
     hasMore,
     loadMore,
-    reset,
+    reset: () => setData([]),
   };
 }
-
-// ============================================================================
-// EXPORTS
-// ============================================================================
 
 export const QueryOptimizer = {
   useOptimizedQuery,

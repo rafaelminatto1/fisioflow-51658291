@@ -21,8 +21,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { getMedicalDisclaimerContent } from '@/constants/legalContent';
 import { LEGAL_VERSIONS } from '@/constants/legalVersions';
-import { db, auth } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { authApi } from '@/lib/auth-api';
+import { config } from '@/lib/config';
 import type { MedicalDisclaimerAcknowledgment } from '@/types/legal';
 
 interface MedicalDisclaimerModalProps {
@@ -57,7 +57,7 @@ export default function MedicalDisclaimerModal({
   };
 
   /**
-   * Store acknowledgment in Firestore and call onAcknowledge callback
+   * Store acknowledgment in API and call onAcknowledge callback
    */
   const handleAcknowledge = async () => {
     if (!hasScrolledToBottom || !hasAccepted || isLoading) {
@@ -67,25 +67,35 @@ export default function MedicalDisclaimerModal({
     setIsLoading(true);
 
     try {
-      const user = auth.currentUser;
+      const user = await authApi.getMe();
       if (!user) {
         console.error('No authenticated user found');
         setIsLoading(false);
         return;
       }
 
+      const token = await authApi.getToken();
+
       // Prepare acknowledgment data
       const acknowledgmentData: Omit<MedicalDisclaimerAcknowledgment, 'id'> = {
-        userId: user.uid,
+        userId: user.id,
         context,
         acknowledgedAt: new Date(),
         version: LEGAL_VERSIONS.MEDICAL_DISCLAIMER,
       };
 
-      // Store in Firestore collection 'medical_disclaimers'
-      await addDoc(collection(db, 'medical_disclaimers'), {
-        ...acknowledgmentData,
-        acknowledgedAt: serverTimestamp(),
+      await fetch(`${config.apiUrl}/api/consents/accept`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+           userId: user.id,
+           type: `medical_disclaimer_${context}`,
+           version: LEGAL_VERSIONS.MEDICAL_DISCLAIMER,
+           acknowledgedAt: acknowledgmentData.acknowledgedAt.toISOString(),
+        })
       });
 
       console.log(`Medical disclaimer acknowledged for context: ${context}`);
@@ -101,7 +111,6 @@ export default function MedicalDisclaimerModal({
       console.error('Error storing medical disclaimer acknowledgment:', error);
       setIsLoading(false);
       // Still call onAcknowledge to not block the user
-      // In production, you might want to show an error message
       onAcknowledge();
     }
   };

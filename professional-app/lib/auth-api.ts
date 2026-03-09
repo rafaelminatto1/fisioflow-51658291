@@ -88,5 +88,37 @@ export const authApi = {
     }
 
     return response.json();
+  },
+
+  async resetPassword(email: string): Promise<void> {
+    const response = await fetch(`${config.apiUrl}/auth/reset-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Erro ao enviar email de recuperação');
+    }
+  },
+
+  async updatePassword(newPassword: string): Promise<void> {
+    const token = await this.getToken();
+    if (!token) throw new Error('Not authenticated');
+
+    const response = await fetch(`${config.apiUrl}/auth/update-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ newPassword }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Erro ao atualizar senha');
+    }
   }
 };

@@ -58,7 +58,16 @@ export default function DataExportScreen() {
 
     setIsProcessing(true);
     try {
-      await dataExportService.requestExport(user.id, format, options);
+      const types: ('appointments' | 'evolutions' | 'exercises' | 'profile')[] = [];
+      if (options.includeAppointments) types.push('appointments');
+      if (options.includeSOAPNotes) types.push('evolutions');
+      if (options.includeExercises) types.push('exercises');
+      types.push('profile');
+
+      await dataExportService.requestExport({
+        format,
+        types
+      });
       Alert.alert(
         'Solicitação Enviada',
         'Seu pedido de exportação está sendo processado. Devido ao volume de dados e criptografia, isso pode levar até 48 horas. Você receberá uma notificação quando estiver pronto.',

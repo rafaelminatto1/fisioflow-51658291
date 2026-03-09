@@ -41,10 +41,8 @@ import {
   RefreshCw,
   Trash2,
 } from 'lucide-react';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
 import { uploadToR2 } from '@/lib/storage/r2-storage';
-import { examsApi } from '@/lib/api/workers-client';
+import { aiApi, examsApi } from '@/lib/api/workers-client';
 import { useToast } from '@/hooks/use-toast';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { usePatientsPostgres } from '@/hooks/useDataConnect';
@@ -276,8 +274,7 @@ export default function DocumentScannerPage() {
 
       try {
         // 2. Análise completa via Cloud Functions (se disponível)
-        const analyzeDocument = httpsCallable(functions, 'aiDocumentAnalysis');
-        const result = await analyzeDocument({
+        const result = await aiApi.documentAnalyze({
           fileUrl,
           fileName: file.name,
           mediaType: file.type,
@@ -345,8 +342,7 @@ export default function DocumentScannerPage() {
     if (!extractedData) return;
 
     try {
-      const classifyDocument = httpsCallable(functions, 'aiClassifyDocument');
-      const result = await classifyDocument({
+      const result = await aiApi.documentClassify({
         text: extractedData.text,
         fileUrl: extractedData.fileUrl,
       });
@@ -366,8 +362,7 @@ export default function DocumentScannerPage() {
     if (!extractedData) return;
 
     try {
-      const summarizeDocument = httpsCallable(functions, 'aiSummarizeDocument');
-      const result = await summarizeDocument({
+      const result = await aiApi.documentSummarize({
         text: extractedData.fullText || extractedData.text,
         documentType: classification?.type || 'clinical_report',
       });
@@ -390,8 +385,7 @@ export default function DocumentScannerPage() {
     if (!extractedData) return;
 
     try {
-      const translateDocument = httpsCallable(functions, 'aiTranslateDocument');
-      const result = await translateDocument({
+      const result = await aiApi.documentTranslate({
         text: extractedData.fullText || extractedData.text,
         targetLanguage: translateLanguage,
       });
@@ -420,8 +414,7 @@ export default function DocumentScannerPage() {
     if (!extractedData) return;
 
     try {
-      const compareDocuments = httpsCallable(functions, 'aiCompareDocuments');
-      const result = await compareDocuments({
+      const result = await aiApi.documentCompare({
         currentText: extractedData.fullText || extractedData.text,
         patientId: selectedPatient,
         documentType: classification?.type,
@@ -483,8 +476,7 @@ export default function DocumentScannerPage() {
     if (!extractedData) return;
 
     try {
-      const generatePDF = httpsCallable(functions, 'generateDocumentPDF');
-      await generatePDF({
+      await aiApi.documentPdf({
         documentData: {
           extractedData,
           classification,

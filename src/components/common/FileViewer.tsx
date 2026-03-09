@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import { Eye, Download, FileText, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getFirebaseStorage, ref, getDownloadURL } from '@/integrations/firebase/storage';
+import { resolvePublicStorageUrl } from '@/lib/storage/public-url';
 
 interface FileViewerProps {
     files: {
@@ -19,9 +19,7 @@ export const FileViewer: React.FC<FileViewerProps> = ({ files, bucketName }) => 
     const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
     const getPublicUrl = useCallback(async (path: string): Promise<string> => {
-        const storage = getFirebaseStorage();
-        const storageRef = ref(storage, `${bucketName}/${path}`);
-        return await getDownloadURL(storageRef);
+        return resolvePublicStorageUrl(path, bucketName);
     }, [bucketName]);
 
     // Cache for URLs to avoid repeated fetches

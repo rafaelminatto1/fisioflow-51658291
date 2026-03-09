@@ -20,19 +20,36 @@ const parseJsonArray = (value: unknown): string[] => {
 
 const normalizeArticle = (row: Record<string, unknown>) => ({
   id: String(row.article_id ?? row.id),
+  organizationId: String(row.organization_id ?? ''),
   title: String(row.title ?? ''),
+  type: String(row.article_type ?? 'pdf'),
+  url: row.url ? String(row.url) : '',
   group: String(row.group ?? ''),
   subgroup: String(row.subgroup ?? ''),
   focus: parseJsonArray(row.focus),
   evidence: row.evidence ? String(row.evidence) : 'B',
+  evidenceLevel: row.evidence ? String(row.evidence) : 'B',
   year: row.year == null ? undefined : Number(row.year),
   source: row.source ? String(row.source) : undefined,
-  url: row.url ? String(row.url) : undefined,
   status: row.status ? String(row.status) : 'pending',
   tags: parseJsonArray(row.tags),
+  summary: row.summary ? String(row.summary) : undefined,
+  keyFindings: parseJsonArray(row.highlights),
+  clinicalImplications: parseJsonArray(row.clinical_implications),
   highlights: parseJsonArray(row.highlights),
   observations: parseJsonArray(row.observations),
   keyQuestions: parseJsonArray(row.key_questions),
+  vectorStatus: row.vector_status ? String(row.vector_status) : 'pending',
+  viewCount: Number(row.view_count ?? 0),
+  citationCount: row.citation_count == null ? undefined : Number(row.citation_count),
+  metadata: row.metadata ?? {
+    year: row.year == null ? undefined : Number(row.year),
+    journal: row.source ? String(row.source) : undefined,
+    authors: [],
+  },
+  createdAt: row.created_at ? String(row.created_at) : null,
+  updatedAt: row.updated_at ? String(row.updated_at) : null,
+  createdBy: row.created_by ? String(row.created_by) : '',
 });
 
 const normalizeAnnotation = (row: Record<string, unknown>) => ({
@@ -91,6 +108,106 @@ app.get('/articles', async (c) => {
     [user.organizationId],
   );
   return c.json({ data: result.rows.map(normalizeArticle) });
+});
+
+app.post('/articles', async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  const metadata = (body.metadata && typeof body.metadata === 'object') ? body.metadata as Record<string, unknown> : {};
+  const articleId = String(body.article_id ?? body.id ?? crypto.randomUUID());
+
+  const result = await pool.query(
+    `INSERT INTO knowledge_articles (
+        organization_id, article_id, title, article_type, "group", subgroup, focus, evidence, year,
+        source, url, tags, status, summary, highlights, clinical_implications, observations, key_questions,
+        metadata, vector_status, view_count, citation_count, raw_text, created_by, updated_by, created_at, updated_at
+      ) VALUES (
+        $1,$2,$3,$4,$5,$6,$7::jsonb,$8,$9,$10,$11,$12::jsonb,$13,$14,$15::jsonb,$16::jsonb,$17::jsonb,$18::jsonb,
+        $19::jsonb,$20,$21,$22,$23,$24,$25,NOW(),NOW()
+      )
+      RETURNING *`,
+    [
+      user.organizationId,
+      articleId,
+      String(body.title ?? ''),
+      String(body.type ?? body.article_type ?? 'pdf'),
+      String(body.group ?? ''),
+      String(body.subgroup ?? ''),
+      JSON.stringify(Array.isArray(body.focus) ? body.focus : []),
+      String(body.evidenceLevel ?? body.evidence ?? 'Consensus'),
+      metadata.year == null ? null : Number(metadata.year),
+      metadata.journal ? String(metadata.journal) : (body.source ? String(body.source) : null),
+      body.url ? String(body.url) : null,
+      JSON.stringify(Array.isArray(body.tags) ? body.tags : []),
+      String(body.status ?? 'pending'),
+      body.summary ? String(body.summary) : null,
+      JSON.stringify(Array.isArray(body.keyFindings) ? body.keyFindings : body.highlights ?? []),
+      JSON.stringify(Array.isArray(body.clinicalImplications) ? body.clinicalImplications : []),
+      JSON.stringify(Array.isArray(body.observations) ? body.observations : []),
+      JSON.stringify(Array.isArray(body.keyQuestions) ? body.keyQuestions : []),
+      JSON.stringify(metadata),
+      String(body.vectorStatus ?? body.vector_status ?? 'pending'),
+      Number(body.viewCount ?? body.view_count ?? 0),
+      body.citationCount == null ? null : Number(body.citationCount),
+      body.rawText ? String(body.rawText) : null,
+      user.uid,
+      user.uid,
+    ],
+  );
+
+  return c.json({ data: normalizeArticle(result.rows[0]) }, 201);
+});
+
+app.put('/articles/:articleId', async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { articleId } = c.req.param();
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  const metadata = (body.metadata && typeof body.metadata === 'object') ? body.metadata as Record<string, unknown> : undefined;
+  const sets: string[] = ['updated_by = $1', 'updated_at = NOW()'];
+  const params: unknown[] = [user.uid];
+
+  const addSet = (column: string, value: unknown, transform?: (v: unknown) => unknown) => {
+    params.push(transform ? transform(value) : value);
+    sets.push(`${column} = $${params.length}`);
+  };
+
+  if (body.title !== undefined) addSet('title', String(body.title));
+  if (body.type !== undefined || body.article_type !== undefined) addSet('article_type', String(body.type ?? body.article_type));
+  if (body.group !== undefined) addSet('"group"', String(body.group));
+  if (body.subgroup !== undefined) addSet('subgroup', String(body.subgroup));
+  if (body.focus !== undefined) addSet('focus', body.focus, (v) => JSON.stringify(Array.isArray(v) ? v : []));
+  if (body.evidenceLevel !== undefined || body.evidence !== undefined) addSet('evidence', String(body.evidenceLevel ?? body.evidence));
+  if (body.url !== undefined) addSet('url', body.url ? String(body.url) : null);
+  if (body.tags !== undefined) addSet('tags', body.tags, (v) => JSON.stringify(Array.isArray(v) ? v : []));
+  if (body.status !== undefined) addSet('status', String(body.status));
+  if (body.summary !== undefined) addSet('summary', body.summary ? String(body.summary) : null);
+  if (body.keyFindings !== undefined || body.highlights !== undefined) addSet('highlights', body.keyFindings ?? body.highlights, (v) => JSON.stringify(Array.isArray(v) ? v : []));
+  if (body.clinicalImplications !== undefined) addSet('clinical_implications', body.clinicalImplications, (v) => JSON.stringify(Array.isArray(v) ? v : []));
+  if (body.observations !== undefined) addSet('observations', body.observations, (v) => JSON.stringify(Array.isArray(v) ? v : []));
+  if (body.keyQuestions !== undefined) addSet('key_questions', body.keyQuestions, (v) => JSON.stringify(Array.isArray(v) ? v : []));
+  if (metadata !== undefined) {
+    addSet('metadata', metadata, (v) => JSON.stringify(v));
+    if (metadata.year !== undefined) addSet('year', Number(metadata.year));
+    if (metadata.journal !== undefined) addSet('source', metadata.journal ? String(metadata.journal) : null);
+  }
+  if (body.vectorStatus !== undefined || body.vector_status !== undefined) addSet('vector_status', String(body.vectorStatus ?? body.vector_status));
+  if (body.viewCount !== undefined || body.view_count !== undefined) addSet('view_count', Number(body.viewCount ?? body.view_count));
+  if (body.citationCount !== undefined || body.citation_count !== undefined) addSet('citation_count', body.citationCount ?? body.citation_count);
+  if (body.rawText !== undefined || body.raw_text !== undefined) addSet('raw_text', body.rawText ?? body.raw_text);
+
+  params.push(user.organizationId, articleId);
+  const result = await pool.query(
+    `UPDATE knowledge_articles
+        SET ${sets.join(', ')}
+      WHERE organization_id = $${params.length - 1} AND article_id = $${params.length}
+      RETURNING *`,
+    params,
+  );
+
+  if (!result.rows.length) return c.json({ error: 'Artigo não encontrado' }, 404);
+  return c.json({ data: normalizeArticle(result.rows[0]) });
 });
 
 app.post('/articles/sync', async (c) => {
@@ -162,6 +279,63 @@ app.post('/articles/index', async (c) => {
     [user.organizationId],
   );
   return c.json({ indexed: Number(result.rows[0]?.total ?? 0) });
+});
+
+app.post('/articles/:articleId/process', async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { articleId } = c.req.param();
+  const body = (await c.req.json().catch(() => ({}))) as { textContent?: string };
+  const rawText = String(body.textContent ?? '');
+  const summary = rawText
+    ? rawText.split(/\n+/).map((line) => line.trim()).filter(Boolean).slice(0, 3).join(' ')
+    : 'Documento indexado para consulta.';
+  const keyFindings = rawText
+    ? rawText.split(/\n+/).map((line) => line.trim()).filter(Boolean).slice(0, 5)
+    : [];
+
+  await pool.query(
+    `UPDATE knowledge_articles
+        SET vector_status = 'completed',
+            raw_text = COALESCE(NULLIF($3, ''), raw_text),
+            summary = COALESCE(NULLIF($4, ''), summary),
+            highlights = CASE WHEN jsonb_array_length($5::jsonb) > 0 THEN $5::jsonb ELSE highlights END,
+            updated_by = $1,
+            updated_at = NOW()
+      WHERE organization_id = $2 AND article_id = $6`,
+    [user.uid, user.organizationId, rawText, summary, JSON.stringify(keyFindings), articleId],
+  );
+
+  return c.json({ data: { success: true } });
+});
+
+app.post('/articles/:articleId/ask', async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { articleId } = c.req.param();
+  const body = (await c.req.json().catch(() => ({}))) as { query?: string };
+  const question = String(body.query ?? '').trim();
+  if (!question) return c.json({ error: 'query é obrigatória' }, 400);
+
+  const result = await pool.query(
+    `SELECT title, summary, highlights, raw_text
+       FROM knowledge_articles
+      WHERE organization_id = $1 AND article_id = $2`,
+    [user.organizationId, articleId],
+  );
+
+  if (!result.rows.length) return c.json({ error: 'Artigo não encontrado' }, 404);
+  const row = result.rows[0];
+  const contextBits = [
+    row.summary ? `Resumo: ${String(row.summary)}` : '',
+    ...parseJsonArray(row.highlights).map((item) => `- ${item}`),
+  ].filter(Boolean);
+
+  const answer = contextBits.length
+    ? `Documento: ${String(row.title)}\n\n${contextBits.join('\n')}\n\nPergunta: ${question}\n\nResposta resumida com base no conteúdo indexado acima.`
+    : `Documento: ${String(row.title)}\n\nO documento foi localizado, mas ainda não possui resumo estruturado. Pergunta recebida: ${question}`;
+
+  return c.json({ data: { answer, contextUsed: contextBits.join('\n') } });
 });
 
 app.post('/semantic-search', async (c) => {
@@ -304,6 +478,42 @@ app.get('/curation', async (c) => {
     [user.organizationId],
   );
   return c.json({ data: result.rows.map(normalizeCuration) });
+});
+
+app.get('/articles/:articleId/notes', async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { articleId } = c.req.param();
+  const result = await pool.query(
+    `SELECT id, article_id, user_id, content, page_ref, highlight_color, created_at
+       FROM knowledge_notes
+      WHERE organization_id = $1 AND article_id = $2 AND user_id = $3
+      ORDER BY created_at DESC`,
+    [user.organizationId, articleId, user.uid],
+  );
+  return c.json({ data: result.rows });
+});
+
+app.post('/articles/:articleId/notes', async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { articleId } = c.req.param();
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  const result = await pool.query(
+    `INSERT INTO knowledge_notes (
+        organization_id, article_id, user_id, content, page_ref, highlight_color, created_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,NOW())
+      RETURNING id, article_id, user_id, content, page_ref, highlight_color, created_at`,
+    [
+      user.organizationId,
+      articleId,
+      user.uid,
+      String(body.content ?? ''),
+      body.pageRef ?? null,
+      body.highlightColor ?? null,
+    ],
+  );
+  return c.json({ data: result.rows[0] }, 201);
 });
 
 app.put('/curation/:articleId', async (c) => {

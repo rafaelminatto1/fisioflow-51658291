@@ -26,7 +26,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { biometricAuthService } from '@/lib/services/biometricAuthService';
-import { auth } from '@/lib/firebase';
+import { authApi } from '@/lib/auth-api';
 import type { BiometricType } from '@/types/auth';
 
 type SetupStep = 'intro' | 'biometric' | 'pin' | 'complete';
@@ -56,11 +56,15 @@ export default function BiometricSetupScreen() {
    */
   const checkBiometricAvailability = async () => {
     try {
-      const available = await biometricAuthService.isAvailable();
+      const available = await biometricAuthService.checkHardwareSupport();
       setIsAvailable(available);
 
       if (available) {
-        const type = await biometricAuthService.getBiometricType();
+        const config = await biometricAuthService.getConfig(''); // Empty string is fine just to get types
+        const types = config.type;
+        let type: BiometricType = 'none';
+        if (types.includes(1)) type = 'touchId'; // FINGERPRINT
+        if (types.includes(2)) type = 'faceId'; // FACIAL_RECOGNITION
         setBiometricType(type);
       }
     } catch (error) {
@@ -102,7 +106,13 @@ export default function BiometricSetupScreen() {
    * Setup biometric authentication
    */
   const setupBiometric = async () => {
-    const user = auth.currentUser;
+    let user;
+    try {
+      user = await authApi.getMe();
+    } catch {
+      user = null;
+    }
+
     if (!user) {
       Alert.alert('Erro', 'Usuário não autenticado');
       return;
@@ -112,6 +122,7 @@ export default function BiometricSetupScreen() {
     try {
       // Test biometric authentication first
       const authenticated = await biometricAuthService.authenticate(
+        user.id,
         'Autentique para configurar a proteção biométrica'
       );
 
@@ -125,7 +136,7 @@ export default function BiometricSetupScreen() {
       }
 
       // Setup biometric in service
-      await biometricAuthService.setup(user.uid);
+      await biometricAuthService.enableBiometrics(user.id);
 
       // Move to PIN setup
       setCurrentStep('pin');
@@ -145,7 +156,13 @@ export default function BiometricSetupScreen() {
    * Setup PIN fallback
    */
   const setupPIN = async () => {
-    const user = auth.currentUser;
+    let user;
+    try {
+      user = await authApi.getMe();
+    } catch {
+      user = null;
+    }
+
     if (!user) {
       Alert.alert('Erro', 'Usuário não autenticado');
       return;
@@ -171,7 +188,7 @@ export default function BiometricSetupScreen() {
 
     setIsLoading(true);
     try {
-      await biometricAuthService.setupPIN(user.uid, pin);
+      await biometricAuthService.enableBiometrics(user.id, pin);
       setCurrentStep('complete');
     } catch (error) {
       console.error('Error setting up PIN:', error);

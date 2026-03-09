@@ -16,7 +16,7 @@ import { Card } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useAppointments } from '@/hooks/useAppointments';
 import { usePatients } from '@/hooks/usePatients';
-import { getProfessionalStats } from '@/lib/firestore';
+import { getDashboardStats } from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
 import { useQuery } from '@tanstack/react-query';
 
@@ -59,10 +59,10 @@ export default function ReportsScreen() {
   const { data: patients } = usePatients();
   const { user } = useAuthStore();
 
-  // Buscar estatísticas do Firestore
+  // Buscar estatísticas do backend
   const { data: stats, isLoading } = useQuery({
     queryKey: ['professionalStats', user?.id],
-    queryFn: () => (user?.id ? getProfessionalStats(user.id) : Promise.resolve(null)),
+    queryFn: () => (user?.id ? getDashboardStats(user.id) : Promise.resolve(null)),
     enabled: !!user?.id,
   });
 
@@ -132,7 +132,7 @@ export default function ReportsScreen() {
       {
         label: 'Consultas Realizadas',
         value: completedThisMonth,
-        change: stats ? `${stats.completedAppointmentsThisMonth} este mês` : undefined,
+        change: stats ? `${stats.completedAppointments} este mês` : undefined,
         changeType: 'up',
         icon: 'checkmark-circle',
         color: colors.success,

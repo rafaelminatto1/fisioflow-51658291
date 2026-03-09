@@ -6,8 +6,7 @@
 import { google } from 'googleapis';
 
 import { OAuth2Client } from 'google-auth-library';
-
-import { db, doc, updateDoc } from '@/integrations/firebase/app';
+import { appointmentsApi } from '@/lib/api/workers-client';
 
 import CryptoJS from 'crypto-js';
 
@@ -281,10 +280,8 @@ export async function syncToGoogleCalendar(
         
         // Salvar eventId no appointment
         try {
-          const appointmentRef = doc(db, 'appointments', appointment.id);
-          await updateDoc(appointmentRef, {
+          await appointmentsApi.update(appointment.id, {
             google_calendar_event_id: eventId,
-            updated_at: new Date().toISOString()
           });
         } catch (dbError) {
           console.error(`Erro ao salvar eventId no agendamento ${appointment.id}:`, dbError);

@@ -1,81 +1,25 @@
 /**
- * Firebase Legacy Module - Re-exports from new implementation
- * 
- * Este arquivo foi modificado para evitar duplicacao de inicializacao do Firebase.
- * Agora ele apenas re-exporta as instancias do novo modulo singleton em
- * src/integrations/firebase/app.ts
+ * Compat layer legado.
+ *
+ * Firebase runtime foi removido do frontend principal. Este arquivo existe
+ * apenas para evitar que imports antigos quebrem imediatamente.
  */
 
-// Re-export from new singleton implementation
-export {
-  app,
-  auth,
-  db,
-  storage,
-  functions,
-  // Firestore functions
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  collection,
-  collectionGroup,
-  getDocs,
-  query,
-  where,
-  limit,
-  addDoc,
-  deleteDoc,
-  orderBy,
-  onSnapshot,
-  getDocsFromCache,
-  getDocFromCache,
-  getDocsFromServer,
-  getDocFromServer,
-  getCountFromServer,
-  Timestamp,
-  serverTimestamp,
-  increment,
-  arrayUnion,
-  arrayRemove,
-  deleteField,
-  runTransaction,
-  writeBatch,
-  startAfter,
-  startAt,
-  endBefore,
-  endAt,
-  and,
-  or,
-  documentId,
-  // Functions
-  httpsCallable,
-  // Types
-  type FirebaseConfig,
-  type Query,
-  type CollectionReference,
-  type DocumentReference,
-  type DocumentData,
-  type QueryDocumentSnapshot,
-  type QuerySnapshot,
-  type QueryConstraint,
-  type Unsubscribe,
-  // Helper functions
-  getFirebaseApp,
-  getFirebaseAuth,
-  getFirebaseDb,
-  getFirebaseStorage,
-  getFirebaseFunctions,
-  useFirebase,
-  useAuth,
-  useFirestore,
-  useStorage,
-  isFirebaseConfigured,
-} from '@/integrations/firebase/app';
+export const app = null;
+export const auth = null;
+export const db = null;
+export const storage = null;
+export const functions = null;
 
-// Re-export default
-export { app as default } from '@/integrations/firebase/app';
+export const getFirebaseApp = () => null;
+export const getFirebaseAuth = () => null;
+export const getFirebaseDb = async () => null;
+export const getFirebaseStorage = () => null;
+export const getFirebaseFunctions = () => null;
+export const useFirebase = () => null;
+export const useAuth = () => null;
+export const useFirestore = () => null;
+export const useStorage = () => null;
+export const isFirebaseConfigured = () => false;
 
-// NOTE: This file is a stable re-export layer from @/integrations/firebase/app.
-// ~17 files still import from this path. A migration to direct imports is planned.
-
+export default app;

@@ -10,8 +10,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { authApi } from '@/lib/auth-api';
 import { Button, Input } from '@/components';
 import { useColors } from '@/hooks/useColorScheme';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,7 +29,7 @@ export default function ForgotPasswordScreen() {
 
     setIsLoading(true);
     try {
-      await sendPasswordResetEmail(auth, email.trim());
+      await authApi.resetPassword(email.trim());
       setSent(true);
     } catch (error: any) {
       let message = 'Erro ao enviar email de recuperacao';

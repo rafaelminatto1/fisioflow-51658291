@@ -1,11 +1,10 @@
 /**
- * Lead Scoring Hook - Migrated to Firebase
+ * Lead Scoring Hook - Migrated to Workers/Neon
  */
 
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { db, collection, getDocs, query as firestoreQuery, where } from '@/integrations/firebase/app';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { crmApi, type Lead } from '@/lib/api/workers-client';
 
 interface ScoreFactor {
   type: string;
@@ -13,83 +12,81 @@ interface ScoreFactor {
   points: number;
 }
 
+export interface CalculatedLeadScore {
+  leadId: string;
+  totalScore: number;
+  engagementScore: number;
+  demographicScore: number;
+  behavioralScore: number;
+  factors: ScoreFactor[];
+  category: 'hot' | 'warm' | 'cold';
+}
+
+function calculateLeadScore(lead: Lead): CalculatedLeadScore {
+  let totalScore = 0;
+  let engagementScore = 0;
+  let demographicScore = 0;
+  let behavioralScore = 0;
+  const factors: ScoreFactor[] = [];
+
+  if (lead.email) {
+    demographicScore += 10;
+    factors.push({ type: 'email', description: 'Possui email', points: 10 });
+  }
+
+  if (lead.telefone) {
+    demographicScore += 15;
+    factors.push({ type: 'phone', description: 'Possui telefone', points: 15 });
+  }
+
+  if (lead.origem === 'indicacao') {
+    demographicScore += 20;
+    factors.push({ type: 'source', description: 'Vindo de indicação', points: 20 });
+  }
+
+  if (lead.data_ultimo_contato) {
+    engagementScore += 15;
+    factors.push({ type: 'engagement', description: 'Contato recente registrado', points: 15 });
+  }
+
+  if (lead.interesse) {
+    engagementScore += 10;
+    factors.push({ type: 'interest', description: 'Interesse informado', points: 10 });
+  }
+
+  if (lead.estagio === 'avaliacao_agendada' || lead.estagio === 'avaliacao_realizada') {
+    behavioralScore += 30;
+    factors.push({ type: 'stage', description: 'Lead avançado no funil', points: 30 });
+  } else if (lead.estagio === 'em_contato') {
+    behavioralScore += 15;
+    factors.push({ type: 'stage', description: 'Lead em contato', points: 15 });
+  }
+
+  totalScore = demographicScore + engagementScore + behavioralScore;
+
+  return {
+    leadId: lead.id,
+    totalScore,
+    engagementScore,
+    demographicScore,
+    behavioralScore,
+    factors,
+    category: totalScore >= 70 ? 'hot' : totalScore >= 40 ? 'warm' : 'cold',
+  };
+}
+
+export async function fetchCalculatedLeadScores(leadId?: string) {
+  const result = await crmApi.leads.list();
+  const leads = result?.data ?? [];
+  const filtered = leadId ? leads.filter((lead) => lead.id === leadId) : leads;
+  return filtered.map(calculateLeadScore);
+}
+
 export function useLeadScoring() {
   const calculateScores = useMutation({
-    mutationFn: async (_leadId?: string) => {
-      // Buscar leads
-      const leadsQ = firestoreQuery(collection(db, 'leads'));
-      const leadsSnapshot = await getDocs(leadsQ);
-      const leads = leadsSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
-
-      if (leads.length === 0) return [];
-
-      // Buscar interações (comunicações, agendamentos, etc.)
-      const interacoesQ = firestoreQuery(collection(db, 'lead_interacoes'));
-      const interacoesSnapshot = await getDocs(interacoesQ);
-      const interacoes = interacoesSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
-
-      // Regras de pontuação
-      const regrasQ = firestoreQuery(
-        collection(db, 'lead_scoring_regras'),
-        where('active', '==', true)
-      );
-      const regrasSnapshot = await getDocs(regrasQ);
-      const _regras = regrasSnapshot.docs.length > 0 ? regrasSnapshot.docs[0].data() : null;
-
-      const calculatedScores = leads.map(lead => {
-        let totalScore = 0;
-        let engagementScore = 0;
-        let demographicScore = 0;
-        let behavioralScore = 0;
-        const factors: ScoreFactor[] = [];
-
-        // Pontuação demográfica
-        if (lead.email) {
-          demographicScore += 10;
-          factors.push({ type: 'email', description: 'Possui email', points: 10 });
-        }
-        if (lead.phone) {
-          demographicScore += 15;
-          factors.push({ type: 'phone', description: 'Possui telefone', points: 15 });
-        }
-        if (lead.source === 'indicacao') {
-          demographicScore += 20;
-          factors.push({ type: 'source', description: 'Vindo de indicação', points: 20 });
-        }
-
-        // Pontuação por engajamento
-        const leadInteracoes = interacoes.filter(i => i.lead_id === lead.id);
-        if (leadInteracoes.length > 0) {
-          engagementScore += Math.min(leadInteracoes.length * 5, 25);
-          factors.push({ type: 'engagement', description: `${leadInteracoes.length} interações`, points: Math.min(leadInteracoes.length * 5, 25) });
-        }
-
-        // Pontuação comportamental
-        if (lead.status === 'hot') {
-          behavioralScore += 30;
-          factors.push({ type: 'status', description: 'Lead quente', points: 30 });
-        } else if (lead.status === 'warm') {
-          behavioralScore += 15;
-          factors.push({ type: 'status', description: 'Lead morno', points: 15 });
-        }
-
-        totalScore = demographicScore + engagementScore + behavioralScore;
-
-        return {
-          leadId: lead.id,
-          totalScore,
-          engagementScore,
-          demographicScore,
-          behavioralScore,
-          factors,
-          category: totalScore >= 70 ? 'hot' : totalScore >= 40 ? 'warm' : 'cold'
-        };
-      });
-
-      return calculatedScores;
-    },
+    mutationFn: async (leadId?: string) => fetchCalculatedLeadScores(leadId),
     onSuccess: () => {
-      toast.success('Scores calculados com sucesso!');
+      toast.success('Scores recalculados com sucesso!');
     },
     onError: (error: Error) => {
       toast.error('Erro ao calcular scores: ' + error.message);
