@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { User } from 'firebase/auth'; // tipo mantido por compatibilidade com o restante do app
 import { authClient } from '@/integrations/neon/auth';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { getNeonAccessToken, invalidateNeonTokenCache } from '@/lib/auth/neon-token';
-import { AuthContextType, AuthContext, AuthError } from './AuthContext';
+import { AuthContextType, AuthContext, AuthError, AuthUser } from './AuthContext';
 import { Profile, RegisterFormData, UserRole } from '@/types/auth';
 import { useQueryClient } from '@tanstack/react-query';
 import { AppointmentService } from '@/services/appointmentService';
@@ -12,7 +11,7 @@ import { AppointmentService } from '@/services/appointmentService';
 export const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
 
 export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
@@ -20,7 +19,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const queryClient = useQueryClient();
   const prefetchedOrgIdsRef = useRef(new Set<string>());
 
-  const adaptNeonUser = useCallback((neonUser: any): User => {
+  const adaptNeonUser = useCallback((neonUser: any): AuthUser => {
     if (!neonUser) return null as any;
     return {
       uid: neonUser.id,
@@ -29,17 +28,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
       photoURL: neonUser.image,
       emailVerified: neonUser.emailVerified ?? false,
       getIdToken: async () => getNeonAccessToken(),
-      metadata: {},
-      providerData: [],
-      refreshToken: '',
-      tenantId: null,
-      delete: async () => {},
-      getIdTokenResult: async () => ({ claims: {}, expirationTime: '', authTime: '', issuedAtTime: '', signInProvider: '', token: '' }),
-      reload: async () => {},
-      toJSON: () => ({}),
-      phoneNumber: null,
-      isAnonymous: false,
-    } as unknown as User;
+    };
   }, []);
 
   const prefetchDashboardData = useCallback((orgId: string) => {
@@ -62,7 +51,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   }, [queryClient]);
 
-  const buildProfile = useCallback((neonUser: any, adaptedUser: User): Profile => {
+  const buildProfile = useCallback((neonUser: any, adaptedUser: AuthUser): Profile => {
     const meta = (neonUser?.user_metadata ?? neonUser?.metadata ?? {}) as Record<string, unknown>;
     const organizationId =
       (typeof neonUser?.organization_id === 'string' && neonUser.organization_id) ||
@@ -87,7 +76,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     };
   }, []);
 
-  const loadUserAndProfile = useCallback(async (newUser: User | null) => {
+  const loadUserAndProfile = useCallback(async (newUser: AuthUser | null) => {
     setUser(newUser);
     if (newUser) {
       let profileData: Profile | null = null;
