@@ -8,8 +8,6 @@
  * Entrada de tempo individual
  */
 
-import { Timestamp } from '@/integrations/firebase/app';
-
 export interface TimeEntry {
   id: string;
   user_id: string;
@@ -19,16 +17,16 @@ export interface TimeEntry {
   project_id?: string;        // Vinculado a projeto
   appointment_id?: string;    // Vinculado a agendamento
   description: string;
-  start_time: Timestamp;
-  end_time?: Timestamp;
+  start_time: string;         // ISO 8601
+  end_time?: string;          // ISO 8601
   duration_seconds: number;
   is_billable: boolean;
   hourly_rate?: number;
   total_value?: number;       // Calculado: duration_seconds / 3600 * hourly_rate
   tags: string[];
-  created_at: Timestamp;
-  updated_at: Timestamp;
-  deleted_at?: Timestamp;
+  created_at: string;         // ISO 8601
+  updated_at: string;         // ISO 8601
+  deleted_at?: string;        // ISO 8601
 }
 
 /**

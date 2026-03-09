@@ -10,6 +10,8 @@
  * POST   /api/evaluation-forms/:id/fields
  * PUT    /api/evaluation-forms/fields/:fieldId
  * DELETE /api/evaluation-forms/fields/:fieldId
+ * GET    /api/evaluation-forms/:id/responses?patientId=
+ * POST   /api/evaluation-forms/:id/responses
  */
 import { Hono } from 'hono';
 import { createPool } from '../lib/db';
@@ -443,6 +445,79 @@ app.delete('/fields/:fieldId', requireAuth, async (c) => {
   );
   if (!result.rows.length) return c.json({ error: 'Campo não encontrado' }, 404);
   return c.json({ ok: true });
+});
+
+app.get('/:id/responses', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id } = c.req.param();
+  const patientId = c.req.query('patientId');
+
+  if (!(await hasTable(pool, 'patient_evaluation_responses'))) {
+    return c.json({ data: [] });
+  }
+
+  const params: unknown[] = [id, user.organizationId];
+  const conditions = ['form_id = $1', 'organization_id = $2'];
+  if (patientId) {
+    params.push(patientId);
+    conditions.push(`patient_id = $${params.length}`);
+  }
+
+  const result = await pool.query(
+    `SELECT *
+     FROM patient_evaluation_responses
+     WHERE ${conditions.join(' AND ')}
+     ORDER BY created_at DESC`,
+    params,
+  );
+
+  return c.json({ data: result.rows });
+});
+
+app.post('/:id/responses', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id } = c.req.param();
+  const body = (await c.req.json()) as Record<string, unknown>;
+
+  if (!(await hasTable(pool, 'patient_evaluation_responses'))) {
+    return c.json({ error: 'Respostas de avaliação não disponíveis' }, 501);
+  }
+
+  const patientId = typeof body.patient_id === 'string' ? body.patient_id : null;
+  if (!patientId) return c.json({ error: 'patient_id é obrigatório' }, 400);
+
+  const [formResult, patientResult] = await Promise.all([
+    pool.query(
+      `SELECT id FROM evaluation_forms WHERE id = $1 AND organization_id = $2 LIMIT 1`,
+      [id, user.organizationId],
+    ),
+    pool.query(
+      `SELECT id FROM patients WHERE id = $1 AND organization_id = $2 LIMIT 1`,
+      [patientId, user.organizationId],
+    ),
+  ]);
+
+  if (!formResult.rows.length) return c.json({ error: 'Ficha não encontrada' }, 404);
+  if (!patientResult.rows.length) return c.json({ error: 'Paciente não encontrado' }, 404);
+
+  const result = await pool.query(
+    `INSERT INTO patient_evaluation_responses
+       (organization_id, patient_id, form_id, appointment_id, responses, created_by, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5::jsonb, $6, NOW(), NOW())
+     RETURNING *`,
+    [
+      user.organizationId,
+      patientId,
+      id,
+      typeof body.appointment_id === 'string' ? body.appointment_id : null,
+      JSON.stringify(body.responses ?? {}),
+      user.uid,
+    ],
+  );
+
+  return c.json({ data: result.rows[0] }, 201);
 });
 
 export { app as evaluationFormsRoutes };

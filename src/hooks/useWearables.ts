@@ -1,81 +1,55 @@
 /**
- * useWearables - Migrated to Firebase
- *
+ * useWearables - Migrated to Neon/Workers
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, addDoc, query as firestoreQuery, where, orderBy, getDocs, getDoc, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
-import { useAuth } from '@/contexts/AuthContext';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { wearablesApi } from '@/lib/api/workers-client';
 
 export interface WearableDataPoint {
-    id: string;
-    patient_id: string;
-    source: string;
-    data_type: string;
-    value: number;
-    unit?: string;
-    timestamp: string;
-    created_at: string;
-    organization_id?: string;
+  id: string;
+  patient_id: string;
+  source: string;
+  data_type: string;
+  value: number;
+  unit?: string;
+  timestamp: string;
+  created_at: string;
+  organization_id?: string;
 }
 
-// Helper to convert doc
-const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as T);
-
 export const useWearables = (patientId?: string) => {
-    const queryClient = useQueryClient();
-    const { profile } = useAuth(); // We can get organization_id from context
+  const queryClient = useQueryClient();
 
-    const { data: wearableData = [], isLoading, error } = useQuery({
-        queryKey: ['wearables', patientId],
-        queryFn: async () => {
-            if (!patientId) return [];
+  const { data: wearableData = [], isLoading, error } = useQuery({
+    queryKey: ['wearables', patientId],
+    queryFn: async () => {
+      if (!patientId) return [];
+      const result = await wearablesApi.list({ patientId });
+      return (result.data ?? []) as WearableDataPoint[];
+    },
+    enabled: !!patientId,
+  });
 
-            const q = firestoreQuery(
-                collection(db, 'wearable_data'),
-                where('patient_id', '==', patientId),
-                orderBy('timestamp', 'desc')
-            );
+  const addWearableData = useMutation({
+    mutationFn: async (newData: Omit<WearableDataPoint, 'id' | 'created_at'>) => {
+      const result = await wearablesApi.create(newData as Record<string, unknown>);
+      return result.data as WearableDataPoint;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['wearables', patientId] });
+      toast.success('Dado adicionado com sucesso');
+    },
+    onError: (error: Error) => {
+      toast.error('Erro ao adicionar dado: ' + error.message);
+    },
+  });
 
-            const snapshot = await getDocs(q);
-            return snapshot.docs.map(convertDoc) as WearableDataPoint[];
-        },
-        enabled: !!patientId,
-    });
-
-    const addWearableData = useMutation({
-        mutationFn: async (newData: Omit<WearableDataPoint, 'id' | 'created_at'>) => {
-            if (!profile?.organization_id) {
-                // Try to fallback if profile not loaded but Auth user exists? 
-                // Context should handle profile loading.
-                throw new Error('Organization not found');
-            }
-
-            const docRef = await addDoc(collection(db, 'wearable_data'), {
-                ...newData,
-                organization_id: profile.organization_id,
-                created_at: new Date().toISOString()
-            });
-
-            const newDoc = await getDoc(docRef);
-            return convertDoc(newDoc);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['wearables', patientId] });
-            toast.success('Dado adicionado com sucesso');
-        },
-        onError: (error: Error) => {
-            toast.error('Erro ao adicionar dado: ' + error.message);
-        },
-    });
-
-    return {
-        wearableData,
-        isLoading,
-        error,
-        addWearableData: addWearableData.mutate,
-        isAdding: addWearableData.isPending,
-    };
+  return {
+    wearableData,
+    isLoading,
+    error,
+    addWearableData: addWearableData.mutate,
+    isAdding: addWearableData.isPending,
+  };
 };

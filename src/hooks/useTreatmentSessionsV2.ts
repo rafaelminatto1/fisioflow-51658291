@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { clinicalApi } from '@/integrations/firebase/functions';
+import { clinicalApi } from '@/lib/api/workers-client';
 import { useToast } from '@/hooks/use-toast';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 
@@ -17,7 +17,19 @@ export const useCreateTreatmentSessionV2 = () => {
       evolution?: string;
       nextGoals?: string;
     }) => {
-      const response = await clinicalApi.createTreatmentSession(data);
+      if (!data.appointmentId) {
+        throw new Error('appointmentId é obrigatório para registrar a sessão de tratamento');
+      }
+
+      const response = await clinicalApi.treatmentSessions.upsert({
+        patient_id: data.patientId,
+        appointment_id: data.appointmentId,
+        subjective: data.evolution,
+        plan: data.nextGoals,
+        observations: data.observations,
+        pain_level_before: data.painLevelBefore,
+        pain_level_after: data.painLevelAfter,
+      });
       return response.data;
     },
     onSuccess: (data) => {
@@ -25,6 +37,6 @@ export const useCreateTreatmentSessionV2 = () => {
     },
     onError: (error: Error) => {
       ErrorHandler.handle(error, 'useCreateTreatmentSessionV2');
-    }
+    },
   });
 };

@@ -26,8 +26,7 @@ import { generateProtocolPdf } from '@/utils/generateProtocolPdf';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { useQuery } from '@tanstack/react-query';
 import { ClipboardCheck } from 'lucide-react';
-import { db, collection, getDocs, query as firestoreQuery, where } from '@/integrations/firebase/app';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { clinicalTestsApi } from '@/lib/api/workers-client';
 import { ApplyProtocolModal } from './ApplyProtocolModal';
 
 interface ProtocolDetailViewProps {
@@ -66,27 +65,13 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
         queryFn: async () => {
             const testIds = protocol.clinical_tests || [];
             if (testIds.length === 0) return [];
-
-            // Firestore doesn't support 'in' queries with more than 10 items, so we need to batch
-            const batchSize = 10;
-            const results: LinkedClinicalTest[] = [];
-
-            for (let i = 0; i < testIds.length; i += batchSize) {
-                const batch = testIds.slice(i, i + batchSize);
-                const q = firestoreQuery(
-                    collection(db, 'clinical_test_templates'),
-                    where('__name__', 'in', batch)
-                );
-                const snapshot = await getDocs(q);
-                results.push(...snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    name: normalizeFirestoreData(doc.data()).name,
-                    target_joint: normalizeFirestoreData(doc.data()).target_joint,
-                    category: normalizeFirestoreData(doc.data()).category,
-                })));
-            }
-
-            return results;
+            const res = await clinicalTestsApi.list({ ids: testIds });
+            return ((res?.data ?? []) as LinkedClinicalTest[]).map((test) => ({
+              id: test.id,
+              name: test.name,
+              target_joint: test.target_joint,
+              category: test.category,
+            }));
         },
         enabled: !!protocol.clinical_tests && protocol.clinical_tests.length > 0
     });

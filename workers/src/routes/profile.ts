@@ -201,6 +201,21 @@ app.put('/me', requireAuth, async (c) => {
       typeof body.organization_id === 'string'
         ? body.organization_id
         : (typeof body.organizationId === 'string' ? body.organizationId : user.organizationId);
+    const supportsMfaEnabled = await hasColumn(pool, 'profiles', 'mfa_enabled');
+    const supportsMfaMethod = await hasColumn(pool, 'profiles', 'mfa_method');
+    const mfaEnabled = body.mfa_enabled;
+    const mfaMethod = body.mfa_method;
+
+    const extraAssignments: string[] = [];
+    const extraValues: unknown[] = [];
+    if (supportsMfaEnabled && mfaEnabled !== undefined) {
+      extraValues.push(Boolean(mfaEnabled));
+      extraAssignments.push(`mfa_enabled = $${5 + extraValues.length}`);
+    }
+    if (supportsMfaMethod && body.mfa_method !== undefined) {
+      extraValues.push(typeof mfaMethod === 'string' ? mfaMethod : null);
+      extraAssignments.push(`mfa_method = $${5 + extraValues.length}`);
+    }
 
     const updateResult = await pool.query(
       `
@@ -210,6 +225,7 @@ app.put('/me', requireAuth, async (c) => {
         full_name = $3,
         role = $4,
         organization_id = $5,
+        ${extraAssignments.length ? `${extraAssignments.join(', ')},` : ''}
         updated_at = NOW()
       WHERE user_id = $1
       RETURNING
@@ -224,7 +240,7 @@ app.put('/me', requireAuth, async (c) => {
         created_at,
         updated_at
       `,
-      [user.uid, email, fullName, role, organizationId],
+      [user.uid, email, fullName, role, organizationId, ...extraValues],
     );
 
     if (updateResult.rows[0]) {
@@ -237,19 +253,32 @@ app.put('/me', requireAuth, async (c) => {
       });
     }
 
+    const insertColumns = [
+      'user_id',
+      'email',
+      'full_name',
+      'role',
+      'organization_id',
+      'onboarding_completed',
+      'is_active',
+      'created_at',
+      'updated_at',
+    ];
+    const insertValues: unknown[] = [user.uid, email, fullName, role, organizationId, false, true];
+    if (supportsMfaEnabled) {
+      insertColumns.splice(5, 0, 'mfa_enabled');
+      insertValues.splice(5, 0, Boolean(mfaEnabled));
+    }
+    if (supportsMfaMethod) {
+      insertColumns.splice(supportsMfaEnabled ? 6 : 5, 0, 'mfa_method');
+      insertValues.splice(supportsMfaEnabled ? 6 : 5, 0, typeof mfaMethod === 'string' ? mfaMethod : null);
+    }
+    insertValues.push(new Date().toISOString(), new Date().toISOString());
+
     const insertResult = await pool.query(
       `
-      INSERT INTO profiles (
-        user_id,
-        email,
-        full_name,
-        role,
-        organization_id,
-        onboarding_completed,
-        is_active,
-        created_at,
-        updated_at
-      ) VALUES ($1, $2, $3, $4, $5, false, true, NOW(), NOW())
+      INSERT INTO profiles (${insertColumns.join(', ')})
+      VALUES (${insertValues.map((_, index) => `$${index + 1}`).join(', ')})
       RETURNING
         id,
         user_id,
@@ -262,7 +291,7 @@ app.put('/me', requireAuth, async (c) => {
         created_at,
         updated_at
       `,
-      [user.uid, email, fullName, role, organizationId],
+      insertValues,
     );
 
     return c.json({

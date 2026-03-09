@@ -1,37 +1,38 @@
 /**
- * Firebase Storage Integration - Bridge/Fallback
- * 
- * TODO: Migrate to Cloudflare R2 as per MIGRACAO_CLOUDFLARE_NEON_2026.md
+ * Firebase Storage Integration — Bridge
+ *
+ * uploadFile → migrado para R2
+ * getFirebaseStorage / ref / getDownloadURL — mantidos para leitura de
+ * arquivos legados ainda no Firebase Storage (ex.: FileViewer).
  */
-
-import { 
-  getStorage, 
-  ref, 
-  uploadBytes, 
-  getDownloadURL, 
+import {
+  getStorage,
+  ref,
+  getDownloadURL,
   deleteObject,
-  listAll
+  listAll,
 } from 'firebase/storage';
 import { getFirebaseApp } from './app';
+import { uploadToR2 } from '@/lib/storage/r2-storage';
 
-// Obter instância do Storage
 export const getFirebaseStorage = () => getStorage(getFirebaseApp());
 
 /**
- * Upload de arquivo para o Firebase Storage
+ * Upload de arquivo — agora usa R2.
+ * O parâmetro `path` é usado como prefixo de pasta no R2.
+ * Retorna a URL pública do arquivo no R2.
  */
 export async function uploadFile(path: string, file: File | Blob): Promise<string> {
-  const storage = getFirebaseStorage();
-  const storageRef = ref(storage, path);
-  
-  const snapshot = await uploadBytes(storageRef, file);
-  const downloadURL = await getDownloadURL(snapshot.ref);
-  
-  return downloadURL;
+  const parts = path.split('/');
+  // Usa tudo exceto o último segmento como folder no R2
+  const folder = parts.length > 1 ? parts.slice(0, -1).join('/') : 'uploads';
+  const fileObj = file instanceof File ? file : new File([file], parts.at(-1) ?? 'file');
+  const result = await uploadToR2(fileObj, folder);
+  return result.url;
 }
 
 /**
- * Deletar arquivo do Firebase Storage
+ * Deletar arquivo do Firebase Storage (legado).
  */
 export async function deleteFile(path: string): Promise<void> {
   const storage = getFirebaseStorage();
@@ -40,7 +41,7 @@ export async function deleteFile(path: string): Promise<void> {
 }
 
 /**
- * Obter URL pública de um arquivo
+ * Obter URL de arquivo legado no Firebase Storage.
  */
 export async function getFileUrl(path: string): Promise<string> {
   const storage = getFirebaseStorage();
@@ -48,5 +49,5 @@ export async function getFileUrl(path: string): Promise<string> {
   return getDownloadURL(storageRef);
 }
 
-// Re-exportar funções nativas úteis
+// Exportações nativas necessárias para FileViewer (leitura de arquivos legados)
 export { ref, getDownloadURL, listAll };

@@ -4,7 +4,6 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Timestamp } from '@/integrations/firebase/app';
 import { fisioLogger } from '@/lib/errors/logger';
 import {
 
@@ -238,8 +237,8 @@ export function useTimeTracker(options: UseTimeTrackerOptions): UseTimeTrackerRe
         user_id: userId,
         organization_id: organizationId,
         description: activeTimer.description + ' (pausado)',
-        start_time: Timestamp.fromDate(activeTimer.start_time),
-        end_time: Timestamp.now(),
+        start_time: activeTimer.start_time instanceof Date ? activeTimer.start_time.toISOString() : String(activeTimer.start_time),
+        end_time: new Date().toISOString(),
         duration_seconds: duration,
         is_billable: activeTimer.is_billable,
         hourly_rate: activeTimer.hourly_rate,
@@ -356,7 +355,7 @@ export function useTimeTracker(options: UseTimeTrackerOptions): UseTimeTrackerRe
     try {
       await updateTimeEntry(organizationId, id, updates);
       setEntries((prev) =>
-        prev.map((e) => (e.id === id ? { ...e, ...updates, updated_at: Timestamp.now() } : e))
+        prev.map((e) => (e.id === id ? { ...e, ...updates, updated_at: new Date().toISOString() } : e))
       );
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao atualizar entrada';
