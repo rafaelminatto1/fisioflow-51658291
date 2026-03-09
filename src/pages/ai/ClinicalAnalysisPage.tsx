@@ -33,12 +33,10 @@ import {
   Calendar,
   AlertTriangle,
 } from 'lucide-react';
-import { httpsCallable } from 'firebase/functions';
-import { functions, db } from '@/lib/firebase';
-import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { ChatInterface } from '@/components/ai/ChatInterface';
 import { ProgressTimeline } from '@/components/ai/ProgressTimeline';
+import { aiApi, sessionsApi } from '@/lib/api/workers-client';
 
 interface Patient {
   id: string;
@@ -87,23 +85,17 @@ export default function ClinicalAnalysisPage() {
     if (patient) {
       const fetchHistory = async () => {
         try {
-          const soapRef = collection(db, 'soap_records');
-          const q = query(
-            soapRef,
-            where('patient_id', '==', selectedPatient),
-            orderBy('record_date', 'desc'),
-            limit(10)
-          );
-          
-          const snapshot = await getDocs(q);
-          const history: AnalysisHistory[] = snapshot.docs.map(doc => {
-            const data = doc.data();
+          const result = await sessionsApi.list({
+            patientId: selectedPatient,
+            limit: 10,
+          });
+          const history: AnalysisHistory[] = (result.data ?? []).map((record) => {
             return {
-              id: doc.id,
-              date: data.record_date ? new Date(data.record_date) : new Date(),
-              summary: data.assessment || data.subjective || 'Sem descrição',
-              score: data.progress_score || undefined,
-              improvement: data.improvement_percentage || undefined
+              id: record.id,
+              date: record.record_date ? new Date(record.record_date) : new Date(),
+              summary: record.assessment || record.subjective || 'Sem descrição',
+              score: undefined,
+              improvement: undefined,
             };
           });
           
@@ -146,12 +138,20 @@ export default function ClinicalAnalysisPage() {
         description: 'Aguarde enquanto criamos o relatório.',
       });
 
-      const generateReport = httpsCallable(functions, 'generateClinicalReport');
-      await generateReport({
-        patientId: selectedPatient,
-        includeHistory: true,
-        includeAlerts: true,
-        format: 'pdf',
+      await aiApi.clinicalReport({
+        metrics: {
+          patientId: selectedPatient,
+          includeHistory: true,
+          includeAlerts: true,
+          format: 'pdf',
+        },
+        history: {
+          entries: analysisHistory.map((entry) => ({
+            id: entry.id,
+            date: entry.date.toISOString(),
+            summary: entry.summary,
+          })),
+        },
       });
 
       toast({

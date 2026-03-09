@@ -124,10 +124,31 @@ export function useExerciseDelete() {
   };
 }
 
-// Note: Patient exercise assignments still use Firestore direct access
-// This is because these are more specific to the mobile app workflow
-// and don't have equivalent API endpoints yet
-import { assignExerciseToPatient, getPatientExerciseAssignments } from '@/lib/firestore';
+import { authApi } from '@/lib/auth-api';
+import { config } from '@/lib/config';
+
+const assignExerciseToPatient = async (professionalId: string, patientId: string, assignment: any) => {
+  const token = await authApi.getToken();
+  const res = await fetch(`${config.apiUrl}/api/patients/${patientId}/exercises`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ ...assignment, professionalId })
+  });
+  if (!res.ok) throw new Error('Failed to assign exercise');
+  return res.json();
+};
+
+const getPatientExerciseAssignments = async (patientId: string) => {
+  const token = await authApi.getToken();
+  const res = await fetch(`${config.apiUrl}/api/patients/${patientId}/exercises`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!res.ok) return [];
+  return res.json();
+};
 
 export function usePatientExerciseAssignments() {
   const queryClient = useQueryClient();

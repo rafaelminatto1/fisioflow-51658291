@@ -33,12 +33,12 @@ import {
 import { toast } from 'sonner';
 import {
   createReferralCode,
+  getReferralStats,
   redeemReferralCode,
   generateReferralCode,
 } from '@/services/marketing/marketingService';
 import { generateMarketingContent } from '@/services/ai/marketingAITemplateService';
-import { collection, getDocs, query } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ReferralStats {
   totalReferrals: number;
@@ -48,6 +48,7 @@ interface ReferralStats {
 }
 
 export default function ReferralPage() {
+  const { organizationId = '' } = useAuth();
   const [searchCode, setSearchCode] = useState('');
   const [redemptionResult, setRedemptionResult] = useState<{
     success: boolean;
@@ -112,19 +113,13 @@ export default function ReferralPage() {
 
   const loadReferralStats = async () => {
     try {
-      const codesQuery = query(collection(db, 'referral_codes'));
-      const snapshot = await getDocs(codesQuery);
-
-      const redemptionsQuery = query(collection(db, 'referral_redemptions'));
-      const redemptionsSnapshot = await getDocs(redemptionsQuery);
+      const stats = await getReferralStats(organizationId);
 
       setReferralStats({
-        totalReferrals: snapshot.size,
-        activeReferrals: snapshot.docs.filter(
-          (d) => d.data().uses < (d.data().max_uses || Infinity)
-        ).length,
-        totalRedemptions: redemptionsSnapshot.size,
-        pendingRewards: 0, // Calculate based on business logic
+        totalReferrals: stats.totalCodes,
+        activeReferrals: stats.activeCodes,
+        totalRedemptions: stats.totalRedemptions,
+        pendingRewards: stats.pendingRewards,
       });
     } catch (error) {
       console.error('Error loading referral stats:', error);
@@ -135,7 +130,7 @@ export default function ReferralPage() {
     try {
       const _codeId = await createReferralCode(
         patientId,
-        'default-org', // Replace with actual org ID
+        organizationId,
         newCodeConfig
       );
       toast.success('Código de indicação criado com sucesso');

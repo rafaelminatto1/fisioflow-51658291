@@ -4,8 +4,7 @@
  * Serviço para geração automática de templates de marketing usando IA
  * Usa a API Gemini gratuita (100 requisições/dia)
  */
-
-import { callFunctionHttp } from '@/integrations/firebase/functions';
+import { aiApi } from '@/lib/api/workers-client';
 
 // ============================================================================
 // TYPES
@@ -238,19 +237,29 @@ const DEFAULT_RECALL_TEMPLATES = {
 // API FUNCTIONS
 // ============================================================================
 
+async function requestMarketingJson<T>(prompt: string): Promise<T | null> {
+  try {
+    const result = await aiApi.fastProcessing({ text: prompt, mode: 'marketing-template' });
+    const raw = result?.data?.result?.trim();
+    if (!raw) return null;
+    const jsonMatch = raw.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    return JSON.parse(jsonMatch[0]) as T;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Gera template de mensagem de review usando IA
  */
 export async function generateReviewTemplate(input: GenerateReviewTemplateInput): Promise<GeneratedTemplateResponse> {
   try {
-    const result = await callFunctionHttp<{ prompt: string; language: string }, {
-      template: string;
+    const result = await requestMarketingJson<{
+      template?: string;
       suggestions?: string[];
       error?: string;
-    }>(
-      'generateMarketingTemplate',
-      { prompt: REVIEW_PROMPT_TEMPLATE(input), language: 'pt-BR' }
-    );
+    }>(REVIEW_PROMPT_TEMPLATE(input));
 
     if (result.template) {
       return {
@@ -292,14 +301,11 @@ export async function generateReviewTemplate(input: GenerateReviewTemplateInput)
  */
 export async function generateBirthdayTemplate(input: GenerateBirthdayTemplateInput): Promise<GeneratedTemplateResponse> {
   try {
-    const result = await callFunctionHttp<{ prompt: string; language: string }, {
-      template: string;
+    const result = await requestMarketingJson<{
+      template?: string;
       suggestions?: string[];
       error?: string;
-    }>(
-      'generateMarketingTemplate',
-      { prompt: BIRTHDAY_PROMPT_TEMPLATE(input), language: 'pt-BR' }
-    );
+    }>(BIRTHDAY_PROMPT_TEMPLATE(input));
 
     if (result.template) {
       return {
@@ -341,14 +347,11 @@ export async function generateBirthdayTemplate(input: GenerateBirthdayTemplateIn
  */
 export async function generateRecallTemplate(input: GenerateRecallTemplateInput): Promise<GeneratedTemplateResponse> {
   try {
-    const result = await callFunctionHttp<{ prompt: string; language: string }, {
-      template: string;
+    const result = await requestMarketingJson<{
+      template?: string;
       suggestions?: string[];
       error?: string;
-    }>(
-      'generateMarketingTemplate',
-      { prompt: RECALL_PROMPT_TEMPLATE(input), language: 'pt-BR' }
-    );
+    }>(RECALL_PROMPT_TEMPLATE(input));
 
     if (result.template) {
       return {
@@ -399,18 +402,15 @@ export async function generateFisiolinkTemplates(input: GenerateFisiolinkTemplat
   suggestions?: string[];
 }> {
   try {
-    const result = await callFunctionHttp<{ prompt: string; language: string }, {
-      templates: {
+    const result = await requestMarketingJson<{
+      templates?: {
         short: string;
         medium: string;
         full: string;
       };
       suggestions?: string[];
       error?: string;
-    }>(
-      'generateMarketingTemplate',
-      { prompt: FISIOLINK_PROMPT_TEMPLATE(input), language: 'pt-BR' }
-    );
+    }>(FISIOLINK_PROMPT_TEMPLATE(input));
 
     if (result.templates) {
       return {
@@ -469,15 +469,12 @@ export async function generateSocialCaption(
   try {
     const prompt = SOCIAL_CAPTION_PROMPT_TEMPLATE(type, context);
 
-    const result = await callFunctionHttp<{ prompt: string; language: string }, {
-      caption: string;
+    const result = await requestMarketingJson<{
+      caption?: string;
       hashtags?: string[];
       suggestions?: string[];
       error?: string;
-    }>(
-      'generateMarketingTemplate',
-      { prompt, language: 'pt-BR' }
-    );
+    }>(prompt);
 
     if (result.caption) {
       return {
@@ -519,16 +516,13 @@ export async function generateMythVsTruth(input: GenerateMythVsTruthInput): Prom
   error?: string;
 }> {
   try {
-    const result = await callFunctionHttp<{ prompt: string; language: string }, {
-      myth: string;
-      truth: string;
-      explanation: string;
+    const result = await requestMarketingJson<{
+      myth?: string;
+      truth?: string;
+      explanation?: string;
       suggestions?: string[];
       error?: string;
-    }>(
-      'generateMarketingTemplate',
-      { prompt: MYTH_PROMPT_TEMPLATE(input), language: 'pt-BR' }
-    );
+    }>(MYTH_PROMPT_TEMPLATE(input));
 
     if (result.myth) {
       return {
@@ -651,7 +645,7 @@ Retorne no formato JSON:
 
 export async function generateSOAPTemplate(input: GenerateSOAPTemplateInput): Promise<SOAPTemplateResponse> {
   try {
-    const result = await callFunctionHttp<{ prompt: string; language: string }, {
+    const result = await requestMarketingJson<{
       soap?: {
         subjective?: string;
         objective?: string;
@@ -660,10 +654,7 @@ export async function generateSOAPTemplate(input: GenerateSOAPTemplateInput): Pr
       };
       suggestions?: string[];
       error?: string;
-    }>(
-      'generateMarketingTemplate',
-      { prompt: SOAP_PROMPT_TEMPLATE(input), language: 'pt-BR' }
-    );
+    }>(SOAP_PROMPT_TEMPLATE(input));
 
     if (result.soap) {
       return {

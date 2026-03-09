@@ -82,7 +82,7 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
           compact ? "p-1" : "p-2 pl-3.5",
           className
         )}
-        {...props}
+        {...(props as any)}
       >
         {/* Status Border Strip */}
         <div 

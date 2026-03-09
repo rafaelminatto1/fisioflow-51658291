@@ -70,7 +70,7 @@ export default function ExerciseFormScreen() {
         name: exercise.name || '',
         description: exercise.description || '',
         category: exercise.category || 'Geral',
-        difficulty: exercise.difficulty || 'medium',
+        difficulty: (exercise.difficulty as any) || 'medium',
         instructions: exercise.instructions || [],
         videoUrl: exercise.videoUrl || '',
         imageUrl: exercise.imageUrl || '',
@@ -171,13 +171,13 @@ export default function ExerciseFormScreen() {
           />
           <Picker
             label="Categoria"
-            selectedValue={formData.category}
+            selectedValue={formData.category || ''}
             onValueChange={(v) => updateField('category', v)}
             items={CATEGORIES.map(c => ({ label: c, value: c }))}
            />
           <Picker
             label="Dificuldade"
-            selectedValue={formData.difficulty}
+            selectedValue={formData.difficulty || ''}
             onValueChange={(v) => updateField('difficulty', v)}
             items={DIFFICULTIES}
           />

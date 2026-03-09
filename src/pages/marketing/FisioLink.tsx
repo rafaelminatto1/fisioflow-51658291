@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
-  getFisioLinkConfig,
+  getFisioLinkByOrganization,
   updateFisioLinkConfig,
   type FisioLinkConfig,
 } from '@/services/marketing/marketingService';
@@ -76,7 +76,7 @@ export default function FisioLinkPage() {
   useEffect(() => {
     // Load existing config
     if (organizationId) {
-      getFisioLinkConfig(organizationId).then((existingConfig) => {
+      getFisioLinkByOrganization(organizationId).then((existingConfig) => {
         if (existingConfig) {
           setConfig(existingConfig);
           setSlug(existingConfig.slug);

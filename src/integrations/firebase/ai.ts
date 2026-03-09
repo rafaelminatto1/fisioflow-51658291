@@ -7,8 +7,8 @@
 
 // AI Model Types (local definitions since shared-api was removed)
 
-import { initializeRemoteConfig } from '@/lib/firebase/remote-config';
-import { initAppCheck } from '@/lib/firebase/app-check';
+import { initializeRemoteConfig } from '@/lib/remote-config-manager';
+import { initAppCheck } from '@/lib/app-check';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export enum AIModelType {

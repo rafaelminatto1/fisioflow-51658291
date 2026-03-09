@@ -9,7 +9,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { callFunction } from '@/integrations/firebase/functions';
+import { invitationsApi } from '@/lib/api/workers-client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -100,12 +100,10 @@ export default function Auth() {
       if (!inviteToken) return;
 
       try {
-        const result = await callFunction<{ token: string }, { valid: boolean; email?: string; role?: string }>(
-          'getInvitationByToken',
-          { token: inviteToken }
-        );
+        const result = await invitationsApi.validate(inviteToken);
+        const invitation = result?.data;
 
-        if (!result.valid || !result.email) {
+        if (!invitation?.email) {
           toast({
             title: 'Convite inválido',
             description: 'Este convite expirou ou já foi utilizado',
@@ -114,11 +112,11 @@ export default function Auth() {
           return;
         }
 
-        setInvitationData({ email: result.email, role: result.role || 'fisioterapeuta' });
-        setEmail(result.email);
+        setInvitationData({ email: invitation.email, role: invitation.role || 'fisioterapeuta' });
+        setEmail(invitation.email);
         toast({
           title: 'Convite válido!',
-          description: `Você foi convidado como ${result.role || 'fisioterapeuta'}`,
+          description: `Você foi convidado como ${invitation.role || 'fisioterapeuta'}`,
         });
       } catch (err) {
         logger.error('Erro ao verificar convite', err, 'Auth');
@@ -219,7 +217,7 @@ export default function Auth() {
       } else {
         if (inviteToken) {
           try {
-            await callFunction<{ token: string }, { success: boolean }>('consumeInvitation', { token: inviteToken });
+            await invitationsApi.use(inviteToken);
           } catch (consumeErr) {
             logger.error('Error consuming invitation after login', consumeErr, 'Auth');
           }
@@ -339,7 +337,7 @@ export default function Auth() {
 
       if (newUser && inviteToken) {
         try {
-          await callFunction<{ token: string }, { success: boolean }>('consumeInvitation', { token: inviteToken });
+          await invitationsApi.use(inviteToken);
           logger.info('Invitation consumed after signup', { userId: newUser.uid }, 'Auth');
         } catch (consumeErr) {
           logger.error('Error consuming invitation', consumeErr, 'Auth');

@@ -5,11 +5,11 @@
  * Throws an error if not authorized.
  */
 
-import { getFirebaseAuth } from '@/integrations/firebase/app';
+import { authClient } from '@/lib/auth/neon-token';
 
 export async function requireAdmin() {
-    const auth = getFirebaseAuth();
-    const user = auth.currentUser;
+    const { data } = await authClient.getSession();
+    const user = data?.user;
 
     if (!user) {
         throw new Error("Unauthorized: No active session");
@@ -17,7 +17,7 @@ export async function requireAdmin() {
 
     // Todos os usuários autenticados são admins
     return {
-        userId: user.uid,
+        userId: user.id,
         role: 'admin',
         email: user.email
     };
