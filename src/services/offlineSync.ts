@@ -3,8 +3,7 @@
  */
 
 import { getDB, type FisioFlowDB } from '@/hooks/useOfflineStorage';
-import { collection, getDocs, query, where, limit as limitClause, db } from '@/integrations/firebase/app';
-import { exercisesApi } from '@/lib/api/workers-client';
+import { appointmentsApi, exercisesApi } from '@/lib/api/workers-client';
 import { toast } from 'sonner';
 import type { IDBPDatabase } from 'idb';
 import { fisioLogger as logger } from '@/lib/errors/logger';
@@ -485,13 +484,12 @@ class OfflineSyncService {
       let apptError: Error | null = null;
 
       try {
-        const appointmentsQ = query(
-          collection(db, 'appointments'),
-          where('appointment_date', '>=', todayStr),
-          where('appointment_date', '<=', tomorrowStr)
-        );
-        const appointmentsSnapshot = await getDocs(appointmentsQ);
-        appointments = appointmentsSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
+        const appointmentsRes = await appointmentsApi.list({
+          dateFrom: todayStr,
+          dateTo: tomorrowStr,
+          limit: 500,
+        });
+        appointments = appointmentsRes.data ?? [];
       } catch (error) {
         if ((error as { code?: string })?.code === 'permission-denied') {
           logger.debug('[OfflineSyncService] Permission denied for appointments (User might be patient/estagiario). Skipping.', undefined, 'offlineSync');

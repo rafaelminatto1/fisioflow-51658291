@@ -1,5 +1,3 @@
-import { FunctionCallError } from '@/integrations/firebase/functions';
-
 /** Mensagens e helpers para erros de agendamento (conflito de horário, etc.)
  * Centraliza texto e detecção para manter consistência na UI.
  *
@@ -58,8 +56,14 @@ function formatConflictMessage(details: AppointmentConflictDetails): string {
 }
 
 function extractConflictDetails(error: unknown): AppointmentConflictDetails | null {
-  if (error instanceof FunctionCallError && error.payload && typeof error.payload === 'object') {
-    const payload = error.payload as AppointmentConflictDetails;
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'payload' in error &&
+    typeof (error as { payload?: unknown }).payload === 'object' &&
+    (error as { payload?: unknown }).payload !== null
+  ) {
+    const payload = (error as { payload: AppointmentConflictDetails }).payload;
     if (payload.conflicts || payload.capacity || payload.total) {
       return payload;
     }
