@@ -1,18 +1,16 @@
 /**
- * Embeddings Service para Firestore Vector Search
+ * Embeddings Service compatível com a API legada.
  *
- * Gera embeddings vetoriais para busca semântica
+ * Agora delega para o provedor Gemini direto já usado em `lib/vector/embeddings`,
+ * removendo a dependência de Firebase Vertex AI.
  */
 
-import { getVertexAI, getGenerativeModel } from 'firebase/vertexai';
-import { app as firebaseApp } from '@/integrations/firebase/app';
 import { logger } from '@/lib/errors/logger';
 import { withPerformanceTrace } from '@/lib/monitoring/performance';
-
-const vertexAI = getVertexAI(firebaseApp);
-const embeddingModel = getGenerativeModel(vertexAI, {
-  model: 'text-embedding-004',
-});
+import {
+  generateEmbedding as generateEmbeddingWithGemini,
+  cosineSimilarity as cosineSimilarityDirect,
+} from '@/lib/vector/embeddings';
 
 /**
  * Gera embedding para um texto
@@ -27,8 +25,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 
   return withPerformanceTrace('generate_embedding', async () => {
     try {
-      const result = await embeddingModel.embedContent(text);
-      const embedding = result.embedding.values;
+      const embedding = await generateEmbeddingWithGemini(text);
 
       logger.debug(`[Embeddings] Gerado embedding para texto (${text.length} chars, ${embedding.length} dimensões)`);
       return embedding;
@@ -64,21 +61,7 @@ export async function generateBatchEmbeddings(texts: string[]): Promise<number[]
  * @returns Similaridade (0 a 1)
  */
 export function cosineSimilarity(a: number[], b: number[]): number {
-  if (a.length !== b.length) {
-    throw new Error('Vetores de tamanhos diferentes');
-  }
-
-  let dotProduct = 0;
-  let normA = 0;
-  let normB = 0;
-
-  for (let i = 0; i < a.length; i++) {
-    dotProduct += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
-  }
-
-  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+  return cosineSimilarityDirect(a, b);
 }
 
 /**

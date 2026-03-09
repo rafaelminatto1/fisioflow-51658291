@@ -1,4 +1,4 @@
-import { db, collection, getDocs, query, where, orderBy, limit } from '@/integrations/firebase/app';
+import { clinicalApi } from '@/lib/api/workers-client';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface EngagementStatus {
@@ -16,15 +16,8 @@ export class EngagementService {
   static async getPatientEngagement(patientId: string): Promise<EngagementStatus> {
     try {
       // Get last 10 sessions to calculate rate
-      const q = query(
-        collection(db, 'treatment_sessions'),
-        where('patient_id', '==', patientId),
-        orderBy('session_date', 'desc'),
-        limit(10)
-      );
-      
-      const snapshot = await getDocs(q);
-      const sessions = snapshot.docs.map(doc => doc.data());
+      const result = await clinicalApi.treatmentSessions.list(patientId, { limit: 10 });
+      const sessions = result?.data ?? [];
       
       if (sessions.length === 0) {
         return { patientId, status: 'active', daysSinceLastActivity: 0, completionRate: 0 };

@@ -5,9 +5,9 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { initSentry } from '@/lib/sentry/config';
-import { initAppCheck } from '@/lib/firebase/app-check';
+import { initAppCheck } from '@/lib/app-check';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { initializeRemoteConfig } from '@/lib/firebase/remote-config';
+import { initializeRemoteConfig } from '@/lib/remote-config-manager';
 import { initCrashlytics } from '@/lib/firebase/crashlytics';
 import { initPerformanceMonitoring } from '@/lib/firebase/performance';
 

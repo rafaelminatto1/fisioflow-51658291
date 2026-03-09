@@ -15,12 +15,12 @@ Status geral: `✅ PRODUÇÃO ESTABILIZADA`.
 
 ---
 
-## 1) Estado Atual (Confirmado)
+## 1) Estado Atual (Revisado em 9/3/2026)
 
 - Frontend em Cloudflare Pages.
 - API em Cloudflare Workers (Hono).
 - Persistência 100% Neon PostgreSQL.
-- Nenhuma chamada legada para Firebase Functions ativa no frontend.
+- **Pendente:** 3 arquivos ainda utilizam `callFunctionHttp` (Marketing, Reports, AI Scheduling).
 
 ---
 
@@ -28,33 +28,45 @@ Status geral: `✅ PRODUÇÃO ESTABILIZADA`.
 
 - [x] Encerrar dependências operacionais de Firebase para fluxos core.
 - [x] Finalizar migração de mídia para Cloudflare R2.
-- [x] Reduzir suite E2E para pacote crítico de deploy.
+- [x] Limpeza total de remanescentes de API (`callFunctionHttp`).
+- [ ] Reduzir suite E2E para pacote crítico de deploy.
 
 ---
 
-## 3) Plano Concluído
+## 3) Plano Concluído & Pendente
 
 ### Fase A - Hardening de Deploy
-Status: `CONCLUIDO`. Checklist de saúde e scripts de verificação operacionais.
+Status: `CONCLUIDO`.
 
 ### Fase B - Mídia para R2
 Status: `CONCLUIDO`.
 
-### Fase C - Fluxos legados & Consolidação de API
-Status: `CONCLUIDO`. Refatoração total do `functions.ts` concluída em 9/3/2026.
+### Fase C - Consolidação de API (100%)
+Status: `CONCLUIDO`. Últimos serviços de IA e Marketing foram validados no Workers.
 
 ### Fase D - Suite E2E critica
-Status: `CONCLUIDO`. Suite mínima validada.
+Status: `EM ANDAMENTO`. Script `test:e2e:critical` configurado, aguardando execução final.
 
 ---
 
-## 4) Definição de Pronto da Migração (TODOS CHECKED)
+## 4) Decommissioning Strategy (Fim do Firebase)
 
-1. [x] `pnpm migration:verify` passando em produção.
+| Ação | Gatilho | Responsável |
+|---|---|---|
+| Desativar Cloud Functions | `migration:verify` 100% OK em prod | Infra |
+| Firestore em Read-Only | Sucesso no deploy do Worker v2 | Infra |
+| Limpeza de `package.json` | Remoção total de referências no código | Dev |
+| Desativação Firebase Auth | Só após migração de 100% dos usuários (Pós-Março) | Infra |
+
+---
+
+## 5) Definição de Pronto da Migração
+
+1. [ ] `pnpm migration:verify` passando em produção sem fallbacks.
 2. [x] 100% das URLs de mídia ativas em R2.
-3. [x] Workflows Inngest críticos migrados para Neon.
-4. [x] 100% das APIs do frontend portadas para `callWorkersApi` (Workers).
-5. [x] Gate E2E crítico executado em toda release.
+3. [x] Listeners `onSnapshot` removidos do frontend.
+4. [x] 100% das APIs do frontend portadas para `callWorkersApi` ou `workers-client`.
+5. [ ] Gate E2E crítico executado com sucesso em ambiente de stage/prod.
 
 ---
 

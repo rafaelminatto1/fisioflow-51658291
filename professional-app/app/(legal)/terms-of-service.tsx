@@ -13,8 +13,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TERMS_OF_SERVICE_CONTENT } from '@/constants/legalContent';
 import { LEGAL_VERSIONS } from '@/constants/legalVersions';
-import { db, auth } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { authApi } from '@/lib/auth-api';
+import { config } from '@/lib/config';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 
@@ -71,24 +71,34 @@ export default function TermsOfServiceScreen() {
   };
 
   /**
-   * Store acceptance in Firestore
+   * Store acceptance in API
    */
   const storeAcceptance = async () => {
-    const user = auth.currentUser;
-    if (!user) {
-      console.error('No authenticated user');
-      return;
-    }
-
     try {
+      const user = await authApi.getMe();
+      if (!user) {
+        console.error('No authenticated user');
+        return;
+      }
+
+      const token = await authApi.getToken();
+
       const acceptanceData = {
-        userId: user.uid,
+        userId: user.id,
+        type: 'terms_of_service',
         version: LEGAL_VERSIONS.TERMS_OF_SERVICE,
-        acceptedAt: serverTimestamp(),
+        acceptedAt: new Date().toISOString(),
         deviceInfo: getDeviceInfo(),
       };
 
-      await addDoc(collection(db, 'terms_acceptances'), acceptanceData);
+      await fetch(`${config.apiUrl}/api/consents/accept`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(acceptanceData)
+      });
       console.log('Terms of service acceptance stored successfully');
     } catch (error) {
       console.error('Error storing terms of service acceptance:', error);

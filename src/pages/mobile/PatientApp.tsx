@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, MessageSquare, Activity, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { db, collection, query, where, getDocs, doc, getDoc, orderBy as firestoreOrderBy } from '@/integrations/firebase/app';
+import { appointmentsApi, patientsApi } from '@/lib/api/workers-client';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface Appointment {
@@ -36,55 +36,31 @@ export default function PatientApp() {
     try {
       setLoading(true);
 
-      // Buscar paciente pelo user_id (profile_id in Firestore)
       if (!user) return;
+      const patientResponse = await patientsApi.getByProfile(user.uid);
+      const patientId = patientResponse?.data?.id;
 
-      const qPatient = query(
-        collection(db, 'patients'),
-        where('profile_id', '==', user.uid)
-      );
-      const snapshotPatient = await getDocs(qPatient);
-
-      if (!snapshotPatient.empty) {
-        const _patientData = snapshotPatient.docs[0].data();
-        const patientId = snapshotPatient.docs[0].id;
-
-        // Carregar agendamentos
-        const qApts = query(
-          collection(db, 'appointments'),
-          where('patient_id', '==', patientId),
-          where('start_time', '>=', new Date().toISOString()),
-          firestoreOrderBy('start_time', 'asc')
-        );
-
-        const snapshotApts = await getDocs(qApts);
-
-        const appointmentsWithTherapists = await Promise.all(
-          snapshotApts.docs.map(async (aptDoc) => {
-            const aptData = aptDoc.data();
-
-            // Fetch therapist profile name
-            let therapistName = 'Fisioterapeuta';
-            if (aptData.therapist_id) {
-              const therapistDoc = await getDoc(doc(db, 'profiles', aptData.therapist_id));
-              if (therapistDoc.exists()) {
-                therapistName = therapistDoc.data().full_name;
-              }
-            }
-
-            return {
-              id: aptDoc.id,
-              start_time: aptData.start_time,
-              status: aptData.status,
-              therapists: { name: therapistName }
-            } as Appointment;
-          })
-        );
-
-        setAppointments(appointmentsWithTherapists);
-      } else {
+      if (!patientId) {
         setAppointments([]);
+        return;
       }
+
+      const appointmentsResponse = await appointmentsApi.list({
+        patientId,
+        dateFrom: new Date().toISOString(),
+        limit: 50,
+      });
+
+      const nextAppointments = (appointmentsResponse?.data ?? [])
+        .map((appointment) => ({
+          id: appointment.id,
+          start_time: appointment.start_time,
+          status: appointment.status,
+          therapists: { name: 'Fisioterapeuta' },
+        } as Appointment))
+        .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+
+      setAppointments(nextAppointments);
     } catch (error) {
       logger.error('Erro ao carregar agendamentos', error, 'PatientApp');
       setAppointments([]);
@@ -190,4 +166,3 @@ export default function PatientApp() {
     </div>
   );
 }
-

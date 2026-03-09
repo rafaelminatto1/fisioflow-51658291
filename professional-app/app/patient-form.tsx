@@ -140,7 +140,7 @@ export default function PatientFormScreen() {
         condition: formData.condition,
         notes: formData.notes,
         status: formData.status,
-        birthDate: formData.birthDate ? parse(formData.birthDate, 'dd/MM/yyyy', new Date()) : null,
+        birthDate: formData.birthDate ? parse(formData.birthDate, 'dd/MM/yyyy', new Date()) : undefined,
       };
 
       if (isEditing && patientId) {

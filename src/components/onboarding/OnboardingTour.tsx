@@ -9,8 +9,7 @@ import {
   MessageSquare, CheckCircle, ArrowRight, X, Heart
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { getFirebaseAuth, db, doc, getDoc, setDoc, updateDoc } from '@/integrations/firebase/app';
-import { onAuthStateChanged } from 'firebase/auth';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface OnboardingStep {
   id: string;
@@ -26,6 +25,9 @@ interface OnboardingProgressData {
   completed_at?: string;
   user_id?: string;
   organization_id?: string;
+  skipped_at?: string;
+  completed_steps?: string[];
+  tour_shown?: boolean;
 }
 
 const onboardingSteps: OnboardingStep[] = [
@@ -88,34 +90,42 @@ export const OnboardingTour = () => {
   const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const auth = getFirebaseAuth();
+  const { user, organizationId } = useAuth();
+  const storageKey = user ? `onboarding-progress:${user.uid}` : null;
 
   // Check onboarding status
   const { data: onboardingData } = useQuery({
-    queryKey: ['onboarding-progress'],
+    queryKey: ['onboarding-progress', user?.uid],
     queryFn: async () => {
-      const auth = getFirebaseAuth();
-      return new Promise((resolve) => {
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-          unsubscribe();
-          if (!user) {
-            resolve(null);
-            return;
-          }
-
-          const progressRef = doc(db, 'onboarding_progress', user.uid);
-          const docSnap = await getDoc(progressRef);
-
-          if (!docSnap.exists()) {
-            resolve({ show: true });
-            return;
-          }
-
-          resolve(docSnap.data());
-        });
-      });
-    }
+      if (!user || !storageKey) return null;
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return { show: true, user_id: user.uid, organization_id: organizationId };
+      try {
+        return JSON.parse(raw) as OnboardingProgressData;
+      } catch {
+        return { show: true, user_id: user.uid, organization_id: organizationId };
+      }
+    },
+    enabled: !!user && !!storageKey,
   });
+
+  const persistProgress = async (updates: Partial<OnboardingProgressData>) => {
+    if (!user || !storageKey) return;
+    const current = (onboardingData as OnboardingProgressData | null) ?? {
+      show: true,
+      user_id: user.uid,
+      organization_id: organizationId,
+    };
+    localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        ...current,
+        ...updates,
+        user_id: user.uid,
+        organization_id: organizationId,
+      } satisfies OnboardingProgressData),
+    );
+  };
 
   // Initialize onboarding if needed
   useEffect(() => {
@@ -124,57 +134,39 @@ export const OnboardingTour = () => {
       if (data?.show && !data?.completed_at) {
         setIsOpen(true);
 
-        // Create onboarding record
-        const user = auth.currentUser;
-        if (user) {
-          const profileRef = doc(db, 'profiles', user.uid);
-          const profileSnap = await getDoc(profileRef);
-
-          const onboardingRef = doc(db, 'onboarding_progress', user.uid);
-          await setDoc(onboardingRef, {
-            user_id: user.uid,
-            organization_id: profileSnap.data()?.organization_id,
-            tour_shown: true,
-          }, { merge: true });
-        }
+        await persistProgress({ show: true, tour_shown: true });
       }
     };
 
     initOnboarding();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onboardingData, auth, db]);
+  }, [onboardingData, user?.uid, storageKey]);
 
   // Complete onboarding mutation
   const completeOnboarding = useMutation({
     mutationFn: async () => {
-      const user = auth.currentUser;
-      if (!user) return;
-
-      const progressRef = doc(db, 'onboarding_progress', user.uid);
-      await updateDoc(progressRef, {
+      await persistProgress({
         completed_at: new Date().toISOString(),
         completed_steps: onboardingSteps.map(s => s.id),
+        show: false,
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['onboarding-progress'] });
+      queryClient.invalidateQueries({ queryKey: ['onboarding-progress', user?.uid] });
     }
   });
 
   // Skip onboarding mutation
   const skipOnboarding = useMutation({
     mutationFn: async () => {
-      const user = auth.currentUser;
-      if (!user) return;
-
-      const progressRef = doc(db, 'onboarding_progress', user.uid);
-      await updateDoc(progressRef, {
+      await persistProgress({
         skipped_at: new Date().toISOString(),
+        show: false,
       });
     },
     onSuccess: () => {
       setIsOpen(false);
-      queryClient.invalidateQueries({ queryKey: ['onboarding-progress'] });
+      queryClient.invalidateQueries({ queryKey: ['onboarding-progress', user?.uid] });
     }
   });
 

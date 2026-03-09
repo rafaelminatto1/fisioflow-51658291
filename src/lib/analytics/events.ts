@@ -4,11 +4,10 @@
  * Rastreia eventos específicos do FisioFlow para analytics
  */
 
-import { getAnalytics, logEvent, Analytics } from 'firebase/analytics';
-import { app as firebaseApp } from '@/integrations/firebase/app';
 import { logger } from '@/lib/errors/logger';
 
-let analyticsInstance: Analytics | null = null;
+type AnalyticsStub = { initialized: boolean };
+let analyticsInstance: AnalyticsStub | null = null;
 
 /**
  * Inicializa o Analytics
@@ -19,7 +18,7 @@ export function initAnalytics() {
 
     if (typeof window === 'undefined') return null;
 
-    analyticsInstance = getAnalytics(firebaseApp);
+    analyticsInstance = { initialized: true };
     logger.info('[Analytics] Inicializado');
     return analyticsInstance;
   } catch (error) {
@@ -31,7 +30,7 @@ export function initAnalytics() {
 /**
  * Garante que o Analytics está inicializado
  */
-function ensureInitialized(): Analytics | null {
+function ensureInitialized(): AnalyticsStub | null {
   if (!analyticsInstance) {
     return initAnalytics();
   }
@@ -46,7 +45,17 @@ function track(eventName: string, parameters?: Record<string, any>) {
     const analytics = ensureInitialized();
     if (!analytics) return;
 
-    logEvent(analytics, eventName, parameters);
+    if (typeof window !== 'undefined') {
+      const analyticsWindow = window as Window & {
+        dataLayer?: unknown[];
+        gtag?: (...args: unknown[]) => void;
+      };
+      analyticsWindow.dataLayer = analyticsWindow.dataLayer || [];
+      analyticsWindow.dataLayer.push({ event: eventName, ...parameters });
+      if (typeof analyticsWindow.gtag === 'function') {
+        analyticsWindow.gtag('event', eventName, parameters);
+      }
+    }
     logger.debug(`[Analytics] Event: ${eventName}`, parameters);
   } catch (error) {
     logger.error(`[Analytics] Erro ao logar evento ${eventName}:`, error);
