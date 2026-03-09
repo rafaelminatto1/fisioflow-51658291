@@ -1,16 +1,26 @@
 /**
- * useCommunications - Migrated to Firebase
- *
+ * useCommunications - Migrated to Neon/Workers
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, orderBy, limit, db, where } from '@/integrations/firebase/app';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useAuth } from '@/contexts/AuthContext';
 import { useOrganizations } from '@/hooks/useOrganizations';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { communicationsApi, type CommunicationLogRecord } from '@/lib/api/workers-client';
 
-// ... (types)
+export type CommunicationType = 'email' | 'whatsapp' | 'sms' | 'push';
+export type CommunicationStatus = 'pendente' | 'enviado' | 'entregue' | 'lido' | 'falha';
+
+export interface PatientBasicInfo {
+  id: string;
+  full_name?: string | null;
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+}
+
+export interface Communication extends CommunicationLogRecord {
+  patient?: PatientBasicInfo | null;
+}
 
 export function useCommunications(filters?: { channel?: string; status?: string }) {
   const { currentOrganization } = useOrganizations();
@@ -20,51 +30,12 @@ export function useCommunications(filters?: { channel?: string; status?: string 
     queryKey: ['communications', organizationId, filters],
     queryFn: async () => {
       if (!organizationId) return [];
-      const baseQuery = firestoreQuery(
-        collection(db, 'communication_logs'),
-        where('organization_id', '==', organizationId),
-        orderBy('created_at', 'desc'),
-        limit(100)
-      );
-
-      // Apply filters via client-side filtering after query
-      const snapshot = await getDocs(baseQuery);
-      let data = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as Communication[];
-
-      // Filter by channel
-      if (filters?.channel && filters.channel !== 'all') {
-        data = data.filter(c => c.type === filters.channel);
-      }
-
-      // Filter by status
-      if (filters?.status && filters.status !== 'all') {
-        data = data.filter(c => c.status === filters.status);
-      }
-
-      // Fetch patient data for each communication
-      const patientIds = data
-        .map(c => c.patient_id)
-        .filter((id): id is string => id !== null);
-
-      const patientMap = new Map<string, PatientBasicInfo>();
-      for (const patientId of patientIds) {
-        const patientDoc = await getDoc(doc(db, 'patients', patientId));
-        if (patientDoc.exists()) {
-          const p = patientDoc.data();
-          patientMap.set(patientId, {
-            id: patientDoc.id,
-            full_name: (p.full_name || p.name) as string,
-            email: p.email,
-            phone: p.phone,
-          });
-        }
-      }
-
-      // Attach patient data to communications
-      return data.map(c => ({
-        ...c,
-        patient: c.patient_id ? patientMap.get(c.patient_id) || null : null,
-      }));
+      const res = await communicationsApi.list({
+        channel: filters?.channel,
+        status: filters?.status,
+        limit: 100,
+      });
+      return (res.data ?? []) as Communication[];
     },
     enabled: !!organizationId,
   });
@@ -78,31 +49,8 @@ export function useCommunicationStats() {
     queryKey: ['communication-stats', organizationId],
     queryFn: async () => {
       if (!organizationId) return null;
-      const q = firestoreQuery(
-        collection(db, 'communication_logs'),
-        where('organization_id', '==', organizationId)
-      );
-      const snapshot = await getDocs(q);
-      const data = snapshot.docs.map(doc => normalizeFirestoreData(doc.data())) as Array<{
-        status?: CommunicationStatus;
-        type?: CommunicationType;
-        [key: string]: unknown;
-      }>;
-
-      const stats = {
-        total: data.length || 0,
-        sent: data.filter((c) => c.status === 'enviado').length || 0,
-        delivered: data.filter((c) => c.status === 'entregue').length || 0,
-        failed: data.filter((c) => c.status === 'falha').length || 0,
-        pending: data.filter((c) => c.status === 'pendente').length || 0,
-        byChannel: {
-          email: data.filter((c) => c.type === 'email').length || 0,
-          whatsapp: data.filter((c) => c.type === 'whatsapp').length || 0,
-          sms: data.filter((c) => c.type === 'sms').length || 0,
-        },
-      };
-
-      return stats;
+      const res = await communicationsApi.stats();
+      return res.data;
     },
     enabled: !!organizationId,
   });
@@ -124,27 +72,11 @@ export function useSendCommunication() {
   return useMutation({
     mutationFn: async (data: SendCommunicationData) => {
       if (!organizationId) throw new Error('Organização não encontrada');
-
-      const communicationData = {
-        type: data.type,
-        patient_id: data.patient_id,
-        recipient: data.recipient,
-        subject: data.subject || null,
-        body: data.body,
-        status: 'pendente' as CommunicationStatus,
-        organization_id: organizationId,
-        created_at: new Date().toISOString(),
-        sent_at: null,
-        delivered_at: null,
-        read_at: null,
-        error_message: null,
-        appointment_id: null,
-      };
-
-      const docRef = await addDoc(collection(db, 'communication_logs'), communicationData);
-      const docSnap = await getDoc(docRef);
-
-      return { id: docRef.id, ...docSnap.data() };
+      const res = await communicationsApi.create({
+        ...data,
+        status: 'pendente',
+      });
+      return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['communications', organizationId] });
@@ -164,7 +96,7 @@ export function useDeleteCommunication() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      await deleteDoc(doc(db, 'communication_logs', id));
+      await communicationsApi.delete(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['communications', organizationId] });
@@ -184,14 +116,8 @@ export function useResendCommunication() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const docRef = doc(db, 'communication_logs', id);
-      await updateDoc(docRef, {
-        status: 'pendente' as CommunicationStatus,
-        error_message: null,
-      });
-
-      const docSnap = await getDoc(docRef);
-      return { id, ...docSnap.data() };
+      const res = await communicationsApi.resend(id);
+      return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['communications', organizationId] });
@@ -203,7 +129,6 @@ export function useResendCommunication() {
   });
 }
 
-// Helper to translate status to Portuguese display
 export function getStatusLabel(status: CommunicationStatus): string {
   const labels: Record<CommunicationStatus, string> = {
     pendente: 'Pendente',
@@ -215,7 +140,6 @@ export function getStatusLabel(status: CommunicationStatus): string {
   return labels[status] || status;
 }
 
-// Helper to translate type to Portuguese display
 export function getTypeLabel(type: CommunicationType): string {
   const labels: Record<CommunicationType, string> = {
     email: 'Email',

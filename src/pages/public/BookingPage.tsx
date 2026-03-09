@@ -1,12 +1,10 @@
 /**
- * Booking Page - Migrated to Firebase
+ * Booking Page - Migrated to Neon/Workers
  */
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { db, collection, query as firestoreQuery, where, getDocs } from '@/integrations/firebase/app';
-import { getFirebaseFunctions } from '@/integrations/firebase/functions';
-import { httpsCallable } from 'firebase/functions';
+import { publicBookingApi, type PublicBookingProfile } from '@/lib/api/workers-client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -21,16 +19,6 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-interface PublicProfile {
-    id: string;
-    user_id: string;
-    full_name: string;
-    specialty: string;
-    avatar_url: string;
-    bio: string;
-    slug: string;
-}
-
 interface BookingResponse {
     error?: string;
     success?: boolean;
@@ -40,7 +28,7 @@ export const BookingPage = () => {
     const { slug } = useParams();
     const _navigate = useNavigate();
     const { toast } = useToast();
-    const [profile, setProfile] = useState<PublicProfile | null>(null);
+    const [profile, setProfile] = useState<PublicBookingProfile | null>(null);
     const [loading, setLoading] = useState(true);
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
     const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -62,15 +50,8 @@ export const BookingPage = () => {
         async function loadProfile() {
             if (!slug) return;
             try {
-                const q = firestoreQuery(collection(db, 'profiles'), where('slug', '==', slug));
-                const querySnapshot = await getDocs(q);
-
-                if (querySnapshot.empty) {
-                    throw new Error('Perfil não encontrado');
-                }
-
-                const data = querySnapshot.docs[0].data();
-                setProfile(data as PublicProfile);
+                const res = await publicBookingApi.getProfile(slug);
+                setProfile(res.data ?? null);
             } catch (error: unknown) {
                 logger.error('Error loading profile', error, 'BookingPage');
                 toast({
@@ -90,10 +71,7 @@ export const BookingPage = () => {
 
         setBookingLoading(true);
         try {
-            // Call Firebase Function for secure booking
-            const functions = getFirebaseFunctions();
-            const publicBookingFunction = httpsCallable(functions, 'public-booking');
-            const result = await publicBookingFunction({
+            const result = await publicBookingApi.create({
                 slug,
                 date: new Date(selectedDate).toISOString(),
                 time: selectedTime,
@@ -105,10 +83,8 @@ export const BookingPage = () => {
                 }
             });
 
-            const data = result.data as BookingResponse;
-
-            if (data?.error) {
-                throw new Error(data.error);
+            if (!result.success) {
+                throw new Error('Não foi possível realizar o agendamento');
             }
 
             setStep(3);

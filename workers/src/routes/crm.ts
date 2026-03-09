@@ -4,6 +4,7 @@
  * GET/POST/PUT/DELETE /api/crm/leads
  * GET/POST            /api/crm/leads/:id/historico
  * GET/POST/PUT/DELETE /api/crm/tarefas
+ * GET/POST            /api/crm/campanhas
  */
 import { Hono } from 'hono';
 import { createPool } from '../lib/db';
@@ -263,6 +264,130 @@ app.delete('/tarefas/:id', requireAuth, async (c) => {
   if (!check.rows.length) return c.json({ error: 'Tarefa não encontrada' }, 404);
 
   await pool.query('DELETE FROM crm_tarefas WHERE id = $1', [id]);
+  return c.json({ ok: true });
+});
+
+// ===== CAMPANHAS CRM =====
+
+app.get('/campanhas', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { status, tipo, limit = '50', offset = '0' } = c.req.query();
+
+  const conditions: string[] = ['organization_id = $1'];
+  const params: unknown[] = [user.organizationId];
+
+  if (status) { params.push(status); conditions.push(`status = $${params.length}`); }
+  if (tipo) { params.push(tipo); conditions.push(`tipo = $${params.length}`); }
+
+  params.push(Number(limit), Number(offset));
+  const result = await pool.query(
+    `SELECT * FROM crm_campanhas
+     WHERE ${conditions.join(' AND ')}
+     ORDER BY created_at DESC
+     LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    params,
+  );
+  return c.json({ data: result.rows });
+});
+
+app.post('/campanhas', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const body = (await c.req.json()) as Record<string, unknown>;
+
+  if (!body.nome || !body.tipo) {
+    return c.json({ error: 'nome e tipo são obrigatórios' }, 400);
+  }
+
+  const patientIds = Array.isArray(body.patient_ids)
+    ? body.patient_ids.map((id) => String(id))
+    : [];
+
+  const result = await pool.query(
+    `INSERT INTO crm_campanhas
+       (organization_id, created_by, nome, tipo, conteudo, status, total_destinatarios,
+        total_enviados, agendada_em, concluida_em, created_at, updated_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW(),NOW())
+     RETURNING *`,
+    [
+      user.organizationId,
+      user.uid,
+      String(body.nome),
+      String(body.tipo),
+      body.conteudo ?? null,
+      body.status ?? 'concluida',
+      patientIds.length,
+      patientIds.length,
+      body.agendada_em ?? null,
+      body.concluida_em ?? new Date().toISOString(),
+    ],
+  );
+
+  const campaign = result.rows[0] as { id: string };
+  for (const patientId of patientIds) {
+    await pool.query(
+      `INSERT INTO crm_campanha_envios
+         (campanha_id, patient_id, canal, status, enviado_em, created_at)
+       VALUES ($1,$2,$3,$4,$5,NOW())`,
+      [
+        campaign.id,
+        patientId,
+        body.tipo ?? null,
+        'enviado',
+        body.concluida_em ?? new Date().toISOString(),
+      ],
+    );
+  }
+
+  return c.json({ data: result.rows[0] }, 201);
+});
+
+app.put('/campanhas/:id', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id } = c.req.param();
+  const body = (await c.req.json()) as Record<string, unknown>;
+
+  const sets: string[] = ['updated_at = NOW()'];
+  const values: unknown[] = [];
+  const assign = (column: string, value: unknown) => {
+    values.push(value);
+    sets.push(`${column} = $${values.length}`);
+  };
+
+  if (body.nome !== undefined) assign('nome', body.nome || null);
+  if (body.tipo !== undefined) assign('tipo', body.tipo || null);
+  if (body.conteudo !== undefined) assign('conteudo', body.conteudo || null);
+  if (body.status !== undefined) assign('status', body.status || null);
+  if (body.total_destinatarios !== undefined) assign('total_destinatarios', Number(body.total_destinatarios) || 0);
+  if (body.total_enviados !== undefined) assign('total_enviados', Number(body.total_enviados) || 0);
+  if (body.agendada_em !== undefined) assign('agendada_em', body.agendada_em || null);
+  if (body.concluida_em !== undefined) assign('concluida_em', body.concluida_em || null);
+
+  values.push(id, user.organizationId);
+  const result = await pool.query(
+    `
+      UPDATE crm_campanhas
+      SET ${sets.join(', ')}
+      WHERE id = $${values.length - 1} AND organization_id = $${values.length}
+      RETURNING *
+    `,
+    values,
+  );
+
+  if (!result.rows.length) return c.json({ error: 'Campanha não encontrada' }, 404);
+  return c.json({ data: result.rows[0] });
+});
+
+app.delete('/campanhas/:id', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id } = c.req.param();
+  await pool.query(
+    'DELETE FROM crm_campanhas WHERE id = $1 AND organization_id = $2',
+    [id, user.organizationId],
+  );
   return c.json({ ok: true });
 });
 

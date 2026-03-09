@@ -189,7 +189,7 @@ export const PathologyFormModal: React.FC<PathologyFormModalProps> = ({
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<PathologyFormData> }) =>
-      PathologyService.updatePathology(id, data),
+      PathologyService.updatePathology(id, { ...data, patient_id: patientId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patient-pathologies', patientId] });
       toast.success('Patologia atualizada com sucesso');
@@ -202,7 +202,7 @@ export const PathologyFormModal: React.FC<PathologyFormModalProps> = ({
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => PathologyService.deletePathology(id),
+    mutationFn: (id: string) => PathologyService.deletePathology(id, patientId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patient-pathologies', patientId] });
       toast.success('Patologia removida com sucesso');

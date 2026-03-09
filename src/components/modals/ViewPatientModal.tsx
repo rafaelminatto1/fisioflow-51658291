@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useQuery } from '@tanstack/react-query';
-import { db, doc, getDoc } from '@/integrations/firebase/app';
+import { patientsApi } from '@/lib/api/workers-client';
 import {
 
   User,
@@ -34,15 +34,8 @@ export const ViewPatientModal: React.FC<{
     queryKey: ['patient', patientId],
     queryFn: async () => {
       if (!patientId) return null;
-
-      const docRef = doc(db, 'patients', patientId);
-      const docSnap = await getDoc(docRef);
-
-      if (!docSnap.exists()) {
-        throw new Error('Paciente não encontrado');
-      }
-
-      return { id: docSnap.id, ...docSnap.data() };
+      const response = await patientsApi.get(patientId);
+      return response.data ?? null;
     },
     enabled: open && !!patientId
   });

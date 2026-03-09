@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Loader2, Upload, X, Film, Image as ImageIcon } from 'lucide-react';
-import { api } from '@/integrations/firebase/functions';
+import { exercisesApi } from '@/lib/api/workers-client';
 import { uploadToR2 } from '@/lib/storage/r2-storage';
 import { toast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
@@ -133,7 +133,7 @@ export function NewExerciseModal({ open, onOpenChange, onSubmit, exercise, isLoa
 
     setIsAnalyzing(true);
     try {
-      const result = await api.exerciseAnalysis.analyze(imageUrl);
+      const result = await exercisesApi.analyzeImage(imageUrl);
       if (result.success && result.analysis) {
         // Preencher campos automaticamente baseados na análise
         if (result.analysis.labels?.length > 0) {

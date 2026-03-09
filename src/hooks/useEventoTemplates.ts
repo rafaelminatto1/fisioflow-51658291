@@ -1,44 +1,24 @@
 /**
- * useEventoTemplates - Migrated to Firebase
+ * useEventoTemplates - Migrated to Neon/Workers
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, deleteDoc, doc, getDoc, query as firestoreQuery, where, orderBy, db } from '@/integrations/firebase/app';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import {
+  checklistApi,
+  eventoTemplatesApi,
+  eventosApi,
+  type EventoTemplateRow,
+} from '@/lib/api/workers-client';
 
-export type EventoTemplate = {
-  id: string;
-  nome: string;
-  descricao: string;
-  categoria: string;
-  gratuito: boolean;
-  valor_padrao_prestador: number;
-  checklist_padrao?: string[];
-  created_at?: string;
-  updated_at?: string;
-};
-
-// Helper to convert Firestore doc to EventoTemplate
-const convertDocToEventoTemplate = (doc: { id: string; data: () => Record<string, unknown> }): EventoTemplate => {
-  const data = normalizeFirestoreData(doc.data());
-  return {
-    id: doc.id,
-    ...data,
-  } as EventoTemplate;
-};
+export type EventoTemplate = EventoTemplateRow;
 
 export function useEventoTemplates() {
   return useQuery({
     queryKey: ['evento-templates'],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'evento_templates'),
-        orderBy('created_at', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDocToEventoTemplate);
+      const res = await eventoTemplatesApi.list();
+      return (res?.data ?? []) as EventoTemplate[];
     },
   });
 }
@@ -48,42 +28,31 @@ export function useCreateTemplateFromEvento() {
 
   return useMutation({
     mutationFn: async ({ eventoId, nome }: { eventoId: string; nome: string }) => {
-      // Fetch evento with checklist items
-      const eventoDoc = await getDoc(doc(db, 'eventos', eventoId));
-      if (!eventoDoc.exists()) {
-        throw new Error('Evento não encontrado');
-      }
+      const [eventoRes, checklistRes] = await Promise.all([
+        eventosApi.get(eventoId),
+        checklistApi.list(eventoId),
+      ]);
 
-      const evento = { id: eventoDoc.id, ...eventoDoc.data() };
+      const evento = eventoRes.data;
+      if (!evento) throw new Error('Evento não encontrado');
 
-      // Fetch checklist items for this evento
-      const checklistQ = firestoreQuery(
-        collection(db, 'checklist_items'),
-        where('evento_id', '==', eventoId)
-      );
-      const checklistSnapshot = await getDocs(checklistQ);
-      const checklistItems = checklistSnapshot.docs.map(doc => normalizeFirestoreData(doc.data()));
+      const checklistItems = (checklistRes?.data ?? []).map((item) => ({
+        titulo: item.titulo,
+        tipo: item.tipo,
+        quantidade: item.quantidade,
+        custo_unitario: item.custo_unitario,
+      }));
 
-      const templateData = {
+      const res = await eventoTemplatesApi.create({
         nome,
-        descricao: evento.descricao,
-        categoria: evento.categoria,
-        gratuito: evento.gratuito,
-        valor_padrao_prestador: evento.valor_padrao_prestador,
-        checklist_padrao: checklistItems.map((item: Record<string, unknown>) => ({
-          titulo: item.titulo,
-          tipo: item.tipo,
-          quantidade: item.quantidade,
-          custo_unitario: item.custo_unitario,
-        })),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+        descricao: evento.descricao ?? null,
+        categoria: evento.categoria ?? null,
+        gratuito: evento.gratuito ?? false,
+        valor_padrao_prestador: evento.valor_padrao_prestador ?? null,
+        checklist_padrao: checklistItems,
+      });
 
-      const docRef = await addDoc(collection(db, 'evento_templates'), templateData);
-      const docSnap = await getDoc(docRef);
-
-      return convertDocToEventoTemplate(docSnap);
+      return (res?.data ?? res) as EventoTemplate;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['evento-templates'] });
@@ -112,49 +81,38 @@ export function useCreateEventoFromTemplate() {
       dataFim: string;
       local: string;
     }) => {
-      // Fetch template
-      const templateDoc = await getDoc(doc(db, 'evento_templates', templateId));
-      if (!templateDoc.exists()) {
-        throw new Error('Template não encontrado');
-      }
+      const templateRes = await eventoTemplatesApi.get(templateId);
+      const template = templateRes.data;
+      if (!template) throw new Error('Template não encontrado');
 
-      const template = { id: templateDoc.id, ...templateDoc.data() };
-
-      // Create evento from template
-      const eventoData = {
+      const eventoRes = await eventosApi.create({
         nome: nomeEvento,
-        descricao: template.descricao,
-        categoria: template.categoria,
+        descricao: template.descricao ?? undefined,
+        categoria: template.categoria ?? undefined,
         local,
         data_inicio: dataInicio,
         data_fim: dataFim,
         gratuito: template.gratuito,
-        valor_padrao_prestador: template.valor_padrao_prestador,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+        valor_padrao_prestador: template.valor_padrao_prestador ?? undefined,
+      });
 
-      const eventoDocRef = await addDoc(collection(db, 'eventos'), eventoData);
-      const eventoDocSnap = await getDoc(eventoDocRef);
-      const evento = { id: eventoDocSnap.id, ...eventoDocSnap.data() };
+      const evento = eventoRes.data;
 
-      // Create checklist items if template has checklist_padrao
-      if (template.checklist_padrao && Array.isArray(template.checklist_padrao)) {
-        const checklistItems = template.checklist_padrao.map((item: Record<string, unknown>) => ({
-          evento_id: evento.id,
-          titulo: item.titulo,
-          tipo: item.tipo,
-          quantidade: typeof item.quantidade === 'number' ? item.quantidade : 1,
-          custo_unitario: typeof item.custo_unitario === 'number' ? item.custo_unitario : 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }));
+      const checklistItems = Array.isArray(template.checklist_padrao)
+        ? template.checklist_padrao
+        : [];
 
-        // Batch insert checklist items
-        await Promise.all(
-          checklistItems.map(item => addDoc(collection(db, 'checklist_items'), item))
-        );
-      }
+      await Promise.all(
+        checklistItems.map((item) =>
+          checklistApi.create({
+            evento_id: evento.id,
+            titulo: String(item.titulo ?? ''),
+            tipo: String(item.tipo ?? 'levar') as 'levar' | 'alugar' | 'comprar',
+            quantidade: Number(item.quantidade ?? 1),
+            custo_unitario: Number(item.custo_unitario ?? 0),
+          }),
+        ),
+      );
 
       return evento;
     },
@@ -172,9 +130,7 @@ export function useDeleteTemplate() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (templateId: string) => {
-      await deleteDoc(doc(db, 'evento_templates', templateId));
-    },
+    mutationFn: (templateId: string) => eventoTemplatesApi.delete(templateId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['evento-templates'] });
       toast.success('Template excluído');

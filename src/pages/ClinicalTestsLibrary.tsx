@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { collection, query, getDocs, orderBy as firestoreOrderBy, deleteDoc, doc } from '@/integrations/firebase/app';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,7 @@ import {
     HeartPulse,
     Plus,
 } from 'lucide-react';
-import { db } from '@/integrations/firebase/app';
+import { clinicalTestsApi, type ClinicalTestTemplateRecord } from '@/lib/api/workers-client';
 
 
 // Extracted Components
@@ -23,24 +22,7 @@ import { ClinicalTestProtocolDialog } from '@/components/clinical/ClinicalTestPr
 
 import { useExerciseProtocols } from '@/hooks/useExerciseProtocols';
 
-interface ClinicalTest {
-    id: string;
-    name: string;
-    name_en?: string;
-    category: string;
-    target_joint: string;
-    purpose: string;
-    execution: string;
-    positive_sign?: string;
-    reference?: string;
-    sensitivity_specificity?: string;
-    tags?: string[];
-    media_urls?: string[];
-    description?: string;
-    fields_definition?: unknown[];
-    regularity_sessions?: number | null;
-    organization_id?: string | null;
-}
+interface ClinicalTest extends ClinicalTestTemplateRecord {}
 
 export default function ClinicalTestsLibrary() {
     const queryClient = useQueryClient();
@@ -60,18 +42,14 @@ export default function ClinicalTestsLibrary() {
     const { data: tests = [], isLoading, isError, _error, refetch } = useQuery({
         queryKey: ['clinical-tests-library'],
         queryFn: async () => {
-            const q = query(
-                collection(db, 'clinical_test_templates'),
-                firestoreOrderBy('name')
-            );
-            const snapshot = await getDocs(q);
-            return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as ClinicalTest[];
+            const res = await clinicalTestsApi.list();
+            return (res?.data ?? []) as ClinicalTest[];
         }
     });
 
     const deleteMutation = useMutation({
         mutationFn: async (testId: string) => {
-            await deleteDoc(doc(db, 'clinical_test_templates', testId));
+            await clinicalTestsApi.delete(testId);
         },
         onSuccess: () => {
             toast.success('Teste excluído com sucesso!');

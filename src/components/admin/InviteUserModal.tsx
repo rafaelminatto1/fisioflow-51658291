@@ -7,8 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { getFirebaseFunctions } from '@/integrations/firebase/app';
-import { httpsCallable as httpsCallableFromFirebase } from 'firebase/functions';
+import { invitationsApi } from '@/lib/api/workers-client';
 import { emailSchema } from '@/lib/validations/auth';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
@@ -42,11 +41,7 @@ export function InviteUserModal({ open, onOpenChange }: InviteUserModalProps) {
         return;
       }
 
-      // Chamar Firebase Function para criar convite
-      const functions = getFirebaseFunctions();
-      const createInvitation = httpsCallableFromFirebase(functions, 'createUserInvitation');
-
-      const { data } = await createInvitation({
+      const { data } = await invitationsApi.create({
         email,
         role,
       });

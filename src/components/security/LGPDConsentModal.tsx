@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
 
   Dialog,
@@ -61,16 +61,22 @@ export function LGPDConsentModal({ open, onOpenChange }: LGPDConsentModalProps) 
     onOpenChange(false);
   };
 
-  // Inicializar estado com consentimentos atuais
-  useState(() => {
-    if (consents) {
-      const current: Record<string, boolean> = {};
-      consents.forEach((c) => {
-        current[c.consent_type] = c.granted;
-      });
-      setPendingConsents(current as Record<ConsentType, boolean>);
-    }
-  });
+  useEffect(() => {
+    if (!consents.length) return;
+
+    const current: Record<ConsentType, boolean> = {
+      dados_pessoais: false,
+      dados_sensiveis: false,
+      comunicacao_marketing: false,
+      compartilhamento_terceiros: false,
+    };
+
+    consents.forEach((consent) => {
+      current[consent.consent_type] = consent.granted;
+    });
+
+    setPendingConsents(current);
+  }, [consents]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

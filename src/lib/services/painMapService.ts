@@ -1,139 +1,98 @@
-import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, where, orderBy } from '@/integrations/firebase/app';
-import {
-
-  PainMapRecord,
+import { clinicalApi } from '@/lib/api/workers-client';
+import type {
+  BodyRegion,
   PainEvolutionData,
+  PainMapFormData,
+  PainMapPoint,
+  PainMapRecord,
   PainStatistics,
-  BodyRegion
 } from '@/types/painMap';
 
-export class PainMapService {
-  // Optimized: Select only required columns instead of *
-  static async getPainMapsByPatientId(patientId: string): Promise<PainMapRecord[]> {
-    const q = query(
-      collection(db, 'pain_maps'),
-      where('patient_id', '==', patientId),
-      orderBy('recorded_at', 'desc')
-    );
-    const snapshot = await getDocs(q);
+const mapPoint = (point: Record<string, unknown>): PainMapPoint => ({
+  region: String(point.region ?? 'lombar') as BodyRegion,
+  intensity: Number(point.intensity ?? 0) as PainMapPoint['intensity'],
+  painType: String(point.pain_type ?? point.painType ?? 'aguda') as PainMapPoint['painType'],
+  description: (point.description as string) ?? undefined,
+  x: Number(point.x_coordinate ?? point.x ?? 0),
+  y: Number(point.y_coordinate ?? point.y ?? 0),
+});
 
-    return snapshot.docs.map(docSnap => {
-      const data = docSnap.data();
-      return {
-        id: docSnap.id,
-        patient_id: data.patient_id,
-        global_pain_level: data.global_pain_level,
-        pain_points: data.pain_points || [],
-        recorded_at: data.recorded_at,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-      } as PainMapRecord;
-    });
+const mapPainMap = (row: Record<string, unknown>): PainMapRecord => ({
+  id: String(row.id),
+  patient_id: String(row.patient_id),
+  session_id: row.evolution_id ? String(row.evolution_id) : undefined,
+  appointment_id: row.appointment_id ? String(row.appointment_id) : undefined,
+  recorded_at: String(row.recorded_at ?? row.created_at ?? new Date().toISOString()),
+  pain_points: Array.isArray(row.points) ? row.points.map((point) => mapPoint(point as Record<string, unknown>)) : [],
+  global_pain_level: Number(row.pain_level ?? row.global_pain_level ?? 0) as PainMapRecord['global_pain_level'],
+  notes: (row.notes as string) ?? undefined,
+  created_by: String(row.created_by ?? ''),
+  created_at: String(row.created_at ?? new Date().toISOString()),
+  updated_at: String(row.updated_at ?? row.created_at ?? new Date().toISOString()),
+});
+
+export class PainMapService {
+  static async getPainMapsByPatientId(patientId: string): Promise<PainMapRecord[]> {
+    const res = await clinicalApi.painMaps.list({ patientId });
+    return (res.data ?? []).map((row) => mapPainMap(row as unknown as Record<string, unknown>));
   }
 
-  // Optimized: Select only required columns instead of *
   static async getPainMapById(id: string): Promise<PainMapRecord> {
-    const docRef = doc(db, 'pain_maps', id);
-    const docSnap = await getDoc(docRef);
-
-    if (!docSnap.exists()) {
-      throw new Error('Pain map not found');
-    }
-
-    const data = docSnap.data();
-    return {
-      id: docSnap.id,
-      patient_id: data.patient_id,
-      global_pain_level: data.global_pain_level,
-      pain_points: data.pain_points || [],
-      recorded_at: data.recorded_at,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
-    } as PainMapRecord;
+    const res = await clinicalApi.painMaps.get(id);
+    return mapPainMap(res.data as unknown as Record<string, unknown>);
   }
 
   static async createPainMap(painMap: PainMapFormData): Promise<PainMapRecord> {
-    const now = new Date().toISOString();
-    const dataToSave = {
-      ...painMap,
-      recorded_at: painMap.recorded_at || now,
-      created_at: now,
-      updated_at: now,
-    };
+    const res = await clinicalApi.painMaps.create({
+      patient_id: painMap.patient_id,
+      evolution_id: painMap.session_id,
+      pain_level: painMap.global_pain_level,
+      notes: painMap.notes,
+    });
+    const created = mapPainMap(res.data as unknown as Record<string, unknown>);
 
-    const docRef = await addDoc(collection(db, 'pain_maps'), dataToSave);
-    const docSnap = await getDoc(docRef);
+    if (painMap.pain_points?.length) {
+      await Promise.all(
+        painMap.pain_points.map((point) =>
+          clinicalApi.painMaps.addPoint(created.id, {
+            x_coordinate: point.x,
+            y_coordinate: point.y,
+            intensity: point.intensity,
+            region: point.region,
+          }),
+        ),
+      );
+    }
 
-    const data = docSnap.data();
-    return {
-      id: docSnap.id,
-      patient_id: data.patient_id,
-      global_pain_level: data.global_pain_level,
-      pain_points: data.pain_points || [],
-      recorded_at: data.recorded_at,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
-    } as PainMapRecord;
+    return this.getPainMapById(created.id);
   }
 
   static async updatePainMap(id: string, painMap: Partial<PainMapFormData>): Promise<PainMapRecord> {
-    const docRef = doc(db, 'pain_maps', id);
-
-    await updateDoc(docRef, {
-      ...painMap,
-      updated_at: new Date().toISOString(),
+    await clinicalApi.painMaps.update(id, {
+      patient_id: painMap.patient_id,
+      evolution_id: painMap.session_id,
+      pain_level: painMap.global_pain_level,
+      notes: painMap.notes,
     });
-
     return this.getPainMapById(id);
   }
 
   static async deletePainMap(id: string): Promise<void> {
-    const docRef = doc(db, 'pain_maps', id);
-    await deleteDoc(docRef);
+    await clinicalApi.painMaps.delete(id);
   }
 
-  // Optimized: Select only required columns instead of *
   static async getPainEvolution(patientId: string, startDate?: string, endDate?: string): Promise<PainEvolutionData[]> {
-    const q = query(
-      collection(db, 'pain_maps'),
-      where('patient_id', '==', patientId),
-      orderBy('recorded_at', 'asc')
-    );
-
-    // Note: Firestore doesn't support multiple range queries in a single query
-    // Additional filtering would need to be done client-side or via composite indexes
-    // For now, we'll apply date filters in client-side processing if needed
-
-    const snapshot = await getDocs(q);
-
-    const allRecords = snapshot.docs.map(docSnap => {
-      const data = docSnap.data();
-      return {
-        id: docSnap.id,
-        patient_id: data.patient_id,
-        global_pain_level: data.global_pain_level,
-        pain_points: data.pain_points || [],
-        recorded_at: data.recorded_at,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-      } as PainMapRecord;
-    });
-
-    // Client-side date filtering
+    const allRecords = await this.getPainMapsByPatientId(patientId);
     let filteredRecords = allRecords;
-    if (startDate) {
-      filteredRecords = filteredRecords.filter(r => r.recorded_at >= startDate);
-    }
-    if (endDate) {
-      filteredRecords = filteredRecords.filter(r => r.recorded_at <= endDate);
-    }
+    if (startDate) filteredRecords = filteredRecords.filter((record) => record.recorded_at >= startDate);
+    if (endDate) filteredRecords = filteredRecords.filter((record) => record.recorded_at <= endDate);
 
-    return filteredRecords.map(record => ({
+    return filteredRecords.map((record) => ({
       date: record.recorded_at,
       globalPainLevel: record.global_pain_level,
       regionCount: record.pain_points.length,
       mostAffectedRegion: this.getMostAffectedRegion(record.pain_points),
-      painPoints: record.pain_points
+      painPoints: record.pain_points,
     }));
   }
 
@@ -146,11 +105,11 @@ export class PainMapService {
         painReduction: 0,
         mostFrequentRegion: 'lombar',
         painFreeRegionsCount: 0,
-        improvementTrend: 'stable'
+        improvementTrend: 'stable',
       };
     }
 
-    const painLevels = records.map(r => r.global_pain_level);
+    const painLevels = records.map((r) => r.global_pain_level);
     const averagePainLevel = painLevels.reduce((a, b) => a + b, 0) / painLevels.length;
 
     const firstPain = records[records.length - 1].global_pain_level;
@@ -158,22 +117,22 @@ export class PainMapService {
     const painReduction = firstPain > 0 ? ((firstPain - lastPain) / firstPain) * 100 : 0;
 
     const regionFrequency = new Map<BodyRegion, number>();
-    records.forEach(record => {
-      record.pain_points.forEach(point => {
+    records.forEach((record) => {
+      record.pain_points.forEach((point) => {
         regionFrequency.set(point.region, (regionFrequency.get(point.region) || 0) + 1);
       });
     });
 
-    const mostFrequentRegion = Array.from(regionFrequency.entries())
-      .sort((a, b) => b[1] - a[1])[0]?.[0] || 'lombar';
+    const mostFrequentRegion =
+      Array.from(regionFrequency.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || 'lombar';
 
     const allRegions = new Set<BodyRegion>();
-    records[0]?.pain_points.forEach(p => allRegions.add(p.region));
-    const painFreeRegionsCount = 25 - allRegions.size; // 25 regiões totais
+    records[0]?.pain_points.forEach((point) => allRegions.add(point.region));
+    const painFreeRegionsCount = 25 - allRegions.size;
 
     let improvementTrend: PainStatistics['improvementTrend'] = 'stable';
     if (records.length >= 3) {
-      const recent = records.slice(0, 3).map(r => r.global_pain_level);
+      const recent = records.slice(0, 3).map((r) => r.global_pain_level);
       const avg = recent.reduce((a, b) => a + b, 0) / recent.length;
       if (recent[0] < avg - 1) improvementTrend = 'improving';
       else if (recent[0] > avg + 1) improvementTrend = 'worsening';
@@ -184,15 +143,15 @@ export class PainMapService {
       painReduction,
       mostFrequentRegion,
       painFreeRegionsCount,
-      improvementTrend
+      improvementTrend,
     };
   }
 
-  private static getMostAffectedRegion(painPoints: { region: BodyRegion; intensity: number }[]): BodyRegion | undefined {
+  private static getMostAffectedRegion(
+    painPoints: { region: BodyRegion; intensity: number }[],
+  ): BodyRegion | undefined {
     if (painPoints.length === 0) return undefined;
-
-    const sorted = [...painPoints].sort((a, b) => b.intensity - a.intensity);
-    return sorted[0].region;
+    return [...painPoints].sort((a, b) => b.intensity - a.intensity)[0].region;
   }
 
   static getRegionLabel(region: BodyRegion): string {
@@ -206,7 +165,7 @@ export class PainMapService {
       pescoco: 'Pescoço',
       pescoco_frontal_esquerdo: 'Pescoço (Frente Esq.)',
       pescoco_frontal_direito: 'Pescoço (Frente Dir.)',
-      pescoco_nuca_esquerdo: 'Cervical (Esq.)', // Neck back usually referred to as Cervical in contexts
+      pescoco_nuca_esquerdo: 'Cervical (Esq.)',
       pescoco_nuca_direito: 'Cervical (Dir.)',
       ombro_direito: 'Ombro Direito',
       ombro_esquerdo: 'Ombro Esquerdo',
@@ -242,15 +201,15 @@ export class PainMapService {
       tornozelo_direito: 'Tornozelo Direito',
       tornozelo_esquerdo: 'Tornozelo Esquerdo',
       pe_direito: 'Pé Direito',
-      pe_esquerdo: 'Pé Esquerdo'
+      pe_esquerdo: 'Pé Esquerdo',
     };
     return labels[region];
   }
 
   static getPainIntensityColor(intensity: number): string {
     if (intensity === 0) return 'hsl(var(--muted))';
-    if (intensity <= 3) return 'hsl(47, 100%, 60%)'; // Amarelo
-    if (intensity <= 6) return 'hsl(30, 100%, 50%)'; // Laranja
-    return 'hsl(0, 80%, 50%)'; // Vermelho
+    if (intensity <= 3) return 'hsl(47, 100%, 60%)';
+    if (intensity <= 6) return 'hsl(30, 100%, 50%)';
+    return 'hsl(0, 80%, 50%)';
   }
 }

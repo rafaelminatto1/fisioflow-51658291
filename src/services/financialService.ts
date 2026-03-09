@@ -1,4 +1,4 @@
-import { financialApi } from '@/integrations/firebase/functions';
+import { financialApi } from '@/lib/api/workers-client';
 import { AppError } from '@/lib/errors/AppError';
 
 export interface Transaction {
@@ -51,7 +51,7 @@ export class FinancialService {
      */
     static async fetchTransactions(limit = 300): Promise<Transaction[]> {
         try {
-            const response = await financialApi.list(limit);
+            const response = await financialApi.transacoes.list({ limit });
             return response.data || [];
         } catch (error) {
             throw AppError.from(error, 'FinancialService.fetchTransactions');
@@ -65,12 +65,12 @@ export class FinancialService {
         try {
             const summary = await financialApi.summary(period);
             return {
-                totalRevenue: Number(summary.totalRevenue || 0),
-                pendingPayments: Number(summary.pendingPayments || 0),
-                monthlyGrowth: Number(summary.monthlyGrowth || 0),
-                paidCount: Number(summary.paidCount || 0),
-                totalCount: Number(summary.totalCount || 0),
-                averageTicket: Number(summary.averageTicket || 0),
+                totalRevenue: Number(summary.data?.totalRevenue || 0),
+                pendingPayments: Number(summary.data?.pendingPayments || 0),
+                monthlyGrowth: Number(summary.data?.monthlyGrowth || 0),
+                paidCount: Number(summary.data?.paidCount || 0),
+                totalCount: Number(summary.data?.totalCount || 0),
+                averageTicket: Number(summary.data?.averageTicket || 0),
             };
         } catch (error) {
             throw AppError.from(error, 'FinancialService.fetchSummary');
@@ -127,8 +127,8 @@ export class FinancialService {
      */
     static async createTransaction(transaction: Omit<Transaction, 'id' | 'created_at' | 'updated_at'>): Promise<Transaction> {
         try {
-            const response = await financialApi.create(transaction);
-            return response as Transaction;
+            const response = await financialApi.transacoes.create(transaction);
+            return response.data as Transaction;
         } catch (error) {
             throw AppError.from(error, 'FinancialService.createTransaction');
         }
@@ -139,8 +139,8 @@ export class FinancialService {
      */
     static async updateTransaction(id: string, updates: Partial<Transaction>): Promise<Transaction> {
         try {
-            const response = await financialApi.update(id, updates);
-            return response as Transaction;
+            const response = await financialApi.transacoes.update(id, updates);
+            return response.data as Transaction;
         } catch (error) {
             throw AppError.from(error, 'FinancialService.updateTransaction');
         }
@@ -151,7 +151,7 @@ export class FinancialService {
      */
     static async deleteTransaction(id: string): Promise<void> {
         try {
-            await financialApi.delete(id);
+            await financialApi.transacoes.delete(id);
         } catch (error) {
             throw AppError.from(error, 'FinancialService.deleteTransaction');
         }
@@ -162,8 +162,8 @@ export class FinancialService {
      */
     static async markAsPaid(id: string): Promise<Transaction> {
         try {
-            const response = await financialApi.update(id, { status: 'concluido' });
-            return response as Transaction;
+            const response = await financialApi.transacoes.update(id, { status: 'concluido' });
+            return response.data as Transaction;
         } catch (error) {
             throw AppError.from(error, 'FinancialService.markAsPaid');
         }
@@ -175,7 +175,7 @@ export class FinancialService {
     static async getEventReport(eventoId: string): Promise<FinancialReport> {
         try {
             const response = await financialApi.getEventReport(eventoId);
-            return response as FinancialReport;
+            return response.data as FinancialReport;
         } catch (error) {
             throw AppError.from(error, 'FinancialService.getEventReport');
         }
@@ -187,7 +187,7 @@ export class FinancialService {
     static async findTransactionByAppointmentId(appointmentId: string): Promise<Transaction | null> {
         try {
             const response = await financialApi.findByAppointment(appointmentId);
-            return response as Transaction | null;
+            return (response.data as Transaction | null) ?? null;
         } catch (error) {
             throw AppError.from(error, 'FinancialService.findTransactionByAppointmentId');
         }

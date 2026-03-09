@@ -22,7 +22,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useCreateConduct, type ConductTemplate } from '@/hooks/useConductLibrary';
+import {
+  useCreateConduct,
+  useUpdateConduct,
+  type ConductTemplate,
+  type CreateConductData,
+} from '@/hooks/useConductLibrary';
 
 const formSchema = z.object({
   title: z.string().min(3, 'Título deve ter no mínimo 3 caracteres'),
@@ -41,6 +46,7 @@ interface AddConductModalProps {
 
 export function AddConductModal({ open, onOpenChange, conduct }: AddConductModalProps) {
   const createMutation = useCreateConduct();
+  const updateMutation = useUpdateConduct();
 
   const categories = [
     'Mobilização Articular',
@@ -84,7 +90,22 @@ export function AddConductModal({ open, onOpenChange, conduct }: AddConductModal
   }, [conduct, form]);
 
   const onSubmit = (data: FormData) => {
-    createMutation.mutate(data as unknown as ConductFormData, {
+    const payload = data as CreateConductData;
+
+    if (conduct?.id) {
+      updateMutation.mutate(
+        { id: conduct.id, ...payload },
+        {
+          onSuccess: () => {
+            form.reset();
+            onOpenChange(false);
+          },
+        },
+      );
+      return;
+    }
+
+    createMutation.mutate(payload, {
       onSuccess: () => {
         form.reset();
         onOpenChange(false);
@@ -186,10 +207,14 @@ export function AddConductModal({ open, onOpenChange, conduct }: AddConductModal
               </Button>
               <Button
                 type="submit"
-                disabled={createMutation.isPending}
+                disabled={createMutation.isPending || updateMutation.isPending}
                 className="flex-1"
               >
-                {createMutation.isPending ? 'Salvando...' : 'Criar Conduta'}
+                {createMutation.isPending || updateMutation.isPending
+                  ? 'Salvando...'
+                  : conduct
+                    ? 'Salvar Alterações'
+                    : 'Criar Conduta'}
               </Button>
             </div>
           </form>

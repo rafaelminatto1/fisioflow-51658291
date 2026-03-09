@@ -24,19 +24,11 @@ import {
   CheckCircle2,
   Clock,
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import {
-  collection,
-  query as firestoreQuery,
-  where,
-  orderBy,
-  getDocs,
-} from '@/integrations/firebase/app';
-import { db } from '@/integrations/firebase/app';
-import { differenceInDays, format, subDays } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { usePatientsAtRisk } from '@/hooks/usePatientRetention';
 
 interface AtRiskPatient {
   id: string;
@@ -67,91 +59,34 @@ export default function AtRiskPatientsPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Fetch at-risk patients
-  const { data: atRiskPatients = [], isLoading } = useQuery({
-    queryKey: ['at-risk-patients', daysFilter],
-    queryFn: async (): Promise<AtRiskPatient[]> => {
-      const cutoffDate = subDays(new Date(), daysFilter);
+  const minRiskScore = daysFilter >= 90 ? 80 : daysFilter >= 60 ? 60 : daysFilter >= 30 ? 30 : 10;
+  const { data: retentionAtRisk = [], isLoading } = usePatientsAtRisk(minRiskScore);
 
-      // Query patients who haven't had appointments in the specified period
-      const appointmentsQuery = firestoreQuery(
-        collection(db, 'appointments'),
-        where('appointment_date', '>=', cutoffDate.toISOString()),
-        orderBy('appointment_date', 'desc')
-      );
+  const atRiskPatients = useMemo<AtRiskPatient[]>(() => {
+    return retentionAtRisk
+      .map((patient) => {
+        let riskLevel: AtRiskPatient['risk_level'] = 'low';
+        if (patient.daysSinceLastSession >= 90 || patient.riskScore >= 80) riskLevel = 'critical';
+        else if (patient.daysSinceLastSession >= 60 || patient.riskScore >= 60) riskLevel = 'high';
+        else if (patient.daysSinceLastSession >= 30 || patient.riskScore >= 30) riskLevel = 'medium';
 
-      const appointmentsSnapshot = await getDocs(appointmentsQuery);
-      const activePatientIds = new Set(
-        appointmentsSnapshot.docs
-          .map((d) => d.data().patient_id)
-          .filter(Boolean)
-      );
-
-      // Get all patients
-      const patientsSnapshot = await getDocs(
-        firestoreQuery(collection(db, 'patients'), orderBy('created_at', 'desc'))
-      );
-
-      const atRiskPatients: AtRiskPatient[] = [];
-
-      for (const patientDoc of patientsSnapshot.docs) {
-        const patientId = patientDoc.id;
-        if (activePatientIds.has(patientId)) continue;
-
-        const patientData = patientDoc.data();
-
-        // Get last appointment for this patient
-        const lastApptQuery = firestoreQuery(
-          collection(db, 'appointments'),
-          where('patient_id', '==', patientId),
-          orderBy('appointment_date', 'desc'),
-          // @ts-expect-error - limit exists
-          where('limit', '==', 1)
-        );
-
-        const lastApptSnapshot = await getDocs(lastApptQuery);
-        const lastAppointment = lastApptSnapshot.docs[0]?.data();
-
-        if (!lastAppointment) continue;
-
-        const lastApptDate = new Date(lastAppointment.appointment_date);
-        const daysInactive = differenceInDays(new Date(), lastApptDate);
-
-        if (daysInactive < daysFilter) continue;
-
-        // Calculate risk level based on days inactive
-        let riskLevel: AtRiskPatient['risk_level'];
-        if (daysInactive >= 90) {
-          riskLevel = 'critical';
-        } else if (daysInactive >= 60) {
-          riskLevel = 'high';
-        } else if (daysInactive >= 30) {
-          riskLevel = 'medium';
-        } else {
-          riskLevel = 'low';
-        }
-
-        atRiskPatients.push({
-          id: patientId,
-          patient_id: patientId,
-          patient_name: patientData.full_name || patientData.name || 'Paciente',
-          email: patientData.email,
-          phone: patientData.phone,
-          last_appointment_date: lastAppointment.appointment_date,
-          last_activity_date: lastAppointment.appointment_date,
-          days_inactive: daysInactive,
+        return {
+          id: patient.id,
+          patient_id: patient.id,
+          patient_name: patient.name,
+          email: patient.email || undefined,
+          phone: patient.phone || undefined,
+          last_appointment_date: patient.lastAppointmentDate || new Date().toISOString(),
+          last_activity_date: patient.lastAppointmentDate || new Date().toISOString(),
+          days_inactive: patient.daysSinceLastSession,
           risk_level: riskLevel,
-          total_sessions: 0, // Would need aggregation
-          last_therapist: lastAppointment.therapist_id,
-        });
-
-        // Limit results and sort by risk level
-        atRiskPatients.sort((a, b) => b.days_inactive - a.days_inactive);
-      }
-
-      return atRiskPatients.slice(0, 100);
-    },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
+          total_sessions: patient.totalSessions,
+          last_therapist: undefined,
+        };
+      })
+      .filter((patient) => patient.days_inactive >= daysFilter)
+      .slice(0, 100);
+  }, [retentionAtRisk, daysFilter]);
 
   // Calculate statistics
   const stats: RiskStats = useMemo(() => {

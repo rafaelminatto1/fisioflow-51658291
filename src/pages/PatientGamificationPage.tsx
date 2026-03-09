@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, query, orderBy, limit, where } from '@/integrations/firebase/app';
 import MainLayout from '@/components/layout/MainLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,7 +16,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { db } from '@/integrations/firebase/app';
+import { gamificationApi } from '@/lib/api/workers-client';
 
 
 // Gamification Components
@@ -29,7 +28,6 @@ import WeeklyChallenges from '@/components/gamification/WeeklyChallenges';
 import { LevelUpModal } from '@/components/gamification/LevelUpModal';
 import AchievementModal from '@/components/gamification/AchievementModal';
 import StreakFreezeModal from '@/components/gamification/StreakFreezeModal';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface LeaderboardEntry {
   patient_id: string;
@@ -92,36 +90,14 @@ export default function PatientGamificationPage() {
   const { data: leaderboard = [], isLoading: isLoadingLeaderboard } = useQuery({
     queryKey: ['gamification-leaderboard'],
     queryFn: async () => {
-      const q = query(
-        collection(db, 'patient_gamification'),
-        orderBy('total_points', 'desc'),
-        limit(20)
-      );
-
-      const snapshot = await getDocs(q);
-      const entries = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as unknown[];
-
-      if (entries.length === 0) return [];
-
-      // Get patient names from profiles
-      const profileIds = entries.map(e => e.patient_id);
-      const profilesRef = collection(db, 'profiles');
-      const profilesQuery = query(profilesRef, where('user_id', 'in', profileIds.slice(0, 10)));
-      const profilesSnap = await getDocs(profilesQuery);
-      
-      const patientMap = new Map();
-      profilesSnap.forEach(d => {
-        const p = d.data();
-        patientMap.set(p.user_id, p.full_name);
-      });
-
-      return entries.map(entry => ({
+      const res = await gamificationApi.getLeaderboard({ period: 'all', limit: 20 });
+      return (res.data ?? []).map((entry) => ({
         patient_id: entry.patient_id,
-        patient_name: patientMap.get(entry.patient_id) || 'Paciente',
-        current_level: entry.level || 1,
-        total_xp: entry.total_points || 0,
-        current_streak: entry.current_streak || 0,
-        title: entry.title || 'Iniciante'
+        patient_name: entry.patient_name,
+        current_level: entry.current_level,
+        total_xp: entry.total_xp,
+        current_streak: entry.current_streak,
+        title: 'Iniciante',
       })) as LeaderboardEntry[];
     },
   });

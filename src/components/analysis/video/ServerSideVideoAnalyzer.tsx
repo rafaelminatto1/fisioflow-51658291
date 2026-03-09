@@ -2,8 +2,8 @@ import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload, Video, Loader2, PlayCircle, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getFirebaseApp } from '@/integrations/firebase/app';
+import { uploadToR2 } from '@/lib/storage/r2-storage';
 import { toast } from 'sonner';
 import { MotionCard } from '@fisioflow/ui';
 
@@ -50,14 +50,10 @@ export const ServerSideVideoAnalyzer: React.FC<ServerSideVideoAnalyzerProps> = (
 
     try {
       setIsUploading(true);
-      const storage = getStorage(getFirebaseApp());
-      const fileName = `analysis/${Date.now()}_${videoFile.name}`;
-      const storageRef = ref(storage, fileName);
 
-      // Upload
-      const snapshot = await uploadBytes(storageRef, videoFile);
-      const downloadURL = await getDownloadURL(snapshot.ref);
-      
+      // Upload to R2
+      const { url: downloadURL } = await uploadToR2(videoFile, 'analysis');
+
       setUploadProgress(100);
       setIsUploading(false);
       setIsAnalyzing(true);

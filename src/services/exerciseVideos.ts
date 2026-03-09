@@ -1,13 +1,12 @@
 /**
- * Exercise Videos Service - Migrated to Firebase
+ * Exercise Videos Service — Cloudflare Workers + Neon PostgreSQL
+ *
+ * Uploads de arquivo continuam direto para R2 via uploadToR2.
+ * Metadados gravados no Neon via Workers API.
  */
-
-import { db, collection, getDocs, where, orderBy, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, QueryConstraint, getFirebaseAuth } from '@/integrations/firebase/app';
 import { uploadToR2, deleteFromR2 } from '@/lib/storage/r2-storage';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
-
-const auth = getFirebaseAuth();
+import { exerciseVideosApi } from '@/lib/api/workers-client';
 
 // ============================================================================
 // TYPES
@@ -16,6 +15,7 @@ const auth = getFirebaseAuth();
 export interface ExerciseVideo {
   id: string;
   exercise_id: string | null;
+  organization_id?: string | null;
   title: string;
   description: string | null;
   video_url: string;
@@ -125,378 +125,186 @@ export const ALLOWED_VIDEO_EXTENSIONS = ['.mp4', '.webm', '.mov', '.avi'] as con
 // ============================================================================
 
 export const exerciseVideosService = {
-  // ------------------------------------------------------------------------
-  // READ OPERATIONS
-  // ------------------------------------------------------------------------
+  // ── READ ──────────────────────────────────────────────────────────────────
 
   async getVideos(filters?: VideoFilterOptions): Promise<ExerciseVideo[]> {
     try {
-      const constraints: QueryConstraint[] = [
-        orderBy('created_at', 'desc')
-      ];
-
-      if (filters?.category && filters.category !== 'all') {
-        constraints.push(where('category', '==', filters.category));
-      }
-
-      if (filters?.difficulty && filters.difficulty !== 'all') {
-        constraints.push(where('difficulty', '==', filters.difficulty));
-      }
-
-      if (filters?.bodyPart && filters.bodyPart !== 'all') {
-        constraints.push(where('body_parts', 'array-contains', filters.bodyPart));
-      }
-
-      if (filters?.equipment && filters.equipment !== 'all') {
-        constraints.push(where('equipment', 'array-contains', filters.equipment));
-      }
-
-      const q = firestoreQuery(collection(db, 'exercise_videos'), ...constraints);
-      const querySnapshot = await getDocs(q);
-
-      let videos = querySnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as ExerciseVideo[];
-
-      // Client-side filtering for search term (Firestore doesn't support ILIKE)
-      if (filters?.searchTerm) {
-        const searchLower = filters.searchTerm.toLowerCase();
-        videos = videos.filter(video =>
-          video.title.toLowerCase().includes(searchLower) ||
-          (video.description && video.description.toLowerCase().includes(searchLower))
-        );
-      }
-
-      return videos;
+      const res = await exerciseVideosApi.list({
+        category: filters?.category !== 'all' ? filters?.category : undefined,
+        difficulty: filters?.difficulty !== 'all' ? filters?.difficulty : undefined,
+        bodyPart: filters?.bodyPart !== 'all' ? filters?.bodyPart : undefined,
+        equipment: filters?.equipment !== 'all' ? filters?.equipment : undefined,
+        search: filters?.searchTerm,
+      });
+      return res.data ?? [];
     } catch (error) {
       logger.error('[exerciseVideosService] getVideos error', error, 'exerciseVideos');
       throw error;
     }
   },
 
-  /**
-   * Get a single video by ID
-   */
   async getVideoById(id: string): Promise<ExerciseVideo> {
     try {
-      const docRef = doc(db, 'exercise_videos', id);
-      const docSnap = await getDoc(docRef);
-
-      if (!docSnap.exists()) {
-        throw new Error('Vídeo não encontrado');
-      }
-
-      return { id: docSnap.id, ...docSnap.data() } as ExerciseVideo;
+      const res = await exerciseVideosApi.get(id);
+      if (!res.data) throw new Error('Vídeo não encontrado');
+      return res.data;
     } catch (error) {
       logger.error('[exerciseVideosService] getVideoById error', error, 'exerciseVideos');
       throw error;
     }
   },
 
-  /**
-   * Get videos for a specific exercise
-   */
   async getVideosByExerciseId(exerciseId: string): Promise<ExerciseVideo[]> {
     try {
-      const q = firestoreQuery(
-        collection(db, 'exercise_videos'),
-        where('exercise_id', '==', exerciseId),
-        orderBy('created_at', 'desc')
-      );
-      const querySnapshot = await getDocs(q);
-
-      return querySnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as ExerciseVideo[];
+      const res = await exerciseVideosApi.byExercise(exerciseId);
+      return res.data ?? [];
     } catch (error) {
       logger.error('[exerciseVideosService] getVideosByExerciseId error', error, 'exerciseVideos');
       throw error;
     }
   },
 
-  // ------------------------------------------------------------------------
-  // VIDEO PROCESSING
-  // ------------------------------------------------------------------------
+  // ── PROCESSING HELPERS (browser-side, sem Firebase) ───────────────────────
 
-  /**
-   * Validate video file
-   */
   validateVideoFile(file: File): { valid: boolean; error?: string } {
-    // Check file size
     if (file.size > MAX_VIDEO_SIZE) {
-      return {
-        valid: false,
-        error: `O vídeo deve ter no máximo ${this.formatFileSize(MAX_VIDEO_SIZE)}`,
-      };
+      return { valid: false, error: `O vídeo deve ter no máximo ${this.formatFileSize(MAX_VIDEO_SIZE)}` };
     }
-
-    // Check file type
     if (!file.type.startsWith('video/')) {
       return { valid: false, error: 'O arquivo deve ser um vídeo' };
     }
-
-    // Check file extension
     const ext = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
     if (!ALLOWED_VIDEO_EXTENSIONS.includes(ext as typeof ALLOWED_VIDEO_EXTENSIONS[number])) {
-      return {
-        valid: false,
-        error: `Formato não suportado. Use: ${ALLOWED_VIDEO_EXTENSIONS.join(', ')}`,
-      };
+      return { valid: false, error: `Formato não suportado. Use: ${ALLOWED_VIDEO_EXTENSIONS.join(', ')}` };
     }
-
     return { valid: true };
   },
 
-  /**
-   * Extract video metadata (duration, dimensions)
-   */
   async extractVideoMetadata(file: File): Promise<VideoMetadata> {
     return new Promise((resolve, reject) => {
       const video = document.createElement('video');
       video.preload = 'metadata';
-
-      const cleanup = () => {
-        URL.revokeObjectURL(video.src);
-      };
+      const cleanup = () => URL.revokeObjectURL(video.src);
 
       video.onloadedmetadata = () => {
         cleanup();
-        resolve({
-          duration: video.duration,
-          width: video.videoWidth,
-          height: video.videoHeight,
-        });
+        resolve({ duration: video.duration, width: video.videoWidth, height: video.videoHeight });
       };
-
-      video.onerror = () => {
-        cleanup();
-        reject(new Error('Falha ao carregar metadados do vídeo'));
-      };
-
-      // Set timeout for metadata loading
-      setTimeout(() => {
-        if (!video.duration) {
-          cleanup();
-          reject(new Error('Timeout ao carregar vídeo'));
-        }
-      }, 10000);
-
+      video.onerror = () => { cleanup(); reject(new Error('Falha ao carregar metadados do vídeo')); };
+      setTimeout(() => { if (!video.duration) { cleanup(); reject(new Error('Timeout ao carregar vídeo')); } }, 10000);
       video.src = URL.createObjectURL(file);
     });
   },
 
-  /**
-   * Generate a thumbnail from video file at specified time
-   */
-  async generateThumbnail(file: File, time: number = 1): Promise<Blob> {
+  async generateThumbnail(file: File, time = 1): Promise<Blob> {
     return new Promise((resolve, reject) => {
       const video = document.createElement('video');
       video.preload = 'auto';
       video.currentTime = time;
-
-      const cleanup = () => {
-        URL.revokeObjectURL(video.src);
-      };
+      const cleanup = () => URL.revokeObjectURL(video.src);
 
       video.onseeked = () => {
         try {
           const canvas = document.createElement('canvas');
           canvas.width = video.videoWidth || 640;
           canvas.height = video.videoHeight || 360;
-
           const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            cleanup();
-            reject(new Error('Falha ao obter contexto do canvas'));
-            return;
-          }
-
-          // Draw black background first
+          if (!ctx) { cleanup(); reject(new Error('Falha ao obter contexto do canvas')); return; }
           ctx.fillStyle = '#000';
           ctx.fillRect(0, 0, canvas.width, canvas.height);
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-          canvas.toBlob(
-            (blob) => {
-              cleanup();
-              if (blob) {
-                resolve(blob);
-              } else {
-                reject(new Error('Falha ao gerar thumbnail'));
-              }
-            },
-            'image/jpeg',
-            0.8
-          );
-        } catch (error) {
-          cleanup();
-          reject(error);
-        }
+          canvas.toBlob((blob) => {
+            cleanup();
+            if (blob) resolve(blob);
+            else reject(new Error('Falha ao gerar thumbnail'));
+          }, 'image/jpeg', 0.8);
+        } catch (e) { cleanup(); reject(e); }
       };
-
-      video.onerror = () => {
-        cleanup();
-        reject(new Error('Falha ao carregar vídeo para gerar thumbnail'));
-      };
-
-      // Set timeout for thumbnail generation
-      setTimeout(() => {
-        if (video.readyState < 2) {
-          cleanup();
-          reject(new Error('Timeout ao gerar thumbnail'));
-        }
-      }, 15000);
-
+      video.onerror = () => { cleanup(); reject(new Error('Falha ao carregar vídeo para gerar thumbnail')); };
+      setTimeout(() => { if (video.readyState < 2) { cleanup(); reject(new Error('Timeout ao gerar thumbnail')); } }, 15000);
       video.src = URL.createObjectURL(file);
     });
   },
 
-  // ------------------------------------------------------------------------
-  // UPLOAD OPERATIONS
-  // ------------------------------------------------------------------------
+  // ── UPLOAD ────────────────────────────────────────────────────────────────
 
-  /**
-   * Upload a new exercise video with full processing
-   */
   async uploadVideo(data: UploadVideoData): Promise<ExerciseVideo> {
     try {
-      // Get authenticated user
-      const user = auth.currentUser;
-      if (!user) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      // Validate video file
       const validation = this.validateVideoFile(data.file);
-      if (!validation.valid) {
-        throw new Error(validation.error);
-      }
+      if (!validation.valid) throw new Error(validation.error);
 
-      // Extract video metadata
       const metadata = await this.extractVideoMetadata(data.file);
 
       // Generate thumbnail if not provided
-      let thumbnailFile = data.thumbnail;
       let thumbnailUrl: string | null = null;
+      const thumbnailFile = data.thumbnail ?? await this.generateThumbnail(data.file).then(
+        (blob) => new File([blob], 'thumbnail.jpg', { type: 'image/jpeg' }),
+        () => null,
+      );
 
-      if (!thumbnailFile) {
-        try {
-          const thumbnailBlob = await this.generateThumbnail(data.file);
-          thumbnailFile = new File([thumbnailBlob], 'thumbnail.avif', { type: 'image/avif' });
-        } catch (error) {
-          logger.warn('[exerciseVideosService] Failed to generate thumbnail', error, 'exerciseVideos');
-        }
-      }
-
-      // Sanitize filename
-      const sanitizedTitle = data.title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '_')
-        .replace(/^_+|_+$/g, '');
-
-      // Upload video file
+      // Upload video to R2
       const { publicUrl: videoUrl } = await uploadToR2(data.file, 'exercise-videos/videos');
 
-      // Upload thumbnail if available
+      // Upload thumbnail to R2
       if (thumbnailFile) {
-        try {
-          const { publicUrl: thumbUrl } = await uploadToR2(thumbnailFile, 'exercise-videos/thumbnails');
-          thumbnailUrl = thumbUrl;
-        } catch (thumbError) {
-          logger.warn('[exerciseVideosService] Thumbnail upload error', thumbError, 'exerciseVideos');
-        }
+        const { publicUrl: thumbUrl } = await uploadToR2(thumbnailFile, 'exercise-videos/thumbnails').catch(() => ({ publicUrl: null }));
+        thumbnailUrl = thumbUrl;
       }
 
-      // Create database record
-      const videoData = {
-        exercise_id: data.exercise_id || null,
+      // Save metadata in Neon via Workers
+      const res = await exerciseVideosApi.create({
+        exercise_id: data.exercise_id ?? null,
         title: data.title.trim(),
-        description: data.description?.trim() || null,
+        description: data.description?.trim() ?? null,
         video_url: videoUrl,
         thumbnail_url: thumbnailUrl,
-        duration: Math.round(metadata.duration || 0),
+        duration: Math.round(metadata.duration ?? 0),
         file_size: data.file.size,
         category: data.category,
         difficulty: data.difficulty,
         body_parts: data.body_parts,
         equipment: data.equipment,
-        uploaded_by: user.uid,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+      });
 
-      const docRef = await addDoc(collection(db, 'exercise_videos'), videoData);
-
-      return { id: docRef.id, ...videoData } as ExerciseVideo;
+      return res.data;
     } catch (error) {
       logger.error('[exerciseVideosService] uploadVideo error', error, 'exerciseVideos');
       throw error;
     }
   },
 
-  // ------------------------------------------------------------------------
-  // UPDATE OPERATIONS
-  // ------------------------------------------------------------------------
+  // ── UPDATE ────────────────────────────────────────────────────────────────
 
-  /**
-   * Update an existing video's metadata
-   */
   async updateVideo(
     id: string,
-    updates: Partial<Omit<ExerciseVideo, 'id' | 'created_at' | 'uploaded_by' | 'video_url' | 'file_size'>>
+    updates: Partial<Omit<ExerciseVideo, 'id' | 'created_at' | 'uploaded_by' | 'video_url' | 'file_size'>>,
   ): Promise<ExerciseVideo> {
     try {
-      const docRef = doc(db, 'exercise_videos', id);
-      const updateData = {
-        ...updates,
-        updated_at: new Date().toISOString(),
-      };
-
-      await updateDoc(docRef, updateData);
-
-      // Fetch and return updated document
-      const updatedDoc = await getDoc(docRef);
-      return { id: updatedDoc.id, ...updatedDoc.data() } as ExerciseVideo;
+      const res = await exerciseVideosApi.update(id, updates as Record<string, unknown>);
+      return res.data;
     } catch (error) {
       logger.error('[exerciseVideosService] updateVideo error', error, 'exerciseVideos');
       throw error;
     }
   },
 
-  // ------------------------------------------------------------------------
-  // DELETE OPERATIONS
-  // ------------------------------------------------------------------------
+  // ── DELETE ────────────────────────────────────────────────────────────────
 
-  /**
-   * Delete a video and its files from storage
-   */
   async deleteVideo(id: string): Promise<ExerciseVideo> {
     try {
-      // Get video record first
-      const docRef = doc(db, 'exercise_videos', id);
-      const docSnap = await getDoc(docRef);
+      const res = await exerciseVideosApi.delete(id);
+      const video = res.data;
 
-      if (!docSnap.exists()) {
-        throw new Error('Vídeo não encontrado');
-      }
-
-      const video = { id: docSnap.id, ...docSnap.data() } as ExerciseVideo;
-
-      // Delete from database
-      await deleteDoc(docRef);
-
-      // Delete files from storage (fire and forget, log errors only)
+      // Delete R2 files (best-effort)
       const filesToDelete: string[] = [];
       const videoKey = this.extractR2KeyFromUrl(video.video_url);
       if (videoKey) filesToDelete.push(videoKey);
-
       if (video.thumbnail_url) {
         const thumbKey = this.extractR2KeyFromUrl(video.thumbnail_url);
         if (thumbKey) filesToDelete.push(thumbKey);
       }
-
-      if (filesToDelete.length > 0) {
-        await Promise.allSettled(
-          filesToDelete.map(key => deleteFromR2(key))
-        ).catch((err) => {
-          logger.warn('[exerciseVideosService] Failed to delete storage files', err, 'exerciseVideos');
-        });
+      if (filesToDelete.length) {
+        await Promise.allSettled(filesToDelete.map((k) => deleteFromR2(k)));
       }
 
       return video;
@@ -506,26 +314,16 @@ export const exerciseVideosService = {
     }
   },
 
-  // ------------------------------------------------------------------------
-  // UTILITY FUNCTIONS
-  // ------------------------------------------------------------------------
+  // ── UTILITIES ─────────────────────────────────────────────────────────────
 
-  /**
-   * Extract R2 key from public URL
-   */
   extractR2KeyFromUrl(url: string): string | null {
     try {
-      // R2 public URL format: https://domain/path/to/file.ext
-      const urlObj = new URL(url);
-      return decodeURIComponent(urlObj.pathname.substring(1));
+      return decodeURIComponent(new URL(url).pathname.substring(1));
     } catch {
       return null;
     }
   },
 
-  /**
-   * Format file size for display
-   */
   formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -534,25 +332,10 @@ export const exerciseVideosService = {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   },
 
-  /**
-   * Format duration for display
-   */
   formatDuration(seconds: number): string {
     if (!seconds || !isFinite(seconds)) return '--:--';
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
-  },
-
-  /**
-   * Get signed URL for private video access (if needed in future)
-   * Note: Firebase Storage doesn't have built-in signed URLs like Supabase.
-   * This would require setting up Firebase Cloud Storage signed URLs via GCS.
-   */
-  async getSignedUrl(videoPath: string, _expiresIn: number = 3600): Promise<string> {
-    // For now, return the public URL
-    // In production, you might use Firebase Cloud Functions to generate signed URLs
-    const storageRef = ref(storage, `exercise-videos/${videoPath}`);
-    return getDownloadURL(storageRef);
   },
 };

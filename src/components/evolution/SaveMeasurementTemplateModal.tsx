@@ -34,7 +34,7 @@ import {
     Layout
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { db, collection, addDoc } from '@/integrations/firebase/app';
+import { clinicalTestsApi } from '@/lib/api/workers-client';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface MeasurementField {
@@ -76,7 +76,7 @@ export const SaveMeasurementTemplateModal: React.FC<SaveMeasurementTemplateModal
 
         setLoading(true);
         try {
-            await addDoc(collection(db, 'clinical_test_templates'), {
+            await clinicalTestsApi.create({
                 name: formData.name,
                 category: formData.category,
                 target_joint: formData.target_joint,
@@ -85,7 +85,6 @@ export const SaveMeasurementTemplateModal: React.FC<SaveMeasurementTemplateModal
                 created_by: user?.id,
                 organization_id: (user as { organization_id?: string } | null)?.organization_id,
                 is_custom: true,
-                created_at: new Date().toISOString(),
             });
 
             toast.success('Modelo salvo com sucesso!', {

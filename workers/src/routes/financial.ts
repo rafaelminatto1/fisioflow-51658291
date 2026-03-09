@@ -748,12 +748,100 @@ app.delete('/pagamentos/:id', requireAuth, async (c) => {
 
 // ===== PACOTES DE PACIENTES =====
 
+app.get('/package-templates', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+
+  const result = await pool.query(
+    `
+      SELECT *
+      FROM session_package_templates
+      WHERE organization_id = $1
+      ORDER BY sessions_count ASC, created_at DESC
+    `,
+    [user.organizationId],
+  );
+
+  return c.json({ data: result.rows });
+});
+
+app.post('/package-templates', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const body = (await c.req.json()) as Record<string, unknown>;
+
+  if (!body.name || !body.sessions_count || !body.price) {
+    return c.json({ error: 'name, sessions_count e price são obrigatórios' }, 400);
+  }
+
+  const result = await pool.query(
+    `
+      INSERT INTO session_package_templates (
+        organization_id, name, description, sessions_count, price, validity_days, is_active, created_by, created_at, updated_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW(),NOW())
+      RETURNING *
+    `,
+    [
+      user.organizationId,
+      String(body.name),
+      body.description ? String(body.description) : null,
+      Number(body.sessions_count),
+      Number(body.price),
+      Number(body.validity_days ?? 365),
+      body.is_active !== undefined ? Boolean(body.is_active) : true,
+      user.uid,
+    ],
+  );
+
+  return c.json({ data: result.rows[0] }, 201);
+});
+
+app.put('/package-templates/:id', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id } = c.req.param();
+  const body = (await c.req.json()) as Record<string, unknown>;
+
+  const sets: string[] = ['updated_at = NOW()'];
+  const params: unknown[] = [];
+
+  if (body.name !== undefined) { params.push(String(body.name)); sets.push(`name = $${params.length}`); }
+  if (body.description !== undefined) { params.push(body.description ? String(body.description) : null); sets.push(`description = $${params.length}`); }
+  if (body.sessions_count !== undefined) { params.push(Number(body.sessions_count)); sets.push(`sessions_count = $${params.length}`); }
+  if (body.price !== undefined) { params.push(Number(body.price)); sets.push(`price = $${params.length}`); }
+  if (body.validity_days !== undefined) { params.push(Number(body.validity_days)); sets.push(`validity_days = $${params.length}`); }
+  if (body.is_active !== undefined) { params.push(Boolean(body.is_active)); sets.push(`is_active = $${params.length}`); }
+
+  params.push(id, user.organizationId);
+  const result = await pool.query(
+    `UPDATE session_package_templates SET ${sets.join(', ')}
+     WHERE id = $${params.length - 1} AND organization_id = $${params.length}
+     RETURNING *`,
+    params,
+  );
+
+  if (!result.rows.length) return c.json({ error: 'Pacote não encontrado' }, 404);
+  return c.json({ data: result.rows[0] });
+});
+
+app.delete('/package-templates/:id', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id } = c.req.param();
+
+  await pool.query(
+    'DELETE FROM session_package_templates WHERE id = $1 AND organization_id = $2',
+    [id, user.organizationId],
+  );
+  return c.json({ ok: true });
+});
+
 app.get('/patient-packages', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = createPool(c.env);
   const { patientId, status, limit = '100', offset = '0' } = c.req.query();
 
-  const conditions: string[] = ['p.organization_id = $1'];
+  const conditions: string[] = ['pp.organization_id = $1'];
   const params: unknown[] = [user.organizationId];
 
   if (patientId) {
@@ -771,14 +859,17 @@ app.get('/patient-packages', requireAuth, async (c) => {
     `SELECT
         pp.id,
         pp.patient_id,
+        pp.package_template_id,
         pp.name,
         pp.total_sessions,
         pp.used_sessions,
         pp.remaining_sessions,
         pp.price,
+        pp.payment_method,
         pp.status,
         pp.purchased_at,
         pp.expires_at,
+        pp.last_used_at,
         pp.created_at,
         p.full_name AS patient_name,
         p.phone AS patient_phone
@@ -791,6 +882,366 @@ app.get('/patient-packages', requireAuth, async (c) => {
   );
 
   return c.json({ data: result.rows });
+});
+
+app.post('/patient-packages', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const body = (await c.req.json()) as Record<string, unknown>;
+
+  const patientId = String(body.patient_id ?? '').trim();
+  const packageTemplateId = body.package_id ? String(body.package_id) : null;
+  if (!patientId) return c.json({ error: 'patient_id é obrigatório' }, 400);
+
+  let template: Record<string, unknown> | null = null;
+  if (packageTemplateId) {
+    const templateResult = await pool.query(
+      'SELECT * FROM session_package_templates WHERE id = $1 AND organization_id = $2',
+      [packageTemplateId, user.organizationId],
+    );
+    template = (templateResult.rows[0] as Record<string, unknown> | undefined) ?? null;
+    if (!template) return c.json({ error: 'Template de pacote não encontrado' }, 404);
+  }
+
+  const totalSessions = Number(body.custom_sessions ?? template?.sessions_count ?? 0);
+  const price = Number(body.custom_price ?? template?.price ?? 0);
+  const validityDays = Number(template?.validity_days ?? body.validity_days ?? 365);
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + validityDays);
+
+  const result = await pool.query(
+    `
+      INSERT INTO patient_packages (
+        organization_id, patient_id, package_template_id, name, total_sessions, used_sessions,
+        remaining_sessions, price, payment_method, status, purchased_at, expires_at, created_by, created_at, updated_at
+      ) VALUES ($1,$2,$3,$4,$5,0,$5,$6,$7,'active',NOW(),$8,$9,NOW(),NOW())
+      RETURNING *
+    `,
+    [
+      user.organizationId,
+      patientId,
+      packageTemplateId,
+      String(template?.name ?? body.name ?? 'Pacote Avulso'),
+      totalSessions,
+      price,
+      body.payment_method ? String(body.payment_method) : null,
+      expiresAt.toISOString(),
+      user.uid,
+    ],
+  );
+
+  return c.json({ data: result.rows[0] }, 201);
+});
+
+app.post('/patient-packages/:id/consume', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id } = c.req.param();
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+
+  const currentResult = await pool.query(
+    'SELECT * FROM patient_packages WHERE id = $1 AND organization_id = $2',
+    [id, user.organizationId],
+  );
+
+  const current = currentResult.rows[0] as Record<string, unknown> | undefined;
+  if (!current) return c.json({ error: 'Pacote não encontrado' }, 404);
+  if (String(current.status ?? 'active') !== 'active') return c.json({ error: 'Pacote não está ativo' }, 400);
+  if (current.expires_at && new Date(String(current.expires_at)) < new Date()) {
+    return c.json({ error: 'Pacote expirado' }, 400);
+  }
+  if (Number(current.remaining_sessions ?? 0) <= 0) {
+    return c.json({ error: 'Sem sessões disponíveis neste pacote' }, 400);
+  }
+
+  const updated = await pool.query(
+    `
+      UPDATE patient_packages
+      SET
+        used_sessions = used_sessions + 1,
+        remaining_sessions = remaining_sessions - 1,
+        last_used_at = NOW(),
+        status = CASE WHEN remaining_sessions - 1 <= 0 THEN 'depleted' ELSE status END,
+        updated_at = NOW()
+      WHERE id = $1 AND organization_id = $2
+      RETURNING *
+    `,
+    [id, user.organizationId],
+  );
+
+  await pool.query(
+    `
+      INSERT INTO package_usage (
+        organization_id, patient_package_id, patient_id, appointment_id, used_at, created_by
+      ) VALUES ($1,$2,$3,$4,NOW(),$5)
+    `,
+    [
+      user.organizationId,
+      id,
+      String(current.patient_id),
+      body.appointmentId ? String(body.appointmentId) : null,
+      user.uid,
+    ],
+  );
+
+  return c.json({ data: updated.rows[0] });
+});
+
+// ===== VOUCHERS =====
+
+app.get('/vouchers', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { all, ativo } = c.req.query();
+  const conditions: string[] = ['organization_id = $1'];
+  const params: unknown[] = [user.organizationId];
+
+  if (all !== 'true') {
+    params.push(ativo === undefined ? true : ativo === 'true');
+    conditions.push(`ativo = $${params.length}`);
+  } else if (ativo !== undefined) {
+    params.push(ativo === 'true');
+    conditions.push(`ativo = $${params.length}`);
+  }
+
+  const result = await pool.query(
+    `
+      SELECT *
+      FROM vouchers
+      WHERE ${conditions.join(' AND ')}
+      ORDER BY preco ASC, created_at DESC
+    `,
+    params,
+  );
+
+  return c.json({ data: result.rows });
+});
+
+app.post('/vouchers', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const body = (await c.req.json()) as Record<string, unknown>;
+
+  if (!body.nome) return c.json({ error: 'nome é obrigatório' }, 400);
+  if (!body.tipo) return c.json({ error: 'tipo é obrigatório' }, 400);
+  if (body.preco == null) return c.json({ error: 'preco é obrigatório' }, 400);
+
+  const result = await pool.query(
+    `
+      INSERT INTO vouchers (
+        organization_id, nome, descricao, tipo, sessoes, validade_dias, preco, ativo, stripe_price_id, created_at, updated_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,NOW(),NOW())
+      RETURNING *
+    `,
+    [
+      user.organizationId,
+      String(body.nome),
+      body.descricao ? String(body.descricao) : null,
+      String(body.tipo),
+      body.sessoes != null ? Number(body.sessoes) : null,
+      Number(body.validade_dias ?? 30),
+      Number(body.preco),
+      body.ativo !== undefined ? Boolean(body.ativo) : true,
+      body.stripe_price_id ? String(body.stripe_price_id) : null,
+    ],
+  );
+
+  return c.json({ data: result.rows[0] }, 201);
+});
+
+app.put('/vouchers/:id', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id } = c.req.param();
+  const body = (await c.req.json()) as Record<string, unknown>;
+  const sets: string[] = ['updated_at = NOW()'];
+  const params: unknown[] = [];
+
+  if (body.nome !== undefined) { params.push(String(body.nome)); sets.push(`nome = $${params.length}`); }
+  if (body.descricao !== undefined) { params.push(body.descricao ? String(body.descricao) : null); sets.push(`descricao = $${params.length}`); }
+  if (body.tipo !== undefined) { params.push(String(body.tipo)); sets.push(`tipo = $${params.length}`); }
+  if (body.sessoes !== undefined) { params.push(body.sessoes != null ? Number(body.sessoes) : null); sets.push(`sessoes = $${params.length}`); }
+  if (body.validade_dias !== undefined) { params.push(Number(body.validade_dias)); sets.push(`validade_dias = $${params.length}`); }
+  if (body.preco !== undefined) { params.push(Number(body.preco)); sets.push(`preco = $${params.length}`); }
+  if (body.ativo !== undefined) { params.push(Boolean(body.ativo)); sets.push(`ativo = $${params.length}`); }
+  if (body.stripe_price_id !== undefined) { params.push(body.stripe_price_id ? String(body.stripe_price_id) : null); sets.push(`stripe_price_id = $${params.length}`); }
+
+  params.push(id, user.organizationId);
+  const result = await pool.query(
+    `
+      UPDATE vouchers
+      SET ${sets.join(', ')}
+      WHERE id = $${params.length - 1} AND organization_id = $${params.length}
+      RETURNING *
+    `,
+    params,
+  );
+
+  if (!result.rows.length) return c.json({ error: 'Voucher não encontrado' }, 404);
+  return c.json({ data: result.rows[0] });
+});
+
+app.delete('/vouchers/:id', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id } = c.req.param();
+
+  await pool.query('DELETE FROM vouchers WHERE id = $1 AND organization_id = $2', [id, user.organizationId]);
+  return c.json({ ok: true });
+});
+
+app.get('/user-vouchers', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const result = await pool.query(
+    `
+      SELECT
+        uv.*,
+        row_to_json(v) AS voucher
+      FROM user_vouchers uv
+      INNER JOIN vouchers v ON v.id = uv.voucher_id
+      WHERE uv.user_id = $1 AND uv.organization_id = $2
+      ORDER BY uv.data_compra DESC
+    `,
+    [user.uid, user.organizationId],
+  );
+
+  return c.json({ data: result.rows });
+});
+
+app.post('/user-vouchers/:id/consume', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id } = c.req.param();
+
+  const currentResult = await pool.query(
+    `
+      SELECT *
+      FROM user_vouchers
+      WHERE id = $1 AND user_id = $2 AND organization_id = $3
+      LIMIT 1
+    `,
+    [id, user.uid, user.organizationId],
+  );
+
+  const current = currentResult.rows[0] as Record<string, unknown> | undefined;
+  if (!current) return c.json({ error: 'Voucher não encontrado' }, 404);
+  if (!Boolean(current.ativo)) return c.json({ error: 'Voucher inativo' }, 400);
+  if (new Date(String(current.data_expiracao)) < new Date()) return c.json({ error: 'Voucher expirado' }, 400);
+  if (Number(current.sessoes_restantes ?? 0) <= 0) return c.json({ error: 'Voucher sem sessões disponíveis' }, 400);
+
+  const updated = await pool.query(
+    `
+      UPDATE user_vouchers
+      SET
+        sessoes_restantes = sessoes_restantes - 1,
+        ativo = CASE WHEN sessoes_restantes - 1 <= 0 THEN false ELSE ativo END,
+        updated_at = NOW()
+      WHERE id = $1
+      RETURNING *
+    `,
+    [id],
+  );
+
+  return c.json({ data: updated.rows[0] });
+});
+
+app.post('/vouchers/:id/checkout', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id } = c.req.param();
+
+  const voucherResult = await pool.query(
+    `
+      SELECT *
+      FROM vouchers
+      WHERE id = $1 AND organization_id = $2 AND ativo = true
+      LIMIT 1
+    `,
+    [id, user.organizationId],
+  );
+
+  const voucher = voucherResult.rows[0] as Record<string, unknown> | undefined;
+  if (!voucher) return c.json({ error: 'Voucher não encontrado' }, 404);
+
+  const checkoutResult = await pool.query(
+    `
+      INSERT INTO voucher_checkout_sessions (
+        organization_id, user_id, voucher_id, amount, status, created_at, updated_at
+      ) VALUES ($1,$2,$3,$4,'pending',NOW(),NOW())
+      RETURNING *
+    `,
+    [user.organizationId, user.uid, id, Number(voucher.preco ?? 0)],
+  );
+
+  const checkout = checkoutResult.rows[0];
+  return c.json({
+    data: {
+      sessionId: checkout.id,
+      url: `/vouchers?session_id=${checkout.id}`,
+    },
+  });
+});
+
+app.post('/vouchers/checkout/verify', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+  const sessionId = String(body.sessionId ?? '').trim();
+
+  if (!sessionId) return c.json({ error: 'sessionId é obrigatório' }, 400);
+
+  const checkoutResult = await pool.query(
+    `
+      SELECT vcs.*, v.sessoes, v.validade_dias
+      FROM voucher_checkout_sessions vcs
+      INNER JOIN vouchers v ON v.id = vcs.voucher_id
+      WHERE vcs.id = $1 AND vcs.user_id = $2 AND vcs.organization_id = $3
+      LIMIT 1
+    `,
+    [sessionId, user.uid, user.organizationId],
+  );
+
+  const checkout = checkoutResult.rows[0] as Record<string, unknown> | undefined;
+  if (!checkout) return c.json({ error: 'Sessão de checkout não encontrada' }, 404);
+
+  if (checkout.status === 'paid' && checkout.user_voucher_id) {
+    return c.json({ data: { success: true, userVoucherId: checkout.user_voucher_id } });
+  }
+
+  const expiration = new Date();
+  expiration.setDate(expiration.getDate() + Number(checkout.validade_dias ?? 30));
+
+  const userVoucherResult = await pool.query(
+    `
+      INSERT INTO user_vouchers (
+        organization_id, user_id, voucher_id, sessoes_restantes, sessoes_totais,
+        data_compra, data_expiracao, ativo, valor_pago, created_at, updated_at
+      ) VALUES ($1,$2,$3,$4,$4,NOW(),$5,true,$6,NOW(),NOW())
+      RETURNING *
+    `,
+    [
+      user.organizationId,
+      user.uid,
+      checkout.voucher_id,
+      Number(checkout.sessoes ?? 0),
+      expiration.toISOString(),
+      Number(checkout.amount ?? 0),
+    ],
+  );
+
+  const userVoucher = userVoucherResult.rows[0];
+
+  await pool.query(
+    `
+      UPDATE voucher_checkout_sessions
+      SET status = 'paid', user_voucher_id = $2, updated_at = NOW()
+      WHERE id = $1
+    `,
+    [sessionId, userVoucher.id],
+  );
+
+  return c.json({ data: { success: true, userVoucherId: userVoucher.id } });
 });
 
 export { app as financialRoutes };

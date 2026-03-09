@@ -1,37 +1,16 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { clinicalApi } from '@/integrations/firebase/functions';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { patientsApi, type PatientMedicalRecord } from '@/lib/api/workers-client';
 import { useToast } from '@/hooks/use-toast';
 
-export interface MedicalRecord {
-  id: string;
-  patient_id: string;
-  chief_complaint?: string;
-  medical_history?: string;
-  current_medications?: string;
-  allergies?: string;
-  previous_surgeries?: string;
-  family_history?: string;
-  lifestyle_habits?: string;
-  record_date: string;
-  created_by?: string;
-  created_at?: string;
-  updated_at?: string;
-}
+export type MedicalRecord = PatientMedicalRecord;
 
 export function useMedicalRecords(patientId?: string) {
   return useQuery({
     queryKey: ['medical-records', patientId],
     queryFn: async () => {
-      const isE2E = typeof window !== 'undefined' && window.location.search.includes('e2e=true');
-      const isLocalHost = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname);
-      if (isE2E || isLocalHost) return [];
-
-      try {
-        const response = await clinicalApi.getPatientRecords(patientId || '', 'evolution', 100);
-        return response.data as MedicalRecord[];
-      } catch {
-        return [];
-      }
+      if (!patientId) return [];
+      const response = await patientsApi.medicalRecords(patientId);
+      return response.data ?? [];
     },
     enabled: !!patientId,
   });
@@ -43,16 +22,20 @@ export function useCreateMedicalRecord() {
 
   return useMutation({
     mutationFn: async (record: Omit<MedicalRecord, 'id' | 'created_at' | 'updated_at'>) => {
-      const response = await clinicalApi.createMedicalRecord({
-        patientId: record.patient_id,
-        type: 'evolution',
-        title: 'Evolução Clínica',
-        content: JSON.stringify(record),
-        recordDate: record.record_date
+      const response = await patientsApi.createMedicalRecord(record.patient_id, {
+        chief_complaint: record.chief_complaint,
+        medical_history: record.medical_history,
+        current_medications: record.current_medications,
+        allergies: record.allergies,
+        previous_surgeries: record.previous_surgeries,
+        family_history: record.family_history,
+        lifestyle_habits: record.lifestyle_habits,
+        record_date: record.record_date,
+        created_by: record.created_by,
       });
       return response.data;
     },
-    onSuccess: (data: { id: string; patient_id?: string }) => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['medical-records'] });
       if (data?.patient_id) {
         queryClient.invalidateQueries({ queryKey: ['medical-records', data.patient_id] });
@@ -77,11 +60,29 @@ export function useUpdateMedicalRecord() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ id, data, patientId }: { id: string; data: Partial<MedicalRecord>; patientId: string }) => {
-      const response = await clinicalApi.updateMedicalRecord(id, data);
-      return { ...response.data, patient_id: patientId };
+    mutationFn: async ({
+      id,
+      data,
+      patientId,
+    }: {
+      id: string;
+      data: Partial<MedicalRecord>;
+      patientId: string;
+    }) => {
+      const response = await patientsApi.updateMedicalRecord(patientId, id, {
+        chief_complaint: data.chief_complaint,
+        medical_history: data.medical_history,
+        current_medications: data.current_medications,
+        allergies: data.allergies,
+        previous_surgeries: data.previous_surgeries,
+        family_history: data.family_history,
+        lifestyle_habits: data.lifestyle_habits,
+        record_date: data.record_date,
+        created_by: data.created_by,
+      });
+      return response.data;
     },
-    onSuccess: (data: { id: string; patient_id: string }) => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['medical-records'] });
       queryClient.invalidateQueries({ queryKey: ['medical-records', data.patient_id] });
       toast({
@@ -105,7 +106,7 @@ export function useDeleteMedicalRecord() {
 
   return useMutation({
     mutationFn: async ({ id, patientId }: { id: string; patientId: string }) => {
-      await clinicalApi.deleteMedicalRecord(id);
+      await patientsApi.deleteMedicalRecord(patientId, id);
       return patientId;
     },
     onSuccess: (patientId) => {

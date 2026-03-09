@@ -1,19 +1,21 @@
 /**
- * useInnovations - Migrated to Firebase
- *
+ * useInnovations - Migrated to Neon/Workers
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, getDoc, addDoc, updateDoc, doc, query as firestoreQuery, where, orderBy, limit, db, getFirebaseAuth } from '@/integrations/firebase/app';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  gamificationApi,
+  innovationsApi,
+  type AchievementRow,
+  type GamificationProfileRow,
+  type InventoryItemRow,
+  type InventoryMovementRow,
+  type RevenueForecastRow,
+  type StaffPerformanceRow,
+  type WhatsAppExerciseQueueRow,
+  type PatientSelfAssessmentRow,
+} from '@/lib/api/workers-client';
 import { toast } from 'sonner';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
-
-const _auth = getFirebaseAuth();
-
-// Helper
-const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as T);
-
-// ==================== GAMIFICATION ====================
 
 export interface PatientLevel {
   id: string;
@@ -50,15 +52,38 @@ export interface PatientAchievement {
   reward?: GamificationReward;
 }
 
+const mapProfile = (profile: GamificationProfileRow): PatientLevel => ({
+  id: profile.id,
+  patient_id: profile.patient_id,
+  current_level: profile.level,
+  total_xp: profile.total_points ?? profile.current_xp ?? 0,
+  current_streak: profile.current_streak,
+  longest_streak: profile.longest_streak,
+  last_activity_date: profile.last_activity_date,
+  badges: [],
+  title: `Nível ${profile.level}`,
+  created_at: profile.created_at,
+  updated_at: profile.updated_at,
+});
+
+const mapReward = (achievement: AchievementRow): GamificationReward => ({
+  id: achievement.id,
+  name: achievement.title,
+  description: achievement.description ?? null,
+  type: 'badge',
+  xp_required: achievement.xp_reward ?? null,
+  level_required: null,
+  icon: achievement.icon ?? null,
+  color: null,
+  is_active: true,
+});
+
 export function usePatientLevel(patientId: string) {
   return useQuery({
     queryKey: ['patient-level', patientId],
     queryFn: async () => {
-      const q = firestoreQuery(collection(db, 'patient_levels'), where('patient_id', '==', patientId));
-      const snapshot = await getDocs(q);
-
-      if (snapshot.empty) return null;
-      return convertDoc<PatientLevel>(snapshot.docs[0]);
+      const res = await gamificationApi.getProfile(patientId);
+      return mapProfile(res.data);
     },
     enabled: !!patientId,
   });
@@ -68,14 +93,8 @@ export function useGamificationRewards() {
   return useQuery({
     queryKey: ['gamification-rewards'],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'gamification_rewards'),
-        where('is_active', '==', true),
-        orderBy('xp_required', 'asc')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDoc) as GamificationReward[];
+      const res = await gamificationApi.achievementDefinitions.list();
+      return (res?.data ?? []).map(mapReward);
     },
   });
 }
@@ -84,29 +103,16 @@ export function usePatientAchievements(patientId: string) {
   return useQuery({
     queryKey: ['patient-achievements', patientId],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'patient_achievements'),
-        where('patient_id', '==', patientId),
-        orderBy('unlocked_at', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-      const achievements = snapshot.docs.map(convertDoc) as PatientAchievement[];
-
-      // Manual join for reward details
-      const achievementsWithRewards = await Promise.all(
-        achievements.map(async (achievement) => {
-          if (achievement.reward_id) {
-            const rewardSnap = await getDoc(doc(db, 'gamification_rewards', achievement.reward_id));
-            if (rewardSnap.exists()) {
-              return { ...achievement, reward: convertDoc<GamificationReward>(rewardSnap) };
-            }
-          }
-          return achievement;
-        })
-      );
-
-      return achievementsWithRewards;
+      const res = await gamificationApi.getAchievements(patientId);
+      const rewards = new Map((res.data.all ?? []).map((item) => [item.id, mapReward(item)]));
+      return (res.data.unlocked ?? []).map((item) => ({
+        id: item.id,
+        patient_id: item.patient_id,
+        reward_id: item.achievement_id,
+        unlocked_at: item.unlocked_at,
+        notified: true,
+        reward: rewards.get(item.achievement_id),
+      })) as PatientAchievement[];
     },
     enabled: !!patientId,
   });
@@ -116,20 +122,21 @@ export function useAddXP() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ patientId, xp, achievementTitle }: { patientId: string; xp: number; achievementTitle: string }) => {
-      // Add to log
-      await addDoc(collection(db, 'achievements_log'), {
-        patient_id: patientId,
-        achievement_id: crypto.randomUUID(),
-        achievement_title: achievementTitle,
-        xp_reward: xp,
-        created_at: new Date().toISOString()
+    mutationFn: async ({
+      patientId,
+      xp,
+      achievementTitle,
+    }: {
+      patientId: string;
+      xp: number;
+      achievementTitle: string;
+    }) => {
+      await gamificationApi.awardXp({
+        patientId,
+        amount: xp,
+        reason: achievementTitle,
+        description: achievementTitle,
       });
-
-      // Update patient level/XP logic would ideally be here or in a Cloud Function trigger.
-      // For now we just log it as per original code which just inserted to log?
-      // Original code: inserts to achievements_log. Note: It does NOT automatically update patient_levels table in the original Supabase code shown, perhaps a Trigger did that?
-      // Assuming logic exists elsewhere or just logging for now.
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['patient-level', variables.patientId] });
@@ -139,170 +146,9 @@ export function useAddXP() {
   });
 }
 
-// ==================== INVENTORY ====================
-
-export interface InventoryItem {
-  id: string;
-  organization_id: string | null;
-  item_name: string;
-  category: string | null;
-  current_quantity: number;
-  minimum_quantity: number;
-  unit: string;
-  cost_per_unit: number | null;
-  supplier: string | null;
-  last_restock_date: string | null;
-  expiration_date: string | null;
-  location: string | null;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface InventoryMovement {
-  id: string;
-  inventory_id: string;
-  movement_type: 'entrada' | 'saida' | 'ajuste' | 'perda';
-  quantity: number;
-  reason: string | null;
-  related_appointment_id: string | null;
-  created_by: string | null;
-  created_at: string;
-}
-
-export function useInventory() {
-  return useQuery({
-    queryKey: ['inventory'],
-    queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'clinic_inventory'),
-        where('is_active', '==', true),
-        orderBy('item_name')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDoc) as InventoryItem[];
-    },
-  });
-}
-
-export function useCreateInventoryItem() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (item: Partial<InventoryItem>) => {
-      await addDoc(collection(db, 'clinic_inventory'), {
-        ...item,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['inventory'] });
-      toast.success('Item adicionado ao estoque');
-    },
-  });
-}
-
-export function useUpdateInventoryItem() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<InventoryItem> & { id: string }) => {
-      const docRef = doc(db, 'clinic_inventory', id);
-      await updateDoc(docRef, { ...updates, updated_at: new Date().toISOString() });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['inventory'] });
-      toast.success('Item atualizado');
-    },
-  });
-}
-
-export function useInventoryMovements(inventoryId?: string) {
-  return useQuery({
-    queryKey: ['inventory-movements', inventoryId],
-    queryFn: async () => {
-      let q = firestoreQuery(
-        collection(db, 'inventory_movements'),
-        orderBy('created_at', 'desc'),
-        limit(100)
-      );
-
-      if (inventoryId) {
-        q = firestoreQuery(
-          collection(db, 'inventory_movements'),
-          where('inventory_id', '==', inventoryId),
-          orderBy('created_at', 'desc'),
-          limit(100)
-        );
-      }
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDoc) as InventoryMovement[];
-    },
-  });
-}
-
-export function useCreateMovement() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (movement: Partial<InventoryMovement>) => {
-      await addDoc(collection(db, 'inventory_movements'), {
-        ...movement,
-        created_at: new Date().toISOString()
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['inventory'] });
-      queryClient.invalidateQueries({ queryKey: ['inventory-movements'] });
-      toast.success('Movimentação registrada');
-    },
-  });
-}
-
-// ==================== STAFF PERFORMANCE ====================
-
-export interface StaffPerformance {
-  id: string;
-  therapist_id: string;
-  metric_date: string;
-  total_appointments: number;
-  completed_appointments: number;
-  cancelled_appointments: number;
-  no_show_appointments: number;
-  average_session_duration: number | null;
-  patient_satisfaction_avg: number | null;
-  revenue_generated: number;
-  new_patients: number;
-  returning_patients: number;
-  created_at: string;
-}
-
-export function useStaffPerformance(therapistId?: string, startDate?: string, endDate?: string) {
-  return useQuery({
-    queryKey: ['staff-performance', therapistId, startDate, endDate],
-    queryFn: async () => {
-      let q = firestoreQuery(collection(db, 'staff_performance_metrics'), orderBy('metric_date', 'desc'));
-
-      if (therapistId) {
-        q = firestoreQuery(q, where('therapist_id', '==', therapistId));
-      }
-      if (startDate) {
-        q = firestoreQuery(q, where('metric_date', '>=', startDate));
-      }
-      if (endDate) {
-        q = firestoreQuery(q, where('metric_date', '<=', endDate));
-      }
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDoc) as StaffPerformance[];
-    },
-  });
-}
-
-// ==================== PREDICTIONS ====================
+export type InventoryItem = InventoryItemRow;
+export type InventoryMovement = InventoryMovementRow;
+export type StaffPerformance = StaffPerformanceRow;
 
 export interface AppointmentPrediction {
   id: string;
@@ -316,84 +162,112 @@ export interface AppointmentPrediction {
   created_at: string;
 }
 
-export function useAppointmentPredictions() {
-  return useQuery({
-    queryKey: ['appointment-predictions'],
-    queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'appointment_predictions'),
-        orderBy('no_show_probability', 'desc'),
-        limit(50)
-      );
+export type RevenueForecast = RevenueForecastRow;
+export type WhatsAppExerciseQueue = WhatsAppExerciseQueueRow;
+export type PatientSelfAssessment = PatientSelfAssessmentRow;
 
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDoc) as AppointmentPrediction[];
+export function useInventory() {
+  return useQuery({
+    queryKey: ['inventory'],
+    queryFn: async () => {
+      const res = await innovationsApi.inventory.list({ activeOnly: true });
+      return (res?.data ?? []) as InventoryItem[];
     },
   });
 }
 
-// ==================== REVENUE FORECASTS ====================
+export function useCreateInventoryItem() {
+  const queryClient = useQueryClient();
 
-export interface RevenueForecast {
-  id: string;
-  organization_id: string | null;
-  forecast_date: string;
-  predicted_revenue: number;
-  actual_revenue: number | null;
-  predicted_appointments: number;
-  actual_appointments: number | null;
-  confidence_interval_low: number;
-  confidence_interval_high: number;
-  factors: Record<string, unknown>;
-  model_version: string;
-  created_at: string;
+  return useMutation({
+    mutationFn: async (item: Partial<InventoryItem>) => {
+      const res = await innovationsApi.inventory.create(item);
+      return (res?.data ?? res) as InventoryItem;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      toast.success('Item adicionado ao estoque');
+    },
+  });
+}
+
+export function useUpdateInventoryItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<InventoryItem> & { id: string }) => {
+      const res = await innovationsApi.inventory.update(id, updates);
+      return (res?.data ?? res) as InventoryItem;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      toast.success('Item atualizado');
+    },
+  });
+}
+
+export function useInventoryMovements(inventoryId?: string) {
+  return useQuery({
+    queryKey: ['inventory-movements', inventoryId],
+    queryFn: async () => {
+      const res = await innovationsApi.inventoryMovements.list({ inventoryId, limit: 100 });
+      return (res?.data ?? []) as InventoryMovement[];
+    },
+  });
+}
+
+export function useCreateMovement() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (movement: Partial<InventoryMovement>) => {
+      const res = await innovationsApi.inventoryMovements.create(movement);
+      return (res?.data ?? res) as InventoryMovement;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
+      queryClient.invalidateQueries({ queryKey: ['inventory-movements'] });
+      toast.success('Movimentação registrada');
+    },
+  });
+}
+
+export function useStaffPerformance(therapistId?: string, startDate?: string, endDate?: string) {
+  return useQuery({
+    queryKey: ['staff-performance', therapistId, startDate, endDate],
+    queryFn: async () => {
+      const res = await innovationsApi.staffPerformance.list({ therapistId, startDate, endDate });
+      return (res?.data ?? []) as StaffPerformance[];
+    },
+  });
+}
+
+export function useAppointmentPredictions() {
+  return useQuery({
+    queryKey: ['appointment-predictions'],
+    queryFn: async () => {
+      const res = await innovationsApi.appointmentPredictions.list({ limit: 50 });
+      return (res?.data ?? []) as AppointmentPrediction[];
+    },
+  });
 }
 
 export function useRevenueForecasts() {
   return useQuery({
     queryKey: ['revenue-forecasts'],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'revenue_forecasts'),
-        orderBy('forecast_date', 'asc'),
-        limit(90)
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDoc) as RevenueForecast[];
+      const res = await innovationsApi.revenueForecasts.list({ limit: 90 });
+      return (res?.data ?? []) as RevenueForecast[];
     },
   });
-}
-
-// ==================== WHATSAPP EXERCISE QUEUE ====================
-
-export interface WhatsAppExerciseQueue {
-  id: string;
-  patient_id: string;
-  exercise_plan_id: string | null;
-  phone_number: string;
-  exercises: Record<string, unknown>[];
-  scheduled_for: string | null;
-  sent_at: string | null;
-  delivered_at: string | null;
-  opened_at: string | null;
-  status: 'pending' | 'sent' | 'delivered' | 'opened' | 'failed';
-  error_message: string | null;
-  created_at: string;
 }
 
 export function useWhatsAppExerciseQueue() {
   return useQuery({
     queryKey: ['whatsapp-exercise-queue'],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'whatsapp_exercise_queue'),
-        orderBy('created_at', 'desc'),
-        limit(100)
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDoc) as WhatsAppExerciseQueue[];
+      const res = await innovationsApi.whatsappExerciseQueue.list({ limit: 100 });
+      return (res?.data ?? []) as WhatsAppExerciseQueue[];
     },
   });
 }
@@ -403,10 +277,8 @@ export function useCreateWhatsAppExercise() {
 
   return useMutation({
     mutationFn: async (data: Partial<WhatsAppExerciseQueue>) => {
-      await addDoc(collection(db, 'whatsapp_exercise_queue'), {
-        ...data,
-        created_at: new Date().toISOString()
-      });
+      const res = await innovationsApi.whatsappExerciseQueue.create(data);
+      return (res?.data ?? res) as WhatsAppExerciseQueue;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['whatsapp-exercise-queue'] });
@@ -415,42 +287,12 @@ export function useCreateWhatsAppExercise() {
   });
 }
 
-// ==================== PATIENT SELF-ASSESSMENTS ====================
-
-export interface PatientSelfAssessment {
-  id: string;
-  patient_id: string;
-  assessment_type: 'pain_level' | 'mood' | 'exercise_completion' | 'nps';
-  question: string;
-  response: string | null;
-  numeric_value: number | null;
-  received_via: string;
-  sent_at: string | null;
-  responded_at: string | null;
-  created_at: string;
-}
-
 export function usePatientSelfAssessments(patientId?: string) {
   return useQuery({
     queryKey: ['patient-self-assessments', patientId],
     queryFn: async () => {
-      let q = firestoreQuery(
-        collection(db, 'patient_self_assessments'),
-        orderBy('created_at', 'desc'),
-        limit(100)
-      );
-
-      if (patientId) {
-        q = firestoreQuery(
-          collection(db, 'patient_self_assessments'),
-          where('patient_id', '==', patientId),
-          orderBy('created_at', 'desc'),
-          limit(100)
-        );
-      }
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDoc) as PatientSelfAssessment[];
+      const res = await innovationsApi.patientSelfAssessments.list({ patientId, limit: 100 });
+      return (res?.data ?? []) as PatientSelfAssessment[];
     },
   });
 }

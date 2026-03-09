@@ -12,7 +12,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, UserX } from 'lucide-react';
 import { PatientService } from '@/lib/services/PatientService';
-import { FunctionCallError } from '@/integrations/firebase/functions';
 import type { Patient } from '@/types';
 
 const patientSchema = z.object({
@@ -36,19 +35,6 @@ type PatientFormData = z.infer<typeof patientSchema>;
 
 /** Extrai mensagem amigável para exibir em toast de erro. */
 function getErrorMessage(error: unknown): string {
-  if (error instanceof FunctionCallError && error.originalError instanceof Error) {
-    const msg = error.originalError.message;
-    const match = msg.match(/HTTP \d+: (.+)/);
-    if (match) {
-      try {
-        const parsed = JSON.parse(match[1]) as { error?: string };
-        return parsed.error ?? msg;
-      } catch {
-        return msg;
-      }
-    }
-    return msg;
-  }
   if (error instanceof Error) return error.message;
   return 'Não foi possível atualizar o paciente. Tente novamente.';
 }

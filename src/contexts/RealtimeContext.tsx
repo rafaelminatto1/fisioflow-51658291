@@ -1,11 +1,8 @@
-import { createContext, useState, useCallback, useEffect, useRef } from 'react';
-import { getDatabase, ref, onValue, off } from 'firebase/database';
-import { app } from '@/integrations/firebase/app';
-import { appointmentsApi } from '@/integrations/firebase/functions';
+import { createContext, useState, useCallback, useEffect } from 'react';
+import { appointmentsApi } from '@/lib/api/workers-client';
 import { useAuth } from '@/contexts/AuthContext';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useDebounce } from '@/hooks/performance/useDebounce';
-import { parseResponseDate } from '@/utils/dateUtils';
 
 let _loggedRealtimeNoOrgId = false;
 
@@ -66,11 +63,6 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   });
   const [lastUpdate, setLastUpdate] = useState(Date.now());
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-
-  // Ref para tracking de updates em batch
-  const updateTimeoutRef = useRef<NodeJS.Timeout>();
-  const pendingUpdatesRef = useRef<Array<(prev: Appointment[]) => Appointment[]>>([]);
 
   /**
    * Atualizar métricas baseadas nos appointments atuais
@@ -138,68 +130,6 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [updateMetrics, debouncedAppointments]);
 
   /**
-   * Processa updates em batch para múltiplas mudanças rápidas
-   * Reduz número de re-renders significativamente
-   */
-  const flushPendingUpdates = useCallback(() => {
-    if (pendingUpdatesRef.current.length === 0) return;
-
-    setAppointments(prev => {
-      let result = prev;
-      for (const updateFn of pendingUpdatesRef.current) {
-        result = updateFn(result);
-      }
-      return result;
-    });
-
-    pendingUpdatesRef.current = [];
-    setLastUpdate(Date.now());
-  }, []);
-
-  /**
-   * Handler otimizado para mudanças de Realtime
-   * Acumula mudanças e processa em batch
-   */
-  const handleRealtimeChange = useCallback((payload: {
-    eventType: string;
-    new: Record<string, unknown>;
-    old: Record<string, unknown>;
-  }) => {
-    const updateFn = (prev: Appointment[]) => {
-      if (payload.eventType === 'INSERT') {
-        const newData = payload.new as Appointment;
-        // Só adiciona se for futuro ou hoje (reduz tamanho do array)
-        // Usar parseResponseDate para evitar problemas de timezone com strings "YYYY-MM-DD"
-        const dateStr = newData.start_time || (newData as unknown).date || '';
-        const apptDate = dateStr ? parseResponseDate(dateStr) : new Date();
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        if (apptDate >= today) {
-          return [...prev, newData];
-        }
-        return prev;
-      } else if (payload.eventType === 'UPDATE') {
-        const newData = payload.new as Appointment;
-        return prev.map(a => a.id === newData.id ? newData : a);
-      } else if (payload.eventType === 'DELETE') {
-        const oldData = payload.old as { id: string };
-        return prev.filter(a => a.id !== oldData.id);
-      }
-      return prev;
-    };
-
-    pendingUpdatesRef.current.push(updateFn);
-
-    // Limpar timeout anterior e agendar novo
-    if (updateTimeoutRef.current) {
-      clearTimeout(updateTimeoutRef.current);
-    }
-
-    updateTimeoutRef.current = setTimeout(flushPendingUpdates, 100);
-  }, [flushPendingUpdates]);
-
-  /**
    * Carregar appointments iniciais ao montar o provider
    * OTIMIZADO: Só carrega appointments futuros e dos últimos 7 dias
    */
@@ -219,7 +149,8 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       });
 
       if (response.data) {
-        setAppointments(response.data as Appointment[]);
+        setAppointments(response.data as unknown as Appointment[]);
+        setLastUpdate(Date.now());
         logger.debug(`Realtime: Loaded ${response.data.length} initial appointments`, {}, 'RealtimeContext');
       }
     } catch (error) {
@@ -228,10 +159,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [organizationId]);
 
   /**
-   * Subscrever às mudanças na agenda via Firebase Realtime Database
-   * Otimizado com triggers para reduzir tráfego
-   *
-   * FIX: Tracka estado de subscription para evitar erros
+   * Substitui o antigo RTDB por polling leve contra a Workers API.
    */
   const subscribeToAppointments = useCallback(() => {
     if (!organizationId) {
@@ -242,50 +170,19 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return () => { };
     }
 
-    logger.debug('Realtime: Subscribing to appointments via RTDB', { organizationId, retryCount }, 'RealtimeContext');
-
-    let db;
-    try {
-      db = getDatabase(app);
-    } catch (error) {
-      logger.debug('Realtime: RTDB not available, skipping subscription', error, 'RealtimeContext');
-      return () => { };
-    }
-
-    const triggerRef = ref(db, `orgs/${organizationId}/agenda/refresh_trigger`);
-
-    const unsubscribe = onValue(triggerRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const val = snapshot.val();
-        // RTDB trigger contains both the signal and optional payload
-        logger.debug('Realtime (RTDB): Agenda refresh signal received', { organizationId, val }, 'RealtimeContext');
-
-        // If payload contains event data, process it
-        if (val.data && typeof val.data === 'object') {
-          handleRealtimeChange(val.data as {
-            eventType: string;
-            new: Record<string, unknown>;
-            old: Record<string, unknown>;
-          });
-        } else {
-          // No detailed payload, reload from API
-          loadInitialAppointments();
-        }
-      }
-    });
-
+    logger.debug('Realtime: Starting appointments polling', { organizationId }, 'RealtimeContext');
     setIsSubscribed(true);
+    loadInitialAppointments();
+    const intervalId = window.setInterval(() => {
+      loadInitialAppointments();
+    }, 30000);
 
     return () => {
-      logger.debug('Realtime (RTDB): Unsubscribing from agenda trigger', { organizationId }, 'RealtimeContext');
-      off(triggerRef, 'value', unsubscribe);
+      logger.debug('Realtime: Stopping appointments polling', { organizationId }, 'RealtimeContext');
+      window.clearInterval(intervalId);
       setIsSubscribed(false);
-
-      if (updateTimeoutRef.current) {
-        clearTimeout(updateTimeoutRef.current);
-      }
     };
-  }, [organizationId, handleRealtimeChange, retryCount, loadInitialAppointments]);
+  }, [organizationId, loadInitialAppointments]);
 
   /**
    * Carregar appointments iniciais ao montar o provider

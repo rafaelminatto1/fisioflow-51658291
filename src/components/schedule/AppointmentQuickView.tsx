@@ -48,7 +48,7 @@ import { useTherapists, formatTherapistLabel, getTherapistById, THERAPIST_SELECT
 import { useUpdateAppointment } from '@/hooks/useAppointments';
 import { prefetchRoute, RouteKeys } from '@/lib/routing/routePrefetch';
 import { useQueryClient } from '@tanstack/react-query';
-import { appointmentsApi } from '@/integrations/firebase/functions';
+import { appointmentsApi } from '@/lib/api/workers-client';
 import { WaitlistNotification } from './WaitlistNotification';
 import { WaitlistQuickAdd } from './WaitlistQuickAdd';
 import { PaymentRegistrationModal } from './PaymentRegistrationModal';

@@ -21,10 +21,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { getFirebaseAuth, db, doc, getDoc, getDocs, collection, query, where, limit, updateDoc, addDoc } from '@/integrations/firebase/app';
-import { onAuthStateChanged } from 'firebase/auth';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useOrganizations } from '@/hooks/useOrganizations';
+import { useAuth } from '@/contexts/AuthContext';
 import { SOAPFormPanel } from './SOAPFormPanel';
 import { SessionHistoryPanel } from './SessionHistoryPanel';
 import { TestEvolutionPanel } from './TestEvolutionPanel';
@@ -40,16 +39,15 @@ import { SessionExercisesPanel, type SessionExercise } from './SessionExercisesP
 import { PatientHelpers } from '@/types';
 import { GamificationTriggerService } from '@/lib/services/gamificationTriggers';
 import { GamificationNotificationService } from '@/lib/services/gamificationNotifications';
-import { appointmentsApi } from '@/integrations/firebase/functions';
 import { PatientService } from '@/lib/services/PatientService';
 import { useQueryClient } from '@tanstack/react-query';
 import { soapKeys } from '@/hooks/useSoapRecords';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 import { AgendaAutomationService } from '@/lib/services/AgendaAutomationService';
 import { NotionEvolutionPanel } from './v2-improved/NotionEvolutionPanel';
 import { NotionEvolutionPanel as NotionV3Panel } from './v3-notion/NotionEvolutionPanel';
 import { EvolutionVersionToggle } from './v2-improved/EvolutionVersionToggle';
 import { NotionEvolutionEditor } from './NotionEvolutionEditor';
+import { appointmentsApi, evolutionApi, goalsApi, patientsApi, sessionsApi } from '@/lib/api/workers-client';
 
 interface SessionEvolutionContainerProps {
   appointmentId?: string;
@@ -69,7 +67,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { currentOrganization } = useOrganizations();
-  const auth = getFirebaseAuth();
+  const { user } = useAuth();
 
   const appointmentId = propAppointmentId || params.appointmentId;
   const [patientId, setPatientId] = useState(propPatientId || '');
@@ -115,7 +113,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   const { therapists } = useTherapists();
 
   const loadData = React.useCallback(async () => {
-    if (!auth.currentUser) {
+    if (!user) {
       setIsLoading(false);
       setLoadError('Faça login para acessar esta página.');
       return;
@@ -125,56 +123,53 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
     try {
       let currentPatientId = propPatientId || '';
 
-      // Load appointment data (Firestore primeiro; se não existir, tenta API usada pela agenda)
+      // Load appointment data via API
       if (appointmentId) {
-        const appointmentRef = doc(db, 'appointments', appointmentId);
-        const appointmentSnap = await getDoc(appointmentRef);
-
         let appointmentData: Record<string, unknown> & { patient_id?: string; patientId?: string; notes?: string } = {};
         let loadedFromApi = false;
 
-        if (appointmentSnap.exists()) {
-          setAppointmentLoadedFromApi(false);
-          appointmentData = { ...appointmentSnap.data(), patient_id: appointmentSnap.data().patient_id };
-          setAppointment({ id: appointmentSnap.id, ...appointmentData });
-        } else {
-          // Agenda pode vir da API (Cloud Function); buscar por id
-          try {
-            const apiAppointment = await appointmentsApi.get(appointmentId);
-            loadedFromApi = true;
-            setAppointmentLoadedFromApi(true);
-            const pid = (apiAppointment as { patientId?: string; patient_id?: string }).patientId ?? (apiAppointment as { patient_id?: string }).patient_id;
-            appointmentData = {
-              id: apiAppointment.id,
-              patient_id: pid,
-              patientId: pid,
-              therapist_id: (apiAppointment as { therapist_id?: string }).therapist_id,
-              date: (apiAppointment as { date?: string }).date,
-              start_time: (apiAppointment as { startTime?: string }).startTime,
-              notes: (apiAppointment as { notes?: string }).notes,
-            };
-            setAppointment({ id: apiAppointment.id, ...appointmentData });
-            currentPatientId = pid || currentPatientId;
-            if (pid) setPatientId(pid);
-          } catch (apiErr) {
-            logger.warn('Appointment not in Firestore nor API', { appointmentId, err: apiErr }, 'SessionEvolutionContainer');
-            throw new Error('Appointment not found');
+        try {
+          const apiAppointmentResponse = await appointmentsApi.get(appointmentId);
+          const apiAppointment = apiAppointmentResponse.data;
+          loadedFromApi = true;
+          setAppointmentLoadedFromApi(true);
+          const pid = (apiAppointment as { patientId?: string; patient_id?: string }).patientId
+            ?? (apiAppointment as { patient_id?: string }).patient_id;
+          appointmentData = {
+            id: apiAppointment.id,
+            patient_id: pid,
+            patientId: pid,
+            therapist_id: (apiAppointment as { therapist_id?: string }).therapist_id,
+            date: (apiAppointment as { date?: string }).date,
+            start_time: (apiAppointment as { start_time?: string; startTime?: string }).start_time
+              ?? (apiAppointment as { startTime?: string }).startTime,
+            notes: (apiAppointment as { notes?: string }).notes,
+          };
+          setAppointment({ id: apiAppointment.id, ...appointmentData });
+          currentPatientId = pid || currentPatientId;
+          if (pid) setPatientId(pid);
+
+          if (apiAppointment.patient) {
+            setPatient({
+              id: apiAppointment.patient.id,
+              ...apiAppointment.patient,
+              full_name: apiAppointment.patient.full_name ?? apiAppointment.patient.name,
+              patientName: apiAppointment.patient.full_name ?? apiAppointment.patient.name,
+            });
           }
+        } catch (apiErr) {
+          logger.warn('Appointment not found in API', { appointmentId, err: apiErr }, 'SessionEvolutionContainer');
+          throw new Error('Appointment not found');
         }
 
         const patientIdFromApp = appointmentData.patient_id ?? appointmentData.patientId;
         if (patientIdFromApp) {
           currentPatientId = String(patientIdFromApp);
           setPatientId(currentPatientId);
-          const patientRef = doc(db, 'patients', currentPatientId);
-          const patientSnap = await getDoc(patientRef);
-          if (patientSnap.exists()) {
-            setPatient({ id: patientSnap.id, ...patientSnap.data() });
-          } else if (loadedFromApi) {
+          if (!appointmentData.patient && loadedFromApi) {
             try {
               const apiPatient = await PatientService.getPatientById(currentPatientId);
               if (apiPatient) {
-                // Normalizar para formato esperado pela UI (full_name, etc.)
                 setPatient({
                   id: apiPatient.id,
                   ...apiPatient,
@@ -183,13 +178,12 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
                 });
               }
             } catch {
-              // Paciente não encontrado na API; seguir sem dados do paciente
+              // segue sem bloquear a tela
             }
           }
         }
 
-        // Load existing SOAP if any (só quando veio do Firestore)
-        if (appointmentSnap.exists() && appointmentData.notes) {
+        if (appointmentData.notes) {
           try {
             const notes = JSON.parse(String(appointmentData.notes));
             if (notes.soap) setSoapData(notes.soap);
@@ -199,56 +193,57 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
           }
         }
         const aptTherapistId = (appointmentData as { therapist_id?: string }).therapist_id;
-        setSelectedTherapistId(aptTherapistId || auth.currentUser?.uid || '');
+        setSelectedTherapistId(aptTherapistId || user?.uid || '');
       } else if (propPatientId) {
-        // Load patient directly
-        const patientRef = doc(db, 'patients', propPatientId);
-        const patientSnap = await getDoc(patientRef);
-
-        if (!patientSnap.exists()) {
-          throw new Error('Patient not found');
-        }
-
-        setPatient({ id: patientSnap.id, ...patientSnap.data() });
+        const apiPatient = await PatientService.getPatientById(propPatientId);
+        if (!apiPatient) throw new Error('Patient not found');
+        setPatient({
+          id: apiPatient.id,
+          ...apiPatient,
+          full_name: apiPatient.name,
+          patientName: apiPatient.name,
+        });
         currentPatientId = propPatientId;
-        setSelectedTherapistId(auth.currentUser?.uid || '');
+        setSelectedTherapistId(user?.uid || '');
       }
 
       // Load patient related data
       if (currentPatientId) {
-        // Número da sessão: conta apenas atendimentos no Firestore (quando carregado da API pode ser aproximado)
-        const appointmentsQuery = query(
-          collection(db, 'appointments'),
-          where('patient_id', '==', currentPatientId),
-          where('status', '==', 'atendido')
-        );
-        const appointmentsSnap = await getDocs(appointmentsQuery);
-        const calculatedSessionNumber = appointmentsSnap.size + 1;
+        const [patientAppointmentsRes, surgeriesRes, pathologiesRes, goalsRes] = await Promise.all([
+          appointmentsApi.list({ patientId: currentPatientId, limit: 500 }),
+          patientsApi.surgeries(currentPatientId),
+          patientsApi.pathologies(currentPatientId),
+          goalsApi.list(currentPatientId),
+        ]);
+
+        const completedStatuses = new Set(['completed', 'concluido', 'realizado', 'atendido']);
+        const calculatedSessionNumber =
+          (patientAppointmentsRes.data ?? []).filter((appointment) =>
+            completedStatuses.has(String(appointment.status ?? '').toLowerCase()),
+          ).length + 1;
         setSessionNumber(calculatedSessionNumber);
-
-        // Load surgeries
-        const surgeriesQuery = query(
-          collection(db, 'patient_surgeries'),
-          where('patient_id', '==', currentPatientId)
-        );
-        const surgeriesSnap = await getDocs(surgeriesQuery);
-        setSurgeries(surgeriesSnap.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })));
-
-        // Load pathologies
-        const pathologiesQuery = query(
-          collection(db, 'patient_pathologies'),
-          where('patient_id', '==', currentPatientId)
-        );
-        const pathologiesSnap = await getDocs(pathologiesQuery);
-        setPathologies(pathologiesSnap.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })));
-
-        // Load goals
-        const goalsQuery = query(
-          collection(db, 'patient_goals'),
-          where('patient_id', '==', currentPatientId)
-        );
-        const goalsSnap = await getDocs(goalsQuery);
-        setGoals(goalsSnap.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })));
+        setSurgeries((surgeriesRes.data ?? []).map((row) => ({
+          id: row.id,
+          patient_id: currentPatientId,
+          surgery_name: row.name,
+          surgery_date: row.surgery_date ?? row.created_at,
+          surgeon: row.surgeon ?? undefined,
+          hospital: row.hospital ?? undefined,
+          surgery_type: row.post_op_protocol ?? undefined,
+          notes: row.notes ?? undefined,
+          created_at: row.created_at,
+        })));
+        setPathologies((pathologiesRes.data ?? []).map((row) => ({
+          id: row.id,
+          patient_id: currentPatientId,
+          pathology_name: row.name,
+          cid_code: row.icd_code ?? undefined,
+          diagnosis_date: row.diagnosed_at ?? undefined,
+          status: row.status ?? undefined,
+          notes: row.notes ?? undefined,
+          created_at: row.created_at,
+        })));
+        setGoals(goalsRes.data ?? []);
 
         // Check mandatory tests
         const result = await MandatoryTestAlertService.checkMandatoryTests(
@@ -280,48 +275,47 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       setIsLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appointmentId, propPatientId, testsCompleted, toast, db]);
+  }, [appointmentId, propPatientId, testsCompleted, toast, user]);
 
   useEffect(() => {
-  }, []);
-  // Só carregar dados quando o usuário estiver autenticado (evita permission-denied por token ainda não disponível)
-  useEffect(() => {
     let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let cancelled = false;
     let retryCount = 0;
     const maxRetries = 3;
 
-    const unsub = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const attemptLoad = async () => {
-          try {
-            // Get token to ensure it's ready
-            await user.getIdToken(true);
-            await loadData();
-          } catch (err) {
-            if (retryCount < maxRetries) {
-              retryCount++;
-              logger.warn(`Retry loading data (${retryCount}/${maxRetries})...`, err, 'SessionEvolutionContainer');
-              timeoutId = setTimeout(attemptLoad, 500 * retryCount);
-            } else {
-              logger.error('Failed to load data after retries', err, 'SessionEvolutionContainer');
-              setLoadError('Erro de conexão ou permissão. Tente recarregar a página.');
-              setIsLoading(false);
-            }
-          }
-        };
-
-        // Pequeno atraso para o SDK anexar o token às próximas requisições Firestore
-        timeoutId = setTimeout(attemptLoad, 200);
-      } else if (auth.currentUser === null) {
+    const attemptLoad = async () => {
+      try {
+        await loadData();
+      } catch (err) {
+        if (cancelled) return;
+        if (retryCount < maxRetries) {
+          retryCount++;
+          logger.warn(`Retry loading data (${retryCount}/${maxRetries})...`, err, 'SessionEvolutionContainer');
+          timeoutId = setTimeout(attemptLoad, 500 * retryCount);
+          return;
+        }
+        logger.error('Failed to load data after retries', err, 'SessionEvolutionContainer');
+        setLoadError('Erro de conexão ou permissão. Tente recarregar a página.');
         setIsLoading(false);
-        setLoadError('Faça login para acessar esta página.');
       }
-    });
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-      unsub();
     };
-  }, [loadData, auth]);
+
+    if (!user) {
+      setIsLoading(false);
+      setLoadError('Faça login para acessar esta página.');
+      return () => {
+        cancelled = true;
+        if (timeoutId) clearTimeout(timeoutId);
+      };
+    }
+
+    timeoutId = setTimeout(attemptLoad, 100);
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [loadData, user]);
 
   const handleSoapChange = (data: typeof soapData) => {
     setSoapData(data);
@@ -409,7 +403,6 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
 
     setIsSaving(true);
     try {
-      const user = auth.currentUser;
       if (!user) throw new Error('Usuário não autenticado');
 
       // Upsert SOAP record: update existing draft for this appointment or create new (evita duplicação)
@@ -429,76 +422,43 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       };
 
       let soapRecordId: string;
-      const draftQuery = query(
-        collection(db, 'soap_records'),
-        where('appointment_id', '==', appointmentId),
-        where('status', '==', 'draft'),
-        limit(1)
-      );
-      const draftSnap = await getDocs(draftQuery);
-      if (!draftSnap.empty) {
-        const existingRef = draftSnap.docs[0].ref;
-        soapRecordId = existingRef.id;
-        await updateDoc(existingRef, { ...soapRecordData, updated_at: now });
+      const draftsResponse = await sessionsApi.list({
+        patientId,
+        appointmentId,
+        status: 'draft',
+        limit: 1,
+      });
+      const existingDraft = draftsResponse.data?.[0];
+      if (existingDraft?.id) {
+        soapRecordId = existingDraft.id;
+        await sessionsApi.update(existingDraft.id, { ...soapRecordData, updated_at: now });
       } else {
-        const newRef = await addDoc(collection(db, 'soap_records'), {
+        const created = await sessionsApi.create({
           ...soapRecordData,
           created_at: now,
         });
-        soapRecordId = newRef.id;
-      }
-
-      // Save to treatment_sessions (Exercises Performed)
-      // First, check if a session already exists for this appointment to avoid duplicates
-      let existingSessionId = null;
-      if (appointmentId) {
-        const sessionsQuery = query(
-          collection(db, 'treatment_sessions'),
-          where('appointment_id', '==', appointmentId)
-        );
-        const sessionsSnap = await getDocs(sessionsQuery);
-        if (!sessionsSnap.empty) {
-          existingSessionId = sessionsSnap.docs[0].id;
-        }
+        soapRecordId = created.data.id;
       }
 
       const therapistId = selectedTherapistId || user.uid;
-      const sessionData = {
-        patient_id: patientId,
-        therapist_id: therapistId,
-        appointment_id: appointmentId || null,
-        session_date: new Date().toISOString(),
-        session_type: 'treatment',
-        // pain_level_before/after could be gathered from a form, keeping default 0 for now
-        pain_level_before: 0,
-        pain_level_after: 0,
-        functional_score_before: 0,
-        functional_score_after: 0,
-        exercises_performed: sessionExercises,
-        observations: soapData.assessment,
-        status: 'completed',
-        created_by: user.uid,
-        created_at: new Date().toISOString()
-      };
-
-      if (existingSessionId) {
-        await updateDoc(doc(db, 'treatment_sessions', existingSessionId), sessionData);
-      } else {
-        await addDoc(collection(db, 'treatment_sessions'), sessionData);
+      if (appointmentId) {
+        await evolutionApi.treatmentSessions.upsert({
+          patient_id: patientId,
+          therapist_id: therapistId,
+          appointment_id: appointmentId,
+          session_date: new Date().toISOString(),
+          observations: soapData.assessment,
+          exercises_performed: sessionExercises,
+          pain_level_before: 0,
+          pain_level_after: 0,
+        });
       }
 
       // Update appointment: mesma fonte em que foi carregado (API ou Firestore)
       if (appointmentId) {
         const notesPayload = JSON.stringify({ soap: soapData, soapRecordId: soapRecordId, exercises: sessionExercises });
         const statusRealizado = 'Realizado'; // UI/agenda; API pode normalizar
-        if (appointmentLoadedFromApi) {
-          await appointmentsApi.update(appointmentId, { status: statusRealizado, notes: notesPayload });
-        } else {
-          await updateDoc(doc(db, 'appointments', appointmentId), {
-            status: statusRealizado,
-            notes: notesPayload
-          });
-        }
+        await appointmentsApi.update(appointmentId, { status: statusRealizado, notes: notesPayload });
       }
 
       logger.info('Evolução salva com sucesso', { soapRecordId: soapRecordId, patientId }, 'SessionEvolutionContainer');
@@ -585,7 +545,6 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   }) => {
     if (!patientId) return;
     if (!currentOrganization?.id) return;
-    const user = auth.currentUser;
     if (!user) return;
 
     const now = new Date().toISOString();
@@ -606,22 +565,21 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
 
     let soapRecordId: string | null = null;
     if (appointmentId) {
-      const draftQuery = query(
-        collection(db, 'soap_records'),
-        where('appointment_id', '==', appointmentId),
-        where('status', '==', 'draft'),
-        limit(1)
-      );
-      const draftSnap = await getDocs(draftQuery);
-      if (!draftSnap.empty) {
-        const existingRef = draftSnap.docs[0].ref;
-        soapRecordId = existingRef.id;
-        await updateDoc(existingRef, { ...soapRecordData, updated_at: now });
+      const draftsResponse = await sessionsApi.list({
+        patientId,
+        appointmentId,
+        status: 'draft',
+        limit: 1,
+      });
+      const existingDraft = draftsResponse.data?.[0];
+      if (existingDraft?.id) {
+        soapRecordId = existingDraft.id;
+        await sessionsApi.update(existingDraft.id, { ...soapRecordData, updated_at: now });
       }
     }
 
     if (!soapRecordId) {
-      await addDoc(collection(db, 'soap_records'), {
+      await sessionsApi.create({
         ...soapRecordData,
         created_at: now,
       });
@@ -807,7 +765,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
               sessionNumber,
               totalSessions: sessionNumber,
               sessionDate: new Date().toISOString(),
-              therapistName: auth.currentUser?.displayName || 'Fisioterapeuta',
+              therapistName: user?.displayName || 'Fisioterapeuta',
               therapistCrefito: selectedTherapistCrefito || '',
             }}
             patientId={patientId}
@@ -861,7 +819,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
               sessionNumber,
               totalSessions: sessionNumber,
               sessionDate: new Date().toISOString(),
-              therapistName: auth.currentUser?.displayName || 'Fisioterapeuta',
+              therapistName: user?.displayName || 'Fisioterapeuta',
               therapistCrefito: selectedTherapistCrefito || '',
             }}
             onChange={(newData) => {

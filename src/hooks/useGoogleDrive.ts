@@ -1,29 +1,24 @@
 /**
- * useGoogleDrive - Hook para integração com Google Drive via Cloud Functions
+ * useGoogleDrive - Hook para integração com Google Drive via Workers API
  */
 
 import { useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
+import { integrationsApi } from '@/lib/api/workers-client';
 
 export function useGoogleDrive() {
   const queryClient = useQueryClient();
 
-  // Listar arquivos via Cloud Function
   const listFiles = useCallback(async (folderId?: string) => {
-    const listGoogleFiles = httpsCallable(functions, 'listGoogleFiles');
-    const result = await listGoogleFiles({ folderId });
-    return (result.data as any).files || [];
+    const result = await integrationsApi.google.drive.listFiles(folderId);
+    return result.data || [];
   }, []);
 
-  // Criar pasta do paciente
   const createPatientFolder = useMutation({
     mutationFn: async ({ name, parentId }: { name: string; parentId?: string }) => {
-      const createPatientDriveFolder = httpsCallable(functions, 'createPatientDriveFolder');
-      const result = await createPatientDriveFolder({ name, parentId });
-      return result.data as { folderId: string };
+      const result = await integrationsApi.google.drive.createFolder({ name, parentId });
+      return result.data;
     },
     onSuccess: () => {
       toast.success('Pasta criada no Google Drive');

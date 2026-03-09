@@ -66,9 +66,9 @@ export function TimeEntryModal({ onClose, onSave, entry }: TimeEntryModalProps) 
     resolver: zodResolver(timeEntrySchema),
     defaultValues: {
       description: entry?.description || '',
-      date: entry ? entry.start_time.toDate() : new Date(),
+      date: entry ? new Date(entry.start_time) : new Date(),
       start_time: entry
-        ? format(entry.start_time.toDate(), 'HH:mm')
+        ? format(new Date(entry.start_time), 'HH:mm')
         : format(new Date(), 'HH:mm'),
       duration_minutes: Math.round((entry?.duration_seconds || 0) / 60),
       is_billable: entry?.is_billable ?? true,

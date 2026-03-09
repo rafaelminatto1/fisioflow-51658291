@@ -1,14 +1,12 @@
 /**
- * useGoogleDocs - Hook para integração com Google Docs via Cloud Functions
+ * useGoogleDocs - Hook para integração com Google Docs via Workers API
  */
 
 import { useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
+import { integrationsApi } from '@/lib/api/workers-client';
 
-// Placeholders constants
 export const CLINICAL_REPORT_PLACEHOLDERS = {
   PACIENTE_NOME: 'Nome completo do paciente',
   PACIENTE_CPF: 'CPF do paciente',
@@ -34,14 +32,11 @@ export const DECLARATION_PLACEHOLDERS = {
 export function useGoogleDocs() {
   const queryClient = useQueryClient();
 
-  // Listar templates via Cloud Function
   const listTemplates = useCallback(async (folderId?: string) => {
-    const listGoogleTemplates = httpsCallable(functions, 'listGoogleTemplates');
-    const result = await listGoogleTemplates({ folderId });
-    return (result.data as any).templates || [];
+    const result = await integrationsApi.google.docs.listTemplates(folderId);
+    return result.data || [];
   }, []);
 
-  // Gerar relatório a partir de template via Cloud Function
   const generateReport = useMutation({
     mutationFn: async ({
       templateId,
@@ -54,37 +49,35 @@ export function useGoogleDocs() {
       data: Record<string, string>;
       folderId?: string;
     }) => {
-      const generateGoogleReport = httpsCallable(functions, 'generateGoogleReport');
-      const result = await generateGoogleReport({
+      const result = await integrationsApi.google.docs.generateReport({
         templateId,
         patientName,
         data,
         folderId,
       });
-      return result.data as { success: boolean; fileId: string; webViewLink: string };
+      return result.data;
     },
     onSuccess: (data) => {
-      if (data.success) {
+      if (data?.success) {
         toast.success('Relatório gerado com sucesso!');
         queryClient.invalidateQueries({ queryKey: ['drive-files'] });
       }
     },
     onError: (error) => {
       console.error('Erro ao gerar relatório:', error);
-      toast.error('Erro ao gerar relatório. Verifique suas permissões do Google.');
+      toast.error('Erro ao gerar relatório. Verifique a integração do Google.');
     },
   });
 
-  // Criar pasta do paciente
   const createPatientFolder = useMutation({
     mutationFn: async ({ name, parentId }: { name: string; parentId?: string }) => {
-      const createPatientDriveFolder = httpsCallable(functions, 'createPatientDriveFolder');
-      const result = await createPatientDriveFolder({ name, parentId });
-      return result.data as { folderId: string };
+      const result = await integrationsApi.google.drive.createFolder({ name, parentId });
+      return result.data;
     },
     onSuccess: () => {
       toast.success('Pasta do paciente criada no Google Drive');
-    }
+      queryClient.invalidateQueries({ queryKey: ['drive-files'] });
+    },
   });
 
   return {
@@ -93,8 +86,6 @@ export function useGoogleDocs() {
     isGenerating: generateReport.isPending,
     createPatientFolder: createPatientFolder.mutate,
     isCreatingFolder: createPatientFolder.isPending,
-    
-    // Constants
     CLINICAL_REPORT_PLACEHOLDERS,
     CERTIFICATE_PLACEHOLDERS,
     DECLARATION_PLACEHOLDERS,

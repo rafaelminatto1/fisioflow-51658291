@@ -1,94 +1,42 @@
 /**
- * useTreatmentCycles - Firestore CRUD hook for treatment cycles
- *
- * Linear-inspired sprint/cycle tracking for patient treatment plans.
- * Collection: treatment_cycles/{cycleId}
+ * useTreatmentCycles - Migrated to Neon/Workers
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  db,
-  collection,
-  doc,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  getDocs,
-  orderBy,
-  query as firestoreQuery,
-  where,
-  serverTimestamp,
-} from '@/integrations/firebase/app';
-import { getFirebaseAuth } from '@/integrations/firebase/app';
+import { treatmentCyclesApi } from '@/lib/api/workers-client';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import type { TreatmentCycle } from '@/components/evolution/TreatmentCycles';
-
-// ---------------------------------------------------------------------------
-// Query keys
-// ---------------------------------------------------------------------------
 
 const cycleKeys = {
   all: ['treatment-cycles'] as const,
   list: (patientId: string) => [...cycleKeys.all, 'list', patientId] as const,
 };
 
-// ---------------------------------------------------------------------------
-// Firestore helpers
-// ---------------------------------------------------------------------------
-
-async function fetchCycles(patientId: string): Promise<TreatmentCycle[]> {
-  if (!patientId) return [];
-  try {
-    const ref = collection(db, 'treatment_cycles');
-    const q = firestoreQuery(
-      ref,
-      where('patient_id', '==', patientId),
-      orderBy('startDate', 'desc')
-    );
-    const snap = await getDocs(q);
-    return snap.docs.map((d) => ({
-      id: d.id,
-      ...(d.data() as Omit<TreatmentCycle, 'id'>),
-    }));
-  } catch (err) {
-    logger.error('Error fetching treatment cycles', err, 'useTreatmentCycles');
-    return [];
-  }
-}
-
 export type CreateCycleInput = Omit<TreatmentCycle, 'id'> & { patient_id?: string };
 export type UpdateCycleInput = Partial<Omit<TreatmentCycle, 'id'>>;
 
-// ---------------------------------------------------------------------------
-// Hook
-// ---------------------------------------------------------------------------
-
 export function useTreatmentCycles(patientId: string) {
   const queryClient = useQueryClient();
-  const auth = getFirebaseAuth();
 
-  // --- Query ---
   const cyclesQuery = useQuery({
     queryKey: cycleKeys.list(patientId),
-    queryFn: () => fetchCycles(patientId),
+    queryFn: async () => {
+      if (!patientId) return [];
+      const result = await treatmentCyclesApi.list(patientId);
+      return (result.data ?? []) as unknown as TreatmentCycle[];
+    },
     enabled: !!patientId,
     staleTime: 60_000,
     gcTime: 5 * 60_000,
   });
 
-  // --- Create ---
   const createCycleMutation = useMutation({
     mutationFn: async (input: CreateCycleInput) => {
-      const user = auth.currentUser;
-      const ref = collection(db, 'treatment_cycles');
-      const docRef = await addDoc(ref, {
+      const result = await treatmentCyclesApi.create({
         ...input,
         patient_id: input.patient_id ?? patientId,
-        therapistId: input.therapistId ?? user?.uid ?? '',
-        created_at: serverTimestamp(),
-        updated_at: serverTimestamp(),
-      });
-      return docRef.id;
+      } as Record<string, unknown>);
+      return result.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: cycleKeys.list(patientId) });
@@ -98,14 +46,10 @@ export function useTreatmentCycles(patientId: string) {
     },
   });
 
-  // --- Update ---
   const updateCycleMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: UpdateCycleInput }) => {
-      const ref = doc(db, 'treatment_cycles', id);
-      await updateDoc(ref as Parameters<typeof updateDoc>[0], {
-        ...data,
-        updated_at: serverTimestamp(),
-      });
+      const result = await treatmentCyclesApi.update(id, data as Record<string, unknown>);
+      return result.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: cycleKeys.list(patientId) });
@@ -115,10 +59,9 @@ export function useTreatmentCycles(patientId: string) {
     },
   });
 
-  // --- Delete ---
   const deleteCycleMutation = useMutation({
     mutationFn: async (cycleId: string) => {
-      await deleteDoc(doc(db, 'treatment_cycles', cycleId));
+      await treatmentCyclesApi.delete(cycleId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: cycleKeys.list(patientId) });

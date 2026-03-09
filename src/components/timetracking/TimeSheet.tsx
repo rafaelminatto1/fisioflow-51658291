@@ -160,12 +160,12 @@ export function TimeSheet({ entries, onUpdate, onDelete, isLoading }: TimeSheetP
                   <TableCell>
                     <div className="text-sm">
                       <div>
-                        {format(entry.start_time.toDate(), 'dd/MMM', { locale: ptBR })}
+                        {format(new Date(entry.start_time), 'dd/MMM', { locale: ptBR })}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {format(entry.start_time.toDate(), 'HH:mm')} -{' '}
+                        {format(new Date(entry.start_time), 'HH:mm')} -{' '}
                         {entry.end_time
-                          ? format(entry.end_time.toDate(), 'HH:mm')
+                          ? format(new Date(entry.end_time!), 'HH:mm')
                           : 'em andamento'}
                       </div>
                     </div>

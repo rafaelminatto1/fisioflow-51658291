@@ -4,9 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Mail, Send, Loader2 } from 'lucide-react';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
+import { communicationsApi } from '@/lib/api/workers-client';
 
 export default function EmailTest() {
   const [email, setEmail] = useState('');
@@ -18,15 +17,15 @@ export default function EmailTest() {
     setLoading(true);
 
     try {
-      const sendEmail = httpsCallable(functions, 'sendEmail');
-      await sendEmail({
+      await communicationsApi.testEmail({
         to: email,
         subject: 'Bem-vindo ao FisioFlow (Teste)',
         type: 'welcome',
+        body: 'Email transacional de teste do FisioFlow.',
         data: {
           name: 'Visitante',
-          clinicName: 'Clínica Modelo'
-        }
+          clinicName: 'Clínica Modelo',
+        },
       });
 
       toast({
@@ -37,7 +36,7 @@ export default function EmailTest() {
       console.error(error);
       toast({
         title: "Erro no Envio",
-        description: error.message || "Falha ao conectar com o Resend.",
+        description: error instanceof Error ? error.message : "Falha ao enviar email de teste.",
         variant: "destructive"
       });
     } finally {

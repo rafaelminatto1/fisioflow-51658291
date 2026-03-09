@@ -24,8 +24,7 @@ import { Save, Loader2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import type { TemplateField } from './EvaluationTemplateSelector';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { httpsCallable } from 'firebase/functions';
-import { getFirebaseFunctions } from '@/integrations/firebase/functions';
+import { evaluationFormsApi } from '@/lib/api/workers-client';
 
 interface SaveAsTemplateDialogProps {
     open: boolean;
@@ -62,27 +61,29 @@ export function SaveAsTemplateDialog({
 
     const saveTemplateMutation = useMutation({
         mutationFn: async () => {
-            // Use Firebase callable function to create evaluation template
-            const saveTemplateFn = httpsCallable(getFirebaseFunctions(), 'saveEvaluationTemplate');
-            const result = await saveTemplateFn({
+            const created = await evaluationFormsApi.create({
                 nome: formData.nome,
                 descricao: formData.descricao || null,
                 tipo: formData.tipo,
-                campos: fields.map((field, index) => ({
-                    label: field.label,
-                    tipo_campo: field.tipo_campo,
-                    placeholder: field.placeholder,
-                    opcoes: field.opcoes || null,
-                    ordem: index + 1,
-                    obrigatorio: field.obrigatorio,
-                })),
+                ativo: true,
             });
 
-            if (result.data?.error) {
-                throw new Error(result.data.error);
-            }
+            const form = (created?.data ?? created) as { id: string };
 
-            return result.data;
+            await Promise.all(
+                fields.map((field, index) =>
+                    evaluationFormsApi.addField(form.id, {
+                        label: field.label,
+                        tipo_campo: field.tipo_campo,
+                        placeholder: field.placeholder,
+                        opcoes: field.opcoes || null,
+                        ordem: index + 1,
+                        obrigatorio: field.obrigatorio,
+                    })
+                )
+            );
+
+            return form;
         },
         onSuccess: (form) => {
             queryClient.invalidateQueries({ queryKey: ['evaluation-templates-with-fields'] });

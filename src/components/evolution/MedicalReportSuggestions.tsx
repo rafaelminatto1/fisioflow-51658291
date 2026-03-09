@@ -10,9 +10,9 @@ import {
   FileText
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { db, collection, query, where, getDocs, orderBy, limit } from '@/integrations/firebase/app';
 import { useAI } from '@/integrations/firebase/ai';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { evolutionApi, sessionsApi } from '@/lib/api/workers-client';
 
 interface MedicalReportSuggestionsProps {
   patientId: string;
@@ -38,16 +38,13 @@ export const MedicalReportSuggestions: React.FC<MedicalReportSuggestionsProps> =
     
     setIsLoading(true);
     try {
-      // 1. Buscar dados históricos do Firestore (substituindo Supabase)
-      const soapRef = collection(db, 'soap_records');
-      const soapQuery = query(soapRef, where('patient_id', '==', patientId), orderBy('created_at', 'desc'), limit(5));
-      const soapSnap = await getDocs(soapQuery);
-      const history = soapSnap.docs.map(d => d.data());
+      const [soapResponse, metricsResponse] = await Promise.all([
+        sessionsApi.list({ patientId, limit: 5 }),
+        evolutionApi.measurements.list(patientId, { limit: 10 }),
+      ]);
 
-      const measureRef = collection(db, 'evolution_measurements');
-      const measureQuery = query(measureRef, where('patient_id', '==', patientId), orderBy('measured_at', 'desc'), limit(10));
-      const measureSnap = await getDocs(measureQuery);
-      const metrics = measureSnap.docs.map(d => d.data());
+      const history = soapResponse.data ?? [];
+      const metrics = metricsResponse.data ?? [];
 
       // 2. Construir prompt rico para o Gemini
       const prompt = `
