@@ -14,10 +14,30 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/auth';
 import { Card, Button } from '@/components';
-import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { NotificationCategory, NotificationPreference, NotificationPreferences } from '@/types/notifications';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { config } from '@/lib/config';
+import { authApi } from '@/lib/auth-api';
+
+const fetchApi = async (endpoint: string, method: string = 'GET', body?: any) => {
+  const token = await authApi.getToken();
+  if (!token) throw new Error('Not authenticated');
+
+  const res = await fetch(`${config.apiUrl}${endpoint}`, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+
+  if (!res.ok) {
+    if (res.status === 404 && method === 'GET') return null;
+    throw new Error(`API Error: ${res.status}`);
+  }
+  return res.json();
+};
 
 export default function NotificationPreferencesScreen() {
   const colors = useColors();
@@ -40,11 +60,10 @@ export default function NotificationPreferencesScreen() {
     if (!user?.id) return;
     setIsLoading(true);
     try {
-      const prefRef = doc(db, 'notification_preferences', user.id);
-      const snapshot = await getDoc(prefRef);
+      const data = await fetchApi(`/api/settings/notifications/${user.id}`);
       
-      if (snapshot.exists()) {
-        setPreferences(snapshot.data() as NotificationPreferences);
+      if (data) {
+        setPreferences(data);
       } else {
         // Default preferences
         const defaultPrefs: NotificationPreferences = {
@@ -79,10 +98,9 @@ export default function NotificationPreferencesScreen() {
     if (!user?.id || !preferences) return;
     setIsSaving(true);
     try {
-      const prefRef = doc(db, 'notification_preferences', user.id);
-      await setDoc(prefRef, {
+      await fetchApi(`/api/settings/notifications/${user.id}`, 'PUT', {
         ...preferences,
-        updatedAt: serverTimestamp(),
+        updatedAt: new Date().toISOString(),
       });
       Alert.alert('Sucesso', 'Suas preferências foram salvas.');
     } catch (error) {
@@ -217,85 +235,22 @@ export default function NotificationPreferencesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-  },
-  header: {
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    lineHeight: 22,
-  },
-  categoryCard: {
-    marginBottom: 16,
-    padding: 16,
-  },
-  categoryHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  categoryTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  categoryTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  quietHoursContainer: {
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.05)',
-    paddingTop: 12,
-  },
-  quietHoursHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  quietHoursLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  timeRows: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
-  },
-  timeButton: {
-    flex: 1,
-    padding: 10,
-    borderRadius: 8,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  timeLabel: {
-    fontSize: 13,
-  },
-  timeValue: {
-    fontSize: 15,
-    fontWeight: 'bold',
-  },
-  saveButton: {
-    marginTop: 24,
-    marginBottom: 32,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  container: { flex: 1 },
+  scrollContent: { padding: 16 },
+  header: { marginBottom: 24 },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 8 },
+  subtitle: { fontSize: 16, lineHeight: 22 },
+  categoryCard: { marginBottom: 16, padding: 16 },
+  categoryHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  categoryTitleContainer: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  categoryTitle: { fontSize: 18, fontWeight: '600' },
+  quietHoursContainer: { borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.05)', paddingTop: 12 },
+  quietHoursHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 },
+  quietHoursLabel: { fontSize: 14, fontWeight: '600' },
+  timeRows: { flexDirection: 'row', gap: 12, marginTop: 8 },
+  timeButton: { flex: 1, padding: 10, borderRadius: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  timeLabel: { fontSize: 13 },
+  timeValue: { fontSize: 15, fontWeight: 'bold' },
+  saveButton: { marginTop: 24, marginBottom: 32 },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 });

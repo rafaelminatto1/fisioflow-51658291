@@ -1,18 +1,11 @@
 /**
- * Medical Record Service - Complete CRUD operations for patient medical records
- *
- * This service provides a comprehensive interface for managing patient medical records,
- * including SOAP notes, attachments, document history, and PDF export.
+ * Medical Record Service - Workers/Neon first, local fallback for unsupported sections
  */
 
-
-// ===== TYPES =====
-
-import { db, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
-import { fisioLogger as logger } from '@/lib/errors/logger';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { patientsApi, sessionsApi, type PatientMedicalRecord, type SessionRecord } from '@/lib/api/workers-client';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface MedicalRecord {
   id: string;
@@ -53,7 +46,7 @@ export interface PhysicalExamination extends MedicalRecord {
     bmi?: number;
   };
   general_appearance?: string;
-  heent?: string; // Head, Eyes, Ears, Nose, Throat
+  heent?: string;
   cardiovascular?: string;
   respiratory?: string;
   gastrointestinal?: string;
@@ -92,338 +85,366 @@ export interface Attachment {
   description?: string;
 }
 
-// ===== ERROR CLASS =====
-
 export class MedicalRecordError extends Error {
   constructor(
     message: string,
     public code?: string,
-    public originalError?: unknown
+    public originalError?: unknown,
   ) {
     super(message);
     this.name = 'MedicalRecordError';
   }
 }
 
-// ===== ANAMNESIS CRUD =====
+const ANAMNESIS_INDEX_KEY = 'medical-records:anamnesis-index';
+const PHYSICAL_EXAM_PREFIX = 'medical-records:physical:';
+const TREATMENT_PLAN_PREFIX = 'medical-records:treatment:';
+const ATTACHMENTS_PREFIX = 'medical-records:attachments:';
 
-/**
- * Get anamnesis records for a patient
- */
+function canUseStorage() {
+  return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
+}
+
+function readJson<T>(key: string, fallback: T): T {
+  if (!canUseStorage()) return fallback;
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeJson<T>(key: string, value: T) {
+  if (!canUseStorage()) return;
+  window.localStorage.setItem(key, JSON.stringify(value));
+}
+
+function listKeys(prefix: string): string[] {
+  if (!canUseStorage()) return [];
+  const keys: string[] = [];
+  for (let i = 0; i < window.localStorage.length; i += 1) {
+    const key = window.localStorage.key(i);
+    if (key?.startsWith(prefix)) keys.push(key);
+  }
+  return keys;
+}
+
+function sortByDateDesc<T extends { record_date?: string; created_at?: string }>(items: T[]) {
+  return [...items].sort((a, b) => {
+    const left = a.record_date ?? a.created_at ?? '';
+    const right = b.record_date ?? b.created_at ?? '';
+    return right.localeCompare(left);
+  });
+}
+
+function physicalExamKey(patientId: string) {
+  return `${PHYSICAL_EXAM_PREFIX}${patientId}`;
+}
+
+function treatmentPlanKey(patientId: string) {
+  return `${TREATMENT_PLAN_PREFIX}${patientId}`;
+}
+
+function attachmentsKey(patientId: string) {
+  return `${ATTACHMENTS_PREFIX}${patientId}`;
+}
+
+function mapMedicalRecord(record: PatientMedicalRecord): AnamnesisRecord {
+  return {
+    id: record.id,
+    patient_id: record.patient_id,
+    record_date: record.record_date,
+    created_at: record.created_at ?? record.record_date,
+    updated_at: record.updated_at ?? record.record_date,
+    created_by: record.created_by ?? '',
+    chief_complaint: record.chief_complaint ?? undefined,
+    history_present_illness: record.medical_history ?? undefined,
+    past_medical_history: record.previous_surgeries ?? undefined,
+    medications: splitCsv(record.current_medications),
+    allergies: splitCsv(record.allergies),
+    family_history: record.family_history ?? undefined,
+    lifestyle: record.lifestyle_habits
+      ? {
+          exercise: record.lifestyle_habits,
+        }
+      : undefined,
+  };
+}
+
+function splitCsv(value?: string | null): string[] | undefined {
+  if (!value) return undefined;
+  const items = value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+  return items.length ? items : undefined;
+}
+
+function joinCsv(values?: string[]): string | undefined {
+  if (!values?.length) return undefined;
+  return values.join(', ');
+}
+
+function rememberAnamnesisRecord(record: { id: string; patient_id: string }) {
+  const index = readJson<Record<string, string>>(ANAMNESIS_INDEX_KEY, {});
+  index[record.id] = record.patient_id;
+  writeJson(ANAMNESIS_INDEX_KEY, index);
+}
+
+function getPatientIdByAnamnesisRecord(recordId: string): string | null {
+  const index = readJson<Record<string, string>>(ANAMNESIS_INDEX_KEY, {});
+  return index[recordId] ?? null;
+}
+
+async function upsertPatientMedicalRecord(
+  patientId: string,
+  data: Partial<AnamnesisRecord>,
+  userId: string,
+): Promise<AnamnesisRecord> {
+  const existing = await patientsApi.medicalRecords(patientId);
+  const current = existing.data?.[0];
+  const payload = {
+    chief_complaint: data.chief_complaint,
+    medical_history: data.history_present_illness,
+    previous_surgeries: data.past_medical_history,
+    current_medications: joinCsv(data.medications),
+    allergies: joinCsv(data.allergies),
+    family_history: data.family_history,
+    lifestyle_habits: data.lifestyle?.exercise,
+    record_date: data.record_date ?? new Date().toISOString().slice(0, 10),
+    created_by: userId,
+  };
+
+  const response = current
+    ? await patientsApi.updateMedicalRecord(patientId, current.id, payload)
+    : await patientsApi.createMedicalRecord(patientId, payload);
+  const mapped = mapMedicalRecord(response.data);
+  rememberAnamnesisRecord(mapped);
+  return mapped;
+}
+
+function getLocalCollection<T>(prefixKey: string): T[] {
+  return sortByDateDesc(readJson<T[]>(prefixKey, [] as T[]));
+}
+
+function saveLocalCollection<T>(prefixKey: string, items: T[]) {
+  writeJson(prefixKey, items);
+}
+
+function buildRecordId(prefix: string) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+async function upsertLocalRecord<T extends MedicalRecord>(
+  storageKey: string,
+  data: Partial<T>,
+  patientId: string,
+  userId: string,
+  idPrefix: string,
+): Promise<T> {
+  const items = getLocalCollection<T>(storageKey);
+  const id = data.id ?? buildRecordId(idPrefix);
+  const createdAt = items.find((item) => item.id === id)?.created_at ?? new Date().toISOString();
+  const nextRecord = {
+    ...(items.find((item) => item.id === id) ?? {}),
+    ...data,
+    id,
+    patient_id: patientId,
+    record_date: data.record_date ?? new Date().toISOString().slice(0, 10),
+    created_by: data.created_by ?? userId,
+    created_at: createdAt,
+    updated_at: new Date().toISOString(),
+  } as T;
+
+  const nextItems = sortByDateDesc([
+    nextRecord,
+    ...items.filter((item) => item.id !== id),
+  ]);
+  saveLocalCollection(storageKey, nextItems);
+  return nextRecord;
+}
+
+function removeFromLocalCollection(prefix: string, id: string): boolean {
+  const keys = listKeys(prefix);
+  let removed = false;
+  keys.forEach((key) => {
+    const items = readJson<Array<{ id: string }>>(key, []);
+    const next = items.filter((item) => item.id !== id);
+    if (next.length !== items.length) {
+      removed = true;
+      writeJson(key, next);
+    }
+  });
+  return removed;
+}
+
 export async function getAnamnesisRecords(patientId: string): Promise<AnamnesisRecord[]> {
   try {
-    const q = firestoreQuery(
-      collection(db, 'anamnesis_records'),
-      where('patient_id', '==', patientId),
-      orderBy('record_date', 'desc')
-    );
-
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...normalizeFirestoreData(doc.data())
-    } as AnamnesisRecord));
+    const response = await patientsApi.medicalRecords(patientId);
+    const records = (response.data ?? []).map(mapMedicalRecord);
+    records.forEach(rememberAnamnesisRecord);
+    return sortByDateDesc(records);
   } catch (error) {
     logger.error('Error fetching anamnesis records', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao buscar anamneses', 'FETCH_ERROR', error);
   }
 }
 
-/**
- * Get latest anamnesis for a patient
- */
 export async function getLatestAnamnesis(patientId: string): Promise<AnamnesisRecord | null> {
   try {
-    const q = firestoreQuery(
-      collection(db, 'anamnesis_records'),
-      where('patient_id', '==', patientId),
-      orderBy('record_date', 'desc'),
-      limit(1)
-    );
-
-    const snapshot = await getDocs(q);
-    if (snapshot.empty) return null;
-
-    const doc = snapshot.docs[0];
-    return {
-      id: doc.id,
-      ...normalizeFirestoreData(doc.data())
-    } as AnamnesisRecord;
+    const records = await getAnamnesisRecords(patientId);
+    return records[0] ?? null;
   } catch (error) {
     logger.error('Error fetching latest anamnesis', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao buscar anamnese', 'FETCH_ERROR', error);
   }
 }
 
-/**
- * Create or update anamnesis record
- */
-export async function saveAnamnesis(patientId: string, data: Partial<AnamnesisRecord>, userId: string): Promise<AnamnesisRecord> {
+export async function saveAnamnesis(
+  patientId: string,
+  data: Partial<AnamnesisRecord>,
+  userId: string,
+): Promise<AnamnesisRecord> {
   try {
-    const recordData = {
-      ...data,
-      patient_id: patientId,
-      record_date: data.record_date || new Date().toISOString().split('T')[0],
-      created_by: userId,
-      updated_at: new Date().toISOString(),
-    };
-
-    // Check if there's an existing anamnesis for this date
-    const existingQuery = firestoreQuery(
-      collection(db, 'anamnesis_records'),
-      where('patient_id', '==', patientId),
-      where('record_date', '==', recordData.record_date),
-      limit(1)
-    );
-
-    const existingSnapshot = await getDocs(existingQuery);
-
-    if (!existingSnapshot.empty) {
-      // Update existing record
-      const existingDoc = existingSnapshot.docs[0];
-      await updateDoc(existingDoc.ref, {
-        ...recordData,
-        created_at: existingDoc.data().created_at, // Preserve original creation date
-      });
-
-      return {
-        id: existingDoc.id,
-        ...recordData,
-        created_at: existingDoc.data().created_at
-      } as AnamnesisRecord;
-    }
-
-    // Create new record
-    const docRef = await addDoc(collection(db, 'anamnesis_records'), {
-      ...recordData,
-      created_at: new Date().toISOString(),
-    });
-
-    return {
-      id: docRef.id,
-      ...recordData
-    } as AnamnesisRecord;
+    return await upsertPatientMedicalRecord(patientId, data, userId);
   } catch (error) {
     logger.error('Error saving anamnesis', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao salvar anamnese', 'SAVE_ERROR', error);
   }
 }
 
-/**
- * Delete anamnesis record
- */
 export async function deleteAnamnesis(recordId: string): Promise<void> {
   try {
-    const docRef = doc(db, 'anamnesis_records', recordId);
-    await deleteDoc(docRef);
+    const patientId = getPatientIdByAnamnesisRecord(recordId);
+    if (!patientId) throw new Error('Paciente do prontuário não encontrado');
+    await patientsApi.deleteMedicalRecord(patientId, recordId);
   } catch (error) {
     logger.error('Error deleting anamnesis', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao excluir anamnese', 'DELETE_ERROR', error);
   }
 }
 
-// ===== PHYSICAL EXAMINATION CRUD =====
-
-/**
- * Get physical examination records for a patient
- */
 export async function getPhysicalExaminations(patientId: string): Promise<PhysicalExamination[]> {
   try {
-    const q = firestoreQuery(
-      collection(db, 'physical_examinations'),
-      where('patient_id', '==', patientId),
-      orderBy('record_date', 'desc')
-    );
-
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...normalizeFirestoreData(doc.data())
-    } as PhysicalExamination));
+    return getLocalCollection<PhysicalExamination>(physicalExamKey(patientId));
   } catch (error) {
     logger.error('Error fetching physical examinations', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao buscar exames físicos', 'FETCH_ERROR', error);
   }
 }
 
-/**
- * Save physical examination record
- */
-export async function savePhysicalExamination(patientId: string, data: Partial<PhysicalExamination>, userId: string): Promise<PhysicalExamination> {
+export async function savePhysicalExamination(
+  patientId: string,
+  data: Partial<PhysicalExamination>,
+  userId: string,
+): Promise<PhysicalExamination> {
   try {
-    const recordData = {
-      ...data,
-      patient_id: patientId,
-      record_date: data.record_date || new Date().toISOString().split('T')[0],
-      created_by: userId,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
-    const docRef = await addDoc(collection(db, 'physical_examinations'), recordData);
-
-    return {
-      id: docRef.id,
-      ...recordData
-    } as PhysicalExamination;
+    return await upsertLocalRecord<PhysicalExamination>(
+      physicalExamKey(patientId),
+      data,
+      patientId,
+      userId,
+      'physical-exam',
+    );
   } catch (error) {
     logger.error('Error saving physical examination', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao salvar exame físico', 'SAVE_ERROR', error);
   }
 }
 
-// ===== TREATMENT PLAN CRUD =====
-
-/**
- * Get treatment plans for a patient
- */
 export async function getTreatmentPlans(patientId: string): Promise<TreatmentPlan[]> {
   try {
-    const q = firestoreQuery(
-      collection(db, 'treatment_plans'),
-      where('patient_id', '==', patientId),
-      orderBy('record_date', 'desc')
-    );
-
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...normalizeFirestoreData(doc.data())
-    } as TreatmentPlan));
+    return getLocalCollection<TreatmentPlan>(treatmentPlanKey(patientId));
   } catch (error) {
     logger.error('Error fetching treatment plans', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao buscar planos de tratamento', 'FETCH_ERROR', error);
   }
 }
 
-/**
- * Get active treatment plan for a patient
- */
 export async function getActiveTreatmentPlan(patientId: string): Promise<TreatmentPlan | null> {
   try {
     const plans = await getTreatmentPlans(patientId);
-    // Return the most recent plan
-    return plans.length > 0 ? plans[0] : null;
+    return plans[0] ?? null;
   } catch (error) {
     logger.error('Error fetching active treatment plan', error, 'medicalRecordService');
     return null;
   }
 }
 
-/**
- * Save treatment plan
- */
-export async function saveTreatmentPlan(patientId: string, data: Partial<TreatmentPlan>, userId: string): Promise<TreatmentPlan> {
+export async function saveTreatmentPlan(
+  patientId: string,
+  data: Partial<TreatmentPlan>,
+  userId: string,
+): Promise<TreatmentPlan> {
   try {
-    const recordData = {
-      ...data,
-      patient_id: patientId,
-      record_date: data.record_date || new Date().toISOString().split('T')[0],
-      created_by: userId,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
-    const docRef = await addDoc(collection(db, 'treatment_plans'), recordData);
-
-    return {
-      id: docRef.id,
-      ...recordData
-    } as TreatmentPlan;
+    return await upsertLocalRecord<TreatmentPlan>(
+      treatmentPlanKey(patientId),
+      data,
+      patientId,
+      userId,
+      'treatment-plan',
+    );
   } catch (error) {
     logger.error('Error saving treatment plan', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao salvar plano de tratamento', 'SAVE_ERROR', error);
   }
 }
 
-/**
- * Update treatment plan
- */
 export async function updateTreatmentPlan(planId: string, data: Partial<TreatmentPlan>): Promise<TreatmentPlan> {
   try {
-    const docRef = doc(db, 'treatment_plans', planId);
-
-    await updateDoc(docRef, {
-      ...data,
-      updated_at: new Date().toISOString(),
-    });
-
-    const snapshot = await getDoc(docRef);
-    return {
-      id: snapshot.id,
-      ...snapshot.data()
-    } as TreatmentPlan;
+    const keys = listKeys(TREATMENT_PLAN_PREFIX);
+    for (const key of keys) {
+      const patientId = key.replace(TREATMENT_PLAN_PREFIX, '');
+      const items = readJson<TreatmentPlan[]>(key, []);
+      const current = items.find((item) => item.id === planId);
+      if (!current) continue;
+      return upsertLocalRecord<TreatmentPlan>(
+        key,
+        { ...current, ...data },
+        patientId,
+        current.created_by,
+        'treatment-plan',
+      );
+    }
+    throw new Error('Plano de tratamento não encontrado');
   } catch (error) {
     logger.error('Error updating treatment plan', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao atualizar plano de tratamento', 'UPDATE_ERROR', error);
   }
 }
 
-// ===== ATTACHMENTS =====
-
-/**
- * Get attachments for a patient
- */
 export async function getPatientAttachments(patientId: string): Promise<Attachment[]> {
   try {
-    const q = firestoreQuery(
-      collection(db, 'medical_attachments'),
-      where('patient_id', '==', patientId),
-      orderBy('uploaded_at', 'desc')
-    );
-
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...normalizeFirestoreData(doc.data())
-    } as Attachment));
+    return getLocalCollection<Attachment>(attachmentsKey(patientId));
   } catch (error) {
     logger.error('Error fetching attachments', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao buscar anexos', 'FETCH_ERROR', error);
   }
 }
 
-/**
- * Get attachments for a specific record
- */
 export async function getRecordAttachments(recordId: string): Promise<Attachment[]> {
   try {
-    const q = firestoreQuery(
-      collection(db, 'medical_attachments'),
-      where('record_id', '==', recordId),
-      orderBy('uploaded_at', 'desc')
-    );
-
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...normalizeFirestoreData(doc.data())
-    } as Attachment));
+    return listKeys(ATTACHMENTS_PREFIX)
+      .flatMap((key) => readJson<Attachment[]>(key, []))
+      .filter((attachment) => attachment.record_id === recordId)
+      .sort((a, b) => b.uploaded_at.localeCompare(a.uploaded_at));
   } catch (error) {
     logger.error('Error fetching record attachments', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao buscar anexos', 'FETCH_ERROR', error);
   }
 }
 
-/**
- * Delete attachment
- */
 export async function deleteAttachment(attachmentId: string): Promise<void> {
   try {
-    const docRef = doc(db, 'medical_attachments', attachmentId);
-    await deleteDoc(docRef);
+    const removed = removeFromLocalCollection(ATTACHMENTS_PREFIX, attachmentId);
+    if (!removed) throw new Error('Anexo não encontrado');
   } catch (error) {
     logger.error('Error deleting attachment', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao excluir anexo', 'DELETE_ERROR', error);
   }
 }
 
-// ===== CONSULTATION HISTORY =====
-
-/**
- * Get complete consultation history for a patient
- * Includes SOAP notes, treatment plans, and examinations
- */
 export interface ConsultationHistory {
   date: string;
   soap_notes?: Array<{
@@ -446,56 +467,79 @@ export interface ConsultationHistory {
   }>;
 }
 
-export async function getConsultationHistory(patientId: string, _startDate?: string, _endDate?: string): Promise<ConsultationHistory[]> {
+function toHistoryEntry(session: SessionRecord) {
+  return {
+    id: session.id,
+    subjective: session.subjective,
+    objective: session.objective,
+    assessment: session.assessment,
+    plan: session.plan,
+    status: session.status,
+  };
+}
+
+export async function getConsultationHistory(
+  patientId: string,
+  startDate?: string,
+  endDate?: string,
+): Promise<ConsultationHistory[]> {
   try {
-    // This would be more efficient with a proper backend function
-    // For now, fetch all relevant records and group them by date
+    const [sessionsResponse, treatmentPlans, examinations] = await Promise.all([
+      sessionsApi.list({ patientId, limit: 100 }),
+      getTreatmentPlans(patientId),
+      getPhysicalExaminations(patientId),
+    ]);
 
     const historyMap = new Map<string, ConsultationHistory>();
 
-    // Fetch SOAP notes
-    const soapQuery = firestoreQuery(
-      collection(db, 'soap_records'),
-      where('patient_id', '==', patientId),
-      orderBy('record_date', 'desc')
-    );
-    const soapSnapshot = await getDocs(soapQuery);
-
-    soapSnapshot.docs.forEach(doc => {
-      const data = normalizeFirestoreData(doc.data());
-      const date = data.record_date || data.created_at;
-
-      if (!historyMap.has(date)) {
-        historyMap.set(date, { date });
-      }
-
-      const entry = historyMap.get(date)!;
-      if (!entry.soap_notes) entry.soap_notes = [];
-      entry.soap_notes.push({
-        id: doc.id,
-        subjective: data.subjective,
-        objective: data.objective,
-        assessment: data.assessment,
-        plan: data.plan,
-        status: data.status,
-      });
+    (sessionsResponse.data ?? []).forEach((session) => {
+      const date = session.record_date ?? session.created_at;
+      if (startDate && date < startDate) return;
+      if (endDate && date > endDate) return;
+      const current = historyMap.get(date) ?? { date };
+      current.soap_notes = [...(current.soap_notes ?? []), toHistoryEntry(session)];
+      historyMap.set(date, current);
     });
 
-    // Convert map to array and sort by date descending
-    return Array.from(historyMap.values()).sort((a, b) =>
-      b.date.localeCompare(a.date)
-    );
+    treatmentPlans.forEach((plan) => {
+      const date = plan.record_date;
+      if (startDate && date < startDate) return;
+      if (endDate && date > endDate) return;
+      const current = historyMap.get(date) ?? { date };
+      current.treatment_plans = [
+        ...(current.treatment_plans ?? []),
+        {
+          id: plan.id,
+          diagnosis: plan.diagnosis,
+          objectives: plan.objectives,
+          procedures: plan.procedures,
+        },
+      ];
+      historyMap.set(date, current);
+    });
+
+    examinations.forEach((exam) => {
+      const date = exam.record_date;
+      if (startDate && date < startDate) return;
+      if (endDate && date > endDate) return;
+      const current = historyMap.get(date) ?? { date };
+      current.examinations = [
+        ...(current.examinations ?? []),
+        {
+          id: exam.id,
+          vital_signs: exam.vital_signs,
+        },
+      ];
+      historyMap.set(date, current);
+    });
+
+    return Array.from(historyMap.values()).sort((a, b) => b.date.localeCompare(a.date));
   } catch (error) {
     logger.error('Error fetching consultation history', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao buscar histórico de consultas', 'FETCH_ERROR', error);
   }
 }
 
-// ===== PDF EXPORT =====
-
-/**
- * Generate medical record summary for PDF export
- */
 export interface MedicalRecordSummary {
   patient: {
     name: string;
@@ -517,42 +561,37 @@ export interface MedicalRecordSummary {
   generatedAt: string;
 }
 
-export async function generateMedicalRecordSummary(patientId: string, patientData: {
-  name: string;
-  birthDate?: string;
-  cpf?: string;
-  phone?: string;
-  email?: string;
-}): Promise<MedicalRecordSummary> {
+export async function generateMedicalRecordSummary(
+  patientId: string,
+  patientData: {
+    name: string;
+    birthDate?: string;
+    cpf?: string;
+    phone?: string;
+    email?: string;
+  },
+): Promise<MedicalRecordSummary> {
   try {
-    const [anamnesis, examinations, plans, soapRecords] = await Promise.all([
+    const [anamnesis, examinations, plans, sessionsResponse] = await Promise.all([
       getLatestAnamnesis(patientId),
       getPhysicalExaminations(patientId),
       getTreatmentPlans(patientId),
-      getDocs(firestoreQuery(
-        collection(db, 'soap_records'),
-        where('patient_id', '==', patientId),
-        orderBy('record_date', 'desc'),
-        limit(5)
-      )),
+      sessionsApi.list({ patientId, limit: 5 }),
     ]);
 
-    const recentNotes = soapRecords.docs.map(doc => {
-      const data = normalizeFirestoreData(doc.data());
-      return {
-        date: data.record_date || data.created_at,
-        subjective: data.subjective,
-        objective: data.objective,
-        assessment: data.assessment,
-        plan: data.plan,
-      };
-    });
+    const recentNotes = (sessionsResponse.data ?? []).slice(0, 5).map((session) => ({
+      date: session.record_date ?? session.created_at,
+      subjective: session.subjective,
+      objective: session.objective,
+      assessment: session.assessment,
+      plan: session.plan,
+    }));
 
     return {
       patient: patientData,
-      anamnesis: anamnesis || undefined,
-      latestExamination: examinations[0] || undefined,
-      activePlan: plans[0] || undefined,
+      anamnesis: anamnesis ?? undefined,
+      latestExamination: examinations[0] ?? undefined,
+      activePlan: plans[0] ?? undefined,
       recentNotes,
       generatedAt: new Date().toISOString(),
     };
@@ -562,13 +601,10 @@ export async function generateMedicalRecordSummary(patientId: string, patientDat
   }
 }
 
-/**
- * Format medical record summary as HTML for PDF generation
- */
 export function formatMedicalRecordAsHTML(summary: MedicalRecordSummary): string {
   const formatDate = (dateStr: string) => {
     try {
-      return format(parseISO(dateStr), "dd/MM/yyyy", { locale: ptBR });
+      return format(parseISO(dateStr), 'dd/MM/yyyy', { locale: ptBR });
     } catch {
       return dateStr;
     }
@@ -705,7 +741,7 @@ export function formatMedicalRecordAsHTML(summary: MedicalRecordSummary): string
   ${summary.recentNotes.length > 0 ? `
   <div class="section">
     <h3>Evoluções Recentes</h3>
-    ${summary.recentNotes.map(note => `
+    ${summary.recentNotes.map((note) => `
       <div class="soap-note">
         <div class="date">${formatDate(note.date)}</div>
         ${note.subjective ? `<div class="soap-section"><span class="soap-label">S (Subjetivo):</span> ${note.subjective}</div>` : ''}
@@ -725,33 +761,21 @@ export function formatMedicalRecordAsHTML(summary: MedicalRecordSummary): string
   `.trim();
 }
 
-// Export singleton instance
 export const medicalRecordService = {
-  // Anamnesis
   getAnamnesisRecords,
   getLatestAnamnesis,
   saveAnamnesis,
   deleteAnamnesis,
-
-  // Physical Examination
   getPhysicalExaminations,
   savePhysicalExamination,
-
-  // Treatment Plans
   getTreatmentPlans,
   getActiveTreatmentPlan,
   saveTreatmentPlan,
   updateTreatmentPlan,
-
-  // Attachments
   getPatientAttachments,
   getRecordAttachments,
   deleteAttachment,
-
-  // History
   getConsultationHistory,
-
-  // Export
   generateMedicalRecordSummary,
   formatMedicalRecordAsHTML,
 };

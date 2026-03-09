@@ -20,9 +20,33 @@ import { useAuthStore } from '@/store/auth';
 import { Button, Card } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { updateProfessionalProfile, getProfessionalProfile } from '@/lib/firestore';
 import { uploadAvatar } from '@/lib/storage';
 import * as ImagePicker from 'expo-image-picker';
+import { config } from '@/lib/config';
+import { authApi } from '@/lib/auth-api';
+
+const getProfessionalProfile = async (id: string) => {
+  const token = await authApi.getToken();
+  const res = await fetch(`${config.apiUrl}/api/users/${id}`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!res.ok) return null;
+  return res.json();
+};
+
+const updateProfessionalProfile = async (id: string, data: any) => {
+  const token = await authApi.getToken();
+  const res = await fetch(`${config.apiUrl}/api/users/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  });
+  if (!res.ok) throw new Error('Failed to update profile');
+  return res.json();
+};
 
 interface FormData {
   name: string;
@@ -597,7 +621,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 24,
     borderWidth: 1,
-    // @ts-expect-error - dynamic borderColor
     borderColor: 'rgba(239, 68, 68, 0.3)',
   },
   dangerTitle: {

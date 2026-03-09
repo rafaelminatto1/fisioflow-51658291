@@ -1,9 +1,5 @@
 /**
  * Onboarding Flow Screen
- * Multi-step flow for first-time users:
- * Welcome → Privacy Policy → Terms of Service → Medical Disclaimer → Biometric Setup (optional)
- * 
- * Requirements: 1.5, 1.12
  */
 
 import React, { useState, useEffect } from 'react';
@@ -18,12 +14,12 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { db, auth } from '@/lib/firebase';
-import { doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { LEGAL_VERSIONS } from '@/constants/legalVersions';
 import MedicalDisclaimerModal from '@/components/legal/MedicalDisclaimerModal';
+import { authApi } from '@/lib/auth-api';
+import { config } from '@/lib/config';
 
 type OnboardingStep = 'welcome' | 'privacy' | 'terms' | 'disclaimer' | 'biometric' | 'complete';
 
@@ -34,6 +30,23 @@ interface OnboardingState {
   disclaimerAccepted: boolean;
   biometricSetup: boolean;
 }
+
+const fetchApi = async (endpoint: string, method: string = 'GET', body?: any) => {
+  const token = await authApi.getToken();
+  if (!token) throw new Error('Not authenticated');
+
+  const res = await fetch(`${config.apiUrl}${endpoint}`, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+
+  if (!res.ok) throw new Error(`API Error: ${res.status}`);
+  return res.json();
+};
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -46,22 +59,19 @@ export default function OnboardingScreen() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
-  /**
-   * Check if user has already completed onboarding
-   */
   useEffect(() => {
     checkOnboardingStatus();
   }, []);
 
   const checkOnboardingStatus = async () => {
-    const user = auth.currentUser;
-    if (!user) return;
-
     try {
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
-      if (userDoc.exists() && userDoc.data()?.onboardingComplete) {
-        // User has already completed onboarding, redirect to main app
+      const currentUser = await authApi.getMe();
+      setUser(currentUser);
+      
+      const res = await fetchApi(`/api/users/${currentUser.id}`);
+      if (res.data?.onboardingComplete) {
         router.replace('/(tabs)');
       }
     } catch (error) {
@@ -69,9 +79,6 @@ export default function OnboardingScreen() {
     }
   };
 
-  /**
-   * Get device information for acceptance records
-   */
   const getDeviceInfo = () => {
     return {
       model: Device.modelName || 'Unknown',
@@ -81,70 +88,29 @@ export default function OnboardingScreen() {
     };
   };
 
-  /**
-   * Store privacy policy acceptance
-   */
-  const storePrivacyAcceptance = async () => {
-    const user = auth.currentUser;
+  const storeAcceptance = async (type: string, version: string) => {
     if (!user) throw new Error('No authenticated user');
-
-    const acceptanceData = {
-      userId: user.uid,
-      version: LEGAL_VERSIONS.PRIVACY_POLICY,
-      acceptedAt: serverTimestamp(),
-      deviceInfo: getDeviceInfo(),
-    };
-
-    await setDoc(
-      doc(db, 'privacy_acceptances', `${user.uid}_${LEGAL_VERSIONS.PRIVACY_POLICY}`),
-      acceptanceData
-    );
+    await fetchApi('/api/consents/accept', 'POST', {
+      userId: user.id,
+      type,
+      version,
+      deviceInfo: getDeviceInfo()
+    });
   };
 
-  /**
-   * Store terms of service acceptance
-   */
-  const storeTermsAcceptance = async () => {
-    const user = auth.currentUser;
-    if (!user) throw new Error('No authenticated user');
-
-    const acceptanceData = {
-      userId: user.uid,
-      version: LEGAL_VERSIONS.TERMS_OF_SERVICE,
-      acceptedAt: serverTimestamp(),
-      deviceInfo: getDeviceInfo(),
-    };
-
-    await setDoc(
-      doc(db, 'terms_acceptances', `${user.uid}_${LEGAL_VERSIONS.TERMS_OF_SERVICE}`),
-      acceptanceData
-    );
-  };
-
-  /**
-   * Mark onboarding as complete in user document
-   */
   const completeOnboarding = async () => {
-    const user = auth.currentUser;
     if (!user) throw new Error('No authenticated user');
 
-    await setDoc(
-      doc(db, 'users', user.uid),
-      {
-        onboardingComplete: true,
-        onboardingCompletedAt: serverTimestamp(),
-        privacyPolicyVersion: LEGAL_VERSIONS.PRIVACY_POLICY,
-        termsOfServiceVersion: LEGAL_VERSIONS.TERMS_OF_SERVICE,
-        medicalDisclaimerVersion: LEGAL_VERSIONS.MEDICAL_DISCLAIMER,
-        deviceInfo: getDeviceInfo(),
-      },
-      { merge: true }
-    );
+    await fetchApi(`/api/users/${user.id}`, 'PUT', {
+      onboardingComplete: true,
+      onboardingCompletedAt: new Date().toISOString(),
+      privacyPolicyVersion: LEGAL_VERSIONS.PRIVACY_POLICY,
+      termsOfServiceVersion: LEGAL_VERSIONS.TERMS_OF_SERVICE,
+      medicalDisclaimerVersion: LEGAL_VERSIONS.MEDICAL_DISCLAIMER,
+      deviceInfo: getDeviceInfo(),
+    });
   };
 
-  /**
-   * Navigate to next step
-   */
   const goToNextStep = async () => {
     setIsLoading(true);
     try {
@@ -154,12 +120,12 @@ export default function OnboardingScreen() {
           break;
 
         case 'privacy':
-          await storePrivacyAcceptance();
+          await storeAcceptance('privacy_policy', LEGAL_VERSIONS.PRIVACY_POLICY);
           setState({ ...state, currentStep: 'terms', privacyAccepted: true });
           break;
 
         case 'terms':
-          await storeTermsAcceptance();
+          await storeAcceptance('terms_of_service', LEGAL_VERSIONS.TERMS_OF_SERVICE);
           setState({ ...state, currentStep: 'disclaimer', termsAccepted: true });
           break;
 
@@ -184,17 +150,11 @@ export default function OnboardingScreen() {
     }
   };
 
-  /**
-   * Handle medical disclaimer acknowledgment
-   */
   const handleDisclaimerAcknowledged = async () => {
     setShowDisclaimerModal(false);
     setState({ ...state, currentStep: 'biometric', disclaimerAccepted: true });
   };
 
-  /**
-   * Skip biometric setup
-   */
   const skipBiometric = async () => {
     setIsLoading(true);
     try {
@@ -208,17 +168,10 @@ export default function OnboardingScreen() {
     }
   };
 
-  /**
-   * Setup biometric authentication
-   */
   const setupBiometric = () => {
-    // Navigate to biometric setup screen
     router.push('/(auth)/biometric-setup?mode=onboarding' as any);
   };
 
-  /**
-   * Render welcome step
-   */
   const renderWelcome = () => (
     <View style={styles.stepContainer}>
       <View style={styles.iconContainer}>
@@ -247,9 +200,6 @@ export default function OnboardingScreen() {
     </View>
   );
 
-  /**
-   * Render privacy policy step
-   */
   const renderPrivacy = () => (
     <View style={styles.stepContainer}>
       <View style={styles.iconContainer}>
@@ -263,19 +213,11 @@ export default function OnboardingScreen() {
       <ScrollView style={styles.bulletList}>
         <View style={styles.bulletItem}>
           <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-          <Text style={styles.bulletText}>Criptografia AES-256 para todos os dados</Text>
+          <Text style={styles.bulletText}>Criptografia para todos os dados</Text>
         </View>
         <View style={styles.bulletItem}>
           <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-          <Text style={styles.bulletText}>Conformidade com LGPD e HIPAA</Text>
-        </View>
-        <View style={styles.bulletItem}>
-          <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-          <Text style={styles.bulletText}>Seus direitos de acesso, correção e exclusão</Text>
-        </View>
-        <View style={styles.bulletItem}>
-          <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-          <Text style={styles.bulletText}>Transparência sobre uso de dados</Text>
+          <Text style={styles.bulletText}>Conformidade com LGPD</Text>
         </View>
       </ScrollView>
       <TouchableOpacity
@@ -298,9 +240,6 @@ export default function OnboardingScreen() {
     </View>
   );
 
-  /**
-   * Render terms of service step
-   */
   const renderTerms = () => (
     <View style={styles.stepContainer}>
       <View style={styles.iconContainer}>
@@ -311,24 +250,6 @@ export default function OnboardingScreen() {
         Os Termos de Uso estabelecem as regras para utilização do FisioFlow e suas
         responsabilidades como profissional de saúde.
       </Text>
-      <ScrollView style={styles.bulletList}>
-        <View style={styles.bulletItem}>
-          <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-          <Text style={styles.bulletText}>Uso profissional e ético da plataforma</Text>
-        </View>
-        <View style={styles.bulletItem}>
-          <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-          <Text style={styles.bulletText}>Responsabilidades clínicas</Text>
-        </View>
-        <View style={styles.bulletItem}>
-          <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-          <Text style={styles.bulletText}>Proteção de dados dos pacientes</Text>
-        </View>
-        <View style={styles.bulletItem}>
-          <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-          <Text style={styles.bulletText}>Limitações e garantias</Text>
-        </View>
-      </ScrollView>
       <TouchableOpacity
         style={styles.primaryButton}
         onPress={() => router.push('/(legal)/terms-of-service?mode=onboarding' as any)}
@@ -349,9 +270,6 @@ export default function OnboardingScreen() {
     </View>
   );
 
-  /**
-   * Render biometric setup step
-   */
   const renderBiometric = () => (
     <View style={styles.stepContainer}>
       <View style={styles.iconContainer}>
@@ -359,24 +277,7 @@ export default function OnboardingScreen() {
       </View>
       <Text style={styles.title}>Autenticação Biométrica</Text>
       <Text style={styles.description}>
-        Proteja o acesso aos dados sensíveis de saúde dos seus pacientes com Face ID ou Touch ID.
-      </Text>
-      <ScrollView style={styles.bulletList}>
-        <View style={styles.bulletItem}>
-          <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-          <Text style={styles.bulletText}>Acesso rápido e seguro</Text>
-        </View>
-        <View style={styles.bulletItem}>
-          <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-          <Text style={styles.bulletText}>Proteção contra acesso não autorizado</Text>
-        </View>
-        <View style={styles.bulletItem}>
-          <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-          <Text style={styles.bulletText}>Conformidade com requisitos de segurança</Text>
-        </View>
-      </ScrollView>
-      <Text style={styles.note}>
-        Você pode configurar isso mais tarde nas configurações.
+        Proteja o acesso aos dados sensíveis de saúde dos seus pacientes.
       </Text>
       <TouchableOpacity
         style={styles.primaryButton}
@@ -399,27 +300,16 @@ export default function OnboardingScreen() {
     </View>
   );
 
-  /**
-   * Render current step
-   */
   const renderStep = () => {
     switch (state.currentStep) {
-      case 'welcome':
-        return renderWelcome();
-      case 'privacy':
-        return renderPrivacy();
-      case 'terms':
-        return renderTerms();
-      case 'biometric':
-        return renderBiometric();
-      default:
-        return null;
+      case 'welcome': return renderWelcome();
+      case 'privacy': return renderPrivacy();
+      case 'terms': return renderTerms();
+      case 'biometric': return renderBiometric();
+      default: return null;
     }
   };
 
-  /**
-   * Get progress percentage
-   */
   const getProgress = () => {
     const steps = ['welcome', 'privacy', 'terms', 'disclaimer', 'biometric'];
     const currentIndex = steps.indexOf(state.currentStep);
@@ -428,7 +318,6 @@ export default function OnboardingScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      {/* Progress bar */}
       <View style={styles.progressContainer}>
         <View style={styles.progressBar}>
           <View style={[styles.progressFill, { width: `${getProgress()}%` }]} />
@@ -437,8 +326,6 @@ export default function OnboardingScreen() {
           {Math.round(getProgress())}% completo
         </Text>
       </View>
-
-      {/* Step content */}
       <ScrollView
         style={styles.content}
         contentContainerStyle={styles.contentContainer}
@@ -446,8 +333,6 @@ export default function OnboardingScreen() {
       >
         {renderStep()}
       </ScrollView>
-
-      {/* Medical Disclaimer Modal */}
       <MedicalDisclaimerModal
         visible={showDisclaimerModal}
         context="first-launch"
@@ -458,113 +343,23 @@ export default function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  progressContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  progressBar: {
-    height: 4,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 2,
-    overflow: 'hidden',
-    marginBottom: 8,
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: '#007AFF',
-    borderRadius: 2,
-  },
-  progressText: {
-    fontSize: 12,
-    color: '#6B7280',
-    textAlign: 'center',
-  },
-  content: {
-    flex: 1,
-  },
-  contentContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
-  },
-  stepContainer: {
-    alignItems: 'center',
-  },
-  iconContainer: {
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#1F2937',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  description: {
-    fontSize: 16,
-    lineHeight: 24,
-    color: '#6B7280',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  bulletList: {
-    width: '100%',
-    maxHeight: 200,
-    marginVertical: 16,
-  },
-  bulletItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    paddingHorizontal: 8,
-  },
-  bulletText: {
-    flex: 1,
-    fontSize: 15,
-    color: '#374151',
-    marginLeft: 12,
-  },
-  note: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    textAlign: 'center',
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  primaryButton: {
-    width: '100%',
-    backgroundColor: '#007AFF',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 24,
-    minHeight: 52,
-    justifyContent: 'center',
-  },
-  primaryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  secondaryButton: {
-    width: '100%',
-    backgroundColor: 'transparent',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginTop: 12,
-    minHeight: 52,
-    justifyContent: 'center',
-  },
-  secondaryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#007AFF',
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
+  progressContainer: { paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
+  progressBar: { height: 4, backgroundColor: '#E5E7EB', borderRadius: 2, overflow: 'hidden', marginBottom: 8 },
+  progressFill: { height: '100%', backgroundColor: '#007AFF', borderRadius: 2 },
+  progressText: { fontSize: 12, color: '#6B7280', textAlign: 'center' },
+  content: { flex: 1 },
+  contentContainer: { flexGrow: 1, justifyContent: 'center', padding: 20 },
+  stepContainer: { alignItems: 'center' },
+  iconContainer: { marginBottom: 24 },
+  title: { fontSize: 28, fontWeight: '700', color: '#1F2937', textAlign: 'center', marginBottom: 16 },
+  description: { fontSize: 16, lineHeight: 24, color: '#6B7280', textAlign: 'center', marginBottom: 16 },
+  bulletList: { width: '100%', maxHeight: 200, marginVertical: 16 },
+  bulletItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 12, paddingHorizontal: 8 },
+  bulletText: { flex: 1, fontSize: 15, color: '#374151', marginLeft: 12 },
+  note: { fontSize: 14, color: '#9CA3AF', textAlign: 'center', marginTop: 8, marginBottom: 16 },
+  primaryButton: { width: '100%', backgroundColor: '#007AFF', paddingVertical: 16, borderRadius: 12, alignItems: 'center', marginTop: 24, minHeight: 52, justifyContent: 'center' },
+  primaryButtonText: { fontSize: 16, fontWeight: '600', color: '#fff' },
+  secondaryButton: { width: '100%', backgroundColor: 'transparent', paddingVertical: 16, borderRadius: 12, alignItems: 'center', marginTop: 12, minHeight: 52, justifyContent: 'center' },
+  secondaryButtonText: { fontSize: 16, fontWeight: '600', color: '#007AFF' },
 });

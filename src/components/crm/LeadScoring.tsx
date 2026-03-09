@@ -14,7 +14,8 @@ import {
   CheckCircle2, Clock, Phone, Mail, Calendar
 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { db } from '@/integrations/firebase/app';
+import { crmApi } from '@/lib/api/workers-client';
+import { fetchCalculatedLeadScores, useLeadScoring } from './hooks/useLeadScoring';
 
 interface LeadScoreData {
   id: string;
@@ -46,29 +47,30 @@ export function LeadScoring({ _leadId, showSettings = false }: LeadScoringProps)
   const { data: scores = [], isLoading } = useQuery({
     queryKey: ['lead-scores', _leadId],
     queryFn: async () => {
-      const q = queryFromFirestore(collectionRef(db, 'lead_scores'), orderByFn('total_score', 'desc'));
-
-      const snapshot = await getDocsFromCollection(q);
-
-      const results = await Promise.all(snapshot.docs.map(async (docSnap) => {
-        const data = docSnap.data();
-        // Fetch lead data
-        const leadRef = docRef(db, 'leads', data.lead_id);
-        const leadSnap = await getDocFromFirestore(leadRef);
-
-        return {
-          id: docSnap.id,
-          ...data,
-          leads: leadSnap.exists() ? { name: leadSnap.data().name } : null
-        };
-      }));
-
-      // Filter by lead_id if provided
-      if (_leadId) {
-        return results.filter((r) => r.lead_id === _leadId);
-      }
-
-      return results as LeadScoreData[];
+      const [leadsResult, calculated] = await Promise.all([
+        crmApi.leads.list(),
+        fetchCalculatedLeadScores(_leadId),
+      ]);
+      const leadsById = new Map((leadsResult?.data ?? []).map((lead) => [lead.id, lead]));
+      return calculated
+        .sort((a, b) => b.totalScore - a.totalScore)
+        .map((score) => ({
+          id: score.leadId,
+          lead_id: score.leadId,
+          total_score: score.totalScore,
+          engagement_score: score.engagementScore,
+          demographic_score: score.demographicScore,
+          behavioral_score: score.behavioralScore,
+          tier: score.category,
+          factors: score.factors.map((factor) => ({
+            name: factor.type,
+            points: factor.points,
+            description: factor.description,
+          })),
+          leads: leadsById.get(score.leadId)
+            ? { name: leadsById.get(score.leadId)?.nome ?? 'Lead' }
+            : null,
+        })) as LeadScoreData[];
     },
   });
 

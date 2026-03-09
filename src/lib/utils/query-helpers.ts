@@ -8,9 +8,26 @@
 // TIMEOUT & RETRY HELPERS
 // ==============================================================================
 
-import { query as firestoreQuery, where, orderBy, limit, startAfter, Query, CollectionReference } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { normalizeFirestoreData } from '@/utils/firestoreData';
+
+export type Query<T> = {
+  source?: unknown;
+  constraints?: unknown[];
+  _phantom?: T;
+};
+
+export type CollectionReference<T> = Query<T>;
+
+const firestoreQuery = <T>(query: Query<T>, ...constraints: unknown[]): Query<T> => ({
+  ...query,
+  constraints: [...(query.constraints ?? []), ...constraints],
+});
+
+const where = (field: string, op: string, value: unknown) => ({ type: 'where', field, op, value });
+const orderBy = (field: string, direction: 'asc' | 'desc' = 'asc') => ({ type: 'orderBy', field, direction });
+const limit = (value: number) => ({ type: 'limit', value });
+const startAfter = (value: unknown) => ({ type: 'startAfter', value });
 
 export function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
   return Promise.race([
