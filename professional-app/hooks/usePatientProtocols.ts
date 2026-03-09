@@ -1,9 +1,26 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, query, where, getDocs, addDoc, updateDoc, doc, serverTimestamp, orderBy, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { useAuthStore } from '@/store/auth';
-import { PatientProtocol, TreatmentProtocol } from '@/types';
+import { PatientProtocol } from '@/types';
 import { useHaptics } from './useHaptics';
+import { config } from '@/lib/config';
+import { authApi } from '@/lib/auth-api';
+
+const fetchApi = async (endpoint: string, method: string = 'GET', body?: any) => {
+  const token = await authApi.getToken();
+  if (!token) throw new Error('Not authenticated');
+
+  const res = await fetch(`${config.apiUrl}${endpoint}`, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+
+  if (!res.ok) throw new Error(`API Error: ${res.status}`);
+  return res.json();
+};
 
 export function usePatientProtocols(patientId: string | null) {
   const { user } = useAuthStore();
@@ -15,48 +32,8 @@ export function usePatientProtocols(patientId: string | null) {
     queryKey: ['patient-protocols', patientId],
     queryFn: async () => {
       if (!patientId) return [];
-
-      const patientProtocolsRef = collection(db, 'patient_protocols');
-      const q = query(
-        patientProtocolsRef,
-        where('patientId', '==', patientId),
-        where('isActive', '==', true),
-        orderBy('createdAt', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-      const protocols = await Promise.all(
-        snapshot.docs.map(async (docSnapshot) => {
-          const data = docSnapshot.data();
-          
-          // Fetch the protocol details
-          let protocol: TreatmentProtocol | undefined;
-          if (data.protocolId) {
-            const protocolRef = doc(db, 'treatment_protocols', data.protocolId);
-            const protocolSnap = await getDoc(protocolRef);
-            if (protocolSnap.exists()) {
-              protocol = {
-                id: protocolSnap.id,
-                ...protocolSnap.data(),
-                createdAt: protocolSnap.data().createdAt?.toDate(),
-                updatedAt: protocolSnap.data().updatedAt?.toDate(),
-              } as TreatmentProtocol;
-            }
-          }
-
-          return {
-            id: docSnapshot.id,
-            ...data,
-            protocol,
-            startDate: data.startDate?.toDate(),
-            endDate: data.endDate?.toDate(),
-            createdAt: data.createdAt?.toDate(),
-            updatedAt: data.updatedAt?.toDate(),
-          } as PatientProtocol;
-        })
-      );
-
-      return protocols;
+      const response = await fetchApi(`/api/patients/${patientId}/protocols`);
+      return response.data as PatientProtocol[];
     },
     enabled: !!patientId,
   });
@@ -66,20 +43,13 @@ export function usePatientProtocols(patientId: string | null) {
     mutationFn: async ({ protocolId, notes }: { protocolId: string; notes?: string }) => {
       if (!user?.id || !patientId) throw new Error('Missing required data');
 
-      const patientProtocolsRef = collection(db, 'patient_protocols');
-      const docRef = await addDoc(patientProtocolsRef, {
-        patientId,
+      const response = await fetchApi(`/api/patients/${patientId}/protocols`, 'POST', {
         protocolId,
         professionalId: user.id,
-        startDate: serverTimestamp(),
-        isActive: true,
-        progress: 0,
         notes: notes || '',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
       });
 
-      return docRef.id;
+      return response.data?.id;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patient-protocols', patientId] });
@@ -93,10 +63,8 @@ export function usePatientProtocols(patientId: string | null) {
   // Update protocol progress
   const updateProgressMutation = useMutation({
     mutationFn: async ({ id, progress }: { id: string; progress: number }) => {
-      const patientProtocolRef = doc(db, 'patient_protocols', id);
-      await updateDoc(patientProtocolRef, {
+      await fetchApi(`/api/patients/${patientId}/protocols/${id}`, 'PUT', {
         progress,
-        updatedAt: serverTimestamp(),
       });
     },
     onSuccess: () => {
@@ -111,12 +79,7 @@ export function usePatientProtocols(patientId: string | null) {
   // Remove protocol from patient (soft delete)
   const removeMutation = useMutation({
     mutationFn: async (id: string) => {
-      const patientProtocolRef = doc(db, 'patient_protocols', id);
-      await updateDoc(patientProtocolRef, {
-        isActive: false,
-        endDate: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
+      await fetchApi(`/api/patients/${patientId}/protocols/${id}`, 'DELETE');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patient-protocols', patientId] });

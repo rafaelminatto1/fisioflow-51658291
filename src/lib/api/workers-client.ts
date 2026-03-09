@@ -619,6 +619,130 @@ export const documentTemplatesApi = {
   },
 };
 
+export interface KnowledgeProfileSummary {
+  full_name?: string;
+  avatar_url?: string;
+}
+
+export interface KnowledgeSemanticResultRow {
+  article_id: string;
+  score: number;
+}
+
+export interface KnowledgeArticleRow {
+  id: string;
+  title: string;
+  group: string;
+  subgroup: string;
+  focus: string[];
+  evidence: string;
+  year?: number;
+  source?: string;
+  url?: string;
+  status: string;
+  tags: string[];
+  highlights: string[];
+  observations: string[];
+  keyQuestions: string[];
+}
+
+export interface KnowledgeAnnotationRow {
+  id: string;
+  article_id: string;
+  organization_id: string;
+  scope: 'organization' | 'user';
+  user_id?: string;
+  highlights: string[];
+  observations: string[];
+  status?: string;
+  evidence?: string;
+  created_by: string;
+  updated_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface KnowledgeCurationRow {
+  id: string;
+  article_id: string;
+  organization_id: string;
+  status: string;
+  notes?: string;
+  assigned_to?: string;
+  created_by: string;
+  updated_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface KnowledgeAuditRow {
+  id: string;
+  article_id: string;
+  organization_id: string;
+  actor_id: string;
+  action: 'create_annotation' | 'update_annotation' | 'update_curation';
+  before?: Record<string, unknown>;
+  after?: Record<string, unknown>;
+  created_at: string;
+  context?: Record<string, unknown>;
+}
+
+export const knowledgeApi = {
+  listArticles: () => request<{ data: KnowledgeArticleRow[] }>('/api/knowledge/articles'),
+  syncArticles: (articles: KnowledgeArticleRow[]) =>
+    request<{ indexed: number }>('/api/knowledge/articles/sync', {
+      method: 'POST',
+      body: JSON.stringify({ articles }),
+    }),
+  indexArticles: () =>
+    request<{ indexed: number }>('/api/knowledge/articles/index', {
+      method: 'POST',
+      body: JSON.stringify({}),
+    }),
+  semanticSearch: (params: { query: string; limit?: number }) =>
+    request<{ data: KnowledgeSemanticResultRow[] }>('/api/knowledge/semantic-search', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }),
+  listAnnotations: () => request<{ data: KnowledgeAnnotationRow[] }>('/api/knowledge/annotations'),
+  upsertAnnotation: (
+    articleId: string,
+    data: {
+      scope: 'organization' | 'user';
+      highlights: string[];
+      observations: string[];
+      status?: string;
+      evidence?: string;
+    },
+  ) =>
+    request<{ data: KnowledgeAnnotationRow }>(`/api/knowledge/annotations/${encodeURIComponent(articleId)}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  listCuration: () => request<{ data: KnowledgeCurationRow[] }>('/api/knowledge/curation'),
+  updateCuration: (
+    articleId: string,
+    data: { status: string; notes?: string; assigned_to?: string },
+  ) =>
+    request<{ data: KnowledgeCurationRow }>(`/api/knowledge/curation/${encodeURIComponent(articleId)}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  listAudit: () => request<{ data: KnowledgeAuditRow[] }>('/api/knowledge/audit'),
+  addAuditEntry: (
+    data: Omit<KnowledgeAuditRow, 'id' | 'organization_id' | 'created_at'>,
+  ) =>
+    request<{ data: KnowledgeAuditRow }>('/api/knowledge/audit', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  getProfiles: (ids: string[]) => {
+    const qs = new URLSearchParams();
+    if (ids.length) qs.set('ids', ids.join(','));
+    return request<{ data: Record<string, KnowledgeProfileSummary> }>(`/api/knowledge/profiles${qs.toString() ? `?${qs}` : ''}`);
+  },
+};
+
 export const communicationsApi = {
   list: (params?: { channel?: string; status?: string; limit?: number }) => {
     const qs = new URLSearchParams(
@@ -1488,6 +1612,52 @@ export const organizationsApi = {
     }),
 };
 
+export interface DoctorRecord {
+  id: string;
+  organization_id?: string | null;
+  nome: string;
+  especialidade?: string | null;
+  telefone?: string | null;
+  email?: string | null;
+  crm?: string | null;
+  observacoes?: string | null;
+  clinica_nome?: string | null;
+  endereco?: string | null;
+  cidade?: string | null;
+  estado?: string | null;
+  cep?: string | null;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export const doctorsApi = {
+  list: (params?: { searchTerm?: string; limit?: number }) => {
+    const qs = new URLSearchParams(
+      Object.entries(params ?? {})
+        .filter(([, v]) => v != null && String(v) !== '')
+        .map(([k, v]) => [k === 'searchTerm' ? 'search' : k, String(v)]),
+    ).toString();
+    return request<{ data: DoctorRecord[]; total?: number }>(`/api/doctors${qs ? `?${qs}` : ''}`);
+  },
+  search: (params: { searchTerm: string; limit?: number }) => doctorsApi.list(params),
+  get: (id: string) => request<{ data: DoctorRecord }>(`/api/doctors/${encodeURIComponent(id)}`),
+  create: (data: Record<string, unknown>) =>
+    request<{ data: DoctorRecord }>('/api/doctors', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: Record<string, unknown>) =>
+    request<{ data: DoctorRecord }>(`/api/doctors/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  delete: (id: string) =>
+    request<{ ok: boolean }>(`/api/doctors/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    }),
+};
+
 export const profileApi = {
   me: () => request<{ data: { organization_id?: string; organizationId?: string } }>('/api/profile/me'),
   listTherapists: () =>
@@ -1576,6 +1746,14 @@ export interface GooglePlacePrediction {
   };
 }
 
+export interface GoogleBusinessReviewRecord {
+  author: string;
+  rating: number;
+  comment: string;
+  date: string;
+  time?: number;
+}
+
 export interface ActivityLabClinicRecord {
   id: string;
   clinic_name: string;
@@ -1621,6 +1799,10 @@ export const integrationsApi = {
       request<{ data: { url: string } }>(`/api/integrations/google/auth-url${state ? `?state=${encodeURIComponent(state)}` : ''}`),
     status: () =>
       request<{ data: GoogleIntegrationRecord | null }>('/api/integrations/google/status'),
+    business: {
+      reviews: () =>
+        request<{ data: GoogleBusinessReviewRecord[] }>('/api/integrations/google/business/reviews'),
+    },
     connect: (data?: { code?: string; email?: string }) =>
       request<{ data: GoogleIntegrationRecord }>('/api/integrations/google/connect', {
         method: 'POST',

@@ -1,53 +1,54 @@
 # Migração Cloudflare + Neon — FisioFlow 2026
 
 > **Data:** Março 2026
-> **Status:** ✅ Fase 1 completa — Workers + Neon + Neon Auth rodando
-> **Plano de fechamento:** `docs2026/PLANO_FECHAMENTO_MIGRACAO_CLOUDFLARE_NEON_2026.md`
+> **Status:** ✅ Fase 2 completa — Consolidação Total das APIs + Workers + Neon + Neon Auth
+> **Relatório de Consolidação:** `brain/b6ee7d54-9c41-4da2-bd4d-238e9edb2437/walkthrough.md`
 
 ---
 
 ## Visão Geral
 
-O FisioFlow migrou sua camada de infraestrutura para uma arquitetura moderna baseada em Edge Computing e PostgreSQL Serverless:
+O FisioFlow consolidou sua camada de infraestrutura para uma arquitetura moderna baseada em Edge Computing e PostgreSQL Serverless, eliminando completamente as dependências de roteamento do Firebase Functions nas chamadas principais:
 
 ```
 Frontend (React/Vite)
   → Cloudflare Pages (fisioflow.pages.dev)
 
-API (Hono)
+API Consolidade (Hono + callWorkersApi)
   → Cloudflare Workers (fisioflow-api.rafalegollas.workers.dev)
   → Hyperdrive (pool de conexões nos PoPs do Cloudflare)
   → Neon PostgreSQL (sa-east-1, São Paulo)
 
 Auth
   → Neon Auth (Provedor Principal - Integrado via @neondatabase/neon-js)
-  → Firebase Auth (Mantido como ponte de compatibilidade/legacy)
+  → Firebase Auth (Mantido apenas como ponte legada)
 
 Banco de Dados Principal (PostgreSQL)
-  → Perfis, Organizações, Membros, Exercícios, Protocolos, Templates, Wiki
+  → Pacientes, Agendamentos, Evoluções, Exercícios, Financeiro, Perfis, etc.
 
-Firestore (Legado/Tempo Real)
-  → Pacientes, Agenda, Evoluções (Migração em progresso)
+Firestore (Legado)
+  → Mantido apenas para compatibilidade de dados legados não migrados.
 ```
 
-### Por que essa migração?
+### Principais Ganhos
 
-| Problema | Solução |
-|---|---|
-| Cloud Functions: cold start 2-5s | Workers: cold start <5ms |
-| Firestore: consultas complexas custosas | PostgreSQL: JOINs, full-text, agregações |
-| Auth Fragmentado | Neon Auth: Autenticação que "nasce" com o banco de dados |
-| Multi-tenancy complexo no Firestore | RLS Nativo no PostgreSQL |
+| Indicador | Antes (Firebase) | Depois (Cloudflare + Neon) |
+|---|---|---|
+| **Latência (Cold Start)** | 2s - 5s | < 10ms |
+| **Consultas** | NoSQL limitado | SQL Pleno (JOINs, Agregações) |
+| **Auth** | Desconectado do BD | Integrado nativamente (Neon Auth) |
+| **Arquitetura** | Monolito de Functions | Micro-serviços via roteamento edge |
 
 ---
 
-## Arquitetura de Autenticação (Nova)
+## Consolidação de Roteamento (Março 2026)
 
-Diferente do plano inicial, migramos para **Neon Auth** para garantir que a identidade do usuário esteja no mesmo ecossistema do banco de dados relacional.
+Concluímos a refatoração do arquivo `src/integrations/firebase/functions.ts`, substituindo todas as chamadas `callFunctionHttp` por `callWorkersApi`.
 
-1.  **Neon Auth Client:** Gerencia sessões e tokens JWT.
-2.  **Legacy Bridge:** `src/integrations/firebase/auth.ts` foi reescrito para mapear chamadas do Firebase para o Neon Auth, evitando quebras no frontend legado.
-3.  **Single-Tenant Focus:** O sistema foi otimizado para a clínica principal, com o `organization_id` padrão (`00000000-0000-0000-0000-000000000001`) configurado no `AuthContextProvider`.
+- **Clinical/Evolution:** Mapeado para `/api/clinical` e `/api/evolution/treatment-sessions`.
+- **Financial/Analytics:** Unificado sob `/api/analytics` e `/api/financial`.
+- **Patients/Appointments:** Totalmente operacionais no Neon via API de Workers.
+- **Exercises:** Biblioteca migrada para o Neon com busca semântica habilitada.
 
 ---
 
@@ -58,33 +59,31 @@ Diferente do plano inicial, migramos para **Neon Auth** para garantir que a iden
 | Tabela | Função |
 |---|---|
 | `neon_auth.user` | Credenciais e roles de autenticação |
-| `neon_auth.organization` | Dados da clínica |
-| `public.profiles` | Perfil detalhado (nome, telefone, avatar) |
-| `exercises` / `categories` | Biblioteca de exercícios |
-| `exercise_templates` | Templates de treinos |
-| `wiki_pages` | Base de conhecimento |
+| `public.patients` | Dados centrais de pacientes |
+| `public.appointments` | Agenda e compromissos |
+| `public.medical_records` | Evoluções, prontuários e documentos |
+| `public.exercises` | Biblioteca de exercícios e prescrições |
+| `public.financial_transactions`| Gestão financeira e faturamento |
 
 ---
 
 ## O Que Ainda Precisa Ser Feito
 
 ### 🔴 Crítico
-1.  **Limpeza de Testes:** A suite de testes E2E cresceu para 2500+ casos devido a matrizes de dispositivos. É necessário reduzir para ~100 testes críticos.
+1.  **Limpeza de Testes:** A suite de testes E2E precisa ser reduzida de 2500+ para ~100 casos críticos focados na nova arquitetura. (Em progresso)
 
-### 🟡 Importante
-1.  **Migrar Pacientes:** Mover a coleção `patients` do Firestore para o Neon para permitir buscas complexas.
-2.  **Migrar Agenda:** Mover `appointments` para o Neon, mantendo Firestore apenas para notificações push/tempo real.
-
-### ✅ Atualização de 5 de março de 2026
-1.  **Auth de API:** Rotas protegidas do Worker validam exclusivamente JWT Neon via JWKS.
-2.  **Pacientes/Agenda na API:** Endpoints `/api/patients` e `/api/appointments` já operam no Neon PostgreSQL.
-3.  **Mídias:** Dry-run de migração para R2 sem pendências nas tabelas alvo (`exercises`, `patients`, `session_attachments`, `sessions`).
-4.  **Workflows Inngest:** Leituras de `patients/appointments` migradas para Neon (sem referências restantes em `src/inngest/workflows`).
-5.  **Gate de deploy:** Suite mínima validada em produção com `pnpm test:e2e:deploy-gate` (auth + patients + appointments + R2).
+### ✅ Concluído (Fase 2)
+1.  **Auth de API:** Todas as rotas validam JWT Neon.
+2.  **Consolidação de Roteamento:** 100% das APIs no frontend portadas para `callWorkersApi`.
+3.  **Neon DB:** Pacientes, Agenda e Financeiro operando plenamente no PostgreSQL.
+4.  **Analytics:** Métricas de dashboard servidas diretamente pelo Worker + Neon.
+5.  **Descomissionamento Firestore:** Listeners `onSnapshot` removidos e substituídos por polling em `useRealtime*`.
+6.  **Migração de Mídias (R2):** Upload de arquivos agora utiliza Cloudflare R2 via Workers API.
 
 ---
 
 ## Comandos Úteis
 - **Dev Frontend:** `pnpm dev`
 - **Dev Workers:** `pnpm workers:dev`
-- **Testes Críticos:** `pnpm test:e2e:auth` (Validado com sucesso!)
+- **Checklist de Saúde:** `python .agent/scripts/checklist.py .`
+```

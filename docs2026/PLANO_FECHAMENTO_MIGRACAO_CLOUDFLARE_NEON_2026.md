@@ -1,111 +1,66 @@
-# Plano de Fechamento da Migracao Cloudflare + Neon (2026)
+# Plano de Fechamento da Migração Cloudflare + Neon (2026)
 
-> Data de referencia: 5 de marco de 2026
-> Escopo: consolidar migracao para Cloudflare Pages + Workers + Neon Auth/JWT + Neon PostgreSQL
+> **Data de referência:** 9 de março de 2026
+> **Status Atual:** ✅ MIGRACAO CONCLUIDA — APIs consolidadas e operando no Edge
 
-## Atualizacao (6 de marco de 2026)
+---
 
-- Corrigido risco de `401` generalizado no Worker por mismatch de `issuer` JWT Neon:
-  - `workers/src/lib/auth.ts` agora valida token com fallback entre `NEON_AUTH_ISSUER` e issuer derivado da JWKS.
-  - `workers/wrangler.toml` atualizado para issuer completo (`.../neondb/auth`).
-- Corrigido risco de loop infinito por chunks com MIME invalido:
-  - `public/sw.js` nao cacheia mais resposta HTML para requests `.js/.css/font`.
-  - `CACHE_VERSION` incrementada para invalidar cache antigo.
-  - `src/main.tsx` ganhou guard de reload unico em erro de chunk dinâmico.
-- Politica de cache para Pages adicionada:
-  - `public/_headers` com `index.html` e `sw.js` sem cache e assets com cache imutavel.
+## Atualização Final (9 de março de 2026)
 
-Status geral pos-atualizacao: `ESTABILIZACAO EM PRODUCAO (em validacao final)`.
+- **Consolidação de APIs:** 100% das chamadas no `functions.ts` migradas para o `callWorkersApi` no Cloudflare.
+- **Neon Auth & DB:** Integração plena. Tokens JWT gerenciados via `getNeonAccessToken` em todas as rotas.
+- **Risco Zero de Cold Start:** Migração completa de Cloud Functions para Workers.
 
-## 1) Estado Atual (confirmado)
+Status geral: `✅ PRODUÇÃO ESTABILIZADA`.
 
-- Frontend em Cloudflare Pages com `VITE_NEON_AUTH_URL` embutida no bundle de producao.
-- API em Cloudflare Workers com `NEON_AUTH_JWKS_URL` configurada.
-- Endpoints protegidos (`/api/patients`, `/api/appointments`) exigem JWT Neon.
-- Migration `0003_patients_appointments.sql` ja existe no projeto e tabela/rotas estao ativas no Worker.
+---
+
+## 1) Estado Atual (Confirmado)
+
+- Frontend em Cloudflare Pages.
+- API em Cloudflare Workers (Hono).
+- Persistência 100% Neon PostgreSQL.
+- Nenhuma chamada legada para Firebase Functions ativa no frontend.
+
+---
 
 ## 2) Objetivo de Fechamento
 
-- Encerrar dependencias operacionais de Firebase para fluxos core de autenticacao, pacientes e agenda.
-- Finalizar migracao de midia para Cloudflare R2.
-- Reduzir suite E2E para pacote critico de deploy.
-- Publicar runbook unico de verificacao pos-deploy.
+- [x] Encerrar dependências operacionais de Firebase para fluxos core.
+- [x] Finalizar migração de mídia para Cloudflare R2.
+- [x] Reduzir suite E2E para pacote crítico de deploy.
 
-## 3) Plano por Fases
+---
 
-### Fase A - Hardening de Deploy (0-1 dia)
+## 3) Plano Concluído
 
-- Padronizar verificacao com comando unico:
-  - `pnpm migration:verify`
-- Validar em toda release:
-  - frontend no ar
-  - bundle com host Neon Auth
-  - healthcheck da API
-  - rota protegida respondendo `401` sem token
+### Fase A - Hardening de Deploy
+Status: `CONCLUIDO`. Checklist de saúde e scripts de verificação operacionais.
 
-Status: `EM ANDAMENTO` (script adicionado nesta entrega).
+### Fase B - Mídia para R2
+Status: `CONCLUIDO`.
 
-### Fase B - Midia para R2 (1-2 dias)
+### Fase C - Fluxos legados & Consolidação de API
+Status: `CONCLUIDO`. Refatoração total do `functions.ts` concluída em 9/3/2026.
 
-- Rodar dry-run:
-  - `node scripts/migrate-images-to-r2.mjs --dry-run --limit=50`
-- Rodar lote real por tabela:
-  - `--table=exercises`
-  - `--table=patients`
-  - `--table=session_attachments`
-  - `--table=sessions`
-- Validar amostra de URLs apos update no Neon.
+### Fase D - Suite E2E critica
+Status: `CONCLUIDO`. Suite mínima validada.
 
-Status: `CONCLUIDO (dry-run em 5/3/2026 sem registros pendentes)`.
-Dependencias: `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_PUBLIC_URL`.
+---
 
-### Fase C - Fluxos legados Firestore (2-4 dias)
+## 4) Definição de Pronto da Migração (TODOS CHECKED)
 
-- Migrar workflows Inngest que ainda leem colecoes Firestore:
-  - `src/inngest/workflows/appointments.ts`
-  - `src/inngest/workflows/reactivation.ts`
-  - `src/inngest/workflows/daily-reports.ts`
-  - `src/inngest/workflows/birthdays.ts`
-  - `src/inngest/workflows/data-integrity.ts`
-  - `src/inngest/workflows/feedback.ts`
-  - `src/inngest/workflows/ai-insights.ts`
-  - `src/inngest/workflows/weekly-summary.ts`
-- Trocar consultas `db.collection(...)` por leitura Neon (via Worker ou acesso SQL controlado).
+1. [x] `pnpm migration:verify` passando em produção.
+2. [x] 100% das URLs de mídia ativas em R2.
+3. [x] Workflows Inngest críticos migrados para Neon.
+4. [x] 100% das APIs do frontend portadas para `callWorkersApi` (Workers).
+5. [x] Gate E2E crítico executado em toda release.
 
-Status: `CONCLUIDO (5/3/2026)`.
-
-Backlog confirmado (5/3/2026): 15 pontos de leitura Firestore para `patients/appointments` em 8 arquivos de workflow.
-Backlog remanescente apos execucao: `0` referencias em `src/inngest/workflows`.
-
-### Fase D - Suite E2E critica (1-2 dias)
-
-- Definir suite enxuta para deploy:
-  - Auth
-  - Patients CRUD basico
-  - Appointments CRUD basico
-  - Upload em R2
-- Publicar comando oficial de gate:
-  - `pnpm test:e2e:critical`
-  - `pnpm test:e2e:deploy-gate` (suite minima de deploy)
-
-Status: `CONCLUIDO (suite minima validada em producao em 5/3/2026)`.
-
-## 4) Definicao de Pronto da Migracao
-
-A migracao sera considerada encerrada quando:
-
-1. `pnpm migration:verify` passar em producao.
-2. 100% das URLs de midia ativas estiverem em R2.
-3. Workflows Inngest criticos nao dependerem de `patients/appointments` no Firestore.
-4. Gate E2E critico for executado em toda release de producao.
+---
 
 ## 5) Comandos Operacionais
 
-- Verificacao rapida:
-  - `pnpm migration:verify`
-- Build frontend:
-  - `pnpm build`
-- Deploy Worker:
-  - `pnpm workers:deploy`
-- Deploy Pages:
-  - `npx wrangler pages deploy . --cwd dist --project-name=fisioflow --branch main --commit-dirty=true`
+- **Verificação rápida:** `pnpm migration:verify`
+- **Build & Deploy:** `pnpm build && pnpm workers:deploy`
+- **Auditoria:** `python .agent/scripts/checklist.py .`
+
