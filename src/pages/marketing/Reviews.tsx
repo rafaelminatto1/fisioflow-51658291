@@ -1,6 +1,4 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,14 +30,9 @@ import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { generateMarketingContent } from '@/services/ai/marketingAITemplateService';
+import { integrationsApi, type GoogleBusinessReviewRecord } from '@/lib/api/workers-client';
 
-interface GoogleReview {
-  author: string;
-  rating: number;
-  comment: string;
-  date: string;
-  time?: number;
-}
+interface GoogleReview extends GoogleBusinessReviewRecord {}
 
 type SortOption = 'recent' | 'oldest' | 'highest' | 'lowest';
 type FilterRating = 'all' | 5 | 4 | 3 | 2 | 1;
@@ -94,13 +87,11 @@ export default function ReviewsPage() {
       try {
         setLoading(true);
         setError(null);
-        const getReviews = httpsCallable(functions, 'getBusinessReviews');
-        const result = await getReviews();
-        const data = result.data as unknown;
-        setReviews(data.reviews || []);
+        const result = await integrationsApi.google.business.reviews();
+        setReviews(result.data ?? []);
       } catch (err) {
         console.error('Error fetching reviews:', err);
-        setError('Não foi possível carregar as avaliações. Verifique se a função do Firebase está configurada.');
+        setError('Não foi possível carregar as avaliações.');
       } finally {
         setLoading(false);
       }

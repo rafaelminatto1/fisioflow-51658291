@@ -1,83 +1,12 @@
 /**
  * API Client for Professional App
- * Uses the same Cloud Functions V2 endpoints as the web app
- * Falls back to Firestore when Cloud Functions are not available
+ * Re-architected to use Cloudflare Workers and Neon DB
  *
  * @module lib/api
  */
 
-import { auth } from './firebase';
 import { config } from './config';
-import { 
-  listPatientsFirestore, 
-  listAppointmentsFirestore, 
-  getDashboardStatsFirestore,
-  getAppointmentByIdFirestore,
-  getPatientByIdFirestore,
-  listEvolutionsFirestore,
-  listPatientFinancialRecordsFirestore,
-  getPatientFinancialSummaryFirestore,
-  listAllFinancialRecordsFirestore
-} from './firestore-fallback';
-
-// ============================================================
-// CONFIGURATION
-// ============================================================
-
-const PROJECT_NUMBER = process.env.EXPO_PUBLIC_FIREBASE_PROJECT_NUMBER || '412418905255';
-const REGION = process.env.EXPO_PUBLIC_FIREBASE_REGION || 'southamerica-east1';
-const CLOUD_RUN_BASE_URL = (func: string) =>
-  `https://${func.toLowerCase()}-${PROJECT_NUMBER}.${REGION}.run.app/`;
-
-const API_URLS = {
-  patients: {
-    list: CLOUD_RUN_BASE_URL('listPatientsV2'),
-    get: CLOUD_RUN_BASE_URL('getPatientHttp'),
-    create: CLOUD_RUN_BASE_URL('createPatientV2'),
-    update: CLOUD_RUN_BASE_URL('updatePatientV2'),
-    delete: CLOUD_RUN_BASE_URL('deletePatientV2'),
-  },
-  appointments: {
-    list: CLOUD_RUN_BASE_URL('listAppointments'),
-    get: CLOUD_RUN_BASE_URL('getAppointmentV2'),
-    create: CLOUD_RUN_BASE_URL('createAppointmentV2'),
-    update: CLOUD_RUN_BASE_URL('updateAppointmentV2'),
-    cancel: CLOUD_RUN_BASE_URL('cancelAppointmentV2'),
-  },
-  evolutions: {
-    list: CLOUD_RUN_BASE_URL('listEvolutionsV2'),
-    get: CLOUD_RUN_BASE_URL('getEvolutionV2'),
-    create: CLOUD_RUN_BASE_URL('createEvolutionV2'),
-    update: CLOUD_RUN_BASE_URL('updateEvolutionV2'),
-    delete: CLOUD_RUN_BASE_URL('deleteEvolutionV2'),
-  },
-  exercises: {
-    list: CLOUD_RUN_BASE_URL('listExercisesV2'),
-    get: CLOUD_RUN_BASE_URL('getExerciseV2'),
-    create: CLOUD_RUN_BASE_URL('createExerciseV2'),
-    update: CLOUD_RUN_BASE_URL('updateExerciseV2'),
-    delete: CLOUD_RUN_BASE_URL('deleteExerciseV2'),
-  },
-  dashboard: {
-    stats: CLOUD_RUN_BASE_URL('getDashboardStatsV2'),
-  },
-  partnerships: {
-    list: CLOUD_RUN_BASE_URL('listPartnerships'),
-    get: CLOUD_RUN_BASE_URL('getPartnership'),
-    create: CLOUD_RUN_BASE_URL('createPartnership'),
-    update: CLOUD_RUN_BASE_URL('updatePartnership'),
-    delete: CLOUD_RUN_BASE_URL('deletePartnership'),
-  },
-  financial: {
-    listAll: CLOUD_RUN_BASE_URL('listAllFinancialRecordsV2'),
-    listRecords: CLOUD_RUN_BASE_URL('listPatientFinancialRecords'),
-    getSummary: CLOUD_RUN_BASE_URL('getPatientFinancialSummaryV2'),
-    createRecord: CLOUD_RUN_BASE_URL('createFinancialRecord'),
-    updateRecord: CLOUD_RUN_BASE_URL('updateFinancialRecord'),
-    deleteRecord: CLOUD_RUN_BASE_URL('deleteFinancialRecord'),
-    markAsPaid: CLOUD_RUN_BASE_URL('markAsPaid'),
-  },
-};
+import { authApi } from './auth-api';
 
 // ============================================================
 // TYPES
@@ -240,12 +169,12 @@ class ApiError extends Error {
 // AUTH TOKEN
 // ============================================================
 
-async function getAuthToken(forceRefresh = false): Promise<string> {
-  const user = auth.currentUser;
-  if (!user) {
+async function getAuthToken(): Promise<string> {
+  const token = await authApi.getToken();
+  if (!token) {
     throw new Error('User not authenticated');
   }
-  return await user.getIdToken(forceRefresh);
+  return token;
 }
 
 // ============================================================
@@ -265,39 +194,53 @@ function cleanRequestData(data: Record<string, any>): Record<string, any> {
   return cleaned;
 }
 
-/**
- * Generic fetch with retry logic
- */
-async function fetchWithRetry<T>(
-  url: string,
-  data: any,
-  retries = 1
+interface FetchOptions extends RequestInit {
+  data?: any;
+  params?: Record<string, string | number | boolean | undefined>;
+}
+
+async function fetchApi<T>(
+  endpoint: string,
+  options: FetchOptions = {}
 ): Promise<T> {
-  let lastError: Error | null = null;
+  const token = await getAuthToken();
+  const { data, params, ...fetchInit } = options;
 
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      const token = await getAuthToken(attempt > 0); // Force refresh token on retry
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (response.ok) {
-        return response.json() as Promise<T>;
+  let url = `${config.apiUrl}${endpoint}`;
+  
+  if (params) {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        searchParams.append(key, String(value));
       }
+    });
+    const queryString = searchParams.toString();
+    if (queryString) {
+      url += `?${queryString}`;
+    }
+  }
 
-      // If error is 401 Unauthorized, try with refreshed token
-      if (response.status === 401 && attempt < retries) {
-        continue;
-      }
+  const method = fetchInit.method || 'GET';
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
+    ...(fetchInit.headers || {}),
+  };
 
-      // Parse error response - clone first to avoid "Already read" error
+  const body = data ? JSON.stringify(cleanRequestData(data)) : undefined;
+
+  console.log(`[API] ${method} ${url}`);
+
+  try {
+    const response = await fetch(url, {
+      ...fetchInit,
+      method,
+      headers,
+      body,
+    });
+
+    if (!response.ok) {
       let errorMessage = `HTTP ${response.status}`;
       const responseClone = response.clone();
       
@@ -309,46 +252,16 @@ async function fetchWithRetry<T>(
           const errorText = await response.text();
           if (errorText) errorMessage = errorText;
         } catch (textError) {
-          // If both fail, use default error message
           console.warn('[API] Could not parse error response:', jsonError, textError);
         }
       }
 
-      throw new ApiError(
-        url.split('/').pop() || url,
-        response.status,
-        errorMessage
-      );
-    } catch (error) {
-      lastError = error as Error;
-      if (attempt === retries) {
-        break;
-      }
-      // Exponential backoff before retry
-      await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+      throw new ApiError(endpoint, response.status, errorMessage);
     }
-  }
 
-  throw lastError || new Error('Unknown error in fetchWithRetry');
-}
-
-/**
- * Generic fetch wrapper with error handling
- */
-async function fetchApi<T>(
-  endpoint: string,
-  data?: any
-): Promise<T> {
-  const cleanedData = data ? cleanRequestData(data) : {};
-
-  console.log(`[API] ${endpoint}:`, cleanedData);
-
-  try {
-    const result = await fetchWithRetry<T>(endpoint, cleanedData);
-    console.log(`[API] ${endpoint}: Success`);
-    return result;
+    return response.json() as Promise<T>;
   } catch (error) {
-    console.error(`[API] ${endpoint}:`, error);
+    console.error(`[API] ${method} ${endpoint}:`, error);
     throw error;
   }
 }
@@ -357,114 +270,71 @@ async function fetchApi<T>(
 // DASHBOARD API
 // ============================================================
 export async function getDashboardStats(organizationId?: string): Promise<ApiDashboardStats> {
-    // Use Firestore fallback if Cloud Functions are disabled
-    if (!config.useCloudFunctions) {
-        console.log('[API] Using Firestore fallback for getDashboardStats');
-        const stats = await getDashboardStatsFirestore(organizationId);
-        return {
-            activePatients: stats.activePatients || 0,
-            todayAppointments: stats.appointmentsToday || 0,
-            pendingAppointments: 0,
-            completedAppointments: 0,
-        };
-    }
-
-    const response = await fetchApi<ApiResponse<ApiDashboardStats>>(API_URLS.dashboard.stats, { organizationId });
-    return response.data;
+    const response = await fetchApi<ApiResponse<ApiDashboardStats>>('/api/analytics/dashboard', {
+        params: { organizationId }
+    });
+    return response.data || {
+        activePatients: 0,
+        todayAppointments: 0,
+        pendingAppointments: 0,
+        completedAppointments: 0,
+    };
 }
 
 // ============================================================
 // PATIENTS API
 // ============================================================
 
-/**
- * Get list of patients
- * @param organizationId - Filter by organization (optional)
- * @param options - Additional filters (status, search, limit)
- */
 export async function getPatients(
   organizationId?: string,
   options?: { status?: string; search?: string; limit?: number }
 ): Promise<ApiPatient[]> {
-  // Use Firestore fallback if Cloud Functions are disabled
-  if (!config.useCloudFunctions) {
-    console.log('[API] Using Firestore fallback for getPatients');
-    return listPatientsFirestore(organizationId, options);
-  }
-
-  const requestData: any = {
-    limit: options?.limit || 100,
-  };
-
-  if (options?.search) requestData.search = options.search;
-  if (options?.status) requestData.status = options.status;
-  if (organizationId) requestData.organizationId = organizationId;
-
-  const response = await fetchApi<ApiResponse<ApiPatient[]>>(API_URLS.patients.list, requestData);
+  const response = await fetchApi<ApiResponse<ApiPatient[]>>('/api/patients', {
+      params: { 
+          organizationId, 
+          status: options?.status, 
+          search: options?.search, 
+          limit: options?.limit || 100 
+      }
+  });
   return response.data || [];
 }
 
-/**
- * Get a single patient by ID
- */
 export async function getPatientById(id: string): Promise<ApiPatient | null> {
-  // Use Firestore fallback if Cloud Functions are disabled
-  if (!config.useCloudFunctions) {
-    console.log('[API] Using Firestore fallback for getPatientById');
-    return getPatientByIdFirestore(id);
-  }
-
   try {
-    const response = await fetchApi<ApiResponse<ApiPatient>>(API_URLS.patients.get, {
-      patientId: id,
-    });
+    const response = await fetchApi<ApiResponse<ApiPatient>>(`/api/patients/${encodeURIComponent(id)}`);
     return response.data || null;
   } catch {
     return null;
   }
 }
 
-/**
- * Create a new patient
- */
 export async function createPatient(data: Partial<ApiPatient>): Promise<ApiPatient> {
-  const response = await fetchApi<ApiResponse<ApiPatient>>(API_URLS.patients.create, data);
-  if (response.error) {
-    throw new Error(response.error);
-  }
-  return response.data;
-}
-
-/**
- * Update an existing patient
- */
-export async function updatePatient(id: string, data: Partial<ApiPatient>): Promise<ApiPatient> {
-  const response = await fetchApi<ApiResponse<ApiPatient>>(API_URLS.patients.update, {
-    patientId: id,
-    ...data,
+  const response = await fetchApi<ApiResponse<ApiPatient>>('/api/patients', {
+      method: 'POST',
+      data
   });
-  if (response.error) {
-    throw new Error(response.error);
-  }
+  if (response.error) throw new Error(response.error);
   return response.data;
 }
 
-/**
- * Delete (soft-delete) a patient
- */
+export async function updatePatient(id: string, data: Partial<ApiPatient>): Promise<ApiPatient> {
+  const response = await fetchApi<ApiResponse<ApiPatient>>(`/api/patients/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      data
+  });
+  if (response.error) throw new Error(response.error);
+  return response.data;
+}
+
 export async function deletePatient(id: string): Promise<{ success: boolean }> {
-  return fetchApi<{ success: boolean }>(API_URLS.patients.delete, { patientId: id });
+  return fetchApi<{ success: boolean }>(`/api/patients/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
 
 // ============================================================
 // APPOINTMENTS API
 // ============================================================
 
-/**
- * Get list of appointments
- * @param organizationId - Filter by organization (optional)
- * @param options - Additional filters
- */
 export async function getAppointments(
   organizationId?: string,
   options?: {
@@ -476,50 +346,29 @@ export async function getAppointments(
     limit?: number;
   }
 ): Promise<ApiAppointment[]> {
-  // Use Firestore fallback if Cloud Functions are disabled
-  if (!config.useCloudFunctions) {
-    console.log('[API] Using Firestore fallback for getAppointments');
-    return listAppointmentsFirestore(organizationId, options?.therapistId, options);
-  }
-
-  const requestData: any = {
-    limit: options?.limit || 100,
-  };
-
-  if (options?.dateFrom) requestData.dateFrom = options.dateFrom;
-  if (options?.dateTo) requestData.dateTo = options.dateTo;
-  if (options?.therapistId) requestData.therapistId = options.therapistId;
-  if (options?.status) requestData.status = options.status;
-  if (options?.patientId) requestData.patientId = options.patientId;
-  if (organizationId) requestData.organizationId = organizationId;
-
-  const response = await fetchApi<ApiResponse<ApiAppointment[]>>(API_URLS.appointments.list, requestData);
+  const response = await fetchApi<ApiResponse<ApiAppointment[]>>('/api/appointments', {
+      params: { 
+          organizationId, 
+          dateFrom: options?.dateFrom,
+          dateTo: options?.dateTo,
+          therapistId: options?.therapistId,
+          status: options?.status,
+          patientId: options?.patientId,
+          limit: options?.limit || 100 
+      }
+  });
   return response.data || [];
 }
 
-/**
- * Get a single appointment by ID
- */
 export async function getAppointmentById(id: string): Promise<ApiAppointment | null> {
-  // Use Firestore fallback if Cloud Functions are disabled
-  if (!config.useCloudFunctions) {
-    console.log('[API] Using Firestore fallback for getAppointmentById');
-    return getAppointmentByIdFirestore(id);
-  }
-
   try {
-    const response = await fetchApi<ApiResponse<ApiAppointment>>(API_URLS.appointments.get, {
-      appointmentId: id,
-    });
+    const response = await fetchApi<ApiResponse<ApiAppointment>>(`/api/appointments/${encodeURIComponent(id)}`);
     return response.data || null;
   } catch {
     return null;
   }
 }
 
-/**
- * Create a new appointment
- */
 export async function createAppointment(data: {
   patientId: string;
   date: string;
@@ -529,37 +378,39 @@ export async function createAppointment(data: {
   type?: string;
   notes?: string;
 }): Promise<ApiAppointment> {
-  const response = await fetchApi<ApiResponse<ApiAppointment>>(API_URLS.appointments.create, data);
-  if (response.error) {
-    throw new Error(response.error);
-  }
+  const payload = {
+      patient_id: data.patientId,
+      appointment_date: data.date,
+      start_time: data.startTime,
+      end_time: data.endTime,
+      therapist_id: data.therapistId,
+      session_type: data.type,
+      notes: data.notes
+  };
+  const response = await fetchApi<ApiResponse<ApiAppointment>>('/api/appointments', {
+      method: 'POST',
+      data: payload
+  });
+  if (response.error) throw new Error(response.error);
   return response.data;
 }
 
-/**
- * Update an existing appointment
- */
 export async function updateAppointment(
   id: string,
   data: Partial<ApiAppointment>
 ): Promise<ApiAppointment> {
-  const response = await fetchApi<ApiResponse<ApiAppointment>>(API_URLS.appointments.update, {
-    appointmentId: id,
-    ...data,
+  const response = await fetchApi<ApiResponse<ApiAppointment>>(`/api/appointments/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      data
   });
-  if (response.error) {
-    throw new Error(response.error);
-  }
+  if (response.error) throw new Error(response.error);
   return response.data;
 }
 
-/**
- * Cancel an appointment
- */
 export async function cancelAppointment(id: string, reason?: string): Promise<{ success: boolean }> {
-  return fetchApi<{ success: boolean }>(API_URLS.appointments.cancel, {
-    appointmentId: id,
-    reason,
+  return fetchApi<{ success: boolean }>(`/api/appointments/${encodeURIComponent(id)}/cancel`, {
+      method: 'POST',
+      data: { reason }
   });
 }
 
@@ -567,68 +418,49 @@ export async function cancelAppointment(id: string, reason?: string): Promise<{ 
 // EXERCISES API
 // ============================================================
 
-/**
- * Get list of exercises
- */
 export async function getExercises(
   options?: { category?: string; difficulty?: string; search?: string; limit?: number }
 ): Promise<ApiExercise[]> {
-  const requestData: any = {
-    limit: options?.limit || 100,
-  };
-
-  if (options?.category) requestData.category = options.category;
-  if (options?.difficulty) requestData.difficulty = options.difficulty;
-  if (options?.search) requestData.search = options.search;
-
-  const response = await fetchApi<ApiResponse<ApiExercise[]>>(API_URLS.exercises.list, requestData);
+  const response = await fetchApi<ApiResponse<ApiExercise[]>>('/api/exercises', {
+      params: { 
+          category: options?.category,
+          difficulty: options?.difficulty,
+          q: options?.search,
+          limit: options?.limit || 100 
+      }
+  });
   return response.data || [];
 }
 
-/**
- * Get a single exercise by ID
- */
 export async function getExerciseById(id: string): Promise<ApiExercise | null> {
   try {
-    const response = await fetchApi<ApiResponse<ApiExercise>>(API_URLS.exercises.get, {
-      exerciseId: id,
-    });
+    const response = await fetchApi<ApiResponse<ApiExercise>>(`/api/exercises/${encodeURIComponent(id)}`);
     return response.data || null;
   } catch {
     return null;
   }
 }
 
-/**
- * Create a new exercise
- */
 export async function createExercise(data: Partial<ApiExercise>): Promise<ApiExercise> {
-  const response = await fetchApi<ApiResponse<ApiExercise>>(API_URLS.exercises.create, data);
-  if (response.error) {
-    throw new Error(response.error);
-  }
-  return response.data;
-}
-
-/**
- * Update an existing exercise
- */
-export async function updateExercise(id: string, data: Partial<ApiExercise>): Promise<ApiExercise> {
-  const response = await fetchApi<ApiResponse<ApiExercise>>(API_URLS.exercises.update, {
-    id,
-    ...data,
+  const response = await fetchApi<ApiResponse<ApiExercise>>('/api/exercises', {
+      method: 'POST',
+      data
   });
-  if (response.error) {
-    throw new Error(response.error);
-  }
+  if (response.error) throw new Error(response.error);
   return response.data;
 }
 
-/**
- * Delete an exercise
- */
+export async function updateExercise(id: string, data: Partial<ApiExercise>): Promise<ApiExercise> {
+  const response = await fetchApi<ApiResponse<ApiExercise>>(`/api/exercises/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      data
+  });
+  if (response.error) throw new Error(response.error);
+  return response.data;
+}
+
 export async function deleteExercise(id: string): Promise<{ success: boolean }> {
-  return fetchApi<{ success: boolean }>(API_URLS.exercises.delete, { id });
+  return fetchApi<{ success: boolean }>(`/api/exercises/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
 
 // ============================================================
@@ -636,19 +468,15 @@ export async function deleteExercise(id: string): Promise<{ success: boolean }> 
 // ============================================================
 
 export async function getEvolutions(patientId: string): Promise<ApiEvolution[]> {
-    // Use Firestore fallback if Cloud Functions are disabled
-    if (!config.useCloudFunctions) {
-        console.log('[API] Using Firestore fallback for getEvolutions');
-        return listEvolutionsFirestore(patientId);
-    }
-
-    const response = await fetchApi<ApiResponse<ApiEvolution[]>>(API_URLS.evolutions.list, { patientId });
+    const response = await fetchApi<ApiResponse<ApiEvolution[]>>(`/api/patients/${encodeURIComponent(patientId)}/medical-records`, {
+        params: { type: 'evolution' }
+    });
     return response.data || [];
 }
 
 export async function getEvolutionById(id: string): Promise<ApiEvolution | null> {
     try {
-        const response = await fetchApi<ApiResponse<ApiEvolution>>(API_URLS.evolutions.get, { evolutionId: id });
+        const response = await fetchApi<ApiResponse<ApiEvolution>>(`/api/evolution/${encodeURIComponent(id)}`);
         return response.data || null;
     } catch {
         return null;
@@ -656,272 +484,151 @@ export async function getEvolutionById(id: string): Promise<ApiEvolution | null>
 }
 
 export async function createEvolution(data: Partial<ApiEvolution>): Promise<ApiEvolution> {
-    const response = await fetchApi<ApiResponse<ApiEvolution>>(API_URLS.evolutions.create, data);
+    const response = await fetchApi<ApiResponse<ApiEvolution>>('/api/evolution', {
+        method: 'POST',
+        data
+    });
     if (response.error) throw new Error(response.error);
     return response.data;
 }
 
 export async function updateEvolution(id: string, data: Partial<ApiEvolution>): Promise<ApiEvolution> {
-    const response = await fetchApi<ApiResponse<ApiEvolution>>(API_URLS.evolutions.update, { evolutionId: id, ...data });
+    const response = await fetchApi<ApiResponse<ApiEvolution>>(`/api/evolution/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        data
+    });
     if (response.error) throw new Error(response.error);
     return response.data;
 }
 
 export async function deleteEvolution(id: string): Promise<{ success: boolean }> {
-    return fetchApi<{ success: boolean }>(API_URLS.evolutions.delete, { evolutionId: id });
+    return fetchApi<{ success: boolean }>(`/api/evolution/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
-
-// ============================================================
-// BATCH OPERATIONS (for optimization)
-// ============================================================
-
-/**
- * Fetch multiple data sources in parallel
- */
-export async function fetchDashboardData(organizationId?: string) {
-  const [patients, appointments] = await Promise.all([
-    getPatients(organizationId, { limit: 10 }).catch(() => []),
-    getAppointments(organizationId, {
-      therapistId: auth.currentUser?.uid,
-      limit: 10,
-    }).catch(() => []),
-  ]);
-
-  return { patients, appointments };
-}
-
-/**
- * Export for testing
- */
-export const api = {
-  patients: {
-    list: getPatients,
-    get: getPatientById,
-    create: createPatient,
-    update: updatePatient,
-    delete: deletePatient,
-  },
-  appointments: {
-    list: getAppointments,
-    get: getAppointmentById,
-    create: createAppointment,
-    update: updateAppointment,
-    cancel: cancelAppointment,
-  },
-  exercises: {
-    list: getExercises,
-    get: getExerciseById,
-    create: createExercise,
-    update: updateExercise,
-    delete: deleteExercise,
-  },
-  evolutions: {
-    list: getEvolutions,
-    get: getEvolutionById,
-    create: createEvolution,
-    update: updateEvolution,
-    delete: deleteEvolution,
-  },
-};
 
 // ============================================================
 // PARTNERSHIPS API
 // ============================================================
 
-/**
- * Get list of partnerships
- */
 export async function getPartnerships(options?: {
   activeOnly?: boolean;
   limit?: number;
 }): Promise<ApiPartnership[]> {
-  const requestData: any = {
-    limit: options?.limit || 100,
-    activeOnly: options?.activeOnly ?? true,
-  };
-
-  const response = await fetchApi<ApiResponse<ApiPartnership[]>>(API_URLS.partnerships.list, requestData);
+  const response = await fetchApi<ApiResponse<ApiPartnership[]>>('/api/partnerships', {
+      params: { 
+          activeOnly: options?.activeOnly,
+          limit: options?.limit || 100 
+      }
+  });
   return response.data || [];
 }
 
-/**
- * Get a single partnership by ID
- */
 export async function getPartnershipById(id: string): Promise<ApiPartnership | null> {
   try {
-    const response = await fetchApi<ApiResponse<ApiPartnership>>(API_URLS.partnerships.get, {
-      partnershipId: id,
-    });
+    const response = await fetchApi<ApiResponse<ApiPartnership>>(`/api/partnerships/${encodeURIComponent(id)}`);
     return response.data || null;
   } catch {
     return null;
   }
 }
 
-/**
- * Create a new partnership
- */
 export async function createPartnership(data: Partial<ApiPartnership>): Promise<ApiPartnership> {
-  const response = await fetchApi<ApiResponse<ApiPartnership>>(API_URLS.partnerships.create, data);
-  if (response.error) {
-    throw new Error(response.error);
-  }
-  return response.data;
-}
-
-/**
- * Update an existing partnership
- */
-export async function updatePartnership(id: string, data: Partial<ApiPartnership>): Promise<ApiPartnership> {
-  const response = await fetchApi<ApiResponse<ApiPartnership>>(API_URLS.partnerships.update, {
-    partnershipId: id,
-    ...data,
+  const response = await fetchApi<ApiResponse<ApiPartnership>>('/api/partnerships', {
+      method: 'POST',
+      data
   });
-  if (response.error) {
-    throw new Error(response.error);
-  }
+  if (response.error) throw new Error(response.error);
   return response.data;
 }
 
-/**
- * Delete a partnership
- */
+export async function updatePartnership(id: string, data: Partial<ApiPartnership>): Promise<ApiPartnership> {
+  const response = await fetchApi<ApiResponse<ApiPartnership>>(`/api/partnerships/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      data
+  });
+  if (response.error) throw new Error(response.error);
+  return response.data;
+}
+
 export async function deletePartnership(id: string): Promise<{ success: boolean }> {
-  return fetchApi<{ success: boolean }>(API_URLS.partnerships.delete, { partnershipId: id });
+  return fetchApi<{ success: boolean }>(`/api/partnerships/${encodeURIComponent(id)}`, { method: 'DELETE' });
 }
 
 // ============================================================
 // PATIENT FINANCIAL RECORDS API
 // ============================================================
 
-/**
- * Get all financial records for the organization
- */
 export async function getAllFinancialRecords(
   options?: { startDate?: string; endDate?: string; limit?: number }
 ): Promise<(ApiFinancialRecord & { patient_name: string })[]> {
-  // Use Firestore fallback if Cloud Functions are disabled
-  if (!config.useCloudFunctions) {
-    console.log('[API] Using Firestore fallback for getAllFinancialRecords');
-    return listAllFinancialRecordsFirestore(options);
-  }
-
-  const requestData: any = {
-    limit: options?.limit || 100,
-  };
-  if (options?.startDate) requestData.startDate = options.startDate;
-  if (options?.endDate) requestData.endDate = options.endDate;
-
-  const response = await fetchApi<ApiResponse<(ApiFinancialRecord & { patient_name: string })[]>>(API_URLS.financial.listAll, requestData);
+  const response = await fetchApi<ApiResponse<(ApiFinancialRecord & { patient_name: string })[]>>('/api/financial/transacoes', {
+      params: { 
+          startDate: options?.startDate,
+          endDate: options?.endDate,
+          limit: options?.limit || 100 
+      }
+  });
   return response.data || [];
 }
 
-/**
- * Get patient financial records
- */
 export async function getPatientFinancialRecords(
   patientId: string,
   options?: { status?: string; limit?: number }
 ): Promise<ApiFinancialRecord[]> {
-  // Use Firestore fallback if Cloud Functions are disabled
-  if (!config.useCloudFunctions) {
-    console.log('[API] Using Firestore fallback for getPatientFinancialRecords');
-    return listPatientFinancialRecordsFirestore(patientId, options);
-  }
-
-  const requestData: any = {
-    patientId,
-    limit: options?.limit || 100,
-  };
-
-  if (options?.status) requestData.status = options.status;
-
-  const response = await fetchApi<ApiResponse<ApiFinancialRecord[]>>(API_URLS.financial.listRecords, requestData);
+  const response = await fetchApi<ApiResponse<ApiFinancialRecord[]>>(`/api/financial/transacoes/patient/${encodeURIComponent(patientId)}`, {
+      params: { 
+          status: options?.status,
+          limit: options?.limit || 100 
+      }
+  });
   return response.data || [];
 }
 
-/**
- * Get patient financial summary
- */
 export async function getPatientFinancialSummary(patientId: string): Promise<ApiFinancialSummary | null> {
-  // Use Firestore fallback if Cloud Functions are disabled
-  if (!config.useCloudFunctions) {
-    console.log('[API] Using Firestore fallback for getPatientFinancialSummary');
-    return getPatientFinancialSummaryFirestore(patientId);
-  }
-
   try {
-    const response = await fetchApi<ApiResponse<ApiFinancialSummary>>(API_URLS.financial.getSummary, {
-      patientId,
-    });
+    const response = await fetchApi<ApiResponse<ApiFinancialSummary>>(`/api/financial/summary/patient/${encodeURIComponent(patientId)}`);
     return response.data || null;
   } catch {
     return null;
   }
 }
 
-/**
- * Create a new financial record
- */
-export async function createFinancialRecord(data: {
-  patient_id: string;
-  appointment_id?: string;
-  session_date: string;
-  session_value: number;
-  payment_method?: string;
-  payment_status?: string;
-  paid_amount?: number;
-  paid_date?: string;
-  notes?: string;
-  is_barter?: boolean;
-  barter_notes?: string;
-}): Promise<ApiFinancialRecord> {
-  const response = await fetchApi<ApiResponse<ApiFinancialRecord>>(API_URLS.financial.createRecord, data);
-  if (response.error) {
-    throw new Error(response.error);
-  }
+export async function createFinancialRecord(data: any): Promise<ApiFinancialRecord> {
+  const response = await fetchApi<ApiResponse<ApiFinancialRecord>>('/api/financial/transacoes', {
+      method: 'POST',
+      data
+  });
+  if (response.error) throw new Error(response.error);
   return response.data;
 }
 
-/**
- * Update a financial record
- */
 export async function updateFinancialRecord(
   recordId: string,
   data: Partial<ApiFinancialRecord>
 ): Promise<ApiFinancialRecord> {
-  const response = await fetchApi<ApiResponse<ApiFinancialRecord>>(API_URLS.financial.updateRecord, {
-    recordId,
-    ...data,
+  const response = await fetchApi<ApiResponse<ApiFinancialRecord>>(`/api/financial/transacoes/${encodeURIComponent(recordId)}`, {
+      method: 'PUT',
+      data
   });
-  if (response.error) {
-    throw new Error(response.error);
-  }
+  if (response.error) throw new Error(response.error);
   return response.data;
 }
 
-/**
- * Delete a financial record
- */
 export async function deleteFinancialRecord(recordId: string): Promise<{ success: boolean }> {
-  return fetchApi<{ success: boolean }>(API_URLS.financial.deleteRecord, { recordId });
+  return fetchApi<{ success: boolean }>(`/api/financial/transacoes/${encodeURIComponent(recordId)}`, { method: 'DELETE' });
 }
 
-/**
- * Mark a financial record as paid
- */
 export async function markFinancialRecordAsPaid(
   recordId: string,
   paymentMethod: string,
   paidDate?: string
 ): Promise<ApiFinancialRecord> {
-  const response = await fetchApi<ApiResponse<ApiFinancialRecord>>(API_URLS.financial.markAsPaid, {
-    recordId,
-    payment_method: paymentMethod,
-    paid_date: paidDate,
+  const response = await fetchApi<ApiResponse<ApiFinancialRecord>>(`/api/financial/transacoes/${encodeURIComponent(recordId)}/pay`, {
+      method: 'POST',
+      data: {
+        payment_method: paymentMethod,
+        paid_date: paidDate,
+      }
   });
-  if (response.error) {
-    throw new Error(response.error);
-  }
+  if (response.error) throw new Error(response.error);
   return response.data;
 }

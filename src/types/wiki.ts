@@ -8,7 +8,12 @@
  * Página da Wiki
  */
 
-import { Timestamp } from '@/integrations/firebase/app';
+type TimestampLikeLike =
+  | string
+  | Date
+  | {
+      toDate?: () => Date;
+    };
 
 export interface WikiPage {
   id: string;
@@ -29,10 +34,10 @@ export interface WikiPage {
   attachments: WikiAttachment[];
   icon?: string;                   // Emoji para ícone da página
   cover_image?: string;            // URL da imagem de capa
-  created_at: Timestamp;
-  updated_at: Timestamp;
+  created_at: TimestampLike;
+  updated_at: TimestampLike;
   version: number;                 // Versão atual
-  deleted_at?: Timestamp;
+  deleted_at?: TimestampLike;
 }
 
 /**
@@ -47,7 +52,7 @@ export interface WikiPageVersion {
   html_content?: string;           // Estrutura serializada de blocos (quando disponível)
   organization_id?: string;
   created_by: string;
-  created_at: Timestamp;
+  created_at: TimestampLike;
   version: number;
   comment?: string;                // Mensagem de commit ("Correção de ortografia")
   changes?: VersionChange[];       // Diff summary
@@ -76,9 +81,9 @@ export interface WikiComment {
   selection_text?: string;         // Trecho textual comentado
   selection_start?: number;        // Offset opcional no conteúdo original
   selection_end?: number;          // Offset opcional no conteúdo original
-  created_at: Timestamp;
-  updated_at?: Timestamp;
-  deleted_at?: Timestamp;
+  created_at: TimestampLike;
+  updated_at?: TimestampLike;
+  deleted_at?: TimestampLike;
   resolved?: boolean;
 }
 
@@ -92,7 +97,7 @@ export interface WikiAttachment {
   url: string;
   size_bytes?: number;
   uploaded_by: string;
-  uploaded_at: Timestamp;
+  uploaded_at: TimestampLike;
 }
 
 /**
@@ -108,7 +113,7 @@ export interface WikiCategory {
   organization_id: string;
   parent_id?: string;              // Subcategorias
   order_index: number;
-  created_at: Timestamp;
+  created_at: TimestampLike;
 }
 
 /**
@@ -124,7 +129,7 @@ export interface WikiTemplate {
   icon?: string;
   variables: TemplateVariable[];
   created_by: string;
-  created_at: Timestamp;
+  created_at: TimestampLike;
 }
 
 /**
@@ -193,5 +198,5 @@ export interface WikiTriageEvent {
   changed_by: string;
   source: 'drag' | 'quick-action' | 'automation-checklist' | 'automation-blocked';
   reason?: string;
-  created_at: Timestamp;
+  created_at: TimestampLike;
 }

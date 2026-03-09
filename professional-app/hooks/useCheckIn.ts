@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
 import { Alert } from 'react-native';
 import { getCurrentLocation, type LocationData } from '@/lib/geolocation';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { config } from '@/lib/config';
+import { authApi } from '@/lib/auth-api';
 
 interface CheckInData {
   appointmentId: string;
@@ -39,18 +39,26 @@ export function useCheckIn() {
         checkedAt: new Date().toISOString(),
       };
 
-      // Save to Firestore
-      const checkInRef = doc(db, 'appointment_checkins', appointmentId);
-      await setDoc(checkInRef, {
-        appointment_id: appointmentId,
-        patient_id: patientId,
-        professional_id: professionalId,
-        latitude: location.latitude,
-        longitude: location.longitude,
-        accuracy: location.accuracy,
-        checked_at: checkInData.checkedAt,
-        created_at: serverTimestamp(),
-      }, { merge: true });
+      const token = await authApi.getToken();
+      const response = await fetch(`${config.apiUrl}/api/appointments/${appointmentId}/check-in`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          patient_id: patientId,
+          professional_id: professionalId,
+          latitude: location.latitude,
+          longitude: location.longitude,
+          accuracy: location.accuracy,
+          checked_at: checkInData.checkedAt
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Falha ao registrar check-in no servidor');
+      }
 
       setLastCheckIn(checkInData);
       return checkInData;

@@ -2,13 +2,12 @@
  * Medical Record Helpers
  *
  * Helper functions for saving medical record data
- * Migrated from Supabase to Firebase Functions
+ * Legacy helper kept for compatibility.
+ * The active flows now save these entities through the Workers/Neon routes.
  */
 
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { httpsCallable } from 'firebase/functions';
-import { getFirebaseFunctions } from '@/integrations/firebase/functions';
 
 export interface Surgery {
   name: string;
@@ -29,30 +28,25 @@ export interface Pathology {
   diagnosedAt: string;
 }
 
+const unsupportedLegacyHelper = (action: string) => {
+  const error = new Error(
+    `${action} não é mais suportado por este helper legado. Use os serviços Workers/Neon do domínio de evolução.`,
+  );
+  logger.error(`[medicalRecordHelpers] ${action} helper legado acionado`, error, 'medicalRecordHelpers');
+  toast.error(`Fluxo legado de ${action.toLowerCase()} não suportado.`);
+  throw error;
+};
+
 /**
  * Save surgeries for a medical record
  * @param recordId - Medical record ID
  * @param newSurgeries - Array of surgeries to save
  */
 export const saveSurgeries = async (
-  recordId: string,
-  newSurgeries: Surgery[]
+  _recordId: string,
+  _newSurgeries: Surgery[]
 ) => {
-  try {
-    const saveSurgeriesFn = httpsCallable(getFirebaseFunctions(), 'saveSurgeries');
-    const result = await saveSurgeriesFn({
-      recordId,
-      surgeries: newSurgeries,
-    });
-
-    if (result.data?.error) {
-      throw new Error(result.data.error);
-    }
-  } catch (error) {
-    logger.error('Error saving surgeries', error, 'medicalRecordHelpers');
-    toast.error('Erro ao salvar cirurgias');
-    throw error;
-  }
+  unsupportedLegacyHelper('Salvar cirurgias');
 };
 
 /**
@@ -61,24 +55,10 @@ export const saveSurgeries = async (
  * @param newGoals - Array of goals to save
  */
 export const saveGoals = async (
-  recordId: string,
-  newGoals: Goal[]
+  _recordId: string,
+  _newGoals: Goal[]
 ) => {
-  try {
-    const saveGoalsFn = httpsCallable(getFirebaseFunctions(), 'saveGoals');
-    const result = await saveGoalsFn({
-      recordId,
-      goals: newGoals,
-    });
-
-    if (result.data?.error) {
-      throw new Error(result.data.error);
-    }
-  } catch (error) {
-    logger.error('Error saving goals', error, 'medicalRecordHelpers');
-    toast.error('Erro ao salvar objetivos');
-    throw error;
-  }
+  unsupportedLegacyHelper('Salvar objetivos');
 };
 
 /**
@@ -87,22 +67,8 @@ export const saveGoals = async (
  * @param newPathologies - Array of pathologies to save
  */
 export const savePathologies = async (
-  recordId: string,
-  newPathologies: Pathology[]
+  _recordId: string,
+  _newPathologies: Pathology[]
 ) => {
-  try {
-    const savePathologiesFn = httpsCallable(getFirebaseFunctions(), 'savePathologies');
-    const result = await savePathologiesFn({
-      recordId,
-      pathologies: newPathologies,
-    });
-
-    if (result.data?.error) {
-      throw new Error(result.data.error);
-    }
-  } catch (error) {
-    logger.error('Error saving pathologies', error, 'medicalRecordHelpers');
-    toast.error('Erro ao salvar patologias');
-    throw error;
-  }
+  unsupportedLegacyHelper('Salvar patologias');
 };

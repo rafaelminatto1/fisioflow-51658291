@@ -1,18 +1,7 @@
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  getDoc, 
-  getDocs, 
-  query, 
-  where, 
-  orderBy, 
-  serverTimestamp, 
-  Timestamp
-} from 'firebase/firestore';
-import { db } from '../firebase';
 import { Consent, ConsentHistory, ConsentType, ConsentCategory } from '@/types/consent';
 import { CONSENT_TYPES } from '@/constants/consentTypes';
+import { config } from '@/lib/config';
+import { authApi } from '@/lib/auth-api';
 
 export class ConsentManager {
   private static instance: ConsentManager;
@@ -26,13 +15,30 @@ export class ConsentManager {
     return ConsentManager.instance;
   }
 
+  private async fetchApi(endpoint: string, method: string = 'GET', body?: any) {
+    const token = await authApi.getToken();
+    if (!token) throw new Error('Not authenticated');
+
+    const res = await fetch(`${config.apiUrl}${endpoint}`, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: body ? JSON.stringify(body) : undefined
+    });
+
+    if (!res.ok) {
+        throw new Error(`API Error: ${res.status}`);
+    }
+
+    return res.json();
+  }
+
   /**
    * Initialize consent manager for user
    */
   async initialize(userId: string): Promise<void> {
-    // Check if initial consents exist, if not create default structure?
-    // Mostly just ensuring we can read consents.
-    // Maybe verify required consents.
     await this.getUserConsents(userId);
   }
 
@@ -45,46 +51,20 @@ export class ConsentManager {
     version: string,
     metadata?: Record<string, any>
   ): Promise<Consent> {
-    const consentRef = doc(db, 'user_consents', `${userId}_${consentType}`);
-    const historyRef = doc(collection(db, 'consent_history'));
-
-    const consentData: Consent = {
-      id: `${userId}_${consentType}`,
-      userId,
-      type: this.getConsentTypeCategory(consentType),
-      category: this.getConsentCategory(consentType),
-      name: consentType,
-      description: this.getConsentDescription(consentType),
-      version,
-      status: 'granted',
-      grantedAt: new Date(), // Local time, will be overwritten by serverTimestamp in Firestore but kept for return
-      metadata
+    const payload = {
+        userId,
+        consentType,
+        version,
+        metadata,
+        type: this.getConsentTypeCategory(consentType),
+        category: this.getConsentCategory(consentType),
+        name: consentType,
+        description: this.getConsentDescription(consentType),
+        action: 'granted'
     };
 
-    // Firestore writes
-    await setDoc(consentRef, {
-      ...consentData,
-      grantedAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    });
-
-    // History write
-    const historyEntry: Omit<ConsentHistory, 'id'> = {
-      consentId: consentData.id,
-      userId,
-      action: 'granted',
-      timestamp: new Date(),
-      version
-    };
-
-    await setDoc(historyRef, {
-      ...historyEntry,
-      timestamp: serverTimestamp()
-    });
-
-    // TODO: Audit Log (Task 36)
-
-    return consentData;
+    const response = await this.fetchApi('/api/consents/grant', 'POST', payload);
+    return response.data;
   }
 
   /**
@@ -100,117 +80,68 @@ export class ConsentManager {
       throw new Error('Cannot withdraw required consent');
     }
 
-    const consentRef = doc(db, 'user_consents', `${userId}_${consentType}`);
-    const historyRef = doc(collection(db, 'consent_history'));
-    
-    // Check if it exists first
-    const snapshot = await getDoc(consentRef);
-    if (!snapshot.exists()) {
-       throw new Error('Consent record not found');
-    }
-
-    await setDoc(consentRef, {
-      status: 'withdrawn',
-      withdrawnAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    }, { merge: true });
-
-    // History write
-    const historyEntry: Omit<ConsentHistory, 'id'> = {
-        consentId: `${userId}_${consentType}`,
+    await this.fetchApi('/api/consents/withdraw', 'POST', {
         userId,
-        action: 'withdrawn',
-        timestamp: new Date(),
-        version: snapshot.data().version, // Use current version
+        consentType,
         reason
-    };
-
-    await setDoc(historyRef, {
-        ...historyEntry,
-        timestamp: serverTimestamp()
     });
-
-    // TODO: Audit Log (Task 36)
   }
 
   /**
    * Check if user has granted specific consent
    */
   async hasConsent(userId: string, consentType: string): Promise<boolean> {
-     const consentRef = doc(db, 'user_consents', `${userId}_${consentType}`);
-     const snapshot = await getDoc(consentRef);
-     if (!snapshot.exists()) return false;
-     const data = snapshot.data() as Consent;
-     return data.status === 'granted';
+     try {
+         const response = await this.fetchApi(`/api/consents/check?userId=${userId}&consentType=${consentType}`);
+         return response.data?.status === 'granted';
+     } catch {
+         return false;
+     }
   }
 
   /**
    * Get all consents for user
    */
   async getUserConsents(userId: string): Promise<Consent[]> {
-    const q = query(collection(db, 'user_consents'), where('userId', '==', userId));
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-            ...data,
-            grantedAt: data.grantedAt instanceof Timestamp ? data.grantedAt.toDate() : data.grantedAt,
-            withdrawnAt: data.withdrawnAt instanceof Timestamp ? data.withdrawnAt.toDate() : data.withdrawnAt,
-        } as Consent;
-    });
+    try {
+        const response = await this.fetchApi(`/api/consents/user/${userId}`);
+        return response.data || [];
+    } catch {
+        return [];
+    }
   }
 
   /**
    * Get consent history
    */
   async getConsentHistory(userId: string, consentType?: string): Promise<ConsentHistory[]> {
-    let q = query(
-        collection(db, 'consent_history'), 
-        where('userId', '==', userId),
-        orderBy('timestamp', 'desc')
-    );
-
-    if (consentType) {
-        // We need to filter by consentId which is userId_consentType
-        // But the design says consentId, let's assume filtering by consentId
-        q = query(
-            collection(db, 'consent_history'),
-            where('userId', '==', userId),
-            where('consentId', '==', `${userId}_${consentType}`),
-            orderBy('timestamp', 'desc')
-        );
+    try {
+        const url = consentType 
+            ? `/api/consents/history/${userId}?consentType=${consentType}`
+            : `/api/consents/history/${userId}`;
+        const response = await this.fetchApi(url);
+        return response.data || [];
+    } catch {
+        return [];
     }
-
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-            id: doc.id,
-            ...data,
-            timestamp: data.timestamp instanceof Timestamp ? data.timestamp.toDate() : data.timestamp,
-        } as ConsentHistory;
-    });
   }
 
   /**
    * Check if consent needs renewal (version changed)
    */
   async needsRenewal(userId: string, consentType: string, currentVersion: string): Promise<boolean> {
-      const consentRef = doc(db, 'user_consents', `${userId}_${consentType}`);
-      const snapshot = await getDoc(consentRef);
-      if (!snapshot.exists()) return true;
-      
-      const data = snapshot.data() as Consent;
-      // Simple version check: not equal means renewal needed? Or semver?
-      // For now, strict inequality.
-      return data.version !== currentVersion;
+      try {
+          const response = await this.fetchApi(`/api/consents/check-renewal?userId=${userId}&consentType=${consentType}&version=${currentVersion}`);
+          return response.data?.needsRenewal || false;
+      } catch {
+          return true;
+      }
   }
 
   /**
    * Sync consent with device permissions
    */
   async syncDevicePermissions(userId: string): Promise<void> {
-    // TODO: Implement syncing with PermissionManager (Task 24)
     console.log('Syncing device permissions for', userId);
   }
   
@@ -235,8 +166,6 @@ export class ConsentManager {
   }
 
   private getConsentDescription(consentType: string): string {
-      // Return localized description
-      // For now return hardcoded string or key, ideally this should come from translation file
       return consentType;
   }
 }
