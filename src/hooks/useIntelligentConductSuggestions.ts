@@ -1,18 +1,10 @@
 /**
- * useIntelligentConductSuggestions - Migrated to Firebase
- *
+ * useIntelligentConductSuggestions - Migrado para Neon/Workers
  */
 
-
-
-// Helper to convert doc
-
 import { useQuery } from '@tanstack/react-query';
-import { collection, getDocs, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
+import { patientsApi, clinicalApi } from '@/lib/api/workers-client';
 import { useSoapRecords } from './useSoapRecords';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
-
-const convertDoc = (doc: { id: string; data: () => Record<string, unknown> }) => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) });
 
 export interface ConductSuggestion {
   id: string;
@@ -29,76 +21,54 @@ export const useIntelligentConductSuggestions = (patientId: string) => {
   return useQuery({
     queryKey: ['intelligent-conduct-suggestions', patientId],
     queryFn: async () => {
-      // Buscar patologias do paciente
-      const pathologiesQuery = firestoreQuery(
-        collection(db, 'patient_pathologies'),
-        where('patient_id', '==', patientId),
-        where('status', '==', 'em_tratamento')
-      );
-      const pathologiesSnap = await getDocs(pathologiesQuery);
-      const pathologies = pathologiesSnap.docs.map(convertDoc);
+      const [pathologiesRes, conductsRes] = await Promise.all([
+        patientsApi.pathologies(patientId),
+        clinicalApi.conductLibrary.list(),
+      ]);
 
-      // Buscar avaliação médica recente
-      const medicalRecordsQuery = firestoreQuery(
-        collection(db, 'medical_records'),
-        where('patient_id', '==', patientId),
-        orderBy('created_at', 'desc'),
-        limit(1)
-      );
-      const medicalRecordsSnap = await getDocs(medicalRecordsQuery);
-      const medicalRecord = !medicalRecordsSnap.empty ? convertDoc(medicalRecordsSnap.docs[0]) : null;
+      const pathologies = pathologiesRes?.data ?? [];
+      const conducts = conductsRes?.data ?? [];
 
-      // Extrair palavras-chave das últimas evoluções
       const recentKeywords = soapRecords
-        .flatMap(record => {
+        .flatMap((record) => {
           const text = `${record.subjective || ''} ${record.objective || ''} ${record.assessment || ''}`;
           return text.toLowerCase().match(/\b\w{4,}\b/g) || [];
         })
         .filter((word, index, arr) => arr.indexOf(word) === index)
         .slice(0, 20);
 
-      // Buscar condutas da biblioteca
-      const conductsQuery = firestoreQuery(collection(db, 'conduct_library'));
-      const conductsSnap = await getDocs(conductsQuery);
-      const conducts = conductsSnap.docs.map(convertDoc);
-
-      // Calcular relevância para cada conduta
-      interface ConductFirestore {
-        id: string;
-        title: string;
-        description?: string;
-        conduct_text: string;
-        category: string;
-        [key: string]: unknown;
-      }
-
-      interface PathologyFirestore {
-        pathology_name: string;
-        [key: string]: unknown;
-      }
+      const hasPainComplaint =
+        recentKeywords.includes('dor') ||
+        soapRecords.some(
+          (record) =>
+            record.subjective?.toLowerCase().includes('dor') ||
+            record.assessment?.toLowerCase().includes('dor'),
+        );
 
       const suggestions: ConductSuggestion[] = conducts
-        .map((conduct: ConductFirestore) => {
+        .map((conduct) => {
           let score = 0;
           const reasons: string[] = [];
+          const conductText =
+            `${conduct.title} ${conduct.description || ''} ${conduct.conduct_text}`.toLowerCase();
 
-          const conductText = `${conduct.title} ${conduct.description || ''} ${conduct.conduct_text}`.toLowerCase();
+          const pathologyNames = pathologies
+            .map((item) => item.name?.toLowerCase().trim())
+            .filter(Boolean) as string[];
 
-          // Pontuação por patologia correspondente
-          const pathologyNames = pathologies.map((p: PathologyFirestore) => p.pathology_name.toLowerCase());
-          pathologyNames.forEach(pathology => {
-            if (conductText.includes(pathology) || conduct.category.toLowerCase().includes(pathology)) {
+          pathologyNames.forEach((pathology) => {
+            if (
+              conductText.includes(pathology) ||
+              conduct.category.toLowerCase().includes(pathology)
+            ) {
               score += 50;
               reasons.push(`Relacionado à patologia: ${pathology}`);
             }
           });
 
-          // Pontuação por palavras-chave das últimas evoluções
           let keywordMatches = 0;
-          recentKeywords.forEach(keyword => {
-            if (conductText.includes(keyword)) {
-              keywordMatches++;
-            }
+          recentKeywords.forEach((keyword) => {
+            if (conductText.includes(keyword)) keywordMatches += 1;
           });
 
           if (keywordMatches > 0) {
@@ -106,10 +76,7 @@ export const useIntelligentConductSuggestions = (patientId: string) => {
             reasons.push(`Palavras-chave em comum (${keywordMatches})`);
           }
 
-          // Pontuação por categoria
-          if (conduct.category.toLowerCase().includes('dor') &&
-              (medicalRecord?.chief_complaint?.toLowerCase().includes('dor') ||
-               soapRecords.some(r => r.subjective?.toLowerCase().includes('dor')))) {
+          if (conduct.category.toLowerCase().includes('dor') && hasPainComplaint) {
             score += 20;
             reasons.push('Categoria relacionada à queixa');
           }
@@ -120,15 +87,15 @@ export const useIntelligentConductSuggestions = (patientId: string) => {
             conduct_text: conduct.conduct_text,
             category: conduct.category,
             relevance_score: score,
-            reason: reasons.join(' • ') || 'Conduta padrão'
+            reason: reasons.join(' • ') || 'Conduta padrão',
           };
         })
-        .filter(s => s.relevance_score > 0)
+        .filter((suggestion) => suggestion.relevance_score > 0)
         .sort((a, b) => b.relevance_score - a.relevance_score)
         .slice(0, 10);
 
       return suggestions;
     },
-    enabled: !!patientId
+    enabled: !!patientId,
   });
 };

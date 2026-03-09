@@ -1,8 +1,8 @@
-import { getFirebaseAuth } from '@/integrations/firebase/app';
 import type { MandatoryTestAlert, AssessmentTestConfig } from '@/types/evolution';
 import { TestEvolutionService } from './testEvolutionService';
 import { PathologyService } from './pathologyService';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { auditApi } from '@/lib/api/workers-client';
 
 export interface AlertCheckResult {
   canSave: boolean;
@@ -77,31 +77,21 @@ export class MandatoryTestAlertService {
     testName: string,
     reason: string
   ): Promise<void> {
-    // Get current user from Firebase Auth
-    const auth = getFirebaseAuth();
-    const userId = auth.currentUser?.uid;
-
-    // NOTE: This would typically use a Cloud Function to log to audit_log
-    // For now, we'll log to console and create a local record
     const exceptionRecord = {
       action: 'MANDATORY_TEST_EXCEPTION',
-      table_name: 'evolution_measurements',
-      user_id: userId,
-      new_data: {
+      entity_type: 'evolution_measurements',
+      entity_id: sessionId,
+      metadata: {
         patient_id: patientId,
         session_id: sessionId,
         test_name: testName,
         exception_reason: reason,
         timestamp: new Date().toISOString(),
       },
-      created_at: new Date().toISOString(),
     };
 
     logger.warn('Mandatory test exception registered', exceptionRecord, 'MandatoryTestAlertService');
-
-    // In production, this should call a Cloud Function to store in audit_log
-    // For now, we'll just log the exception
-    logger.debug('Audit log entry', exceptionRecord, 'MandatoryTestAlertService');
+    await auditApi.create(exceptionRecord);
   }
 
   /**

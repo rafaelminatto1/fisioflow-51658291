@@ -12,7 +12,6 @@ import {
 } from '@/components/ui/select';
 import { DatePickerWithRange } from '@/components/ui/date-range-picker';
 import { Checkbox } from '@/components/ui/checkbox';
-import { db, collection, query as firestoreQuery, where, orderBy, getDocs } from '@/integrations/firebase/app';
 import { FileText, Download, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { DateRange } from 'react-day-picker';
@@ -20,7 +19,8 @@ import { parseResponseDate } from '@/utils/dateUtils';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { appointmentsApi } from '@/lib/api/workers-client';
+import { toast } from 'sonner';
 
 type ReportType = 'appointments' | 'financial' | 'patients' | 'analytics' | 'complete';
 type ExportFormat = 'pdf' | 'csv' | 'json';
@@ -51,32 +51,28 @@ export function AdvancedReportGenerator() {
     const startDate = dateRange?.from ? format(dateRange.from, 'yyyy-MM-dd') : null;
     const endDate = dateRange?.to ? format(dateRange.to, 'yyyy-MM-dd') : null;
 
-    let q = firestoreQuery(collection(db, 'appointments'), orderBy('appointment_date', 'desc'));
-
-    if (startDate) {
-      q = firestoreQuery(collection(db, 'appointments'), where('appointment_date', '>=', startDate), orderBy('appointment_date', 'desc'));
-    }
-    if (endDate) {
-      q = firestoreQuery(collection(db, 'appointments'), where('appointment_date', '<=', endDate), orderBy('appointment_date', 'desc'));
-    }
-
-    const snapshot = await getDocs(q);
-    const data: AppointmentData[] = [];
-    snapshot.forEach((doc) => {
-      const appointmentData = normalizeFirestoreData(doc.data());
-      // For now, we'll just get the basic data. Patient names would need to be fetched separately.
-      data.push({
-        id: doc.id,
-        ...appointmentData,
-        patients: { full_name: appointmentData.patient_name || 'N/A' }
-      });
+    const response = await appointmentsApi.list({
+      dateFrom: startDate ?? undefined,
+      dateTo: endDate ?? undefined,
+      limit: 5000,
+      offset: 0,
     });
 
-    return data;
+    return (response.data ?? []).map((appointment) => ({
+      id: appointment.id,
+      appointment_date: appointment.date,
+      type: appointment.session_type,
+      status: appointment.status,
+      payment_amount: undefined,
+      patients: {
+        full_name: appointment.patient_name || 'N/A',
+      },
+    })) as AppointmentData[];
   };
 
   // Define interface for appointment data from database
   interface AppointmentData {
+    id?: string;
     appointment_date: string | Date;
     patients?: { full_name: string; email?: string; phone?: string } | null;
     type?: string;

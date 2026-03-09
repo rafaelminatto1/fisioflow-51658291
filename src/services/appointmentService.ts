@@ -2,7 +2,7 @@
 
 // Type for appointment item from API
 
-import { appointmentsApi } from '@/integrations/firebase/functions';
+import { appointmentsApi } from '@/lib/api/workers-client';
 import { AppointmentBase, AppointmentFormData, AppointmentStatus, AppointmentType } from '@/types/appointment';
 import { VerifiedAppointmentSchema } from '@/schemas/appointment';
 import { dateSchema, timeSchema } from '@/lib/validations/agenda';
@@ -246,9 +246,7 @@ export class AppointmentService {
             };
 
             const response = await appointmentsApi.create(payload);
-
-            // appointmentsApi.create() already returns res.data (the appointment), not { data: appointment }
-            const newAppointment = response as AppointmentApiItem;
+            const newAppointment = response.data as AppointmentApiItem;
 
             // Helper to parse date string as local date (avoiding timezone issues)
             // new Date("2026-02-05") is parsed as UTC midnight, which becomes previous day in Brazil (UTC-3)
@@ -367,8 +365,7 @@ export class AppointmentService {
             if (Object.keys(updateData).length === 0) throw AppError.badRequest('Nenhum dado para atualizar');
 
             const response = await appointmentsApi.update(id, updateData);
-            // API retorna o appointment diretamente (res.data), não { data: appointment }
-            const fetchedUpdatedAppointment = response;
+            const fetchedUpdatedAppointment = response.data as AppointmentApiItem;
 
             // #region agent log
             logAgentEvent({
@@ -411,10 +408,10 @@ export class AppointmentService {
             // We refetch details to complete information
             try {
                 const refreshed = await appointmentsApi.get(id);
-                if (refreshed) {
-                    const r = refreshed as { patient_name?: string; patient_phone?: string; patients?: { full_name?: string; phone?: string } };
-                    updatedAppointment.patientName = r.patient_name || r.patients?.full_name || 'Desconhecido';
-                    updatedAppointment.phone = r.patient_phone || r.patients?.phone || '';
+                if (refreshed?.data) {
+                    const r = refreshed.data as AppointmentApiItem & { patient?: { full_name?: string; phone?: string } };
+                    updatedAppointment.patientName = r.patient_name || r.patient?.full_name || 'Desconhecido';
+                    updatedAppointment.phone = r.patient_phone || r.patient?.phone || '';
                 }
             } catch (_e) {
                 // Ignore silent refresh error

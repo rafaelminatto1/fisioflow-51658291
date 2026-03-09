@@ -48,11 +48,33 @@ const mapTreatmentSession = (row: Record<string, unknown>) => ({
   assessment: row.assessment,
   plan: row.plan,
   observations: row.observations,
+  exercises_performed: row.exercises_performed,
   pain_level_before: row.pain_level_before,
   pain_level_after: row.pain_level_after,
   next_session_goals: row.next_session_goals,
   created_at: row.created_at,
   updated_at: row.updated_at,
+});
+
+app.get('/treatment-sessions', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const patientId = c.req.query('patientId');
+  if (!patientId) return c.json({ error: 'patientId é obrigatório' }, 400);
+
+  const limitValue = Math.min(Math.max(Number(c.req.query('limit') ?? 20), 1), 200);
+  const rows = await pool.query(
+    `
+      SELECT *
+      FROM treatment_sessions
+      WHERE patient_id = $1 AND organization_id = $2
+      ORDER BY session_date DESC, created_at DESC
+      LIMIT $3
+    `,
+    [patientId, user.organizationId, limitValue],
+  );
+
+  return c.json({ data: rows.rows.map(mapTreatmentSession) });
 });
 
 app.get('/measurements', requireAuth, async (c) => {
@@ -187,6 +209,7 @@ app.post('/treatment-sessions', requireAuth, async (c) => {
     body.assessment ? String(body.assessment) : null,
     body.plan ? String(body.plan) : null,
     body.observations ? String(body.observations) : null,
+    jsonSerialize(body.exercises_performed) ?? '[]',
     Number(body.pain_level_before ?? 0),
     Number(body.pain_level_after ?? 0),
     user.organizationId,
@@ -210,13 +233,14 @@ app.post('/treatment-sessions', requireAuth, async (c) => {
           assessment         = $7,
           plan               = $8,
           observations       = $9,
-          pain_level_before  = $10,
-          pain_level_after   = $11,
+          exercises_performed = $10::jsonb,
+          pain_level_before  = $11,
+          pain_level_after   = $12,
           updated_at         = NOW()
-        WHERE id = $12
+        WHERE id = $13
         RETURNING *
       `,
-      [...values.slice(0, 11), existing.rows[0].id],
+      [...values.slice(0, 12), existing.rows[0].id],
     );
     result = row;
   } else {
@@ -232,10 +256,11 @@ app.post('/treatment-sessions', requireAuth, async (c) => {
           assessment,
           plan,
           observations,
+          exercises_performed,
           pain_level_before,
           pain_level_after,
           organization_id
-        ) VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10, $11, $12)
+        ) VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9, $10::jsonb, $11, $12, $13)
         RETURNING *
       `,
       values,

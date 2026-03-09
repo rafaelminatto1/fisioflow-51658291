@@ -20,8 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { storage } from '@/integrations/firebase/app';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { uploadToR2 } from '@/lib/storage/r2-storage';
 import { knowledgeService } from '../../services/knowledgeService';
 import { aiService } from '../../services/aiService';
 import { toast } from 'sonner';
@@ -63,10 +62,8 @@ export function ArticleUploadDialog({ open, onOpenChange, onSuccess }: ArticleUp
       setIsUploading(true);
       setUploadStep('uploading');
 
-      // 1. Upload to Storage
-      const storageRef = ref(storage, `knowledge-base/${user.organizationId}/${Date.now()}_${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
+      // 1. Upload to R2
+      const { url: downloadURL } = await uploadToR2(file, `knowledge-base/${user.organizationId}`);
 
       // 2. Create Firestore Record
       const artifactId = await knowledgeService.createArtifact({

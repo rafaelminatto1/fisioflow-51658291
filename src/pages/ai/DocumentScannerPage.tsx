@@ -42,9 +42,9 @@ import {
   Trash2,
 } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
-import { functions, storage, db } from '@/lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { functions } from '@/lib/firebase';
+import { uploadToR2 } from '@/lib/storage/r2-storage';
+import { examsApi } from '@/lib/api/workers-client';
 import { useToast } from '@/hooks/use-toast';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { usePatientsPostgres } from '@/hooks/useDataConnect';
@@ -189,16 +189,14 @@ export default function DocumentScannerPage() {
   // Buscar exames anteriores do paciente para comparação
   const fetchPreviousExams = async (patientId: string) => {
     try {
-      const examsRef = collection(db, 'medical_records');
-      const q = query(
-        examsRef,
-        where('patientId', '==', patientId),
-        where('type', '==', 'exam_result'),
-        orderBy('date', 'desc'),
-        limit(5)
-      );
-      const snapshot = await getDocs(q);
-      const exams = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as MedicalRecord[];
+      const result = await examsApi.list(patientId);
+      const exams = (result.data ?? []).slice(0, 5).map(e => ({
+        id: e.id,
+        patientId: e.patient_id,
+        type: e.exam_type ?? 'exam_result',
+        date: e.exam_date ?? e.created_at,
+        description: e.description,
+      })) as MedicalRecord[];
       setPreviousExams(exams);
       return exams;
     } catch (error) {
@@ -258,17 +256,16 @@ export default function DocumentScannerPage() {
     setLoading(true);
 
     try {
-      // 1. Upload para Firebase Storage
-      const storageRef = ref(storage, `medical_reports/${Date.now()}_${file.name}`);
+      // 1. Upload para R2
       let fileUrl = '';
       try {
-        await uploadBytes(storageRef, file);
-        fileUrl = await getDownloadURL(storageRef);
+        const { url } = await uploadToR2(file, 'medical_reports');
+        fileUrl = url;
       } catch (uploadError) {
-        console.error('Falha no upload para o Storage, usando fallback local', uploadError);
+        console.error('Falha no upload para o R2, usando fallback local', uploadError);
         toast({
           title: 'Sem acesso ao Storage',
-          description: 'Processando localmente (permissão necessária para upload).',
+          description: 'Processando localmente.',
           variant: 'default',
         });
         await scanLocally(file);
@@ -307,7 +304,7 @@ export default function DocumentScannerPage() {
 
         setExtractedData({
           ...data.extractedData,
-          storagePath: storageRef.fullPath,
+          storagePath: fileUrl,
         });
         setClassification(data.classification || null);
         setSummary(data.summary || null);
@@ -450,24 +447,22 @@ export default function DocumentScannerPage() {
     try {
       const patient = (patients as Patient[] | undefined)?.find((p) => p.id === selectedPatient);
 
-      // Salvar como registro médico com dados estruturados
-      const createRecord = httpsCallable(functions, 'createMedicalRecordV2');
-      await createRecord({
-        patientId: selectedPatient,
-        type: classification?.type === 'mri' || classification?.type === 'xray' || classification?.type === 'ct_scan' || classification?.type === 'ultrasound'
-          ? 'exam_result'
-          : 'clinical_note',
+      // Salvar como exame/registro médico via Workers API
+      const isImaging = ['mri', 'xray', 'ct_scan', 'ultrasound'].includes(classification?.type ?? '');
+      const newExam = await examsApi.create({
+        patient_id: selectedPatient,
+        title: summary?.impression?.substring(0, 100) || classification?.type || 'Documento Digitalizado',
+        exam_type: isImaging ? 'exam_result' : 'clinical_note',
+        exam_date: new Date().toISOString(),
         description: summary?.impression || extractedData.text.substring(0, 500),
-        attachments: [extractedData.fileUrl],
-        date: new Date().toISOString(),
-        metadata: {
-          classification,
-          summary,
-          tags,
-          documentType: classification?.type,
-          confidence: classification?.confidence,
-        },
       });
+      if (extractedData.fileUrl && newExam?.data?.id) {
+        await examsApi.addFile(newExam.data.id, {
+          file_path: extractedData.fileUrl,
+          file_name: file?.name ?? 'documento',
+          file_type: 'pdf',
+        });
+      }
 
       toast({
         title: 'Salvo!',

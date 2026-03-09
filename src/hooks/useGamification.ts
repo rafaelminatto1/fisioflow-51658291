@@ -1,68 +1,94 @@
 /**
- * useGamification - Migrated to Firebase
+ * useGamification — Cloudflare Workers + Neon PostgreSQL
+ *
+ * Migrado de Firestore para Workers API.
  */
-
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, limit, setDoc } from '@/integrations/firebase/app';
-import { triggerGamificationFeedback } from '@/lib/gamification/feedback-utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { parseISO, differenceInCalendarDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { generateSmartQuests, GeneratedQuest } from '@/lib/gamification/quest-generator';
+import { triggerGamificationFeedback } from '@/lib/gamification/feedback-utils';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import {
-
+  gamificationApi,
+  type GamificationProfileRow,
+  type ShopItemRow,
+  type UserInventoryRow,
+} from '@/lib/api/workers-client';
+import type {
   DailyQuestItem,
   GamificationProfile,
   Achievement,
   UnlockedAchievement,
   AwardXpParams,
   AwardXpResult,
-  type ShopItem,
-  type UserInventoryItem,
-  type BuyItemParams,
+  ShopItem,
+  UserInventoryItem,
+  BuyItemParams,
 } from '@/types/gamification';
-import { db } from '@/integrations/firebase/app';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
+// ─── Level helpers ────────────────────────────────────────────────────────────
 
-// Level Calculation Constants - buscar do banco se disponível
 const LEVEL_BASE_XP = 1000;
 const LEVEL_MULTIPLIER = 1.2;
 
-const calculateLevel = (totalXp: number, settings?: { base_xp?: number; multiplier?: number }) => {
-  const baseXP = settings?.base_xp || LEVEL_BASE_XP;
-  const multiplier = settings?.multiplier || LEVEL_MULTIPLIER;
-
+const calculateLevel = (totalXp: number) => {
   let level = 1;
-  let xpForNextLevel = baseXP;
-  let accumulatedXp = 0;
-
-  while (totalXp >= accumulatedXp + xpForNextLevel) {
-    accumulatedXp += xpForNextLevel;
+  let xpForNextLevel = LEVEL_BASE_XP;
+  let accumulated = 0;
+  while (totalXp >= accumulated + xpForNextLevel) {
+    accumulated += xpForNextLevel;
     level++;
-    xpForNextLevel = Math.floor(xpForNextLevel * multiplier);
+    xpForNextLevel = Math.floor(xpForNextLevel * LEVEL_MULTIPLIER);
   }
-
-  return {
-    level,
-    currentLevelXp: totalXp - accumulatedXp,
-    xpForNextLevel,
-    progress: xpForNextLevel > 0 ? ((totalXp - accumulatedXp) / xpForNextLevel) * 100 : 100
-  };
+  return { level, xpForNextLevel, currentLevelXp: totalXp - accumulated, progress: xpForNextLevel > 0 ? ((totalXp - accumulated) / xpForNextLevel) * 100 : 100 };
 };
 
-const calculateNewStreak = (currentStreak: number, lastActivityDate: string | null) => {
-  if (!lastActivityDate) return { newStreak: 1, shouldReset: false };
+// ─── Row → domain type mappers ────────────────────────────────────────────────
 
-  const today = new Date();
-  const lastDate = parseISO(lastActivityDate);
-  const diffDays = differenceInCalendarDays(today, lastDate);
+const rowToProfile = (row: GamificationProfileRow): GamificationProfile => ({
+  id: row.id,
+  patient_id: row.patient_id,
+  current_xp: row.current_xp,
+  level: row.level,
+  current_streak: row.current_streak,
+  longest_streak: row.longest_streak,
+  total_points: row.total_points,
+  last_activity_date: row.last_activity_date,
+  created_at: row.created_at,
+  updated_at: row.updated_at,
+});
 
-  if (diffDays === 0) return { newStreak: currentStreak, shouldReset: false }; // Same day
-  if (diffDays === 1) return { newStreak: currentStreak, shouldReset: false }; // Consecutive day
+const rowToShopItem = (row: ShopItemRow): ShopItem => ({
+  id: row.id,
+  code: row.code,
+  name: row.name,
+  description: row.description,
+  cost: row.cost,
+  type: row.type as ShopItem['type'],
+  icon: row.icon,
+  metadata: row.metadata,
+  is_active: row.is_active,
+});
 
-  return { newStreak: 1, shouldReset: true }; // Missed a day
-};
+const rowToInventoryItem = (row: UserInventoryRow): UserInventoryItem => ({
+  id: row.id,
+  user_id: row.user_id,
+  item_id: row.item_id,
+  quantity: row.quantity,
+  is_equipped: row.is_equipped,
+  item: row.item_name ? {
+    id: row.item_id,
+    code: row.item_code,
+    name: row.item_name,
+    description: row.item_description ?? '',
+    cost: row.item_cost ?? 0,
+    type: (row.item_type ?? 'consumable') as ShopItem['type'],
+    icon: row.item_icon,
+    metadata: {},
+    is_active: true,
+  } : undefined,
+});
+
+// ─── Return type ──────────────────────────────────────────────────────────────
 
 export interface UseGamificationResult {
   profile: GamificationProfile | null;
@@ -78,461 +104,200 @@ export interface UseGamificationResult {
   shopItems: ShopItem[];
   userInventory: UserInventoryItem[];
   buyItem: ReturnType<typeof useMutation<void, Error, BuyItemParams>>;
-
-  // Computed
   xpPerLevel: number;
   currentLevel: number;
   currentXp: number;
   totalPoints: number;
   progressToNextLevel: number;
   progressPercentage: number;
-  xpProgress: number; // same as progressPercentage, alias
-  totalSessions: number; // mock or real
-  recentTransactions: Array<{ id: string; amount: number; reason: string; created_at: string }>; // simplified
+  xpProgress: number;
+  totalSessions: number;
+  recentTransactions: Array<{ id: string; amount: number; reason: string; created_at: string }>;
 }
+
+// ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export const useGamification = (patientId: string): UseGamificationResult => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const hasPatientId = patientId.trim().length > 0;
+  const enabled = patientId.trim().length > 0;
 
-  const isRecoverableFirestoreError = (error: unknown): boolean => {
-    const code = (error as { code?: string })?.code;
-    const message = (error as Error)?.message?.toLowerCase?.() ?? '';
-    return (
-      code === 'permission-denied' ||
-      code === 'failed-precondition' ||
-      message.includes('insufficient permissions') ||
-      message.includes('requires an index')
-    );
-  };
-
-  // -------------------------------------------------------------------------
-  // 1. Shop & Inventory Queries
-  // -------------------------------------------------------------------------
-  const { data: shopItems = [] } = useQuery({
+  // ── 1. Shop items (global, sem patientId) ──────────────────────────────────
+  const { data: shopItemsRaw = [] } = useQuery({
     queryKey: ['shop-items'],
     queryFn: async () => {
       try {
-        const q = firestoreQuery(
-          collection(db, 'shop_items'),
-          where('is_active', '==', true)
-        );
-
-        const snapshot = await getDocs(q);
-        return snapshot.docs
-          .map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }))
-          .sort((a, b) => Number((a as { cost?: number }).cost ?? 0) - Number((b as { cost?: number }).cost ?? 0)) as ShopItem[];
-      } catch (error) {
-        if (isRecoverableFirestoreError(error)) {
-          logger.warn('[useGamification] Falha ao carregar itens da loja (fallback vazio)', { error }, 'useGamification');
-          return [];
-        }
-        throw error;
+        const res = await gamificationApi.getShopItems();
+        return res.data ?? [];
+      } catch (err) {
+        logger.warn('[useGamification] Falha ao carregar loja', { err }, 'useGamification');
+        return [];
       }
     },
-    enabled: hasPatientId,
-    staleTime: 1000 * 60 * 30, // 30 mins
+    enabled,
+    staleTime: 1000 * 60 * 30,
   });
 
-  const { data: userInventory = [] } = useQuery({
+  const shopItems = shopItemsRaw.map(rowToShopItem);
+
+  // ── 2. Inventário do paciente ──────────────────────────────────────────────
+  const { data: inventoryRaw = [] } = useQuery({
     queryKey: ['user-inventory', patientId],
     queryFn: async () => {
       try {
-        const q = firestoreQuery(
-          collection(db, 'user_inventory'),
-          where('user_id', '==', patientId)
-        );
-
-        const snapshot = await getDocs(q);
-        return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as UserInventoryItem[];
-      } catch (error) {
-        if (isRecoverableFirestoreError(error)) {
-          logger.warn('[useGamification] Falha ao carregar inventário (fallback vazio)', { error }, 'useGamification');
-          return [];
-        }
-        throw error;
+        const res = await gamificationApi.getInventory(patientId);
+        return res.data ?? [];
+      } catch (err) {
+        logger.warn('[useGamification] Falha ao carregar inventário', { err }, 'useGamification');
+        return [];
       }
     },
-    enabled: hasPatientId,
+    enabled,
   });
 
-  // -------------------------------------------------------------------------
-  // 2. Fetch Gamification Profile (Updated with Streak Freeze Logic)
-  // -------------------------------------------------------------------------
-  const { data: profile, isLoading: isLoadingProfile } = useQuery({
+  const userInventory = inventoryRaw.map(rowToInventoryItem);
+
+  // ── 3. Perfil de gamificação ───────────────────────────────────────────────
+  const { data: profileRaw, isLoading: isLoadingProfile } = useQuery({
     queryKey: ['gamification-profile', patientId],
     queryFn: async () => {
       try {
-        const docRef = doc(db, 'patient_gamification', patientId);
-        const snapshot = await getDoc(docRef);
-
-        let data = null;
-        if (snapshot.exists()) {
-          data = { id: snapshot.id, ...snapshot.data() } as GamificationProfile;
-        }
-
-        if (!data) {
-          // Create profile if not exists
-          const newProfile = {
-            patient_id: patientId,
-            total_points: 0,
-            level: 1,
-            current_streak: 0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          } as GamificationProfile;
-
-          await setDoc(docRef, newProfile);
-          return newProfile;
-        }
-
-        // Check Streak Logic with Inventory Protection
-        if (data.last_activity_date) {
-          const { shouldReset } = calculateNewStreak(
-            data.current_streak,
-            data.last_activity_date
-          );
-
-          if (shouldReset) {
-            // Check for Streak Freeze in Inventory
-            const freezeQ = firestoreQuery(
-              collection(db, 'user_inventory'),
-              where('user_id', '==', patientId),
-              where('item_code', '==', 'streak_freeze'),
-              where('quantity', '>', 0),
-              limit(1)
-            );
-
-            const freezeSnapshot = await getDocs(freezeQ);
-
-            if (!freezeSnapshot.empty) {
-              const freezeItem = { id: freezeSnapshot.docs[0].id, ...freezeSnapshot.docs[0].data() };
-
-              // Consume Freeze
-              const newQuantity = (freezeItem.quantity || 1) - 1;
-              if (newQuantity === 0) {
-                await deleteDoc(doc(db, 'user_inventory', freezeItem.id));
-              } else {
-                await updateDoc(doc(db, 'user_inventory', freezeItem.id), { quantity: newQuantity });
-              }
-
-              // Save Streak (fake an activity for yesterday to keep it alive)
-              const yesterday = new Date();
-              yesterday.setDate(yesterday.getDate() - 1);
-
-              await updateDoc(docRef, { last_activity_date: yesterday.toISOString() });
-
-              const updatedSnap = await getDoc(docRef);
-              if (updatedSnap.exists()) {
-                logger.info('Streak Saved by Freeze', null, 'useGamification');
-                return { id: updatedSnap.id, ...updatedSnap.data() } as GamificationProfile;
-              }
-            }
-
-            // No freeze available? Reset.
-            await updateDoc(docRef, { current_streak: 0 });
-
-            const updatedSnap = await getDoc(docRef);
-            if (updatedSnap.exists()) {
-              return { id: updatedSnap.id, ...updatedSnap.data() } as GamificationProfile;
-            }
-          }
-        }
-
-        return data;
-      } catch (error) {
-        if (isRecoverableFirestoreError(error)) {
-          logger.warn('[useGamification] Falha ao carregar perfil (fallback nulo)', { error }, 'useGamification');
-          return null;
-        }
-        throw error;
+        const res = await gamificationApi.getProfile(patientId);
+        return res.data ?? null;
+      } catch (err) {
+        logger.warn('[useGamification] Falha ao carregar perfil', { err }, 'useGamification');
+        return null;
       }
     },
-    enabled: hasPatientId,
+    enabled,
     staleTime: 1000 * 60 * 2,
   });
 
-  // -------------------------------------------------------------------------
-  // 3. Fetch Daily Quests (Smart Generation)
-  // -------------------------------------------------------------------------
-  const { data: dailyQuests = [] } = useQuery({
+  const profile = profileRaw ? rowToProfile(profileRaw) : null;
+
+  // ── 4. Missões diárias ────────────────────────────────────────────────────
+  const { data: questsRecord } = useQuery({
     queryKey: ['daily-quests', patientId],
     queryFn: async () => {
       try {
-        const today = new Date().toISOString().split('T')[0];
-
-        // 1. Try to get existing quests for today
-        const q = firestoreQuery(
-          collection(db, 'daily_quests'),
-          where('patient_id', '==', patientId),
-          where('date', '==', today),
-          limit(1)
-        );
-
-        const snapshot = await getDocs(q);
-
-        if (!snapshot.empty) {
-          const data = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
-          // Parse stored JSON
-          const quests = data.quests_data as DailyQuestItem[];
-          return quests;
-        }
-
-        // 2. No quests found? Generate Smart Quests!
-        const smartQuests: GeneratedQuest[] = await generateSmartQuests(patientId);
-
-        const newQuestsData: DailyQuestItem[] = smartQuests.map(q => ({
-          id: q.id,
-          title: q.title,
-          description: q.description,
-          xp: q.xp,
-          completed: false,
-          icon: q.icon
-        }));
-
-        // 3. Persist generated quests
-        await addDoc(collection(db, 'daily_quests'), {
-          patient_id: patientId,
-          date: today,
-          quests_data: newQuestsData,
-          completed_count: 0,
-          created_at: new Date().toISOString(),
-        });
-
-        return newQuestsData;
-      } catch (error) {
-        if (isRecoverableFirestoreError(error)) {
-          logger.warn('[useGamification] Falha ao carregar missões diárias (fallback vazio)', { error }, 'useGamification');
-          return [];
-        }
-        throw error;
+        const res = await gamificationApi.getQuests(patientId);
+        return res.data ?? null;
+      } catch (err) {
+        logger.warn('[useGamification] Falha ao carregar missões', { err }, 'useGamification');
+        return null;
       }
     },
-    enabled: hasPatientId,
-    staleTime: 1000 * 60 * 60, // 1 hour
+    enabled,
+    staleTime: 1000 * 60 * 60,
   });
 
-  // -------------------------------------------------------------------------
-  // 4. Fetch Achievements
-  // -------------------------------------------------------------------------
+  const dailyQuests: DailyQuestItem[] = (questsRecord?.quests_data as DailyQuestItem[]) ?? [];
+
+  // ── 5. Conquistas ─────────────────────────────────────────────────────────
   const { data: achievementsData } = useQuery({
     queryKey: ['achievements', patientId],
     queryFn: async () => {
       try {
-        const [allSnapshot, unlockedSnapshot] = await Promise.all([
-          getDocs(firestoreQuery(collection(db, 'achievements'), where('is_active', '==', true))),
-          getDocs(firestoreQuery(collection(db, 'achievements_log'), where('patient_id', '==', patientId)))
-        ]);
-
-        return {
-          all: allSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as Achievement[],
-          unlocked: unlockedSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as UnlockedAchievement[]
-        };
-      } catch (error) {
-        if (isRecoverableFirestoreError(error)) {
-          logger.warn('[useGamification] Falha ao carregar conquistas (fallback vazio)', { error }, 'useGamification');
-          return { all: [], unlocked: [] };
-        }
-        throw error;
+        const res = await gamificationApi.getAchievements(patientId);
+        return res.data ?? { all: [], unlocked: [] };
+      } catch (err) {
+        logger.warn('[useGamification] Falha ao carregar conquistas', { err }, 'useGamification');
+        return { all: [], unlocked: [] };
       }
     },
-    enabled: hasPatientId,
-    staleTime: 1000 * 60 * 30, // 30 mins
+    enabled,
+    staleTime: 1000 * 60 * 30,
   });
 
-  // -------------------------------------------------------------------------
-  // 5. Fetch Recent Transactions
-  // -------------------------------------------------------------------------
+  // ── 6. Transações XP recentes ─────────────────────────────────────────────
   const { data: recentTransactions = [] } = useQuery({
     queryKey: ['xp-transactions', patientId],
     queryFn: async () => {
       try {
-        const q = firestoreQuery(
-          collection(db, 'xp_transactions'),
-          where('patient_id', '==', patientId)
-        );
-
-        const snapshot = await getDocs(q);
-        return snapshot.docs
-          .map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }))
-          .sort(
-            (a, b) =>
-              new Date((b as { created_at?: string }).created_at ?? 0).getTime() -
-              new Date((a as { created_at?: string }).created_at ?? 0).getTime()
-          )
-          .slice(0, 10);
-      } catch (error) {
-        if (isRecoverableFirestoreError(error)) {
-          logger.warn('[useGamification] Falha ao carregar transações (fallback vazio)', { error }, 'useGamification');
-          return [];
-        }
-        throw error;
+        const res = await gamificationApi.getTransactions(patientId);
+        return (res.data ?? []).map((t) => ({
+          id: t.id,
+          amount: t.amount,
+          reason: t.reason,
+          created_at: t.created_at,
+        }));
+      } catch (err) {
+        logger.warn('[useGamification] Falha ao carregar transações', { err }, 'useGamification');
+        return [];
       }
     },
-    enabled: hasPatientId
+    enabled,
   });
 
-  // -------------------------------------------------------------------------
-  // Mutations
-  // -------------------------------------------------------------------------
+  // ── Mutations ─────────────────────────────────────────────────────────────
 
   const awardXp = useMutation<AwardXpResult, Error, AwardXpParams>({
     mutationFn: async ({ amount, reason, description }) => {
-      if (!profile) throw new Error("Profile not loaded");
-
-      // 1. Log Transaction
-      await addDoc(collection(db, 'xp_transactions'), {
-        patient_id: patientId,
-        amount,
-        reason,
-        description,
-        created_at: new Date().toISOString(),
-      });
-
-      // 2. Update Profile
-      const newTotalPoints = (profile.total_points || 0) + amount;
-      const calc = calculateLevel(newTotalPoints);
-
-      const docRef = doc(db, 'patient_gamification', patientId);
-      await updateDoc(docRef, {
-        total_points: newTotalPoints,
-        level: calc.level,
-        last_activity_date: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      });
-
-      // Fetch updated profile
-      const updatedSnap = await getDoc(docRef);
-      const updatedProfile = { id: updatedSnap.id, ...updatedSnap.data() } as GamificationProfile;
-
+      const res = await gamificationApi.awardXp({ patientId, amount, reason, description });
       return {
-        newLevel: updatedProfile.level,
-        newXp: updatedProfile.total_points,
-        leveledUp: updatedProfile.level > profile.level
+        data: rowToProfile(res.data),
+        leveledUp: res.leveledUp,
+        newLevel: res.newLevel,
+        streakExtended: res.streakExtended,
       };
     },
-
-
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['gamification-profile', patientId] });
       queryClient.invalidateQueries({ queryKey: ['xp-transactions', patientId] });
-
       if (data.leveledUp) {
         triggerGamificationFeedback('level_up', { level: data.newLevel });
       } else {
-        triggerGamificationFeedback('xp', { amount: data.newXp - (profile?.total_points || 0) });
+        triggerGamificationFeedback('xp', { amount: data.data.total_points - (profile?.total_points ?? 0) });
       }
-    }
+    },
   });
 
   const completeQuest = useMutation<void, Error, { questId: string }>({
     mutationFn: async ({ questId }) => {
-      const quest = dailyQuests.find(q => q.id === questId);
-      if (!quest || quest.completed) return;
-
-      // 1. Update Quest State locally (optimistic) or DB
-      const updatedQuests = dailyQuests.map(q => q.id === questId ? { ...q, completed: true } : q);
-
-      const today = new Date().toISOString().split('T')[0];
-      const q = firestoreQuery(
-        collection(db, 'daily_quests'),
-        where('patient_id', '==', patientId),
-        where('date', '==', today),
-        limit(1)
-      );
-
-      const snapshot = await getDocs(q);
-      if (!snapshot.empty) {
-        await updateDoc(snapshot.docs[0].ref, {
-          quests_data: updatedQuests,
-          completed_count: updatedQuests.filter(q => q.completed).length,
-          updated_at: new Date().toISOString(),
+      const res = await gamificationApi.completeQuest(patientId, questId);
+      if (res.xpAwarded > 0) {
+        await awardXp.mutateAsync({
+          amount: res.xpAwarded,
+          reason: 'daily_quest',
+          description: `Missão concluída`,
         });
       }
-
-      // 2. Award XP
-      await awardXp.mutateAsync({
-        amount: quest.xp,
-        reason: 'daily_quest',
-        description: `Missão: ${quest.title}`
-      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['daily-quests', patientId] });
-    }
+    },
   });
 
   const buyItem = useMutation<void, Error, BuyItemParams>({
-    mutationFn: async ({ itemId, cost }) => {
-      if (!profile) throw new Error("Perfil não carregado");
-      if (profile.total_points < cost) throw new Error("Pontos insuficientes");
-
-      // 1. Deduct Points
-      const docRef = doc(db, 'patient_gamification', patientId);
-      await updateDoc(docRef, {
-        total_points: profile.total_points - cost,
-        updated_at: new Date().toISOString(),
-      });
-
-      // 2. Add to Inventory
-      const q = firestoreQuery(
-        collection(db, 'user_inventory'),
-        where('user_id', '==', patientId),
-        where('item_id', '==', itemId),
-        limit(1)
-      );
-
-      const snapshot = await getDocs(q);
-
-      if (!snapshot.empty) {
-        await updateDoc(snapshot.docs[0].ref, {
-          quantity: (snapshot.docs[0].data().quantity || 1) + 1,
-          updated_at: new Date().toISOString(),
-        });
-      } else {
-        await addDoc(collection(db, 'user_inventory'), {
-          user_id: patientId,
-          item_id: itemId,
-          quantity: 1,
-          created_at: new Date().toISOString(),
-        });
-      }
+    mutationFn: async ({ itemId }) => {
+      await gamificationApi.buyItem(patientId, itemId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gamification-profile', patientId] });
       queryClient.invalidateQueries({ queryKey: ['user-inventory', patientId] });
-      toast({
-        title: "Compra realizada!",
-        description: "Item adicionado ao seu inventário.",
-      });
+      toast({ title: 'Compra realizada!', description: 'Item adicionado ao seu inventário.' });
     },
     onError: (err) => {
-      toast({
-        title: "Erro na compra",
-        description: err.message,
-        variant: "destructive"
-      });
-    }
+      toast({ title: 'Erro na compra', description: err.message, variant: 'destructive' });
+    },
   });
 
-  // Placeholder for explicit streak freeze manual action if needed (redundant now with auto-check)
   const freezeStreak = useMutation<void, Error, void>({
     mutationFn: async () => {},
-    onSuccess: () => {}
   });
 
-  // Derived State
-  const allAchievements = achievementsData?.all || [];
-  const unlockedAchievements = achievementsData?.unlocked || [];
+  // ── Derived state ─────────────────────────────────────────────────────────
+
+  const allAchievements = (achievementsData?.all ?? []) as Achievement[];
+  const unlockedAchievements = (achievementsData?.unlocked ?? []) as UnlockedAchievement[];
   const lockedAchievements = allAchievements.filter(
-    a => !unlockedAchievements.some(ua => ua.achievement_id === a.id)
+    (a) => !unlockedAchievements.some((ua) => ua.achievement_id === a.id),
   );
 
-  const calc = calculateLevel(profile?.total_points || 0);
+  const calc = calculateLevel(profile?.total_points ?? 0);
 
   return {
-    profile: profile || null,
+    profile,
     dailyQuests,
     allAchievements,
     unlockedAchievements,
@@ -541,20 +306,21 @@ export const useGamification = (patientId: string): UseGamificationResult => {
     awardXp,
     completeQuest,
     freezeStreak,
-    freezeCost: { price: 500, max_per_month: 2 }, // legacy/fallback
+    freezeCost: { price: 500, max_per_month: 2 },
     shopItems,
     userInventory,
     buyItem,
-
-    // Computed Values
     xpPerLevel: calc.xpForNextLevel,
     currentLevel: calc.level,
     currentXp: calc.currentLevelXp,
-    totalPoints: profile?.total_points || 0,
+    totalPoints: profile?.total_points ?? 0,
     progressToNextLevel: calc.xpForNextLevel - calc.currentLevelXp,
     progressPercentage: calc.progress,
     xpProgress: calc.progress,
-    totalSessions: 12, // mock
-    recentTransactions
+    totalSessions: 12,
+    recentTransactions,
   };
 };
+
+// Re-export Achievement for components that import it from here
+export type { Achievement } from '@/types/gamification';

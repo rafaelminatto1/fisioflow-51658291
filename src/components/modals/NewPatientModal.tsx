@@ -16,11 +16,10 @@ import { CalendarIcon, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
-import { useOrganizations } from '@/hooks/useOrganizations';
 import { formatCPF, formatPhoneInput } from '@/utils/formatInputs';
 import { cleanCPF, cleanPhone, emailSchema, cpfSchema, phoneSchema, sanitizeString, sanitizeEmail } from '@/lib/validations';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { collection, addDoc, serverTimestamp, db } from '@/integrations/firebase/app';
+import { patientsApi } from '@/lib/api/workers-client';
 
 const patientSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(200, 'Nome muito longo'),
@@ -65,7 +64,6 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
   const [isCalendarOpen, setIsCalendarOpen] = React.useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { currentOrganization } = useOrganizations();
 
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
@@ -113,54 +111,12 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
 
   const handleSave = async (data: PatientFormData) => {
     try {
-      // Validar organização
-      if (!currentOrganization?.id) {
-        toast({
-          title: 'Organização não encontrada',
-          description: 'Você precisa estar vinculado a uma organização para cadastrar pacientes.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // Sanitizar e limpar dados
       const cleanCpfValue = data.cpf ? cleanCPF(data.cpf) : undefined;
       const cleanPhoneValue = data.phone ? cleanPhone(data.phone) : undefined;
       const cleanEmailValue = data.email ? sanitizeEmail(data.email) : undefined;
-
-      // Preparar dados para inserção
-      type PatientInsert = {
-        name: string;
-        email: string | null;
-        phone: string | null;
-        cpf: string | null;
-        birth_date: string;
-        gender: string;
-        address: string | null;
-        emergency_contact: string | null;
-        emergency_contact_relationship: string | null;
-        medical_history: string | null;
-        main_condition: string;
-        allergies: string | null;
-        medications: string | null;
-        weight_kg: number | null;
-        height_cm: number | null;
-        blood_type: string | null;
-        marital_status: string | null;
-        profession: string | null;
-        education_level: string | null;
-        insurance_plan: string | null;
-        insurance_number: string | null;
-        status: string;
-        progress: number;
-        consent_data: boolean;
-        consent_image: boolean;
-        organization_id: string;
-        incomplete_registration: boolean;
-      };
-
-      const patientData: PatientInsert = {
+      const patientData = {
         name: sanitizeString(data.name, 200),
+        full_name: sanitizeString(data.name, 200),
         email: cleanEmailValue || null,
         phone: cleanPhoneValue || null,
         cpf: cleanCpfValue || null,
@@ -185,20 +141,32 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
         progress: 0,
         consent_data: true,
         consent_image: false,
-        organization_id: currentOrganization.id,
         incomplete_registration: false,
       };
 
-      // Inserir no Firebase Firestore
-      const docRef = await addDoc(collection(db, 'patients'), {
-        ...patientData,
-        created_at: serverTimestamp(),
-        updated_at: serverTimestamp(),
-      });
+      const patientResponse = await patientsApi.create(patientData);
+      const createdPatient = patientResponse.data;
+
+      if (
+        createdPatient?.id &&
+        (data.medical_history || data.allergies || data.medications)
+      ) {
+        await patientsApi.createMedicalRecord(createdPatient.id, {
+          chief_complaint: data.main_condition,
+          medical_history: data.medical_history || null,
+          current_medications: data.medications || null,
+          allergies: data.allergies || null,
+          family_history: null,
+          lifestyle_habits: null,
+          previous_surgeries: null,
+          record_date: format(new Date(), 'yyyy-MM-dd'),
+          created_by: null,
+        });
+      }
 
       logger.info('Paciente cadastrado com sucesso', {
         name: patientData.name,
-        id: docRef.id
+        id: createdPatient?.id
       }, 'NewPatientModal');
 
       toast({
@@ -214,11 +182,10 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
 
       let errorMessage = 'Não foi possível cadastrar o paciente.';
 
-      // Firebase error handling
       if (error instanceof Error) {
-        if (error.message.includes('permission-denied') || error.message.includes('Missing or insufficient permissions')) {
+        if (error.message.includes('permission-denied') || error.message.includes('insufficient permissions')) {
           errorMessage = 'Você não tem permissão para cadastrar pacientes.';
-        } else if (error.message.includes('already exists')) {
+        } else if (error.message.includes('already exists') || error.message.includes('duplicate key')) {
           errorMessage = 'Já existe um paciente com este CPF ou email cadastrado.';
         } else {
           errorMessage = error.message;

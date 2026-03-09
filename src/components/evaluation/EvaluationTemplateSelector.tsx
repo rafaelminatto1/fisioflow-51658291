@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { db, collection, getDocs, query as firestoreQuery, where, orderBy } from '@/integrations/firebase/app';
+import { evaluationFormsApi } from '@/lib/api/workers-client';
 import { Check, ChevronsUpDown, FileText, Search, Loader2, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -86,58 +86,43 @@ export function EvaluationTemplateSelector({
     const { data: templates = [], isLoading } = useQuery({
         queryKey: ['evaluation-templates-with-fields', category],
         queryFn: async () => {
-            const q = firestoreQuery(
-                collection(db, 'evaluation_forms'),
-                where('ativo', '==', true),
-                orderBy('nome')
-            );
-
-            // Note: Firebase doesn't support multiple where clauses with different fields in a single query
-            // If category filtering is needed, we'll need to filter client-side or use a different approach
-            const snapshot = await getDocs(q);
+            const formsResponse = await evaluationFormsApi.list({
+                ativo: true,
+                ...(category ? { tipo: category } : {}),
+            });
+            const forms = (formsResponse?.data ?? formsResponse ?? []) as Array<Record<string, unknown>>;
 
             const templatesWithFields = await Promise.all(
-                snapshot.docs.map(async (formDoc) => {
-                    const form = { id: formDoc.id, ...formDoc.data() } as { id: string; nome: string; descricao?: string; tipo: string; referencias?: string[] };
+                forms.map(async (form) => {
+                    const detailResponse = await evaluationFormsApi.get(String(form.id));
+                    const detail = (detailResponse?.data ?? detailResponse) as Record<string, unknown>;
+                    const rawFields = Array.isArray(detail.fields) ? detail.fields : [];
 
-                    // Skip if category is specified and doesn't match
-                    if (category && form.tipo !== category) {
-                        return null;
-                    }
-
-                    // Fetch fields for this form
-                    const fieldsQuery = firestoreQuery(
-                        collection(db, 'evaluation_form_fields'),
-                        where('form_id', '==', form.id),
-                        orderBy('ordem')
-                    );
-                    const fieldsSnapshot = await getDocs(fieldsQuery);
-
-                    const fields = fieldsSnapshot.docs.map(fieldDoc => {
-                        const field = fieldDoc.data();
+                    const fields = rawFields.map((field) => {
+                        const data = field as Record<string, unknown>;
                         return {
-                            ...field,
-                            section: field.grupo,
-                            min: field.minimo,
-                            max: field.maximo,
-                            description: field.descricao,
-                            opcoes: typeof field.opcoes === 'string' ? JSON.parse(field.opcoes) : field.opcoes,
+                            ...data,
+                            section: data.grupo,
+                            min: data.minimo,
+                            max: data.maximo,
+                            description: data.descricao,
+                            opcoes: Array.isArray(data.opcoes) ? (data.opcoes as string[]) : null,
                         } as TemplateField;
                     });
 
                     return {
-                        id: form.id,
-                        nome: form.nome,
-                        descricao: form.descricao,
-                        tipo: form.tipo,
-                        referencias: form.referencias,
-                        category: form.tipo,
+                        id: String(detail.id),
+                        nome: String(detail.nome ?? ''),
+                        descricao: typeof detail.descricao === 'string' ? detail.descricao : null,
+                        tipo: String(detail.tipo ?? 'geral'),
+                        referencias: typeof detail.referencias === 'string' ? detail.referencias : null,
+                        category: String(detail.tipo ?? 'geral'),
                         fields: fields.sort((a, b) => a.ordem - b.ordem),
                     } as EvaluationTemplate;
                 })
             );
 
-            return templatesWithFields.filter((t): t is EvaluationTemplate => t !== null);
+            return templatesWithFields;
         },
     });
 

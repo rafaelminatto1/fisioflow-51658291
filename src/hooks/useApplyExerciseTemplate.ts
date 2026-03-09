@@ -1,20 +1,29 @@
 /**
- * useApplyExerciseTemplate - Migrated to Firebase
+ * useApplyExerciseTemplate - Migrated to Neon/Workers
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDoc, addDoc, db } from '@/integrations/firebase/app';
-import { templatesApi } from '@/lib/api/workers-client';
+import { templatesApi, exercisePlansApi } from '@/lib/api/workers-client';
 import { toast } from 'sonner';
 import { useAuth } from './useAuth';
 
 interface ApplyTemplateParams {
   templateId: string;
   patientId: string;
-  surgeryDate?: string; // Para pós-operatórios
-  adjustWeeks?: boolean; // Se deve ajustar por semanas
+  surgeryDate?: string;
+  adjustWeeks?: boolean;
   startDate?: string;
   endDate?: string;
+}
+
+interface ExerciseTemplateItem {
+  exercise_id: string;
+  sets: number;
+  repetitions: number;
+  duration: number;
+  notes?: string;
+  week_start: number | null;
+  week_end: number | null;
 }
 
 export const useApplyExerciseTemplate = () => {
@@ -32,15 +41,13 @@ export const useApplyExerciseTemplate = () => {
     }: ApplyTemplateParams) => {
       if (!user?.uid) throw new Error('Usuário não autenticado');
 
-      // 1. Buscar template + itens via Workers API (Neon)
+      // 1. Fetch template + items via Workers API (Neon)
       const templateRes = await templatesApi.get(templateId);
-      if (!templateRes.data) {
-        throw new Error('Template não encontrado');
-      }
+      if (!templateRes.data) throw new Error('Template não encontrado');
       const template = templateRes.data;
-      const templateItems = template.items ?? [];
+      const templateItems: ExerciseTemplateItem[] = template.items ?? [];
 
-      // 3. Calcular semanas pós-operatórias se aplicável
+      // 2. Calculate post-surgery week if applicable
       let currentWeek = 0;
       if (surgeryDate && template.category === 'pos_operatorio') {
         const surgery = new Date(surgeryDate);
@@ -49,21 +56,10 @@ export const useApplyExerciseTemplate = () => {
         currentWeek = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7));
       }
 
-      // 4. Filtrar exercícios pela fase atual (se aplicável)
+      // 3. Filter exercises by current phase
       let filteredItems = templateItems;
-
-      interface ExerciseTemplateItem {
-        exercise_id: string;
-        sets: number;
-        repetitions: number;
-        duration: number;
-        notes?: string;
-        week_start: number | null;
-        week_end: number | null;
-      }
-
       if (adjustWeeks && template.category === 'pos_operatorio' && surgeryDate) {
-        filteredItems = templateItems.filter((item: ExerciseTemplateItem) => {
+        filteredItems = templateItems.filter((item) => {
           if (item.week_start === null && item.week_end === null) return true;
           if (item.week_start !== null && currentWeek < item.week_start) return false;
           if (item.week_end !== null && currentWeek > item.week_end) return false;
@@ -71,37 +67,24 @@ export const useApplyExerciseTemplate = () => {
         });
       }
 
-      // 5. Criar plano de exercícios
+      // 4. Create exercise plan via Workers API
       const planName = `${template.name} - ${template.condition_name}${
         template.template_variant ? ` (${template.template_variant})` : ''
       }`;
 
-      const planData = {
+      const result = await exercisePlansApi.create({
         patient_id: patientId,
         created_by: user.uid,
         name: planName,
         description: `${template.description || ''}${
-          surgeryDate
-            ? `\n\nPós-operatório - Semana ${currentWeek}`
-            : ''
+          surgeryDate ? `\n\nPós-operatório - Semana ${currentWeek}` : ''
         }`,
         start_date: startDate || new Date().toISOString().split('T')[0],
-        end_date: endDate,
+        end_date: endDate ?? null,
         status: 'ativo',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      const planRef = await addDoc(collection(db, 'exercise_plans'), planData);
-      const planSnap = await getDoc(planRef);
-      const plan = { id: planRef.id, ...planSnap.data() };
-
-      // 6. Adicionar exercícios ao plano
-      if (filteredItems.length > 0) {
-        const planItems = filteredItems.map((item: ExerciseTemplateItem, index: number) => ({
-          plan_id: planRef.id,
+        items: filteredItems.map((item, idx) => ({
           exercise_id: item.exercise_id,
-          order_index: index,
+          order_index: idx,
           sets: item.sets,
           repetitions: item.repetitions,
           duration: item.duration,
@@ -110,18 +93,11 @@ export const useApplyExerciseTemplate = () => {
               ? `Semanas: ${item.week_start || '0'}${item.week_end ? ` - ${item.week_end}` : '+'}`
               : undefined
           ),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }));
-
-        // Batch insert all plan items
-        await Promise.all(
-          planItems.map(item => addDoc(collection(db, 'exercise_plan_items'), item))
-        );
-      }
+        })),
+      });
 
       return {
-        plan,
+        plan: result.data,
         itemsCount: filteredItems.length,
         currentWeek,
         templateName: template.name,
@@ -130,20 +106,14 @@ export const useApplyExerciseTemplate = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['exercise-plans'] });
       queryClient.invalidateQueries({ queryKey: ['patient-exercise-plans'] });
-
-      toast.success(
-        `Plano "${data.templateName}" criado com sucesso!`,
-        {
-          description: `${data.itemsCount} exercícios adicionados${
-            data.currentWeek > 0 ? ` (Semana ${data.currentWeek})` : ''
-          }`,
-        }
-      );
+      toast.success(`Plano "${data.templateName}" criado com sucesso!`, {
+        description: `${data.itemsCount} exercícios adicionados${
+          data.currentWeek > 0 ? ` (Semana ${data.currentWeek})` : ''
+        }`,
+      });
     },
     onError: (error: Error) => {
-      toast.error('Erro ao aplicar template', {
-        description: error.message,
-      });
+      toast.error('Erro ao aplicar template', { description: error.message });
     },
   });
 
