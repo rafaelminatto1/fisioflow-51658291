@@ -1,9 +1,9 @@
 import type { Patient } from '@/types';
 import {
-  exercisesApi,
-  clinicalApi
-} from '@/integrations/firebase/functions';
-import { patientsApi, clinicalApi as workersClinicalApi } from '@/lib/api/workers-client';
+  patientsApi,
+  clinicalApi as workersClinicalApi,
+  exerciseSessionsApi,
+} from '@/lib/api/workers-client';
 
 interface PatientApiData {
   id: string;
@@ -193,27 +193,44 @@ export class PatientService {
   }
 
   static async logExercise(patientId: string, prescriptionId: string, difficulty: string, notes?: string) {
-    await exercisesApi.logExercise({
-      patientId,
-      prescriptionId,
-      difficulty: Number(difficulty),
-      notes,
+    await exerciseSessionsApi.create({
+      patient_id: patientId,
+      exercise_id: prescriptionId,
+      exercise_type: 'prescribed_exercise',
+      start_time: new Date().toISOString(),
+      end_time: new Date().toISOString(),
+      duration: undefined,
+      repetitions: 1,
+      completed: true,
+      metrics: {
+        difficulty: Number(difficulty),
+        note_length: notes?.length ?? 0,
+      },
+      posture_issues_summary: {},
     });
   }
 
   // Optimized: Select specific columns instead of *
   static async getPainRecords(patientId: string) {
-    const response = await clinicalApi.getPainRecords(patientId);
-    return response.data;
+    const response = await workersClinicalApi.painMaps.list({ patientId });
+    return (response.data ?? []).map((record) => ({
+      id: record.id,
+      patient_id: record.patient_id,
+      level: record.pain_level ?? 0,
+      type: record.body_region ?? 'Dor',
+      bodyPart: record.body_region ?? 'Não informado',
+      notes: record.notes ?? '',
+      created_at: record.created_at,
+      updated_at: record.updated_at,
+    }));
   }
 
   static async savePainRecord(patientId: string, level: number, type: string, bodyPart: string, notes?: string) {
-    await clinicalApi.savePainRecord({
-      patientId,
-      level,
-      type,
-      bodyPart,
-      notes,
+    await workersClinicalApi.painMaps.create({
+      patient_id: patientId,
+      body_region: bodyPart || type,
+      pain_level: level,
+      notes: notes ? `${type}: ${notes}` : type,
     });
   }
 }

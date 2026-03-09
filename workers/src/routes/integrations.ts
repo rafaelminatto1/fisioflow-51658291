@@ -126,6 +126,28 @@ app.get('/google/status', async (c) => {
   return c.json({ data: result.rows[0] ?? null });
 });
 
+app.get('/google/business/reviews', async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const integrationRes = await pool.query(
+    `
+      SELECT settings
+      FROM google_integrations
+      WHERE user_id = $1 AND provider = 'google'
+      LIMIT 1
+    `,
+    [user.uid],
+  );
+
+  const settings = integrationRes.rows[0]?.settings;
+  const reviews =
+    settings && typeof settings === 'object' && Array.isArray((settings as Record<string, unknown>).business_reviews)
+      ? ((settings as Record<string, unknown>).business_reviews as unknown[])
+      : [];
+
+  return c.json({ data: reviews });
+});
+
 app.post('/google/connect', async (c) => {
   const user = c.get('user');
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;

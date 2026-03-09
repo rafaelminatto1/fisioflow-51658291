@@ -1,141 +1,150 @@
-import { 
-  collection, 
-  addDoc, 
-  serverTimestamp, 
-  query, 
-  where, 
-  orderBy, 
-  getDocs, 
-  limit, 
-  Timestamp 
-} from 'firebase/firestore';
-import { db } from '../firebase';
-import { AuditLogEntry, AuditLogQuery, AuditResourceType } from '@/types/audit';
+import { config } from '@/lib/config';
+import { authApi } from '@/lib/auth-api';
 import * as Device from 'expo-device';
-import Constants from 'expo-constants';
-import { DeviceInfo } from '@/types/legal';
+import * as Application from 'expo-application';
+import { Platform } from 'react-native';
 
-export class AuditLogger {
-  private static instance: AuditLogger;
+export type AuditAction = 
+  | 'login'
+  | 'logout'
+  | 'view'
+  | 'create'
+  | 'update'
+  | 'delete'
+  | 'export'
+  | 'print'
+  | 'share';
 
-  private constructor() {}
+export type ResourceType = 
+  | 'patient'
+  | 'evolution'
+  | 'appointment'
+  | 'financial'
+  | 'report'
+  | 'settings'
+  | 'auth'
+  | 'consent'
+  | 'policy'
+  | 'biometrics';
 
-  static getInstance(): AuditLogger {
-    if (!AuditLogger.instance) {
-      AuditLogger.instance = new AuditLogger();
-    }
-    return AuditLogger.instance;
+export interface AuditEvent {
+  userId: string;
+  action: AuditAction;
+  resourceType: ResourceType;
+  resourceId?: string;
+  details?: Record<string, any>;
+  timestamp: string;
+  deviceInfo: {
+    os: string;
+    osVersion: string;
+    model: string;
+    appVersion: string;
+  };
+  ipAddress?: string;
+}
+
+class AuditLogger {
+  private async getDeviceInfo() {
+    return {
+      os: Platform.OS,
+      osVersion: Platform.Version.toString(),
+      model: Device.modelName || 'Unknown',
+      appVersion: Application.nativeApplicationVersion || 'Unknown',
+    };
   }
 
-  /**
-   * Log an audit event
-   */
-  async log(entry: Omit<AuditLogEntry, 'id' | 'timestamp' | 'deviceInfo'>): Promise<void> {
+  async logEvent(event: Omit<AuditEvent, 'timestamp' | 'deviceInfo'>): Promise<void> {
     try {
-      const logsRef = collection(db, 'audit_logs');
       const deviceInfo = await this.getDeviceInfo();
+      const token = await authApi.getToken();
       
-      await addDoc(logsRef, {
-        ...entry,
+      const fullEvent: AuditEvent = {
+        ...event,
+        timestamp: new Date().toISOString(),
         deviceInfo,
-        timestamp: serverTimestamp(),
+      };
+
+      if (!token) {
+        console.log('[AuditLogger] No token, skipping log (might be pre-login):', fullEvent.action);
+        return;
+      }
+
+      await fetch(`${config.apiUrl}/api/audit/logs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(fullEvent)
       });
     } catch (error) {
-      // Fail silently but log to console in dev
-      console.error('Failed to write audit log:', error);
+      console.error('[AuditLogger] Error logging event:', error);
+      // Failsafe: don't crash the app if audit logging fails
     }
   }
 
-  /**
-   * Log user login
-   */
-  async logLogin(userId: string): Promise<void> {
-    await this.log({
-      userId,
-      action: 'login',
-      resourceType: 'settings', // Or create a more specific type
-    });
-  }
-
-  /**
-   * Log user logout
-   */
-  async logLogout(userId: string): Promise<void> {
-    await this.log({
-      userId,
-      action: 'logout',
-      resourceType: 'settings',
-    });
-  }
-
-  /**
-   * Log PHI access (view)
-   */
-  async logPHIAccess(
-    userId: string,
-    resourceType: AuditResourceType,
-    resourceId: string
-  ): Promise<void> {
-    await this.log({
-      userId,
-      action: 'view',
-      resourceType,
-      resourceId,
-    });
-  }
-
-  /**
-   * Log PHI modification (create, update, delete)
-   */
+  // Helper methods for common events
   async logPHIModification(
-    userId: string,
-    action: 'create' | 'update' | 'delete',
-    resourceType: AuditResourceType,
-    resourceId: string,
-    metadata?: Record<string, any>
-  ): Promise<void> {
-    await this.log({
+    userId: string, 
+    action: 'create' | 'update' | 'delete', 
+    resourceType: ResourceType, 
+    resourceId: string, 
+    changes?: Record<string, any>
+  ) {
+    return this.logEvent({
       userId,
       action,
       resourceType,
       resourceId,
-      metadata,
+      details: {
+        isPHI: true,
+        changes
+      }
     });
   }
 
-  /**
-   * Query audit log
-   */
-  async query(logQuery: AuditLogQuery): Promise<AuditLogEntry[]> {
-    const q = query(
-      collection(db, 'audit_logs'),
-      where('userId', '==', logQuery.userId),
-      orderBy('timestamp', 'desc'),
-      limit(logQuery.limit || 50)
-    );
-
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        ...data,
-        timestamp: data.timestamp instanceof Timestamp ? data.timestamp.toDate() : data.timestamp,
-      } as AuditLogEntry;
+  async logPHIAccess(
+    userId: string, 
+    resourceType: ResourceType, 
+    resourceId: string,
+    purpose: string = 'treatment'
+  ) {
+    return this.logEvent({
+      userId,
+      action: 'view',
+      resourceType,
+      resourceId,
+      details: {
+        isPHI: true,
+        purpose
+      }
     });
   }
 
-  /**
-   * Get device information using expo-device
-   */
-  private async getDeviceInfo(): Promise<DeviceInfo> {
-    return {
-      model: Device.modelName || 'Unknown',
-      osVersion: Device.osVersion || 'Unknown',
-      appVersion: Constants.expoConfig?.version || '1.0.0',
-      platform: Device.osName === 'iOS' ? 'ios' : 'android' as any,
-    };
+  async logLogin(userId: string) {
+    return this.logEvent({
+      userId,
+      action: 'login',
+      resourceType: 'auth'
+    });
+  }
+
+  async logLogout(userId: string) {
+    return this.logEvent({
+      userId,
+      action: 'logout',
+      resourceType: 'auth'
+    });
+  }
+
+  async logExport(userId: string, resourceType: ResourceType, format: string) {
+    return this.logEvent({
+      userId,
+      action: 'export',
+      resourceType,
+      details: { format }
+    });
   }
 }
 
-export const auditLogger = AuditLogger.getInstance();
+export const auditLogger = new AuditLogger();
