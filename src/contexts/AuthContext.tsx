@@ -1,6 +1,15 @@
 import { createContext, useContext } from 'react';
-import { User } from 'firebase/auth';
 import { Profile, UserRole, RegisterFormData } from '@/types/auth';
+
+/** Tipo simplificado de usuário para o frontend, desacoplado do Firebase */
+export interface AuthUser {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+  emailVerified: boolean;
+  getIdToken: () => Promise<string>;
+}
 
 interface AuthError {
   message: string;
@@ -8,7 +17,7 @@ interface AuthError {
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   profile: Profile | null;
   loading: boolean;
   initialized: boolean;
@@ -16,7 +25,7 @@ interface AuthContextType {
   role?: UserRole;
   organizationId?: string;
   signIn: (email: string, password: string, remember?: boolean) => Promise<{ error?: AuthError | null }>;
-  signUp: (data: RegisterFormData) => Promise<{ error?: AuthError | null; user?: User | null }>;
+  signUp: (data: RegisterFormData) => Promise<{ error?: AuthError | null; user?: AuthUser | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error?: AuthError | null }>;
   updatePassword: (password: string) => Promise<{ error?: AuthError | null }>;
