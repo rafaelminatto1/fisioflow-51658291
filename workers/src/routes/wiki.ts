@@ -7,7 +7,7 @@
  */
 import { Hono } from 'hono';
 import { eq, and, ilike, isNull, sql } from 'drizzle-orm';
-import { createDb } from '../lib/db';
+import { createDb, createPool } from '../lib/db';
 import { requireAuth, verifyToken, type AuthVariables } from '../lib/auth';
 import type { Env } from '../types/env';
 import { wikiPages, wikiPageVersions } from '../../../src/server/db/schema/wiki';
@@ -322,6 +322,72 @@ app.delete('/:slug', requireAuth, async (c) => {
 
   if (!row) return c.json({ error: 'Página não encontrada' }, 404);
 
+  return c.json({ ok: true });
+});
+
+// ===== CATEGORIAS =====
+app.get('/categories', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = createPool(c.env);
+  const result = await db.query(
+    `SELECT * FROM wiki_categories WHERE organization_id = $1 ORDER BY order_index ASC, name ASC`,
+    [user.organizationId]
+  );
+  return c.json({ data: result.rows });
+});
+
+app.post('/categories', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = createPool(c.env);
+  const body = await c.req.json();
+  const slug = body.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  const result = await db.query(
+    `INSERT INTO wiki_categories (organization_id, name, slug, description, icon, color, parent_id, order_index)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT (organization_id, slug) DO NOTHING RETURNING *`,
+    [user.organizationId, body.name, body.slug ?? slug, body.description ?? null, body.icon ?? null,
+     body.color ?? null, body.parent_id ?? null, body.order_index ?? 0]
+  );
+  return c.json({ data: result.rows[0] }, 201);
+});
+
+app.delete('/categories/:id', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = createPool(c.env);
+  await db.query(`DELETE FROM wiki_categories WHERE id = $1 AND organization_id = $2`, [c.req.param('id'), user.organizationId]);
+  return c.json({ ok: true });
+});
+
+// ===== COMENTÁRIOS =====
+app.get('/:pageId/comments', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = createPool(c.env);
+  const result = await db.query(
+    `SELECT * FROM wiki_comments WHERE page_id = $1 AND organization_id = $2 AND deleted_at IS NULL ORDER BY created_at ASC`,
+    [c.req.param('pageId'), user.organizationId]
+  );
+  return c.json({ data: result.rows });
+});
+
+app.post('/:pageId/comments', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = createPool(c.env);
+  const body = await c.req.json();
+  const result = await db.query(
+    `INSERT INTO wiki_comments (organization_id, page_id, parent_comment_id, content, created_by, block_id, selection_text, selection_start, selection_end)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
+    [user.organizationId, c.req.param('pageId'), body.parent_comment_id ?? null, body.content,
+     user.uid, body.block_id ?? null, body.selection_text ?? null, body.selection_start ?? null, body.selection_end ?? null]
+  );
+  return c.json({ data: result.rows[0] }, 201);
+});
+
+app.patch('/comments/:id/resolve', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = createPool(c.env);
+  await db.query(
+    `UPDATE wiki_comments SET resolved = TRUE, updated_at = NOW() WHERE id = $1 AND organization_id = $2`,
+    [c.req.param('id'), user.organizationId]
+  );
   return c.json({ ok: true });
 });
 
