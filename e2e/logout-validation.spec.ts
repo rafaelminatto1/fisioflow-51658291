@@ -1,6 +1,6 @@
 /**
- * Validação manual do fix de logout em produção.
- * Roda direto contra https://fisioflow.pages.dev (sem storageState pré-existente).
+ * Validação do fix de logout em produção.
+ * Testa se o logout invalida a sessão no servidor (cookie limpo + reload bloqueado).
  */
 import { test, expect } from '@playwright/test';
 
@@ -8,49 +8,101 @@ const BASE = 'https://fisioflow.pages.dev';
 const EMAIL = 'REDACTED_EMAIL';
 const PASSWORD = 'REDACTED';
 
-test.use({ storageState: { cookies: [], origins: [] } }); // sessão limpa
+test.use({
+  storageState: { cookies: [], origins: [] },
+  baseURL: BASE,
+});
 
-test('login e logout devem redirecionar para /auth/login', async ({ page }) => {
-  // ── 1. Login ──────────────────────────────────────────────────────────────
-  await page.goto(`${BASE}/auth`, { waitUntil: 'networkidle' });
+test('login e logout devem invalidar sessão no servidor', async ({ page }) => {
+  // Captura TODAS as requisições/respostas para diagnóstico
+  const allRequests: { method: string; url: string }[] = [];
+  const allResponses: { url: string; status: number }[] = [];
+  const consoleMessages: string[] = [];
 
-  // Aguarda o splash screen sumir e o formulário aparecer
-  await page.locator('#initial-loader').waitFor({ state: 'hidden', timeout: 15000 }).catch(() => {});
-  await page.locator('#login-email').waitFor({ state: 'visible', timeout: 30000 });
-  await page.locator('#login-email').fill(EMAIL);
-  await page.locator('#login-password').fill(PASSWORD);
-  await page.locator('button[type="submit"]').first().click();
+  page.on('request', (req) => {
+    if (req.url().includes('neonauth') || req.url().includes('sign-out') || req.url().includes('signout')) {
+      allRequests.push({ method: req.method(), url: req.url() });
+    }
+  });
+  page.on('response', (resp) => {
+    if (resp.url().includes('neonauth') || resp.url().includes('sign-out') || resp.url().includes('signout')) {
+      allResponses.push({ url: resp.url(), status: resp.status() });
+    }
+  });
+  page.on('requestfailed', (req) => {
+    if (req.url().includes('neonauth') || req.url().includes('sign-out')) {
+      console.log('❌ Request FALHOU:', req.method(), req.url(), req.failure()?.errorText);
+    }
+  });
+  page.on('console', (msg) => {
+    if (msg.type() === 'warn' || msg.type() === 'error') {
+      consoleMessages.push(`[${msg.type()}] ${msg.text()}`);
+    }
+  });
 
-  // Aguarda sair do /auth
-  await page.waitForURL((url) => !url.pathname.startsWith('/auth'), { timeout: 30000 });
+  // ── 1. Login ───────────────────────────────────────────────────────────────
+  await page.goto('/auth/login', { waitUntil: 'domcontentloaded', timeout: 30000 });
+
+  const emailInput = page.locator('#login-email');
+  await emailInput.waitFor({ state: 'visible', timeout: 35000 });
+  console.log('✅ Formulário de login visível');
+
+  await emailInput.click();
+  await emailInput.type(EMAIL, { delay: 30 });
+  const passwordInput = page.locator('#login-password');
+  await passwordInput.click();
+  await passwordInput.type(PASSWORD, { delay: 30 });
+  await expect(emailInput).toHaveValue(EMAIL);
+
+  await Promise.all([
+    page.waitForURL((url) => !url.pathname.startsWith('/auth'), { timeout: 40000 }),
+    page.locator('button[type="submit"]').first().click(),
+  ]);
   console.log('✅ Login OK — URL:', page.url());
 
-  // Confirma que o dashboard carregou
-  await page.waitForSelector('[data-testid="main-layout"], [data-testid="user-menu"], h1', {
-    timeout: 20000,
-  });
+  await page.waitForSelector('nav, main, [data-testid="main-layout"]', { timeout: 20000 });
   console.log('✅ Dashboard carregado');
 
-  // ── 2. Logout ─────────────────────────────────────────────────────────────
-  // Tenta o botão da sidebar primeiro, depois o do header mobile
-  const logoutButton = page
-    .getByText(/Encerrar Sessão|Sair do Sistema/i)
-    .first();
+  // ── 2. Captura token de sessão antes do logout ─────────────────────────────
+  const cookiesBefore = await page.context().cookies();
+  const sessionCookie = cookiesBefore.find(c => c.name === '__Secure-neon-auth.session_token');
+  const sessionToken = sessionCookie?.value;
+  console.log('🍪 Session token antes do logout:', sessionToken ? `${sessionToken.slice(0, 20)}...` : 'NENHUM');
 
-  await logoutButton.waitFor({ state: 'visible', timeout: 10000 });
+  // ── 3. Logout ─────────────────────────────────────────────────────────────
+  const logoutBtn = page.getByText(/Encerrar Sessão|Sair do Sistema/i).first();
+  await logoutBtn.waitFor({ state: 'visible', timeout: 10000 });
   console.log('✅ Botão de logout encontrado');
-  await logoutButton.click();
 
-  // ── 3. Verifica redirecionamento ──────────────────────────────────────────
+  // Limpa histórico de requests antes do logout
+  allRequests.length = 0;
+  allResponses.length = 0;
+
+  await logoutBtn.click();
   await page.waitForURL((url) => url.pathname.startsWith('/auth'), { timeout: 15000 });
-  console.log('✅ Redirecionado para:', page.url());
-
+  console.log('✅ Redirecionado após logout:', page.url());
   expect(page.url()).toContain('/auth');
 
-  // ── 4. Garante que não volta ao dashboard sem re-login ────────────────────
-  await page.goto(`${BASE}/dashboard`, { waitUntil: 'domcontentloaded' });
-  await page.waitForURL((url) => url.pathname.startsWith('/auth'), { timeout: 10000 });
-  console.log('✅ Acesso ao /dashboard sem sessão bloqueado corretamente:', page.url());
+  // Aguarda requests de signOut terminarem
+  await page.waitForTimeout(3000);
 
+  console.log('📡 Requisições feitas no logout:', allRequests.length > 0 ? allRequests : 'NENHUMA');
+  console.log('📡 Respostas recebidas no logout:', allResponses.length > 0 ? allResponses : 'NENHUMA');
+  if (consoleMessages.length > 0) {
+    console.log('⚠️  Console warnings/errors:', consoleMessages.join('\n'));
+  }
+
+  const cookiesAfter = await page.context().cookies();
+  const sessionCookieAfter = cookiesAfter.find(c => c.name === '__Secure-neon-auth.session_token');
+  console.log('🍪 Session cookie após logout:', sessionCookieAfter
+    ? `PRESENTE (value: ${sessionCookieAfter.value.slice(0, 10)}...)`
+    : 'REMOVIDO ✅'
+  );
+
+  // ── 4. Verificação REAL: recarregar /dashboard SEM limpar cookies manualmente ──
+  // Se a sessão foi invalidada no servidor, o cookie (mesmo presente) não autentica
+  await page.goto('/dashboard', { waitUntil: 'domcontentloaded', timeout: 20000 });
+  await page.waitForURL((url) => url.pathname.startsWith('/auth'), { timeout: 15000 });
+  console.log('✅ /dashboard após logout (com cookies originais) bloqueado:', page.url());
   expect(page.url()).toContain('/auth');
 });

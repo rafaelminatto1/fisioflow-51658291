@@ -19,12 +19,11 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { db, doc, getDoc, getDocs, collection, query as firestoreQuery, where, addDoc, orderBy, limit as limitClause } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { AppointmentService } from '@/services/appointmentService';
+import { appointmentsApi, evaluationFormsApi, goalsApi, patientsApi } from '@/lib/api/workers-client';
 
 import { useIncrementTemplateUsage } from '@/hooks/useTemplateStats';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 // Helper function to generate UUID - using crypto.randomUUID() to avoid "ne is not a function" error in production
 const uuidv4 = (): string => crypto.randomUUID();
@@ -60,23 +59,22 @@ export default function NewEvaluationPage() {
         queryFn: async () => {
             if (!patientId) return null;
 
-            const [patientDoc, goalsQuery, pathologiesQuery, surgeriesQuery, appointmentsQuery] = await Promise.all([
-                getDoc(doc(db, 'patients', patientId)),
-                getDocs(firestoreQuery(collection(db, 'patient_goals'), where('patient_id', '==', patientId))),
-                getDocs(firestoreQuery(collection(db, 'patient_pathologies'), where('patient_id', '==', patientId))),
-                getDocs(firestoreQuery(collection(db, 'patient_surgeries'), where('patient_id', '==', patientId))),
-                getDocs(firestoreQuery(collection(db, 'appointments'), where('patient_id', '==', patientId), orderBy('appointment_date', 'desc'), limitClause(20)))
+            const [patientRes, goalsRes, pathologiesRes, surgeriesRes, appointmentsRes] = await Promise.all([
+                patientsApi.get(patientId),
+                goalsApi.list(patientId),
+                patientsApi.pathologies(patientId),
+                patientsApi.surgeries(patientId),
+                appointmentsApi.list({ patientId, limit: 20 })
             ]);
 
-            if (!patientDoc.exists()) throw new Error('Paciente não encontrado');
+            if (!patientRes?.data) throw new Error('Paciente não encontrado');
 
             return {
-                id: patientDoc.id,
-                ...patientDoc.data(),
-                goals: goalsQuery.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })),
-                pathologies: pathologiesQuery.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })),
-                surgeries: surgeriesQuery.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })),
-                appointments: appointmentsQuery.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }))
+                ...patientRes.data,
+                goals: goalsRes?.data ?? [],
+                pathologies: pathologiesRes?.data ?? [],
+                surgeries: surgeriesRes?.data ?? [],
+                appointments: appointmentsRes?.data ?? [],
             };
         },
         enabled: !!patientId
@@ -123,12 +121,10 @@ export default function NewEvaluationPage() {
         try {
             // Save evaluation responses
             if (selectedTemplate && Object.keys(fieldValues).length > 0) {
-                await addDoc(collection(db, 'patient_evaluation_responses'), {
+                await evaluationFormsApi.responses.create(selectedTemplate.id, {
                     patient_id: patientId,
-                    form_id: selectedTemplate.id,
                     responses: fieldValues,
                     appointment_id: appointmentId || null,
-                    created_at: new Date().toISOString(),
                 });
 
                 // Increment template usage counter

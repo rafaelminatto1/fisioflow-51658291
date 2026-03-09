@@ -18,12 +18,11 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useEffect } from 'react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { whatsappApi } from '@/lib/api/workers-client';
 
 interface WhatsAppIntegrationProps {
   patientId: string;
@@ -42,9 +41,15 @@ export function WhatsAppIntegration({ patientId: _patientId, patientPhone }: Wha
   const fetchHistory = async () => {
     try {
       setLoadingHistory(true);
-      const getHistory = httpsCallable(functions, 'getWhatsAppHistory');
-      const result = await getHistory({ patientId: _patientId });
-      setHistory((result.data as { data?: Array<{ id: string; message: string; sent_at: string; status?: string }> }).data || []);
+      const result = await whatsappApi.listMessages({ patientId: _patientId, limit: 100 });
+      setHistory(
+        (result.data ?? []).map((item) => ({
+          id: item.id,
+          message: item.message_content,
+          sent_at: item.sent_at ?? item.created_at ?? new Date().toISOString(),
+          status: item.status,
+        })),
+      );
     } catch (error) {
       logger.error('Error fetching WhatsApp history', error, 'WhatsAppIntegration');
     } finally {
@@ -94,10 +99,16 @@ export function WhatsAppIntegration({ patientId: _patientId, patientPhone }: Wha
       setSendingMessage(true);
       const messageToSend = customMessage || message;
 
-      const sendCustomMessage = httpsCallable(functions, 'sendWhatsAppCustomMessage');
-      await sendCustomMessage({
-        to: patientPhone,
-        message: messageToSend
+      await whatsappApi.createMessage({
+        patient_id: _patientId,
+        to_phone: patientPhone,
+        message_type: 'custom',
+        message_content: messageToSend,
+        status: 'enviado',
+        metadata: {
+          to_phone: patientPhone,
+          source: 'whatsapp_integration',
+        },
       });
 
       toast({

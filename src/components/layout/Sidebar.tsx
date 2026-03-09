@@ -71,9 +71,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useGamification } from '@/hooks/useGamification';
 import { Progress } from '@/components/ui/progress';
-import { getFirebaseAuth } from '@/integrations/firebase/app';
 import { GlobalCommandPalette } from "@/components/evolution/search/GlobalCommandPalette";
-import { signOut } from 'firebase/auth';
 
 const GamificationMiniProfile = ({ collapsed }: { collapsed: boolean }) => {
   const { profile: authProfile } = useAuth();
@@ -428,14 +426,13 @@ export function Sidebar() {
     );
   };
 
+  const { signOut: contextSignOut } = useAuth();
   const handleLogout = async () => {
     try {
-      const auth = getFirebaseAuth();
-      await signOut(auth);
+      await contextSignOut();
       toast({ title: 'Logout realizado', description: 'Até breve!' });
-      navigate('/auth');
     } catch (error) {
-      toast({ title: 'Erro ao sair', description: error?.message || 'Ocorreu um erro', variant: 'destructive' });
+      toast({ title: 'Erro ao sair', description: (error as Error)?.message || 'Ocorreu um erro', variant: 'destructive' });
     }
   };
 

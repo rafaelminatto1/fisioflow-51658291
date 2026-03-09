@@ -1,7 +1,7 @@
-import { db, collection, getDocs, query, where, orderBy } from '@/integrations/firebase/app';
 import { WhatsAppService } from './WhatsAppService';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { notificationManager } from './NotificationManager';
+import { appointmentsApi } from '@/lib/api/workers-client';
 
 export interface AgendaGap {
   date: string;
@@ -17,15 +17,13 @@ export class AgendaAutomationService {
    */
   static async detectGaps(therapistId: string, date: string): Promise<AgendaGap[]> {
     try {
-      const q = query(
-        collection(db, 'appointments'),
-        where('therapist_id', '==', therapistId),
-        where('date', '==', date),
-        orderBy('start_time', 'asc')
-      );
-      
-      const snapshot = await getDocs(q);
-      const appointments = snapshot.docs.map(doc => doc.data());
+      const res = await appointmentsApi.list({
+        therapistId,
+        dateFrom: date,
+        dateTo: date,
+        limit: 200,
+      });
+      const appointments = [...(res.data ?? [])].sort((a, b) => a.start_time.localeCompare(b.start_time));
       
       const gaps: AgendaGap[] = [];
       const workStart = "08:00";

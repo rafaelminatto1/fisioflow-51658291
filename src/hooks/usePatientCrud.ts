@@ -4,7 +4,7 @@
 // ============================================================================================
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { patientsApi } from '@/integrations/firebase/functions';
+import { patientsApi } from '@/lib/api/workers-client';
 import { toast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { sanitizeString, sanitizeEmail, cleanCPF, cleanPhone } from '@/lib/validations';
@@ -138,7 +138,7 @@ export const usePatients = (organizationId?: string | null) => {
     queryKey: ['patients', organizationId],
     queryFn: async (): Promise<Patient[]> => {
       if (!organizationId) return [];
-      const response = await patientsApi.list({ organizationId, limit: 1000 });
+      const response = await patientsApi.list({ limit: 1000 });
       return (response.data as Patient[]) ?? [];
     },
     enabled: !!organizationId,
@@ -394,7 +394,6 @@ export const usePatientsPaginated = (params: PatientsQueryParams = {}): Patients
       if (!organizationId) return { data: [], count: 0 };
 
       const response = await patientsApi.list({
-        organizationId,
         status: (status === 'all' || status === null) ? undefined : status,
         search: searchTerm,
         limit: pageSize,

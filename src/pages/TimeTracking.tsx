@@ -127,7 +127,7 @@ export default function TimeTrackingPage() {
     }
 
     return entries.filter((e) => {
-      const entryDate = e.start_time.toDate();
+      const entryDate = new Date(e.start_time);
       return entryDate >= startDate && entryDate <= endDate;
     });
   }, [entries, period]);

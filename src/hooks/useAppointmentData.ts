@@ -10,7 +10,7 @@ import {
     APPOINTMENT_SELECT,
     devValidateAppointment
 } from '@/lib/constants/appointment-queries';
-import { appointmentsApi, patientsApi } from '@/integrations/firebase/functions';
+import { appointmentsApi, patientsApi } from '@/lib/api/workers-client';
 import { fisioLogger } from '@/lib/errors/logger';
 import { type Patient, type AppointmentUnified } from '@/types';
 import { mapPatientDBToApp } from '@/utils/patientDataMappers';
@@ -30,8 +30,9 @@ export const useAppointmentData = (
 
             devValidateAppointment(APPOINTMENT_SELECT.standard);
 
-            fisioLogger.debug('Fetching appointment from PostgreSQL via API', { appointmentId }, 'useAppointmentData');
-            const data = await appointmentsApi.get(appointmentId);
+            fisioLogger.debug('Fetching appointment from Workers API', { appointmentId }, 'useAppointmentData');
+            const response = await appointmentsApi.get(appointmentId);
+            const data = response.data;
 
             // Check if patient data is embedded
             const patientData = data.patient;
@@ -101,8 +102,9 @@ export const useAppointmentData = (
 
             try {
                 // 1. Try direct get first (most efficient)
-                const data = await patientsApi.get(patientId);
-                if (data) return mapPatientDBToApp(data);
+            const response = await patientsApi.get(patientId);
+            const data = response?.data;
+            if (data) return mapPatientDBToApp(data);
                 throw new Error(`Patient API returned empty for ID: ${patientId}`);
             } catch (err) {
                 fisioLogger.warn(`[useAppointmentData] Direct fetch failed for ${patientId}`, { error: err }, 'useAppointmentData');

@@ -1,79 +1,34 @@
 /**
- * useDocumentTemplates - Migrated to Firebase
+ * useDocumentTemplates - Migrated to Neon/Workers
  */
 
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  documentTemplatesApi,
+  type AtestadoTemplateRecord,
+  type ContratoTemplateRecord,
+} from '@/lib/api/workers-client';
+import { toast } from 'sonner';
 
+export type AtestadoTemplate = AtestadoTemplateRecord;
+export type ContratoTemplate = ContratoTemplateRecord;
 
+export type AtestadoTemplateFormData = Partial<
+  Pick<AtestadoTemplate, 'organization_id' | 'variaveis_disponiveis' | 'created_by'>
+> &
+  Pick<AtestadoTemplate, 'nome' | 'descricao' | 'conteudo' | 'ativo'>;
 
-// Atestado Templates
+export type ContratoTemplateFormData = Partial<
+  Pick<ContratoTemplate, 'organization_id' | 'variaveis_disponiveis' | 'created_by'>
+> &
+  Pick<ContratoTemplate, 'nome' | 'descricao' | 'conteudo' | 'tipo' | 'ativo'>;
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, getDoc, query as firestoreQuery, orderBy, db } from '@/integrations/firebase/app';
-import { toast } from '@/hooks/use-toast';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
-
-export interface AtestadoTemplate {
-  id: string;
-  organization_id: string | null;
-  nome: string;
-  descricao: string | null;
-  conteudo: string;
-  variaveis_disponiveis: string[];
-  ativo: boolean;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export type AtestadoTemplateFormData = Partial<Pick<AtestadoTemplate, 'organization_id' | 'variaveis_disponiveis' | 'created_by'>> & Pick<AtestadoTemplate, 'nome' | 'descricao' | 'conteudo' | 'ativo'>;
-
-// Contrato Templates
-export interface ContratoTemplate {
-  id: string;
-  organization_id: string | null;
-  nome: string;
-  descricao: string | null;
-  tipo: string;
-  conteudo: string;
-  variaveis_disponiveis: string[];
-  ativo: boolean;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export type ContratoTemplateFormData = Partial<Pick<ContratoTemplate, 'organization_id' | 'variaveis_disponiveis' | 'created_by'>> & Pick<ContratoTemplate, 'nome' | 'descricao' | 'conteudo' | 'tipo' | 'ativo'>;
-
-// Helper to convert Firestore doc to AtestadoTemplate
-const convertDocToAtestadoTemplate = (doc: { id: string; data: () => Record<string, unknown> }): AtestadoTemplate => {
-  const data = normalizeFirestoreData(doc.data());
-  return {
-    id: doc.id,
-    ...data,
-  } as AtestadoTemplate;
-};
-
-// Helper to convert Firestore doc to ContratoTemplate
-const convertDocToContratoTemplate = (doc: { id: string; data: () => Record<string, unknown> }): ContratoTemplate => {
-  const data = normalizeFirestoreData(doc.data());
-  return {
-    id: doc.id,
-    ...data,
-  } as ContratoTemplate;
-};
-
-// Atestado Hooks
 export function useAtestadoTemplates() {
   return useQuery({
     queryKey: ['atestado_templates'],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'atestado_templates'),
-        orderBy('nome')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDocToAtestadoTemplate);
+      const res = await documentTemplatesApi.atestados.list();
+      return res.data ?? [];
     },
   });
 }
@@ -83,23 +38,18 @@ export function useCreateAtestadoTemplate() {
 
   return useMutation({
     mutationFn: async (template: AtestadoTemplateFormData) => {
-      const templateData = {
+      const res = await documentTemplatesApi.atestados.create({
         ...template,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'atestado_templates'), templateData);
-      const docSnap = await getDoc(docRef);
-
-      return convertDocToAtestadoTemplate(docSnap);
+        variaveis_disponiveis: template.variaveis_disponiveis ?? [],
+      });
+      return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['atestado_templates'] });
-      toast({ title: 'Modelo de atestado criado com sucesso' });
+      toast.success('Modelo de atestado criado com sucesso');
     },
     onError: (error: Error) => {
-      toast({ title: 'Erro ao criar modelo', description: error.message, variant: 'destructive' });
+      toast.error('Erro ao criar modelo: ' + error.message);
     },
   });
 }
@@ -109,21 +59,15 @@ export function useUpdateAtestadoTemplate() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<AtestadoTemplate> & { id: string }) => {
-      const docRef = doc(db, 'atestado_templates', id);
-      await updateDoc(docRef, {
-        ...updates,
-        updated_at: new Date().toISOString(),
-      });
-
-      const docSnap = await getDoc(docRef);
-      return convertDocToAtestadoTemplate(docSnap);
+      const res = await documentTemplatesApi.atestados.update(id, updates);
+      return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['atestado_templates'] });
-      toast({ title: 'Modelo de atestado atualizado' });
+      toast.success('Modelo de atestado atualizado');
     },
     onError: (error: Error) => {
-      toast({ title: 'Erro ao atualizar modelo', description: error.message, variant: 'destructive' });
+      toast.error('Erro ao atualizar modelo: ' + error.message);
     },
   });
 }
@@ -133,30 +77,24 @@ export function useDeleteAtestadoTemplate() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      await deleteDoc(doc(db, 'atestado_templates', id));
+      await documentTemplatesApi.atestados.delete(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['atestado_templates'] });
-      toast({ title: 'Modelo removido com sucesso' });
+      toast.success('Modelo removido com sucesso');
     },
     onError: (error: Error) => {
-      toast({ title: 'Erro ao remover modelo', description: error.message, variant: 'destructive' });
+      toast.error('Erro ao remover modelo: ' + error.message);
     },
   });
 }
 
-// Contrato Hooks
 export function useContratoTemplates() {
   return useQuery({
     queryKey: ['contrato_templates'],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'contrato_templates'),
-        orderBy('nome')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDocToContratoTemplate);
+      const res = await documentTemplatesApi.contratos.list();
+      return res.data ?? [];
     },
   });
 }
@@ -166,23 +104,18 @@ export function useCreateContratoTemplate() {
 
   return useMutation({
     mutationFn: async (template: ContratoTemplateFormData) => {
-      const templateData = {
+      const res = await documentTemplatesApi.contratos.create({
         ...template,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'contrato_templates'), templateData);
-      const docSnap = await getDoc(docRef);
-
-      return convertDocToContratoTemplate(docSnap);
+        variaveis_disponiveis: template.variaveis_disponiveis ?? [],
+      });
+      return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contrato_templates'] });
-      toast({ title: 'Modelo de contrato criado com sucesso' });
+      toast.success('Modelo de contrato criado com sucesso');
     },
     onError: (error: Error) => {
-      toast({ title: 'Erro ao criar modelo', description: error.message, variant: 'destructive' });
+      toast.error('Erro ao criar modelo: ' + error.message);
     },
   });
 }
@@ -192,21 +125,15 @@ export function useUpdateContratoTemplate() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<ContratoTemplate> & { id: string }) => {
-      const docRef = doc(db, 'contrato_templates', id);
-      await updateDoc(docRef, {
-        ...updates,
-        updated_at: new Date().toISOString(),
-      });
-
-      const docSnap = await getDoc(docRef);
-      return convertDocToContratoTemplate(docSnap);
+      const res = await documentTemplatesApi.contratos.update(id, updates);
+      return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contrato_templates'] });
-      toast({ title: 'Modelo de contrato atualizado' });
+      toast.success('Modelo de contrato atualizado');
     },
     onError: (error: Error) => {
-      toast({ title: 'Erro ao atualizar modelo', description: error.message, variant: 'destructive' });
+      toast.error('Erro ao atualizar modelo: ' + error.message);
     },
   });
 }
@@ -216,19 +143,18 @@ export function useDeleteContratoTemplate() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      await deleteDoc(doc(db, 'contrato_templates', id));
+      await documentTemplatesApi.contratos.delete(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['contrato_templates'] });
-      toast({ title: 'Modelo removido com sucesso' });
+      toast.success('Modelo removido com sucesso');
     },
     onError: (error: Error) => {
-      toast({ title: 'Erro ao remover modelo', description: error.message, variant: 'destructive' });
+      toast.error('Erro ao remover modelo: ' + error.message);
     },
   });
 }
 
-// Template variables helper
 export const templateVariables = {
   atestado: [
     { key: '#cliente-nome', label: 'Nome do Cliente' },

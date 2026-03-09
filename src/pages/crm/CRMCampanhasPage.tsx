@@ -15,16 +15,17 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { toast } from 'sonner';
 import {
 
   Mail, Plus, Edit, Trash2, Send, Users, Eye, Clock, CheckCircle2,
   XCircle, AlertCircle, TrendingUp, Filter, FileText
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { db, collection, query as firestoreQuery, orderBy, getDocs, addDoc, updateDoc, doc, deleteDoc, QueryDocumentSnapshot, where } from '@/integrations/firebase/app';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useOrganizations } from '@/hooks/useOrganizations';
+import { crmApi, type CrmCampanha, type Lead } from '@/lib/api/workers-client';
 
 interface EmailCampaign {
   id: string;
@@ -79,13 +80,21 @@ export default function CRMCampanhasPage() {
     queryKey: ['email-campanhas', organizationId],
     queryFn: async () => {
       if (!organizationId) return [];
-      const q = firestoreQuery(
-        collection(db, 'email_campanhas'),
-        where('organization_id', '==', organizationId),
-        orderBy('created_at', 'desc')
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() })) as EmailCampaign[];
+      const result = await crmApi.campanhas.list();
+      return ((result.data ?? []) as CrmCampanha[]).map((campaign) => ({
+        id: campaign.id,
+        name: campaign.nome,
+        subject: campaign.nome,
+        content: campaign.conteudo || '',
+        status: (campaign.status as EmailCampaign['status']) || 'rascunho',
+        recipient_count: campaign.total_destinatarios || 0,
+        sent_count: campaign.total_enviados || 0,
+        opened_count: 0,
+        clicked_count: 0,
+        scheduled_at: campaign.agendada_em || undefined,
+        sent_at: campaign.concluida_em || undefined,
+        created_at: campaign.created_at,
+      }));
     },
     enabled: !!organizationId,
   });
@@ -95,13 +104,8 @@ export default function CRMCampanhasPage() {
     queryKey: ['email-templates', organizationId],
     queryFn: async () => {
       if (!organizationId) return [];
-      const q = firestoreQuery(
-        collection(db, 'email_templates'),
-        where('organization_id', '==', organizationId),
-        orderBy('name')
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() })) as EmailTemplate[];
+      const saved = localStorage.getItem(`crm-email-templates:${organizationId}`);
+      return saved ? (JSON.parse(saved) as EmailTemplate[]) : [];
     },
     enabled: !!organizationId,
   });
@@ -111,12 +115,8 @@ export default function CRMCampanhasPage() {
     queryKey: ['leads-segmentacao', organizationId],
     queryFn: async () => {
       if (!organizationId) return [];
-      const q = firestoreQuery(
-        collection(db, 'leads'),
-        where('organization_id', '==', organizationId)
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map((d: QueryDocumentSnapshot) => ({ id: d.id, ...d.data() }));
+      const result = await crmApi.leads.list();
+      return (result.data ?? []) as Lead[];
     },
     enabled: !!organizationId,
   });
@@ -133,7 +133,7 @@ export default function CRMCampanhasPage() {
           return daysSinceCreation <= 7;
         }).length;
       } else if (data.target_segment === 'prospecao') {
-        recipientCount = (leads as any[]).filter(l => l.stage === 'prospecacao').length;
+        recipientCount = leads.filter((l) => l.estagio === 'aguardando').length;
       }
 
       const scheduledAt = data.schedule_type === 'agendado' && data.scheduled_date && data.scheduled_time
@@ -153,8 +153,15 @@ export default function CRMCampanhasPage() {
         created_at: new Date().toISOString(),
       };
 
-      const docRef = await addDoc(collection(db, 'email_campanhas'), campaignData);
-      return { id: docRef.id, ...campaignData };
+      const result = await crmApi.campanhas.create({
+        nome: data.name,
+        tipo: 'email',
+        conteudo: data.content,
+        status: data.schedule_type === 'agendado' ? 'agendado' : 'rascunho',
+        agendada_em: scheduledAt,
+        patient_ids: [],
+      });
+      return result.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['email-campanhas', organizationId] });
@@ -177,18 +184,15 @@ export default function CRMCampanhasPage() {
   // Enviar campanha
   const sendCampaign = useMutation({
     mutationFn: async (id: string) => {
-      await updateDoc(doc(db, 'email_campanhas', id), {
+      await crmApi.campanhas.update(id, {
         status: 'enviando',
-        sent_at: new Date().toISOString()
+        concluida_em: new Date().toISOString(),
       });
-
-      // Simular envio (em produção, isso seria processado por uma fila)
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Atualizar como enviado
-      await updateDoc(doc(db, 'email_campanhas', id), {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await crmApi.campanhas.update(id, {
         status: 'enviado',
-        sent_count: leads.length
+        total_enviados: leads.length,
+        concluida_em: new Date().toISOString(),
       });
     },
     onSuccess: () => {
@@ -203,6 +207,7 @@ export default function CRMCampanhasPage() {
     mutationFn: async (data: typeof formData) => {
       if (!organizationId) throw new Error('Organização não identificada');
       const templateData = {
+        id: crypto.randomUUID(),
         organization_id: organizationId,
         name: data.name,
         subject: data.subject,
@@ -210,9 +215,11 @@ export default function CRMCampanhasPage() {
         category: 'custom',
         variables: extractVariables(data.content),
       };
-
-      const docRef = await addDoc(collection(db, 'email_templates'), templateData);
-      return { id: docRef.id, ...templateData };
+      const existing = localStorage.getItem(`crm-email-templates:${organizationId}`);
+      const items = existing ? (JSON.parse(existing) as EmailTemplate[]) : [];
+      items.push(templateData as EmailTemplate);
+      localStorage.setItem(`crm-email-templates:${organizationId}`, JSON.stringify(items));
+      return templateData;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['email-templates', organizationId] });
@@ -225,7 +232,7 @@ export default function CRMCampanhasPage() {
   // Deletar campanha
   const deleteCampaign = useMutation({
     mutationFn: async (id: string) => {
-      await deleteDoc(doc(db, 'email_campanhas', id));
+      await crmApi.campanhas.delete(id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['email-campanhas', organizationId] });

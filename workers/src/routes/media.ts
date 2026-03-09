@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { requireAuth, type AuthVariables } from '../lib/auth';
+import { createPool } from '../lib/db';
 import type { Env } from '../types/env';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -17,6 +18,58 @@ const ALLOWED_TYPES: Record<string, string> = {
     'video/webm': '.webm',
     'video/quicktime': '.mov',
 };
+
+app.get('/annotations', requireAuth, async (c) => {
+    const user = c.get('user');
+    const pool = createPool(c.env);
+    const assetId = c.req.query('assetId');
+
+    if (!assetId) {
+        return c.json({ error: 'assetId é obrigatório' }, 400);
+    }
+
+    const result = await pool.query(
+        `
+          SELECT id, asset_id, version, data, created_at, author_id
+          FROM asset_annotations
+          WHERE organization_id = $1 AND asset_id = $2
+          ORDER BY version DESC
+        `,
+        [user.organizationId, assetId],
+    );
+
+    return c.json({ data: result.rows });
+});
+
+app.post('/annotations', requireAuth, async (c) => {
+    const user = c.get('user');
+    const pool = createPool(c.env);
+    const body = await c.req.json() as Record<string, unknown>;
+
+    if (!body.asset_id) {
+        return c.json({ error: 'asset_id é obrigatório' }, 400);
+    }
+
+    const result = await pool.query(
+        `
+          INSERT INTO asset_annotations (
+            organization_id, asset_id, version, data, author_id, created_at
+          ) VALUES (
+            $1, $2, $3, $4::jsonb, $5, NOW()
+          )
+          RETURNING id, asset_id, version, data, created_at, author_id
+        `,
+        [
+            user.organizationId,
+            String(body.asset_id),
+            Number(body.version ?? 1),
+            JSON.stringify(body.data ?? []),
+            user.uid,
+        ],
+    );
+
+    return c.json({ data: result.rows[0] }, 201);
+});
 
 // ===== ROTA DE UPLOAD (Pre-Signed URL) =====
 app.post('/upload-url', requireAuth, async (c) => {

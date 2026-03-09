@@ -128,7 +128,7 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
 
     const updateMutation = useMutation({
         mutationFn: ({ id, data }: { id: string; data: Partial<MedicalReturnFormData> }) =>
-            MedicalReturnService.updateMedicalReturn(id, data),
+            MedicalReturnService.updateMedicalReturn(id, { ...data, patient_id: patientId }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['patient-medical-returns', patientId] });
             toast.success('Retorno médico atualizado com sucesso');
@@ -141,7 +141,7 @@ export const MedicalReturnFormModal: React.FC<MedicalReturnFormModalProps> = ({
     });
 
     const deleteMutation = useMutation({
-        mutationFn: (id: string) => MedicalReturnService.deleteMedicalReturn(id),
+        mutationFn: (id: string) => MedicalReturnService.deleteMedicalReturn(id, patientId),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['patient-medical-returns', patientId] });
             toast.success('Retorno médico removido com sucesso');
