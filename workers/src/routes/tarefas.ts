@@ -10,7 +10,7 @@ app.get('/', requireAuth, async (c) => {
   const { projectId } = c.req.query();
   const db = createPool(c.env);
 
-  let sql = `SELECT * FROM tarefas WHERE organization_id = $1`;
+  let sql = `SELECT *, task_references as references FROM tarefas WHERE organization_id = $1`;
   const params: unknown[] = [user.organizationId];
   let idx = 2;
   if (projectId) { sql += ` AND project_id = $${idx++}`; params.push(projectId); }
@@ -28,16 +28,16 @@ app.post('/', requireAuth, async (c) => {
   const result = await db.query(
     `INSERT INTO tarefas (organization_id, created_by, responsavel_id, project_id, parent_id,
        titulo, descricao, status, prioridade, tipo, data_vencimento, start_date,
-       order_index, tags, checklists, attachments, references, dependencies)
+       order_index, tags, checklists, attachments, task_references, dependencies)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
-     RETURNING *`,
+     RETURNING *, task_references as references`,
     [
       user.organizationId, user.uid, body.responsavel_id ?? null, body.project_id ?? null,
       body.parent_id ?? null, body.titulo, body.descricao ?? null,
       body.status ?? 'A_FAZER', body.prioridade ?? 'MEDIA', body.tipo ?? 'TAREFA',
       body.data_vencimento ?? null, body.start_date ?? null, body.order_index ?? 0,
       JSON.stringify(body.tags ?? []), JSON.stringify(body.checklists ?? []),
-      JSON.stringify(body.attachments ?? []), JSON.stringify(body.references ?? []),
+      JSON.stringify(body.attachments ?? []), JSON.stringify(body.task_references ?? body.references ?? []),
       JSON.stringify(body.dependencies ?? []),
     ]
   );
@@ -50,16 +50,19 @@ app.patch('/:id', requireAuth, async (c) => {
   const body = await c.req.json();
   const db = createPool(c.env);
 
+  // Map frontend field 'references' to DB column 'task_references'
+  if ('references' in body && !('task_references' in body)) body.task_references = body.references;
+
   const allowed = ['titulo', 'descricao', 'status', 'prioridade', 'tipo', 'data_vencimento',
     'start_date', 'completed_at', 'order_index', 'tags', 'checklists', 'attachments',
-    'references', 'dependencies', 'responsavel_id', 'project_id', 'parent_id'];
+    'task_references', 'dependencies', 'responsavel_id', 'project_id', 'parent_id'];
 
   const sets: string[] = [];
   const params: unknown[] = [];
   let idx = 1;
   for (const key of allowed) {
     if (key in body) {
-      const val = ['tags', 'checklists', 'attachments', 'references', 'dependencies'].includes(key)
+      const val = ['tags', 'checklists', 'attachments', 'task_references', 'dependencies'].includes(key)
         ? JSON.stringify(body[key]) : body[key];
       sets.push(`${key} = $${idx++}`);
       params.push(val);
@@ -70,7 +73,7 @@ app.patch('/:id', requireAuth, async (c) => {
   params.push(id, user.organizationId);
 
   const result = await db.query(
-    `UPDATE tarefas SET ${sets.join(', ')} WHERE id = $${idx++} AND organization_id = $${idx++} RETURNING *`,
+    `UPDATE tarefas SET ${sets.join(', ')} WHERE id = $${idx++} AND organization_id = $${idx++} RETURNING *, task_references as references`,
     params
   );
   if (!result.rowCount) return c.json({ error: 'Not found' }, 404);

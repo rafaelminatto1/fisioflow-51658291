@@ -425,6 +425,24 @@ export const wikiApi = {
       method: 'PATCH',
       body: JSON.stringify({ updates }),
     }),
+
+  listCategories: () =>
+    request<{ data: unknown[] }>('/api/wiki/categories'),
+
+  createCategory: (data: { name: string; slug?: string; description?: string; icon?: string; color?: string; parent_id?: string; order_index?: number }) =>
+    request<{ data: unknown }>('/api/wiki/categories', { method: 'POST', body: JSON.stringify(data) }),
+
+  deleteCategory: (id: string) =>
+    request<{ ok: boolean }>(`/api/wiki/categories/${id}`, { method: 'DELETE' }),
+
+  listComments: (pageId: string) =>
+    request<{ data: unknown[] }>(`/api/wiki/${pageId}/comments`),
+
+  addComment: (pageId: string, data: { content: string; parent_comment_id?: string; block_id?: string; selection_text?: string; selection_start?: number; selection_end?: number }) =>
+    request<{ data: unknown }>(`/api/wiki/${pageId}/comments`, { method: 'POST', body: JSON.stringify(data) }),
+
+  resolveComment: (commentId: string) =>
+    request<{ ok: boolean }>(`/api/wiki/comments/${commentId}/resolve`, { method: 'PATCH' }),
 };
 
 // ===== API TEMPLATES =====
