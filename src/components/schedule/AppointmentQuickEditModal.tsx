@@ -61,14 +61,13 @@ import { getAppointmentConflictUserMessage } from '@/utils/appointmentErrors';
 import { PatientService } from '@/services/patientService';
 import { AppointmentService } from '@/services/appointmentService';
 import { getUserOrganizationId } from '@/utils/userHelpers';
-import { db, collection, query as firestoreQuery, where, getDocs } from '@/integrations/firebase/app';
 import type { Appointment, AppointmentStatus, AppointmentBase } from '@/types/appointment';
+import { appointmentsApi } from '@/lib/api/workers-client';
 import {
   useTherapists,
   formatTherapistLabel,
   THERAPIST_PLACEHOLDER,
 } from '@/hooks/useTherapists';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 interface AppointmentQuickEditModalProps {
   appointment: Appointment | null;
@@ -158,27 +157,34 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
     queryFn: async () => {
       if (!appointment?.date) return [];
       const appointmentDate = appointment.date.toISOString().split('T')[0];
-
-      const q = firestoreQuery(
-        collection(db, 'appointments'),
-        where('appointment_date', '==', appointmentDate),
-        where('status', 'in', ['agendado', 'confirmado', 'em_andamento'])
+      const responses = await Promise.all(
+        ['agendado', 'confirmado', 'em_andamento'].map((status) =>
+          appointmentsApi.list({
+            dateFrom: appointmentDate,
+            dateTo: appointmentDate,
+            status,
+            limit: 500,
+          })
+        )
       );
-      const snapshot = await getDocs(q);
 
-      return snapshot.docs.map(doc => {
-        const data = normalizeFirestoreData(doc.data());
-        return {
-          id: doc.id,
+      return responses.flatMap((response) =>
+        (response.data ?? []).map((data) => ({
+          id: data.id,
           patientId: data.patient_id,
           patientName: data.patient_name || 'Desconhecido',
-          date: data.appointment_date ? new Date(data.appointment_date) : new Date(),
-          time: data.appointment_time || '00:00',
-          duration: data.duration || 60,
-          status: data.status || 'agendado',
+          date: data.date ? new Date(data.date) : new Date(),
+          time: data.start_time || '00:00',
+          duration: data.start_time && data.end_time
+            ? differenceInMinutes(
+                new Date(`1970-01-01T${data.end_time}`),
+                new Date(`1970-01-01T${data.start_time}`)
+              )
+            : 60,
+          status: (data.status as AppointmentStatus) || 'agendado',
           therapistId: data.therapist_id,
-        } as AppointmentBase;
-      });
+        } as AppointmentBase))
+      );
     },
     staleTime: 30000,
     enabled: open && !!appointment?.date,
@@ -195,17 +201,15 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
       const monthStartStr = format(monthStart, 'yyyy-MM-dd');
       const monthEndStr = format(monthEnd, 'yyyy-MM-dd');
 
-      const q = firestoreQuery(
-        collection(db, 'appointments'),
-        where('patient_id', '==', appointment.patientId)
-      );
-      const snapshot = await getDocs(q);
+      const response = await appointmentsApi.list({
+        patientId: appointment.patientId,
+        limit: 500,
+      });
 
-      return snapshot.docs.filter((doc) => {
-        const data = normalizeFirestoreData(doc.data()) as { appointment_date?: string; date?: string; status?: string };
+      return (response.data ?? []).filter((data) => {
         const status = String(data.status || '').toLowerCase();
         if (status !== 'cancelado' && status !== 'cancelled') return false;
-        const appointmentDate = String(data.appointment_date || data.date || '').slice(0, 10);
+        const appointmentDate = String(data.date || '').slice(0, 10);
         return appointmentDate >= monthStartStr && appointmentDate <= monthEndStr;
       }).length;
     },

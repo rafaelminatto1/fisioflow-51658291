@@ -4,10 +4,9 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Medal, Crown, Flame } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { getFirebaseFunctions } from '@/integrations/firebase/app';
-import { httpsCallable } from 'firebase/functions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { gamificationApi } from '@/lib/api/workers-client';
 
 interface LeaderboardEntry {
   rank: number;
@@ -22,10 +21,17 @@ export function Leaderboard() {
   const { data, isLoading } = useQuery({
     queryKey: ['leaderboard'],
     queryFn: async () => {
-      const functions = getFirebaseFunctions();
-      const getLeaderboardFn = httpsCallable(functions, 'getLeaderboard');
-      const result = await getLeaderboardFn();
-      return result.data as { leaderboard: LeaderboardEntry[] };
+      const result = await gamificationApi.getLeaderboard({ period: 'all', limit: 10 });
+      return {
+        leaderboard: (result.data ?? []).map((entry) => ({
+          rank: entry.rank,
+          patientId: entry.patient_id,
+          level: entry.current_level,
+          xp: entry.total_xp,
+          streak: entry.current_streak,
+          isCurrentUser: false,
+        })),
+      } as { leaderboard: LeaderboardEntry[] };
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
   });

@@ -1,23 +1,21 @@
 /**
- * usePurchaseVoucher - Migrated to Firebase
+ * usePurchaseVoucher - Migrated to Neon/Workers
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
-import { getFunctions, httpsCallable } from 'firebase/functions';
-
-const functions = getFunctions();
+import { financialApi } from '@/lib/api/workers-client';
 
 interface VoucherCheckoutData {
+  sessionId: string;
   url?: string;
   error?: string;
-  [key: string]: unknown;
 }
 
 interface VoucherPaymentVerifyData {
   success?: boolean;
+  userVoucherId?: string;
   error?: string;
-  [key: string]: unknown;
 }
 
 export function usePurchaseVoucher() {
@@ -25,10 +23,8 @@ export function usePurchaseVoucher() {
 
   return useMutation({
     mutationFn: async (voucherId: string) => {
-      const createCheckout = httpsCallable(functions, 'create-voucher-checkout');
-
-      const result = await createCheckout({ voucherId });
-      const data = result.data as VoucherCheckoutData;
+      const result = await financialApi.vouchers.checkout(voucherId);
+      const data = (result?.data ?? result) as VoucherCheckoutData;
 
       if (data.error) {
         throw new Error(data.error);
@@ -38,12 +34,10 @@ export function usePurchaseVoucher() {
     },
     onSuccess: (data: VoucherCheckoutData) => {
       if (data.url) {
-        // Abrir checkout em nova aba
         window.open(data.url, '_blank');
-
         toast({
           title: 'Redirecionando para pagamento',
-          description: 'Aguarde enquanto você é redirecionado para o Stripe.',
+          description: 'Aguarde enquanto você é redirecionado para o checkout.',
         });
       }
     },
@@ -64,10 +58,8 @@ export function useVerifyVoucherPayment() {
 
   return useMutation({
     mutationFn: async (sessionId: string) => {
-      const verifyPayment = httpsCallable(functions, 'verify-voucher-payment');
-
-      const result = await verifyPayment({ sessionId });
-      const data = result.data as VoucherPaymentVerifyData;
+      const result = await financialApi.vouchers.verifyCheckout(sessionId);
+      const data = (result?.data ?? result) as VoucherPaymentVerifyData;
 
       if (data.error) {
         throw new Error(data.error);

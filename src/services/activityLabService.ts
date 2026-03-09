@@ -1,23 +1,9 @@
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  where,
-  orderBy,
-} from '@/integrations/firebase/app';
-import { db } from '@/integrations/firebase/app';
-import { patientsApi } from '@/integrations/firebase/functions';
-import type { 
-  ActivityLabPatient, 
-  ActivityLabSession, 
-  ActivityLabClinic 
+import { activityLabApi } from '@/lib/api/workers-client';
+import type {
+  ActivityLabClinic,
+  ActivityLabPatient,
+  ActivityLabSession,
 } from '@/types/activityLab';
-
-const PATIENTS_COLLECTION = 'patients';
-const SESSIONS_COLLECTION = 'sessions';
-const CLINIC_COLLECTION = 'clinic';
 
 const normalizeSearch = (value: string) =>
   value
@@ -47,160 +33,133 @@ const filterPatientsByTerm = (patients: ActivityLabPatient[], term: string) => {
   });
 };
 
-const loadPatientsFromFirestore = async (): Promise<ActivityLabPatient[]> => {
-  const snapshot = await getDocs(collection(db, PATIENTS_COLLECTION));
-  return snapshot.docs
-    .map((docSnap) => mapPatient(docSnap.id, docSnap.data()))
-    .filter((patient) => patient.is_active !== false && patient.status !== 'inactive');
-};
-
-function mapPatient(id: string, data: any): ActivityLabPatient {
+function mapPatient(id: string, data: Record<string, unknown>): ActivityLabPatient {
   return {
     id,
-    full_name: data.full_name || data.name || '',
-    birth_date: data.birth_date || data.birthDate || '',
-    gender: data.gender || 'masculino',
-    phone: data.phone || '',
-    email: data.email || '',
-    cpf: data.cpf || '',
-    status: data.status || 'active',
-    is_active: data.is_active ?? data.isActive ?? true,
-    created_at: data.created_at || data.createdAt || new Date().toISOString(),
-    updated_at: data.updated_at || data.updatedAt || new Date().toISOString(),
-    main_condition: data.main_condition || data.notes || '',
-    organization_id: data.organization_id || 'default',
-    incomplete_registration: !!data.incomplete_registration,
+    full_name: String(data.full_name ?? data.name ?? ''),
+    birth_date: String(data.birth_date ?? ''),
+    gender:
+      String(data.gender ?? 'masculino').toLowerCase().startsWith('f')
+        ? 'feminino'
+        : 'masculino',
+    phone: String(data.phone ?? ''),
+    email: String(data.email ?? ''),
+    cpf: String(data.cpf ?? ''),
+    status:
+      String(data.status ?? 'active').toLowerCase() === 'inactive'
+        ? 'inactive'
+        : 'active',
+    is_active: data.is_active !== false,
+    created_at: String(data.created_at ?? new Date().toISOString()),
+    updated_at: String(data.updated_at ?? new Date().toISOString()),
+    main_condition: String(data.main_condition ?? data.notes ?? ''),
+    organization_id: String(data.organization_id ?? ''),
+    incomplete_registration: Boolean(data.incomplete_registration),
     source: 'activity_lab',
   };
 }
 
-function mapSession(id: string, data: any): ActivityLabSession {
+function mapSession(id: string, data: Record<string, unknown>): ActivityLabSession {
+  const rawForceData = Array.isArray(data.raw_force_data)
+    ? (data.raw_force_data as Array<{ value: number; timestamp: number }>)
+    : [];
+
   return {
     id,
-    patient_id: data.patient_id || data.patientId,
-    protocol_name: data.protocol_name || data.protocolName || data.exercise_name || 'Protocolo Desconhecido',
-    body_part: data.body_part || data.bodyPart || data.muscle_group || 'N/A',
-    side: data.side || 'LEFT',
-    test_type: data.test_type || 'isometric',
-    created_at: data.created_at || data.createdAt || new Date().toISOString(),
-    updated_at: data.updated_at || data.updatedAt || new Date().toISOString(),
-    peak_force: data.peak_force ?? data.peakForce ?? data.max_force ?? 0,
-    avg_force: data.avg_force ?? data.avgForce ?? data.mean_force ?? 0,
-    duration: data.duration ?? 0,
-    rfd: data.rfd ?? data.rateOfForceDevelopment ?? data.rate_of_force_development ?? 0,
-    sensitivity: data.sensitivity ?? 3,
-    raw_force_data: data.raw_force_data || data.rawForceData || [],
-    sample_rate: data.sample_rate || data.sampleRate || 80,
-    device_model: data.device_model || data.deviceModel || 'Tindeq',
-    device_firmware: data.device_firmware || data.deviceFirmware || '',
-    device_battery: data.device_battery ?? data.deviceBattery ?? 0,
-    measurement_mode: data.measurement_mode || data.measurementMode || 'isometric',
-    is_simulated: !!(data.is_simulated || data.isSimulated),
-    notes: data.notes || '',
-    organization_id: data.organization_id || 'default',
+    patient_id: String(data.patient_id ?? ''),
+    patientId: String(data.patient_id ?? ''),
+    protocol_name: String(data.protocol_name ?? 'Protocolo Desconhecido'),
+    protocolName: String(data.protocol_name ?? 'Protocolo Desconhecido'),
+    body_part: String(data.body_part ?? 'N/A'),
+    bodyPart: String(data.body_part ?? 'N/A'),
+    side: String(data.side ?? 'LEFT') === 'RIGHT' ? 'RIGHT' : 'LEFT',
+    test_type: 'isometric',
+    created_at: String(data.created_at ?? new Date().toISOString()),
+    createdAt: String(data.created_at ?? new Date().toISOString()),
+    updated_at: String(data.updated_at ?? new Date().toISOString()),
+    peak_force: Number(data.peak_force ?? 0),
+    peakForce: Number(data.peak_force ?? 0),
+    avg_force: Number(data.avg_force ?? 0),
+    avgForce: Number(data.avg_force ?? 0),
+    duration: Number(data.duration ?? 0),
+    rfd: Number(data.rfd ?? 0),
+    rateOfForceDevelopment: Number(data.rfd ?? 0),
+    sensitivity: Number(data.sensitivity ?? 3),
+    raw_force_data: rawForceData,
+    rawForceData: rawForceData,
+    sample_rate: Number(data.sample_rate ?? 80),
+    sampleRate: Number(data.sample_rate ?? 80),
+    device_model: String(data.device_model ?? 'Tindeq'),
+    deviceModel: String(data.device_model ?? 'Tindeq'),
+    device_firmware: String(data.device_firmware ?? ''),
+    deviceFirmware: String(data.device_firmware ?? ''),
+    device_battery: Number(data.device_battery ?? 0),
+    deviceBattery: Number(data.device_battery ?? 0),
+    measurement_mode: 'isometric',
+    measurementMode: 'isometric',
+    is_simulated: Boolean(data.is_simulated),
+    isSimulated: Boolean(data.is_simulated),
+    notes: String(data.notes ?? ''),
+    organization_id: String(data.organization_id ?? ''),
     source: 'activity_lab',
   };
 }
 
 export const activityLabService = {
-  /**
-   * Get all patients from Activity Lab
-   */
   async getPatients(searchTerm?: string): Promise<ActivityLabPatient[]> {
     const term = searchTerm?.trim();
+    const response = await activityLabApi.patients.list({
+      search: term || undefined,
+      limit: term ? 200 : 500,
+    });
 
-    try {
-      // Use API V2 to keep patient search available for all allowed roles
-      // (Firestore direct reads are restricted for some roles, e.g. recepcionista).
-      const apiResponse = await patientsApi.list({
-        status: 'active',
-        search: term || undefined,
-        limit: 200,
-        offset: 0,
-      });
+    const mapped = (response.data ?? [])
+      .map((row) => mapPatient(String(row.id ?? ''), row as unknown as Record<string, unknown>))
+      .filter((patient) => !!patient.id);
 
-      const rows = Array.isArray(apiResponse.data) ? apiResponse.data : [];
-      const mapped = rows
-        .map((row) => mapPatient(String(row.id || ''), row))
-        .filter((patient) => !!patient.id);
-
-      if (!term || mapped.length > 0) {
-        return sortPatientsByName(mapped);
-      }
-
-      // Fallback for accent-insensitive typing: if backend search returns no rows,
-      // load a larger active list and filter locally with normalized text.
-      const fallbackResponse = await patientsApi.list({
-        status: 'active',
-        limit: 2000,
-        offset: 0,
-      });
-
-      const fallbackRows = Array.isArray(fallbackResponse.data) ? fallbackResponse.data : [];
-      const fallbackMapped = fallbackRows
-        .map((row) => mapPatient(String(row.id || ''), row))
-        .filter((patient) => !!patient.id);
-
-      return sortPatientsByName(filterPatientsByTerm(fallbackMapped, term));
-    } catch {
-      // Local dev fallback (e.g., CORS on Cloud Functions) to keep autocomplete usable.
-      const firestorePatients = await loadPatientsFromFirestore();
-      if (!term) return sortPatientsByName(firestorePatients);
-      return sortPatientsByName(filterPatientsByTerm(firestorePatients, term));
+    if (!term || mapped.length > 0) {
+      return sortPatientsByName(mapped);
     }
+
+    const fallback = await activityLabApi.patients.list({ limit: 2000 });
+    const fallbackMapped = (fallback.data ?? [])
+      .map((row) => mapPatient(String(row.id ?? ''), row as unknown as Record<string, unknown>))
+      .filter((patient) => !!patient.id);
+
+    return sortPatientsByName(filterPatientsByTerm(fallbackMapped, term));
   },
 
-  /**
-   * Get a specific patient by ID
-   */
   async getPatientById(id: string): Promise<ActivityLabPatient | null> {
-    const ref = doc(db, PATIENTS_COLLECTION, id);
-    const snap = await getDoc(ref);
-    if (!snap.exists() || snap.data()?.source !== 'activity_lab') return null;
-    return mapPatient(snap.id, snap.data());
+    const response = await activityLabApi.patients.get(id);
+    if (!response.data) return null;
+    return mapPatient(String(response.data.id), response.data as unknown as Record<string, unknown>);
   },
 
-  /**
-   * Get all sessions for a specific patient
-   */
   async getSessionsByPatient(patientId: string): Promise<ActivityLabSession[]> {
-    // Attempt multiple possible fields for patient reference due to cross-compatibility
-    const q = query(
-      collection(db, SESSIONS_COLLECTION),
-      where('source', '==', 'activity_lab'),
-      where('patient_id', '==', patientId),
-      orderBy('created_at', 'desc')
+    const response = await activityLabApi.sessions.listByPatient(patientId);
+    return (response.data ?? []).map((row) =>
+      mapSession(String(row.id), row as unknown as Record<string, unknown>),
     );
-    
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(d => mapSession(d.id, d.data()));
   },
 
-  /**
-   * Get a specific session by ID
-   */
   async getSessionById(id: string): Promise<ActivityLabSession | null> {
-    const ref = doc(db, SESSIONS_COLLECTION, id);
-    const snap = await getDoc(ref);
-    if (!snap.exists() || snap.data()?.source !== 'activity_lab') return null;
-    return mapSession(snap.id, snap.data());
+    const response = await activityLabApi.sessions.get(id);
+    if (!response.data) return null;
+    return mapSession(String(response.data.id), response.data as unknown as Record<string, unknown>);
   },
 
-  /**
-   * Get clinic profile
-   */
   async getClinicProfile(): Promise<ActivityLabClinic | null> {
-    const ref = doc(db, CLINIC_COLLECTION, 'profile');
-    const snap = await getDoc(ref);
-    if (!snap.exists() || snap.data()?.source !== 'activity_lab') return null;
-    const data = snap.data();
-    return { 
+    const response = await activityLabApi.clinic.get();
+    const row = response.data;
+    if (!row) return null;
+
+    return {
       id: 'profile',
-      clinic_name: data.clinic_name || data.name || '',
-      professional_name: data.professional_name || data.physioName || '',
-      registration_number: data.registration_number || data.crefito || '',
-      updated_at: data.updated_at || data.updatedAt || new Date().toISOString(),
-      source: 'activity_lab'
-    } as ActivityLabClinic;
-  }
+      clinic_name: String(row.clinic_name ?? ''),
+      professional_name: String(row.professional_name ?? ''),
+      registration_number: String(row.registration_number ?? ''),
+      updated_at: String(row.updated_at ?? new Date().toISOString()),
+      source: 'activity_lab',
+    };
+  },
 };

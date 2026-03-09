@@ -1,10 +1,9 @@
 import type { Patient } from '@/types';
 import {
-
-  patientsApi,
   exercisesApi,
   clinicalApi
 } from '@/integrations/firebase/functions';
+import { patientsApi, clinicalApi as workersClinicalApi } from '@/lib/api/workers-client';
 
 interface PatientApiData {
   id: string;
@@ -44,7 +43,7 @@ export class PatientService {
    * Uses optimized column selection from constants
    */
   static async getPatients(organizationId?: string): Promise<Patient[]> {
-    const response = await patientsApi.list({ organizationId, limit: 1000 });
+    const response = await patientsApi.list({ limit: 1000 });
     const data = response.data || [];
 
     return data.map((p: PatientApiData) => ({
@@ -163,7 +162,7 @@ export class PatientService {
   }
 
   static async getPatientByProfileId(profileId: string): Promise<Patient | null> {
-    const response = await patientsApi.get({ profileId });
+    const response = await patientsApi.getByProfile(profileId);
     const data = response.data;
 
     if (!data) return null;
@@ -189,7 +188,7 @@ export class PatientService {
    * Fetch prescribed exercises for a patient
    */
   static async getPrescribedExercises(patientId: string) {
-    const response = await exercisesApi.getPrescribedExercises(patientId);
+    const response = await workersClinicalApi.prescribedExercises.list({ patientId, active: true });
     return response.data;
   }
 
@@ -197,7 +196,7 @@ export class PatientService {
     await exercisesApi.logExercise({
       patientId,
       prescriptionId,
-      difficulty: Number(difficulty), // Ensure number
+      difficulty: Number(difficulty),
       notes,
     });
   }

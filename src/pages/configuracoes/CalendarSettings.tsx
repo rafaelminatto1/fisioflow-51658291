@@ -44,7 +44,7 @@ import {
   Copy
 } from 'lucide-react';
 import { useCalendarIntegration } from '@/hooks/useCalendarIntegration';
-import { callFunction } from '@/integrations/firebase/functions';
+import { integrationsApi } from '@/lib/api/workers-client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -117,16 +117,13 @@ export default function CalendarSettings() {
     setImportLoading(true);
     setImportEvents([]);
     try {
-      const result = await callFunction<
-        { startDate: string; endDate: string },
-        { success: boolean; events: Array<{ id: string; summary: string; start: string | null; end: string | null }> }
-      >('importFromGoogleCalendar', {
+      const result = await integrationsApi.google.calendar.importPreview({
         startDate: importStartDate,
         endDate: importEndDate,
       });
-      if (result?.events) {
-        setImportEvents(result.events);
-        toast.success(`${result.events.length} evento(s) encontrado(s)`);
+      if (result.data?.events) {
+        setImportEvents(result.data.events);
+        toast.success(`${result.data.events.length} evento(s) encontrado(s)`);
       } else {
         toast.info('Nenhum evento no período');
       }

@@ -113,13 +113,15 @@ export default defineConfig(({ mode }) => {
                   packageName === 'react-dom' || 
                   packageName === 'scheduler' ||
                   packageName.startsWith('react-') || 
-                  packageName.includes('react-')) {
+                  packageName.includes('react-') ||
+                  packageName.includes('@radix-ui') ||
+                  packageName.includes('tiptap') || 
+                  packageName.includes('prosemirror') ||
+                  packageName.includes('lucide-react')) {
                 return 'react-lib';
               }
               if (packageName.includes('firebase')) return 'firebase-vendor';
               
-              if (packageName.includes('lucide-react')) return 'ui-icons';
-              if (packageName.includes('@radix-ui')) return 'ui-radix';
               if (packageName.includes('framer-motion')) return 'motion';
               if (packageName.includes('recharts')) return 'charts';
               if (packageName.includes('react-grid-layout')) return 'grid-layout';
@@ -133,9 +135,6 @@ export default defineConfig(({ mode }) => {
 
               // AI e ML
               if (packageName.includes('@google') || packageName.includes('openai') || packageName.includes('ai-sdk')) return 'ai-vendor';
-
-              // Editor e Text
-              if (packageName.includes('tiptap') || packageName.includes('prosemirror')) return 'editor-core';
 
               // WebGL e Computer Vision
               if (packageName.includes('mediapipe') || packageName.includes('three') || packageName.includes('konva')) return 'webgl-vendor';

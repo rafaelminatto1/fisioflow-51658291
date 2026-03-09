@@ -23,7 +23,7 @@ import { HomeCareWidget } from '@/components/evolution/HomeCareWidget';
 import { SessionExercise } from '@/components/evolution/SessionExercisesPanel';
 import { SessionImageUpload } from '@/components/evolution/SessionImageUpload';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { db, doc, updateDoc } from '@/integrations/firebase/app';
+import { profileApi } from '@/lib/api/workers-client';
 
 export interface SOAPData {
     subjective: string;
@@ -426,17 +426,18 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
             setIsEditable(false);
             toast.success('Layout salvo com sucesso!');
 
-            // 2. Persist to database via Firebase Firestore
-            if (user?.id) {
+            // 2. Persist to backend profile preferences
+            if (user?.uid) {
                 try {
-                    const profileRef = doc(db, 'profiles', user.id);
-                    await updateDoc(profileRef, {
-                        'preferences.evolution_layout': normalized,
-                        updated_at: new Date().toISOString(),
+                    await profileApi.updateMe({
+                        preferences: {
+                            ...(profile?.preferences ?? {}),
+                            evolution_layout: normalized,
+                        },
                     });
-                    logger.info('Layout preference saved to Firestore', { userId: user.id }, 'EvolutionDraggableGrid');
+                    logger.info('Layout preference saved via Workers API', { userId: user.uid }, 'EvolutionDraggableGrid');
                 } catch (err) {
-                    logger.error('Failed to save preferences to Firestore', err, 'EvolutionDraggableGrid');
+                    logger.error('Failed to save preferences via Workers API', err, 'EvolutionDraggableGrid');
                 }
             }
         } else {
@@ -451,19 +452,17 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
         setIsEditable(false);
         toast.success('Layout restaurado para o padrão!');
 
-        // Remove from database via Firebase Firestore
-        if (user?.id && profile?.preferences?.evolution_layout) {
+        // Remove from backend profile preferences
+        if (user?.uid && profile?.preferences?.evolution_layout) {
             try {
-                const profileRef = doc(db, 'profiles', user.id);
                 const restPreferences = { ...profile.preferences };
                 delete restPreferences.evolution_layout;
-                await updateDoc(profileRef, {
+                await profileApi.updateMe({
                     preferences: restPreferences,
-                    updated_at: new Date().toISOString(),
                 });
-                logger.info('Reset evolution_layout preference in Firestore', { userId: user.id }, 'EvolutionDraggableGrid');
+                logger.info('Reset evolution_layout preference via Workers API', { userId: user.uid }, 'EvolutionDraggableGrid');
             } catch (err) {
-                logger.error('Failed to reset preferences in Firestore', err, 'EvolutionDraggableGrid');
+                logger.error('Failed to reset preferences via Workers API', err, 'EvolutionDraggableGrid');
             }
         }
 

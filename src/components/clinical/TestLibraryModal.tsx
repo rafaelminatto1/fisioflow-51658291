@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { db, collection, getDocs, query as firestoreQuery, orderBy } from '@/integrations/firebase/app';
+import { clinicalTestsApi, type ClinicalTestTemplateRecord } from '@/lib/api/workers-client';
 import {
 
     Dialog,
@@ -34,31 +34,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
-export interface ClinicalTest {
-    id: string;
-    name: string;
-    name_en?: string;
-    category: string;
-    target_joint: string;
-    purpose?: string;
-    execution?: string;
-    positive_sign?: string;
-    tags?: string[];
-    type?: string;
-    media_urls?: string[];
-    image_url?: string;
-    layout_type?: 'single' | 'multi_field' | 'y_balance' | 'radial';
-    fields_definition?: Array<{
-        id: string;
-        label: string;
-        unit?: string;
-        type: string;
-        required?: boolean;
-        description?: string;
-    }>;
-}
+export interface ClinicalTest extends ClinicalTestTemplateRecord {}
 
 interface TestLibraryModalProps {
     open: boolean;
@@ -162,15 +139,8 @@ export function TestLibraryModal({ open, onOpenChange, onAddTest, patientId }: T
     const { data: tests = [], isLoading } = useQuery({
         queryKey: ['clinical-tests-library'],
         queryFn: async () => {
-            const q = firestoreQuery(
-                collection(db, 'clinical_test_templates'),
-                orderBy('name')
-            );
-            const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...normalizeFirestoreData(doc.data())
-            })) as ClinicalTest[];
+            const res = await clinicalTestsApi.list();
+            return (res?.data ?? []) as ClinicalTest[];
         },
         enabled: open,
     });

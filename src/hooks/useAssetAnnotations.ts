@@ -1,13 +1,11 @@
 /**
- * useAssetAnnotations - Migrated to Firebase
+ * useAssetAnnotations - Migrated to Neon/Workers
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { collection, getDocs, query as firestoreQuery, where, addDoc, orderBy, db } from '@/integrations/firebase/app';
 import { useToast } from '@/components/ui/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { mediaApi } from '@/lib/api/workers-client';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface Annotation {
   id: string;
@@ -41,43 +39,33 @@ export const useAssetAnnotations = (assetId: string | null) => {
   const [currentVersion, setCurrentVersion] = useState<number>(1);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
 
-  // Load annotations for the asset
   useEffect(() => {
     if (!assetId) {
       setAnnotations([]);
+      setVersions([]);
+      setCurrentVersion(1);
       return;
     }
 
     const loadAnnotations = async () => {
       setIsLoading(true);
       try {
-        const annotationsQuery = firestoreQuery(
-          collection(db, 'asset_annotations'),
-          where('asset_id', '==', assetId),
-          orderBy('version', 'desc')
-        );
-        const snapshot = await getDocs(annotationsQuery);
+        const response = await mediaApi.annotations.list(assetId);
+        const versionDocs = ((response?.data ?? []) as AnnotationVersion[]).map((item) => ({
+          version: Number(item.version),
+          data: Array.isArray(item.data) ? item.data : [],
+          created_at: item.created_at,
+          author_id: item.author_id,
+        }));
 
-        if (!snapshot.empty) {
-          const versionDocs = snapshot.docs.map(doc => ({
-            version: normalizeFirestoreData(doc.data()).version,
-            data: normalizeFirestoreData(doc.data()).data,
-            created_at: normalizeFirestoreData(doc.data()).created_at,
-            author_id: normalizeFirestoreData(doc.data()).author_id
-          }));
+        setVersions(versionDocs);
 
-          setVersions(versionDocs);
-
-          // Load the latest version
-          const latestVersion = versionDocs[0];
-          if (latestVersion) {
-            setCurrentVersion(latestVersion.version);
-            setAnnotations(latestVersion.data);
-          }
+        const latestVersion = versionDocs[0];
+        if (latestVersion) {
+          setCurrentVersion(latestVersion.version);
+          setAnnotations(latestVersion.data);
         } else {
-          setVersions([]);
           setCurrentVersion(1);
           setAnnotations([]);
         }
@@ -86,7 +74,7 @@ export const useAssetAnnotations = (assetId: string | null) => {
         toast({
           variant: 'destructive',
           title: 'Erro ao carregar anotações',
-          description: error instanceof Error ? error.message : 'Erro desconhecido'
+          description: error instanceof Error ? error.message : 'Erro desconhecido',
         });
       } finally {
         setIsLoading(false);
@@ -96,42 +84,40 @@ export const useAssetAnnotations = (assetId: string | null) => {
     loadAnnotations();
   }, [assetId, toast]);
 
-  // Save current state as a new version
   const saveVersion = useCallback(async () => {
-    if (!assetId || !user) return;
+    if (!assetId) return;
 
     try {
       const nextVersion = (versions.length > 0 ? versions[0].version : 0) + 1;
-
-      await addDoc(collection(db, 'asset_annotations'), {
+      const response = await mediaApi.annotations.create({
         asset_id: assetId,
         version: nextVersion,
-        data: annotations,
-        created_at: new Date().toISOString(),
-        author_id: user.uid
+        data: annotations as unknown as Record<string, unknown>[],
       });
 
+      const saved = response.data;
+      const newVersion: AnnotationVersion = {
+        version: Number(saved.version),
+        data: Array.isArray(saved.data) ? (saved.data as Annotation[]) : [],
+        created_at: saved.created_at,
+        author_id: saved.author_id,
+      };
+
       setCurrentVersion(nextVersion);
-      setVersions(prev => [{
-        version: nextVersion,
-        data: annotations,
-        created_at: new Date().toISOString(),
-        author_id: user.uid
-      }, ...prev]);
+      setVersions((prev) => [newVersion, ...prev]);
 
       toast({
         title: 'Anotações salvas',
-        description: `Versão ${nextVersion} criada com sucesso.`
+        description: `Versão ${nextVersion} criada com sucesso.`,
       });
-
-    } catch (e) {
+    } catch (error) {
       toast({
         variant: 'destructive',
         title: 'Erro ao salvar',
-        description: e instanceof Error ? e.message : 'Erro desconhecido'
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
       });
     }
-  }, [assetId, annotations, versions, user, toast]);
+  }, [assetId, annotations, versions, toast]);
 
   return {
     annotations,
@@ -140,12 +126,12 @@ export const useAssetAnnotations = (assetId: string | null) => {
     currentVersion,
     isLoading,
     saveVersion,
-    setCurrentVersion: (v: number) => {
-      const target = versions.find(ver => ver.version === v);
+    setCurrentVersion: (version: number) => {
+      const target = versions.find((item) => item.version === version);
       if (target) {
         setAnnotations(target.data);
-        setCurrentVersion(v);
+        setCurrentVersion(version);
       }
-    }
+    },
   };
 };

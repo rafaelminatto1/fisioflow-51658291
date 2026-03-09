@@ -534,6 +534,7 @@ export namespace ClinicalApi {
   }
 
   export interface UpdateMedicalRecordData {
+    patientId: string;
     [key: string]: unknown;
   }
 
@@ -703,8 +704,10 @@ export const patientsApi = {
    */
   get: (idOrParams: string | PatientApi.GetParams): Promise<PatientApi.Patient> => {
     const data = typeof idOrParams === 'string' ? { patientId: idOrParams } : idOrParams;
+    const patientId = data.patientId;
+    if (!patientId) throw new Error('patientId as string is required');
     return callWorkersApi<{ data: PatientApi.Patient }>(
-      `/api/patients/${encodeURIComponent(data.patientId)}`,
+      `/api/patients/${encodeURIComponent(patientId)}`,
       { method: 'GET' },
     ).then((res) => res.data);
   },
@@ -753,66 +756,151 @@ export const patientsApi = {
  * API de Exercícios no Firebase Functions
  */
 export const exercisesApi = {
-  list: (params: ExerciseApi.ListParams = {}): Promise<FunctionResponse<ExerciseApi.Exercise[]>> =>
-    callFunctionHttpWithResponse('listExercisesV2', params),
+  list: async (params: ExerciseApi.ListParams = {}): Promise<FunctionResponse<ExerciseApi.Exercise[]>> => {
+    const query = new URLSearchParams();
+    if (params.category) query.set('category', params.category);
+    if (params.difficulty) query.set('difficulty', params.difficulty);
+    if (params.search) query.set('q', params.search);
+    if (params.limit != null) query.set('limit', String(params.limit));
+    if (params.offset != null) query.set('offset', String(params.offset));
+
+    const res = await callWorkersApi<{ data: ExerciseApi.Exercise[]; total?: number }>(
+      `/api/exercises${query.toString() ? `?${query.toString()}` : ''}`,
+      { method: 'GET' }
+    );
+    return { data: res.data ?? [], total: res.total };
+  },
+
   get: async (exerciseId: string): Promise<ExerciseApi.Exercise> => {
-    const res = await callFunctionHttp<{ exerciseId: string }, { data: ExerciseApi.Exercise }>('getExerciseV2', { exerciseId });
+    const res = await callWorkersApi<{ data: ExerciseApi.Exercise }>(
+      `/api/exercises/${encodeURIComponent(exerciseId)}`,
+      { method: 'GET' }
+    );
     return res.data;
   },
-  searchSimilar: (params: { exerciseId?: string; query?: string; limit?: number }): Promise<ExerciseApi.Exercise[]> =>
-    callFunctionHttp<{ exerciseId?: string; query?: string; limit?: number }, { data: ExerciseApi.Exercise[] }>('searchSimilarExercisesV2', params).then((r) => r.data),
+
+  searchSimilar: async (params: { exerciseId?: string; query?: string; limit?: number }): Promise<ExerciseApi.Exercise[]> => {
+    const query = new URLSearchParams();
+    if (params.query) query.set('q', params.query);
+    if (params.limit != null) query.set('limit', String(params.limit));
+
+    const path = params.exerciseId
+      ? `/api/exercises/${encodeURIComponent(params.exerciseId)}/similar`
+      : `/api/exercises/search/semantic?${query.toString()}`;
+
+    const res = await callWorkersApi<{ data: ExerciseApi.Exercise[] }>(path, { method: 'GET' });
+    return res.data;
+  },
+
   getCategories: async (): Promise<ExerciseApi.Category[]> => {
-    const res = await callFunctionHttp<Record<string, never>, { data: ExerciseApi.Category[] }>('getExerciseCategoriesV2', {});
+    const res = await callWorkersApi<{ data: ExerciseApi.Category[] }>('/api/exercises/categories', {
+      method: 'GET'
+    });
     return res.data;
   },
+
   getPrescribedExercises: async (patientId: string): Promise<ExerciseApi.PrescribedExercise[]> => {
-    const res = await callFunctionHttp<{ patientId: string }, { data: ExerciseApi.PrescribedExercise[] }>('getPrescribedExercisesV2', { patientId });
+    const res = await callWorkersApi<{ data: ExerciseApi.PrescribedExercise[] }>(
+      `/api/clinical/prescribed-exercises?patientId=${encodeURIComponent(patientId)}`,
+      { method: 'GET' }
+    );
     return res.data;
   },
-  logExercise: (data: ExerciseApi.LogExerciseData): Promise<{ success: boolean; logId?: string }> =>
-    callFunctionHttp('logExerciseV2', data),
+
+  logExercise: async (data: ExerciseApi.LogExerciseData): Promise<{ success: boolean; logId?: string }> => {
+    return callWorkersApi('/api/clinical/prescribed-exercises/log', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+  },
+
   create: async (exercise: ExerciseApi.CreateData): Promise<ExerciseApi.Exercise> => {
-    const res = await callFunctionHttp<ExerciseApi.CreateData, { data: ExerciseApi.Exercise }>('createExerciseV2', exercise);
+    const res = await callWorkersApi<{ data: ExerciseApi.Exercise }>('/api/exercises', {
+      method: 'POST',
+      body: JSON.stringify(exercise)
+    });
     return res.data;
   },
+
   update: async (id: string, updates: ExerciseApi.UpdateData): Promise<ExerciseApi.Exercise> => {
-    const res = await callFunctionHttp<{ id: string } & ExerciseApi.UpdateData, { data: ExerciseApi.Exercise }>('updateExerciseV2', { id, ...updates });
+    const res = await callWorkersApi<{ data: ExerciseApi.Exercise }>(
+      `/api/exercises/${encodeURIComponent(id)}`,
+      { method: 'PUT', body: JSON.stringify(updates) }
+    );
     return res.data;
   },
-  delete: (id: string): Promise<{ success: boolean }> =>
-    callFunctionHttp('deleteExerciseV2', { id }),
-  merge: (keepId: string, mergeIds: string[]): Promise<{ success: boolean; mergedCount?: number }> =>
-    callFunctionHttp('mergeExercisesV2', { keepId, mergeIds }),
+
+  delete: async (id: string): Promise<{ success: boolean }> =>
+    callWorkersApi(`/api/exercises/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+
+  merge: async (keepId: string, mergeIds: string[]): Promise<{ success: boolean; mergedCount?: number }> =>
+    callWorkersApi('/api/exercises/merge', {
+      method: 'POST',
+      body: JSON.stringify({ keepId, mergeIds })
+    }),
 };
 
 /**
  * API Financeira (Transações) no Firebase Functions
  */
 export const financialApi = {
-  list: (limit?: number, offset?: number): Promise<FunctionResponse<FinancialApi.Transaction[]>> =>
-    callFunctionHttpWithResponse('listTransactionsV2', { limit, offset }),
+  list: async (limit?: number, offset?: number): Promise<FunctionResponse<FinancialApi.Transaction[]>> => {
+    const query = new URLSearchParams();
+    if (limit != null) query.set('limit', String(limit));
+    if (offset != null) query.set('offset', String(offset));
+    const res = await callWorkersApi<{ data: FinancialApi.Transaction[]; total?: number }>(
+      `/api/financial/transacoes${query.toString() ? `?${query.toString()}` : ''}`,
+      { method: 'GET' }
+    );
+    return { data: res.data ?? [], total: res.total };
+  },
+
   summary: async (period: FinancialApi.Period = 'monthly'): Promise<FinancialApi.Summary> => {
-    const res = await callFunctionHttp<{ period: FinancialApi.Period }, { data: FinancialApi.Summary }>('getFinancialSummaryV2', { period });
+    const res = await callWorkersApi<{ data: FinancialApi.Summary }>(
+      `/api/financial/summary?period=${period}`,
+      { method: 'GET' }
+    );
     return res.data;
   },
+
   create: async (transaction: FinancialApi.CreateData): Promise<FinancialApi.Transaction> => {
-    const res = await callFunctionHttp<FinancialApi.CreateData, { data: FinancialApi.Transaction }>('createTransactionV2', transaction);
+    const res = await callWorkersApi<{ data: FinancialApi.Transaction }>('/api/financial/transacoes', {
+      method: 'POST',
+      body: JSON.stringify(transaction)
+    });
     return res.data;
   },
+
   update: async (transactionId: string, updates: FinancialApi.UpdateData): Promise<FinancialApi.Transaction> => {
-    const res = await callFunctionHttp<{ transactionId: string } & FinancialApi.UpdateData, { data: FinancialApi.Transaction }>('updateTransactionV2', { transactionId, ...updates });
+    const res = await callWorkersApi<{ data: FinancialApi.Transaction }>(
+      `/api/financial/transacoes/${encodeURIComponent(transactionId)}`,
+      { method: 'PUT', body: JSON.stringify(updates) }
+    );
     return res.data;
   },
-  delete: (transactionId: string): Promise<{ success: boolean }> =>
-    callFunctionHttp('deleteTransactionV2', { transactionId }),
+
+  delete: async (transactionId: string): Promise<{ success: boolean }> =>
+    callWorkersApi(`/api/financial/transacoes/${encodeURIComponent(transactionId)}`, { method: 'DELETE' }),
+
   findByAppointment: async (appointmentId: string): Promise<FinancialApi.Transaction | null> => {
-    const res = await callFunctionHttp<{ appointmentId: string }, { data: FinancialApi.Transaction | null }>('findTransactionByAppointmentIdV2', { appointmentId });
+    const res = await callWorkersApi<{ data: FinancialApi.Transaction | null }>(
+      `/api/financial/transacoes/appointment/${encodeURIComponent(appointmentId)}`,
+      { method: 'GET' }
+    );
     return res.data;
   },
+
   getEventReport: async (eventoId: string): Promise<FinancialApi.EventReport> => {
-    const res = await callFunctionHttp<{ eventoId: string }, { data: FinancialApi.EventReport }>('getEventReportV2', { eventoId });
+    const res = await callWorkersApi<{ data: FinancialApi.EventReport }>(
+      `/api/financial/event-report/${encodeURIComponent(eventoId)}`,
+      { method: 'GET' }
+    );
     return res.data;
   },
+
+  getDashboard: (params: any): Promise<any> =>
+    callWorkersApi<any>(`/api/analytics/dashboard?${new URLSearchParams(params)}`, { method: 'GET' })
+      .then(res => res.data),
 };
 
 /**
@@ -823,32 +911,76 @@ export const clinicalApi = {
     patientId: string,
     type?: string,
     limit?: number
-  ): Promise<FunctionResponse<ClinicalApi.MedicalRecord[]>> =>
-    callFunctionHttpWithResponse('getPatientRecordsV2', { patientId, type, limit }),
+  ): Promise<FunctionResponse<ClinicalApi.MedicalRecord[]>> => {
+    const query = new URLSearchParams();
+    if (type) query.set('type', type);
+    if (limit != null) query.set('limit', String(limit));
+    return callWorkersApi<{ data: ClinicalApi.MedicalRecord[] }>(
+      `/api/patients/${encodeURIComponent(patientId)}/medical-records${query.toString() ? `?${query.toString()}` : ''}`,
+      { method: 'GET' }
+    ).then(res => ({ data: res.data ?? [] }));
+  },
+
   createMedicalRecord: async (data: ClinicalApi.CreateMedicalRecordData): Promise<ClinicalApi.MedicalRecord> => {
-    const res = await callFunctionHttp<ClinicalApi.CreateMedicalRecordData, { data: ClinicalApi.MedicalRecord }>('createMedicalRecordV2', data);
+    const res = await callWorkersApi<{ data: ClinicalApi.MedicalRecord }>(
+      `/api/patients/${encodeURIComponent(data.patientId)}/medical-records`,
+      {
+        method: 'POST',
+        body: JSON.stringify(data)
+      }
+    );
     return res.data;
   },
+
   updateMedicalRecord: async (recordId: string, updates: ClinicalApi.UpdateMedicalRecordData): Promise<ClinicalApi.MedicalRecord> => {
-    const res = await callFunctionHttp<{ recordId: string } & ClinicalApi.UpdateMedicalRecordData, { data: ClinicalApi.MedicalRecord }>('updateMedicalRecordV2', { recordId, ...updates });
+    const patientId = (updates as any).patientId || (updates as any).patient_id;
+    if (!patientId) throw new Error('patientId is required for updateMedicalRecord');
+    const res = await callWorkersApi<{ data: ClinicalApi.MedicalRecord }>(
+      `/api/patients/${encodeURIComponent(patientId)}/medical-records/${encodeURIComponent(recordId)}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(updates)
+      }
+    );
     return res.data;
   },
-  deleteMedicalRecord: (recordId: string): Promise<{ success: boolean }> =>
-    callFunctionHttp('deleteMedicalRecordV2', { recordId }),
+
+  deleteMedicalRecord: async (patientId: string, recordId: string): Promise<{ success: boolean }> => {
+    return callWorkersApi(`/api/patients/${encodeURIComponent(patientId)}/medical-records/${encodeURIComponent(recordId)}`, { method: 'DELETE' });
+  },
+
   listTreatmentSessions: async (patientId: string, limit?: number): Promise<ClinicalApi.TreatmentSession[]> => {
-    const res = await callFunctionHttp<{ patientId: string; limit?: number }, { data: ClinicalApi.TreatmentSession[] }>('listTreatmentSessionsV2', { patientId, limit });
-    return res.data;
+    const query = new URLSearchParams();
+    query.set('patientId', patientId);
+    if (limit != null) query.set('limit', String(limit));
+    const res = await callWorkersApi<{ data: ClinicalApi.TreatmentSession[] }>(
+      `/api/evolution/treatment-sessions?${query.toString()}`,
+      { method: 'GET' }
+    );
+    return res.data ?? [];
   },
+
   createTreatmentSession: async (data: ClinicalApi.CreateTreatmentSessionData): Promise<ClinicalApi.TreatmentSession> => {
-    const res = await callFunctionHttp<ClinicalApi.CreateTreatmentSessionData, { data: ClinicalApi.TreatmentSession }>('createTreatmentSessionV2', data);
+    const res = await callWorkersApi<{ data: ClinicalApi.TreatmentSession }>('/api/evolution/treatment-sessions', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
     return res.data;
   },
+
   getPainRecords: async (patientId: string): Promise<ClinicalApi.PainRecord[]> => {
-    const res = await callFunctionHttp<{ patientId: string }, { data: ClinicalApi.PainRecord[] }>('getPainRecordsV2', { patientId });
-    return res.data;
+    const res = await callWorkersApi<{ data: ClinicalApi.PainRecord[] }>(
+      `/api/clinical/pain-maps?patientId=${encodeURIComponent(patientId)}`,
+      { method: 'GET' }
+    );
+    return res.data ?? [];
   },
+
   savePainRecord: async (data: ClinicalApi.SavePainRecordData): Promise<ClinicalApi.PainRecord> => {
-    const res = await callFunctionHttp<ClinicalApi.SavePainRecordData, { data: ClinicalApi.PainRecord }>('savePainRecordV2', data);
+    const res = await callWorkersApi<{ data: ClinicalApi.PainRecord }>('/api/clinical/pain-maps', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
     return res.data;
   },
 };
@@ -858,49 +990,47 @@ export const clinicalApi = {
  */
 export const evolutionsApi = {
   /**
-   * Lista evoluções de um paciente (uses Unified Service)
+   * Lista evoluções de um paciente (Worker API + Neon JWT)
    */
   list: (patientId: string): Promise<FunctionResponse<ClinicalApi.MedicalRecord[]>> =>
-    callFunctionHttpWithResponse('evolutionServiceHttp', { patientId, action: 'list' }),
+    callWorkersApi<{ data: ClinicalApi.MedicalRecord[] }>(`/api/patients/${encodeURIComponent(patientId)}/medical-records?type=evolution`, { method: 'GET' })
+      .then(res => ({ data: res.data ?? [] })),
 
   /**
-   * Obtém uma evolução por ID (uses Unified Service)
+   * Obtém uma evolução por ID (Worker API + Neon JWT)
    */
   get: async (evolutionId: string): Promise<ClinicalApi.MedicalRecord> => {
-    const res = await callFunctionHttp<any, { data: ClinicalApi.MedicalRecord }>(
-      'evolutionServiceHttp',
-      { evolutionId, action: 'get' }
-    );
+    const res = await callWorkersApi<{ data: ClinicalApi.MedicalRecord }>(`/api/evolution/${encodeURIComponent(evolutionId)}`, { method: 'GET' });
     return res.data;
   },
 
   /**
-   * Cria uma nova evolução (uses Unified Service)
+   * Cria uma nova evolução (Worker API + Neon JWT)
    */
   create: async (data: any): Promise<ClinicalApi.MedicalRecord> => {
-    const res = await callFunctionHttp<any, { data: ClinicalApi.MedicalRecord }>(
-      'evolutionServiceHttp',
-      { ...data, action: 'create' }
-    );
+    const res = await callWorkersApi<{ data: ClinicalApi.MedicalRecord }>('/api/evolution', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
     return res.data;
   },
 
   /**
-   * Atualiza uma evolução existente (uses Unified Service)
+   * Atualiza uma evolução existente (Worker API + Neon JWT)
    */
   update: async (evolutionId: string, updates: any): Promise<ClinicalApi.MedicalRecord> => {
-    const res = await callFunctionHttp<any, { data: ClinicalApi.MedicalRecord }>(
-      'evolutionServiceHttp',
-      { evolutionId, ...updates, action: 'update' }
-    );
+    const res = await callWorkersApi<{ data: ClinicalApi.MedicalRecord }>(`/api/evolution/${encodeURIComponent(evolutionId)}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates)
+    });
     return res.data;
   },
 
   /**
-   * Remove uma evolução (uses Unified Service)
+   * Remove uma evolução (Worker API + Neon JWT)
    */
   delete: (evolutionId: string): Promise<{ success: boolean }> =>
-    callFunctionHttp('evolutionServiceHttp', { evolutionId, action: 'delete' }),
+    callWorkersApi(`/api/evolution/${encodeURIComponent(evolutionId)}`, { method: 'DELETE' }),
 };
 
 /**
@@ -1082,13 +1212,31 @@ export const doctorsApi = {
  * API de Analytics (BigQuery)
  */
 export const analyticsApi = {
-  setup: () => callFunctionHttp('setupAnalytics', {}),
-  getDashboard: (organizationId: string) => callFunctionHttp('dashboardMetrics', { organizationId }),
-  getPatientEvolution: (patientId: string) => callFunctionHttp('patientEvolution', { patientId }),
-  getOrganizationStats: (organizationId: string) => callFunctionHttp('organizationStats', { organizationId }),
-  getTopExercises: (organizationId: string) => callFunctionHttp('topExercises', { organizationId }),
-  getPainMap: (organizationId: string) => callFunctionHttp('painMapAnalysis', { organizationId }),
-  getUsage: () => callFunctionHttp('usageStats', {}),
+  setup: () => callWorkersApi('/api/analytics/setup', { method: 'POST' }),
+
+  getDashboard: (params: any): Promise<any> =>
+    callWorkersApi<any>(`/api/analytics/dashboard?${new URLSearchParams(params)}`, { method: 'GET' })
+      .then(res => res.data),
+
+  getPatientEvolution: (patientId: string) =>
+    callWorkersApi<{ data: any }>(`/api/analytics/patient-evolution/${encodeURIComponent(patientId)}`, { method: 'GET' })
+      .then(res => res.data),
+
+  getOrganizationStats: (organizationId: string) =>
+    callWorkersApi<{ data: any }>(`/api/analytics/dashboard`, { method: 'GET' })
+      .then(res => res.data),
+
+  getTopExercises: (organizationId: string) =>
+    callWorkersApi<{ data: any }>(`/api/analytics/top-exercises`, { method: 'GET' })
+      .then(res => res.data),
+
+  getPainMap: (organizationId: string) =>
+    callWorkersApi<{ data: any }>(`/api/analytics/pain-map`, { method: 'GET' })
+      .then(res => res.data),
+
+  getUsage: () =>
+    callWorkersApi<{ data: any }>(`/api/analytics/dashboard`, { method: 'GET' })
+      .then(res => res.data),
 };
 
 /**

@@ -11,6 +11,10 @@ export interface Env {
   FIREBASE_PROJECT_ID: string;
   ALLOWED_ORIGINS: string; // CSV: "https://a.com,https://b.com"
   GOOGLE_AI_API_KEY: string;
+  GOOGLE_MAPS_API_KEY?: string;
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
+  GOOGLE_REDIRECT_URI?: string;
   NEON_AUTH_JWKS_URL?: string;
   NEON_AUTH_ISSUER?: string;
   NEON_AUTH_AUDIENCE?: string;
