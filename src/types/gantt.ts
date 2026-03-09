@@ -8,7 +8,12 @@
  * Tarefa com dados para Gantt
  */
 
-import { Timestamp } from '@/integrations/firebase/app';
+type TimestampLikeLike =
+  | string
+  | Date
+  | {
+      toDate?: () => Date;
+    };
 
 export interface GanttTask {
   id: string;
@@ -28,8 +33,8 @@ export interface GanttTask {
   is_milestone: boolean;
   color?: string;                  // Cor custom da barra
   tags: string[];
-  created_at: Timestamp;
-  updated_at: Timestamp;
+  created_at: TimestampLike;
+  updated_at: TimestampLike;
 }
 
 /**

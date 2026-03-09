@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { httpsCallable } from 'firebase/functions';
-import { collection, getDocs, query } from 'firebase/firestore';
-import { functions, db } from '@/lib/firebase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,13 +18,9 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { crmApi, integrationsApi, type GoogleBusinessReviewRecord } from '@/lib/api/workers-client';
 
-interface GoogleReview {
-  author: string;
-  rating: number;
-  comment: string;
-  date: string;
-}
+interface GoogleReview extends GoogleBusinessReviewRecord {}
 
 interface MarketingMetrics {
   totalReviews: number;
@@ -64,11 +57,14 @@ export default function MarketingDashboard() {
         let rating2 = 0;
         let rating1 = 0;
 
-        try {
-          const getReviews = httpsCallable(functions, 'getBusinessReviews');
-          const result = await getReviews();
-          reviews = (result.data as unknown).reviews || [];
+        const [reviewsResult, campaignsResult, leadsResult] = await Promise.allSettled([
+          integrationsApi.google.business.reviews(),
+          crmApi.campanhas.list(),
+          crmApi.leads.list(),
+        ]);
 
+        if (reviewsResult.status === 'fulfilled') {
+          reviews = reviewsResult.value.data ?? [];
           totalReviews = reviews.length;
           if (totalReviews > 0) {
             averageRating = reviews.reduce((sum: number, r: GoogleReview) => sum + r.rating, 0) / totalReviews;
@@ -78,39 +74,11 @@ export default function MarketingDashboard() {
             rating2 = reviews.filter((r: GoogleReview) => r.rating === 2).length;
             rating1 = reviews.filter((r: GoogleReview) => r.rating === 1).length;
           }
-        } catch (err) {
-          console.error('Error fetching reviews:', err);
         }
 
-        // Fetch Marketing Exports count
-        let totalExports = 0;
-        try {
-          const exportsQuery = query(collection(db, 'marketing_exports'));
-          const exportsSnapshot = await getDocs(exportsQuery);
-          totalExports = exportsSnapshot.size;
-        } catch (err) {
-          console.error('Error fetching exports:', err);
-        }
-
-        // Fetch Campaigns count
-        let totalCampaigns = 0;
-        try {
-          const campaignsQuery = query(collection(db, 'crm_campanhas'));
-          const campaignsSnapshot = await getDocs(campaignsQuery);
-          totalCampaigns = campaignsSnapshot.size;
-        } catch (err) {
-          console.error('Error fetching campaigns:', err);
-        }
-
-        // Fetch Leads count
-        let totalLeads = 0;
-        try {
-          const leadsQuery = query(collection(db, 'crm_leads'));
-          const leadsSnapshot = await getDocs(leadsQuery);
-          totalLeads = leadsSnapshot.size;
-        } catch (err) {
-          console.error('Error fetching leads:', err);
-        }
+        const totalExports = 0;
+        const totalCampaigns = campaignsResult.status === 'fulfilled' ? (campaignsResult.value.data ?? []).length : 0;
+        const totalLeads = leadsResult.status === 'fulfilled' ? (leadsResult.value.data ?? []).length : 0;
 
         setMetrics({
           totalReviews,
