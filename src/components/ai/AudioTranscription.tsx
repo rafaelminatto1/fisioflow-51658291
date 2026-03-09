@@ -8,9 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Mic, Square, Play, Pause, Trash2, FileText, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { getFirebaseFunctions } from '@/integrations/firebase/functions';
-import { httpsCallable } from 'firebase/functions';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { aiApi } from '@/lib/api/workers-client';
 
 interface AudioTranscriptionProps {
   patientId: string;
@@ -134,15 +133,11 @@ export function AudioTranscription({ patientId, onTranscriptionComplete }: Audio
       reader.onloadend = async () => {
         const base64Audio = reader.result as string;
 
-        // Call Firebase Cloud Function
-        const functions = getFirebaseFunctions();
-        const transcribeFunction = httpsCallable(functions, 'ai-transcribe-session');
-        const result = await transcribeFunction({
+        const result = await aiApi.transcribeSession({
           audioData: base64Audio,
-          patientId
+          patientId,
         });
-
-        const data = result.data as TranscriptionResponse;
+        const data = result.data as unknown as TranscriptionResponse;
 
         if (data?.error) {
           throw new Error(data.error);

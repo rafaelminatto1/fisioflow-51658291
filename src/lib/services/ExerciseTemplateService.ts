@@ -1,4 +1,4 @@
-import { db, collection, getDocs, query, where } from '@/integrations/firebase/app';
+import { exerciseTemplatesApi } from '@/lib/api/workers-client';
 import type { ExerciseV2Item } from '@/components/evolution/v2/types';
 
 export interface ExerciseTemplate {
@@ -11,15 +11,29 @@ export interface ExerciseTemplate {
 }
 
 export class ExerciseTemplateService {
-  private static COLLECTION = 'exercise_templates';
+  private static mapTemplate(template: Awaited<ReturnType<typeof exerciseTemplatesApi.list>>['data'][number]): ExerciseTemplate {
+    return {
+      id: template.id,
+      name: template.name,
+      diagnosis_cid: template.conditionName ?? undefined,
+      description: template.description ?? undefined,
+      category: template.category ?? undefined,
+      exercises: (template.items ?? []).map((item) => ({
+        exercise_id: item.exerciseId,
+        sets: item.sets ?? undefined,
+        reps: item.repetitions ?? undefined,
+        duration: item.duration ?? undefined,
+        notes: item.notes ?? undefined,
+      })) as Omit<ExerciseV2Item, 'id'>[],
+    };
+  }
 
   /**
    * Get all exercise templates
    */
   static async getAllTemplates(): Promise<ExerciseTemplate[]> {
-    const q = query(collection(db, this.COLLECTION));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ExerciseTemplate));
+    const response = await exerciseTemplatesApi.list({ limit: 500 });
+    return (response.data ?? []).map((template) => this.mapTemplate(template));
   }
 
   /**
@@ -40,8 +54,7 @@ export class ExerciseTemplateService {
    * Get a default template for a specific clinical area
    */
   static async getTemplatesByCategory(category: string): Promise<ExerciseTemplate[]> {
-    const q = query(collection(db, this.COLLECTION), where('category', '==', category));
-    const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ExerciseTemplate));
+    const response = await exerciseTemplatesApi.list({ category, limit: 500 });
+    return (response.data ?? []).map((template) => this.mapTemplate(template));
   }
 }

@@ -4,8 +4,6 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
-import { getMessaging, getToken } from 'firebase/messaging';
-import { app } from './firebase';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -103,17 +101,6 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
         }
       } else {
         console.log('Push notifications: projectId not configured. Set EXPO_PUBLIC_PROJECT_ID in .env for production');
-      }
-
-      // Also get FCM token for Firebase Cloud Messaging (only on Android with dev client)
-      if (Platform.OS === 'android') {
-        try {
-          const messaging = getMessaging(app);
-          const fcmToken = await getToken(messaging);
-          console.log('FCM Token:', fcmToken);
-        } catch (fcmError) {
-          console.log('FCM not available (requires expo-dev-client)');
-        }
       }
     } catch (error) {
       console.log('Push notifications setup skipped:', error instanceof Error ? error.message : 'Unknown error');

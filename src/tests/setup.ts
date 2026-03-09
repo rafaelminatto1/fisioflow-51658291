@@ -7,39 +7,12 @@
  */
 
 
-// ============================================================================
-// MOCKS - Firebase Client
-// ============================================================================
-
 import { beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
-vi.mock('@/integrations/firebase/app', () => ({
-  db: null,
-  firebaseApp: {
-    auth: () => ({}),
-    firestore: () => ({}),
-    storage: () => ({}),
-  },
-  collection: vi.fn(),
-  doc: vi.fn(),
-  getDoc: vi.fn(),
-  getDocs: vi.fn(),
-  addDoc: vi.fn(),
-  setDoc: vi.fn(),
-  updateDoc: vi.fn(),
-  deleteDoc: vi.fn(),
-  query: vi.fn(),
-  where: vi.fn(),
-  orderBy: vi.fn(),
-  limit: vi.fn(),
-  onSnapshot: vi.fn(),
-  serverTimestamp: vi.fn(() => new Date()),
-}));
 
 vi.mock('@/integrations/firebase/auth', () => ({
   auth: {
@@ -54,12 +27,6 @@ vi.mock('@/integrations/firebase/auth', () => ({
   signOut: vi.fn(),
   resetPassword: vi.fn(),
   onAuthStateChange: vi.fn(),
-}));
-
-vi.mock('@/integrations/firebase/functions', () => ({
-  httpsCallable: vi.fn(() => ({ data: null })),
-  getFirebaseFunctions: vi.fn(() => ({ httpsCallable: vi.fn() })),
-  functionsInstance: { httpsCallable: vi.fn() },
 }));
 
 // ============================================================================

@@ -62,7 +62,7 @@ export function useEvolutions(patientId: string) {
         const result = await apiCreateEvolution(apiData);
         
         // Log audit event
-        await auditLogger.logPHIModification(user.id, 'create', 'soap_note', result.id);
+        await auditLogger.logPHIModification(user.id, 'create', 'evolution', result.id);
 
         return mapApiEvolution(result);
     },
@@ -86,7 +86,7 @@ export function useEvolutions(patientId: string) {
         
         // Log audit event
         if (user?.id) {
-          await auditLogger.logPHIModification(user.id, 'update', 'soap_note', id);
+          await auditLogger.logPHIModification(user.id, 'update', 'evolution', id);
         }
 
         return mapApiEvolution(result);
@@ -103,7 +103,7 @@ export function useEvolutions(patientId: string) {
       
       // Log audit event
       if (user?.id) {
-        await auditLogger.logPHIModification(user.id, 'delete', 'soap_note', id);
+        await auditLogger.logPHIModification(user.id, 'delete', 'evolution', id);
       }
       
       return result;

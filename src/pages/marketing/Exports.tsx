@@ -1,16 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import {
-
-  collection,
-  query,
-  orderBy,
-  getDocs,
-  doc,
-  getDoc,
-  deleteDoc
-} from 'firebase/firestore';
-import { ref, deleteObject } from 'firebase/storage';
-import { db, getFirebaseStorage } from '@/lib/firebase';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -51,6 +39,10 @@ import {
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
+import {
+  deleteMarketingExport,
+  getOrganizationMarketingExports,
+} from '@/services/marketing/marketingService';
 
 interface MarketingExport {
   id: string;
@@ -77,38 +69,8 @@ export default function MarketingExportsPage() {
     const fetchExports = async () => {
       try {
         setLoading(true);
-
-        const exportsQuery = query(
-          collection(db, 'marketing_exports'),
-          orderBy('created_at', 'desc')
-        );
-
-        const snapshot = await getDocs(exportsQuery);
-        const exportsData: MarketingExport[] = [];
-
-        for (const docSnap of snapshot.docs) {
-          const data = docSnap.data() as Omit<MarketingExport, 'id'>;
-
-          // Fetch patient name
-          let patientName = 'Desconhecido';
-          try {
-            const patientRef = doc(db, 'patients', data.patient_id);
-            const patientSnap = await getDoc(patientRef);
-            if (patientSnap.exists()) {
-              patientName = patientSnap.data().name || 'Desconhecido';
-            }
-          } catch (err) {
-            console.error('Error fetching patient:', err);
-          }
-
-          exportsData.push({
-            id: docSnap.id,
-            ...data,
-            patient_name: patientName,
-          });
-        }
-
-        setExports(exportsData);
+        const exportsData = await getOrganizationMarketingExports();
+        setExports(exportsData as MarketingExport[]);
       } catch (error) {
         console.error('Error fetching exports:', error);
         toast({
@@ -126,18 +88,7 @@ export default function MarketingExportsPage() {
 
   const handleDelete = async (exportItem: MarketingExport) => {
     try {
-      const storage = getFirebaseStorage();
-
-      // Delete from Storage
-      try {
-        const storageRef = ref(storage, exportItem.file_path);
-        await deleteObject(storageRef);
-      } catch (err) {
-        console.error('Error deleting from storage:', err);
-      }
-
-      // Delete from Firestore
-      await deleteDoc(doc(db, 'marketing_exports', exportItem.id));
+      await deleteMarketingExport(exportItem.id);
 
       // Update local state
       setExports((prev) => prev.filter((e) => e.id !== exportItem.id));

@@ -18,9 +18,8 @@
 // ============================================================================
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { db, collection, query, orderBy, getDocs } from '@/integrations/firebase/app';
+import { PainMapService } from '@/lib/services/painMapService';
 import { PainEvolutionData, PainMapRecord, PainMapPoint } from '@/types/painMap';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 export interface PainMigrationPattern {
   fromRegion: string;
@@ -762,29 +761,25 @@ Respond in valid JSON:
 async function getPainAssessments(
   patientId: string,
   startDate?: Date,
-  _endDate?: Date
+  endDate?: Date
 ): Promise<PainEvolutionData[]> {
+  const records: PainMapRecord[] = await PainMapService.getPainMapsByPatientId(patientId);
 
-  const q = query(
-    collection(db, 'patients', patientId, 'pain-maps'),
-    orderBy('recorded_at', 'asc')
-  );
-
-  if (startDate) {
-    // Adicionar filtro de data se necessário
-  }
-
-  const snapshot = await getDocs(q);
-  const records: PainMapRecord[] = snapshot.docs.map(doc => normalizeFirestoreData(doc.data()) as PainMapRecord);
-
-  // Converter para PainEvolutionData
-  return records.map(record => ({
+  return records
+    .filter((record) => {
+      const recordedAt = new Date(record.recorded_at);
+      if (startDate && recordedAt < startDate) return false;
+      if (endDate && recordedAt > endDate) return false;
+      return true;
+    })
+    .sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime())
+    .map((record) => ({
     date: record.recorded_at,
     globalPainLevel: record.global_pain_level,
     regionCount: record.pain_points.length,
     mostAffectedRegion: getMostIntenseRegion(record.pain_points),
     painPoints: record.pain_points
-  }));
+    }));
 }
 
 function getMostIntenseRegion(points: PainMapPoint[]): string {

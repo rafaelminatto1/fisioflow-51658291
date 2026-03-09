@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Database, Download, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { db } from '@/integrations/firebase/app';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { appointmentsApi, financialApi, patientsApi } from '@/lib/api/workers-client';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export function BackupSettings() {
     const [isExporting, setIsExporting] = useState(false);
@@ -32,9 +32,26 @@ export function BackupSettings() {
             ];
 
             await Promise.all(collections.map(async (colName) => {
-                const colRef = collectionRef(db, colName);
-                const snapshot = await getDocsFromCollection(colRef);
-                backupData[colName] = snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
+                switch (colName) {
+                    case 'patients':
+                        backupData[colName] = (await patientsApi.list({ limit: 1000 })).data ?? [];
+                        break;
+                    case 'appointments':
+                        backupData[colName] = (await appointmentsApi.list({ limit: 1000 })).data ?? [];
+                        break;
+                    case 'transactions':
+                        backupData[colName] = (await financialApi.transacoes.list({ limit: 1000 })).data ?? [];
+                        break;
+                    case 'session_packages':
+                        backupData[colName] = (await financialApi.packageTemplates.list()).data ?? [];
+                        break;
+                    case 'patient_packages':
+                        backupData[colName] = (await financialApi.patientPackages.list()).data ?? [];
+                        break;
+                    default:
+                        backupData[colName] = [];
+                        break;
+                }
             }));
 
             // Create Blob

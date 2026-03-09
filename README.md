@@ -1,276 +1,63 @@
-# 🏥 FisioFlow - Sistema de Gestão para Fisioterapia
+# 🏥 FisioFlow - Gestão Inteligente para Fisioterapia
 
-Sistema completo de gestão para clínicas de fisioterapia, desenvolvido com React + TypeScript + Firebase.
+Plataforma de alta performance para clínicas de fisioterapia, utilizando a stack mais moderna de 2026: **Neon DB + Cloudflare Workers**.
 
-> **📚 Documentação Oficial**: [docs2026/](./docs2026/) - Documentação técnica completa do projeto
+## 🛠 Stack Tecnológica
 
-## 🚀 Funcionalidades Principais
+- **Frontend**: React 19, Tailwind CSS, shadcn/ui.
+- **Backend**: Cloudflare Workers (TypeScript).
+- **Banco de Dados**: Neon PostgreSQL (Serverless).
+- **Autenticação**: Neon Auth (Powered by Better Auth).
+- **Storage**: Cloudflare R2 (S3-Compatible).
+- **ORM**: Drizzle ORM.
 
-### 👥 **Gestão de Pacientes**
-- Cadastro completo de pacientes com histórico médico
-- Upload de documentos e exames
-- Controle de acesso baseado em funções (RBAC)
-- Conformidade com LGPD
+## 🚀 Configuração de Desenvolvimento
 
-### 📅 **Agendamento de Consultas**
-- Calendário avançado com visualizações (semana/dia/mês)
-- Detecção automática de conflitos
-- Consultas recorrentes
-- Notificações automáticas
+### 1. Requisitos
+- Node.js 20+
+- Cloudflare Wrangler CLI (`npm install -g wrangler`)
+- Conta no Neon.tech
 
-### 📝 **Prontuários Eletrônicos (SOAP)**
-- Sistema completo de notas SOAP
-- Assinaturas digitais
-- Trilhas de auditoria
-- Integração com planos de tratamento
-
-### 💪 **Gestão de Exercícios**
-- Biblioteca completa de exercícios com filtros avançados
-- Prescrição personalizada de exercícios
-- Acompanhamento de progresso em tempo real
-- Protocolos baseados em evidências científicas
-- Integração com registros SOAP
-
-### 📊 **Analytics e Relatórios**
-- Dashboard em tempo real
-- Métricas de adesão dos pacientes
-- Relatórios de progresso
-- Análises de tendências
-
-### 🆕 **Novidades Q1 2026**
-- ⚡ **Performance Monitoring** - Sistema completo de monitoramento
-- 📊 **System Health Dashboard** - Visibilidade em tempo real
-- ♿ **Acessibilidade WCAG 2.1 AA** - Inclusão digital
-- 🧪 **Test Coverage Melhorado** - +23 novos testes
-- 🔧 **CI/CD Automatizado** - Deploy em 10 minutos
-
-> 📚 **Veja todas as melhorias:** [FINAL_SUMMARY.md](./FINAL_SUMMARY.md)
-
-## 🛠 Tecnologias Utilizadas
-
-- **Frontend**: React 18 + TypeScript + Vite
-- **Mobile**: React Native + Expo
-- **UI Components**: shadcn/ui + Tailwind CSS
-- **Backend**: Firebase (Firestore + Auth + Realtime + Storage + Cloud Functions)
-- **Autenticação**: Firebase Auth com Firestore Security Rules
-- **Deploy**: Firebase Hosting (100% Firebase + GCP)
-
-## 📋 Requisitos do Sistema
-
-- Node.js 18+
-- npm ou yarn
-- Conta no Firebase
-
-## ⚡ Instalação e Configuração
-
-### 1. Clone o repositório
-```bash
-git clone https://github.com/seu-usuario/fisioflow.git
-cd fisioflow
-```
-
-### 2. Instale as dependências
-```bash
-npm install
-```
-
-### 3. Configure as variáveis de ambiente
-Renomeie `.env.example` para `.env` e configure:
+### 2. Variáveis de Ambiente
+Crie um arquivo `.dev.vars` (para Workers) e `.env` (para Frontend):
 
 ```env
-# Firebase
-VITE_FIREBASE_API_KEY=...
-VITE_FIREBASE_AUTH_DOMAIN=...
-VITE_FIREBASE_PROJECT_ID=...
-VITE_FIREBASE_STORAGE_BUCKET=...
-VITE_FIREBASE_MESSAGING_SENDER_ID=...
-VITE_FIREBASE_APP_ID=...
-VITE_FIREBASE_MEASUREMENT_ID=...
+# Database
+DATABASE_URL=postgresql://user:pass@ep-project.sa-east-1.aws.neon.tech/neondb?sslmode=require
 
-# Google Calendar (Opcional)
-VITE_GOOGLE_CLIENT_ID=seu_client_id
-VITE_GOOGLE_API_KEY=sua_api_key
+# Auth
+VITE_NEON_AUTH_URL=https://your-auth-endpoint.neonauth.aws.neon.tech
+NEON_AUTH_JWKS_URL=...
 
-# Notificações (Opcional)
-RESEND_API_KEY=sua_chave_resend
-WHATSAPP_ACCESS_TOKEN=token_whatsapp_cloud
-WHATSAPP_PHONE_NUMBER_ID=id_numero_telefone
-WHATSAPP_BUSINESS_ACCOUNT_ID=id_conta_business
+# Storage (R2)
+R2_BUCKET_NAME=fisioflow-media
 ```
 
-### 4. Configure o Firebase
-- Crie um projeto no [Firebase Console](https://console.firebase.google.com) e ative Auth, Firestore e Storage.
-- Configure as regras de segurança do Firestore conforme o arquivo `firestore.rules` do projeto.
-- Para desenvolvimento local, opcional: `firebase emulators:start --only auth,firestore,storage`.
-
-### 5. Execute o projeto
-Inicie o frontend e o servidor de desenvolvimento do Inngest (para automações):
+### 3. Scripts Principais
 
 ```bash
-# Terminal 1: Frontend
+# Iniciar frontend
 npm run dev
 
-# Terminal 2: Inngest (Background Jobs)
-npx inngest-cli@latest dev
+# Iniciar backend local (Wrangler)
+cd workers && npm run dev
+
+# Migrações de Banco de Dados
+npx drizzle-kit push
 ```
 
-### 6. Edge Functions
-Para funcionalidades críticas como reservas públicas e sync de calendário:
+## 📁 Estrutura do Projeto
 
-```bash
-firebase deploy --only functions
-# Ou deploy de funções específicas: firebase deploy --only functions:publicBooking,functions:googleCalendarSync
-```
+- `/src`: Código fonte do frontend React.
+- `/workers`: API Serverless rodando na borda da Cloudflare.
+- `/drizzle`: Definições de esquema e migrações do PostgreSQL.
+- `/docs2026`: Documentação técnica detalhada.
 
-## 🚀 Deploy em Produção
+## 🔐 Segurança e Privacidade
 
-### Firebase Hosting + GCP
-1. Configure o projeto no [Firebase Console](https://console.firebase.google.com)
-2. Build: `pnpm build`
-3. Deploy: `firebase deploy --only hosting` (e `--only functions` para o backend)
-4. CI/CD: use Cloud Build ou GitHub Actions com Firebase (veja [Plano Firebase + GCP](docs2026/PLANO_FIREBASE_GCP.md))
-
-Para deploy contínuo (CI/CD), use **Cloud Build** ou **GitHub Actions** com Firebase. Veja [docs2026/PLANO_FIREBASE_GCP.md](docs2026/PLANO_FIREBASE_GCP.md) e [docs2026/11-deploy-producao.md](docs2026/11-deploy-producao.md).
-
-## 🔐 Segurança e Conformidade
-
-- ✅ Autenticação segura com Firebase Auth
-- ✅ Firestore Security Rules ativadas
-- ✅ Criptografia de dados sensíveis
-- ✅ Conformidade com LGPD
-- ✅ Headers de segurança configurados
-- ✅ Assinaturas digitais para documentos
-
-## 👨‍⚕️ Perfis de Usuário
-
-### 🔴 **Administrador**
-- Acesso completo ao sistema
-- Gestão de usuários e permissões
-- Relatórios financeiros
-
-### 🟡 **Fisioterapeuta**
-- Gestão de pacientes
-- Prescrição de exercícios
-- Criação de registros SOAP
-
-### 🟢 **Estagiário**
-- Acompanhamento de pacientes
-- Visualização de protocolos
-
-### 🔵 **Paciente**
-- Acesso aos próprios dados
-- Visualização de exercícios prescritos
-- Histórico de consultas
-
-## 🧪 Testes e Qualidade
-
-### Checklist Pre-Deploy
-
-**✅ Os testes são executados AUTOMATICAMENTE:**
-
-1. **Localmente**: Git pre-commit hook roda antes de cada commit
-2. **CI/CD**: GitHub Actions roda antes de cada deploy
-
-**Instalar hooks locais (primeira vez):**
-
-```bash
-npm run hooks:install
-```
-
-**Executar manualmente se necessário:**
-
-```bash
-npm run test:pre-deploy     # Todos os testes
-npm run test:race 100       # Apenas race conditions
-npm run test:db-constraints # Apenas análise de código
-```
-
-### Testes Disponíveis
-
-| Script NPM | Descrição | Uso |
-|------------|-----------|-----|
-| `npm run test:pre-deploy` | **Executa todos os testes pre-deploy** | `npm run test:pre-deploy` |
-| `npm run test:race` | Detecta race conditions em inserts | `npm run test:race 100` |
-| `npm run test:db-constraints` | Analisa constraints e patterns perigosos | `npm run test:db-constraints` |
-| `npm run test:e2e` | Testes end-to-end | `npm run test:e2e` |
-| `npm run test:coverage` | Cobertura de testes | `npm run test:coverage` |
-
-> 📚 **Documentação completa**: Veja [DATABASE_PATTERNS.md](./DATABASE_PATTERNS.md) para aprender sobre padrões seguros de banco de dados.
-
-### Build e Deploy
-
-```bash
-# Lint
-npm run lint
-
-# Build de produção
-npm run build
-
-# Preview da build
-npm run preview
-```
-
-## 📈 Roadmap
-
-Veja o [roadmap completo](./docs2026/ROADMAP_2026.md) com:
-- Funcionalidades implementadas ✅
-- Funcionalidades em desenvolvimento 🔄
-- Melhorias necessárias 📝
-- Novas funcionalidades sugeridas 💡
-
-### ✅ Recentemente Implementado (Q1 2026)
-- ⚡ Performance optimization (30% mais rápido)
-- 📊 System health monitoring
-- ♿ Acessibilidade WCAG 2.1 AA
-- 🧪 Test coverage melhorado (+23 testes)
-- 🔧 CI/CD automatizado (deploy em 10min)
-
-### 🔄 Próximas Funcionalidades (Q2 2026)
-- [ ] TypeScript Strict Mode completo
-- [ ] Storybook para documentação de componentes
-- [ ] App Mobile (iOS/Android) nas lojas
-- [ ] IA Clinical Assistant (predição de adesão)
-- [ ] Performance optimization avançada
-
-### 💡 Melhorias Planejadas (Q3-Q4 2026)
-- [ ] Telemedicina completa
-- [ ] Integração com wearables
-- [ ] Multi-idioma (i18n)
-- [ ] Dark mode completo
-- [ ] Certificação ISO 27001
-- [ ] Expansão internacional
-
-## 🤝 Contribuição
-
-Leia o [CONTRIBUTING.md](./CONTRIBUTING.md) para detalhes sobre como contribuir.
-
-### Quick Start
-1. Fork o projeto
-2. Crie uma branch (`git checkout -b feature/nova-funcionalidade`)
-3. Commit suas mudanças (`git commit -m 'feat: add nova funcionalidade'`)
-4. Push para a branch (`git push origin feature/nova-funcionalidade`)
-5. Abra um Pull Request
-
-## 🔐 Segurança
-
-⚠️ **IMPORTANTE**: Leia [SECURITY.md](./SECURITY.md) para políticas de segurança.
-
-- ✅ Autenticação segura com Firebase Auth
-- ✅ Firestore Security Rules ativadas
-- ✅ Criptografia de dados sensíveis
-- ✅ Conformidade com LGPD
-- ✅ Headers de segurança configurados
-- ✅ Assinaturas digitais para documentos
-- ✅ Auditoria completa de operações
-
-## 📄 Licença
-
-Este projeto está sob licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
-
-## 👏 Créditos
-
-Desenvolvido com ❤️ para modernizar a fisioterapia brasileira.
+- **No SEO**: Sistema privado, não indexado para proteção de dados clínicos.
+- **Encryption**: Dados criptografados em repouso no Neon DB.
+- **R2 Privacy**: Vídeos de exercícios protegidos por URLs assinadas.
 
 ---
-
-**FisioFlow** - Transformando o cuidado em saúde através da tecnologia.
+Desenvolvido para transformar a fisioterapia brasileira com tecnologia de ponta.

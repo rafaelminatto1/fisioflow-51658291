@@ -1,5 +1,4 @@
-import { functions } from '@/integrations/firebase/app';
-import { httpsCallable } from 'firebase/functions';
+import { knowledgeApi } from '@/lib/api/workers-client';
 
 export const aiService = {
   /**
@@ -7,13 +6,7 @@ export const aiService = {
    */
   async askArtifact(artifactId: string, query: string): Promise<{ answer: string; contextUsed?: string }> {
     try {
-      const queryFn = httpsCallable<{ artifactId: string; query: string }, { answer: string; contextUsed?: string }>(
-        functions, 
-        'queryArtifact'
-      );
-      
-      const result = await queryFn({ artifactId, query });
-      return result.data;
+      return (await knowledgeApi.askArticle(artifactId, query)).data;
     } catch (error) {
       console.error("Erro ao consultar IA:", error);
       throw new Error("Falha ao processar sua pergunta. Tente novamente.");
@@ -26,13 +19,7 @@ export const aiService = {
    */
   async processArtifact(artifactId: string, textContent?: string): Promise<{ success: boolean }> {
     try {
-      const processFn = httpsCallable<{ artifactId: string; textContent?: string }, { success: boolean }>(
-        functions, 
-        'processArtifact'
-      );
-      
-      const result = await processFn({ artifactId, textContent });
-      return result.data;
+      return (await knowledgeApi.processArticle(artifactId, textContent)).data;
     } catch (error) {
       console.error("Erro ao processar artefato:", error);
       throw new Error("Falha ao indexar documento.");

@@ -87,6 +87,9 @@ import { treatmentCyclesRoutes } from './routes/treatmentCycles';
 import { evolutionVersionsRoutes } from './routes/evolutionVersions';
 import { exercisePlansRoutes } from './routes/exercisePlans';
 import { activityLabRoutes } from './routes/activityLab';
+import { marketingRoutes } from './routes/marketing';
+import { aiRoutes } from './routes/ai';
+import { dicomRoutes } from './routes/dicom';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -198,6 +201,9 @@ app.route('/api/treatment-cycles', treatmentCyclesRoutes);
 app.route('/api/evolution-versions', evolutionVersionsRoutes);
 app.route('/api/exercise-plans', exercisePlansRoutes);
 app.route('/api/activity-lab', activityLabRoutes);
+app.route('/api/marketing', marketingRoutes);
+app.route('/api/ai', aiRoutes);
+app.route('/api/dicom', dicomRoutes);
 
 // 404 handler
 app.notFound((c) => c.json({ error: 'Rota não encontrada' }, 404));

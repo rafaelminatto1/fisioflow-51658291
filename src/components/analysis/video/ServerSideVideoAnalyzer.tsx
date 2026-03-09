@@ -1,11 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload, Video, Loader2, PlayCircle, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import { getFirebaseApp } from '@/integrations/firebase/app';
 import { uploadToR2 } from '@/lib/storage/r2-storage';
 import { toast } from 'sonner';
 import { MotionCard } from '@fisioflow/ui';
+import { aiApi } from '@/lib/api/workers-client';
 
 interface AnalysisResult {
   reps: number;
@@ -58,16 +57,12 @@ export const ServerSideVideoAnalyzer: React.FC<ServerSideVideoAnalyzerProps> = (
       setIsUploading(false);
       setIsAnalyzing(true);
 
-      // Call Cloud Function
-      const functions = getFunctions(getFirebaseApp(), 'southamerica-east1');
-      const analyzeFn = httpsCallable(functions, 'analyzeMovementVideo');
-      
-      const response = await analyzeFn({
+      const response = await aiApi.movementVideo({
         videoUrl: downloadURL,
-        exerciseName: exerciseName
+        exerciseName,
       });
 
-      const analysisData = (response.data as any).analysis as AnalysisResult;
+      const analysisData = response.data.analysis as AnalysisResult;
       setResult(analysisData);
       
       if (onAnalysisComplete) {

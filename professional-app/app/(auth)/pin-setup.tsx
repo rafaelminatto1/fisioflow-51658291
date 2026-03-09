@@ -28,7 +28,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { biometricAuthService } from '@/lib/services/biometricAuthService';
-import { auth } from '@/lib/firebase';
+import { authApi } from '@/lib/auth-api';
 
 type PINSetupMode = 'create' | 'change';
 type SetupStep = 'old-pin' | 'new-pin' | 'confirm-pin' | 'complete';
@@ -177,7 +177,13 @@ export default function PINSetupScreen() {
    * Verify old PIN (for change mode)
    */
   const verifyOldPIN = async () => {
-    const user = auth.currentUser;
+    let user;
+    try {
+      user = await authApi.getMe();
+    } catch {
+      user = null;
+    }
+
     if (!user) {
       Alert.alert('Erro', 'Usuário não autenticado');
       return;
@@ -187,7 +193,7 @@ export default function PINSetupScreen() {
     setError(null);
 
     try {
-      const isValid = await biometricAuthService.verifyPIN(user.uid, oldPin);
+      const isValid = await biometricAuthService.verifyPin(user.id, oldPin);
 
       if (!isValid) {
         setError('PIN incorreto. Tente novamente.');
@@ -235,7 +241,13 @@ export default function PINSetupScreen() {
    * Setup new PIN
    */
   const setupNewPIN = async () => {
-    const user = auth.currentUser;
+    let user;
+    try {
+      user = await authApi.getMe();
+    } catch {
+      user = null;
+    }
+
     if (!user) {
       Alert.alert('Erro', 'Usuário não autenticado');
       return;
@@ -252,7 +264,7 @@ export default function PINSetupScreen() {
     setError(null);
 
     try {
-      await biometricAuthService.setupPIN(user.uid, newPin);
+      await biometricAuthService.enableBiometrics(user.id, newPin);
       setCurrentStep('complete');
     } catch (error) {
       console.error('Error setting up PIN:', error);

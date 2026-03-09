@@ -4,6 +4,13 @@ compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 
+# ===== ROTAS (SUBDOMINIOS CUSTOMIZADOS) =====
+routes = [
+  { pattern = "api-pro.moocafisio.com.br", custom_domain = true },
+  { pattern = "api-paciente.moocafisio.com.br", custom_domain = true }
+]
+
+
 # ===== HYPERDRIVE (Neon PostgreSQL) =====
 # Crie com: wrangler hyperdrive create fisioflow-neon \
 #   --connection-string="postgresql://neondb_owner:<PASSWORD>@ep-wandering-bonus-acj4zwvo-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require"

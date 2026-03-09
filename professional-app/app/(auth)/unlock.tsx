@@ -45,7 +45,8 @@ export default function UnlockScreen() {
         const currentUserId = 'current-user-id'; // TODO: Get from auth context
         setUserId(currentUserId);
 
-        const isEnabled = await biometricAuthService.isEnabled(currentUserId);
+        const config = await biometricAuthService.getConfig(currentUserId);
+        const isEnabled = config.isEnabled;
         setBiometricAvailable(isEnabled);
 
         // Auto-trigger biometric if available

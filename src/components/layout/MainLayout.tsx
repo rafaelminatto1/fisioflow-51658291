@@ -33,11 +33,10 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import fisioflowLogo from '@/assets/logo.avif';
-import { signOut } from 'firebase/auth';
-import { getFirebaseAuth } from '@/integrations/firebase/app';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -63,11 +62,12 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   hideDefaultHeader = false,
 }) => {
   const { profile, loading, getDisplayName, getInitials } = useUserProfile();
+  const { signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
-      await signOut(getFirebaseAuth());
+      await signOut();
       toast({
         title: 'Sessão encerrada',
         description: 'Você foi desconectado com sucesso.',

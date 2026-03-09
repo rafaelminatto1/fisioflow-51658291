@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { uploadFile } from '@/lib/firebase/storage';
+import { uploadFile } from '@/lib/storage/upload';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -159,9 +159,6 @@ export const AttachmentsBlock: React.FC<AttachmentsBlockProps> = ({
     try {
       const result = await uploadFile(selectedFile, {
         folder,
-        contentType: selectedFile.type,
-        resumable: true,
-        includeUserIdPath: false
       });
 
       const newAttachment: Attachment = {

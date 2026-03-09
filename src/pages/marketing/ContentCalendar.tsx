@@ -31,18 +31,8 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  addDoc,
-  collection,
-  getDocs,
-  query,
-  updateDoc,
-  deleteDoc,
-  doc,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, parseISO } from 'date-fns';
+import { marketingApi } from '@/lib/api/workers-client';
+import { format, addDays, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
 type ContentType = 'post' | 'story' | 'reel' | 'carousel' | 'live';
@@ -56,8 +46,9 @@ interface ContentItem {
   status: ContentStatus;
   date: string;
   hashtags?: string;
-  imageUrl?: string;
-  createdAt: string;
+  image_url?: string;
+  created_at: string;
+  updated_at?: string;
 }
 
 const CONTENT_TYPES: { value: ContentType; label: string; icon: React.ComponentType<{ className?: string }>; color: string }[] = [
@@ -113,12 +104,7 @@ export default function ContentCalendarPage() {
 
   const loadContentItems = async () => {
     try {
-      const q = query(collection(db, 'content_calendar'));
-      const snapshot = await getDocs(q);
-      const items = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...normalizeFirestoreData(doc.data()),
-      } as ContentItem));
+      const items = (await marketingApi.contentCalendar.list()).data ?? [];
       setContentItems(items);
     } catch (error) {
       console.error('Error loading content items:', error);
@@ -143,10 +129,7 @@ export default function ContentCalendarPage() {
     }));
 
     for (const idea of newIdeas) {
-      await addDoc(collection(db, 'content_calendar'), {
-        ...idea,
-        createdAt: serverTimestamp(),
-      });
+      await marketingApi.contentCalendar.create(idea);
     }
 
     await loadContentItems();
@@ -158,16 +141,10 @@ export default function ContentCalendarPage() {
     setSaving(true);
     try {
       if (editingItem) {
-        await updateDoc(doc(db, 'content_calendar', editingItem.id), {
-          ...formData,
-          updatedAt: serverTimestamp(),
-        });
+        await marketingApi.contentCalendar.update(editingItem.id, formData);
         toast.success('Conteúdo atualizado!');
       } else {
-        await addDoc(collection(db, 'content_calendar'), {
-          ...formData,
-          createdAt: serverTimestamp(),
-        });
+        await marketingApi.contentCalendar.create(formData);
         toast.success('Conteúdo adicionado ao calendário!');
       }
 
@@ -193,7 +170,7 @@ export default function ContentCalendarPage() {
     if (!confirm('Tem certeza que deseja excluir este conteúdo?')) return;
 
     try {
-      await deleteDoc(doc(db, 'content_calendar', id));
+      await marketingApi.contentCalendar.delete(id);
       toast.success('Conteúdo excluído!');
       await loadContentItems();
     } catch (_error) {

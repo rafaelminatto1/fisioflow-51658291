@@ -6,17 +6,15 @@
  */
 
 
-// Helper function to call Firebase Functions
+// Helper function to call backend HTTP endpoints
 
 import { PatientCache, AppointmentCache, getCache, setCache } from './KVCacheService';
-import { httpsCallable } from 'firebase/functions';
-import { getFirebaseFunctions } from '@/integrations/firebase/functions';
-import type { DocumentData } from 'firebase/firestore';
+import { callFunctionHttp } from '@/lib/http/function-http';
+
+type DocumentData = Record<string, unknown>;
 
 async function callFunction<T>(functionName: string, data: unknown): Promise<T> {
-  const fn = httpsCallable(getFirebaseFunctions(), functionName);
-  const result = await fn(data);
-  return result.data as T;
+  return callFunctionHttp<typeof data, T>(functionName, data);
 }
 
 // ========================================

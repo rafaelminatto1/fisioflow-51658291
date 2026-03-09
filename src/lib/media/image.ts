@@ -1,5 +1,5 @@
-import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { resolvePublicStorageUrl } from '@/lib/storage/public-url';
 
 type TransformOptions = {
     width?: number;
@@ -21,13 +21,11 @@ export const IMAGE_PRESETS = {
 export type ImagePreset = keyof typeof IMAGE_PRESETS;
 
 /**
- * Generates a URL for a Firebase Storage image.
- * Note: Firebase Storage does not support on-the-fly transformations like Supabase Pro.
- * For true optimization, consider using the "Resize Images" Firebase Extension.
+ * Gera uma URL pública para imagens servidas via R2/proxy.
  *
  * @param bucket - The storage bucket (e.g., 'avatars', 'exercises')
  * @param path - The file path within the bucket
- * @param _options - Transformation options (currently ignored in basic migration)
+ * @param _options - Transformation options (mantidos por compatibilidade)
  */
 export const getOptimizedImageUrl = async (
     bucket: string,
@@ -40,11 +38,7 @@ export const getOptimizedImageUrl = async (
     if (path.startsWith('http')) return path;
 
     try {
-        const storage = getStorage();
-        // Firebase paths often include the bucket name in our new structure or are separate.
-        // We'll assume the path is relative to the bucket or fully qualified within the storage root.
-        const storageRef = ref(storage, path.startsWith(bucket) ? path : `${bucket}/${path}`);
-        return await getDownloadURL(storageRef);
+        return resolvePublicStorageUrl(path, bucket);
     } catch (error) {
         logger.error('Error getting image URL', error, 'image');
         return '';

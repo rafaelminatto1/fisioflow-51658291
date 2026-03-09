@@ -1,16 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { AgendaAutomationService } from '../AgendaAutomationService';
 
-// Mocking Firebase
-vi.mock('@/integrations/firebase/app', () => ({
-  db: {},
-  collection: vi.fn(),
-  getDocs: vi.fn(),
-  query: vi.fn(),
-  where: vi.fn(),
-  orderBy: vi.fn()
-}));
-
 describe('AgendaAutomationService', () => {
   it('should calculate duration correctly between two times', () => {
     // Acessando via reflexão pois o método é privado

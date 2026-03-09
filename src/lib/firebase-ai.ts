@@ -8,11 +8,12 @@
  * Clinical analysis must remain server-side via Cloud Functions.
  */
 
-import { getVertexAI, getGenerativeModel } from "firebase/vertexai";
-import { app as firebaseApp } from "@/integrations/firebase/client";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Initialize Vertex AI with Firebase
-const vertexAI = getVertexAI(firebaseApp);
+const apiKey = import.meta.env.VITE_GOOGLE_GENERATIVE_AI_API_KEY
+    || import.meta.env.GOOGLE_GENERATIVE_AI_API_KEY
+    || "";
+const genAI = new GoogleGenerativeAI(apiKey);
 
 // ============================================================================
 // MODEL INSTANCES
@@ -22,7 +23,7 @@ const vertexAI = getVertexAI(firebaseApp);
  * Fast model for quick suggestions and UI helpers
  * Use for: autocomplete, text formatting, general suggestions
  */
-export const flashModel = getGenerativeModel(vertexAI, {
+export const flashModel = genAI.getGenerativeModel({
     model: "gemini-2.5-flash",
 });
 
@@ -30,7 +31,7 @@ export const flashModel = getGenerativeModel(vertexAI, {
  * Advanced model for complex reasoning (use sparingly from client)
  * Use for: complex analysis that doesn't involve PHI
  */
-export const proModel = getGenerativeModel(vertexAI, {
+export const proModel = genAI.getGenerativeModel({
     model: "gemini-2.5-pro",
 });
 

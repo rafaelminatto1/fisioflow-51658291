@@ -4,8 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { FolderOpen, Image as ImageIcon, ArrowLeft, RefreshCw } from 'lucide-react';
 import { dicomWebClient, DicomStudy } from '@/services/dicom/dicomWebClient';
-import { getFirebaseFunctions } from '@/integrations/firebase/app';
-import { httpsCallable } from 'firebase/functions';
 import DicomViewer from './DicomViewer';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
@@ -54,21 +52,9 @@ const DicomBrowser: React.FC<DicomBrowserProps> = (_props) => {
             // Find series for this study
             // QIDO-RS: /studies/{studyUID}/series
             const studyUid = getTagValue(study, '0020000D');
-
-            const functions = getFirebaseFunctions();
-            const dicomProxyFunction = httpsCallable(functions, 'dicom-proxy');
-
-            const path = `studies/${studyUid}/series`;
-            const result = await dicomProxyFunction({
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/dicom+json',
-                    'x-dicom-path': path
-                }
-            });
-
-            if (result.data) {
-                setSeries(result.data as Record<string, unknown>[]);
+            const data = await dicomWebClient.searchSeries(studyUid);
+            if (data) {
+                setSeries(data);
                 setView('series');
             }
 

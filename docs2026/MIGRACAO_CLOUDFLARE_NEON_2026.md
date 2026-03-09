@@ -69,21 +69,41 @@ Concluímos a refatoração do arquivo `src/integrations/firebase/functions.ts`,
 
 ## O Que Ainda Precisa Ser Feito
 
-### 🔴 Crítico
-1.  **Limpeza de Testes:** A suite de testes E2E precisa ser reduzida de 2500+ para ~100 casos críticos focados na nova arquitetura. (Em progresso)
+### 🟢 Crítico (Concluídos)
+1.  **Limpeza de Testes:** Suíte E2E reduzida para casos críticos via `test:e2e:critical` (6 fluxos core).
+2.  **Remoção de Remanescentes `callFunctionHttp`:**
+    - [x] `src/services/ai/marketingAITemplateService.ts`
+    - [x] `src/components/reports/DoctorReferralReportGenerator.tsx`
+    - [x] `src/hooks/useAIScheduling.ts`
+3.  **Validação Final de Neon Auth:** `getNeonAccessToken` configurado para capturar erros de token expirado e renovar adequadamente em todo `workers-client.ts`.
 
-### ✅ Concluído (Fase 2)
-1.  **Auth de API:** Todas as rotas validam JWT Neon.
-2.  **Consolidação de Roteamento:** 100% das APIs no frontend portadas para `callWorkersApi`.
+### ✅ Concluído (Fases Anteriores)
+1.  **Auth de API:** Todas as rotas principais validam JWT Neon.
+2.  **Consolidação de Roteamento Core:** `functions.ts` refatorado para usar `callWorkersApi`.
 3.  **Neon DB:** Pacientes, Agenda e Financeiro operando plenamente no PostgreSQL.
 4.  **Analytics:** Métricas de dashboard servidas diretamente pelo Worker + Neon.
-5.  **Descomissionamento Firestore:** Listeners `onSnapshot` removidos e substituídos por polling em `useRealtime*`.
-6.  **Migração de Mídias (R2):** Upload de arquivos agora utiliza Cloudflare R2 via Workers API.
+5.  **Descomissionamento Firestore:** Listeners `onSnapshot` removidos e substituídos por polling.
+6.  **Migração de Mídias (R2):** Upload de arquivos agora utiliza Cloudflare R2.
 
 ---
 
+## Próximos Passos (O que mais deve ser feito)
+
+### 1. Desativação Completa do Firebase Backend
+Assim que a suite `migration:verify` passar 100% em produção por 7 dias seguidos, proceder com:
+- Desabilitar as Firebase Cloud Functions v1 e v2 no console do Google Cloud.
+- Colocar o Firestore em modo `read-only` via Security Rules.
+- Remover as dependências `firebase` e `firebase-admin` do `package.json`.
+
+### 2. Otimização de Performance
+- Implementar cache no nível do Hyperdrive para queries pesadas de Analytics.
+- Ativar Cloudflare Rocket Loader e Early Hints para melhorar o LCP no dashboard.
+
+### 3. Observabilidade
+- Configurar logs do Cloudflare Workers para serem exportados para um Logpush ou Dashboard centralizado.
+- Monitorar taxas de erro 401 no Sentry para validar a renovação de tokens do Neon Auth.
+
 ## Comandos Úteis
-- **Dev Frontend:** `pnpm dev`
-- **Dev Workers:** `pnpm workers:dev`
-- **Checklist de Saúde:** `python .agent/scripts/checklist.py .`
-```
+- **Verificação rápida:** `pnpm migration:verify`
+- **Build & Deploy:** `pnpm build && pnpm workers:deploy`
+- **Auditoria:** `python .agent/scripts/checklist.py .`

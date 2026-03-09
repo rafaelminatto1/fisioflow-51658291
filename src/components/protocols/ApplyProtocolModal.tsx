@@ -11,8 +11,8 @@ import { Button } from '@/components/ui/button';
 import { PatientCombobox } from '@/components/ui/patient-combobox';
 import { useActivePatients } from '@/hooks/usePatients';
 import { ExerciseProtocol } from '@/hooks/useExerciseProtocols';
+import { goalsApi, patientsApi } from '@/lib/api/workers-client';
 import { toast } from 'sonner';
-import { db, collection, addDoc, serverTimestamp } from '@/integrations/firebase/app';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { Loader2, Check } from 'lucide-react';
 
@@ -36,16 +36,11 @@ export function ApplyProtocolModal({ protocol, open, onOpenChange }: ApplyProtoc
         setIsApplying(true);
         try {
             // Apply as a pathology/condition to the patient
-            await addDoc(collection(db, 'patient_pathologies'), {
-                patient_id: selectedPatientId,
+            await patientsApi.createPathology(selectedPatientId, {
                 pathology_name: protocol.condition_name,
-                protocol_id: protocol.id,
-                protocol_name: protocol.name,
                 status: 'em_tratamento',
-                onset_date: new Date().toISOString().split('T')[0],
-                created_at: serverTimestamp(),
-                updated_at: serverTimestamp(),
-                applied_protocol: true
+                diagnosis_date: new Date().toISOString().split('T')[0],
+                notes: `Protocolo aplicado: ${protocol.name} (${protocol.id})`,
             });
 
             // Also optionally add the first milestone as a goal
@@ -54,13 +49,11 @@ export function ApplyProtocolModal({ protocol, open, onOpenChange }: ApplyProtoc
                 const targetDate = new Date();
                 targetDate.setDate(targetDate.getDate() + (firstMilestone.week * 7));
 
-                await addDoc(collection(db, 'patient_goals'), {
+                await goalsApi.create({
                     patient_id: selectedPatientId,
                     description: `Marco Protocolo: ${firstMilestone.description}`,
                     target_date: targetDate.toISOString().split('T')[0],
                     status: 'em_andamento',
-                    created_at: serverTimestamp(),
-                    updated_at: serverTimestamp()
                 });
             }
 

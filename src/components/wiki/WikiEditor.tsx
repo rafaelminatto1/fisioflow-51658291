@@ -41,7 +41,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { uploadFile } from '@/integrations/firebase/storage';
+import { uploadFile } from '@/lib/storage/upload';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -1845,7 +1845,8 @@ export function WikiEditor({ page, draft, onCancel, onSave }: WikiEditorProps) {
       const pageSlug = buildSlug(title) || 'nova-pagina';
       const folder = mediaType === 'image' ? 'images' : 'videos';
       const path = `wiki/${organizationId}/${userId}/${pageSlug}/${folder}/${Date.now()}-${sanitizeFileName(file.name)}`;
-      const uploadedUrl = await uploadFile(path, file);
+      const uploadedFile = await uploadFile(file, { folder: path.split('/').slice(0, -1).join('/') });
+      const uploadedUrl = uploadedFile.url;
 
       updateBlock(blockId, { url: uploadedUrl });
       toast.success(`${mediaType === 'image' ? 'Imagem' : 'Vídeo'} enviado com sucesso.`);

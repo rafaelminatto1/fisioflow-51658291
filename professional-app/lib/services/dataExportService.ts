@@ -1,14 +1,20 @@
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  serverTimestamp, 
-  addDoc 
-} from 'firebase/firestore';
-import { db } from '../firebase';
-import { DataExportRequest, ExportFormat, ExportOptions } from '@/types/dataExport';
+import { authApi } from '@/lib/auth-api';
+import { config } from '@/lib/config';
+import { fisioLogger } from '../errors/logger';
+import { auditLogger } from './auditLogger';
 
-export class DataExportService {
+export type ExportFormat = 'json' | 'pdf' | 'csv';
+
+export interface ExportRequest {
+  format: ExportFormat;
+  dateRange?: {
+    start: Date;
+    end: Date;
+  };
+  types: ('appointments' | 'evolutions' | 'exercises' | 'profile')[];
+}
+
+class DataExportService {
   private static instance: DataExportService;
 
   private constructor() {}
@@ -20,69 +26,42 @@ export class DataExportService {
     return DataExportService.instance;
   }
 
-  /**
-   * Request data export
-   */
-  async requestExport(
-    userId: string,
-    format: ExportFormat,
-    options: ExportOptions
-  ): Promise<DataExportRequest> {
-    const exportRef = collection(db, 'data_exports');
-    
-    const requestData: Omit<DataExportRequest, 'id'> = {
-      userId,
-      format,
-      options,
-      status: 'pending',
-      requestedAt: new Date(),
-    };
+  async requestExport(request: ExportRequest): Promise<{ status: string; url?: string }> {
+    try {
+      const user = await authApi.getMe();
+      if (!user) throw new Error('Not authenticated');
 
-    const docRef = await addDoc(exportRef, {
-      ...requestData,
-      requestedAt: serverTimestamp(),
-    });
+      const token = await authApi.getToken();
 
-    return {
-      id: docRef.id,
-      ...requestData,
-    };
-  }
+      const res = await fetch(`${config.apiUrl}/api/export`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+           userId: user.id,
+           format: request.format,
+           types: request.types,
+           dateRange: request.dateRange ? {
+               start: request.dateRange.start.toISOString(),
+               end: request.dateRange.end.toISOString()
+           } : undefined
+        })
+      });
 
-  /**
-   * Get export status
-   */
-  async getExportStatus(exportId: string): Promise<DataExportRequest | null> {
-    const docRef = doc(db, 'data_exports', exportId);
-    const snapshot = await getDoc(docRef);
-    
-    if (!snapshot.exists()) return null;
-    
-    return {
-      id: snapshot.id,
-      ...snapshot.data() as Omit<DataExportRequest, 'id'>,
-    } as DataExportRequest;
-  }
+      if (!res.ok) {
+        throw new Error('Falha ao solicitar exportação');
+      }
 
-  /**
-   * Generate JSON export (Simulation for client side, real implementation would be in Cloud Function)
-   */
-  async generateJSONExport(userId: string, options: ExportOptions): Promise<any> {
-    // In a real implementation, this would trigger a Cloud Function
-    // For now, let's return a message or skeleton
-    console.log('JSON export requested for', userId);
-    return {
-       message: 'O processamento do seu arquivo JSON foi iniciado. Você receberá uma notificação quando estiver pronto.'
-    };
-  }
-
-  /**
-   * Generate PDF export
-   */
-  async generatePDFExport(userId: string, options: ExportOptions): Promise<string> {
-    // In a real implementation, this would trigger a Cloud Function or use jsPDF locally
-    console.log('PDF export requested for', userId);
-    return 'PDF_EXPORT_URL_PLACEHOLDER';
+      await auditLogger.logExport(user.id, 'patient', request.format);
+      
+      const data = await res.json();
+      return data;
+    } catch (error) {
+      fisioLogger.error('Export request failed', error, 'DataExportService');
+      throw error;
+    }
   }
 }
 

@@ -42,7 +42,7 @@ export const EvolutionCard = React.forwardRef<HTMLDivElement, EvolutionCardProps
           compact ? "p-3" : "p-4",
           className
         )}
-        {...props}
+        {...(props as any)}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">

@@ -15,6 +15,9 @@ export interface Env {
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;
   GOOGLE_REDIRECT_URI?: string;
+  DICOM_BASE_URL?: string;
+  DICOM_AUTH_TOKEN?: string;
+  DICOM_AUTH_HEADER?: string;
   NEON_AUTH_JWKS_URL?: string;
   NEON_AUTH_ISSUER?: string;
   NEON_AUTH_AUDIENCE?: string;

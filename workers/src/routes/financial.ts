@@ -1244,4 +1244,164 @@ app.post('/vouchers/checkout/verify', requireAuth, async (c) => {
   return c.json({ data: { success: true, userVoucherId: userVoucher.id } });
 });
 
+app.get('/nfse', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+
+  const result = await pool.query(
+    `
+      SELECT *
+      FROM nfse
+      WHERE organization_id = $1
+      ORDER BY data_emissao DESC, created_at DESC
+    `,
+    [user.organizationId],
+  );
+
+  return c.json({ data: result.rows });
+});
+
+app.post('/nfse', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const body = (await c.req.json()) as Record<string, unknown>;
+
+  if (!body.numero) return c.json({ error: 'numero é obrigatório' }, 400);
+  if (body.valor == null) return c.json({ error: 'valor é obrigatório' }, 400);
+
+  const result = await pool.query(
+    `
+      INSERT INTO nfse (
+        organization_id, numero, serie, tipo, valor, data_emissao, data_prestacao,
+        destinatario, prestador, servico, status, chave_acesso, protocolo, verificacao,
+        created_at, updated_at
+      ) VALUES (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,NOW(),NOW()
+      )
+      RETURNING *
+    `,
+    [
+      user.organizationId,
+      String(body.numero),
+      body.serie ?? '1',
+      body.tipo ?? 'saida',
+      Number(body.valor),
+      body.data_emissao ?? new Date().toISOString(),
+      body.data_prestacao,
+      JSON.stringify(body.destinatario ?? {}),
+      JSON.stringify(body.prestador ?? {}),
+      JSON.stringify(body.servico ?? {}),
+      body.status ?? 'rascunho',
+      body.chave_acesso ?? null,
+      body.protocolo ?? null,
+      body.verificacao ?? null,
+    ],
+  );
+
+  return c.json({ data: result.rows[0] }, 201);
+});
+
+app.put('/nfse/:id', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id } = c.req.param();
+  const body = (await c.req.json()) as Record<string, unknown>;
+
+  const sets: string[] = ['updated_at = NOW()'];
+  const params: unknown[] = [];
+  const assign = (column: string, value: unknown) => {
+    params.push(value);
+    sets.push(`${column} = $${params.length}`);
+  };
+
+  if (body.numero !== undefined) assign('numero', body.numero);
+  if (body.serie !== undefined) assign('serie', body.serie);
+  if (body.tipo !== undefined) assign('tipo', body.tipo);
+  if (body.valor !== undefined) assign('valor', Number(body.valor));
+  if (body.data_emissao !== undefined) assign('data_emissao', body.data_emissao);
+  if (body.data_prestacao !== undefined) assign('data_prestacao', body.data_prestacao);
+  if (body.destinatario !== undefined) assign('destinatario', JSON.stringify(body.destinatario ?? {}));
+  if (body.prestador !== undefined) assign('prestador', JSON.stringify(body.prestador ?? {}));
+  if (body.servico !== undefined) assign('servico', JSON.stringify(body.servico ?? {}));
+  if (body.status !== undefined) assign('status', body.status);
+  if (body.chave_acesso !== undefined) assign('chave_acesso', body.chave_acesso ?? null);
+  if (body.protocolo !== undefined) assign('protocolo', body.protocolo ?? null);
+  if (body.verificacao !== undefined) assign('verificacao', body.verificacao ?? null);
+
+  params.push(id, user.organizationId);
+  const result = await pool.query(
+    `
+      UPDATE nfse
+      SET ${sets.join(', ')}
+      WHERE id = $${params.length - 1} AND organization_id = $${params.length}
+      RETURNING *
+    `,
+    params,
+  );
+
+  if (!result.rows.length) return c.json({ error: 'NFSe não encontrada' }, 404);
+  return c.json({ data: result.rows[0] });
+});
+
+app.delete('/nfse/:id', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id } = c.req.param();
+
+  const result = await pool.query(
+    'DELETE FROM nfse WHERE id = $1 AND organization_id = $2 RETURNING id',
+    [id, user.organizationId],
+  );
+
+  if (!result.rows.length) return c.json({ error: 'NFSe não encontrada' }, 404);
+  return c.json({ ok: true });
+});
+
+app.get('/nfse-config', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+
+  const result = await pool.query(
+    'SELECT * FROM nfse_config WHERE organization_id = $1 LIMIT 1',
+    [user.organizationId],
+  );
+
+  return c.json({ data: result.rows[0] ?? null });
+});
+
+app.put('/nfse-config', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const body = (await c.req.json()) as Record<string, unknown>;
+
+  const result = await pool.query(
+    `
+      INSERT INTO nfse_config (
+        organization_id, ambiente, municipio_codigo, cnpj_prestador, inscricao_municipal,
+        aliquota_iss, auto_emissao, created_at, updated_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,NOW(),NOW())
+      ON CONFLICT (organization_id) DO UPDATE SET
+        ambiente = EXCLUDED.ambiente,
+        municipio_codigo = EXCLUDED.municipio_codigo,
+        cnpj_prestador = EXCLUDED.cnpj_prestador,
+        inscricao_municipal = EXCLUDED.inscricao_municipal,
+        aliquota_iss = EXCLUDED.aliquota_iss,
+        auto_emissao = EXCLUDED.auto_emissao,
+        updated_at = NOW()
+      RETURNING *
+    `,
+    [
+      user.organizationId,
+      body.ambiente ?? 'homologacao',
+      body.municipio_codigo ?? null,
+      body.cnpj_prestador ?? null,
+      body.inscricao_municipal ?? null,
+      body.aliquota_iss ?? 5,
+      body.auto_emissao ?? false,
+    ],
+  );
+
+  return c.json({ data: result.rows[0] });
+});
+
 export { app as financialRoutes };

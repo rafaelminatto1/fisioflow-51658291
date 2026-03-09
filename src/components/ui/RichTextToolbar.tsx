@@ -41,7 +41,7 @@ import {
 } from 'lucide-react';
 import { useRichTextContext } from '@/context/RichTextContext';
 import { cn } from '@/lib/utils';
-import { uploadFile, STORAGE_FOLDERS } from '@/lib/firebase/storage';
+import { uploadFile, STORAGE_FOLDERS } from '@/lib/storage/upload';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -408,15 +408,7 @@ export const RichTextToolbar: React.FC<RichTextToolbarProps> = ({ className, ima
         try {
             const result = await uploadFile(processedFile, {
                 folder: imageUploadFolder || STORAGE_FOLDERS.IMAGES,
-                contentType: processedFile.type,
-                resumable: true,
-                includeUserIdPath: !imageUploadFolder,
                 onProgress: (progress) => setUploadProgress(progress),
-                metadata: {
-                    source: 'rich-text',
-                    resized: String(true),
-                    originalName: pendingImageFile.name,
-                },
             });
             editor.chain().focus().setImage({ src: result.url }).run();
             toast.success('Imagem inserida.');

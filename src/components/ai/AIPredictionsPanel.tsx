@@ -8,8 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { getFirebaseFunctions } from '@/integrations/firebase/functions';
-import { httpsCallable } from 'firebase/functions';
+import { aiApi } from '@/lib/api/workers-client';
 import { Brain, TrendingUp, AlertTriangle, CheckCircle, Loader2 } from 'lucide-react';
 
 interface AIPredictionsPanelProps {
@@ -34,14 +33,10 @@ export function AIPredictionsPanel({ patientId }: AIPredictionsPanelProps) {
       setLoading(true);
       setPredictions(null);
 
-      // Call Firebase Cloud Function
-      const functions = getFirebaseFunctions();
-      const treatmentAssistantFunction = httpsCallable(functions, 'ai-treatment-assistant');
-      const result = await treatmentAssistantFunction({
+      const result = await aiApi.treatmentAssistant({
         patientId,
         action: 'predict_adherence'
       });
-
       const data = result.data as PredictionResponse;
 
       if (data?.error) {
