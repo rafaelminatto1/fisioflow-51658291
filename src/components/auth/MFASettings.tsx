@@ -10,7 +10,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { QRCodeSVG } from 'qrcode.react';
 import { mfaService } from '@/lib/auth/mfa';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { db, doc, updateDoc } from '@/integrations/firebase/app';
 
 interface MFASettingsProps {
   userId: string;
@@ -71,14 +70,6 @@ export function MFASettings({ userId }: MFASettingsProps) {
         setCode('');
         setQrCode('');
         setSecret('');
-
-        // Update database
-        try {
-          const profileRef = doc(db, 'profiles', userId);
-          await updateDoc(profileRef, { mfa_enabled: true });
-        } catch (updateError) {
-          logger.error('Error updating MFA status', updateError, 'MFASettings');
-        }
       } else {
         setError('Código inválido. Tente novamente.');
       }
@@ -106,14 +97,6 @@ export function MFASettings({ userId }: MFASettingsProps) {
 
       setHasMFA(false);
       setSuccess('MFA desabilitado com sucesso');
-
-      // Update database
-      try {
-        const profileRef = doc(db, 'profiles', userId);
-        await updateDoc(profileRef, { mfa_enabled: false });
-      } catch (updateError) {
-        logger.error('Error updating MFA status', updateError, 'MFASettings');
-      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Erro ao desabilitar MFA');
     } finally {

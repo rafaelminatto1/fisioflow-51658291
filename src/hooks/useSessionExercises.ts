@@ -1,72 +1,59 @@
 import { useQuery } from '@tanstack/react-query';
-import { collection, query as firestoreQuery, where, orderBy, limit, getDocs, db } from '@/integrations/firebase/app';
+import { evolutionApi, type TreatmentSessionRecord } from '@/lib/api/workers-client';
 import { SessionExercise } from '@/components/evolution/SessionExercisesPanel';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+
+type TreatmentSessionWithExercises = TreatmentSessionRecord & {
+  exercises_performed?: SessionExercise[];
+};
 
 export const useSessionExercises = (patientId: string) => {
-    // Fetch the most recent treatment session to get previous exercises
-    const lastSessionQuery = useQuery({
-        queryKey: ['last-treatment-session', patientId],
-        queryFn: async () => {
-            if (!patientId) return null;
+  const lastSessionQuery = useQuery({
+    queryKey: ['last-treatment-session', patientId],
+    queryFn: async () => {
+      if (!patientId) return null;
+      const res = await evolutionApi.treatmentSessions.list(patientId, { limit: 1 });
+      const session = (res?.data?.[0] ?? null) as TreatmentSessionWithExercises | null;
+      return session;
+    },
+    enabled: !!patientId,
+  });
 
-            const q = firestoreQuery(
-                collection(db, 'treatment_sessions'),
-                where('patient_id', '==', patientId),
-                orderBy('session_date', 'desc'),
-                limit(1)
-            );
+  const suggestExerciseChanges = (
+    exercises: SessionExercise[],
+    painLevel: number,
+    observations: string,
+  ): SessionExercise[] => {
+    return exercises.map((exercise) => {
+      let suggestedReps = exercise.repetitions;
+      let suggestionMsg = '';
 
-            const snapshot = await getDocs(q);
+      if (
+        painLevel <= 2 &&
+        !observations.toLowerCase().includes('dor') &&
+        !observations.toLowerCase().includes('difícil')
+      ) {
+        suggestedReps = Math.min(exercise.repetitions + 2, 20);
+        suggestionMsg = 'Sugerido aumentar repetições (Paciente estável)';
+      } else if (painLevel >= 7) {
+        suggestedReps = Math.max(exercise.repetitions - 2, 5);
+        suggestionMsg = 'Sugerido reduzir volume devido à dor';
+      }
 
-            if (snapshot.empty) {
-                return null;
-            }
+      if (!suggestionMsg) return exercise;
 
-            const doc = snapshot.docs[0];
-            return {
-                id: doc.id,
-                ...normalizeFirestoreData(doc.data())
-            };
-        },
-        enabled: !!patientId
+      return {
+        ...exercise,
+        repetitions: suggestedReps,
+        observations: exercise.observations
+          ? `${exercise.observations} | ${suggestionMsg}`
+          : suggestionMsg,
+      };
     });
+  };
 
-    // Suggest changes to exercises based on current session data
-    // This is a client-side logic for now, could be moved to AI later
-    const suggestExerciseChanges = (
-        exercises: SessionExercise[],
-        painLevel: number,
-        observations: string
-    ): SessionExercise[] => {
-        return exercises.map(ex => {
-            const _suggestedSets = ex.sets;
-            let suggestedReps = ex.repetitions;
-            let suggestionMsg = '';
-
-            // Simple heuristic: if pain is low, suggest increasing volume or load
-            if (painLevel <= 2 && !observations.toLowerCase().includes('dor') && !observations.toLowerCase().includes('difícil')) {
-                suggestedReps = Math.min(ex.repetitions + 2, 20);
-                suggestionMsg = 'Sugerido aumentar repetições (Paciente estável)';
-            } else if (painLevel >= 7) {
-                suggestedReps = Math.max(ex.repetitions - 2, 5);
-                suggestionMsg = 'Sugerido reduzir volume devido à dor';
-            }
-
-            if (suggestionMsg) {
-                return {
-                    ...ex,
-                    repetitions: suggestedReps,
-                    observations: ex.observations ? `${ex.observations} | ${suggestionMsg}` : suggestionMsg
-                };
-            }
-            return ex;
-        });
-    };
-
-    return {
-        lastSession: lastSessionQuery.data,
-        isLoadingLastSession: lastSessionQuery.isLoading,
-        suggestExerciseChanges
-    };
+  return {
+    lastSession: lastSessionQuery.data,
+    isLoadingLastSession: lastSessionQuery.isLoading,
+    suggestExerciseChanges,
+  };
 };

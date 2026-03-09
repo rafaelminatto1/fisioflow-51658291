@@ -1,21 +1,14 @@
 /**
- * usePackages - Migrated to Firebase
- *
+ * usePackages - Migrated to Neon/Workers
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, query as firestoreQuery, where, orderBy, db, getFirebaseAuth } from '@/integrations/firebase/app';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { fisioLogger as logger } from '@/lib/errors/logger';
-import { FinancialService } from '@/services/financialService';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
-import { useAuth } from '@/contexts/AuthContext';
-
-const auth = getFirebaseAuth();
-
-// Helper to convert doc
-const convertDoc = <T>(doc: { id: string; data: () => Record<string, unknown> }): T =>
-  ({ id: doc.id, ...normalizeFirestoreData(doc.data()) } as T);
+import {
+  financialApi,
+  type PatientPackageRow,
+  type SessionPackageTemplateRow,
+} from '@/lib/api/workers-client';
 
 export interface SessionPackage {
   id: string;
@@ -32,7 +25,7 @@ export interface SessionPackage {
 export interface PatientPackage {
   id: string;
   patient_id: string;
-  package_id: string;
+  package_id?: string;
   sessions_purchased: number;
   sessions_used: number;
   price_paid: number;
@@ -40,7 +33,6 @@ export interface PatientPackage {
   expires_at: string;
   last_used_at?: string;
   package?: SessionPackage;
-  // Campos calculados
   sessions_remaining?: number;
   is_expired?: boolean;
   status?: 'active' | 'expired' | 'depleted';
@@ -58,149 +50,95 @@ interface CreatePackageInput {
 interface PurchasePackageInput {
   patient_id: string;
   package_id: string;
-  // Optional overrides for "on the fly" customization
   custom_sessions?: number;
   custom_price?: number;
   payment_method?: string;
 }
 
-// Hook para listar templates de pacotes
+const mapTemplate = (row: SessionPackageTemplateRow): SessionPackage => ({
+  id: row.id,
+  name: row.name,
+  description: row.description ?? undefined,
+  sessions_count: Number(row.sessions_count),
+  price: Number(row.price),
+  validity_days: Number(row.validity_days),
+  is_active: Boolean(row.is_active),
+  organization_id: row.organization_id,
+  created_at: row.created_at,
+});
+
+const mapPatientPackage = (row: PatientPackageRow): PatientPackage => {
+  const remaining = Number(row.remaining_sessions ?? 0);
+  const isExpired = !!row.expires_at && new Date(row.expires_at) < new Date();
+
+  return {
+    id: row.id,
+    patient_id: row.patient_id,
+    package_id: row.package_template_id ?? undefined,
+    sessions_purchased: Number(row.total_sessions),
+    sessions_used: Number(row.used_sessions),
+    price_paid: Number(row.price ?? 0),
+    purchased_at: row.purchased_at ?? row.created_at,
+    expires_at: row.expires_at ?? row.created_at,
+    last_used_at: row.last_used_at ?? undefined,
+    package: {
+      id: row.package_template_id ?? row.id,
+      name: row.name,
+      sessions_count: Number(row.total_sessions),
+      price: Number(row.price ?? 0),
+      validity_days: row.expires_at && row.purchased_at
+        ? Math.max(
+            1,
+            Math.round(
+              (new Date(row.expires_at).getTime() - new Date(row.purchased_at).getTime()) /
+                (1000 * 60 * 60 * 24),
+            ),
+          )
+        : 365,
+      is_active: row.status === 'active',
+      organization_id: '',
+      created_at: row.created_at,
+    },
+    patient_name: row.patient_name ?? undefined,
+    sessions_remaining: remaining,
+    is_expired: isExpired,
+    status: isExpired ? 'expired' : remaining <= 0 ? 'depleted' : 'active',
+  };
+};
+
 export function useSessionPackages() {
-  const { profile } = useAuth();
-
   return useQuery({
-    queryKey: ['session-packages', profile?.organization_id],
+    queryKey: ['session-packages'],
     queryFn: async () => {
-      if (!profile?.organization_id) {
-        return [];
-      }
-
-      const q = firestoreQuery(
-        collection(db, 'session_packages'),
-        where('organization_id', '==', profile.organization_id)
-      );
-
-      const snapshot = await getDocs(q);
-
-      const mapped = snapshot.docs.map(doc => {
-        const data = normalizeFirestoreData(doc.data()) as Record<string, unknown>;
-        const sessions = Number(data.total_sessions || data.sessions_count || 0);
-        return {
-          id: doc.id,
-          name: data.package_name || data.name,
-          description: data.notes || data.description,
-          sessions_count: sessions,
-          price: Number(data.final_value || data.price),
-          validity_days: data.validity_months ? Number(data.validity_months) * 30 : (data.validity_days || 365),
-          is_active: data.status === 'active' || data.is_active === true,
-          organization_id: data.organization_id || '',
-          created_at: data.created_at || new Date().toISOString(),
-        } as SessionPackage;
-      });
-
-      // Evita exigir índice composto (where + orderBy) no Firestore.
-      return mapped.sort((a, b) => a.sessions_count - b.sessions_count);
+      const res = await financialApi.packageTemplates.list();
+      return ((res.data ?? []) as SessionPackageTemplateRow[]).map(mapTemplate);
     },
   });
 }
 
-// Hook para listar pacotes de um paciente (ou todos se admin)
 export function usePatientPackages(patientId?: string) {
   return useQuery({
     queryKey: ['patient-packages', patientId || 'all'],
     queryFn: async () => {
-      let q = firestoreQuery(
-        collection(db, 'patient_packages'),
-        orderBy('purchased_at', 'desc')
-      );
-
-      if (patientId) {
-        q = firestoreQuery(
-          collection(db, 'patient_packages'),
-          where('patient_id', '==', patientId),
-          orderBy('purchased_at', 'desc')
-        );
-      }
-
-      const snapshot = await getDocs(q);
-      const patientPackages = snapshot.docs.map(convertDoc<PatientPackage>);
-
-      // Enriched data with manual joins
-      const enrichedData = await Promise.all(patientPackages.map(async (pp) => {
-        let pkg: SessionPackage | undefined;
-        let patientName: string | undefined;
-
-        // Fetch package details
-        if (pp.package_id) {
-          try {
-            const pkgSnap = await getDoc(doc(db, 'session_packages', pp.package_id));
-            if (pkgSnap.exists()) {
-              const pData = pkgSnap.data();
-              pkg = {
-                id: pkgSnap.id,
-                name: pData.package_name || pData.name,
-                sessions_count: Number(pData.total_sessions || pData.sessions_count),
-                price: Number(pData.final_value || pData.price),
-                validity_days: pData.validity_months ? Number(pData.validity_months) * 30 : (pData.validity_days || 365),
-                is_active: pData.status === 'active',
-                organization_id: pData.organization_id,
-                created_at: pData.created_at
-              } as SessionPackage;
-            }
-          } catch (_e) {
-            // Ignore package lookup errors
-          }
-        }
-
-        // Fetch patient details
-        if (pp.patient_id) {
-          try {
-            const patSnap = await getDoc(doc(db, 'patients', pp.patient_id));
-            if (patSnap.exists()) {
-              patientName = patSnap.data().name || patSnap.data().full_name;
-            }
-          } catch (_e) {
-            // Ignore patient lookup errors
-          }
-        }
-
-        const remaining = Number(pp.sessions_purchased) - Number(pp.sessions_used);
-        const isExpired = pp.expires_at && new Date(pp.expires_at) < new Date();
-
-        return {
-          id: pp.id,
-          patient_id: pp.patient_id,
-          package_id: pp.package_id,
-          sessions_purchased: Number(pp.sessions_purchased),
-          sessions_used: Number(pp.sessions_used),
-          price_paid: Number(pp.price_paid),
-          purchased_at: pp.purchased_at,
-          expires_at: pp.expires_at,
-          last_used_at: pp.last_used_at,
-          package: pkg,
-          patient_name: patientName,
-          sessions_remaining: remaining,
-          is_expired: isExpired,
-          status: isExpired ? 'expired' : remaining <= 0 ? 'depleted' : 'active',
-        } as PatientPackage;
-      }));
-
-      return enrichedData;
+      const res = await financialApi.patientPackages.list({
+        patientId,
+        limit: 100,
+        offset: 0,
+      });
+      return ((res.data ?? []) as PatientPackageRow[]).map(mapPatientPackage);
     },
   });
 }
 
-// Hook para obter saldo total de pacotes do paciente
 export function usePatientPackageBalance(patientId: string | undefined) {
   const { data: packages, isLoading } = usePatientPackages(patientId);
 
-  const activePackages = packages?.filter(p => p.status === 'active') || [];
+  const activePackages = packages?.filter((p) => p.status === 'active') || [];
   const totalRemaining = activePackages.reduce((sum, p) => sum + (p.sessions_remaining || 0), 0);
-
-  const nearExpiration = activePackages.filter(p => {
+  const nearExpiration = activePackages.filter((p) => {
     if (!p.expires_at) return false;
     const daysUntilExpiration = Math.ceil(
-      (new Date(p.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+      (new Date(p.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
     );
     return daysUntilExpiration <= 7;
   });
@@ -214,185 +152,67 @@ export function usePatientPackageBalance(patientId: string | undefined) {
   };
 }
 
-// Hook para criar template de pacote
 export function useCreatePackage() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (input: CreatePackageInput) => {
-      const docRef = await addDoc(collection(db, 'session_packages'), {
-        package_name: input.name,
-        notes: input.description,
-        total_sessions: input.sessions_count,
-        final_value: input.price,
-        validity_months: Math.ceil(input.validity_days / 30),
-        status: 'active',
-        created_at: new Date().toISOString(),
-        organization_id: auth.currentUser ? auth.currentUser.uid : null // Should get org id properly
-      });
-      const newDoc = await getDoc(docRef);
-      return {
-        id: newDoc.id,
-        name: input.name,
-        description: input.description,
-        sessions_count: input.sessions_count,
-        price: input.price,
-        validity_days: input.validity_days,
-        is_active: true,
-        created_at: new Date().toISOString()
-      } as SessionPackage;
+      const res = await financialApi.packageTemplates.create(input);
+      return mapTemplate(res.data as SessionPackageTemplateRow);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['session-packages'] });
       toast.success('Pacote criado com sucesso!');
     },
-    onError: (error) => {
-      logger.error('Erro ao criar pacote', error, 'usePackages');
-      toast.error('Erro ao criar pacote');
+    onError: (error: Error) => {
+      toast.error('Erro ao criar pacote: ' + error.message);
     },
   });
 }
 
-// Hook para comprar pacote para paciente
 export function usePurchasePackage() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (input: PurchasePackageInput) => {
-      const { patient_id, package_id } = input;
-
-      const pkgRef = doc(db, 'session_packages', package_id);
-      const pkgSnap = await getDoc(pkgRef);
-
-      if (!pkgSnap.exists()) throw new Error('Pacote não encontrado');
-      const pkgData = pkgSnap.data();
-
-      // Simple check for availability status if field exists
-      if (pkgData.status === 'inactive' || pkgData.status === 'cancelado') {
-        throw new Error('Pacote não disponível');
-      }
-
-      const validityMonths = Number(pkgData.validity_months || 12);
-      const validityDays = validityMonths * 30;
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + validityDays);
-
-      const sessionsCount = input.custom_sessions ?? Number(pkgData.total_sessions || pkgData.sessions_count);
-      const pricePaid = input.custom_price ?? Number(pkgData.final_value || pkgData.price);
-
-      const purchaseData = {
-        patient_id,
-        package_id,
-        sessions_purchased: sessionsCount,
-        sessions_used: 0,
-        price_paid: pricePaid,
-        purchased_at: new Date().toISOString(),
-        expires_at: expiresAt.toISOString(),
-        payment_method: input.payment_method || 'pix', // Default or provided
-      };
-
-      const docRef = await addDoc(collection(db, 'patient_packages'), purchaseData);
-      const newDoc = await getDoc(docRef);
-      const createdPkg = convertDoc<PatientPackage>(newDoc);
-
-      // Criar transação financeira
-      try {
-        await FinancialService.createTransaction({
-          tipo: 'receita',
-          descricao: `Venda de Pacote: ${pkgData.package_name || pkgData.name}`,
-          valor: pricePaid,
-          status: 'concluido',
-          metadata: {
-            source: 'package_purchase',
-            patient_id,
-            patient_package_id: createdPkg.id,
-            package_template_id: package_id
-          }
-        });
-      } catch (err) {
-        logger.error('Erro ao registrar transação financeira do pacote', err, 'usePackages');
-      }
-
-      return {
-        ...createdPkg,
-        package: {
-          name: pkgData.package_name || pkgData.name
-        }
-      };
+      const res = await financialApi.patientPackages.create(input);
+      return mapPatientPackage(res.data as PatientPackageRow);
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['patient-packages', variables.patient_id] });
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      toast.success(`Pacote adquirido com sucesso!`);
+      queryClient.invalidateQueries({ queryKey: ['patient-packages', 'all'] });
+      toast.success('Pacote adquirido com sucesso!');
     },
-    onError: (error: unknown) => {
-      logger.error('Erro ao comprar pacote', error, 'usePackages');
-      toast.error(error instanceof Error ? error.message : 'Erro ao adquirir pacote');
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao adquirir pacote');
     },
   });
 }
 
-// Hook para usar sessão do pacote
 export function useUsePackageSession() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
       patientPackageId,
-      appointmentId
+      appointmentId,
     }: {
       patientPackageId: string;
       appointmentId?: string;
     }) => {
-      const docRef = doc(db, 'patient_packages', patientPackageId);
-      const snapshot = await getDoc(docRef);
-
-      if (!snapshot.exists()) throw new Error('Pacote não encontrado');
-      const patientPackage = snapshot.data();
-
-      // Verificar validade
-      if (patientPackage.expires_at && new Date(patientPackage.expires_at) < new Date()) {
-        throw new Error('Pacote expirado');
-      }
-
-      // Verificar saldo
-      const remaining = Number(patientPackage.sessions_purchased) - Number(patientPackage.sessions_used);
-      if (remaining <= 0) {
-        throw new Error('Sem sessões disponíveis neste pacote');
-      }
-
-      const newUsed = Number(patientPackage.sessions_used) + 1;
-      await updateDoc(docRef, {
-        sessions_used: newUsed,
-        last_used_at: new Date().toISOString(),
-      });
-
-      // Registrar uso
-      await addDoc(collection(db, 'package_usage'), {
-        patient_package_id: patientPackageId,
-        patient_id: patientPackage.patient_id,
-        appointment_id: appointmentId,
-        used_at: new Date().toISOString(),
-      });
-
-      return {
-        ...patientPackage,
-        sessions_used: newUsed,
-        sessions_remaining: Number(patientPackage.sessions_purchased) - newUsed,
-      };
+      const res = await financialApi.patientPackages.consume(patientPackageId, { appointmentId });
+      return mapPatientPackage(res.data as PatientPackageRow);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patient-packages'] });
       toast.success(`Sessão utilizada. Restam ${data.sessions_remaining} sessões.`);
     },
-    onError: (error: unknown) => {
-      logger.error('Erro ao usar sessão do pacote', error, 'usePackages');
-      toast.error(error instanceof Error ? error.message : 'Erro ao usar sessão do pacote');
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erro ao usar sessão do pacote');
     },
   });
 }
 
-// Hook para atualizar template de pacote
 export function useUpdatePackage() {
   const queryClient = useQueryClient();
 
@@ -406,47 +226,39 @@ export function useUpdatePackage() {
       validity_days,
       is_active,
     }: Partial<SessionPackage> & { id: string }) => {
-      const updateData: Record<string, unknown> = {};
-      if (name !== undefined) updateData.package_name = name;
-      if (description !== undefined) updateData.notes = description;
-      if (sessions_count !== undefined) updateData.total_sessions = sessions_count;
-      if (price !== undefined) updateData.final_value = price;
-      if (validity_days !== undefined) updateData.validity_months = Math.ceil(validity_days / 30);
-      if (is_active !== undefined) updateData.status = is_active ? 'active' : 'inactive';
-
-      const docRef = doc(db, 'session_packages', id);
-      await updateDoc(docRef, updateData);
-
-      const updated = await getDoc(docRef);
-      return convertDoc(updated);
+      const res = await financialApi.packageTemplates.update(id, {
+        name,
+        description,
+        sessions_count,
+        price,
+        validity_days,
+        is_active,
+      });
+      return mapTemplate(res.data as SessionPackageTemplateRow);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['session-packages'] });
       toast.success('Pacote atualizado!');
     },
-    onError: (error) => {
-      logger.error('Erro ao atualizar pacote', error, 'usePackages');
-      toast.error('Erro ao atualizar pacote');
+    onError: (error: Error) => {
+      toast.error('Erro ao atualizar pacote: ' + error.message);
     },
   });
 }
 
-// Hook para desativar template de pacote
 export function useDeactivatePackage() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (packageId: string) => {
-      const docRef = doc(db, 'session_packages', packageId);
-      await updateDoc(docRef, { status: 'cancelado' });
+      await financialApi.packageTemplates.delete(packageId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['session-packages'] });
       toast.success('Pacote desativado');
     },
-    onError: (error) => {
-      logger.error('Erro ao desativar pacote', error, 'usePackages');
-      toast.error('Erro ao desativar pacote');
+    onError: (error: Error) => {
+      toast.error('Erro ao desativar pacote: ' + error.message);
     },
   });
 }

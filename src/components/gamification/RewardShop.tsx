@@ -4,8 +4,6 @@ import { Button } from '@/components/ui/button';
 import { ShoppingBag, Star, Zap, Gift, Clock, Loader2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useGamification } from '@/hooks/useGamification';
-import { getFirebaseFunctions } from '@/integrations/firebase/app';
-import { httpsCallable } from 'firebase/functions';
 import { toast } from 'sonner';
 
 interface RewardItem {
@@ -45,7 +43,8 @@ const rewards: RewardItem[] = [
 ];
 
 export function RewardShop() {
-  const { totalPoints, awardXp } = useGamification(useAuth().profile?.id || '');
+  const { user } = useAuth();
+  const { totalPoints, buyItem } = useGamification(user?.id || '');
   const [buyingId, setBuyingId] = useState<string | null>(null);
 
   const handlePurchase = async (item: RewardItem) => {
@@ -56,18 +55,11 @@ export function RewardShop() {
 
     setBuyingId(item.id);
     try {
-      const functions = getFirebaseFunctions();
-      const processPurchaseFn = httpsCallable(functions, 'processPurchase');
-      const result = await processPurchaseFn({ itemId: item.id, cost: item.cost });
-      
-      const data = result.data as { success: boolean, voucherCode: string };
-      
-      if (data.success) {
-        toast.success(`Compra realizada! Código: ${data.voucherCode}`, {
-          description: `Você adquiriu: ${item.title}`,
-          duration: 6000
-        });
-      }
+      await buyItem.mutateAsync({ itemId: item.id });
+      toast.success(`Compra realizada: ${item.title}`, {
+        description: 'O item foi adicionado ao seu inventário.',
+        duration: 5000,
+      });
     } catch (error) {
       console.error('Purchase error:', error);
       toast.error('Erro ao processar compra.');

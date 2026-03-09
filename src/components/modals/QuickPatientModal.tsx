@@ -13,8 +13,7 @@ import { AlertTriangle, UserPlus, Loader2, Phone, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
-import { useAuth } from '@/contexts/AuthContext';
-import { patientsApi } from '@/integrations/firebase/functions';
+import { patientsApi } from '@/lib/api/workers-client';
 
 const quickPatientSchema = z.object({
   name: z.string()
@@ -133,7 +132,6 @@ const QuickPatientModalComponent: React.FC<QuickPatientModalProps> = ({
 }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { user, profile } = useAuth(); // Firebase auth user and profile
   // useTransition para melhor UX durante operações assíncronas (React 18)
   const [isPending, startTransition] = useTransition();
 
@@ -161,60 +159,42 @@ const QuickPatientModalComponent: React.FC<QuickPatientModalProps> = ({
   // ===== Mutation para criar paciente =====
   const createPatientMutation = useMutation({
     mutationFn: async (data: QuickPatientFormData) => {
-      // Verificar autenticação Firebase
-      if (!user) {
-        logger.error('Usuário Firebase não autenticado', { user }, 'QuickPatientModal');
-        throw new Error('Sessão expirada. Faça login novamente.');
-      }
-
-      // Verificar organização (do profile do Firebase)
-      const organizationId = profile?.organization_id;
-      if (!organizationId) {
-        logger.error('Organização não encontrada no profile', { profile }, 'QuickPatientModal');
-        throw new Error('Organização não encontrada. Tente fazer login novamente.');
-      }
-
-      // Log para debug
-      logger.info('Criando paciente via Firebase Functions', {
+      logger.info('Criando paciente via Workers', {
         name: data.name.trim(),
         phone: cleanPhoneNumber(data.phone),
-        organizationId,
       }, 'QuickPatientModal');
 
-      // Criar paciente via Firebase Cloud Functions (PostgreSQL)
       try {
-        const newPatient = await patientsApi.create({
+        const response = await patientsApi.create({
           name: data.name.trim(),
+          full_name: data.name.trim(),
           phone: cleanPhoneNumber(data.phone) || undefined,
           status: 'active',
           incomplete_registration: true,
-          organization_id: organizationId,
         });
+        const newPatient = response.data;
 
         if (!newPatient) {
           throw new Error('Paciente não foi criado. Tente novamente.');
         }
 
-        logger.info('Paciente criado com sucesso via Firebase Functions', {
+        logger.info('Paciente criado com sucesso via Workers', {
           patientId: newPatient.id,
           patientName: newPatient.name || newPatient.full_name
         }, 'QuickPatientModal');
 
         return newPatient;
       } catch (err: unknown) {
-        // Capturar e logar erros do Firebase Functions
         const error = err instanceof Error ? err : new Error(String(err));
-        logger.error('Erro ao criar paciente via Firebase Functions', {
+        logger.error('Erro ao criar paciente via Workers', {
           error,
           errorMessage: error.message,
           errorCode: (error as { code?: string }).code,
           errorDetails: (error as { details?: unknown }).details,
         }, 'QuickPatientModal');
 
-        // Re-throw com contexto adicional para o getErrorMessage
-        const orig = (err as { originalError?: { code?: string } })?.originalError;
         const enhancedError = {
-          code: orig?.code ?? (err as { code?: string })?.code,
+          code: (err as { code?: string })?.code,
           message: (err as Error)?.message,
           functionName: 'createPatient',
         };

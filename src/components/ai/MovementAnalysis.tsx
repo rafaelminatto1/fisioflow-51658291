@@ -40,8 +40,7 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { storage } from '@/lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { uploadToR2 } from '@/lib/storage/r2-storage';
 import { analyzeMovement } from '@/services/ai/firebaseAIService';
 
 // ============================================================================
@@ -275,12 +274,8 @@ export function MovementAnalysis({
     });
 
     try {
-      // 1. Upload video to Firebase Storage
-      const storagePath = `movement_analysis/${patientId}/${Date.now()}_${videoFile.name}`;
-      const storageRef = ref(storage, storagePath);
-      
-      await uploadBytes(storageRef, videoFile);
-      const patientVideoUrl = await getDownloadURL(storageRef);
+      // 1. Upload video to R2
+      const { url: patientVideoUrl } = await uploadToR2(videoFile, `movement_analysis/${patientId}`);
 
       setAnalysisProgress({
         stage: 'analyzing',

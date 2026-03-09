@@ -10,8 +10,7 @@
  */
 
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { httpsCallable } from 'firebase/functions';
-import { getFirebaseFunctions } from '@/integrations/firebase/functions';
+import { whatsappApi } from '@/lib/api/workers-client';
 
 export class AppointmentNotificationService {
   /**
@@ -33,15 +32,18 @@ export class AppointmentNotificationService {
 
       logger.info('Agendando notificação para consulta', { appointmentId, date, time }, 'AppointmentNotificationService');
 
-      // Call Firebase Cloud Function to schedule reminder notification (if implemented)
-      const functions = getFirebaseFunctions();
-      const notifyScheduleFn = httpsCallable(functions, 'notifyAppointmentScheduled');
-      await notifyScheduleFn({
-        appointmentId,
-        patientId,
-        date: date.toISOString(),
-        time,
-        patientName,
+      await whatsappApi.createMessage({
+        appointment_id: appointmentId,
+        patient_id: patientId,
+        message_type: 'appointment_scheduled',
+        message_content: `Consulta agendada para ${date.toLocaleDateString('pt-BR')} às ${time} para ${patientName}.`,
+        status: 'pendente',
+        metadata: {
+          appointment_id: appointmentId,
+          patient_name: patientName,
+          notification_kind: 'schedule',
+          scheduled_for: date.toISOString(),
+        },
       });
 
       logger.info('Notificação agendada com sucesso (placeholder)', { appointmentId }, 'AppointmentNotificationService');
@@ -72,15 +74,18 @@ export class AppointmentNotificationService {
 
       logger.info('Notificando reagendamento', { appointmentId, newDate, newTime }, 'AppointmentNotificationService');
 
-      // Call Firebase Cloud Function to send reschedule notification
-      const functions = getFirebaseFunctions();
-      const notifyRescheduleFn = httpsCallable(functions, 'notifyAppointmentReschedule');
-      await notifyRescheduleFn({
-        appointmentId,
-        patientId,
-        newDate: newDate.toISOString(),
-        newTime,
-        patientName,
+      await whatsappApi.createMessage({
+        appointment_id: appointmentId,
+        patient_id: patientId,
+        message_type: 'appointment_reschedule',
+        message_content: `Consulta reagendada para ${newDate.toLocaleDateString('pt-BR')} às ${newTime} para ${patientName}.`,
+        status: 'pendente',
+        metadata: {
+          appointment_id: appointmentId,
+          patient_name: patientName,
+          notification_kind: 'reschedule',
+          scheduled_for: newDate.toISOString(),
+        },
       });
 
       logger.info('Notificação de reagendamento enviada', { appointmentId }, 'AppointmentNotificationService');
@@ -110,15 +115,18 @@ export class AppointmentNotificationService {
 
       logger.info('Notificando cancelamento', { appointmentId }, 'AppointmentNotificationService');
 
-      // Call Firebase Cloud Function to send cancellation notification
-      const functions = getFirebaseFunctions();
-      const notifyCancellationFn = httpsCallable(functions, 'notifyAppointmentCancellation');
-      await notifyCancellationFn({
-        appointmentId,
-        patientId,
-        date: date.toISOString(),
-        time,
-        patientName,
+      await whatsappApi.createMessage({
+        appointment_id: appointmentId,
+        patient_id: patientId,
+        message_type: 'appointment_cancellation',
+        message_content: `Consulta de ${patientName} em ${date.toLocaleDateString('pt-BR')} às ${time} foi cancelada.`,
+        status: 'pendente',
+        metadata: {
+          appointment_id: appointmentId,
+          patient_name: patientName,
+          notification_kind: 'cancellation',
+          scheduled_for: date.toISOString(),
+        },
       });
 
       logger.info('Notificação de cancelamento enviada', { appointmentId }, 'AppointmentNotificationService');

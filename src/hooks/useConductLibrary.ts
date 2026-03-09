@@ -1,25 +1,12 @@
 /**
- * useConductLibrary - Migrated to Firebase
- *
+ * useConductLibrary - Migrado para Neon/Workers
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, deleteDoc, doc, query as firestoreQuery, orderBy, db } from '@/integrations/firebase/app';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { clinicalApi, type ConductLibraryRecord } from '@/lib/api/workers-client';
 
-export interface ConductTemplate {
-  id: string;
-  title: string;
-  description?: string;
-  conduct_text: string;
-  category: string;
-  organization_id?: string;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-}
+export type ConductTemplate = ConductLibraryRecord;
 
 export interface CreateConductData {
   title: string;
@@ -29,96 +16,64 @@ export interface CreateConductData {
   organization_id?: string;
 }
 
-// Helper to convert Firestore doc to ConductTemplate
-const convertDocToConductTemplate = (doc: { id: string; data: () => Record<string, unknown> }): ConductTemplate => {
-  const data = normalizeFirestoreData(doc.data());
-  return {
-    id: doc.id,
-    ...data,
-  } as ConductTemplate;
-};
-
-export const useConductLibrary = (category?: string) => {
-  return useQuery({
+export const useConductLibrary = (category?: string) =>
+  useQuery({
     queryKey: ['conduct-library', category],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'conduct_library'),
-        orderBy('title')
-      );
-
-      const snapshot = await getDocs(q);
-      let data = snapshot.docs.map(convertDocToConductTemplate);
-
-      // Filter by category if provided
-      if (category) {
-        data = data.filter(c => c.category === category);
-      }
-
-      return data;
-    }
+      const res = await clinicalApi.conductLibrary.list(category ? { category } : undefined);
+      return (res?.data ?? []) as ConductTemplate[];
+    },
   });
-};
 
 export const useCreateConduct = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (data: CreateConductData) => {
-      if (!user) throw new Error('Usuário não autenticado');
-
-      const conductData = {
-        ...data,
-        created_by: user.uid,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'conduct_library'), conductData);
-      const docSnap = await getDoc(docRef);
-
-      return convertDocToConductTemplate(docSnap);
+      const res = await clinicalApi.conductLibrary.create(data);
+      return (res?.data ?? res) as ConductTemplate;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conduct-library'] });
-      toast({
-        title: 'Conduta salva',
-        description: 'A conduta foi adicionada à biblioteca.'
-      });
+      toast.success('A conduta foi adicionada à biblioteca.');
     },
     onError: (error: unknown) => {
-      toast({
-        title: 'Erro ao salvar conduta',
-        description: error instanceof Error ? error.message : 'Erro desconhecido',
-        variant: 'destructive'
-      });
-    }
+      toast.error(error instanceof Error ? error.message : 'Erro ao salvar conduta');
+    },
+  });
+};
+
+export const useUpdateConduct = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...data }: Partial<CreateConductData> & { id: string }) => {
+      const res = await clinicalApi.conductLibrary.update(id, data);
+      return (res?.data ?? res) as ConductTemplate;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conduct-library'] });
+      toast.success('A conduta foi atualizada.');
+    },
+    onError: (error: unknown) => {
+      toast.error(error instanceof Error ? error.message : 'Erro ao atualizar conduta');
+    },
   });
 };
 
 export const useDeleteConduct = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (conductId: string) => {
-      await deleteDoc(doc(db, 'conduct_library', conductId));
+      await clinicalApi.conductLibrary.delete(conductId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conduct-library'] });
-      toast({
-        title: 'Conduta removida',
-        description: 'A conduta foi removida da biblioteca.'
-      });
+      toast.success('A conduta foi removida da biblioteca.');
     },
     onError: (error: unknown) => {
-      toast({
-        title: 'Erro ao remover conduta',
-        description: error instanceof Error ? error.message : 'Erro desconhecido',
-        variant: 'destructive'
-      });
-    }
+      toast.error(error instanceof Error ? error.message : 'Erro ao remover conduta');
+    },
   });
 };

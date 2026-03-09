@@ -1,13 +1,10 @@
 /**
- * useSessionPackages - Migrated to Firebase
+ * useSessionPackages - Migrated to Neon/Workers
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, query as firestoreQuery, where, orderBy, runTransaction, getFirebaseAuth, db } from '@/integrations/firebase/app';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { financialApi, type PatientPackageRow } from '@/lib/api/workers-client';
 import { useToast } from '@/hooks/use-toast';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
-
-const auth = getFirebaseAuth();
 
 export interface SessionPackage {
   id: string;
@@ -32,25 +29,51 @@ export interface SessionPackage {
   updated_at: string;
 }
 
+const mapStatus = (status?: string | null, validUntil?: string | null): SessionPackage['status'] => {
+  if (status === 'cancelled') return 'cancelado';
+  if (status === 'depleted') return 'consumido';
+  if (validUntil && new Date(validUntil) < new Date()) return 'expirado';
+  return 'ativo';
+};
+
+const mapPaymentStatus = (pkg: PatientPackageRow): string => {
+  if (pkg.payment_method) return 'pago';
+  return 'pendente';
+};
+
+const mapPatientPackageToSessionPackage = (pkg: PatientPackageRow): SessionPackage => {
+  const totalValue = Number(pkg.price ?? 0);
+  const totalSessions = Number(pkg.total_sessions ?? 0);
+  return {
+    id: pkg.id,
+    organization_id: '',
+    patient_id: pkg.patient_id,
+    package_name: pkg.name,
+    total_sessions: totalSessions,
+    used_sessions: Number(pkg.used_sessions ?? 0),
+    remaining_sessions: Number(pkg.remaining_sessions ?? 0),
+    total_value: totalValue,
+    discount_value: 0,
+    final_value: totalValue,
+    value_per_session: totalSessions > 0 ? Number((totalValue / totalSessions).toFixed(2)) : 0,
+    payment_status: mapPaymentStatus(pkg),
+    payment_method: pkg.payment_method ?? undefined,
+    paid_at: pkg.purchased_at ?? undefined,
+    status: mapStatus(pkg.status, pkg.expires_at),
+    valid_until: pkg.expires_at ?? undefined,
+    notes: undefined,
+    created_by: '',
+    created_at: pkg.created_at,
+    updated_at: pkg.last_used_at ?? pkg.created_at,
+  };
+};
+
 export const useSessionPackages = (patientId?: string) => {
   return useQuery({
     queryKey: ['session-packages', patientId],
     queryFn: async () => {
-      let q = firestoreQuery(
-        collection(db, 'session_packages'),
-        orderBy('created_at', 'desc')
-      );
-
-      if (patientId) {
-        q = firestoreQuery(
-          collection(db, 'session_packages'),
-          where('patient_id', '==', patientId),
-          orderBy('created_at', 'desc')
-        );
-      }
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) })) as SessionPackage[];
+      const res = await financialApi.patientPackages.list(patientId ? { patientId, limit: 200 } : { limit: 200 });
+      return ((res?.data ?? []) as PatientPackageRow[]).map(mapPatientPackageToSessionPackage);
     },
   });
 };
@@ -60,30 +83,29 @@ export const useCreatePackage = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (packageData: Omit<SessionPackage, 'id' | 'created_at' | 'updated_at' | 'remaining_sessions' | 'value_per_session' | 'used_sessions'>) => {
-      const firebaseUser = auth.currentUser;
-      if (!firebaseUser) throw new Error('Usuário não autenticado');
+    mutationFn: async (
+      packageData: Omit<
+        SessionPackage,
+        'id' | 'created_at' | 'updated_at' | 'remaining_sessions' | 'value_per_session' | 'used_sessions'
+      >,
+    ) => {
+      const res = await financialApi.patientPackages.create({
+        patient_id: packageData.patient_id,
+        name: packageData.package_name,
+        custom_sessions: packageData.total_sessions,
+        custom_price: packageData.final_value,
+        payment_method: packageData.payment_method,
+        validity_days: packageData.valid_until
+          ? Math.max(
+              1,
+              Math.ceil(
+                (new Date(packageData.valid_until).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+              ),
+            )
+          : undefined,
+      });
 
-      const now = new Date().toISOString();
-      const remainingSessions = packageData.total_sessions;
-      const valuePerSession = packageData.final_value / packageData.total_sessions;
-
-      const newPackageData = {
-        ...packageData,
-        created_by: firebaseUser.uid,
-        used_sessions: 0,
-        remaining_sessions: remainingSessions,
-        value_per_session: Math.round(valuePerSession * 100) / 100, // Round to 2 decimal places
-        created_at: now,
-        updated_at: now,
-      };
-
-      const docRef = await addDoc(collection(db, 'session_packages'), newPackageData);
-
-      return {
-        id: docRef.id,
-        ...newPackageData,
-      } as SessionPackage;
+      return mapPatientPackageToSessionPackage((res?.data ?? res) as PatientPackageRow);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['session-packages'] });
@@ -101,66 +123,19 @@ export const useUsePackageSession = () => {
 
   return useMutation({
     mutationFn: async (packageId: string) => {
-      const packageRef = doc(db, 'session_packages', packageId);
-
-      // Use transaction to ensure atomicity
-      await runTransaction(db, async (transaction) => {
-        const packageSnap = await getDoc(packageRef);
-
-        if (!packageSnap.exists()) {
-          throw new Error('Pacote não encontrado');
-        }
-
-        const pkg = packageSnap.data() as SessionPackage;
-
-        if (pkg.status !== 'ativo') {
-          throw new Error('Pacote não está ativo');
-        }
-
-        if (pkg.remaining_sessions <= 0) {
-          throw new Error('Não há sessões disponíveis neste pacote');
-        }
-
-        // Check if package is expired
-        if (pkg.valid_until && new Date(pkg.valid_until) < new Date()) {
-          throw new Error('Pacote expirado');
-        }
-
-        const newUsedSessions = pkg.used_sessions + 1;
-        const newRemainingSessions = pkg.remaining_sessions - 1;
-
-        // Update status if consumed
-        let newStatus = pkg.status;
-        if (newRemainingSessions === 0) {
-          newStatus = 'consumido';
-        }
-
-        transaction.update(packageRef, {
-          used_sessions: newUsedSessions,
-          remaining_sessions: newRemainingSessions,
-          status: newStatus,
-          updated_at: new Date().toISOString(),
-        });
-
-        return { id: packageId, ...pkg, used_sessions: newUsedSessions, remaining_sessions: newRemainingSessions, status: newStatus };
-      });
-
-      // Fetch updated package
-      const updatedSnap = await getDoc(packageRef);
-      return {
-        id: updatedSnap.id,
-        ...updatedSnap.data(),
-      } as SessionPackage;
+      const res = await financialApi.patientPackages.consume(packageId);
+      return mapPatientPackageToSessionPackage((res?.data ?? res) as PatientPackageRow);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['session-packages'] });
+      queryClient.invalidateQueries({ queryKey: ['patient-packages'] });
       toast({ title: 'Sessão debitada do pacote' });
     },
     onError: (error: Error) => {
       toast({
         title: 'Erro ao debitar sessão',
         description: error.message,
-        variant: 'destructive'
+        variant: 'destructive',
       });
     },
   });

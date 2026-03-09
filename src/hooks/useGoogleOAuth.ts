@@ -1,7 +1,27 @@
 import { useState, useCallback } from 'react';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
 import { toast } from 'sonner';
+import { integrationsApi } from '@/lib/api/workers-client';
+
+function buildLocalGoogleAuthUrl(state?: string): string {
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const redirectUri = import.meta.env.VITE_GOOGLE_REDIRECT_URI;
+  if (!clientId || !redirectUri) {
+    throw new Error('Google OAuth não configurado');
+  }
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    response_type: 'code',
+    scope: [
+      'https://www.googleapis.com/auth/calendar',
+      'https://www.googleapis.com/auth/calendar.events',
+    ].join(' '),
+    access_type: 'offline',
+    prompt: 'consent',
+    state: state || 'google-integrations',
+  });
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+}
 
 export function useGoogleOAuth() {
   const [loading, setLoading] = useState(false);
@@ -9,12 +29,19 @@ export function useGoogleOAuth() {
   const connect = useCallback(async () => {
     setLoading(true);
     try {
-      const getGoogleAuthUrl = httpsCallable(functions, 'getGoogleAuthUrlIntegration');
-      const result = await getGoogleAuthUrl({});
-      const url = (result.data as any).url;
-      if (url) {
-        window.location.href = url;
+      let url: string | undefined;
+      try {
+        const result = await integrationsApi.google.authUrl('google-integrations');
+        url = result.data?.url;
+      } catch {
+        url = buildLocalGoogleAuthUrl('google-integrations');
       }
+
+      if (!url) {
+        throw new Error('URL de autenticação não disponível');
+      }
+
+      window.location.href = url;
     } catch (error) {
       console.error('Error connecting to Google:', error);
       toast.error('Erro ao conectar com Google');
@@ -25,6 +52,6 @@ export function useGoogleOAuth() {
 
   return {
     connect,
-    loading
+    loading,
   };
 }

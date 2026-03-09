@@ -18,6 +18,7 @@ import type {
   MLTrainingData,
 } from '@/types/patientAnalytics';
 import type { PathologyRequiredMeasurement, MedicalReturn } from '@/types/evolution';
+import type { GamificationStats, AtRiskPatient, PopularAchievement } from '@/types/gamification';
 
 const BASE_URL = (import.meta.env.VITE_WORKERS_API_URL ?? 'http://localhost:8788').replace(
   /\/$/,
@@ -113,6 +114,15 @@ export interface Exercise {
   equipment: string[];
   durationSeconds: number | null;
   description: string | null;
+}
+
+export interface ExerciseImageAnalysisResult {
+  success: boolean;
+  analysis?: {
+    labels?: string[];
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
 }
 
 export interface ExerciseCategory {
@@ -248,6 +258,28 @@ export const exercisesApi = {
     request<{ ok: boolean }>(`/api/exercises/${id}`, {
       method: 'DELETE',
     }),
+
+  analyzeImage: async (imageUrl: string) => {
+    const token = await getNeonAccessToken();
+    const apiBase = (import.meta.env.VITE_EXERCISE_ANALYSIS_API_URL ?? '').replace(/\/$/, '');
+    if (!apiBase) {
+      throw new Error('VITE_EXERCISE_ANALYSIS_API_URL não configurada');
+    }
+    const response = await fetch(`${apiBase}/api/exercises/analyze`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ imageUrl }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to analyze exercise');
+    }
+
+    return response.json() as Promise<ExerciseImageAnalysisResult>;
+  },
 };
 
 // ===== API PROTOCOLS =====
@@ -323,6 +355,22 @@ export const wikiApi = {
   delete: (slug: string) =>
     request<{ ok: boolean }>(`/api/wiki/${slug}`, {
       method: 'DELETE',
+    }),
+
+  listOrg: (params?: { q?: string; category?: string }) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(Object.entries(params ?? {}).filter(([, v]) => v != null).map(([k, v]) => [k, String(v)])),
+    ).toString();
+    return request<{ data: WikiPage[] }>(`/api/wiki/org/list${qs ? `?${qs}` : ''}`);
+  },
+
+  getById: (id: string) =>
+    request<{ data: WikiPageFull }>(`/api/wiki/by-id/${encodeURIComponent(id)}`),
+
+  updateTriage: (updates: Array<{ id: string; triage_order?: number; tags?: string[]; category?: string }>) =>
+    request<{ ok: boolean }>('/api/wiki/triage', {
+      method: 'PATCH',
+      body: JSON.stringify({ updates }),
     }),
 };
 
@@ -455,6 +503,75 @@ export interface PatientDocument {
   updated_at: string;
 }
 
+export interface AtestadoTemplateRecord {
+  id: string;
+  organization_id: string | null;
+  nome: string;
+  descricao: string | null;
+  conteudo: string;
+  variaveis_disponiveis: string[];
+  ativo: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ContratoTemplateRecord {
+  id: string;
+  organization_id: string | null;
+  nome: string;
+  descricao: string | null;
+  tipo: string;
+  conteudo: string;
+  variaveis_disponiveis: string[];
+  ativo: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CommunicationPatientRecord {
+  id: string;
+  full_name?: string | null;
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+}
+
+export interface CommunicationLogRecord {
+  id: string;
+  organization_id: string;
+  patient_id?: string | null;
+  appointment_id?: string | null;
+  type: 'email' | 'whatsapp' | 'sms' | 'push';
+  recipient: string;
+  subject?: string | null;
+  body: string;
+  status: 'pendente' | 'enviado' | 'entregue' | 'lido' | 'falha';
+  sent_at?: string | null;
+  delivered_at?: string | null;
+  read_at?: string | null;
+  error_message?: string | null;
+  metadata?: Record<string, unknown>;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+  patient?: CommunicationPatientRecord | null;
+}
+
+export interface CommunicationStatsRecord {
+  total: number;
+  sent: number;
+  delivered: number;
+  failed: number;
+  pending: number;
+  byChannel: {
+    email: number;
+    whatsapp: number;
+    sms: number;
+  };
+}
+
 export const documentsApi = {
   list: (patientId: string) =>
     request<{ data: PatientDocument[] }>(`/api/documents?patientId=${encodeURIComponent(patientId)}`),
@@ -467,6 +584,69 @@ export const documentsApi = {
 
   delete: (id: string) =>
     request<{ ok: boolean; file_path?: string }>(`/api/documents/${id}`, { method: 'DELETE' }),
+};
+
+export const documentTemplatesApi = {
+  atestados: {
+    list: () => request<{ data: AtestadoTemplateRecord[] }>('/api/documents/atestado-templates'),
+    create: (data: Partial<AtestadoTemplateRecord>) =>
+      request<{ data: AtestadoTemplateRecord }>('/api/documents/atestado-templates', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: Partial<AtestadoTemplateRecord>) =>
+      request<{ data: AtestadoTemplateRecord }>(`/api/documents/atestado-templates/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      request<{ ok: boolean }>(`/api/documents/atestado-templates/${id}`, { method: 'DELETE' }),
+  },
+  contratos: {
+    list: () => request<{ data: ContratoTemplateRecord[] }>('/api/documents/contrato-templates'),
+    create: (data: Partial<ContratoTemplateRecord>) =>
+      request<{ data: ContratoTemplateRecord }>('/api/documents/contrato-templates', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: Partial<ContratoTemplateRecord>) =>
+      request<{ data: ContratoTemplateRecord }>(`/api/documents/contrato-templates/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      request<{ ok: boolean }>(`/api/documents/contrato-templates/${id}`, { method: 'DELETE' }),
+  },
+};
+
+export const communicationsApi = {
+  list: (params?: { channel?: string; status?: string; limit?: number }) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(
+        Object.entries(params ?? {}).filter(([, v]) => v != null).map(([k, v]) => [k, String(v)]),
+      ),
+    ).toString();
+    return request<{ data: CommunicationLogRecord[] }>(`/api/communications${qs ? `?${qs}` : ''}`);
+  },
+  stats: () => request<{ data: CommunicationStatsRecord }>('/api/communications/stats'),
+  create: (data: Partial<CommunicationLogRecord> & { type: string; recipient: string; body: string }) =>
+    request<{ data: CommunicationLogRecord }>('/api/communications', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  delete: (id: string) =>
+    request<{ ok: boolean }>(`/api/communications/${id}`, {
+      method: 'DELETE',
+    }),
+  resend: (id: string) =>
+    request<{ data: CommunicationLogRecord }>(`/api/communications/${id}/resend`, {
+      method: 'POST',
+    }),
+  testEmail: (data: { to: string; subject?: string; type?: string; body?: string; data?: Record<string, unknown> }) =>
+    request<{ data: CommunicationLogRecord }>('/api/communications/test-email', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 };
 
 // ===== API EXAMS =====
@@ -591,6 +771,229 @@ export const goalsApi = {
 
   delete: (id: string) =>
     request<{ ok: boolean }>(`/api/goals/${id}`, { method: 'DELETE' }),
+};
+
+// ===== API GAMIFICATION =====
+export interface GamificationProfileRow {
+  id: string;
+  patient_id: string;
+  current_xp: number;
+  level: number;
+  current_streak: number;
+  longest_streak: number;
+  total_points: number;
+  last_activity_date: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DailyQuestRow { id: string; patient_id: string; date: string; quests_data: Array<{ id: string; title: string; description?: string; xp: number; completed: boolean; icon: string }>; completed_count: number; created_at: string; updated_at: string; }
+export interface AchievementRow { id: string; code: string; title: string; description: string; xp_reward: number; icon?: string; category: string; requirements: unknown; created_at: string; }
+export interface AchievementLogRow { id: string; patient_id: string; achievement_id: string; achievement_title: string; xp_reward: number; unlocked_at: string; }
+export interface XpTransactionRow { id: string; patient_id: string; amount: number; reason: string; description?: string; created_at: string; }
+export interface GamificationSettingRow { id?: string; key: string; value: unknown; description?: string; updated_at?: string; }
+export interface QuestDefinitionRow { id: string; code?: string | null; title: string; description?: string | null; category: string; xp_reward: number; points_reward?: number; requirements?: unknown; icon?: string | null; difficulty?: string; is_active: boolean; repeat_interval?: string; created_at?: string; updated_at?: string; }
+export interface PatientChallengeRow { id?: string; patient_id: string; challenge_id: string; progress: number; completed: boolean; completed_at?: string | null; }
+export interface WeeklyChallengeRow { id: string; title: string; description?: string | null; xp_reward: number; point_reward: number; start_date: string; end_date: string; target: { type: string; count?: number }; icon?: string | null; is_active?: boolean; created_at?: string; updated_at?: string; patient_progress?: PatientChallengeRow | null; }
+export interface ShopItemRow { id: string; code: string; name: string; description: string; cost: number; type: string; icon?: string; metadata: Record<string, unknown>; is_active: boolean; }
+export interface UserInventoryRow { id: string; user_id: string; item_id: string; item_code: string; quantity: number; is_equipped: boolean; created_at: string; updated_at: string; item_name?: string; item_description?: string; item_cost?: number; item_type?: string; item_icon?: string; }
+export interface GamificationLeaderboardRow { rank: number; patient_id: string; patient_name: string; email?: string | null; current_level: number; total_xp: number; current_streak: number; longest_streak?: number; last_activity_date?: string | null; isCurrentUser?: boolean; }
+
+export const gamificationApi = {
+  getProfile: (patientId: string) =>
+    request<{ data: GamificationProfileRow }>(`/api/gamification/profile/${encodeURIComponent(patientId)}`),
+
+  awardXp: (data: { patientId: string; amount: number; reason: string; description?: string }) =>
+    request<{ data: GamificationProfileRow; leveledUp: boolean; newLevel: number; streakExtended: boolean }>('/api/gamification/award-xp', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getQuests: (patientId: string) =>
+    request<{ data: DailyQuestRow }>(`/api/gamification/quests/${encodeURIComponent(patientId)}`),
+
+  completeQuest: (patientId: string, questId: string) =>
+    request<{ data: DailyQuestRow; xpAwarded: number }>(`/api/gamification/quests/${encodeURIComponent(patientId)}/complete`, {
+      method: 'PUT',
+      body: JSON.stringify({ questId }),
+    }),
+
+  getAchievements: (patientId: string) =>
+    request<{ data: { all: AchievementRow[]; unlocked: AchievementLogRow[] } }>(`/api/gamification/achievements/${encodeURIComponent(patientId)}`),
+
+  getTransactions: (patientId: string) =>
+    request<{ data: XpTransactionRow[] }>(`/api/gamification/transactions/${encodeURIComponent(patientId)}`),
+  listTransactions: (params?: { days?: number; limit?: number }) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(
+        Object.entries(params ?? {})
+          .filter(([, value]) => value != null)
+          .map(([key, value]) => [key, String(value)]),
+      ),
+    ).toString();
+    return request<{ data: XpTransactionRow[] }>(`/api/gamification/transactions${qs ? `?${qs}` : ''}`);
+  },
+
+  getLeaderboard: (params?: { period?: 'weekly' | 'monthly' | 'all'; limit?: number }) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(
+        Object.entries(params ?? {})
+          .filter(([, value]) => value != null)
+          .map(([key, value]) => [key, String(value)]),
+      ),
+    ).toString();
+    return request<{ data: GamificationLeaderboardRow[] }>(`/api/gamification/leaderboard${qs ? `?${qs}` : ''}`);
+  },
+
+  getShopItems: () =>
+    request<{ data: ShopItemRow[] }>('/api/gamification/shop'),
+
+  getAllShopItems: () =>
+    request<{ data: ShopItemRow[] }>('/api/gamification/shop-items'),
+
+  getInventory: (patientId: string) =>
+    request<{ data: UserInventoryRow[] }>(`/api/gamification/inventory/${encodeURIComponent(patientId)}`),
+
+  buyItem: (patientId: string, itemId: string) =>
+    request<{ data: GamificationProfileRow }>('/api/gamification/buy', {
+      method: 'POST',
+      body: JSON.stringify({ patientId, itemId }),
+    }),
+
+  getSettings: () =>
+    request<{ data: GamificationSettingRow[] }>('/api/gamification/settings'),
+
+  updateSettings: (settings: Record<string, unknown>) =>
+    request<{ data: GamificationSettingRow[] }>('/api/gamification/settings', {
+      method: 'PUT',
+      body: JSON.stringify({ settings }),
+    }),
+
+  getAdminStats: (days = 30) =>
+    request<{ data: GamificationStats }>(`/api/gamification/admin/stats?days=${encodeURIComponent(String(days))}`),
+
+  getAtRiskPatients: (params?: { days?: number; limit?: number }) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(
+        Object.entries(params ?? {})
+          .filter(([, value]) => value != null)
+          .map(([key, value]) => [key, String(value)]),
+      ),
+    ).toString();
+    return request<{ data: AtRiskPatient[] }>(`/api/gamification/admin/at-risk${qs ? `?${qs}` : ''}`);
+  },
+
+  getPopularAchievements: (limit = 10) =>
+    request<{ data: PopularAchievement[] }>(
+      `/api/gamification/admin/popular-achievements?limit=${encodeURIComponent(String(limit))}`,
+    ),
+
+  adjustXp: (payload: { patientId: string; amount: number; reason: string }) =>
+    request<{ data: GamificationProfileRow }>('/api/gamification/admin/adjust-xp', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  resetStreak: (patientId: string) =>
+    request<{ data: GamificationProfileRow | null }>('/api/gamification/admin/reset-streak', {
+      method: 'POST',
+      body: JSON.stringify({ patientId }),
+    }),
+
+  achievementDefinitions: {
+    list: () =>
+      request<{ data: AchievementRow[] }>('/api/gamification/achievement-definitions'),
+    create: (data: Partial<AchievementRow>) =>
+      request<{ data: AchievementRow }>('/api/gamification/achievement-definitions', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: Partial<AchievementRow>) =>
+      request<{ data: AchievementRow }>(`/api/gamification/achievement-definitions/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      request<{ ok: boolean }>(`/api/gamification/achievement-definitions/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      }),
+  },
+
+  questDefinitions: {
+    list: () =>
+      request<{ data: QuestDefinitionRow[] }>('/api/gamification/quest-definitions'),
+    create: (data: Partial<QuestDefinitionRow>) =>
+      request<{ data: QuestDefinitionRow }>('/api/gamification/quest-definitions', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: Partial<QuestDefinitionRow>) =>
+      request<{ data: QuestDefinitionRow }>(`/api/gamification/quest-definitions/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    setActive: (id: string, is_active: boolean) =>
+      request<{ data: QuestDefinitionRow }>(`/api/gamification/quest-definitions/${encodeURIComponent(id)}/active`, {
+        method: 'PATCH',
+        body: JSON.stringify({ is_active }),
+      }),
+    delete: (id: string) =>
+      request<{ ok: boolean }>(`/api/gamification/quest-definitions/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      }),
+  },
+
+  weeklyChallenges: {
+    list: (params?: { active?: boolean; patientId?: string }) => {
+      const qs = new URLSearchParams(
+        Object.fromEntries(
+          Object.entries(params ?? {})
+            .filter(([, value]) => value != null)
+            .map(([key, value]) => [key, String(value)]),
+        ),
+      ).toString();
+      return request<{ data: WeeklyChallengeRow[] }>(`/api/gamification/weekly-challenges${qs ? `?${qs}` : ''}`);
+    },
+    create: (data: Partial<WeeklyChallengeRow>) =>
+      request<{ data: WeeklyChallengeRow }>('/api/gamification/weekly-challenges', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: Partial<WeeklyChallengeRow>) =>
+      request<{ data: WeeklyChallengeRow }>(`/api/gamification/weekly-challenges/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    setActive: (id: string, is_active: boolean) =>
+      request<{ data: WeeklyChallengeRow }>(`/api/gamification/weekly-challenges/${encodeURIComponent(id)}/active`, {
+        method: 'PATCH',
+        body: JSON.stringify({ is_active }),
+      }),
+    delete: (id: string) =>
+      request<{ ok: boolean }>(`/api/gamification/weekly-challenges/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      }),
+  },
+
+  getPatientChallenges: (patientId: string) =>
+    request<{ data: PatientChallengeRow[] }>(`/api/gamification/patient-challenges/${encodeURIComponent(patientId)}`),
+
+  shopAdmin: {
+    create: (data: Partial<ShopItemRow>) =>
+      request<{ data: ShopItemRow }>('/api/gamification/shop-items', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: Partial<ShopItemRow>) =>
+      request<{ data: ShopItemRow }>(`/api/gamification/shop-items/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      request<{ ok: boolean }>(`/api/gamification/shop-items/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      }),
+  },
 };
 
 // ===== API SESSION ATTACHMENTS =====
@@ -725,6 +1128,17 @@ export interface PatientRow {
   birth_date?: string;
   gender?: string | null;
   main_condition?: string | null;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  zip_code?: string | null;
+  emergency_contact?: string | null;
+  emergency_phone?: string | null;
+  emergency_contact_relationship?: string | null;
+  health_insurance?: string | null;
+  insurance_number?: string | null;
+  profession?: string | null;
+  observations?: string | null;
   status?: string;
   progress?: number;
   incomplete_registration?: boolean;
@@ -735,24 +1149,48 @@ export interface PatientRow {
 
 export interface PatientSurgery {
   id: string;
+  patient_id?: string;
   name: string;
   surgery_date?: string | null;
   surgeon?: string | null;
   hospital?: string | null;
   post_op_protocol?: string | null;
+  affected_side?: 'direito' | 'esquerdo' | 'bilateral' | 'nao_aplicavel' | null;
+  complications?: string | null;
   notes?: string | null;
   created_at: string;
+  updated_at?: string | null;
 }
 
 export interface PatientPathology {
   id: string;
+  patient_id?: string;
   name: string;
   icd_code?: string | null;
   status?: string | null;
   diagnosed_at?: string | null;
   treated_at?: string | null;
+  severity?: 'leve' | 'moderada' | 'grave' | null;
+  affected_region?: string | null;
   notes?: string | null;
   created_at: string;
+  updated_at?: string | null;
+}
+
+export interface PatientMedicalRecord {
+  id: string;
+  patient_id: string;
+  chief_complaint?: string | null;
+  medical_history?: string | null;
+  current_medications?: string | null;
+  allergies?: string | null;
+  previous_surgeries?: string | null;
+  family_history?: string | null;
+  lifestyle_habits?: string | null;
+  record_date: string;
+  created_by?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 }
 
 export interface PatientStats {
@@ -781,6 +1219,8 @@ export const patientsApi = {
     ).toString();
     return request<{ data: PatientRow[]; total?: number }>(`/api/patients${qs ? `?${qs}` : ''}`);
   },
+  getByProfile: (profileId: string) =>
+    request<{ data: PatientRow | null }>(`/api/patients/by-profile/${encodeURIComponent(profileId)}`),
   get: (id: string) => request<{ data: PatientRow }>(`/api/patients/${id}`),
   create: (data: Partial<PatientRow>) =>
     request<{ data: PatientRow }>('/api/patients', { method: 'POST', body: JSON.stringify(data) }),
@@ -789,16 +1229,185 @@ export const patientsApi = {
   delete: (id: string) => request<{ success: boolean }>(`/api/patients/${id}`, { method: 'DELETE' }),
   stats: (id: string) => request<{ data: PatientStats }>(`/api/patients/${id}/stats`),
   lastUpdated: () => request<{ data: { last_updated_at: string | null } }>('/api/patients/last-updated'),
+  medicalRecords: (patientId: string) =>
+    request<{ data: PatientMedicalRecord[] }>(
+      `/api/patients/${encodeURIComponent(patientId)}/medical-records`,
+    ),
+  createMedicalRecord: (
+    patientId: string,
+    data: Omit<PatientMedicalRecord, 'id' | 'patient_id' | 'created_at' | 'updated_at'>,
+  ) =>
+    request<{ data: PatientMedicalRecord }>(
+      `/api/patients/${encodeURIComponent(patientId)}/medical-records`,
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      },
+    ),
+  updateMedicalRecord: (
+    patientId: string,
+    recordId: string,
+    data: Partial<Omit<PatientMedicalRecord, 'id' | 'patient_id' | 'created_at' | 'updated_at'>>,
+  ) =>
+    request<{ data: PatientMedicalRecord }>(
+      `/api/patients/${encodeURIComponent(patientId)}/medical-records/${encodeURIComponent(recordId)}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      },
+    ),
+  deleteMedicalRecord: (patientId: string, recordId: string) =>
+    request<{ ok: boolean }>(
+      `/api/patients/${encodeURIComponent(patientId)}/medical-records/${encodeURIComponent(recordId)}`,
+      {
+        method: 'DELETE',
+      },
+    ),
   surgeries: (patientId: string) =>
     request<{ data: PatientSurgery[] }>(
       `/api/patients/${encodeURIComponent(patientId)}/surgeries`,
+    ),
+  createSurgery: (
+    patientId: string,
+    data: {
+      surgery_name: string;
+      surgery_date?: string | null;
+      surgeon_name?: string | null;
+      hospital?: string | null;
+      surgery_type?: string | null;
+      affected_side?: 'direito' | 'esquerdo' | 'bilateral' | 'nao_aplicavel' | null;
+      complications?: string | null;
+      notes?: string | null;
+    },
+  ) =>
+    request<{ data: PatientSurgery }>(`/api/patients/${encodeURIComponent(patientId)}/surgeries`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updateSurgery: (
+    patientId: string,
+    surgeryId: string,
+    data: {
+      surgery_name?: string;
+      surgery_date?: string | null;
+      surgeon_name?: string | null;
+      hospital?: string | null;
+      surgery_type?: string | null;
+      affected_side?: 'direito' | 'esquerdo' | 'bilateral' | 'nao_aplicavel' | null;
+      complications?: string | null;
+      notes?: string | null;
+    },
+  ) =>
+    request<{ data: PatientSurgery }>(
+      `/api/patients/${encodeURIComponent(patientId)}/surgeries/${encodeURIComponent(surgeryId)}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      },
+    ),
+  deleteSurgery: (patientId: string, surgeryId: string) =>
+    request<{ ok: boolean }>(
+      `/api/patients/${encodeURIComponent(patientId)}/surgeries/${encodeURIComponent(surgeryId)}`,
+      {
+        method: 'DELETE',
+      },
     ),
   pathologies: (patientId: string) =>
     request<{ data: PatientPathology[] }>(
       `/api/patients/${encodeURIComponent(patientId)}/pathologies`,
     ),
+  createPathology: (
+    patientId: string,
+    data: {
+      pathology_name: string;
+      cid_code?: string | null;
+      diagnosis_date?: string | null;
+      severity?: 'leve' | 'moderada' | 'grave' | null;
+      affected_region?: string | null;
+      status?: string | null;
+      notes?: string | null;
+    },
+  ) =>
+    request<{ data: PatientPathology }>(`/api/patients/${encodeURIComponent(patientId)}/pathologies`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updatePathology: (
+    patientId: string,
+    pathologyId: string,
+    data: {
+      pathology_name?: string;
+      cid_code?: string | null;
+      diagnosis_date?: string | null;
+      severity?: 'leve' | 'moderada' | 'grave' | null;
+      affected_region?: string | null;
+      status?: string | null;
+      notes?: string | null;
+      treated_at?: string | null;
+    },
+  ) =>
+    request<{ data: PatientPathology }>(
+      `/api/patients/${encodeURIComponent(patientId)}/pathologies/${encodeURIComponent(pathologyId)}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      },
+    ),
+  deletePathology: (patientId: string, pathologyId: string) =>
+    request<{ ok: boolean }>(
+      `/api/patients/${encodeURIComponent(patientId)}/pathologies/${encodeURIComponent(pathologyId)}`,
+      {
+        method: 'DELETE',
+      },
+    ),
   medicalReturns: (patientId: string) =>
     request<{ data: MedicalReturn[] }>(`/api/patients/${encodeURIComponent(patientId)}/medical-returns`),
+  createMedicalReturn: (
+    patientId: string,
+    data: {
+      doctor_name: string;
+      doctor_phone?: string | null;
+      return_date?: string | null;
+      return_period?: string | null;
+      notes?: string | null;
+      report_done?: boolean;
+      report_sent?: boolean;
+    },
+  ) =>
+    request<{ data: MedicalReturn }>(
+      `/api/patients/${encodeURIComponent(patientId)}/medical-returns`,
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      },
+    ),
+  updateMedicalReturn: (
+    patientId: string,
+    medicalReturnId: string,
+    data: {
+      doctor_name?: string;
+      doctor_phone?: string | null;
+      return_date?: string | null;
+      return_period?: string | null;
+      notes?: string | null;
+      report_done?: boolean;
+      report_sent?: boolean;
+    },
+  ) =>
+    request<{ data: MedicalReturn }>(
+      `/api/patients/${encodeURIComponent(patientId)}/medical-returns/${encodeURIComponent(medicalReturnId)}`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      },
+    ),
+  deleteMedicalReturn: (patientId: string, medicalReturnId: string) =>
+    request<{ ok: boolean }>(
+      `/api/patients/${encodeURIComponent(patientId)}/medical-returns/${encodeURIComponent(medicalReturnId)}`,
+      {
+        method: 'DELETE',
+      },
+    ),
 };
 
 export interface OrganizationMember {
@@ -883,7 +1492,304 @@ export const profileApi = {
   me: () => request<{ data: { organization_id?: string; organizationId?: string } }>('/api/profile/me'),
   listTherapists: () =>
     request<{ data: TherapistSummary[] }>('/api/profile/therapists'),
+  updateMe: (data: Record<string, unknown>) =>
+    request<{ data: Record<string, unknown> }>('/api/profile/me', {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
 };
+
+export interface GoogleIntegrationRecord {
+  id: string;
+  organization_id?: string | null;
+  user_id: string;
+  provider: string;
+  external_email?: string | null;
+  status: string;
+  scopes?: string[];
+  settings?: Record<string, unknown>;
+  tokens?: Record<string, unknown>;
+  last_synced_at?: string | null;
+  events_synced_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GoogleSyncLogRecord {
+  id: string;
+  integration_id: string;
+  action: string;
+  status: string;
+  event_type?: string | null;
+  event_id?: string | null;
+  external_event_id?: string | null;
+  message?: string | null;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface GoogleDriveItemRecord {
+  id: string;
+  organization_id?: string | null;
+  user_id: string;
+  integration_id?: string | null;
+  provider_item_id: string;
+  name: string;
+  mime_type?: string | null;
+  item_kind: string;
+  parent_provider_item_id?: string | null;
+  web_view_link?: string | null;
+  metadata?: Record<string, unknown>;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface MFASettingsRecord {
+  id: string;
+  user_id: string;
+  organization_id?: string | null;
+  mfa_enabled: boolean;
+  mfa_method?: string | null;
+  backup_codes: string[];
+  pending_otp_expires_at?: string | null;
+  last_used_at?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MFAFactorRecord {
+  id: string;
+  factor_id: string;
+  type: string;
+  friendly_name?: string | null;
+  verified: boolean;
+  created_at: string;
+  verified_at?: string | null;
+}
+
+export interface GooglePlacePrediction {
+  place_id: string;
+  description: string;
+  structured_formatting?: {
+    main_text?: string;
+    secondary_text?: string;
+  };
+}
+
+export interface ActivityLabClinicRecord {
+  id: string;
+  clinic_name: string;
+  professional_name: string;
+  registration_number: string;
+  updated_at: string;
+  source: 'activity_lab';
+}
+
+export interface ActivityLabSessionRecord {
+  id: string;
+  patient_id: string;
+  protocol_name: string;
+  body_part: string;
+  side: 'LEFT' | 'RIGHT';
+  test_type: 'isometric';
+  created_at: string;
+  updated_at: string;
+  peak_force: number;
+  avg_force: number;
+  duration: number;
+  rfd: number;
+  sensitivity: number;
+  raw_force_data: Array<{ value: number; timestamp: number }>;
+  sample_rate: number;
+  device_model: string;
+  device_firmware: string;
+  device_battery: number;
+  measurement_mode: 'isometric';
+  is_simulated: boolean;
+  notes: string;
+  organization_id: string;
+  source: 'activity_lab';
+}
+
+export const integrationsApi = {
+  searchPlaces: (query: string) =>
+    request<{ data: GooglePlacePrediction[] }>(
+      `/api/integrations/google/places/search?query=${encodeURIComponent(query)}`,
+    ),
+  google: {
+    authUrl: (state?: string) =>
+      request<{ data: { url: string } }>(`/api/integrations/google/auth-url${state ? `?state=${encodeURIComponent(state)}` : ''}`),
+    status: () =>
+      request<{ data: GoogleIntegrationRecord | null }>('/api/integrations/google/status'),
+    connect: (data?: { code?: string; email?: string }) =>
+      request<{ data: GoogleIntegrationRecord }>('/api/integrations/google/connect', {
+        method: 'POST',
+        body: JSON.stringify(data ?? {}),
+      }),
+    disconnect: () =>
+      request<{ data: GoogleIntegrationRecord | null }>('/api/integrations/google/disconnect', {
+        method: 'POST',
+      }),
+    calendar: {
+      get: () =>
+        request<{ data: GoogleIntegrationRecord | null }>('/api/integrations/google/calendar'),
+      update: (data: Record<string, unknown>) =>
+        request<{ data: GoogleIntegrationRecord }>('/api/integrations/google/calendar', {
+          method: 'PUT',
+          body: JSON.stringify(data),
+        }),
+      sync: () =>
+        request<{ data: { synced_at: string; integration: GoogleIntegrationRecord } }>(
+          '/api/integrations/google/calendar/sync',
+          { method: 'POST' },
+        ),
+      logs: () =>
+        request<{ data: GoogleSyncLogRecord[] }>('/api/integrations/google/calendar/logs'),
+      importPreview: (data: { startDate: string; endDate: string }) =>
+        request<{ data: { success: boolean; events: Array<{ id: string; summary: string; start: string | null; end: string | null }> } }>(
+          '/api/integrations/google/calendar/import-preview',
+          {
+            method: 'POST',
+            body: JSON.stringify(data),
+          },
+        ),
+      syncAppointment: (data: Record<string, unknown>) =>
+        request<{ data: { success: boolean; externalEventId: string } }>(
+          '/api/integrations/google/calendar/sync-appointment',
+          {
+            method: 'POST',
+            body: JSON.stringify(data),
+          },
+        ),
+    },
+    docs: {
+      listTemplates: (folderId?: string) =>
+        request<{ data: GoogleDriveItemRecord[] }>(`/api/integrations/google/docs/templates${folderId ? `?folderId=${encodeURIComponent(folderId)}` : ''}`),
+      generateReport: (data: {
+        templateId: string;
+        patientName: string;
+        data: Record<string, string>;
+        folderId?: string;
+      }) =>
+        request<{ data: { success: boolean; fileId: string; webViewLink: string } }>(
+          '/api/integrations/google/docs/generate-report',
+          {
+            method: 'POST',
+            body: JSON.stringify(data),
+          },
+        ),
+    },
+    drive: {
+      listFiles: (folderId?: string) =>
+        request<{ data: GoogleDriveItemRecord[] }>(`/api/integrations/google/drive/files${folderId ? `?folderId=${encodeURIComponent(folderId)}` : ''}`),
+      createFolder: (data: { name: string; parentId?: string }) =>
+        request<{ data: { folderId: string; webViewLink: string } }>(
+          '/api/integrations/google/drive/folders',
+          {
+            method: 'POST',
+            body: JSON.stringify(data),
+          },
+        ),
+    },
+  },
+};
+
+export const activityLabApi = {
+  patients: {
+    list: (params?: { search?: string; limit?: number }) => {
+      const qs = new URLSearchParams(
+        Object.fromEntries(
+          Object.entries(params ?? {})
+            .filter(([, value]) => value != null && String(value).trim() !== '')
+            .map(([key, value]) => [key, String(value)]),
+        ),
+      ).toString();
+
+      return request<{ data: PatientRow[] }>(`/api/activity-lab/patients${qs ? `?${qs}` : ''}`);
+    },
+    get: (id: string) =>
+      request<{ data: PatientRow | null }>(`/api/activity-lab/patients/${id}`),
+  },
+  sessions: {
+    listByPatient: (patientId: string) =>
+      request<{ data: ActivityLabSessionRecord[] }>(
+        `/api/activity-lab/patients/${patientId}/sessions`,
+      ),
+    get: (id: string) =>
+      request<{ data: ActivityLabSessionRecord | null }>(`/api/activity-lab/sessions/${id}`),
+  },
+  clinic: {
+    get: () =>
+      request<{ data: ActivityLabClinicRecord | null }>('/api/activity-lab/clinic/profile'),
+  },
+};
+
+export const securityApi = {
+  lgpd: {
+    list: () =>
+      request<{ data: LGPDConsentRecord[] }>('/api/security/lgpd-consents'),
+    update: (consentType: string, data: { granted: boolean; version?: string }) =>
+      request<{ data: LGPDConsentRecord | null }>(`/api/security/lgpd-consents/${encodeURIComponent(consentType)}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+  },
+  mfa: {
+    getSettings: () =>
+      request<{ data: MFASettingsRecord | null }>('/api/security/mfa/settings'),
+    enable: (method: string) =>
+      request<{ data: MFASettingsRecord; backupCodes: string[] }>('/api/security/mfa/enable', {
+        method: 'POST',
+        body: JSON.stringify({ method }),
+      }),
+    disable: () =>
+      request<{ data: MFASettingsRecord | null }>('/api/security/mfa/disable', {
+        method: 'POST',
+      }),
+    sendOtp: () =>
+      request<{ data: { success: boolean; expiresAt: string; debugCode?: string } }>(
+        '/api/security/mfa/send-otp',
+        { method: 'POST' },
+      ),
+    verifyOtp: (code: string) =>
+      request<{ data: { verified: boolean } }>('/api/security/mfa/verify-otp', {
+        method: 'POST',
+        body: JSON.stringify({ code }),
+      }),
+    enroll: (friendlyName?: string) =>
+      request<{ data: { qrCode: string; secret: string; factorId: string } }>(
+        '/api/security/mfa/enroll',
+        {
+          method: 'POST',
+          body: JSON.stringify({ friendlyName }),
+        },
+      ),
+    verifyEnrollment: (factorId: string, code: string) =>
+      request<{ data: { verified: boolean } }>('/api/security/mfa/enroll/verify', {
+        method: 'POST',
+        body: JSON.stringify({ factorId, code }),
+      }),
+    listFactors: () =>
+      request<{ data: MFAFactorRecord[] }>('/api/security/mfa/factors'),
+    deleteFactor: (factorId: string) =>
+      request<{ data: { success: boolean } }>(`/api/security/mfa/factors/${encodeURIComponent(factorId)}`, {
+        method: 'DELETE',
+      }),
+  },
+};
+
+export interface LGPDConsentRecord {
+  id: string;
+  user_id: string;
+  organization_id: string;
+  consent_type: string;
+  granted: boolean;
+  granted_at: string | null;
+  revoked_at: string | null;
+  version: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface DashboardResponse {
   data: {
@@ -897,6 +1803,40 @@ export interface DashboardResponse {
     revenueChart: { date: string; revenue: number }[];
   };
 }
+
+export interface ProjectRecord {
+  id: string;
+  title: string;
+  description?: string | null;
+  status: 'active' | 'completed' | 'archived' | 'on_hold';
+  start_date?: string | null;
+  end_date?: string | null;
+  organization_id: string;
+  created_by: string;
+  manager_id?: string | null;
+  created_at: string;
+  updated_at: string;
+  manager?: {
+    full_name: string;
+    avatar_url?: string | null;
+  } | null;
+}
+
+export const projectsApi = {
+  list: () => request<{ data: ProjectRecord[] }>('/api/projects'),
+  get: (id: string) => request<{ data: ProjectRecord }>(`/api/projects/${id}`),
+  create: (data: Partial<ProjectRecord>) =>
+    request<{ data: ProjectRecord }>('/api/projects', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: Partial<ProjectRecord>) =>
+    request<{ data: ProjectRecord }>(`/api/projects/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  delete: (id: string) => request<{ ok: boolean }>(`/api/projects/${id}`, { method: 'DELETE' }),
+};
 
 export interface FinancialReportResponse {
   data: {
@@ -1226,6 +2166,43 @@ export interface EvolutionMeasurementRecord {
   updated_at: string;
 }
 
+export interface ClinicalTestTemplateRecord {
+  id: string;
+  organization_id?: string | null;
+  created_by?: string | null;
+  name: string;
+  name_en?: string | null;
+  category: string;
+  target_joint: string;
+  purpose?: string | null;
+  execution?: string | null;
+  positive_sign?: string | null;
+  reference?: string | null;
+  sensitivity_specificity?: string | null;
+  tags?: string[];
+  type?: string | null;
+  fields_definition?: unknown[];
+  regularity_sessions?: number | null;
+  layout_type?: 'single' | 'multi_field' | 'y_balance' | 'radial' | null;
+  image_url?: string | null;
+  media_urls?: string[];
+  is_custom?: boolean;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface ConductLibraryRecord {
+  id: string;
+  organization_id?: string | null;
+  created_by?: string | null;
+  title: string;
+  description?: string | null;
+  conduct_text: string;
+  category: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface TreatmentSessionRecord {
   id: string;
   patient_id: string;
@@ -1237,6 +2214,7 @@ export interface TreatmentSessionRecord {
   assessment?: string | null;
   plan?: string | null;
   observations?: string | null;
+  exercises_performed?: unknown[] | null;
   pain_level_before?: number | null;
   pain_level_after?: number | null;
   next_session_goals?: string | null;
@@ -1285,6 +2263,18 @@ export const evolutionApi = {
     },
   },
   treatmentSessions: {
+    list: (patientId: string, params?: { limit?: number }) => {
+      const query = new URLSearchParams(
+        Object.entries({
+          patientId,
+          limit: params?.limit ? String(params.limit) : undefined,
+        }).filter(([, value]) => value != null) as [string, string][],
+      ).toString();
+
+      return request<{ data: TreatmentSessionRecord[] }>(
+        `/api/evolution/treatment-sessions${query ? `?${query}` : ''}`,
+      );
+    },
     upsert: (data: {
       patient_id: string;
       appointment_id: string;
@@ -1294,6 +2284,7 @@ export const evolutionApi = {
       assessment?: string;
       plan?: string;
       observations?: string;
+      exercises_performed?: unknown[];
       pain_level_before?: number;
       pain_level_after?: number;
       session_date?: string;
@@ -1303,6 +2294,32 @@ export const evolutionApi = {
         body: JSON.stringify(data),
       }),
   },
+};
+
+export const clinicalTestsApi = {
+  list: (params?: { ids?: string[] }) => {
+    const query = new URLSearchParams();
+    if (params?.ids && params.ids.length > 0) {
+      query.set('ids', params.ids.join(','));
+    }
+    return request<{ data: ClinicalTestTemplateRecord[] }>(
+      `/api/clinical/test-templates${query.toString() ? `?${query.toString()}` : ''}`,
+    );
+  },
+  get: (id: string) =>
+    request<{ data: ClinicalTestTemplateRecord }>(`/api/clinical/test-templates/${id}`),
+  create: (data: Partial<ClinicalTestTemplateRecord>) =>
+    request<{ data: ClinicalTestTemplateRecord }>('/api/clinical/test-templates', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: Partial<ClinicalTestTemplateRecord>) =>
+    request<{ data: ClinicalTestTemplateRecord }>(`/api/clinical/test-templates/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  delete: (id: string) =>
+    request<{ ok: boolean }>(`/api/clinical/test-templates/${id}`, { method: 'DELETE' }),
 };
 
 // ===== API APPOINTMENTS =====
@@ -1345,6 +2362,33 @@ export const appointmentsApi = {
     ).toString();
     return request<{ data: AppointmentRow[] }>(`/api/appointments${qs ? `?${qs}` : ''}`);
   },
+  get: (id: string) => request<{ data: AppointmentRow & { patient?: PatientRow | null } }>(`/api/appointments/${id}`),
+  checkConflict: (data: {
+    therapistId: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    excludeAppointmentId?: string;
+  }) =>
+    request<{ hasConflict: boolean; conflictingAppointments: unknown[] }>('/api/appointments/check-conflict', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  create: (data: Record<string, unknown>) =>
+    request<{ data: AppointmentRow }>('/api/appointments', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: Partial<AppointmentRow> & Record<string, unknown>) =>
+    request<{ data: AppointmentRow }>(`/api/appointments/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  cancel: (id: string, reason?: string) =>
+    request<{ success: boolean }>(`/api/appointments/${id}/cancel`, {
+      method: 'POST',
+      body: JSON.stringify(reason ? { reason } : {}),
+    }),
   lastUpdated: () => request<{ data: AppointmentsLastUpdated }>('/api/appointments/last-updated'),
 };
 
@@ -1360,17 +2404,152 @@ export interface FormaPagamento { id: string; organization_id?: string | null; n
 export interface PatientPackageRow {
   id: string;
   patient_id: string;
+  package_template_id?: string | null;
   name: string;
   total_sessions: number;
   used_sessions: number;
   remaining_sessions: number;
   price?: number | null;
+  payment_method?: string | null;
   status?: string | null;
   purchased_at?: string | null;
   expires_at?: string | null;
+  last_used_at?: string | null;
   created_at: string;
   patient_name?: string | null;
   patient_phone?: string | null;
+}
+
+export interface InventoryItemRow {
+  id: string;
+  organization_id: string | null;
+  item_name: string;
+  category: string | null;
+  current_quantity: number;
+  minimum_quantity: number;
+  unit: string;
+  cost_per_unit: number | null;
+  supplier: string | null;
+  last_restock_date: string | null;
+  expiration_date: string | null;
+  location: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InventoryMovementRow {
+  id: string;
+  inventory_id: string;
+  movement_type: 'entrada' | 'saida' | 'ajuste' | 'perda';
+  quantity: number;
+  reason: string | null;
+  related_appointment_id: string | null;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface StaffPerformanceRow {
+  id: string;
+  therapist_id: string;
+  metric_date: string;
+  total_appointments: number;
+  completed_appointments: number;
+  cancelled_appointments: number;
+  no_show_appointments: number;
+  average_session_duration: number | null;
+  patient_satisfaction_avg: number | null;
+  revenue_generated: number;
+  new_patients: number;
+  returning_patients: number;
+  created_at: string;
+}
+
+export interface RevenueForecastRow {
+  id: string;
+  organization_id: string | null;
+  forecast_date: string;
+  predicted_revenue: number;
+  actual_revenue: number | null;
+  predicted_appointments: number;
+  actual_appointments: number | null;
+  confidence_interval_low: number;
+  confidence_interval_high: number;
+  factors: Record<string, unknown>;
+  model_version: string;
+  created_at: string;
+}
+
+export interface WhatsAppExerciseQueueRow {
+  id: string;
+  patient_id: string;
+  exercise_plan_id: string | null;
+  phone_number: string;
+  exercises: Record<string, unknown>[];
+  scheduled_for: string | null;
+  sent_at: string | null;
+  delivered_at: string | null;
+  opened_at: string | null;
+  status: 'pending' | 'sent' | 'delivered' | 'opened' | 'failed';
+  error_message: string | null;
+  created_at: string;
+}
+
+export interface PatientSelfAssessmentRow {
+  id: string;
+  patient_id: string;
+  assessment_type: 'pain_level' | 'mood' | 'exercise_completion' | 'nps';
+  question: string;
+  response: string | null;
+  numeric_value: number | null;
+  received_via: string;
+  sent_at: string | null;
+  responded_at: string | null;
+  created_at: string;
+}
+
+export interface SessionPackageTemplateRow {
+  id: string;
+  organization_id: string;
+  name: string;
+  description?: string | null;
+  sessions_count: number;
+  price: number;
+  validity_days: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface VoucherRecord {
+  id: string;
+  organization_id: string;
+  nome: string;
+  descricao: string | null;
+  tipo: 'pacote' | 'mensal' | 'trimestral' | 'semestral';
+  sessoes: number | null;
+  validade_dias: number;
+  preco: number;
+  ativo: boolean;
+  stripe_price_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserVoucherRecord {
+  id: string;
+  organization_id: string;
+  user_id: string;
+  voucher_id: string;
+  sessoes_restantes: number;
+  sessoes_totais: number;
+  data_compra: string;
+  data_expiracao: string;
+  ativo: boolean;
+  valor_pago: number;
+  created_at: string;
+  updated_at: string;
+  voucher?: VoucherRecord;
 }
 
 const fin = (path: string, opts?: RequestInit) => request<any>(`/api/financial${path}`, opts);
@@ -1423,6 +2602,146 @@ export const financialApi = {
         ),
       );
       return fin(`/patient-packages${query.toString() ? `?${query.toString()}` : ''}`);
+    },
+    create: (data: {
+      patient_id: string;
+      package_id?: string;
+      name?: string;
+      custom_sessions?: number;
+      custom_price?: number;
+      payment_method?: string;
+      validity_days?: number;
+    }) => fin('/patient-packages', { method: 'POST', body: JSON.stringify(data) }),
+    consume: (id: string, data?: { appointmentId?: string }) =>
+      fin(`/patient-packages/${id}/consume`, { method: 'POST', body: JSON.stringify(data ?? {}) }),
+  },
+  packageTemplates: {
+    list: () => fin('/package-templates'),
+    create: (d: Partial<SessionPackageTemplateRow>) =>
+      fin('/package-templates', { method: 'POST', body: JSON.stringify(d) }),
+    update: (id: string, d: Partial<SessionPackageTemplateRow>) =>
+      fin(`/package-templates/${id}`, { method: 'PUT', body: JSON.stringify(d) }),
+    delete: (id: string) => fin(`/package-templates/${id}`, { method: 'DELETE' }),
+  },
+  vouchers: {
+    list: (params?: { all?: boolean; ativo?: boolean }) => {
+      const query = new URLSearchParams(
+        Object.fromEntries(
+          Object.entries(params ?? {})
+            .filter(([, v]) => v != null)
+            .map(([k, v]) => [k, String(v)]),
+        ),
+      );
+      return fin(`/vouchers${query.toString() ? `?${query.toString()}` : ''}`);
+    },
+    create: (data: Partial<VoucherRecord>) =>
+      fin('/vouchers', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: Partial<VoucherRecord>) =>
+      fin(`/vouchers/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: string) => fin(`/vouchers/${id}`, { method: 'DELETE' }),
+    checkout: (id: string) =>
+      fin(`/vouchers/${id}/checkout`, { method: 'POST' }),
+    verifyCheckout: (sessionId: string) =>
+      fin('/vouchers/checkout/verify', { method: 'POST', body: JSON.stringify({ sessionId }) }),
+  },
+  userVouchers: {
+    list: () => fin('/user-vouchers'),
+    consume: (id: string) => fin(`/user-vouchers/${id}/consume`, { method: 'POST' }),
+  },
+};
+
+const innovations = (path: string, opts?: RequestInit) => request<any>(`/api/innovations${path}`, opts);
+export const innovationsApi = {
+  inventory: {
+    list: (params?: { activeOnly?: boolean }) => {
+      const query = new URLSearchParams(
+        Object.fromEntries(
+          Object.entries(params ?? {})
+            .filter(([, v]) => v != null)
+            .map(([k, v]) => [k, String(v)]),
+        ),
+      );
+      return innovations(`/inventory${query.toString() ? `?${query.toString()}` : ''}`);
+    },
+    create: (data: Partial<InventoryItemRow>) =>
+      innovations('/inventory', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: Partial<InventoryItemRow>) =>
+      innovations(`/inventory/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  },
+  inventoryMovements: {
+    list: (params?: { inventoryId?: string; limit?: number }) => {
+      const query = new URLSearchParams(
+        Object.fromEntries(
+          Object.entries(params ?? {})
+            .filter(([, v]) => v != null)
+            .map(([k, v]) => [k, String(v)]),
+        ),
+      );
+      return innovations(`/inventory-movements${query.toString() ? `?${query.toString()}` : ''}`);
+    },
+    create: (data: Partial<InventoryMovementRow>) =>
+      innovations('/inventory-movements', { method: 'POST', body: JSON.stringify(data) }),
+  },
+  staffPerformance: {
+    list: (params?: { therapistId?: string; startDate?: string; endDate?: string }) => {
+      const query = new URLSearchParams(
+        Object.fromEntries(
+          Object.entries(params ?? {})
+            .filter(([, v]) => v != null)
+            .map(([k, v]) => [k, String(v)]),
+        ),
+      );
+      return innovations(`/staff-performance${query.toString() ? `?${query.toString()}` : ''}`);
+    },
+  },
+  appointmentPredictions: {
+    list: (params?: { limit?: number }) => {
+      const query = new URLSearchParams(
+        Object.fromEntries(
+          Object.entries(params ?? {})
+            .filter(([, v]) => v != null)
+            .map(([k, v]) => [k, String(v)]),
+        ),
+      );
+      return innovations(`/appointment-predictions${query.toString() ? `?${query.toString()}` : ''}`);
+    },
+  },
+  revenueForecasts: {
+    list: (params?: { limit?: number }) => {
+      const query = new URLSearchParams(
+        Object.fromEntries(
+          Object.entries(params ?? {})
+            .filter(([, v]) => v != null)
+            .map(([k, v]) => [k, String(v)]),
+        ),
+      );
+      return innovations(`/revenue-forecasts${query.toString() ? `?${query.toString()}` : ''}`);
+    },
+  },
+  whatsappExerciseQueue: {
+    list: (params?: { limit?: number }) => {
+      const query = new URLSearchParams(
+        Object.fromEntries(
+          Object.entries(params ?? {})
+            .filter(([, v]) => v != null)
+            .map(([k, v]) => [k, String(v)]),
+        ),
+      );
+      return innovations(`/whatsapp-exercise-queue${query.toString() ? `?${query.toString()}` : ''}`);
+    },
+    create: (data: Partial<WhatsAppExerciseQueueRow>) =>
+      innovations('/whatsapp-exercise-queue', { method: 'POST', body: JSON.stringify(data) }),
+  },
+  patientSelfAssessments: {
+    list: (params?: { patientId?: string; limit?: number }) => {
+      const query = new URLSearchParams(
+        Object.fromEntries(
+          Object.entries(params ?? {})
+            .filter(([, v]) => v != null)
+            .map(([k, v]) => [k, String(v)]),
+        ),
+      );
+      return innovations(`/patient-self-assessments${query.toString() ? `?${query.toString()}` : ''}`);
     },
   },
 };
@@ -1749,11 +3068,22 @@ export const whatsappApi = {
 export interface Lead { id: string; organization_id: string; nome: string; telefone?: string; email?: string; origem?: string; estagio: string; responsavel_id?: string; data_primeiro_contato?: string; data_ultimo_contato?: string; interesse?: string; observacoes?: string; motivo_nao_efetivacao?: string; created_at: string; updated_at: string; }
 export interface LeadHistorico { id: string; lead_id: string; tipo_contato?: string; descricao?: string; resultado?: string; proximo_contato?: string; created_by?: string; created_at: string; }
 export interface CrmTarefa { id: string; organization_id: string; titulo: string; descricao?: string; status: string; responsavel_id?: string; lead_id?: string; due_date?: string; created_at: string; updated_at: string; }
+export interface CrmCampanha { id: string; organization_id: string; created_by?: string; nome: string; tipo: string; conteudo?: string; status: string; total_destinatarios: number; total_enviados: number; agendada_em?: string | null; concluida_em?: string | null; created_at: string; updated_at: string; }
 
 const crm = (path: string, opts?: RequestInit) => request<any>(`/api/crm${path}`, opts);
 export const crmApi = {
   leads: { list: (p?:{estagio?:string})=>crm(`/leads?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`), get:(id:string)=>crm(`/leads/${id}`), create:(d:Partial<Lead>)=>crm('/leads',{method:'POST',body:JSON.stringify(d)}), update:(id:string,d:Partial<Lead>)=>crm(`/leads/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete:(id:string)=>crm(`/leads/${id}`,{method:'DELETE'}), historico:(id:string)=>crm(`/leads/${id}/historico`), addHistorico:(id:string,d:Partial<LeadHistorico>)=>crm(`/leads/${id}/historico`,{method:'POST',body:JSON.stringify(d)}) },
   tarefas: { list:(p?:{status?:string;leadId?:string})=>crm(`/tarefas?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`), create:(d:Partial<CrmTarefa>)=>crm('/tarefas',{method:'POST',body:JSON.stringify(d)}), update:(id:string,d:Partial<CrmTarefa>)=>crm(`/tarefas/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete:(id:string)=>crm(`/tarefas/${id}`,{method:'DELETE'}) },
+  campanhas: {
+    list: (p?: { status?: string; tipo?: string; limit?: number; offset?: number }) =>
+      crm(`/campanhas?${new URLSearchParams(Object.fromEntries(Object.entries(p ?? {}).filter(([,v]) => v != null).map(([k,v]) => [k, String(v)])))}`),
+    create: (d: Partial<CrmCampanha> & { patient_ids?: string[] }) =>
+      crm('/campanhas', { method: 'POST', body: JSON.stringify(d) }),
+    update: (id: string, d: Partial<CrmCampanha>) =>
+      crm(`/campanhas/${id}`, { method: 'PUT', body: JSON.stringify(d) }),
+    delete: (id: string) =>
+      crm(`/campanhas/${id}`, { method: 'DELETE' }),
+  },
 };
 
 // ===== API CLINICAL =====
@@ -1761,6 +3091,20 @@ export interface PainMap { id: string; organization_id?: string; patient_id?: st
 export interface PainMapPoint { id: string; pain_map_id: string; x_coordinate?: number; y_coordinate?: number; intensity?: number; region?: string; created_at: string; }
 export interface EvolutionTemplate { id: string; organization_id: string; name: string; description?: string; blocks: unknown[]; tags?: string[]; ativo: boolean; created_by?: string; created_at: string; updated_at: string; }
 export interface ExercisePrescription { id: string; organization_id?: string; patient_id?: string; therapist_id?: string; qr_code?: string; title: string; exercises: unknown[]; notes?: string; validity_days?: number; valid_until?: string; status: string; view_count?: number; last_viewed_at?: string; completed_exercises?: unknown[]; created_at: string; updated_at: string; }
+export interface StandardizedTestResultRow {
+  id: string;
+  organization_id: string;
+  patient_id: string;
+  test_type: 'oswestry' | 'lysholm' | 'dash';
+  test_name: string;
+  score: number;
+  max_score: number;
+  interpretation: string | null;
+  answers: Record<string, number>;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
 export interface PrescribedExercise {
   id: string;
   patient_id: string;
@@ -1787,6 +3131,24 @@ const clinPublic = (path: string, opts?: RequestInit) =>
 export const clinicalApi = {
   painMaps: { list:(p?:{patientId?:string;evolutionId?:string})=>clin(`/pain-maps?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`), get:(id:string)=>clin(`/pain-maps/${id}`), create:(d:Partial<PainMap>)=>clin('/pain-maps',{method:'POST',body:JSON.stringify(d)}), update:(id:string,d:Partial<PainMap>)=>clin(`/pain-maps/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete:(id:string)=>clin(`/pain-maps/${id}`,{method:'DELETE'}), addPoint:(mapId:string,pt:Partial<PainMapPoint>)=>clin(`/pain-maps/${mapId}/points`,{method:'POST',body:JSON.stringify(pt)}), deletePoint:(mapId:string,ptId:string)=>clin(`/pain-maps/${mapId}/points/${ptId}`,{method:'DELETE'}) },
   evolutionTemplates: { list:(p?:{ativo?:boolean})=>clin(`/evolution-templates${p?.ativo!=null?`?ativo=${p.ativo}`:''}`), get:(id:string)=>clin(`/evolution-templates/${id}`), create:(d:Partial<EvolutionTemplate>)=>clin('/evolution-templates',{method:'POST',body:JSON.stringify(d)}), update:(id:string,d:Partial<EvolutionTemplate>)=>clin(`/evolution-templates/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete:(id:string)=>clin(`/evolution-templates/${id}`,{method:'DELETE'}) },
+  conductLibrary: {
+    list: (p?: { category?: string }) => {
+      const qs = new URLSearchParams(
+        Object.fromEntries(
+          Object.entries(p ?? {})
+            .filter(([, v]) => v != null)
+            .map(([k, v]) => [k, String(v)]),
+        ),
+      ).toString();
+      return clin(`/conduct-library${qs ? `?${qs}` : ''}`);
+    },
+    get: (id: string) => clin(`/conduct-library/${id}`),
+    create: (d: Partial<ConductLibraryRecord>) =>
+      clin('/conduct-library', { method: 'POST', body: JSON.stringify(d) }),
+    update: (id: string, d: Partial<ConductLibraryRecord>) =>
+      clin(`/conduct-library/${id}`, { method: 'PUT', body: JSON.stringify(d) }),
+    delete: (id: string) => clin(`/conduct-library/${id}`, { method: 'DELETE' }),
+  },
   prescriptions: { list:(p?:{patientId?:string;status?:string})=>clin(`/prescriptions?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`), get:(id:string)=>clin(`/prescriptions/${id}`), getByQr:(qr:string)=>clin(`/prescriptions/qr/${qr}`), create:(d:Partial<ExercisePrescription>)=>clin('/prescriptions',{method:'POST',body:JSON.stringify(d)}), update:(id:string,d:Partial<ExercisePrescription>)=>clin(`/prescriptions/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete:(id:string)=>clin(`/prescriptions/${id}`,{method:'DELETE'}) },
   prescribedExercises: {
     list: (params?: { patientId?: string; active?: boolean }) =>
@@ -1803,6 +3165,29 @@ export const clinicalApi = {
       clin(`/prescribed-exercises/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id: string) =>
       clin(`/prescribed-exercises/${id}`, { method: 'DELETE' }),
+  },
+  patientObjectives: {
+    list: () => clin('/patient-objectives'),
+    create: (data: Record<string, unknown>) =>
+      clin('/patient-objectives', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: Record<string, unknown>) =>
+      clin(`/patient-objectives/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: string) =>
+      clin(`/patient-objectives/${id}`, { method: 'DELETE' }),
+  },
+  patientObjectiveAssignments: {
+    list: (patientId: string) =>
+      clin(`/patient-objective-assignments?patientId=${encodeURIComponent(patientId)}`),
+    create: (data: Record<string, unknown>) =>
+      clin('/patient-objective-assignments', { method: 'POST', body: JSON.stringify(data) }),
+    delete: (id: string) =>
+      clin(`/patient-objective-assignments/${id}`, { method: 'DELETE' }),
+  },
+  standardizedTests: {
+    list: (patientId: string) =>
+      clin(`/standardized-tests?patientId=${encodeURIComponent(patientId)}`),
+    create: (data: Partial<StandardizedTestResultRow>) =>
+      clin('/standardized-tests', { method: 'POST', body: JSON.stringify(data) }),
   },
 };
 
@@ -1854,6 +3239,18 @@ export interface EvaluationFormWithFieldsRow extends EvaluationFormRow {
   fields: EvaluationFormFieldRow[];
 }
 
+export interface PatientEvaluationResponseRow {
+  id: string;
+  organization_id?: string | null;
+  patient_id: string;
+  form_id: string;
+  appointment_id?: string | null;
+  responses: Record<string, unknown>;
+  created_by?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 const evalForms = (path: string, opts?: RequestInit) => request<any>(`/api/evaluation-forms${path}`, opts);
 export const evaluationFormsApi = {
   list: (p?: { tipo?: string; ativo?: boolean; favorite?: boolean }) => {
@@ -1881,6 +3278,27 @@ export const evaluationFormsApi = {
     evalForms(`/fields/${fieldId}`, { method: 'PUT', body: JSON.stringify(d) }),
   deleteField: (fieldId: string) =>
     evalForms(`/fields/${fieldId}`, { method: 'DELETE' }),
+  responses: {
+    list: (formId: string, params?: { patientId?: string }) => {
+      const qs = new URLSearchParams(
+        Object.fromEntries(
+          Object.entries(params ?? {})
+            .filter(([, v]) => v != null)
+            .map(([k, v]) => [k, String(v)]),
+        ),
+      ).toString();
+      return evalForms(`/${formId}/responses${qs ? `?${qs}` : ''}`);
+    },
+    create: (
+      formId: string,
+      d: {
+        patient_id: string;
+        appointment_id?: string | null;
+        responses: Record<string, unknown>;
+      },
+    ) =>
+      evalForms(`/${formId}/responses`, { method: 'POST', body: JSON.stringify(d) }),
+  },
 };
 
 export interface FeriadoRow {
@@ -1987,6 +3405,33 @@ export const notificationPreferencesApi = {
     }),
 };
 
+export interface AssetAnnotationVersionRecord {
+  id: string;
+  asset_id: string;
+  version: number;
+  data: Record<string, unknown>[];
+  created_at: string;
+  author_id?: string;
+}
+
+export const mediaApi = {
+  annotations: {
+    list: (assetId: string) =>
+      request<{ data: AssetAnnotationVersionRecord[] }>(
+        `/api/media/annotations?assetId=${encodeURIComponent(assetId)}`,
+      ),
+    create: (data: {
+      asset_id: string;
+      version: number;
+      data: Record<string, unknown>[];
+    }) =>
+      request<{ data: AssetAnnotationVersionRecord }>('/api/media/annotations', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+  },
+};
+
 // ===== API EVENTOS/SALAS/SERVICOS =====
 export interface Evento { id: string; organization_id: string; nome: string; descricao?: string; categoria?: string; local?: string; data_inicio?: string; data_fim?: string; hora_inicio?: string; hora_fim?: string; gratuito?: boolean; link_whatsapp?: string; valor_padrao_prestador?: number; status: string; created_at: string; updated_at: string; }
 export interface Sala { id: string; organization_id: string; nome: string; capacidade?: number; descricao?: string; cor?: string; ativo: boolean; created_at: string; updated_at: string; }
@@ -2006,12 +3451,35 @@ export interface ChecklistItem {
   created_at: string;
   updated_at?: string;
 }
+export interface EventoTemplateRow {
+  id: string;
+  organization_id: string;
+  nome: string;
+  descricao: string | null;
+  categoria: string | null;
+  gratuito: boolean;
+  valor_padrao_prestador: number | null;
+  checklist_padrao: Record<string, unknown>[];
+  created_at: string;
+  updated_at: string;
+}
 export const eventosApi = {
   list: (p?:{status?:string;categoria?:string;limit?:number;offset?:number}) => request<{data:Evento[]}>(`/api/eventos?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`),
   get: (id:string) => request<{data:Evento}>(`/api/eventos/${id}`),
   create: (d:Partial<Evento>) => request<{data:Evento}>('/api/eventos',{method:'POST',body:JSON.stringify(d)}),
   update: (id:string,d:Partial<Evento>) => request<{data:Evento}>(`/api/eventos/${id}`,{method:'PUT',body:JSON.stringify(d)}),
   delete: (id:string) => request<{ok:boolean}>(`/api/eventos/${id}`,{method:'DELETE'}),
+};
+export const eventoTemplatesApi = {
+  list: () => request<{ data: EventoTemplateRow[] }>('/api/evento-templates'),
+  get: (id: string) => request<{ data: EventoTemplateRow }>(`/api/evento-templates/${id}`),
+  create: (data: Partial<EventoTemplateRow>) =>
+    request<{ data: EventoTemplateRow }>('/api/evento-templates', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  delete: (id: string) =>
+    request<{ ok: boolean }>(`/api/evento-templates/${id}`, { method: 'DELETE' }),
 };
 export const checklistApi = {
   list: (eventoId: string) => request<{ data: ChecklistItem[] }>(`/api/checklist?eventoId=${encodeURIComponent(eventoId)}`),
@@ -2140,6 +3608,70 @@ export interface Precadastro {
   updated_at: string;
 }
 
+export interface MedicalReportTemplateRecord {
+  id: string;
+  nome: string;
+  descricao: string;
+  tipo_relatorio: string;
+  campos: string[];
+  organization_id?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MedicalReportRecord {
+  id: string;
+  patientId?: string;
+  tipo_relatorio: string;
+  paciente: Record<string, unknown>;
+  profissional_emissor: Record<string, unknown>;
+  profissional_destino?: Record<string, unknown>;
+  clinica: Record<string, unknown>;
+  historico_clinico?: Record<string, unknown>;
+  avaliacao?: Record<string, unknown>;
+  plano_tratamento?: Record<string, unknown>;
+  evolucoes?: unknown[];
+  resumo_tratamento?: string;
+  conduta_sugerida?: string;
+  recomendacoes?: string;
+  data_emissao: string;
+  urgencia?: string;
+  relatorio_feito?: boolean;
+  relatorio_enviado?: boolean;
+}
+
+export interface ConvenioReportRecord {
+  id: string;
+  patientId?: string;
+  paciente: Record<string, unknown>;
+  profissional: Record<string, unknown>;
+  convenio: Record<string, unknown>;
+  clinica: Record<string, unknown>;
+  atendimentos: unknown[];
+  observacoes?: string;
+  evolucao?: string;
+  prognostico?: string;
+  conduta?: string;
+  data_emissao: string;
+}
+
+export interface PublicBookingProfile {
+  id: string;
+  user_id: string;
+  full_name: string;
+  specialty?: string | null;
+  avatar_url?: string | null;
+  bio?: string | null;
+  slug: string;
+  organization_id?: string | null;
+}
+
+export interface PublicBookingRequestResult {
+  id: string;
+  status: string;
+  created_at: string;
+}
+
 export const precadastroApi = {
   public: {
     getToken: (token: string) =>
@@ -2189,10 +3721,349 @@ export const precadastroApi = {
   },
 };
 
+export const reportsApi = {
+  medicalTemplates: {
+    list: () => request<{ data: MedicalReportTemplateRecord[] }>('/api/reports/medical-templates'),
+    create: (data: Partial<MedicalReportTemplateRecord>) =>
+      request<{ data: MedicalReportTemplateRecord }>('/api/reports/medical-templates', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: Partial<MedicalReportTemplateRecord>) =>
+      request<{ data: MedicalReportTemplateRecord }>(`/api/reports/medical-templates/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      request<{ ok: boolean }>(`/api/reports/medical-templates/${id}`, { method: 'DELETE' }),
+  },
+  medical: {
+    list: () => request<{ data: MedicalReportRecord[] }>('/api/reports/medical'),
+    create: (data: Partial<MedicalReportRecord> & Record<string, unknown>) =>
+      request<{ data: MedicalReportRecord }>('/api/reports/medical', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: Partial<MedicalReportRecord> & Record<string, unknown>) =>
+      request<{ data: MedicalReportRecord }>(`/api/reports/medical/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      request<{ ok: boolean }>(`/api/reports/medical/${id}`, { method: 'DELETE' }),
+  },
+  convenio: {
+    list: () => request<{ data: ConvenioReportRecord[] }>('/api/reports/convenio'),
+    create: (data: Partial<ConvenioReportRecord> & Record<string, unknown>) =>
+      request<{ data: ConvenioReportRecord }>('/api/reports/convenio', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: Partial<ConvenioReportRecord> & Record<string, unknown>) =>
+      request<{ data: ConvenioReportRecord }>(`/api/reports/convenio/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      request<{ ok: boolean }>(`/api/reports/convenio/${id}`, { method: 'DELETE' }),
+  },
+};
+
+export const publicBookingApi = {
+  getProfile: (slug: string) =>
+    requestPublic<{ data: PublicBookingProfile }>(`/api/public/booking/${encodeURIComponent(slug)}`),
+  create: (data: {
+    slug: string;
+    date: string;
+    time: string;
+    patient: {
+      name: string;
+      email?: string;
+      phone: string;
+      notes?: string;
+    };
+  }) =>
+    requestPublic<{ data: PublicBookingRequestResult; success: boolean }>('/api/public/booking', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+};
+
+// ===== API EXERCISE VIDEOS =====
+export const exerciseVideosApi = {
+  list: (params?: { category?: string; difficulty?: string; bodyPart?: string; equipment?: string; search?: string }) => {
+    const qs = params ? new URLSearchParams(Object.fromEntries(Object.entries(params).filter(([, v]) => v != null) as [string, string][])).toString() : '';
+    return request<{ data: import('@/services/exerciseVideos').ExerciseVideo[] }>(`/api/exercise-videos${qs ? `?${qs}` : ''}`);
+  },
+  get: (id: string) =>
+    request<{ data: import('@/services/exerciseVideos').ExerciseVideo }>(`/api/exercise-videos/${id}`),
+  byExercise: (exerciseId: string) =>
+    request<{ data: import('@/services/exerciseVideos').ExerciseVideo[] }>(`/api/exercise-videos/by-exercise/${encodeURIComponent(exerciseId)}`),
+  create: (data: Record<string, unknown>) =>
+    request<{ data: import('@/services/exerciseVideos').ExerciseVideo }>('/api/exercise-videos', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: Record<string, unknown>) =>
+    request<{ data: import('@/services/exerciseVideos').ExerciseVideo }>(`/api/exercise-videos/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  delete: (id: string) =>
+    request<{ data: import('@/services/exerciseVideos').ExerciseVideo }>(`/api/exercise-videos/${id}`, {
+      method: 'DELETE',
+    }),
+};
+
+// ===== TIME ENTRIES =====
+export const timeEntriesApi = {
+  list: (params: { userId?: string; startDate?: string; endDate?: string; patientId?: string; limit?: number }) => {
+    const qs = new URLSearchParams();
+    if (params.userId) qs.set('userId', params.userId);
+    if (params.startDate) qs.set('startDate', params.startDate);
+    if (params.endDate) qs.set('endDate', params.endDate);
+    if (params.patientId) qs.set('patientId', params.patientId);
+    if (params.limit) qs.set('limit', String(params.limit));
+    return request<{ data: import('@/types/timetracking').TimeEntry[] }>(`/api/time-entries?${qs}`);
+  },
+  create: (data: Record<string, unknown>) =>
+    request<{ data: import('@/types/timetracking').TimeEntry }>('/api/time-entries', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: Record<string, unknown>) =>
+    request<{ data: import('@/types/timetracking').TimeEntry }>(`/api/time-entries/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+  delete: (id: string) =>
+    request<{ ok: boolean }>(`/api/time-entries/${id}`, { method: 'DELETE' }),
+  stats: (params: { userId?: string; startDate?: string; endDate?: string }) => {
+    const qs = new URLSearchParams();
+    if (params.userId) qs.set('userId', params.userId);
+    if (params.startDate) qs.set('startDate', params.startDate);
+    if (params.endDate) qs.set('endDate', params.endDate);
+    return request<{ data: { total_seconds: string; billable_seconds: string; non_billable_seconds: string; entries_count: string; total_value: string } }>(`/api/time-entries/stats?${qs}`);
+  },
+  getTimerDraft: (userId: string) =>
+    request<{ data: import('@/types/timetracking').ActiveTimer | null }>(`/api/time-entries/timer-draft/${encodeURIComponent(userId)}`),
+  saveTimerDraft: (userId: string, timer: import('@/types/timetracking').ActiveTimer) =>
+    request<{ ok: boolean }>(`/api/time-entries/timer-draft/${encodeURIComponent(userId)}`, {
+      method: 'PUT',
+      body: JSON.stringify({ timer }),
+    }),
+  clearTimerDraft: (userId: string) =>
+    request<{ ok: boolean }>(`/api/time-entries/timer-draft/${encodeURIComponent(userId)}`, { method: 'DELETE' }),
+};
+
+// ===== EXERCISE SESSIONS =====
+export interface ExerciseSessionRow {
+  id: string;
+  patient_id?: string;
+  exercise_id?: string;
+  exercise_type?: string;
+  start_time: string;
+  end_time?: string;
+  duration?: number;
+  repetitions: number;
+  completed: boolean;
+  metrics: Record<string, number>;
+  posture_issues_summary: Record<string, number>;
+  created_at: string;
+}
+
+export interface ExerciseSessionStats {
+  total_sessions: string;
+  total_reps: string;
+  avg_score: string;
+  last_session?: string;
+}
+
+export const exerciseSessionsApi = {
+  list: (params: { patientId?: string; exerciseId?: string; limit?: number }) => {
+    const qs = new URLSearchParams();
+    if (params.patientId) qs.set('patientId', params.patientId);
+    if (params.exerciseId) qs.set('exerciseId', params.exerciseId);
+    if (params.limit) qs.set('limit', String(params.limit));
+    return request<{ data: ExerciseSessionRow[] }>(`/api/exercise-sessions?${qs}`);
+  },
+  create: (data: Omit<ExerciseSessionRow, 'id' | 'created_at'>) =>
+    request<{ data: ExerciseSessionRow }>('/api/exercise-sessions', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  stats: (patientId: string) =>
+    request<{ data: ExerciseSessionStats }>(`/api/exercise-sessions/stats/${encodeURIComponent(patientId)}`),
+};
+
 // ===== HEALTH CHECK =====
 export const healthApi = {
   check: () =>
     request<{ status: string; environment: string; timestamp: string; version: string }>(
       '/api/health',
     ),
+};
+
+// ===== TAREFAS =====
+export interface TarefaRow {
+  id: string; organization_id: string; created_by: string; responsavel_id: string | null;
+  project_id: string | null; parent_id: string | null; titulo: string; descricao: string | null;
+  status: string; prioridade: string; tipo: string; data_vencimento: string | null;
+  start_date: string | null; completed_at: string | null; order_index: number;
+  tags: string[]; checklists: unknown[]; attachments: unknown[]; references: unknown[];
+  dependencies: unknown[]; created_at: string; updated_at: string;
+}
+export const tarefasApi = {
+  list: (params?: { projectId?: string }) => {
+    const qs = params?.projectId ? `?projectId=${encodeURIComponent(params.projectId)}` : '';
+    return request<{ data: TarefaRow[] }>(`/api/tarefas${qs}`);
+  },
+  create: (data: Record<string, unknown>) =>
+    request<{ data: TarefaRow }>('/api/tarefas', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: string, data: Record<string, unknown>) =>
+    request<{ data: TarefaRow }>(`/api/tarefas/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete: (id: string) =>
+    request<{ ok: boolean }>(`/api/tarefas/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  bulk: (updates: Array<{ id: string; status?: string; order_index?: number }>) =>
+    request<{ ok: boolean }>('/api/tarefas/bulk', { method: 'POST', body: JSON.stringify({ updates }) }),
+};
+
+// ===== INVITATIONS =====
+export interface InvitationRow {
+  id: string; organization_id: string; email: string; role: string; token: string;
+  invited_by: string; expires_at: string; used_at: string | null; created_at: string;
+}
+export const invitationsApi = {
+  list: () => request<{ data: InvitationRow[] }>('/api/invitations'),
+  create: (data: { email: string; role: string }) =>
+    request<{ data: InvitationRow }>('/api/invitations', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: string, data: { email?: string; role?: string; expires_at?: string }) =>
+    request<{ data: InvitationRow }>(`/api/invitations/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete: (id: string) =>
+    request<{ ok: boolean }>(`/api/invitations/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  validate: (token: string) =>
+    request<{ data: InvitationRow }>(`/api/invitations/validate/${encodeURIComponent(token)}`),
+  use: (token: string) =>
+    request<{ data: InvitationRow }>(`/api/invitations/use/${encodeURIComponent(token)}`, { method: 'POST' }),
+};
+
+// ===== SATISFACTION SURVEYS =====
+export interface SatisfactionSurveyRow {
+  id: string; organization_id: string; patient_id: string; appointment_id: string | null;
+  therapist_id: string | null; nps_score: number | null; q_care_quality: number | null;
+  q_professionalism: number | null; q_facility_cleanliness: number | null;
+  q_scheduling_ease: number | null; q_communication: number | null;
+  comments: string | null; suggestions: string | null; sent_at: string;
+  responded_at: string | null; response_time_hours: number | null;
+  created_at: string; updated_at: string;
+}
+export interface SurveyStatsRow {
+  total: number; responded_count: number; response_rate: number; nps: number;
+  promotores: number; neutros: number; detratores: number;
+  avg_nps: number; avg_care_quality: number; avg_professionalism: number; avg_communication: number;
+}
+export const satisfactionSurveysApi = {
+  list: (params?: { patientId?: string; therapistId?: string; startDate?: string; endDate?: string; responded?: boolean }) => {
+    const qs = new URLSearchParams(Object.entries(params ?? {}).filter(([,v]) => v !== undefined).map(([k, v]) => [k, String(v)])).toString();
+    return request<{ data: SatisfactionSurveyRow[] }>(`/api/satisfaction-surveys${qs ? `?${qs}` : ''}`);
+  },
+  stats: () => request<{ data: SurveyStatsRow }>('/api/satisfaction-surveys/stats'),
+  create: (data: Record<string, unknown>) =>
+    request<{ data: SatisfactionSurveyRow }>('/api/satisfaction-surveys', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: string, data: Record<string, unknown>) =>
+    request<{ data: SatisfactionSurveyRow }>(`/api/satisfaction-surveys/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete: (id: string) =>
+    request<{ ok: boolean }>(`/api/satisfaction-surveys/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+};
+
+// ===== WEARABLES =====
+export interface WearableDataRow {
+  id: string; organization_id: string; patient_id: string; source: string;
+  data_type: string; value: number; unit: string | null; timestamp: string; created_at: string;
+}
+export const wearablesApi = {
+  list: (params?: { patientId?: string; dataType?: string; source?: string; limit?: number }) => {
+    const qs = new URLSearchParams(Object.entries(params ?? {}).filter(([,v]) => v !== undefined).map(([k, v]) => [k, String(v)])).toString();
+    return request<{ data: WearableDataRow[] }>(`/api/wearables${qs ? `?${qs}` : ''}`);
+  },
+  create: (data: Record<string, unknown>) =>
+    request<{ data: WearableDataRow }>('/api/wearables', { method: 'POST', body: JSON.stringify(data) }),
+  bulk: (entries: Record<string, unknown>[]) =>
+    request<{ data: WearableDataRow[] }>('/api/wearables/bulk', { method: 'POST', body: JSON.stringify({ entries }) }),
+};
+
+// ===== DOCUMENT SIGNATURES =====
+export interface DocumentSignatureRow {
+  id: string; document_id: string; document_type: string; document_title: string;
+  signer_name: string; signer_id: string | null; signature_hash: string;
+  ip_address: string | null; user_agent: string | null; signed_at: string; created_at: string;
+}
+export const documentSignaturesApi = {
+  list: (documentId?: string) => {
+    const qs = documentId ? `?documentId=${encodeURIComponent(documentId)}` : '';
+    return request<{ data: DocumentSignatureRow[] }>(`/api/document-signatures${qs}`);
+  },
+  create: (data: { document_id: string; document_type: string; document_title: string; signer_name: string; signer_id?: string; signature_image: string; signature_hash: string }) =>
+    request<{ data: DocumentSignatureRow }>('/api/document-signatures', { method: 'POST', body: JSON.stringify(data) }),
+  verify: (documentId: string, hash: string) =>
+    request<{ data: { valid: boolean; signature: DocumentSignatureRow | null } }>(
+      `/api/document-signatures/verify?documentId=${encodeURIComponent(documentId)}&hash=${encodeURIComponent(hash)}`
+    ),
+};
+
+// ===== TREATMENT CYCLES =====
+export interface TreatmentCycleRow {
+  id: string; patient_id: string; therapist_id: string | null; title: string;
+  description: string | null; status: string; start_date: string | null; end_date: string | null;
+  goals: unknown[]; metadata: Record<string, unknown>; created_at: string; updated_at: string;
+}
+export const treatmentCyclesApi = {
+  list: (patientId?: string) => {
+    const qs = patientId ? `?patientId=${encodeURIComponent(patientId)}` : '';
+    return request<{ data: TreatmentCycleRow[] }>(`/api/treatment-cycles${qs}`);
+  },
+  create: (data: Record<string, unknown>) =>
+    request<{ data: TreatmentCycleRow }>('/api/treatment-cycles', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: string, data: Record<string, unknown>) =>
+    request<{ data: TreatmentCycleRow }>(`/api/treatment-cycles/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete: (id: string) =>
+    request<{ ok: boolean }>(`/api/treatment-cycles/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+};
+
+// ===== EVOLUTION VERSIONS =====
+export interface EvolutionVersionRow {
+  id: string; soap_record_id: string; saved_by: string; change_type: string;
+  content: Record<string, unknown>; saved_at: string;
+}
+export const evolutionVersionsApi = {
+  list: (soapRecordId: string) =>
+    request<{ data: EvolutionVersionRow[] }>(`/api/evolution-versions?soapRecordId=${encodeURIComponent(soapRecordId)}`),
+  create: (data: { soap_record_id: string; change_type?: string; content: Record<string, unknown> }) =>
+    request<{ data: EvolutionVersionRow }>('/api/evolution-versions', { method: 'POST', body: JSON.stringify(data) }),
+};
+
+// ===== EXERCISE PLANS =====
+export interface ExercisePlanRow {
+  id: string; patient_id: string; created_by: string; name: string; description: string | null;
+  status: string; start_date: string | null; end_date: string | null;
+  created_at: string; updated_at: string; items?: ExercisePlanItemRow[];
+}
+export interface ExercisePlanItemRow {
+  id: string; plan_id: string; exercise_id: string | null; order_index: number;
+  sets: number | null; repetitions: number | null; duration: number | null; notes: string | null;
+  created_at: string; updated_at: string;
+}
+export const exercisePlansApi = {
+  list: (patientId?: string) => {
+    const qs = patientId ? `?patientId=${encodeURIComponent(patientId)}` : '';
+    return request<{ data: ExercisePlanRow[] }>(`/api/exercise-plans${qs}`);
+  },
+  create: (data: Record<string, unknown>) =>
+    request<{ data: ExercisePlanRow }>('/api/exercise-plans', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: string, data: Record<string, unknown>) =>
+    request<{ data: ExercisePlanRow }>(`/api/exercise-plans/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete: (id: string) =>
+    request<{ ok: boolean }>(`/api/exercise-plans/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  addItem: (planId: string, item: Record<string, unknown>) =>
+    request<{ data: ExercisePlanItemRow }>(`/api/exercise-plans/${encodeURIComponent(planId)}/items`, { method: 'POST', body: JSON.stringify(item) }),
 };

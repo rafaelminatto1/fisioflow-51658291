@@ -19,40 +19,14 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { useQuery } from "@tanstack/react-query";
-import { db, collection, getDocs, query as firestoreQuery, orderBy } from '@/integrations/firebase/app';
+import { clinicalTestsApi, type ClinicalTestTemplateRecord } from '@/lib/api/workers-client';
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { normalizeFirestoreData } from '@/utils/firestoreData';
-
-export interface ClinicalTest {
-    id: string;
-    name: string;
-    name_en?: string;
-    category: string;
-    target_joint: string;
-    purpose?: string;
-    execution?: string;
-    tags?: string[];
-    type?: string;
-    /** URLs de imagens/vídeos para "como realizar" o teste */
-    media_urls?: string[];
-    /** URL única da imagem principal do teste (alternativa a media_urls[0]) */
-    image_url?: string;
-    /** Layout de entrada: single | multi_field | y_balance | radial */
-    layout_type?: 'single' | 'multi_field' | 'y_balance' | 'radial';
-    fields_definition?: Array<{
-        id: string;
-        label: string;
-        unit?: string;
-        type: string;
-        required?: boolean;
-        description?: string;
-    }>;
-}
+export interface ClinicalTest extends ClinicalTestTemplateRecord {}
 
 interface ClinicalTestComboboxProps {
     value?: string;
@@ -75,16 +49,8 @@ export function ClinicalTestCombobox({
     const { data: tests = [], isLoading } = useQuery({
         queryKey: ['clinical-tests-combobox'],
         queryFn: async () => {
-            const q = firestoreQuery(
-                collection(db, 'clinical_test_templates'),
-                orderBy('name')
-            );
-
-            const snapshot = await getDocs(q);
-            return snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...normalizeFirestoreData(doc.data())
-            } as ClinicalTest));
+            const res = await clinicalTestsApi.list();
+            return (res?.data ?? []) as ClinicalTest[];
         }
     });
 

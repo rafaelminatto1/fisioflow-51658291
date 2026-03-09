@@ -8,8 +8,7 @@ import { Menu } from 'lucide-react';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { getFirebaseAuth } from '@/integrations/firebase/app';
-import { signOut } from 'firebase/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import fisioflowLogo from '@/assets/logo.avif';
 import {
@@ -57,15 +56,11 @@ export function MobileHeader() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const { signOut: contextSignOut } = useAuth();
   const handleLogout = async () => {
     try {
-      const auth = getFirebaseAuth();
-      await signOut(auth);
-      toast({
-        title: 'Logout realizado',
-        description: 'Até breve!',
-      });
-      navigate('/auth');
+      await contextSignOut();
+      toast({ title: 'Logout realizado', description: 'Até breve!' });
     } catch (error) {
       toast({
         title: 'Erro ao sair',

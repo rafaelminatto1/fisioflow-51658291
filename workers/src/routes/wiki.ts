@@ -162,6 +162,70 @@ app.get('/:slug/versions', requireAuth, async (c) => {
   return c.json({ data: versions });
 });
 
+// ===== LISTA PÁGINAS DA ORGANIZAÇÃO (auth required) =====
+app.get('/org/list', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = createDb(c.env, user.organizationId);
+  const { q, category } = c.req.query();
+
+  const conditions = [
+    eq(wikiPages.isPublished, true),
+    isNull(wikiPages.deletedAt),
+  ];
+
+  if (user.organizationId) {
+    conditions.push(eq(wikiPages.organizationId, user.organizationId));
+  }
+  if (q) conditions.push(ilike(wikiPages.title, `%${q}%`));
+  if (category) conditions.push(eq(wikiPages.category, category));
+
+  const rows = await db
+    .select()
+    .from(wikiPages)
+    .where(and(...conditions))
+    .orderBy(sql`${wikiPages.updatedAt} DESC`);
+
+  return c.json({ data: rows });
+});
+
+// ===== BUSCAR PÁGINA POR ID =====
+app.get('/by-id/:id', requireAuth, async (c) => {
+  const { id } = c.req.param();
+  const user = c.get('user');
+  const db = createDb(c.env, user.organizationId);
+
+  const rows = await db
+    .select()
+    .from(wikiPages)
+    .where(and(eq(wikiPages.id, id), isNull(wikiPages.deletedAt)))
+    .limit(1);
+
+  if (!rows.length) return c.json({ error: 'Página não encontrada' }, 404);
+  return c.json({ data: rows[0] });
+});
+
+// ===== BULK UPDATE TRIAGE ORDERING =====
+app.patch('/triage', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = createDb(c.env, user.organizationId);
+  const { updates } = await c.req.json() as {
+    updates: Array<{ id: string; triage_order?: number; tags?: string[]; category?: string }>;
+  };
+
+  await Promise.all(updates.map(({ id, ...fields }) =>
+    db.update(wikiPages)
+      .set({
+        ...(fields.category !== undefined && { category: fields.category }),
+        ...(fields.tags !== undefined && { tags: fields.tags }),
+        updatedBy: user.uid,
+        updatedAt: new Date(),
+      })
+      .where(eq(wikiPages.id, id))
+  ));
+
+  return c.json({ ok: true });
+});
+
 // ===== CRIAR PÁGINA =====
 app.post('/', requireAuth, async (c) => {
   const db = createDb(c.env);

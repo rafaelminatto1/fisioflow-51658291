@@ -1,14 +1,10 @@
 /**
- * useTarefas - Migrated to Firebase
+ * useTarefas - Migrated to Neon/Workers
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query as firestoreQuery, where, orderBy, writeBatch, getFirebaseAuth, db } from '@/integrations/firebase/app';
 import { toast } from 'sonner';
-import { getUserOrganizationId } from '@/utils/userHelpers';
-import { fisioLogger } from '@/lib/errors/logger';
-
-const auth = getFirebaseAuth();
+import { tarefasApi } from '@/lib/api/workers-client';
 
 // Re-export types from centralized types file
 export type {
@@ -36,86 +32,21 @@ export {
 } from '@/types/tarefas';
 
 import type { Tarefa, TarefaStatus } from '@/types/tarefas';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
-// Query key para cache e prefetch
 export const TAREFAS_QUERY_KEY = ['tarefas'] as const;
 
-const toIsoDateString = (value: unknown): string | undefined => {
-  if (!value) return undefined;
-  if (typeof value === 'string') return value;
-  if (value instanceof Date) return value.toISOString();
-  if (value && typeof value === 'object' && typeof (value as { toDate?: () => Date }).toDate === 'function') {
-    try {
-      return (value as { toDate: () => Date }).toDate().toISOString();
-    } catch {
-      return undefined;
-    }
-  }
-  if (typeof value === 'number') return new Date(value).toISOString();
-  return undefined;
-};
-
-const toNumberSafe = (value: unknown, fallback = 0): number => {
-  if (typeof value === 'number' && Number.isFinite(value)) return value;
-  if (typeof value === 'string') {
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : fallback;
-  }
-  if (value && typeof value === 'object' && typeof (value as { toString?: () => string }).toString === 'function') {
-    try {
-      const parsed = Number((value as { toString: () => string }).toString());
-      return Number.isFinite(parsed) ? parsed : fallback;
-    } catch {
-      return fallback;
-    }
-  }
-  return fallback;
-};
-
-// Helper: Convert Firestore doc to Tarefa
-const convertDocToTarefa = (doc: { id: string; data: () => Record<string, unknown> }): Tarefa => {
-  const data = normalizeFirestoreData(doc.data());
-  return {
-    id: doc.id,
-    ...data,
-    created_at: toIsoDateString(data.created_at) || new Date().toISOString(),
-    updated_at: toIsoDateString(data.updated_at) || new Date().toISOString(),
-    start_date: toIsoDateString(data.start_date),
-    data_vencimento: toIsoDateString(data.data_vencimento),
-    completed_at: toIsoDateString(data.completed_at),
-    order_index: toNumberSafe(data.order_index, 0),
-  } as Tarefa;
-};
-
-// QueryFn extraída para permitir prefetch (melhora velocidade ao abrir /tarefas)
 export async function fetchTarefas(): Promise<Tarefa[]> {
-  const user = auth.currentUser;
-  if (!user) return [];
-
-  const organizationId = await getUserOrganizationId();
-  if (!organizationId) {
-    fisioLogger.debug('No organization_id found - returning empty array', undefined, 'useTarefas');
-    return [];
-  }
-
-  const q = firestoreQuery(
-    collection(db, 'tarefas'),
-    where('organization_id', '==', organizationId),
-    orderBy('order_index', 'asc')
-  );
-
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(convertDocToTarefa);
+  const result = await tarefasApi.list();
+  return (result.data ?? []) as unknown as Tarefa[];
 }
 
 export function useTarefas() {
   return useQuery({
     queryKey: TAREFAS_QUERY_KEY,
     queryFn: fetchTarefas,
-    staleTime: 1000 * 60 * 5, // 5 minutos - dados considerados frescos
-    gcTime: 1000 * 60 * 30, // 30 minutos - tempo para garbage collection
-    refetchOnWindowFocus: false, // Evita recargas ao mudar de aba
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -124,17 +55,10 @@ export function useProjectTarefas(projectId: string | undefined) {
     queryKey: ['tarefas', 'project', projectId],
     queryFn: async () => {
       if (!projectId) return [];
-
-      const q = firestoreQuery(
-        collection(db, 'tarefas'),
-        where('project_id', '==', projectId),
-        orderBy('order_index', 'asc')
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(convertDocToTarefa);
+      const result = await tarefasApi.list({ projectId });
+      return (result.data ?? []) as unknown as Tarefa[];
     },
-    enabled: !!projectId, // Só executa se projectId for fornecido
+    enabled: !!projectId,
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 30,
     refetchOnWindowFocus: false,
@@ -146,11 +70,7 @@ export function useCreateTarefa() {
 
   return useMutation({
     mutationFn: async (tarefa: Partial<Tarefa>) => {
-      const organization_id = await getUserOrganizationId();
-      const firebaseUser = auth.currentUser;
-      if (!firebaseUser) throw new Error('Usuário não autenticado');
-
-      const tarefaData = {
+      const result = await tarefasApi.create({
         titulo: tarefa.titulo!,
         descricao: tarefa.descricao,
         status: tarefa.status || 'A_FAZER',
@@ -159,8 +79,6 @@ export function useCreateTarefa() {
         data_vencimento: tarefa.data_vencimento,
         tags: tarefa.tags || [],
         order_index: tarefa.order_index || 0,
-        organization_id,
-        created_by: firebaseUser.uid,
         project_id: tarefa.project_id,
         parent_id: tarefa.parent_id,
         checklists: tarefa.checklists || [],
@@ -169,23 +87,12 @@ export function useCreateTarefa() {
         dependencies: tarefa.dependencies || [],
         start_date: tarefa.start_date,
         responsavel_id: tarefa.responsavel_id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'tarefas'), tarefaData);
-      const docSnap = await getDoc(docRef);
-
-      return { id: docSnap.id, ...tarefaData };
+      });
+      return result.data as unknown as Tarefa;
     },
     onMutate: async (newTarefa) => {
-      // Cancelar queries em andamento
       await queryClient.cancelQueries({ queryKey: ['tarefas'] });
-
-      // Salvar estado anterior para rollback
       const previousTarefas = queryClient.getQueryData(['tarefas']);
-
-      // Criar tarefa temporária para atualização otimista
       const tempTarefa: Tarefa = {
         id: `temp-${Date.now()}`,
         titulo: newTarefa.titulo!,
@@ -205,25 +112,18 @@ export function useCreateTarefa() {
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
-
-      // Adicionar temporariamente ao cache
-      queryClient.setQueryData(['tarefas'], (old: Tarefa[] | undefined) => {
-        if (!old) return old;
-        return [...old, tempTarefa];
-      });
-
+      queryClient.setQueryData(['tarefas'], (old: Tarefa[] | undefined) =>
+        old ? [...old, tempTarefa] : old
+      );
       return { previousTarefas, tempTarefa };
     },
     onSuccess: (data, _variables, context) => {
-      // Substituir tarefa temporária pela real
-      queryClient.setQueryData(['tarefas'], (old: Tarefa[] | undefined) => {
-        if (!old) return old;
-        return old.map(t => t.id === context?.tempTarefa.id ? data : t);
-      });
+      queryClient.setQueryData(['tarefas'], (old: Tarefa[] | undefined) =>
+        old ? old.map(t => t.id === context?.tempTarefa.id ? data : t) : old
+      );
       toast.success('Tarefa criada com sucesso!');
     },
     onError: (error: Error, _variables, context) => {
-      // Rollback em caso de erro
       if (context?.previousTarefas) {
         queryClient.setQueryData(['tarefas'], context.previousTarefas);
       }
@@ -237,32 +137,18 @@ export function useUpdateTarefa() {
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Tarefa> & { id: string }) => {
-      const docRef = doc(db, 'tarefas', id);
-      await updateDoc(docRef, {
-        ...updates,
-        updated_at: new Date().toISOString(),
-      });
-
-      const docSnap = await getDoc(docRef);
-      return convertDocToTarefa(docSnap);
+      const result = await tarefasApi.update(id, updates as Record<string, unknown>);
+      return result.data as unknown as Tarefa;
     },
     onMutate: async (updatedTarefa) => {
-      // Cancelar queries em andamento para evitar conflitos
       await queryClient.cancelQueries({ queryKey: ['tarefas'] });
-
-      // Salvar estado anterior para rollback em caso de erro
       const previousTarefas = queryClient.getQueryData(['tarefas']);
-
-      // Atualização otimista - atualiza o cache imediatamente
-      queryClient.setQueryData(['tarefas'], (old: Tarefa[] | undefined) => {
-        if (!old) return old;
-        return old.map((t) => (t.id === updatedTarefa.id ? { ...t, ...updatedTarefa } : t));
-      });
-
+      queryClient.setQueryData(['tarefas'], (old: Tarefa[] | undefined) =>
+        old ? old.map((t) => (t.id === updatedTarefa.id ? { ...t, ...updatedTarefa } : t)) : old
+      );
       return { previousTarefas };
     },
     onError: (err, _updatedTarefa, context) => {
-      // Rollback para o estado anterior em caso de erro
       if (context?.previousTarefas) {
         queryClient.setQueryData(['tarefas'], context.previousTarefas);
       }
@@ -276,26 +162,18 @@ export function useDeleteTarefa() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      await deleteDoc(doc(db, 'tarefas', id));
+      await tarefasApi.delete(id);
       return id;
     },
     onMutate: async (deletedId) => {
-      // Cancelar queries em andamento
       await queryClient.cancelQueries({ queryKey: ['tarefas'] });
-
-      // Salvar estado anterior para rollback
       const previousTarefas = queryClient.getQueryData(['tarefas']);
-
-      // Remover do cache otimistamente
-      queryClient.setQueryData(['tarefas'], (old: Tarefa[] | undefined) => {
-        if (!old) return old;
-        return old.filter(t => t.id !== deletedId);
-      });
-
-      return { previousTarefas, deletedId };
+      queryClient.setQueryData(['tarefas'], (old: Tarefa[] | undefined) =>
+        old ? old.filter(t => t.id !== deletedId) : old
+      );
+      return { previousTarefas };
     },
     onError: (error: Error, _variables, context) => {
-      // Rollback em caso de erro
       if (context?.previousTarefas) {
         queryClient.setQueryData(['tarefas'], context.previousTarefas);
       }
@@ -312,30 +190,12 @@ export function useBulkUpdateTarefas() {
 
   return useMutation({
     mutationFn: async (tarefas: Array<{ id: string; status?: TarefaStatus; order_index?: number }>) => {
-      // Use batch for bulk updates (max 500 operations)
-      const batchSize = 500;
-      for (let i = 0; i < tarefas.length; i += batchSize) {
-        const batch = writeBatch(db);
-        const chunk = tarefas.slice(i, i + batchSize);
-
-        chunk.forEach(({ id, ...updates }) => {
-          const docRef = doc(db, 'tarefas', id);
-          batch.update(docRef, { ...updates, updated_at: new Date().toISOString() });
-        });
-
-        await batch.commit();
-      }
-
+      await tarefasApi.bulk(tarefas);
       return tarefas;
     },
     onMutate: async (updatedTarefas) => {
-      // Cancelar queries em andamento
       await queryClient.cancelQueries({ queryKey: ['tarefas'] });
-
-      // Salvar estado anterior para rollback
       const previousTarefas = queryClient.getQueryData(['tarefas']);
-
-      // Atualizar cache otimistamente
       queryClient.setQueryData(['tarefas'], (old: Tarefa[] | undefined) => {
         if (!old) return old;
         const updatedMap = new Map(updatedTarefas.map(t => [t.id, t]));
@@ -344,11 +204,9 @@ export function useBulkUpdateTarefas() {
           return updates ? { ...t, ...updates } : t;
         });
       });
-
       return { previousTarefas };
     },
     onError: (error: Error, _variables, context) => {
-      // Rollback em caso de erro
       if (context?.previousTarefas) {
         queryClient.setQueryData(['tarefas'], context.previousTarefas);
       }

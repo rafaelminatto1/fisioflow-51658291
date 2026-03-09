@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Loader2, MapPin } from 'lucide-react';
+import { integrationsApi, type GooglePlacePrediction } from '@/lib/api/workers-client';
 
 interface Props {
   value: string;
@@ -16,7 +15,7 @@ interface Props {
 }
 
 export function AddressAutocomplete({ value, onChange, onSelect, className, placeholder = "Digite o endereço...", label, id = "address-input" }: Props) {
-  const [suggestions, setSuggestions] = useState<unknown[]>([]);
+  const [suggestions, setSuggestions] = useState<GooglePlacePrediction[]>([]);
   const [loading, setLoading] = useState(false);
   const debouncedSearch = useDebounce(value, 500);
   const [isOpen, setIsOpen] = useState(false);
@@ -30,9 +29,8 @@ export function AddressAutocomplete({ value, onChange, onSelect, className, plac
     const fetchPlaces = async () => {
       setLoading(true);
       try {
-        const searchPlaces = httpsCallable(functions, 'searchPlaces');
-        const result = await searchPlaces({ query: debouncedSearch });
-        setSuggestions((result.data as unknown[]) || []);
+        const result = await integrationsApi.searchPlaces(debouncedSearch);
+        setSuggestions(result.data ?? []);
         setIsOpen(true);
       } catch (error) {
         console.error(error);
@@ -44,7 +42,7 @@ export function AddressAutocomplete({ value, onChange, onSelect, className, plac
     fetchPlaces();
   }, [debouncedSearch]);
 
-  const handleSelect = (place: unknown) => {
+  const handleSelect = (place: GooglePlacePrediction) => {
     onChange(place.description);
     if (onSelect) onSelect(place);
     setSuggestions([]);

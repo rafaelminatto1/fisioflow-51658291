@@ -1,12 +1,11 @@
 /**
- * useLeaderboard - Migrated to Firebase
+ * useLeaderboard - Migrated to Neon/Workers
  */
 
 import { useState } from 'react';
-import { collection, getDocs, query as firestoreQuery, where, orderBy, limit } from '@/integrations/firebase/app';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { subDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { gamificationApi } from '@/lib/api/workers-client';
 import {
 
   LeaderboardEntry,
@@ -14,8 +13,6 @@ import {
   EngagementData,
 } from '@/types/gamification';
 import { downloadCSV } from '@/utils/csvExport';
-import { db } from '@/integrations/firebase/app';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 
 // ============================================================================
@@ -69,126 +66,56 @@ export const useLeaderboard = (initialFilters?: Partial<LeaderboardFilters>): Us
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['gamification-leaderboard', filters],
     queryFn: async (): Promise<{ leaderboard: LeaderboardEntry[]; totalCount: number }> => {
-      // Build base query
-      const sortColumn = filters.sortBy === 'total_xp' ? 'total_points' : filters.sortBy;
-      const baseQuery = firestoreQuery(
-        collection(db, 'patient_gamification'),
-        orderBy(sortColumn, filters.order === 'asc' ? 'asc' : 'desc')
-      );
+      const period =
+        filters.period === 'week' ? 'weekly' : filters.period === 'month' ? 'monthly' : 'all';
+      const res = await gamificationApi.getLeaderboard({ period, limit: 100 });
+      let leaderboard = (res.data ?? []).map((entry) => ({
+        rank: entry.rank,
+        patient_id: entry.patient_id,
+        patient_name: entry.patient_name,
+        email: entry.email || '',
+        level: entry.current_level,
+        total_xp: entry.total_xp,
+        current_streak: entry.current_streak,
+        longest_streak: entry.longest_streak || 0,
+        achievements_count: 0,
+        last_activity: entry.last_activity_date || '',
+      })) as LeaderboardEntry[];
 
-      const snapshot = await getDocs(baseQuery);
-
-      // Get all gamification data
-      let gamificationData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...normalizeFirestoreData(doc.data())
-      }));
-
-      // Apply period filter (client-side for date range + sort combo)
-      if (filters.period === 'week') {
-        const weekAgo = subDays(new Date(), 7);
-        gamificationData = gamificationData.filter((p) => {
-          const lastActivity = p.last_activity_date ? new Date(p.last_activity_date) : null;
-          return lastActivity && lastActivity >= weekAgo;
-        });
-      } else if (filters.period === 'month') {
-        const monthAgo = subDays(new Date(), 30);
-        gamificationData = gamificationData.filter((p) => {
-          const lastActivity = p.last_activity_date ? new Date(p.last_activity_date) : null;
-          return lastActivity && lastActivity >= monthAgo;
-        });
-      }
-
-      // Get total count before pagination
-      const totalCount = gamificationData.length;
-
-      // Fetch patient names for search filter and display
-      const patientIds = gamificationData.map((p) => p.id);
-      const patientsMap: Record<string, unknown> = {};
-
-      // Fetch patient data in batches (Firestore limitation)
-      for (const patientId of patientIds) {
-        const patientQuery = firestoreQuery(
-          collection(db, 'patients'),
-          where('__name__', '==', patientId),
-          limit(1)
-        );
-        const patientSnap = await getDocs(patientQuery);
-        if (!patientSnap.empty) {
-          patientsMap[patientId] = patientSnap.docs[0].data();
-        }
-      }
-
-      // Apply search filter
-      if (filters.search && filters.search.trim()) {
+      if (filters.search.trim()) {
         const searchLower = filters.search.trim().toLowerCase();
-        gamificationData = gamificationData.filter((p: { id: string; [key: string]: unknown }) => {
-          const patientName = (patientsMap[p.id]?.full_name as string) || '';
-          return patientName.toLowerCase().includes(searchLower);
-        });
-      }
-
-      // Re-sort after filtering (since we fetched all sorted data initially)
-      const descOrder = filters.order === 'desc';
-      gamificationData.sort((a: Record<string, unknown>, b: Record<string, unknown>) => {
-        const aVal = (a[sortColumn] as number) || 0;
-        const bVal = (b[sortColumn] as number) || 0;
-        return descOrder ? bVal - aVal : aVal - bVal;
-      });
-
-      // Apply pagination
-      const from = (filters.page - 1) * filters.pageSize;
-      const paginatedData = gamificationData.slice(from, from + filters.pageSize);
-
-      if (paginatedData.length === 0) {
-        return { leaderboard: [], totalCount };
-      }
-
-      interface GamificationData {
-        id: string;
-        level: number;
-        total_points?: number;
-        current_streak?: number;
-        longest_streak?: number;
-        last_activity_date?: string;
-      }
-
-      // Get achievement counts for paginated patients
-      const paginatedPatientIds = paginatedData.map((p: GamificationData) => p.id);
-      const achievementMap: Record<string, number> = {};
-
-      for (const patientId of paginatedPatientIds) {
-        const achievementsQuery = firestoreQuery(
-          collection(db, 'achievements_log'),
-          where('patient_id', '==', patientId)
+        leaderboard = leaderboard.filter((entry) =>
+          entry.patient_name.toLowerCase().includes(searchLower),
         );
-        const achievementsSnap = await getDocs(achievementsQuery);
-        achievementMap[patientId] = achievementsSnap.size;
       }
 
-      // Transform data to leaderboard entries
-      const leaderboard: LeaderboardEntry[] = paginatedData.map((p: GamificationData, index) => {
-        const patientInfo = patientsMap[p.id] || {};
-        const entry: LeaderboardEntry = {
-          patient_id: p.id,
-          patient_name: patientInfo.full_name || 'Desconhecido',
-          email: patientInfo.email,
-          level: p.level,
-          total_xp: p.total_points || 0,
-          current_streak: p.current_streak || 0,
-          longest_streak: p.longest_streak || 0,
-          achievements_count: achievementMap[p.id] || 0,
-          last_activity: p.last_activity_date || '',
-        };
-
-        // Calculate rank based on sorted position
-        entry.rank = from + index + 1;
-
-        return entry;
+      const sortBy = filters.sortBy;
+      leaderboard.sort((a, b) => {
+        const dir = filters.order === 'asc' ? 1 : -1;
+        const av =
+          sortBy === 'total_xp' ? a.total_xp :
+          sortBy === 'current_streak' ? a.current_streak :
+          sortBy === 'longest_streak' ? a.longest_streak :
+          sortBy === 'achievements_count' ? a.achievements_count :
+          sortBy === 'last_activity' ? new Date(a.last_activity || 0).getTime() :
+          a.level;
+        const bv =
+          sortBy === 'total_xp' ? b.total_xp :
+          sortBy === 'current_streak' ? b.current_streak :
+          sortBy === 'longest_streak' ? b.longest_streak :
+          sortBy === 'achievements_count' ? b.achievements_count :
+          sortBy === 'last_activity' ? new Date(b.last_activity || 0).getTime() :
+          b.level;
+        return av > bv ? dir : av < bv ? -dir : 0;
       });
 
+      const totalCount = leaderboard.length;
+      const from = (filters.page - 1) * filters.pageSize;
       return {
-        leaderboard,
+        leaderboard: leaderboard.slice(from, from + filters.pageSize).map((entry, index) => ({
+          ...entry,
+          rank: from + index + 1,
+        })),
         totalCount,
       };
     },
@@ -254,10 +181,6 @@ export const useLeaderboard = (initialFilters?: Partial<LeaderboardFilters>): Us
   };
 };
 
-// ============================================================================
-// ENGAGEMENT DATA HOOK
-// ============================================================================
-
 export interface UseEngagementDataResult {
   data: EngagementData[];
   isLoading: boolean;
@@ -271,22 +194,9 @@ export const useEngagementData = (defaultDays: number = 30): UseEngagementDataRe
   const { data, isLoading } = useQuery({
     queryKey: ['gamification-engagement-data', days],
     queryFn: async (): Promise<EngagementData[]> => {
-      const startDate = subDays(new Date(), days);
-
-      const q = firestoreQuery(
-        collection(db, 'xp_transactions'),
-        where('created_at', '>=', startDate.toISOString()),
-        orderBy('created_at', 'asc')
-      );
-
-      const snapshot = await getDocs(q);
-
-      if (snapshot.empty) return [];
-
-      const transactions = snapshot.docs.map(doc => ({
-        ...normalizeFirestoreData(doc.data()),
-        id: doc.id
-      }));
+      const res = await gamificationApi.listTransactions({ days, limit: 5000 });
+      const transactions = res.data ?? [];
+      if (transactions.length === 0) return [];
 
       // Group by date
       const grouped = transactions.reduce((acc, t) => {
@@ -300,7 +210,7 @@ export const useEngagementData = (defaultDays: number = 30): UseEngagementDataRe
             achievementsUnlocked: 0,
           };
         }
-        acc[date].xpAwarded += t.amount;
+        acc[date].xpAwarded += t.amount || 0;
         if (t.reason === 'daily_quest') acc[date].questsCompleted++;
         if (t.reason === 'achievement_unlocked') acc[date].achievementsUnlocked++;
         return acc;

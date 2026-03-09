@@ -7,6 +7,7 @@
  * GET/POST/PUT/DELETE /api/evento-contratados
  * GET/POST/PUT/DELETE /api/participantes
  * GET/POST/PUT/DELETE /api/checklist
+ * GET/POST/DELETE /api/evento-templates
  */
 import { Hono } from 'hono';
 import { createPool } from '../lib/db';
@@ -621,6 +622,88 @@ app.delete('/participantes/:id', requireAuth, async (c) => {
        )`,
     [id, user.organizationId],
   );
+  return c.json({ ok: true });
+});
+
+// ===== EVENTO TEMPLATES =====
+
+app.get('/evento-templates', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+
+  const result = await pool.query(
+    `
+      SELECT *
+      FROM evento_templates
+      WHERE organization_id = $1
+      ORDER BY created_at DESC
+    `,
+    [user.organizationId],
+  );
+
+  return c.json({ data: result.rows });
+});
+
+app.get('/evento-templates/:id', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id } = c.req.param();
+
+  const result = await pool.query(
+    `
+      SELECT *
+      FROM evento_templates
+      WHERE id = $1 AND organization_id = $2
+      LIMIT 1
+    `,
+    [id, user.organizationId],
+  );
+
+  if (!result.rows.length) return c.json({ error: 'Template não encontrado' }, 404);
+  return c.json({ data: result.rows[0] });
+});
+
+app.post('/evento-templates', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const body = (await c.req.json()) as Record<string, unknown>;
+
+  if (!body.nome) return c.json({ error: 'nome é obrigatório' }, 400);
+
+  const result = await pool.query(
+    `
+      INSERT INTO evento_templates (
+        organization_id, nome, descricao, categoria, gratuito, valor_padrao_prestador,
+        checklist_padrao, created_at, updated_at
+      ) VALUES (
+        $1,$2,$3,$4,$5,$6,$7::jsonb,NOW(),NOW()
+      )
+      RETURNING *
+    `,
+    [
+      user.organizationId,
+      String(body.nome),
+      body.descricao ?? null,
+      body.categoria ?? null,
+      body.gratuito === true,
+      body.valor_padrao_prestador != null ? Number(body.valor_padrao_prestador) : null,
+      JSON.stringify(body.checklist_padrao ?? []),
+    ],
+  );
+
+  return c.json({ data: result.rows[0] }, 201);
+});
+
+app.delete('/evento-templates/:id', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id } = c.req.param();
+
+  await pool.query(
+    'DELETE FROM evento_templates WHERE id = $1 AND organization_id = $2',
+    [id, user.organizationId],
+  );
+
   return c.json({ ok: true });
 });
 

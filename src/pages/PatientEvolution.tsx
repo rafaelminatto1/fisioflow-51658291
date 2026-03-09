@@ -4,7 +4,6 @@
  */
 
 import { lazy, Suspense, useEffect, useMemo, useState, useCallback } from 'react';
-import { collection, query, where, getDocs, addDoc, updateDoc, doc, limit } from '@/integrations/firebase/app';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   format,
@@ -55,7 +54,6 @@ import { useTherapists } from '@/hooks/useTherapists';
 import { useQueryClient } from '@tanstack/react-query';
 import { usePDFGenerator } from '@/hooks/usePDFGenerator';
 import { useAuth } from '@/hooks/useAuth';
-import { db, getFirebaseAuth } from '@/integrations/firebase/app';
 import { useEvolutionTemplates, type EvolutionTemplate } from '@/hooks/useEvolutionTemplates';
 
 // Componentes de Evolução
@@ -702,45 +700,19 @@ const PatientEvolution = () => {
         }, 'manual').catch(() => {/* versão não é crítica */ });
       }
 
-      // Salvar sessão de tratamento (exercícios realizados) - Migrado para Firebase
-      if (!patientId) return; // evita gravar sessão sem paciente
-      const user = getFirebaseAuth().currentUser;
-      if (user) {
-        // Verificar se já existe sessão para este agendamento
-        let existingSessionId: string | null = null;
-        if (appointmentId) {
-          const q = query(
-            collection(db, 'treatment_sessions'),
-            where('appointment_id', '==', appointmentId),
-            limit(1)
-          );
-          const snapshot = await getDocs(q);
-          if (!snapshot.empty) {
-            existingSessionId = snapshot.docs[0].id;
-          }
-        }
-
-        const therapistId = selectedTherapistId || user?.uid;
-        if (!therapistId) return;
-        const sessionData = {
+      if (!patientId || !appointmentId) return;
+      const therapistId = selectedTherapistId || appointment?.therapist_id;
+      if (therapistId) {
+        await evolutionApi.treatmentSessions.upsert({
           patient_id: patientId,
-          therapist_id: therapistId,
-          appointment_id: appointmentId || null,
+          therapist_id: String(therapistId),
+          appointment_id: appointmentId,
           session_date: new Date().toISOString(),
-          session_type: 'treatment',
+          observations: saveData.assessment || '',
           exercises_performed: exercisesToSave,
           pain_level_before: painScale.level,
-          updated_at: new Date().toISOString(),
-        };
-
-        if (existingSessionId) {
-          await updateDoc(doc(db, 'treatment_sessions', existingSessionId), sessionData);
-        } else {
-          await addDoc(collection(db, 'treatment_sessions'), {
-            ...sessionData,
-            created_at: new Date().toISOString(),
-          });
-        }
+          pain_level_after: painScale.level,
+        });
       }
     } catch (error) {
       toast({

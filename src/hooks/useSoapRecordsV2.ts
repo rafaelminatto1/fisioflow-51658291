@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { clinicalApi } from '@/integrations/firebase/functions';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { sessionsApi } from '@/lib/api/workers-client';
 import { useToast } from '@/hooks/use-toast';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 
@@ -15,43 +15,30 @@ export interface SoapRecordV2 {
   createdBy: string;
 }
 
-// Helper to parse content JSON
-const parseSoapContent = (record: unknown): SoapRecordV2 => {
-  let content = { subjective: '', objective: '', assessment: '', plan: '' };
-  try {
-    content = typeof record.content === 'string' ? JSON.parse(record.content) : record.content;
-  } catch (_e) {
-    // Fallback if content is plain text
-    content.subjective = record.content;
-  }
-
-  return {
-    id: record.id,
-    patientId: record.patient_id,
-    recordDate: record.record_date,
-    subjective: content.subjective || '',
-    objective: content.objective || '',
-    assessment: content.assessment || '',
-    plan: content.plan || '',
-    createdAt: record.created_at,
-    createdBy: record.created_by_name || 'Desconhecido'
-  };
-};
+const toSoapRecordV2 = (record: Record<string, unknown>): SoapRecordV2 => ({
+  id: String(record.id),
+  patientId: String(record.patient_id ?? record.patientId ?? ''),
+  recordDate: String(record.record_date ?? record.recordDate ?? new Date().toISOString().slice(0, 10)),
+  subjective: typeof record.subjective === 'string' ? record.subjective : '',
+  objective: typeof record.objective === 'string' ? record.objective : '',
+  assessment: typeof record.assessment === 'string' ? record.assessment : '',
+  plan: typeof record.plan === 'string' ? record.plan : '',
+  createdAt: String(record.created_at ?? record.createdAt ?? new Date().toISOString()),
+  createdBy:
+    typeof record.created_by === 'string'
+      ? record.created_by
+      : typeof record.createdBy === 'string'
+        ? record.createdBy
+        : 'Desconhecido',
+});
 
 export const useSoapRecordsV2 = (patientId: string) => {
   return useQuery({
     queryKey: ['soap-records-v2', patientId],
     queryFn: async () => {
-      const isE2E = typeof window !== 'undefined' && window.location.search.includes('e2e=true');
-      const isLocalHost = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname);
-      if (isE2E || isLocalHost) return [];
-
-      try {
-        const response = await clinicalApi.getPatientRecords(patientId, 'soap', 50);
-        return (response.data || []).map(parseSoapContent);
-      } catch {
-        return [];
-      }
+      if (!patientId) return [];
+      const response = await sessionsApi.list({ patientId, limit: 50 });
+      return (response.data ?? []).map((record) => toSoapRecordV2(record as unknown as Record<string, unknown>));
     },
     enabled: !!patientId,
   });
@@ -62,33 +49,35 @@ export const useCreateSoapRecordV2 = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (data: { patientId: string; subjective: string; objective: string; assessment: string; plan: string; recordDate?: string }) => {
-      const content = JSON.stringify({
+    mutationFn: async (data: {
+      patientId: string;
+      subjective: string;
+      objective: string;
+      assessment: string;
+      plan: string;
+      recordDate?: string;
+    }) => {
+      const response = await sessionsApi.create({
+        patient_id: data.patientId,
         subjective: data.subjective,
         objective: data.objective,
         assessment: data.assessment,
-        plan: data.plan
+        plan: data.plan,
+        record_date: data.recordDate,
+        status: 'draft',
       });
-
-      const response = await clinicalApi.createMedicalRecord({
-        patientId: data.patientId,
-        type: 'soap',
-        title: 'Evolução SOAP',
-        content,
-        recordDate: data.recordDate
-      });
-      return parseSoapContent(response.data);
+      return toSoapRecordV2(response.data as unknown as Record<string, unknown>);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['soap-records-v2', data.patientId] });
       toast({
         title: 'Evolução salva',
-        description: 'Registro salvo com sucesso.'
+        description: 'Registro salvo com sucesso.',
       });
     },
     onError: (error: Error) => {
       ErrorHandler.handle(error, 'useCreateSoapRecordV2');
-    }
+    },
   });
 };
 
@@ -97,67 +86,69 @@ export const useUpdateSoapRecordV2 = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (data: { recordId: string; patientId: string; subjective: string; objective: string; assessment: string; plan: string }) => {
-      const content = JSON.stringify({
+    mutationFn: async (data: {
+      recordId: string;
+      patientId: string;
+      subjective: string;
+      objective: string;
+      assessment: string;
+      plan: string;
+    }) => {
+      const response = await sessionsApi.update(data.recordId, {
         subjective: data.subjective,
         objective: data.objective,
         assessment: data.assessment,
-        plan: data.plan
+        plan: data.plan,
       });
-
-      const response = await clinicalApi.updateMedicalRecord(data.recordId, {
-        content
-      });
-      return parseSoapContent(response.data);
+      return toSoapRecordV2(response.data as unknown as Record<string, unknown>);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['soap-records-v2', data.patientId] });
       toast({
         title: 'Evolução atualizada',
-        description: 'Registro atualizado com sucesso.'
+        description: 'Registro atualizado com sucesso.',
       });
     },
     onError: (error: Error) => {
       ErrorHandler.handle(error, 'useUpdateSoapRecordV2');
-    }
+    },
   });
 };
 
-// Autosave hook compatible with V2
 export const useAutoSaveSoapRecordV2 = () => {
   const createMutation = useCreateSoapRecordV2();
   const updateMutation = useUpdateSoapRecordV2();
 
   return {
-    mutateAsync: async (data: { 
-      recordId?: string; 
-      patientId: string; 
-      subjective: string; 
-      objective: string; 
-      assessment: string; 
+    mutateAsync: async (data: {
+      recordId?: string;
+      patientId: string;
+      subjective: string;
+      objective: string;
+      assessment: string;
       plan: string;
       recordDate?: string;
     }) => {
       if (data.recordId) {
-        return await updateMutation.mutateAsync({
+        return updateMutation.mutateAsync({
           recordId: data.recordId,
           patientId: data.patientId,
           subjective: data.subjective,
           objective: data.objective,
           assessment: data.assessment,
-          plan: data.plan
-        });
-      } else {
-        return await createMutation.mutateAsync({
-          patientId: data.patientId,
-          subjective: data.subjective,
-          objective: data.objective,
-          assessment: data.assessment,
           plan: data.plan,
-          recordDate: data.recordDate
         });
       }
+
+      return createMutation.mutateAsync({
+        patientId: data.patientId,
+        subjective: data.subjective,
+        objective: data.objective,
+        assessment: data.assessment,
+        plan: data.plan,
+        recordDate: data.recordDate,
+      });
     },
-    isPending: createMutation.isPending || updateMutation.isPending
+    isPending: createMutation.isPending || updateMutation.isPending,
   };
 };

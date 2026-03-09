@@ -122,7 +122,7 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<SurgeryFormData> }) =>
-      SurgeryService.updateSurgery(id, data),
+      SurgeryService.updateSurgery(id, { ...data, patient_id: patientId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patient-surgeries', patientId] });
       toast.success('Cirurgia atualizada com sucesso');
@@ -135,7 +135,7 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => SurgeryService.deleteSurgery(id),
+    mutationFn: (id: string) => SurgeryService.deleteSurgery(id, patientId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patient-surgeries', patientId] });
       toast.success('Cirurgia removida com sucesso');

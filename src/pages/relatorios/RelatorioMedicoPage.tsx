@@ -25,14 +25,14 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-pdf/renderer';
 import { useAuth } from '@/contexts/AuthContext';
-import { db, collection, query as firestoreQuery, where, getDocs, addDoc, setDoc, doc, getDoc, orderBy as firestoreOrderBy, deleteDoc } from '@/integrations/firebase/app';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { usePatients } from '@/hooks/usePatients';
-import { patientsApi } from '@/integrations/firebase/functions';
+import { reportsApi, sessionsApi } from '@/lib/api/workers-client';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Download, Info, Cloud } from 'lucide-react';
 import { useGoogleDocs } from '@/hooks/useGoogleDocs';
 import { useGoogleOAuth } from '@/hooks/useGoogleOAuth';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 const styles = StyleSheet.create({
   page: {
@@ -1236,6 +1236,7 @@ function RelatorioMedicoEditor({
 
 export default function RelatorioMedicoPage() {
   const { user } = useAuth();
+  const { profile } = useUserProfile();
   const { currentOrganization: org } = useOrganizations();
   const organizationId = org?.id;
   const queryClient = useQueryClient();
@@ -1267,11 +1268,8 @@ export default function RelatorioMedicoPage() {
   const { data: customTemplates = [], isLoading: isLoadingTemplates } = useQuery({
     queryKey: ['relatorio-medico-templates', org?.id],
     queryFn: async () => {
-      const constraints = [firestoreOrderBy('created_at', 'desc')];
-      if (org?.id) constraints.unshift(where('organization_id', '==', org.id));
-      const q = firestoreQuery(collection(db, 'relatorios_medicos_modelos'), ...constraints);
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as RelatorioTemplate[];
+      const res = await reportsApi.medicalTemplates.list();
+      return (res.data ?? []) as RelatorioTemplate[];
     },
   });
 
@@ -1282,13 +1280,8 @@ export default function RelatorioMedicoPage() {
     queryKey: ['relatorios-medicos', organizationId],
     queryFn: async () => {
       if (!organizationId) return [];
-      const q = firestoreQuery(
-        collection(db, 'relatorios_medicos'),
-        where('organization_id', '==', organizationId),
-        firestoreOrderBy('data_emissao', 'desc')
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as RelatorioMedicoData[];
+      const res = await reportsApi.medical.list();
+      return (res.data ?? []) as RelatorioMedicoData[];
     },
     enabled: !!organizationId,
   });
@@ -1351,24 +1344,11 @@ export default function RelatorioMedicoPage() {
     mutationFn: async (data: RelatorioMedicoData) => {
       if (!organizationId) throw new Error('Organização não identificada');
       if (data.id) {
-        const docRef = doc(db, 'relatorios_medicos', data.id);
-        await setDoc(docRef, { ...data, organization_id: organizationId }, { merge: true });
+        await reportsApi.medical.update(data.id, { ...data, organization_id: organizationId });
       } else {
-        const { _id, ...rest } = data;
-        const docRef = await addDoc(collection(db, 'relatorios_medicos'), {
-          ...rest,
-          organization_id: organizationId,
-        });
-        (data as RelatorioMedicoData & { id: string }).id = docRef.id;
-      }
-      // Atualizar paciente: médico/telefone, relatório feito / enviado (para dashboard e evolução)
-      if (data.patientId) {
-        await patientsApi.update(data.patientId, {
-          referring_doctor_name: data.profissional_destino?.nome ?? undefined,
-          referring_doctor_phone: data.profissional_destino?.telefone ?? undefined,
-          medical_report_done: data.relatorio_feito ?? false,
-          medical_report_sent: data.relatorio_enviado ?? false,
-        });
+        const { id: _id, ...rest } = data;
+        const created = await reportsApi.medical.create({ ...rest, organization_id: organizationId });
+        (data as RelatorioMedicoData & { id: string }).id = created.data.id;
       }
       return data;
     },
@@ -1387,7 +1367,7 @@ export default function RelatorioMedicoPage() {
 
   const deleteRelatorio = useMutation({
     mutationFn: async (id: string) => {
-      await deleteDoc(doc(db, 'relatorios_medicos', id));
+      await reportsApi.medical.delete(id);
       return id;
     },
     onSuccess: () => {
@@ -1410,13 +1390,12 @@ export default function RelatorioMedicoPage() {
       };
 
       if (template.id && !template.id.startsWith('builtin-')) {
-        const ref = doc(db, 'relatorios_medicos_modelos', template.id);
-        await setDoc(ref, payload, { merge: true });
-        return { ...template, ...payload };
+        const updated = await reportsApi.medicalTemplates.update(template.id, payload);
+        return updated.data as RelatorioTemplate;
       }
 
-      const ref = await addDoc(collection(db, 'relatorios_medicos_modelos'), payload);
-      return { ...template, ...payload, id: ref.id };
+      const created = await reportsApi.medicalTemplates.create(payload);
+      return created.data as RelatorioTemplate;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['relatorio-medico-templates', org?.id] });
@@ -1429,7 +1408,7 @@ export default function RelatorioMedicoPage() {
 
   const deleteTemplateMutation = useMutation({
     mutationFn: async (id: string) => {
-      await deleteDoc(doc(db, 'relatorios_medicos_modelos', id));
+      await reportsApi.medicalTemplates.delete(id);
       return id;
     },
     onSuccess: () => {
@@ -1442,9 +1421,6 @@ export default function RelatorioMedicoPage() {
   // Carregar dados do profissional
   const carregarDadosProfissional = async () => {
     if (!user) return { profile: null, org: null };
-    const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
-    const profile = profileDoc.exists() ? profileDoc.data() : null;
-
     return { profile, org };
   };
 
@@ -1456,13 +1432,17 @@ export default function RelatorioMedicoPage() {
     const { profile, org } = await carregarDadosProfissional();
 
     // Buscar evoluções do paciente
-    const qEvolucoes = firestoreQuery(
-      collection(db, 'evolucoes'),
-      where('patient_id', '==', pacienteId),
-      firestoreOrderBy('data', 'asc')
-    );
-    const snapshotEvolucoes = await getDocs(qEvolucoes);
-    const evolucoes = snapshotEvolucoes.docs.map(d => d.data());
+    const sessionsRes = await sessionsApi.list({ patientId: pacienteId, limit: 200 });
+    const evolucoes = (sessionsRes.data ?? []).map((session, index) => ({
+      data: session.record_date ?? session.created_at,
+      sessao: session.session_number ?? index + 1,
+      descricao:
+        session.assessment ||
+        session.plan ||
+        session.objective ||
+        session.subjective ||
+        '',
+    }));
 
     const doctorName = (paciente.referring_doctor_name ?? paciente.referringDoctorName) as string | undefined;
     const doctorPhone = (paciente.referring_doctor_phone ?? paciente.referringDoctorPhone) as string | undefined;
@@ -1479,10 +1459,10 @@ export default function RelatorioMedicoPage() {
       },
       profissional_emissor: {
         nome: profile?.full_name || '',
-        registro: profile?.registro_profissional || '',
-        uf_registro: profile?.uf_registro || '',
+        registro: profile?.crefito || '',
+        uf_registro: '',
         especialidade: 'Fisioterapia',
-        email: profile?.email || '',
+        email: user?.email || '',
         telefone: profile?.phone || '',
       },
       profissional_destino: (doctorName || doctorPhone) ? { nome: doctorName, telefone: doctorPhone } : {},
@@ -1492,11 +1472,7 @@ export default function RelatorioMedicoPage() {
         endereco: org?.address || '',
         telefone: org?.phone || '',
       },
-      evolucoes: evolucoes?.map((e, i) => ({
-        data: e.data,
-        sessao: i + 1,
-        descricao: e.descricao || '',
-      })) || [],
+      evolucoes,
       data_emissao: new Date().toISOString(),
       urgencia: 'baixa',
       patientId: pacienteId,

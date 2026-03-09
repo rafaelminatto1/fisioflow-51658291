@@ -1,4 +1,4 @@
-import { db, collection, doc, getDoc, getDocs, query, where, orderBy, limit } from '@/integrations/firebase/app';
+import { clinicalApi, sessionsApi } from '@/lib/api/workers-client';
 import type { ConductTemplate } from '@/types/evolution';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
@@ -11,76 +11,84 @@ export interface ConductData {
 }
 
 export class ConductReplicationService {
-  // Optimized: Select only required columns instead of *
   static async getSavedConducts(patientId: string): Promise<ConductTemplate[]> {
-    // For now, we'll get recent SOAP records as conduct templates
-    const q = query(
-      collection(db, 'soap_records'),
-      where('patient_id', '==', patientId),
-      where('plan', '!=', null),
-      orderBy('record_date', 'desc'),
-      limit(10)
-    );
-    const snapshot = await getDocs(q);
+    const res = await sessionsApi.list({ patientId, limit: 10 });
+    const records = (res.data ?? []).filter((record) => record.plan && record.plan.trim().length > 0);
 
-    return snapshot.docs.map(recordSnap => {
-      const data = recordSnap.data();
-      return {
-        id: recordSnap.id,
-        patient_id: data.patient_id,
-        template_name: `Conduta de ${data.record_date}`,
-        conduct_data: {
-          plan: data.plan || '',
-          techniques: [],
-          exercises: [],
-          recommendations: data.assessment || ''
-        },
-        created_by: data.created_by,
-        created_at: data.created_at
-      } as ConductTemplate;
-    });
+    return records.map((record) => ({
+      id: record.id,
+      patient_id: record.patient_id,
+      template_name: `Conduta de ${record.record_date}`,
+      conduct_data: {
+        plan: record.plan || '',
+        techniques: [],
+        exercises: [],
+        recommendations: record.assessment || '',
+      },
+      created_by: record.created_by,
+      created_at: record.created_at,
+    }));
   }
 
   static async saveConductAsTemplate(
     patientId: string,
     conduct: ConductData,
-    name: string
+    name: string,
   ): Promise<ConductTemplate> {
-    // This would ideally save to a separate templates table
-    // For now, we'll return a formatted template
-    const template: ConductTemplate = {
-      id: `template_${Date.now()}`,
-      patient_id: patientId,
-      template_name: name,
-      conduct_data: conduct,
-      created_by: '', // Will be filled by the calling function
-      created_at: new Date().toISOString()
-    };
-
-    return template;
-  }
-
-  static async replicateConduct(conductId: string): Promise<{ plan: string | null; assessment: string | null; techniques: unknown[]; exercises: unknown[] }> {
-    const docRef = doc(db, 'soap_records', conductId);
-    const docSnap = await getDoc(docRef);
-
-    if (!docSnap.exists()) {
-      throw new Error('SOAP record not found');
-    }
-
-    const data = docSnap.data();
+    const response = await clinicalApi.conductLibrary.create({
+      title: name,
+      category: 'Outros',
+      description: conduct.recommendations,
+      conduct_text: conduct.plan || '',
+    });
+    const template = response.data;
 
     return {
-      plan: data.plan,
-      assessment: data.assessment,
+      id: template.id,
+      patient_id: patientId,
+      template_name: template.title,
+      conduct_data: {
+        plan: template.conduct_text,
+        techniques: Array.isArray(conduct.techniques) ? conduct.techniques : [],
+        exercises: Array.isArray(conduct.exercises) ? conduct.exercises : [],
+        recommendations: template.description || undefined,
+      },
+      created_by: template.created_by || '',
+      created_at: template.created_at,
+    };
+  }
+
+  static async replicateConduct(
+    conductId: string,
+  ): Promise<{ plan: string | null; assessment: string | null; techniques: unknown[]; exercises: unknown[] }> {
+    const response = await sessionsApi.get(conductId).catch(() => null);
+
+    if (response?.data) {
+      return {
+        plan: response.data.plan || null,
+        assessment: response.data.assessment || null,
+        techniques: [],
+        exercises: [],
+      };
+    }
+
+    const templateResponse = await clinicalApi.conductLibrary.get(conductId);
+    const template = templateResponse.data;
+    if (!template) {
+      throw new Error('Conduta não encontrada');
+    }
+
+    return {
+      plan: template.conduct_text || null,
+      assessment: template.description || null,
       techniques: [],
-      exercises: []
+      exercises: [],
     };
   }
 
   static async deleteConduct(conductId: string): Promise<void> {
-    // For now, this is a no-op since we're using SOAP records
-    // In a full implementation, this would delete from a templates table
-    logger.debug('Delete conduct template', { conductId }, 'conductReplicationService');
+    await clinicalApi.conductLibrary.delete(conductId).catch((error) => {
+      logger.warn('Falha ao remover conduta da biblioteca', error, 'conductReplicationService');
+    });
   }
 }

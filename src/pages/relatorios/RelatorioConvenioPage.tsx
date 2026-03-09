@@ -21,9 +21,9 @@ import { ptBR } from 'date-fns/locale';
 import { Document, Page, Text, View, StyleSheet, PDFDownloadLink, Font } from '@react-pdf/renderer';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import { db, collection, query as firestoreQuery, where, getDocs, addDoc, setDoc, doc, getDoc, limit, orderBy as firestoreOrderBy } from '@/integrations/firebase/app';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { Activity } from 'lucide-react';
+import { appointmentsApi, financialApi, reportsApi, patientsApi } from '@/lib/api/workers-client';
 
 // Registrar font para PDF
 Font.register({
@@ -155,6 +155,7 @@ interface DadosAtendimento {
 
 interface RelatorioConvenioData {
   id: string;
+  patientId?: string;
   paciente: DadosPaciente;
   profissional: DadosProfissional;
   convenio: {
@@ -734,13 +735,8 @@ export default function RelatorioConvenioPage() {
     queryKey: ['relatorios-convenio', organizationId],
     queryFn: async () => {
       if (!organizationId) return [];
-      const q = firestoreQuery(
-        collection(db, 'relatorios_convenio'),
-        where('organization_id', '==', organizationId),
-        firestoreOrderBy('data_emissao', 'desc')
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as RelatorioConvenioData[];
+      const res = await reportsApi.convenio.list();
+      return (res.data ?? []) as RelatorioConvenioData[];
     },
     enabled: !!organizationId,
   });
@@ -750,13 +746,8 @@ export default function RelatorioConvenioPage() {
     queryKey: ['pacientes-select', organizationId],
     queryFn: async () => {
       if (!organizationId) return [];
-      const q = firestoreQuery(
-        collection(db, 'patients'),
-        where('organization_id', '==', organizationId),
-        firestoreOrderBy('full_name')
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Array<{ id: string; full_name: string; cpf?: string; birth_date?: string; phone?: string; email?: string }>;
+      const res = await patientsApi.list({ limit: 1000, sortBy: 'name_asc' });
+      return (res.data ?? []) as Array<{ id: string; full_name: string; cpf?: string; birth_date?: string; phone?: string; email?: string }>;
     },
     enabled: !!organizationId,
   });
@@ -766,12 +757,8 @@ export default function RelatorioConvenioPage() {
     queryKey: ['convenios-select', organizationId],
     queryFn: async () => {
       if (!organizationId) return [];
-      const q = firestoreQuery(
-        collection(db, 'convenios'),
-        where('organization_id', '==', organizationId)
-      );
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Array<{ id: string; nome: string; cnpj?: string; codigo_ans?: string }>;
+      const res = await financialApi.convenios.list();
+      return (res.data ?? []) as Array<{ id: string; nome: string; cnpj?: string; codigo_ans?: string }>;
     },
     enabled: !!organizationId,
   });
@@ -781,16 +768,12 @@ export default function RelatorioConvenioPage() {
     mutationFn: async (data: RelatorioConvenioData) => {
       if (!organizationId) throw new Error('Organização não identificada');
       if (data.id) {
-        const docRef = doc(db, 'relatorios_convenio', data.id);
-        await setDoc(docRef, { ...data, organization_id: organizationId }, { merge: true });
+        await reportsApi.convenio.update(data.id, { ...data, organization_id: organizationId });
         return data;
       } else {
-        const { _id, ...rest } = data;
-        const docRef = await addDoc(collection(db, 'relatorios_convenio'), {
-          ...rest,
-          organization_id: organizationId,
-        });
-        return { id: docRef.id, ...rest };
+        const { id: _id, ...rest } = data;
+        const created = await reportsApi.convenio.create({ ...rest, organization_id: organizationId });
+        return created.data as RelatorioConvenioData;
       }
     },
     onSuccess: () => {
@@ -809,16 +792,13 @@ export default function RelatorioConvenioPage() {
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
 
-    const qAppointments = firestoreQuery(
-      collection(db, 'appointments'),
-      where('organization_id', '==', organizationId),
-      where('patient_id', '==', pacienteId),
-      where('start_time', '>=', oneMonthAgo.toISOString()),
-      firestoreOrderBy('start_time', 'asc')
-    );
-
-    const snapshotAppointments = await getDocs(qAppointments);
-    const atendimentos = snapshotAppointments.docs.map(d => ({ id: d.id, ...d.data() })) as Array<{ id: string; start_time: string; end_time?: string; status?: string; service_names?: string[] }>;
+    const appointmentsRes = await appointmentsApi.list({
+      patientId: pacienteId,
+      dateFrom: oneMonthAgo.toISOString().slice(0, 10),
+      dateTo: new Date().toISOString().slice(0, 10),
+      limit: 200,
+    });
+    const atendimentos = appointmentsRes.data ?? [];
 
     if (!atendimentos || atendimentos.length === 0) {
       toast.error('Nenhum atendimento encontrado no último mês.');
@@ -831,43 +811,13 @@ export default function RelatorioConvenioPage() {
 
     // Buscar dados do profissional
     if (!user) return;
-    const profileDoc = await getDoc(doc(db, 'profiles', user.uid));
-    const profile = profileDoc.exists() ? profileDoc.data() : null;
+    const profissional = profile;
 
     // Buscar dados da clínica
     const org = orgData;
 
     // Buscar convênio do paciente
-    const qConvenio = firestoreQuery(
-      collection(db, 'patient_convenios'),
-      where('organization_id', '==', organizationId),
-      where('patient_id', '==', pacienteId),
-      where('ativo', '==', true),
-      limit(1)
-    );
-    const snapshotConvenio = await getDocs(qConvenio);
-    const pacienteConvenio = snapshotConvenio.docs.length > 0 ? snapshotConvenio.docs[0].data() : null;
-
-    let convenio = null;
-    if (pacienteConvenio?.convenio_id) {
-      const convenioDoc = await getDoc(doc(db, 'convenios', pacienteConvenio.convenio_id));
-      if (convenioDoc.exists()) {
-        convenio = convenioDoc.data();
-      }
-    }
-
-    if (!convenio) convenio = (convenios as any[])[0];
-
-    // Buscar evoluções
-    const qEvolucoes = firestoreQuery(
-      collection(db, 'evolucoes'),
-      where('organization_id', '==', organizationId),
-      where('patient_id', '==', pacienteId),
-      firestoreOrderBy('data', 'desc'),
-      limit(5)
-    );
-    const snapshotEvolucoes = await getDocs(qEvolucoes);
-    const evolucoes = snapshotEvolucoes.docs.map(d => d.data());
+    const convenio = (convenios as Array<{ id: string; nome: string; cnpj?: string; codigo_ans?: string }>)[0] ?? null;
 
     const novoRelatorio: RelatorioConvenioData = {
       id: '',
@@ -880,15 +830,15 @@ export default function RelatorioConvenioPage() {
         numero_convenio: '',
       },
       profissional: {
-        nome: profile?.full_name || '',
-        cpf: profile?.cpf_cnpj || '',
-        registro_profissional: profile?.registro_profissional || '',
-        uf_registro: profile?.uf_registro || '',
+        nome: profissional?.full_name || '',
+        cpf: profissional?.cpf || '',
+        registro_profissional: profissional?.crefito || '',
+        uf_registro: '',
       },
       convenio: {
         nome: convenio?.nome || 'Particular',
         cnpj: convenio?.cnpj || '',
-        ans: convenio?.codigo_ans || '',
+        ans: (convenio as { codigo_ans?: string; ans?: string } | null)?.codigo_ans || (convenio as { ans?: string } | null)?.ans || '',
       },
       clinica: {
         nome: org?.name || '',
@@ -897,17 +847,18 @@ export default function RelatorioConvenioPage() {
         telefone: org?.phone || '',
       },
       atendimentos: atendimentos.map(att => ({
-        data: att.start_time.split('T')[0],
-        horario_inicio: format(new Date(att.start_time), 'HH:mm', { locale: ptBR }),
-        horario_fim: att.end_time ? format(new Date(att.end_time), 'HH:mm', { locale: ptBR }) : '',
-        tipo: att.status === 'completed' ? 'evolucao' : 'agendado',
-        procedimentos: att.service_names || [],
+        data: att.date,
+        horario_inicio: String(att.start_time || '').slice(0, 5),
+        horario_fim: String(att.end_time || '').slice(0, 5),
+        tipo: att.status === 'completed' ? 'evolucao' : 'retorno',
+        procedimentos: att.notes ? [att.notes] : [],
         cid: '',
         codigos_tuss: [],
         numero_sessoes: atendimentos.length,
         sessao_atual: 0,
       })),
-      evolucao: evolucoes?.[0]?.descricao || '',
+      patientId: pacienteId,
+      evolucao: '',
       data_emissao: new Date().toISOString(),
     };
 

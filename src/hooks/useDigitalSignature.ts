@@ -1,12 +1,10 @@
 /**
- * useDigitalSignature - Migrated to Firebase
- *
+ * useDigitalSignature - Migrated to Neon/Workers
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, addDoc, getDoc, query as firestoreQuery, where, orderBy, limit, db } from '@/integrations/firebase/app';
 import { useToast } from '@/hooks/use-toast';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { documentSignaturesApi } from '@/lib/api/workers-client';
 
 export interface DocumentSignature {
   id: string;
@@ -15,7 +13,7 @@ export interface DocumentSignature {
   document_title: string;
   signer_name: string;
   signer_id?: string;
-  signature_image: string;
+  signature_image?: string;
   signature_hash: string;
   ip_address?: string;
   user_agent?: string;
@@ -23,35 +21,14 @@ export interface DocumentSignature {
   created_at: string;
 }
 
-// Helper to convert Firestore doc to DocumentSignature
-const convertDocToDocumentSignature = (doc: { id: string; data: () => Record<string, unknown> }): DocumentSignature => {
-  const data = normalizeFirestoreData(doc.data());
-  return {
-    id: doc.id,
-    ...data,
-  } as DocumentSignature;
-};
-
 export function useDocumentSignatures(documentId?: string) {
   return useQuery({
     queryKey: ['document-signatures', documentId],
     queryFn: async () => {
-      const q = firestoreQuery(
-        collection(db, 'document_signatures'),
-        orderBy('signed_at', 'desc')
-      );
-
-      const snapshot = await getDocs(q);
-      let data = snapshot.docs.map(convertDocToDocumentSignature);
-
-      // Filter by documentId if provided
-      if (documentId) {
-        data = data.filter(s => s.document_id === documentId);
-      }
-
-      return data;
+      const result = await documentSignaturesApi.list(documentId);
+      return (result.data ?? []) as DocumentSignature[];
     },
-    enabled: true
+    enabled: true,
   });
 }
 
@@ -69,51 +46,24 @@ export function useCreateSignature() {
       signature_image: string;
       signature_hash: string;
     }) => {
-      const signatureData = {
-        ...data,
-        signed_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection(db, 'document_signatures'), signatureData);
-      const docSnap = await getDoc(docRef);
-
-      return convertDocToDocumentSignature(docSnap);
+      const result = await documentSignaturesApi.create(data);
+      return result.data as DocumentSignature;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['document-signatures'] });
-      toast({
-        title: 'Documento assinado',
-        description: 'Assinatura registrada com sucesso'
-      });
+      toast({ title: 'Documento assinado', description: 'Assinatura registrada com sucesso' });
     },
     onError: () => {
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível registrar a assinatura',
-        variant: 'destructive'
-      });
-    }
+      toast({ title: 'Erro', description: 'Não foi possível registrar a assinatura', variant: 'destructive' });
+    },
   });
 }
 
 export function useVerifySignature() {
   return useMutation({
     mutationFn: async ({ documentId, hash }: { documentId: string; hash: string }) => {
-      const q = firestoreQuery(
-        collection(db, 'document_signatures'),
-        where('document_id', '==', documentId),
-        where('signature_hash', '==', hash),
-        limit(1)
-      );
-
-      const snapshot = await getDocs(q);
-      const valid = !snapshot.empty;
-
-      return {
-        valid,
-        signature: valid ? convertDocToDocumentSignature(snapshot.docs[0]) : null
-      };
-    }
+      const result = await documentSignaturesApi.verify(documentId, hash);
+      return result.data as { valid: boolean; signature: DocumentSignature | null };
+    },
   });
 }

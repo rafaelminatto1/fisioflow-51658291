@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { db, collection, addDoc, setDoc, doc, serverTimestamp } from '@/integrations/firebase/app';
+import { clinicalTestsApi, type ClinicalTestTemplateRecord } from '@/lib/api/workers-client';
 import {
 
     Dialog,
@@ -26,28 +26,12 @@ import { Save, Loader2, BookOpen, Settings, BarChart3 } from 'lucide-react';
 import { ClinicalTestMetricsBuilder, MetricField } from './ClinicalTestMetricsBuilder';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-interface ClinicalTest {
+interface ClinicalTest extends Omit<ClinicalTestTemplateRecord, 'fields_definition'> {
     id?: string;
-    name: string;
-    name_en?: string;
-    category: string;
-    target_joint: string;
     purpose: string;
     execution: string;
-    positive_sign?: string;
-    reference?: string;
-    sensitivity_specificity?: string;
-    tags?: string[];
-    type?: string;
     fields_definition?: MetricField[];
-    regularity_sessions?: number | null;
     organization_id?: string;
-    /** Layout no registro de medições: single | multi_field | y_balance | radial */
-    layout_type?: 'single' | 'multi_field' | 'y_balance' | 'radial';
-    /** URL da imagem "como realizar" o teste */
-    image_url?: string;
-    /** URLs de mídia (imagens/vídeos) */
-    media_urls?: string[];
 }
 
 interface ClinicalTestFormModalProps {
@@ -131,7 +115,7 @@ export function ClinicalTestFormModal({
 
     const createMutation = useMutation({
         mutationFn: async (data: ClinicalTest) => {
-            await addDoc(collection(db, 'clinical_test_templates'), {
+            await clinicalTestsApi.create({
                 name: data.name,
                 name_en: data.name_en || null,
                 category: data.category,
@@ -150,7 +134,7 @@ export function ClinicalTestFormModal({
                 media_urls: data.media_urls?.length ? data.media_urls : null,
                 organization_id: organizationId,
                 created_by: user?.uid,
-                created_at: serverTimestamp(),
+                is_custom: true,
             });
         },
         onSuccess: () => {
@@ -167,9 +151,7 @@ export function ClinicalTestFormModal({
     const updateMutation = useMutation({
         mutationFn: async (data: ClinicalTest) => {
             if (!data.id) throw new Error('Test ID is required for update');
-
-            const docRef = doc(db, 'clinical_test_templates', data.id);
-            await setDoc(docRef, {
+            await clinicalTestsApi.update(data.id, {
                 name: data.name,
                 name_en: data.name_en || null,
                 category: data.category,
@@ -186,8 +168,7 @@ export function ClinicalTestFormModal({
                 layout_type: data.layout_type || null,
                 image_url: data.image_url || null,
                 media_urls: data.media_urls?.length ? data.media_urls : null,
-                updated_at: serverTimestamp(),
-            }, { merge: true });
+            });
         },
         onSuccess: () => {
             toast.success('Teste clínico atualizado com sucesso!');
