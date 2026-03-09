@@ -64,8 +64,12 @@ export const wikiService = {
   },
 
   async listCategories(_organizationId: string): Promise<WikiCategory[]> {
-    // Wiki categories table not yet in Neon — return empty
-    return [];
+    try {
+      const result = await wikiApi.listCategories();
+      return (result.data ?? []) as unknown as WikiCategory[];
+    } catch {
+      return [];
+    }
   },
 
   async savePage(
@@ -90,16 +94,31 @@ export const wikiService = {
     return [];
   },
 
-  async listComments(_organizationId: string, _pageId: string): Promise<WikiComment[]> {
-    // Wiki comments table not yet in Neon — return empty
-    return [];
+  async listComments(_organizationId: string, pageId: string): Promise<WikiComment[]> {
+    try {
+      const result = await wikiApi.listComments(pageId);
+      return (result.data ?? []) as unknown as WikiComment[];
+    } catch {
+      return [];
+    }
   },
 
   async addComment(
     _organizationId: string,
-    _comment: Omit<WikiComment, 'id' | 'created_at'>
+    comment: Omit<WikiComment, 'id' | 'created_at'>
   ): Promise<string> {
-    // Wiki comments table not yet in Neon — no-op
-    return '';
+    try {
+      const result = await wikiApi.addComment(String(comment.page_id), {
+        content: comment.content,
+        parent_comment_id: comment.parent_comment_id,
+        block_id: comment.block_id,
+        selection_text: comment.selection_text,
+        selection_start: comment.selection_start,
+        selection_end: comment.selection_end,
+      });
+      return (result.data as { id: string })?.id ?? '';
+    } catch {
+      return '';
+    }
   },
 };

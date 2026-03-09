@@ -1,5 +1,5 @@
 /**
- * Mobile Header - Migrated to Firebase
+ * Mobile Header - Migrated to Neon/Cloudflare
  */
 
 import { Button } from '@/components/ui/button';

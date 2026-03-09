@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS tarefas (
   tags TEXT[] NOT NULL DEFAULT '{}',
   checklists JSONB NOT NULL DEFAULT '[]',
   attachments JSONB NOT NULL DEFAULT '[]',
-  references JSONB NOT NULL DEFAULT '[]',
+  task_references JSONB NOT NULL DEFAULT '[]',
   dependencies JSONB NOT NULL DEFAULT '[]',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
