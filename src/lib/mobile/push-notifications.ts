@@ -6,7 +6,8 @@
 import { PushNotifications, PushNotificationSchema, Token, ActionPerformed } from '@capacitor/push-notifications';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
-import { db, getFirebaseAuth, doc, setDoc } from '@/integrations/firebase/app';
+import { pushSubscriptionsApi } from '@/lib/api/workers-client';
+import { authClient } from '@/lib/auth/neon-token';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface PushNotificationData {
@@ -76,33 +77,27 @@ export async function initPushNotifications(navigate?: (path: string) => void): 
 }
 
 /**
- * Salva o token de push no Supabase
- */
-/**
- * Salva o token de push no Firebase Firestore
+ * Salva o token de push no backend Neon/Workers.
  */
 async function savePushTokenToDatabase(token: string): Promise<void> {
   try {
-    const auth = getFirebaseAuth();
-    const currentUser = auth.currentUser;
+    const { data } = await authClient.getSession();
+    const currentUser = data?.user;
 
     if (currentUser) {
-      // Use device ID or platform as key if possible, but for now we settle for user_id + token
-      // Better schema: user_push_tokens/{userId}/devices/{deviceId}
-      // Or simply a collection of tokens with user_id field.
-      // Let's us a subcollection for the user to make it easier to manage per user.
-      // users/{userId}/push_tokens/{token}
+      await pushSubscriptionsApi.upsert({
+        endpoint: token,
+        userId: currentUser.id,
+        deviceInfo: {
+          platform: Capacitor.getPlatform(),
+          updated_at: new Date().toISOString(),
+          last_used: new Date().toISOString(),
+          native: true,
+        },
+        active: true,
+      });
 
-      const tokenRef = doc(db, 'users', currentUser.uid, 'push_tokens', token);
-
-      await setDoc(tokenRef, {
-        token: token,
-        platform: Capacitor.getPlatform(),
-        updated_at: new Date().toISOString(),
-        last_used: new Date().toISOString()
-      }, { merge: true });
-
-      logger.info('Token salvo no Firestore', undefined, 'push-notifications');
+      logger.info('Token salvo em Neon/Workers', undefined, 'push-notifications');
     } else {
       logger.info('Usuário não autenticado, token não salvo', undefined, 'push-notifications');
     }

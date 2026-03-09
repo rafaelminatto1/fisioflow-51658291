@@ -1,5 +1,4 @@
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import { getFirebaseApp } from '@/integrations/firebase/app';
+import { aiApi } from '@/lib/api/workers-client';
 
 interface PatientSummaryInput {
   patientName: string;
@@ -30,16 +29,9 @@ interface PatientSummaryOutput {
  * Client-side wrapper for Genkit Patient Summary Flow
  */
 export async function generatePatientSummary(input: PatientSummaryInput): Promise<PatientSummaryOutput> {
-  const functions = getFunctions(getFirebaseApp(), 'southamerica-east1');
-  const aiService = httpsCallable(functions, 'aiService');
-
   try {
-    const response = await aiService({
-      action: 'patientExecutiveSummary',
-      ...input
-    });
-
-    return (response.data as any) as PatientSummaryOutput;
+    const response = await aiApi.executiveSummary(input as unknown as Record<string, unknown>);
+    return response.data as unknown as PatientSummaryOutput;
   } catch (error) {
     console.error('Failed to generate patient summary:', error);
     throw error;

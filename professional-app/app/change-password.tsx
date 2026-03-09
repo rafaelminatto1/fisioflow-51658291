@@ -14,8 +14,7 @@ import { useRouter } from 'expo-router';
 import { useColors } from '@/hooks/useColorScheme';
 import { Button } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
-import { updatePassword } from 'firebase/auth';
-import { auth as getAuth } from '@/lib/firebase';
+import { authApi } from '@/lib/auth-api';
 
 interface FormErrors {
   currentPassword?: string;
@@ -77,14 +76,7 @@ export default function ChangePasswordScreen() {
     setIsSubmitting(true);
 
     try {
-      const auth = getAuth;
-      const currentUser = auth.currentUser;
-
-      if (!currentUser) {
-        throw new Error('Usuário não autenticado');
-      }
-
-      await updatePassword(currentUser, formData.newPassword);
+      await authApi.updatePassword(formData.newPassword);
 
       success();
       Alert.alert(

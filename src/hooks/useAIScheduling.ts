@@ -11,7 +11,7 @@
 import { useState, useCallback } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { callFunctionHttp } from '@/integrations/firebase/functions';
+import { aiApi } from '@/lib/api/workers-client';
 
 interface SuggestOptimalSlotParams {
   patientId: string;
@@ -55,19 +55,14 @@ export function useAIScheduling({ organizationId: propOrganizationId }: UseAISch
   const [capacityRecommendation, setCapacityRecommendation] = useState<CapacityRecommendation | null>(null);
 
   // Função auxiliar para chamar AI service
-  const callAIService = useCallback(async (action: string, params: any) => {
+  const callAIService = useCallback(async (action: string, params: Record<string, unknown>) => {
     setIsLoading(true);
     try {
-      const data = await callFunctionHttp<
-        Record<string, unknown>,
-        { data?: unknown; success?: boolean; error?: string }
-      >('aiServiceHttp', { action, ...params, organizationId: finalOrgId });
-
-      if (data?.success === false) {
-        throw new Error(data.error || 'Falha ao processar IA');
-      }
-
-      return data.data;
+      const response = await aiApi.service<Record<string, unknown>, unknown>(action, {
+        ...params,
+        organizationId: finalOrgId,
+      });
+      return response.data;
     } catch (error) {
       console.error('AI service error:', error);
       toast({
@@ -88,12 +83,13 @@ export function useAIScheduling({ organizationId: propOrganizationId }: UseAISch
     try {
       const result = await callAIService('suggestOptimalSlot', params);
 
-      if (result && result.suggestions && result.suggestions.length > 0) {
-        setSuggestions(result.suggestions);
+      const data = result as { suggestions?: SlotSuggestion[] } | null;
+      if (data?.suggestions && data.suggestions.length > 0) {
+        setSuggestions(data.suggestions);
 
         toast({
           title: '✅ Sugestões de horário geradas',
-          description: `${result.suggestions.length} horários sugeridos pelo IA.`,
+          description: `${data.suggestions.length} horários sugeridos pelo IA.`,
         });
       } else {
         setSuggestions([]);
@@ -127,8 +123,9 @@ export function useAIScheduling({ organizationId: propOrganizationId }: UseAISch
         appointmentTime,
       });
 
-      if (result) {
-        setNoShowPrediction(result);
+      const data = result as NoShowPrediction | null;
+      if (data) {
+        setNoShowPrediction(data);
 
         const predictionLabels = {
           'low': 'Baixa',
@@ -139,7 +136,7 @@ export function useAIScheduling({ organizationId: propOrganizationId }: UseAISch
 
         toast({
           title: 'Análise de risco completada',
-          description: `Risco de não comparecimento: ${predictionLabels[result.prediction]} (${(result.probability * 100).toFixed(0)}%)`,
+          description: `Risco de não comparecimento: ${predictionLabels[data.prediction]} (${(data.probability * 100).toFixed(0)}%)`,
         });
       }
     } catch (error) {
@@ -154,12 +151,13 @@ export function useAIScheduling({ organizationId: propOrganizationId }: UseAISch
     try {
       const result = await callAIService('optimizeCapacity', { date });
 
-      if (result && result.recommendations && result.recommendations.length > 0) {
-        setCapacityRecommendation(result.recommendations[0]);
+      const data = result as { recommendations?: CapacityRecommendation[]; overallOptimization?: string } | null;
+      if (data?.recommendations && data.recommendations.length > 0) {
+        setCapacityRecommendation(data.recommendations[0]);
 
         toast({
           title: 'Otimização de capacidade gerada',
-          description: result.overallOptimization,
+          description: data.overallOptimization,
         });
       }
     } catch (error) {
@@ -180,13 +178,14 @@ export function useAIScheduling({ organizationId: propOrganizationId }: UseAISch
     try {
       const result = await callAIService('waitlistPrioritization', { limit, sortBy });
 
-      if (result && result.rankedEntries) {
+      const data = result as { rankedEntries?: unknown[] } | null;
+      if (data?.rankedEntries) {
         toast({
           title: 'Lista de espera priorizada',
-          description: `${result.rankedEntries.length} pacientes ordenados por prioridade.`,
+          description: `${data.rankedEntries.length} pacientes ordenados por prioridade.`,
         });
 
-        return result.rankedEntries;
+        return data.rankedEntries;
       }
 
       return [];

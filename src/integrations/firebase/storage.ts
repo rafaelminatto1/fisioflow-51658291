@@ -1,53 +1,38 @@
 /**
- * Firebase Storage Integration — Bridge
+ * Storage compatibility bridge.
  *
- * uploadFile → migrado para R2
- * getFirebaseStorage / ref / getDownloadURL — mantidos para leitura de
- * arquivos legados ainda no Firebase Storage (ex.: FileViewer).
+ * Leituras/escritas novas usam R2. Este módulo mantém a API antiga sem
+ * carregar Firebase Storage no bundle.
  */
-import {
-  getStorage,
-  ref,
-  getDownloadURL,
-  deleteObject,
-  listAll,
-} from 'firebase/storage';
-import { getFirebaseApp } from './app';
-import { uploadToR2 } from '@/lib/storage/r2-storage';
+import { uploadToR2, deleteFromR2 } from '@/lib/storage/r2-storage';
+import { resolvePublicStorageUrl } from '@/lib/storage/public-url';
 
-export const getFirebaseStorage = () => getStorage(getFirebaseApp());
+type StorageRef = { fullPath: string };
 
-/**
- * Upload de arquivo — agora usa R2.
- * O parâmetro `path` é usado como prefixo de pasta no R2.
- * Retorna a URL pública do arquivo no R2.
- */
+export const getFirebaseStorage = () => ({ provider: 'r2' } as const);
+
+export const ref = (_storage: unknown, path: string): StorageRef => ({ fullPath: path });
+
+export async function getDownloadURL(storageRef: StorageRef): Promise<string> {
+  return resolvePublicStorageUrl(storageRef.fullPath);
+}
+
+export async function listAll(): Promise<{ items: StorageRef[]; prefixes: StorageRef[] }> {
+  return { items: [], prefixes: [] };
+}
+
 export async function uploadFile(path: string, file: File | Blob): Promise<string> {
   const parts = path.split('/');
-  // Usa tudo exceto o último segmento como folder no R2
   const folder = parts.length > 1 ? parts.slice(0, -1).join('/') : 'uploads';
   const fileObj = file instanceof File ? file : new File([file], parts.at(-1) ?? 'file');
   const result = await uploadToR2(fileObj, folder);
   return result.url;
 }
 
-/**
- * Deletar arquivo do Firebase Storage (legado).
- */
 export async function deleteFile(path: string): Promise<void> {
-  const storage = getFirebaseStorage();
-  const storageRef = ref(storage, path);
-  await deleteObject(storageRef);
+  await deleteFromR2(path);
 }
 
-/**
- * Obter URL de arquivo legado no Firebase Storage.
- */
 export async function getFileUrl(path: string): Promise<string> {
-  const storage = getFirebaseStorage();
-  const storageRef = ref(storage, path);
-  return getDownloadURL(storageRef);
+  return resolvePublicStorageUrl(path);
 }
-
-// Exportações nativas necessárias para FileViewer (leitura de arquivos legados)
-export { ref, getDownloadURL, listAll };

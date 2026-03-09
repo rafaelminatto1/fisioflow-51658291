@@ -282,6 +282,59 @@ export const exercisesApi = {
   },
 };
 
+export interface ExerciseTemplateRecord {
+  id: string;
+  firestoreId?: string | null;
+  name: string;
+  description?: string | null;
+  category?: string | null;
+  conditionName?: string | null;
+  templateVariant?: string | null;
+  evidenceLevel?: string | null;
+  items?: Array<{
+    id: string;
+    exerciseId: string;
+    orderIndex?: number | null;
+    sets?: number | null;
+    repetitions?: number | null;
+    duration?: number | null;
+    notes?: string | null;
+  }>;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export const exerciseTemplatesApi = {
+  list: (params?: { q?: string; category?: string; page?: number; limit?: number }) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(
+        Object.entries(params ?? {})
+          .filter(([, value]) => value != null)
+          .map(([key, value]) => [key, String(value)]),
+      ),
+    ).toString();
+    return request<{ data: ExerciseTemplateRecord[]; meta?: { page: number; limit: number; total: number; pages: number } }>(
+      `/api/templates${qs ? `?${qs}` : ''}`,
+    );
+  },
+  get: (id: string) =>
+    request<{ data: ExerciseTemplateRecord }>(`/api/templates/${encodeURIComponent(id)}`),
+  create: (data: Partial<ExerciseTemplateRecord>) =>
+    request<{ data: ExerciseTemplateRecord }>('/api/templates', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  update: (id: string, data: Partial<ExerciseTemplateRecord>) =>
+    request<{ data: ExerciseTemplateRecord }>(`/api/templates/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+  delete: (id: string) =>
+    request<{ ok: boolean }>(`/api/templates/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    }),
+};
+
 // ===== API PROTOCOLS =====
 export const protocolsApi = {
   list: (params?: {
@@ -689,6 +742,16 @@ export interface KnowledgeAuditRow {
 
 export const knowledgeApi = {
   listArticles: () => request<{ data: KnowledgeArticleRow[] }>('/api/knowledge/articles'),
+  createArticle: (data: Record<string, unknown>) =>
+    request<{ data: Record<string, unknown> }>('/api/knowledge/articles', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  updateArticle: (articleId: string, data: Record<string, unknown>) =>
+    request<{ data: Record<string, unknown> }>(`/api/knowledge/articles/${encodeURIComponent(articleId)}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
   syncArticles: (articles: KnowledgeArticleRow[]) =>
     request<{ indexed: number }>('/api/knowledge/articles/sync', {
       method: 'POST',
@@ -741,6 +804,23 @@ export const knowledgeApi = {
     if (ids.length) qs.set('ids', ids.join(','));
     return request<{ data: Record<string, KnowledgeProfileSummary> }>(`/api/knowledge/profiles${qs.toString() ? `?${qs}` : ''}`);
   },
+  listNotes: (articleId: string) =>
+    request<{ data: Array<Record<string, unknown>> }>(`/api/knowledge/articles/${encodeURIComponent(articleId)}/notes`),
+  addNote: (articleId: string, data: Record<string, unknown>) =>
+    request<{ data: Record<string, unknown> }>(`/api/knowledge/articles/${encodeURIComponent(articleId)}/notes`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  askArticle: (articleId: string, query: string) =>
+    request<{ data: { answer: string; contextUsed?: string } }>(`/api/knowledge/articles/${encodeURIComponent(articleId)}/ask`, {
+      method: 'POST',
+      body: JSON.stringify({ query }),
+    }),
+  processArticle: (articleId: string, textContent?: string) =>
+    request<{ data: { success: boolean } }>(`/api/knowledge/articles/${encodeURIComponent(articleId)}/process`, {
+      method: 'POST',
+      body: JSON.stringify({ textContent }),
+    }),
 };
 
 export const communicationsApi = {
@@ -1317,6 +1397,54 @@ export interface PatientMedicalRecord {
   updated_at?: string | null;
 }
 
+export interface PatientPhysicalExamination {
+  id: string;
+  patient_id: string;
+  record_date: string;
+  created_by?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  vital_signs?: Record<string, unknown>;
+  general_appearance?: string | null;
+  heent?: string | null;
+  cardiovascular?: string | null;
+  respiratory?: string | null;
+  gastrointestinal?: string | null;
+  musculoskeletal?: string | null;
+  neurological?: string | null;
+  integumentary?: string | null;
+  psychological?: string | null;
+}
+
+export interface PatientTreatmentPlan {
+  id: string;
+  patient_id: string;
+  record_date: string;
+  created_by?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  diagnosis?: unknown[];
+  objectives?: unknown[];
+  procedures?: unknown[];
+  exercises?: unknown[];
+  recommendations?: unknown[];
+  follow_up_date?: string | null;
+}
+
+export interface PatientMedicalAttachment {
+  id: string;
+  patient_id: string;
+  record_id?: string | null;
+  file_name: string;
+  file_url: string;
+  file_type: string;
+  file_size?: number | null;
+  uploaded_at?: string | null;
+  uploaded_by?: string | null;
+  category?: string | null;
+  description?: string | null;
+}
+
 export interface PatientStats {
   totalSessions: number;
   upcomingAppointments: number;
@@ -1386,6 +1514,83 @@ export const patientsApi = {
       {
         method: 'DELETE',
       },
+    ),
+  physicalExaminations: (patientId: string) =>
+    request<{ data: PatientPhysicalExamination[] }>(
+      `/api/patients/${encodeURIComponent(patientId)}/physical-examinations`,
+    ),
+  createPhysicalExamination: (
+    patientId: string,
+    data: Omit<PatientPhysicalExamination, 'id' | 'patient_id' | 'created_at' | 'updated_at'>,
+  ) =>
+    request<{ data: PatientPhysicalExamination }>(
+      `/api/patients/${encodeURIComponent(patientId)}/physical-examinations`,
+      { method: 'POST', body: JSON.stringify(data) },
+    ),
+  updatePhysicalExamination: (
+    patientId: string,
+    examId: string,
+    data: Partial<Omit<PatientPhysicalExamination, 'id' | 'patient_id' | 'created_at' | 'updated_at'>>,
+  ) =>
+    request<{ data: PatientPhysicalExamination }>(
+      `/api/patients/${encodeURIComponent(patientId)}/physical-examinations/${encodeURIComponent(examId)}`,
+      { method: 'PUT', body: JSON.stringify(data) },
+    ),
+  deletePhysicalExamination: (patientId: string, examId: string) =>
+    request<{ ok: boolean }>(
+      `/api/patients/${encodeURIComponent(patientId)}/physical-examinations/${encodeURIComponent(examId)}`,
+      { method: 'DELETE' },
+    ),
+  treatmentPlans: (patientId: string) =>
+    request<{ data: PatientTreatmentPlan[] }>(
+      `/api/patients/${encodeURIComponent(patientId)}/treatment-plans`,
+    ),
+  createTreatmentPlan: (
+    patientId: string,
+    data: Omit<PatientTreatmentPlan, 'id' | 'patient_id' | 'created_at' | 'updated_at'>,
+  ) =>
+    request<{ data: PatientTreatmentPlan }>(
+      `/api/patients/${encodeURIComponent(patientId)}/treatment-plans`,
+      { method: 'POST', body: JSON.stringify(data) },
+    ),
+  updateTreatmentPlan: (
+    patientId: string,
+    planId: string,
+    data: Partial<Omit<PatientTreatmentPlan, 'id' | 'patient_id' | 'created_at' | 'updated_at'>>,
+  ) =>
+    request<{ data: PatientTreatmentPlan }>(
+      `/api/patients/${encodeURIComponent(patientId)}/treatment-plans/${encodeURIComponent(planId)}`,
+      { method: 'PUT', body: JSON.stringify(data) },
+    ),
+  deleteTreatmentPlan: (patientId: string, planId: string) =>
+    request<{ ok: boolean }>(
+      `/api/patients/${encodeURIComponent(patientId)}/treatment-plans/${encodeURIComponent(planId)}`,
+      { method: 'DELETE' },
+    ),
+  medicalAttachments: (patientId: string, params?: { recordId?: string }) => {
+    const qs = new URLSearchParams(
+      Object.fromEntries(
+        Object.entries(params ?? {})
+          .filter(([, v]) => v != null)
+          .map(([k, v]) => [k, String(v)]),
+      ),
+    ).toString();
+    return request<{ data: PatientMedicalAttachment[] }>(
+      `/api/patients/${encodeURIComponent(patientId)}/attachments${qs ? `?${qs}` : ''}`,
+    );
+  },
+  createMedicalAttachment: (
+    patientId: string,
+    data: Omit<PatientMedicalAttachment, 'id' | 'patient_id' | 'uploaded_at'>,
+  ) =>
+    request<{ data: PatientMedicalAttachment }>(
+      `/api/patients/${encodeURIComponent(patientId)}/attachments`,
+      { method: 'POST', body: JSON.stringify(data) },
+    ),
+  deleteMedicalAttachment: (patientId: string, attachmentId: string) =>
+    request<{ ok: boolean }>(
+      `/api/patients/${encodeURIComponent(patientId)}/attachments/${encodeURIComponent(attachmentId)}`,
+      { method: 'DELETE' },
     ),
   surgeries: (patientId: string) =>
     request<{ data: PatientSurgery[] }>(
@@ -1754,6 +1959,106 @@ export interface GoogleBusinessReviewRecord {
   time?: number;
 }
 
+export interface MarketingConsentRecord {
+  patient_id: string;
+  organization_id: string;
+  social_media: boolean;
+  educational_material: boolean;
+  website: boolean;
+  signed_at: string;
+  signed_by: string;
+  signature_ip?: string | null;
+  expires_at?: string | null;
+  is_active: boolean;
+  revoked_at?: string | null;
+}
+
+export interface MarketingExportRecord {
+  id: string;
+  patient_id: string;
+  organization_id: string;
+  export_type: string;
+  file_path: string;
+  file_url: string;
+  is_anonymized: boolean;
+  metrics_overlay: string[];
+  asset_a_id?: string | null;
+  asset_b_id?: string | null;
+  created_at: string;
+  patient_name?: string | null;
+}
+
+export interface ReviewAutomationConfigRecord {
+  organization_id: string;
+  enabled: boolean;
+  trigger_status: string[];
+  message_template: string;
+  delay_hours: number;
+  google_place_id?: string | null;
+}
+
+export interface BirthdayAutomationConfigRecord {
+  organization_id: string;
+  enabled: boolean;
+  message_template: string;
+  send_whatsapp: boolean;
+  send_email: boolean;
+}
+
+export interface RecallCampaignRecord {
+  id: string;
+  organization_id: string;
+  name: string;
+  description: string;
+  days_without_visit: number;
+  message_template: string;
+  enabled: boolean;
+  created_at: string;
+}
+
+export interface ReferralCodeRecord {
+  id: string;
+  patient_id: string;
+  organization_id: string;
+  code: string;
+  reward_type: 'discount' | 'session' | 'product';
+  reward_value: number;
+  referrer_reward?: {
+    type: 'discount' | 'session';
+    value: number;
+  } | null;
+  uses: number;
+  max_uses?: number | null;
+  expires_at?: string | null;
+  created_at: string;
+}
+
+export interface FisioLinkConfigRecord {
+  organization_id: string;
+  slug: string;
+  whatsapp_number?: string | null;
+  google_maps_url?: string | null;
+  phone?: string | null;
+  show_before_after: boolean;
+  show_reviews: boolean;
+  custom_message?: string | null;
+  theme: 'light' | 'dark' | 'clinical';
+  primary_color: string;
+}
+
+export interface ContentCalendarRecord {
+  id: string;
+  title: string;
+  description: string;
+  type: 'post' | 'story' | 'reel' | 'carousel' | 'live';
+  status: 'idea' | 'scheduled' | 'posted' | 'cancelled';
+  date: string | null;
+  hashtags?: string | null;
+  image_url?: string | null;
+  created_at: string;
+  updated_at?: string | null;
+}
+
 export interface ActivityLabClinicRecord {
   id: string;
   clinic_name: string;
@@ -1874,6 +2179,133 @@ export const integrationsApi = {
         ),
     },
   },
+};
+
+export const marketingApi = {
+  consents: {
+    get: (patientId: string) =>
+      request<{ data: MarketingConsentRecord | null }>(`/api/marketing/consents/${patientId}`),
+    upsert: (patientId: string, data: Partial<MarketingConsentRecord>) =>
+      request<{ data: MarketingConsentRecord }>(`/api/marketing/consents/${patientId}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    revoke: (patientId: string) =>
+      request<{ data: MarketingConsentRecord }>(`/api/marketing/consents/${patientId}/revoke`, {
+        method: 'POST',
+      }),
+  },
+  reviewConfig: {
+    get: () =>
+      request<{ data: ReviewAutomationConfigRecord }>('/api/marketing/review-config'),
+    update: (data: Partial<ReviewAutomationConfigRecord>) =>
+      request<{ data: ReviewAutomationConfigRecord }>('/api/marketing/review-config', {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+  },
+  birthdayConfig: {
+    get: () =>
+      request<{ data: BirthdayAutomationConfigRecord }>('/api/marketing/birthday-config'),
+    update: (data: Partial<BirthdayAutomationConfigRecord>) =>
+      request<{ data: BirthdayAutomationConfigRecord }>('/api/marketing/birthday-config', {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+  },
+  recallCampaigns: {
+    list: () =>
+      request<{ data: RecallCampaignRecord[] }>('/api/marketing/recall-campaigns'),
+    create: (data: Partial<RecallCampaignRecord>) =>
+      request<{ data: RecallCampaignRecord }>('/api/marketing/recall-campaigns', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: Partial<RecallCampaignRecord>) =>
+      request<{ data: RecallCampaignRecord }>(`/api/marketing/recall-campaigns/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      request<{ ok: boolean }>(`/api/marketing/recall-campaigns/${id}`, {
+        method: 'DELETE',
+      }),
+  },
+  referrals: {
+    stats: () =>
+      request<{ data: { totalCodes: number; activeCodes: number; totalRedemptions: number; pendingRewards: number; topReferrers: Array<{ patient_id: string; patient_name: string; redemptions: number }> } }>('/api/marketing/referrals/stats'),
+    create: (data: Partial<ReferralCodeRecord> & { patient_id: string; code: string }) =>
+      request<{ data: ReferralCodeRecord }>('/api/marketing/referrals', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    getByCode: (code: string) =>
+      request<{ data: ReferralCodeRecord | null }>(`/api/marketing/referrals/code/${encodeURIComponent(code)}`),
+    getByPatient: (patientId: string) =>
+      request<{ data: ReferralCodeRecord | null }>(`/api/marketing/referrals/patient/${patientId}`),
+    redeem: (data: { code: string; new_patient_id: string }) =>
+      request<{ data: { success: boolean; reward?: string; error?: string } }>('/api/marketing/referrals/redeem', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+  },
+  fisiolink: {
+    getMine: () =>
+      request<{ data: FisioLinkConfigRecord | null }>('/api/marketing/fisiolink'),
+    update: (data: Partial<FisioLinkConfigRecord>) =>
+      request<{ data: FisioLinkConfigRecord }>('/api/marketing/fisiolink', {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    analytics: (slug: string) =>
+      request<{ data: { totalClicks: number; clicksByButton: Record<string, number> } }>(`/api/marketing/fisiolink/${encodeURIComponent(slug)}/analytics`),
+    publicGet: (slug: string) =>
+      requestPublic<{ data: FisioLinkConfigRecord | null }>(`/api/marketing/public/fisiolink/${encodeURIComponent(slug)}`),
+    trackClick: (slug: string, button: string) =>
+      requestPublic<{ ok: boolean }>(`/api/marketing/public/fisiolink/${encodeURIComponent(slug)}/click`, {
+        method: 'POST',
+        body: JSON.stringify({ button }),
+      }),
+  },
+  exports: {
+    list: (params?: { patientId?: string }) => {
+      const qs = new URLSearchParams(
+        Object.fromEntries(Object.entries(params ?? {}).filter(([, v]) => v != null).map(([k, v]) => [k, String(v)])),
+      ).toString();
+      return request<{ data: MarketingExportRecord[] }>(`/api/marketing/exports${qs ? `?${qs}` : ''}`);
+    },
+    create: (data: Partial<MarketingExportRecord> & { patient_id: string; file_path: string; file_url: string }) =>
+      request<{ data: MarketingExportRecord }>('/api/marketing/exports', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      request<{ data: { id: string; file_path: string } }>(`/api/marketing/exports/${id}`, {
+        method: 'DELETE',
+      }),
+  },
+  contentCalendar: {
+    list: () =>
+      request<{ data: ContentCalendarRecord[] }>('/api/marketing/content-calendar'),
+    create: (data: Omit<ContentCalendarRecord, 'id' | 'created_at' | 'updated_at'>) =>
+      request<{ data: ContentCalendarRecord }>('/api/marketing/content-calendar', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: string, data: Partial<ContentCalendarRecord>) =>
+      request<{ data: ContentCalendarRecord }>(`/api/marketing/content-calendar/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    delete: (id: string) =>
+      request<{ ok: boolean }>(`/api/marketing/content-calendar/${id}`, {
+        method: 'DELETE',
+      }),
+  },
+  roi: (data: { startDate: string; endDate: string }) =>
+    request<{ data: { totalLeads: number; convertedLeads: number } }>(
+      `/api/marketing/roi?startDate=${encodeURIComponent(data.startDate)}&endDate=${encodeURIComponent(data.endDate)}`,
+    ),
 };
 
 export const activityLabApi = {
@@ -2734,6 +3166,38 @@ export interface UserVoucherRecord {
   voucher?: VoucherRecord;
 }
 
+export interface NFSeRecord {
+  id: string;
+  organization_id?: string;
+  numero: string;
+  serie: string;
+  tipo: 'entrada' | 'saida';
+  valor: number;
+  data_emissao: string;
+  data_prestacao: string;
+  destinatario: Record<string, unknown>;
+  prestador: Record<string, unknown>;
+  servico: Record<string, unknown>;
+  status: 'rascunho' | 'emitida' | 'cancelada' | 'erro';
+  chave_acesso?: string | null;
+  protocolo?: string | null;
+  verificacao?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface NFSeConfigRecord {
+  organization_id?: string;
+  ambiente: 'homologacao' | 'producao';
+  municipio_codigo?: string | null;
+  cnpj_prestador?: string | null;
+  inscricao_municipal?: string | null;
+  aliquota_iss: number;
+  auto_emissao: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 const fin = (path: string, opts?: RequestInit) => request<any>(`/api/financial${path}`, opts);
 export const financialApi = {
   transacoes: { list: (p?: {tipo?:string;status?:string;dateFrom?:string;dateTo?:string;limit?:number;offset?:number}) => fin(`/transacoes?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`) , create: (d: Partial<Transacao>) => fin('/transacoes',{method:'POST',body:JSON.stringify(d)}), update: (id:string,d:Partial<Transacao>)=>fin(`/transacoes/${id}`,{method:'PUT',body:JSON.stringify(d)}), delete: (id:string)=>fin(`/transacoes/${id}`,{method:'DELETE'}) },
@@ -2829,6 +3293,19 @@ export const financialApi = {
   userVouchers: {
     list: () => fin('/user-vouchers'),
     consume: (id: string) => fin(`/user-vouchers/${id}/consume`, { method: 'POST' }),
+  },
+  nfse: {
+    list: () => fin('/nfse'),
+    create: (data: Partial<NFSeRecord>) =>
+      fin('/nfse', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: Partial<NFSeRecord>) =>
+      fin(`/nfse/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: string) => fin(`/nfse/${id}`, { method: 'DELETE' }),
+  },
+  nfseConfig: {
+    get: () => fin('/nfse-config'),
+    upsert: (data: Partial<NFSeConfigRecord>) =>
+      fin('/nfse-config', { method: 'PUT', body: JSON.stringify(data) }),
   },
 };
 
@@ -4061,6 +4538,54 @@ export interface ExerciseSessionStats {
   last_session?: string;
 }
 
+export interface AIClinicalReport {
+  summary: string;
+  technical_analysis: string;
+  patient_summary: string;
+  confidence_overall_0_100: number;
+  key_findings: Array<{ text: string; confidence: 'HIGH' | 'MEDIUM' | 'LOW' }>;
+  metrics_table_markdown: string;
+  improvements: string[];
+  still_to_improve: string[];
+  suggested_exercises: Array<{
+    name: string;
+    sets: string;
+    reps: string;
+    goal: string;
+    progression: string;
+    regression: string;
+  }>;
+  limitations: string[];
+  red_flags_generic: string[];
+  disclaimer: string;
+}
+
+export interface AITreatmentAssistantResult {
+  suggestion?: string;
+}
+
+export interface AISessionTranscriptionResult {
+  soapData: {
+    subjective: string;
+    objective: string;
+    assessment: string;
+    plan: string;
+  };
+}
+
+export interface AIDocumentAnalysisResult {
+  extractedData: Record<string, unknown>;
+  classification?: Record<string, unknown> | null;
+  summary?: Record<string, unknown> | null;
+  comparison?: Record<string, unknown> | null;
+  translation?: Record<string, unknown> | null;
+  tags?: Array<Record<string, unknown>>;
+}
+
+export interface DicomStudyRecord {
+  [tag: string]: unknown;
+}
+
 export const exerciseSessionsApi = {
   list: (params: { patientId?: string; exerciseId?: string; limit?: number }) => {
     const qs = new URLSearchParams();
@@ -4076,6 +4601,121 @@ export const exerciseSessionsApi = {
     }),
   stats: (patientId: string) =>
     request<{ data: ExerciseSessionStats }>(`/api/exercise-sessions/stats/${encodeURIComponent(patientId)}`),
+};
+
+// ===== AI =====
+export const aiApi = {
+  service: <TInput extends Record<string, unknown>, TOutput>(action: string, data: TInput) =>
+    request<{ data: TOutput }>('/api/ai/service', {
+      method: 'POST',
+      body: JSON.stringify({ action, data }),
+    }),
+
+  fastProcessing: (data: { text: string; mode?: string }) =>
+    request<{ data: { result: string } }>('/api/ai/fast-processing', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  transcribeAudio: (data: { audioData?: string; audio?: string; mimeType?: string; languageCode?: string; context?: string }) =>
+    request<{ data: { transcription: string; confidence?: number } }>('/api/ai/transcribe-audio', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  transcribeSession: (data: { audioData?: string; patientId?: string; hintText?: string }) =>
+    request<{ data: AISessionTranscriptionResult }>('/api/ai/transcribe-session', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  treatmentAssistant: (data: { patientId: string; action: string; context?: string }) =>
+    request<{ data: AITreatmentAssistantResult }>('/api/ai/treatment-assistant', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  clinicalReport: (data: { metrics: Record<string, unknown>; history?: Record<string, unknown> }) =>
+    request<{ data: AIClinicalReport }>('/api/ai/analysis', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  formSuggestions: (data: { context: string }) =>
+    request<{ data: { suggestions: string[] } }>('/api/ai/form-suggestions', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  documentAnalyze: (data: Record<string, unknown>) =>
+    request<{ data: AIDocumentAnalysisResult }>('/api/ai/document/analyze', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  documentClassify: (data: { text: string; fileUrl?: string }) =>
+    request<{ data: Record<string, unknown> }>('/api/ai/document/classify', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  documentSummarize: (data: { text: string; documentType?: string }) =>
+    request<{ data: Record<string, unknown> }>('/api/ai/document/summarize', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  documentTranslate: (data: { text: string; targetLanguage: string }) =>
+    request<{ data: Record<string, unknown> }>('/api/ai/document/translate', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  documentCompare: (data: { currentText: string; patientId: string; documentType?: string }) =>
+    request<{ data: Record<string, unknown> }>('/api/ai/document/compare', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  documentPdf: (data: Record<string, unknown>) =>
+    request<{ data: { url: string | null; generated: boolean } }>('/api/ai/document/pdf', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  executiveSummary: (data: Record<string, unknown>) =>
+    request<{ data: Record<string, unknown> }>('/api/ai/executive-summary', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  movementVideo: (data: { videoUrl: string; exerciseName?: string }) =>
+    request<{ data: { analysis: { reps: number; score: number; errors: string[]; feedback: string; isValidExercise: boolean } } }>('/api/ai/movement-video', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+};
+
+// ===== DICOM =====
+export const dicomApi = {
+  studies: (params?: Record<string, string>) => {
+    const qs = new URLSearchParams(Object.entries(params ?? {})).toString();
+    return request<{ data: DicomStudyRecord[] }>(`/api/dicom/studies${qs ? `?${qs}` : ''}`);
+  },
+  series: (studyUid: string) =>
+    request<{ data: DicomStudyRecord[] }>(`/api/dicom/studies/${encodeURIComponent(studyUid)}/series`),
+  instances: (studyUid: string, seriesUid: string) =>
+    request<{ data: DicomStudyRecord[] }>(`/api/dicom/studies/${encodeURIComponent(studyUid)}/series/${encodeURIComponent(seriesUid)}/instances`),
+  uploadInstances: (files: Array<{ body: string; fileName: string }>) =>
+    Promise.all(
+      files.map((file) =>
+        request<{ data: unknown }>('/api/dicom/instances', {
+          method: 'POST',
+          body: JSON.stringify(file),
+        }),
+      ),
+    ),
+  getWadoUrl: () => `${BASE_URL}/api/dicom/wado`,
 };
 
 // ===== HEALTH CHECK =====

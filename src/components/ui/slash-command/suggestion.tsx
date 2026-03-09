@@ -14,7 +14,7 @@ import {
 import { CommandList } from './CommandList';
 import { withImageParams } from '@/lib/storageProxy';
 import { cn } from '@/lib/utils';
-import { uploadFile, STORAGE_FOLDERS } from '@/lib/firebase/storage';
+import { uploadFile, STORAGE_FOLDERS } from '@/lib/storage/upload';
 
 // ── Suggestion Logic ──────────────────────────────────
 
@@ -136,7 +136,6 @@ async function uploadAndInsertFile({
 
     const result = await uploadFile(file, {
         folder: imageUploadFolder || defaultFolder,
-        includeUserIdPath: !imageUploadFolder,
     });
 
     if (asImage && file.type.startsWith('image/')) {

@@ -33,7 +33,7 @@ import { cn } from '@/lib/utils';
 import { RichTextProvider, useRichTextContext } from '@/context/RichTextContext';
 import { RichTextToolbar } from '@/components/ui/RichTextToolbar';
 import { RichTextEditor } from '@/components/ui/RichTextEditor';
-import { uploadFile } from '@/lib/firebase/storage';
+import { uploadFile } from '@/lib/storage/upload';
 import type { Exercise } from './ExerciseQuickAdd';
 import type { EvolutionV2Data } from '../v2-improved/types';
 import { QuickPainSlider } from './QuickPainSlider';
@@ -288,13 +288,6 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
     try {
       const result = await uploadFile(file, {
         folder,
-        contentType: file.type,
-        resumable: true,
-        includeUserIdPath: false,
-        metadata: {
-          source: type,
-          originalName: file.name,
-        },
       });
       if (isImage) {
         activeEditor?.chain().focus().setImage({ src: result.url }).run();

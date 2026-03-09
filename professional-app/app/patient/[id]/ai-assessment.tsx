@@ -22,7 +22,31 @@ import { AnalysisEngine } from '@/lib/ai/analysisEngine';
 import { PoseFeedbackOverlay } from '@/components/ai/PoseFeedbackOverlay';
 import { useAudioFeedback } from '@/hooks/useAudioFeedback';
 import { useAIExercisePersistence } from '@/hooks/useAIExercisePersistence';
-import { ExerciseType, createExerciseSession } from '@/types/pose';
+import { ExerciseType, ExerciseSession } from '@/types/pose';
+
+const createSession = (id: string, patientId: string, exerciseType: ExerciseType): ExerciseSession => ({
+  id,
+  exerciseId: id,
+  exerciseType,
+  patientId,
+  startTime: new Date(),
+  duration: 0,
+  repetitions: 0,
+  totalScore: 0,
+  metrics: {
+    formScore: 0,
+    stabilityScore: 0,
+    rangeOfMotion: 0,
+    romPercentage: 0,
+    repetitions: 0,
+    avgAngles: {},
+    duration: 0,
+    avgFps: 0
+  },
+  postureIssues: [],
+  completed: false,
+  createdAt: new Date()
+});
 
 export default function AIAssessmentScreen() {
   const { id, name } = useLocalSearchParams();
@@ -92,7 +116,7 @@ export default function AIAssessmentScreen() {
     medium();
     setIsSaving(true);
     try {
-      const session = createExerciseSession(
+      const session = createSession(
         'clinica-eval-' + Date.now(),
         id as string,
         exerciseType
