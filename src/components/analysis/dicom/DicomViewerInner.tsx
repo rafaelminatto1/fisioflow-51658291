@@ -12,8 +12,6 @@ import {
     StackViewport,
     getRenderingEngine,
 } from '@cornerstonejs/core';
-import { getFirebaseFunctions } from '@/integrations/firebase/app';
-import { httpsCallable } from 'firebase/functions';
 import {
     ToolGroupManager,
     PanTool,
@@ -28,6 +26,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Ruler, MousePointer2, ZoomIn, Move } from 'lucide-react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { dicomWebClient } from '@/services/dicom/dicomWebClient';
 
 interface DicomViewerProps {
     file?: File;
@@ -135,20 +134,8 @@ export const DicomViewerInner: React.FC<DicomViewerProps> = ({
                 logger.warn("DICOM Loader disabled for build verification", undefined, 'DicomViewerInner');
             } else if (studyInstanceUid && seriesInstanceUid && wadoUrl) {
                 try {
-                    const functions = getFirebaseFunctions();
-                    const dicomProxyFunction = httpsCallable(functions, 'dicom-proxy');
-
-                    const path = `studies/${studyInstanceUid}/series/${seriesInstanceUid}/instances`;
-                    const result = await dicomProxyFunction({
-                        method: 'GET',
-                        headers: {
-                            'Accept': 'application/dicom+json',
-                            'x-dicom-path': path
-                        }
-                    });
-
-                    if (result.data) {
-                        const instances = result.data as Array<Record<string, { Value?: string[] }>>;
+                    const instances = await dicomWebClient.getInstances(studyInstanceUid, seriesInstanceUid);
+                    if (instances) {
                         const baseUrl = wadoUrl;
                         imageIds = instances.map((inst) => {
                             const sopUid = inst['00080018']?.Value?.[0];

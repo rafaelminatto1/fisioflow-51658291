@@ -145,6 +145,22 @@ class AuditLogger {
       details: { format }
     });
   }
+
+  async query(options: { userId: string; limit?: number }) {
+    try {
+      const token = await authApi.getToken();
+      if (!token) throw new Error('Not authenticated');
+      
+      const res = await fetch(`${config.apiUrl}/api/audit/logs?userId=${options.userId}&limit=${options.limit || 50}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.logs || [];
+    } catch {
+      return [];
+    }
+  }
 }
 
 export const auditLogger = new AuditLogger();

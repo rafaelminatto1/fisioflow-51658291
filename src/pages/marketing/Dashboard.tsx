@@ -18,7 +18,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { crmApi, integrationsApi, type GoogleBusinessReviewRecord } from '@/lib/api/workers-client';
+import { crmApi, integrationsApi, marketingApi, type GoogleBusinessReviewRecord } from '@/lib/api/workers-client';
 
 interface GoogleReview extends GoogleBusinessReviewRecord {}
 
@@ -57,10 +57,11 @@ export default function MarketingDashboard() {
         let rating2 = 0;
         let rating1 = 0;
 
-        const [reviewsResult, campaignsResult, leadsResult] = await Promise.allSettled([
+        const [reviewsResult, campaignsResult, leadsResult, exportsResult] = await Promise.allSettled([
           integrationsApi.google.business.reviews(),
           crmApi.campanhas.list(),
           crmApi.leads.list(),
+          marketingApi.exports.list(),
         ]);
 
         if (reviewsResult.status === 'fulfilled') {
@@ -76,7 +77,7 @@ export default function MarketingDashboard() {
           }
         }
 
-        const totalExports = 0;
+        const totalExports = exportsResult.status === 'fulfilled' ? (exportsResult.value.data ?? []).length : 0;
         const totalCampaigns = campaignsResult.status === 'fulfilled' ? (campaignsResult.value.data ?? []).length : 0;
         const totalLeads = leadsResult.status === 'fulfilled' ? (leadsResult.value.data ?? []).length : 0;
 

@@ -1,4 +1,4 @@
-import { db, collection, addDoc } from '@/integrations/firebase/app';
+import { auditApi } from '@/lib/api/workers-client';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export type AuditAction = 'INSERT' | 'UPDATE' | 'DELETE';
@@ -52,14 +52,16 @@ export function calculateDiff(
  */
 export async function logAuditEntry(entry: AuditEntry): Promise<boolean> {
   try {
-    await addDoc(collection(db, 'audit_log'), {
+    await auditApi.create({
       action: entry.action,
-      table_name: entry.table_name,
-      record_id: entry.record_id || null,
-      old_data: entry.old_data || null,
-      new_data: entry.new_data || null,
-      changes: entry.changes || null,
-      timestamp: new Date().toISOString(),
+      entity_type: entry.table_name,
+      entity_id: entry.record_id || null,
+      metadata: {
+        old_data: entry.old_data || null,
+        new_data: entry.new_data || null,
+        changes: entry.changes || null,
+        timestamp: new Date().toISOString(),
+      },
     });
 
     return true;

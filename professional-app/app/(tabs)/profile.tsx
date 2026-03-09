@@ -18,7 +18,7 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { Card, Button, SyncStatus } from '@/components';
 import { useSyncStatus } from '@/hooks/useSyncStatus';
 import { useQuery } from '@tanstack/react-query';
-import { getProfessionalStats } from '@/lib/firestore';
+import { getDashboardStats } from '@/lib/api';
 import { useAppointments } from '@/hooks/useAppointments';
 import { usePatients } from '@/hooks/usePatients';
 
@@ -32,7 +32,7 @@ export default function ProfileScreen() {
   // Buscar estatísticas reais
   const { data: stats } = useQuery({
     queryKey: ['professionalStats'],
-    queryFn: () => getProfessionalStats('current-professional'),
+    queryFn: () => getDashboardStats('current-professional'),
   });
 
   const { data: appointments } = useAppointments();
@@ -186,7 +186,7 @@ export default function ProfileScreen() {
         {/* Stats */}
         <View style={styles.statsContainer}>
           <Card style={styles.statCard}>
-            <Text style={[styles.statValue, { color: colors.primary }]}>{stats?.totalAppointments || appointments.length || 0}</Text>
+            <Text style={[styles.statValue, { color: colors.primary }]}>{stats?.completedAppointments || appointments.length || 0}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
               Consultas
             </Text>

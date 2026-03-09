@@ -1,82 +1,44 @@
-
 /**
- * Adaptador para converter formato Data Connect (camelCase) para Frontend (snake_case)
+ * Adaptador legado para manter a API do antigo Data Connect.
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { executeQuery } from 'firebase/data-connect';
-import { dc, listPatientsByOrgRef, getPatientByIdRef } from '@/lib/dataconnect';
-import { fisioLogger } from '@/lib/errors/logger';
+import { patientsApi, clinicalApi } from '@/lib/api/workers-client';
 
-const isUUID = (id: string | undefined): id is string => 
+const isUUID = (id: string | undefined): id is string =>
   !!id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
-const mapPatientFromPostgres = (p: any): any => ({
-  id: p.id,
-  name: p.name,
-  email: p.email,
-  phone: p.phone,
-  birth_date: p.birthDate, // Mapper importante
-  cpf: p.cpf,
-  gender: p.gender,
-  address: p.address,
-  main_condition: p.mainCondition,
-  status: 'Em Tratamento', // Default status se não vier do banco
-  organization_id: p.organizationId,
-  created_at: p.createdAt,
-  updated_at: p.updatedAt
-});
-
-/**
- * Hook para listar pacientes via Data Connect (Postgres)
- */
 export const usePatientsPostgres = (organizationId: string | undefined) => {
   return useQuery({
     queryKey: ['patients-postgres', organizationId],
     queryFn: async () => {
       if (!isUUID(organizationId)) return [];
-      const result = await executeQuery(listPatientsByOrgRef(dc(), { organizationId }));
-      return (result.data?.patients || []).map(mapPatientFromPostgres);
+      const result = await patientsApi.list({ limit: 500 });
+      return result.data ?? [];
     },
     enabled: isUUID(organizationId),
   });
 };
 
-/**
- * Hook para obter exercícios prescritos de um paciente via Data Connect
- */
 export const usePatientExercisesPostgres = (patientId: string | undefined) => {
   return useQuery({
     queryKey: ['patient-exercises-postgres', patientId],
     queryFn: async () => {
       if (!isUUID(patientId)) return [];
-      
-      // Nota: Enquanto o SDK gerado não está 100%, usamos a query manual simulada
-      // ou chamamos a query gerada se disponível.
-      // Aqui, como fallback, vou chamar a Cloud Function que já lê do Postgres,
-      // mas mantendo a interface do hook pronta para o Data Connect.
-      
-      // Quando o SDK estiver estável:
-      // const result = await executeQuery(getPatientExercisesRef(dc, { patientId }));
-      // return result.data.prescribed_exercises;
-
-      fisioLogger.debug('Data Connect exercises query pending SDK generation. Using fallback.', undefined, 'useDataConnect');
-      return []; 
+      const result = await clinicalApi.prescribedExercises.list({ patientId, active: true });
+      return result.data ?? [];
     },
     enabled: isUUID(patientId),
   });
 };
 
-/**
- * Hook para obter um paciente por ID via Data Connect
- */
 export const usePatientPostgres = (patientId: string | undefined) => {
   return useQuery({
     queryKey: ['patient-postgres', patientId],
     queryFn: async () => {
       if (!isUUID(patientId)) return null;
-      const result = await executeQuery(getPatientByIdRef(dc(), { id: patientId }));
-      return result.data?.patient || null;
+      const result = await patientsApi.get(patientId);
+      return result.data ?? null;
     },
     enabled: isUUID(patientId),
   });

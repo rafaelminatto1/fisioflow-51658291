@@ -38,7 +38,7 @@ function RootLayoutContent() {
 
     // Initialize auth
     try {
-      unsubscribe = initialize();
+      initialize();
     } catch (error) {
       console.error('Failed to initialize auth:', error);
     }

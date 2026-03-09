@@ -2,11 +2,10 @@ import React, { useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Loader2, Mic, StopCircle } from 'lucide-react';
-import { httpsCallable } from 'firebase/functions';
-import { functions } from '@/lib/firebase';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
+import { aiApi } from '@/lib/api/workers-client';
 
 interface MagicTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   value: string;
@@ -39,10 +38,8 @@ export function MagicTextarea({ value, onValueChange, className, ...props }: Mag
         const audioBlob = await stopRecording();
         const audioBase64 = await blobToBase64(audioBlob);
 
-        const transcribe = httpsCallable(functions, 'transcribeAudio');
-        const result = await transcribe({ audio: audioBase64 });
-        
-        const transcription = (result.data as unknown).transcription;
+        const result = await aiApi.transcribeAudio({ audio: audioBase64, mimeType: audioBlob.type || 'audio/webm' });
+        const transcription = result.data.transcription;
         if (transcription) {
           // Adiciona ao texto existente ou substitui
           const newValue = value ? `${value} ${transcription}` : transcription;
@@ -64,10 +61,8 @@ export function MagicTextarea({ value, onValueChange, className, ...props }: Mag
     
     setLoading(true);
     try {
-      const fixText = httpsCallable(functions, 'aiFastProcessing');
-      const result = await fixText({ text: value, mode: 'fix_grammar' });
-      
-      const correctedText = (result.data as unknown).result;
+      const result = await aiApi.fastProcessing({ text: value, mode: 'fix_grammar' });
+      const correctedText = result.data.result;
       if (correctedText) {
         onValueChange(correctedText);
       }

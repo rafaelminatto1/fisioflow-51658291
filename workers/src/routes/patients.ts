@@ -128,6 +128,62 @@ function mapMedicalRecordRow(row: Record<string, unknown>) {
   };
 }
 
+function mapPhysicalExaminationRow(row: Record<string, unknown>) {
+  return {
+    id: row.id,
+    patient_id: row.patient_id,
+    record_date: row.record_date ?? row.updated_at ?? row.created_at ?? new Date().toISOString().slice(0, 10),
+    created_by: row.created_by ?? null,
+    created_at: row.created_at ?? null,
+    updated_at: row.updated_at ?? null,
+    vital_signs: row.vital_signs ?? {},
+    general_appearance: row.general_appearance ?? null,
+    heent: row.heent ?? null,
+    cardiovascular: row.cardiovascular ?? null,
+    respiratory: row.respiratory ?? null,
+    gastrointestinal: row.gastrointestinal ?? null,
+    musculoskeletal: row.musculoskeletal ?? null,
+    neurological: row.neurological ?? null,
+    integumentary: row.integumentary ?? null,
+    psychological: row.psychological ?? null,
+  };
+}
+
+function mapTreatmentPlanRow(row: Record<string, unknown>) {
+  const asList = (value: unknown) => (Array.isArray(value) ? value : []);
+
+  return {
+    id: row.id,
+    patient_id: row.patient_id,
+    record_date: row.record_date ?? row.updated_at ?? row.created_at ?? new Date().toISOString().slice(0, 10),
+    created_by: row.created_by ?? null,
+    created_at: row.created_at ?? null,
+    updated_at: row.updated_at ?? null,
+    diagnosis: asList(row.diagnosis),
+    objectives: asList(row.objectives),
+    procedures: asList(row.procedures),
+    exercises: asList(row.exercises),
+    recommendations: asList(row.recommendations),
+    follow_up_date: row.follow_up_date ?? null,
+  };
+}
+
+function mapMedicalAttachmentRow(row: Record<string, unknown>) {
+  return {
+    id: row.id,
+    record_id: row.record_id ?? null,
+    patient_id: row.patient_id,
+    file_name: row.file_name,
+    file_url: row.file_url,
+    file_type: row.file_type,
+    file_size: row.file_size ?? null,
+    uploaded_at: row.uploaded_at ?? row.created_at ?? null,
+    uploaded_by: row.uploaded_by ?? null,
+    category: row.category ?? 'other',
+    description: row.description ?? null,
+  };
+}
+
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = createPool(c.env);
@@ -1056,6 +1112,341 @@ app.delete('/:id/medical-records/:recordId', requireAuth, async (c) => {
   );
 
   if (!result.rows.length) return c.json({ error: 'Prontuário não encontrado' }, 404);
+  return c.json({ ok: true });
+});
+
+app.get('/:id/physical-examinations', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id: patientId } = c.req.param();
+
+  const result = await pool.query(
+    `
+      SELECT pe.*
+      FROM physical_examinations pe
+      JOIN patients p ON p.id = pe.patient_id
+      WHERE pe.patient_id = $1 AND p.organization_id = $2
+      ORDER BY pe.record_date DESC, pe.created_at DESC
+    `,
+    [patientId, user.organizationId],
+  );
+
+  return c.json({ data: result.rows.map(mapPhysicalExaminationRow) });
+});
+
+app.post('/:id/physical-examinations', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id: patientId } = c.req.param();
+  const body = (await c.req.json()) as Record<string, unknown>;
+
+  const patientRes = await pool.query(
+    'SELECT id FROM patients WHERE id = $1 AND organization_id = $2 LIMIT 1',
+    [patientId, user.organizationId],
+  );
+  if (!patientRes.rows.length) return c.json({ error: 'Paciente não encontrado' }, 404);
+
+  const result = await pool.query(
+    `
+      INSERT INTO physical_examinations (
+        organization_id, patient_id, record_date, created_by, vital_signs,
+        general_appearance, heent, cardiovascular, respiratory, gastrointestinal,
+        musculoskeletal, neurological, integumentary, psychological, created_at, updated_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,NOW(),NOW())
+      RETURNING *
+    `,
+    [
+      user.organizationId,
+      patientId,
+      body.record_date ?? new Date().toISOString().slice(0, 10),
+      body.created_by ?? user.uid ?? null,
+      JSON.stringify((body.vital_signs as Record<string, unknown> | undefined) ?? {}),
+      body.general_appearance ?? null,
+      body.heent ?? null,
+      body.cardiovascular ?? null,
+      body.respiratory ?? null,
+      body.gastrointestinal ?? null,
+      body.musculoskeletal ?? null,
+      body.neurological ?? null,
+      body.integumentary ?? null,
+      body.psychological ?? null,
+    ],
+  );
+
+  return c.json({ data: mapPhysicalExaminationRow(result.rows[0]) }, 201);
+});
+
+app.put('/:id/physical-examinations/:examId', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id: patientId, examId } = c.req.param();
+  const body = (await c.req.json()) as Record<string, unknown>;
+
+  const updates: string[] = [];
+  const values: unknown[] = [];
+  const assign = (column: string, value: unknown) => {
+    values.push(value);
+    updates.push(`${column} = $${values.length}`);
+  };
+
+  if (body.record_date !== undefined) assign('record_date', body.record_date ?? null);
+  if (body.created_by !== undefined) assign('created_by', body.created_by ?? null);
+  if (body.vital_signs !== undefined) assign('vital_signs', JSON.stringify(body.vital_signs ?? {}));
+  if (body.general_appearance !== undefined) assign('general_appearance', body.general_appearance ?? null);
+  if (body.heent !== undefined) assign('heent', body.heent ?? null);
+  if (body.cardiovascular !== undefined) assign('cardiovascular', body.cardiovascular ?? null);
+  if (body.respiratory !== undefined) assign('respiratory', body.respiratory ?? null);
+  if (body.gastrointestinal !== undefined) assign('gastrointestinal', body.gastrointestinal ?? null);
+  if (body.musculoskeletal !== undefined) assign('musculoskeletal', body.musculoskeletal ?? null);
+  if (body.neurological !== undefined) assign('neurological', body.neurological ?? null);
+  if (body.integumentary !== undefined) assign('integumentary', body.integumentary ?? null);
+  if (body.psychological !== undefined) assign('psychological', body.psychological ?? null);
+  assign('updated_at', new Date().toISOString());
+
+  values.push(examId, patientId, user.organizationId);
+  const result = await pool.query(
+    `
+      UPDATE physical_examinations pe
+      SET ${updates.join(', ')}
+      FROM patients p
+      WHERE pe.id = $${values.length - 2}
+        AND pe.patient_id = p.id
+        AND p.id = $${values.length - 1}
+        AND p.organization_id = $${values.length}
+      RETURNING pe.*
+    `,
+    values,
+  );
+
+  if (!result.rows.length) return c.json({ error: 'Exame físico não encontrado' }, 404);
+  return c.json({ data: mapPhysicalExaminationRow(result.rows[0]) });
+});
+
+app.delete('/:id/physical-examinations/:examId', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id: patientId, examId } = c.req.param();
+
+  const result = await pool.query(
+    `
+      DELETE FROM physical_examinations pe
+      USING patients p
+      WHERE pe.id = $1
+        AND pe.patient_id = p.id
+        AND p.id = $2
+        AND p.organization_id = $3
+      RETURNING pe.id
+    `,
+    [examId, patientId, user.organizationId],
+  );
+
+  if (!result.rows.length) return c.json({ error: 'Exame físico não encontrado' }, 404);
+  return c.json({ ok: true });
+});
+
+app.get('/:id/treatment-plans', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id: patientId } = c.req.param();
+
+  const result = await pool.query(
+    `
+      SELECT tp.*
+      FROM treatment_plans tp
+      JOIN patients p ON p.id = tp.patient_id
+      WHERE tp.patient_id = $1 AND p.organization_id = $2
+      ORDER BY tp.record_date DESC, tp.created_at DESC
+    `,
+    [patientId, user.organizationId],
+  );
+
+  return c.json({ data: result.rows.map(mapTreatmentPlanRow) });
+});
+
+app.post('/:id/treatment-plans', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id: patientId } = c.req.param();
+  const body = (await c.req.json()) as Record<string, unknown>;
+
+  const patientRes = await pool.query(
+    'SELECT id FROM patients WHERE id = $1 AND organization_id = $2 LIMIT 1',
+    [patientId, user.organizationId],
+  );
+  if (!patientRes.rows.length) return c.json({ error: 'Paciente não encontrado' }, 404);
+
+  const result = await pool.query(
+    `
+      INSERT INTO treatment_plans (
+        organization_id, patient_id, record_date, created_by, diagnosis, objectives,
+        procedures, exercises, recommendations, follow_up_date, created_at, updated_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW(),NOW())
+      RETURNING *
+    `,
+    [
+      user.organizationId,
+      patientId,
+      body.record_date ?? new Date().toISOString().slice(0, 10),
+      body.created_by ?? user.uid ?? null,
+      JSON.stringify(Array.isArray(body.diagnosis) ? body.diagnosis : []),
+      JSON.stringify(Array.isArray(body.objectives) ? body.objectives : []),
+      JSON.stringify(Array.isArray(body.procedures) ? body.procedures : []),
+      JSON.stringify(Array.isArray(body.exercises) ? body.exercises : []),
+      JSON.stringify(Array.isArray(body.recommendations) ? body.recommendations : []),
+      body.follow_up_date ?? null,
+    ],
+  );
+
+  return c.json({ data: mapTreatmentPlanRow(result.rows[0]) }, 201);
+});
+
+app.put('/:id/treatment-plans/:planId', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id: patientId, planId } = c.req.param();
+  const body = (await c.req.json()) as Record<string, unknown>;
+
+  const updates: string[] = [];
+  const values: unknown[] = [];
+  const assign = (column: string, value: unknown) => {
+    values.push(value);
+    updates.push(`${column} = $${values.length}`);
+  };
+
+  if (body.record_date !== undefined) assign('record_date', body.record_date ?? null);
+  if (body.created_by !== undefined) assign('created_by', body.created_by ?? null);
+  if (body.diagnosis !== undefined) assign('diagnosis', JSON.stringify(Array.isArray(body.diagnosis) ? body.diagnosis : []));
+  if (body.objectives !== undefined) assign('objectives', JSON.stringify(Array.isArray(body.objectives) ? body.objectives : []));
+  if (body.procedures !== undefined) assign('procedures', JSON.stringify(Array.isArray(body.procedures) ? body.procedures : []));
+  if (body.exercises !== undefined) assign('exercises', JSON.stringify(Array.isArray(body.exercises) ? body.exercises : []));
+  if (body.recommendations !== undefined) assign('recommendations', JSON.stringify(Array.isArray(body.recommendations) ? body.recommendations : []));
+  if (body.follow_up_date !== undefined) assign('follow_up_date', body.follow_up_date ?? null);
+  assign('updated_at', new Date().toISOString());
+
+  values.push(planId, patientId, user.organizationId);
+  const result = await pool.query(
+    `
+      UPDATE treatment_plans tp
+      SET ${updates.join(', ')}
+      FROM patients p
+      WHERE tp.id = $${values.length - 2}
+        AND tp.patient_id = p.id
+        AND p.id = $${values.length - 1}
+        AND p.organization_id = $${values.length}
+      RETURNING tp.*
+    `,
+    values,
+  );
+
+  if (!result.rows.length) return c.json({ error: 'Plano de tratamento não encontrado' }, 404);
+  return c.json({ data: mapTreatmentPlanRow(result.rows[0]) });
+});
+
+app.delete('/:id/treatment-plans/:planId', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id: patientId, planId } = c.req.param();
+
+  const result = await pool.query(
+    `
+      DELETE FROM treatment_plans tp
+      USING patients p
+      WHERE tp.id = $1
+        AND tp.patient_id = p.id
+        AND p.id = $2
+        AND p.organization_id = $3
+      RETURNING tp.id
+    `,
+    [planId, patientId, user.organizationId],
+  );
+
+  if (!result.rows.length) return c.json({ error: 'Plano de tratamento não encontrado' }, 404);
+  return c.json({ ok: true });
+});
+
+app.get('/:id/attachments', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id: patientId } = c.req.param();
+  const { recordId } = c.req.query();
+
+  const params: unknown[] = [patientId, user.organizationId];
+  let where = 'ma.patient_id = $1 AND p.organization_id = $2';
+  if (recordId) {
+    params.push(recordId);
+    where += ` AND ma.record_id = $${params.length}`;
+  }
+
+  const result = await pool.query(
+    `
+      SELECT ma.*
+      FROM medical_attachments ma
+      JOIN patients p ON p.id = ma.patient_id
+      WHERE ${where}
+      ORDER BY ma.uploaded_at DESC, ma.created_at DESC
+    `,
+    params,
+  );
+
+  return c.json({ data: result.rows.map(mapMedicalAttachmentRow) });
+});
+
+app.post('/:id/attachments', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id: patientId } = c.req.param();
+  const body = (await c.req.json()) as Record<string, unknown>;
+
+  const patientRes = await pool.query(
+    'SELECT id FROM patients WHERE id = $1 AND organization_id = $2 LIMIT 1',
+    [patientId, user.organizationId],
+  );
+  if (!patientRes.rows.length) return c.json({ error: 'Paciente não encontrado' }, 404);
+
+  const result = await pool.query(
+    `
+      INSERT INTO medical_attachments (
+        organization_id, patient_id, record_id, file_name, file_url, file_type,
+        file_size, uploaded_at, uploaded_by, category, description, created_at, updated_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,NOW(),$8,$9,$10,NOW(),NOW())
+      RETURNING *
+    `,
+    [
+      user.organizationId,
+      patientId,
+      body.record_id ?? null,
+      body.file_name,
+      body.file_url,
+      body.file_type,
+      body.file_size ?? null,
+      body.uploaded_by ?? user.uid ?? null,
+      body.category ?? 'other',
+      body.description ?? null,
+    ],
+  );
+
+  return c.json({ data: mapMedicalAttachmentRow(result.rows[0]) }, 201);
+});
+
+app.delete('/:id/attachments/:attachmentId', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id: patientId, attachmentId } = c.req.param();
+
+  const result = await pool.query(
+    `
+      DELETE FROM medical_attachments ma
+      USING patients p
+      WHERE ma.id = $1
+        AND ma.patient_id = p.id
+        AND p.id = $2
+        AND p.organization_id = $3
+      RETURNING ma.id
+    `,
+    [attachmentId, patientId, user.organizationId],
+  );
+
+  if (!result.rows.length) return c.json({ error: 'Anexo não encontrado' }, 404);
   return c.json({ ok: true });
 });
 

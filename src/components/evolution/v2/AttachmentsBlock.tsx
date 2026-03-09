@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { uploadFile } from '@/lib/storage/upload';
 import {
   Dialog,
   DialogContent,
@@ -148,8 +149,6 @@ export const AttachmentsBlock: React.FC<AttachmentsBlockProps> = ({
     try {
       setIsUploading(true);
 
-      const { uploadFile } = await import('@/lib/firebase/storage');
-
       // Get a safe evolution ID if not provided
       const safeEvolutionId = evolutionId || `generic_${Date.now()}`;
 
@@ -161,7 +160,6 @@ export const AttachmentsBlock: React.FC<AttachmentsBlockProps> = ({
 
       const result = await uploadFile(selectedFile, {
         folder: storagePath,
-        includeUserIdPath: !patientId, // Only include userId if we're not in a patient-specific folder
       });
 
       const newAttachment: Attachment = {

@@ -98,7 +98,7 @@ export default function FinancialFormScreen() {
         patient_id: patientId,
         session_date: date.toISOString().split('T')[0], // YYYY-MM-DD
         session_value: finalAmount,
-        payment_method: paymentMethod,
+        payment_method: paymentMethod as any,
         payment_status: status,
         notes: description,
         paid_amount: status === 'paid' ? finalAmount : 0,
