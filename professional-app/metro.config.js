@@ -9,7 +9,14 @@ const monorepoRoot = path.resolve(projectRoot, '..');
 const config = getDefaultConfig(projectRoot);
 
 // 1. Suporte a Monorepo (Watch Folders e Node Modules)
-config.watchFolders = [monorepoRoot];
+// NOTA: Não monitoramos o monorepoRoot inteiro para evitar problemas com arquivos temporários
+// Apenas pacotes específicos do packages/ são necessários
+config.watchFolders = [
+  path.resolve(monorepoRoot, 'packages/ui'),
+  path.resolve(monorepoRoot, 'packages/core'),
+  path.resolve(monorepoRoot, 'packages/shared-api'),
+  path.resolve(monorepoRoot, 'packages/config'),
+];
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(monorepoRoot, 'node_modules'),
@@ -49,29 +56,30 @@ try {
 }
 
 // 6. Blocklist (Otimização Drástica)
+const blocklistPaths = [
+  'test-results',
+  'playwright-report',
+  'testsprite_tests',
+  'e2e',
+  'playwright',
+  'playwright-logs',
+  'playwright-screenshots',
+  'playwright-video',
+  'scripts',
+  // 'stubs' removido - necessário para o alias do framer-motion
+  'claude-skills',
+];
+
 config.resolver.blockList = [
-  // Testes e relatórios
-  /test-results\/.*/,
-  /playwright-report\/.*/,
-  /testsprite_tests\/.*/,
-  /e2e\//,
-  /playwright\//,
-  /playwright-logs\/.*/,
-  /playwright-screenshots\/.*/,
-  /playwright-video\/.*/,
+  ...blocklistPaths.map(p => new RegExp(`^${path.join(projectRoot, p).replace(/\\/g, '/')}/.*`)),
   /.*\.cache.*/,
   // Git e Firebase
   /\.git\/.*/,
   /\.firebase\/.*/,
   // Documentação e scripts de desenvolvimento
   /.*\.md$/,
-  /scripts\//,
-  /stubs\//,
-  /claude-skills\//,
   /\.*claude\/.*/,
   /\.gemini\/.*/,
-  // Cloud Functions (não usado no mobile)
-  /functions\//,
   // Arquivos de validação e teste
   /check_patients\.js$/,
   /test-notifications\.js$/,
@@ -84,6 +92,8 @@ config.resolver.blockList = [
   /node_modules\/@playwright\/.*/,
   /node_modules\/puppeteer\/.*/,
   /node_modules\/.*\/node_modules/,
+  // Arquivos temporários do Firebase que causam erro de watch
+  /node_modules\/@firebase\/.*_tmp_.*/,
 ];
 
 // 7. Porta do Servidor

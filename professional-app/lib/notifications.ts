@@ -279,19 +279,18 @@ export async function sendTestNotification(): Promise<void> {
 }
 
 // ============================================
-// CLOUD MESSAGING (Firebase FCM)
+// CLOUD MESSAGING (Neon & Cloudflare)
 // ============================================
 
 export async function sendPushNotification(
   targetToken: string,
   notification: PushNotificationData
 ): Promise<void> {
-  // This would typically call your Cloud Function to send FCM notification
-  // For now, we'll store it locally or call an API endpoint
+  // This typically calls the Cloudflare Worker API to handle the push notification
   console.log('Sending push notification:', notification);
 
-  // Example implementation would call:
-  // await fetch('https://your-cloud-function-url/sendPush', {
+  // Example implementation:
+  // await fetch('https://api-pro.moocafisio.com.br/api/notifications/send', {
   //   method: 'POST',
   //   headers: { 'Content-Type': 'application/json' },
   //   body: JSON.stringify({
