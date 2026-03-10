@@ -47,6 +47,43 @@ function calculateLevel(totalXp: number) {
   return { level, xpForNextLevel, currentLevelXp: totalXp - accumulated };
 }
 
+// Helper para obter patient_id do usuário logado (se for paciente)
+async function getPatientIdFromUser(c: any, pool: any): Promise<string | null> {
+  const user = c.get('user');
+  if (!user?.uid) return null;
+  
+  const result = await pool.query(
+    'SELECT id FROM patients WHERE user_id = $1 OR email = $2 LIMIT 1',
+    [user.uid, user.email]
+  );
+  return result.rows[0]?.id || null;
+}
+
+// ─── GET /profile ────────────────────────────────────────────────────────────
+app.get('/profile', requireAuth, async (c) => {
+  const pool = createPool(c.env);
+  const patientId = await getPatientIdFromUser(c, pool);
+  if (!patientId) return c.json({ data: null, error: 'Paciente não encontrado' }, 404);
+
+  // Reutiliza a lógica do perfil
+  let result = await pool.query(
+    'SELECT * FROM patient_gamification WHERE patient_id = $1',
+    [patientId],
+  );
+
+  if (!result.rows.length) {
+    result = await pool.query(
+      `INSERT INTO patient_gamification
+         (patient_id, current_xp, level, current_streak, longest_streak,
+          total_points, last_activity_date, created_at, updated_at)
+       VALUES ($1, 0, 1, 0, 0, 0, NULL, NOW(), NOW())
+       RETURNING *`,
+      [patientId],
+    );
+  }
+  return c.json({ data: result.rows[0] });
+});
+
 // ─── GET /profile/:patientId ─────────────────────────────────────────────────
 
 app.get('/profile/:patientId', requireAuth, async (c) => {
@@ -209,6 +246,16 @@ app.post('/award-xp', requireAuth, async (c) => {
   });
 });
 
+// ─── GET /quests ─────────────────────────────────────────────────────────────
+app.get('/quests', requireAuth, async (c) => {
+  const pool = createPool(c.env);
+  const patientId = await getPatientIdFromUser(c, pool);
+  if (!patientId) return c.json({ data: [] });
+  const today = new Date().toISOString().split('T')[0];
+  const result = await pool.query('SELECT * FROM daily_quests WHERE patient_id = $1 AND date = $2 LIMIT 1', [patientId, today]);
+  return c.json({ data: result.rows[0] || [] });
+});
+
 // ─── GET /quests/:patientId ───────────────────────────────────────────────────
 
 app.get('/quests/:patientId', requireAuth, async (c) => {
@@ -277,6 +324,18 @@ app.put('/quests/:patientId/complete', requireAuth, async (c) => {
   );
 
   return c.json({ data: { ...record, quests_data: updatedQuests, completed_count: completedCount }, xpAwarded: quest.xp });
+});
+
+// ─── GET /achievements ───────────────────────────────────────────────────────
+app.get('/achievements', requireAuth, async (c) => {
+  const pool = createPool(c.env);
+  const patientId = await getPatientIdFromUser(c, pool);
+  if (!patientId) return c.json({ data: { all: [], unlocked: [] } });
+  const [allResult, unlockedResult] = await Promise.all([
+    pool.query('SELECT * FROM achievements ORDER BY xp_reward ASC'),
+    pool.query('SELECT * FROM achievements_log WHERE patient_id = $1 ORDER BY unlocked_at DESC', [patientId]),
+  ]);
+  return c.json({ data: { all: allResult.rows, unlocked: unlockedResult.rows } });
 });
 
 // ─── GET /achievements/:patientId ────────────────────────────────────────────
@@ -398,6 +457,22 @@ app.get('/shop', requireAuth, async (c) => {
     'SELECT * FROM shop_items WHERE is_active = true ORDER BY cost ASC',
   );
   try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+});
+
+// ─── GET /inventory ─────────────────────────────────────────────────────────
+app.get('/inventory', requireAuth, async (c) => {
+  const pool = createPool(c.env);
+  const patientId = await getPatientIdFromUser(c, pool);
+  if (!patientId) return c.json({ data: [] });
+  const result = await pool.query(
+    `SELECT ui.*, si.code as item_code_check, si.name as item_name, si.description as item_description,
+            si.cost as item_cost, si.type as item_type, si.icon as item_icon
+     FROM user_inventory ui
+     JOIN shop_items si ON si.id = ui.item_id
+     WHERE ui.user_id = $1`,
+    [patientId],
+  );
+  return c.json({ data: result.rows });
 });
 
 // ─── GET /inventory/:patientId ───────────────────────────────────────────────
@@ -969,6 +1044,18 @@ app.delete('/weekly-challenges/:id', requireAuth, async (c) => {
   const { id } = c.req.param();
   await pool.query('DELETE FROM weekly_challenges WHERE id = $1', [id]);
   return c.json({ ok: true });
+});
+
+// ─── GET /patient-challenges ────────────────────────────────────────────────
+app.get('/patient-challenges', requireAuth, async (c) => {
+  const pool = createPool(c.env);
+  const patientId = await getPatientIdFromUser(c, pool);
+  if (!patientId) return c.json({ data: [] });
+  const result = await pool.query(
+    `SELECT * FROM patient_challenges WHERE patient_id = $1 ORDER BY completed DESC, completed_at DESC NULLS LAST`,
+    [patientId],
+  );
+  return c.json({ data: result.rows });
 });
 
 app.get('/patient-challenges/:patientId', requireAuth, async (c) => {

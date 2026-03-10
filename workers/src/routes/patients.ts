@@ -126,4 +126,103 @@ app.delete('/:id', requireAuth, async (c) => {
   }
 });
 
+// ===== PATHOLOGIES =====
+app.get('/:id/pathologies', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = createPool(c.env);
+  const { id } = c.req.param();
+  try {
+    const result = await db.query(
+      `SELECT * FROM patient_pathologies WHERE patient_id = $1::uuid AND organization_id = $2::uuid ORDER BY created_at DESC`,
+      [id, user.organizationId],
+    );
+    return c.json({ data: result.rows || [] });
+  } catch (error: any) {
+    return c.json({ data: [], error: error.message });
+  }
+});
+
+app.post('/:id/pathologies', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = createPool(c.env);
+  const { id } = c.req.param();
+  try {
+    const body = (await c.req.json()) as any;
+    const result = await db.query(
+      `INSERT INTO patient_pathologies (patient_id, organization_id, pathology_name, cid_code, diagnosis_date, severity, affected_region, status, notes, created_at, updated_at)
+       VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()) RETURNING *`,
+      [id, user.organizationId, body.pathology_name, body.cid_code || null, body.diagnosis_date || null, body.severity || null, body.affected_region || null, body.status || 'ativo', body.notes || null],
+    );
+    return c.json({ data: result.rows?.[0] }, 201);
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// ===== SURGERIES =====
+app.get('/:id/surgeries', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = createPool(c.env);
+  const { id } = c.req.param();
+  try {
+    const result = await db.query(
+      `SELECT * FROM patient_surgeries WHERE patient_id = $1::uuid AND organization_id = $2::uuid ORDER BY surgery_date DESC`,
+      [id, user.organizationId],
+    );
+    return c.json({ data: result.rows || [] });
+  } catch (error: any) {
+    return c.json({ data: [], error: error.message });
+  }
+});
+
+app.post('/:id/surgeries', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = createPool(c.env);
+  const { id } = c.req.param();
+  try {
+    const body = (await c.req.json()) as any;
+    const result = await db.query(
+      `INSERT INTO patient_surgeries (patient_id, organization_id, surgery_name, surgery_date, surgeon_name, hospital, surgery_type, affected_side, complications, notes, created_at, updated_at)
+       VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW()) RETURNING *`,
+      [id, user.organizationId, body.surgery_name, body.surgery_date || null, body.surgeon_name || null, body.hospital || null, body.surgery_type || null, body.affected_side || null, body.complications || null, body.notes || null],
+    );
+    return c.json({ data: result.rows?.[0] }, 201);
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// ===== MEDICAL RETURNS =====
+app.get('/:id/medical-returns', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = createPool(c.env);
+  const { id } = c.req.param();
+  try {
+    const result = await db.query(
+      `SELECT * FROM patient_medical_returns WHERE patient_id = $1::uuid AND organization_id = $2::uuid ORDER BY return_date DESC`,
+      [id, user.organizationId],
+    );
+    return c.json({ data: result.rows || [] });
+  } catch (error: any) {
+    return c.json({ data: [], error: error.message });
+  }
+});
+
+app.post('/:id/medical-returns', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = createPool(c.env);
+  const { id } = c.req.param();
+  try {
+    const body = (await c.req.json()) as any;
+    const result = await db.query(
+      `INSERT INTO patient_medical_returns (patient_id, organization_id, doctor_name, doctor_phone, return_date, return_period, notes, report_done, report_sent, created_at, updated_at)
+       VALUES ($1::uuid, $2::uuid, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW()) RETURNING *`,
+      [id, user.organizationId, body.doctor_name, body.doctor_phone || null, body.return_date || null, body.return_period || null, body.notes || null, body.report_done || false, body.report_sent || false],
+    );
+    return c.json({ data: result.rows?.[0] }, 201);
+  } catch (error: any) {
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 export { app as patientsRoutes };

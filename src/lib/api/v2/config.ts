@@ -7,8 +7,8 @@
  * 3. Fallback legado por HASH (compatibilidade)
  */
 
-const _REGION = import.meta.env.VITE_FIREBASE_REGION || 'southamerica-east1';
-const _PROJECT_NUMBER = import.meta.env.VITE_FIREBASE_PROJECT_NUMBER || '412418905255';
+const _REGION = 'southamerica-east1';
+const _PROJECT_NUMBER = '412418905255';
 const _LEGACY_HASH = import.meta.env.VITE_CLOUD_FUNCTIONS_HASH || 'tfecm5cqoq';
 const _RUN_APP_PATTERN = import.meta.env.VITE_CLOUD_RUN_PATTERN || 'legacy-hash';
 

@@ -97,8 +97,8 @@ export function generateOpenAPISpec(): OpenAPISpec {
     },
     servers: [
       {
-        url: 'https://us-central1-fisioflow-51658291.cloudfunctions.net',
-        description: 'Produção (Firebase Functions)',
+        url: 'https://fisioflow-api.rafalegollas.workers.dev',
+        description: 'Produção (Cloudflare Workers)',
       },
       {
         url: 'http://localhost:5001/fisioflow-51658291/us-central1',

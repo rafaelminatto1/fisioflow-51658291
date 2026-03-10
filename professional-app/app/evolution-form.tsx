@@ -17,6 +17,9 @@ import { useEvolutions } from '@/hooks';
 import { SOAPForm } from '@/components/evolution/SOAPForm';
 import { PainLevelSlider } from '@/components/evolution/PainLevelSlider';
 import { PhotoUpload } from '@/components/evolution/PhotoUpload';
+import { FillingStyleToggle, FillingMode } from '@/components/evolution/FillingStyleToggle';
+import { NotionForm } from '@/components/evolution/NotionForm';
+import { TiptapForm } from '@/components/evolution/TiptapForm';
 
 export default function EvolutionFormScreen() {
   const colors = useColors();
@@ -35,10 +38,12 @@ export default function EvolutionFormScreen() {
   } = useEvolutions(patientId);
 
   // Form state
+  const [mode, setMode] = useState<FillingMode>('SOAP');
   const [subjective, setSubjective] = useState('');
   const [objective, setObjective] = useState('');
   const [assessment, setAssessment] = useState('');
   const [plan, setPlan] = useState('');
+  const [freeContent, setFreeContent] = useState('');
   const [painLevel, setPainLevel] = useState(0);
   const [photos, setPhotos] = useState<string[]>([]);
 
@@ -50,27 +55,26 @@ export default function EvolutionFormScreen() {
   const handleGenerateWithAI = async () => {
     setGeneratingSOAP(true);
 
-    // Simulate AI generation (in real implementation, call Firebase function)
+    // Simulate AI generation
     setTimeout(() => {
-      const suggestions = [
-        'Considerar o nível de dor atual',
-        'Incluir exercícios domiciliares recomendados',
-        'Revisar objetivos do tratamento',
-      ];
+      if (mode === 'SOAP') {
+        const generatedSOAP = {
+          subjective: painLevel > 0 
+            ? `Paciente relata dor nível ${painLevel}/10 na região tratada. Refere ${painLevel > 5 ? 'dificuldade significativa' : 'algum desconforto'} em atividades funcionais, mas nota melhora em relação ao início.`
+            : 'Paciente relata ausência de dor no momento. Sente-se bem e motivado com o tratamento.',
+          objective: 'Realizada avaliação de amplitude de movimento e força muscular. Apresenta boa estabilidade articular e controle motor durante os exercícios propostos.',
+          assessment: `Evolução clínica ${painLevel > 5 ? 'dentro do esperado para o quadro álgico' : 'positiva e progressiva'}. Resposta satisfatória à conduta de hoje.`,
+          plan: `Manter exercícios de fortalecimento e mobilidade. Próxima sessão: progredir carga conforme tolerância e focar em treino funcional específico.`,
+        };
 
-      const generatedSOAP = {
-        subjective: painLevel > 0 
-          ? `Paciente relata dor nível ${painLevel}/10 na região tratada. Refere ${painLevel > 5 ? 'dificuldade significativa' : 'algum desconforto'} em atividades funcionais, mas nota melhora em relação ao início.`
-          : 'Paciente relata ausência de dor no momento. Sente-se bem e motivado com o tratamento.',
-        objective: 'Realizada avaliação de amplitude de movimento e força muscular. Apresenta boa estabilidade articular e controle motor durante os exercícios propostos.',
-        assessment: `Evolução clínica ${painLevel > 5 ? 'dentro do esperado para o quadro álgico' : 'positiva e progressiva'}. Resposta satisfatória à conduta de hoje.`,
-        plan: `Manter exercícios de fortalecimento e mobilidade. Próxima sessão: progredir carga conforme tolerância e focar em treino funcional específico.`,
-      };
+        setSubjective(generatedSOAP.subjective);
+        setObjective(generatedSOAP.objective);
+        setAssessment(generatedSOAP.assessment);
+        setPlan(generatedSOAP.plan);
+      } else {
+        setFreeContent(`Evolução do paciente ${patientName}. Nível de dor: ${painLevel}/10. Realizados exercícios de fortalecimento e mobilidade. Paciente apresenta boa resposta clínica e progressão satisfatória.`);
+      }
 
-      setSubjective(generatedSOAP.subjective);
-      setObjective(generatedSOAP.objective);
-      setAssessment(generatedSOAP.assessment);
-      setPlan(generatedSOAP.plan);
       setGeneratedSuggestions([
         'Focar em exercícios de core',
         'Avaliar retorno ao esporte',
@@ -90,9 +94,12 @@ export default function EvolutionFormScreen() {
   const handleSave = async () => {
     medium();
     
-    const hasContent = subjective.trim() || objective.trim() || assessment.trim() || plan.trim();
+    const hasContent = mode === 'SOAP' 
+      ? (subjective.trim() || objective.trim() || assessment.trim() || plan.trim())
+      : freeContent.trim();
+
     if (!hasContent) {
-      Alert.alert('Atencao', 'Preencha pelo menos um campo do SOAP para salvar.');
+      Alert.alert('Atenção', 'Preencha o formulário antes de salvar.');
       hapticError();
       return;
     }
@@ -102,18 +109,22 @@ export default function EvolutionFormScreen() {
         patientId,
         appointmentId,
         date: new Date(),
-        subjective: subjective.trim(),
-        objective: objective.trim(),
-        assessment: assessment.trim(),
-        plan: plan.trim(),
+        // Map non-SOAP modes to assessment or combine them
+        subjective: mode === 'SOAP' ? subjective.trim() : '',
+        objective: mode === 'SOAP' ? objective.trim() : '',
+        assessment: mode === 'SOAP' ? assessment.trim() : freeContent.trim(),
+        plan: mode === 'SOAP' ? plan.trim() : '',
         painLevel,
         attachments: photos,
+        metadata: {
+          fillingMode: mode
+        }
       };
 
       await createEvolutionAsync(evolutionPayload as any);
 
       success();
-      Alert.alert('Sucesso', 'Evolucao registrada com sucesso!', [
+      Alert.alert('Sucesso', 'Evolução registrada com sucesso!', [
         {
           text: 'OK',
           onPress: () => router.back(),
@@ -122,11 +133,13 @@ export default function EvolutionFormScreen() {
 
     } catch (err: any) {
       hapticError();
-      Alert.alert('Erro', err.message || 'Nao foi possível salvar a evolucao.');
+      Alert.alert('Erro', err.message || 'Não foi possível salvar a evolução.');
     }
   };
 
-  const canSave = subjective.trim() || objective.trim() || assessment.trim() || plan.trim();
+  const canSave = mode === 'SOAP' 
+    ? (subjective.trim() || objective.trim() || assessment.trim() || plan.trim())
+    : freeContent.trim();
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -137,25 +150,46 @@ export default function EvolutionFormScreen() {
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Nova Evolucao</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Nova Evolução</Text>
           <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>{patientName}</Text>
         </View>
         <View style={styles.placeholder} />
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-        {/* SOAP Form */}
-        <SOAPForm
-          subjective={subjective}
-          objective={objective}
-          assessment={assessment}
-          plan={plan}
-          onChangeSubjective={setSubjective}
-          onChangeObjective={setObjective}
-          onChangeAssessment={setAssessment}
-          onChangePlan={setPlan}
-          colors={colors}
+        {/* Mode Toggle */}
+        <FillingStyleToggle 
+          mode={mode} 
+          onModeChange={setMode} 
+          colors={colors} 
         />
+
+        {/* Dynamic Form Content */}
+        {mode === 'SOAP' ? (
+          <SOAPForm
+            subjective={subjective}
+            objective={objective}
+            assessment={assessment}
+            plan={plan}
+            onChangeSubjective={setSubjective}
+            onChangeObjective={setObjective}
+            onChangeAssessment={setAssessment}
+            onChangePlan={setPlan}
+            colors={colors}
+          />
+        ) : mode === 'Notion' ? (
+          <NotionForm
+            content={freeContent}
+            onChangeContent={setFreeContent}
+            colors={colors}
+          />
+        ) : (
+          <TiptapForm
+            content={freeContent}
+            onChangeContent={setFreeContent}
+            colors={colors}
+          />
+        )}
 
         {/* Pain Level */}
         <PainLevelSlider
@@ -179,23 +213,27 @@ export default function EvolutionFormScreen() {
             disabled={generatingSOAP}
           >
             {generatingSOAP ? (
-              <ActivityIndicator color={colors.primary} />
+              <ActivityIndicator color="#fff" />
             ) : (
               <>
-                <Ionicons name="sparkles" size={20} color={colors.text} />
+                <Ionicons name="sparkles" size={20} color="#fff" />
                 <Text style={styles.aiButtonText}>Gerar com IA</Text>
               </>
             )}
           </TouchableOpacity>
           {generatedSuggestions.length > 0 && (
             <View style={styles.suggestionsContainer}>
-              <Text style={styles.suggestionsLabel}>Sugestoes:</Text>
+              <Text style={styles.suggestionsLabel}>Sugestões:</Text>
               {generatedSuggestions.map((suggestion, index) => (
                 <TouchableOpacity
                   key={index}
                   style={styles.suggestionItem}
                   onPress={() => {
-                    setSubjective(subjective + ' ' + suggestion);
+                    if (mode === 'SOAP') {
+                      setSubjective(subjective + ' ' + suggestion);
+                    } else {
+                      setFreeContent(freeContent + '\n• ' + suggestion);
+                    }
                   }}
                 >
                   <Text style={styles.suggestionText}>• {suggestion}</Text>
@@ -219,7 +257,7 @@ export default function EvolutionFormScreen() {
           ) : (
             <>
               <Ionicons name="checkmark-circle" size={20} color="#fff" />
-              <Text style={styles.saveButtonText}>Salvar Evolucao</Text>
+              <Text style={styles.saveButtonText}>Salvar Evolução</Text>
             </>
           )}
         </TouchableOpacity>
@@ -227,6 +265,7 @@ export default function EvolutionFormScreen() {
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
