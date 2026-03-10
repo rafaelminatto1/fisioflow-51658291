@@ -28,7 +28,7 @@ async function fetchWithTimeout(resource: string, options: any = {}) {
 
 export const authApi = {
   async login(email: string, password: string): Promise<AuthResponse> {
-    const response = await fetchWithTimeout(`${config.apiUrl}/sessions/login`, {
+    const response = await fetchWithTimeout(`${config.apiUrl}/api/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -54,8 +54,8 @@ export const authApi = {
     try {
       const token = await this.getToken();
       if (token) {
-        // Rota de logout geralmente opcional em Workers sem estado
-        await fetchWithTimeout(`${config.apiUrl}/sessions/logout`, {
+        // Rota de logout opcional - backend pode não implementar
+        await fetchWithTimeout(`${config.apiUrl}/api/auth/logout`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -81,7 +81,7 @@ export const authApi = {
     const token = await this.getToken();
     if (!token) throw new Error('No token found');
 
-    const response = await fetchWithTimeout(`${config.apiUrl}/profile/me`, {
+    const response = await fetchWithTimeout(`${config.apiUrl}/api/profile/me`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -102,7 +102,7 @@ export const authApi = {
   },
 
   async resetPassword(email: string): Promise<void> {
-    const response = await fetch(`${config.apiUrl}/auth/reset-password`, {
+    const response = await fetch(`${config.apiUrl}/api/auth/reset-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -119,7 +119,7 @@ export const authApi = {
     const token = await this.getToken();
     if (!token) throw new Error('Not authenticated');
 
-    const response = await fetch(`${config.apiUrl}/auth/update-password`, {
+    const response = await fetch(`${config.apiUrl}/api/auth/update-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

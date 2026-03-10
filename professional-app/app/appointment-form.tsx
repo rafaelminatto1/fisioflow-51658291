@@ -59,12 +59,14 @@ export default function AppointmentFormScreen() {
     isUpdating, 
     isDeleting 
   } = useAppointments();
-  const { data: patients } = usePatients({ status: 'active' });
+  const { data: patients = [] } = usePatients({ status: 'active' });
   const { medium, success, error: hapticError } = useHaptics();
   const createFinancialMutation = useCreateFinancialRecord();
 
   const [isLoadingData, setIsLoadingData] = useState(!!appointmentId);
   const [selectedPatient, setSelectedPatient] = useState<string>(params.patientId as string || '');
+  const [patientSearch, setPatientSearch] = useState(params.patientName as string || '');
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [date, setDate] = useState(params.date as string || '');
   const [time, setTime] = useState(params.time as string || '');
   const [type, setType] = useState('Fisioterapia');
@@ -72,7 +74,6 @@ export default function AppointmentFormScreen() {
   const [status, setStatus] = useState<AppointmentStatus>('scheduled');
   const [notes, setNotes] = useState('');
 
-  const [showPatientModal, setShowPatientModal] = useState(false);
   const [showTypeModal, setShowTypeModal] = useState(false);
   const [showDurationModal, setShowDurationModal] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -84,6 +85,15 @@ export default function AppointmentFormScreen() {
       loadAppointmentData();
     }
   }, [appointmentId]);
+
+  useEffect(() => {
+    if (selectedPatient && patients.length > 0) {
+      const patient = patients.find(p => p.id === selectedPatient);
+      if (patient) {
+        setPatientSearch(patient.name);
+      }
+    }
+  }, [selectedPatient, patients]);
 
   const loadAppointmentData = async () => {
     try {
@@ -107,6 +117,10 @@ export default function AppointmentFormScreen() {
 
   const selectedPatientData = patients?.find((p) => p.id === selectedPatient);
   const selectedStatusData = STATUS_OPTIONS.find((s) => s.value === status);
+
+  const filteredPatients = patients.filter(p => 
+    p.name.toLowerCase().includes(patientSearch.toLowerCase())
+  ).slice(0, 5);
 
   const validateForm = () => {
     if (!selectedPatient) {
@@ -148,6 +162,7 @@ export default function AppointmentFormScreen() {
         professionalId: '', // Will be set in the create function
         type,
         date: appointmentDate,
+        time,
         duration,
         status,
         notes: notes.trim() || undefined,

@@ -3,13 +3,19 @@
  * 
  * Utiliza expo-av para emitir bips e sons de alerta.
  * Requer expo-speech para TTS (Text-to-Speech) completo.
+ * 
+ * OTIMIZAÇÃO: Usa lazy loading para não incluir expo-av no bundle inicial.
  */
 
-import { useCallback, useEffect, useRef } from 'react';
-import { Audio } from 'expo-av';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+// Tipo para o módulo de áudio (carregado sob demanda)
+type AudioModule = typeof import('expo-av').Audio;
+type SoundObject = import('expo-av').Sound;
 
 export function useAudioFeedback() {
-  const soundRef = useRef<Audio.Sound | null>(null);
+  const soundRef = useRef<SoundObject | null>(null);
+  const [audioModule, setAudioModule] = useState<AudioModule | null>(null);
 
   const playSuccess = useCallback(async () => {
     try {
