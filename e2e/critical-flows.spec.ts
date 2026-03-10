@@ -8,8 +8,13 @@
  */
 
 import { test, expect, Page } from '@playwright/test';
+import { authenticateBrowserContext } from './helpers/neon-auth';
 
 const TEST_ORG_ID = '00000000-0000-0000-0000-000000000001';
+const baseURL = process.env.BASE_URL || 'http://localhost:5173';
+const neonAuthUrl = process.env.VITE_NEON_AUTH_URL || '';
+const loginEmail = process.env.E2E_LOGIN_EMAIL || 'rafael.minatto@yahoo.com.br';
+const loginPassword = process.env.E2E_LOGIN_PASSWORD || 'Yukari30@';
 
 function generateValidCpf(): string {
   const digits = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10));
@@ -298,9 +303,19 @@ async function mockOrganizationBootstrap(page: Page) {
   });
 }
 
+async function authenticatePage(page: Page) {
+  if (!neonAuthUrl) {
+    throw new Error('VITE_NEON_AUTH_URL ausente para critical-flows.spec.ts');
+  }
+  await authenticateBrowserContext(page.context(), loginEmail, loginPassword);
+}
+
 test.describe('Fluxos Críticos do FisioFlow', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
   // Autenticação
   test.beforeEach(async ({ page }) => {
+    await authenticatePage(page);
     await mockOrganizationBootstrap(page);
 
     // Log console messages
@@ -787,11 +802,15 @@ test.describe('Fluxos Críticos do FisioFlow', () => {
 });
 
 test.describe('Fluxos Críticos - Mobile', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
   /**
    * TESTE 9: Mobile Responsiveness
    * Verifica funcionalidades críticas em mobile
    */
   test('CRÍTICO: Mobile - Agendamento responsivo', async ({ page }) => {
+    await authenticatePage(page);
+
     // Log console messages
     page.on('console', msg => {
       if (msg.type() === 'error') console.error(`MOBILE BROWSER ERROR: ${msg.text()}`);
@@ -833,7 +852,10 @@ test.describe('Fluxos Críticos - Mobile', () => {
 });
 
 test.describe('Fluxos Críticos - Performance', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
   test.beforeEach(async ({ page }) => {
+    await authenticatePage(page);
     await page.goto('/?e2e=true');
     await page.waitForURL(url => /\/(dashboard|eventos|schedule|agenda)?$/.test(url.pathname), { timeout: 30000 });
   });

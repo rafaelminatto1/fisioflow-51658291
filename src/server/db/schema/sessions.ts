@@ -13,7 +13,7 @@
 
 // ===== ENUMS =====
 
-import { pgTable, uuid, text, timestamp, jsonb, pgEnum, integer, boolean, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, jsonb, pgEnum, integer, boolean, varchar, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { patients } from './patients';
 import { appointments } from './appointments';
@@ -138,7 +138,13 @@ export const sessions = pgTable('sessions', {
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => ({
+    patientIdIdx: index('idx_sessions_patient_id').on(table.patientId),
+    appointmentIdIdx: index('idx_sessions_appointment_id').on(table.appointmentId),
+    therapistIdIdx: index('idx_sessions_therapist_id').on(table.therapistId),
+    organizationIdIdx: index('idx_sessions_organization_id').on(table.organizationId),
+    dateIdx: index('idx_sessions_date').on(table.date),
+}));
 
 export const sessionsRelations = relations(sessions, ({ one, many }) => ({
     patient: one(patients, {
@@ -184,7 +190,10 @@ export const sessionAttachments = pgTable('session_attachments', {
     description: text('description'),
     uploadedBy: uuid('uploaded_by'),
     uploadedAt: timestamp('uploaded_at').defaultNow().notNull(),
-});
+}, (table) => ({
+    sessionIdIdx: index('idx_session_attachments_session_id').on(table.sessionId),
+    patientIdIdx: index('idx_session_attachments_patient_id').on(table.patientId),
+}));
 
 export const sessionAttachmentsRelations = relations(sessionAttachments, ({ one }) => ({
     session: one(sessions, {
@@ -217,4 +226,7 @@ export const sessionTemplates = pgTable('session_templates', {
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => ({
+    organizationIdIdx: index('idx_session_templates_organization_id').on(table.organizationId),
+    therapistIdIdx: index('idx_session_templates_therapist_id').on(table.therapistId),
+}));

@@ -18,6 +18,7 @@ import {
   integer,
   jsonb,
   pgEnum,
+  index,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -102,7 +103,11 @@ export const exerciseProtocols = pgTable('exercise_protocols', {
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => ({
+  slugIdx: index('idx_exercise_protocols_slug').on(table.slug),
+  organizationIdIdx: index('idx_exercise_protocols_organization_id').on(table.organizationId),
+  protocolTypeIdx: index('idx_exercise_protocols_protocol_type').on(table.protocolType),
+}));
 
 export const exerciseProtocolsRelations = relations(exerciseProtocols, ({ many }) => ({
   protocolExercises: many(protocolExercises),
@@ -125,7 +130,10 @@ export const protocolExercises = pgTable('protocol_exercises', {
   orderIndex: integer('order_index').default(0),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => ({
+  protocolIdIdx: index('idx_protocol_exercises_protocol_id').on(table.protocolId),
+  exerciseIdIdx: index('idx_protocol_exercises_exercise_id').on(table.exerciseId),
+}));
 
 export const protocolExercisesRelations = relations(protocolExercises, ({ one }) => ({
   protocol: one(exerciseProtocols, {

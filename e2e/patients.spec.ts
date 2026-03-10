@@ -1,6 +1,11 @@
 import { test, expect, Page } from '@playwright/test';
+import { authenticateBrowserContext } from './helpers/neon-auth';
 
 const TEST_ORG_ID = '00000000-0000-0000-0000-000000000001';
+const baseURL = process.env.BASE_URL || 'http://localhost:5173';
+const neonAuthUrl = process.env.VITE_NEON_AUTH_URL || '';
+const loginEmail = process.env.E2E_LOGIN_EMAIL || 'rafael.minatto@yahoo.com.br';
+const loginPassword = process.env.E2E_LOGIN_PASSWORD || 'Yukari30@';
 
 async function dismissOnboardingIfPresent(page: Page) {
   const onboardingDialog = page
@@ -145,8 +150,18 @@ async function mockPatientsBootstrap(page: Page) {
   });
 }
 
+async function authenticatePage(page: Page) {
+  if (!neonAuthUrl) {
+    throw new Error('VITE_NEON_AUTH_URL ausente para patients.spec.ts');
+  }
+  await authenticateBrowserContext(page.context(), loginEmail, loginPassword);
+}
+
 test.describe('Pacientes - CRUD Completo', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
   test.beforeEach(async ({ page }) => {
+    await authenticatePage(page);
     await mockPatientsBootstrap(page);
     await page.goto('/patients?e2e=true');
     await page.waitForLoadState('domcontentloaded');

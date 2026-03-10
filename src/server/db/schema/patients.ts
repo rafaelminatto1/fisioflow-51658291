@@ -12,7 +12,7 @@
 
 // ===== ENUMS =====
 
-import { pgTable, uuid, varchar, text, date, boolean, timestamp, jsonb, pgEnum, integer, numeric } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, date, boolean, timestamp, jsonb, pgEnum, integer, numeric, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { appointments } from './appointments';
 import { sessions } from './sessions';
@@ -79,7 +79,12 @@ export const patients = pgTable('patients', {
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => ({
+    organizationIdIdx: index('idx_patients_organization_id').on(table.organizationId),
+    cpfIdx: index('idx_patients_cpf').on(table.cpf),
+    isActiveIdx: index('idx_patients_is_active').on(table.isActive),
+    fullNameIdx: index('idx_patients_full_name').on(table.fullName),
+}));
 
 export const patientsRelations = relations(patients, ({ one, many }) => ({
     medicalRecord: one(medicalRecords, {
@@ -153,7 +158,9 @@ export const medicalRecords = pgTable('medical_records', {
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => ({
+    patientIdIdx: index('idx_medical_records_patient_id').on(table.patientId),
+}));
 
 export const medicalRecordsRelations = relations(medicalRecords, ({ one, many }) => ({
     patient: one(patients, {
@@ -178,7 +185,10 @@ export const pathologies = pgTable('pathologies', {
     notes: text('notes'),
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => ({
+    medicalRecordIdIdx: index('idx_pathologies_medical_record_id').on(table.medicalRecordId),
+    statusIdx: index('idx_pathologies_status').on(table.status),
+}));
 
 export const pathologiesRelations = relations(pathologies, ({ one }) => ({
     medicalRecord: one(medicalRecords, {
@@ -200,7 +210,9 @@ export const surgeries = pgTable('surgeries', {
     notes: text('notes'),
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => ({
+    medicalRecordIdIdx: index('idx_surgeries_medical_record_id').on(table.medicalRecordId),
+}));
 
 export const surgeriesRelations = relations(surgeries, ({ one }) => ({
     medicalRecord: one(medicalRecords, {
@@ -222,7 +234,10 @@ export const goals = pgTable('goals', {
     notes: text('notes'),
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => ({
+    medicalRecordIdIdx: index('idx_goals_medical_record_id').on(table.medicalRecordId),
+    statusIdx: index('idx_goals_status').on(table.status),
+}));
 
 export const goalsRelations = relations(goals, ({ one }) => ({
     medicalRecord: one(medicalRecords, {
@@ -250,7 +265,10 @@ export const patientPackages = pgTable('patient_packages', {
     expiresAt: timestamp('expires_at'),
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => ({
+    patientIdIdx: index('idx_patient_packages_patient_id').on(table.patientId),
+    statusIdx: index('idx_patient_packages_status').on(table.status),
+}));
 
 export const patientPackagesRelations = relations(patientPackages, ({ one }) => ({
     patient: one(patients, {

@@ -17,6 +17,7 @@ import {
   timestamp,
   integer,
   pgEnum,
+  index,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { protocolExercises } from './protocols';
@@ -47,7 +48,10 @@ export const exerciseCategories = pgTable('exercise_categories', {
   orderIndex: integer('order_index').default(0),
   parentId: uuid('parent_id'),                   // subcategoria
   createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => ({
+  slugIdx: index('idx_exercise_categories_slug').on(table.slug),
+  parentIdIdx: index('idx_exercise_categories_parent_id').on(table.parentId),
+}));
 
 export const exerciseCategoriesRelations = relations(exerciseCategories, ({ one, many }) => ({
   parent: one(exerciseCategories, {
@@ -113,7 +117,12 @@ export const exercises = pgTable('exercises', {
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => ({
+  slugIdx: index('idx_exercises_slug').on(table.slug),
+  categoryIdIdx: index('idx_exercises_category_id').on(table.categoryId),
+  organizationIdIdx: index('idx_exercises_organization_id').on(table.organizationId),
+  isActiveIdx: index('idx_exercises_is_active').on(table.isActive),
+}));
 
 export const exercisesRelations = relations(exercises, ({ one, many }) => ({
   category: one(exerciseCategories, {
@@ -130,7 +139,11 @@ export const exerciseFavorites = pgTable('exercise_favorites', {
   userId: text('user_id').notNull(),             // Firebase Auth UID
   organizationId: uuid('organization_id'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => ({
+  exerciseIdIdx: index('idx_exercise_favorites_exercise_id').on(table.exerciseId),
+  userIdIdx: index('idx_exercise_favorites_user_id').on(table.userId),
+  organizationIdIdx: index('idx_exercise_favorites_organization_id').on(table.organizationId),
+}));
 
 export const exerciseFavoritesRelations = relations(exerciseFavorites, ({ one }) => ({
   exercise: one(exercises, {
