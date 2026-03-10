@@ -9,7 +9,7 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Input } from '@/components';
@@ -241,6 +241,7 @@ export default function AppointmentFormScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
+      <Stack.Screen options={{ headerShown: false }} />
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => router.back()}>
@@ -252,22 +253,65 @@ export default function AppointmentFormScreen() {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         {/* Patient Selection */}
         <Text style={[styles.label, { color: colors.textSecondary }]}>Paciente *</Text>
-        <TouchableOpacity
-          style={[styles.selector, { backgroundColor: colors.surface, borderColor: colors.border }]}
-          onPress={() => {
-            medium();
-            setShowPatientModal(true);
+        <Input
+          placeholder="Digite o nome do paciente..."
+          value={patientSearch}
+          onChangeText={(text) => {
+            setPatientSearch(text);
+            setShowSuggestions(true);
+            // Se o texto mudar e não for o nome do paciente selecionado, limpa a seleção
+            if (selectedPatientData && text !== selectedPatientData.name) {
+              setSelectedPatient('');
+            }
           }}
-          disabled={isEditing}
-        >
-          <Text style={[styles.selectorText, { color: selectedPatientData ? colors.text : colors.textMuted }]}>
-            {selectedPatientData?.name || (params.patientName as string) || 'Selecione o paciente'}
-          </Text>
-          {!isEditing && <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />}
-        </TouchableOpacity>
+          onFocus={() => setShowSuggestions(true)}
+          leftIcon="person-outline"
+          rightIcon={patientSearch.length > 0 && !isEditing ? "close-circle" : undefined}
+          onRightIconPress={() => {
+            setPatientSearch('');
+            setSelectedPatient('');
+            setShowSuggestions(true);
+          }}
+          editable={!isEditing}
+          containerStyle={{ marginBottom: showSuggestions && !isEditing && patientSearch.length > 0 ? 0 : 16 }}
+        />
+        
+        {showSuggestions && !isEditing && patientSearch.length > 0 && (
+          <View style={[styles.suggestionsContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            {filteredPatients.length > 0 ? (
+              filteredPatients.map((patient) => (
+                <TouchableOpacity
+                  key={patient.id}
+                  style={[styles.suggestionItem, { borderBottomColor: colors.border }]}
+                  onPress={() => {
+                    medium();
+                    setSelectedPatient(patient.id);
+                    setPatientSearch(patient.name);
+                    setShowSuggestions(false);
+                  }}
+                >
+                  <View>
+                    <Text style={[styles.modalItemText, { color: colors.text }]}>{patient.name}</Text>
+                    <Text style={[styles.modalItemSub, { color: colors.textSecondary }]}>
+                      {patient.condition || 'Sem condição'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <View style={styles.suggestionItem}>
+                <Text style={{ color: colors.textMuted }}>Nenhum paciente encontrado</Text>
+              </View>
+            )}
+          </View>
+        )}
 
         {/* Date and Time */}
         <View style={styles.row}>
@@ -389,41 +433,6 @@ export default function AppointmentFormScreen() {
 
         <View style={{ height: 32 }} />
       </ScrollView>
-
-      {/* Patient Selection Modal */}
-      <Modal
-        visible={showPatientModal}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setShowPatientModal(false)}
-      >
-        <SafeAreaView style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>Selecionar Paciente</Text>
-              <TouchableOpacity onPress={() => setShowPatientModal(false)}>
-                <Ionicons name="close" size={24} color={colors.text} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.modalList}>
-              {patients.map((patient) => (
-                <TouchableOpacity
-                  key={patient.id}
-                  style={[styles.modalItem, { borderBottomColor: colors.border }]}
-                  onPress={() => {
-                    medium();
-                    setSelectedPatient(patient.id);
-                    setShowPatientModal(false);
-                  }}
-                >
-                  <Text style={[styles.modalItemText, { color: colors.text }]}>{patient.name}</Text>
-                  <Text style={[styles.modalItemSub, { color: colors.textSecondary }]}>{patient.condition || 'Sem condição'}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        </SafeAreaView>
-      </Modal>
 
       {/* Type Selection Modal */}
       <Modal
@@ -648,5 +657,19 @@ const styles = StyleSheet.create({
   durationText: {
     fontSize: 18,
     fontWeight: '500',
+  },
+  suggestionsContainer: {
+    marginTop: -16,
+    marginBottom: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: 'hidden',
+    zIndex: 1000,
+    elevation: 5,
+  },
+  suggestionItem: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
   },
 });
