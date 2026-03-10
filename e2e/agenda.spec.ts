@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
 import { testUsers } from './fixtures/test-data';
 import type { Page } from '@playwright/test';
+import { authenticateBrowserContext } from './helpers/neon-auth';
+const baseURL = process.env.BASE_URL || 'http://localhost:5173';
+const neonAuthUrl = process.env.VITE_NEON_AUTH_URL || '';
 const EMAIL_INPUT_SELECTOR = 'input[name="email"], input[name="email"], #login-email';
 const PASSWORD_INPUT_SELECTOR = 'input[name="password"], input[name="password"], #login-password';
 const LOGIN_BUTTON_NAME = /Entrar na Plataforma|Entrar/i;
@@ -76,6 +79,13 @@ async function doLogin(page: Page) {
   throw lastError;
 }
 
+async function authenticatePage(page: Page) {
+  if (!neonAuthUrl) {
+    throw new Error('VITE_NEON_AUTH_URL ausente para agenda.spec.ts');
+  }
+  await authenticateBrowserContext(page.context(), testUsers.fisio.email, testUsers.fisio.password);
+}
+
 async function ensureScheduleReady(page: Page, options?: { forceLogin?: boolean }) {
   const forceLogin = options?.forceLogin ?? false;
 
@@ -118,9 +128,11 @@ async function ensureScheduleReady(page: Page, options?: { forceLogin?: boolean 
 
 test.describe('Agenda de Fisioterapia - E2E Tests', () => {
   test.setTimeout(180000);
+  test.use({ storageState: { cookies: [], origins: [] } });
 
   // Setup robusto: autentica somente quando necessário e estabiliza na agenda.
   test.beforeEach(async ({ page, browserName }) => {
+    await authenticatePage(page);
     await ensureScheduleReady(page, { forceLogin: browserName === 'firefox' });
   });
 

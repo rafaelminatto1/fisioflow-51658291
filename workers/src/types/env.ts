@@ -8,7 +8,6 @@ export interface Env {
 
   // Variáveis de ambiente
   ENVIRONMENT: 'production' | 'staging' | 'development';
-  FIREBASE_PROJECT_ID: string;
   DATABASE_URL?: string;
   NEON_URL?: string;
   ALLOWED_ORIGINS: string; // CSV: "https://a.com,https://b.com"

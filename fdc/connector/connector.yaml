@@ -1,5 +1,0 @@
-connectorId: "default"
-generate:
-  javascriptSdk:
-    outputDir: "../../src/lib/dataconnect-sdk"
-    package: "@fisioflow/dataconnect"

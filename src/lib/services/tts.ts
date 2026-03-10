@@ -38,10 +38,7 @@ class TextToSpeechService {
       return;
     }
 
-    const region = import.meta.env.VITE_FIREBASE_REGION || 'southamerica-east1';
-    const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID;
-    const resolvedProjectId = projectId || 'fisioflow-migration';
-    this.baseUrl = `https://${region}-${resolvedProjectId}.cloudfunctions.net`;
+    this.baseUrl = import.meta.env.VITE_WORKERS_API_URL || 'https://fisioflow-api.rafalegollas.workers.dev';
   }
 
   /**
