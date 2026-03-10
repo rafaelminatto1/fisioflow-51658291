@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { telemedicineApi, type TelemedicineRoomRecord } from '@/lib/api/workers-client';
 
-export interface TelemedicineRoom extends TelemedicineRoomRecord {}
+export type TelemedicineRoom = TelemedicineRoomRecord;
 
 export function useTelemedicineRooms() {
   const { profile } = useAuth();

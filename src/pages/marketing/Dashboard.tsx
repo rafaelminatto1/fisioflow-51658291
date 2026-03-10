@@ -20,7 +20,7 @@ import {
 import { cn } from '@/lib/utils';
 import { crmApi, integrationsApi, marketingApi, type GoogleBusinessReviewRecord } from '@/lib/api/workers-client';
 
-interface GoogleReview extends GoogleBusinessReviewRecord {}
+type GoogleReview = GoogleBusinessReviewRecord;
 
 interface MarketingMetrics {
   totalReviews: number;

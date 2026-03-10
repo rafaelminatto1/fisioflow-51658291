@@ -7,8 +7,8 @@ import { motion } from 'framer-motion';
 import { differenceInDays, differenceInHours, parseISO } from 'date-fns';
 import { gamificationApi, type WeeklyChallengeRow, type PatientChallengeRow } from '@/lib/api/workers-client';
 
-interface WeeklyChallenge extends WeeklyChallengeRow {}
-interface PatientChallenge extends PatientChallengeRow {}
+type WeeklyChallenge = WeeklyChallengeRow;
+type PatientChallenge = PatientChallengeRow;
 interface WeeklyChallengesProps { patientId: string; }
 
 export default function WeeklyChallenges({ patientId }: WeeklyChallengesProps) {

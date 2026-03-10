@@ -19,8 +19,8 @@ const DEFAULT_PREFERENCES: Omit<NotificationPreferences, 'user_id' | 'organizati
     weekend_notifications: false,
   };
 
-export interface UpdateNotificationPreferencesInput
-  extends Partial<Omit<NotificationPreferences, 'user_id' | 'organization_id' | 'created_at' | 'updated_at'>> {}
+export type UpdateNotificationPreferencesInput =
+  Partial<Omit<NotificationPreferences, 'user_id' | 'organization_id' | 'created_at' | 'updated_at'>>;
 
 export function useNotificationPreferences() {
   const queryClient = useQueryClient();
