@@ -7,6 +7,25 @@ const browser = await chromium.launch({ channel: 'chromium', headless: true });
 const context = await browser.newContext({ baseURL: 'http://localhost:5173' });
 const page = await context.newPage();
 
+await page.route(/\/api\/financial\/transacoes(?:\/[^/?#]+)?(?:\?.*)?$/i, async (route) => {
+  const method = route.request().method();
+  const url = route.request().url();
+  if (method === 'GET') {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: [
+        { id: '1', descricao: 'Venda de Pacote Teste', valor: 500, status: 'concluido', tipo: 'receita', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+        { id: '2', descricao: 'Consulta Pendente', valor: 150, status: 'pendente', tipo: 'receita', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+      ]})
+    });
+  } else if (method === 'PUT' && /\/api\/financial\/transacoes\/[^/?#]+/i.test(url)) {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: { id: '2', descricao: 'Consulta Pendente', valor: 150, status: 'pago', tipo: 'receita', created_at: new Date().toISOString(), updated_at: new Date().toISOString() } }) });
+  } else {
+    await route.continue();
+  }
+});
+
 page.on('console', (msg) => console.log('CONSOLE', msg.type(), msg.text()));
 page.on('pageerror', (err) => console.log('PAGEERROR', err.stack || err.message));
 page.on('response', (res) => {

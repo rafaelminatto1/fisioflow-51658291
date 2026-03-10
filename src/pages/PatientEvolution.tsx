@@ -76,6 +76,7 @@ import { getTherapistById } from '@/hooks/useTherapists';
 // Lazy loading para componentes pesados
 const LazyNotionEvolutionPanel = lazy(() => import('@/components/evolution/v2/NotionEvolutionPanel').then(m => ({ default: m.NotionEvolutionPanel })));
 const LazyNotionEvolutionPanelV3 = lazy(() => import('@/components/evolution/v3-notion/NotionEvolutionPanel').then(m => ({ default: m.NotionEvolutionPanel })));
+const LazyNotionEvolutionEditor = lazy(() => import('@/components/evolution/NotionEvolutionEditor').then(m => ({ default: m.NotionEvolutionEditor })));
 const LazyEvolutionDraggableGrid = lazy(() => import('@/components/evolution/EvolutionDraggableGrid').then(m => ({ default: m.EvolutionDraggableGrid })));
 
 // OTIMIZAÇÃO: Lazy loading de abas completas para melhor code splitting
@@ -958,6 +959,25 @@ const PatientEvolution = () => {
 
   // 3. Main Grid (Editor) - Onde o usuário digita. Re-renderiza muito, mas isolado das outras seções.
   const mainGridContent = useMemo(() => {
+    if (evolutionVersion === 'v4-tiptap') {
+      return (
+        /* ===== V4: Tiptap ===== */
+        <Suspense fallback={<LoadingSkeleton type="card" />}>
+          <div className="h-full overflow-y-auto bg-card rounded-xl border border-border/50 shadow-sm p-4">
+            <LazyNotionEvolutionEditor
+              initialContent={soapData.assessment}
+              soapData={soapData}
+              evolutionId={appointmentId}
+              isSaving={autoSaveMutation.isPending}
+              onSave={(content) => {
+                setSoapDataStable({ ...soapData, assessment: content });
+              }}
+            />
+          </div>
+        </Suspense>
+      );
+    }
+
     if (evolutionVersion === 'v3-notion') {
       return (
         /* ===== V3: Notion-style ===== */
@@ -1068,7 +1088,8 @@ const PatientEvolution = () => {
     handleCopyPreviousEvolution,
     toast,
     // Add missing deps
-    suggestExerciseChanges
+    suggestExerciseChanges,
+    appointmentId
   ]);
 
   // ========== RENDERIZAÇÃO ==========
