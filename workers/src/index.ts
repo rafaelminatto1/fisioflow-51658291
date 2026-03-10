@@ -75,11 +75,20 @@ app.use('*', secureHeaders());
 
 app.use('*', async (c, next) => {
   const allowedOrigins = c.env.ALLOWED_ORIGINS?.split(',').map((o) => o.trim()) ?? [];
-  const origin = c.req.header('Origin') ?? '';
-  const allowed = allowedOrigins.includes(origin) ? origin : allowedOrigins[0] ?? '*';
 
   return cors({
-    origin: allowed,
+    origin: (origin) => {
+      if (!origin) return '*';
+      if (
+        origin.endsWith('.pages.dev') ||
+        origin.endsWith('moocafisio.com.br') ||
+        origin.includes('localhost') ||
+        origin.includes('127.0.0.1')
+      ) {
+        return origin;
+      }
+      return allowedOrigins.includes(origin) ? origin : allowedOrigins[0] ?? '*';
+    },
     allowHeaders: ['Content-Type', 'Authorization'],
     allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     exposeHeaders: ['X-Request-Id'],
