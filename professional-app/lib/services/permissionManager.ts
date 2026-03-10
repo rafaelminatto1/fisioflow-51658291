@@ -1,6 +1,10 @@
-import { Camera } from 'expo-camera';
-import * as MediaLibrary from 'expo-media-library';
-import * as Location from 'expo-location';
+/**
+ * Permission Manager
+ * 
+ * OTIMIZAÇÃO: Usa lazy loading para não incluir módulos pesados no bundle inicial.
+ * Camera, MediaLibrary, Location são carregados apenas quando necessário.
+ */
+
 import * as Notifications from 'expo-notifications';
 import { Alert, Linking, Platform } from 'react-native';
 import { consentManager } from './consentManager';
@@ -8,6 +12,32 @@ import { CONSENT_TYPES } from '@/constants/consentTypes';
 
 export type PermissionType = 'camera' | 'photos' | 'location' | 'notifications';
 export type PermissionStatus = 'granted' | 'denied' | 'undetermined' | 'limited';
+
+// Cache para módulos carregados sob demanda
+let cameraModule: typeof import('expo-camera') | null = null;
+let mediaLibraryModule: typeof import('expo-media-library') | null = null;
+let locationModule: typeof import('expo-location') | null = null;
+
+async function getCameraModule() {
+  if (!cameraModule) {
+    cameraModule = await import('expo-camera');
+  }
+  return cameraModule;
+}
+
+async function getMediaLibraryModule() {
+  if (!mediaLibraryModule) {
+    mediaLibraryModule = await import('expo-media-library');
+  }
+  return mediaLibraryModule;
+}
+
+async function getLocationModule() {
+  if (!locationModule) {
+    locationModule = await import('expo-location');
+  }
+  return locationModule;
+}
 
 export class PermissionManager {
   private static instance: PermissionManager;
@@ -27,14 +57,17 @@ export class PermissionManager {
   async checkPermission(permission: PermissionType): Promise<PermissionStatus> {
     switch (permission) {
       case 'camera': {
-        const result = await Camera.getCameraPermissionsAsync();
+        const Camera = await getCameraModule();
+        const result = await Camera.Camera.getCameraPermissionsAsync();
         return result.status as PermissionStatus;
       }
       case 'photos': {
+        const MediaLibrary = await getMediaLibraryModule();
         const { status } = await MediaLibrary.getPermissionsAsync();
         return status as PermissionStatus;
       }
       case 'location': {
+        const Location = await getLocationModule();
         const { status } = await Location.getForegroundPermissionsAsync();
         return status as PermissionStatus;
       }
@@ -58,7 +91,8 @@ export class PermissionManager {
 
     switch (permission) {
       case 'camera': {
-        const result = await Camera.requestCameraPermissionsAsync();
+        const Camera = await getCameraModule();
+        const result = await Camera.Camera.requestCameraPermissionsAsync();
         status = result.status as PermissionStatus;
         if (userId && status === 'granted') {
           await consentManager.grantConsent(userId, CONSENT_TYPES.CAMERA_PERMISSION, '1.0');
@@ -66,6 +100,7 @@ export class PermissionManager {
         break;
       }
       case 'photos': {
+        const MediaLibrary = await getMediaLibraryModule();
         const result = await MediaLibrary.requestPermissionsAsync();
         status = result.status as PermissionStatus;
         if (userId && status === 'granted') {
@@ -74,6 +109,7 @@ export class PermissionManager {
         break;
       }
       case 'location': {
+        const Location = await getLocationModule();
         const result = await Location.requestForegroundPermissionsAsync();
         status = result.status as PermissionStatus;
         if (userId && status === 'granted') {

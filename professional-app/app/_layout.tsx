@@ -1,7 +1,7 @@
 // Load polyfills first
 import './polyfills';
 
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
@@ -28,6 +28,17 @@ const queryClient = new QueryClient({
   },
 });
 
+/**
+ * Preload módulos críticos pós-login em background
+ * Isso melhora a experiência do usuário carregando módulos pesados
+ * enquanto ele está fazendo login ou vendo o splash screen
+ */
+async function preloadCriticalModules(): Promise<void> {
+  // Carregar date-fns em background (usado em várias telas)
+  // Não bloqueia o fluxo de login
+  import('date-fns').catch(() => {});
+}
+
 function RootLayoutContent() {
   const colors = useColors();
   const colorScheme = useColorScheme();
@@ -37,6 +48,9 @@ function RootLayoutContent() {
   useEffect(() => {
     const initAuth = async () => {
       try {
+        // Iniciar preload de módulos em paralelo com a inicialização
+        preloadCriticalModules();
+        
         await initialize();
       } catch (error) {
         console.error('Failed to initialize auth:', error);

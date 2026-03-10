@@ -1,4 +1,9 @@
-import * as Location from 'expo-location';
+/**
+ * Geolocation Utilities
+ * 
+ * OTIMIZAÇÃO: Usa lazy loading para não incluir expo-location no bundle inicial.
+ * O módulo de localização só é carregado quando necessário.
+ */
 
 export interface LocationData {
   latitude: number;
@@ -8,11 +13,25 @@ export interface LocationData {
   timestamp: number;
 }
 
+// Cache do módulo de localização
+let locationModule: typeof import('expo-location') | null = null;
+
+/**
+ * Carrega o módulo de localização sob demanda
+ */
+async function getLocationModule(): Promise<typeof import('expo-location')> {
+  if (!locationModule) {
+    locationModule = await import('expo-location');
+  }
+  return locationModule;
+}
+
 /**
  * Solicita permissão para usar a localização
  */
 export async function requestLocationPermission(): Promise<boolean> {
   try {
+    const Location = await getLocationModule();
     const { status } = await Location.requestForegroundPermissionsAsync();
     return status === 'granted';
   } catch (error) {
@@ -26,8 +45,9 @@ export async function requestLocationPermission(): Promise<boolean> {
  * @param accuracy Nível de precisão desejado
  */
 export async function getCurrentLocation(
-  accuracy: Location.LocationAccuracy = Location.LocationAccuracy.BestForNavigation
+  accuracy?: number
 ): Promise<LocationData | null> {
+  const Location = await getLocationModule();
   const hasPermission = await requestLocationPermission();
 
   if (!hasPermission) {
@@ -35,7 +55,9 @@ export async function getCurrentLocation(
   }
 
   try {
-    const location = await Location.getCurrentPositionAsync({ accuracy });
+    const location = await Location.getCurrentPositionAsync({ 
+      accuracy: accuracy ?? Location.LocationAccuracy.BestForNavigation 
+    });
 
     return {
       latitude: location.coords.latitude,
