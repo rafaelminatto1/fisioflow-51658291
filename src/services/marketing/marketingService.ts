@@ -15,7 +15,7 @@ import {
 } from '@/lib/api/workers-client';
 import { uploadToR2, deleteFromR2 } from '@/lib/storage/r2-storage';
 
-export interface MarketingConsent extends MarketingConsentRecord {}
+export type MarketingConsent = MarketingConsentRecord;
 
 export interface MarketingExportParams {
   patientId: string;
@@ -27,11 +27,11 @@ export interface MarketingExportParams {
   exportType?: 'video_comparison' | 'before_after' | 'timelapse' | 'certificate';
 }
 
-export interface ReviewAutomationConfig extends ReviewAutomationConfigRecord {}
-export interface RecallCampaign extends RecallCampaignRecord {}
-export interface ReferralCode extends ReferralCodeRecord {}
-export interface FisioLinkConfig extends FisioLinkConfigRecord {}
-export interface BirthdayAutomationConfig extends BirthdayAutomationConfigRecord {}
+export type ReviewAutomationConfig = ReviewAutomationConfigRecord;
+export type RecallCampaign = RecallCampaignRecord;
+export type ReferralCode = ReferralCodeRecord;
+export type FisioLinkConfig = FisioLinkConfigRecord;
+export type BirthdayAutomationConfig = BirthdayAutomationConfigRecord;
 
 const DEFAULT_REVIEW_MESSAGE =
   'Olá {nome}! Esperamos que esteja ótimo. Gostaríamos de saber sua opinião sobre nosso atendimento: {review_link}';

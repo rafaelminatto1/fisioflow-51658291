@@ -16,6 +16,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -156,6 +157,9 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-0 overflow-hidden bg-transparent border-none shadow-premium-lg">
+        <DialogTitle className="sr-only">
+          {protocol ? 'Editar Protocolo' : 'Criar Novo Protocolo'}
+        </DialogTitle>
         <div className="relative w-full overflow-hidden glass-card rounded-2xl">
           {/* Header with Stepper */}
           <div className="relative p-6 border-b border-white/10 bg-white/5">
@@ -433,4 +437,3 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
     </Dialog>
   );
 };
-
