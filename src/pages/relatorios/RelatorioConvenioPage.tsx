@@ -706,10 +706,10 @@ function RelatorioEditor({
 
         {/* Botões de Ação */}
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => onSave()}>
+          <Button variant="outline" onClick={onCancel}>
             Cancelar
           </Button>
-          <Button onClick={() => onSave()}>
+          <Button onClick={onSave}>
             <Save className="h-4 w-4 mr-2" />
             Salvar Alterações
           </Button>
@@ -1120,6 +1120,10 @@ export default function RelatorioConvenioPage() {
                 data={editingRelatorio}
                 onChange={setEditingRelatorio}
                 onSave={handleSave}
+                onCancel={() => {
+                  setIsEditorOpen(false);
+                  setEditingRelatorio(null);
+                }}
               />
             )}
           </DialogContent>

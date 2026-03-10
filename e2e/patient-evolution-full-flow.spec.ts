@@ -11,14 +11,24 @@
  */
 
 import { test, expect } from '@playwright/test';
+import { authenticateBrowserContext } from './helpers/neon-auth';
+
+const loginEmail = process.env.E2E_LOGIN_EMAIL || 'REDACTED_EMAIL';
+const loginPassword = process.env.E2E_LOGIN_PASSWORD || 'REDACTED';
 
 test.describe('Patient Evolution - fluxo completo com preenchimento SOAP', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
   test('login -> agenda -> Iniciar atendimento -> preencher SOAP -> Salvar', async ({ page, baseURL }) => {
     const url = baseURL || 'http://127.0.0.1:8084';
     const appointmentId = 'appt-e2e';
     const patientId = 'patient-e2e';
     const today = new Date().toISOString().slice(0, 10);
     let sessionSaveRequests = 0;
+
+    await page.addInitScript(() => {
+      window.localStorage.setItem('fisioflow-evolution-version', 'v1-soap');
+    });
 
     await page.route(/\/api\/appointments(?:\/[^/?#]+)?(?:\?.*)?$/i, async (route) => {
       const requestUrl = route.request().url();
@@ -192,6 +202,7 @@ test.describe('Patient Evolution - fluxo completo com preenchimento SOAP', () =>
     });
 
     await page.setViewportSize({ width: 1280, height: 900 });
+    await authenticateBrowserContext(page.context(), loginEmail, loginPassword);
 
     // 1. O login já vem do storageState criado no global-setup.
     // Validamos aqui o fluxo principal da página de evolução com agendamento mockado.
@@ -238,7 +249,7 @@ test.describe('Patient Evolution - fluxo completo com preenchimento SOAP', () =>
       await page.waitForTimeout(800);
     }
 
-    await page.waitForSelector('textarea', { timeout: 20000 });
+    await page.waitForSelector('textarea[aria-label="Campo SOAP: Subjetivo"]', { timeout: 20000 });
     await page.waitForTimeout(1000);
 
     const setTextareaValue = async (selector: string, value: string) => {
