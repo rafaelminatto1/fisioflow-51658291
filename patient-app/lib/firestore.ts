@@ -1,4 +1,4 @@
-import { patientApi } from './api';
+import { patientApi, api } from './api';
 import { log } from '@/lib/logger';
 
 // ============================================
@@ -272,7 +272,7 @@ export async function getPatientEvolutions(
 ): Promise<any[]> {
   try {
     // Reutilizar o endpoint de perfil ou evoluções específico
-    const data = await api.get<any[]>('/api/patient/evolutions');
+    const data = await api.request<any[]>('/api/patient/evolutions');
     return data.map((item: any) => ({
       ...item,
       createdAt: parseDate(item.createdAt),

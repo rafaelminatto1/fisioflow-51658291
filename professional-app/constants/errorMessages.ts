@@ -20,8 +20,8 @@ export const ERROR_MESSAGES = {
   EXPORT_FAILED: 'Falha ao exportar dados. Tente novamente.',
   DELETION_FAILED: 'Falha ao processar solicitação de exclusão.',
   
-  // Firebase
+  // General API
   PERMISSION_DENIED: 'Você não tem permissão para acessar estes dados.',
   QUOTA_EXCEEDED: 'Limite de armazenamento atingido. Contate o suporte.',
-  FUNCTION_TIMEOUT: 'Operação demorou muito. Tente novamente.',
+  TIMEOUT: 'A operação demorou muito. Tente novamente.',
 };
