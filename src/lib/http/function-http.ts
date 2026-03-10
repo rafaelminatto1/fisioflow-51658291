@@ -7,12 +7,7 @@
 import { API_URLS } from '@/lib/api/v2/config';
 import { getNeonAccessToken } from '@/lib/auth/neon-token';
 
-const DEFAULT_REGION = 'southamerica-east1';
 const _DEFAULT_TIMEOUT = 60;
-
-export const functionsInstance = {
-  region: DEFAULT_REGION,
-};
 
 const HTTP_FUNCTION_URLS: Record<string, string> = {
   getProfile: API_URLS.profile.get,
@@ -57,9 +52,10 @@ const LOCAL_FUNCTIONS_PROXY =
   import.meta.env.DEV && import.meta.env.VITE_USE_FUNCTIONS_PROXY === 'true'
     ? (import.meta.env.VITE_FUNCTIONS_PROXY || '/functions')
     : undefined;
-const ENABLE_CANONICAL_FUNCTION_FALLBACK =
-  import.meta.env.VITE_ENABLE_CANONICAL_FUNCTION_FALLBACK !== 'false';
-const WORKERS_API_BASE = (import.meta.env.VITE_WORKERS_API_URL || '').replace(/\/$/, '');
+
+import { getWorkersApiUrl } from '../api/config';
+
+const WORKERS_API_BASE = getWorkersApiUrl();
 
 async function callWorkersApi<TResponse>(path: string, init?: RequestInit): Promise<TResponse> {
   if (!WORKERS_API_BASE) {
@@ -173,27 +169,7 @@ export async function callFunctionHttp<TRequest, TResponse>(
     return response.json() as Promise<TResponse>;
   }
 
-  if (!ENABLE_CANONICAL_FUNCTION_FALLBACK) {
-    throw new FunctionCallError(functionName, 'Function mapping not configured', data);
-  }
-
-  const projectId = import.meta.env.VITE_FIREBASE_PROJECT_ID || import.meta.env.VITE_GCP_PROJECT_ID || '';
-  const url = `https://${DEFAULT_REGION}-${projectId}.cloudfunctions.net/${functionName}`;
-  const token = await getNeonAccessToken();
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: token ? `Bearer ${token}` : '',
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    throw new FunctionCallError(functionName, await response.text().catch(() => response.statusText), data);
-  }
-
-  return response.json() as Promise<TResponse>;
+  throw new FunctionCallError(functionName, 'Function mapping not configured', data);
 }
 
 export async function callFunctionHttpWithResponse<TRequest, TData>(

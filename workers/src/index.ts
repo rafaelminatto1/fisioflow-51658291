@@ -172,6 +172,16 @@ app.route('/api/fcm-tokens', fcmTokensRoutes);
 
 app.notFound((c) => c.json({ error: 'Rota não encontrada' }, 404));
 
+// Rota de Health Check
+app.get('/api/health', (c) => c.json({ status: 'ok', environment: c.env.ENVIRONMENT, timestamp: new Date().toISOString() }));
+
+// CATCH-ALL SUCCESS HANDLER para rotas /api não implementadas
+// Isso evita que o frontend quebre com 404 em funcionalidades ainda não migradas
+app.all('/api/*', (c) => {
+  console.log(`[Worker] Unmapped API Route accessed: ${c.req.path}`);
+  return c.json({ data: [], message: 'Funcionalidade em migração', unmapped: true }, 200);
+});
+
 // ERROR HANDLER BLINDADO
 app.onError((err, c) => {
   console.error('[Worker Error]', err.message);

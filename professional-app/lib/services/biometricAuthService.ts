@@ -148,7 +148,7 @@ class BiometricAuthService {
       await SecureStore.deleteItemAsync(`${BIOMETRIC_KEY}_${userId}`);
       await SecureStore.deleteItemAsync(`${PIN_KEY}_${userId}`);
 
-      let deviceId = await SecureStore.getItemAsync(DEVICE_ID_KEY);
+      const deviceId = await SecureStore.getItemAsync(DEVICE_ID_KEY);
 
       // Remove from API
       if (deviceId) {

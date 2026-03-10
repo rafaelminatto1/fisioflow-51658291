@@ -12,7 +12,7 @@
 
 // ===== ENUMS =====
 
-import { pgTable, uuid, varchar, text, date, time, boolean, timestamp, integer, pgEnum, numeric } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, date, time, boolean, timestamp, integer, pgEnum, numeric, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { patients } from './patients';
 import { sessions } from './sessions';
@@ -101,7 +101,13 @@ export const appointments = pgTable('appointments', {
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
     createdBy: uuid('created_by'),
-});
+}, (table) => ({
+    organizationIdIdx: index('idx_appointments_organization_id').on(table.organizationId),
+    patientIdIdx: index('idx_appointments_patient_id').on(table.patientId),
+    therapistDateIdx: index('idx_appointments_therapist_date').on(table.therapistId, table.date),
+    statusIdx: index('idx_appointments_status').on(table.status),
+    roomIdIdx: index('idx_appointments_room_id').on(table.roomId),
+}));
 
 export const appointmentsRelations = relations(appointments, ({ one }) => ({
     patient: one(patients, {
@@ -135,7 +141,10 @@ export const rooms = pgTable('rooms', {
     }>(),
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => ({
+    organizationIdIdx: index('idx_rooms_organization_id').on(table.organizationId),
+    isActiveIdx: index('idx_rooms_is_active').on(table.isActive),
+}));
 
 // ===== BLOCKED TIME SLOTS =====
 export const blockedSlots = pgTable('blocked_slots', {
@@ -153,4 +162,8 @@ export const blockedSlots = pgTable('blocked_slots', {
     isAllDay: boolean('is_all_day').default(false),
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => ({
+    organizationIdIdx: index('idx_blocked_slots_organization_id').on(table.organizationId),
+    therapistDateIdx: index('idx_blocked_slots_therapist_date').on(table.therapistId, table.date),
+    roomDateIdx: index('idx_blocked_slots_room_date').on(table.roomId, table.date),
+}));
