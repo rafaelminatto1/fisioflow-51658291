@@ -32,16 +32,6 @@ import {
 import { getUserOrganizationId } from '@/utils/userHelpers';
 import type { Patient } from '@/types';
 
-const fetchPatientStats = async (patientId: string) => {
-  try {
-    const res = await patientsApi.stats(patientId);
-    return res?.data ?? null;
-  } catch (error) {
-    logger.debug('useActivePatients: failed to fetch patient stats', { patientId }, 'usePatients');
-    return null;
-  }
-};
-
 // ==============================================================================
 // MAPPING FUNCTIONS
 // ==============================================================================

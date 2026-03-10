@@ -47,12 +47,14 @@ export function Input({
         style={[
           styles.inputContainer,
           {
-            backgroundColor: colors.surface,
+            backgroundColor: isFocused ? colors.background : colors.surface,
             borderColor: error
               ? colors.error
               : isFocused
                 ? colors.primary
                 : colors.border,
+            borderWidth: isFocused ? 2 : 1, // Thicker border on focus
+            paddingHorizontal: isFocused ? -1 : 0, // Compensate for border width shift
           },
         ]}
       >
@@ -123,7 +125,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 12,
-    borderWidth: 1.5,
     minHeight: 52,
   },
   input: {
