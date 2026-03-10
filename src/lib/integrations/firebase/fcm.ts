@@ -395,85 +395,66 @@ export class FCMService {
   // Token Management
   // ========================================================================
 
+  private get apiUrl() {
+    return process.env.VITE_API_URL || process.env.NEXT_PUBLIC_API_URL || process.env.API_URL || 'https://api-pro.moocafisio.com.br';
+  }
+
   /**
-   * Salva token de dispositivo no Firestore
+   * Salva token de dispositivo no Neon
    */
   async saveDeviceToken(tokenData: Omit<DeviceToken, 'createdAt' | 'updatedAt'>): Promise<void> {
-    const { token, userId, tenantId, deviceInfo, active } = tokenData;
-
-    // Verificar se token já existe
-    const snapshot = await db
-      .collection('fcm_tokens')
-      .where('token', '==', token)
-      .limit(1)
-      .get();
-
-    const now = new Date();
-
-    if (snapshot.empty) {
-      // Criar novo registro
-      await db.collection('fcm_tokens').add({
-        token,
-        userId,
-        tenantId,
-        deviceInfo,
-        active: active ?? true,
-        createdAt: now.toISOString(),
-        updatedAt: now.toISOString(),
+    try {
+      await fetch(`${this.apiUrl}/api/fcm-tokens`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(tokenData),
       });
-    } else {
-      // Atualizar registro existente
-      const doc = snapshot.docs[0];
-      await doc.ref.update({
-        active: active ?? true,
-        deviceInfo: deviceInfo || null,
-        updatedAt: now.toISOString(),
-      });
+    } catch (error) {
+      console.error('Erro ao salvar device token via API:', error);
     }
   }
 
   /**
-   * Remove token de dispositivo (desativa)
+   * Remove token de dispositivo (desativa) no Neon
    */
   async removeDeviceToken(token: string): Promise<void> {
-    const snapshot = await db
-      .collection('fcm_tokens')
-      .where('token', '==', token)
-      .limit(1)
-      .get();
-
-    if (!snapshot.empty) {
-      await snapshot.docs[0].ref.update({
-        active: false,
-        updatedAt: new Date().toISOString(),
+    try {
+      await fetch(`${this.apiUrl}/api/fcm-tokens/${encodeURIComponent(token)}`, {
+        method: 'DELETE',
       });
+    } catch (error) {
+      console.error('Erro ao remover device token via API:', error);
     }
   }
 
   /**
-   * Busca tokens ativos de um usuário
+   * Busca tokens ativos de um usuário no Neon
    */
   async getUserTokens(userId: string): Promise<string[]> {
-    const snapshot = await db
-      .collection('fcm_tokens')
-      .where('userId', '==', userId)
-      .where('active', '==', true)
-      .get();
-
-    return snapshot.docs.map((doc) => doc.data().token);
+    try {
+      const response = await fetch(`${this.apiUrl}/api/fcm-tokens/user/${encodeURIComponent(userId)}`);
+      if (!response.ok) return [];
+      const data = await response.json();
+      return data.data || [];
+    } catch (error) {
+      console.error('Erro ao buscar tokens do usuario via API:', error);
+      return [];
+    }
   }
 
   /**
-   * Busca tokens ativos de um tenant
+   * Busca tokens ativos de um tenant no Neon
    */
   async getTenantTokens(tenantId: string): Promise<string[]> {
-    const snapshot = await db
-      .collection('fcm_tokens')
-      .where('tenantId', '==', tenantId)
-      .where('active', '==', true)
-      .get();
-
-    return snapshot.docs.map((doc) => doc.data().token);
+    try {
+      const response = await fetch(`${this.apiUrl}/api/fcm-tokens/tenant/${encodeURIComponent(tenantId)}`);
+      if (!response.ok) return [];
+      const data = await response.json();
+      return data.data || [];
+    } catch (error) {
+      console.error('Erro ao buscar tokens do tenant via API:', error);
+      return [];
+    }
   }
 
   // ========================================================================

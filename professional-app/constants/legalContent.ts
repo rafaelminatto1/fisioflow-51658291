@@ -78,15 +78,15 @@ O tratamento de dados é baseado em:
 
 ## 4. Compartilhamento de Dados
 
-### 4.1 Firebase (Google Cloud Platform)
-Compartilhamos dados com o Firebase para:
-- **Firestore**: Armazenamento de registros clínicos
-- **Firebase Authentication**: Gerenciamento de login e autenticação
-- **Firebase Storage**: Armazenamento de fotos e documentos
-- **Firebase Cloud Functions**: Processamento de dados e notificações
+### 4.1 Infraestrutura Principal (Neon e Cloudflare)
+Compartilhamos dados com nossos provedores de infraestrutura para:
+- **Neon DB**: Armazenamento seguro de registros clínicos (PostgreSQL)
+- **Neon Auth**: Gerenciamento de login e autenticação
+- **Cloudflare R2**: Armazenamento de fotos e documentos
+- **Cloudflare Workers**: Processamento de dados e APIs
 
-**Localização dos dados**: Servidores na região southamerica-east1 (São Paulo, Brasil)
-**Certificações**: ISO 27001, SOC 2, HIPAA-compliant infrastructure
+**Localização dos dados**: Servidores primários na região southamerica-east1 (São Paulo, Brasil)
+**Certificações**: ISO 27001, SOC 2, infraestrutura compatível com HIPAA e LGPD
 
 ### 4.2 Expo (Notificações Push)
 Usamos o serviço Expo para enviar notificações push sobre:
