@@ -28,10 +28,10 @@ interface AuthState {
 }
 
 // Mocks para manter compatibilidade temporária com quem importa db/storage/functions de lib/firebase
-export const auth = null;
-export const db = null;
-export const storage = null;
-export const functions = null;
+export const auth = null as any;
+export const db = null as any;
+export const storage = null as any;
+export const functions = null as any;
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
@@ -63,7 +63,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         email: neonUser.email,
         name: neonUser.name || 'Usuário',
         role: (neonUser as any).role || 'patient',
-        avatarUrl: neonUser.image,
+        avatarUrl: neonUser.image || undefined,
       };
 
       set({
@@ -132,7 +132,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     // Usar o hook de subscrição de sessão do Better Auth
-    const unsubscribe = authClient.useSession.subscribe(async (session) => {
+    const unsubscribe = authClient.useSession.subscribe(async (session: any) => {
       const neonUser = session?.data?.user;
       
       if (neonUser) {
@@ -141,7 +141,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           email: neonUser.email,
           name: neonUser.name || 'Usuário',
           role: (neonUser as any).role || 'patient',
-          avatarUrl: neonUser.image,
+          avatarUrl: neonUser.image || undefined,
         };
 
         set({
