@@ -25,6 +25,7 @@ import { useEvolutions } from '@/hooks';
 import { useAIExerciseHistory } from '@/hooks/useAIExerciseHistory';
 import { AIExerciseHistoryCard } from '@/components/ai/AIExerciseHistoryCard';
 import { PainProgressChart } from '@/components/patient/PainProgressChart';
+import { generateEvolutionPDF } from '@/lib/services/pdfGenerator';
 import {
   usePatientFinancialRecords,
   usePatientFinancialSummary,
@@ -60,6 +61,7 @@ export default function PatientDetailScreen() {
   const deleteFinancialMutation = useDeleteFinancialRecord();
   const markAsPaidMutation = useMarkAsPaid();
 
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [showFinancialModal, setShowFinancialModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState<ApiFinancialRecord | null>(null);
   const [formData, setFormData] = useState({
@@ -356,16 +358,50 @@ export default function PatientDetailScreen() {
 
         {selectedTab === 'evolutions' && (
           <View style={styles.evolutionsContainer}>
-            <TouchableOpacity
-              style={[styles.addEvolutionBtn, { backgroundColor: colors.primary }]}
-              onPress={() => {
-                medium();
-                router.push(`/evolution-form?patientId=${id}&patientName=${name}` as any);
-              }}
-            >
-              <Ionicons name="add" size={24} color="#FFFFFF" />
-              <Text style={styles.addEvolutionBtnText}>Nova Evolução SOAP</Text>
-            </TouchableOpacity>
+            <View style={styles.evolutionsHeaderActions}>
+              <TouchableOpacity
+                style={[styles.addEvolutionBtn, { backgroundColor: colors.primary, flex: 1 }]}
+                onPress={() => {
+                  medium();
+                  router.push(`/evolution-form?patientId=${id}&patientName=${name}` as any);
+                }}
+              >
+                <Ionicons name="add" size={24} color="#FFFFFF" />
+                <Text style={styles.addEvolutionBtnText}>Nova Evolução</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.exportPdfBtn, { borderColor: colors.primary, backgroundColor: colors.surface }]}
+                onPress={async () => {
+                  if (!patient || evolutions.length === 0) {
+                    Alert.alert('Erro', 'Não há dados suficientes para gerar o relatório.');
+                    return;
+                  }
+                  
+                  medium();
+                  setIsGeneratingPDF(true);
+                  try {
+                    await generateEvolutionPDF(patient, evolutions);
+                    success();
+                  } catch (err: any) {
+                    error();
+                    Alert.alert('Erro', err.message || 'Falha ao gerar PDF');
+                  } finally {
+                    setIsGeneratingPDF(false);
+                  }
+                }}
+                disabled={isGeneratingPDF || evolutions.length === 0}
+              >
+                {isGeneratingPDF ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <>
+                    <Ionicons name="document-outline" size={20} color={colors.primary} />
+                    <Text style={[styles.exportPdfBtnText, { color: colors.primary }]}>PDF</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
 
             {/* View All Evolutions Button */}
             {evolutions.length > 0 && (
@@ -1338,5 +1374,25 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: 'center',
     paddingHorizontal: 32,
+  },
+  evolutionsHeaderActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 8,
+    alignItems: 'center',
+  },
+  exportPdfBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    height: 54,
+    gap: 8,
+  },
+  exportPdfBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
