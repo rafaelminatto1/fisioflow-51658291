@@ -1,0 +1,10 @@
+# Workers Environment Variables Template
+
+ENVIRONMENT = "development"
+
+# Neon Auth JWT verification
+NEON_AUTH_JWKS_URL = "https://your-project.neonauth.region.aws.neon.tech/neondb/auth/.well-known/jwks.json"
+NEON_AUTH_ISSUER = "https://your-project.neonauth.region.aws.neon.tech/neondb/auth"
+
+# Database Binding (Hyperdrive ID)
+# HYPERDRIVE_ID = "obtido via wrangler hyperdrive create"

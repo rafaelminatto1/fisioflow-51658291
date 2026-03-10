@@ -1,135 +1,70 @@
 /**
- * Utility functions for proxying Firebase Storage URLs
- * This bypasses CORS issues by using a Cloud Function proxy
+ * Utility functions for proxying Media Storage URLs
+ * Updated for Cloudflare R2 / Neon Stack
  */
 
-const PROXY_BASE = '/api/exercise-image';
 const FIREBASE_STORAGE_PATTERN = /https:\/\/firebasestorage\.googleapis\.com\/v0\/b\/[^/]+\/o\/([^?]+)/;
-type ImageFormat = 'auto' | 'avif' | 'webp' | 'jpeg' | 'png';
 
-export interface ImageTransformOptions {
-  width?: number;
-  height?: number;
-  dpr?: number;
-  format?: ImageFormat;
-  quality?: number;
-  fit?: 'cover' | 'contain' | 'inside' | 'outside' | 'fill';
-}
+type ImageFormat = 'auto' | 'webp' | 'avif' | 'jpg' | 'jpeg' | 'png';
+type ImageFit = 'cover' | 'contain' | 'fill' | 'inside' | 'outside';
 
-export interface ImageSrcSetOptions extends Omit<ImageTransformOptions, 'width' | 'dpr'> {
-  widths?: number[];
+export interface ImageParams {
+    width?: number;
+    height?: number;
+    quality?: number;
+    format?: ImageFormat;
+    fit?: ImageFit;
+    dpr?: number;
 }
 
 /**
- * Convert a Firebase Storage URL to a proxy URL
- * @param storageUrl - The Firebase Storage URL (e.g., https://firebasestorage.googleapis.com/v0/b/bucket/o/path?alt=media)
- * @returns The proxy URL (e.g., /api/exercise-image/path)
+ * Convert a Storage URL to a proxy URL if necessary
  */
-export function toProxyUrl(storageUrl: string | null | undefined): string {
+export function convertToProxyUrl(storageUrl: string | null | undefined): string {
     if (!storageUrl) return '';
-
-    // Reject local file paths (these are artifacts from AI generation, not valid URLs)
-    if (storageUrl.startsWith('/brain/') || storageUrl.startsWith('/home/') || storageUrl.startsWith('/tmp/')) {
-        // Silently reject known invalid AI artifacts to avoid console noise
-        return '';
-    }
-
-    // Check if it's already a proxy URL or a cloudflare-served URL
-    if (storageUrl.startsWith(PROXY_BASE) || storageUrl.includes('moocafisio.com.br')) {
+    
+    // We keep the pattern check just in case legacy URLs still exist in the DB
+    const match = storageUrl.match(FIREBASE_STORAGE_PATTERN);
+    if (match) {
+        // Legacy Firebase URL detection - can be used to trigger migration alerts
         return storageUrl;
     }
 
-    // Check if it's a Firebase Storage URL to convert
-    const match = storageUrl.match(FIREBASE_STORAGE_PATTERN);
-    if (match && match[1]) {
-        // The encoded path looks like: exercise-media%2Fid%2Ffile.png
-        const encodedPath = match[1];
-        const decodedPath = decodeURIComponent(encodedPath);
-
-        // If it's a Firebase URL, we proxy it through our worker which can optimize it
-        return `${PROXY_BASE}/${decodedPath}`;
-    }
-
-    // Not a Firebase Storage URL, return as-is
+    // Default: return URL as is (assumed to be R2 or signed Cloudflare URL)
     return storageUrl;
 }
 
 /**
- * Append transformation params to an image URL (works with proxy or direct URLs)
+ * Convert multiple Storage URLs to proxy URLs
  */
-export function withImageParams(url: string | null | undefined, opts: ImageTransformOptions = {}): string {
-    if (!url) return '';
-
-    // Usar URL direta para evitar problemas com o proxy
-    const effectiveUrl = url;
-
-    const hasQuery = effectiveUrl.includes('?');
-    const [base, existingQuery] = hasQuery ? effectiveUrl.split('?', 2) : [effectiveUrl, ''];
-    const params = new URLSearchParams(existingQuery);
-
-    if (opts.width) params.set('w', String(Math.round(opts.width)));
-    if (opts.height) params.set('h', String(Math.round(opts.height)));
-    if (opts.dpr) params.set('dpr', String(opts.dpr));
-    if (opts.format) params.set('fmt', opts.format);
-    if (opts.quality) params.set('q', String(Math.round(opts.quality)));
-    if (opts.fit) params.set('fit', opts.fit);
-
-    const queryString = params.toString();
-    return queryString ? `${base}?${queryString}` : base;
+export function convertMultipleToProxyUrls(storageUrls: string[]): string[] {
+    if (!storageUrls || !Array.isArray(storageUrls)) return [];
+    return storageUrls.map(url => convertToProxyUrl(url));
 }
 
-const DEFAULT_SRCSET_WIDTHS = [160, 240, 320, 480, 640, 768, 960, 1280];
+export function withImageParams(storageUrl: string | null | undefined, params: ImageParams = {}): string {
+    const normalizedUrl = convertToProxyUrl(storageUrl);
+    if (!normalizedUrl) return '';
 
-function normalizeWidths(widths?: number[]): number[] {
-    const source = Array.isArray(widths) && widths.length > 0 ? widths : DEFAULT_SRCSET_WIDTHS;
-    return Array.from(new Set(source.map((w) => Math.round(w)).filter((w) => Number.isFinite(w) && w >= 16))).sort((a, b) => a - b);
-}
-
-/**
- * Builds a width-based srcset from a single image URL.
- * Uses proxy + transform params so each candidate is already optimized.
- */
-export function buildImageSrcSet(url: string | null | undefined, opts: ImageSrcSetOptions = {}): string {
-    if (!url) return '';
-
-    const { widths, ...transform } = opts;
-    const normalizedWidths = normalizeWidths(widths);
-
-    return normalizedWidths
-        .map((width) => `${withImageParams(url, { ...transform, width })} ${width}w`)
-        .join(', ');
-}
-
-/**
- * Convert multiple Firebase Storage URLs to proxy URLs
- * @param storageUrls - Array of Firebase Storage URLs
- * @returns Array of proxy URLs
- */
-export function toProxyUrls(storageUrls: (string | null | undefined)[]): string[] {
-    return storageUrls.map(toProxyUrl);
-}
-
-/**
- * Check if a URL is a Firebase Storage URL
- * @param url - The URL to check
- * @returns True if it's a Firebase Storage URL
- */
-export function isFirebaseStorageUrl(url: string | null | undefined): boolean {
-    if (!url) return false;
-    return FIREBASE_STORAGE_PATTERN.test(url);
-}
-
-/**
- * Get the original Firebase Storage URL from a proxy URL
- * @param proxyUrl - The proxy URL
- * @param bucket - The Firebase Storage bucket name
- * @returns The original Firebase Storage URL
- */
-export function fromProxyUrl(proxyUrl: string, bucket = 'fisioflow-migration.firebasestorage.app'): string {
-    if (!proxyUrl.startsWith(PROXY_BASE)) {
-        return proxyUrl;
+    try {
+        const url = new URL(normalizedUrl, window.location.origin);
+        if (params.width) url.searchParams.set('w', String(params.width));
+        if (params.height) url.searchParams.set('h', String(params.height));
+        if (params.quality) url.searchParams.set('q', String(params.quality));
+        if (params.format) url.searchParams.set('format', params.format);
+        if (params.fit) url.searchParams.set('fit', params.fit);
+        if (params.dpr) url.searchParams.set('dpr', String(params.dpr));
+        return url.toString();
+    } catch {
+        return normalizedUrl;
     }
+}
 
-    const path = proxyUrl.substring(PROXY_BASE.length + 1);
-    return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${path}?alt=media`;
+export function buildImageSrcSet(storageUrl: string | null | undefined, params: ImageParams = {}): string {
+    const normalizedUrl = convertToProxyUrl(storageUrl);
+    if (!normalizedUrl) return '';
+
+    const oneX = withImageParams(normalizedUrl, { ...params, dpr: 1 });
+    const twoX = withImageParams(normalizedUrl, { ...params, dpr: 2 });
+    return `${oneX} 1x, ${twoX} 2x`;
 }

@@ -1,5 +1,5 @@
 /**
- * Audio Transcription Component - Migrated to Firebase
+ * Audio Transcription Component - Migrated to Neon/Cloudflare
  */
 
 import React, { useState, useRef } from 'react';

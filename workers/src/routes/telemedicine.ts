@@ -37,7 +37,7 @@ app.get('/rooms', requireAuth, async (c) => {
     [user.organizationId],
   );
 
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.get('/rooms/:id', requireAuth, async (c) => {
