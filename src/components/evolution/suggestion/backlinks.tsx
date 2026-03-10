@@ -28,7 +28,7 @@ export const Backlinks = Extension.create({
   addProposals() {
     return [
       {
-        name: 'suggestion',
+        name: 'backlinksSuggestion',
         suggestion: {
           ...this.options.suggestion,
           items: ({ query }: { query: string }) => {

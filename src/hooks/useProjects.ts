@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { projectsApi, type ProjectRecord } from '@/lib/api/workers-client';
 
-export interface Project extends ProjectRecord {}
+export type Project = ProjectRecord;
 
 export function useProjects() {
   return useQuery({

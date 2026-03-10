@@ -617,7 +617,7 @@ test.describe('Worker Mutations - CRUD Flows', () => {
 
     await page.getByRole('button', { name: 'NOVO PROTOCOLO' }).click();
     const dialog = page.getByRole('dialog').last();
-    await expect(dialog.getByText('Criar Novo Protocolo')).toBeVisible({ timeout: 10000 });
+    await expect(dialog.getByRole('heading', { name: 'Criar Novo Protocolo' }).nth(1)).toBeVisible({ timeout: 10000 });
 
     await dialog.getByPlaceholder(/Reabilitação LCA/i).fill(protocolName);
     await dialog.getByPlaceholder(/LCA, Menisco/i).fill('LCA');

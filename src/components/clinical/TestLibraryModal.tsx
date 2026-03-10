@@ -35,7 +35,7 @@ import {
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
-export interface ClinicalTest extends ClinicalTestTemplateRecord {}
+export type ClinicalTest = ClinicalTestTemplateRecord;
 
 interface TestLibraryModalProps {
     open: boolean;
