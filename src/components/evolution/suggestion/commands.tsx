@@ -5,7 +5,7 @@ import tippy from 'tippy.js';
 import { ClipboardList, CheckSquare, Paperclip, ImageIcon, Sparkles, Book } from 'lucide-react';
 
 export const Commands = Extension.create({
-  name: 'commands',
+  name: 'clinicalCommands',
 
   addOptions() {
     return {
@@ -21,7 +21,7 @@ export const Commands = Extension.create({
   addProposals() {
     return [
       {
-        name: 'suggestion',
+        name: 'clinicalCommandsSuggestion',
         suggestion: {
           ...this.options.suggestion,
           items: ({ query }: { query: string }) => {

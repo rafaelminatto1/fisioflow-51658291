@@ -52,7 +52,7 @@ interface NFSe extends NFSeRecord {
   };
 }
 
-interface NFSConfig extends NFSeConfigRecord {}
+type NFSConfig = NFSeConfigRecord;
 
 const DEFAULT_NFSE_CONFIG: NFSConfig = {
   ambiente: 'homologacao',

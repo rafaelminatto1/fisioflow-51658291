@@ -22,7 +22,7 @@ import { ClinicalTestProtocolDialog } from '@/components/clinical/ClinicalTestPr
 
 import { useExerciseProtocols } from '@/hooks/useExerciseProtocols';
 
-interface ClinicalTest extends ClinicalTestTemplateRecord {}
+type ClinicalTest = ClinicalTestTemplateRecord;
 
 export default function ClinicalTestsLibrary() {
     const queryClient = useQueryClient();

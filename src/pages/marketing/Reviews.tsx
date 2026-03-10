@@ -32,7 +32,7 @@ import { cn } from '@/lib/utils';
 import { generateMarketingContent } from '@/services/ai/marketingAITemplateService';
 import { integrationsApi, type GoogleBusinessReviewRecord } from '@/lib/api/workers-client';
 
-interface GoogleReview extends GoogleBusinessReviewRecord {}
+type GoogleReview = GoogleBusinessReviewRecord;
 
 type SortOption = 'recent' | 'oldest' | 'highest' | 'lowest';
 type FilterRating = 'all' | 5 | 4 | 3 | 2 | 1;
