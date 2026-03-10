@@ -20,9 +20,6 @@
       "@fisioflow/shared-constants": [
         "./packages/shared-constants/src"
       ],
-      "@fisioflow/shared-api": [
-        "./packages/shared-api/src"
-      ],
       "@fisioflow/shared-ui": [
         "./packages/shared-ui/src"
       ],

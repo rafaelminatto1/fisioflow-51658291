@@ -33,21 +33,19 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [localError, setLocalError] = useState('');
-  const [showBiometric, setShowBiometric] = useState(false);
 
   // Check biometric availability on mount
   useEffect(() => {
     checkAvailability();
+    loadStoredEmail();
   }, []);
 
-  // Show biometric button if available and not enabled yet
-  useEffect(() => {
-    if (isAvailable && !isEnabled && !user) {
-      setShowBiometric(true);
-    } else {
-      setShowBiometric(false);
+  const loadStoredEmail = async () => {
+    const storedEmail = await SecureStore.getItemAsync('user_email');
+    if (storedEmail) {
+      setEmail(storedEmail);
     }
-  }, [isAvailable, isEnabled, user]);
+  };
 
   const handleLogin = async () => {
     clearError();
@@ -65,13 +63,17 @@ export default function LoginScreen() {
 
     try {
       await signIn(email.trim(), password);
-      // Enable biometric after successful login
-      if (isAvailable) {
+      // Save for biometrics
+      await SecureStore.setItemAsync('user_email', email.trim());
+      await SecureStore.setItemAsync('user_password', password);
+      
+      // Auto-enable biometrics if not yet enabled but available
+      if (isAvailable && !isEnabled) {
         await enable();
       }
       router.replace('/(tabs)');
     } catch (err: any) {
-      // Error is already handled by the store
+      // Error handled by store
     }
   };
 
@@ -79,11 +81,26 @@ export default function LoginScreen() {
     clearError();
     setLocalError('');
 
+    if (!isEnabled) {
+      setLocalError('Habilite a biometria nas configurações');
+      return;
+    }
+
     const success = await authenticate('Acesse o FisioFlow Pro');
     if (success) {
-      // If biometric login succeeds, we need to sign in with stored credentials
-      // For now, this is a simplified version - in production, store credentials securely
-      setLocalError('Faça login com email e senha primeiro para habilitar biometria');
+      const storedEmail = await SecureStore.getItemAsync('user_email');
+      const storedPassword = await SecureStore.getItemAsync('user_password');
+      
+      if (storedEmail && storedPassword) {
+        try {
+          await signIn(storedEmail, storedPassword);
+          router.replace('/(tabs)');
+        } catch (err: any) {
+          setLocalError('Erro na autenticação. Tente login manual.');
+        }
+      } else {
+        setLocalError('Credenciais não salvas. Faça login manual uma vez.');
+      }
     }
   };
 
@@ -176,7 +193,7 @@ export default function LoginScreen() {
             />
 
             {/* Biometric Login Button */}
-            {showBiometric && (
+            {isAvailable && isEnabled && (
               <TouchableOpacity
                 style={[styles.biometricButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
                 onPress={handleBiometricLogin}
