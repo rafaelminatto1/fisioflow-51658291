@@ -233,10 +233,22 @@ app.post('/', requireAuth, async (c) => {
   const body = await c.req.json();
   const { comment, ...pageData } = body;
 
+  // Gera slug único a partir do título se não enviado
+  if (!pageData.slug && pageData.title) {
+    const base = String(pageData.title)
+      .toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .substring(0, 200);
+    pageData.slug = `${base}-${Date.now()}`;
+  }
+
   const [row] = await db
     .insert(wikiPages)
     .values({
       ...pageData,
+      organizationId: user.organizationId,
       createdBy: user.uid,
       version: 1,
     })
