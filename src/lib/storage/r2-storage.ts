@@ -1,6 +1,7 @@
 import { getNeonAccessToken } from '@/lib/auth/neon-token';
+import { getWorkersApiUrl } from '@/lib/api/config';
 
-const API_URL = import.meta.env.VITE_WORKERS_API_URL || 'https://fisioflow-api.rafalegollas.workers.dev';
+const API_URL = getWorkersApiUrl();
 
 export interface R2UploadResult {
     url: string;

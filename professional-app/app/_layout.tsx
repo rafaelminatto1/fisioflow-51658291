@@ -1,5 +1,5 @@
 // Load polyfills first
-import './polyfills';
+import '../lib/polyfills';
 
 import { useEffect, useCallback } from 'react';
 import { Stack } from 'expo-router';

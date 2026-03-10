@@ -41,7 +41,9 @@ export const authApi = {
       try {
         const data = await response.json();
         errorMessage = data.message || data.error || errorMessage;
-      } catch (e) {}
+      } catch (e) {
+        // Silently fail if JSON parsing fails
+      }
       throw new Error(errorMessage);
     }
 
