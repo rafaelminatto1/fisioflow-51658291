@@ -24,16 +24,11 @@ export function createPool(env: Env) {
   const url = env.NEON_URL || env.HYPERDRIVE?.connectionString || process.env.DATABASE_URL;
   if (!url) throw new Error('DB URL missing');
   const sql = neon(url);
-  
+
   return {
     query: async (text: string, params: any[] = []) => {
-      try {
-        const rows = await sql(text, params);
-        return { rows: Array.isArray(rows) ? rows : [rows], rowCount: Array.isArray(rows) ? rows.length : 1 };
-      } catch (err) {
-        console.error('[DB Query Error]', err);
-        return { rows: [], rowCount: 0 };
-      }
+      const rows = await sql.query(text, params);
+      return { rows: Array.isArray(rows) ? rows : [rows], rowCount: Array.isArray(rows) ? rows.length : 1 };
     },
     on: () => {},
     end: async () => {},
