@@ -123,18 +123,20 @@ const styles = StyleSheet.create({
     },
     viewSwitcher: {
         flexDirection: 'row',
-        borderRadius: 8,
+        borderRadius: 24, // Pill shape
         borderWidth: 1,
         overflow: 'hidden',
+        padding: 4,
     },
     switchButton: {
         flex: 1,
         paddingVertical: 8,
         alignItems: 'center',
+        borderRadius: 20, // Inner pill
     },
     switchText: {
         fontSize: 14,
-        fontWeight: '500',
+        fontWeight: '600',
     },
     content: {
         flex: 1,

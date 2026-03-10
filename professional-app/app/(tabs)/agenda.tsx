@@ -113,8 +113,8 @@ export default function AgendaScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
       {showLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Carregando agenda...</Text>
+          <ActivityIndicator size="large" color={colors.primary} style={{ marginBottom: 16 }} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Sincronizando agenda...</Text>
         </View>
       ) : (
         <CalendarView
@@ -129,12 +129,20 @@ export default function AgendaScreen() {
       {/* Floating Action Button */}
       {!showLoading && (
         <TouchableOpacity
-          style={[styles.fab, { backgroundColor: colors.primary }]}
+          style={[
+            styles.fab, 
+            { 
+              backgroundColor: colors.primary,
+              shadowColor: colors.primary, // Themed shadow
+            }
+          ]}
           onPress={() => {
             light();
             router.push('/appointment-form');
           }}
           activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="Novo Agendamento"
         >
           <Ionicons name="add" size={32} color="#fff" />
         </TouchableOpacity>
@@ -151,24 +159,24 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 60,
   },
   loadingText: {
-    marginTop: 10,
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: '500',
   },
   fab: {
     position: 'absolute',
-    right: 20,
-    bottom: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    right: 24,
+    bottom: 24,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    elevation: 6,
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 3,
+    shadowRadius: 8,
   }
 });
