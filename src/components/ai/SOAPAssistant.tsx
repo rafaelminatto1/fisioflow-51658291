@@ -231,7 +231,7 @@ export function SOAPAssistant({
       setProgress(50);
 
       // Firebase - transcrever áudio
-      const { transcribeAudioBlob } = await import('@/services/ai/firebaseAIService');
+      const { transcribeAudioBlob } = await import('@/services/ai/geminiAiService');
       const { transcription } = await transcribeAudioBlob(audioBlob, 'audio/webm');
 
       setConsultationText(prev => prev.replace('\n\n[Transcrevendo áudio...]', transcription));
@@ -286,7 +286,7 @@ export function SOAPAssistant({
       setProgress(50);
 
       // Firebase Cloud Functions - aiSoapNoteChat
-      const { generateSOAPNote } = await import('@/services/ai/firebaseAIService');
+      const { generateSOAPNote } = await import('@/services/ai/geminiAiService');
       const result = await generateSOAPNote({
         patientContext: {
           patientName: patient.name,

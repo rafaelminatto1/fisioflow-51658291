@@ -1,4 +1,4 @@
-import type { ClinicalChatInput } from '@/services/ai/firebaseAIService';
+import type { ClinicalChatInput } from '@/services/ai/geminiAiService';
 import type { PatientAnalyticsData } from '@/types/patientAnalytics';
 
 interface BuildPatientChatContextOptions {

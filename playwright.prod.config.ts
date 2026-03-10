@@ -4,13 +4,13 @@ export default defineConfig({
   testDir: './e2e',
   timeout: 60000,
   use: {
-    baseURL: 'https://fisioflow-professional.web.app',
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
+    baseURL: 'https://moocafisio.com.br',
+    trace: 'on',
+    screenshot: 'on',
   },
   projects: [
     {
-      name: 'chromium',
+      name: 'production',
       use: { ...devices['Desktop Chrome'] },
     },
   ],

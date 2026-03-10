@@ -1,10 +1,18 @@
 /**
- * Medical Record Service - Workers/Neon first, local fallback for unsupported sections
+ * Medical Record Service - Workers/Neon backed
  */
 
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { patientsApi, sessionsApi, type PatientMedicalRecord, type SessionRecord } from '@/lib/api/workers-client';
+import {
+  patientsApi,
+  sessionsApi,
+  type PatientMedicalAttachment,
+  type PatientMedicalRecord,
+  type PatientPhysicalExamination,
+  type PatientTreatmentPlan,
+  type SessionRecord,
+} from '@/lib/api/workers-client';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 export interface MedicalRecord {
@@ -96,58 +104,15 @@ export class MedicalRecordError extends Error {
   }
 }
 
-const ANAMNESIS_INDEX_KEY = 'medical-records:anamnesis-index';
-const PHYSICAL_EXAM_PREFIX = 'medical-records:physical:';
-const TREATMENT_PLAN_PREFIX = 'medical-records:treatment:';
-const ATTACHMENTS_PREFIX = 'medical-records:attachments:';
-
-function canUseStorage() {
-  return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
+function splitCsv(value?: string | null): string[] | undefined {
+  if (!value) return undefined;
+  const items = value.split(',').map((item) => item.trim()).filter(Boolean);
+  return items.length ? items : undefined;
 }
 
-function readJson<T>(key: string, fallback: T): T {
-  if (!canUseStorage()) return fallback;
-  try {
-    const raw = window.localStorage.getItem(key);
-    return raw ? (JSON.parse(raw) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function writeJson<T>(key: string, value: T) {
-  if (!canUseStorage()) return;
-  window.localStorage.setItem(key, JSON.stringify(value));
-}
-
-function listKeys(prefix: string): string[] {
-  if (!canUseStorage()) return [];
-  const keys: string[] = [];
-  for (let i = 0; i < window.localStorage.length; i += 1) {
-    const key = window.localStorage.key(i);
-    if (key?.startsWith(prefix)) keys.push(key);
-  }
-  return keys;
-}
-
-function sortByDateDesc<T extends { record_date?: string; created_at?: string }>(items: T[]) {
-  return [...items].sort((a, b) => {
-    const left = a.record_date ?? a.created_at ?? '';
-    const right = b.record_date ?? b.created_at ?? '';
-    return right.localeCompare(left);
-  });
-}
-
-function physicalExamKey(patientId: string) {
-  return `${PHYSICAL_EXAM_PREFIX}${patientId}`;
-}
-
-function treatmentPlanKey(patientId: string) {
-  return `${TREATMENT_PLAN_PREFIX}${patientId}`;
-}
-
-function attachmentsKey(patientId: string) {
-  return `${ATTACHMENTS_PREFIX}${patientId}`;
+function joinCsv(values?: string[]): string | undefined {
+  if (!values?.length) return undefined;
+  return values.join(', ');
 }
 
 function mapMedicalRecord(record: PatientMedicalRecord): AnamnesisRecord {
@@ -164,127 +129,79 @@ function mapMedicalRecord(record: PatientMedicalRecord): AnamnesisRecord {
     medications: splitCsv(record.current_medications),
     allergies: splitCsv(record.allergies),
     family_history: record.family_history ?? undefined,
-    lifestyle: record.lifestyle_habits
-      ? {
-          exercise: record.lifestyle_habits,
-        }
+    lifestyle: record.lifestyle_habits ? { exercise: record.lifestyle_habits } : undefined,
+  };
+}
+
+function mapPhysicalExamination(record: PatientPhysicalExamination): PhysicalExamination {
+  return {
+    id: record.id,
+    patient_id: record.patient_id,
+    record_date: record.record_date,
+    created_at: record.created_at ?? record.record_date,
+    updated_at: record.updated_at ?? record.record_date,
+    created_by: record.created_by ?? '',
+    vital_signs: (record.vital_signs as PhysicalExamination['vital_signs']) ?? {},
+    general_appearance: record.general_appearance ?? undefined,
+    heent: record.heent ?? undefined,
+    cardiovascular: record.cardiovascular ?? undefined,
+    respiratory: record.respiratory ?? undefined,
+    gastrointestinal: record.gastrointestinal ?? undefined,
+    musculoskeletal: record.musculoskeletal ?? undefined,
+    neurological: record.neurological ?? undefined,
+    integumentary: record.integumentary ?? undefined,
+    psychological: record.psychological ?? undefined,
+  };
+}
+
+function mapTreatmentPlan(record: PatientTreatmentPlan): TreatmentPlan {
+  return {
+    id: record.id,
+    patient_id: record.patient_id,
+    record_date: record.record_date,
+    created_at: record.created_at ?? record.record_date,
+    updated_at: record.updated_at ?? record.record_date,
+    created_by: record.created_by ?? '',
+    diagnosis: Array.isArray(record.diagnosis) ? record.diagnosis.map(String) : undefined,
+    objectives: Array.isArray(record.objectives) ? record.objectives.map(String) : undefined,
+    procedures: Array.isArray(record.procedures) ? record.procedures.map(String) : undefined,
+    exercises: Array.isArray(record.exercises)
+      ? record.exercises.map((exercise) => {
+          const item = exercise as Record<string, unknown>;
+          return {
+            name: String(item.name ?? ''),
+            sets: item.sets != null ? Number(item.sets) : undefined,
+            reps: item.reps != null ? Number(item.reps) : undefined,
+            frequency: item.frequency != null ? String(item.frequency) : undefined,
+            duration: item.duration != null ? String(item.duration) : undefined,
+          };
+        })
       : undefined,
+    recommendations: Array.isArray(record.recommendations) ? record.recommendations.map(String) : undefined,
+    follow_up_date: record.follow_up_date ?? undefined,
   };
 }
 
-function splitCsv(value?: string | null): string[] | undefined {
-  if (!value) return undefined;
-  const items = value
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
-  return items.length ? items : undefined;
-}
-
-function joinCsv(values?: string[]): string | undefined {
-  if (!values?.length) return undefined;
-  return values.join(', ');
-}
-
-function rememberAnamnesisRecord(record: { id: string; patient_id: string }) {
-  const index = readJson<Record<string, string>>(ANAMNESIS_INDEX_KEY, {});
-  index[record.id] = record.patient_id;
-  writeJson(ANAMNESIS_INDEX_KEY, index);
-}
-
-function getPatientIdByAnamnesisRecord(recordId: string): string | null {
-  const index = readJson<Record<string, string>>(ANAMNESIS_INDEX_KEY, {});
-  return index[recordId] ?? null;
-}
-
-async function upsertPatientMedicalRecord(
-  patientId: string,
-  data: Partial<AnamnesisRecord>,
-  userId: string,
-): Promise<AnamnesisRecord> {
-  const existing = await patientsApi.medicalRecords(patientId);
-  const current = existing.data?.[0];
-  const payload = {
-    chief_complaint: data.chief_complaint,
-    medical_history: data.history_present_illness,
-    previous_surgeries: data.past_medical_history,
-    current_medications: joinCsv(data.medications),
-    allergies: joinCsv(data.allergies),
-    family_history: data.family_history,
-    lifestyle_habits: data.lifestyle?.exercise,
-    record_date: data.record_date ?? new Date().toISOString().slice(0, 10),
-    created_by: userId,
+function mapAttachment(record: PatientMedicalAttachment): Attachment {
+  return {
+    id: record.id,
+    record_id: record.record_id ?? '',
+    patient_id: record.patient_id,
+    file_name: record.file_name,
+    file_url: record.file_url,
+    file_type: record.file_type,
+    file_size: record.file_size ?? undefined,
+    uploaded_at: record.uploaded_at ?? new Date().toISOString(),
+    uploaded_by: record.uploaded_by ?? undefined,
+    category: (record.category as Attachment['category']) ?? 'other',
+    description: record.description ?? undefined,
   };
-
-  const response = current
-    ? await patientsApi.updateMedicalRecord(patientId, current.id, payload)
-    : await patientsApi.createMedicalRecord(patientId, payload);
-  const mapped = mapMedicalRecord(response.data);
-  rememberAnamnesisRecord(mapped);
-  return mapped;
-}
-
-function getLocalCollection<T>(prefixKey: string): T[] {
-  return sortByDateDesc(readJson<T[]>(prefixKey, [] as T[]));
-}
-
-function saveLocalCollection<T>(prefixKey: string, items: T[]) {
-  writeJson(prefixKey, items);
-}
-
-function buildRecordId(prefix: string) {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-}
-
-async function upsertLocalRecord<T extends MedicalRecord>(
-  storageKey: string,
-  data: Partial<T>,
-  patientId: string,
-  userId: string,
-  idPrefix: string,
-): Promise<T> {
-  const items = getLocalCollection<T>(storageKey);
-  const id = data.id ?? buildRecordId(idPrefix);
-  const createdAt = items.find((item) => item.id === id)?.created_at ?? new Date().toISOString();
-  const nextRecord = {
-    ...(items.find((item) => item.id === id) ?? {}),
-    ...data,
-    id,
-    patient_id: patientId,
-    record_date: data.record_date ?? new Date().toISOString().slice(0, 10),
-    created_by: data.created_by ?? userId,
-    created_at: createdAt,
-    updated_at: new Date().toISOString(),
-  } as T;
-
-  const nextItems = sortByDateDesc([
-    nextRecord,
-    ...items.filter((item) => item.id !== id),
-  ]);
-  saveLocalCollection(storageKey, nextItems);
-  return nextRecord;
-}
-
-function removeFromLocalCollection(prefix: string, id: string): boolean {
-  const keys = listKeys(prefix);
-  let removed = false;
-  keys.forEach((key) => {
-    const items = readJson<Array<{ id: string }>>(key, []);
-    const next = items.filter((item) => item.id !== id);
-    if (next.length !== items.length) {
-      removed = true;
-      writeJson(key, next);
-    }
-  });
-  return removed;
 }
 
 export async function getAnamnesisRecords(patientId: string): Promise<AnamnesisRecord[]> {
   try {
     const response = await patientsApi.medicalRecords(patientId);
-    const records = (response.data ?? []).map(mapMedicalRecord);
-    records.forEach(rememberAnamnesisRecord);
-    return sortByDateDesc(records);
+    return (response.data ?? []).map(mapMedicalRecord).sort((a, b) => b.record_date.localeCompare(a.record_date));
   } catch (error) {
     logger.error('Error fetching anamnesis records', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao buscar anamneses', 'FETCH_ERROR', error);
@@ -292,32 +209,39 @@ export async function getAnamnesisRecords(patientId: string): Promise<AnamnesisR
 }
 
 export async function getLatestAnamnesis(patientId: string): Promise<AnamnesisRecord | null> {
-  try {
-    const records = await getAnamnesisRecords(patientId);
-    return records[0] ?? null;
-  } catch (error) {
-    logger.error('Error fetching latest anamnesis', error, 'medicalRecordService');
-    throw new MedicalRecordError('Erro ao buscar anamnese', 'FETCH_ERROR', error);
-  }
+  const records = await getAnamnesisRecords(patientId);
+  return records[0] ?? null;
 }
 
-export async function saveAnamnesis(
-  patientId: string,
-  data: Partial<AnamnesisRecord>,
-  userId: string,
-): Promise<AnamnesisRecord> {
+export async function saveAnamnesis(patientId: string, data: Partial<AnamnesisRecord>, userId: string): Promise<AnamnesisRecord> {
   try {
-    return await upsertPatientMedicalRecord(patientId, data, userId);
+    const existing = await patientsApi.medicalRecords(patientId);
+    const current = existing.data?.[0];
+    const payload = {
+      chief_complaint: data.chief_complaint,
+      medical_history: data.history_present_illness,
+      previous_surgeries: data.past_medical_history,
+      current_medications: joinCsv(data.medications),
+      allergies: joinCsv(data.allergies),
+      family_history: data.family_history,
+      lifestyle_habits: data.lifestyle?.exercise,
+      record_date: data.record_date ?? new Date().toISOString().slice(0, 10),
+      created_by: userId,
+    };
+
+    const response = current
+      ? await patientsApi.updateMedicalRecord(patientId, current.id, payload)
+      : await patientsApi.createMedicalRecord(patientId, payload);
+    return mapMedicalRecord(response.data);
   } catch (error) {
     logger.error('Error saving anamnesis', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao salvar anamnese', 'SAVE_ERROR', error);
   }
 }
 
-export async function deleteAnamnesis(recordId: string): Promise<void> {
+export async function deleteAnamnesis(recordId: string, patientId?: string): Promise<void> {
   try {
-    const patientId = getPatientIdByAnamnesisRecord(recordId);
-    if (!patientId) throw new Error('Paciente do prontuário não encontrado');
+    if (!patientId) throw new Error(`deleteAnamnesis requer patientId para remover ${recordId}`);
     await patientsApi.deleteMedicalRecord(patientId, recordId);
   } catch (error) {
     logger.error('Error deleting anamnesis', error, 'medicalRecordService');
@@ -327,26 +251,34 @@ export async function deleteAnamnesis(recordId: string): Promise<void> {
 
 export async function getPhysicalExaminations(patientId: string): Promise<PhysicalExamination[]> {
   try {
-    return getLocalCollection<PhysicalExamination>(physicalExamKey(patientId));
+    const response = await patientsApi.physicalExaminations(patientId);
+    return (response.data ?? []).map(mapPhysicalExamination).sort((a, b) => b.record_date.localeCompare(a.record_date));
   } catch (error) {
     logger.error('Error fetching physical examinations', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao buscar exames físicos', 'FETCH_ERROR', error);
   }
 }
 
-export async function savePhysicalExamination(
-  patientId: string,
-  data: Partial<PhysicalExamination>,
-  userId: string,
-): Promise<PhysicalExamination> {
+export async function savePhysicalExamination(patientId: string, data: Partial<PhysicalExamination>, userId: string): Promise<PhysicalExamination> {
   try {
-    return await upsertLocalRecord<PhysicalExamination>(
-      physicalExamKey(patientId),
-      data,
-      patientId,
-      userId,
-      'physical-exam',
-    );
+    const payload = {
+      record_date: data.record_date ?? new Date().toISOString().slice(0, 10),
+      created_by: userId,
+      vital_signs: data.vital_signs ?? {},
+      general_appearance: data.general_appearance,
+      heent: data.heent,
+      cardiovascular: data.cardiovascular,
+      respiratory: data.respiratory,
+      gastrointestinal: data.gastrointestinal,
+      musculoskeletal: data.musculoskeletal,
+      neurological: data.neurological,
+      integumentary: data.integumentary,
+      psychological: data.psychological,
+    };
+    const response = data.id
+      ? await patientsApi.updatePhysicalExamination(patientId, data.id, payload)
+      : await patientsApi.createPhysicalExamination(patientId, payload);
+    return mapPhysicalExamination(response.data);
   } catch (error) {
     logger.error('Error saving physical examination', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao salvar exame físico', 'SAVE_ERROR', error);
@@ -355,7 +287,8 @@ export async function savePhysicalExamination(
 
 export async function getTreatmentPlans(patientId: string): Promise<TreatmentPlan[]> {
   try {
-    return getLocalCollection<TreatmentPlan>(treatmentPlanKey(patientId));
+    const response = await patientsApi.treatmentPlans(patientId);
+    return (response.data ?? []).map(mapTreatmentPlan).sort((a, b) => b.record_date.localeCompare(a.record_date));
   } catch (error) {
     logger.error('Error fetching treatment plans', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao buscar planos de tratamento', 'FETCH_ERROR', error);
@@ -363,51 +296,49 @@ export async function getTreatmentPlans(patientId: string): Promise<TreatmentPla
 }
 
 export async function getActiveTreatmentPlan(patientId: string): Promise<TreatmentPlan | null> {
-  try {
-    const plans = await getTreatmentPlans(patientId);
-    return plans[0] ?? null;
-  } catch (error) {
-    logger.error('Error fetching active treatment plan', error, 'medicalRecordService');
-    return null;
-  }
+  const plans = await getTreatmentPlans(patientId);
+  return plans[0] ?? null;
 }
 
-export async function saveTreatmentPlan(
-  patientId: string,
-  data: Partial<TreatmentPlan>,
-  userId: string,
-): Promise<TreatmentPlan> {
+export async function saveTreatmentPlan(patientId: string, data: Partial<TreatmentPlan>, userId: string): Promise<TreatmentPlan> {
   try {
-    return await upsertLocalRecord<TreatmentPlan>(
-      treatmentPlanKey(patientId),
-      data,
-      patientId,
-      userId,
-      'treatment-plan',
-    );
+    const payload = {
+      record_date: data.record_date ?? new Date().toISOString().slice(0, 10),
+      created_by: userId,
+      diagnosis: data.diagnosis ?? [],
+      objectives: data.objectives ?? [],
+      procedures: data.procedures ?? [],
+      exercises: data.exercises ?? [],
+      recommendations: data.recommendations ?? [],
+      follow_up_date: data.follow_up_date,
+    };
+    const response = data.id
+      ? await patientsApi.updateTreatmentPlan(patientId, data.id, payload)
+      : await patientsApi.createTreatmentPlan(patientId, payload);
+    return mapTreatmentPlan(response.data);
   } catch (error) {
     logger.error('Error saving treatment plan', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao salvar plano de tratamento', 'SAVE_ERROR', error);
   }
 }
 
-export async function updateTreatmentPlan(planId: string, data: Partial<TreatmentPlan>): Promise<TreatmentPlan> {
+export async function updateTreatmentPlan(
+  patientId: string,
+  planId: string,
+  data: Partial<TreatmentPlan>,
+): Promise<TreatmentPlan> {
   try {
-    const keys = listKeys(TREATMENT_PLAN_PREFIX);
-    for (const key of keys) {
-      const patientId = key.replace(TREATMENT_PLAN_PREFIX, '');
-      const items = readJson<TreatmentPlan[]>(key, []);
-      const current = items.find((item) => item.id === planId);
-      if (!current) continue;
-      return upsertLocalRecord<TreatmentPlan>(
-        key,
-        { ...current, ...data },
-        patientId,
-        current.created_by,
-        'treatment-plan',
-      );
-    }
-    throw new Error('Plano de tratamento não encontrado');
+    const response = await patientsApi.updateTreatmentPlan(patientId, planId, {
+      record_date: data.record_date,
+      created_by: data.created_by,
+      diagnosis: data.diagnosis,
+      objectives: data.objectives,
+      procedures: data.procedures,
+      exercises: data.exercises,
+      recommendations: data.recommendations,
+      follow_up_date: data.follow_up_date,
+    });
+    return mapTreatmentPlan(response.data);
   } catch (error) {
     logger.error('Error updating treatment plan', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao atualizar plano de tratamento', 'UPDATE_ERROR', error);
@@ -416,7 +347,8 @@ export async function updateTreatmentPlan(planId: string, data: Partial<Treatmen
 
 export async function getPatientAttachments(patientId: string): Promise<Attachment[]> {
   try {
-    return getLocalCollection<Attachment>(attachmentsKey(patientId));
+    const response = await patientsApi.medicalAttachments(patientId);
+    return (response.data ?? []).map(mapAttachment);
   } catch (error) {
     logger.error('Error fetching attachments', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao buscar anexos', 'FETCH_ERROR', error);
@@ -425,20 +357,22 @@ export async function getPatientAttachments(patientId: string): Promise<Attachme
 
 export async function getRecordAttachments(recordId: string): Promise<Attachment[]> {
   try {
-    return listKeys(ATTACHMENTS_PREFIX)
-      .flatMap((key) => readJson<Attachment[]>(key, []))
-      .filter((attachment) => attachment.record_id === recordId)
-      .sort((a, b) => b.uploaded_at.localeCompare(a.uploaded_at));
+    logger.warn(
+      `getRecordAttachments(${recordId}) requer patientId no backend atual; retornando lista vazia`,
+      undefined,
+      'medicalRecordService',
+    );
+    return [];
   } catch (error) {
     logger.error('Error fetching record attachments', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao buscar anexos', 'FETCH_ERROR', error);
   }
 }
 
-export async function deleteAttachment(attachmentId: string): Promise<void> {
+export async function deleteAttachment(attachmentId: string, patientId?: string): Promise<void> {
   try {
-    const removed = removeFromLocalCollection(ATTACHMENTS_PREFIX, attachmentId);
-    if (!removed) throw new Error('Anexo não encontrado');
+    if (!patientId) throw new Error(`deleteAttachment requer patientId para remover ${attachmentId}`);
+    await patientsApi.deleteMedicalAttachment(patientId, attachmentId);
   } catch (error) {
     logger.error('Error deleting attachment', error, 'medicalRecordService');
     throw new MedicalRecordError('Erro ao excluir anexo', 'DELETE_ERROR', error);
@@ -478,11 +412,7 @@ function toHistoryEntry(session: SessionRecord) {
   };
 }
 
-export async function getConsultationHistory(
-  patientId: string,
-  startDate?: string,
-  endDate?: string,
-): Promise<ConsultationHistory[]> {
+export async function getConsultationHistory(patientId: string, startDate?: string, endDate?: string): Promise<ConsultationHistory[]> {
   try {
     const [sessionsResponse, treatmentPlans, examinations] = await Promise.all([
       sessionsApi.list({ patientId, limit: 100 }),
@@ -508,12 +438,7 @@ export async function getConsultationHistory(
       const current = historyMap.get(date) ?? { date };
       current.treatment_plans = [
         ...(current.treatment_plans ?? []),
-        {
-          id: plan.id,
-          diagnosis: plan.diagnosis,
-          objectives: plan.objectives,
-          procedures: plan.procedures,
-        },
+        { id: plan.id, diagnosis: plan.diagnosis, objectives: plan.objectives, procedures: plan.procedures },
       ];
       historyMap.set(date, current);
     });
@@ -523,13 +448,7 @@ export async function getConsultationHistory(
       if (startDate && date < startDate) return;
       if (endDate && date > endDate) return;
       const current = historyMap.get(date) ?? { date };
-      current.examinations = [
-        ...(current.examinations ?? []),
-        {
-          id: exam.id,
-          vital_signs: exam.vital_signs,
-        },
-      ];
+      current.examinations = [...(current.examinations ?? []), { id: exam.id, vital_signs: exam.vital_signs }];
       historyMap.set(date, current);
     });
 
@@ -563,13 +482,7 @@ export interface MedicalRecordSummary {
 
 export async function generateMedicalRecordSummary(
   patientId: string,
-  patientData: {
-    name: string;
-    birthDate?: string;
-    cpf?: string;
-    phone?: string;
-    email?: string;
-  },
+  patientData: { name: string; birthDate?: string; cpf?: string; phone?: string; email?: string },
 ): Promise<MedicalRecordSummary> {
   try {
     const [anamnesis, examinations, plans, sessionsResponse] = await Promise.all([
@@ -618,76 +531,21 @@ export function formatMedicalRecordAsHTML(summary: MedicalRecordSummary): string
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Prontuário - ${summary.patient.name}</title>
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    .header {
-      border-bottom: 2px solid #2563eb;
-      padding-bottom: 20px;
-      margin-bottom: 30px;
-    }
-    .header h1 {
-      color: #2563eb;
-      margin: 0;
-    }
-    .header .date {
-      color: #666;
-      font-size: 14px;
-    }
-    .patient-info {
-      background: #f3f4f6;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 30px;
-    }
-    .patient-info h2 {
-      margin-top: 0;
-      color: #1f2937;
-    }
-    .section {
-      margin-bottom: 30px;
-    }
-    .section h3 {
-      color: #2563eb;
-      border-bottom: 1px solid #e5e7eb;
-      padding-bottom: 10px;
-      margin-bottom: 15px;
-    }
-    .field {
-      margin-bottom: 10px;
-    }
-    .field-label {
-      font-weight: 600;
-      color: #374151;
-    }
-    .soap-note {
-      background: #fff;
-      border: 1px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 15px;
-      margin-bottom: 15px;
-    }
-    .soap-note .date {
-      color: #2563eb;
-      font-weight: 600;
-      margin-bottom: 10px;
-    }
-    .soap-section {
-      margin-bottom: 10px;
-    }
-    .soap-label {
-      font-weight: 600;
-      color: #6b7280;
-    }
-    @media print {
-      body { padding: 0; }
-      .section { page-break-inside: avoid; }
-    }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
+    .header { border-bottom: 2px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px; }
+    .header h1 { color: #2563eb; margin: 0; }
+    .header .date { color: #666; font-size: 14px; }
+    .patient-info { background: #f3f4f6; padding: 15px; border-radius: 8px; margin-bottom: 30px; }
+    .patient-info h2 { margin-top: 0; color: #1f2937; }
+    .section { margin-bottom: 30px; }
+    .section h3 { color: #2563eb; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 15px; }
+    .field { margin-bottom: 10px; }
+    .field-label { font-weight: 600; color: #374151; }
+    .soap-note { background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+    .soap-note .date { color: #2563eb; font-weight: 600; margin-bottom: 10px; }
+    .soap-section { margin-bottom: 10px; }
+    .soap-label { font-weight: 600; color: #6b7280; }
+    @media print { body { padding: 0; } .section { page-break-inside: avoid; } }
   </style>
 </head>
 <body>
@@ -695,67 +553,19 @@ export function formatMedicalRecordAsHTML(summary: MedicalRecordSummary): string
     <h1>Prontuário Eletrônico</h1>
     <div class="date">Gerado em: ${formatDate(summary.generatedAt)}</div>
   </div>
-
   <div class="patient-info">
     <h2>Dados do Paciente</h2>
-    <div class="field">
-      <span class="field-label">Nome:</span> ${summary.patient.name}
-    </div>
+    <div class="field"><span class="field-label">Nome:</span> ${summary.patient.name}</div>
     ${summary.patient.birthDate ? `<div class="field"><span class="field-label">Data de Nascimento:</span> ${formatDate(summary.patient.birthDate)}</div>` : ''}
     ${summary.patient.cpf ? `<div class="field"><span class="field-label">CPF:</span> ${summary.patient.cpf}</div>` : ''}
     ${summary.patient.phone ? `<div class="field"><span class="field-label">Telefone:</span> ${summary.patient.phone}</div>` : ''}
     ${summary.patient.email ? `<div class="field"><span class="field-label">Email:</span> ${summary.patient.email}</div>` : ''}
   </div>
-
-  ${summary.anamnesis ? `
-  <div class="section">
-    <h3>Anamnese</h3>
-    ${summary.anamnesis.chief_complaint ? `<div class="field"><span class="field-label">Queixa Principal:</span> ${summary.anamnesis.chief_complaint}</div>` : ''}
-    ${summary.anamnesis.history_present_illness ? `<div class="field"><span class="field-label">História da Doença Atual:</span> ${summary.anamnesis.history_present_illness}</div>` : ''}
-    ${summary.anamnesis.past_medical_history ? `<div class="field"><span class="field-label">Histórico Médico:</span> ${summary.anamnesis.past_medical_history}</div>` : ''}
-    ${summary.anamnesis.medications?.length ? `<div class="field"><span class="field-label">Medicações:</span> ${summary.anamnesis.medications.join(', ')}</div>` : ''}
-    ${summary.anamnesis.allergies?.length ? `<div class="field"><span class="field-label">Alergias:</span> ${summary.anamnesis.allergies.join(', ')}</div>` : ''}
-  </div>
-  ` : ''}
-
-  ${summary.latestExamination ? `
-  <div class="section">
-    <h3>Exame Físico</h3>
-    ${summary.latestExamination.vital_signs?.blood_pressure ? `<div class="field"><span class="field-label">Pressão Arterial:</span> ${summary.latestExamination.vital_signs.blood_pressure}</div>` : ''}
-    ${summary.latestExamination.vital_signs?.heart_rate ? `<div class="field"><span class="field-label">Frequência Cardíaca:</span> ${summary.latestExamination.vital_signs.heart_rate} bpm</div>` : ''}
-    ${summary.latestExamination.vital_signs?.weight ? `<div class="field"><span class="field-label">Peso:</span> ${summary.latestExamination.vital_signs.weight} kg</div>` : ''}
-    ${summary.latestExamination.musculoskeletal ? `<div class="field"><span class="field-label">Sistema Musculoesquelético:</span> ${summary.latestExamination.musculoskeletal}</div>` : ''}
-  </div>
-  ` : ''}
-
-  ${summary.activePlan ? `
-  <div class="section">
-    <h3>Plano de Tratamento</h3>
-    ${summary.activePlan.diagnosis?.length ? `<div class="field"><span class="field-label">Diagnóstico:</span> ${summary.activePlan.diagnosis.join(', ')}</div>` : ''}
-    ${summary.activePlan.objectives?.length ? `<div class="field"><span class="field-label">Objetivos:</span> ${summary.activePlan.objectives.join(', ')}</div>` : ''}
-    ${summary.activePlan.procedures?.length ? `<div class="field"><span class="field-label">Procedimentos:</span> ${summary.activePlan.procedures.join(', ')}</div>` : ''}
-    ${summary.activePlan.follow_up_date ? `<div class="field"><span class="field-label">Próxima Consulta:</span> ${formatDate(summary.activePlan.follow_up_date)}</div>` : ''}
-  </div>
-  ` : ''}
-
-  ${summary.recentNotes.length > 0 ? `
-  <div class="section">
-    <h3>Evoluções Recentes</h3>
-    ${summary.recentNotes.map((note) => `
-      <div class="soap-note">
-        <div class="date">${formatDate(note.date)}</div>
-        ${note.subjective ? `<div class="soap-section"><span class="soap-label">S (Subjetivo):</span> ${note.subjective}</div>` : ''}
-        ${note.objective ? `<div class="soap-section"><span class="soap-label">O (Objetivo):</span> ${note.objective}</div>` : ''}
-        ${note.assessment ? `<div class="soap-section"><span class="soap-label">A (Avaliação):</span> ${note.assessment}</div>` : ''}
-        ${note.plan ? `<div class="soap-section"><span class="soap-label">P (Plano):</span> ${note.plan}</div>` : ''}
-      </div>
-    `).join('')}
-  </div>
-  ` : ''}
-
-  <div style="margin-top: 50px; text-align: center; color: #9ca3af; font-size: 12px;">
-    Gerado por FisioFlow - Sistema de Gestão para Fisioterapeutas
-  </div>
+  ${summary.anamnesis ? `<div class="section"><h3>Anamnese</h3>${summary.anamnesis.chief_complaint ? `<div class="field"><span class="field-label">Queixa Principal:</span> ${summary.anamnesis.chief_complaint}</div>` : ''}${summary.anamnesis.history_present_illness ? `<div class="field"><span class="field-label">História da Doença Atual:</span> ${summary.anamnesis.history_present_illness}</div>` : ''}${summary.anamnesis.past_medical_history ? `<div class="field"><span class="field-label">Histórico Médico:</span> ${summary.anamnesis.past_medical_history}</div>` : ''}${summary.anamnesis.medications?.length ? `<div class="field"><span class="field-label">Medicações:</span> ${summary.anamnesis.medications.join(', ')}</div>` : ''}${summary.anamnesis.allergies?.length ? `<div class="field"><span class="field-label">Alergias:</span> ${summary.anamnesis.allergies.join(', ')}</div>` : ''}</div>` : ''}
+  ${summary.latestExamination ? `<div class="section"><h3>Exame Físico</h3>${summary.latestExamination.vital_signs?.blood_pressure ? `<div class="field"><span class="field-label">Pressão Arterial:</span> ${summary.latestExamination.vital_signs.blood_pressure}</div>` : ''}${summary.latestExamination.vital_signs?.heart_rate ? `<div class="field"><span class="field-label">Frequência Cardíaca:</span> ${summary.latestExamination.vital_signs.heart_rate} bpm</div>` : ''}${summary.latestExamination.vital_signs?.weight ? `<div class="field"><span class="field-label">Peso:</span> ${summary.latestExamination.vital_signs.weight} kg</div>` : ''}${summary.latestExamination.musculoskeletal ? `<div class="field"><span class="field-label">Sistema Musculoesquelético:</span> ${summary.latestExamination.musculoskeletal}</div>` : ''}</div>` : ''}
+  ${summary.activePlan ? `<div class="section"><h3>Plano de Tratamento</h3>${summary.activePlan.diagnosis?.length ? `<div class="field"><span class="field-label">Diagnóstico:</span> ${summary.activePlan.diagnosis.join(', ')}</div>` : ''}${summary.activePlan.objectives?.length ? `<div class="field"><span class="field-label">Objetivos:</span> ${summary.activePlan.objectives.join(', ')}</div>` : ''}${summary.activePlan.procedures?.length ? `<div class="field"><span class="field-label">Procedimentos:</span> ${summary.activePlan.procedures.join(', ')}</div>` : ''}${summary.activePlan.follow_up_date ? `<div class="field"><span class="field-label">Próxima Consulta:</span> ${formatDate(summary.activePlan.follow_up_date)}</div>` : ''}</div>` : ''}
+  ${summary.recentNotes.length > 0 ? `<div class="section"><h3>Evoluções Recentes</h3>${summary.recentNotes.map((note) => `<div class="soap-note"><div class="date">${formatDate(note.date)}</div>${note.subjective ? `<div class="soap-section"><span class="soap-label">S (Subjetivo):</span> ${note.subjective}</div>` : ''}${note.objective ? `<div class="soap-section"><span class="soap-label">O (Objetivo):</span> ${note.objective}</div>` : ''}${note.assessment ? `<div class="soap-section"><span class="soap-label">A (Avaliação):</span> ${note.assessment}</div>` : ''}${note.plan ? `<div class="soap-section"><span class="soap-label">P (Plano):</span> ${note.plan}</div>` : ''}</div>`).join('')}</div>` : ''}
+  <div style="margin-top: 50px; text-align: center; color: #9ca3af; font-size: 12px;">Gerado por FisioFlow - Sistema de Gestão para Fisioterapeutas</div>
 </body>
 </html>
   `.trim();

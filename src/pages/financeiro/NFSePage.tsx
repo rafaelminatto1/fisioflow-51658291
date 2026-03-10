@@ -1,5 +1,5 @@
 /**
- * NFSe Page - Migrated to Firebase
+ * NFSe Page - Migrated to Workers/Neon
  */
 
 import { useState } from 'react';
@@ -30,15 +30,9 @@ import { Document, Page, Text, View, StyleSheet, PDFDownloadLink } from '@react-
 import { useAuth } from '@/contexts/AuthContext';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { financialApi, type NFSeConfigRecord, type NFSeRecord } from '@/lib/api/workers-client';
 
-interface NFSe {
-  id: string;
-  numero: string;
-  serie: string;
-  tipo: 'entrada' | 'saida';
-  valor: number;
-  data_emissao: string;
-  data_prestacao: string;
+interface NFSe extends NFSeRecord {
   destinatario: {
     nome: string;
     cnpj_cpf: string;
@@ -56,20 +50,9 @@ interface NFSe {
     aliquota: number;
     valor_iss: number;
   };
-  status: 'rascunho' | 'emitida' | 'cancelada' | 'erro';
-  chave_acesso?: string;
-  protocolo?: string;
-  verificacao?: string;
 }
 
-interface NFSConfig {
-  ambiente: 'homologacao' | 'producao';
-  municipio_codigo: string;
-  cnpj_prestador: string;
-  inscricao_municipal: string;
-  aliquota_iss: number;
-  auto_emissao: boolean;
-}
+interface NFSConfig extends NFSeConfigRecord {}
 
 const DEFAULT_NFSE_CONFIG: NFSConfig = {
   ambiente: 'homologacao',
@@ -80,46 +63,28 @@ const DEFAULT_NFSE_CONFIG: NFSConfig = {
   auto_emissao: false,
 };
 
-function getNFSeStorageKey(organizationId: string) {
-  return `nfse:list:${organizationId}`;
-}
-
-function getNFSeConfigStorageKey(organizationId: string) {
-  return `nfse:config:${organizationId}`;
-}
-
-function readNFSeList(organizationId: string): NFSe[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = window.localStorage.getItem(getNFSeStorageKey(organizationId));
-    return raw ? (JSON.parse(raw) as NFSe[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeNFSeList(organizationId: string, items: NFSe[]) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(getNFSeStorageKey(organizationId), JSON.stringify(items));
-}
-
-function readNFSeConfig(organizationId: string): NFSConfig {
-  if (typeof window === 'undefined') return DEFAULT_NFSE_CONFIG;
-  try {
-    const raw = window.localStorage.getItem(getNFSeConfigStorageKey(organizationId));
-    return raw ? { ...DEFAULT_NFSE_CONFIG, ...(JSON.parse(raw) as Partial<NFSConfig>) } : DEFAULT_NFSE_CONFIG;
-  } catch {
-    return DEFAULT_NFSE_CONFIG;
-  }
-}
-
-function writeNFSeConfig(organizationId: string, patch: Partial<NFSConfig>) {
-  const current = readNFSeConfig(organizationId);
-  const next = { ...current, ...patch };
-  if (typeof window !== 'undefined') {
-    window.localStorage.setItem(getNFSeConfigStorageKey(organizationId), JSON.stringify(next));
-  }
-  return next;
+function normalizeNFSe(row: NFSeRecord): NFSe {
+  return {
+    ...row,
+    destinatario: {
+      nome: String((row.destinatario as Record<string, unknown> | undefined)?.nome ?? ''),
+      cnpj_cpf: String((row.destinatario as Record<string, unknown> | undefined)?.cnpj_cpf ?? ''),
+      endereco: ((row.destinatario as Record<string, unknown> | undefined)?.endereco as string | undefined) ?? undefined,
+    },
+    prestador: {
+      nome: String((row.prestador as Record<string, unknown> | undefined)?.nome ?? ''),
+      cnpj: String((row.prestador as Record<string, unknown> | undefined)?.cnpj ?? ''),
+      inscricao_municipal:
+        ((row.prestador as Record<string, unknown> | undefined)?.inscricao_municipal as string | undefined) ?? undefined,
+    },
+    servico: {
+      descricao: String((row.servico as Record<string, unknown> | undefined)?.descricao ?? ''),
+      codigo_cnae: String((row.servico as Record<string, unknown> | undefined)?.codigo_cnae ?? ''),
+      codigo_tributario: String((row.servico as Record<string, unknown> | undefined)?.codigo_tributario ?? ''),
+      aliquota: Number((row.servico as Record<string, unknown> | undefined)?.aliquota ?? 0),
+      valor_iss: Number((row.servico as Record<string, unknown> | undefined)?.valor_iss ?? 0),
+    },
+  };
 }
 
 // Estilos para PDF
@@ -527,7 +492,10 @@ export default function NFSePage() {
     queryKey: ['nfse-list', organizationId],
     queryFn: async () => {
       if (!organizationId) return [];
-      return readNFSeList(organizationId).sort((a, b) => b.data_emissao.localeCompare(a.data_emissao));
+      const response = await financialApi.nfse.list();
+      return (response.data ?? [])
+        .map((row) => normalizeNFSe(row as NFSeRecord))
+        .sort((a, b) => b.data_emissao.localeCompare(a.data_emissao));
     },
     enabled: !!organizationId,
   });
@@ -537,14 +505,15 @@ export default function NFSePage() {
     queryKey: ['nfse-config', organizationId],
     queryFn: async () => {
       if (!organizationId) return null;
-      return readNFSeConfig(organizationId);
+      const response = await financialApi.nfseConfig.get();
+      return response.data ? ({ ...DEFAULT_NFSE_CONFIG, ...response.data } as NFSConfig) : DEFAULT_NFSE_CONFIG;
     },
     enabled: !!organizationId,
   });
 
-  const updateConfig = (patch: Partial<NFSConfig>) => {
+  const updateConfig = async (patch: Partial<NFSConfig>) => {
     if (!organizationId) return;
-    writeNFSeConfig(organizationId, patch);
+    await financialApi.nfseConfig.upsert({ ...config, ...patch });
     queryClient.invalidateQueries({ queryKey: ['nfse-config', organizationId] });
     toast.success('Configuração atualizada!');
   };
@@ -560,13 +529,11 @@ export default function NFSePage() {
       const valorISS = (valorNumerico * aliquota) / 100;
 
       // Gerar número
-      const currentItems = readNFSeList(organizationId);
-      const lastNFSe = [...currentItems].sort((a, b) => b.numero.localeCompare(a.numero))[0] ?? null;
+      const lastNFSe = [...nfses].sort((a, b) => b.numero.localeCompare(a.numero))[0] ?? null;
       const novoNumero = (Number(lastNFSe?.numero) || 0) + 1;
       const profileData = profile as Record<string, unknown> | null;
 
-      const nfse: NFSe = {
-        id: `nfse-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      const nfse: Omit<NFSe, 'id'> = {
         numero: novoNumero.toString().padStart(10, '0'),
         serie: '1',
         tipo: data.tipo,
@@ -597,11 +564,8 @@ export default function NFSePage() {
         status: config?.auto_emissao ? 'emitida' : 'rascunho',
       };
 
-      writeNFSeList(
-        organizationId,
-        [nfse, ...currentItems].sort((a, b) => b.data_emissao.localeCompare(a.data_emissao)),
-      );
-      return nfse;
+      const response = await financialApi.nfse.create(nfse);
+      return normalizeNFSe(response.data as NFSeRecord);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['nfse-list', organizationId] });
@@ -796,8 +760,7 @@ export default function NFSePage() {
                     <Switch
                       checked={config?.auto_emissao || false}
                       onCheckedChange={(checked) => {
-                        // Atualizar configuração
-                        updateConfig({ auto_emissao: checked });
+                        void updateConfig({ auto_emissao: checked });
                       }}
                     />
                   </div>
@@ -807,7 +770,7 @@ export default function NFSePage() {
                     <Select
                       defaultValue={config?.ambiente || 'homologacao'}
                       onValueChange={(v: 'homologacao' | 'producao') => {
-                        updateConfig({ ambiente: v });
+                        void updateConfig({ ambiente: v });
                       }}
                     >
                       <SelectTrigger>
@@ -826,7 +789,7 @@ export default function NFSePage() {
                       defaultValue={config?.municipio_codigo || ''}
                       placeholder="Ex: 3550308 (São Paulo)"
                       onBlur={(e) => {
-                        updateConfig({ municipio_codigo: e.target.value });
+                        void updateConfig({ municipio_codigo: e.target.value });
                       }}
                     />
                   </div>
@@ -837,7 +800,7 @@ export default function NFSePage() {
                       defaultValue={config?.inscricao_municipal || ''}
                       placeholder="Número da inscrição municipal"
                       onBlur={(e) => {
-                        updateConfig({ inscricao_municipal: e.target.value });
+                        void updateConfig({ inscricao_municipal: e.target.value });
                       }}
                     />
                   </div>
@@ -849,7 +812,7 @@ export default function NFSePage() {
                       step="0.01"
                       defaultValue={config?.aliquota_iss?.toString() || '5'}
                       onBlur={(e) => {
-                        updateConfig({ aliquota_iss: parseFloat(e.target.value) || 0 });
+                        void updateConfig({ aliquota_iss: parseFloat(e.target.value) || 0 });
                       }}
                     />
                   </div>

@@ -58,10 +58,13 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
       (typeof neonUser?.organizationId === 'string' && neonUser.organizationId) ||
       (typeof meta.organization_id === 'string' && meta.organization_id) ||
       (typeof meta.organizationId === 'string' && meta.organizationId) ||
+      (adaptedUser as any).organizationId ||
       DEFAULT_ORG_ID;
+
     const role =
       (typeof neonUser?.role === 'string' && neonUser.role) ||
       (typeof meta.role === 'string' && meta.role) ||
+      (adaptedUser as any).role ||
       'admin';
     return {
       id: String(neonUser?.id ?? adaptedUser.uid),
@@ -217,7 +220,6 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     initialized,
     sessionCheckFailed,
     role: profile?.role as UserRole | undefined,
-    organizationId: profile?.organization_id || DEFAULT_ORG_ID,
     signIn,
     signUp,
     signOut,
@@ -225,6 +227,8 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     updatePassword,
     updateProfile,
     refreshProfile: () => loadUserAndProfile(user),
+    organizationId: profile?.organization_id || DEFAULT_ORG_ID,
+    organization_id: profile?.organization_id || DEFAULT_ORG_ID,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

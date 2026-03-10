@@ -13,5 +13,9 @@
     "test:e2e": "playwright test --config=playwright.config.ts",
     "test:e2e:headed": "playwright test --config=playwright.config.ts --headed",
     "test:e2e:debug": "playwright test --config=playwright.config.ts --debug"
+  },
+  "dependencies": {
+    "@neondatabase/neon-js": "0.2.0-beta.1",
+    "better-auth": "^1.5.3"
   }
 }

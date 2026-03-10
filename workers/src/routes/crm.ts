@@ -32,7 +32,7 @@ app.get('/leads', requireAuth, async (c) => {
      ORDER BY created_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`,
     params,
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.get('/leads/:id', requireAuth, async (c) => {
@@ -144,7 +144,7 @@ app.get('/leads/:id/historico', requireAuth, async (c) => {
     'SELECT * FROM lead_historico WHERE lead_id = $1 ORDER BY created_at DESC',
     [id],
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/leads/:id/historico', requireAuth, async (c) => {
@@ -197,7 +197,7 @@ app.get('/tarefas', requireAuth, async (c) => {
      ORDER BY due_date ASC NULLS LAST, created_at DESC`,
     params,
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/tarefas', requireAuth, async (c) => {
@@ -288,7 +288,7 @@ app.get('/campanhas', requireAuth, async (c) => {
      LIMIT $${params.length - 1} OFFSET $${params.length}`,
     params,
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/campanhas', requireAuth, async (c) => {

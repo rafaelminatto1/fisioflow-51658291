@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Sparkles, RefreshCw, Lightbulb } from 'lucide-react';
-import { useAI, AIFeatureCategory } from '@/integrations/firebase/ai';
+import { useAI, AIFeatureCategory } from '@/integrations/neon/ai';
 import { DashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fisioLogger as logger } from '@/lib/errors/logger';

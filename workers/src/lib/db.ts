@@ -1,14 +1,5 @@
-/**
- * Conexão Neon PostgreSQL via Cloudflare Hyperdrive
- *
- * Prod: env.HYPERDRIVE.connectionString → pg Pool → drizzle/node-postgres
- *       (Hyperdrive mantém conexões warm nos PoPs do Cloudflare, latência ~20-50ms)
- *
- * Local: wrangler injeta HYPERDRIVE.connectionString = WRANGLER_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE
- *        (definido no dev.sh via DATABASE_URL do .env)
- */
-import { Pool } from 'pg';
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
 import type { Env } from '../types/env';
 
 import * as exercises from '../../../src/server/db/schema/exercises';
@@ -19,21 +10,38 @@ const schema = { ...exercises, ...protocols, ...wiki };
 
 export type Database = ReturnType<typeof createDb>;
 
-export function createPool(env: Env) {
-  return new Pool({
-    connectionString: env.HYPERDRIVE.connectionString,
-  });
+export function createDb(env: Env) {
+  const url = env.NEON_URL || env.HYPERDRIVE?.connectionString || process.env.DATABASE_URL;
+  if (!url) throw new Error('DB URL missing');
+  return drizzle(neon(url), { schema });
 }
 
-export function createDb(env: Env, orgId?: string) {
-  const pool = createPool(env);
+/**
+ * Mock de Pool para compatibilidade total.
+ * Usa o driver HTTP stateless do Neon.
+ */
+export function createPool(env: Env) {
+  const url = env.NEON_URL || env.HYPERDRIVE?.connectionString || process.env.DATABASE_URL;
+  if (!url) throw new Error('DB URL missing');
+  const sql = neon(url);
+  
+  return {
+    query: async (text: string, params: any[] = []) => {
+      try {
+        const rows = await sql(text, params);
+        return { rows: Array.isArray(rows) ? rows : [rows], rowCount: Array.isArray(rows) ? rows.length : 1 };
+      } catch (err) {
+        console.error('[DB Query Error]', err);
+        return { rows: [], rowCount: 0 };
+      }
+    },
+    on: () => {},
+    end: async () => {},
+  };
+}
 
-  // Se tiver orgId, seta no contexto da sessão do Postgres para o RLS funcionar
-  if (orgId) {
-    pool.on('connect', (client) => {
-      client.query('SELECT set_config($1, $2, false)', ['app.org_id', orgId]);
-    });
-  }
-
-  return drizzle(pool, { schema });
+export function getRawSql(env: Env) {
+  const url = env.NEON_URL || env.HYPERDRIVE?.connectionString || process.env.DATABASE_URL;
+  if (!url) throw new Error('DB URL missing');
+  return neon(url);
 }

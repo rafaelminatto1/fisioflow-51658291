@@ -1,5 +1,5 @@
 /**
- * Schedule Page - Migrated to Firebase
+ * Schedule Page - Migrated to Neon/Cloudflare
  */
 
 import { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';

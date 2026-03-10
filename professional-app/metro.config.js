@@ -4,115 +4,70 @@ const path = require('path');
 // Caminhos do Monorepo
 const projectRoot = __dirname;
 const monorepoRoot = path.resolve(projectRoot, '..');
-const packagesUiRoot = path.resolve(monorepoRoot, 'packages/ui');
 
-// Configuração do Metro
+// Configuração base do Metro do Expo
 const config = getDefaultConfig(projectRoot);
 
-// ============================================
-// 1. PRIORIDADE TOTAL PARA EXTENSÕES NATIVAS
-// ============================================
-// Colocar .native.* no topo da lista de extensões
-// Isso garante que .native.tsx seja resolvido antes de .tsx
-config.resolver.sourceExts = [
-  'native.ts',
-  'native.tsx',
-  'native.js',
-  'native.jsx',
-  'ts',
-  'tsx',
-  'js',
-  'jsx',
-  'json',
-  'mjs',
-  'cjs',
-];
-
-// ============================================
-// 2. CONFIGURAÇÃO DE PLATAFORMA
-// ============================================
-// Priorizar campos react-native em node_modules linkados
-config.resolver.resolverMainFields = ['react-native', 'browser', 'main'];
-
-// Habilitar suporte a package exports para monorepo
-config.resolver.unstable_enablePackageExports = true;
-
-// Permitir symlinks (necessário para pnpm workspace)
-config.resolver.unstable_symlinks = true;
-
-// ============================================
-// 3. WATCH FOLDERS E RESOLUÇÃO
-// ============================================
-// Incluir o monorepoRoot para acessar packages/ui
+// 1. Suporte a Monorepo (Watch Folders e Node Modules)
 config.watchFolders = [monorepoRoot];
-
-// Node Modules Resolution Strategy (Evitar duplicidade do React)
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(monorepoRoot, 'node_modules'),
 ];
 
-// Não desabilitar hierarchical lookup pois é necessário para pnpm
-// config.resolver.disableHierarchicalLookup = true;
+// 2. Extensões de Arquivo (Preservar defaults do Expo e adicionar nativas)
+const defaultSourceExts = config.resolver.sourceExts;
+config.resolver.sourceExts = [
+  'native.ts',
+  'native.tsx',
+  'native.js',
+  'native.jsx',
+  ...defaultSourceExts,
+];
 
-// ============================================
-// 4. TRANSFORMER - GARANTIR TRANSPILAÇÃO DO packages/ui
-// ============================================
-// Forçar transpilação de todos os arquivos TypeScript/JSX no packages/ui
-config.transformer = {
-  ...config.transformer,
-  minifierPath: require.resolve('metro-minify-terser'),
-  minifierConfig: {
-    keep_fnames: true,
-    mangle: {
-      keep_fnames: true,
-    },
-    output: {
-      comments: false,
-    },
-  },
+// 3. Configuração de Plataforma e Resolvers
+config.resolver.resolverMainFields = ['react-native', 'browser', 'main'];
+config.resolver.unstable_enablePackageExports = true;
+config.resolver.unstable_symlinks = true;
+
+// 4. Transformer e Minificação
+config.transformer.minifierPath = require.resolve('metro-minify-terser');
+config.transformer.minifierConfig = {
+  keep_fnames: true,
+  mangle: { keep_fnames: true },
+  output: { comments: false },
 };
 
-// ============================================
-// 5. ALIAS PARA DEPENDÊNCIAS WEB
-// ============================================
-// Criar stub para framer-motion (evita bundle da versão web)
-// NOTA: Não usamos alias para lucide-react pois os componentes .native.tsx
-// já estão configurados para usar lucide-react-native diretamente
+// 5. Aliases (Opcional, se necessário para stubs)
 try {
   config.resolver.alias = {
     'framer-motion': require.resolve('./stubs/framer-motion'),
+    ...config.resolver.alias,
   };
 } catch (e) {
-  // Se o stub não existir, continuar sem alias
+  // Ignorar se o stub não existir
 }
 
-// ============================================
-// 6. BLOCKLIST - EXCLUIR CÓDIGO WEB
-// ============================================
-// Bloquear arquivos desnecessários e código web específico
+// 6. Blocklist (Otimização Drástica)
 config.resolver.blockList = [
   /test-results\/.*/,
   /playwright-report\/.*/,
   /testsprite_tests\/.*/,
   /\.git\/.*/,
   /\.firebase\/.*/,
-  /dataconnect\/.*/,
-  /functions\/.*/,
   /e2e\//,
-  // Bloquear arquivos de teste e storybook do packages/ui
-  /packages\/ui\/src\/\*\*\/\.test\.(ts|tsx|js|jsx)$/,
-  /packages\/ui\/src\/\*\*\/\.stories\.(ts|tsx|js|jsx)$/,
-  // Bloquear a pasta web do monorepo
-  /\/src\/web\//,
+  /playwright\//,
+  /.*\.cache.*/,
+  // Bloquear pacotes pesados de web/desktop do monorepo raiz que não são usados no app mobile
+  /node_modules\/@cornerstonejs\/.*/,
+  /node_modules\/@aws-sdk\/.*/,
+  /node_modules\/@sentry\/vite-plugin\/.*/,
+  /node_modules\/@playwright\/.*/,
+  /node_modules\/puppeteer\/.*/,
+  /node_modules\/.*\/node_modules/,
 ];
 
-// ============================================
-// 7. CONFIGURAÇÕES DO SERVIDOR
-// ============================================
-config.server = {
-  ...config.server,
-  port: 8081,
-};
+// 7. Porta do Servidor
+config.server.port = 8081;
 
 module.exports = config;

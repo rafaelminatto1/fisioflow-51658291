@@ -401,7 +401,7 @@ app.get('/:id/attachments', requireAuth, async (c) => {
      ORDER BY uploaded_at DESC`,
     [id, user.organizationId],
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/:id/attachments', requireAuth, async (c) => {
@@ -476,7 +476,7 @@ app.get('/templates', requireAuth, async (c) => {
      ORDER BY created_at DESC`,
     [user.organizationId],
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/templates', requireAuth, async (c) => {

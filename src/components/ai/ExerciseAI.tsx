@@ -59,7 +59,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import type { Exercise, Patient, SOAPRecord } from '@/types';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { generateExercisePlanWithIA, type ExercisePlanResponse } from '@/services/ai/firebaseAIService';
+import { generateExercisePlanWithIA, type ExercisePlanResponse } from '@/services/ai/geminiAiService';
 
 const NO_PATIENT_ERROR_MSG =
   'Abra a IA Assistente no perfil de um paciente para recomendações personalizadas.';
@@ -246,7 +246,7 @@ export function ExerciseAI({
       setProgress(50);
 
       // Firebase Cloud Functions - aiExerciseSuggestion
-      const { getExerciseSuggestions } = await import('@/services/ai/firebaseAIService');
+      const { getExerciseSuggestions } = await import('@/services/ai/geminiAiService');
       const result = await getExerciseSuggestions({
         patientId,
         goals: goals ?? [],
