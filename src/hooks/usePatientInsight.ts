@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { chatWithClinicalAssistant } from '@/services/ai/firebaseAIService';
+import { chatWithClinicalAssistant } from '@/services/ai/geminiAiService';
 
 interface PatientInsightResponse {
     insight: string;

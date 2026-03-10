@@ -18,7 +18,7 @@ import { Send, Sparkles, User, Bot, Volume2, VolumeX, Zap } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useToast } from '@/hooks/use-toast';
 import { getGeminiClient, chat as geminiChat, GeminiModel } from '@/lib/integrations/google/client';
-import { chatWithClinicalAssistant } from '@/services/ai/firebaseAIService';
+import { chatWithClinicalAssistant } from '@/services/ai/geminiAiService';
 
 // Web Speech API Types
 interface SpeechRecognitionEvent extends Event {

@@ -1,15 +1,16 @@
 /**
- * Appointment Reminder Workflow - Migrated to Firebase
+ * Appointment Reminder Workflow - Migrated to Neon/Cloudflare
  *
  */
 
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
-import { getAdminDb, batchFetchDocuments } from '../../lib/firebase/admin.js';
 import {
   getAppointmentById,
   getAppointmentsForReminder,
   getPatientsByIds,
+  getOrganizationsByIds,
+  getProfilesByIds,
 } from './_shared/neon-patients-appointments';
 
 type AppointmentWithRelations = {
@@ -35,21 +36,20 @@ type AppointmentWithRelations = {
 };
 
 async function getAppointmentsWithRelations(startDate: Date, endDate: Date): Promise<AppointmentWithRelations[]> {
-  const db = getAdminDb();
   const appointmentsFromNeon = await getAppointmentsForReminder(startDate, endDate);
   if (!appointmentsFromNeon.length) {
     return [];
   }
 
-  // Buscar dados relacionados em lote (pacientes no Neon, org/perfis ainda no Firebase)
+  // Buscar dados relacionados em lote no Neon
   const patientIds = appointmentsFromNeon.map((a) => a.patient_id).filter(Boolean);
   const orgIds = appointmentsFromNeon.map((a) => a.organization_id).filter(Boolean);
   const therapistIds = appointmentsFromNeon.map((a) => a.therapist_id).filter(Boolean);
 
   const [patientMap, orgMap, therapistMap] = await Promise.all([
     getPatientsByIds(patientIds),
-    batchFetchDocuments('organizations', orgIds),
-    batchFetchDocuments('profiles', therapistIds),
+    getOrganizationsByIds(orgIds),
+    getProfilesByIds(therapistIds),
   ]);
 
   const appointments: AppointmentWithRelations[] = [];
@@ -71,15 +71,13 @@ async function getAppointmentsWithRelations(startDate: Date, endDate: Date): Pro
       },
       organization: {
         id: appointment.organization_id || 'unknown',
-        name: (org as { name?: string } | null)?.name || 'Unknown',
-        settings: (org as { settings?: { email_enabled?: boolean; whatsapp_enabled?: boolean } } | null)?.settings,
+        name: org?.name || 'Unknown',
+        settings: org?.settings,
       },
       therapist: appointment.therapist_id
         ? {
           id: appointment.therapist_id,
-          full_name: (therapist as { full_name?: string; name?: string } | undefined)?.full_name
-            || (therapist as { full_name?: string; name?: string } | undefined)?.name
-            || 'Fisioterapeuta',
+          full_name: therapist?.full_name || therapist?.name || 'Fisioterapeuta',
         }
         : undefined,
     });
@@ -197,7 +195,6 @@ export const appointmentCreatedWorkflow = inngest.createFunction(
     event: Events.APPOINTMENT_CREATED,
   },
   async ({ event, step }: { event: { data: { appointmentId: string } }; step: InngestStep }) => {
-    const db = getAdminDb();
     const { appointmentId } = event.data;
 
     // 1. Fetch complete appointment details
@@ -207,18 +204,16 @@ export const appointmentCreatedWorkflow = inngest.createFunction(
         throw new Error('Appointment not found');
       }
 
-      // Buscar relações em lote
-      const [patientSnap, orgSnap, therapistSnap] = await Promise.all([
-        Promise.resolve(appointmentData.patient_id).then((id) => getPatientsByIds([id])).then((map) => map.get(appointmentData.patient_id) ?? null),
-        appointmentData.organization_id
-          ? db.collection('organizations').doc(appointmentData.organization_id).get()
-          : Promise.resolve({ exists: false } as { exists: false }),
-        appointmentData.therapist_id ? db.collection('profiles').doc(appointmentData.therapist_id).get() : Promise.resolve({ exists: false }),
+      // Buscar relações em lote no Neon
+      const [patientMap, orgMap, therapistMap] = await Promise.all([
+        getPatientsByIds([appointmentData.patient_id]),
+        appointmentData.organization_id ? getOrganizationsByIds([appointmentData.organization_id]) : Promise.resolve(new Map()),
+        appointmentData.therapist_id ? getProfilesByIds([appointmentData.therapist_id]) : Promise.resolve(new Map()),
       ]);
 
-      const patient = patientSnap ? { id: patientSnap.id, ...patientSnap } : null;
-      const organization = orgSnap.exists ? { id: orgSnap.id, ...orgSnap.data() } : null;
-      const therapist = therapistSnap.exists ? { id: therapistSnap.id, ...therapistSnap.data() } : null;
+      const patient = patientMap.get(appointmentData.patient_id) || null;
+      const organization = appointmentData.organization_id ? orgMap.get(appointmentData.organization_id) : null;
+      const therapist = appointmentData.therapist_id ? therapistMap.get(appointmentData.therapist_id) : null;
 
       return {
         ...appointmentData,

@@ -60,7 +60,12 @@
     },
     "owner": "rafaelminatto",
     "updates": {
-      "url": "https://u.expo.dev/8e006901-c021-464d-bbcd-96d821ab62d0"
-    }
+      "url": "https://u.expo.dev/8e006901-c021-464d-bbcd-96d821ab62d0",
+      "checkOnLaunch": "NEVER",
+      "enabled": true
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
   }
 }

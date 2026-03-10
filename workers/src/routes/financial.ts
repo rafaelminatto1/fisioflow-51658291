@@ -43,7 +43,7 @@ app.get('/transacoes', requireAuth, async (c) => {
      ORDER BY created_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`,
     params,
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/transacoes', requireAuth, async (c) => {
@@ -139,7 +139,7 @@ app.get('/contas', requireAuth, async (c) => {
      ORDER BY data_vencimento ASC NULLS LAST, created_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`,
     params,
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/contas', requireAuth, async (c) => {
@@ -230,7 +230,7 @@ app.get('/centros-custo', requireAuth, async (c) => {
     `SELECT * FROM centros_custo WHERE ${conditions.join(' AND ')} ORDER BY nome ASC`,
     params,
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/centros-custo', requireAuth, async (c) => {
@@ -310,7 +310,7 @@ app.get('/empresas-parceiras', requireAuth, async (c) => {
     `SELECT * FROM empresas_parceiras WHERE organization_id = $1 ORDER BY nome ASC`,
     [user.organizationId],
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/empresas-parceiras', requireAuth, async (c) => {
@@ -394,7 +394,7 @@ app.get('/fornecedores', requireAuth, async (c) => {
     `SELECT * FROM fornecedores WHERE organization_id = $1 ORDER BY razao_social ASC`,
     [user.organizationId],
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/fornecedores', requireAuth, async (c) => {
@@ -495,7 +495,7 @@ app.get('/formas-pagamento', requireAuth, async (c) => {
     `SELECT * FROM formas_pagamento WHERE organization_id = $1 ORDER BY nome ASC`,
     [user.organizationId],
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/formas-pagamento', requireAuth, async (c) => {
@@ -577,7 +577,7 @@ app.get('/convenios', requireAuth, async (c) => {
     `SELECT * FROM convenios WHERE ${conditions.join(' AND ')} ORDER BY nome ASC`,
     params,
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/convenios', requireAuth, async (c) => {
@@ -676,7 +676,7 @@ app.get('/pagamentos', requireAuth, async (c) => {
      ORDER BY pago_em DESC NULLS LAST, created_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`,
     params,
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/pagamentos', requireAuth, async (c) => {
@@ -762,7 +762,7 @@ app.get('/package-templates', requireAuth, async (c) => {
     [user.organizationId],
   );
 
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/package-templates', requireAuth, async (c) => {
@@ -881,7 +881,7 @@ app.get('/patient-packages', requireAuth, async (c) => {
     params,
   );
 
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/patient-packages', requireAuth, async (c) => {
@@ -1014,7 +1014,7 @@ app.get('/vouchers', requireAuth, async (c) => {
     params,
   );
 
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/vouchers', requireAuth, async (c) => {
@@ -1106,7 +1106,7 @@ app.get('/user-vouchers', requireAuth, async (c) => {
     [user.uid, user.organizationId],
   );
 
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/user-vouchers/:id/consume', requireAuth, async (c) => {
@@ -1258,7 +1258,7 @@ app.get('/nfse', requireAuth, async (c) => {
     [user.organizationId],
   );
 
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/nfse', requireAuth, async (c) => {

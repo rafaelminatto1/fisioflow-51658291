@@ -1,5 +1,5 @@
 /**
- * Hooks para analytics e métricas da clínica - Migrated to Firebase
+ * Hooks para analytics e métricas da clínica - Migrated to Neon/Cloudflare
  * @module hooks/useClinicAnalytics
  */
 

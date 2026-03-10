@@ -197,14 +197,15 @@ function cleanRequestData(data: Record<string, any>): Record<string, any> {
 interface FetchOptions extends RequestInit {
   data?: any;
   params?: Record<string, string | number | boolean | undefined>;
+  timeout?: number;
 }
 
-async function fetchApi<T>(
+export async function fetchApi<T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<T> {
   const token = await getAuthToken();
-  const { data, params, ...fetchInit } = options;
+  const { data, params, timeout = 10000, ...fetchInit } = options;
 
   let url = `${config.apiUrl}${endpoint}`;
   
@@ -221,7 +222,7 @@ async function fetchApi<T>(
     }
   }
 
-  const method = fetchInit.method || 'GET';
+  const method = fetchInit.method || (data ? 'POST' : 'GET');
   const headers = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`,
@@ -232,13 +233,18 @@ async function fetchApi<T>(
 
   console.log(`[API] ${method} ${url}`);
 
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+
   try {
     const response = await fetch(url, {
       ...fetchInit,
       method,
       headers,
       body,
+      signal: controller.signal,
     });
+    clearTimeout(id);
 
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}`;
@@ -260,7 +266,11 @@ async function fetchApi<T>(
     }
 
     return response.json() as Promise<T>;
-  } catch (error) {
+  } catch (error: any) {
+    clearTimeout(id);
+    if (error.name === 'AbortError') {
+      throw new Error('Tempo de conexão esgotado (timeout)');
+    }
     console.error(`[API] ${method} ${endpoint}:`, error);
     throw error;
   }

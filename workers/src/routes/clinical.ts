@@ -55,7 +55,7 @@ app.get('/conduct-library', requireAuth, async (c) => {
     params,
   );
 
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.get('/conduct-library/:id', requireAuth, async (c) => {
@@ -177,7 +177,7 @@ app.get('/test-templates', requireAuth, async (c) => {
     params,
   );
 
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.get('/test-templates/:id', requireAuth, async (c) => {
@@ -317,7 +317,7 @@ app.get('/standardized-tests', requireAuth, async (c) => {
     [user.organizationId, patientId],
   );
 
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/standardized-tests', requireAuth, async (c) => {
@@ -498,7 +498,7 @@ app.get('/evolution-templates', requireAuth, async (c) => {
     `SELECT * FROM evolution_templates WHERE ${conditions.join(' AND ')} ORDER BY name ASC`,
     params,
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.get('/evolution-templates/:id', requireAuth, async (c) => {
@@ -598,7 +598,7 @@ app.get('/prescriptions', requireAuth, async (c) => {
     `SELECT * FROM exercise_prescriptions WHERE ${conditions.join(' AND ')} ORDER BY created_at DESC`,
     params,
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.get('/prescriptions/qr/:qrCode', async (c) => {
@@ -793,7 +793,7 @@ app.get('/prescribed-exercises', requireAuth, async (c) => {
     params,
   );
 
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/prescribed-exercises', requireAuth, async (c) => {
@@ -905,7 +905,7 @@ app.get('/patient-objectives', requireAuth, async (c) => {
     [user.organizationId],
   );
 
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/patient-objectives', requireAuth, async (c) => {

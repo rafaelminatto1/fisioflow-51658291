@@ -1,18 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-
-import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-  orderBy,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { profApi } from '@/lib/api';
 import { useAuth } from './useAuth';
 import type { Appointment, AppointmentStatus } from '@/types';
 
@@ -22,7 +9,7 @@ export function useAppointments() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  const fetchData = useCallback(() => {
+  const fetchData = useCallback(async () => {
     if (!profile?.id) {
       setLoading(false);
       return;
@@ -31,61 +18,49 @@ export function useAppointments() {
     setLoading(true);
     setError(null);
 
-    // Query appointments for this therapist
-    const q = query(
-      collection(db, 'appointments'),
-      where('therapist_id', '==', profile.id),
-      orderBy('date', 'asc'),
-      orderBy('time', 'asc')
-    );
+    try {
+      // No Neon/REST, buscamos um range de datas ou todos para o terapeuta
+      // O backend via Workers já filtra pelo organization_id/therapist_id do token
+      const appointments = await profApi.getAppointments('', '');
+      
+      const mappedAppointments: Appointment[] = appointments.map((item: any) => ({
+        id: item.id,
+        patientId: item.patient_id || '',
+        patientName: item.patient_name || 'Paciente',
+        date: item.date || '',
+        time: item.time || '',
+        duration: item.duration || 60,
+        type: item.type || 'Fisioterapia',
+        status: item.status || 'agendado',
+        notes: item.notes,
+        phone: item.phone,
+        therapistId: item.therapist_id,
+        room: item.room,
+        createdAt: new Date(item.created_at),
+        updatedAt: new Date(item.updated_at),
+      }));
 
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const appointments: Appointment[] = [];
-        snapshot.forEach((doc) => {
-          const data = doc.data();
-          appointments.push({
-            id: doc.id,
-            patientId: data.patient_id || '',
-            patientName: data.patient_name || 'Paciente',
-            date: data.date || data.appointment_date || '',
-            time: data.time || data.appointment_time || data.start_time || '',
-            duration: data.duration || 60,
-            type: data.type || 'Fisioterapia',
-            status: data.status || 'agendado',
-            notes: data.notes,
-            phone: data.phone,
-            therapistId: data.therapist_id,
-            room: data.room,
-            createdAt: data.created_at?.toDate?.() || new Date(),
-            updatedAt: data.updated_at?.toDate?.() || new Date(),
-          } as Appointment);
-        });
-        setData(appointments);
-        setLoading(false);
-      },
-      (err) => {
-        console.error('Error fetching appointments:', err);
-        setError(err as Error);
-        setLoading(false);
-      }
-    );
-
-    return unsubscribe;
+      setData(mappedAppointments);
+    } catch (err) {
+      console.error('Error fetching appointments:', err);
+      setError(err as Error);
+    } finally {
+      setLoading(false);
+    }
   }, [profile?.id]);
 
   useEffect(() => {
-    const unsubscribe = fetchData();
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
+    fetchData();
+    
+    // Simulação de "realtime" via polling (melhor que onSnapshot para serverless)
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
   }, [fetchData]);
 
   // Create new appointment
   const create = useCallback(async (appointment: Omit<Appointment, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      const docRef = await addDoc(collection(db, 'appointments'), {
+      const result = await profApi.createAppointment({
         patient_id: appointment.patientId,
         patient_name: appointment.patientName,
         date: appointment.date,
@@ -95,35 +70,27 @@ export function useAppointments() {
         status: appointment.status || 'agendado',
         notes: appointment.notes,
         phone: appointment.phone,
-        therapist_id: profile?.id,
         room: appointment.room,
-        created_at: serverTimestamp(),
-        updated_at: serverTimestamp(),
       });
-      return docRef.id;
+      
+      await fetchData(); // Refresh local
+      return result.id;
     } catch (err) {
       console.error('Error creating appointment:', err);
       throw err;
     }
-  }, [profile?.id]);
+  }, [fetchData]);
 
   // Update appointment
   const update = useCallback(async (id: string, updates: Partial<Appointment>) => {
     try {
-      await updateDoc(doc(db, 'appointments', id), {
-        ...(updates.status && { status: updates.status }),
-        ...(updates.notes !== undefined && { notes: updates.notes }),
-        ...(updates.date && { date: updates.date }),
-        ...(updates.time && { time: updates.time }),
-        ...(updates.type && { type: updates.type }),
-        ...(updates.duration && { duration: updates.duration }),
-        updated_at: serverTimestamp(),
-      });
+      await profApi.updateAppointment(id, updates);
+      await fetchData();
     } catch (err) {
       console.error('Error updating appointment:', err);
       throw err;
     }
-  }, []);
+  }, [fetchData]);
 
   // Update appointment status
   const updateStatus = useCallback(async (id: string, status: AppointmentStatus) => {
@@ -133,12 +100,13 @@ export function useAppointments() {
   // Delete appointment
   const remove = useCallback(async (id: string) => {
     try {
-      await deleteDoc(doc(db, 'appointments', id));
+      await api.delete(`/api/prof/appointments/${id}`);
+      await fetchData();
     } catch (err) {
       console.error('Error deleting appointment:', err);
       throw err;
     }
-  }, []);
+  }, [fetchData]);
 
   return { data, loading, error, refetch: fetchData, create, update, updateStatus, remove };
 }

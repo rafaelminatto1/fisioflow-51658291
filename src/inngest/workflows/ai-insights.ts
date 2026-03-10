@@ -1,5 +1,5 @@
 /**
- * AI Patient Insights Workflow - Migrated to Firebase
+ * AI Patient Insights Workflow - Migrated to Neon
  *
  */
 
@@ -9,25 +9,18 @@ import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { getAdminDb } from '../../lib/firebase/admin.js';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
-import { getPatientById } from './_shared/neon-patients-appointments';
+import { 
+  getPatientById, 
+  getLatestSessionsByPatient, 
+  storePatientInsight 
+} from './_shared/neon-patients-appointments';
 
 type PatientData = {
   id: string;
   name: string;
   date_of_birth: string;
   main_complaint?: string;
-  sessions?: Array<{
-    id?: string;
-    pain_level_after?: number;
-    created_at?: string;
-    patient_id?: string;
-    subjective?: string;
-    objective?: string;
-    assessment?: string;
-    plan?: string;
-  }>;
+  sessions?: any[];
 };
 
 const insightSchema = z.object({
@@ -49,23 +42,15 @@ export const aiPatientInsightsWorkflow = inngest.createFunction(
   },
   async ({ event, step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
     const { patientId, organizationId } = event.data;
-    const db = getAdminDb();
 
-    // Step 1: Fetch patient data
+    // Step 1: Fetch patient data (Neon)
     const patient = await step.run('fetch-patient-data', async (): Promise<PatientData> => {
       const patientData = await getPatientById(String(patientId));
       if (!patientData) {
         throw new Error('Patient not found');
       }
 
-      // Fetch sessions for this patient (last 10)
-      const sessionsSnapshot = await db.collection('soap_records')
-        .where('patient_id', '==', patientId)
-        .orderBy('created_at', 'desc')
-        .limit(10)
-        .get();
-
-      const sessions = sessionsSnapshot.docs.map(doc => ({ id: doc.id, ...normalizeFirestoreData(doc.data()) }));
+      const sessions = await getLatestSessionsByPatient(String(patientId), 10);
 
       return {
         id: patientData.id,
@@ -78,9 +63,8 @@ export const aiPatientInsightsWorkflow = inngest.createFunction(
     // Step 2: Generate AI insights
     const insights = await step.run('generate-ai-insights', async (): Promise<z.infer<typeof insightSchema>> => {
       const sessions = patient.sessions || [];
-      const recentSessions = sessions.slice(-10);
-
-      if (recentSessions.length === 0) {
+      
+      if (sessions.length === 0) {
         return {
           summary: 'Insufficient data for analysis',
           trends: [],
@@ -100,8 +84,8 @@ Patient: ${patient.name}
 Age: ${patient.date_of_birth}
 Main Complaint: ${patient.main_complaint || 'Not specified'}
 
-Recent Sessions (${recentSessions.length}):
-${recentSessions.map((s, i: number) => `
+Recent Sessions (${sessions.length}):
+${sessions.map((s, i: number) => `
 Session ${i + 1} (${s.created_at}):
 - Subjective: ${s.subjective || 'N/A'}
 - Objective: ${s.objective || 'N/A'}
@@ -130,23 +114,15 @@ Please provide:
       }
     });
 
-    // Step 3: Store insights in database
+    // Step 3: Store insights in database (Neon)
     await step.run('store-insights', async () => {
-      await db.collection('patient_insights').add({
-        patient_id: patientId,
-        organization_id: organizationId,
+      await storePatientInsight({
+        patient_id: String(patientId),
+        organization_id: String(organizationId),
         insights: insights,
-        generated_at: new Date().toISOString(),
       });
 
       return { stored: true };
-    });
-
-    // Step 4: Invalidate cache
-    await step.run('invalidate-cache', async () => {
-      // Invalidate patient cache
-      // TODO: Use KVCacheService
-      return { invalidated: true };
     });
 
     return {
@@ -154,53 +130,6 @@ Please provide:
       timestamp: new Date().toISOString(),
       patientId,
       insights,
-    };
-  }
-);
-
-export const aiBatchInsightsWorkflow = inngest.createFunction(
-  {
-    id: 'fisioflow-ai-batch-insights',
-    name: 'Generate Batch AI Insights',
-    retries: retryConfig.api.maxAttempts,
-    concurrency: 3,
-  },
-  {
-    event: 'ai/batch.insights',
-  },
-  async ({ event, step }: { event: { data: Record<string, unknown> }; step: InngestStep }) => {
-    const { organizationId, patientIds } = event.data;
-
-    // Validate input
-    if (!Array.isArray(patientIds) || patientIds.length === 0) {
-      return {
-        success: false,
-        error: 'No patient IDs provided',
-        queued: 0,
-        timestamp: new Date().toISOString(),
-      };
-    }
-
-    const results = await step.run('process-batch', async (): Promise<{ queued: number }> => {
-      const events = (patientIds as string[]).map((patientId) => ({
-        name: Events.AI_PATIENT_INSIGHTS,
-        data: {
-          patientId,
-          organizationId,
-        },
-      }));
-
-      await inngest.send(events);
-
-      return {
-        queued: events.length,
-      };
-    });
-
-    return {
-      success: true,
-      queued: results.queued,
-      timestamp: new Date().toISOString(),
     };
   }
 );

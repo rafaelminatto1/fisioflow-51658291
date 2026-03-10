@@ -1,5 +1,5 @@
 /**
- * useNotificationPreferences - Migrated to Firebase
+ * useNotificationPreferences - Migrated to Neon/Cloudflare
  *
  */
 

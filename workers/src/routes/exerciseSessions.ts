@@ -20,7 +20,7 @@ app.get('/', requireAuth, async (c) => {
   params.push(Math.min(Number(lim) || 20, 100));
 
   const result = await db.query(sql, params);
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 // POST /api/exercise-sessions

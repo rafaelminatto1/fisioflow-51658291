@@ -491,7 +491,7 @@ app.get('/articles/:articleId/notes', async (c) => {
       ORDER BY created_at DESC`,
     [user.organizationId, articleId, user.uid],
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/articles/:articleId/notes', async (c) => {

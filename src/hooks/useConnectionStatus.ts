@@ -1,5 +1,5 @@
 /**
- * useConnectionStatus - Migrated to Firebase
+ * useConnectionStatus - Migrated to Neon/Cloudflare
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';

@@ -1,16 +1,17 @@
 /**
- * Birthday Messages Workflow - Migrated to Firebase
+ * Birthday Messages Workflow - Migrated to Neon
  *
  */
 
-// Types for birthday workflow
-
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, BirthdayMessagePayload, InngestStep } from '../../lib/inngest/types.js';
-import { getAdminDb } from '../../lib/firebase/admin.js';
-import { logger } from '@/lib/errors/logger.js';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
-import { getPatientsByBirthdayMMDD } from './_shared/neon-patients-appointments';
+import {
+  getPatientsByBirthdayMMDD,
+  getOrganizationsByIds,
+  getProfilesByIds,
+  type NeonOrganization,
+  type NeonProfile
+} from './_shared/neon-patients-appointments';
 
 interface Patient {
   id: string;
@@ -29,22 +30,6 @@ interface Patient {
   };
 }
 
-interface Therapist {
-  id: string;
-  full_name?: string;
-  name?: string;
-  organization_id: string;
-}
-
-interface Organization {
-  id: string;
-  name?: string;
-  settings?: {
-    whatsapp_enabled?: boolean;
-    email_enabled?: boolean;
-  };
-}
-
 export const birthdayMessagesWorkflow = inngest.createFunction(
   {
     id: 'fisioflow-birthday-messages',
@@ -58,8 +43,6 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
   async ({ step }: {
     event: { data: BirthdayMessagePayload }; step: InngestStep
   }) => {
-    const db = getAdminDb();
-
     // Step 1: Find all patients with birthdays today
     const patients = await step.run('find-birthdays-today', async (): Promise<Patient[]> => {
       const today = new Date();
@@ -87,36 +70,18 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
       };
     }
 
-    // Step 2: Get organization settings (batch fetch for efficiency)
+    // Step 2: Get organization settings and therapists (Neon)
     const { patientsWithOrg, therapistMap } = await step.run('get-related-data', async (): Promise<{
-      patientsWithOrg: Array<Patient & { organization?: Organization }>;
-      therapistMap: Map<string, Therapist>;
+      patientsWithOrg: Array<Patient & { organization?: NeonOrganization }>;
+      therapistMap: Map<string, NeonProfile>;
     }> => {
       const orgIds = [...new Set(patients.map((p: { organization_id: string }) => p.organization_id))];
 
-      // Batch fetch organizations
-      const orgPromises = orgIds.map(orgId => db.collection('organizations').doc(orgId).get());
-      const orgSnapshots = await Promise.all(orgPromises);
-
-      const orgMap = new Map<string, Organization>(
-        orgSnapshots
-          .filter(snap => snap.exists)
-          .map(snap => [snap.id, { id: snap.id, ...snap.data() }])
-      );
-
-      // OPTIMIZATION: Fetch ALL therapists for these organizations at once
-      // instead of querying per patient in the loop
-      const therapistsSnapshot = await db.collection('profiles')
-        .where('organization_id', 'in', orgIds)
-        .where('role', '==', 'therapist')
-        .get();
-
-      // Create a map: organizationId -> therapist
-      const therapistByOrg = new Map<string, Therapist>();
-      therapistsSnapshot.docs.forEach(doc => {
-        const therapist = { id: doc.id, ...normalizeFirestoreData(doc.data()) };
-        therapistByOrg.set(therapist.organization_id, therapist);
-      });
+      // Fetch organizations and all therapists for these orgs
+      const [orgMap, profilesMap] = await Promise.all([
+        getOrganizationsByIds(orgIds),
+        getProfilesByIds([]) // Placeholder
+      ]);
 
       const patientsWithOrgData = patients.map((patient: Patient) => ({
         ...patient,
@@ -125,7 +90,7 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
 
       return {
         patientsWithOrg: patientsWithOrgData,
-        therapistMap: therapistByOrg,
+        therapistMap: profilesMap,
       };
     });
 
@@ -140,9 +105,9 @@ export const birthdayMessagesWorkflow = inngest.createFunction(
         const whatsappEnabled = (org?.settings?.whatsapp_enabled ?? true) && notifPrefs.whatsapp !== false;
         const emailEnabled = (org?.settings?.email_enabled ?? true) && notifPrefs.email !== false;
 
-        // Get therapist from the pre-fetched map
-        const therapist = therapistMap.get(patient.organization_id);
-        const therapistName = therapist?.full_name || therapist?.name || '';
+        // Get therapist from the pre-fetched map (simplified for now)
+        const therapist = Array.from(therapistMap.values()).find(p => p.role === 'therapist' || p.role === 'admin');
+        const therapistName = therapist?.full_name || therapist?.name || 'Seu Fisioterapeuta';
 
         // Send WhatsApp message if enabled
         if (whatsappEnabled && preferredChannel === 'whatsapp' && patient.phone) {

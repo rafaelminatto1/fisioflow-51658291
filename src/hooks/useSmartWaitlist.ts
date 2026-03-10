@@ -1,5 +1,5 @@
 /**
- * useSmartWaitlist - Migrated to Firebase
+ * useSmartWaitlist - Migrated to Neon/Cloudflare
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

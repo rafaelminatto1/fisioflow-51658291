@@ -66,6 +66,15 @@ const Financial = () => {
     _isDeleting,
   } = useFinancial();
 
+  const safeStats = {
+    totalRevenue: stats?.totalRevenue ?? 0,
+    monthlyGrowth: stats?.monthlyGrowth ?? 0,
+    pendingPayments: stats?.pendingPayments ?? 0,
+    paidCount: stats?.paidCount ?? 0,
+    totalCount: stats?.totalCount ?? 0,
+    averageTicket: stats?.averageTicket ?? 0,
+  };
+
   const handleNewTransaction = () => {
     setEditingTransaction(null);
     setIsModalOpen(true);
@@ -97,11 +106,11 @@ const Financial = () => {
     setIsExporting(true);
     try {
       await exportFinancialReport({
-        totalRevenue: stats.totalRevenue,
-        pendingPayments: stats.pendingPayments,
-        paidCount: stats.paidCount,
-        totalCount: stats.totalCount,
-        averageTicket: stats.averageTicket,
+        totalRevenue: safeStats.totalRevenue,
+        pendingPayments: safeStats.pendingPayments,
+        paidCount: safeStats.paidCount,
+        totalCount: safeStats.totalCount,
+        averageTicket: safeStats.averageTicket,
         transactions: transactions.map(t => ({
           id: t.id,
           tipo: t.tipo,
@@ -168,11 +177,11 @@ const Financial = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-6 pb-6">
-              <p className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">R$ {stats?.totalRevenue.toLocaleString('pt-BR')}</p>
+              <p className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">R$ {safeStats.totalRevenue.toLocaleString('pt-BR')}</p>
               <div className="flex items-center mt-2">
                 <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-600 border-none text-[10px] font-bold px-2 py-0">
                   <TrendingUp className="h-3 w-3 mr-1" />
-                  +{stats?.monthlyGrowth.toFixed(1)}%
+                  +{safeStats.monthlyGrowth.toFixed(1)}%
                 </Badge>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-2">vs anterior</span>
               </div>
@@ -189,7 +198,7 @@ const Financial = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-6 pb-6">
-              <p className="text-3xl font-black tracking-tighter text-amber-600">R$ {stats?.pendingPayments.toLocaleString('pt-BR')}</p>
+              <p className="text-3xl font-black tracking-tighter text-amber-600">R$ {safeStats.pendingPayments.toLocaleString('pt-BR')}</p>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2">{transactions.filter(t => t.status === 'pendente').length} em aberto</p>
             </CardContent>
           </Card>
@@ -204,7 +213,7 @@ const Financial = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="px-6 pb-6">
-              <p className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">R$ {stats?.averageTicket.toLocaleString('pt-BR')}</p>
+              <p className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">R$ {safeStats.averageTicket.toLocaleString('pt-BR')}</p>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2">Média p/ sessão</p>
             </CardContent>
           </Card>
@@ -220,9 +229,9 @@ const Financial = () => {
             </CardHeader>
             <CardContent className="px-6 pb-6">
               <p className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">
-                {stats?.totalCount ? Math.round((stats.paidCount / stats.totalCount) * 100) : 0}%
+                {safeStats.totalCount ? Math.round((safeStats.paidCount / safeStats.totalCount) * 100) : 0}%
               </p>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2">{stats?.paidCount} de {stats?.totalCount} realizados</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-2">{safeStats.paidCount} de {safeStats.totalCount} realizados</p>
             </CardContent>
           </Card>
         </div>

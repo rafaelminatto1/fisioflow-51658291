@@ -41,7 +41,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { uploadToR2 } from '@/lib/storage/r2-storage';
-import { analyzeMovement } from '@/services/ai/firebaseAIService';
+import { analyzeMovement } from '@/services/ai/geminiAiService';
 
 // ============================================================================
 // TYPES

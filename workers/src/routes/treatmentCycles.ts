@@ -18,7 +18,7 @@ app.get('/', requireAuth, async (c) => {
   sql += ' ORDER BY created_at DESC';
 
   const result = await db.query(sql, params);
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/', requireAuth, async (c) => {

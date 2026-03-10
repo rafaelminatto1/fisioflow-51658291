@@ -1,5 +1,5 @@
 /**
- * useStandardForms - Migrated to Firebase
+ * useStandardForms - Migrated to Neon/Cloudflare
  *
  */
 

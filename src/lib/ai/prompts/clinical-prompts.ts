@@ -12,7 +12,7 @@
  * System prompt base with safety guidelines
  */
 
-import { AIFeatureCategory } from '@/integrations/firebase/ai';
+import { AIFeatureCategory } from '@/integrations/neon/ai';
 
 const CLINICAL_SAFETY_GUIDELINES = `
 Você é um assistente de IA especializado em fisioterapia, operando no sistema FisioFlow.

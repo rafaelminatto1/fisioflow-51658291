@@ -14,7 +14,7 @@ import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-vi.mock('@/integrations/firebase/auth', () => ({
+vi.mock('@/integrations/neon/auth', () => ({
   auth: {
     currentUser: null,
     signInWithEmailAndPassword: vi.fn(),

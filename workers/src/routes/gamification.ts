@@ -310,7 +310,7 @@ app.get('/transactions/:patientId', requireAuth, async (c) => {
     [patientId],
   );
 
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.get('/transactions', requireAuth, async (c) => {
@@ -334,7 +334,7 @@ app.get('/transactions', requireAuth, async (c) => {
     [user.organizationId, startDate, limitNum],
   );
 
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 // ─── GET /leaderboard ────────────────────────────────────────────────────────
@@ -397,7 +397,7 @@ app.get('/shop', requireAuth, async (c) => {
   const result = await pool.query(
     'SELECT * FROM shop_items WHERE is_active = true ORDER BY cost ASC',
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 // ─── GET /inventory/:patientId ───────────────────────────────────────────────
@@ -415,7 +415,7 @@ app.get('/inventory/:patientId', requireAuth, async (c) => {
     [patientId],
   );
 
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 // ─── POST /buy ────────────────────────────────────────────────────────────────
@@ -481,7 +481,7 @@ app.get('/settings', requireAuth, async (c) => {
      FROM gamification_settings
      ORDER BY key ASC`,
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.put('/settings', requireAuth, async (c) => {
@@ -706,7 +706,7 @@ app.post('/admin/reset-streak', requireAuth, async (c) => {
 app.get('/achievement-definitions', requireAuth, async (c) => {
   const pool = createPool(c.env);
   const result = await pool.query('SELECT * FROM achievements ORDER BY xp_reward ASC, title ASC');
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/achievement-definitions', requireAuth, async (c) => {
@@ -771,7 +771,7 @@ app.delete('/achievement-definitions/:id', requireAuth, async (c) => {
 app.get('/quest-definitions', requireAuth, async (c) => {
   const pool = createPool(c.env);
   const result = await pool.query('SELECT * FROM quest_definitions ORDER BY created_at DESC NULLS LAST, title ASC');
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/quest-definitions', requireAuth, async (c) => {
@@ -978,7 +978,7 @@ app.get('/patient-challenges/:patientId', requireAuth, async (c) => {
     `SELECT * FROM patient_challenges WHERE patient_id = $1 ORDER BY completed DESC, completed_at DESC NULLS LAST`,
     [patientId],
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 // ─── CRUD /shop-items ────────────────────────────────────────────────────────
@@ -986,7 +986,7 @@ app.get('/patient-challenges/:patientId', requireAuth, async (c) => {
 app.get('/shop-items', requireAuth, async (c) => {
   const pool = createPool(c.env);
   const result = await pool.query('SELECT * FROM shop_items ORDER BY created_at DESC NULLS LAST, cost ASC');
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/shop-items', requireAuth, async (c) => {
