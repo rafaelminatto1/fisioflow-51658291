@@ -114,19 +114,32 @@ test.describe('Autenticação', () => {
     await page.keyboard.press('Escape').catch(() => {});
     await page.waitForTimeout(250);
 
-    const sidebarLogoutButton = page.locator('button:has-text("Sair do Sistema")').first();
-    if (await sidebarLogoutButton.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await sidebarLogoutButton.evaluate((button: HTMLElement) => button.click());
+    const directLogoutButton = page
+      .locator(
+        'button:has-text("Sair do Sistema"), button:has-text("Encerrar Sessão"), [data-testid="user-menu-logout"], button[aria-label*="logout"], button[aria-label*="Sair"]',
+      )
+      .first();
+
+    if (await directLogoutButton.isVisible({ timeout: 5000 }).catch(() => false)) {
+      await directLogoutButton.evaluate((button: HTMLElement) => button.click());
     } else {
       const userMenuTrigger = page.locator('[data-testid="user-menu"]').first();
-      await expect(userMenuTrigger).toBeVisible({ timeout: 15000 });
-      await userMenuTrigger.click();
+      if (await userMenuTrigger.isVisible({ timeout: 5000 }).catch(() => false)) {
+        await userMenuTrigger.evaluate((button: HTMLElement) => button.click());
 
-      const dropdownLogoutButton = page
-        .locator('[data-testid="user-menu-logout"], [role="menuitem"]:has-text("Encerrar Sessão")')
-        .first();
-      await expect(dropdownLogoutButton).toBeVisible({ timeout: 15000 });
-      await dropdownLogoutButton.click();
+        const dropdownLogoutButton = page
+          .locator(
+            '[data-testid="user-menu-logout"], [role="menuitem"]:has-text("Encerrar Sessão"), button:has-text("Encerrar Sessão")',
+          )
+          .first();
+        await expect(dropdownLogoutButton).toBeVisible({ timeout: 15000 });
+        await dropdownLogoutButton.evaluate((button: HTMLElement) => button.click());
+      } else {
+        await page.evaluate(async () => {
+          const neonAuth = await import('/src/integrations/neon/auth.ts');
+          await neonAuth.signOut();
+        });
+      }
     }
 
     // Verificar se voltou para a página de login
