@@ -41,6 +41,7 @@ export interface ExerciseProtocol {
   created_by?: string;
   created_at?: string;
   updated_at?: string;
+  wiki_page_id?: string | null;
 }
 
 /**
@@ -56,6 +57,7 @@ const mapWorkerToAppProtocol = (p: WorkersProtocol): ExerciseProtocol => ({
   milestones: [],
   restrictions: [],
   progression_criteria: [],
+  wiki_page_id: p.wikiPageId || null,
 });
 
 /**
@@ -74,6 +76,7 @@ const mapAppToWorkerProtocol = (
   progressionCriteria: p.progression_criteria,
   references: p.references,
   clinicalTests: p.clinical_tests,
+  wikiPageId: p.wiki_page_id,
 });
 
 export const useWorkersProtocols = (filters?: {
@@ -133,6 +136,7 @@ export const useExerciseProtocols = () => {
       if (protocol.progression_criteria !== undefined) workerData.progressionCriteria = protocol.progression_criteria;
       if (protocol.references !== undefined) workerData.references = protocol.references;
       if (protocol.clinical_tests !== undefined) workerData.clinicalTests = protocol.clinical_tests;
+      if (protocol.wiki_page_id !== undefined) workerData.wikiPageId = protocol.wiki_page_id;
 
       const result = await protocolsApi.update(id, workerData as any);
       return mapWorkerToAppProtocol(result.data);

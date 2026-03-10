@@ -17,7 +17,7 @@ import type {
   ClinicalBenchmark as ClinicalBenchmarkType,
   MLTrainingData,
 } from '@/types/patientAnalytics';
-import type { PathologyRequiredMeasurement, MedicalReturn } from '@/types/evolution';
+import type { MedicalReturn } from '@/types/evolution';
 import type { GamificationStats, AtRiskPatient, PopularAchievement } from '@/types/gamification';
 
 import { getWorkersApiUrl } from './config';
@@ -144,6 +144,7 @@ export interface Protocol {
   weeksTotal: number | null;
   tags: string[];
   icd10Codes: string[];
+  wikiPageId?: string | null;
 }
 
 export interface WikiPage {
@@ -2888,7 +2889,7 @@ export const evolutionApi = {
       if (pathologies.length > 0) {
         query.set('pathologies', pathologies.join(','));
       }
-      return request<{ data: PathologyRequiredMeasurement[] }>(
+      return request<{ data: any[] }>(
         `/api/evolution/required-measurements${query.toString() ? `?${query.toString()}` : ''}`,
       );
     },
