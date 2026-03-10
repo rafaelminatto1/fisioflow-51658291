@@ -14,6 +14,38 @@ import { wikiPages, wikiPageVersions } from '../../../src/server/db/schema/wiki'
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
+// ===== CATEGORIAS (ANTES de /:slug para evitar conflito de rota) =====
+app.get('/categories', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = createPool(c.env);
+  const result = await db.query(
+    `SELECT * FROM wiki_categories WHERE organization_id = $1 ORDER BY order_index ASC, name ASC`,
+    [user.organizationId]
+  );
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+});
+
+app.post('/categories', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = createPool(c.env);
+  const body = await c.req.json();
+  const slug = body.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  const result = await db.query(
+    `INSERT INTO wiki_categories (organization_id, name, slug, description, icon, color, parent_id, order_index)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT (organization_id, slug) DO NOTHING RETURNING *`,
+    [user.organizationId, body.name, body.slug ?? slug, body.description ?? null, body.icon ?? null,
+     body.color ?? null, body.parent_id ?? null, body.order_index ?? 0]
+  );
+  return c.json({ data: result.rows[0] }, 201);
+});
+
+app.delete('/categories/:id', requireAuth, async (c) => {
+  const user = c.get('user');
+  const db = createPool(c.env);
+  await db.query(`DELETE FROM wiki_categories WHERE id = $1 AND organization_id = $2`, [c.req.param('id'), user.organizationId]);
+  return c.json({ ok: true });
+});
+
 // ===== LISTA DE PÁGINAS =====
 app.get('/', async (c) => {
   const authUser = await verifyToken(c.req.header('Authorization'), c.env);
@@ -334,38 +366,6 @@ app.delete('/:slug', requireAuth, async (c) => {
 
   if (!row) return c.json({ error: 'Página não encontrada' }, 404);
 
-  return c.json({ ok: true });
-});
-
-// ===== CATEGORIAS =====
-app.get('/categories', requireAuth, async (c) => {
-  const user = c.get('user');
-  const db = createPool(c.env);
-  const result = await db.query(
-    `SELECT * FROM wiki_categories WHERE organization_id = $1 ORDER BY order_index ASC, name ASC`,
-    [user.organizationId]
-  );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
-});
-
-app.post('/categories', requireAuth, async (c) => {
-  const user = c.get('user');
-  const db = createPool(c.env);
-  const body = await c.req.json();
-  const slug = body.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-  const result = await db.query(
-    `INSERT INTO wiki_categories (organization_id, name, slug, description, icon, color, parent_id, order_index)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT (organization_id, slug) DO NOTHING RETURNING *`,
-    [user.organizationId, body.name, body.slug ?? slug, body.description ?? null, body.icon ?? null,
-     body.color ?? null, body.parent_id ?? null, body.order_index ?? 0]
-  );
-  return c.json({ data: result.rows[0] }, 201);
-});
-
-app.delete('/categories/:id', requireAuth, async (c) => {
-  const user = c.get('user');
-  const db = createPool(c.env);
-  await db.query(`DELETE FROM wiki_categories WHERE id = $1 AND organization_id = $2`, [c.req.param('id'), user.organizationId]);
   return c.json({ ok: true });
 });
 
