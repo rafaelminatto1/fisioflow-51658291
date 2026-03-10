@@ -4,6 +4,7 @@
  *   - conduct_library
  *   - crm_campanhas + crm_campanha_envios
  *   - formas_pagamento
+ *   - fcm_tokens
  */
 import pg from 'pg';
 
@@ -72,6 +73,24 @@ CREATE TABLE IF NOT EXISTS formas_pagamento (
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- ═══════════════════════════════════════════════════════
+-- fcm_tokens
+-- ═══════════════════════════════════════════════════════
+CREATE TABLE IF NOT EXISTS fcm_tokens (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  token        TEXT NOT NULL UNIQUE,
+  user_id      TEXT NOT NULL,
+  tenant_id    TEXT,
+  platform     TEXT CHECK (platform IN ('ios','android','web')),
+  device_model TEXT,
+  os_version   TEXT,
+  app_version  TEXT,
+  active       BOOLEAN DEFAULT TRUE,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_fcm_tokens_user_id ON fcm_tokens(user_id);
 `;
 
 async function main() {
@@ -84,7 +103,7 @@ async function main() {
     console.log('✅ Tabelas criadas (ou já existiam)');
 
     // Verifica quais existem
-    for (const table of ['conduct_library', 'crm_campanhas', 'crm_campanha_envios', 'formas_pagamento']) {
+    for (const table of ['conduct_library', 'crm_campanhas', 'crm_campanha_envios', 'formas_pagamento', 'fcm_tokens']) {
       const res = await client.query(`SELECT to_regclass($1)::text AS t`, [`public.${table}`]);
       const exists = Boolean(res.rows[0]?.t);
       console.log(`  ${exists ? '✅' : '❌'} ${table}`);

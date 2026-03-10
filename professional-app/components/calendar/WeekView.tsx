@@ -110,6 +110,7 @@ export const WeekView = ({
                                                     height,
                                                     backgroundColor: colors.primary,
                                                     borderRadius: 4,
+                                                    right: '10%', // Leave space on the right
                                                 }
                                             ]}
                                             onPress={() => router.push(`/appointment-form?id=${apt.id}` as any)}

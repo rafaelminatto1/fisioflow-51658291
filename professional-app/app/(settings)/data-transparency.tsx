@@ -32,7 +32,7 @@ const DATA_CATEGORIES: DataCategory[] = [
     examples: ['Nome', 'Email', 'CPF', 'Telefone', 'Data de Nascimento'],
     purpose: 'Identificação do usuário, comunicação e gestão de prontuários.',
     retention: 'Enquanto a conta estiver ativa ou conforme exigido por lei.',
-    thirdParties: ['Firebase (Google Cloud)'],
+    thirdParties: ['Neon DB (PostgreSQL)', 'Cloudflare'],
   },
   {
     id: 'health',
@@ -42,7 +42,7 @@ const DATA_CATEGORIES: DataCategory[] = [
     examples: ['Evoluções SOAP', 'Fotos de Progresso', 'Histórico Médico', 'Prescrições'],
     purpose: 'Prestação de serviços de fisioterapia e acompanhamento clínico.',
     retention: 'Mínimo de 20 anos (conforme regulamentação do COFFITO).',
-    thirdParties: ['Firebase (Armazenamento Criptografado)'],
+    thirdParties: ['Neon DB (Criptografado)', 'Cloudflare R2'],
   },
   {
     id: 'usage',
@@ -52,17 +52,17 @@ const DATA_CATEGORIES: DataCategory[] = [
     examples: ['Interações com recursos', 'Tempo de uso', 'Frequência de acesso'],
     purpose: 'Melhoria contínua da experiência do usuário e otimização de recursos.',
     retention: 'Até 2 anos.',
-    thirdParties: ['Firebase Analytics'],
+    thirdParties: ['PostHog', 'Cloudflare Analytics'],
   },
   {
     id: 'technical',
     name: 'Dados Técnicos',
     icon: 'hardware-chip-outline',
     description: 'Informações sobre o dispositivo e erros do sistema.',
-    examples: ['Modelo do aparelho', 'Versão do SO', 'Logs de erro (Crashlytics)'],
+    examples: ['Modelo do aparelho', 'Versão do SO', 'Logs de erro'],
     purpose: 'Segurança, suporte técnico e correção de bugs.',
     retention: '90 dias para logs detalhados.',
-    thirdParties: ['Firebase Crashlytics', 'Expo'],
+    thirdParties: ['Sentry', 'Expo'],
   },
 ];
 

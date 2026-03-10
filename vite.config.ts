@@ -81,7 +81,6 @@ export default defineConfig(({ mode }) => {
       alias: {
         "@": path.resolve(__dirname, "./src"),
         "lodash": "lodash-es",
-        "@fisioflow/shared-api": path.resolve(__dirname, "./packages/shared-api/src"),
         "@fisioflow/shared-types": path.resolve(__dirname, "./packages/shared-types/src"),
         "@fisioflow/shared-constants": path.resolve(__dirname, "./packages/shared-constants/src"),
         "@fisioflow/shared-utils": path.resolve(__dirname, "./packages/shared-utils/src"),
