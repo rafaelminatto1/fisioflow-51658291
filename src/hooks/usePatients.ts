@@ -169,31 +169,10 @@ export const useActivePatients = (options: UseActivePatientsOptions = {}) => {
   });
 
   useEffect(() => {
-    if (!result.data || result.data.length === 0) return undefined;
-
-    const prefetchIfNeeded = () => {
-      const patientsToPrefetch = result.data.slice(0, 10);
-
-      patientsToPrefetch.forEach((patient) => {
-        queryClient
-          .prefetchQuery({
-            queryKey: ['patient-stats', patient.id],
-            queryFn: () => fetchPatientStats(patient.id),
-            staleTime: PATIENT_QUERY_CONFIG.staleTime,
-          })
-          .catch(() => {
-            // Silently fail prefetch - not critical
-          });
-      });
-    };
-
-    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-      const id = window.requestIdleCallback(() => prefetchIfNeeded());
-      return () => window.cancelIdleCallback(id);
-    }
-
-    const timer = setTimeout(() => prefetchIfNeeded(), 100);
-    return () => clearTimeout(timer);
+    // Prefetching patient stats removed to prevent 404 errors 
+    // since the /api/patients/:id/stats endpoint does not exist on the workers API.
+    // The data is actually calculated locally in usePatientStats.ts.
+    return undefined;
   }, [queryClient, result.data]);
 
   return result;

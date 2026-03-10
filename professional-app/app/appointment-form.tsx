@@ -259,14 +259,15 @@ export default function AppointmentFormScreen() {
         keyboardShouldPersistTaps="handled"
       >
         {/* Patient Selection */}
-        <Text style={[styles.label, { color: colors.textSecondary }]}>Paciente *</Text>
+        <Text style={[styles.label, { color: colors.textSecondary }]} accessibilityLabel="Campo obrigatório: Nome do Paciente">Paciente *</Text>
         <Input
           placeholder="Digite o nome do paciente..."
           value={patientSearch}
+          accessibilityLabel="Nome do paciente"
+          accessibilityHint="Digite o nome para buscar sugestões de pacientes ativos"
           onChangeText={(text) => {
             setPatientSearch(text);
             setShowSuggestions(true);
-            // Se o texto mudar e não for o nome do paciente selecionado, limpa a seleção
             if (selectedPatientData && text !== selectedPatientData.name) {
               setSelectedPatient('');
             }
@@ -284,12 +285,18 @@ export default function AppointmentFormScreen() {
         />
         
         {showSuggestions && !isEditing && patientSearch.length > 0 && (
-          <View style={[styles.suggestionsContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View 
+            style={[styles.suggestionsContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            accessibilityRole="menu"
+            accessibilityLabel="Sugestões de pacientes"
+          >
             {filteredPatients.length > 0 ? (
               filteredPatients.map((patient) => (
                 <TouchableOpacity
                   key={patient.id}
                   style={[styles.suggestionItem, { borderBottomColor: colors.border }]}
+                  accessibilityRole="menuitem"
+                  accessibilityLabel={`Selecionar ${patient.name}`}
                   onPress={() => {
                     medium();
                     setSelectedPatient(patient.id);
