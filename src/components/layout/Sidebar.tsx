@@ -552,6 +552,17 @@ export function Sidebar() {
               collapsed,
               location
             })}
+
+            {renderSubmenu({
+              icon: BarChart3,
+              label: 'Relatórios',
+              items: relatoriosSubmenu,
+              isOpen: relatoriosOpen || isRelatoriosActive,
+              onOpenChange: setRelatoriosOpen,
+              isActive: isRelatoriosActive,
+              collapsed,
+              location
+            })}
           </div>
 
           <div className="space-y-1 pt-2">
