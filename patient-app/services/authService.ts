@@ -1,43 +1,52 @@
 /**
- * Authentication Service
+ * Authentication Service (Migrated to Neon Auth)
  * Handles all authentication-related operations
  */
 
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  sendPasswordResetEmail,
-  updateProfile,
-  User as FirebaseUser,
-} from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { authClient, isNeonAuthEnabled } from '@/lib/neonAuth';
 import { asyncResult, Result } from '@/lib/async';
 import { log } from '@/lib/logger';
 import { perf } from '@/lib/performance';
 import { registerPushToken, clearPushToken } from '@/lib/notificationsSystem';
 
+/** Tipo de usuário compatível com o sistema */
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: 'patient' | 'professional' | 'admin';
+  avatarUrl?: string;
+  [key: string]: any;
+}
+
 /**
  * Sign in with email and password
  */
-export async function signIn(email: string, password: string): Promise<Result<FirebaseUser>> {
+export async function signIn(email: string, password: string): Promise<Result<any>> {
   return asyncResult(async () => {
     perf.start(PerformanceMarkers.AUTH_LOGIN, { email });
 
-    const userCredential = await signInWithEmailAndPassword(
-      auth,
-      email.trim().toLowerCase(),
-      password
-    );
+    if (!isNeonAuthEnabled()) {
+      throw new Error('Neon Auth não configurado.');
+    }
 
+    const { data, error } = await authClient.signIn.email({ 
+      email: email.trim().toLowerCase(), 
+      password 
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    const user = data.user;
     perf.end(PerformanceMarkers.AUTH_LOGIN, true);
-    log.info('AUTH', 'User signed in', { uid: userCredential.user.uid });
+    log.info('AUTH', 'User signed in', { uid: user.id });
 
     // Register push token after login
-    await registerPushToken(userCredential.user.uid);
+    await registerPushToken(user.id);
 
-    return userCredential.user;
+    return user;
   }, 'signIn');
 }
 
@@ -51,46 +60,38 @@ export interface SignUpData {
   phone?: string;
 }
 
-export async function signUp(data: SignUpData): Promise<Result<FirebaseUser>> {
+export async function signUp(data: SignUpData): Promise<Result<any>> {
   return asyncResult(async () => {
     perf.start(PerformanceMarkers.AUTH_REGISTER, { email: data.email });
 
-    // Create auth user
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      data.email.trim().toLowerCase(),
-      data.password
-    );
+    if (!isNeonAuthEnabled()) {
+      throw new Error('Neon Auth não configurado.');
+    }
 
-    const uid = userCredential.user.uid;
-
-    // Create user document
-    await setDoc(doc(db, 'users', uid), {
+    const { data: authData, error } = await authClient.signUp.email({ 
+      email: data.email.trim().toLowerCase(), 
+      password: data.password,
       name: data.fullName.trim(),
-      email: data.email.trim().toLowerCase(),
-      phone: data.phone?.trim() || null,
-      role: 'patient',
-      created_at: serverTimestamp(),
-      updated_at: serverTimestamp(),
-      professional_id: null,
-      professional_name: null,
-      birth_date: null,
-      gender: null,
-      clinic_id: null,
     });
 
-    // Update display name
-    await updateProfile(userCredential.user, {
-      displayName: data.fullName.trim(),
-    });
+    if (error) {
+      throw new Error(error.message);
+    }
 
+    const user = authData.user;
+    const uid = user.id;
+
+    // TODO: Integrar com a API de Workers para criar o perfil no Neon DB
+    // Atualmente o better-auth já cria o usuário no banco, mas podemos precisar
+    // de campos extras específicos da clínica.
+    
     perf.end(PerformanceMarkers.AUTH_REGISTER, true);
     log.info('AUTH', 'User signed up', { uid });
 
     // Register push token
     await registerPushToken(uid);
 
-    return userCredential.user;
+    return user;
   }, 'signUp');
 }
 
@@ -101,14 +102,15 @@ export async function signOut(): Promise<Result<void>> {
   return asyncResult(async () => {
     perf.start(PerformanceMarkers.AUTH_LOGOUT);
 
-    const userId = auth.currentUser?.uid;
+    const session = await authClient.getSession();
+    const userId = session?.data?.user?.id;
 
     // Clear push token before signing out
     if (userId) {
       await clearPushToken(userId);
     }
 
-    await firebaseSignOut(auth);
+    await authClient.signOut();
 
     perf.end(PerformanceMarkers.AUTH_LOGOUT, true);
     log.info('AUTH', 'User signed out', { userId });
@@ -120,35 +122,46 @@ export async function signOut(): Promise<Result<void>> {
  */
 export async function resetPassword(email: string): Promise<Result<void>> {
   return asyncResult(async () => {
-    await sendPasswordResetEmail(auth, email.trim().toLowerCase());
-    log.info('AUTH', 'Password reset email sent', { email });
+    const { error } = await authClient.forgetPassword({ 
+      email: email.trim().toLowerCase(),
+      redirectTo: 'fisioflow://reset-password' // Deep link para o app
+    });
+    
+    if (error) throw new Error(error.message);
+    log.info('AUTH', 'Password reset email requested', { email });
   }, 'resetPassword');
 }
 
 /**
  * Get current user
  */
-export function getCurrentUser(): FirebaseUser | null {
-  return auth.currentUser;
+export async function getCurrentUser(): Promise<any | null> {
+  const session = await authClient.getSession();
+  return session?.data?.user || null;
 }
 
 /**
- * Get user data from Firestore
+ * Get user data (Profile)
+ * In Neon stack, this should call our Worker API
  */
 export async function getUserData(uid: string): Promise<Result<any>> {
   return asyncResult(async () => {
-    perf.start('firestore_get_user');
+    perf.start('api_get_user');
 
-    const docRef = doc(db, 'users', uid);
-    const docSnap = await getDoc(docRef);
+    // TODO: Substituir por chamada ao Worker API
+    // const response = await fetch(`${API_URL}/api/patients/${uid}`);
+    // return await response.json();
+    
+    const session = await authClient.getSession();
+    const user = session?.data?.user;
+    
+    perf.end('api_get_user', true);
 
-    perf.end('firestore_get_user', true);
-
-    if (!docSnap.exists()) {
-      throw new Error('User not found');
+    if (!user || user.id !== uid) {
+      throw new Error('User not found in session');
     }
 
-    return { id: docSnap.id, ...docSnap.data() };
+    return user;
   }, 'getUserData');
 }
 
@@ -163,54 +176,18 @@ export interface UpdateProfileData {
 }
 
 export async function updateProfileData(
-  uid: string,
+  _uid: string,
   data: UpdateProfileData
 ): Promise<Result<void>> {
   return asyncResult(async () => {
-    const userRef = doc(db, 'users', uid);
-
-    await updateDoc(userRef, {
-      ...data,
-      updated_at: serverTimestamp(),
+    const { error } = await authClient.updateUser({
+      name: data.name,
+      // outros campos precisam estar no schema do Better Auth ou salvos via API
     });
 
-    log.info('AUTH', 'Profile updated', { uid });
+    if (error) throw new Error(error.message);
+    log.info('AUTH', 'Profile updated', { name: data.name });
   }, 'updateProfileData');
-}
-
-/**
- * Link user to professional
- */
-export async function linkToProfessional(
-  uid: string,
-  professionalId: string,
-  professionalName: string
-): Promise<Result<void>> {
-  return asyncResult(async () => {
-    const userRef = doc(db, 'users', uid);
-
-    await updateDoc(userRef, {
-      professional_id: professionalId,
-      professional_name: professionalName,
-      updated_at: serverTimestamp(),
-    });
-
-    // Also add patient to professional's list
-    const profRef = doc(db, 'users', professionalId);
-    const profDoc = await getDoc(profRef);
-
-    if (profDoc.exists()) {
-      const profData = profDoc.data();
-      const patients = profData.patients || [];
-      if (!patients.includes(uid)) {
-        await updateDoc(profRef, {
-          patients: [...patients, uid],
-        });
-      }
-    }
-
-    log.info('AUTH', 'User linked to professional', { uid, professionalId });
-  }, 'linkToProfessional');
 }
 
 // Performance markers

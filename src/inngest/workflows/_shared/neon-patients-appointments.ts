@@ -52,6 +52,233 @@ export type NeonAppointment = {
   status?: string;
 };
 
+export type NeonOrganization = {
+  id: string;
+  name?: string;
+  settings?: { email_enabled?: boolean; whatsapp_enabled?: boolean };
+};
+
+export type NeonProfile = {
+  id: string;
+  full_name?: string;
+  name?: string;
+  email?: string;
+  role?: string;
+};
+
+export async function getOrganizationsByIds(ids: string[]): Promise<Map<string, NeonOrganization>> {
+  if (!ids.length) return new Map();
+  const sql = getSql();
+  const result = await sql.query(
+    `
+      SELECT
+        id::text AS id,
+        name,
+        settings::jsonb AS settings
+      FROM organizations
+      WHERE id::text = ANY($1::text[])
+    `,
+    [Array.from(new Set(ids))],
+  );
+
+  const map = new Map<string, NeonOrganization>();
+  for (const row of rowsFrom(result)) {
+    map.set(String(row.id), row as unknown as NeonOrganization);
+  }
+  return map;
+}
+
+export async function getProfilesByIds(ids: string[]): Promise<Map<string, NeonProfile>> {
+  if (!ids.length) return new Map();
+  const sql = getSql();
+  const result = await sql.query(
+    `
+      SELECT
+        id::text AS id,
+        full_name,
+        email,
+        role
+      FROM profiles
+      WHERE id::text = ANY($1::text[])
+    `,
+    [Array.from(new Set(ids))],
+  );
+
+  const map = new Map<string, NeonProfile>();
+  for (const row of rowsFrom(result)) {
+    map.set(String(row.id), row as unknown as NeonProfile);
+  }
+  return map;
+}
+
+export async function getActiveOrganizations(): Promise<NeonOrganization[]> {
+  const sql = getSql();
+  const result = await sql.query(
+    `
+      SELECT
+        id::text AS id,
+        name,
+        settings::jsonb AS settings
+      FROM organizations
+      WHERE active = true
+    `,
+    [],
+  );
+  return rowsFrom(result) as NeonOrganization[];
+}
+
+export async function logNotificationHistory(data: {
+  user_id: string;
+  organization_id: string;
+  type: string;
+  channel: string;
+  status: string;
+  payload: any;
+}): Promise<string> {
+  const sql = getSql();
+  const result = await sql.query(
+    `
+      INSERT INTO notification_history (
+        user_id, organization_id, type, channel, status, data, created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6::jsonb, NOW())
+      RETURNING id::text
+    `,
+    [data.user_id, data.organization_id, data.type, data.channel, data.status, JSON.stringify(data.payload)],
+  );
+  return String(rowsFrom(result)[0]?.id);
+}
+
+export async function updateNotificationStatus(id: string, status: string, errorMessage?: string | null): Promise<void> {
+  const sql = getSql();
+  await sql.query(
+    `
+      UPDATE notification_history
+      SET status = $1, sent_at = NOW(), error_message = $2
+      WHERE id::text = $3
+    `,
+    [status, errorMessage, id],
+  );
+}
+
+export async function getUserPushTokens(userId: string): Promise<string[]> {
+  const sql = getSql();
+  const result = await sql.query(
+    `
+      SELECT token
+      FROM user_push_tokens
+      WHERE user_id::text = $1 AND active = true
+    `,
+    [userId],
+  );
+  return rowsFrom(result).map(r => String(r.token));
+}
+
+export async function getLatestSessionsByPatient(patientId: string, limit = 10): Promise<any[]> {
+  const sql = getSql();
+  const result = await sql.query(
+    `
+      SELECT
+        id::text AS id,
+        pain_level_after::int AS pain_level_after,
+        created_at::text AS created_at,
+        patient_id::text AS patient_id,
+        subjective,
+        objective,
+        assessment,
+        plan,
+        status
+      FROM soap_records
+      WHERE patient_id::text = $1
+      ORDER BY created_at DESC
+      LIMIT $2
+    `,
+    [patientId, limit],
+  );
+  return rowsFrom(result);
+}
+
+export async function storePatientInsight(data: {
+  patient_id: string;
+  organization_id: string;
+  insights: any;
+}): Promise<void> {
+  const sql = getSql();
+  await sql.query(
+    `
+      INSERT INTO patient_insights (
+        patient_id, organization_id, insights, generated_at
+      ) VALUES ($1, $2, $3::jsonb, NOW())
+    `,
+    [data.patient_id, data.organization_id, JSON.stringify(data.insights)],
+  );
+}
+
+export async function deleteOldRecords(table: string, timeColumn: string, days: number): Promise<number> {
+  const sql = getSql();
+  const result = await sql.query(
+    `
+      DELETE FROM ${table}
+      WHERE ${timeColumn} < NOW() - ($1::int || ' days')::interval
+      RETURNING id
+    `,
+    [days],
+  );
+  return rowsFrom(result).length;
+}
+
+export async function cleanupIncompleteSessions(days: number): Promise<number> {
+  const sql = getSql();
+  const result = await sql.query(
+    `
+      DELETE FROM soap_records
+      WHERE status = 'in_progress'
+        AND updated_at < NOW() - ($1::int || ' days')::interval
+      RETURNING id
+    `,
+    [days],
+  );
+  return rowsFrom(result).length;
+}
+
+export async function getExpiringVouchers(daysFromNow: number): Promise<any[]> {
+  const sql = getSql();
+  const result = await sql.query(
+    `
+      SELECT
+        v.id::text AS id,
+        v.expiration_date::text AS expiration_date,
+        v.patient_id::text AS patient_id,
+        v.organization_id::text AS organization_id,
+        p.full_name AS patient_name,
+        p.email AS patient_email,
+        p.phone AS patient_phone,
+        o.name AS organization_name
+      FROM vouchers v
+      JOIN patients p ON p.id = v.patient_id
+      JOIN organizations o ON o.id = v.organization_id
+      WHERE v.active = true
+        AND v.expiration_date::date = (CURRENT_DATE + ($1::int || ' days')::interval)::date
+    `,
+    [daysFromNow],
+  );
+  return rowsFrom(result);
+}
+
+export async function getWeeklyStats(organizationId: string, startIso: string, endIso: string): Promise<{ totalSessions: number }> {
+  const sql = getSql();
+  const result = await sql.query(
+    `
+      SELECT COUNT(*)::int AS total
+      FROM soap_records
+      WHERE organization_id::text = $1
+        AND created_at >= $2::timestamptz
+        AND created_at <= $3::timestamptz
+    `,
+    [organizationId, startIso, endIso],
+  );
+  return { totalSessions: Number(rowsFrom(result)[0]?.total ?? 0) };
+}
+
 export async function getAppointmentsForReminder(startDate: Date, endDateExclusive: Date): Promise<NeonAppointment[]> {
   const sql = getSql();
   const start = toIsoDate(startDate);

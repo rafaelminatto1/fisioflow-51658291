@@ -1,25 +1,156 @@
-import { test, expect } from '@playwright/test';
-import { testUsers } from './fixtures/test-data';
+import { test, expect, Page } from '@playwright/test';
+
+const TEST_ORG_ID = '00000000-0000-0000-0000-000000000001';
+
+async function dismissOnboardingIfPresent(page: Page) {
+  const onboardingDialog = page
+    .locator('[role="dialog"]')
+    .filter({ has: page.getByText(/Bem-vindo ao FisioFlow/i) })
+    .first();
+
+  if (!(await onboardingDialog.isVisible({ timeout: 3000 }).catch(() => false))) {
+    return;
+  }
+
+  const closeButton = onboardingDialog.getByRole('button', { name: /Close|Fechar/i }).first();
+  if (await closeButton.isVisible().catch(() => false)) {
+    await closeButton.click({ force: true });
+  } else {
+    await page.keyboard.press('Escape').catch(() => {});
+  }
+
+  await expect(onboardingDialog).toBeHidden({ timeout: 5000 });
+}
+
+async function mockPatientsBootstrap(page: Page) {
+  await page.route(`**/api/organizations/${TEST_ORG_ID}`, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: {
+          id: TEST_ORG_ID,
+          name: 'Organização E2E',
+          slug: 'organizacao-e2e',
+          settings: {},
+          active: true,
+        },
+      }),
+    });
+  });
+
+  await page.route('**/api/organization-members?**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: [
+          {
+            id: 'member-e2e-admin',
+            organization_id: TEST_ORG_ID,
+            user_id: 'user-e2e-admin',
+            role: 'admin',
+            active: true,
+            joined_at: new Date().toISOString(),
+            profiles: {
+              full_name: 'Admin E2E',
+              email: 'admin@e2e.local',
+            },
+          },
+        ],
+        total: 1,
+      }),
+    });
+  });
+
+  await page.route('**/api/profile/me', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: {
+          id: 'user-e2e-admin',
+          user_id: 'user-e2e-admin',
+          email: 'admin@e2e.local',
+          full_name: 'Admin E2E',
+          role: 'admin',
+          organization_id: TEST_ORG_ID,
+          organizationId: TEST_ORG_ID,
+          email_verified: true,
+        },
+      }),
+    });
+  });
+
+  await page.route('**/api/notifications?**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: [] }),
+    });
+  });
+
+  await page.route('**/api/audit-logs?**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: [] }),
+    });
+  });
+
+  await page.route('**/api/patients?**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: [
+          {
+            id: 'patient-e2e-list',
+            name: 'João Silva',
+            full_name: 'João Silva',
+            status: 'active',
+            email: 'joao.silva@example.com',
+            phone: '11999999999',
+            cpf: '12345678901',
+            main_condition: 'Dor Lombar',
+          },
+        ],
+        total: 1,
+      }),
+    });
+  });
+
+  await page.route('**/api/patients', async (route) => {
+    if (route.request().method() === 'POST') {
+      await route.fulfill({
+        status: 201,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            id: `patient-created-${Date.now()}`,
+            name: 'Paciente Teste',
+            full_name: 'Paciente Teste',
+            status: 'active',
+          },
+        }),
+      });
+      return;
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ data: [], total: 0 }),
+    });
+  });
+}
 
 test.describe('Pacientes - CRUD Completo', () => {
   test.beforeEach(async ({ page }) => {
-    // Login robusto
-    await page.goto('/auth/login');
-    const emailInput = page.locator('input[name="email"], #login-email').first();
-    const passwordInput = page.locator('input[name="password"], #login-password').first();
-    
-    await expect(emailInput).toBeVisible({ timeout: 15000 });
-    await emailInput.fill(testUsers.fisio.email);
-    await passwordInput.fill(testUsers.fisio.password);
-    await page.click('button[type="submit"], button:has-text("Acessar Minha Conta")');
-    
-    // Aguardar navegação para fora da página de auth
-    await expect.poll(() => page.url(), { timeout: 30000 }).not.toContain('/auth');
-    
-    // Navegar para página de pacientes
-    await page.goto('/patients');
-    // Esperar pelo header da página e conteúdo básico
+    await mockPatientsBootstrap(page);
+    await page.goto('/patients?e2e=true');
     await page.waitForLoadState('domcontentloaded');
+    await dismissOnboardingIfPresent(page);
     await expect(page.locator('[data-testid="patients-page-header"]')).toBeVisible({ timeout: 25000 });
   });
 

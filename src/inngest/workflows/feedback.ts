@@ -1,12 +1,15 @@
 /**
- * Feedback Workflow - Migrated to Firebase
+ * Feedback Workflow - Migrated to Neon
  *
  */
 
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, InngestStep } from '../../lib/inngest/types.js';
-import { getAdminDb } from '../../lib/firebase/admin.js';
-import { getAppointmentById, getPatientById } from './_shared/neon-patients-appointments';
+import { 
+  getAppointmentById, 
+  getPatientById, 
+  getOrganizationsByIds 
+} from './_shared/neon-patients-appointments';
 
 interface AppointmentRecord {
   id: string;
@@ -32,7 +35,6 @@ export const appointmentCompletedWorkflow = inngest.createFunction(
   async ({ event, step }: { event: AppointmentUpdatedEvent; step: InngestStep }) => {
     const { old_record, record } = event.data;
 
-    // Only trigger if status changed to 'concluido' (or 'completed', 'attended')
     const completedStatuses = ['concluido', 'realizado', 'attended', 'completed'];
     const isCompleted = completedStatuses.includes(record.status?.toLowerCase());
     const wasCompleted = completedStatuses.includes(old_record?.status?.toLowerCase());
@@ -46,20 +48,19 @@ export const appointmentCompletedWorkflow = inngest.createFunction(
     // Step 1: Wait 2 hours after the appointment
     await step.sleep('2h');
 
-    const db = getAdminDb();
-
-    // Step 2: Fetch details
+    // Step 2: Fetch details (Neon)
     const details = await step.run('fetch-details', async () => {
       const appointment = await getAppointmentById(appointmentId);
       if (!appointment) {
         throw new Error('Appointment not found');
       }
       const patient = await getPatientById(appointment.patient_id);
-
-      // Fetch organization
-      const organization = appointment.organization_id
-        ? await db.collection('organizations').doc(appointment.organization_id).get().then((snap) => (snap.exists ? { id: snap.id, ...snap.data() } : null))
-        : null;
+      
+      const orgMap = appointment.organization_id 
+        ? await getOrganizationsByIds([appointment.organization_id])
+        : new Map();
+      
+      const organization = appointment.organization_id ? orgMap.get(appointment.organization_id) : null;
 
       return {
         ...appointment,
@@ -77,9 +78,6 @@ export const appointmentCompletedWorkflow = inngest.createFunction(
     const org = details.organization;
 
     if (!patient?.phone) return { skipped: true, reason: 'No phone' };
-    if ((patient as { notification_preferences?: { whatsapp?: boolean } })?.notification_preferences?.whatsapp === false) {
-      return { skipped: true, reason: 'Opt-out' };
-    }
     if (org?.settings?.whatsapp_enabled === false) return { skipped: true, reason: 'Org disabled WA' };
 
     await step.run('send-feedback-request', async () => {

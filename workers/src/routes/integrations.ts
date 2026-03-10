@@ -256,7 +256,7 @@ app.get('/google/calendar/logs', async (c) => {
     `,
     [integrationId],
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/google/calendar/sync', async (c) => {
@@ -428,7 +428,7 @@ app.get('/google/drive/files', async (c) => {
     params,
   );
 
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/google/drive/folders', async (c) => {

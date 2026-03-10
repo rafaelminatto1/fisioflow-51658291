@@ -1,5 +1,5 @@
 /**
- * Aniversariantes Page - Migrated to Firebase
+ * Aniversariantes Page - Migrated to Neon/Cloudflare
  */
 
 import { useState } from 'react';

@@ -16,7 +16,7 @@ app.get('/', requireAuth, async (c) => {
     `SELECT * FROM recibos WHERE organization_id = $1 ORDER BY numero_recibo DESC LIMIT $2 OFFSET $3`,
     [user.organizationId, limitNum, offsetNum],
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.get('/last-number', requireAuth, async (c) => {

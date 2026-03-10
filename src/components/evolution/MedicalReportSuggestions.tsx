@@ -10,7 +10,7 @@ import {
   FileText
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useAI } from '@/integrations/firebase/ai';
+import { useAI } from '@/integrations/neon/ai';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { evolutionApi, sessionsApi } from '@/lib/api/workers-client';
 

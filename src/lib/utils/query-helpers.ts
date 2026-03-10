@@ -9,7 +9,8 @@
 // ==============================================================================
 
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+
+const normalizeFirestoreData = (d: any) => d;
 
 export type Query<T> = {
   source?: unknown;

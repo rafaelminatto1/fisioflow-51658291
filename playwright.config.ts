@@ -45,7 +45,10 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: {
+        ...devices['Desktop Chrome'],
+        channel: 'chromium',
+      },
     },
     /* Outros navegadores desativados por padrão para velocidade. 
        Ative apenas quando necessário validar cross-browser. */

@@ -56,7 +56,13 @@ function setCachedJwt(token: string): void {
 async function getJwtFromSessionEndpoint(): Promise<string | null> {
   try {
     const { data } = await authClient.getSession();
-    const token = data?.session?.token;
+    
+    // Tenta diferentes caminhos comuns no Better Auth / Neon Auth
+    const token = 
+      (data as any)?.session?.token || 
+      (data as any)?.token || 
+      (data as any)?.idToken;
+
     if (typeof token === 'string' && looksLikeJwt(token)) {
       return token;
     }

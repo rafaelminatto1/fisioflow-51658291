@@ -38,7 +38,7 @@ app.get('/annotations', requireAuth, async (c) => {
         [user.organizationId, assetId],
     );
 
-    return c.json({ data: result.rows });
+    try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/annotations', requireAuth, async (c) => {

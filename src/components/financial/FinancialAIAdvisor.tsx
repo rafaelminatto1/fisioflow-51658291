@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Sparkles } from 'lucide-react';
-import { useAI } from '@/integrations/firebase/ai';
+import { useAI } from '@/integrations/neon/ai';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import type { FinancialStats } from '@/hooks/useFinancial';
 

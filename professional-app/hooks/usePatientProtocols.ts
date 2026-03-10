@@ -2,25 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/auth';
 import { PatientProtocol } from '@/types';
 import { useHaptics } from './useHaptics';
-import { config } from '@/lib/config';
-import { authApi } from '@/lib/auth-api';
-
-const fetchApi = async (endpoint: string, method: string = 'GET', body?: any) => {
-  const token = await authApi.getToken();
-  if (!token) throw new Error('Not authenticated');
-
-  const res = await fetch(`${config.apiUrl}${endpoint}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: body ? JSON.stringify(body) : undefined
-  });
-
-  if (!res.ok) throw new Error(`API Error: ${res.status}`);
-  return res.json();
-};
+import { fetchApi } from '@/lib/api';
 
 export function usePatientProtocols(patientId: string | null) {
   const { user } = useAuthStore();
@@ -32,7 +14,7 @@ export function usePatientProtocols(patientId: string | null) {
     queryKey: ['patient-protocols', patientId],
     queryFn: async () => {
       if (!patientId) return [];
-      const response = await fetchApi(`/api/patients/${patientId}/protocols`);
+      const response = await fetchApi<any>(`/api/patients/${patientId}/protocols`);
       return response.data as PatientProtocol[];
     },
     enabled: !!patientId,
@@ -43,10 +25,13 @@ export function usePatientProtocols(patientId: string | null) {
     mutationFn: async ({ protocolId, notes }: { protocolId: string; notes?: string }) => {
       if (!user?.id || !patientId) throw new Error('Missing required data');
 
-      const response = await fetchApi(`/api/patients/${patientId}/protocols`, 'POST', {
-        protocolId,
-        professionalId: user.id,
-        notes: notes || '',
+      const response = await fetchApi<any>(`/api/patients/${patientId}/protocols`, {
+        method: 'POST',
+        data: {
+          protocolId,
+          professionalId: user.id,
+          notes: notes || '',
+        }
       });
 
       return response.data?.id;
@@ -63,8 +48,9 @@ export function usePatientProtocols(patientId: string | null) {
   // Update protocol progress
   const updateProgressMutation = useMutation({
     mutationFn: async ({ id, progress }: { id: string; progress: number }) => {
-      await fetchApi(`/api/patients/${patientId}/protocols/${id}`, 'PUT', {
-        progress,
+      await fetchApi(`/api/patients/${patientId}/protocols/${id}`, {
+        method: 'PUT',
+        data: { progress }
       });
     },
     onSuccess: () => {
@@ -79,7 +65,7 @@ export function usePatientProtocols(patientId: string | null) {
   // Remove protocol from patient (soft delete)
   const removeMutation = useMutation({
     mutationFn: async (id: string) => {
-      await fetchApi(`/api/patients/${patientId}/protocols/${id}`, 'DELETE');
+      await fetchApi(`/api/patients/${patientId}/protocols/${id}`, { method: 'DELETE' });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patient-protocols', patientId] });

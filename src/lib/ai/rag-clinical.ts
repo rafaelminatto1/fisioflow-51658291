@@ -4,7 +4,7 @@
  * Combina busca vetorial com LLM para gerar sugestões baseadas em histórico
  */
 
-import { flashModel, proModel } from '@/lib/firebase-ai';
+import { flashModel, proModel } from '@/lib/gemini-ai';
 import { logger } from '@/lib/errors/logger';
 import { withPerformanceTrace, traceAIOperation } from '@/lib/monitoring/performance';
 import {

@@ -1,5 +1,5 @@
 /**
- * useTherapistOccupancy - Migrated to Firebase
+ * useTherapistOccupancy - Migrated to Neon/Cloudflare
  */
 
 import { useQuery } from '@tanstack/react-query';

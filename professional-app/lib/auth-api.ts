@@ -3,24 +3,32 @@ import * as SecureStore from 'expo-secure-store';
 
 const TOKEN_KEY = 'FISIOFLOW_AUTH_TOKEN';
 
-export interface AuthResponse {
-  token: string;
-  user: {
-    id: string;
-    email: string;
-    name: string;
-    role: string;
-    clinicId?: string;
-    organizationId?: string;
-    avatarUrl?: string;
-    specialty?: string;
-    crefito?: string;
-  };
+// Helper for fetch with timeout
+async function fetchWithTimeout(resource: string, options: any = {}) {
+  const { timeout = 10000 } = options;
+  
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  
+  try {
+    const response = await fetch(resource, {
+      ...options,
+      signal: controller.signal
+    });
+    clearTimeout(id);
+    return response;
+  } catch (error: any) {
+    clearTimeout(id);
+    if (error.name === 'AbortError') {
+      throw new Error('Tempo de conexão esgotado (timeout)');
+    }
+    throw error;
+  }
 }
 
 export const authApi = {
   async login(email: string, password: string): Promise<AuthResponse> {
-    const response = await fetch(`${config.apiUrl}/auth/login`, {
+    const response = await fetchWithTimeout(`${config.apiUrl}/sessions/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -46,12 +54,13 @@ export const authApi = {
     try {
       const token = await this.getToken();
       if (token) {
-        // Opccionalmente notificar o backend para invalidar o token
-        await fetch(`${config.apiUrl}/auth/logout`, {
+        // Rota de logout geralmente opcional em Workers sem estado
+        await fetchWithTimeout(`${config.apiUrl}/sessions/logout`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`
-          }
+          },
+          timeout: 5000
         }).catch(() => {});
       }
     } finally {
@@ -72,12 +81,13 @@ export const authApi = {
     const token = await this.getToken();
     if (!token) throw new Error('No token found');
 
-    const response = await fetch(`${config.apiUrl}/auth/me`, {
+    const response = await fetchWithTimeout(`${config.apiUrl}/profile/me`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
+      timeout: 8000
     });
 
     if (!response.ok) {
@@ -87,7 +97,8 @@ export const authApi = {
       throw new Error('Falha ao validar sessão');
     }
 
-    return response.json();
+    const data = await response.json();
+    return data.user || data;
   },
 
   async resetPassword(email: string): Promise<void> {

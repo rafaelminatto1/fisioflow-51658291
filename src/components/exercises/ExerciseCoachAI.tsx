@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Trophy, Activity, Loader2 } from 'lucide-react';
-import { useAI } from '@/integrations/firebase/ai';
+import { useAI } from '@/integrations/neon/ai';
 import { motion } from 'framer-motion';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 

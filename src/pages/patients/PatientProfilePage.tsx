@@ -1,5 +1,5 @@
 /**
- * Patient Profile Page - Migrated to Firebase
+ * Patient Profile Page - Migrated to Neon/Cloudflare
  * Optimized with usePatientProfileOptimized for better performance
  */
 

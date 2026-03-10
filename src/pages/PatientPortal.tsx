@@ -29,7 +29,7 @@ const PatientGamification = lazy(() => import('@/components/gamification/Patient
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { PatientService } from '@/lib/services/PatientService';
 import { useAppointments } from '@/hooks/useAppointments';
-import { useAI, AIFeatureCategory } from '@/integrations/firebase/ai';
+import { useAI, AIFeatureCategory } from '@/integrations/neon/ai';
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { PatientHelpers } from '@/types';

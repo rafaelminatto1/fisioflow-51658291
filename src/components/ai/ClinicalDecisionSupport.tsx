@@ -193,7 +193,7 @@ export function ClinicalDecisionSupport({
    * Analyze pain evolution (Firebase Cloud Functions)
    */
   const analyzePainEvolution = useCallback(async (): Promise<PainAnalysisResult> => {
-    const { analyzePainEvolution: analyzePain } = await import('@/services/ai/firebaseAIService');
+    const { analyzePainEvolution: analyzePain } = await import('@/services/ai/geminiAiService');
     const data = await analyzePain(patient.id, currentPainLevel ?? 0);
     return data as unknown as PainAnalysisResult;
   }, [patient.id, currentPainLevel]);
@@ -202,7 +202,7 @@ export function ClinicalDecisionSupport({
    * Predict recovery timeline (Firebase Cloud Functions)
    */
   const predictRecovery = useCallback(async (): Promise<RecoveryPrediction> => {
-    const { predictRecovery: predict } = await import('@/services/ai/firebaseAIService');
+    const { predictRecovery: predict } = await import('@/services/ai/geminiAiService');
     const data = await predict(
       patient.id,
       { age: patient.age, gender: patient.gender, baselinePainLevel: currentPainLevel, mainComplaint: patient.mainCondition },
@@ -216,7 +216,7 @@ export function ClinicalDecisionSupport({
    * Evaluate treatment response (Firebase Cloud Functions)
    */
   const evaluateTreatmentResponse = useCallback(async (): Promise<TreatmentResponse> => {
-    const { evaluateTreatmentResponse: evaluate } = await import('@/services/ai/firebaseAIService');
+    const { evaluateTreatmentResponse: evaluate } = await import('@/services/ai/geminiAiService');
     const data = await evaluate(patient.id, sessionsCompleted ?? 0, currentPainLevel ?? 0);
     return data as unknown as TreatmentResponse;
   }, [patient.id, sessionsCompleted, currentPainLevel]);
