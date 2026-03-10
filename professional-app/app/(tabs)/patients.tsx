@@ -121,65 +121,78 @@ export default function PatientsScreen() {
           <View style={styles.loadingState}>
             <ActivityIndicator size="large" color={colors.primary} />
             <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
-              Carregando pacientes...
+              Buscando prontuários...
             </Text>
           </View>
         ) : filteredPatients.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="people-outline" size={64} color={colors.textMuted} />
-            <Text style={[styles.emptyTitle, { color: colors.text }]}>
-              {searchQuery ? 'Nenhum paciente encontrado' : 'Nenhum paciente cadastrado'}
-            </Text>
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-              {searchQuery ? 'Tente outra busca' : 'Adicione seu primeiro paciente'}
-            </Text>
-          </View>
+          <Card style={styles.emptyCard}>
+             <View style={[styles.emptyIconContainer, { backgroundColor: colors.surfaceHighlight || colors.border }]}>
+               <Ionicons name={searchQuery ? "search-outline" : "people-outline"} size={32} color={colors.textMuted} />
+             </View>
+             <Text style={[styles.emptyTitle, { color: colors.text }]}>
+               {searchQuery ? 'Sem Resultados' : 'Sem Pacientes'}
+             </Text>
+             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+               {searchQuery ? 'Tente buscar com outro termo ou limpe o filtro.' : 'Você ainda não possui pacientes cadastrados. Clique no botão + para adicionar.'}
+             </Text>
+          </Card>
         ) : (
-          filteredPatients.map((patient) => (
-            <TouchableOpacity
-              key={patient.id}
-              onPress={() => {
-                light();
-                router.push(`/patient/${patient.id}`);
-              }}
-            >
-              <Card style={styles.patientCard}>
-                <View style={styles.patientHeader}>
-                  <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-                    <Text style={styles.avatarText}>
-                      {patient.name.charAt(0).toUpperCase()}
-                    </Text>
-                  </View>
-                  <View style={styles.patientInfo}>
-                    <Text style={[styles.patientName, { color: colors.text }]}>
-                      {patient.name}
-                    </Text>
-                    <Text style={[styles.patientCondition, { color: colors.textSecondary }]}>
-                      {patient.condition ?? 'Sem condição registrada'}
-                    </Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
-                </View>
-
-                <View style={[styles.patientFooter, { borderTopColor: colors.border }]}>
-                  <View style={styles.footerItem}>
-                    <Ionicons name="calendar-outline" size={14} color={colors.textSecondary} />
-                    <Text style={[styles.footerText, { color: colors.textSecondary }]}>
-                      Desde: {formatDate(patient.createdAt)}
-                    </Text>
-                  </View>
-                  {patient.phone && (
-                    <View style={styles.footerItem}>
-                      <Ionicons name="call-outline" size={14} color={colors.textSecondary} />
-                      <Text style={[styles.footerText, { color: colors.textSecondary }]}>
-                        {patient.phone}
+          <View style={styles.listContainer}>
+            {filteredPatients.map((patient) => (
+              <TouchableOpacity
+                key={patient.id}
+                activeOpacity={0.7}
+                onPress={() => {
+                  light();
+                  router.push(`/patient/${patient.id}`);
+                }}
+              >
+                <Card style={styles.patientCard}>
+                  <View style={styles.patientHeader}>
+                    <View style={[styles.avatar, { backgroundColor: colors.primary + '15' }]}>
+                      <Text style={[styles.avatarText, { color: colors.primary }]}>
+                        {patient.name.charAt(0).toUpperCase()}
                       </Text>
                     </View>
-                  )}
-                </View>
-              </Card>
-            </TouchableOpacity>
-          ))
+                    <View style={styles.patientInfo}>
+                      <Text style={[styles.patientName, { color: colors.text }]} numberOfLines={1}>
+                        {patient.name}
+                      </Text>
+                      {patient.condition ? (
+                        <View style={[styles.conditionBadge, { backgroundColor: colors.surfaceHighlight || colors.border }]}>
+                          <Text style={[styles.patientCondition, { color: colors.textSecondary }]} numberOfLines={1}>
+                            {patient.condition}
+                          </Text>
+                        </View>
+                      ) : (
+                        <Text style={[styles.patientConditionText, { color: colors.textMuted }]}>Sem condição</Text>
+                      )}
+                    </View>
+                    <View style={styles.actionArrow}>
+                      <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+                    </View>
+                  </View>
+
+                  <View style={[styles.patientFooter, { borderTopColor: colors.border }]}>
+                    <View style={styles.footerItem}>
+                      <Ionicons name="calendar-outline" size={14} color={colors.textSecondary} />
+                      <Text style={[styles.footerText, { color: colors.textSecondary }]}>
+                        Desde: {formatDate(patient.createdAt)}
+                      </Text>
+                    </View>
+                    {patient.phone && (
+                      <View style={styles.footerItem}>
+                        <Ionicons name="call-outline" size={14} color={colors.textSecondary} />
+                        <Text style={[styles.footerText, { color: colors.textSecondary }]}>
+                          {patient.phone}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </Card>
+              </TouchableOpacity>
+            ))}
+          </View>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -241,6 +254,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     paddingTop: 8,
+    paddingBottom: 48,
   },
   loadingState: {
     alignItems: 'center',
@@ -250,8 +264,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 16,
   },
+  listContainer: {
+    gap: 12,
+  },
   patientCard: {
-    marginBottom: 12,
+    borderRadius: 16,
   },
   patientHeader: {
     flexDirection: 'row',
@@ -266,24 +283,43 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontWeight: '700',
   },
   patientInfo: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: 16,
+    marginRight: 16,
   },
   patientName: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
+    marginBottom: 4,
+  },
+  conditionBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
   },
   patientCondition: {
-    fontSize: 14,
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  patientConditionText: {
+    fontSize: 13,
+  },
+  actionArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.02)',
   },
   patientFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 12,
+    marginTop: 16,
     paddingTop: 12,
     borderTopWidth: 1,
   },
@@ -294,18 +330,30 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 13,
+    fontWeight: '500',
   },
-  emptyState: {
+  emptyCard: {
     alignItems: 'center',
-    paddingVertical: 60,
+    paddingVertical: 40,
+    gap: 8,
+    borderRadius: 16,
+    borderStyle: 'dashed',
+  },
+  emptyIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
   },
   emptyTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
-    marginTop: 16,
   },
   emptyText: {
     fontSize: 14,
-    marginTop: 4,
+    textAlign: 'center',
+    paddingHorizontal: 20,
   },
 });
