@@ -26,7 +26,8 @@ export const DayView = ({
     
     // Calculate available width for appointments (total width - time label width)
     const TIME_LABEL_WIDTH = 50;
-    const availableWidth = windowWidth - TIME_LABEL_WIDTH;
+    const RIGHT_MARGIN = 40; // Space on the right to allow tapping the grid
+    const availableWidth = windowWidth - TIME_LABEL_WIDTH - RIGHT_MARGIN;
 
     const handleGridPress = (hour: number) => {
         // Navigate to appointment form with pre-filled date and time

@@ -28,7 +28,6 @@ bucket_name = "fisioflow-media"
 # ===== VARIÁVEIS DE AMBIENTE =====
 [vars]
 ENVIRONMENT = "production"
-FIREBASE_PROJECT_ID = "fisioflow-migration"
 # CORS: domínio do frontend em Cloudflare Pages
 ALLOWED_ORIGINS = "https://minatto-fisio.pages.dev,https://fisioflow.pages.dev,https://moocafisio.com.br,https://www.moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173"
 GOOGLE_MAPS_API_KEY = ""
@@ -44,7 +43,6 @@ name = "fisioflow-api-staging"
 
 [env.staging.vars]
 ENVIRONMENT = "staging"
-FIREBASE_PROJECT_ID = "fisioflow-migration"
 ALLOWED_ORIGINS = "https://fisioflow-staging.pages.dev,http://localhost:5173"
 NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
 
