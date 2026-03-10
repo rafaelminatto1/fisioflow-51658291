@@ -122,7 +122,7 @@ export async function signOut(): Promise<Result<void>> {
  */
 export async function resetPassword(email: string): Promise<Result<void>> {
   return asyncResult(async () => {
-    const { error } = await authClient.forgetPassword({ 
+    const { error } = await (authClient as any).forgetPassword({ 
       email: email.trim().toLowerCase(),
       redirectTo: 'fisioflow://reset-password' // Deep link para o app
     });

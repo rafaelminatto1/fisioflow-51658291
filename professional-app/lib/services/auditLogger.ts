@@ -1,8 +1,15 @@
 import { config } from '@/lib/config';
 import { authApi } from '@/lib/auth-api';
 import * as Device from 'expo-device';
-import * as Application from 'expo-application';
 import { Platform } from 'react-native';
+
+// Lazy import para evitar erros se expo-application não estiver instalado
+let Application: any = null;
+try {
+  Application = require('expo-application');
+} catch (e) {
+  // expo-application não está instalado, usar fallback
+}
 
 export type AuditAction = 
   | 'login'
@@ -45,11 +52,19 @@ export interface AuditEvent {
 
 class AuditLogger {
   private async getDeviceInfo() {
+    let model = 'Unknown';
+    try {
+      // Device.modelName pode ser null em alguns casos
+      model = (await Device.modelName) || 'Unknown';
+    } catch {
+      model = Device.modelName || 'Unknown';
+    }
+    
     return {
       os: Platform.OS,
       osVersion: Platform.Version.toString(),
-      model: Device.modelName || 'Unknown',
-      appVersion: Application.nativeApplicationVersion || 'Unknown',
+      model,
+      appVersion: Application?.nativeApplicationVersion || '1.0.0',
     };
   }
 
