@@ -1,5 +1,5 @@
 /**
- * useOrganizationMembers - Migrated to Firebase
+ * useOrganizationMembers - Migrated to Neon/Cloudflare
  *
  */
 

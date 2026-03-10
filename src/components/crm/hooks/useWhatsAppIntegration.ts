@@ -1,5 +1,5 @@
 /**
- * WhatsApp Integration Hook - Migrated to Firebase
+ * WhatsApp Integration Hook - Migrated to Neon/Cloudflare
  */
 
 import { useMutation } from '@tanstack/react-query';

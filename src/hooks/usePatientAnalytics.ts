@@ -1,5 +1,5 @@
 /**
- * usePatientAnalytics - Migrated to Firebase
+ * usePatientAnalytics - Migrated to Neon/Cloudflare
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

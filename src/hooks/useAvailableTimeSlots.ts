@@ -1,5 +1,5 @@
 /**
- * useAvailableTimeSlots - Migrated to Firebase
+ * useAvailableTimeSlots - Migrated to Neon/Cloudflare
  */
 
 import { useMemo } from 'react';

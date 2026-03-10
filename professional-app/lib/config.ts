@@ -8,7 +8,7 @@ export const config = {
   useCloudFunctions: true, // Forcing true as we migrate to standard APIs
   
   // Cloudflare Worker API Configuration
-  apiUrl: process.env.EXPO_PUBLIC_API_URL || 'https://api.seu-dominio.com',
+  apiUrl: process.env.EXPO_PUBLIC_API_URL || 'https://api-pro.moocafisio.com.br',
   
   // Feature flags
   enablePushNotifications: false, // Requires Expo project ID

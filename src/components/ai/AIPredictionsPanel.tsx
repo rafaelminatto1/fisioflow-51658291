@@ -1,5 +1,5 @@
 /**
- * AI Predictions Panel Component - Migrated to Firebase
+ * AI Predictions Panel Component - Migrated to Neon/Cloudflare
  */
 
 import { useState } from 'react';

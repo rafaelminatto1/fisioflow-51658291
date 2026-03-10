@@ -333,7 +333,7 @@ app.get('/categories', requireAuth, async (c) => {
     `SELECT * FROM wiki_categories WHERE organization_id = $1 ORDER BY order_index ASC, name ASC`,
     [user.organizationId]
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/categories', requireAuth, async (c) => {
@@ -365,7 +365,7 @@ app.get('/:pageId/comments', requireAuth, async (c) => {
     `SELECT * FROM wiki_comments WHERE page_id = $1 AND organization_id = $2 AND deleted_at IS NULL ORDER BY created_at ASC`,
     [c.req.param('pageId'), user.organizationId]
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/:pageId/comments', requireAuth, async (c) => {

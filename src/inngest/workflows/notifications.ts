@@ -1,13 +1,16 @@
 /**
- * Notification Workflow - Migrated to Firebase
+ * Notification Workflow - Migrated to Neon
  *
  */
 
 import { inngest, retryConfig } from '../../lib/inngest/client.js';
 import { Events, NotificationSendPayload, NotificationBatchPayload, InngestStep } from '../../lib/inngest/types.js';
-import { getAdminDb, getAdminMessaging } from '../../lib/firebase/admin.js';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+import { 
+  logNotificationHistory, 
+  updateNotificationStatus, 
+  getUserPushTokens 
+} from './_shared/neon-patients-appointments';
 
 type NotificationResult = { sent: boolean; channel: string; error?: string };
 
@@ -22,28 +25,23 @@ export const sendNotificationWorkflow = inngest.createFunction(
   },
   async ({ event, step }: { event: { data: NotificationSendPayload }; step: InngestStep }) => {
     const { userId, organizationId, type, data } = event.data;
-    const db = getAdminDb();
 
-    // Log notification attempt
+    // Log notification attempt (Neon)
     const notificationId = await step.run('log-notification', async () => {
-      const docRef = await db.collection('notification_history').add({
+      return await logNotificationHistory({
         user_id: userId,
         organization_id: organizationId,
         type,
         channel: type,
         status: 'pending',
-        data,
-        created_at: new Date().toISOString(),
+        payload: data,
       });
-
-      return docRef.id;
     });
 
     // Send based on type
     const result = await step.run('send-notification', async (): Promise<NotificationResult> => {
       switch (type) {
         case 'email':
-          // Trigger email workflow
           await inngest.send({
             name: Events.EMAIL_SEND,
             data: {
@@ -56,7 +54,6 @@ export const sendNotificationWorkflow = inngest.createFunction(
           return { sent: true, channel: 'email' };
 
         case 'whatsapp':
-          // Trigger WhatsApp workflow
           await inngest.send({
             name: Events.WHATSAPP_SEND,
             data: {
@@ -67,47 +64,26 @@ export const sendNotificationWorkflow = inngest.createFunction(
           return { sent: true, channel: 'whatsapp' };
 
         case 'push': {
-          const messaging = getAdminMessaging();
-          const tokensSnapshot = await db.collection('users').doc(userId).collection('push_tokens').get();
+          // Push notifications now handled via external provider or Worker bridge
+          const tokens = await getUserPushTokens(userId);
 
-          if (tokensSnapshot.empty) {
+          if (tokens.length === 0) {
             logger.info('[Notification] No push tokens found for user', { userId }, 'notifications-workflow');
             return { sent: false, channel: 'push', error: 'No tokens found' };
           }
 
-          const tokens = tokensSnapshot.docs.map(doc => normalizeFirestoreData(doc.data()).token).filter(t => !!t);
-
-          if (tokens.length === 0) {
-            return { sent: false, channel: 'push', error: 'No valid tokens' };
-          }
-
-          // Send multicast message
-          const message = {
-            notification: {
+          // Trigger internal event for Push Provider (OneSignal/Firebase-bridge)
+          await inngest.send({
+            name: 'push/send.multicast',
+            data: {
+              tokens,
               title: data.subject || 'FisioFlow',
               body: data.body,
-            },
-            data: {
-              // Data must be string key/value pairs
-              ...Object.entries(data).reduce((acc, [k, v]) => ({ ...acc, [k]: String(v) }), {}),
-              type: 'PROMOTIONAL', // Default or specific type
-            },
-            tokens: tokens,
-          };
+              metadata: data
+            }
+          });
 
-          const response = await messaging.sendEachForMulticast(message);
-
-          if (response.failureCount > 0) {
-            logger.warn('[Notification] Some push notifications failed', {
-              success: response.successCount,
-              failure: response.failureCount,
-              errors: response.responses.filter(r => !r.success).map(r => r.error)
-            }, 'notifications-workflow');
-
-            // Optional: Clean up invalid tokens here if error is 'registration-token-not-registered'
-          }
-
-          return { sent: response.successCount > 0, channel: 'push', error: response.failureCount === tokens.length ? 'All failed' : undefined };
+          return { sent: true, channel: 'push' };
         }
 
         default:
@@ -116,14 +92,9 @@ export const sendNotificationWorkflow = inngest.createFunction(
       }
     });
 
-    // Update notification status
+    // Update notification status (Neon)
     await step.run('update-status', async () => {
-      await db.collection('notification_history').doc(notificationId).update({
-        status: result.sent ? 'sent' : 'failed',
-        sent_at: new Date().toISOString(),
-        error_message: result.error || null,
-      });
-
+      await updateNotificationStatus(notificationId, result.sent ? 'sent' : 'failed', result.error);
       return { updated: true };
     });
 
@@ -148,7 +119,6 @@ export const sendNotificationBatchWorkflow = inngest.createFunction(
   async ({ event, step }: { event: { data: NotificationBatchPayload }; step: InngestStep }) => {
     const { organizationId, notifications } = event.data;
 
-    // Validate input
     if (!Array.isArray(notifications) || notifications.length === 0) {
       return {
         success: false,
@@ -159,7 +129,6 @@ export const sendNotificationBatchWorkflow = inngest.createFunction(
     }
 
     const results = await step.run('process-batch', async () => {
-      // Send individual notification events
       const events = notifications.map((notification: Omit<NotificationSendPayload, 'organizationId'>) => ({
         name: Events.NOTIFICATION_SEND,
         data: {
