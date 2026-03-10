@@ -1,8 +1,11 @@
 import { Hono } from 'hono';
 import type { Env } from '../types/env';
 import { createPool } from '../lib/db';
+import { requireAuth, type AuthVariables } from '../lib/auth';
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
+
+app.use('*', requireAuth);
 
 app.post('/', async (c) => {
   const db = createPool(c.env);
