@@ -21,6 +21,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useQuery } from '@tanstack/react-query';
+import { knowledgeService } from '@/features/wiki/services/knowledgeService';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Select,
   SelectContent,
@@ -49,6 +52,8 @@ interface ProtocolFormData {
   weeks_total: number;
   milestones: Milestone[];
   restrictions: Restriction[];
+  evidence_level?: string;
+  wiki_page_id?: string;
 }
 
 interface NewProtocolModalProps {
@@ -73,7 +78,16 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
     condition_name: '',
     weeks_total: 12,
     milestones: [],
-    restrictions: []
+    restrictions: [],
+    evidence_level: 'B',
+    wiki_page_id: ''
+  });
+
+  const { organizationId } = useAuth();
+  const { data: wikiArticles = [] } = useQuery({
+    queryKey: ['knowledge-artifacts', organizationId],
+    queryFn: () => organizationId ? knowledgeService.listArtifacts(organizationId) : Promise.resolve([]),
+    enabled: !!organizationId
   });
 
   // Sync with protocol prop when editing
@@ -85,7 +99,9 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
         condition_name: protocol.condition_name || '',
         weeks_total: protocol.weeks_total || 12,
         milestones: Array.isArray(protocol.milestones) ? (protocol.milestones as any) : [],
-        restrictions: Array.isArray(protocol.restrictions) ? (protocol.restrictions as any) : []
+        restrictions: Array.isArray(protocol.restrictions) ? (protocol.restrictions as any) : [],
+        evidence_level: protocol.evidence_level || 'B',
+        wiki_page_id: protocol.wiki_page_id || ''
       });
       setStep(1);
     } else if (!protocol && open) {
@@ -95,7 +111,9 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
         condition_name: '',
         weeks_total: 12,
         milestones: [],
-        restrictions: []
+        restrictions: [],
+        evidence_level: 'B',
+        wiki_page_id: ''
       });
       setStep(1);
     }
@@ -156,22 +174,22 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-0 overflow-hidden bg-transparent border-none shadow-premium-lg">
+      <DialogContent className="max-w-2xl p-0 overflow-hidden rounded-2xl border-border bg-background shadow-lg">
         <DialogTitle className="sr-only">
           {protocol ? 'Editar Protocolo' : 'Criar Novo Protocolo'}
         </DialogTitle>
-        <div className="relative w-full overflow-hidden glass-card rounded-2xl">
+        <div className="relative w-full h-full flex flex-col">
           {/* Header with Stepper */}
-          <div className="relative p-6 border-b border-white/10 bg-white/5">
+          <div className="relative p-6 border-b bg-muted/30">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                  <Activity className="w-6 h-6 text-[#13ecc8]" />
+                <h2 className="text-2xl font-bold flex items-center gap-2">
+                  <Activity className="w-6 h-6 text-primary" />
                   {protocol ? 'Editar Protocolo' : 'Criar Novo Protocolo'}
                 </h2>
-                <p className="text-sm text-white/50">Personalize a jornada de recuperação do paciente</p>
+                <p className="text-sm text-muted-foreground">Personalize a jornada de recuperação do paciente</p>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="text-white/40 hover:text-white hover:bg-white/10">
+              <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="text-muted-foreground hover:text-foreground">
                 <X className="w-5 h-5" />
               </Button>
             </div>
@@ -186,14 +204,14 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
                     <div className={cn(
                       "w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2",
                       step >= s.id 
-                        ? "bg-[#13ecc8]/20 border-[#13ecc8] text-[#13ecc8] shadow-[0_0_15px_rgba(19,236,200,0.3)]" 
-                        : "bg-white/5 border-white/10 text-white/40"
+                        ? "bg-primary/10 border-primary text-primary shadow-sm" 
+                        : "bg-muted border-border text-muted-foreground"
                     )}>
                       <s.icon className="w-5 h-5" />
                     </div>
                     <span className={cn(
                       "text-[10px] font-semibold transition-colors uppercase tracking-wider",
-                      step >= s.id ? "text-white" : "text-white/30"
+                      step >= s.id ? "text-foreground" : "text-muted-foreground/50"
                     )}>
                       {s.name}
                     </span>
@@ -201,7 +219,7 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
                   {idx < steps.length - 1 && (
                     <div className={cn(
                       "flex-1 h-0.5 mx-4 transition-colors",
-                      step > s.id ? "bg-[#13ecc8]" : "bg-white/10"
+                      step > s.id ? "bg-primary" : "bg-border"
                     )} />
                   )}
                 </React.Fragment>
@@ -210,7 +228,7 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
           </div>
 
           {/* Content Area */}
-          <div className="relative p-8 min-h-[400px]">
+          <div className="relative p-8 min-h-[400px] overflow-y-auto">
             <AnimatePresence mode="wait">
               <motion.div
                 key={step}
@@ -223,46 +241,84 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
                   <div className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="col-span-2 space-y-2">
-                        <Label className="text-white/70">Nome do Protocolo</Label>
+                        <Label>Nome do Protocolo</Label>
                         <Input 
                           placeholder="Ex: Reabilitação LCA - Fase Pós-Op" 
-                          className="bg-white/5 border-white/10 text-white placeholder:text-white/20 h-12 focus-visible:ring-[#13ecc8] focus-visible:ring-offset-0 focus:border-[#13ecc8]"
+                          className="h-12 focus-visible:ring-primary"
                           value={formData.name}
                           onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
                         />
                       </div>
                       <div className="col-span-2 space-y-2">
-                        <Label className="text-white/70">Condição / Patologia</Label>
+                        <Label>Condição / Patologia</Label>
                         <Input 
                           placeholder="Ex: LCA, Menisco, Manguito Rotador" 
-                          className="bg-white/5 border-white/10 text-white placeholder:text-white/20 h-12 focus-visible:ring-[#13ecc8] focus-visible:ring-offset-0 focus:border-[#13ecc8]"
+                          className="h-12 focus-visible:ring-primary"
                           value={formData.condition_name}
                           onChange={e => setFormData(prev => ({ ...prev, condition_name: e.target.value }))}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-white/70">Tipo</Label>
+                        <Label>Tipo</Label>
                         <Select 
                           value={formData.protocol_type} 
                           onValueChange={v => setFormData(prev => ({ ...prev, protocol_type: v as any }))}
                         >
-                          <SelectTrigger className="bg-white/5 border-white/10 text-white h-12">
+                          <SelectTrigger className="h-12">
                             <SelectValue placeholder="Selecione o tipo" />
                           </SelectTrigger>
-                          <SelectContent className="bg-[#111928] border-white/10 text-white">
+                          <SelectContent>
                             <SelectItem value="patologia">Patologia</SelectItem>
                             <SelectItem value="pos_operatorio">Pós-Operatório</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-white/70">Duração Total (Semanas)</Label>
+                        <Label>Duração Total (Semanas)</Label>
                         <Input 
                           type="number"
-                          className="bg-white/5 border-white/10 text-white h-12"
+                          className="h-12"
                           value={formData.weeks_total}
                           onChange={e => setFormData(prev => ({ ...prev, weeks_total: parseInt(e.target.value) || 0 }))}
                         />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label>Nível de Evidência</Label>
+                        <Select 
+                          value={formData.evidence_level} 
+                          onValueChange={v => setFormData(prev => ({ ...prev, evidence_level: v }))}
+                        >
+                          <SelectTrigger className="h-12">
+                            <SelectValue placeholder="Selecione o nível" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="A">Nível A (Ouro)</SelectItem>
+                            <SelectItem value="B">Nível B (Prata)</SelectItem>
+                            <SelectItem value="C">Nível C (Bronze)</SelectItem>
+                            <SelectItem value="D">Nível D (Consenso)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="col-span-2 space-y-2">
+                        <Label>Vincular Página da Wiki</Label>
+                        <Select 
+                          value={formData.wiki_page_id} 
+                          onValueChange={v => setFormData(prev => ({ ...prev, wiki_page_id: v }))}
+                        >
+                          <SelectTrigger className="h-12">
+                            <SelectValue placeholder="Selecione um artigo/consenso" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-[300px]">
+                            <SelectItem value="">Nenhum vínculo</SelectItem>
+                            {wikiArticles.map(art => (
+                              <SelectItem key={art.id} value={art.id}>
+                                {art.title} ({art.subgroup})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                   </div>
@@ -271,19 +327,19 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
                 {step === 2 && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between mb-2">
-                      <Label className="text-white/70">Marcos de Evolução</Label>
+                      <Label>Marcos de Evolução</Label>
                       <Button 
                         size="sm" 
                         onClick={addMilestone}
-                        className="bg-[#13ecc8] hover:bg-[#11d8b7] text-black font-bold h-8"
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-8"
                       >
                         <Plus className="w-4 h-4 mr-1" /> Add Marco
                       </Button>
                     </div>
 
-                    <div className="max-h-[300px] overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-white/10">
+                    <div className="max-h-[300px] overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-muted">
                       {formData.milestones.length === 0 && (
-                        <div className="text-center py-8 border-2 border-dashed border-white/5 rounded-xl text-white/30">
+                        <div className="text-center py-8 border-2 border-dashed border-border rounded-xl text-muted-foreground/30">
                           Nenhum marco adicionado ainda.
                         </div>
                       )}
@@ -292,13 +348,13 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
                           initial={{ opacity: 0, y: 5 }}
                           animate={{ opacity: 1, y: 0 }}
                           key={idx} 
-                          className="flex gap-2 p-3 bg-white/5 border border-white/10 rounded-xl items-start"
+                          className="flex gap-2 p-3 bg-muted/30 border border-border rounded-xl items-start"
                         >
                           <div className="w-16">
                             <Input 
                               type="number" 
                               placeholder="Sem"
-                              className="bg-white/5 border-white/10 text-white p-2 h-9 text-xs"
+                              className="p-2 h-9 text-xs"
                               value={m.week}
                               onChange={e => updateMilestone(idx, 'week', parseInt(e.target.value) || 0)}
                             />
@@ -306,7 +362,7 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
                           <div className="flex-1">
                             <Input 
                               placeholder="Descrição do marco..."
-                              className="bg-white/5 border-white/10 text-white p-2 h-9 text-xs"
+                              className="p-2 h-9 text-xs"
                               value={m.description}
                               onChange={e => updateMilestone(idx, 'description', e.target.value)}
                             />
@@ -314,7 +370,7 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-9 w-9 text-white/20 hover:text-red-400 hover:bg-red-400/10"
+                            className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                             onClick={() => removeMilestone(idx)}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -328,19 +384,20 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
                 {step === 3 && (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between mb-2">
-                      <Label className="text-white/70">Restrições Clínicas</Label>
+                      <Label>Restrições Clínicas</Label>
                       <Button 
                         size="sm" 
                         onClick={addRestriction}
-                        className="bg-red-500/80 hover:bg-red-500 text-white font-bold h-8"
+                        variant="destructive"
+                        className="font-bold h-8"
                       >
                         <Plus className="w-4 h-4 mr-1" /> Add Restrição
                       </Button>
                     </div>
 
-                    <div className="max-h-[300px] overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-white/10">
+                    <div className="max-h-[300px] overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-muted">
                       {formData.restrictions.length === 0 && (
-                        <div className="text-center py-8 border-2 border-dashed border-white/5 rounded-xl text-white/30">
+                        <div className="text-center py-8 border-2 border-dashed border-border rounded-xl text-muted-foreground/30">
                           Nenhuma restrição clínica definida.
                         </div>
                       )}
@@ -349,19 +406,19 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
                           initial={{ opacity: 0, y: 5 }}
                           animate={{ opacity: 1, y: 0 }}
                           key={idx} 
-                          className="flex gap-2 p-3 bg-red-500/5 border border-red-500/20 rounded-xl items-start"
+                          className="flex gap-2 p-3 bg-destructive/5 border border-destructive/20 rounded-xl items-start"
                         >
                           <div className="flex gap-1 w-32">
                             <Input 
                               type="number"
-                              className="bg-white/5 border-white/10 text-white p-2 h-9 text-xs font-mono"
+                              className="p-2 h-9 text-xs font-mono"
                               value={r.week_start}
                               onChange={e => updateRestriction(idx, 'week_start', parseInt(e.target.value) || 0)}
                             />
-                            <span className="text-white/30 self-center">/</span>
+                            <span className="text-muted-foreground/30 self-center">/</span>
                             <Input 
                               type="number"
-                              className="bg-white/5 border-white/10 text-white p-2 h-9 text-xs font-mono"
+                              className="p-2 h-9 text-xs font-mono"
                               value={r.week_end}
                               onChange={e => updateRestriction(idx, 'week_end', parseInt(e.target.value) || 0)}
                             />
@@ -369,7 +426,7 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
                           <div className="flex-1">
                             <Input 
                               placeholder="Descreva a restrição..."
-                              className="bg-white/5 border-white/10 text-white p-2 h-9 text-xs"
+                              className="p-2 h-9 text-xs"
                               value={r.description}
                               onChange={e => updateRestriction(idx, 'description', e.target.value)}
                             />
@@ -377,7 +434,7 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-9 w-9 text-white/20 hover:text-red-400 hover:bg-red-400/10"
+                            className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                             onClick={() => removeRestriction(idx)}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -392,13 +449,12 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
           </div>
 
           {/* Footer Navigation */}
-          <div className="p-6 border-t border-white/10 flex items-center justify-between bg-white/5">
+          <div className="p-6 border-t flex items-center justify-between bg-muted/30">
             <Button
               variant="ghost"
               onClick={prevStep}
               disabled={step === 1 || isLoading}
               className={cn(
-                "text-white/60 hover:text-white hover:bg-white/10",
                 step === 1 && "opacity-0 pointer-events-none"
               )}
             >
@@ -410,7 +466,7 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
                 <Button 
                   onClick={nextStep}
                   disabled={step === 1 && (!formData.name || !formData.condition_name)}
-                  className="bg-[#13ecc8] hover:bg-[#11d8b7] text-black font-bold px-8 shadow-[0_0_20px_rgba(19,236,200,0.2)] hover:shadow-[0_0_25px_rgba(19,236,200,0.4)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-8 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Continuar <ChevronRight className="w-4 h-4 ml-2" />
                 </Button>
@@ -418,7 +474,7 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
                 <Button 
                   onClick={handleSave}
                   disabled={isLoading}
-                  className="bg-[#13ecc8] hover:bg-[#11d8b7] text-black font-bold px-8 shadow-[0_0_20px_rgba(19,236,200,0.2)] group"
+                  className="px-8 group"
                 >
                   {isLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin" />

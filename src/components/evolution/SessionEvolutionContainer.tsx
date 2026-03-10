@@ -35,6 +35,7 @@ import { GoalsTracker } from './GoalsTracker';
 import { ConductReplication } from './ConductReplication';
 import { MedicalReportSuggestions } from './MedicalReportSuggestions';
 import { MandatoryTestAlertService, type AlertCheckResult } from '@/lib/services/mandatoryTestAlertService';
+import { ProtocolMilestonesAlert } from './ProtocolMilestonesAlert';
 import { SessionExercisesPanel, type SessionExercise } from './SessionExercisesPanel';
 import { PatientHelpers } from '@/types';
 import { GamificationTriggerService } from '@/lib/services/gamificationTriggers';
@@ -150,9 +151,10 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
           if (pid) setPatientId(pid);
 
           if (apiAppointment.patient) {
+            const { id: _ignored, ...patientData } = apiAppointment.patient;
             setPatient({
               id: apiAppointment.patient.id,
-              ...apiAppointment.patient,
+              ...patientData,
               full_name: apiAppointment.patient.full_name ?? apiAppointment.patient.name,
               patientName: apiAppointment.patient.full_name ?? apiAppointment.patient.name,
             });
@@ -170,11 +172,12 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
             try {
               const apiPatient = await PatientService.getPatientById(currentPatientId);
               if (apiPatient) {
+                const { id: _ignored, ...patientData } = apiPatient;
                 setPatient({
                   id: apiPatient.id,
-                  ...apiPatient,
-                  full_name: apiPatient.name ?? (apiPatient as Record<string, unknown>).full_name,
-                  patientName: apiPatient.name ?? (apiPatient as Record<string, unknown>).patientName,
+                  ...patientData,
+                  full_name: apiPatient.name ?? (apiPatient as any).full_name,
+                  patientName: apiPatient.name ?? (apiPatient as any).patientName,
                 });
               }
             } catch {
@@ -197,9 +200,10 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       } else if (propPatientId) {
         const apiPatient = await PatientService.getPatientById(propPatientId);
         if (!apiPatient) throw new Error('Patient not found');
+        const { id: _ignored, ...patientData } = apiPatient;
         setPatient({
           id: apiPatient.id,
-          ...apiPatient,
+          ...patientData,
           full_name: apiPatient.name,
           patientName: apiPatient.name,
         });
@@ -243,8 +247,9 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
           notes: row.notes ?? undefined,
           created_at: row.created_at,
         })));
-        setGoals(goalsRes.data ?? []);
-
+        if (goalsRes.data) {
+          setGoals(goalsRes.data as any);
+        }
         // Check mandatory tests
         const result = await MandatoryTestAlertService.checkMandatoryTests(
           currentPatientId,
@@ -322,7 +327,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   };
 
   const handleSelectConduct = (conduct: string) => {
-    setSoapData(prev => ({ ...prev, plan: conduct }));
+    setSoapData(prev => ({ ...prev, plan: conduct || '' } as any));
     toast({
       title: 'Conduta aplicada',
       description: 'O plano foi atualizado com a conduta selecionada.'
@@ -333,11 +338,11 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
     if (conduct.plan) {
       setSoapData(prev => ({
         ...prev,
-        plan: conduct.plan,
+        plan: conduct.plan || '',
         ...(conduct.subjective && { subjective: conduct.subjective }),
         ...(conduct.objective && { objective: conduct.objective }),
         ...(conduct.assessment && { assessment: conduct.assessment }),
-      }));
+      } as any));
       toast({
         title: 'Conduta replicada',
         description: 'Os dados da sessão anterior foram aplicados.'
@@ -362,6 +367,13 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
 
     await MandatoryTestAlertService.registerException(patientId, appointmentId, testName, reason);
     handleTestCompleted(testName);
+  };
+
+  const handleApplyMilestone = (milestone: string) => {
+    setSoapData(prev => ({
+      ...prev,
+      assessment: prev.assessment ? `${prev.assessment}\n- ${milestone}` : `- ${milestone}`
+    } as any));
   };
 
   const handleSave = async () => {
@@ -431,12 +443,12 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       const existingDraft = draftsResponse.data?.[0];
       if (existingDraft?.id) {
         soapRecordId = existingDraft.id;
-        await sessionsApi.update(existingDraft.id, { ...soapRecordData, updated_at: now });
+        await sessionsApi.update(existingDraft.id, { ...soapRecordData, updated_at: now } as any);
       } else {
         const created = await sessionsApi.create({
           ...soapRecordData,
           created_at: now,
-        });
+        } as any);
         soapRecordId = created.data.id;
       }
 
@@ -574,7 +586,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       const existingDraft = draftsResponse.data?.[0];
       if (existingDraft?.id) {
         soapRecordId = existingDraft.id;
-        await sessionsApi.update(existingDraft.id, { ...soapRecordData, updated_at: now });
+        await sessionsApi.update(existingDraft.id, { ...soapRecordData, updated_at: now } as any);
       }
     }
 
@@ -582,7 +594,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       await sessionsApi.create({
         ...soapRecordData,
         created_at: now,
-      });
+      } as any);
     }
   };
 
@@ -751,12 +763,13 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
               procedures: [],
               exercises: sessionExercises.map(ex => ({
                 id: ex.id || Math.random().toString(),
+                exerciseId: ex.exerciseId,
                 name: ex.name,
-                sets: ex.sets || '3',
-                reps: ex.reps || '10',
-                weight: ex.weight || '',
-                notes: ex.notes || '',
-                feedback: ex.feedback as any || 'good',
+                prescription: `${ex.sets || 3}x${ex.repetitions || 10}${ex.weight ? ` c/ ${ex.weight}` : ''}`,
+                completed: ex.completed || false,
+                observations: ex.observations || '',
+                image_url: ex.image_url,
+                feedback: (ex as any).feedback as any || { pain: false, fatigue: false, difficultyPerforming: false },
               })),
               painLevel: 0,
               painLocation: '',
@@ -805,12 +818,13 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
               procedures: [], // Mapear se disponível
               exercises: sessionExercises.map(ex => ({
                 id: ex.id || Math.random().toString(),
+                exerciseId: ex.exerciseId,
                 name: ex.name,
-                sets: ex.sets || '3',
-                reps: ex.reps || '10',
-                weight: ex.weight || '',
-                notes: ex.notes || '',
-                feedback: ex.feedback as any || 'good',
+                prescription: `${ex.sets || 3}x${ex.repetitions || 10}${ex.weight ? ` c/ ${ex.weight}` : ''}`,
+                completed: ex.completed || false,
+                observations: ex.observations || '',
+                image_url: ex.image_url,
+                feedback: (ex as any).feedback as any || { pain: false, fatigue: false, difficultyPerforming: false },
               })),
               painLevel: 0,
               painLocation: '',
@@ -920,8 +934,9 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
                     </TabsContent>
 
                     <TabsContent value="pathologies" className="mt-4">
+                      <SurgeryTimeline surgeries={surgeries as any} />
                       {pathologies.length > 0 ? (
-                        <PathologyStatus pathologies={pathologies} />
+                        <PathologyStatus pathologies={pathologies as any} />
                       ) : (
                         <div className="text-center py-8 text-muted-foreground">
                           Nenhuma patologia registrada.
@@ -944,11 +959,19 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
               <ScrollArea className="h-[calc(100vh-120px)]">
                 <div className="space-y-4 pr-4">
                   {patient && (
-                    <PatientSummaryPanel
-                      patient={patient}
-                      goals={goals}
-                      totalSessions={sessionNumber}
-                    />
+                    <>
+                      <ProtocolMilestonesAlert
+                        patientId={patientId}
+                        surgeries={surgeries as any}
+                        pathologies={pathologies as any}
+                        onApplyMilestone={handleApplyMilestone}
+                      />
+                      <PatientSummaryPanel
+                        patient={patient as any}
+                        goals={goals as any}
+                        totalSessions={sessionNumber}
+                      />
+                    </>
                   )}
                   {goals.length > 0 && (
                     <GoalsTracker goals={goals} />

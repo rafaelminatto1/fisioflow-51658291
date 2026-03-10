@@ -22,6 +22,13 @@
       "when": 1773174100378,
       "tag": "0002_yummy_texas_twister",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1773181761864,
+      "tag": "0003_flaky_shocker",
+      "breakpoints": true
     }
   ]
 }

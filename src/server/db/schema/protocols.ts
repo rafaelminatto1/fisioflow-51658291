@@ -99,6 +99,7 @@ export const exerciseProtocols = pgTable('exercise_protocols', {
   isActive: boolean('is_active').default(true).notNull(),
   isPublic: boolean('is_public').default(true).notNull(),
   organizationId: uuid('organization_id'),
+  wikiPageId: uuid('wiki_page_id'),
   createdBy: text('created_by'),
 
   createdAt: timestamp('created_at').defaultNow().notNull(),
