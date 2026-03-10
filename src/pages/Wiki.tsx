@@ -669,7 +669,7 @@ export default function WikiPage() {
       return;
     }
 
-    const pageFromSlug = pages.find((page) => page.slug === slug) ?? null;
+    const pageFromSlug = pages.find((page) => page.slug === slug || page.id === slug) ?? null;
     setSelectedPage(pageFromSlug);
   }, [pages, slug]);
 

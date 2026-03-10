@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -59,6 +60,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
     const [expandedPhases, setExpandedPhases] = useState<string[]>(['Fase 1']);
     const [applyModalOpen, setApplyModalOpen] = useState(false);
     const { currentOrganization } = useOrganizations();
+    const navigate = useNavigate();
 
     const { data: linkedTests = [], isLoading: _isLoadingTests } = useQuery({
         queryKey: ['protocol-linked-tests', protocol.id, protocol.clinical_tests],
@@ -128,14 +130,28 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                     <div>
                         <div className="flex items-center gap-2 flex-wrap">
                             <h1 className="text-2xl font-bold tracking-tight">{protocol.name}</h1>
-                            <Badge
-                                variant={protocol.protocol_type === 'pos_operatorio' ? 'default' : 'secondary'}
-                                className="text-xs px-2 py-0.5"
-                            >
-                                {protocol.protocol_type === 'pos_operatorio' ? 'Pós-Operatório' : 'Patologia'}
-                            </Badge>
+                            <div className="flex gap-1.5 items-center">
+                                <Badge
+                                    variant={protocol.protocol_type === 'pos_operatorio' ? 'default' : 'secondary'}
+                                    className="text-[10px] h-5 px-2 py-0 uppercase tracking-wider font-bold"
+                                >
+                                    {protocol.protocol_type === 'pos_operatorio' ? 'Pós-Operatório' : 'Patologia'}
+                                </Badge>
+                                {protocol.evidence_level && (
+                                    <Badge 
+                                        variant="outline" 
+                                        className={cn(
+                                            "text-[10px] h-5 px-2 py-0 uppercase tracking-wider font-bold gap-1",
+                                            protocol.evidence_level === 'A' ? "bg-amber-500/10 text-amber-600 border-amber-500/20" : "bg-blue-500/10 text-blue-600 border-blue-500/20"
+                                        )}
+                                    >
+                                        <Zap className="h-2.5 w-2.5 fill-current" />
+                                        Nível {protocol.evidence_level}
+                                    </Badge>
+                                )}
+                            </div>
                         </div>
-                        <p className="text-muted-foreground font-medium flex items-center gap-2">
+                        <p className="text-muted-foreground font-medium flex items-center gap-2 mt-1">
                             {protocol.condition_name}
                             <span className="h-1 w-1 rounded-full bg-muted-foreground/40" />
                             <span className="flex items-center gap-1 text-xs">
@@ -147,6 +163,17 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                 </div>
 
                 <div className="flex items-center gap-2 self-end md:self-auto">
+                    {protocol.wiki_page_id && (
+                        <Button 
+                            variant="secondary" 
+                            className="gap-2 shadow-sm bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200"
+                            onClick={() => navigate(`/wiki/${protocol.wiki_page_id}`)}
+                        >
+                            <BookOpen className="h-4 w-4" />
+                            <span className="hidden sm:inline">Ver na Wiki</span>
+                            <span className="sm:hidden">Wiki</span>
+                        </Button>
+                    )}
                     <Button onClick={() => setApplyModalOpen(true)} className="gap-2 shadow-sm">
                         <Play className="h-4 w-4" />
                         <span className="hidden sm:inline">Aplicar a Paciente</span>
@@ -321,132 +348,118 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                         </Badge>
                     </div>
 
-                    <div className="grid gap-3">
+                    <div className="relative pl-6 md:pl-10 space-y-12 before:absolute before:left-[11px] md:left-[19px] before:top-4 before:bottom-4 before:w-0.5 before:bg-gradient-to-b before:from-indigo-500/10 before:via-indigo-500/40 before:to-indigo-500/10">
                         {details.phases.map((phase, i) => {
-                            const phaseId = phase.name.split(' - ')[0];
-                            const isExpanded = expandedPhases.includes(phaseId);
+                            const phaseColors = [
+                                { bg: 'bg-red-500', text: 'text-red-600', border: 'border-red-500/20', light: 'bg-red-500/5', gradient: 'from-red-500 to-rose-600' },
+                                { bg: 'bg-amber-500', text: 'text-amber-600', border: 'border-amber-500/20', light: 'bg-amber-500/5', gradient: 'from-amber-500 to-orange-600' },
+                                { bg: 'bg-blue-500', text: 'text-blue-600', border: 'border-blue-500/20', light: 'bg-blue-500/5', gradient: 'from-blue-500 to-indigo-600' },
+                                { bg: 'bg-emerald-500', text: 'text-emerald-600', border: 'border-emerald-500/20', light: 'bg-emerald-500/5', gradient: 'from-emerald-500 to-green-600' }
+                            ];
+                            const color = phaseColors[i % phaseColors.length];
 
                             return (
-                                <Collapsible
-                                    key={i}
-                                    open={isExpanded}
-                                    onOpenChange={() => togglePhase(phaseId)}
-                                    className="group"
-                                >
-                                    <CollapsibleTrigger asChild>
-                                        <Card className={cn(
-                                            'p-4 cursor-pointer transition-all duration-300 backdrop-blur-xl bg-background/40 hover:bg-background/60 border-border/40 overflow-hidden relative',
-                                            isExpanded ? 'ring-1 ring-primary/30 shadow-lg translate-x-1' : 'hover:translate-x-1'
-                                        )}>
-                                            {/* Phase progress indicator */}
-                                            <div className={cn(
-                                                "absolute left-0 top-0 bottom-0 w-1.5 transition-all",
-                                                i === 0 ? "bg-red-500" :
-                                                    i === 1 ? "bg-amber-500" :
-                                                        i === 2 ? "bg-blue-500" :
-                                                            "bg-emerald-500"
-                                            )} />
+                                <div key={i} className="relative animate-in slide-in-from-left-4 duration-500" style={{ transitionDelay: `${i * 100}ms` }}>
+                                    {/* Timeline Node */}
+                                    <div className={cn(
+                                        "absolute -left-[27px] md:-left-[35px] h-6 w-6 md:h-9 md:w-9 rounded-full border-4 border-background flex items-center justify-center text-white text-[10px] md:text-sm font-bold shadow-md z-10 transition-transform hover:scale-110",
+                                        color.bg
+                                    )}>
+                                        {i + 1}
+                                    </div>
 
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-5">
-                                                    <div className={cn(
-                                                        'h-12 w-12 rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-sm',
-                                                        i === 0 ? 'bg-gradient-to-br from-red-500 to-rose-600' :
-                                                            i === 1 ? 'bg-gradient-to-br from-amber-500 to-orange-600' :
-                                                                i === 2 ? 'bg-gradient-to-br from-blue-500 to-indigo-600' :
-                                                                    'bg-gradient-to-br from-emerald-500 to-green-600'
-                                                    )}>
-                                                        {i + 1}
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="font-bold text-lg leading-none mb-1.5">{phase.name}</h4>
-                                                        <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium uppercase tracking-wider">
-                                                            <Calendar className="h-3 w-3" />
-                                                            {phase.weeks}
-                                                        </div>
-                                                    </div>
+                                    <Card className="p-0 border-border/40 overflow-hidden backdrop-blur-sm bg-background/40 hover:bg-background/60 transition-colors shadow-none">
+                                        <div className={cn("px-6 py-4 border-b flex items-center justify-between", color.border, color.light)}>
+                                            <div className="flex items-center gap-4">
+                                                <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center text-white shadow-sm", color.bg)}>
+                                                    <Calendar className="h-5 w-5" />
                                                 </div>
-                                                <div className={cn(
-                                                    "h-8 w-8 rounded-full flex items-center justify-center transition-all",
-                                                    isExpanded ? "bg-primary/10 text-primary rotate-180" : "bg-muted/40 text-muted-foreground"
-                                                )}>
-                                                    <ChevronDown className="h-5 w-5" />
-                                                </div>
-                                            </div>
-                                        </Card>
-                                    </CollapsibleTrigger>
-                                    <CollapsibleContent className="CollapsibleContent">
-                                        <div className="mt-3 ml-2 md:ml-10 space-y-6 p-6 md:p-8 backdrop-blur-xl bg-primary/[0.02] rounded-3xl border border-primary/5 shadow-inner">
-                                            {/* Phase Content Grid */}
-                                            <div className="grid md:grid-cols-2 gap-8">
-                                                {/* Left Column: Goals & Criteria */}
-                                                <div className="space-y-6">
-                                                    <div>
-                                                        <h5 className="font-bold text-xs uppercase tracking-[0.2em] text-muted-foreground mb-4 flex items-center gap-2">
-                                                            <Target className="h-3 w-3 text-primary" />
-                                                            Objetivos da Fase
-                                                        </h5>
-                                                        <ul className="grid gap-2.5">
-                                                            {phase.goals.map((goal, j) => (
-                                                                <li key={j} className="flex items-center gap-3 p-3 rounded-xl bg-background/40 border border-border/40 text-sm font-medium">
-                                                                    <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                                                                    {goal}
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-
-                                                    <div>
-                                                        <h5 className="font-bold text-xs uppercase tracking-[0.2em] text-emerald-500 mb-4 flex items-center gap-2">
-                                                            <CheckCircle2 className="h-3 w-3" />
-                                                            Critérios para Próxima Fase
-                                                        </h5>
-                                                        <ul className="grid gap-2.5">
-                                                            {phase.criteria.map((crit, j) => (
-                                                                <li key={j} className="flex items-start gap-3 p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-sm font-medium text-emerald-800 dark:text-emerald-300">
-                                                                    <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
-                                                                    {crit}
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                </div>
-
-                                                {/* Right Column: Exercises & Precautions */}
-                                                <div className="space-y-6">
-                                                    <div>
-                                                        <h5 className="font-bold text-xs uppercase tracking-[0.2em] text-indigo-500 mb-4 flex items-center gap-2">
-                                                            <Dumbbell className="h-3 w-3" />
-                                                            Intervenções Recomendadas
-                                                        </h5>
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {phase.exercises.map((ex, j) => (
-                                                                <Badge key={j} variant="secondary" className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/10 py-1.5 px-3 rounded-lg text-xs font-semibold">
-                                                                    {ex}
-                                                                </Badge>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-
-                                                    <div>
-                                                        <h5 className="font-bold text-xs uppercase tracking-[0.2em] text-amber-500 mb-4 flex items-center gap-2">
-                                                            <AlertTriangle className="h-3 w-3" />
-                                                            Precauções & Alertas
-                                                        </h5>
-                                                        <ul className="grid gap-2.5">
-                                                            {phase.precautions.map((prec, j) => (
-                                                                <li key={j} className="flex items-start gap-3 p-3 rounded-xl bg-amber-500/5 border border-amber-500/10 text-sm font-medium text-amber-800 dark:text-amber-300">
-                                                                    <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />
-                                                                    {prec}
-                                                                </li>
-                                                            ))}
-                                                        </ul>
+                                                <div>
+                                                    <h4 className="font-bold text-lg leading-tight">{phase.name}</h4>
+                                                    <div className="flex items-center gap-2 text-xs text-muted-foreground font-semibold mt-0.5">
+                                                        <Clock className="h-3.5 w-3.5" />
+                                                        {phase.weeks}
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </CollapsibleContent>
-                                </Collapsible>
+
+                                        <div className="p-6 md:p-8">
+                                            <div className="grid md:grid-cols-2 gap-8 lg:gap-12">
+                                                {/* Goals & Progress */}
+                                                <div className="space-y-6">
+                                                    <section>
+                                                        <h5 className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground mb-4 flex items-center gap-2">
+                                                            <Target className="h-3 w-3 text-primary" />
+                                                            Objetivos Terapêuticos
+                                                        </h5>
+                                                        <ul className="grid gap-2.5">
+                                                            {phase.goals.map((goal, j) => (
+                                                                <li key={j} className="flex items-start gap-3 p-3 rounded-2xl bg-muted/30 border border-transparent hover:border-primary/10 transition-colors group">
+                                                                    <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-primary group-hover:text-white transition-colors">
+                                                                        <div className="h-1.5 w-1.5 rounded-full bg-current" />
+                                                                    </div>
+                                                                    <span className="text-sm font-medium leading-snug">{goal}</span>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </section>
+
+                                                    <section>
+                                                        <h5 className="font-bold text-[10px] uppercase tracking-widest text-emerald-500 mb-4 flex items-center gap-2">
+                                                            <CheckCircle2 className="h-3 w-3" />
+                                                            Critérios de Progressão
+                                                        </h5>
+                                                        <ul className="grid gap-2.5">
+                                                            {phase.criteria.map((crit, j) => (
+                                                                <li key={j} className="flex items-start gap-3 p-3 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 transition-all hover:bg-emerald-500/10">
+                                                                    <div className="h-5 w-5 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                                                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                                                                    </div>
+                                                                    <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-300 leading-snug">{crit}</span>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </section>
+                                                </div>
+
+                                                {/* Interventions & Safety */}
+                                                <div className="space-y-6">
+                                                    <section>
+                                                        <h5 className="font-bold text-[10px] uppercase tracking-widest text-indigo-500 mb-4 flex items-center gap-2">
+                                                            <Dumbbell className="h-3 w-3" />
+                                                            Intervenções Chave
+                                                        </h5>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {phase.exercises.map((ex, j) => (
+                                                                <Badge key={j} variant="secondary" className="bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/10 py-1.5 px-4 rounded-full text-[11px] font-bold shadow-sm hover:scale-105 transition-transform">
+                                                                    {ex}
+                                                                </Badge>
+                                                            ))}
+                                                        </div>
+                                                    </section>
+
+                                                    <section>
+                                                        <h5 className="font-bold text-[10px] uppercase tracking-widest text-amber-500 mb-4 flex items-center gap-2">
+                                                            <AlertTriangle className="h-3 w-3" />
+                                                            Precauções & Contraindicações
+                                                        </h5>
+                                                        <ul className="grid gap-2.5">
+                                                            {phase.precautions.map((prec, j) => (
+                                                                <li key={j} className="flex items-start gap-3 p-3 rounded-2xl bg-amber-500/5 border border-amber-500/10 transition-all hover:border-amber-500/30">
+                                                                    <div className="h-5 w-5 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                                                                        <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+                                                                    </div>
+                                                                    <span className="text-sm font-medium text-amber-800 dark:text-amber-300 leading-snug">{prec}</span>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    </section>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </Card>
+                                </div>
                             );
                         })}
                     </div>
