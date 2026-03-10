@@ -24,6 +24,7 @@ import { format, isValid, parse } from 'date-fns';
 import { useEvolutions } from '@/hooks';
 import { useAIExerciseHistory } from '@/hooks/useAIExerciseHistory';
 import { AIExerciseHistoryCard } from '@/components/ai/AIExerciseHistoryCard';
+import { PainProgressChart } from '@/components/patient/PainProgressChart';
 import {
   usePatientFinancialRecords,
   usePatientFinancialSummary,
@@ -265,6 +266,7 @@ export default function PatientDetailScreen() {
         {selectedTab === 'info' && (
           <>
             <View style={styles.infoSection}>
+                <PainProgressChart evolutions={evolutions} />
                 {/* Personal Information */}
                 <Card style={styles.infoCard}>
                     <View style={styles.infoCardHeader}>

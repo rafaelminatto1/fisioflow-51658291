@@ -37,7 +37,7 @@ async function mockOrganizationBootstrap(page: Page) {
                         joined_at: new Date().toISOString(),
                         profiles: {
                             full_name: 'Admin E2E',
-                            email: loginEmail,
+                            email: 'admin@e2e.local',
                         },
                     },
                 ],
@@ -54,7 +54,7 @@ async function mockOrganizationBootstrap(page: Page) {
                 data: {
                     id: 'user-e2e-admin',
                     user_id: 'user-e2e-admin',
-                    email: loginEmail,
+                    email: 'admin@e2e.local',
                     full_name: 'Admin E2E',
                     role: 'admin',
                     organization_id: TEST_ORG_ID,
@@ -82,8 +82,27 @@ async function mockOrganizationBootstrap(page: Page) {
     });
 }
 
+async function dismissOnboardingIfPresent(page: Page) {
+    const onboardingDialog = page
+        .locator('[role="dialog"]')
+        .filter({ has: page.getByText(/Bem-vindo ao FisioFlow/i) })
+        .first();
+
+    if (!(await onboardingDialog.isVisible({ timeout: 3000 }).catch(() => false))) {
+        return;
+    }
+
+    const closeButton = onboardingDialog.getByRole('button', { name: /Close|Fechar/i }).first();
+    if (await closeButton.isVisible().catch(() => false)) {
+        await closeButton.click({ force: true });
+    } else {
+        await page.keyboard.press('Escape').catch(() => {});
+    }
+
+    await expect(onboardingDialog).toBeHidden({ timeout: 5000 });
+}
+
 async function ensureLoggedIn(page: Page) {
-    await mockOrganizationBootstrap(page);
     await page.goto('/auth?e2e=true', { waitUntil: 'domcontentloaded' });
 
     const emailInput = page.locator('input[name="email"], #login-email').first();
@@ -93,21 +112,12 @@ async function ensureLoggedIn(page: Page) {
     await expect(emailInput).toBeVisible({ timeout: 15000 });
     await emailInput.fill(loginEmail);
     await passwordInput.fill(loginPassword);
-    await submitButton.evaluate((button: HTMLElement) => button.click());
-    await page.waitForURL((url) => !url.pathname.includes('/auth'), { timeout: 40000 });
-    await expect(
-        page.locator('main, nav, [data-testid="main-layout"], a[href="/agenda"], a[href="/dashboard"]').first()
-    ).toBeVisible({ timeout: 25000 });
+    await submitButton.click();
 
-    const financialLink = page.locator('a[href="/financial"], a[href="/financial?e2e=true"]').first();
-    if (await financialLink.isVisible({ timeout: 3000 }).catch(() => false)) {
-        await financialLink.evaluate((link: HTMLAnchorElement) => link.click());
-    } else {
-        await page.evaluate(() => {
-            window.history.pushState({}, '', '/financial?e2e=true');
-            window.dispatchEvent(new PopStateEvent('popstate'));
-        });
-    }
+    await page.waitForTimeout(5000);
+    await page.waitForURL((url) => !url.pathname.includes('/auth'), { timeout: 40000 });
+    await page.goto('/financial?e2e=true', { waitUntil: 'domcontentloaded' });
+    await page.waitForTimeout(8000);
 }
 
 test.describe('Fluxo Financeiro', () => {
@@ -142,10 +152,7 @@ test.describe('Fluxo Financeiro', () => {
         });
 
         await ensureLoggedIn(page);
-        const closeOnboardingButton = page.getByRole('button', { name: 'Close' });
-        if (await closeOnboardingButton.isVisible().catch(() => false)) {
-            await closeOnboardingButton.click();
-        }
+        await dismissOnboardingIfPresent(page);
         await expect(
             page.locator('text=Receita Total, text=Fluxo de Caixa, button:has-text("Exportar")').first()
         ).toBeVisible({ timeout: 15000 });

@@ -1,5 +1,14 @@
 import { createAuthClient } from '@neondatabase/neon-js/auth';
-import type { User } from 'firebase/auth';
+
+export interface NeonUser {
+  id: string;
+  email: string;
+  name?: string;
+  emailVerified?: boolean;
+  image?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
 
 /**
  * Neon Auth Client
@@ -18,7 +27,7 @@ export const isNeonAuthEnabled = () => {
  * Resultado de autenticação com dados do profile
  */
 export interface AuthResult {
-  user: User;
+  user: NeonUser;
   profile?: any;
 }
 
@@ -31,7 +40,7 @@ export async function signIn(email: string, password: string): Promise<AuthResul
   }
   const { data, error } = await authClient.signIn.email({ email, password });
   if (error) throw new Error(error.message);
-  return { user: data.user as any };
+  return { user: data.user as unknown as NeonUser };
 }
 
 /**
@@ -43,7 +52,7 @@ export async function signInWithGoogle(): Promise<AuthResult> {
   }
   const { data, error } = await authClient.signIn.social({ provider: 'google' });
   if (error) throw new Error(error.message);
-  return { user: data.user as any };
+  return { user: data.user as unknown as NeonUser };
 }
 
 /**
@@ -59,7 +68,7 @@ export async function signUp(
   }
   const { data, error } = await authClient.signUp.email({ email, password, name });
   if (error) throw new Error(error.message);
-  return { user: data.user as any };
+  return { user: data.user as unknown as NeonUser };
 }
 
 /**
@@ -98,14 +107,14 @@ export async function updateUserPassword(newPassword: string): Promise<void> {
  * Observar mudanças no estado de autenticação
  */
 export function onAuthStateChange(
-  callback: (user: User | null) => void
+  callback: (user: NeonUser | null) => void
 ): () => void {
   if (!isNeonAuthEnabled()) {
     callback(null);
     return () => {};
   }
   return authClient.useSession.subscribe((session) => {
-    callback(session?.data?.user as any || null);
+    callback((session?.data?.user as unknown as NeonUser) || null);
   });
 }
 
