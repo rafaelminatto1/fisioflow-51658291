@@ -77,6 +77,7 @@ export default defineConfig(({ mode }) => {
       viteCompression(),
     ].filter(Boolean),
     resolve: {
+      dedupe: ['react', 'react-dom', 'framer-motion'],
       alias: {
         "@": path.resolve(__dirname, "./src"),
         "lodash": "lodash-es",
