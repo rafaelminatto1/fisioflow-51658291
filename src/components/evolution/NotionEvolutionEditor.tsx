@@ -54,7 +54,11 @@ export const NotionEvolutionEditor: React.FC<NotionEvolutionEditorProps> = ({
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        history: true,
+        // Desativar extensões que carregamos manualmente para evitar aviso de duplicidade
+        link: false,
+      }),
       Image.configure({
         HTMLAttributes: {
           class: 'rounded-lg border border-gray-200 shadow-md max-w-full h-auto cursor-zoom-in hover:opacity-95 transition-opacity',
