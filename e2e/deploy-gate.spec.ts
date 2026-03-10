@@ -1,6 +1,7 @@
 import { Buffer } from 'node:buffer';
 import { expect, test, type Page } from '@playwright/test';
 import { testUsers } from './fixtures/test-data';
+import { authenticateBrowserContext, getSharedBearer } from './helpers/neon-auth';
 
 const WORKERS_BASE =
   (process.env.VITE_WORKERS_API_URL || 'https://fisioflow-api.rafalegollas.workers.dev').replace(/\/$/, '');
@@ -56,50 +57,23 @@ async function expectAuthenticatedShell(page: Page) {
   ).toBeVisible({ timeout: 30000 });
 }
 
-async function getNeonBearerFromPage(page: Page): Promise<string> {
-  let token: string | null = null;
-
-  for (let attempt = 0; attempt < 20; attempt += 1) {
-    token = await page.evaluate(async () => {
-      try {
-        const mod = await import('/src/lib/auth/neon-token.ts');
-        return await mod.getNeonAccessToken();
-      } catch {
-        return null;
-      }
-    });
-
-    if (token) break;
-    await page.waitForTimeout(1000);
-  }
-
-  expect(token, 'JWT do Neon Auth ausente no contexto da página').toBeTruthy();
-  expect(String(token).split('.').length, 'JWT do Neon Auth inválido').toBe(3);
-  return `Bearer ${token}`;
+async function getNeonBearerFromHttpSession(): Promise<string> {
+  return getSharedBearer(loginEmail, loginPassword);
 }
 
-async function loginViaUI(page: Page) {
-  await mockOrganizationBootstrap(page);
-  await page.goto('/auth?e2e=true', { waitUntil: 'domcontentloaded' });
+async function authenticatePage(page: Page) {
+  const neonAuthUrl = process.env.VITE_NEON_AUTH_URL;
 
-  const emailInput = page.locator('input[name="email"], #login-email').first();
-  const passwordInput = page.locator('input[name="password"], #login-password').first();
-  const submitButton = page.locator('button[type="submit"], button:has-text("Acessar Minha Conta")').first();
-
-  await expect(emailInput).toBeVisible({ timeout: 15000 });
-  await emailInput.fill(loginEmail);
-  await passwordInput.fill(loginPassword);
-  await submitButton.evaluate((button: HTMLElement) => button.click());
-
-  await page.waitForURL((url) => !url.pathname.includes('/auth'), { timeout: 40000 });
-  await expectAuthenticatedShell(page);
+  expect(neonAuthUrl, 'VITE_NEON_AUTH_URL ausente no ambiente do teste').toBeTruthy();
+  await authenticateBrowserContext(page.context(), loginEmail, loginPassword);
 }
 
 test.describe('Deploy Gate - Fluxo Critico', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
   test.beforeEach(async ({ page }) => {
-    await loginViaUI(page);
+    await authenticatePage(page);
+    await mockOrganizationBootstrap(page);
   });
 
   test('auth: sessão válida e app carregado', async ({ page }) => {
@@ -110,7 +84,7 @@ test.describe('Deploy Gate - Fluxo Critico', () => {
   test('patients: endpoint autenticado responde 200', async ({ page, request }) => {
     await page.goto('/patients?e2e=true');
     await expectAuthenticatedShell(page);
-    const auth = await getNeonBearerFromPage(page);
+    const auth = await getNeonBearerFromHttpSession();
     const response = await request.get(`${WORKERS_BASE}/api/patients`, {
       headers: { Authorization: auth },
     });
@@ -120,7 +94,7 @@ test.describe('Deploy Gate - Fluxo Critico', () => {
   test('appointments: endpoint autenticado responde 200', async ({ page, request }) => {
     await page.goto('/agenda?e2e=true');
     await expectAuthenticatedShell(page);
-    const auth = await getNeonBearerFromPage(page);
+    const auth = await getNeonBearerFromHttpSession();
     const response = await request.get(`${WORKERS_BASE}/api/appointments`, {
       headers: { Authorization: auth },
     });
@@ -130,7 +104,7 @@ test.describe('Deploy Gate - Fluxo Critico', () => {
   test('r2: upload-url + PUT no objeto com JWT Neon', async ({ page, request }) => {
     await page.goto('/exercises?e2e=true');
     await expectAuthenticatedShell(page);
-    const auth = await getNeonBearerFromPage(page);
+    const auth = await getNeonBearerFromHttpSession();
 
     const presign = await request.post(`${WORKERS_BASE}/api/media/upload-url`, {
       headers: {

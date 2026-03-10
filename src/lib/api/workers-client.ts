@@ -1,7 +1,7 @@
 /**
  * Cliente HTTP para a API Cloudflare Workers (Hono + Neon)
  *
- * URL base: VITE_WORKERS_API_URL (dev: http://localhost:8787)
+ * URL base: VITE_WORKERS_API_URL (prod: https://api.moocafisio.com.br)
  *
  * Inclui automaticamente o token JWT do Neon Auth.
  */
@@ -20,10 +20,9 @@ import type {
 import type { PathologyRequiredMeasurement, MedicalReturn } from '@/types/evolution';
 import type { GamificationStats, AtRiskPatient, PopularAchievement } from '@/types/gamification';
 
-const BASE_URL = (import.meta.env.VITE_WORKERS_API_URL ?? 'http://localhost:8788').replace(
-  /\/$/,
-  '',
-);
+import { getWorkersApiUrl } from './config';
+
+const BASE_URL = getWorkersApiUrl();
 
 async function getAuthHeader(): Promise<Record<string, string>> {
   const token = await getNeonAccessToken();

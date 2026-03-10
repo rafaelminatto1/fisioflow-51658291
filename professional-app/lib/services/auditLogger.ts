@@ -6,6 +6,7 @@ import { Platform } from 'react-native';
 // Lazy import para evitar erros se expo-application não estiver instalado
 let Application: any = null;
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   Application = require('expo-application');
 } catch (e) {
   // expo-application não está instalado, usar fallback
