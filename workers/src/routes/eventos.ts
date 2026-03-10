@@ -17,7 +17,7 @@ import type { Env } from '../types/env';
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 // ===== HELPERS =====
-async function tableHasColumn(pool: { query: (sql: string, params?: unknown[]) => Promise<{ rows: Array<{ exists: boolean }> }> }, tableName: string, columnName: string) {
+async function tableHasColumn(pool: any, tableName: string, columnName: string) {
   const result = await pool.query(
     `SELECT EXISTS (
       SELECT 1

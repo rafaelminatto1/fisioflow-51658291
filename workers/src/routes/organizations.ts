@@ -55,6 +55,7 @@ const buildFallbackOrganization = (id: string) => ({
 
 app.get('/:id', async (c) => {
   const { id } = c.req.param();
+  const user = c.get('user');
   
   // Para clínica única, retornamos sempre o objeto padrão se solicitado o ID padrão
   if (id === '00000000-0000-0000-0000-000000000001') {

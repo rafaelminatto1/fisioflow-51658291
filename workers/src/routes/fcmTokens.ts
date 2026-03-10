@@ -36,7 +36,7 @@ app.post('/', async (c) => {
       [token, userId, tenantId, platform, deviceModel, osVersion, appVersion, active]
     );
 
-    return c.json({ success: true, data: result.rows?.[0] || result[0] });
+    return c.json({ success: true, data: result.rows?.[0] || (result as any)[0] });
   } catch (error: any) {
     console.error('[FCMTokens/Post] Error:', error.message);
     return c.json({ error: 'Erro ao salvar token', details: error.message }, 500);
@@ -51,7 +51,7 @@ app.delete('/:token', async (c) => {
       `UPDATE fcm_tokens SET active = false, updated_at = NOW() WHERE token = $1 RETURNING *`,
       [token]
     );
-    return c.json({ success: true, data: result.rows?.[0] || result[0] });
+    return c.json({ success: true, data: result.rows?.[0] || (result as any)[0] });
   } catch (error: any) {
     console.error('[FCMTokens/Delete] Error:', error.message);
     return c.json({ error: 'Erro ao desativar token', details: error.message }, 500);
@@ -66,7 +66,7 @@ app.get('/user/:userId', async (c) => {
       `SELECT token FROM fcm_tokens WHERE user_id = $1 AND active = true`,
       [userId]
     );
-    const rows = result.rows || result;
+    const rows = result.rows || (result as any);
     return c.json({ data: rows.map((r: any) => r.token) });
   } catch (error: any) {
     return c.json({ error: 'Erro ao buscar tokens do usuário', details: error.message }, 500);
@@ -81,7 +81,7 @@ app.get('/tenant/:tenantId', async (c) => {
       `SELECT token FROM fcm_tokens WHERE tenant_id = $1 AND active = true`,
       [tenantId]
     );
-    const rows = result.rows || result;
+    const rows = result.rows || (result as any);
     return c.json({ data: rows.map((r: any) => r.token) });
   } catch (error: any) {
     return c.json({ error: 'Erro ao buscar tokens do tenant', details: error.message }, 500);
