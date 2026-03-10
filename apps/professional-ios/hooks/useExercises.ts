@@ -32,16 +32,12 @@ export function useExercises() {
   }, [fetchData]);
 
   const getById = useCallback(async (id: string) => {
-    try {
-      const item = await api.get<any>(`/api/prof/exercises/${id}`);
-      return {
-        ...item,
-        created_at: new Date(item.created_at),
-        updated_at: new Date(item.updated_at),
-      } as Exercise;
-    } catch (err) {
-      throw err;
-    }
+    const item = await api.get<any>(`/api/prof/exercises/${id}`);
+    return {
+      ...item,
+      created_at: new Date(item.created_at),
+      updated_at: new Date(item.updated_at),
+    } as Exercise;
   }, []);
 
   return { data, loading, error, refetch: fetchData, getById };

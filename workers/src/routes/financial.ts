@@ -1126,7 +1126,7 @@ app.post('/user-vouchers/:id/consume', requireAuth, async (c) => {
 
   const current = currentResult.rows[0] as Record<string, unknown> | undefined;
   if (!current) return c.json({ error: 'Voucher não encontrado' }, 404);
-  if (!Boolean(current.ativo)) return c.json({ error: 'Voucher inativo' }, 400);
+  if (!current.ativo) return c.json({ error: 'Voucher inativo' }, 400);
   if (new Date(String(current.data_expiracao)) < new Date()) return c.json({ error: 'Voucher expirado' }, 400);
   if (Number(current.sessoes_restantes ?? 0) <= 0) return c.json({ error: 'Voucher sem sessões disponíveis' }, 400);
 

@@ -41,18 +41,21 @@ const derivePeriodRange = (period: string): { startDate?: string; endDate?: stri
   const today = new Date();
   const iso = (date: Date) => date.toISOString().split('T')[0];
   switch (period) {
-    case 'week':
+    case 'week': {
       const weekStart = new Date(today);
       weekStart.setDate(today.getDate() - 7);
       return { startDate: iso(weekStart), endDate: iso(today) };
-    case 'quarter':
+    }
+    case 'quarter': {
       const quarterStart = new Date(today);
       quarterStart.setMonth(today.getMonth() - 3);
       return { startDate: iso(quarterStart), endDate: iso(today) };
-    default:
+    }
+    default: {
       const monthStart = new Date(today);
       monthStart.setMonth(today.getMonth() - 1);
       return { startDate: iso(monthStart), endDate: iso(today) };
+    }
   }
 };
 
