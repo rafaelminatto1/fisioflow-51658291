@@ -63,7 +63,7 @@ app.post('/', requireAuth, async (c) => {
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW()) RETURNING *`,
       [patientId, therapistId, date, startTime, endTime, user.organizationId, status, notes],
     );
-    const row = result.rows?.[0] || result[0];
+    const row = result.rows?.[0] || (result as any)[0];
     return c.json({ data: row }, 201);
   } catch (error: any) {
     console.error('[Appointments/Create] Error:', error.message);
@@ -82,7 +82,7 @@ app.get('/:id', requireAuth, async (c) => {
        WHERE a.id = $1 AND a.organization_id = $2 LIMIT 1`,
       [id, user.organizationId],
     );
-    const row = result.rows?.[0] || result[0];
+    const row = result.rows?.[0] || (result as any)[0];
     if (!row) return c.json({ error: 'Agendamento não encontrado' }, 404);
     return c.json({ data: row });
   } catch (error: any) {
@@ -111,7 +111,7 @@ app.patch('/:id', requireAuth, async (c) => {
       `UPDATE appointments SET ${fields.join(', ')} WHERE id = $${idx++} AND organization_id = $${idx++} RETURNING *`,
       params,
     );
-    const row = result.rows?.[0] || result[0];
+    const row = result.rows?.[0] || (result as any)[0];
     if (!row) return c.json({ error: 'Agendamento não encontrado' }, 404);
     return c.json({ data: row });
   } catch (error: any) {
@@ -130,7 +130,7 @@ app.post('/:id/cancel', requireAuth, async (c) => {
        WHERE id = $2 AND organization_id = $3 RETURNING id`,
       [body.reason ?? null, id, user.organizationId],
     );
-    const row = result.rows?.[0] || result[0];
+    const row = result.rows?.[0] || (result as any)[0];
     if (!row) return c.json({ error: 'Agendamento não encontrado' }, 404);
     return c.json({ success: true });
   } catch (error: any) {
@@ -147,7 +147,7 @@ app.delete('/:id', requireAuth, async (c) => {
       `DELETE FROM appointments WHERE id = $1 AND organization_id = $2 RETURNING id`,
       [id, user.organizationId],
     );
-    const row = result.rows?.[0] || result[0];
+    const row = result.rows?.[0] || (result as any)[0];
     if (!row) return c.json({ error: 'Agendamento não encontrado' }, 404);
     return c.json({ success: true });
   } catch (error: any) {
