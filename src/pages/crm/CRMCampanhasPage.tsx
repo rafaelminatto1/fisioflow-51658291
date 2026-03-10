@@ -1,5 +1,5 @@
 /**
- * CRM Campaigns Page - Migrated to Firebase
+ * CRM Campaigns Page - Migrated to Neon/Cloudflare
  */
 
 import { useState } from 'react';

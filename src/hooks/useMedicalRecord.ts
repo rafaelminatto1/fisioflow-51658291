@@ -98,7 +98,7 @@ export function useDeleteAnamnesis() {
 
   return useMutation({
     mutationFn: async ({ recordId, patientId }: { recordId: string; patientId: string }) => {
-      await medicalRecordService.deleteAnamnesis(recordId);
+      await medicalRecordService.deleteAnamnesis(recordId, patientId);
       return { recordId, patientId };
     },
     onSuccess: (data) => {
@@ -236,11 +236,19 @@ export function useUpdateTreatmentPlan() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async ({ planId, data }: { planId: string; data: Partial<TreatmentPlan> }) => {
-      return medicalRecordService.updateTreatmentPlan(planId, data);
+    mutationFn: async ({
+      patientId,
+      planId,
+      data,
+    }: {
+      patientId: string;
+      planId: string;
+      data: Partial<TreatmentPlan>;
+    }) => {
+      return medicalRecordService.updateTreatmentPlan(patientId, planId, data);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: medicalRecordKeys.treatmentPlans('') });
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: medicalRecordKeys.treatmentPlans(variables.patientId) });
       toast({
         title: 'Plano de tratamento atualizado',
         description: 'O plano de tratamento foi atualizado com sucesso.',
@@ -279,7 +287,7 @@ export function useDeleteAttachment() {
 
   return useMutation({
     mutationFn: async ({ attachmentId, patientId }: { attachmentId: string; patientId: string }) => {
-      await medicalRecordService.deleteAttachment(attachmentId);
+      await medicalRecordService.deleteAttachment(attachmentId, patientId);
       return { attachmentId, patientId };
     },
     onSuccess: (data) => {

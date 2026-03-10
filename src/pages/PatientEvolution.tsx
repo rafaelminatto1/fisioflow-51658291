@@ -1,5 +1,5 @@
 /**
- * Patient Evolution Page - Migrated to Firebase
+ * Patient Evolution Page - Migrated to Neon/Cloudflare
  * Optimized with useEvolutionDataOptimized for better performance
  */
 

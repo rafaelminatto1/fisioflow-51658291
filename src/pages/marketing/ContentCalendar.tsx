@@ -522,4 +522,5 @@ export default function ContentCalendarPage() {
 import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { addDays } from 'date-fns';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
+
+const normalizeFirestoreData = (d: any) => d;

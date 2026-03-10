@@ -17,7 +17,6 @@
 // TYPES
 // ============================================================================
 
-import { getAdminDb } from '@/lib/firebase/admin';
 import { generateObject } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { z } from 'zod';
@@ -653,20 +652,10 @@ async function storeOptimization(
   patientId: string,
   optimization: TreatmentOptimization
 ): Promise<void> {
-  const db = getAdminDb();
-
   try {
-    await db.collection('treatment_optimizations').add({
-      patient_id: patientId,
-      optimized_at: optimization.optimizedAt,
-      recommendations: optimization.recommendations,
-      optimized_plan: optimization.optimizedPlan,
-      confidence_score: optimization.confidenceScore,
-      model_version: optimization.modelVersion,
-      created_at: new Date().toISOString(),
-    });
-
-    logger.info(`[Treatment Optimizer] Optimization stored for patient ${patientId}`, undefined, 'treatment-optimizer');
+    // TODO: Chamar o Worker endpoint apropriado via workers-client
+    // await workersApi.post('/api/ai/treatment-optimizations', { patientId, ...optimization })
+    logger.info(`[Treatment Optimizer] Optimization generated for patient ${patientId} (Not stored - API pending)`, undefined, 'treatment-optimizer');
   } catch (error) {
     logger.error('[Treatment Optimizer] Error storing optimization', error, 'treatment-optimizer');
   }

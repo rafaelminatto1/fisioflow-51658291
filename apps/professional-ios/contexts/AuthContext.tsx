@@ -1,13 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-
-import {
-  onAuthStateChanged,
-  signInWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  User,
-} from 'firebase/auth';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase';
+import { authClient, isNeonAuthEnabled } from '@/lib/neonAuth';
 import type { Profile } from '@/types/auth';
 import { HapticFeedback } from '@/lib/haptics';
 import { clearPhotoCache } from '@/hooks/usePhotoDecryption';
@@ -22,37 +14,36 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Listen for auth state changes
+  // Listen for auth state changes (Neon Auth / Better Auth)
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
+    if (!isNeonAuthEnabled()) {
+      setLoading(false);
+      return;
+    }
 
-      if (user) {
-        // Fetch user profile from Firestore
-        try {
-          const userDoc = await getDoc(doc(db, 'users', user.uid));
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            setProfile({
-              id: user.uid,
-              email: user.email!,
-              full_name: userData.full_name || user.displayName || '',
-              role: userData.role || 'fisioterapeuta',
-              phone: userData.phone || '',
-              photo_url: userData.photo_url || user.photoURL || '',
-              organization_id: userData.organization_id || '',
-              created_at: userData.created_at || new Date().toISOString(),
-              updated_at: userData.updated_at || new Date().toISOString(),
-            });
-          }
-        } catch (error) {
-          console.error('Error fetching user profile:', error);
-        }
+    const unsubscribe = authClient.useSession.subscribe(async (session) => {
+      const neonUser = session?.data?.user;
+
+      if (neonUser) {
+        // No Neon, o profile já vem junto no session ou pode ser buscado via API
+        // Por compatibilidade, mapeamos os campos do better-auth
+        setProfile({
+          id: neonUser.id,
+          email: neonUser.email,
+          full_name: neonUser.name || '',
+          role: (neonUser as any).role || 'fisioterapeuta',
+          phone: (neonUser as any).phone || '',
+          photo_url: neonUser.image || '',
+          organization_id: (neonUser as any).organization_id || (neonUser as any).organizationId || DEFAULT_ORG_ID,
+          created_at: neonUser.createdAt?.toISOString() || new Date().toISOString(),
+          updated_at: neonUser.updatedAt?.toISOString() || new Date().toISOString(),
+        });
       } else {
         setProfile(null);
       }
@@ -65,7 +56,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     HapticFeedback.light();
-    await signInWithEmailAndPassword(auth, email, password);
+    if (!isNeonAuthEnabled()) throw new Error('Neon Auth não configurado.');
+
+    const { error } = await authClient.signIn.email({ 
+      email: email.trim().toLowerCase(), 
+      password 
+    });
+
+    if (error) throw new Error(error.message);
   }, []);
 
   const signOut = useCallback(async () => {
@@ -75,24 +73,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearPhotoCache();
     console.log('[AuthContext] Cleared photo cache on logout');
     
-    await firebaseSignOut(auth);
+    if (isNeonAuthEnabled()) {
+      await authClient.signOut();
+    }
     setProfile(null);
   }, []);
 
   const updateProfile = useCallback(async (data: Partial<Profile>) => {
-    if (!user) throw new Error('No user logged in');
+    if (!profile) throw new Error('No user logged in');
 
-    const updateData = {
-      ...data,
-      updated_at: new Date().toISOString(),
-    };
+    const { error } = await authClient.updateUser({
+      name: data.full_name,
+      image: data.photo_url,
+      // outros campos precisam ser via API de Workers para o Neon DB
+    });
 
-    await updateDoc(doc(db, 'users', user.uid), updateData);
+    if (error) throw new Error(error.message);
 
     setProfile((prev) =>
-      prev ? { ...prev, ...updateData } : null
+      prev ? { ...prev, ...data, updated_at: new Date().toISOString() } : null
     );
-  }, [user]);
+  }, [profile]);
 
   return (
     <AuthContext.Provider

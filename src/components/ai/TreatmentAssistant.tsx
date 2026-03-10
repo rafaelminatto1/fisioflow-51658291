@@ -1,5 +1,5 @@
 /**
- * Treatment Assistant Component - Migrated to Firebase
+ * Treatment Assistant Component - Migrated to Neon/Cloudflare
  */
 
 import { useState } from 'react';
