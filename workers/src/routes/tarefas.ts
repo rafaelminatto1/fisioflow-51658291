@@ -36,9 +36,11 @@ app.post('/', requireAuth, async (c) => {
       body.parent_id ?? null, body.titulo, body.descricao ?? null,
       body.status ?? 'A_FAZER', body.prioridade ?? 'MEDIA', body.tipo ?? 'TAREFA',
       body.data_vencimento ?? null, body.start_date ?? null, body.order_index ?? 0,
-      JSON.stringify(body.tags ?? []), JSON.stringify(body.checklists ?? []),
-      JSON.stringify(body.attachments ?? []), JSON.stringify(body.task_references ?? body.references ?? []),
-      JSON.stringify(body.dependencies ?? []),
+      body.tags ?? [],                                                        // text[]  — array JS direto
+      JSON.stringify(body.checklists ?? []),                                  // jsonb
+      JSON.stringify(body.attachments ?? []),                                 // jsonb
+      JSON.stringify(body.task_references ?? body.references ?? []),          // jsonb
+      JSON.stringify(body.dependencies ?? []),                                // jsonb
     ]
   );
   return c.json({ data: result.rows[0] }, 201);
@@ -62,8 +64,12 @@ app.patch('/:id', requireAuth, async (c) => {
   let idx = 1;
   for (const key of allowed) {
     if (key in body) {
-      const val = ['tags', 'checklists', 'attachments', 'task_references', 'dependencies'].includes(key)
-        ? JSON.stringify(body[key]) : body[key];
+      // tags = text[] (array JS puro); demais = jsonb (JSON.stringify)
+      const val = key === 'tags'
+        ? (body[key] ?? [])
+        : ['checklists', 'attachments', 'task_references', 'dependencies'].includes(key)
+          ? JSON.stringify(body[key] ?? [])
+          : body[key];
       sets.push(`${key} = $${idx++}`);
       params.push(val);
     }
