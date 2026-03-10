@@ -88,14 +88,14 @@ function mapAppointmentStatus(status: string): Appointment['status'] {
 
 function mapToApiStatus(status: Appointment['status']): string {
   const statusMap: Record<string, string> = {
-    'scheduled': 'agendado',
-    'confirmed': 'confirmado',
-    'in_progress': 'em_atendimento',
-    'completed': 'concluido',
-    'cancelled': 'cancelado',
+    'scheduled': 'scheduled',
+    'confirmed': 'confirmed',
+    'in_progress': 'in_progress',
+    'completed': 'completed',
+    'cancelled': 'cancelled',
     'no_show': 'no_show',
   };
-  return statusMap[status] || 'agendado';
+  return statusMap[status] || 'scheduled';
 }
 
 // Format Date to YYYY-MM-DD
@@ -160,6 +160,7 @@ export function useAppointments(options?: UseAppointmentsOptions) {
         startTime,
         endTime,
         therapistId: user.id,
+        organizationId: user.organizationId,
         type: data.type,
         notes: data.notes,
       });

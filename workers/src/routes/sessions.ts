@@ -24,6 +24,11 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 // ===== HELPERS =====
 
+/** Verifica se uma string é um UUID válido */
+function isValidUuid(val: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+}
+
 /** Serializa um texto para JSONB no formato { text: "..." } */
 function textToJsonb(val: unknown): string | null {
   if (val == null || val === '') return null;
@@ -201,7 +206,7 @@ app.post('/autosave', requireAuth, async (c) => {
     [
       patientId,
       body.appointment_id ? String(body.appointment_id) : null,
-      user.uid,
+      isValidUuid(user.uid) ? user.uid : null,
       user.organizationId,
       recordDate,
       durationNum,
@@ -288,7 +293,7 @@ app.post('/', requireAuth, async (c) => {
     [
       patientId,
       body.appointment_id ? String(body.appointment_id) : null,
-      user.uid,
+      isValidUuid(user.uid) ? user.uid : null,
       user.organizationId,
       recordDate,
       body.duration_minutes != null ? Number(body.duration_minutes) : null,

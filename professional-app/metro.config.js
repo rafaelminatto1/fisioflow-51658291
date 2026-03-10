@@ -50,14 +50,33 @@ try {
 
 // 6. Blocklist (Otimização Drástica)
 config.resolver.blockList = [
+  // Testes e relatórios
   /test-results\/.*/,
   /playwright-report\/.*/,
   /testsprite_tests\/.*/,
-  /\.git\/.*/,
-  /\.firebase\/.*/,
   /e2e\//,
   /playwright\//,
+  /playwright-logs\/.*/,
+  /playwright-screenshots\/.*/,
+  /playwright-video\/.*/,
   /.*\.cache.*/,
+  // Git e Firebase
+  /\.git\/.*/,
+  /\.firebase\/.*/,
+  // Documentação e scripts de desenvolvimento
+  /.*\.md$/,
+  /scripts\//,
+  /stubs\//,
+  /claude-skills\//,
+  /\.*claude\/.*/,
+  /\.gemini\/.*/,
+  // Cloud Functions (não usado no mobile)
+  /functions\//,
+  // Arquivos de validação e teste
+  /check_patients\.js$/,
+  /test-notifications\.js$/,
+  /test-protocols\.js$/,
+  /validate-setup\.js$/,
   // Bloquear pacotes pesados de web/desktop do monorepo raiz que não são usados no app mobile
   /node_modules\/@cornerstonejs\/.*/,
   /node_modules\/@aws-sdk\/.*/,

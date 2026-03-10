@@ -385,17 +385,18 @@ export async function createAppointment(data: {
   startTime: string;
   endTime: string;
   therapistId?: string;
+  organizationId?: string;
   type?: string;
   notes?: string;
 }): Promise<ApiAppointment> {
   const payload = {
-      patient_id: data.patientId,
-      appointment_date: data.date,
-      start_time: data.startTime,
-      end_time: data.endTime,
-      therapist_id: data.therapistId,
-      session_type: data.type,
-      notes: data.notes
+      patientId: data.patientId,
+      date: data.date,
+      startTime: data.startTime,
+      endTime: data.endTime,
+      therapistId: data.therapistId,
+      organizationId: data.organizationId,
+      notes: data.notes,
   };
   const response = await fetchApi<ApiResponse<ApiAppointment>>('/api/appointments', {
       method: 'POST',
@@ -410,7 +411,7 @@ export async function updateAppointment(
   data: Partial<ApiAppointment>
 ): Promise<ApiAppointment> {
   const response = await fetchApi<ApiResponse<ApiAppointment>>(`/api/appointments/${encodeURIComponent(id)}`, {
-      method: 'PUT',
+      method: 'PATCH',
       data
   });
   if (response.error) throw new Error(response.error);
