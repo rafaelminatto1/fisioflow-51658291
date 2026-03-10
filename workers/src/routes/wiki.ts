@@ -49,7 +49,7 @@ app.delete('/categories/:id', requireAuth, async (c) => {
 // ===== LISTA DE PÁGINAS =====
 app.get('/', async (c) => {
   const authUser = await verifyToken(c.req.header('Authorization'), c.env);
-  const db = createDb(c.env, authUser?.organizationId);
+  const db = createDb(c.env);
 
   const { q, category, page = '1', limit = '30' } = c.req.query();
 
@@ -104,7 +104,7 @@ app.get('/', async (c) => {
 // ===== PÁGINA COMPLETA =====
 app.get('/:slug', async (c) => {
   const authUser = await verifyToken(c.req.header('Authorization'), c.env);
-  const db = createDb(c.env, authUser?.organizationId);
+  const db = createDb(c.env);
   const { slug } = c.req.param();
 
   const row = await db
@@ -136,7 +136,7 @@ app.get('/:slug', async (c) => {
 // ===== SUB-PÁGINAS =====
 app.get('/:slug/children', async (c) => {
   const authUser = await verifyToken(c.req.header('Authorization'), c.env);
-  const db = createDb(c.env, authUser?.organizationId);
+  const db = createDb(c.env);
   const { slug } = c.req.param();
 
   const parent = await db
@@ -173,7 +173,7 @@ app.get('/:slug/children', async (c) => {
 // ===== HISTÓRICO DE VERSÕES (auth obrigatório) =====
 app.get('/:slug/versions', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createDb(c.env, user.organizationId);
+  const db = createDb(c.env);
   const { slug } = c.req.param();
 
   const page = await db
@@ -197,7 +197,7 @@ app.get('/:slug/versions', requireAuth, async (c) => {
 // ===== LISTA PÁGINAS DA ORGANIZAÇÃO (auth required) =====
 app.get('/org/list', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createDb(c.env, user.organizationId);
+  const db = createDb(c.env);
   const { q, category } = c.req.query();
 
   const conditions = [
@@ -224,7 +224,7 @@ app.get('/org/list', requireAuth, async (c) => {
 app.get('/by-id/:id', requireAuth, async (c) => {
   const { id } = c.req.param();
   const user = c.get('user');
-  const db = createDb(c.env, user.organizationId);
+  const db = createDb(c.env);
 
   const rows = await db
     .select()
@@ -239,7 +239,7 @@ app.get('/by-id/:id', requireAuth, async (c) => {
 // ===== BULK UPDATE TRIAGE ORDERING =====
 app.patch('/triage', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createDb(c.env, user.organizationId);
+  const db = createDb(c.env);
   const { updates } = await c.req.json() as {
     updates: Array<{ id: string; triage_order?: number; tags?: string[]; category?: string }>;
   };

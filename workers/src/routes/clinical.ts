@@ -374,20 +374,20 @@ app.get('/pain-maps', requireAuth, async (c) => {
   // Fetch points for all maps
   if (mapsResult.rows.length === 0) return c.json({ data: [] });
 
-  const mapIds = mapsResult.rows.map((r: { id: string }) => r.id);
+  const mapIds = mapsResult.rows.map((r: any) => r.id);
   const placeholders = mapIds.map((_: string, i: number) => `$${i + 1}`).join(',');
   const pointsResult = await pool.query(
     `SELECT * FROM pain_map_points WHERE pain_map_id IN (${placeholders}) ORDER BY created_at ASC`,
     mapIds,
   );
 
-  const pointsByMap = pointsResult.rows.reduce((acc: Record<string, unknown[]>, point: { pain_map_id: string }) => {
+  const pointsByMap = pointsResult.rows.reduce((acc: Record<string, unknown[]>, point: any) => {
     if (!acc[point.pain_map_id]) acc[point.pain_map_id] = [];
     acc[point.pain_map_id].push(point);
     return acc;
   }, {} as Record<string, unknown[]>);
 
-  const mapsWithPoints = mapsResult.rows.map((map: { id: string }) => ({
+  const mapsWithPoints = mapsResult.rows.map((map: any) => ({
     ...map,
     points: pointsByMap[map.id] ?? [],
   }));

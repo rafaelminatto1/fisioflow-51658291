@@ -23,7 +23,7 @@ type MetricsResponse = {
 };
 
 async function ensureEventBelongsToOrg(
-  pool: { query: (sql: string, params?: unknown[]) => Promise<{ rows: { organization_id: string }[] }> },
+  pool: any,
   eventId: string,
   organizationId: string,
 ) {
@@ -34,7 +34,7 @@ async function ensureEventBelongsToOrg(
 }
 
 async function getPrestadorWithEvent(
-  pool: { query: (sql: string, params?: unknown[]) => Promise<{ rows: Array<{ evento_id: string; organization_id: string }> }> },
+  pool: any,
   id: string,
 ) {
   const result = await pool.query(
