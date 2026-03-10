@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { useColors } from '@/hooks/useColorScheme';
 import { Button, Card, Input } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
@@ -178,9 +178,9 @@ export default function PatientFormScreen() {
         </View>
       </SafeAreaView>
     );
-  import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
-  ...
-    return (
+  }
+
+  return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
         <Stack.Screen options={{ headerShown: false }} />
         <KeyboardAvoidingView
