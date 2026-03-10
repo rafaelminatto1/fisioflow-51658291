@@ -75,7 +75,8 @@ export async function verifyToken(
     
     try {
       // Validação RELAXADA: Apenas assinatura, sem checar Issuer/Audience estritamente agora
-      const verified = await jwtVerify(token, getJwks(jwksUrl));
+      const jwks = createRemoteJWKSet(new URL(jwksUrl));
+      const verified = await jwtVerify(token, jwks);
       verifiedPayload = verified.payload;
     } catch (e) {
       lastError = e;
