@@ -17,7 +17,7 @@ export const api = {
   async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
     try {
       const session = await authClient.getSession();
-      const token = session?.data?.token || '';
+      const token = (session?.data as any)?.token || '';
 
       const url = new URL(`${API_BASE_URL}${endpoint}`);
       if (options.params) {

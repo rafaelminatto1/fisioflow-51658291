@@ -121,7 +121,7 @@ Usamos o serviço Expo para enviar notificações push sobre:
 - Você pode visualizar seu próprio log de auditoria
 
 ### 5.4 Proteção Adicional
-- Certificado pinning para conexões Firebase
+- Criptografia TLS de ponta a ponta
 - Detecção de dispositivos com jailbreak
 - Limpeza automática de cache ao fazer logout
 - Prevenção de capturas de tela em telas com PHI
@@ -177,8 +177,8 @@ Você pode solicitar informações sobre entidades com as quais compartilhamos d
 
 ## 8. Transferência Internacional de Dados
 
-Os dados são armazenados primariamente em servidores no Brasil (região southamerica-east1 do Google Cloud). Em casos específicos, pode haver transferência para:
-- Estados Unidos (infraestrutura do Firebase/Google)
+Os dados são armazenados primariamente em servidores no Brasil (região southamerica-east1). Em casos específicos, pode haver transferência para:
+- Estados Unidos (infraestrutura global de nuvem)
 - Mecanismos de proteção: Cláusulas contratuais padrão, certificações ISO 27001 e SOC 2
 
 ## 9. Cookies e Tecnologias Similares

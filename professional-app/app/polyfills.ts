@@ -1,5 +1,6 @@
 // Polyfills para React Native
 // Carregar este arquivo no topo do _layout.tsx
+// IMPORTANTE: Não exportar nada para evitar que o Expo Router tente usar como rota
 
 // Polyfill para fetch global (necessário para expo-notifications)
 if (typeof global.fetch === 'undefined') {
@@ -14,7 +15,4 @@ if (typeof global.fetch === 'undefined') {
 
 console.log('Polyfills loaded, fetch available:', typeof global.fetch);
 
-// Default export para satisfazer o Expo Router
-export default function Polyfills() {
-  return null;
-}
+// Não exportar nada - este arquivo é apenas para side effects
