@@ -67,10 +67,8 @@ const SmartAI = () => {
     setLoading(true);
 
     try {
-      // Use Firebase Functions HTTP endpoint
-      const REGION = import.meta.env.VITE_FIREBASE_REGION || 'southamerica-east1';
-      const PROJECT_ID = import.meta.env.VITE_FIREBASE_PROJECT_ID;
-      const CHAT_URL = `https://${REGION}-${PROJECT_ID}.cloudfunctions.net/aiClinicalChat`;
+      const WORKERS_BASE = import.meta.env.VITE_WORKERS_API_URL || 'https://fisioflow-api.rafalegollas.workers.dev';
+      const CHAT_URL = `${WORKERS_BASE}/api/ai/chat`;
 
       const response = await fetch(CHAT_URL, {
         method: 'POST',

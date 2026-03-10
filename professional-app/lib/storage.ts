@@ -16,7 +16,7 @@ export async function uploadFile(uri: string, path: string): Promise<string> {
     const blob = await response.blob();
 
     const formData = new FormData();
-    // @ts-ignore - React Native FormData accepts blob
+    // @ts-expect-error - React Native FormData accepts blob
     formData.append('file', {
         uri,
         name: path.split('/').pop() || 'file',

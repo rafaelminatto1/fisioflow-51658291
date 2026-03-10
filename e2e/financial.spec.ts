@@ -1,5 +1,6 @@
-import { test, expect, request, type BrowserContext, type Page } from '@playwright/test';
+import { test, expect, type BrowserContext, type Page, type StorageState } from '@playwright/test';
 import { testUsers } from './fixtures/test-data';
+import { getSharedAuthSession } from './helpers/neon-auth';
 
 const TEST_ORG_ID = '00000000-0000-0000-0000-000000000001';
 const loginEmail = process.env.E2E_LOGIN_EMAIL || testUsers.admin.email;
@@ -104,35 +105,13 @@ async function dismissOnboardingIfPresent(page: Page) {
     await expect(onboardingDialog).toBeHidden({ timeout: 5000 });
 }
 
-async function authenticateContext(context: BrowserContext) {
+async function createAuthenticatedStorageState(): Promise<StorageState> {
     if (!neonAuthUrl) {
         throw new Error('VITE_NEON_AUTH_URL ausente para o teste financeiro.');
     }
 
-    const authContext = await request.newContext({
-        baseURL,
-        extraHTTPHeaders: {
-            origin: baseURL,
-        },
-    });
-
-    const response = await authContext.post(`${neonAuthUrl}/sign-in/email`, {
-        data: {
-            email: loginEmail,
-            password: loginPassword,
-        },
-        headers: {
-            'content-type': 'application/json',
-        },
-    });
-
-    if (!response.ok()) {
-        throw new Error(`Falha no login HTTP do teste financeiro: ${response.status()} ${await response.text()}`);
-    }
-
-    const storageState = await authContext.storageState();
-    await context.addCookies(storageState.cookies);
-    await authContext.dispose();
+    const session = await getSharedAuthSession(loginEmail, loginPassword);
+    return session.storageState;
 }
 
 async function openFinancialPage(page: Page) {
@@ -143,11 +122,16 @@ async function openFinancialPage(page: Page) {
 test.describe('Fluxo Financeiro', () => {
     let context: BrowserContext;
     let page: Page;
+    let authStorageState: StorageState;
+
+    test.beforeAll(async () => {
+        authStorageState = await createAuthenticatedStorageState();
+    });
 
     test.beforeEach(async ({ browser }) => {
         context = await browser.newContext({
             baseURL,
-            storageState: { cookies: [], origins: [] },
+            storageState: authStorageState,
         });
         page = await context.newPage();
 
@@ -180,7 +164,6 @@ test.describe('Fluxo Financeiro', () => {
             }
         });
 
-        await authenticateContext(context);
         await openFinancialPage(page);
         await dismissOnboardingIfPresent(page);
         await expect(page.getByRole('heading', { name: /Gestão Financeira/i })).toBeVisible({ timeout: 15000 });
