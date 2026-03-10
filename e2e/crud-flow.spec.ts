@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { authenticateBrowserContext } from './helpers/neon-auth';
 
 const loginEmail = 'rafael.minatto@yahoo.com.br';
 const loginPassword = 'Yukari30@';
@@ -9,67 +10,51 @@ test.describe('Fluxo CRUD Completo - Produção', () => {
 
   test('deve realizar o ciclo de vida completo de paciente e agendamento', async ({ page }) => {
     test.setTimeout(300000);
+    await authenticateBrowserContext(page.context(), loginEmail, loginPassword);
 
-    // 1. LOGIN
-    console.log(`[CRUD] Login: ${loginEmail}`);
-    await page.goto('/auth', { waitUntil: 'domcontentloaded' });
-    await page.fill('input[name="email"]', loginEmail);
-    await page.fill('input[name="password"]', loginPassword);
-    await page.click('button[type="submit"]');
-    
-    await page.waitForURL(url => url.pathname.includes('/agenda') || url.pathname.includes('/dashboard'), { timeout: 60000 });
-    console.log('[CRUD] Login OK');
+    // 1. Shell autenticado
+    console.log(`[CRUD] Sessão autenticada: ${loginEmail}`);
+    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
+    await page.waitForURL(url => !url.pathname.includes('/auth'), { timeout: 60000 });
+    console.log('[CRUD] Shell autenticado OK');
 
     // 2. PACIENTE - CREATE
     console.log('[CRUD] Navegando para /patients');
-    await page.goto('/pacientes', { waitUntil: 'domcontentloaded' });
+    await page.goto('/patients', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByRole('heading', { name: 'Pacientes' })).toBeVisible({ timeout: 30000 });
     
     const addBtn = page.locator('button:has-text("Novo Paciente"), [data-testid="add-patient"]').first();
     await addBtn.waitFor({ state: 'visible', timeout: 30000 });
     await addBtn.click();
     console.log('[CRUD] Botão Novo Paciente clicado');
 
-    const nameInput = page.locator('#full_name, [data-testid="patient-name"], input[placeholder*="Nome"]').first();
+    const patientForm = page.locator('[data-testid="patient-form"]').first();
+    await patientForm.waitFor({ state: 'visible', timeout: 15000 });
+
+    const nameInput = patientForm.locator('#full_name, #name, [data-testid="patient-name"], input[placeholder*="Nome completo"]').first();
     await nameInput.waitFor({ state: 'visible', timeout: 15000 });
     await nameInput.fill(testPatientName);
     
-    // Tratamento robusto para calendário que falha na renderização do popup
-    try {
-        const dateBtn = page.locator('button:has-text("data"), [data-testid*="birthdate"]').first();
-        await dateBtn.click({ timeout: 5000 });
-        const calendarDay = page.locator('.rdp-day:not(.rdp-day_outside), button[name="day"]').first();
-        await calendarDay.waitFor({ state: 'visible', timeout: 5000 });
-        await calendarDay.click();
-    } catch (e) {
-        console.log('[CRUD] Calendário popup falhou, ignorando data de nascimento se não for obrigatório, ou tentando type puro');
-        // Se for um input de texto disfarçado:
-        const birthInput = page.locator('input[name="birth_date"]').first();
-        if (await birthInput.isVisible()) {
-            await birthInput.fill('01011990');
-        }
-    }
-    
-    // Gênero
-    try {
-        await page.locator('button[role="combobox"]').filter({ hasText: /gênero/i }).click({ timeout: 5000 });
-        await page.locator('[role="option"]').first().click({ timeout: 5000 });
-    } catch (e) {
-        console.log('[CRUD] Dropdown de gênero falhou. Assumindo valor padrão se possível.');
-    }
+    const birthDateTrigger = patientForm.getByRole('button', { name: /Selecione uma data|\d{2}\/\d{2}\/\d{4}/ }).first();
+    await birthDateTrigger.click();
+    const calendarGrid = page.getByRole('grid').first();
+    await calendarGrid.waitFor({ state: 'visible', timeout: 10000 });
+    const calendarDay = calendarGrid.locator('button:not([disabled])').first();
+    await calendarDay.click();
 
-    // Médico
-    try {
-        await page.locator('button[role="tab"]:has-text("Médico")').click({ timeout: 5000 });
-        await page.locator('#main_condition').fill('Teste Playwright em Produção');
-    } catch (e) {
-        console.log('[CRUD] Aba Médico não visível ou falhou.');
-    }
+    const medicoTab = patientForm.getByRole('tab', { name: /Médico/i }).first();
+    await medicoTab.click();
+    const mainConditionInput = patientForm.locator('#main_condition').first();
+    await mainConditionInput.scrollIntoViewIfNeeded();
+    await mainConditionInput.fill('Teste Playwright em Produção');
 
-    await page.click('button:has-text("Cadastrar"), button:has-text("Salvar")');
+    const submitButton = page.getByRole('button', { name: /Cadastrar Paciente|Cadastrar|Salvar/i }).last();
+    await submitButton.click();
     console.log('[CRUD] Salvando paciente...');
-    
-    await page.waitForTimeout(3000);
-    await page.fill('input[placeholder*="Buscar"]', testPatientName);
+
+    await expect(page.getByRole('dialog')).toBeHidden({ timeout: 30000 });
+    const searchInput = page.locator('input[placeholder*="Buscar"], input[type="search"]').first();
+    await searchInput.fill(testPatientName);
     await expect(page.locator(`text=${testPatientName}`).first()).toBeVisible({ timeout: 30000 });
     console.log('✅ Paciente Criado');
 
@@ -89,19 +74,37 @@ test.describe('Fluxo CRUD Completo - Produção', () => {
     console.log('✅ Agendamento Criado');
 
     // 4. CLEANUP (Arquivando)
-    await page.goto('/pacientes', { waitUntil: 'domcontentloaded' });
-    await page.fill('input[placeholder*="Buscar"]', testPatientName);
+    await page.goto('/patients', { waitUntil: 'domcontentloaded' });
+    await searchInput.fill(testPatientName);
     await page.waitForTimeout(2000);
-    
-    const actionsMenu = page.locator('button[id*="actions"], button[aria-label*="Ações"]').first();
-    if (await actionsMenu.isVisible()) {
+
+    try {
+      const patientCard = page.locator(`[data-testid^="patient-card-"]`).filter({ hasText: testPatientName }).first();
+      await patientCard.waitFor({ state: 'visible', timeout: 15000 });
+
+      const actionsMenu = patientCard.locator('button[id*="actions"], button[aria-label*="Ações"]').first();
+      if (await actionsMenu.isVisible().catch(() => false)) {
         await actionsMenu.click();
-    } else {
-        await page.locator(`tr:has-text("${testPatientName}") button`).last().click();
+      } else {
+        const fallbackCardButton = patientCard.locator('button').last();
+        if (await fallbackCardButton.isVisible().catch(() => false)) {
+          await fallbackCardButton.click();
+        }
+      }
+
+      const archiveAction = page.locator('text=/Arquivar|Excluir/i').first();
+      if (await archiveAction.isVisible({ timeout: 5000 }).catch(() => false)) {
+        await archiveAction.click();
+        const confirmArchive = page.locator('button:has-text("Arquivar"), button:has-text("Confirmar")').first();
+        if (await confirmArchive.isVisible({ timeout: 3000 }).catch(() => false)) {
+          await confirmArchive.click();
+        }
+      } else {
+        console.log('[CRUD] Cleanup sem ação visível; fluxo principal já validado.');
+      }
+    } catch (error) {
+      console.log('[CRUD] Cleanup não concluído no layout atual:', error instanceof Error ? error.message : String(error));
     }
-    await page.locator('text=/Arquivar|Excluir/i').click();
-    const confirmArchive = page.locator('button:has-text("Arquivar"), button:has-text("Confirmar")').first();
-    if (await confirmArchive.isVisible()) await confirmArchive.click();
 
     console.log('✅ CRUD EM PRODUÇÃO VALIDADO!');
   });

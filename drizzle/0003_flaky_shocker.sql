@@ -1,0 +1,1 @@
+ALTER TABLE "exercise_protocols" ADD COLUMN "wiki_page_id" uuid;
