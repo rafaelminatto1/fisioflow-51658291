@@ -1364,7 +1364,7 @@ app.post('/patient-predictions/upsert', requireAuth, async (c) => {
     return c.json({ error: 'patient_id e predictions são obrigatórios' }, 400);
   }
 
-  const client = await pool.connect();
+  const client = pool as any;
   try {
     await client.query('BEGIN');
     await client.query(

@@ -54,7 +54,7 @@ app.post('/', requireAuth, async (c) => {
        VALUES ($1::uuid, $2, $3, $4, $5, true, NOW(), NOW(), 0) RETURNING *`,
       [user.organizationId, name, body.email || null, body.phone || null, body.status || 'Inicial'],
     );
-    const row = result.rows?.[0] || result[0];
+    const row = result.rows?.[0] || (result as any)[0];
     return c.json({ data: normalizePatientRow(row) }, 201);
   } catch (error: any) {
     console.error('[Patients/Create] Error:', error.message);
@@ -71,7 +71,7 @@ app.get('/:id', requireAuth, async (c) => {
       `SELECT * FROM patients WHERE id = $1::uuid AND organization_id = $2::uuid LIMIT 1`,
       [id, user.organizationId],
     );
-    const row = result.rows?.[0] || result[0];
+    const row = result.rows?.[0] || (result as any)[0];
     if (!row) return c.json({ error: 'Paciente não encontrado' }, 404);
     return c.json({ data: normalizePatientRow(row) });
   } catch (error: any) {
@@ -101,7 +101,7 @@ app.patch('/:id', requireAuth, async (c) => {
       `UPDATE patients SET ${fields.join(', ')} WHERE id = $${idx++}::uuid AND organization_id = $${idx++}::uuid RETURNING *`,
       params,
     );
-    const row = result.rows?.[0] || result[0];
+    const row = result.rows?.[0] || (result as any)[0];
     if (!row) return c.json({ error: 'Paciente não encontrado' }, 404);
     return c.json({ data: normalizePatientRow(row) });
   } catch (error: any) {
@@ -118,7 +118,7 @@ app.delete('/:id', requireAuth, async (c) => {
       `UPDATE patients SET is_active = false, updated_at = NOW() WHERE id = $1::uuid AND organization_id = $2::uuid RETURNING id`,
       [id, user.organizationId],
     );
-    const row = result.rows?.[0] || result[0];
+    const row = result.rows?.[0] || (result as any)[0];
     if (!row) return c.json({ error: 'Paciente não encontrado' }, 404);
     return c.json({ success: true });
   } catch (error: any) {

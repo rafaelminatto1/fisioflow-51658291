@@ -142,7 +142,7 @@ app.get('/:id', async (c) => {
 // ===== CRIAR PROTOCOLO (AUTH) =====
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createDb(c.env, user.organizationId);
+  const db = createDb(c.env);
   const body = await c.req.json();
 
   // Gerar slug a partir do nome
@@ -185,7 +185,7 @@ app.post('/', requireAuth, async (c) => {
 // ===== ATUALIZAR PROTOCOLO (AUTH) =====
 app.put('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createDb(c.env, user.organizationId);
+  const db = createDb(c.env);
   const { id } = c.req.param();
   const body = await c.req.json();
 
@@ -230,7 +230,7 @@ app.put('/:id', requireAuth, async (c) => {
 // ===== EXCLUIR PROTOCOLO (AUTH, soft-delete) =====
 app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createDb(c.env, user.organizationId);
+  const db = createDb(c.env);
   const { id } = c.req.param();
 
   const [deleted] = await db
