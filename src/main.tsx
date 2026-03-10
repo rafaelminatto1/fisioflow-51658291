@@ -8,8 +8,6 @@ import { initSentry } from '@/lib/sentry/config';
 import { initAppCheck } from '@/lib/app-check';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { initializeRemoteConfig } from '@/lib/remote-config-manager';
-import { initCrashlytics } from '@/lib/firebase/crashlytics';
-import { initPerformanceMonitoring } from '@/lib/firebase/performance';
 
 // Inicialização paralela de serviços não-bloqueantes
 const initServices = async () => {
@@ -20,8 +18,6 @@ const initServices = async () => {
     // Serviços que podem falhar sem quebrar a app (Remote Config, Analytics, etc)
     const secondaryServices = [
       initializeRemoteConfig(3600000, 600000),
-      initCrashlytics(),
-      initPerformanceMonitoring()
     ];
     
     await Promise.allSettled(secondaryServices);

@@ -11,7 +11,7 @@ import {
   getClinicalInsights,
   getTreatmentRecommendations,
   chatWithClinicalAssistant,
-} from '@/services/ai/firebaseAIService';
+} from '@/services/ai/geminiAiService';
 import type { PatientAnalyticsData } from '@/types/patientAnalytics';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { buildPatientChatContext } from '@/lib/ai/patient-chat-context';

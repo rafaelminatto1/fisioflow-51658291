@@ -1,7 +1,14 @@
 [
   {
-    "origin": ["*"],
-    "method": ["GET"],
-    "maxAgeSeconds": 3600
+    "AllowedOrigins": [
+      "https://moocafisio.com.br",
+      "https://app.moocafisio.com.br",
+      "http://localhost:5173",
+      "capacitor://localhost"
+    ],
+    "AllowedMethods": ["GET", "PUT", "POST", "DELETE", "HEAD"],
+    "AllowedHeaders": ["Content-Type", "Authorization"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3600
   }
 ]

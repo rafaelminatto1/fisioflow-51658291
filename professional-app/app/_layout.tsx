@@ -33,38 +33,36 @@ function RootLayoutContent() {
   const colorScheme = useColorScheme();
   const { isLoading, initialize } = useAuthStore();
 
+  // 1. Inicialização única da autenticação
   useEffect(() => {
-    let unsubscribe: (() => void) | undefined;
-
-    // Initialize auth
-    try {
-      initialize();
-    } catch (error) {
-      console.error('Failed to initialize auth:', error);
-    }
-
-    // Initialize push notifications when app starts
-    const initNotifications = async () => {
+    const initAuth = async () => {
       try {
-        await registerForPushNotificationsAsync();
-        console.log('Push notifications initialized');
+        await initialize();
       } catch (error) {
-        console.error('Failed to initialize push notifications:', error);
+        console.error('Failed to initialize auth:', error);
       }
     };
+    initAuth();
+  }, [initialize]);
 
-    // Hide splash screen when auth state is determined
-    if (!isLoading) {
-      SplashScreen.hideAsync();
-      initNotifications();
-    }
-
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
+  // 2. Lógica para esconder o Splash Screen e iniciar notificações
+  useEffect(() => {
+    const finalizeSetup = async () => {
+      if (!isLoading) {
+        try {
+          await SplashScreen.hideAsync();
+          
+          // Iniciar notificações apenas se houver um projeto configurado
+          if (process.env.EXPO_PUBLIC_PROJECT_ID) {
+            await registerForPushNotificationsAsync();
+          }
+        } catch (error) {
+          console.log('Setup finalization error:', error);
+        }
       }
     };
-  }, [isLoading, initialize]);
+    finalizeSetup();
+  }, [isLoading]);
 
   if (isLoading) {
     return (

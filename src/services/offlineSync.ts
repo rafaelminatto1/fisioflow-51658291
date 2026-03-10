@@ -1,5 +1,5 @@
 /**
- * Offline Sync Service - Migrated to Firebase
+ * Offline Sync Service - Migrated to Neon/Cloudflare
  */
 
 import { getDB, type FisioFlowDB } from '@/hooks/useOfflineStorage';
@@ -732,7 +732,6 @@ export function resetOfflineSyncService(): void {
 
 import { useEffect, useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { normalizeFirestoreData } from '@/utils/firestoreData';
 
 /**
  * React hook for offline sync

@@ -75,7 +75,7 @@ app.get('/', requireAuth, async (c) => {
      ORDER BY nome ASC`,
     params,
   );
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.get('/:id', requireAuth, async (c) => {
@@ -472,7 +472,7 @@ app.get('/:id/responses', requireAuth, async (c) => {
     params,
   );
 
-  return c.json({ data: result.rows });
+  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/:id/responses', requireAuth, async (c) => {

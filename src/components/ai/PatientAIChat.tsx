@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Bot, User, Loader2, Sparkles } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { chatWithClinicalAssistant } from '@/services/ai/firebaseAIService';
+import { chatWithClinicalAssistant } from '@/services/ai/geminiAiService';
 import { usePatientAnalyticsDashboard } from '@/hooks/usePatientAnalytics';
 import { buildPatientChatContext } from '@/lib/ai/patient-chat-context';
 

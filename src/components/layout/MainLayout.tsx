@@ -1,5 +1,5 @@
 /**
- * MainLayout - Migrated to Firebase
+ * MainLayout - Migrated to Neon/Cloudflare
  */
 
 import React from 'react';
@@ -7,7 +7,6 @@ import { Sidebar } from './Sidebar';
 import { MobileHeader } from './MobileHeader';
 import { BottomNavigation } from './BottomNavigation';
 import { OnlineUsersIndicator } from './OnlineUsersIndicator';
-import { OnboardingTour } from '@/components/onboarding/OnboardingTour';
 import { SkipLinks } from '@/components/accessibility/SkipLinks';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -89,9 +88,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
     <div className="min-h-screen flex w-full bg-slate-50 dark:bg-slate-950" data-testid="main-layout">
       {/* Skip Links for Accessibility */}
       <SkipLinks />
-
-      {/* Onboarding Tour */}
-      <OnboardingTour />
 
       {/* Header Mobile */}
       <MobileHeader />

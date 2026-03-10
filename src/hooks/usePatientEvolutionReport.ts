@@ -1,5 +1,5 @@
 /**
- * usePatientEvolutionReport - Migrated to Firebase
+ * usePatientEvolutionReport - Migrated to Neon/Cloudflare
  */
 
 import { useQuery } from '@tanstack/react-query';
