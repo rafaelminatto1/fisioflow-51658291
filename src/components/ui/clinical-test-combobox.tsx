@@ -26,7 +26,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
-export interface ClinicalTest extends ClinicalTestTemplateRecord {}
+export type ClinicalTest = ClinicalTestTemplateRecord;
 
 interface ClinicalTestComboboxProps {
     value?: string;

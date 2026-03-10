@@ -5,7 +5,7 @@
 import { aiApi, type AIClinicalReport } from '@/lib/api/workers-client';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-export interface AIAnalysisResult extends AIClinicalReport {}
+export type AIAnalysisResult = AIClinicalReport;
 
 export const generateClinicalReport = async (
   metrics: Record<string, unknown>,
