@@ -1,20 +1,15 @@
 /**
  * HTTP helpers for legacy callable endpoints.
  *
- * This compatibility layer maps historical function names to the
- * equivalent Cloudflare Workers routes instead of Cloud Run / Firebase.
+ * This compatibility layer maps historical callable names to the
+ * equivalent Cloudflare Workers routes.
  */
 
 import { getWorkersApiUrl } from '../api/config';
 import { getNeonAccessToken } from '@/lib/auth/neon-token';
 
-const LOCAL_FUNCTIONS_PROXY =
-  import.meta.env.DEV && import.meta.env.VITE_USE_FUNCTIONS_PROXY === 'true'
-    ? (import.meta.env.VITE_FUNCTIONS_PROXY || '/functions')
-    : undefined;
-
 const WORKERS_API_BASE = getWorkersApiUrl();
-const functionsInstance = null;
+const legacyFunctionsAdapter = null;
 
 type JsonValue = string | number | boolean | null | undefined;
 type JsonRecord = Record<string, unknown>;
@@ -237,21 +232,21 @@ const LEGACY_FUNCTION_ROUTES: Record<string, LegacyRouteMapper> = {
   }),
   getEventReportV2: (payload) => ({
     method: 'GET',
-    path: `/api/analytics/financial${buildQuery({
+    path: `/api/insights/financial${buildQuery({
       startDate: payload.startDate as JsonValue,
       endDate: payload.endDate as JsonValue,
     })}`,
   }),
   getFinancialSummaryV2: (payload) => ({
     method: 'GET',
-    path: `/api/analytics/financial${buildQuery({
+    path: `/api/insights/financial${buildQuery({
       startDate: payload.startDate as JsonValue,
       endDate: payload.endDate as JsonValue,
     })}`,
   }),
   dashboardMetrics: (payload) => ({
     method: 'GET',
-    path: `/api/analytics/dashboard${buildQuery({
+    path: `/api/insights/dashboard${buildQuery({
       period: payload.period as JsonValue,
       startDate: payload.startDate as JsonValue,
       endDate: payload.endDate as JsonValue,
@@ -259,17 +254,17 @@ const LEGACY_FUNCTION_ROUTES: Record<string, LegacyRouteMapper> = {
   }),
   patientEvolution: (payload) => ({
     method: 'GET',
-    path: `/api/analytics/patient-evolution/${encodeURIComponent(requireId(payload, 'patientId', 'id'))}`,
+    path: `/api/insights/patient-evolution/${encodeURIComponent(requireId(payload, 'patientId', 'id'))}`,
   }),
   topExercises: (payload) => ({
     method: 'GET',
-    path: `/api/analytics/top-exercises${buildQuery({
+    path: `/api/insights/top-exercises${buildQuery({
       limit: payload.limit as JsonValue,
     })}`,
   }),
   painMapAnalysis: (payload) => ({
     method: 'GET',
-    path: `/api/analytics/pain-map${buildQuery({
+    path: `/api/insights/pain-map${buildQuery({
       limit: payload.limit as JsonValue,
     })}`,
   }),
@@ -325,8 +320,8 @@ async function callWorkersApi<TResponse>(descriptor: LegacyRouteDescriptor): Pro
   return response.json() as Promise<TResponse>;
 }
 
-export function getFirebaseFunctions() {
-  return functionsInstance;
+export function getLegacyFunctionsAdapter() {
+  return legacyFunctionsAdapter;
 }
 
 export interface FunctionResponse<T> {
@@ -387,21 +382,9 @@ export async function callFunctionHttp<TRequest, TResponse>(
     }
   }
 
-  if (LOCAL_FUNCTIONS_PROXY) {
-    const response = await fetch(`${LOCAL_FUNCTIONS_PROXY}/${functionName}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    if (!response.ok) {
-      throw new FunctionCallError(functionName, await response.text().catch(() => response.statusText), data);
-    }
-    return response.json() as Promise<TResponse>;
-  }
-
   throw new FunctionCallError(
     functionName,
-    'Function mapping not configured for Workers compatibility',
+    'Legacy callable mapping not configured for Workers compatibility',
     data,
   );
 }
