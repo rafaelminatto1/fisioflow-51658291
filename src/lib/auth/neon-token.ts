@@ -44,17 +44,17 @@ function setCachedJwt(token: string): void {
 }
 
 /**
- * Obtém JWT via authClient.token() — método oficial do SDK Neon Auth (JWT plugin).
- * Fallback: intercepta o header set-auth-jwt retornado por getSession().
+ * Obtém JWT via authClient.getSession() — o token JWT fica em data.session.token.
+ * Fallback: intercepta o header set-auth-jwt da resposta HTTP.
  */
 async function fetchJwt(): Promise<string | null> {
-  // Método primário: authClient.token() — recomendado pela documentação oficial
+  // Método primário: data.session.token retornado por getSession()
   try {
-    const { data, error } = await authClient.token();
-    if (!error && typeof (data as any)?.token === 'string') {
-      const token = (data as any).token as string;
-      if (looksLikeJwt(token)) return token;
-    }
+    const { data } = await authClient.getSession();
+    const token =
+      (data as any)?.session?.token ||
+      (data as any)?.token;
+    if (typeof token === 'string' && looksLikeJwt(token)) return token;
   } catch {
     // Fallback abaixo
   }

@@ -13,7 +13,7 @@
 
 // ===== ENUMS =====
 
-import { pgTable, uuid, text, timestamp, jsonb, pgEnum, integer, boolean, varchar, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, jsonb, pgEnum, integer, boolean, varchar, index, doublePrecision } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { patients } from './patients';
 import { appointments } from './appointments';
@@ -135,6 +135,37 @@ export const sessions = pgTable('sessions', {
     // Alerts
     requiredTests: jsonb('required_tests').$type<string[]>(), // Tests that must be done
     alertsAcknowledged: boolean('alerts_acknowledged').default(false),
+
+    // Activity Lab (Dynamometry) Data
+    timeToPeak: doublePrecision('time_to_peak'),
+    totalReps: integer('total_reps'),
+    avgPeakForce: doublePrecision('avg_peak_force'),
+    peakForceNkg: doublePrecision('peak_force_nkg'),
+    bodyWeight: doublePrecision('body_weight'),
+    rfd50: doublePrecision('rfd_50'),
+    rfd100: doublePrecision('rfd_100'),
+    rfd200: doublePrecision('rfd_200'),
+    peakForceN: doublePrecision('peak_force_n'),
+    rawForceData: jsonb('raw_force_data'),
+    peakForce: doublePrecision('peak_force'),
+    avgForce: doublePrecision('avg_force'),
+    rateOfForceDevelopment: doublePrecision('rate_of_force_development'),
+    sensitivity: integer('sensitivity'),
+    deviceBattery: integer('device_battery'),
+    sampleRate: integer('sample_rate'),
+    isSimulated: boolean('is_simulated'),
+    repetitions: integer('repetitions'),
+    side: text('side'),
+    deviceFirmware: text('device_firmware'),
+    measurementMode: text('measurement_mode'),
+    deviceModel: text('device_model'),
+    protocolName: text('protocol_name'),
+    bodyPart: text('body_part'),
+    activityLabDuration: doublePrecision('duration'),
+    activityLabNotes: text('notes'),
+
+    // Legacy
+    firestoreId: varchar('firestore_id', { length: 150 }),
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),

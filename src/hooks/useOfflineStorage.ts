@@ -306,126 +306,8 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
   const syncInProgress = useRef(false);
 
   // ========================================================================
-  // CONNECTION MONITORING
+  // SHARED UTILITIES
   // ========================================================================
-
-  /**
-   * Handles online event - triggers sync and shows notification
-   */
-  const handleOnline = useCallback(() => {
-    setIsOnline(true);
-    toast.success('Conexão restaurada', {
-      description: 'Sincronizando dados pendentes...',
-    });
-    syncPendingActions();
-  }, [syncPendingActions]);
-
-  /**
-   * Handles offline event - shows warning notification
-   */
-  const handleOffline = useCallback(() => {
-    setIsOnline(false);
-    toast.warning('Você está offline', {
-      description: 'As alterações serão sincronizadas quando reconectar.',
-    });
-  }, []);
-
-  // Set up connection event listeners
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
-  }, [handleOnline, handleOffline]);
-
-  // Load initial cache stats
-  useEffect(() => {
-    loadCacheStats();
-  }, [loadCacheStats]);
-
-  // ========================================================================
-  // PATIENT ANALYTICS CACHE
-  // ========================================================================
-
-  /**
-   * Caches patient analytics data
-   * @param patientId - Patient identifier
-   * @param data - Analytics data to cache
-   */
-  const cachePatientAnalytics = useCallback(
-    async (patientId: string, data: unknown): Promise<void> => {
-      try {
-        const db = await getDB();
-        await db.put('patient_analytics', {
-          patientId,
-          data,
-          timestamp: Date.now(),
-          version: 1,
-        });
-        await loadCacheStats();
-      } catch (error) {
-        logger.error('Error caching patient analytics', error, 'useOfflineStorage');
-        throw error;
-      }
-    },
-    [loadCacheStats]
-  );
-
-  /**
-   * Retrieves cached patient analytics data
-   * @param patientId - Patient identifier
-   * @returns Cached analytics data or null if not found/expired
-   */
-  const getCachedPatientAnalytics = useCallback(
-    async (patientId: string): Promise<unknown | null> => {
-      try {
-        const db = await getDB();
-        const cached = await db.get('patient_analytics', patientId);
-
-        if (!cached) return null;
-
-        // Check if cache is expired
-        if (isCacheExpired(cached.timestamp, cacheExpiryMs)) {
-          await db.delete('patient_analytics', patientId);
-          await loadCacheStats();
-          return null;
-        }
-
-        return cached.data;
-      } catch (error) {
-        logger.error('Error getting cached analytics', error, 'useOfflineStorage');
-        return null;
-      }
-    },
-    [cacheExpiryMs, loadCacheStats]
-  );
-
-  /**
-   * Clears cached patient analytics data
-   * @param patientId - Optional patient ID to clear. If not provided, clears all.
-   */
-  const clearPatientCache = useCallback(
-    async (patientId?: string): Promise<void> => {
-      try {
-        const db = await getDB();
-        if (patientId) {
-          await db.delete('patient_analytics', patientId);
-        } else {
-          await db.clear('patient_analytics');
-        }
-        await loadCacheStats();
-      } catch (error) {
-        logger.error('Error clearing cache', error, 'useOfflineStorage');
-        throw error;
-      }
-    },
-    [loadCacheStats]
-  );
 
   /**
    * Gets all cached patient IDs
@@ -445,42 +327,27 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
     }
   }, []);
 
-  // ========================================================================
-  // OFFLINE ACTIONS QUEUE
-  // ========================================================================
-
   /**
-   * Queues an offline action for later synchronization
-   * @param action - Action type
-   * @param payload - Action payload
-   * @returns Generated action ID
+   * Loads cache statistics from IndexedDB
    */
-  const queueOfflineAction = useCallback(
-    async (action: string, payload: unknown): Promise<string> => {
-      try {
-        const db = await getDB();
-        const actionId = generateActionId(action);
+  const loadCacheStats = useCallback(async (): Promise<void> => {
+    try {
+      const db = await getDB();
 
-        await db.add('offline_actions', {
-          id: actionId,
-          action,
-          payload,
-          timestamp: Date.now(),
-          synced: false,
-          retryCount: 0,
-        });
+      // Count cached patients
+      await db.count('patient_analytics');
+      const cachedIds = await getAllCachedPatients();
+      setCachedPatients(cachedIds);
 
-        await loadCacheStats();
-        toast.info('Ação salva para sincronização posterior');
-
-        return actionId;
-      } catch (error) {
-        logger.error('Error queuing offline action', error, 'useOfflineStorage');
-        throw error;
-      }
-    },
-    [loadCacheStats]
-  );
+      // Count pending actions
+      const tx = db.transaction('offline_actions', 'readonly');
+      const index = tx.store.index('by-synced');
+      const pending = await index.count(false);
+      setPendingActions(pending);
+    } catch (error) {
+      logger.error('[OfflineStorage] Error loading cache stats', error, 'useOfflineStorage');
+    }
+  }, [getAllCachedPatients]);
 
   /**
    * Gets all pending (unsynced) actions that haven't exceeded retry limit
@@ -578,8 +445,166 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
     }
 
     return result;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOnline, pendingActions, getPendingActions, maxRetryAttempts]);
+  }, [getPendingActions, isOnline, loadCacheStats, maxRetryAttempts, pendingActions]);
+
+  // ========================================================================
+  // CONNECTION MONITORING
+  // ========================================================================
+
+  /**
+   * Handles online event - triggers sync and shows notification
+   */
+  const handleOnline = useCallback(() => {
+    setIsOnline(true);
+    toast.success('Conexão restaurada', {
+      description: 'Sincronizando dados pendentes...',
+    });
+    void syncPendingActions();
+  }, [syncPendingActions]);
+
+  /**
+   * Handles offline event - shows warning notification
+   */
+  const handleOffline = useCallback(() => {
+    setIsOnline(false);
+    toast.warning('Você está offline', {
+      description: 'As alterações serão sincronizadas quando reconectar.',
+    });
+  }, []);
+
+  // Set up connection event listeners
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [handleOnline, handleOffline]);
+
+  // Load initial cache stats
+  useEffect(() => {
+    void loadCacheStats();
+  }, [loadCacheStats]);
+
+  // ========================================================================
+  // PATIENT ANALYTICS CACHE
+  // ========================================================================
+
+  /**
+   * Caches patient analytics data
+   * @param patientId - Patient identifier
+   * @param data - Analytics data to cache
+   */
+  const cachePatientAnalytics = useCallback(
+    async (patientId: string, data: unknown): Promise<void> => {
+      try {
+        const db = await getDB();
+        await db.put('patient_analytics', {
+          patientId,
+          data,
+          timestamp: Date.now(),
+          version: 1,
+        });
+        await loadCacheStats();
+      } catch (error) {
+        logger.error('Error caching patient analytics', error, 'useOfflineStorage');
+        throw error;
+      }
+    },
+    [loadCacheStats]
+  );
+
+  /**
+   * Retrieves cached patient analytics data
+   * @param patientId - Patient identifier
+   * @returns Cached analytics data or null if not found/expired
+   */
+  const getCachedPatientAnalytics = useCallback(
+    async (patientId: string): Promise<unknown | null> => {
+      try {
+        const db = await getDB();
+        const cached = await db.get('patient_analytics', patientId);
+
+        if (!cached) return null;
+
+        // Check if cache is expired
+        if (isCacheExpired(cached.timestamp, cacheExpiryMs)) {
+          await db.delete('patient_analytics', patientId);
+          await loadCacheStats();
+          return null;
+        }
+
+        return cached.data;
+      } catch (error) {
+        logger.error('Error getting cached analytics', error, 'useOfflineStorage');
+        return null;
+      }
+    },
+    [cacheExpiryMs, loadCacheStats]
+  );
+
+  /**
+   * Clears cached patient analytics data
+   * @param patientId - Optional patient ID to clear. If not provided, clears all.
+   */
+  const clearPatientCache = useCallback(
+    async (patientId?: string): Promise<void> => {
+      try {
+        const db = await getDB();
+        if (patientId) {
+          await db.delete('patient_analytics', patientId);
+        } else {
+          await db.clear('patient_analytics');
+        }
+        await loadCacheStats();
+      } catch (error) {
+        logger.error('Error clearing cache', error, 'useOfflineStorage');
+        throw error;
+      }
+    },
+    [loadCacheStats]
+  );
+
+  // ========================================================================
+  // OFFLINE ACTIONS QUEUE
+  // ========================================================================
+
+  /**
+   * Queues an offline action for later synchronization
+   * @param action - Action type
+   * @param payload - Action payload
+   * @returns Generated action ID
+   */
+  const queueOfflineAction = useCallback(
+    async (action: string, payload: unknown): Promise<string> => {
+      try {
+        const db = await getDB();
+        const actionId = generateActionId(action);
+
+        await db.add('offline_actions', {
+          id: actionId,
+          action,
+          payload,
+          timestamp: Date.now(),
+          synced: false,
+          retryCount: 0,
+        });
+
+        await loadCacheStats();
+        toast.info('Ação salva para sincronização posterior');
+
+        return actionId;
+      } catch (error) {
+        logger.error('Error queuing offline action', error, 'useOfflineStorage');
+        throw error;
+      }
+    },
+    [loadCacheStats]
+  );
 
   /**
    * Executes an offline action (placeholder - replace with actual API calls)
@@ -716,28 +741,6 @@ export function useOfflineStorage(options: OfflineStorageOptions = {}) {
   // ========================================================================
   // UTILITY METHODS
   // ========================================================================
-
-  /**
-   * Loads cache statistics from IndexedDB
-   */
-  const loadCacheStats = useCallback(async (): Promise<void> => {
-    try {
-      const db = await getDB();
-
-      // Count cached patients
-      await db.count('patient_analytics');
-      const cachedIds = await getAllCachedPatients();
-      setCachedPatients(cachedIds);
-
-      // Count pending actions
-      const tx = db.transaction('offline_actions', 'readonly');
-      const index = tx.store.index('by-synced');
-      const pending = await index.count(false);
-      setPendingActions(pending);
-    } catch (error) {
-      logger.error('[OfflineStorage] Error loading cache stats', error, 'useOfflineStorage');
-    }
-  }, [getAllCachedPatients]);
 
   /**
    * Clears all cached data (except pending actions)

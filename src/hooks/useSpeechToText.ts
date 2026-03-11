@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { API_URLS } from '@/lib/api/v2/config';
+import { getWorkersApiUrl } from '@/lib/api/config';
 import { useToast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { getNeonAccessToken } from '@/lib/auth/neon-token';
@@ -24,8 +24,7 @@ export const useSpeechToText = () => {
       const audioBase64 = await base64Promise;
       const token = await getNeonAccessToken();
 
-      // Chamar API do Google Cloud via nossa Function
-      const response = await fetch(API_URLS.clinical.transcribe, {
+      const response = await fetch(`${getWorkersApiUrl()}/api/ai/transcribe-audio`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -38,7 +37,7 @@ export const useSpeechToText = () => {
       
       if (!response.ok) throw new Error(result.error || 'Falha na transcrição');
 
-      return result.data.transcript || '';
+      return result.data.transcription || result.data.transcript || '';
     } catch (error) {
       logger.error('Speech-to-Text Error:', error);
       toast({

@@ -129,6 +129,7 @@ export function BodyMap({
   const [muscleModalOpen, setMuscleModalOpen] = useState(false);
   const [pendingRegion, setPendingRegion] = useState<{ code: string; name: string; x: number; y: number } | null>(null);
   const [focusedRegionIndex, setFocusedRegionIndex] = useState<number>(-1);
+  const regions = BODY_REGIONS[view];
 
   // Keyboard navigation for regions
   useEffect(() => {
@@ -162,8 +163,6 @@ export function BodyMap({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [focusedRegionIndex, regions, readOnly, onPointAdd]);
-
-  const regions = BODY_REGIONS[view];
 
   // Encontrar região mais próxima do clique
   const findNearestRegion = useCallback((x: number, y: number) => {
@@ -534,4 +533,3 @@ export function BodyMap({
     </div>
   );
 }
-

@@ -4,6 +4,7 @@
  */
 
 import { authClient, isNeonAuthEnabled } from '@/lib/neonAuth';
+import { patientApi } from '@/lib/api';
 import { asyncResult, Result } from '@/lib/async';
 import { log } from '@/lib/logger';
 import { perf } from '@/lib/performance';
@@ -81,9 +82,12 @@ export async function signUp(data: SignUpData): Promise<Result<any>> {
     const user = authData.user;
     const uid = user.id;
 
-    // TODO: Integrar com a API de Workers para criar o perfil no Neon DB
-    // Atualmente o better-auth já cria o usuário no banco, mas podemos precisar
-    // de campos extras específicos da clínica.
+    await patientApi.bootstrapProfile({
+      full_name: data.fullName.trim(),
+      email: data.email.trim().toLowerCase(),
+      phone: data.phone?.trim() || null,
+      incomplete_registration: true,
+    });
     
     perf.end(PerformanceMarkers.AUTH_REGISTER, true);
     log.info('AUTH', 'User signed up', { uid });
@@ -147,21 +151,14 @@ export async function getCurrentUser(): Promise<any | null> {
 export async function getUserData(uid: string): Promise<Result<any>> {
   return asyncResult(async () => {
     perf.start('api_get_user');
-
-    // TODO: Substituir por chamada ao Worker API
-    // const response = await fetch(`${API_URL}/api/patients/${uid}`);
-    // return await response.json();
-    
-    const session = await authClient.getSession();
-    const user = session?.data?.user;
-    
+    const profile = await patientApi.getProfile();
     perf.end('api_get_user', true);
 
-    if (!user || user.id !== uid) {
-      throw new Error('User not found in session');
+    if (!profile || (profile.user_id !== uid && profile.profile?.user_id !== uid)) {
+      throw new Error('User not found in portal profile');
     }
 
-    return user;
+    return profile;
   }, 'getUserData');
 }
 
@@ -176,7 +173,7 @@ export interface UpdateProfileData {
 }
 
 export async function updateProfileData(
-  _uid: string,
+  uid: string,
   data: UpdateProfileData
 ): Promise<Result<void>> {
   return asyncResult(async () => {
@@ -186,6 +183,15 @@ export async function updateProfileData(
     });
 
     if (error) throw new Error(error.message);
+    await patientApi.updateProfile({
+      name: data.name,
+      phone: data.phone,
+      birth_date:
+        data.birth_date instanceof Date
+          ? data.birth_date.toISOString().slice(0, 10)
+          : undefined,
+      gender: data.gender,
+    });
     log.info('AUTH', 'Profile updated', { name: data.name });
   }, 'updateProfileData');
 }

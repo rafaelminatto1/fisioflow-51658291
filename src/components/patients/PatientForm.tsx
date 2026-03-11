@@ -5,7 +5,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
-
   Card,
   CardContent,
   CardDescription,
@@ -22,11 +21,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { CalendarIcon, User, Phone, Mail, MapPin, Activity, HeartPulse, Shield, Briefcase } from 'lucide-react';
+import { CalendarIcon, User, Phone, Mail, MapPin, Activity, HeartPulse, Shield, Briefcase, BadgeCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PatientFormSchema, type PatientFormData } from '@/schemas/patient';
 import { formatCPF, formatPhoneInput, formatCEP } from '@/utils/formatInputs';
@@ -35,6 +33,7 @@ import { AddressAutocomplete } from '@/components/forms/AddressAutocomplete';
 import { MagicTextarea } from '@/components/ai/MagicTextarea';
 import { BrasilService } from '@/services/brasilApi';
 import { toast } from 'sonner';
+import { SmartDatePicker } from '@/components/ui/smart-date-picker';
 
 // ============================================================================================
 // COMPONENT
@@ -55,7 +54,6 @@ export const PatientForm: React.FC<PatientFormProps> = ({
   submitLabel = 'Salvar',
   organizationId,
 }) => {
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'basic' | 'medical' | 'address' | 'additional'>('basic');
 
   const isEditing = !!patient;
@@ -98,137 +96,72 @@ export const PatientForm: React.FC<PatientFormProps> = ({
     handleSubmit,
     watch,
     setValue,
-    control,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = form;
 
   const watchedBirthDate = watch('birth_date');
-  const watchedPhone = watch('phone');
   const watchedCpf = watch('cpf');
-  const watchedCEP = watch('zip_code');
-  const watchedEmergencyPhone = watch('emergency_phone');
+  const watchedPhone = watch('phone');
+  const watchedEmail = watch('email');
+  const watchedZipCode = watch('zip_code');
 
-  const fieldToTabMap: Partial<Record<keyof PatientFormData, typeof activeTab>> = {
-    full_name: 'basic',
-    email: 'basic',
-    phone: 'basic',
-    cpf: 'basic',
-    birth_date: 'basic',
-    gender: 'basic',
-    emergency_contact: 'basic',
-    emergency_contact_relationship: 'basic',
-    emergency_phone: 'basic',
-    main_condition: 'medical',
-    medical_history: 'medical',
-    allergies: 'medical',
-    medications: 'medical',
-    weight_kg: 'medical',
-    height_cm: 'medical',
-    blood_type: 'medical',
-    address: 'address',
-    city: 'address',
-    state: 'address',
-    zip_code: 'address',
-    marital_status: 'additional',
-    profession: 'additional',
-    education_level: 'additional',
-    health_insurance: 'additional',
-    insurance_number: 'additional',
-    observations: 'additional',
-  };
-
-  const errorMessages = useMemo(() => {
-    return Object.entries(errors)
-      .map(([, value]) => value?.message)
-      .filter((msg): msg is string => typeof msg === 'string');
-  }, [errors]);
-
-  // Formatters
+  // handlers
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue('cpf', formatCPF(e.target.value), { shouldValidate: false });
+    setValue('cpf', formatCPF(e.target.value));
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue('phone', formatPhoneInput(e.target.value), { shouldValidate: false });
+    setValue('phone', formatPhoneInput(e.target.value));
   };
 
-  const handleEmergencyPhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue('emergency_phone', formatPhoneInput(e.target.value), { shouldValidate: false });
-  };
+  const handleZipCodeChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = formatCEP(e.target.value);
+    setValue('zip_code', value);
 
-  const handleCEPChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = e.target.value;
-    const formattedValue = formatCEP(rawValue);
-    setValue('zip_code', formattedValue, { shouldValidate: false });
-
-    // Se o CEP estiver completo (8 dígitos limpos), busca na BrasilAPI
-    const cleanCep = rawValue.replace(/\D/g, '');
-    if (cleanCep.length === 8) {
+    if (value.length === 9) {
       try {
-        const addressData = await BrasilService.getCep(cleanCep);
-        
-        // Preencher campos automaticamente
-        setValue('address', `${addressData.street}, ${addressData.neighborhood}`, { shouldValidate: true });
-        setValue('city', addressData.city, { shouldValidate: true });
-        setValue('state', addressData.state, { shouldValidate: true });
-        
-        toast.success('Endereço encontrado!');
-      } catch (error) {
-        console.error('Erro ao buscar CEP:', error);
-        // Não mostrar erro intrusivo, apenas deixar o usuário digitar se falhar
+        const data = await BrasilService.getCep(value.replace(/\D/g, ''));
+        if (data) {
+          setValue('address', data.street || '');
+          setValue('city', data.city || '');
+          setValue('state', data.state || '');
+        }
+      } catch (err) {
+        console.error('Erro ao buscar CEP:', err);
       }
     }
   };
 
-  // Submit handler
   const onFormSubmit = async (data: PatientFormData) => {
-    // Prepare data for submission
-    const submitData: PatientCreateInput | PatientUpdateInput = {
-      full_name: data.full_name,
-      email: data.email || undefined,
-      phone: data.phone || undefined,
-      cpf: data.cpf || undefined,
-      birth_date: data.birth_date,
-      gender: data.gender,
-      address: data.address || undefined,
-      city: data.city || undefined,
-      state: data.state || undefined,
-      zip_code: data.zip_code || undefined,
-      emergency_contact: data.emergency_contact || undefined,
-      emergency_contact_relationship: data.emergency_contact_relationship || undefined,
-      emergency_phone: data.emergency_phone || undefined,
-      medical_history: data.medical_history || undefined,
-      main_condition: data.main_condition,
-      allergies: data.allergies || undefined,
-      medications: data.medications || undefined,
-      weight_kg: data.weight_kg,
-      height_cm: data.height_cm,
-      blood_type: data.blood_type || undefined,
-      marital_status: data.marital_status || undefined,
-      profession: data.profession || undefined,
-      education_level: data.education_level || undefined,
-      health_insurance: data.health_insurance || undefined,
-      insurance_number: data.insurance_number || undefined,
-      observations: data.observations || undefined,
-      status: data.status,
-      organization_id: organizationId,
-    };
+    try {
+      const submitData: PatientCreateInput | PatientUpdateInput = {
+        ...data,
+        status: data.status,
+        organization_id: organizationId,
+      };
 
-    console.info('[PatientForm] Submit payload ready', {
-      full_name: submitData.full_name,
-      birth_date: submitData.birth_date,
-      organization_id: submitData.organization_id,
-    });
-    await onSubmit(submitData);
+      console.info('[PatientForm] Submit payload ready', {
+        full_name: submitData.full_name,
+        birth_date: submitData.birth_date,
+        organization_id: submitData.organization_id,
+      });
+
+      await onSubmit(submitData);
+    } catch (error) {
+      console.error('[PatientForm] Submit Error:', error);
+      toast.error('Erro ao salvar paciente. Tente novamente.');
+    }
   };
 
   const onFormInvalid = (formErrors: FieldErrors<PatientFormData>) => {
     const firstField = Object.keys(formErrors)[0] as keyof PatientFormData | undefined;
-    if (firstField) {
-      const targetTab = fieldToTabMap[firstField];
-      if (targetTab) setActiveTab(targetTab);
+    let firstMsg = 'Verifique os campos obrigatórios.';
+    if (firstField && formErrors[firstField]) {
+      const error = formErrors[firstField];
+      if (error && typeof error === 'object' && 'message' in error) {
+        firstMsg = String(error.message);
+      }
     }
-    const firstMsg = (firstField && formErrors[firstField]?.message) || 'Verifique os campos obrigatórios.';
     console.error('[PatientForm] Validation blocked submit', {
       firstField,
       firstMessage: firstMsg,
@@ -290,43 +223,20 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                 {/* Data de Nascimento */}
                 <div className="space-y-2">
                   <Label>
-                    Data de Nascimento <span className="text-destructive">*</span>
+                    Data de Nascimento <span className="text-slate-400 font-light">(Opcional)</span>
                   </Label>
-                  <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        data-testid="patient-birthdate"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !watchedBirthDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {watchedBirthDate ? (
-                          format(new Date(watchedBirthDate), 'dd/MM/yyyy', { locale: ptBR })
-                        ) : (
-                          "Selecione uma data"
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={watchedBirthDate ? new Date(watchedBirthDate) : undefined}
-                        onSelect={(date) => {
-                          if (date) {
-                            setValue('birth_date', format(date, 'yyyy-MM-dd'));
-                            setIsCalendarOpen(false);
-                          }
-                        }}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1900-01-01")
-                        }
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <SmartDatePicker
+                    date={watchedBirthDate ? new Date(watchedBirthDate) : undefined}
+                    onChange={(date) => {
+                      if (date) {
+                        setValue('birth_date', format(date, 'yyyy-MM-dd'), { shouldValidate: true });
+                      } else {
+                        setValue('birth_date', '', { shouldValidate: true });
+                      }
+                    }}
+                    placeholder="Selecione ou digite..."
+                    fromYear={1920}
+                  />
                   {errors.birth_date && (
                     <p className="text-sm text-destructive">{errors.birth_date.message}</p>
                   )}
@@ -351,15 +261,13 @@ export const PatientForm: React.FC<PatientFormProps> = ({
 
                 {/* Gênero */}
                 <div className="space-y-2">
-                  <Label htmlFor="gender">
-                    Gênero <span className="text-destructive">*</span>
-                  </Label>
+                  <Label htmlFor="gender">Gênero</Label>
                   <Controller
                     name="gender"
-                    control={control}
+                    control={form.control}
                     render={({ field }) => (
                       <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger>
+                        <SelectTrigger id="gender">
                           <SelectValue placeholder="Selecione o gênero" />
                         </SelectTrigger>
                         <SelectContent>
@@ -375,19 +283,19 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                   )}
                 </div>
 
-                {/* Email */}
+                {/* E-mail */}
                 <div className="space-y-2">
-                  <Label htmlFor="email">
-                    <Mail className="w-4 h-4 inline mr-1" />
-                    Email
-                  </Label>
-                  <Input
-                    id="email"
-                    data-testid="patient-email"
-                    type="email"
-                    placeholder="email@exemplo.com"
-                    {...register('email')}
-                  />
+                  <Label htmlFor="email">E-mail</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="email"
+                      type="email"
+                      className="pl-9"
+                      placeholder="exemplo@email.com"
+                      {...register('email')}
+                    />
+                  </div>
                   {errors.email && (
                     <p className="text-sm text-destructive">{errors.email.message}</p>
                   )}
@@ -395,96 +303,43 @@ export const PatientForm: React.FC<PatientFormProps> = ({
 
                 {/* Telefone */}
                 <div className="space-y-2">
-                  <Label htmlFor="phone">
-                    <Phone className="w-4 h-4 inline mr-1" />
-                    Telefone
-                  </Label>
-                  <Input
-                    id="phone"
-                    data-testid="patient-phone"
-                    value={watchedPhone || ''}
-                    onChange={handlePhoneChange}
-                    onBlur={() => setValue('phone', watchedPhone || '', { shouldValidate: true })}
-                    placeholder="(11) 99999-9999"
-                    maxLength={15}
-                  />
+                  <Label htmlFor="phone">Telefone</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="phone"
+                      className="pl-9"
+                      placeholder="(00) 00000-0000"
+                      value={watchedPhone || ''}
+                      onChange={handlePhoneChange}
+                    />
+                  </div>
                   {errors.phone && (
                     <p className="text-sm text-destructive">{errors.phone.message}</p>
                   )}
                 </div>
-              </div>
 
-              {/* Status (apenas na edição) */}
-              {isEditing && (
+                {/* Status */}
                 <div className="space-y-2">
                   <Label htmlFor="status">Status do Paciente</Label>
                   <Controller
                     name="status"
-                    control={control}
+                    control={form.control}
                     render={({ field }) => (
                       <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger>
+                        <SelectTrigger id="status">
                           <SelectValue placeholder="Selecione o status" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Inicial">
-                            <Badge variant="secondary">🆕 Inicial</Badge>
-                          </SelectItem>
-                          <SelectItem value="Em Tratamento">
-                            <Badge className="bg-emerald-500">💚 Em Tratamento</Badge>
-                          </SelectItem>
-                          <SelectItem value="Recuperação">
-                            <Badge className="bg-yellow-500">⚡ Recuperação</Badge>
-                          </SelectItem>
-                          <SelectItem value="Concluído">
-                            <Badge className="bg-gray-500">✅ Concluído</Badge>
-                          </SelectItem>
+                          <SelectItem value="Inicial">Inicial</SelectItem>
+                          <SelectItem value="Em Tratamento">Em Tratamento</SelectItem>
+                          <SelectItem value="Recuperação">Recuperação</SelectItem>
+                          <SelectItem value="Concluído">Concluído</SelectItem>
+                          <SelectItem value="Alta">Alta</SelectItem>
+                          <SelectItem value="Arquivado">Arquivado</SelectItem>
                         </SelectContent>
                       </Select>
                     )}
-                  />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Emergency Contact Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="w-5 h-5 text-primary" />
-                Contato de Emergência
-              </CardTitle>
-              <CardDescription>Informações para contato em casos de emergência</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="emergency_contact">Nome do Contato</Label>
-                  <Input
-                    id="emergency_contact"
-                    placeholder="Nome completo"
-                    {...register('emergency_contact')}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="emergency_contact_relationship">Parentesco</Label>
-                  <Input
-                    id="emergency_contact_relationship"
-                    placeholder="Ex: Mãe, Pai, Cônjuge"
-                    {...register('emergency_contact_relationship')}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="emergency_phone">Telefone</Label>
-                  <Input
-                    id="emergency_phone"
-                    value={watchedEmergencyPhone || ''}
-                    onChange={handleEmergencyPhoneChange}
-                    placeholder="(11) 99999-9999"
-                    maxLength={15}
                   />
                 </div>
               </div>
@@ -498,111 +353,92 @@ export const PatientForm: React.FC<PatientFormProps> = ({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <HeartPulse className="w-5 h-5 text-primary" />
-                Informações Médicas
+                Histórico Clínico
               </CardTitle>
-              <CardDescription>Dados clínicos do paciente</CardDescription>
+              <CardDescription>Principais queixas e condições de saúde</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="main_condition">
-                  Condição Principal <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="main_condition"
-                  placeholder="Ex: Dor lombar, Lesão no joelho, Lombalgia"
-                  {...register('main_condition')}
-                />
-                {errors.main_condition && (
-                  <p className="text-sm text-destructive">{errors.main_condition.message}</p>
-                )}
-              </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="main_condition">Queixa Principal / Condição</Label>
+                  <Input
+                    id="main_condition"
+                    placeholder="Ex: Dor lombar crônica, Pós-operatório de LCA"
+                    {...register('main_condition')}
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="medical_history">Histórico Médico</Label>
-                <Controller
-                  name="medical_history"
-                  control={control}
-                  render={({ field }) => (
-                    <MagicTextarea
-                      id="medical_history"
-                      placeholder="Histórico médico relevante, cirurgias anteriores, comorbidades... (A IA corrige para você)"
-                      rows={3}
-                      value={field.value || ''}
-                      onValueChange={field.onChange}
+                <div className="space-y-2">
+                  <Label htmlFor="medical_history">Histórico Médico</Label>
+                  <MagicTextarea
+                    id="medical_history"
+                    placeholder="Descreva o histórico de saúde, cirurgias anteriores, etc."
+                    value={watch('medical_history') || ''}
+                    onChange={(val) => setValue('medical_history', val)}
+                    minHeight={100}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="allergies">Alergias</Label>
+                    <Input
+                      id="allergies"
+                      placeholder="Medicamentos, alimentos, etc."
+                      {...register('allergies')}
                     />
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="allergies">Alergias Conhecidas</Label>
-                  <Input
-                    id="allergies"
-                    placeholder="Medicamentos, alimentos, látex..."
-                    {...register('allergies')}
-                  />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="medications">Medicamentos em Uso</Label>
+                    <Input
+                      id="medications"
+                      placeholder="Liste os medicamentos atuais"
+                      {...register('medications')}
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="medications">Medicamentos em Uso</Label>
-                  <Input
-                    id="medications"
-                    placeholder="Lista de medicamentos atuais"
-                    {...register('medications')}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="weight_kg">Peso (kg)</Label>
-                  <Input
-                    id="weight_kg"
-                    type="number"
-                    step="0.1"
-                    placeholder="70.5"
-                    {...register('weight_kg', { valueAsNumber: true })}
-                  />
-                  {errors.weight_kg && (
-                    <p className="text-sm text-destructive">{errors.weight_kg.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="height_cm">Altura (cm)</Label>
-                  <Input
-                    id="height_cm"
-                    type="number"
-                    placeholder="170"
-                    {...register('height_cm', { valueAsNumber: true })}
-                  />
-                  {errors.height_cm && (
-                    <p className="text-sm text-destructive">{errors.height_cm.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="blood_type">Tipo Sanguíneo</Label>
-                  <Controller
-                    name="blood_type"
-                    control={control}
-                    render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="A+">A+</SelectItem>
-                          <SelectItem value="A-">A-</SelectItem>
-                          <SelectItem value="B+">B+</SelectItem>
-                          <SelectItem value="B-">B-</SelectItem>
-                          <SelectItem value="AB+">AB+</SelectItem>
-                          <SelectItem value="AB-">AB-</SelectItem>
-                          <SelectItem value="O+">O+</SelectItem>
-                          <SelectItem value="O-">O-</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="weight_kg">Peso (kg)</Label>
+                    <Input
+                      id="weight_kg"
+                      type="number"
+                      step="0.1"
+                      placeholder="00.0"
+                      {...register('weight_kg', { valueAsNumber: true })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="height_cm">Altura (cm)</Label>
+                    <Input
+                      id="height_cm"
+                      type="number"
+                      placeholder="000"
+                      {...register('height_cm', { valueAsNumber: true })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="blood_type">Tipo Sanguíneo</Label>
+                    <Controller
+                      name="blood_type"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <SelectTrigger id="blood_type">
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((type) => (
+                              <SelectItem key={type} value={type}>
+                                {type}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -615,104 +451,66 @@ export const PatientForm: React.FC<PatientFormProps> = ({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-primary" />
-                Endereço
+                Endereço e Contato
               </CardTitle>
-              <CardDescription>Informações de localização (Google Maps)</CardDescription>
+              <CardDescription>Onde o paciente reside e contatos de emergência</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="address">Logradouro</Label>
-                <Controller
-                  name="address"
-                  control={control}
-                  render={({ field }) => (
-                    <AddressAutocomplete
-                      value={field.value || ''}
-                      onChange={field.onChange}
-                      onSelect={(place) => {
-                        // O Google Maps retorna 'description' com o texto completo
-                        // Para um preenchimento robusto, idealmente chamariamos a Geocoding API
-                        // Mas aqui vamos fazer um parse simples da string retornada pelo Autocomplete
-                        const parts = place.description.split(', ');
-                        if (parts.length > 1) {
-                          // Tentativa heurística: "Rua X, 123, Bairro, Cidade - SP, Brasil"
-                          const cityState = parts[parts.length - 2] || '';
-                          const [city, state] = cityState.split(' - ');
-                          if (city) setValue('city', city);
-                          if (state) setValue('state', state);
-                        }
-                      }}
-                      placeholder="Digite o endereço para buscar no Google Maps..."
-                    />
-                  )}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="city">Cidade</Label>
-                  <Input
-                    id="city"
-                    data-testid="address-street"
-                    placeholder="Nome da cidade"
-                    {...register('city')}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="state">Estado</Label>
-                  <Controller
-                    name="state"
-                    control={control}
-                    render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value?.toUpperCase()}>
-                        <SelectTrigger data-testid="address-number">
-                          <SelectValue placeholder="UF" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="AC">Acre</SelectItem>
-                          <SelectItem value="AL">Alagoas</SelectItem>
-                          <SelectItem value="AP">Amapá</SelectItem>
-                          <SelectItem value="AM">Amazonas</SelectItem>
-                          <SelectItem value="BA">Bahia</SelectItem>
-                          <SelectItem value="CE">Ceará</SelectItem>
-                          <SelectItem value="DF">Distrito Federal</SelectItem>
-                          <SelectItem value="ES">Espírito Santo</SelectItem>
-                          <SelectItem value="GO">Goiás</SelectItem>
-                          <SelectItem value="MA">Maranhão</SelectItem>
-                          <SelectItem value="MT">Mato Grosso</SelectItem>
-                          <SelectItem value="MS">Mato Grosso do Sul</SelectItem>
-                          <SelectItem value="MG">Minas Gerais</SelectItem>
-                          <SelectItem value="PA">Pará</SelectItem>
-                          <SelectItem value="PB">Paraíba</SelectItem>
-                          <SelectItem value="PR">Paraná</SelectItem>
-                          <SelectItem value="PE">Pernambuco</SelectItem>
-                          <SelectItem value="PI">Piauí</SelectItem>
-                          <SelectItem value="RJ">Rio de Janeiro</SelectItem>
-                          <SelectItem value="RN">Rio Grande do Norte</SelectItem>
-                          <SelectItem value="RS">Rio Grande do Sul</SelectItem>
-                          <SelectItem value="RO">Rondônia</SelectItem>
-                          <SelectItem value="RR">Roraima</SelectItem>
-                          <SelectItem value="SC">Santa Catarina</SelectItem>
-                          <SelectItem value="SP">São Paulo</SelectItem>
-                          <SelectItem value="SE">Sergipe</SelectItem>
-                          <SelectItem value="TO">Tocantins</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </div>
-
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="zip_code">CEP</Label>
                   <Input
                     id="zip_code"
-                    data-testid="address-cep"
-                    value={watchedCEP || ''}
-                    onChange={handleCEPChange}
                     placeholder="00000-000"
+                    value={watchedZipCode || ''}
+                    onChange={handleZipCodeChange}
                     maxLength={9}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="address">Logradouro / Rua</Label>
+                  <Input id="address" placeholder="Rua, Avenida..." {...register('address')} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="city">Cidade</Label>
+                  <Input id="city" placeholder="Cidade" {...register('city')} />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="state">Estado (UF)</Label>
+                  <Input id="state" placeholder="Estado" maxLength={2} {...register('state')} />
+                </div>
+              </div>
+
+              <div className="border-t pt-4 mt-2">
+                <h4 className="text-sm font-bold mb-4">Contato de Emergência</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="emergency_contact">Nome do Contato</Label>
+                    <Input
+                      id="emergency_contact"
+                      placeholder="Nome do responsável"
+                      {...register('emergency_contact')}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="emergency_phone">Telefone de Emergência</Label>
+                    <Input
+                      id="emergency_phone"
+                      placeholder="(00) 00000-0000"
+                      {...register('emergency_phone')}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="emergency_contact_relationship">Parentesco / Relação</Label>
+                    <Input
+                      id="emergency_contact_relationship"
+                      placeholder="Ex: Cônjuge, Filho, Amigo"
+                      {...register('emergency_contact_relationship')}
+                    />
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -724,100 +522,47 @@ export const PatientForm: React.FC<PatientFormProps> = ({
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-primary" />
-                Informações Adicionais
+                <Shield className="w-5 h-5 text-primary" />
+                Informações Complementares
               </CardTitle>
-              <CardDescription>Dados complementares do paciente</CardDescription>
+              <CardDescription>Seguro saúde, ocupação e observações internas</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="marital_status">Estado Civil</Label>
-                  <Controller
-                    name="marital_status"
-                    control={control}
-                    render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="solteiro">Solteiro(a)</SelectItem>
-                          <SelectItem value="casado">Casado(a)</SelectItem>
-                          <SelectItem value="divorciado">Divorciado(a)</SelectItem>
-                          <SelectItem value="viuvo">Viúvo(a)</SelectItem>
-                          <SelectItem value="uniao_estavel">União Estável</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="profession">Profissão</Label>
-                  <Input
-                    id="profession"
-                    placeholder="Profissão do paciente"
-                    {...register('profession')}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="education_level">Escolaridade</Label>
-                  <Controller
-                    name="education_level"
-                    control={control}
-                    render={({ field }) => (
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="fundamental">Ensino Fundamental</SelectItem>
-                          <SelectItem value="medio">Ensino Médio</SelectItem>
-                          <SelectItem value="superior">Ensino Superior</SelectItem>
-                          <SelectItem value="pos">Pós-graduação</SelectItem>
-                          <SelectItem value="mestrado">Mestrado</SelectItem>
-                          <SelectItem value="doutorado">Doutorado</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="health_insurance">Plano de Saúde</Label>
+                  <Label htmlFor="health_insurance">Convênio / Seguro Saúde</Label>
                   <Input
                     id="health_insurance"
-                    placeholder="Nome do convênio"
+                    placeholder="Nome da operadora"
                     {...register('health_insurance')}
                   />
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="insurance_number">Número da Carteira</Label>
+                  <Label htmlFor="insurance_number">Número da Carteirinha</Label>
                   <Input
                     id="insurance_number"
-                    placeholder="Número da carteirinha"
+                    placeholder="0000000000000"
                     {...register('insurance_number')}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="profession">Profissão / Ocupação</Label>
+                  <Input id="profession" placeholder="Ex: Engenheiro, Professor" {...register('profession')} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="education_level">Escolaridade</Label>
+                  <Input id="education_level" placeholder="Ex: Ensino Superior" {...register('education_level')} />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="observations">Observações</Label>
-                <Controller
-                  name="observations"
-                  control={control}
-                  render={({ field }) => (
-                    <MagicTextarea
-                      id="observations"
-                      placeholder="Informações adicionais, notas importantes..."
-                      rows={4}
-                      value={field.value || ''}
-                      onValueChange={field.onChange}
-                    />
-                  )}
+                <Label htmlFor="observations">Observações Internas</Label>
+                <MagicTextarea
+                  id="observations"
+                  placeholder="Anotações importantes sobre o paciente, preferências, etc."
+                  value={watch('observations') || ''}
+                  onChange={(val) => setValue('observations', val)}
+                  minHeight={100}
                 />
               </div>
             </CardContent>
@@ -826,34 +571,34 @@ export const PatientForm: React.FC<PatientFormProps> = ({
       </Tabs>
 
       {/* Action Buttons */}
-      <div className="flex justify-end gap-3 pt-4 border-t">
+      <div className="flex items-center justify-end gap-3 pt-4 sticky bottom-0 bg-background/80 backdrop-blur-md pb-4 z-10 border-t border-slate-100 dark:border-slate-800">
         <Button
           type="button"
-          variant="outline"
-          onClick={() => form.reset()}
+          variant="ghost"
+          className="rounded-xl h-11 px-6 font-bold text-slate-500 hover:bg-slate-100"
+          onClick={() => window.history.back()}
+          disabled={isLoading}
         >
-          Limpar
+          Cancelar
         </Button>
         <Button
           type="submit"
+          className="rounded-xl h-11 px-8 gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl shadow-slate-900/10 font-bold uppercase tracking-wider transition-all hover:scale-105 active:scale-95"
           disabled={isLoading}
-          className="min-w-[120px]"
         >
           {isLoading ? (
-            <>
-              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-              Salvando...
-            </>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              Processando...
+            </div>
           ) : (
-            submitLabel
+            <>
+              <BadgeCheck className="w-4 h-4" />
+              {submitLabel}
+            </>
           )}
         </Button>
       </div>
-      {errorMessages.length > 0 && (
-        <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
-          {errorMessages.slice(0, 3).join(' | ')}
-        </div>
-      )}
     </form>
   );
 };

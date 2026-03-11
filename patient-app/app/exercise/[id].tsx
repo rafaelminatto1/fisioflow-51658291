@@ -24,8 +24,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
 import { Card, Button, VideoModal } from '@/components';
 import { useAuthStore } from '@/store/auth';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { patientApi } from '@/lib/api';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import * as Haptics from 'expo-haptics';
@@ -83,49 +82,39 @@ export default function ExerciseDetailScreen() {
     setLoading(true);
 
     try {
-      // Buscar detalhes do exercício
-      // Em uma implementação real, isso viria de uma coleção de exercícios
-      // Por ora, simulamos com dados do plano do paciente
+      const exercises = await patientApi.getExercises();
+      const foundExercise = exercises.find((item: any) => item.id === exerciseId);
 
-      const plansRef = doc(db, 'users', user.id, 'exercise_plans', 'current');
-      const planSnap = await getDoc(plansRef);
+      if (foundExercise) {
+        setExercise({
+          id: foundExercise.id,
+          name: foundExercise.exercise?.name || 'Exercício',
+          description: foundExercise.notes || foundExercise.exercise?.description,
+          instructions: foundExercise.exercise?.instructions || [
+            'Mantenha a postura correta durante todo o exercício',
+            'Respire normalmente, não prenda a respiração',
+            'Execute o movimento de forma controlada',
+          ],
+          benefits: foundExercise.exercise?.benefits || [
+            'Melhora a flexibilidade',
+            'Fortalece os músculos',
+            'Reduz a dor',
+          ],
+          precautions: foundExercise.exercise?.precautions || [
+            'Pare se sentir dor intensa',
+            'Não force além dos seus limites',
+          ],
+          sets: foundExercise.sets || 3,
+          reps: foundExercise.reps || 10,
+          holdTime: foundExercise.holdTime,
+          restTime: foundExercise.restTime,
+          videoUrl: foundExercise.exercise?.videoUrl,
+          imageUrl: foundExercise.exercise?.imageUrl,
+          category: foundExercise.exercise?.category,
+          difficulty: foundExercise.exercise?.difficulty,
+        });
 
-      if (planSnap.exists()) {
-        const planData = planSnap.data();
-        const exercises = planData.exercises || [];
-        const foundExercise = exercises.find((e: any) => e.id === exerciseId);
-
-        if (foundExercise) {
-          setExercise({
-            id: foundExercise.id,
-            name: foundExercise.name,
-            description: foundExercise.description,
-            instructions: foundExercise.instructions || [
-              'Mantenha a postura correta durante todo o exercício',
-              'Respire normalmente, não prenda a respiração',
-              'Execute o movimento de forma controlada',
-            ],
-            benefits: foundExercise.benefits || [
-              'Melhora a flexibilidade',
-              'Fortalece os músculos',
-              'Reduz a dor',
-            ],
-            precautions: foundExercise.precautions || [
-              'Pare se sentir dor intensa',
-              'Não force além dos seus limites',
-            ],
-            sets: foundExercise.sets || 3,
-            reps: foundExercise.reps || 10,
-            holdTime: foundExercise.holdTime,
-            restTime: foundExercise.restTime,
-            videoUrl: foundExercise.videoUrl,
-            imageUrl: foundExercise.imageUrl,
-            category: foundExercise.category,
-            difficulty: foundExercise.difficulty,
-          });
-
-          setCompleted(foundExercise.completed || false);
-        }
+        setCompleted(foundExercise.completed || false);
       }
     } catch (error) {
       log.error('Error loading exercise:', error);
@@ -148,21 +137,9 @@ export default function ExerciseDetailScreen() {
       const newCompletedState = !completed;
       setCompleted(newCompletedState);
 
-      // Update in Firestore
-      const plansRef = doc(db, 'users', user.id, 'exercise_plans', 'current');
-      const planSnap = await getDoc(plansRef);
-
-      if (planSnap.exists()) {
-        const planData = planSnap.data();
-        const exercises = planData.exercises || [];
-        const updatedExercises = exercises.map((e: any) =>
-          e.id === exerciseId
-            ? { ...e, completed: newCompletedState, completedAt: new Date() }
-            : e
-        );
-
-        await updateDoc(plansRef, { exercises: updatedExercises });
-      }
+      await patientApi.completeExercise(exerciseId, {
+        completed: newCompletedState,
+      });
 
       if (newCompletedState) {
         Alert.alert('Parabéns!', 'Exercício marcado como completo! 💪');

@@ -27,6 +27,8 @@ interface PatientComboboxProps {
   onCreateNew?: (searchTerm: string) => void;
   /** Nome a exibir quando value está setado mas o paciente ainda não está na lista (ex.: recém-criado) */
   fallbackDisplayName?: string;
+  /** Descrição opcional para o fallback (ex.: "Recém-cadastrado") */
+  fallbackDescription?: string;
   disabled?: boolean;
   className?: string;
 }
@@ -37,6 +39,7 @@ export function PatientCombobox({
   onValueChange,
   onCreateNew,
   fallbackDisplayName,
+  fallbackDescription,
   disabled = false,
   className,
 }: PatientComboboxProps) {
@@ -159,7 +162,9 @@ export function PatientCombobox({
               <User className="h-4 w-4 shrink-0 opacity-50" />
               <div className="flex flex-col items-start truncate leading-tight">
                 <span className="truncate font-medium">{fallbackDisplayName}</span>
-                <span className="text-[10px] text-amber-600 font-normal">Recém-cadastrado</span>
+                {fallbackDescription && (
+                  <span className="text-[10px] text-amber-600 font-normal">{fallbackDescription}</span>
+                )}
               </div>
             </div>
           ) : (

@@ -313,18 +313,15 @@ export function trackSearch(
  * Obtém ID do usuário atual para tracking
  */
 function getUserId(): string | null {
-  // Buscar do localStorage, Firebase Auth, ou gerar temporário
+  // Buscar do localStorage, auth atual, ou gerar temporário
   try {
-    // Tentar obter do Firebase Auth
-    const firebaseUser = window.localStorage.getItem('firebaseUser');
-    if (firebaseUser) {
-      return JSON.parse(firebaseUser)?.uid;
-    }
-
-    // Tentar obter do contexto
-    const authContext = window.localStorage.getItem('authUser');
-    if (authContext) {
-      return JSON.parse(authContext)?.uid;
+    const authKeys = ['neonUser', 'authUser', 'firebaseUser'];
+    for (const authKey of authKeys) {
+      const storedUser = window.localStorage.getItem(authKey);
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        return parsedUser?.uid ?? parsedUser?.id ?? null;
+      }
     }
 
     // Gerar ID temporário se não houver usuário logado
