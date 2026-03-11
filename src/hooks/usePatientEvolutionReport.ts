@@ -5,16 +5,16 @@
 import { useQuery } from '@tanstack/react-query';
 import {
   clinicalApi,
+  evolutionApi,
   profileApi,
   sessionsApi,
   type PainMap,
   type SessionRecord,
 } from '@/lib/api/workers-client';
 
-const fetchEvolutionMeasurements = async (_patientId: string) => {
-  // TODO: Replace this placeholder with a dedicated Workers endpoint that exposes
-  // evolution measurements once the backend route is ready.
-  return [] as Array<{
+const fetchEvolutionMeasurements = async (patientId: string) => {
+  const res = await evolutionApi.measurements.list(patientId);
+  return (res?.data ?? []) as Array<{
     measurement_type: string;
     measurement_name: string;
     value: number | string;
@@ -39,6 +39,10 @@ export interface PatientEvolutionData {
     observations: string;
     therapist: string;
     duration: number;
+    subjective?: string;
+    objective?: string;
+    assessment?: string;
+    plan?: string;
   }[];
   currentPainLevel: number;
   initialPainLevel: number;
@@ -99,6 +103,7 @@ export const usePatientEvolutionReport = (patientId: string) => {
         pain_location: record.pain_location,
         pain_character: record.pain_character,
         record_date: record.record_date,
+        created_by: (record as any).therapist_id || (record as any).created_by || "",
       }));
 
       // Buscar medições de evolução
@@ -141,10 +146,10 @@ export const usePatientEvolutionReport = (patientId: string) => {
         }
 
         return {
-          name: last.measurement_name,
-          type: last.measurement_type,
-          initial: { value: first.value, unit: first.unit, date: first.measured_at },
-          current: { value: last.value, unit: last.unit, date: last.measured_at },
+          name: last.measurement_name || "Desconhecido",
+          type: last.measurement_type || "Outro",
+          initial: { value: first.value, unit: first.unit || "", date: first.measured_at },
+          current: { value: last.value, unit: last.unit || "", date: last.measured_at },
           improvement: typeof improvement === 'number' ? improvement.toFixed(1) : improvement,
           isVitalSign: last.measurement_type === 'Sinais Vitais',
           vitalSigns: last.measurement_type === 'Sinais Vitais' ? (last.custom_data as Record<string, unknown>) : undefined,
@@ -155,9 +160,9 @@ export const usePatientEvolutionReport = (patientId: string) => {
       const painMapsResponse = await clinicalApi.painMaps.list({ patientId });
       const allPainMaps = (painMapsResponse?.data ?? []) as PainMap[];
       const painMaps = allPainMaps
-        .filter((map) => !!map.session_id)
+        .filter((map) => !!(map as any).session_id)
         .map((map) => ({
-          session_id: map.session_id ?? '',
+          session_id: (map as any).session_id ?? '',
           global_pain_level: map.pain_level,
         }));
 
@@ -167,8 +172,8 @@ export const usePatientEvolutionReport = (patientId: string) => {
 
       // Buscar informações dos terapeutas
       const therapistMap = new Map<string, string>();
-      const therapistsRes = await profileApi.therapists();
-      (therapistsRes?.data ?? []).forEach((therapist) => {
+      const therapistsRes = await profileApi.listTherapists();
+      (therapistsRes?.data ?? []).forEach((therapist: any) => {
         therapistMap.set(therapist.id, therapist.name);
       });
 
@@ -177,6 +182,9 @@ export const usePatientEvolutionReport = (patientId: string) => {
         id: string;
         record_date?: string;
         created_at?: string;
+        subjective?: string;
+        objective?: string;
+        assessment?: string;
         plan?: string;
         created_by: string;
       }
@@ -195,6 +203,10 @@ export const usePatientEvolutionReport = (patientId: string) => {
           observations: record.plan || "",
           therapist: therapistMap.get(record.created_by) || "Não informado",
           duration: 60,
+          subjective: record.subjective || "",
+          objective: record.objective || "",
+          assessment: record.assessment || "",
+          plan: record.plan || "",
         };
       });
 

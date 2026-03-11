@@ -1,8 +1,9 @@
 /**
  * Patients Schema - RF01.2 Prontuário Eletrônico do Paciente (PEP)
  * 
- * Comprehensive patient management with:
+ * Comprehensive patient management on Neon/Postgres with:
  * - Basic patient data with photo support
+ * - Structured clinical and contact metadata
  * - Medical records (anamnese)
  * - Surgeries with elapsed time tracking
  * - Treatment goals with countdown
@@ -12,7 +13,7 @@
 
 // ===== ENUMS =====
 
-import { pgTable, uuid, varchar, text, date, boolean, timestamp, jsonb, pgEnum, integer, numeric, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, date, boolean, timestamp, jsonb, pgEnum, integer, numeric, index, doublePrecision } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { appointments } from './appointments';
 import { sessions } from './sessions';
@@ -33,7 +34,7 @@ export const patients = pgTable('patients', {
     gender: genderEnum('gender'),
 
     // Contact
-    phone: varchar('phone', { length: 20 }).notNull(),
+    phone: varchar('phone', { length: 20 }),
     phoneSecondary: varchar('phone_secondary', { length: 20 }),
     email: varchar('email', { length: 255 }),
 
@@ -41,7 +42,7 @@ export const patients = pgTable('patients', {
     photoUrl: text('photo_url'),
     profession: varchar('profession', { length: 100 }),
 
-    // Address (JSONB for flexibility)
+    // Address stored in Neon/Postgres JSONB for flexible UI payloads
     address: jsonb('address').$type<{
         cep?: string;
         street?: string;
@@ -69,28 +70,51 @@ export const patients = pgTable('patients', {
 
     // Organization & Origin
     organizationId: uuid('organization_id'),
+    profileId: uuid('profile_id'),
+    userId: text('user_id'),
     origin: varchar('origin', { length: 100 }), // How patient found the clinic
     referredBy: varchar('referred_by', { length: 150 }), // Referral source
+    professionalId: uuid('professional_id'),
+    professionalName: varchar('professional_name', { length: 150 }),
 
     // Status & Notes
     isActive: boolean('is_active').default(true).notNull(),
     alerts: jsonb('alerts').$type<string[]>().default([]), // Important alerts for dashboard
+    observations: text('observations'),
     notes: text('notes'),
+
+    // Extended patient profile stored in Neon/Postgres
+    incompleteRegistration: boolean('incomplete_registration').default(false).notNull(),
+    consentData: boolean('consent_data').default(true),
+    consentImage: boolean('consent_image').default(false),
+    bloodType: varchar('blood_type', { length: 10 }),
+    weightKg: numeric('weight_kg', { precision: 6, scale: 2 }),
+    heightCm: numeric('height_cm', { precision: 6, scale: 2 }),
+    maritalStatus: varchar('marital_status', { length: 50 }),
+    educationLevel: varchar('education_level', { length: 100 }),
+
+    // Compatibility fields kept while the domain is standardized
+    weight: doublePrecision('weight'),
+    progress: integer('progress'),
+    legacyDateOfBirth: date('date_of_birth'),
+    archived: boolean('archived'),
+    mainCondition: text('main_condition'),
+    status: varchar('status', { length: 100 }),
+    sessionValue: numeric('session_value', { precision: 10, scale: 2 }),
 
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => ({
     organizationIdIdx: index('idx_patients_organization_id').on(table.organizationId),
+    profileIdIdx: index('idx_patients_profile_id').on(table.profileId),
+    userIdIdx: index('idx_patients_user_id').on(table.userId),
     cpfIdx: index('idx_patients_cpf').on(table.cpf),
     isActiveIdx: index('idx_patients_is_active').on(table.isActive),
     fullNameIdx: index('idx_patients_full_name').on(table.fullName),
 }));
 
-export const patientsRelations = relations(patients, ({ one, many }) => ({
-    medicalRecord: one(medicalRecords, {
-        fields: [patients.id],
-        references: [medicalRecords.patientId],
-    }),
+export const patientsRelations = relations(patients, ({ many }) => ({
+    medicalRecords: many(medicalRecords),
     appointments: many(appointments),
     sessions: many(sessions),
     packages: many(patientPackages),
@@ -99,13 +123,21 @@ export const patientsRelations = relations(patients, ({ one, many }) => ({
 // ===== MEDICAL RECORDS (Prontuário/Anamnese) =====
 export const medicalRecords = pgTable('medical_records', {
     id: uuid('id').primaryKey().defaultRandom(),
-    patientId: uuid('patient_id').notNull().references(() => patients.id, { onDelete: 'cascade' }).unique(),
+    patientId: uuid('patient_id').notNull().references(() => patients.id, { onDelete: 'cascade' }),
+
+    organizationId: uuid('organization_id'),
 
     // Anamnese - RF01.2
+    recordDate: date('record_date'),
     chiefComplaint: text('chief_complaint'), // Queixa Principal
+    medicalHistory: text('medical_history'),
+    currentMedications: text('current_medications'),
+    previousSurgeries: text('previous_surgeries'),
+    lifestyleHabits: text('lifestyle_habits'),
     currentHistory: text('current_history'), // História da Doença Atual (HDA)
     pastHistory: text('past_history'), // Histórico Médico Pregresso
     familyHistory: text('family_history'),
+    createdBy: text('created_by'),
 
     // Medications & Allergies
     medications: jsonb('medications').$type<Array<{

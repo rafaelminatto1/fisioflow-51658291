@@ -3,6 +3,62 @@ import Suggestion from '@tiptap/suggestion';
 import { ReactRenderer } from '@tiptap/react';
 import tippy from 'tippy.js';
 import { ClipboardList, CheckSquare, Paperclip, ImageIcon, Sparkles, Book } from 'lucide-react';
+import { getEvolutionSettings } from '../EvolutionSettingsModal';
+
+const COMMANDS_REGISTRY: Record<string, any> = {
+  ai: {
+    id: 'ai',
+    title: 'Assistente IA',
+    icon: Sparkles,
+    description: 'Gerar evolução usando IA',
+    command: ({ editor, range }: any) => {
+      editor.chain().focus().deleteRange(range).run();
+      window.dispatchEvent(new CustomEvent('tiptap-ai-assist'));
+    },
+  },
+  soap: {
+    id: 'soap',
+    title: 'Template SOAP',
+    icon: ClipboardList,
+    description: 'Subjetivo, Objetivo, Avaliação, Plano',
+    command: ({ editor, range }: any) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent('<h3>Subjetivo</h3><p></p><h3>Objetivo</h3><p></p><h3>Avaliação</h3><p></p><h3>Plano</h3><p></p>')
+        .run();
+    },
+  },
+  exercises: {
+    id: 'exercises',
+    title: 'Lista de Exercícios',
+    icon: CheckSquare,
+    description: 'Checklist de exercícios realizados',
+    command: ({ editor, range }: any) => {
+      editor.chain().focus().deleteRange(range).toggleTaskList().run();
+    },
+  },
+  image: {
+    id: 'image',
+    title: 'Imagem/Exame',
+    icon: ImageIcon,
+    description: 'Upload para Cloudflare R2',
+    command: ({ editor, range }: any) => {
+      editor.chain().focus().deleteRange(range).run();
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*,.pdf';
+      input.onchange = (e: any) => {
+        const file = e.target.files?.[0];
+        if (file) {
+          window.dispatchEvent(new CustomEvent('tiptap-upload', { detail: { file } }));
+        }
+      };
+      input.click();
+    },
+  }
+};
 
 export const Commands = Extension.create({
   name: 'clinicalCommands',
@@ -18,113 +74,68 @@ export const Commands = Extension.create({
     };
   },
 
-  addProposals() {
+  addProseMirrorPlugins() {
     return [
-      {
-        name: 'clinicalCommandsSuggestion',
-        suggestion: {
-          ...this.options.suggestion,
-          items: ({ query }: { query: string }) => {
-            return [
-              {
-                title: 'Assistente IA',
-                icon: Sparkles,
-                description: 'Gerar evolução usando IA',
-                command: ({ editor, range }: any) => {
-                  editor.chain().focus().deleteRange(range).run();
-                  // Custom event for AI assistant
-                  window.dispatchEvent(new CustomEvent('tiptap-ai-assist'));
-                },
-              },
-              {
-                title: 'Template SOAP',
-                icon: ClipboardList,
-                description: 'Subjetivo, Objetivo, Avaliação, Plano',
-                command: ({ editor, range }: any) => {
-                  editor
-                    .chain()
-                    .focus()
-                    .deleteRange(range)
-                    .insertContent('<h3>Subjetivo</h3><p></p><h3>Objetivo</h3><p></p><h3>Avaliação</h3><p></p><h3>Plano</h3><p></p>')
-                    .run();
-                },
-              },
-              {
-                title: 'Lista de Exercícios',
-                icon: CheckSquare,
-                description: 'Checklist de exercícios realizados',
-                command: ({ editor, range }: any) => {
-                  editor
-                    .chain()
-                    .focus()
-                    .deleteRange(range)
-                    .toggleTaskList()
-                    .run();
-                },
-              },
-              {
-                title: 'Imagem/Exame',
-                icon: ImageIcon,
-                description: 'Upload para Cloudflare R2',
-                command: ({ editor, range }: any) => {
-                   editor.chain().focus().deleteRange(range).run();
-                   const input = document.createElement('input');
-                   input.type = 'file';
-                   input.accept = 'image/*,.pdf';
-                   input.onchange = (e: any) => {
-                     const file = e.target.files?.[0];
-                     if (file) {
-                        window.dispatchEvent(new CustomEvent('tiptap-upload', { detail: { file } }));
-                     }
-                   };
-                   input.click();
-                },
-              },
-            ].filter(item => item.title.toLowerCase().startsWith(query.toLowerCase()));
-          },
-          render: () => {
-            let component: any;
-            let popup: any;
+      Suggestion({
+        editor: this.editor,
+        ...this.options.suggestion,
+        items: ({ query }: { query: string }) => {
+          const settings = getEvolutionSettings();
+          
+          return settings.slashCommands
+            .filter(cmd => cmd.visible)
+            .map(cmd => COMMANDS_REGISTRY[cmd.id])
+            .filter(Boolean)
+            .filter(item => item.title.toLowerCase().startsWith(query.toLowerCase()));
+        },
+        render: () => {
+          let component: any;
+          let popup: any;
 
-            return {
-              onStart: (props: any) => {
-                component = new ReactRenderer(CommandList, {
-                  props,
-                  editor: props.editor,
-                });
+          return {
+            onStart: (props: any) => {
+              component = new ReactRenderer(CommandList, {
+                props,
+                editor: props.editor,
+              });
 
-                popup = tippy('body', {
-                  getReferenceClientRect: props.clientRect,
-                  appendTo: () => document.body,
-                  content: component.element,
-                  showOnCreate: true,
-                  interactive: true,
-                  trigger: 'manual',
-                  placement: 'bottom-start',
-                });
-              },
-              onUpdate(props: any) {
-                component.updateProps(props);
+              popup = tippy('body', {
+                getReferenceClientRect: props.clientRect,
+                appendTo: () => document.body,
+                content: component.element,
+                showOnCreate: true,
+                interactive: true,
+                trigger: 'manual',
+                placement: 'bottom-start',
+              });
+            },
+            onUpdate(props: any) {
+              component.updateProps(props);
 
+              if (popup) {
                 popup[0].setProps({
                   getReferenceClientRect: props.clientRect,
                 });
-              },
-              onKeyDown(props: any) {
-                if (props.event.key === 'Escape') {
-                  popup[0].hide();
-                  return true;
-                }
-                return component.ref?.onKeyDown(props);
-              },
-              onExit() {
+              }
+            },
+            onKeyDown(props: any) {
+              if (props.event.key === 'Escape') {
+                popup[0].hide();
+                return true;
+              }
+              return component.ref?.onKeyDown(props);
+            },
+            onExit() {
+              if (popup) {
                 popup[0].destroy();
+              }
+              if (component) {
                 component.destroy();
-              },
-            };
-          },
+              }
+            },
+          };
         },
-      },
+      }),
     ];
   },
 });

@@ -74,7 +74,6 @@ app.get('/', async (c) => {
   const [rows, countResult] = await Promise.all([
     db.select({
       id: exerciseTemplates.id,
-      firestoreId: exerciseTemplates.firestoreId,
       name: exerciseTemplates.name,
       description: exerciseTemplates.description,
       category: exerciseTemplates.category,
@@ -107,15 +106,15 @@ app.get('/:id', async (c) => {
   const db = createDb(c.env);
   const { id } = c.req.param();
 
-  const isUuid = /^[0-9a-f-]{36}$/i.test(id);
-  const condition = isUuid
-    ? eq(exerciseTemplates.id, id)
-    : eq(exerciseTemplates.firestoreId, id);
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
+  if (!isUuid) {
+    return c.json({ error: 'Template inválido' }, 400);
+  }
 
   const [template] = await db
     .select()
     .from(exerciseTemplates)
-    .where(and(condition, eq(exerciseTemplates.isActive, true)))
+    .where(and(eq(exerciseTemplates.id, id), eq(exerciseTemplates.isActive, true)))
     .limit(1);
 
   if (!template) return c.json({ error: 'Template não encontrado' }, 404);

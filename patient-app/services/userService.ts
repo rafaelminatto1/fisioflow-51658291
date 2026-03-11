@@ -1,126 +1,48 @@
-/**
- * User Service
- * Handles user-related operations
- */
-
-import {
-  doc,
-  getDoc,
-  getDocs,
-  collection,
-  query,
-  where,
-  getCountFromServer,
-  updateDoc,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { patientApi } from '@/lib/api';
 import { asyncResult, Result } from '@/lib/async';
 import { log } from '@/lib/logger';
 import { perf } from '@/lib/performance';
 
-/**
- * Get user document by ID
- */
 export async function getUserById(userId: string): Promise<Result<any | null>> {
   return asyncResult(async () => {
-    perf.start('firestore_get_user');
+    perf.start('api_get_user');
+    const profile = await patientApi.getProfile();
+    perf.end('api_get_user', true);
 
-    const userRef = doc(db, 'users', userId);
-    const userDoc = await getDoc(userRef);
-
-    perf.end('firestore_get_user', true);
-
-    if (!userDoc.exists()) {
+    if (!profile || (profile.user_id !== userId && profile.profile?.user_id !== userId)) {
       return null;
     }
 
-    return {
-      id: userDoc.id,
-      ...userDoc.data(),
-    };
+    return profile;
   }, 'getUserById');
 }
 
-/**
- * Get professional by invite code
- */
-export async function getProfessionalByInviteCode(
-  inviteCode: string
-): Promise<Result<any | null>> {
+export async function getProfessionalByInviteCode(inviteCode: string): Promise<Result<any | null>> {
   return asyncResult(async () => {
-    perf.start('firestore_get_professional_by_code');
-
-    const usersRef = collection(db, 'users');
-    const q = query(
-      usersRef,
-      where('role', '==', 'professional'),
-      where('invite_code', '==', inviteCode.toUpperCase())
-    );
-
-    const snapshot = await getDocs(q);
-
-    perf.end('firestore_get_professional_by_code', true);
-
-    if (snapshot.empty) {
-      return null;
-    }
-
-    const profDoc = snapshot.docs[0];
-    return {
-      id: profDoc.id,
-      ...profDoc.data(),
-    };
+    perf.start('api_get_professional_by_code');
+    const professionals = await patientApi.getTherapists(inviteCode);
+    perf.end('api_get_professional_by_code', true);
+    return professionals[0] ?? null;
   }, 'getProfessionalByInviteCode');
 }
 
-/**
- * Get user statistics
- */
-export async function getUserStats(userId: string): Promise<Result<any>> {
+export async function getUserStats(_userId: string): Promise<Result<any>> {
   return asyncResult(async () => {
-    perf.start('firestore_get_user_stats');
-
-    // Count appointments
-    const appointmentsRef = collection(db, 'users', userId, 'appointments');
-    const appointmentsSnapshot = await getCountFromServer(appointmentsRef);
-    const totalAppointments = appointmentsSnapshot.data().count;
-
-    // Count exercise plans
-    const plansRef = collection(db, 'users', userId, 'exercise_plans');
-    const plansSnapshot = await getDocs(plansRef);
-
-    let totalExercises = 0;
-    let completedExercises = 0;
-
-    plansSnapshot.forEach((docSnap) => {
-      const plan = docSnap.data();
-      const exercises = plan.exercises || [];
-      totalExercises += exercises.length;
-      completedExercises += exercises.filter((e: any) => e.completed).length;
-    });
-
-    // Count evolutions
-    const evolutionsRef = collection(db, 'users', userId, 'evolutions');
-    const evolutionsSnapshot = await getCountFromServer(evolutionsRef);
-    const totalEvolutions = evolutionsSnapshot.data().count;
-
-    perf.end('firestore_get_user_stats', true);
+    perf.start('api_get_user_stats');
+    const stats = await patientApi.getStats();
+    perf.end('api_get_user_stats', true);
 
     return {
-      totalAppointments,
-      totalExercises,
-      completedExercises,
-      exerciseCompletionRate:
-        totalExercises > 0 ? completedExercises / totalExercises : 0,
-      totalEvolutions,
+      totalAppointments: stats.totalAppointments,
+      totalExercises: stats.totalExercises,
+      completedExercises: stats.totalExercises,
+      exerciseCompletionRate: stats.totalExercises > 0 ? 1 : 0,
+      totalEvolutions: 0,
+      totalMonths: stats.totalMonths,
     };
   }, 'getUserStats');
 }
 
-/**
- * Update user profile
- */
 export interface UserProfileUpdate {
   name?: string;
   phone?: string;
@@ -137,32 +59,30 @@ export interface UserProfileUpdate {
 
 export async function updateUserProfile(
   userId: string,
-  updates: UserProfileUpdate
+  updates: UserProfileUpdate,
 ): Promise<Result<void>> {
   return asyncResult(async () => {
-    perf.start('firestore_update_user_profile');
+    perf.start('api_update_user_profile');
 
-    const userRef = doc(db, 'users', userId);
-    const updateData: any = {
-      updated_at: serverTimestamp(),
-    };
+    await patientApi.updateProfile({
+      name: updates.name,
+      phone: updates.phone,
+      photo_url: updates.photoURL,
+      birth_date: updates.dateOfBirth,
+      gender: updates.gender,
+      address: updates.address
+        ? {
+            street: updates.address,
+            city: updates.city,
+            state: updates.state,
+            zipCode: updates.zipCode,
+          }
+        : undefined,
+      emergency_contact: updates.emergencyContact,
+      emergency_phone: updates.emergencyContactPhone,
+    });
 
-    // Map fields to Firestore naming convention
-    if (updates.name !== undefined) updateData.display_name = updates.name;
-    if (updates.phone !== undefined) updateData.phone = updates.phone;
-    if (updates.photoURL !== undefined) updateData.photo_url = updates.photoURL;
-    if (updates.dateOfBirth !== undefined) updateData.date_of_birth = updates.dateOfBirth;
-    if (updates.gender !== undefined) updateData.gender = updates.gender;
-    if (updates.address !== undefined) updateData.address = updates.address;
-    if (updates.city !== undefined) updateData.city = updates.city;
-    if (updates.state !== undefined) updateData.state = updates.state;
-    if (updates.zipCode !== undefined) updateData.zip_code = updates.zipCode;
-    if (updates.emergencyContact !== undefined) updateData.emergency_contact = updates.emergencyContact;
-    if (updates.emergencyContactPhone !== undefined) updateData.emergency_contact_phone = updates.emergencyContactPhone;
-
-    await updateDoc(userRef, updateData);
-
-    perf.end('firestore_update_user_profile', true);
+    perf.end('api_update_user_profile', true);
     log.info('USER', 'Profile updated', { userId, updates });
   }, 'updateUserProfile');
 }

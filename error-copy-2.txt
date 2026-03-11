@@ -1,0 +1,682 @@
+# Page snapshot
+
+```yaml
+- generic [active]:
+  - generic:
+    - link:
+      - /url: "#main-content"
+      - text: Pular para o conteúdo principal
+    - generic:
+      - button:
+        - generic:
+          - img
+        - generic: Switch to Dark
+    - list
+    - region "Notifications alt+T"
+    - generic:
+      - generic: Core Web Vitals
+      - generic:
+        - generic:
+          - generic: FCP
+          - generic: "104"
+          - generic: ✓
+        - generic:
+          - generic: TTFB
+          - generic: "22"
+          - generic: ✓
+    - generic:
+      - link:
+        - /url: "#main-content"
+        - text: Pular para o conteúdo principal
+      - link:
+        - /url: "#main-navigation"
+        - text: Pular para navegação
+      - link:
+        - /url: "#search"
+        - text: Pular para busca
+      - generic:
+        - generic:
+          - generic:
+            - link:
+              - /url: /agenda
+              - img
+              - generic:
+                - generic: FISIOFLOW
+                - generic: Elite Suite
+            - button:
+              - img
+        - navigation:
+          - generic:
+            - generic:
+              - generic: Núcleo
+              - link:
+                - /url: /agenda
+                - img
+                - generic: Agenda
+              - link:
+                - /url: /dashboard
+                - img
+                - generic: Dashboard
+              - link:
+                - /url: /patients
+                - img
+                - generic: Pacientes
+            - generic:
+              - generic:
+                - generic: Clínica
+              - link:
+                - /url: /exercises
+                - img
+                - generic: Exercícios
+              - link:
+                - /url: /protocols
+                - img
+                - generic: Protocolos
+              - link:
+                - /url: /communications
+                - img
+                - generic: Comunicação
+              - generic:
+                - button:
+                  - generic:
+                    - img
+                    - generic: Avaliações
+                  - img
+            - generic:
+              - generic:
+                - generic: Gestão
+              - link:
+                - /url: /waitlist
+                - img
+                - generic: Lista de Espera
+              - link:
+                - /url: /tarefas
+                - img
+                - generic: Tarefas
+              - link:
+                - /url: /tarefas-v2
+                - img
+                - generic: Tarefas V2
+              - generic:
+                - button:
+                  - generic:
+                    - img
+                    - generic: Marketing
+                  - img
+              - generic:
+                - button:
+                  - generic:
+                    - img
+                    - generic: Financeiro
+                  - img
+              - generic:
+                - button:
+                  - generic:
+                    - img
+                    - generic: Relatórios
+                  - img
+            - generic:
+              - generic:
+                - generic: Inteligência
+              - generic:
+                - button:
+                  - generic:
+                    - img
+                    - generic: Dashboard IA
+                  - img
+              - generic:
+                - button:
+                  - generic:
+                    - img
+                    - generic: Google AI
+                  - img
+            - generic:
+              - generic:
+                - generic: Avançado
+              - generic:
+                - button:
+                  - generic:
+                    - img
+                    - generic: Admin
+                  - img
+            - generic:
+              - generic:
+                - generic: Extra
+              - generic:
+                - button:
+                  - generic:
+                    - img
+                    - generic: Mais
+                  - img
+        - generic:
+          - button:
+            - img
+            - generic: Sair do Sistema
+      - generic:
+        - banner:
+          - generic:
+            - generic:
+              - generic: Real-time Active
+          - generic:
+            - generic:
+              - button:
+                - img
+                - generic: Buscar...
+                - generic:
+                  - generic: ⌘
+                  - text: K
+            - generic:
+              - button:
+                - img
+              - button:
+                - generic:
+                  - img
+                - generic: "0"
+                - generic: online
+            - button:
+              - generic:
+                - generic:
+                  - generic: DA
+              - generic:
+                - generic: Dr. Teste Atualizado
+                - generic: admin
+              - img
+        - main "Conteúdo principal":
+          - generic:
+            - generic:
+              - generic:
+                - link:
+                  - /url: "#calendar-grid"
+                  - text: Pular para o calendário
+                - generic:
+                  - generic:
+                    - generic:
+                      - region "Calendário de agendamentos":
+                        - generic:
+                          - toolbar "Navegação do calendário":
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - button:
+                                    - img
+                                  - button:
+                                    - img
+                                - button: Hoje
+                                - heading "9 - 14 de março" [level=2]
+                                - generic:
+                                  - img
+                                  - generic: "6"
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - img
+                                    - textbox:
+                                      - /placeholder: Buscar paciente...
+                                - button:
+                                  - img
+                                  - generic: Lista de Espera
+                                  - generic: "0"
+                                  - img
+                                - link:
+                                  - /url: /agenda/settings
+                                  - button:
+                                    - img
+                                - button:
+                                  - img
+                                  - text: Filtros
+                                - button:
+                                  - img
+                                - button:
+                                  - img
+                                - radiogroup:
+                                  - radio: Dia
+                                  - radio [checked]: Semana
+                                  - radio: Mês
+                                - button:
+                                  - img
+                                  - generic: Novo Agendamento
+                          - tabpanel "Visualização semanal do calendário":
+                            - generic:
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic: GMT-3
+                                  - generic:
+                                    - generic: segunda
+                                    - generic: "9"
+                                  - generic:
+                                    - generic: terça
+                                    - generic: "10"
+                                  - generic:
+                                    - generic: quarta
+                                    - generic: "11"
+                                  - generic:
+                                    - generic: quinta
+                                    - generic: "12"
+                                  - generic:
+                                    - generic: sexta
+                                    - generic: "13"
+                                  - generic:
+                                    - generic: sábado
+                                    - generic: "14"
+                                - generic:
+                                  - generic:
+                                    - generic:
+                                      - generic:
+                                        - generic:
+                                          - generic: 07:00
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - generic: 08:00
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - generic: 09:00
+                                          - gridcell
+                                          - gridcell:
+                                            - button:
+                                              - button:
+                                                - generic:
+                                                  - generic:
+                                                    - generic: 09:00
+                                                  - generic: Diogenes
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - generic: 10:00
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - generic: 11:00
+                                          - gridcell
+                                          - gridcell:
+                                            - button:
+                                              - button:
+                                                - generic:
+                                                  - generic:
+                                                    - generic: 11:00
+                                                  - generic: Amanda Hitomi Notoya Minatto
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - generic: 12:00
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - generic: 13:00
+                                          - gridcell
+                                          - gridcell:
+                                            - button:
+                                              - button:
+                                                - generic:
+                                                  - generic:
+                                                    - generic: 13:00
+                                                  - generic: Diogenes
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - generic: 14:00
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - gridcell
+                                          - gridcell:
+                                            - button:
+                                              - button:
+                                                - generic:
+                                                  - generic:
+                                                    - generic: 14:30
+                                                  - generic: rafael minatto de martino
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - generic: 15:00
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - generic: 16:00
+                                          - gridcell
+                                          - gridcell:
+                                            - button:
+                                              - button:
+                                                - generic:
+                                                  - generic:
+                                                    - generic: 16:00
+                                                  - generic: Julio Cesar
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - generic: 17:00
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - generic: 18:00
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell:
+                                            - button:
+                                              - button:
+                                                - generic:
+                                                  - generic:
+                                                    - generic: 18:30
+                                                  - generic: Rafael Teste 6198
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - generic: 19:00
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - generic: 20:00
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                      - generic:
+                                        - generic:
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                                          - gridcell
+                              - status
+                - generic:
+                  - generic:
+                    - dialog:
+                      - generic:
+                        - heading [level=2]: Novo Agendamento
+                        - button:
+                          - img
+                      - generic:
+                        - generic:
+                          - tablist:
+                            - tab [selected]:
+                              - img
+                              - generic: Informações
+                            - tab:
+                              - img
+                              - generic: Opções
+                        - generic:
+                          - generic:
+                            - tabpanel:
+                              - generic:
+                                - generic:
+                                  - img
+                                  - text: Paciente *
+                                - combobox:
+                                  - generic:
+                                    - img
+                                    - generic:
+                                      - generic: Rafael Teste 9703
+                                  - img
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - text: Data *
+                                    - button:
+                                      - img
+                                      - text: 11/03
+                                  - generic:
+                                    - generic:
+                                      - generic: Horário *
+                                      - button:
+                                        - img
+                                    - combobox:
+                                      - generic: 18:30
+                                      - img
+                                    - combobox
+                                  - generic:
+                                    - text: Duração
+                                    - combobox:
+                                      - generic: 1 hora
+                                      - img
+                                    - combobox
+                                - generic:
+                                  - generic:
+                                    - img
+                                    - generic: Horário lotado!
+                                  - generic: 1/1
+                                  - generic:
+                                    - generic: "|"
+                                    - generic: Status *
+                                    - combobox:
+                                      - generic:
+                                        - generic: Avaliação
+                                      - img
+                                    - combobox
+                              - generic:
+                                - generic:
+                                  - img
+                                  - text: Fisioterapeuta
+                                - combobox:
+                                  - generic: Rafael Minatto
+                                  - img
+                                - combobox
+                              - generic:
+                                - generic:
+                                  - generic:
+                                    - switch
+                                    - checkbox
+                                    - generic:
+                                      - generic: Sessão Paga
+                                      - generic: Pagamento pendente.
+                              - generic:
+                                - generic:
+                                  - button:
+                                    - generic:
+                                      - img
+                                      - generic:
+                                        - generic: Observações
+                                        - generic: Opcional. Clique para adicionar observações do atendimento.
+                                    - img
+                      - generic:
+                        - generic:
+                          - button: Cancelar
+                          - button:
+                            - img
+                            - text: Agendar
+                          - button:
+                            - img
+                            - text: Iniciar Avaliação
+  - alertdialog "Capacidade Atingida" [ref=e2]:
+    - generic [ref=e5]:
+      - img [ref=e7]
+      - generic [ref=e9]:
+        - heading "Capacidade Atingida" [level=2] [ref=e10]
+        - paragraph [ref=e11]: "Atenção: Limite ultrapassado"
+    - generic [ref=e13]:
+      - paragraph [ref=e14]: Este horário já ultrapassa a capacidade configurada para os profissionais disponíveis no momento.
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - generic [ref=e18]:
+            - img [ref=e19]
+            - text: Data e Horário
+          - paragraph [ref=e22]: 18:30 • quarta-feira, 11 de março
+        - generic [ref=e23]:
+          - generic [ref=e24]:
+            - generic [ref=e25]:
+              - img [ref=e26]
+              - text: Ocupação estimada
+            - generic [ref=e31]:
+              - generic [ref=e32]: "Cap: 1"
+              - generic [ref=e33]: 2 pacientes
+          - paragraph [ref=e37]: Excedente de 1 paciente
+      - generic [ref=e38]:
+        - paragraph [ref=e39]: O que deseja fazer?
+        - generic [ref=e40]:
+          - button "Agendar Mesmo Assim Confirmar atendimento extra" [ref=e41] [cursor=pointer]:
+            - img [ref=e43]
+            - generic [ref=e45]:
+              - paragraph [ref=e46]: Agendar Mesmo Assim
+              - paragraph [ref=e47]: Confirmar atendimento extra
+          - generic [ref=e48]:
+            - button "Outro Horário Evitar lotação" [ref=e49] [cursor=pointer]:
+              - img [ref=e51]
+              - generic [ref=e54]:
+                - paragraph [ref=e55]: Outro Horário
+                - paragraph [ref=e56]: Evitar lotação
+            - button "Fila de Espera Vagas futuras" [ref=e57] [cursor=pointer]:
+              - img [ref=e59]
+              - generic [ref=e60]:
+                - paragraph [ref=e61]: Fila de Espera
+                - paragraph [ref=e62]: Vagas futuras
+    - button "Voltar" [ref=e64] [cursor=pointer]
+```

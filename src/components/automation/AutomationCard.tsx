@@ -6,7 +6,7 @@ import React from 'react';
 import { MoreVertical, Edit2, Copy, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-import type { Automation } from '@/types/automation';
+import type { Automation, AutomationRecipe, RecipeCategory } from '@/types/automation';
 
 function toDateSafe(v: unknown): Date | null {
   if (!v) return null;
@@ -161,10 +161,10 @@ export function RecipeLibrary({
   onCategoryChange,
   onSelectRecipe,
 }: {
-  recipes: unknown[];
-  selectedCategory: string;
-  onCategoryChange: (cat: unknown) => void;
-  onSelectRecipe: (recipe: unknown) => void;
+  recipes: AutomationRecipe[];
+  selectedCategory: RecipeCategory | 'all';
+  onCategoryChange: (cat: RecipeCategory | 'all') => void;
+  onSelectRecipe: (recipe: AutomationRecipe) => void;
 }) {
   const categories: Array<{ value: string; label: string }> = [
     { value: 'all', label: 'Todos' },

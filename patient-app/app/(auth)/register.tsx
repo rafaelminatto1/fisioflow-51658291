@@ -12,11 +12,9 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Button, Input, PasswordStrength } from '@/components';
 import { useColors } from '@/hooks/useColorScheme';
-import { auth, db } from '@/lib/firebase';
+import { signUp } from '@/services/authService';
 import { validators } from '@/lib/validation';
 import { log } from '@/lib/logger';
 
@@ -74,30 +72,16 @@ export default function RegisterScreen() {
     setLoading(true);
 
     try {
-      // Create user with Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        formData.email.trim().toLowerCase(),
-        formData.password
-      );
-
-      const uid = userCredential.user.uid;
-
-      // Create user document in Firestore
-      await setDoc(doc(db, 'users', uid), {
-        name: formData.fullName.trim(),
+      const result = await signUp({
         email: formData.email.trim().toLowerCase(),
-        phone: formData.phone.trim() || null,
-        role: 'patient',
-        created_at: serverTimestamp(),
-        updated_at: serverTimestamp(),
-        // Fields to be filled later
-        professional_id: null,
-        professional_name: null,
-        birth_date: null,
-        gender: null,
-        clinic_id: null,
+        password: formData.password,
+        fullName: formData.fullName.trim(),
+        phone: formData.phone.trim() || undefined,
       });
+
+      if (!result.success) {
+        throw result.error || new Error('Erro ao criar conta');
+      }
 
       Alert.alert(
         'Conta criada!',
@@ -112,21 +96,17 @@ export default function RegisterScreen() {
     } catch (error: any) {
       log.error('Registration error:', error);
 
+      const message = String(error?.message || '');
       let errorMessage = 'Erro ao criar conta. Tente novamente.';
 
-      switch (error.code) {
-        case 'auth/email-already-in-use':
-          errorMessage = 'Este email já está cadastrado. Faça login.';
-          break;
-        case 'auth/invalid-email':
-          errorMessage = 'Email inválido.';
-          break;
-        case 'auth/weak-password':
-          errorMessage = 'A senha é muito fraca. Use pelo menos 6 caracteres.';
-          break;
-        case 'auth/network-request-failed':
-          errorMessage = 'Erro de conexão. Verifique sua internet.';
-          break;
+      if (message.toLowerCase().includes('already')) {
+        errorMessage = 'Este email já está cadastrado. Faça login.';
+      } else if (message.toLowerCase().includes('email')) {
+        errorMessage = 'Email inválido.';
+      } else if (message.toLowerCase().includes('password')) {
+        errorMessage = 'A senha é muito fraca. Use pelo menos 8 caracteres.';
+      } else if (message.toLowerCase().includes('network')) {
+        errorMessage = 'Erro de conexão. Verifique sua internet.';
       }
 
       Alert.alert('Erro', errorMessage);

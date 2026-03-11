@@ -20,8 +20,7 @@ import { useAuthStore } from '@/store/auth';
 import { Card, Button } from '@/components';
 import { Spacing } from '@/constants/spacing';
 import { usePatientNotifications } from '@/lib/notificationsSystem';
-import { collection, getDocs, getCountFromServer } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { patientApi } from '@/lib/api';
 import { APP_VERSION } from '@/lib/constants';
 import * as Notifications from 'expo-notifications';
 import { log } from '@/lib/logger';
@@ -73,35 +72,8 @@ export default function ProfileScreen() {
     }
 
     try {
-      // Count completed appointments
-      const appointmentsRef = collection(db, 'users', user.id, 'appointments');
-      const appointmentsSnapshot = await getCountFromServer(appointmentsRef);
-      const totalAppointments = appointmentsSnapshot.data().count;
-
-      // Count exercises from all plans
-      const plansRef = collection(db, 'users', user.id, 'exercise_plans');
-      const plansSnapshot = await getDocs(plansRef);
-      let totalExercises = 0;
-      plansSnapshot.forEach((doc) => {
-        const plan = doc.data();
-        const exercises = plan.exercises || [];
-        const completed = exercises.filter((e: any) => e.completed).length;
-        totalExercises += completed;
-      });
-
-      // Calculate months since account creation
-      const createdAt = user.createdAt || new Date();
-      const now = new Date();
-      const monthsDiff = Math.max(
-        1,
-        Math.floor((now.getTime() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24 * 30))
-      );
-
-      setStats({
-        totalAppointments,
-        totalExercises,
-        totalMonths: monthsDiff,
-      });
+      const portalStats = await patientApi.getStats();
+      setStats(portalStats);
     } catch (error) {
       log.error('Error fetching user stats:', error);
     } finally {

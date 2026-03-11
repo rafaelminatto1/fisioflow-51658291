@@ -26,9 +26,22 @@ import { WifiOff, RefreshCw, AlertCircle, CloudOff } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-const sourceLabels: Record<string, string> = {
-    firestore: 'Servidor',
-    firebase: 'Servidor',
+type OfflineDataSource =
+    | 'neon'
+    | 'cloudflare'
+    | 'server'
+    | 'indexeddb'
+    | 'localstorage'
+    | 'memory'
+    | 'firestore'
+    | 'firebase';
+
+const sourceLabels: Record<OfflineDataSource, string> = {
+    neon: 'Neon',
+    cloudflare: 'Cloudflare',
+    server: 'Neon/Cloudflare',
+    firestore: 'Neon/Cloudflare',
+    firebase: 'Neon/Cloudflare',
     indexeddb: 'Cache Local',
     localstorage: 'Backup de Emergência',
     memory: 'Memória',
@@ -41,8 +54,8 @@ export interface OfflineIndicatorProps {
     isOnline: boolean;
     /** Se os dados podem estar desatualizados */
     isStale?: boolean;
-    /** Origem dos dados */
-    dataSource?: 'firestore' | 'firebase' | 'indexeddb' | 'localstorage' | 'memory';
+    /** Origem dos dados. Valores legados seguem aceitos por compatibilidade. */
+    dataSource?: OfflineDataSource;
     /** Se está verificando conexão */
     isChecking?: boolean;
     /** Se está tentando reconectar */

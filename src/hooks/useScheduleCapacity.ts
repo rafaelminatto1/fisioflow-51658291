@@ -197,6 +197,23 @@ export function useScheduleCapacity() {
     },
   });
 
+  const replaceCapacityGroup = useMutation({
+    mutationFn: async ({ ids, formDataArray }: { ids: string[]; formDataArray: CapacityFormData[] }) => {
+      if (!organizationId) throw new Error('Organização não encontrada.');
+      await Promise.all(ids.map((id) => schedulingApi.capacity.delete(id)));
+      const payload = formDataArray.map((d) => capacitySchema.parse(d));
+      const res = await schedulingApi.capacity.create(payload);
+      return (res?.data ?? []) as ScheduleCapacity[];
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['schedule-capacity'] });
+      toast({ title: 'Configuração atualizada', description: 'As alterações foram salvas com sucesso.' });
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Erro ao atualizar', description: error.message, variant: 'destructive' });
+    },
+  });
+
   const deleteCapacityGroup = useMutation({
     mutationFn: async (ids: string[]) => {
       if (!organizationId) {
@@ -250,41 +267,26 @@ export function useScheduleCapacity() {
     selectedDays: number[],
     startTime: string,
     endTime: string,
+    excludeIds?: string[],
   ): { hasConflict: boolean; conflicts: Array<{ day: number; dayLabel: string; start: string; end: string }> } => {
-    if (!capacities || capacities.length === 0) {
-      return { hasConflict: false, conflicts: [] };
-    }
+    const list = (capacities || []).filter((c) => !excludeIds?.includes(c.id));
+    if (list.length === 0) return { hasConflict: false, conflicts: [] };
 
     const conflicts: Array<{ day: number; dayLabel: string; start: string; end: string }> = [];
     const dayLabels: Record<number, string> = {
-      0: 'Domingo',
-      1: 'Segunda-feira',
-      2: 'Terça-feira',
-      3: 'Quarta-feira',
-      4: 'Quinta-feira',
-      5: 'Sexta-feira',
-      6: 'Sábado',
+      0: 'Domingo', 1: 'Segunda-feira', 2: 'Terça-feira', 3: 'Quarta-feira',
+      4: 'Quinta-feira', 5: 'Sexta-feira', 6: 'Sábado',
     };
 
     for (const day of selectedDays) {
-      const existingConfigs = capacities.filter((c) => c.day_of_week === day);
-
-      for (const config of existingConfigs) {
+      for (const config of list.filter((c) => c.day_of_week === day)) {
         if (checkTimeOverlap(config.start_time, config.end_time, startTime, endTime)) {
-          conflicts.push({
-            day,
-            dayLabel: dayLabels[day],
-            start: config.start_time,
-            end: config.end_time,
-          });
+          conflicts.push({ day, dayLabel: dayLabels[day], start: config.start_time, end: config.end_time });
         }
       }
     }
 
-    return {
-      hasConflict: conflicts.length > 0,
-      conflicts,
-    };
+    return { hasConflict: conflicts.length > 0, conflicts };
   };
 
   // Helper para obter capacidade de um horário específico
@@ -415,12 +417,14 @@ export function useScheduleCapacity() {
     updateCapacity: updateCapacity.mutate,
     deleteCapacity: deleteCapacity.mutate,
     updateCapacityGroup: updateCapacityGroup.mutate,
+    replaceCapacityGroup: replaceCapacityGroup.mutate,
     deleteCapacityGroup: deleteCapacityGroup.mutate,
     getCapacityForTime,
     getMinCapacityForInterval,
     checkConflicts,
     isCreating: createCapacity.isPending || createMultipleCapacities.isPending,
     isUpdating: updateCapacity.isPending || updateCapacityGroup.isPending,
+    isReplacing: replaceCapacityGroup.isPending,
     isDeleting: deleteCapacity.isPending || deleteCapacityGroup.isPending,
     authError,
   };

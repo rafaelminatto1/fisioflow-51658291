@@ -26,9 +26,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useColors } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/auth';
 import { Card, Button, Input } from '@/components';
-import { updateDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { db, storage } from '@/lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { mediaApi, patientApi } from '@/lib/api';
 import { validators } from '@/lib/validation';
 import { log } from '@/lib/logger';
 
@@ -100,26 +98,25 @@ export default function ProfileEditScreen() {
     if (!user?.id) return;
 
     try {
-      // Buscar dados adicionais do Firestore
-      const userDoc = await doc(db, 'users', user.id);
-      // TODO: Implementar busca real dos dados
+      const profile = await patientApi.getProfile();
+      const address = profile?.address || {};
       setFormData({
-        name: user.name || '',
-        email: user.email || '',
-        phone: '',
-        cpf: '',
-        birthDate: '',
+        name: profile?.name || user.name || '',
+        email: profile?.email || user.email || '',
+        phone: profile?.phone || '',
+        cpf: profile?.cpf || '',
+        birthDate: profile?.birth_date || '',
         address: {
-          street: '',
-          number: '',
-          complement: '',
-          neighborhood: '',
-          city: '',
-          state: '',
-          zipCode: '',
+          street: address.street || '',
+          number: address.number || '',
+          complement: address.complement || '',
+          neighborhood: address.neighborhood || '',
+          city: address.city || '',
+          state: address.state || '',
+          zipCode: address.zipCode || '',
         },
       });
-      setAvatarUrl(user.avatarUrl || null);
+      setAvatarUrl(profile?.photo_url || profile?.avatarUrl || user.avatarUrl || null);
     } catch (error) {
       log.error('Error loading user data:', error);
     }
@@ -181,14 +178,13 @@ export default function ProfileEditScreen() {
     setSaving(true);
 
     try {
-      await updateDoc(doc(db, 'users', user.id), {
+      await patientApi.updateProfile({
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
         phone: formData.phone || null,
         cpf: formData.cpf || null,
-        birthDate: formData.birthDate || null,
+        birth_date: formData.birthDate || null,
         address: formData.address,
-        updatedAt: serverTimestamp(),
       });
 
       Alert.alert('Sucesso', 'Perfil atualizado com sucesso!', [
@@ -225,7 +221,7 @@ export default function ProfileEditScreen() {
 
       if (!result.canceled && result.assets[0]) {
         setUploadingAvatar(true);
-        await uploadAvatar(result.assets[0].uri);
+        await uploadAvatar(result.assets[0].uri, result.assets[0].mimeType || 'image/jpeg');
       }
     } catch (error) {
       log.error('Error picking avatar:', error);
@@ -235,28 +231,32 @@ export default function ProfileEditScreen() {
     }
   };
 
-  const uploadAvatar = async (uri: string) => {
+  const uploadAvatar = async (uri: string, contentType: string) => {
     if (!user?.id) return;
 
     try {
-      // Convert to blob
       const response = await fetch(uri);
       const blob = await response.blob();
-
-      // Upload to Firebase Storage
-      const storageRef = ref(storage, `avatars/${user.id}`);
-      await uploadBytes(storageRef, blob);
-
-      // Get download URL
-      const downloadURL = await getDownloadURL(storageRef);
-
-      // Update user document
-      await updateDoc(doc(db, 'users', user.id), {
-        avatarUrl: downloadURL,
-        updatedAt: serverTimestamp(),
+      const extension = contentType.includes('png') ? 'png' : 'jpg';
+      const upload = await mediaApi.getUploadUrl({
+        filename: `avatar-${user.id}.${extension}`,
+        contentType,
+        folder: 'avatars',
       });
 
-      setAvatarUrl(downloadURL);
+      await fetch(upload.uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': contentType,
+        },
+        body: blob,
+      });
+
+      await patientApi.updateProfile({
+        photo_url: upload.publicUrl,
+      });
+
+      setAvatarUrl(upload.publicUrl);
       Alert.alert('Sucesso', 'Foto de perfil atualizada!');
     } catch (error) {
       log.error('Error uploading avatar:', error);
@@ -277,9 +277,8 @@ export default function ProfileEditScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
-              await updateDoc(doc(db, 'users', user.id), {
-                avatarUrl: null,
-                updatedAt: serverTimestamp(),
+              await patientApi.updateProfile({
+                photo_url: null,
               });
               setAvatarUrl(null);
             } catch (error) {

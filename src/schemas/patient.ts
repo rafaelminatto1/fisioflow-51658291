@@ -86,7 +86,7 @@ export const PatientFormSchema = z.object({
   email: emailValidator.optional().or(z.literal('')),
   phone: phoneValidator.optional().or(z.literal('')),
   cpf: cpfValidator.optional().or(z.literal('')),
-  birth_date: z.string().min(1, 'Data de nascimento é obrigatória').refine(
+  birth_date: z.string().optional().or(z.literal('')).refine(
     (val) => {
       if (!val) return true;
       const parsed = parseDateFlexible(val); // Use flexible parser to handle YYYY-MM-DD from input

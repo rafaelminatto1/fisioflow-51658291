@@ -37,6 +37,24 @@ app.get('/', requireAuth, async (c) => {
   }
 });
 
+const STATUS_MAP: Record<string, string> = {
+  agendado: 'scheduled',
+  confirmado: 'confirmed',
+  em_andamento: 'in_progress',
+  concluido: 'completed',
+  cancelado: 'cancelled',
+  avaliacao: 'scheduled',
+  atendido: 'completed',
+};
+
+const VALID_STATUSES = new Set(['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show', 'rescheduled']);
+
+function normalizeStatus(raw: string | undefined): string {
+  if (!raw) return 'scheduled';
+  if (VALID_STATUSES.has(raw)) return raw;
+  return STATUS_MAP[raw] ?? 'scheduled';
+}
+
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
   const db = createPool(c.env);
@@ -51,12 +69,13 @@ app.post('/', requireAuth, async (c) => {
     const rawTherapist = body.therapistId || body.therapist_id || user.uid;
     const therapistId = isUuid(rawTherapist) ? rawTherapist : null;
     const notes       = body.notes ?? null;
-    const status      = body.status ?? 'scheduled';
+    const status      = normalizeStatus(body.status);
 
-    if (!patientId) return c.json({ error: 'patient_id é obrigatório' }, 400);
-    if (!date)      return c.json({ error: 'date é obrigatório' }, 400);
-    if (!startTime) return c.json({ error: 'start_time é obrigatório' }, 400);
-    if (!endTime)   return c.json({ error: 'end_time é obrigatório' }, 400);
+    if (!patientId)    return c.json({ error: 'patient_id é obrigatório' }, 400);
+    if (!date)         return c.json({ error: 'date é obrigatório' }, 400);
+    if (!startTime)    return c.json({ error: 'start_time é obrigatório' }, 400);
+    if (!endTime)      return c.json({ error: 'end_time é obrigatório' }, 400);
+    if (!therapistId)  return c.json({ error: 'therapist_id inválido — user.uid não é UUID' }, 400);
 
     const result = await db.query(
       `INSERT INTO appointments (patient_id, therapist_id, date, start_time, end_time, organization_id, status, notes, created_at, updated_at)
@@ -102,7 +121,7 @@ app.patch('/:id', requireAuth, async (c) => {
     if (body.date !== undefined)      { fields.push(`date = $${idx++}`);       params.push(body.date); }
     if (body.startTime !== undefined) { fields.push(`start_time = $${idx++}`); params.push(body.startTime); }
     if (body.endTime !== undefined)   { fields.push(`end_time = $${idx++}`);   params.push(body.endTime); }
-    if (body.status !== undefined)    { fields.push(`status = $${idx++}`);     params.push(body.status); }
+    if (body.status !== undefined)    { fields.push(`status = $${idx++}`);     params.push(normalizeStatus(body.status)); }
     if (body.notes !== undefined)     { fields.push(`notes = $${idx++}`);      params.push(body.notes); }
     if (!fields.length) return c.json({ error: 'Nenhum campo para atualizar' }, 400);
     fields.push(`updated_at = NOW()`);

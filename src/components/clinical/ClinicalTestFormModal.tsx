@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import { clinicalTestsApi, type ClinicalTestTemplateRecord } from '@/lib/api/workers-client';
+import { clinicalTestsApi, mediaApi, type ClinicalTestTemplateRecord } from '@/lib/api/workers-client';
 import {
-
     Dialog,
     DialogContent,
     DialogHeader,
@@ -22,7 +21,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, Loader2, BookOpen, Settings, BarChart3 } from 'lucide-react';
+import { Save, Loader2, BookOpen, Settings, BarChart3, Video, Image as ImageIcon, UploadCloud } from 'lucide-react';
 import { ClinicalTestMetricsBuilder, MetricField } from './ClinicalTestMetricsBuilder';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
@@ -77,6 +76,7 @@ export function ClinicalTestFormModal({
     });
 
     const [tagsInput, setTagsInput] = useState('');
+    const [isUploading, setIsUploading] = useState(false);
 
     useEffect(() => {
         if (test && mode === 'edit') {
@@ -113,9 +113,9 @@ export function ClinicalTestFormModal({
         }
     }, [test, mode, open]);
 
-    const createMutation = useMutation({
+    const mutation = useMutation({
         mutationFn: async (data: ClinicalTest) => {
-            await clinicalTestsApi.create({
+            const payload = {
                 name: data.name,
                 name_en: data.name_en || null,
                 category: data.category,
@@ -135,103 +135,99 @@ export function ClinicalTestFormModal({
                 organization_id: organizationId,
                 created_by: user?.uid,
                 is_custom: true,
-            });
-        },
-        onSuccess: () => {
-            toast.success('Teste clínico criado com sucesso!');
-            queryClient.invalidateQueries({ queryKey: ['clinical-tests-library'] });
-            onOpenChange(false);
-        },
-        onError: (error) => {
-            logger.error('Error creating test', error, 'ClinicalTestFormModal');
-            toast.error('Erro ao criar teste clínico');
-        },
-    });
+            };
 
-    const updateMutation = useMutation({
-        mutationFn: async (data: ClinicalTest) => {
-            if (!data.id) throw new Error('Test ID is required for update');
-            await clinicalTestsApi.update(data.id, {
-                name: data.name,
-                name_en: data.name_en || null,
-                category: data.category,
-                target_joint: data.target_joint,
-                purpose: data.purpose,
-                execution: data.execution,
-                positive_sign: data.positive_sign || null,
-                reference: data.reference || null,
-                sensitivity_specificity: data.sensitivity_specificity || null,
-                tags: data.tags || [],
-                type: data.type || 'special_test',
-                fields_definition: data.fields_definition || [],
-                regularity_sessions: data.regularity_sessions || null,
-                layout_type: data.layout_type || null,
-                image_url: data.image_url || null,
-                media_urls: data.media_urls?.length ? data.media_urls : null,
-            });
+            if (mode === 'edit' && data.id) {
+                return await clinicalTestsApi.update(data.id, payload);
+            }
+            return await clinicalTestsApi.create(payload);
         },
         onSuccess: () => {
-            toast.success('Teste clínico atualizado com sucesso!');
+            toast.success(mode === 'create' ? 'Teste clínico criado com sucesso!' : 'Teste clínico atualizado!');
             queryClient.invalidateQueries({ queryKey: ['clinical-tests-library'] });
             onOpenChange(false);
         },
         onError: (error) => {
-            logger.error('Error updating test', error, 'ClinicalTestFormModal');
-            toast.error('Erro ao atualizar teste clínico');
+            logger.error('Error saving test', error, 'ClinicalTestFormModal');
+            toast.error('Erro ao salvar teste clínico');
         },
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        const tags = tagsInput.split(',').map(tag => tag.trim()).filter(Boolean);
+        mutation.mutate({ ...formData, tags });
+    };
 
-        const tags = tagsInput
-            .split(',')
-            .map((t) => t.trim())
-            .filter(Boolean);
+    const isPending = mutation.isPending;
 
-        const dataToSave = { ...formData, tags };
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
 
-        if (mode === 'create') {
-            createMutation.mutate(dataToSave);
-        } else {
-            updateMutation.mutate(dataToSave);
+        try {
+            setIsUploading(true);
+            toast.info('Iniciando upload do arquivo...');
+
+            const filename = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+            
+            const res = await mediaApi.getUploadUrl({
+                filename,
+                contentType: file.type,
+                folder: 'clinical_tests'
+            });
+
+            if (!res?.data?.uploadUrl) throw new Error('Não foi possível gerar URL de upload');
+
+            const uploadRes = await fetch(res.data.uploadUrl, {
+                method: 'PUT',
+                body: file,
+                headers: { 'Content-Type': file.type }
+            });
+
+            if (!uploadRes.ok) throw new Error('Falha no upload para o servidor');
+
+            const publicUrl = res.data.publicUrl;
+            
+            setFormData(prev => ({
+                ...prev,
+                media_urls: [...(prev.media_urls || []), publicUrl]
+            }));
+
+            toast.success('Upload concluído com sucesso!');
+        } catch (error) {
+            logger.error('Error uploading clinical test media', error);
+            toast.error('Erro ao fazer upload do arquivo');
+        } finally {
+            setIsUploading(false);
+            if (e.target) e.target.value = ''; // Reset input
         }
     };
 
-    const isPending = createMutation.isPending || updateMutation.isPending;
-
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0">
-                <DialogHeader className="px-6 py-4 border-b bg-slate-50 shrink-0">
-                    <DialogTitle className="text-xl font-bold text-slate-800">
-                        {mode === 'create' ? 'Novo Teste Clínico' : 'Editar Teste Clínico'}
-                    </DialogTitle>
-                </DialogHeader>
+            <DialogContent className="max-w-2xl p-0 overflow-hidden h-[90vh] flex flex-col bg-white rounded-2xl">
+                <form onSubmit={handleSubmit} className="flex flex-col h-full">
+                    <DialogHeader className="px-6 py-4 border-b bg-slate-50 shrink-0">
+                        <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                            {mode === 'create' ? <Plus className="h-5 w-5 text-teal-600" /> : <Settings className="h-5 w-5 text-teal-600" />}
+                            {mode === 'create' ? 'Novo Teste Clínico' : 'Editar Teste Clínico'}
+                        </DialogTitle>
+                    </DialogHeader>
 
-                <form onSubmit={handleSubmit} className="flex-1 overflow-hidden flex flex-col">
-                    <Tabs defaultValue="info" className="flex-1 overflow-hidden flex flex-col">
-                        <TabsList className="mx-6 mt-4 grid w-fit grid-cols-3 shrink-0">
-                            <TabsTrigger value="info" className="gap-2">
-                                <BookOpen className="h-4 w-4" />
-                                Informações
-                            </TabsTrigger>
-                            <TabsTrigger value="metrics" className="gap-2">
-                                <BarChart3 className="h-4 w-4" />
-                                Métricas
-                            </TabsTrigger>
-                            <TabsTrigger value="settings" className="gap-2">
-                                <Settings className="h-4 w-4" />
-                                Configurações
-                            </TabsTrigger>
+                    <Tabs defaultValue="basic" className="flex-1 flex flex-col overflow-hidden">
+                        <TabsList className="px-6 py-2 bg-slate-50 border-b justify-start rounded-none shrink-0 overflow-x-auto scrollbar-hide">
+                            <TabsTrigger value="basic" className="gap-1.5"><BookOpen className="h-4 w-4" /> Básico</TabsTrigger>
+                            <TabsTrigger value="metrics" className="gap-1.5"><BarChart3 className="h-4 w-4" /> Métricas</TabsTrigger>
+                            <TabsTrigger value="settings" className="gap-1.5"><Settings className="h-4 w-4" /> Configurações</TabsTrigger>
+                            <TabsTrigger value="media" className="gap-1.5"><Video className="h-4 w-4" /> Mídia</TabsTrigger>
                         </TabsList>
 
-                        <div className="flex-1 overflow-y-auto px-6 py-4">
-                            <TabsContent value="info" className="mt-0 space-y-4">
-                                {/* Name fields */}
+                        <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
+                            <TabsContent value="basic" className="mt-0 space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <Label htmlFor="name">Nome (PT) *</Label>
+                                    <div className="col-span-2 md:col-span-1">
+                                        <Label htmlFor="name">Nome do Teste *</Label>
                                         <Input
                                             id="name"
                                             value={formData.name}
@@ -240,8 +236,8 @@ export function ClinicalTestFormModal({
                                             required
                                         />
                                     </div>
-                                    <div>
-                                        <Label htmlFor="name_en">Nome (EN)</Label>
+                                    <div className="col-span-2 md:col-span-1">
+                                        <Label htmlFor="name_en">Nome (Inglês)</Label>
                                         <Input
                                             id="name_en"
                                             value={formData.name_en || ''}
@@ -251,7 +247,6 @@ export function ClinicalTestFormModal({
                                     </div>
                                 </div>
 
-                                {/* Category and Joint */}
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <Label htmlFor="category">Categoria *</Label>
@@ -259,32 +254,28 @@ export function ClinicalTestFormModal({
                                             value={formData.category}
                                             onValueChange={(value) => setFormData({ ...formData, category: value })}
                                         >
-                                            <SelectTrigger>
+                                            <SelectTrigger id="category">
                                                 <SelectValue placeholder="Selecione..." />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {CATEGORIES.map((cat) => (
-                                                    <SelectItem key={cat} value={cat}>
-                                                        {cat}
-                                                    </SelectItem>
+                                                {CATEGORIES.map(cat => (
+                                                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
                                     <div>
-                                        <Label htmlFor="target_joint">Articulação Alvo *</Label>
+                                        <Label htmlFor="target_joint">Articulação/Região *</Label>
                                         <Select
                                             value={formData.target_joint}
                                             onValueChange={(value) => setFormData({ ...formData, target_joint: value })}
                                         >
-                                            <SelectTrigger>
+                                            <SelectTrigger id="target_joint">
                                                 <SelectValue placeholder="Selecione..." />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {TARGET_JOINTS.map((joint) => (
-                                                    <SelectItem key={joint} value={joint}>
-                                                        {joint}
-                                                    </SelectItem>
+                                                {TARGET_JOINTS.map(joint => (
+                                                    <SelectItem key={joint} value={joint}>{joint}</SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
@@ -293,7 +284,7 @@ export function ClinicalTestFormModal({
 
                                 {/* Purpose */}
                                 <div>
-                                    <Label htmlFor="purpose">Objetivo / Propósito *</Label>
+                                    <Label htmlFor="purpose">Propósito *</Label>
                                     <Textarea
                                         id="purpose"
                                         value={formData.purpose}
@@ -441,19 +432,43 @@ export function ClinicalTestFormModal({
                                         Define como o teste aparece ao registrar medições na evolução (diagrama, vários campos, etc.).
                                     </p>
                                 </div>
+                            </TabsContent>
 
-                                {/* Imagem do teste (como realizar) */}
+                            <TabsContent value="media" className="mt-0 space-y-6">
+                                {/* YouTube/Video URL */}
                                 <div>
-                                    <Label htmlFor="image_url">URL da imagem do teste</Label>
+                                    <Label htmlFor="media_urls" className="flex items-center gap-2">
+                                        <Video className="h-4 w-4" /> Vídeos (URLs, separadas por vírgula)
+                                    </Label>
+                                    <Textarea
+                                        id="media_urls"
+                                        value={formData.media_urls?.join(', ') || ''}
+                                        onChange={(e) => {
+                                            const urls = e.target.value.split(',').map(u => u.trim()).filter(Boolean);
+                                            setFormData({ ...formData, media_urls: urls });
+                                        }}
+                                        placeholder="https://www.youtube.com/watch?v=..., https://vimeo.com/..."
+                                        rows={3}
+                                    />
+                                    <p className="text-xs text-slate-500 mt-1">
+                                        Adicione links de vídeos demonstrativos da execução do teste.
+                                    </p>
+                                </div>
+
+                                {/* Main Image URL */}
+                                <div>
+                                    <Label htmlFor="image_url_media" className="flex items-center gap-2">
+                                        <ImageIcon className="h-4 w-4" /> URL da Imagem de Capa
+                                    </Label>
                                     <Input
-                                        id="image_url"
+                                        id="image_url_media"
                                         type="url"
                                         value={formData.image_url || ''}
                                         onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
                                         placeholder="https://... (imagem de execução)"
                                     />
                                     <p className="text-xs text-slate-500 mt-1">
-                                        Imagem exibida ao selecionar o teste no registro de medições para orientar a execução.
+                                        Imagem exibida como referência visual para o teste.
                                     </p>
                                 </div>
                             </TabsContent>

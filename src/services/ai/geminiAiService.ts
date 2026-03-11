@@ -16,7 +16,7 @@ async function blobToBase64(blob: Blob): Promise<string> {
   });
 }
 
-export interface ClinicalChatInput {
+export interface ClinicalChatInput extends Record<string, unknown> {
   message: string;
   context?: {
     patientId?: string;
@@ -79,7 +79,7 @@ export async function chatWithClinicalAssistant(input: ClinicalChatInput): Promi
   return result.response;
 }
 
-export interface ExerciseSuggestionInput {
+export interface ExerciseSuggestionInput extends Record<string, unknown> {
   patientId: string;
   goals: string[];
   availableEquipment?: string[];
@@ -116,7 +116,7 @@ export async function getExerciseSuggestions(input: ExerciseSuggestionInput): Pr
   return callAIService<ExerciseSuggestionInput, ExerciseSuggestionResponse>('exerciseSuggestion', input);
 }
 
-export interface GenerateExercisePlanInput {
+export interface GenerateExercisePlanInput extends Record<string, unknown> {
   patientName: string;
   age?: number;
   condition: string;
@@ -147,7 +147,7 @@ export async function generateExercisePlanWithIA(input: GenerateExercisePlanInpu
   return callAIService<GenerateExercisePlanInput, ExercisePlanResponse>('generateExercisePlan', input);
 }
 
-export interface ClinicalAnalysisInput {
+export interface ClinicalAnalysisInput extends Record<string, unknown> {
   patientId: string;
   currentSOAP: {
     subjective?: string;
@@ -166,7 +166,7 @@ export async function getClinicalAnalysis(input: ClinicalAnalysisInput) {
   return callAIService('clinicalAnalysis', input);
 }
 
-export interface SoapGenerationInput {
+export interface SoapGenerationInput extends Record<string, unknown> {
   patientContext: {
     patientName: string;
     condition: string;
@@ -279,4 +279,81 @@ export interface SemanticSearchResponse {
 export async function findSimilarClinicalRecords(query: string, limit: number = 5): Promise<SemanticSearchResponse> {
   const result = await callAIService<{ query: string; limit: number }, SemanticSearchResponse>('semanticSearch', { query, limit });
   return result;
+}
+
+export interface ClinicalReportInput extends Record<string, unknown> {
+  patientInfo: {
+    name: string;
+    condition?: string;
+  };
+  sessions: Array<{
+    date: string;
+    subjective?: string;
+    objective?: string;
+    assessment?: string;
+    plan?: string;
+    painLevel?: number;
+    exercises?: Array<{ name: string; notes?: string }>;
+  }>;
+  measurementEvolution?: Array<{
+    name: string;
+    type: string;
+    initial: { value: number | string; unit: string; date: string };
+    current: { value: number | string; unit: string; date: string };
+    improvement: number | string;
+  }>;
+}
+
+export async function generateClinicalReport(input: ClinicalReportInput): Promise<string> {
+  const sessionsText = input.sessions.map((s, i) => {
+    const exercisesText = s.exercises?.map(e => e.name + (e.notes ? ' (' + e.notes + ')' : '')).join(', ') || 'N/A';
+    return `Data: ${s.date}
+Subjetivo: ${s.subjective || 'N/A'}
+Objetivo: ${s.objective || 'N/A'}
+Avaliação: ${s.assessment || 'N/A'}
+Plano: ${s.plan || 'N/A'}
+Dor: ${s.painLevel || 'N/A'}/10
+Exercícios: ${exercisesText}`;
+  }).join('\n---');
+
+  const prompt = `Você é um fisioterapeuta preceptor experiente. Sua tarefa é redigir um "Relatório Fisioterapêutico" formal e clínico baseado nas sessões registradas do paciente.
+  
+Paciente: ${input.patientInfo.name}
+Condição/Diagnóstico: ${input.patientInfo.condition || 'Não especificado'}
+
+Histórico das ${input.sessions.length} Sessões Gravadas:
+${sessionsText}
+
+Por favor, escreva o relatório com a seguinte estrutura em Markdown:
+## Histórico Clínico e Diagnóstico
+(Um resumo das queixas iniciais e o que motivou a fisioterapia)
+
+## Condutas Atuais / Tratamento
+(As principais condutas terapêuticas adotadas ao longo destas sessões, exercícios principais, terapias usadas, etc, com base nas sessões)
+
+## Evolução Clínica
+(A evolução de dor, mobilidade, adesão ao tratamento, ganhos funcionais. Identifique a melhora ou não do paciente)
+
+## Próximos Passos do Plano
+(O que se planeja daqui para frente, baseado na última sessão e evolução apresentada)
+
+## Referências Científicas
+(Inclua de 2 a 4 referências bibliográficas reais e embasadas na literatura científica atual que justifiquem as condutas adotadas neste caso.)
+
+Diretrizes:
+- O texto deve ser profissional, direto e claro.
+- Não crie dados fictícios que não estejam no histórico (exceto formulações textuais para dar coesão).
+- Faça um apanhado geral em vez de listar sessão por sessão.
+`;
+
+  const result = await callAIService<ClinicalChatInput & Record<string, unknown>, { response: string }>('clinicalChat', {
+    message: prompt,
+    context: {
+      patientName: input.patientInfo.name,
+      condition: input.patientInfo.condition,
+      sessionCount: input.sessions.length,
+    },
+  });
+
+  return result.response;
 }

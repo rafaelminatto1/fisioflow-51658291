@@ -157,7 +157,7 @@ export const exercises = pgTable("exercises", {
 	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
 	firestoreId: varchar("firestore_id", { length: 255 }),
-	embedding: vector({ dimensions: 3072 }),
+	embedding: vector({ dimensions: 1536 }),
 }, (table) => [
 	index("idx_exercises_active_public").using("btree", table.isActive.asc().nullsLast().op("bool_ops"), table.isPublic.asc().nullsLast().op("bool_ops")).where(sql`((is_active = true) AND (is_public = true))`),
 	index("idx_exercises_name_trgm").using("gin", table.name.asc().nullsLast().op("gin_trgm_ops")),
@@ -544,7 +544,7 @@ export const exerciseProtocols = pgTable("exercise_protocols", {
 	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
 	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
 	firestoreId: varchar("firestore_id", { length: 255 }),
-	embedding: vector({ dimensions: 3072 }),
+	embedding: vector({ dimensions: 1536 }),
 }, (table) => [
 	index("idx_protocols_active_public").using("btree", table.isActive.asc().nullsLast().op("bool_ops"), table.isPublic.asc().nullsLast().op("bool_ops")).where(sql`((is_active = true) AND (is_public = true))`),
 	index("idx_protocols_name_trgm").using("gin", table.name.asc().nullsLast().op("gin_trgm_ops")),
@@ -1134,6 +1134,7 @@ export const patients = pgTable("patients", {
 	dateOfBirth: date("date_of_birth"),
 	archived: boolean().default(false).notNull(),
 	weight: doublePrecision(),
+	sessionValue: numeric("session_value", { precision: 10, scale: 2 }),
 }, (table) => [
 	index("idx_patients_org").using("btree", table.organizationId.asc().nullsLast().op("uuid_ops")),
 	index("idx_patients_org_active").using("btree", table.organizationId.asc().nullsLast().op("bool_ops"), table.isActive.asc().nullsLast().op("uuid_ops")),

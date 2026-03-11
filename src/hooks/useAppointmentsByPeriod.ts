@@ -11,10 +11,11 @@
  * - Compatible with existing appointment infrastructure
  */
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AppointmentBase } from '@/types/appointment';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { AppointmentService } from '@/services/appointmentService';
+import { appointmentsCacheService } from '@/lib/offline/AppointmentsCacheService';
 import {
   PeriodQuery,
   calculatePeriodBounds,
@@ -41,11 +42,13 @@ export const appointmentPeriodKeys = {
 } as const;
 
 /**
- * Fetch appointments for a specific period
+ * Fetch appointments for a specific period with Offline Fallback
  */
 async function fetchAppointmentsByPeriod(query: PeriodQuery): Promise<AppointmentBase[]> {
   const timer = logger.startTimer('fetchAppointmentsByPeriod');
   const bounds = calculatePeriodBounds(query);
+  const dateFrom = formatDateToLocalISO(bounds.startDate);
+  const dateTo = formatDateToLocalISO(bounds.endDate);
 
   logger.info('Fetching appointments for period', {
     viewType: query.viewType,
@@ -53,13 +56,10 @@ async function fetchAppointmentsByPeriod(query: PeriodQuery): Promise<Appointmen
   }, 'useAppointmentsByPeriod');
 
   try {
-    // Use AppointmentService with date range filtering
+    // 1. Try to fetch from API (Cloudflare/Neon)
     const appointments = await AppointmentService.fetchAppointments(
       query.organizationId,
-      {
-        dateFrom: formatDateToLocalISO(bounds.startDate),
-        dateTo: formatDateToLocalISO(bounds.endDate),
-      }
+      { dateFrom, dateTo }
     );
 
     // Filter by therapist if specified
@@ -67,17 +67,44 @@ async function fetchAppointmentsByPeriod(query: PeriodQuery): Promise<Appointmen
       ? appointments.filter(apt => apt.therapistId === query.therapistId)
       : appointments;
 
-    logger.info('Period appointments fetched', {
-      count: filtered.length,
-      viewType: query.viewType,
-      period: formatPeriodBounds(bounds),
-    }, 'useAppointmentsByPeriod');
-
+    // 2. SUCCESS: Save to local persistent cache for offline use
+    // We save the results so they are available next time even without internet
+    try {
+        await appointmentsCacheService.saveAppointments(filtered);
+        logger.debug('Period appointments persisted to local storage', { count: filtered.length }, 'useAppointmentsByPeriod');
+    } catch (cacheErr) {
+        logger.warn('Failed to persist appointments to local cache', cacheErr, 'useAppointmentsByPeriod');
+    }
 
     timer();
     return filtered;
   } catch (error) {
-    logger.error('Failed to fetch period appointments', error, 'useAppointmentsByPeriod');
+    // 3. OFFLINE FALLBACK: If network fails, try to recover from local cache
+    logger.warn('Network fetch failed, attempting local cache recovery', { error }, 'useAppointmentsByPeriod');
+    
+    try {
+        // Try to get from local persistent storage (IndexedDB)
+        const cachedAppointments = await appointmentsCacheService.getAppointments(query.organizationId);
+        
+        // Filter the cached ones for this specific period in memory
+        const periodAppointments = cachedAppointments.filter(apt => {
+            const aptDate = formatDateToLocalISO(apt.date);
+            return aptDate >= dateFrom && aptDate <= dateTo;
+        });
+
+        // Filter by therapist if specified
+        const finalResults = query.therapistId
+          ? periodAppointments.filter(apt => apt.therapistId === query.therapistId)
+          : periodAppointments;
+
+        if (finalResults.length > 0) {
+            logger.info('Recovered appointments from local cache', { count: finalResults.length }, 'useAppointmentsByPeriod');
+            timer();
+            return finalResults;
+        }
+    } catch (cacheErr) {
+        logger.error('Final fallback to local cache failed', cacheErr, 'useAppointmentsByPeriod');
+    }
 
     timer();
     throw error;
@@ -134,11 +161,14 @@ export function useAppointmentsByPeriod(
     staleTime,
     gcTime: cacheTime, // TanStack Query v5 uses gcTime instead of cacheTime
     enabled: shouldEnable,
-    retry: 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    retry: 3, // Increased retries for network resilience
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
+    refetchInterval: 60 * 1000, // 1 minute intelligent polling (Cloudflare friendly)
+    refetchIntervalInBackground: false, // Don't burn resources in background
     placeholderData: (previousData) => previousData, // Keep previous data while refetching
+    networkMode: 'offlineFirst', // CRITICAL: Use cache even if navigator.onLine is false
   });
 }
 

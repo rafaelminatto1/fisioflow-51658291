@@ -1,13 +1,4 @@
-/**
- * Firebase DataConnect Configuration
- *
- * Configuração para Firebase DataConnect - uma camada de abstração
- * sobre Firestore que fornece queries otimizadas e type-safe.
- *
- * @module lib/dataConnect
- */
-
-import { initializeApp, getApps, getApp } from 'firebase/app';
+import { patientApi } from './api';
 import { log } from '@/lib/logger';
 
 interface ConnectorConfig {
@@ -16,74 +7,23 @@ interface ConnectorConfig {
   service: string;
 }
 
-/**
- * Configuração do DataConnect
- *
- * NOTA: Para usar o DataConnect, você precisa:
- * 1. Instalar o pacote: npm install firebase firebase-data-connect
- * 2. Configurar o connector no Firebase Console
- * 3. Gerar os tipos TypeScript com: firebase-data-connect generate
- *
- * Documentação: https://firebase.google.com/docs/data-connect
- */
-
-// Reutilizar a configuração do Firebase existente
-const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || 'YOUR_API_KEY',
-  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || 'YOUR_AUTH_DOMAIN',
-  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || 'YOUR_PROJECT_ID',
-  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || 'YOUR_STORAGE_BUCKET',
-  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || 'YOUR_MESSAGING_SENDER_ID',
-  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || 'YOUR_APP_ID',
-};
-
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-
-/**
- * Configuração do Connector para DataConnect
- *
- * Esta configuração será usada quando o DataConnect estiver plenamente implementado.
- * Atualmente, o app usa Firestore diretamente como fallback.
- */
 export const dataConnectConfig: ConnectorConfig = {
-  connector: 'fisioflow-patient',
-  location: 'us-central1', // ou a região do seu projeto
-  service: 'firestore-default', // ou o nome do seu serviço
+  connector: 'patient-api',
+  location: 'cloudflare',
+  service: 'workers-patient-portal',
 };
 
-/**
- * Inicializa o DataConnect
- *
- * @returns Instância do DataConnect ou null se não disponível
- */
 export function initializeDataConnect() {
-  try {
-    // Placeholder until Data Connect SDK setup is completed.
-    return null;
-  } catch (error) {
-    log.warn('Firebase DataConnect not available, using Firestore fallback:', error);
-    return null;
-  }
+  return null;
 }
 
-/**
- * Interface para query do DataConnect
- */
 export interface DataConnectQuery<T> {
   execute: (variables?: Record<string, any>) => Promise<T>;
 }
 
-/**
- * Interface para mutation do DataConnect
- */
 export interface DataConnectMutation<T> {
   execute: (variables: Record<string, any>) => Promise<T>;
 }
-
-/**
- * Tipos para as operações do DataConnect
- * Estes tipos seriam gerados automaticamente pelo firebase-data-connect CLI
- */
 
 export interface Exercise {
   id: string;
@@ -122,77 +62,113 @@ export interface GetPatientExercisesResult {
   exercises: PatientExercise[];
 }
 
-/**
- * Queries do DataConnect
- *
- * NOTA: Estas funções são stubs que serão implementadas
- * quando o DataConnect estiver configurado no backend.
- */
+function parseDate(value: unknown): Date | undefined {
+  if (!value) return undefined;
+  const parsed = new Date(String(value));
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+}
 
-/**
- * Busca exercícios prescritos ao paciente
- */
+function normalizeExercise(row: any): PatientExercise {
+  return {
+    id: String(row.id ?? ''),
+    patientId: String(row.patient_id ?? row.patientId ?? ''),
+    exerciseId: String(row.exercise_id ?? row.exerciseId ?? row.id ?? ''),
+    exercise: {
+      id: String(row.exercise_id ?? row.exerciseId ?? row.id ?? ''),
+      name: row.name ?? row.exercise_name ?? 'Exercicio',
+      description: row.description ?? undefined,
+      videoUrl: row.video_url ?? row.videoUrl ?? undefined,
+      imageUrl: row.image_url ?? row.imageUrl ?? undefined,
+      category: row.category ?? undefined,
+      difficulty: row.difficulty ?? undefined,
+    },
+    sets: Number(row.sets ?? row.series ?? 0),
+    reps: Number(row.reps ?? row.repetitions ?? 0),
+    holdTime: row.hold_time ? Number(row.hold_time) : undefined,
+    restTime: row.rest_time ? Number(row.rest_time) : undefined,
+    notes: row.notes ?? undefined,
+    completed: row.completed === true,
+    completedAt: parseDate(row.completed_at ?? row.completedAt),
+    prescribedAt: parseDate(row.assigned_at ?? row.prescribed_at ?? row.created_at) ?? new Date(),
+    validUntil: parseDate(row.valid_until ?? row.expires_at),
+  };
+}
+
 export async function getPatientExercises(
-  variables: GetPatientExercisesVariables
+  variables: GetPatientExercisesVariables,
 ): Promise<GetPatientExercisesResult> {
-  // TODO: Implementar com DataConnect quando disponível
-  // Por enquanto, usa Firestore (implementado no hook useDataConnect)
-  log.warn('getPatientExercises: DataConnect not implemented, using Firestore fallback');
-  return { exercises: [] };
+  const exercises = await patientApi.getExercises();
+  const normalized = exercises.map(normalizeExercise);
+
+  return {
+    exercises: normalized
+      .filter((exercise) => variables.includeCompleted !== false || !exercise.completed)
+      .slice(0, variables.limit ?? normalized.length),
+  };
 }
 
-/**
- * Marca um exercício como completo
- */
 export async function completeExercise(
-  variables: { patientExerciseId: string; feedback?: { difficulty: number; pain: number } }
+  variables: { patientExerciseId: string; feedback?: { difficulty: number; pain: number } },
 ): Promise<{ success: boolean }> {
-  // TODO: Implementar com DataConnect quando disponível
-  log.warn('completeExercise: DataConnect not implemented');
-  return { success: false };
+  try {
+    await patientApi.completeExercise(variables.patientExerciseId, {
+      completed: true,
+      ...(variables.feedback ?? {}),
+    });
+
+    return { success: true };
+  } catch (error) {
+    log.error('completeExercise: patient portal request failed', error);
+    return { success: false };
+  }
 }
 
-/**
- * Atualiza feedback de um exercício
- */
 export async function updateExerciseFeedback(
   variables: {
     patientExerciseId: string;
     difficulty: number;
     pain: number;
     notes?: string;
-  }
+  },
 ): Promise<{ success: boolean }> {
-  // TODO: Implementar com DataConnect quando disponível
-  log.warn('updateExerciseFeedback: DataConnect not implemented');
-  return { success: false };
+  try {
+    await patientApi.completeExercise(variables.patientExerciseId, {
+      difficulty: variables.difficulty,
+      pain: variables.pain,
+      notes: variables.notes,
+    });
+
+    return { success: true };
+  } catch (error) {
+    log.error('updateExerciseFeedback: patient portal request failed', error);
+    return { success: false };
+  }
 }
 
-/**
- * Busca estatísticas do paciente
- */
-export async function getPatientStats(variables: { patientId: string }): Promise<{
+export async function getPatientStats(_variables: { patientId: string }): Promise<{
   totalExercises: number;
   completedExercises: number;
   currentStreak: number;
   totalSessions: number;
 }> {
-  // TODO: Implementar com DataConnect quando disponível
-  log.warn('getPatientStats: DataConnect not implemented');
+  const [stats, exercises] = await Promise.all([
+    patientApi.getStats(),
+    patientApi.getExercises().catch(() => []),
+  ]);
+
+  const completedExercises = exercises.filter((exercise: any) => exercise.completed === true).length;
+
   return {
-    totalExercises: 0,
-    completedExercises: 0,
+    totalExercises: Number(stats.totalExercises ?? exercises.length ?? 0),
+    completedExercises,
     currentStreak: 0,
-    totalSessions: 0,
+    totalSessions: Number(stats.totalAppointments ?? 0),
   };
 }
 
-/**
- * Cache local para otimizar queries
- */
 class DataConnectCache {
   private cache = new Map<string, { data: any; timestamp: number }>();
-  private ttl = 5 * 60 * 1000; // 5 minutos
+  private ttl = 5 * 60 * 1000;
 
   set(key: string, data: any): void {
     this.cache.set(key, { data, timestamp: Date.now() });
@@ -225,26 +201,12 @@ class DataConnectCache {
 
 export const dataConnectCache = new DataConnectCache();
 
-/**
- * Helper para criar cache key
- */
-export function createCacheKey(operation: string, variables: Record<string, any>): string {
-  return `${operation}:${JSON.stringify(variables)}`;
-}
-
-/**
- * Verifica se DataConnect está disponível
- */
-export function isDataConnectAvailable(): boolean {
-  return false;
-}
-
 export default {
+  dataConnectConfig,
   initializeDataConnect,
   getPatientExercises,
   completeExercise,
   updateExerciseFeedback,
   getPatientStats,
   dataConnectCache,
-  isDataConnectAvailable,
 };

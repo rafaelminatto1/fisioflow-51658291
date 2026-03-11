@@ -753,7 +753,7 @@ export function useBatchAnalyticsExport() {
   const [currentPatient, setCurrentPatient] = useState<string | null>(null);
 
   const batchExportMutation = useMutation({
-    mutationFn: async ({ patientIds, format, options: _options }: {
+    mutationFn: async ({ patientIds, format: outputFormat, options: _options }: {
       patientIds: string[];
       format: ExportFormat;
       options?: BatchExportOptions;
@@ -769,53 +769,56 @@ export function useBatchAnalyticsExport() {
         setCurrentPatient(patientId);
         setProgress(Math.round((i / total) * 100));
 
-        // Fetch patient data
-        const patientRef = doc(db, 'patients', patientId);
-        const patientSnap = await getDoc(patientRef);
+        const [patientResult, statsResult, progressResult, riskResult, goalsResult] = await Promise.allSettled([
+          patientsApi.get(patientId),
+          patientsApi.stats(patientId),
+          analyticsApi.patientProgress(patientId),
+          analyticsApi.patientRisk(patientId),
+          analyticsApi.patientGoals.list(patientId),
+        ]);
 
-        if (!patientSnap.exists()) continue;
+        if (patientResult.status !== 'fulfilled') {
+          continue;
+        }
 
-        const patient = { id: patientSnap.id, ...patientSnap.data() };
-
-        // Fetch session count
-        const appointmentsQuery = firestoreQuery(
-          collection(db, 'appointments'),
-          where('patient_id', '==', patientId),
-          where('status', 'in', ['atendido', 'confirmado'])
-        );
-        const appointmentsSnap = await getDocs(appointmentsQuery);
-        const sessionCount = appointmentsSnap.size;
-
-        // Fetch risk score
-        const riskScoreQuery = firestoreQuery(
-          collection(db, 'patient_risk_scores'),
-          where('patient_id', '==', patientId),
-          orderBy('calculated_at', 'desc'),
-          limit(1)
-        );
-        const riskScoreSnap = await getDocs(riskScoreQuery);
-        const riskScore = riskScoreSnap.empty ? null : { id: riskScoreSnap.docs[0].id, ...riskScoreSnap.docs[0].data() };
+        const patient = patientResult.value.data;
+        const stats = statsResult.status === 'fulfilled' ? statsResult.value.data : null;
+        const progressSummary = progressResult.status === 'fulfilled' ? progressResult.value.data : null;
+        const riskScore = riskResult.status === 'fulfilled' ? riskResult.value.data : null;
+        const goals = goalsResult.status === 'fulfilled' ? goalsResult.value.data : [];
+        const sessionCount = stats?.totalSessions ?? progressSummary?.total_sessions ?? 0;
+        const goalsAchieved = progressSummary?.goals_achieved ?? goals.filter(goal => goal.status === 'achieved').length;
+        const overallProgress = progressSummary?.overall_progress_percentage ?? 0;
+        const dropoutRisk = riskScore?.dropout_risk_score ?? 50;
+        const patientName = patient.full_name || patient.name || '';
 
         const exportData: AnalyticsExportData = {
           patientInfo: {
             id: patient.id,
-            name: patient.full_name || '',
+            name: patientName,
             email: patient.email || undefined,
             phone: patient.phone || undefined,
             exportDate: format(new Date(), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
           },
           progressSummary: {
             totalSessions: sessionCount,
-            totalPainReduction: 0,
-            goalsAchieved: 0,
-            overallProgress: Math.round(riskScore?.overall_progress_percentage || 0),
+            totalPainReduction: progressSummary?.total_pain_reduction ?? 0,
+            goalsAchieved: goalsAchieved,
+            overallProgress: Math.round(overallProgress),
           },
           trends: [],
           predictions: {
-            dropoutRisk: Math.round(riskScore?.dropout_risk_score || 50),
-            successProbability: Math.round(100 - (riskScore?.dropout_risk_score || 50)),
+            dropoutRisk: Math.round(dropoutRisk),
+            successProbability: Math.round(100 - dropoutRisk),
           },
-          goals: [],
+          goals: goals.map((goal: PatientGoalTracking) => ({
+            title: goal.goal_title,
+            status: goal.status,
+            progress: Math.round(goal.progress_percentage ?? 0),
+            targetDate: goal.target_date
+              ? format(new Date(goal.target_date), 'dd/MM/yyyy', { locale: ptBR })
+              : undefined,
+          })),
         };
 
         results.push(exportData);
@@ -826,7 +829,7 @@ export function useBatchAnalyticsExport() {
 
       const timestamp = format(new Date(), 'yyyyMMdd_HHmm', { locale: ptBR });
 
-      if (format === 'excel') {
+      if (outputFormat === 'excel') {
         const workbook = XLSX.utils.book_new();
 
         const summaryData = [

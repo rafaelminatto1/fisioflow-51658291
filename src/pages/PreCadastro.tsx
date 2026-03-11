@@ -8,6 +8,8 @@ import { toast } from 'sonner';
 import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { precadastroApi, type PrecadastroToken } from '@/lib/api/workers-client';
+import { DatePicker } from '@/components/ui/date-picker';
+import { parseISO, format as formatDateFns, isValid } from 'date-fns';
 
 const PreCadastro = () => {
   const { token } = useParams<{ token: string }>();
@@ -201,16 +203,19 @@ const PreCadastro = () => {
               <Label htmlFor="data_nascimento" className="premium-label">
                 Data de Nascimento {isFieldRequired('data_nascimento') && <span className="text-destructive">*</span>}
               </Label>
-              <div className="premium-input-wrapper">
-                <Input
-                  id="data_nascimento"
-                  type="date"
-                  value={formData.data_nascimento}
-                  onChange={(e) => setFormData({ ...formData, data_nascimento: e.target.value })}
-                  required={isFieldRequired('data_nascimento')}
-                  className="premium-input"
-                />
-              </div>
+              <DatePicker
+                date={formData.data_nascimento ? parseISO(formData.data_nascimento) : undefined}
+                onChange={(date) => {
+                  if (date && isValid(date)) {
+                    setFormData({ ...formData, data_nascimento: formatDateFns(date, 'yyyy-MM-dd') });
+                  } else {
+                    setFormData({ ...formData, data_nascimento: '' });
+                  }
+                }}
+                fromYear={1900}
+                toYear={new Date().getFullYear()}
+                className="premium-input-datepicker"
+              />
             </div>
           )}
 

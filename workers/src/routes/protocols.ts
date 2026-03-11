@@ -76,6 +76,9 @@ app.get('/', async (c) => {
         weeksTotal: exerciseProtocols.weeksTotal,
         tags: exerciseProtocols.tags,
         icd10Codes: exerciseProtocols.icd10Codes,
+        milestones: exerciseProtocols.milestones,
+        restrictions: exerciseProtocols.restrictions,
+        phases: exerciseProtocols.phases,
         createdAt: exerciseProtocols.createdAt,
       })
       .from(exerciseProtocols)
