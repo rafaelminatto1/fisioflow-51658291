@@ -26,7 +26,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/auth';
-import { MessagingManager, Message } from '@/lib/messaging';
+import { MessagingManager, Message, MESSAGING_UNAVAILABLE_REASON } from '@/lib/messaging';
 import { format } from 'date-fns';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
@@ -47,10 +47,16 @@ export default function ChatScreen() {
   const [loading, setLoading] = useState(true);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [professionalName, setProfessionalName] = useState('Profissional');
+  const chatAvailable = manager.isAvailable();
 
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
+    if (!chatAvailable) {
+      setLoading(false);
+      return;
+    }
+
     if (professionalId && user?.id) {
       initializeChat();
     }
@@ -60,12 +66,17 @@ export default function ChatScreen() {
         manager.unsubscribeFromMessages(conversationId);
       }
     };
-  }, [professionalId, user?.id]);
+  }, [conversationId, chatAvailable, manager, professionalId, user?.id]);
 
   const initializeChat = async () => {
     setLoading(true);
 
     try {
+      if (!chatAvailable) {
+        setLoading(false);
+        return;
+      }
+
       // Buscar ou criar conversa
       const convId = await findOrCreateConversation();
       setConversationId(convId);
@@ -116,6 +127,11 @@ export default function ChatScreen() {
   };
 
   const handleSendMessage = async () => {
+    if (!chatAvailable) {
+      Alert.alert('Chat em migracao', MESSAGING_UNAVAILABLE_REASON);
+      return;
+    }
+
     if (!inputText.trim() || !conversationId || sending) {
       return;
     }
@@ -145,6 +161,11 @@ export default function ChatScreen() {
   };
 
   const handleSendImage = async () => {
+    if (!chatAvailable) {
+      Alert.alert('Chat em migracao', MESSAGING_UNAVAILABLE_REASON);
+      return;
+    }
+
     try {
       // Solicitar permissão
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -189,6 +210,13 @@ export default function ChatScreen() {
   const renderMessage = ({ item, index }: { item: Message; index: number }) => {
     const isOwn = item.senderId === user?.id;
     const showTime = index === 0 || messages[index - 1]?.senderId !== item.senderId;
+
+    const createdAt =
+      item.createdAt instanceof Date
+        ? item.createdAt
+        : item.createdAt
+          ? new Date(item.createdAt)
+          : null;
 
     return (
       <View style={[styles.messageContainer, isOwn && styles.ownMessageContainer]}>
@@ -248,7 +276,7 @@ export default function ChatScreen() {
           <View style={styles.messageMeta}>
             {showTime && (
               <Text style={[styles.messageTime, { color: isOwn ? 'rgba(255,255,255,0.7)' : colors.textMuted }]}>
-                {item.createdAt ? format(new Date(item.createdAt.seconds * 1000), 'HH:mm') : ''}
+                {createdAt ? format(createdAt, 'HH:mm') : ''}
               </Text>
             )}
             {isOwn && (
@@ -268,9 +296,13 @@ export default function ChatScreen() {
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
       <Ionicons name="chatbubbles" size={64} color={colors.textMuted} />
-      <Text style={[styles.emptyTitle, { color: colors.text }]}>Inicie a conversa</Text>
+      <Text style={[styles.emptyTitle, { color: colors.text }]}>
+        {chatAvailable ? 'Inicie a conversa' : 'Chat em migracao'}
+      </Text>
       <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-        Envie uma mensagem para {professionalName}
+        {chatAvailable
+          ? `Envie uma mensagem para ${professionalName}`
+          : MESSAGING_UNAVAILABLE_REASON}
       </Text>
     </View>
   );
@@ -308,16 +340,27 @@ export default function ChatScreen() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
-        <FlatList
-          ref={flatListRef}
-          data={messages}
-          keyExtractor={(item) => item.id}
-          renderItem={renderMessage}
-          contentContainerStyle={[styles.messagesContainer, messages.length === 0 && styles.emptyContainer]}
-          ListEmptyComponent={renderEmptyState}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
-          onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
-        />
+        <>
+          {!chatAvailable && (
+            <View style={[styles.migrationBanner, { backgroundColor: colors.warning + '18', borderColor: colors.warning + '40' }]}>
+              <Ionicons name="information-circle" size={18} color={colors.warning} />
+              <Text style={[styles.migrationBannerText, { color: colors.text }]}>
+                {MESSAGING_UNAVAILABLE_REASON}
+              </Text>
+            </View>
+          )}
+
+          <FlatList
+            ref={flatListRef}
+            data={messages}
+            keyExtractor={(item) => item.id}
+            renderItem={renderMessage}
+            contentContainerStyle={[styles.messagesContainer, messages.length === 0 && styles.emptyContainer]}
+            ListEmptyComponent={renderEmptyState}
+            onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
+            onLayout={() => flatListRef.current?.scrollToEnd({ animated: false })}
+          />
+        </>
       )}
 
       {/* Input */}
@@ -329,7 +372,7 @@ export default function ChatScreen() {
           <TouchableOpacity
             onPress={handleSendImage}
             style={styles.attachButton}
-            disabled={sending}
+            disabled={sending || !chatAvailable}
           >
             <Ionicons name="add-circle" size={28} color={colors.primary} />
           </TouchableOpacity>
@@ -342,13 +385,13 @@ export default function ChatScreen() {
             onChangeText={setInputText}
             multiline
             maxLength={500}
-            editable={!sending}
+            editable={!sending && chatAvailable}
           />
 
           <TouchableOpacity
             onPress={handleSendMessage}
             style={[styles.sendButton, inputText.trim() ? { backgroundColor: colors.primary } : { backgroundColor: colors.border }]}
-            disabled={!inputText.trim() || sending}
+            disabled={!inputText.trim() || sending || !chatAvailable}
           >
             {sending ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
@@ -417,6 +460,23 @@ const styles = StyleSheet.create({
   messagesContainer: {
     padding: 16,
     gap: 8,
+  },
+  migrationBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 16,
+    marginTop: 16,
+    marginBottom: -8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  migrationBannerText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 18,
   },
   emptyContainer: {
     flex: 1,

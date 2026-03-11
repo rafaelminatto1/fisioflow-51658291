@@ -10,8 +10,7 @@
 import { useEffect, useState } from 'react';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from './firebase';
+import { patientApi } from './api';
 import { log } from '@/lib/logger';
 
 /**
@@ -114,11 +113,9 @@ export class ExerciseReminders {
         JSON.stringify(this.config)
       );
 
-      // Salvar também no Firestore se tiver userId
       if (this.userId) {
-        const userRef = doc(db, 'users', this.userId);
-        await updateDoc(userRef, {
-          exerciseReminders: this.config,
+        await patientApi.updateProfile({
+          exercise_reminders: this.config,
         });
       }
     } catch (error) {

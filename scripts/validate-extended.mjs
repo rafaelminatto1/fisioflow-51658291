@@ -223,9 +223,9 @@ async function main() {
   // 7. EVENTOS — rotas registradas em /api diretamente
   // ─────────────────────────────────────────────────────────────────────────
   await suite('Eventos — CRUD', async () => {
-    assertList(await req('GET', '/api/eventos', token), 'Eventos');
+    assertList(await req('GET', '/api/activities', token), 'Eventos');
 
-    const c = await req('POST', '/api/eventos', token, {
+    const c = await req('POST', '/api/activities', token, {
       nome: `Evento ${ts}`, categoria: 'workshop',
       data_inicio: '2026-06-01', hora_inicio: '09:00',
       data_fim: '2026-06-01', hora_fim: '17:00',
@@ -235,9 +235,9 @@ async function main() {
     assertCreate(c, 'Eventos', evid);
 
     if (evid) {
-      assertOk(await req('GET', `/api/eventos/${evid}`, token), 'Eventos GET/:id');
-      assertOk(await req('PUT', `/api/eventos/${evid}`, token, { nome: `Evento ${ts} EDIT` }), 'Eventos UPDATE');
-      assertOk(await req('DELETE', `/api/eventos/${evid}`, token), 'Eventos DELETE');
+      assertOk(await req('GET', `/api/activities/${evid}`, token), 'Eventos GET/:id');
+      assertOk(await req('PUT', `/api/activities/${evid}`, token, { nome: `Evento ${ts} EDIT` }), 'Eventos UPDATE');
+      assertOk(await req('DELETE', `/api/activities/${evid}`, token), 'Eventos DELETE');
     }
 
     // Salas

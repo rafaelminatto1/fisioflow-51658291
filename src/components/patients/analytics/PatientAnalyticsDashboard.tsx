@@ -795,14 +795,16 @@ export function PatientAnalyticsDashboard({ patientId, patientName }: PatientAna
                           <p className="text-3xl font-bold">
                             {risk_score.risk_level === 'critical' ? 'Crítico' :
                              risk_score.risk_level === 'high' ? 'Alto' :
-                             risk_score.risk_level === 'medium' ? 'Médio' : 'Baixo'}
+                             risk_score.risk_level === 'medium' ? 'Médio' : 
+                             risk_score.risk_level === 'low' ? 'Baixo' : 'Indeterminado'}
                           </p>
                           <Badge variant={
                             risk_score.risk_level === 'critical' ? 'destructive' :
                             risk_score.risk_level === 'high' ? 'destructive' :
-                            risk_score.risk_level === 'medium' ? 'secondary' : 'default'
+                            risk_score.risk_level === 'medium' ? 'secondary' : 
+                            risk_score.risk_level === 'low' ? 'default' : 'outline'
                           } className="mt-1">
-                            {risk_score.risk_level.toUpperCase()}
+                            {(risk_score.risk_level || 'N/A').toUpperCase()}
                           </Badge>
                         </div>
                         <Button variant="outline" size="sm" onClick={handleRefreshRiskScore} className="w-full gap-2">

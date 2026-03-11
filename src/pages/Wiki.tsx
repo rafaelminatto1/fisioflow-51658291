@@ -943,7 +943,7 @@ export default function WikiPage() {
         userId: currentUserId,
         articles: knowledgeBase,
       });
-      toast.success('Base sincronizada com Firestore.');
+      toast.success('Base sincronizada com o banco principal.');
     } catch (error) {
       console.error('Erro ao sincronizar base:', error);
       toast.error('Nao foi possivel sincronizar a base.');

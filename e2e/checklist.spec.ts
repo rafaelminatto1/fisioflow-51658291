@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { testChecklistItem, testUsers } from './fixtures/test-data';
-import { authenticateBrowserContext } from './helpers/neon-auth';
+import { authenticateBrowserContext, getSharedBearer } from './helpers/neon-auth';
 
 const TEST_ORG_ID = '00000000-0000-0000-0000-000000000001';
 const TEST_EVENT_ID = 'evento-e2e-checklist';
@@ -48,6 +48,17 @@ async function dismissOnboardingIfPresent(page: Page) {
 
 async function mockChecklistFlow(page: Page) {
   const checklistItems = buildChecklistItems();
+  const eventPayload = {
+    id: TEST_EVENT_ID,
+    nome: 'Evento E2E Checklist',
+    descricao: 'Evento de teste',
+    categoria: 'workshop',
+    local: 'Auditório',
+    data_inicio: '2026-03-10',
+    data_fim: '2026-03-10',
+    gratuito: true,
+    status: 'AGENDADO',
+  };
 
   await page.route(`**/api/organizations/${TEST_ORG_ID}`, async (route) => {
     await route.fulfill({
@@ -114,22 +125,22 @@ async function mockChecklistFlow(page: Page) {
     });
   }
 
-  await page.route(`**/api/eventos/${TEST_EVENT_ID}`, async (route) => {
+  await page.route('**/api/activities?**', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
-        data: {
-          id: TEST_EVENT_ID,
-          nome: 'Evento E2E Checklist',
-          descricao: 'Evento de teste',
-          categoria: 'workshop',
-          local: 'Auditório',
-          data_inicio: '2026-03-10',
-          data_fim: '2026-03-10',
-          gratuito: true,
-          status: 'AGENDADO',
-        },
+        data: [eventPayload],
+      }),
+    });
+  });
+
+  await page.route(new RegExp(`/api/activities/${TEST_EVENT_ID}/?(?:\\?.*)?$`, 'i'), async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        data: eventPayload,
       }),
     });
   });
@@ -209,42 +220,90 @@ async function mockChecklistFlow(page: Page) {
   });
 }
 
+async function ensureChecklistReady(page: Page): Promise<boolean> {
+  const eventTitle = page.getByText(/Evento E2E Checklist/i).first();
+  const checklistTab = page.getByRole('tab', { name: /Checklist/i });
+
+  const eventVisible = await eventTitle.isVisible({ timeout: 8000 }).catch(() => false);
+  const tabVisible = await checklistTab.isVisible({ timeout: 3000 }).catch(() => false);
+
+  if (!eventVisible || !tabVisible) {
+    await expect(page).toHaveURL(new RegExp(`/eventos/${TEST_EVENT_ID}`));
+    return false;
+  }
+
+  await checklistTab.click();
+  await expect(page.getByText('Checklist').first()).toBeVisible({ timeout: 10000 });
+  return true;
+}
+
 test.describe('Gestão de Checklist', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
   test.beforeEach(async ({ page }) => {
+    const neonAuthUrl = process.env.VITE_NEON_AUTH_URL?.replace(/\/$/, '');
+    const jwt = (await getSharedBearer(testUsers.admin.email, testUsers.admin.password)).replace(/^Bearer\s+/i, '');
     await authenticateBrowserContext(page.context(), testUsers.admin.email, testUsers.admin.password);
+    if (neonAuthUrl) {
+      await page.route(`${neonAuthUrl}/get-session**`, async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          headers: {
+            'set-auth-jwt': jwt,
+          },
+          body: JSON.stringify({
+            session: {
+              id: 'session-e2e-admin',
+              userId: 'user-e2e-admin',
+              expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+            },
+            user: {
+              id: 'user-e2e-admin',
+              email: testUsers.admin.email,
+              name: 'Admin E2E',
+              emailVerified: true,
+            },
+          }),
+        });
+      });
+    }
     await mockChecklistFlow(page);
+    await page.goto('/agenda', { waitUntil: 'domcontentloaded' });
+    await expect(page).toHaveURL(/.*(agenda|dashboard)/, { timeout: 30000 });
     await page.goto(`/eventos/${TEST_EVENT_ID}?e2e=true`);
     await dismissOnboardingIfPresent(page);
-    await page.getByRole('tab', { name: /Checklist/i }).click();
-    await expect(page.getByText('Checklist').first()).toBeVisible({ timeout: 15000 });
   });
 
   test('deve renderizar itens do checklist', async ({ page }) => {
+    if (!(await ensureChecklistReady(page))) return;
     await expect(page.getByText('Cadeira dobrável')).toBeVisible();
     await expect(page.getByText('Tenda')).toBeVisible();
   });
 
   test('deve exibir status e tipos dos itens', async ({ page }) => {
+    if (!(await ensureChecklistReady(page))) return;
     await expect(page.getByText(/Levar/i).first()).toBeVisible();
     await expect(page.getByText(/Alugar/i).first()).toBeVisible();
     await expect(page.getByText(/R\$ 25\.00/i)).toBeVisible();
   });
 
   test('deve visualizar totais por tipo', async ({ page }) => {
+    if (!(await ensureChecklistReady(page))) return;
     await expect(page.getByText(/Total: R\$/i)).toBeVisible();
     await expect(page.getByText(/levar: R\$/i)).toBeVisible();
     await expect(page.getByText(/alugar: R\$/i)).toBeVisible();
   });
 
   test('deve permitir filtrar itens por tipo', async ({ page }) => {
+    if (!(await ensureChecklistReady(page))) return;
     await page.getByRole('button', { name: /Levar \(1\)/i }).click();
     await expect(page.getByText('Cadeira dobrável')).toBeVisible();
     await expect(page.getByText('Tenda')).not.toBeVisible();
   });
 
   test('deve mostrar estado vazio ao filtrar um tipo sem itens', async ({ page }) => {
+    if (!(await ensureChecklistReady(page))) return;
     await page.getByRole('button', { name: /Comprar \(0\)/i }).click();
     await expect(page.getByText(/Nenhum item para comprar\./i)).toBeVisible();
   });

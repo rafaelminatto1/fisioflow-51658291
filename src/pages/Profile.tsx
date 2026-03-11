@@ -10,12 +10,10 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import {
-
   User,
   Mail,
   Phone,
   MapPin,
-  Calendar,
   Shield,
   Bell,
   Settings,
@@ -26,6 +24,8 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useToast } from '@/hooks/use-toast';
+import { DatePicker } from '@/components/ui/date-picker';
+import { parseISO, format as formatDateFns, isValid } from 'date-fns';
 
 export const Profile = () => {
   const { user } = useAuth();
@@ -249,17 +249,19 @@ export const Profile = () => {
 
                     <div className="space-y-2">
                       <Label htmlFor="birthDate">Data de Nascimento</Label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                        <Input
-                          id="birthDate"
-                          type="date"
-                          value={profileData.birthDate}
-                          onChange={(e) => handleInputChange('birthDate', e.target.value)}
-                          disabled={!isEditing}
-                          className="pl-10"
-                        />
-                      </div>
+                      <DatePicker
+                        date={profileData.birthDate ? parseISO(profileData.birthDate) : undefined}
+                        onChange={(date) => {
+                          if (date && isValid(date)) {
+                            handleInputChange('birthDate', formatDateFns(date, 'yyyy-MM-dd'));
+                          } else {
+                            handleInputChange('birthDate', '');
+                          }
+                        }}
+                        disabled={!isEditing}
+                        fromYear={1900}
+                        toYear={new Date().getFullYear()}
+                      />
                     </div>
                   </div>
 

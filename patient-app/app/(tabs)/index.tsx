@@ -26,15 +26,7 @@ import { useAuthStore } from '@/store/auth';
 import { useGamification } from '@/hooks/useGamification';
 import { Card, NotificationPermissionModal, SyncIndicator, LinearProgress } from '@/components';
 import { Spacing } from '@/constants/spacing';
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-  limit,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { patientApi } from '@/lib/api';
 import * as Notifications from 'expo-notifications';
 import { log } from '@/lib/logger';
 
@@ -59,7 +51,7 @@ interface TodayPlan {
 
 interface Appointment {
   id: string;
-  date: any; // Firestore Timestamp
+  date: any;
   time: string;
   type: string;
   professional_name: string;
@@ -130,79 +122,62 @@ export default function DashboardScreen() {
       return;
     }
 
-    // Fetch today's exercise plan from root patient_exercises or soap_records exercises
-    const exercisesRef = collection(db, 'patient_exercises');
-    const exercisesQuery = query(
-      exercisesRef,
-      where('patientId', '==', user.id),
-      orderBy('prescribedAt', 'desc'),
-      limit(10)
-    );
+    let cancelled = false;
 
-    const unsubscribePlans = onSnapshot(exercisesQuery, (snapshot) => {
-      if (!snapshot.empty) {
-        const exercises = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as any));
+    const load = async () => {
+      try {
+        const [exercises, appointments] = await Promise.all([
+          patientApi.getExercises(),
+          patientApi.getAppointments(true),
+        ]);
 
-        setTodayPlan({
-          id: 'current-plan',
-          name: 'Meus Exercícios',
-          exercises: exercises.map((ex: any) => ({
-            id: ex.id,
-            name: ex.exercise?.name || 'Exercício',
-            sets: ex.sets || 3,
-            reps: ex.reps || 10,
-            completed: ex.completed || false,
-          })),
-        });
-      }
-      setLoading(false);
-    }, (error) => {
-      log.error('HOME', 'Error fetching plans', error);
-      // Fallback logic
-      setLoading(false);
-    });
+        if (cancelled) return;
 
-    // Fetch next appointment from root appointments collection
-    const now = new Date().toISOString();
-    const appointmentsRef = collection(db, 'appointments');
-    const appointmentsQuery = query(
-      appointmentsRef,
-      where('patient_id', '==', user.id),
-      where('date', '>=', now.split('T')[0]),
-      orderBy('date', 'asc'),
-      limit(1)
-    );
-
-    const unsubscribeAppointments = onSnapshot(
-      appointmentsQuery,
-      (snapshot) => {
-        if (!snapshot.empty) {
-          const apptDoc = snapshot.docs[0];
-          const apptData = apptDoc.data();
-          setNextAppointment({
-            id: apptDoc.id,
-            date: apptData.date, // ISO string in root collection
-            time: apptData.start_time,
-            type: apptData.type || 'Fisioterapia',
-            professional_name: apptData.therapist_name || 'Fisioterapeuta',
-          } as any);
-          return;
+        if (exercises.length > 0) {
+          setTodayPlan({
+            id: exercises[0]?.plan?.id || 'current-plan',
+            name: exercises[0]?.plan?.name || 'Meus Exercícios',
+            exercises: exercises.map((exercise: any) => ({
+              id: exercise.id,
+              name: exercise.exercise?.name || 'Exercício',
+              sets: exercise.sets || 3,
+              reps: exercise.reps || 10,
+              completed: exercise.completed || false,
+            })),
+          });
+        } else {
+          setTodayPlan(null);
         }
 
-        setNextAppointment(null);
-      },
-      (error) => {
-        log.error('HOME', 'Error fetching appointments:', error);
-        setNextAppointment(null);
+        const next = appointments[0];
+        setNextAppointment(
+          next
+            ? {
+                id: next.id,
+                date: next.date,
+                time: next.time,
+                type: next.type || 'Fisioterapia',
+                professional_name: next.professional_name || 'Fisioterapeuta',
+              }
+            : null,
+        );
+      } catch (error) {
+        log.error('HOME', 'Error loading dashboard data', error);
+        if (!cancelled) {
+          setTodayPlan(null);
+          setNextAppointment(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
-    );
+    };
+
+    load();
 
     return () => {
-      unsubscribePlans();
-      unsubscribeAppointments();
+      cancelled = true;
     };
   }, [user?.id]);
 

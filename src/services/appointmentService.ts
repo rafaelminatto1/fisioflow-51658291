@@ -252,7 +252,8 @@ export class AppointmentService {
             // new Date("2026-02-05") is parsed as UTC midnight, which becomes previous day in Brazil (UTC-3)
             const parseResponseDate = (dateStr: string | null | undefined): Date => {
                 if (!dateStr) return new Date();
-                const parts = dateStr.split('-');
+                const cleanDate = dateStr.split('T')[0];
+                const parts = cleanDate.split('-');
                 if (parts.length !== 3) return new Date(dateStr);
                 const [year, month, day] = parts.map(Number);
                 // Use noon local time to avoid DST issues
@@ -313,7 +314,12 @@ export class AppointmentService {
 
             const updateData: Record<string, string | number | null | undefined> = {};
 
-            if (updates.patient_id) updateData.patient_id = updates.patient_id;
+            // patient_id is IMMUTABLE during updates as per business rule
+            // To change a patient, the appointment must be deleted and recreated
+            if (updates.patient_id) {
+                logger.warn('Attempted to update patient_id of an existing appointment. This action is blocked.', { appointmentId: id }, 'AppointmentService');
+            }
+
             if (updates.duration) updateData.duration = updates.duration;
             if (updates.type) updateData.type = updates.type;
             if (updates.status) updateData.status = updates.status;
@@ -383,7 +389,8 @@ export class AppointmentService {
             // Helper to parse date string as local date (avoiding timezone issues)
             const parseResponseDate = (dateStr: string | null | undefined): Date => {
                 if (!dateStr) return new Date();
-                const parts = dateStr.split('-');
+                const cleanDate = dateStr.split('T')[0];
+                const parts = cleanDate.split('-');
                 if (parts.length !== 3) return new Date(dateStr);
                 const [year, month, day] = parts.map(Number);
                 // Use noon local time to avoid DST issues

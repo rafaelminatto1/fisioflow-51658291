@@ -72,7 +72,7 @@ const getErrorMessage = (error: { code?: string; message?: string; functionName?
   // Log detalhado para debug
   logger.error('[QuickPatientModal] Erro ao criar paciente', { code, message, functionName, error }, 'QuickPatientModal');
 
-  // Erros específicos do Firebase/Postgres
+  // Erros específicos de API/Postgres
   const errorMessages: Record<string, string> = {
     '23505': 'Já existe um paciente com este nome ou telefone cadastrado.',
     '42501': 'Sem permissão para criar pacientes. Verifique suas permissões.',
@@ -87,18 +87,15 @@ const getErrorMessage = (error: { code?: string; message?: string; functionName?
     return errorMessages[code];
   }
 
-  // Erro invalid-argument com [createPatient] = backend expondo mensagem real
-  if (code === 'functions/invalid-argument' && message.includes('[createPatient]')) {
+  if ((code === 'functions/invalid-argument' || code === 'api/invalid-argument') && message.includes('[createPatient]')) {
     return message.replace('[createPatient] ', '');
   }
 
-  // Erro interno do backend (functions/internal) - não é erro de conexão
-  if (code === 'functions/internal' || message.includes('internal')) {
+  if (code === 'functions/internal' || code === 'api/internal' || message.includes('internal')) {
     return 'Erro interno ao criar paciente. Tente novamente ou contate o suporte.';
   }
 
-  // Erros do Firebase Functions (projeto, conexão real)
-  if (message.includes('FirebaseError') && message.includes('The project')) {
+  if (message.includes('Failed to fetch') || message.includes('NetworkError') || message.includes('The project')) {
     return 'Erro de conexão com o servidor. Tente novamente.';
   }
 
@@ -114,9 +111,8 @@ const getErrorMessage = (error: { code?: string; message?: string; functionName?
     return 'Erro de conexão. Verifique sua internet e tente novamente.';
   }
 
-  // Se for um erro do FunctionCallError, tentar extrair mais informações
   if (error instanceof Error && error.name === 'FunctionCallError') {
-    return `Erro ao chamar função ${functionName}. Verifique a conexão.`;
+    return `Erro ao chamar a API ${functionName}. Verifique a conexão.`;
   }
 
   return message || 'Não foi possível criar o paciente. Tente novamente.';
@@ -226,11 +222,10 @@ const QuickPatientModalComponent: React.FC<QuickPatientModalProps> = ({
     },
     onError: (error: unknown) => {
       logger.error('Erro ao criar paciente rápido', error, 'QuickPatientModal');
-      // Melhorar o log para incluir FunctionCallError
-      if (error.name === 'FunctionCallError') {
+      if (typeof error === 'object' && error && 'name' in error && error.name === 'FunctionCallError') {
         logger.error('Detalhes do erro FunctionCallError', {
-          functionName: error.functionName,
-          originalError: error.originalError,
+          functionName: 'functionName' in error ? error.functionName : undefined,
+          originalError: 'originalError' in error ? error.originalError : undefined,
         }, 'QuickPatientModal');
       }
 
