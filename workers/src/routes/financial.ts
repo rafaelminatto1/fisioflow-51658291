@@ -1381,8 +1381,10 @@ app.put('/nfse-config', requireAuth, async (c) => {
         aliquota_iss, auto_emissao,
         razao_social_prestador, endereco_prestador, telefone_prestador,
         codigo_tuss, nome_responsavel, conselho_tipo, conselho_numero, percentual_impostos,
+        nuvem_fiscal_api_key, nuvem_fiscal_ambiente, optante_simples_nacional,
+        incentivador_cultural, natureza_operacao,
         created_at, updated_at
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,NOW(),NOW())
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,NOW(),NOW())
       ON CONFLICT (organization_id) DO UPDATE SET
         ambiente = EXCLUDED.ambiente,
         municipio_codigo = EXCLUDED.municipio_codigo,
@@ -1398,6 +1400,11 @@ app.put('/nfse-config', requireAuth, async (c) => {
         conselho_tipo = EXCLUDED.conselho_tipo,
         conselho_numero = EXCLUDED.conselho_numero,
         percentual_impostos = EXCLUDED.percentual_impostos,
+        nuvem_fiscal_api_key = EXCLUDED.nuvem_fiscal_api_key,
+        nuvem_fiscal_ambiente = EXCLUDED.nuvem_fiscal_ambiente,
+        optante_simples_nacional = EXCLUDED.optante_simples_nacional,
+        incentivador_cultural = EXCLUDED.incentivador_cultural,
+        natureza_operacao = EXCLUDED.natureza_operacao,
         updated_at = NOW()
       RETURNING *
     `,
@@ -1417,10 +1424,257 @@ app.put('/nfse-config', requireAuth, async (c) => {
       body.conselho_tipo ?? 'CREFITO-3',
       body.conselho_numero ?? null,
       body.percentual_impostos ?? 8.70,
+      body.nuvem_fiscal_api_key ?? null,
+      body.nuvem_fiscal_ambiente ?? 'homologacao',
+      body.optante_simples_nacional ?? false,
+      body.incentivador_cultural ?? false,
+      body.natureza_operacao ?? 1,
     ],
   );
 
   return c.json({ data: result.rows[0] });
+});
+
+// ===================== NFS-e: EMISSÃO DIRETA VIA NUVEM FISCAL =====================
+
+app.post('/nfse/emitir', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const body = (await c.req.json()) as Record<string, unknown>;
+
+  // 1. Buscar configuração NFSe da organização
+  const configResult = await pool.query(
+    'SELECT * FROM nfse_config WHERE organization_id = $1 LIMIT 1',
+    [user.organizationId],
+  );
+  const cfg = configResult.rows[0];
+
+  if (!cfg?.nuvem_fiscal_api_key) {
+    return c.json({
+      error: 'Chave da API Nuvem Fiscal não configurada. Acesse Configurações > NFS-e para configurar.',
+    }, 400);
+  }
+
+  if (!cfg?.cnpj_prestador || !cfg?.inscricao_municipal) {
+    return c.json({
+      error: 'CNPJ e Inscrição Municipal do prestador são obrigatórios. Configure em Configurações > NFS-e.',
+    }, 400);
+  }
+
+  const nfseId = body.nfse_id as string | undefined;
+
+  // 2. Buscar dados da NFSe local (rascunho)
+  let nfseRow: Record<string, unknown> | null = null;
+  if (nfseId) {
+    const nfseResult = await pool.query(
+      'SELECT * FROM nfse WHERE id = $1 AND organization_id = $2',
+      [nfseId, user.organizationId],
+    );
+    nfseRow = nfseResult.rows[0] ?? null;
+  }
+
+  // 3. Montar dados para a Nuvem Fiscal
+  const destinatario = (nfseRow?.destinatario ?? body.destinatario ?? {}) as Record<string, unknown>;
+  const servico = (nfseRow?.servico ?? body.servico ?? {}) as Record<string, unknown>;
+  const valor = Number(nfseRow?.valor ?? body.valor ?? 0);
+  const dataPrestacao = String(nfseRow?.data_prestacao ?? body.data_prestacao ?? new Date().toISOString().split('T')[0]);
+  const referencia = `fisioflow-${nfseId ?? Date.now()}`;
+
+  // Limpar CPF/CNPJ (apenas números)
+  const cpfCnpjTomador = String(destinatario.cnpj_cpf ?? '').replace(/\D/g, '');
+  const cnpjPrestador = cfg.cnpj_prestador.replace(/\D/g, '');
+  const inscricaoMunicipal = cfg.inscricao_municipal.replace(/[^0-9]/g, '');
+
+  const ambiente = cfg.nuvem_fiscal_ambiente ?? 'homologacao';
+  const nuvemFiscalBase = 'https://api.nuvemfiscal.com.br';
+
+  const nuvemFiscalBody = {
+    ambiente,
+    referencia,
+    natureza_operacao: cfg.natureza_operacao ?? 1,
+    prestador: {
+      cpf_cnpj: cnpjPrestador,
+      inscricao_municipal: inscricaoMunicipal,
+      codigo_municipio: cfg.municipio_codigo ?? '3550308',
+    },
+    tomador: {
+      ...(cpfCnpjTomador
+        ? {
+            cpf_cnpj: cpfCnpjTomador,
+            razao_social: String(destinatario.nome ?? ''),
+          }
+        : {}),
+      ...(destinatario.endereco ? { endereco: { logradouro: String(destinatario.endereco) } } : {}),
+      ...(destinatario.email ? { email: String(destinatario.email) } : {}),
+    },
+    servico: {
+      valor_servicos: valor,
+      valor_deducoes: 0,
+      valor_pis: 0,
+      valor_cofins: 0,
+      valor_inss: 0,
+      valor_ir: 0,
+      valor_csll: 0,
+      iss_retido: false,
+      valor_iss: Number(servico.valor_iss ?? 0),
+      outras_retencoes: 0,
+      desconto_incondicionado: 0,
+      desconto_condicionado: 0,
+      item_lista_servico: String(servico.codigo_tributario ?? cfg.codigo_tuss ?? '04391'),
+      codigo_cnae: String(servico.codigo_cnae ?? '8711500'),
+      discriminacao: String(servico.descricao ?? ''),
+      codigo_municipio: cfg.municipio_codigo ?? '3550308',
+    },
+  };
+
+  // 4. Chamar API da Nuvem Fiscal
+  let emissaoResponse: Record<string, unknown>;
+  try {
+    const response = await fetch(`${nuvemFiscalBase}/nfse`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${cfg.nuvem_fiscal_api_key}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(nuvemFiscalBody),
+    });
+
+    const responseText = await response.text();
+    if (!response.ok) {
+      return c.json({
+        error: `Erro na Nuvem Fiscal (${response.status}): ${responseText}`,
+        details: responseText,
+      }, 422);
+    }
+
+    emissaoResponse = JSON.parse(responseText) as Record<string, unknown>;
+  } catch (err) {
+    return c.json({ error: `Erro ao conectar com Nuvem Fiscal: ${String(err)}` }, 500);
+  }
+
+  const nuvemFiscalId = String(emissaoResponse.id ?? '');
+
+  // 5. Se ficou pendente, aguardar (polling simples por até 15s)
+  let statusFinal = String(emissaoResponse.status ?? 'pendente');
+  let tentativas = 0;
+  while (statusFinal === 'pendente' || statusFinal === 'processando') {
+    if (tentativas >= 5) break;
+    await new Promise((r) => setTimeout(r, 3000));
+    tentativas++;
+    try {
+      const poll = await fetch(`${nuvemFiscalBase}/nfse/${nuvemFiscalId}`, {
+        headers: { 'Authorization': `Bearer ${cfg.nuvem_fiscal_api_key}` },
+      });
+      const pollData = (await poll.json()) as Record<string, unknown>;
+      statusFinal = String(pollData.status ?? statusFinal);
+      if (pollData.numero) emissaoResponse = { ...emissaoResponse, ...pollData };
+    } catch { break; }
+  }
+
+  // 6. Buscar URL do PDF na Nuvem Fiscal
+  let pdfUrl: string | null = null;
+  if (nuvemFiscalId && (statusFinal === 'autorizado' || statusFinal === 'emitido')) {
+    try {
+      const pdfResp = await fetch(`${nuvemFiscalBase}/nfse/${nuvemFiscalId}/pdf`, {
+        headers: { 'Authorization': `Bearer ${cfg.nuvem_fiscal_api_key}` },
+      });
+      if (pdfResp.ok) {
+        const pdfData = (await pdfResp.json()) as Record<string, unknown>;
+        pdfUrl = (pdfData.url ?? pdfData.link_pdf ?? null) as string | null;
+      }
+    } catch { /* PDF URL optional */ }
+  }
+
+  // 7. Atualizar registro local da NFSe
+  const novoNumero = String(emissaoResponse.numero ?? nfseRow?.numero ?? '');
+  const verificacao = String(emissaoResponse.codigo_verificacao ?? nfseRow?.verificacao ?? '');
+  const chaveAcesso = String(emissaoResponse.chave_acesso ?? nfseRow?.chave_acesso ?? '');
+  const novoStatus = (statusFinal === 'autorizado' || statusFinal === 'emitido') ? 'emitida' : 'erro';
+
+  if (nfseId) {
+    await pool.query(
+      `UPDATE nfse SET
+        status = $1, numero = $2, verificacao = $3, chave_acesso = $4,
+        pdf_url = $5, nuvem_fiscal_id = $6,
+        patient_phone = $7, patient_email = $8,
+        data_emissao = NOW(), updated_at = NOW()
+       WHERE id = $9 AND organization_id = $10`,
+      [
+        novoStatus,
+        novoNumero || nfseRow?.numero,
+        verificacao || null,
+        chaveAcesso || null,
+        pdfUrl,
+        nuvemFiscalId || null,
+        String(destinatario.phone ?? body.patient_phone ?? ''),
+        String(destinatario.email ?? ''),
+        nfseId,
+        user.organizationId,
+      ],
+    );
+  }
+
+  return c.json({
+    ok: novoStatus === 'emitida',
+    status: novoStatus,
+    numero: novoNumero,
+    verificacao,
+    chave_acesso: chaveAcesso,
+    pdf_url: pdfUrl,
+    nuvem_fiscal_id: nuvemFiscalId,
+    nuvem_fiscal_status: statusFinal,
+    raw: emissaoResponse,
+  });
+});
+
+// ===================== NFS-e: POLLING STATUS NA NUVEM FISCAL =====================
+
+app.get('/nfse/:id/status', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  const { id } = c.req.param();
+
+  const configResult = await pool.query(
+    'SELECT * FROM nfse_config WHERE organization_id = $1 LIMIT 1',
+    [user.organizationId],
+  );
+  const cfg = configResult.rows[0];
+
+  if (!cfg?.nuvem_fiscal_api_key) {
+    return c.json({ error: 'API key não configurada' }, 400);
+  }
+
+  const nfseResult = await pool.query(
+    'SELECT * FROM nfse WHERE id = $1 AND organization_id = $2',
+    [id, user.organizationId],
+  );
+  const nfseRow = nfseResult.rows[0];
+  if (!nfseRow) return c.json({ error: 'NFS-e não encontrada' }, 404);
+
+  if (!nfseRow.nuvem_fiscal_id) {
+    return c.json({ status: nfseRow.status, numero: nfseRow.numero });
+  }
+
+  const nuvemFiscalBase = 'https://api.nuvemfiscal.com.br';
+  const poll = await fetch(`${nuvemFiscalBase}/nfse/${nfseRow.nuvem_fiscal_id}`, {
+    headers: { 'Authorization': `Bearer ${cfg.nuvem_fiscal_api_key}` },
+  });
+  const pollData = (await poll.json()) as Record<string, unknown>;
+
+  // Se mudou status, atualizar no DB
+  const statusMap: Record<string, string> = { autorizado: 'emitida', emitido: 'emitida', cancelado: 'cancelada', erro: 'erro' };
+  const novoStatus = statusMap[String(pollData.status ?? '')] ?? nfseRow.status;
+
+  if (novoStatus !== nfseRow.status) {
+    await pool.query(
+      `UPDATE nfse SET status = $1, numero = COALESCE($2, numero),
+       verificacao = COALESCE($3, verificacao), updated_at = NOW()
+       WHERE id = $4`,
+      [novoStatus, pollData.numero ?? null, pollData.codigo_verificacao ?? null, id],
+    );
+  }
+
+  return c.json({ ok: true, status: novoStatus, nuvem_fiscal: pollData });
 });
 
 export { app as financialRoutes };

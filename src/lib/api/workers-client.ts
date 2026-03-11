@@ -3225,8 +3225,26 @@ export interface NFSeConfigRecord {
   conselho_tipo?: string | null;
   conselho_numero?: string | null;
   percentual_impostos?: number | null;
+  nuvem_fiscal_api_key?: string | null;
+  nuvem_fiscal_ambiente?: 'homologacao' | 'producao' | null;
+  optante_simples_nacional?: boolean;
+  incentivador_cultural?: boolean;
+  natureza_operacao?: number | null;
   created_at?: string;
   updated_at?: string;
+}
+
+export interface NFSeEmitirResult {
+  ok: boolean;
+  status: string;
+  numero?: string;
+  verificacao?: string;
+  chave_acesso?: string;
+  pdf_url?: string | null;
+  nuvem_fiscal_id?: string;
+  nuvem_fiscal_status?: string;
+  error?: string;
+  details?: string;
 }
 
 const fin = (path: string, opts?: RequestInit) => request<any>(`/api/financial${path}`, opts);
@@ -3332,6 +3350,9 @@ export const financialApi = {
     update: (id: string, data: Partial<NFSeRecord>) =>
       fin(`/nfse/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id: string) => fin(`/nfse/${id}`, { method: 'DELETE' }),
+    emitir: (data: { nfse_id: string; patient_phone?: string }) =>
+      fin('/nfse/emitir', { method: 'POST', body: JSON.stringify(data) }) as Promise<{ data?: NFSeEmitirResult } & NFSeEmitirResult>,
+    status: (id: string) => fin(`/nfse/${id}/status`),
   },
   nfseConfig: {
     get: () => fin('/nfse-config'),
