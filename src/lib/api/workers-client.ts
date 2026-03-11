@@ -145,6 +145,11 @@ export interface Protocol {
   tags: string[];
   icd10Codes: string[];
   wikiPageId?: string | null;
+  milestones?: any[];
+  restrictions?: any[];
+  progressionCriteria?: any[];
+  references?: any[];
+  clinicalTests?: string[];
 }
 
 export interface WikiPage {
