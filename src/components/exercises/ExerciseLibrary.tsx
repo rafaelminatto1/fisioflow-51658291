@@ -40,36 +40,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CreateTemplateFromSelectionModal } from './CreateTemplateFromSelectionModal';
 import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import { getBestImageUrl } from '@/lib/imageUtils';
-import * as ReactWindow from 'react-window';
-const { FixedSizeGrid: Grid, FixedSizeList } = ReactWindow;
-import type { ListChildComponentProps, GridChildComponentProps } from 'react-window';
 
-// Custom AutoSizer component to avoid react-virtualized import issues
-function AutoSizer({ children }: { children: (size: { width: number; height: number }) => React.ReactElement }) {
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const [size, setSize] = React.useState({ width: 0, height: 0 });
-
-  React.useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        setSize({ width, height });
-      }
-    });
-
-    resizeObserver.observe(container);
-    return () => resizeObserver.disconnect();
-  }, []);
-
-  return (
-    <div ref={containerRef} className="w-full h-full">
-      {size.width > 0 && size.height > 0 ? children(size) : null}
-    </div>
-  );
-}
 import { useDebounce } from '@/hooks/performance/useDebounce';
 
 
@@ -458,7 +429,7 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMod
   const [showCreateTemplateModal, setShowCreateTemplateModal] = useState(false);
   const [showMergeModal, setShowMergeModal] = useState(false);
 
-  const { exercises, loading, deleteExercise, mergeExercises, isDeleting, _isMerging } = useExercises();
+  const { exercises, loading, deleteExercise, mergeExercises, isDeleting, isMerging } = useExercises();
   const { isFavorite, toggleFavorite } = useExerciseFavorites();
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -556,88 +527,7 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMod
     }
   };
 
-  const GridRow = ({ columnIndex, rowIndex, style, data }: GridChildComponentProps) => {
-    const { items, columnCount } = data;
-    const index = rowIndex * columnCount + columnIndex;
 
-    if (index >= items.length) {
-      return null;
-    }
-
-    const exercise = items[index];
-    const gutter = 16;
-
-    // Adjust style for gutter
-    const itemStyle = {
-      ...style,
-      left: Number(style.left) + gutter,
-      top: Number(style.top) + gutter,
-      width: Number(style.width) - gutter,
-      height: Number(style.height) - gutter
-    };
-
-    return (
-      <div style={itemStyle}>
-        <div key={exercise.id} className="relative group h-full">
-          <ExerciseCard
-            exercise={exercise}
-            isFavorite={isFavorite(exercise.id)}
-            onToggleFavorite={() => toggleFavorite(exercise.id)}
-            onView={() => setViewExercise(exercise)}
-            onEdit={() => onEditExercise(exercise)}
-            onDelete={() => setDeleteId(exercise.id)}
-            selectionMode={selectionMode}
-            isAdded={addedExerciseIds.includes(exercise.id)}
-            onAdd={() => onSelectExercise && onSelectExercise(exercise)}
-            imagePriority={index < 6}
-          />
-          {isSelectionMode && (
-            <div className="absolute top-2 right-2 z-20">
-              <Checkbox
-                checked={selectedExercises.includes(exercise.id)}
-                onCheckedChange={() => toggleSelection(exercise.id)}
-                className="h-6 w-6 border-2 bg-background data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-              />
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
-
-  const ListRow = ({ index, style, data }: ListChildComponentProps) => {
-    const exercise = data[index];
-    const gutter = 8;
-
-    const itemStyle = {
-      ...style,
-      height: Number(style.height) - gutter,
-      marginBottom: gutter
-    };
-
-    return (
-      <div style={itemStyle}>
-        <div key={exercise.id} className="relative flex items-center gap-2 h-full">
-          {isSelectionMode && (
-            <Checkbox
-              checked={selectedExercises.includes(exercise.id)}
-              onCheckedChange={() => toggleSelection(exercise.id)}
-            />
-          )}
-          <div className="flex-1 h-full">
-            <ExerciseListItem
-              exercise={exercise}
-              isFavorite={isFavorite(exercise.id)}
-              onToggleFavorite={() => toggleFavorite(exercise.id)}
-              onView={() => setViewExercise(exercise)}
-              onEdit={() => onEditExercise(exercise)}
-              onDelete={() => setDeleteId(exercise.id)}
-            />
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   if (loading) {
     return (
@@ -685,7 +575,7 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMod
   }
 
   return (
-    <div className="space-y-4 pb-20 h-[calc(100vh-200px)] flex flex-col"> {/* Fixed height container for AutoSizer */}
+    <div className="flex flex-col space-y-4 w-full">
       {/* Search and Filters */}
       <div className="flex flex-col gap-4 flex-shrink-0">
         <div className="flex items-center gap-4">
@@ -789,8 +679,8 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMod
         </div>
       </div>
 
-      {/* Exercise Grid/List */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Library Grid */}
+      <div className="rounded-xl border bg-background/50 backdrop-blur-sm relative min-h-[400px]">
         {filteredExercises.length === 0 ? (
           <EmptyState icon={Dumbbell} title="Nenhum exercício" />
         ) : viewMode === 'grid' ? (

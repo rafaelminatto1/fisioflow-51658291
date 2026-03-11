@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Login Page Refresh Test', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
   test('should not refresh every 10 seconds', async ({ page }) => {
     let navigationCount = 0;
     let reloadCount = 0;
@@ -40,7 +42,7 @@ test.describe('Login Page Refresh Test', () => {
 
     // Check if body was reset (indicating full page refresh)
     // We check if specific form elements still exist
-    const emailInput = page.locator('input[name="email"]').first();
+    const emailInput = page.locator('#login-email, input[type="email"]').first();
     await expect(emailInput).toBeAttached();
   });
 
