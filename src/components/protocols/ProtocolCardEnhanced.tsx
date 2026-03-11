@@ -13,12 +13,11 @@ import {
 import {
     Clock, AlertTriangle, CheckCircle2,
     ArrowRight, Eye, Star, StarOff,
-    Copy, Trash2, MoreVertical
+    Copy, Trash2, MoreVertical, Edit
 } from 'lucide-react';
 import { ExerciseProtocol } from '@/hooks/useExerciseProtocols';
 import { cn } from '@/lib/utils';
 import { getProtocolCategory, PROTOCOL_CATEGORIES } from '@/data/protocols';
-import { Edit } from 'lucide-react';
 
 interface ProtocolCardEnhancedProps {
     protocol: ExerciseProtocol;
@@ -132,14 +131,13 @@ export function ProtocolCardEnhanced({ protocol, onClick, onEdit, onDelete, onDu
         );
     }
 
+    return (
         <Card
             className="protocol-card overflow-hidden hover:shadow-xl transition-all cursor-pointer group border-2 hover:border-primary/30 relative"
             onClick={onClick}
         >
-            {/* Category ribbon */}
             <div className={cn('h-1.5 w-full', categoryInfo.color)} />
 
-            {/* Favorite badge */}
             {isFavorite && (
                 <div className="absolute top-4 right-4 z-10">
                     <Star className="h-5 w-5 text-amber-500 fill-amber-500" />
@@ -147,7 +145,6 @@ export function ProtocolCardEnhanced({ protocol, onClick, onEdit, onDelete, onDu
             )}
 
             <div className="p-5">
-                {/* Header */}
                 <div className="flex items-start gap-3 mb-4">
                     <div className={cn('h-11 w-11 rounded-xl flex items-center justify-center', categoryInfo.color + '/10')}>
                         <categoryInfo.icon className={cn('h-5 w-5', categoryInfo.color.replace('bg-', 'text-'))} />
@@ -199,7 +196,6 @@ export function ProtocolCardEnhanced({ protocol, onClick, onEdit, onDelete, onDu
                     </DropdownMenu>
                 </div>
 
-                {/* Duration bar */}
                 {protocol.weeks_total && (
                     <div className="mb-4">
                         <div className="flex items-center justify-between text-xs mb-1.5">
@@ -215,7 +211,6 @@ export function ProtocolCardEnhanced({ protocol, onClick, onEdit, onDelete, onDu
                     </div>
                 )}
 
-                {/* Stats */}
                 <div className="grid grid-cols-3 gap-2 mb-4">
                     <div className="text-center p-2 bg-muted/50 rounded-lg">
                         <p className="text-lg font-bold text-green-600">{milestones.length}</p>
@@ -231,7 +226,6 @@ export function ProtocolCardEnhanced({ protocol, onClick, onEdit, onDelete, onDu
                     </div>
                 </div>
 
-                {/* Type badge */}
                 <div className="flex items-center justify-between">
                     <Badge variant={protocol.protocol_type === 'pos_operatorio' ? 'default' : 'secondary'} className="text-xs">
                         {protocol.protocol_type === 'pos_operatorio' ? 'Pós-Operatório' : 'Patologia'}
@@ -239,7 +233,6 @@ export function ProtocolCardEnhanced({ protocol, onClick, onEdit, onDelete, onDu
                 </div>
             </div>
 
-            {/* View button */}
             <div className="px-5 pb-5">
                 <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                     Ver Protocolo
