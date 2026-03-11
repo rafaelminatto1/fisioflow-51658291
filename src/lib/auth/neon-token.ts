@@ -1,9 +1,5 @@
 import { authClient, isNeonAuthEnabled } from '@/integrations/neon/auth';
 
-interface GetNeonAccessTokenOptions {
-  forceSessionReload?: boolean;
-}
-
 const JWT_SEGMENTS = 3;
 
 function looksLikeJwt(token: string): boolean {
@@ -29,14 +25,14 @@ function isExpired(token: string): boolean {
   return payload.exp <= nowSeconds;
 }
 
-/** In-memory cache so we don't call /get-session on every request */
+/** In-memory cache — evita chamar /token a cada request */
 let cachedJwt: string | null = null;
 let cachedJwtExpiry = 0;
 
 function getCachedJwt(): string | null {
   if (!cachedJwt) return null;
   const nowSeconds = Math.floor(Date.now() / 1000);
-  // Keep a 30-second buffer
+  // Buffer de 30 segundos antes do vencimento
   if (cachedJwtExpiry > 0 && nowSeconds >= cachedJwtExpiry - 30) return null;
   return cachedJwt;
 }
@@ -48,66 +44,64 @@ function setCachedJwt(token: string): void {
 }
 
 /**
- * Fetches the real JWT from the Neon Auth session.
- * The SDK intercepts the `set-auth-jwt` response header from /get-session
- * and stores it in data.session.token — we use that instead of a raw fetch
- * to avoid CORS header-exposure issues.
+ * Obtém JWT via authClient.token() — método oficial do SDK Neon Auth (JWT plugin).
+ * Fallback: intercepta o header set-auth-jwt retornado por getSession().
  */
-async function getJwtFromSessionEndpoint(): Promise<string | null> {
+async function fetchJwt(): Promise<string | null> {
+  // Método primário: authClient.token() — recomendado pela documentação oficial
   try {
-    const { data } = await authClient.getSession();
-    
-    // Tenta diferentes caminhos comuns no Better Auth / Neon Auth
-    const token = 
-      (data as any)?.session?.token || 
-      (data as any)?.token || 
-      (data as any)?.idToken;
-
-    if (typeof token === 'string' && looksLikeJwt(token)) {
-      return token;
+    const { data, error } = await authClient.token();
+    if (!error && typeof (data as any)?.token === 'string') {
+      const token = (data as any).token as string;
+      if (looksLikeJwt(token)) return token;
     }
-    return null;
   } catch {
-    return null;
+    // Fallback abaixo
   }
+
+  // Fallback: intercepta set-auth-jwt header retornado por getSession()
+  return new Promise((resolve) => {
+    authClient.getSession({
+      fetchOptions: {
+        onSuccess: (ctx: any) => {
+          const jwt = ctx.response?.headers?.get?.('set-auth-jwt');
+          resolve(typeof jwt === 'string' && looksLikeJwt(jwt) ? jwt : null);
+        },
+        onError: () => resolve(null),
+      },
+    }).catch(() => resolve(null));
+  });
 }
 
-export async function getNeonAccessToken(options: GetNeonAccessTokenOptions = {}): Promise<string> {
+export async function getNeonAccessToken(options: { forceSessionReload?: boolean } = {}): Promise<string> {
   if (!isNeonAuthEnabled()) {
     throw new Error('Neon Auth não está habilitado (VITE_NEON_AUTH_URL ausente).');
   }
 
-  // 1. Return from memory cache if still valid
   if (!options.forceSessionReload) {
     const cached = getCachedJwt();
     if (cached) return cached;
   }
 
-  // 2. Fetch the real JWT from Neon Auth's /get-session (set-auth-jwt header)
-  const jwt = await getJwtFromSessionEndpoint();
+  const jwt = await fetchJwt();
 
   if (!jwt) {
     throw new Error('Token JWT do Neon Auth indisponível. Certifique-se de estar logado.');
-  }
-
-  if (!looksLikeJwt(jwt)) {
-    throw new Error('Token do Neon Auth em formato inválido (não é um JWT).');
   }
 
   if (isExpired(jwt)) {
     throw new Error('Token JWT do Neon Auth expirado. Faça login novamente.');
   }
 
-  // Cache for subsequent calls
   setCachedJwt(jwt);
   return jwt;
 }
 
-/** Call this after successful login to clear the cache and force a fresh JWT fetch */
+/** Limpa o cache — chamar após login bem-sucedido */
 export function invalidateNeonTokenCache(): void {
   cachedJwt = null;
   cachedJwtExpiry = 0;
 }
 
-// Re-export for backwards compatibility (some hooks call getSession via authClient directly)
+// Re-export para compatibilidade
 export { authClient };

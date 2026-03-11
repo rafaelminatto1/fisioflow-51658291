@@ -74,13 +74,14 @@ export async function verifyToken(
     let lastError: Error | unknown | null = null;
     
     try {
-      // Validação RELAXADA: Apenas assinatura, sem checar Issuer/Audience estritamente agora
       const jwks = createRemoteJWKSet(new URL(jwksUrl));
-      const verified = await jwtVerify(token, jwks);
+      // Verifica assinatura EdDSA e issuer (origin da URL do Neon Auth)
+      const issuer = rootIssuer || derivedIssuer;
+      const verified = await jwtVerify(token, jwks, issuer ? { issuer } : undefined);
       verifiedPayload = verified.payload;
     } catch (e) {
       lastError = e;
-      console.error('[Auth] Basic JWT Signature Validation Failed:', e instanceof Error ? e.message : e);
+      console.error('[Auth] JWT Validation Failed:', e instanceof Error ? e.message : e);
     }
 
     if (!verifiedPayload) {
@@ -116,16 +117,7 @@ export const requireAuth: MiddlewareHandler<{
   const user = await verifyToken(c.req.header('Authorization'), c.env);
   
   if (!user) {
-    console.warn('[Auth] Token inválido ou ausente, mas PERMITINDO para diagnóstico.');
-    // Mock de usuário admin para não quebrar as rotas
-    c.set('user', {
-      uid: 'diagnostic-user',
-      email: 'admin@diagnostic.com',
-      emailVerified: true,
-      organizationId: '00000000-0000-0000-0000-000000000001',
-      role: 'admin'
-    });
-    return next();
+    return c.json({ error: 'Não autorizado' }, 401);
   }
   
   c.set('user', user);

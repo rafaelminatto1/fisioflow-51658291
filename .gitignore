@@ -28,6 +28,10 @@ build
 .env.production.local
 .env.production
 
+# Wrangler local dev secrets (contém credenciais)
+workers/.dev.vars.local
+*.dev.vars.local
+
 # Supabase
 .supabase
 supabase/.temp
