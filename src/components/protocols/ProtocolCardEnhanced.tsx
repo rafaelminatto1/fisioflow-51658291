@@ -52,7 +52,7 @@ export function ProtocolCardEnhanced({ protocol, onClick, onEdit, onDelete, onDu
     if (viewMode === 'list') {
         return (
             <Card
-                className="p-4 hover:shadow-lg transition-all cursor-pointer group border hover:border-primary/30 flex items-center gap-4"
+                className="protocol-card p-4 hover:shadow-lg transition-all cursor-pointer group border hover:border-primary/30 flex items-center gap-4"
                 onClick={onClick}
             >
                 <div className={cn('h-12 w-12 rounded-xl flex items-center justify-center flex-shrink-0', categoryInfo.color + '/10')}>
@@ -132,9 +132,8 @@ export function ProtocolCardEnhanced({ protocol, onClick, onEdit, onDelete, onDu
         );
     }
 
-    return (
         <Card
-            className="overflow-hidden hover:shadow-xl transition-all cursor-pointer group border-2 hover:border-primary/30 relative"
+            className="protocol-card overflow-hidden hover:shadow-xl transition-all cursor-pointer group border-2 hover:border-primary/30 relative"
             onClick={onClick}
         >
             {/* Category ribbon */}

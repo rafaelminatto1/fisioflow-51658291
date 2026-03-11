@@ -92,8 +92,8 @@ export async function getPatientProfile(_userId: string): Promise<Patient | null
     const data = await patientApi.getProfile();
     return {
       ...data,
-      createdAt: parseDate(data.createdAt),
-      updatedAt: parseDate(data.updatedAt),
+      createdAt: parseDate(data.createdAt || data.created_at),
+      updatedAt: parseDate(data.updatedAt || data.updated_at),
     };
   } catch (error) {
     log.error('Error fetching patient profile:', error);
@@ -242,9 +242,7 @@ export async function markNotificationRead(notificationId: string): Promise<void
 
 export async function markAllNotificationsRead(_userId: string): Promise<void> {
   try {
-    const notifications = await patientApi.getNotifications();
-    const unread = notifications.filter((n: any) => !n.read);
-    await Promise.all(unread.map((n: any) => patientApi.markNotificationRead(n.id)));
+    await patientApi.markAllNotificationsRead();
   } catch (error) {
     log.error('Error marking all notifications as read:', error);
     throw error;

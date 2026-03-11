@@ -1,86 +1,311 @@
 /**
- * HTTP helpers for legacy callable endpoints
+ * HTTP helpers for legacy callable endpoints.
+ *
+ * This compatibility layer maps historical function names to the
+ * equivalent Cloudflare Workers routes instead of Cloud Run / Firebase.
  */
 
-/* eslint-disable @typescript-eslint/no-namespace */
-
-import { API_URLS } from '@/lib/api/v2/config';
+import { getWorkersApiUrl } from '../api/config';
 import { getNeonAccessToken } from '@/lib/auth/neon-token';
 
-const _DEFAULT_TIMEOUT = 60;
-
-const HTTP_FUNCTION_URLS: Record<string, string> = {
-  getProfile: API_URLS.profile.get,
-  updateProfile: API_URLS.profile.update,
-  listAssessmentTemplatesV2: API_URLS.assessments.listTemplates,
-  getPatientHttp: API_URLS.patients.get,
-  listPatientsV2: API_URLS.patients.list,
-  getPatientStatsV2: API_URLS.patients.stats,
-  updatePatientV2: API_URLS.patients.update,
-  deletePatientV2: API_URLS.patients.delete,
-  listAppointments: API_URLS.appointments.list,
-  getAppointmentV2: API_URLS.appointments.get,
-  createAppointmentV2: API_URLS.appointments.create,
-  updateAppointmentV2: API_URLS.appointments.update,
-  cancelAppointmentV2: API_URLS.appointments.cancel,
-  checkTimeConflictV2: API_URLS.appointments.checkConflict,
-  listDoctors: API_URLS.doctors.list,
-  searchDoctorsV2: API_URLS.doctors.search,
-  listExercisesV2: API_URLS.exercises.list,
-  getExerciseV2: API_URLS.exercises.get,
-  searchSimilarExercises: API_URLS.exercises.searchSimilar,
-  searchSimilarExercisesV2: API_URLS.exercises.searchSimilar,
-  listTransactionsV2: API_URLS.financial.listTransactions,
-  createTransactionV2: API_URLS.financial.createTransaction,
-  updateTransactionV2: API_URLS.financial.updateTransaction,
-  deleteTransactionV2: API_URLS.financial.deleteTransaction,
-  findTransactionByAppointmentIdV2: API_URLS.financial.findTransactionByAppointmentId,
-  getEventReportV2: API_URLS.financial.getEventReport,
-  getFinancialSummaryV2: API_URLS.financial.getSummary,
-  patientServiceHttp: API_URLS.services.patient,
-  appointmentServiceHttp: API_URLS.services.appointment,
-  evolutionServiceHttp: API_URLS.services.evolution,
-  setupAnalytics: API_URLS.analytics.setup,
-  dashboardMetrics: API_URLS.analytics.dashboard,
-  patientEvolution: API_URLS.analytics.evolution,
-  organizationStats: API_URLS.analytics.organization,
-  topExercises: API_URLS.analytics.exercises,
-  painMapAnalysis: API_URLS.analytics.painMap,
-  usageStats: API_URLS.analytics.usage,
-};
 const LOCAL_FUNCTIONS_PROXY =
   import.meta.env.DEV && import.meta.env.VITE_USE_FUNCTIONS_PROXY === 'true'
     ? (import.meta.env.VITE_FUNCTIONS_PROXY || '/functions')
     : undefined;
 
-import { getWorkersApiUrl } from '../api/config';
-
 const WORKERS_API_BASE = getWorkersApiUrl();
+const functionsInstance = null;
 
-async function callWorkersApi<TResponse>(path: string, init?: RequestInit): Promise<TResponse> {
+type JsonValue = string | number | boolean | null | undefined;
+type JsonRecord = Record<string, unknown>;
+type LegacyRouteDescriptor = {
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  path: string;
+  body?: unknown;
+};
+type LegacyRouteMapper = (payload: JsonRecord) => LegacyRouteDescriptor;
+
+function asRecord(value: unknown): JsonRecord {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as JsonRecord)
+    : {};
+}
+
+function requireId(payload: JsonRecord, ...keys: string[]): string {
+  for (const key of keys) {
+    const value = payload[key];
+    if (typeof value === 'string' && value.trim()) {
+      return value.trim();
+    }
+  }
+
+  throw new Error(`Missing required identifier: ${keys.join(' | ')}`);
+}
+
+function stripKeys(payload: JsonRecord, keys: string[]): JsonRecord {
+  return Object.fromEntries(
+    Object.entries(payload).filter(([key]) => !keys.includes(key)),
+  );
+}
+
+function nestedOrPayload(payload: JsonRecord, key: string): JsonRecord {
+  const nested = asRecord(payload[key]);
+  return Object.keys(nested).length > 0 ? nested : payload;
+}
+
+function buildQuery(params: Record<string, JsonValue>): string {
+  const query = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') return;
+    query.set(key, String(value));
+  });
+
+  const serialized = query.toString();
+  return serialized ? `?${serialized}` : '';
+}
+
+const LEGACY_FUNCTION_ROUTES: Record<string, LegacyRouteMapper> = {
+  getProfile: () => ({
+    method: 'GET',
+    path: '/api/profile/me',
+  }),
+  updateProfile: (payload) => ({
+    method: 'PUT',
+    path: '/api/profile/me',
+    body: payload,
+  }),
+  listAssessmentTemplatesV2: (payload) => ({
+    method: 'GET',
+    path: `/api/evaluation-forms${buildQuery({
+      tipo: payload.tipo,
+      ativo: payload.ativo as JsonValue,
+      favorite: payload.favorite as JsonValue,
+    })}`,
+  }),
+  getPatientHttp: (payload) => ({
+    method: 'GET',
+    path: `/api/patients/${encodeURIComponent(requireId(payload, 'patientId', 'id'))}`,
+  }),
+  listPatientsV2: (payload) => ({
+    method: 'GET',
+    path: `/api/patients${buildQuery({
+      search: (payload.search ?? payload.searchTerm ?? payload.q) as JsonValue,
+      status: payload.status as JsonValue,
+      createdFrom: payload.createdFrom as JsonValue,
+      createdTo: payload.createdTo as JsonValue,
+      incompleteRegistration: payload.incompleteRegistration as JsonValue,
+      sortBy: payload.sortBy as JsonValue,
+      limit: payload.limit as JsonValue,
+      offset: payload.offset as JsonValue,
+    })}`,
+  }),
+  getPatientStatsV2: (payload) => ({
+    method: 'GET',
+    path: `/api/patients/${encodeURIComponent(requireId(payload, 'patientId', 'id'))}/stats`,
+  }),
+  updatePatientV2: (payload) => {
+    const patientId = requireId(payload, 'patientId', 'id');
+    return {
+      method: 'PUT',
+      path: `/api/patients/${encodeURIComponent(patientId)}`,
+      body: stripKeys(payload, ['patientId', 'id']),
+    };
+  },
+  deletePatientV2: (payload) => ({
+    method: 'DELETE',
+    path: `/api/patients/${encodeURIComponent(requireId(payload, 'patientId', 'id'))}`,
+  }),
+  listAppointments: (payload) => ({
+    method: 'GET',
+    path: `/api/appointments${buildQuery({
+      dateFrom: payload.dateFrom as JsonValue,
+      dateTo: payload.dateTo as JsonValue,
+      therapistId: (payload.therapistId ?? payload.professionalId) as JsonValue,
+      status: payload.status as JsonValue,
+      patientId: payload.patientId as JsonValue,
+      limit: payload.limit as JsonValue,
+      offset: payload.offset as JsonValue,
+    })}`,
+  }),
+  getAppointmentV2: (payload) => ({
+    method: 'GET',
+    path: `/api/appointments/${encodeURIComponent(requireId(payload, 'appointmentId', 'id'))}`,
+  }),
+  createAppointmentV2: (payload) => ({
+    method: 'POST',
+    path: '/api/appointments',
+    body: nestedOrPayload(payload, 'appointment'),
+  }),
+  updateAppointmentV2: (payload) => {
+    const nested = nestedOrPayload(payload, 'appointment');
+    const appointmentId = requireId(
+      { ...nested, ...payload },
+      'appointmentId',
+      'id',
+    );
+
+    return {
+      method: 'PUT',
+      path: `/api/appointments/${encodeURIComponent(appointmentId)}`,
+      body: stripKeys(nested, ['appointmentId', 'id']),
+    };
+  },
+  cancelAppointmentV2: (payload) => ({
+    method: 'POST',
+    path: `/api/appointments/${encodeURIComponent(requireId(payload, 'appointmentId', 'id'))}/cancel`,
+    body: payload.reason ? { reason: payload.reason } : {},
+  }),
+  checkTimeConflictV2: (payload) => ({
+    method: 'POST',
+    path: '/api/appointments/check-conflict',
+    body: payload,
+  }),
+  listDoctors: (payload) => ({
+    method: 'GET',
+    path: `/api/doctors${buildQuery({
+      search: (payload.search ?? payload.searchTerm ?? payload.q) as JsonValue,
+      limit: payload.limit as JsonValue,
+    })}`,
+  }),
+  searchDoctorsV2: (payload) => ({
+    method: 'GET',
+    path: `/api/doctors${buildQuery({
+      search: (payload.search ?? payload.searchTerm ?? payload.q) as JsonValue,
+      limit: payload.limit as JsonValue,
+    })}`,
+  }),
+  listExercisesV2: (payload) => ({
+    method: 'GET',
+    path: `/api/exercises${buildQuery({
+      q: payload.q as JsonValue,
+      category: payload.category as JsonValue,
+      difficulty: payload.difficulty as JsonValue,
+      page: payload.page as JsonValue,
+      limit: payload.limit as JsonValue,
+    })}`,
+  }),
+  getExerciseV2: (payload) => ({
+    method: 'GET',
+    path: `/api/exercises/${encodeURIComponent(requireId(payload, 'exerciseId', 'id', 'slug'))}`,
+  }),
+  searchSimilarExercises: (payload) => ({
+    method: 'GET',
+    path: `/api/exercises/search/semantic${buildQuery({
+      q: (payload.query ?? payload.q) as JsonValue,
+      limit: payload.limit as JsonValue,
+    })}`,
+  }),
+  searchSimilarExercisesV2: (payload) => ({
+    method: 'GET',
+    path: `/api/exercises/search/semantic${buildQuery({
+      q: (payload.query ?? payload.q) as JsonValue,
+      limit: payload.limit as JsonValue,
+    })}`,
+  }),
+  listTransactionsV2: (payload) => ({
+    method: 'GET',
+    path: `/api/financial/transacoes${buildQuery({
+      tipo: payload.tipo as JsonValue,
+      status: payload.status as JsonValue,
+      dateFrom: payload.dateFrom as JsonValue,
+      dateTo: payload.dateTo as JsonValue,
+      limit: payload.limit as JsonValue,
+      offset: payload.offset as JsonValue,
+    })}`,
+  }),
+  createTransactionV2: (payload) => ({
+    method: 'POST',
+    path: '/api/financial/transacoes',
+    body: payload,
+  }),
+  updateTransactionV2: (payload) => ({
+    method: 'PUT',
+    path: `/api/financial/transacoes/${encodeURIComponent(requireId(payload, 'transactionId', 'id'))}`,
+    body: stripKeys(payload, ['transactionId', 'id']),
+  }),
+  deleteTransactionV2: (payload) => ({
+    method: 'DELETE',
+    path: `/api/financial/transacoes/${encodeURIComponent(requireId(payload, 'transactionId', 'id'))}`,
+  }),
+  findTransactionByAppointmentIdV2: (payload) => ({
+    method: 'GET',
+    path: `/api/financial/pagamentos${buildQuery({
+      appointmentId: (payload.appointmentId ?? payload.id) as JsonValue,
+      limit: 1,
+    })}`,
+  }),
+  getEventReportV2: (payload) => ({
+    method: 'GET',
+    path: `/api/analytics/financial${buildQuery({
+      startDate: payload.startDate as JsonValue,
+      endDate: payload.endDate as JsonValue,
+    })}`,
+  }),
+  getFinancialSummaryV2: (payload) => ({
+    method: 'GET',
+    path: `/api/analytics/financial${buildQuery({
+      startDate: payload.startDate as JsonValue,
+      endDate: payload.endDate as JsonValue,
+    })}`,
+  }),
+  dashboardMetrics: (payload) => ({
+    method: 'GET',
+    path: `/api/analytics/dashboard${buildQuery({
+      period: payload.period as JsonValue,
+      startDate: payload.startDate as JsonValue,
+      endDate: payload.endDate as JsonValue,
+    })}`,
+  }),
+  patientEvolution: (payload) => ({
+    method: 'GET',
+    path: `/api/analytics/patient-evolution/${encodeURIComponent(requireId(payload, 'patientId', 'id'))}`,
+  }),
+  topExercises: (payload) => ({
+    method: 'GET',
+    path: `/api/analytics/top-exercises${buildQuery({
+      limit: payload.limit as JsonValue,
+    })}`,
+  }),
+  painMapAnalysis: (payload) => ({
+    method: 'GET',
+    path: `/api/analytics/pain-map${buildQuery({
+      limit: payload.limit as JsonValue,
+    })}`,
+  }),
+};
+
+async function callWorkersApi<TResponse>(descriptor: LegacyRouteDescriptor): Promise<TResponse> {
   if (!WORKERS_API_BASE) {
     throw new Error('VITE_WORKERS_API_URL não configurada');
   }
 
   const token = await getNeonAccessToken();
-  const endpoint = `${WORKERS_API_BASE}${path}`;
-  const response = await fetch(endpoint, {
-    ...init,
+  const endpoint = `${WORKERS_API_BASE}${descriptor.path}`;
+  const init: RequestInit = {
+    method: descriptor.method,
     headers: {
-      'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
-      ...(init?.headers || {}),
     },
-  });
+  };
+
+  if (descriptor.body !== undefined) {
+    init.headers = {
+      ...init.headers,
+      'Content-Type': 'application/json',
+    };
+    init.body = JSON.stringify(descriptor.body);
+  }
+
+  const response = await fetch(endpoint, init);
 
   if (response.status === 401) {
     const refreshedToken = await getNeonAccessToken({ forceSessionReload: true });
     const retry = await fetch(endpoint, {
       ...init,
       headers: {
-        'Content-Type': 'application/json',
+        ...(init.headers ?? {}),
         Authorization: `Bearer ${refreshedToken}`,
-        ...(init?.headers || {}),
       },
     });
 
@@ -151,10 +376,15 @@ export async function callFunctionHttp<TRequest, TResponse>(
   data: TRequest,
   _options?: CallFunctionOptions,
 ): Promise<TResponse> {
-  const directUrl = HTTP_FUNCTION_URLS[functionName];
-  if (directUrl) {
-    const path = new URL(directUrl).pathname.replace(/^\/api/, '/api');
-    return callWorkersApi<TResponse>(path, { method: 'POST', body: JSON.stringify(data) });
+  const payload = asRecord(data);
+  const mapper = LEGACY_FUNCTION_ROUTES[functionName];
+
+  if (mapper) {
+    try {
+      return await callWorkersApi<TResponse>(mapper(payload));
+    } catch (error) {
+      throw new FunctionCallError(functionName, error, data);
+    }
   }
 
   if (LOCAL_FUNCTIONS_PROXY) {
@@ -169,7 +399,11 @@ export async function callFunctionHttp<TRequest, TResponse>(
     return response.json() as Promise<TResponse>;
   }
 
-  throw new FunctionCallError(functionName, 'Function mapping not configured', data);
+  throw new FunctionCallError(
+    functionName,
+    'Function mapping not configured for Workers compatibility',
+    data,
+  );
 }
 
 export async function callFunctionHttpWithResponse<TRequest, TData>(

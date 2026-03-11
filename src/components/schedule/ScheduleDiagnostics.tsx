@@ -144,7 +144,7 @@ export function ScheduleDiagnostics({ currentDate, viewType }: ScheduleDiagnosti
               <div className="font-medium mb-1">⚠️ Atenção:</div>
               <div>
                 O usuário não possui um Organization ID definido. 
-                Verifique o perfil no Firestore e certifique-se de que o campo 
+                Verifique o perfil no banco principal e certifique-se de que o campo 
                 <code className="mx-1 px-1 bg-yellow-100 rounded">organization_id</code> 
                 está preenchido.
               </div>

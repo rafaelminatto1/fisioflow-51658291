@@ -68,6 +68,7 @@ import { aiRoutes } from './routes/ai';
 import { dicomRoutes } from './routes/dicom';
 import { fcmTokensRoutes } from './routes/fcmTokens';
 import { webhooksRoutes } from './routes/webhooks';
+import { patientPortalRoutes } from './routes/patientPortal';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -115,6 +116,7 @@ app.route('/api/sessions', sessionsRoutes);
 app.route('/api/auth', authRoutes);
 app.route('/api/media', mediaRoutes);
 app.route('/api/patients', patientsRoutes);
+app.route('/api/patient', patientPortalRoutes);
 app.route('/api/appointments', appointmentsRoutes);
 app.route('/api/documents', documentsRoutes);
 app.route('/api/exams', examsRoutes);

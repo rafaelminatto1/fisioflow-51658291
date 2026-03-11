@@ -87,61 +87,6 @@ export function useTimeTracker(options: UseTimeTrackerOptions): UseTimeTrackerRe
   const unsubscribeRef = useRef<(() => void) | null>(null);
 
   // ============================================================================
-  // Inicialização
-  // ============================================================================
-
-  useEffect(() => {
-    if (!organizationId || !userId) {
-      return;
-    }
-
-    // Carregar timer ativo
-    loadActiveTimer();
-
-    // Setup listener para entradas de hoje
-    unsubscribeRef.current = listenToTodayTimeEntries(
-      organizationId,
-      userId,
-      (todayEntries) => {
-        setEntries(todayEntries);
-      }
-    );
-
-    return () => {
-      // Cleanup
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current);
-      }
-      if (unsubscribeRef.current) {
-        unsubscribeRef.current();
-      }
-    };
-  }, [organizationId, userId, loadActiveTimer]);
-
-  // ============================================================================
-  // Timer Tick
-  // ============================================================================
-
-  useEffect(() => {
-    if (activeTimer) {
-      // Start tick interval
-      timerIntervalRef.current = window.setInterval(() => {
-        // Force re-render para atualizar duração
-        setActiveTimer((prev) => prev ? { ...prev } : null);
-      }, TICK_INTERVAL);
-
-      // Auto-sync a cada 30 segundos
-      if (autoSync) {
-        const syncTimeout = setTimeout(() => {
-          syncActiveTimer();
-        }, 30000);
-
-        return () => clearTimeout(syncTimeout);
-      }
-    }
-  }, [activeTimer, autoSync, syncActiveTimer]);
-
-  // ============================================================================
   // Helpers
   // ============================================================================
 
@@ -200,6 +145,70 @@ export function useTimeTracker(options: UseTimeTrackerOptions): UseTimeTrackerRe
     const startTime = new Date(activeTimer.start_time);
     return Math.floor((Date.now() - startTime.getTime()) / 1000);
   }, [activeTimer]);
+
+  // ============================================================================
+  // Inicialização
+  // ============================================================================
+
+  useEffect(() => {
+    if (!organizationId || !userId) {
+      return;
+    }
+
+    void loadActiveTimer();
+
+    unsubscribeRef.current = listenToTodayTimeEntries(
+      organizationId,
+      userId,
+      (todayEntries) => {
+        setEntries(todayEntries);
+      }
+    );
+
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current();
+      }
+    };
+  }, [organizationId, userId, loadActiveTimer]);
+
+  // ============================================================================
+  // Timer Tick
+  // ============================================================================
+
+  useEffect(() => {
+    if (!activeTimer) {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+      return;
+    }
+
+    timerIntervalRef.current = window.setInterval(() => {
+      setActiveTimer((prev) => (prev ? { ...prev } : null));
+    }, TICK_INTERVAL);
+
+    let syncTimeout: ReturnType<typeof setTimeout> | null = null;
+    if (autoSync) {
+      syncTimeout = setTimeout(() => {
+        void syncActiveTimer();
+      }, 30000);
+    }
+
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
+      if (syncTimeout) {
+        clearTimeout(syncTimeout);
+      }
+    };
+  }, [activeTimer, autoSync, syncActiveTimer]);
 
   // ============================================================================
   // Ações do Timer

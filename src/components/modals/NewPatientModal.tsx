@@ -5,21 +5,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, User } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { User, Search, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
-import { formatCPF, formatPhoneInput } from '@/utils/formatInputs';
+import { formatCPF, formatPhoneInput, formatCEP } from '@/utils/formatInputs';
 import { cleanCPF, cleanPhone, emailSchema, cpfSchema, phoneSchema, sanitizeString, sanitizeEmail } from '@/lib/validations';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { patientsApi } from '@/lib/api/workers-client';
+import { DatePicker } from '@/components/ui/date-picker';
 
 const patientSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(200, 'Nome muito longo'),
@@ -29,11 +26,16 @@ const patientSchema = z.object({
     if (!val || val === '') return true; // Campo vazio é válido
     return cpfSchema.safeParse(val).success;
   }, { message: 'CPF inválido' }),
-  birth_date: z.date({
-    required_error: 'Data de nascimento é obrigatória',
-  }),
+  birth_date: z.date().optional(),
   gender: z.enum(['masculino', 'feminino', 'outro']),
+  session_value: z.union([z.number().min(0, 'Valor inválido'), z.literal('')]).optional(),
+  zip_code: z.string().max(9, 'CEP inválido').optional(),
   address: z.string().max(500, 'Endereço muito longo').optional(),
+  address_number: z.string().max(20, 'Número muito longo').optional(),
+  address_complement: z.string().max(100, 'Complemento muito longo').optional(),
+  neighborhood: z.string().max(100, 'Bairro muito longo').optional(),
+  city: z.string().max(100, 'Cidade muito longa').optional(),
+  state: z.string().max(2, 'UF inválida').optional(),
   emergency_contact: z.string().max(200, 'Contato muito longo').optional(),
   emergency_contact_relationship: z.string().max(100, 'Parentesco muito longo').optional(),
   medical_history: z.string().max(5000, 'Histórico muito longo').optional(),
@@ -61,9 +63,9 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
   open,
   onOpenChange
 }) => {
-  const [isCalendarOpen, setIsCalendarOpen] = React.useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isFetchingAddress, setIsFetchingAddress] = React.useState(false);
 
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
@@ -72,9 +74,16 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
       email: '',
       phone: '',
       cpf: '',
-      birth_date: undefined as unknown as Date,
+      birth_date: undefined,
       gender: 'masculino',
+      session_value: '' as const,
+      zip_code: '',
       address: '',
+      address_number: '',
+      address_complement: '',
+      neighborhood: '',
+      city: '',
+      state: '',
       emergency_contact: '',
       emergency_contact_relationship: '',
       medical_history: '',
@@ -97,8 +106,9 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
   const watchedBirthDate = watch('birth_date');
   const watchedPhone = watch('phone');
   const watchedCpf = watch('cpf');
+  const watchedZipCode = watch('zip_code');
 
-  // Handlers para formatação de CPF e telefone
+  // Handlers para formatação de CPF, telefone e CEP
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatCPF(e.target.value);
     setValue('cpf', formatted, { shouldValidate: false });
@@ -109,20 +119,71 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
     setValue('phone', formatted, { shouldValidate: false });
   };
 
+  const handleZipCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCEP(e.target.value);
+    setValue('zip_code', formatted, { shouldValidate: false });
+    
+    // Auto-fetch address if CEP is complete
+    if (formatted.replace(/\D/g, '').length === 8) {
+      void fetchAddress(formatted.replace(/\D/g, ''));
+    }
+  };
+
+  const fetchAddress = async (cep: string) => {
+    setIsFetchingAddress(true);
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await response.json();
+      
+      if (data.erro) {
+        toast({
+          title: 'CEP não encontrado',
+          description: 'Verifique o CEP digitado.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setValue('address', data.logradouro || '', { shouldValidate: true });
+      setValue('neighborhood', data.bairro || '', { shouldValidate: true });
+      setValue('city', data.localidade || '', { shouldValidate: true });
+      setValue('state', data.uf || '', { shouldValidate: true });
+      
+      toast({
+        title: 'Endereço encontrado!',
+        description: 'Os campos foram preenchidos automaticamente.',
+      });
+    } catch (error) {
+      logger.error('Erro ao buscar CEP', error, 'NewPatientModal');
+    } finally {
+      setIsFetchingAddress(false);
+    }
+  };
+
   const handleSave = async (data: PatientFormData) => {
     try {
       const cleanCpfValue = data.cpf ? cleanCPF(data.cpf) : undefined;
       const cleanPhoneValue = data.phone ? cleanPhone(data.phone) : undefined;
       const cleanEmailValue = data.email ? sanitizeEmail(data.email) : undefined;
+      
+      // Combine address fields for the single 'address' field in backend if needed, 
+      // or send separately if backend supports it. Assuming current backend uses a single field.
+      const fullAddress = data.address 
+        ? `${data.address}${data.address_number ? `, ${data.address_number}` : ''}${data.address_complement ? ` - ${data.address_complement}` : ''}${data.neighborhood ? ` - ${data.neighborhood}` : ''}${data.city ? ` - ${data.city}` : ''}${data.state ? ` / ${data.state}` : ''}${data.zip_code ? ` (CEP: ${data.zip_code})` : ''}`
+        : null;
+
       const patientData = {
         name: sanitizeString(data.name, 200),
         full_name: sanitizeString(data.name, 200),
         email: cleanEmailValue || null,
         phone: cleanPhoneValue || null,
         cpf: cleanCpfValue || null,
-        birth_date: format(data.birth_date, 'yyyy-MM-dd'),
+        birth_date: data.birth_date ? format(data.birth_date, 'yyyy-MM-dd') : null,
         gender: data.gender,
-        address: data.address ? sanitizeString(data.address, 500) : null,
+        session_value: data.session_value && typeof data.session_value === 'number' ? data.session_value : null,
+        address: fullAddress,
+        // If the backend is updated to support structured address, we could send them separately
+        // For now, let's keep it compatible with existing structure if it's just a string
         emergency_contact: data.emergency_contact ? sanitizeString(data.emergency_contact, 200) : null,
         emergency_contact_relationship: data.emergency_contact_relationship ? sanitizeString(data.emergency_contact_relationship, 100) : null,
         medical_history: data.medical_history ? sanitizeString(data.medical_history, 5000) : null,
@@ -225,10 +286,9 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
                     placeholder="Nome completo do paciente"
                     aria-required="true"
                     aria-invalid={!!errors.name}
-                    aria-describedby={errors.name ? "name-error" : undefined}
                   />
                   {errors.name && (
-                    <p id="name-error" className="text-sm text-destructive">{String(errors.name.message)}</p>
+                    <p className="text-sm text-destructive">{String(errors.name.message)}</p>
                   )}
                 </div>
 
@@ -239,11 +299,9 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
                     type="email"
                     {...register('email')}
                     placeholder="email@exemplo.com"
-                    aria-invalid={!!errors.email}
-                    aria-describedby={errors.email ? "email-error" : undefined}
                   />
                   {errors.email && (
-                    <p id="email-error" className="text-sm text-destructive">{errors.email.message}</p>
+                    <p className="text-sm text-destructive">{errors.email.message}</p>
                   )}
                 </div>
 
@@ -253,18 +311,11 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
                     id="phone"
                     value={watchedPhone || ''}
                     onChange={handlePhoneChange}
-                    onBlur={() => {
-                      if (watchedPhone) {
-                        setValue('phone', watchedPhone, { shouldValidate: true });
-                      }
-                    }}
                     placeholder="(11) 99999-9999"
                     maxLength={15}
-                    aria-invalid={!!errors.phone}
-                    aria-describedby={errors.phone ? "phone-error" : undefined}
                   />
                   {errors.phone && (
-                    <p id="phone-error" className="text-sm text-destructive">{errors.phone.message}</p>
+                    <p className="text-sm text-destructive">{errors.phone.message}</p>
                   )}
                 </div>
 
@@ -274,63 +325,23 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
                     id="cpf"
                     value={watchedCpf || ''}
                     onChange={handleCpfChange}
-                    onBlur={() => {
-                      if (watchedCpf) {
-                        setValue('cpf', watchedCpf, { shouldValidate: true });
-                      }
-                    }}
                     placeholder="000.000.000-00"
                     maxLength={14}
-                    aria-invalid={!!errors.cpf}
-                    aria-describedby={errors.cpf ? "cpf-error" : undefined}
                   />
                   {errors.cpf && (
-                    <p id="cpf-error" className="text-sm text-destructive">{errors.cpf.message}</p>
+                    <p className="text-sm text-destructive">{errors.cpf.message}</p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label id="birth-date-label">Data de Nascimento *</Label>
-                  <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        aria-labelledby="birth-date-label"
-                        aria-required="true"
-                        aria-invalid={!!errors.birth_date}
-                        aria-describedby={errors.birth_date ? "birth-date-error" : undefined}
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !watchedBirthDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {watchedBirthDate ? (
-                          format(watchedBirthDate, 'dd/MM/yyyy', { locale: ptBR })
-                        ) : (
-                          "Selecione uma data"
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={watchedBirthDate}
-                        onSelect={(date) => {
-                          setValue('birth_date', date || new Date());
-                          setIsCalendarOpen(false);
-                        }}
-                        disabled={(date) =>
-                          date > new Date() || date < new Date("1900-01-01")
-                        }
-                        initialFocus
-                        className="pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  {errors.birth_date && (
-                    <p id="birth-date-error" className="text-sm text-destructive">{String(errors.birth_date.message)}</p>
-                  )}
+                  <Label id="birth-date-label">Data de Nascimento</Label>
+                  <DatePicker
+                    date={watchedBirthDate}
+                    onChange={(date) => setValue('birth_date', date, { shouldValidate: true })}
+                    placeholder="Selecione ou digite"
+                    fromYear={1900}
+                    toYear={new Date().getFullYear()}
+                  />
                 </div>
 
                 <div className="space-y-2">
@@ -339,7 +350,7 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
                     value={watch('gender')}
                     onValueChange={(value) => setValue('gender', value as 'masculino' | 'feminino' | 'outro')}
                   >
-                    <SelectTrigger id="gender" aria-required="true" aria-invalid={!!errors.gender} aria-describedby={errors.gender ? "gender-error" : undefined}>
+                    <SelectTrigger id="gender">
                       <SelectValue placeholder="Selecione o gênero" />
                     </SelectTrigger>
                     <SelectContent>
@@ -349,18 +360,109 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
                     </SelectContent>
                   </Select>
                   {errors.gender && (
-                    <p id="gender-error" className="text-sm text-destructive">{errors.gender.message}</p>
+                    <p className="text-sm text-destructive">{errors.gender.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="session_value">Valor por Sessão (R$)</Label>
+                  <Input
+                    id="session_value"
+                    type="number"
+                    step="0.01"
+                    {...register('session_value', { valueAsNumber: true })}
+                    placeholder="0,00"
+                  />
+                  {errors.session_value && (
+                    <p className="text-sm text-destructive">{errors.session_value.message}</p>
                   )}
                 </div>
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="address">Endereço</Label>
-                <Input
-                  id="address"
-                  {...register('address')}
-                  placeholder="Endereço completo"
-                />
+            {/* Address Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">Endereço</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="zip_code">CEP</Label>
+                  <div className="relative">
+                    <Input
+                      id="zip_code"
+                      value={watchedZipCode || ''}
+                      onChange={handleZipCodeChange}
+                      placeholder="00000-000"
+                      maxLength={9}
+                      className="pr-10"
+                    />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      {isFetchingAddress ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      ) : (
+                        <Search className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="address">Logradouro (Rua/Avenida)</Label>
+                  <Input
+                    id="address"
+                    {...register('address')}
+                    placeholder="Nome da rua ou avenida"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="address_number">Número</Label>
+                  <Input
+                    id="address_number"
+                    {...register('address_number')}
+                    placeholder="Número"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="address_complement">Complemento</Label>
+                  <Input
+                    id="address_complement"
+                    {...register('address_complement')}
+                    placeholder="Apto, Sala, Bloco..."
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="neighborhood">Bairro</Label>
+                  <Input
+                    id="neighborhood"
+                    {...register('neighborhood')}
+                    placeholder="Bairro"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="col-span-2 space-y-2">
+                      <Label htmlFor="city">Cidade</Label>
+                      <Input
+                        id="city"
+                        {...register('city')}
+                        placeholder="Cidade"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="state">UF</Label>
+                      <Input
+                        id="state"
+                        {...register('state')}
+                        placeholder="UF"
+                        maxLength={2}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -400,11 +502,9 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
                   {...register('main_condition')}
                   placeholder="Ex: Dor lombar, Lesão no joelho"
                   aria-required="true"
-                  aria-invalid={!!errors.main_condition}
-                  aria-describedby={errors.main_condition ? "main-condition-error" : undefined}
                 />
                 {errors.main_condition && (
-                  <p id="main-condition-error" className="text-sm text-destructive">{errors.main_condition.message}</p>
+                  <p className="text-sm text-destructive">{errors.main_condition.message}</p>
                 )}
               </div>
 
@@ -553,8 +653,6 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
                 </div>
               </div>
             </div>
-
-            {/* Action Buttons are moved to footer */}
           </form>
         </div>
 

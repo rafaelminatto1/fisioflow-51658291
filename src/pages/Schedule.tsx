@@ -2,11 +2,10 @@
  * Schedule Page - Migrated to Neon/Cloudflare
  */
 
-import { useState, useMemo, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { CalendarViewType } from '@/components/schedule/CalendarView';
 import { KeyboardShortcuts } from '@/components/schedule/KeyboardShortcuts';
 import { BulkActionsBar } from '@/components/schedule/BulkActionsBar';
-import { useRescheduleAppointment } from '@/hooks/useAppointments';
 import { usePrefetchAdjacentPeriods } from '@/hooks/usePrefetchAdjacentPeriods';
 import { useFilteredAppointments } from '@/hooks/useFilteredAppointments';
 import { ViewType } from '@/utils/periodCalculations';
@@ -14,23 +13,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useBulkActions } from '@/hooks/useBulkActions';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { AlertTriangle } from 'lucide-react';
-import type { Appointment } from '@/types/appointment';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState } from '@/components/ui';
 import { CalendarSkeletonEnhanced } from '@/components/schedule/skeletons/CalendarSkeletonEnhanced';
-import { useSearchParams } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
-// ============================================================================
-// NOVOS COMPONENTES DE QUICK WINS
-// ============================================================================
-// ScheduleToolbar removed - actions merged into CalendarView header
-import { formatDateToLocalISO, formatDateToBrazilian } from '@/utils/dateUtils';
-import { APPOINTMENT_CONFLICT_MESSAGE, APPOINTMENT_CONFLICT_TITLE, isAppointmentConflictError } from '@/utils/appointmentErrors';
-import { AppointmentService } from '@/services/appointmentService';
-import { getUserOrganizationId } from '@/utils/userHelpers';
+import { formatDateToBrazilian } from '@/utils/dateUtils';
 import {
-
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -40,10 +29,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { format, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { RouteKeys } from '@/lib/routing/routePrefetch';
+import { useScheduleState } from '@/hooks/useScheduleState';
+import { useScheduleHandlers } from '@/hooks/useScheduleHandlers';
 
 // Kick off the CalendarView chunk download immediately at module evaluation
 // so it runs in parallel with Schedule's own execution (eliminates waterfall).
@@ -65,16 +52,6 @@ const WaitlistQuickAdd = lazy(() =>
   import('@/components/schedule/WaitlistQuickAdd').then(mod => ({ default: mod.WaitlistQuickAdd }))
 );
 
-// =====================================================================
-// CONSTANTS
-// =====================================================================
-
-const BUSINESS_HOURS = {
-  start: 7,
-  end: 21,
-  defaultRound: 30,
-} as const;
-
 const KEYBOARD_SHORTCUTS = {
   NEW_APPOINTMENT: 'n',
   SEARCH: 'f',
@@ -86,113 +63,46 @@ const KEYBOARD_SHORTCUTS = {
   HELP_ALT: '?',
 } as const;
 
-// =====================================================================
-// UTILITY FUNCTIONS
-// =====================================================================
-
-const roundToNextSlot = (date: Date): string => {
-  const minutes = date.getMinutes();
-  const roundedMinutes = minutes < BUSINESS_HOURS.defaultRound ? BUSINESS_HOURS.defaultRound : 0;
-  let hour = minutes < BUSINESS_HOURS.defaultRound ? date.getHours() : date.getHours() + 1;
-
-  if (hour >= BUSINESS_HOURS.end) {
-    hour = BUSINESS_HOURS.start;
-  } else if (hour < BUSINESS_HOURS.start) {
-    hour = BUSINESS_HOURS.start;
-  }
-
-  return `${String(hour).padStart(2, '0')}:${String(roundedMinutes).padStart(2, '0')}`;
-};
-
-// =====================================================================
-// MAIN COMPONENT
-// =====================================================================
-
 const Schedule = () => {
-  // ===================================================================
-  // STATE (deep linking: view + date from URL)
-  // ===================================================================
-
-  const [searchParams, setSearchParams] = useSearchParams();
-  const isMobile = useIsMobile();
-
-  const viewFromUrl = searchParams.get('view');
-  const dateFromUrl = searchParams.get('date');
-  const validView = viewFromUrl === 'day' || viewFromUrl === 'week' || viewFromUrl === 'month' ? viewFromUrl : null;
-  const parsedDate = dateFromUrl ? (() => { const d = parseISO(dateFromUrl); return isNaN(d.getTime()) ? null : d; })() : null;
-
-  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
-  const [quickEditAppointment, setQuickEditAppointment] = useState<Appointment | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalDefaultDate, setModalDefaultDate] = useState<Date | undefined>();
-  const [modalDefaultTime, setModalDefaultTime] = useState<string | undefined>();
-  const [currentDate, setCurrentDate] = useState<Date>(() => parsedDate || new Date());
-
-  const [viewType, setViewType] = useState<CalendarViewType | 'list'>(() => {
-    if (validView) return validView;
-    if (typeof window !== 'undefined') {
-      return window.innerWidth < 768 ? 'day' : 'week';
-    }
-    return isMobile ? 'day' : 'week';
-  });
-
-  /** Message announced to screen readers after successful reschedule (aria-live) */
-  const [rescheduleSuccessMessage, setRescheduleSuccessMessage] = useState<string | null>(null);
-
-  // Filters state
-  const [filters, setFilters] = useState<{
-    status: string[];
-    types: string[];
-    therapists: string[];
-  }>({
-    status: [],
-    types: [],
-    therapists: []
-  });
-
-  // Patient search filter
-  const [patientFilter, setPatientFilter] = useState<string | null>(null);
-
-  const [waitlistQuickAdd, setWaitlistQuickAdd] = useState<{ date: Date; time: string } | null>(null);
-  const [scheduleFromWaitlist, setScheduleFromWaitlist] = useState<{ patientId: string; patientName: string } | null>(null);
-  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
-  const [showCancelAllTodayDialog, setShowCancelAllTodayDialog] = useState(false);
-  const [isCancellingAllToday, setIsCancellingAllToday] = useState(false);
-
-  // ===================================================================
-  // HOOKS
-  // ===================================================================
-
   const { user, organizationId: authOrganizationId } = useAuth();
   const organizationId = authOrganizationId || '';
 
-  // Log organization ID for debugging
-  useEffect(() => {
-    logger.info('Schedule page - Organization ID', {
-      hasUser: !!user,
-      organizationId,
-      hasOrganizationId: !!organizationId
-    }, 'Schedule');
-  }, [user, organizationId]);
+  // --- State & URL Sync ---
+  const {
+    currentDate,
+    setCurrentDate,
+    viewType,
+    setViewType,
+    filters,
+    setFilters,
+    patientFilter,
+    setPatientFilter,
+    clearFilters
+  } = useScheduleState();
 
-  // Use period-based data loading for better performance
-  // Only load appointments for the visible period (day/week/month)
+  // --- Bulk Actions ---
+  const {
+    selectedIds,
+    isSelectionMode,
+    toggleSelectionMode,
+    toggleSelection,
+    clearSelection,
+    deleteSelected,
+    updateStatusSelected
+  } = useBulkActions();
+
+  // --- Data Fetching ---
   const periodQuery = {
     viewType: (viewType === 'list' ? 'week' : viewType) as ViewType,
     date: currentDate,
     organizationId,
   };
 
-  // Use filtered appointments hook with optimized caching
-  // Applies filters efficiently with separate cache for filtered results
   const {
     data: appointments = [],
     isLoading: loading,
     error,
     refetch,
-    isFiltered,
-    filterCount,
-    totalCount,
   } = useFilteredAppointments(
     periodQuery,
     {
@@ -204,31 +114,17 @@ const Schedule = () => {
   );
 
   // Prefetch adjacent periods for instant navigation
-  // Prefetches next and previous periods after 500ms delay
-  // Network-aware: skips prefetch on slow connections
   usePrefetchAdjacentPeriods(periodQuery, {
     direction: 'both',
     delay: 500,
     networkAware: true,
   });
 
-  const { mutateAsync: rescheduleAppointment } = useRescheduleAppointment();
-
-  const {
-    selectedIds,
-    isSelectionMode,
-    toggleSelectionMode,
-    toggleSelection,
-    clearSelection,
-    deleteSelected,
-    updateStatusSelected
-  } = useBulkActions();
-
+  // --- Connection Status ---
   const {
     isOnline,
     isReconnecting,
     isChecking,
-    checkConnection,
   } = useConnectionStatus({
     onReconnect: () => {
       refetch();
@@ -243,248 +139,32 @@ const Schedule = () => {
     },
   });
 
-  const hasConnectionBanner = !isOnline || isChecking || isReconnecting;
+  // --- Handlers & Modals ---
+  const { modals, actions } = useScheduleHandlers(currentDate, refetch, isSelectionMode);
 
-  // ===================================================================
-  // COMPUTED VALUES
-  // ===================================================================
-
-  const _formattedMonth = useMemo(() => {
-    const month = format(currentDate, "MMMM 'de' yyyy", { locale: ptBR });
-    return month.charAt(0).toUpperCase() + month.slice(1);
-  }, [currentDate]);
-
-  // filteredAppointments is now handled by useFilteredAppointments hook
-  // No need for client-side filtering with useMemo
-
-  // ===================================================================
-  // HANDLERS
-  // ===================================================================
-
-  const handleRefresh = useCallback(async () => {
-    await checkConnection();
-    await refetch({ cancelRefetch: false });
-  }, [checkConnection, refetch]);
-
-  const handleCreateAppointment = useCallback(() => {
-    setSelectedAppointment(null);
-    const now = new Date();
-    setModalDefaultDate(now);
-    setModalDefaultTime(roundToNextSlot(now));
-    setIsModalOpen(true);
-  }, []);
-
-  const handleTimeSlotClick = useCallback((date: Date, time: string) => {
-    // If in selection mode, maybe we want to ignore slot clicks or allow creating?
-    // For now, let's keep it as is, or disable if selection mode?
-    if (isSelectionMode) return;
-
-    setSelectedAppointment(null);
-    setModalDefaultDate(date);
-    setModalDefaultTime(time);
-    setIsModalOpen(true);
-  }, [isSelectionMode]);
-
-  const handleViewTypeChange = useCallback((type: CalendarViewType) => {
-    setViewType(type);
-  }, []);
-
-  const handleModalClose = useCallback(() => {
-    setIsModalOpen(false);
-    setSelectedAppointment(null);
-    setModalDefaultDate(undefined);
-    setModalDefaultTime(undefined);
-  }, []);
-
-  const handleAppointmentReschedule = useCallback(async (appointment: Appointment, newDate: Date, newTime: string, ignoreCapacity?: boolean) => {
-    try {
-      const formattedDate = formatDateToLocalISO(newDate);
-      await rescheduleAppointment({
-        appointmentId: appointment.id,
-        appointment_date: formattedDate,
-        appointment_time: newTime,
-        duration: appointment.duration,
-        ignoreCapacity
-      });
-      toast({
-        title: '✅ Reagendado com sucesso',
-        description: `Atendimento de ${appointment.patientName} movido para ${formatDateToBrazilian(newDate)} às ${newTime}.`,
-      });
-      setRescheduleSuccessMessage('Reagendado com sucesso');
-    } catch (error) {
-      if (isAppointmentConflictError(error)) {
-        toast({
-          title: APPOINTMENT_CONFLICT_TITLE,
-          description: APPOINTMENT_CONFLICT_MESSAGE,
-          variant: 'destructive'
-        });
-      } else {
-        toast({
-          title: '❌ Erro ao reagendar',
-          description: 'Não foi possível reagendar o atendimento.',
-          variant: 'destructive'
-        });
-      }
-      throw new Error('Failed to reschedule appointment');
-    }
-  }, [rescheduleAppointment]);
-
-  const handleEditAppointment = useCallback((appointment: Appointment) => {
-    setSelectedAppointment(appointment);
-    setIsModalOpen(true);
-  }, []);
-
-  const handleDeleteAppointment = useCallback(async (appointment: Appointment) => {
-    try {
-      const organizationId = await getUserOrganizationId();
-      if (!organizationId) {
-        toast({ title: 'Erro', description: 'Organização não encontrada.', variant: 'destructive' });
-        return;
-      }
-      await AppointmentService.deleteAppointment(appointment.id, organizationId);
-
-      toast({
-        title: '✅ Agendamento excluído',
-        description: `Agendamento de ${appointment.patientName} foi excluído.`
-      });
-      refetch();
-    } catch (err) {
-      logger.error('Erro ao excluir agendamento', err, 'Schedule');
-      toast({
-        title: '❌ Erro ao excluir',
-        description: 'Não foi possível excluir o agendamento.',
-        variant: 'destructive'
-      });
-    }
-  }, [refetch]);
-
-  const handleAppointmentClick = useCallback((appointment: Appointment) => {
-    setQuickEditAppointment(appointment);
-  }, []);
-
-  const handleScheduleFromWaitlist = useCallback((patientId: string, patientName: string) => {
-    setScheduleFromWaitlist({ patientId, patientName });
-    setSelectedAppointment(null);
-    setModalDefaultDate(currentDate);
-    setIsModalOpen(true);
-  }, [currentDate]);
-
-  const handleCancelAllToday = useCallback(async () => {
-    const organizationId = await getUserOrganizationId();
-    if (!organizationId) {
-      toast({
-        title: 'Erro',
-        description: 'Organização não encontrada. Faça login novamente.',
-        variant: 'destructive',
-      });
-      setShowCancelAllTodayDialog(false);
-      return;
-    }
-    const dateStr = formatDateToLocalISO(currentDate);
-    setIsCancellingAllToday(true);
-    try {
-      const { cancelled, errors } = await AppointmentService.cancelAllAppointmentsForDate(organizationId, dateStr);
-      setShowCancelAllTodayDialog(false);
-      await refetch();
-      if (errors > 0) {
-        toast({
-          title: 'Concluído com ressalvas',
-          description: `${cancelled} agendamento(s) cancelado(s). ${errors} falha(s).`,
-          variant: 'destructive',
-        });
-      } else {
-        toast({
-          title: 'Agendamentos cancelados',
-          description: cancelled === 0
-            ? 'Nenhum agendamento encontrado para esta data.'
-            : `${cancelled} agendamento(s) de ${formatDateToBrazilian(currentDate)} cancelado(s).`,
-        });
-      }
-    } catch (err) {
-      logger.error('Erro ao cancelar agendamentos do dia', err, 'Schedule');
-      toast({
-        title: 'Erro ao cancelar',
-        description: 'Não foi possível cancelar os agendamentos.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsCancellingAllToday(false);
-    }
-  }, [currentDate, refetch]);
-
-  // ===================================================================
-  // EFFECTS
-  // ===================================================================
-
+  // Deep link checks for ?edit=
   useEffect(() => {
-    logger.info('Página Schedule carregada', {
+    actions.checkEditUrlParam(appointments);
+  }, [appointments, actions]);
+
+  // Log organization ID for debugging
+  useEffect(() => {
+    logger.info('Schedule page loaded', {
+      hasUser: !!user,
+      organizationId,
       appointmentsCount: appointments.length,
-      loading,
       viewType
     }, 'Schedule');
-  }, [appointments.length, loading, viewType]);
-
-
+  }, [user, organizationId, appointments.length, viewType]);
 
   // Clear reschedule success announcement after 3s (screen reader already heard it)
   useEffect(() => {
-    if (!rescheduleSuccessMessage) return;
-    const t = setTimeout(() => setRescheduleSuccessMessage(null), 3000);
+    if (!modals.rescheduleSuccessMessage) return;
+    const t = setTimeout(() => modals.setRescheduleSuccessMessage(null), 3000);
     return () => clearTimeout(t);
-  }, [rescheduleSuccessMessage]);
+  }, [modals]);
 
-  // Force day view on mobile
-  // No longer forcing 'day' view on mobile to allow responsive weekly view
-  useEffect(() => {
-    if (isMobile && viewType === 'month') {
-      setViewType('day');
-    }
-  }, [isMobile, viewType]);
-
-  // Deep linking: sync view + date to URL for sharing and back/forward
-  useEffect(() => {
-    const params: Record<string, string> = {};
-    const defaultView = isMobile ? 'day' : 'week';
-    const todayStr = format(new Date(), 'yyyy-MM-dd');
-    const currentDateStr = format(currentDate, 'yyyy-MM-dd');
-
-    // Only add view to URL if it's not the default
-    if (viewType !== defaultView) {
-      params.view = viewType;
-    }
-
-    // Only add date to URL if it's not today
-    if (currentDateStr !== todayStr) {
-      params.date = currentDateStr;
-    }
-
-    // Check if we need to update search params
-    const currentViewParam = searchParams.get('view');
-    const currentDateParam = searchParams.get('date');
-
-    if (currentViewParam !== (params.view || null) || currentDateParam !== (params.date || null)) {
-      setSearchParams(params, { replace: true });
-    }
-  }, [viewType, currentDate, setSearchParams, isMobile, searchParams]);
-
-  // Process ?edit= and ?patientId= from URL
-  useEffect(() => {
-    const editAppointmentId = searchParams.get('edit');
-
-    // Open edit modal if ?edit= is present
-    if (editAppointmentId) {
-      const appointmentToEdit = appointments.find(a => a.id === editAppointmentId);
-      if (appointmentToEdit) {
-        setQuickEditAppointment(appointmentToEdit);
-        // Clear the parameter from URL
-        setSearchParams(
-          { view: viewType, date: format(currentDate, 'yyyy-MM-dd') },
-          { replace: true }
-        );
-      }
-    }
-  }, [searchParams, appointments, viewType, currentDate, setSearchParams]);
-
+  // --- Keyboard Shortcuts ---
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
@@ -495,7 +175,7 @@ const Schedule = () => {
         return;
       }
 
-      const isModalActive = isModalOpen || showKeyboardShortcuts || quickEditAppointment;
+      const isModalActive = modals.isModalOpen || modals.showKeyboardShortcuts || modals.quickEditAppointment;
       if (isModalActive && e.key !== 'Escape') {
         return;
       }
@@ -509,7 +189,7 @@ const Schedule = () => {
           break;
         case KEYBOARD_SHORTCUTS.NEW_APPOINTMENT:
           e.preventDefault();
-          handleCreateAppointment();
+          actions.handleCreateAppointment();
           break;
         case KEYBOARD_SHORTCUTS.SEARCH: {
           e.preventDefault();
@@ -540,11 +220,11 @@ const Schedule = () => {
         case KEYBOARD_SHORTCUTS.HELP:
         case KEYBOARD_SHORTCUTS.HELP_ALT:
           e.preventDefault();
-          setShowKeyboardShortcuts(true);
+          modals.setShowKeyboardShortcuts(true);
           break;
         case 'escape':
-          if (showKeyboardShortcuts) {
-            setShowKeyboardShortcuts(false);
+          if (modals.showKeyboardShortcuts) {
+            modals.setShowKeyboardShortcuts(false);
           }
           break;
       }
@@ -554,14 +234,12 @@ const Schedule = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [
     currentDate,
-    isModalOpen,
-    showKeyboardShortcuts,
-    quickEditAppointment,
-    handleCreateAppointment,
-    toggleSelectionMode
+    modals,
+    actions,
+    toggleSelectionMode,
+    setViewType,
+    setCurrentDate
   ]);
-
-  // ScheduleToolbar custom events no longer needed - navigation is handled directly by CalendarView
 
   if (error) {
     logger.error('Erro na página Schedule', { error }, 'Schedule');
@@ -599,22 +277,22 @@ const Schedule = () => {
                   currentDate={currentDate}
                   onDateChange={setCurrentDate}
                   viewType={viewType as CalendarViewType}
-                  onViewTypeChange={handleViewTypeChange}
-                  onAppointmentClick={handleAppointmentClick}
-                  onTimeSlotClick={handleTimeSlotClick}
-                  onAppointmentReschedule={handleAppointmentReschedule}
-                  onEditAppointment={handleEditAppointment}
-                  onDeleteAppointment={handleDeleteAppointment}
+                  onViewTypeChange={setViewType}
+                  onAppointmentClick={actions.handleAppointmentClick}
+                  onTimeSlotClick={actions.handleTimeSlotClick}
+                  onAppointmentReschedule={actions.handleAppointmentReschedule}
+                  onEditAppointment={actions.handleEditAppointment}
+                  onDeleteAppointment={actions.handleDeleteAppointment}
                   selectionMode={isSelectionMode}
                   selectedIds={selectedIds}
                   onToggleSelection={toggleSelection}
-                  rescheduleSuccessMessage={rescheduleSuccessMessage}
-                  onCreateAppointment={handleCreateAppointment}
+                  rescheduleSuccessMessage={modals.rescheduleSuccessMessage}
+                  onCreateAppointment={actions.handleCreateAppointment}
                   onToggleSelectionMode={toggleSelectionMode}
-                  onCancelAllToday={() => setShowCancelAllTodayDialog(true)}
+                  onCancelAllToday={() => modals.setShowCancelAllTodayDialog(true)}
                   filters={filters}
                   onFiltersChange={setFilters}
-                  onClearFilters={() => setFilters({ status: [], types: [], therapists: [] })}
+                  onClearFilters={clearFilters}
                   totalAppointmentsCount={appointments.length}
                   patientFilter={patientFilter}
                   onPatientFilterChange={setPatientFilter}
@@ -632,47 +310,49 @@ const Schedule = () => {
         />
 
         {/* Modals Layer - Lazy loaded for better performance */}
-        <Suspense fallback={null}>
-          <AppointmentQuickEditModal
-            appointment={quickEditAppointment}
-            open={!!quickEditAppointment}
-            onOpenChange={(open) => !open && setQuickEditAppointment(null)}
-          />
-        </Suspense>
+        {modals.quickEditAppointment && (
+          <Suspense fallback={null}>
+            <AppointmentQuickEditModal
+              appointment={modals.quickEditAppointment}
+              open={!!modals.quickEditAppointment}
+              onOpenChange={(open) => !open && modals.setQuickEditAppointment(null)}
+            />
+          </Suspense>
+        )}
 
-        <Suspense fallback={null}>
-          <AppointmentModal
-            key={selectedAppointment ? `edit-${selectedAppointment.id}` : `create-${modalDefaultDate?.getTime() ?? 0}-${modalDefaultTime ?? ''}`}
-            isOpen={isModalOpen}
-            onClose={() => {
-              handleModalClose();
-              setScheduleFromWaitlist(null);
-            }}
-            appointment={selectedAppointment}
-            defaultDate={modalDefaultDate}
-            defaultTime={modalDefaultTime}
-            defaultPatientId={scheduleFromWaitlist?.patientId}
-            mode={selectedAppointment ? 'edit' : 'create'}
-          />
-        </Suspense>
+        {modals.isModalOpen && (
+          <Suspense fallback={null}>
+            <AppointmentModal
+              isOpen={modals.isModalOpen}
+              onClose={() => {
+                actions.handleModalClose();
+              }}
+              appointment={modals.selectedAppointment}
+              defaultDate={modals.modalDefaultDate}
+              defaultTime={modals.modalDefaultTime}
+              defaultPatientId={modals.scheduleFromWaitlist?.patientId}
+              mode={modals.selectedAppointment ? 'edit' : 'create'}
+            />
+          </Suspense>
+        )}
 
-        {waitlistQuickAdd && (
+        {modals.waitlistQuickAdd && (
           <Suspense fallback={null}>
             <WaitlistQuickAdd
-              open={!!waitlistQuickAdd}
-              onOpenChange={(open) => !open && setWaitlistQuickAdd(null)}
-              date={waitlistQuickAdd.date}
-              time={waitlistQuickAdd.time}
+              open={!!modals.waitlistQuickAdd}
+              onOpenChange={(open) => !open && modals.setWaitlistQuickAdd(null)}
+              date={modals.waitlistQuickAdd.date}
+              time={modals.waitlistQuickAdd.time}
             />
           </Suspense>
         )}
 
         <KeyboardShortcuts
-          open={showKeyboardShortcuts}
-          onOpenChange={setShowKeyboardShortcuts}
+          open={modals.showKeyboardShortcuts}
+          onOpenChange={modals.setShowKeyboardShortcuts}
         />
 
-        <AlertDialog open={showCancelAllTodayDialog} onOpenChange={setShowCancelAllTodayDialog}>
+        <AlertDialog open={modals.showCancelAllTodayDialog} onOpenChange={modals.setShowCancelAllTodayDialog}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Cancelar todos os agendamentos</AlertDialogTitle>
@@ -682,16 +362,16 @@ const Schedule = () => {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel disabled={isCancellingAllToday}>Voltar</AlertDialogCancel>
+              <AlertDialogCancel disabled={modals.isCancellingAllToday}>Voltar</AlertDialogCancel>
               <AlertDialogAction
                 onClick={(e) => {
                   e.preventDefault();
-                  handleCancelAllToday();
+                  actions.handleCancelAllToday();
                 }}
-                disabled={isCancellingAllToday}
+                disabled={modals.isCancellingAllToday}
                 className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
               >
-                {isCancellingAllToday ? 'Cancelando…' : 'Cancelar todos'}
+                {modals.isCancellingAllToday ? 'Cancelando…' : 'Cancelar todos'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

@@ -1,20 +1,6 @@
-/**
- * useDataConnect Hook
- *
- * Hook customizado para buscar dados de exercícios do paciente via Firebase DataConnect
- * com fallback para Firestore quando DataConnect não estiver disponível.
- *
- * @module hooks/useDataConnect
- */
-
 import { useState, useEffect } from 'react';
-import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { patientApi } from '@/lib/api';
+import { log } from '@/lib/logger';
 
 /**
  * Interface para exercício prescrito ao paciente
@@ -23,6 +9,11 @@ export interface PatientExercise {
   id: string;
   patientId: string;
   exerciseId: string;
+  plan?: {
+    id: string;
+    name?: string;
+    description?: string;
+  };
   exercise?: {
     id: string;
     name: string;
@@ -62,9 +53,6 @@ export interface UsePatientExercisesOptions {
   limit?: number;
 }
 
-/**
- * Helper to safely parse Firestore dates (can be Timestamp or ISO string)
- */
 function parseDate(date: any): Date | undefined {
   if (!date) return undefined;
   if (typeof date.toDate === 'function') return date.toDate();
@@ -80,19 +68,6 @@ function parseDate(date: any): Date | undefined {
 }
 
 /**
- * Hook para buscar exercícios prescritos ao paciente
- *
- * @param patientId - ID do paciente (user.uid)
- * @param options - Opções de configuração
- * @returns Objeto com dados, loading, error e função de refetch
- *
- * @example
- * ```tsx
- * const { data: exercises, isLoading } = usePatientExercisesPostgres(user?.id, {
- *   includeCompleted: true,
- *   includeExpired: false,
- * });
- * ```
  */
 export function usePatientExercisesPostgres(
   patientId: string | undefined,
@@ -107,6 +82,7 @@ export function usePatientExercisesPostgres(
   const [data, setData] = useState<PatientExercise[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     if (!patientId) {
@@ -117,89 +93,62 @@ export function usePatientExercisesPostgres(
     setIsLoading(true);
     setError(null);
 
-    /**
-     * NOTA: Esta implementação usa Firestore como fonte de dados.
-     * Para migrar para Firebase DataConnect, substitua a lógica abaixo
-     * pelas queries do DataConnect quando disponível.
-     *
-     * Exemplo de migração para DataConnect:
-     *
-     * ```typescript
-     * import { dataConnect } from '@/lib/dataConnect';
-     * const query = dataConnect.query('GetPatientExercises', {
-     *   patientId,
-     *   includeCompleted,
-     *   includeExpired,
-     *   limit,
-     * });
-     * ```
-     */
+    let cancelled = false;
 
-    // Buscar exercícios via Firestore (fallback atual)
-    const exercisesRef = collection(db, 'patient_exercises');
-    const exercisesQuery = query(
-      exercisesRef,
-      where('patientId', '==', patientId)
-    );
+    const load = async () => {
+      try {
+        const response = await patientApi.getExercises();
+        let exercises = response.map((item: any) => ({
+          id: item.id,
+          patientId: item.patientId || item.patient_id || patientId,
+          exerciseId: item.exerciseId || item.exercise_id || '',
+          exercise: item.exercise,
+          sets: item.sets || 0,
+          reps: item.reps || 0,
+          holdTime: item.holdTime,
+          restTime: item.restTime,
+          notes: item.notes,
+          completed: item.completed || false,
+          completedAt: parseDate(item.completedAt || item.completed_at),
+          prescribedAt: parseDate(item.prescribedAt || item.createdAt) || new Date(),
+          validUntil: parseDate(item.validUntil || item.endDate),
+          frequency: item.frequency,
+        })) as PatientExercise[];
 
-    // Filtros adicionais podem ser adicionados aqui
-    if (!includeExpired) {
-      // Filtrar exercícios não expirados
-      // exercisesQuery = query(exercisesQuery, where('validUntil', '>=', new Date()));
-    }
+        if (!includeCompleted) {
+          exercises = exercises.filter((exercise) => !exercise.completed);
+        }
 
-    const unsubscribe = onSnapshot(
-      exercisesQuery,
-      (snapshot) => {
-        const exercises: PatientExercise[] = [];
+        if (!includeExpired) {
+          const now = Date.now();
+          exercises = exercises.filter((exercise) => {
+            if (!exercise.validUntil) return true;
+            return exercise.validUntil.getTime() >= now;
+          });
+        }
 
-        snapshot.forEach((doc) => {
-          const exerciseData = doc.data();
-          const exercise: PatientExercise = {
-            id: doc.id,
-            patientId: exerciseData.patientId || '',
-            exerciseId: exerciseData.exerciseId || '',
-            exercise: exerciseData.exercise,
-            sets: exerciseData.sets || 0,
-            reps: exerciseData.reps || 0,
-            holdTime: exerciseData.holdTime,
-            restTime: exerciseData.restTime,
-            notes: exerciseData.notes,
-            completed: exerciseData.completed || false,
-            completedAt: parseDate(exerciseData.completedAt),
-            prescribedAt: parseDate(exerciseData.prescribedAt) || new Date(),
-            validUntil: parseDate(exerciseData.validUntil),
-            frequency: exerciseData.frequency,
-          };
-
-          // Filtrar exercícios completos se necessário
-          if (!includeCompleted && exercise.completed) {
-            return;
-          }
-
-          exercises.push(exercise);
-        });
-
-        // Ordenar por data de prescrição (mais recentes primeiro)
         exercises.sort((a, b) => b.prescribedAt.getTime() - a.prescribedAt.getTime());
-
-        // Aplicar limite se especificado
         const limitedExercises = limit ? exercises.slice(0, limit) : exercises;
 
-        setData(limitedExercises);
-        setIsLoading(false);
-      },
-      (err) => {
-        console.error('Error fetching patient exercises:', err);
-        setError(err as Error);
-        setIsLoading(false);
+        if (!cancelled) {
+          setData(limitedExercises);
+          setIsLoading(false);
+        }
+      } catch (err) {
+        log.error('Error fetching patient exercises:', err);
+        if (!cancelled) {
+          setError(err as Error);
+          setIsLoading(false);
+        }
       }
-    );
+    };
+
+    load();
 
     return () => {
-      unsubscribe();
+      cancelled = true;
     };
-  }, [patientId, includeCompleted, includeExpired, limit]);
+  }, [patientId, includeCompleted, includeExpired, limit, reloadKey]);
 
   /**
    * Função para forçar uma nova busca dos dados
@@ -207,13 +156,7 @@ export function usePatientExercisesPostgres(
    */
   const refetch = () => {
     setIsLoading(true);
-    // A lógica de refetch será automaticamente acionada pelo onSnapshot
-    // Apenas resetamos o estado de loading
-    setTimeout(() => {
-      if (patientId) {
-        setIsLoading(false);
-      }
-    }, 100);
+    setReloadKey((current) => current + 1);
   };
 
   return {
@@ -242,35 +185,36 @@ export function usePatientExerciseStats(patientId: string | undefined) {
       return;
     }
 
-    // Calcular estatísticas baseadas nos exercícios
-    // Esta é uma implementação simplificada
-    // Em produção, você pode ter uma coleção separada de stats
-    const exercisesRef = collection(db, 'patient_exercises');
-    const q = query(exercisesRef, where('patientId', '==', patientId));
+    let cancelled = false;
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      let completed = 0;
-      let pending = 0;
+    const load = async () => {
+      try {
+        const exercises = await patientApi.getExercises();
+        const completed = exercises.filter((exercise: any) => exercise.completed).length;
+        const total = exercises.length;
 
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        if (data.completed) {
-          completed++;
-        } else {
-          pending++;
+        if (!cancelled) {
+          setStats({
+            total,
+            completed,
+            pending: total - completed,
+            streak: calculateStreak(completed),
+          });
         }
-      });
+      } catch (error) {
+        log.error('Error loading exercise stats:', error);
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
 
-      setStats({
-        total: snapshot.size,
-        completed,
-        pending,
-        streak: calculateStreak(completed), // Simplificado
-      });
-      setIsLoading(false);
-    });
+    load();
 
-    return () => unsubscribe();
+    return () => {
+      cancelled = true;
+    };
   }, [patientId]);
 
   return { stats, isLoading };

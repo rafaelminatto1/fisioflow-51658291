@@ -13,6 +13,8 @@ import { toast } from '@/hooks/use-toast';
 import { Loader2, UserX } from 'lucide-react';
 import { PatientService } from '@/lib/services/PatientService';
 import type { Patient } from '@/types';
+import { DatePicker } from '@/components/ui/date-picker';
+import { parseISO, format as formatDateFns } from 'date-fns';
 
 const patientSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -188,7 +190,18 @@ export const EditPatientModal: React.FC<{
 
                   <div className="space-y-1.5">
                     <Label htmlFor="birth_date" className="text-sm">Data de Nascimento</Label>
-                    <Input id="birth_date" type="date" {...register('birth_date')} className="h-9" />
+                    <Controller
+                      name="birth_date"
+                      control={control}
+                      render={({ field }) => (
+                        <DatePicker
+                          date={field.value ? parseISO(field.value) : undefined}
+                          onChange={(date) => field.onChange(date ? formatDateFns(date, 'yyyy-MM-dd') : '')}
+                          fromYear={1900}
+                          toYear={new Date().getFullYear()}
+                        />
+                      )}
+                    />
                   </div>
 
                   <div className="space-y-1.5">

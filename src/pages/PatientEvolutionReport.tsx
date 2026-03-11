@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PatientEvolutionDashboard } from '@/components/patients/PatientEvolutionDashboard';
@@ -5,21 +6,43 @@ import { ProgressAnalysisCard } from '@/components/patients/ProgressAnalysisCard
 import { usePatientEvolutionReport } from '@/hooks/usePatientEvolutionReport';
 import { usePatients } from '@/hooks/usePatients';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileDown, Printer, Activity } from 'lucide-react';
+import { ArrowLeft, FileDown, Printer, Activity, Sparkles } from 'lucide-react';
 import { LoadingSkeleton, EmptyState } from '@/components/ui';
 import { generateEvolutionPDF } from '@/lib/export/evolutionPdfExport';
 import { toast } from 'sonner';
 import { PatientHelpers } from '@/types';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { AIReportGeneratorModal } from '@/components/patients/AIReportGeneratorModal';
+import { ClinicalReportInput } from '@/services/ai/geminiAiService';
 
 const PatientEvolutionReport = () => {
   const { patientId } = useParams<{ patientId: string }>();
   const navigate = useNavigate();
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
   const { data: patients } = usePatients();
   const patient = patients?.find((p) => p.id === patientId);
 
   const { data: evolutionData, isLoading } = usePatientEvolutionReport(patientId || "");
+
+  const reportInput = useMemo<ClinicalReportInput | null>(() => {
+    if (!patient || !evolutionData) return null;
+    return {
+      patientInfo: {
+        name: patient.name || "Paciente Desconhecido",
+        condition: '', // can be left empty or derive from patient data if available
+      },
+      sessions: evolutionData.sessions.map(s => ({
+        date: s.date ? new Date(s.date).toLocaleDateString('pt-BR') : 'Data não informada',
+        subjective: s.subjective,
+        objective: s.objective,
+        assessment: s.assessment,
+        plan: s.plan,
+        painLevel: s.painLevel,
+      })),
+      measurementEvolution: evolutionData.measurementEvolution,
+    };
+  }, [patient, evolutionData]);
 
   const handlePrint = () => {
     window.print();
@@ -38,7 +61,7 @@ const PatientEvolutionReport = () => {
           name: patientName,
           phone: patient.phone || undefined,
           email: patient.email || undefined,
-          birthDate: patient.birthDate,
+          birthDate: (patient as any).birth_date || undefined,
         },
         evolutionData.sessions,
         {
@@ -211,6 +234,13 @@ const PatientEvolutionReport = () => {
           </div>
         </div>
       </div>
+
+      <AIReportGeneratorModal
+        open={isAIModalOpen}
+        onOpenChange={setIsAIModalOpen}
+        patientName={patient?.name || 'Paciente Desconhecido'}
+        reportInput={reportInput}
+      />
     </MainLayout>
   );
 };

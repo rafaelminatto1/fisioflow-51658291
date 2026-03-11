@@ -10,13 +10,16 @@ import { toast } from 'sonner';
 
 export interface ProtocolMilestone {
   week: number;
-  description: string;
+  title: string;
+  criteria: string[];
+  notes?: string;
 }
 
 export interface ProtocolRestriction {
-  week_start: number;
-  week_end?: number;
+  weekStart: number;
+  weekEnd?: number;
   description: string;
+  type: 'weight_bearing' | 'range_of_motion' | 'activity' | 'general';
 }
 
 export interface ExerciseProtocol {
@@ -26,9 +29,20 @@ export interface ExerciseProtocol {
   protocol_type: 'pos_operatorio' | 'patologia';
   evidence_level?: string;
   weeks_total?: number;
-  milestones: ProtocolMilestone[] | Record<string, unknown>;
-  restrictions: ProtocolRestriction[] | Record<string, unknown>;
-  progression_criteria: Record<string, unknown>[] | Record<string, unknown>;
+  phases?: Array<{
+    name: string;
+    weekStart: number;
+    weekEnd: number;
+    goals: string[];
+    precautions: string[];
+    exerciseIds?: string[];
+  }>;
+  milestones: ProtocolMilestone[];
+  restrictions: ProtocolRestriction[];
+  progression_criteria: Array<{
+    phase: string;
+    criteria: string[];
+  }>;
   references?: {
     title: string;
     authors: string;
@@ -54,6 +68,7 @@ const mapWorkerToAppProtocol = (p: WorkersProtocol): ExerciseProtocol => ({
   protocol_type: p.protocolType as any,
   evidence_level: p.evidenceLevel || undefined,
   weeks_total: p.weeksTotal || undefined,
+  phases: p.phases || [],
   milestones: p.milestones || [],
   restrictions: p.restrictions || [],
   progression_criteria: p.progressionCriteria || [],
@@ -73,6 +88,7 @@ const mapAppToWorkerProtocol = (
   protocolType: p.protocol_type,
   evidenceLevel: p.evidence_level,
   weeksTotal: p.weeks_total,
+  phases: p.phases,
   milestones: p.milestones,
   restrictions: p.restrictions,
   progressionCriteria: p.progression_criteria,
