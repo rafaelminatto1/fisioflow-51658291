@@ -1,6 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { evolutionApi, goalsApi, patientsApi, sessionsApi } from '@/lib/api/workers-client';
 import { soapKeys } from '@/hooks/useSoapRecords';
+import { normalizeGoalRows } from '@/lib/clinical/goalNormalization';
 
 export async function prefetchPatientGoals(
   queryClient: QueryClient,
@@ -12,7 +13,7 @@ export async function prefetchPatientGoals(
     staleTime,
     queryFn: async () => {
       const response = await goalsApi.list(patientId);
-      return response.data ?? [];
+      return normalizeGoalRows(response.data);
     },
   });
 }
