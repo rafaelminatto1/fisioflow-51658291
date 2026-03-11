@@ -21,7 +21,10 @@ import {
     Trophy,
     Flame,
     Star,
-    Award
+    Award,
+    Plus,
+    Pencil,
+    CheckCircle2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -30,6 +33,10 @@ import { parseResponseDate } from '@/utils/dateUtils';
 import { PatientHelpers } from '@/types';
 import { usePatientInsight } from '@/hooks/usePatientInsight';
 import { useGamification } from '@/hooks/useGamification';
+import { useCompleteGoal, usePatientGoals, usePatientPathologies } from '@/hooks/usePatientEvolution';
+import { MetaFormModal } from '@/components/evolution/MetaFormModal';
+import { PathologyFormModal } from '@/components/evolution/PathologyFormModal';
+import type { PatientGoal, Pathology } from '@/types/evolution';
 import { Link } from 'react-router-dom';
 
 interface PatientDashboardProps {
@@ -54,7 +61,7 @@ interface PatientDashboardProps {
         city?: string;
         sessions_available?: number;
     };
-    appointments: Array<{
+    appointments?: Array<{
         id?: string;
         date?: Date | string;
         appointment_date?: Date | string;
@@ -62,36 +69,51 @@ interface PatientDashboardProps {
         status?: string;
         notes?: string;
     }>;
-    activeGoals: Array<{
-        description: string;
+    activeGoals?: Array<{
+        id?: string;
+        goal_title?: string;
+        goal_description?: string;
+        description?: string;
         targetDate?: string | Date;
+        target_date?: string | Date;
     }>;
-    activePathologies: Array<{
-        name: string;
+    activePathologies?: Array<{
+        id?: string;
+        pathology_name?: string;
+        name?: string;
         diagnosedAt?: string | Date;
+        diagnosis_date?: string | Date;
+        status?: string;
     }>;
-    surgeries: Array<{
+    surgeries?: Array<{
         name: string;
         hospital?: string;
         surgeon?: string;
         surgeryDate?: string | Date;
         notes?: string;
     }>;
-    onAction: (action: string) => void;
+    onAction?: (action: string) => void;
     currentAppointmentId?: string;
 }
 
 export const PatientDashboard360 = ({
     patient,
-    appointments,
+    appointments = [],
     activeGoals = [],
     activePathologies = [],
     surgeries = [],
-    onAction,
+    onAction = () => {},
     currentAppointmentId
 }: PatientDashboardProps) => {
     const alerts = patient?.alerts || [];
     const patientId = patient?.id;
+    const { data: fetchedGoals = [] } = usePatientGoals(patientId || '');
+    const { data: fetchedPathologies = [] } = usePatientPathologies(patientId || '');
+    const completeGoal = useCompleteGoal();
+    const [goalModalOpen, setGoalModalOpen] = useState(false);
+    const [editingGoal, setEditingGoal] = useState<PatientGoal | null>(null);
+    const [pathologyModalOpen, setPathologyModalOpen] = useState(false);
+    const [editingPathology, setEditingPathology] = useState<Pathology | null>(null);
 
     // Gamification hook
     const {
@@ -139,6 +161,48 @@ export const PatientDashboard360 = ({
         };
     }, [appointments, currentAppointmentId, patient]);
 
+    const resolvedActiveGoals = useMemo(() => {
+        if (fetchedGoals.length > 0) {
+            return fetchedGoals
+                .filter((goal) => goal.status === 'em_andamento')
+                .map((goal) => ({
+                    id: goal.id,
+                    goal_title: goal.goal_title,
+                    goal_description: goal.goal_description,
+                    target_date: goal.target_date,
+                    editableGoal: goal,
+                }));
+        }
+
+        return activeGoals.map((goal, index) => ({
+            id: goal.id ?? `goal-${index}`,
+            goal_title: goal.goal_title ?? goal.description ?? 'Meta',
+            goal_description: goal.goal_description,
+            target_date: goal.target_date ?? goal.targetDate,
+            editableGoal: null,
+        }));
+    }, [activeGoals, fetchedGoals]);
+
+    const resolvedActivePathologies = useMemo(() => {
+        if (fetchedPathologies.length > 0) {
+            return fetchedPathologies
+                .filter((pathology) => pathology.status === 'em_tratamento')
+                .map((pathology) => ({
+                    id: pathology.id,
+                    pathology_name: pathology.pathology_name,
+                    diagnosis_date: pathology.diagnosis_date,
+                    editablePathology: pathology,
+                }));
+        }
+
+        return activePathologies.map((pathology, index) => ({
+            id: pathology.id ?? `pathology-${index}`,
+            pathology_name: pathology.pathology_name ?? pathology.name ?? 'Patologia',
+            diagnosis_date: pathology.diagnosis_date ?? pathology.diagnosedAt,
+            editablePathology: null,
+        }));
+    }, [activePathologies, fetchedPathologies]);
+
     const [insightResult, setInsightResult] = useState<string | null>(null);
     const { mutate: generateInsight, isPending: isGeneratingInsight } = usePatientInsight();
 
@@ -150,8 +214,8 @@ export const PatientDashboard360 = ({
             name: patientName,
             age: calculatedAge,
             mainCondition: patient.mainCondition,
-            goals: activeGoals.map(g => g.description),
-            pathologies: activePathologies.map(p => p.name),
+            goals: resolvedActiveGoals.map((goal) => goal.goal_title),
+            pathologies: resolvedActivePathologies.map((pathology) => pathology.pathology_name),
             recentAppointments: appointments?.slice(0, 5).map(a => ({
                 date: a.date,
                 type: a.type,
@@ -463,71 +527,167 @@ export const PatientDashboard360 = ({
 
                 {/* Treatment Goals */}
                 <Card className="h-full border-l-4 border-l-violet-500">
-                    <CardHeader className="pb-2">
+                    <CardHeader className="pb-2 flex flex-row items-center justify-between">
                         <CardTitle className="flex items-center gap-2 text-lg">
                             <Target className="w-5 h-5 text-violet-500" />
                             Objetivos do Tratamento
                         </CardTitle>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-violet-200 text-violet-700 hover:bg-violet-50"
+                            onClick={() => {
+                                setEditingGoal(null);
+                                setGoalModalOpen(true);
+                            }}
+                            disabled={!patientId}
+                        >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Nova meta
+                        </Button>
                     </CardHeader>
-                    <CardContent>
-                        {activeGoals.length > 0 ? (
+                    <CardContent className="space-y-3">
+                        {resolvedActiveGoals.length > 0 ? (
                             <div className="space-y-4">
-                                {activeGoals.map((goal, i: number) => (
-                                    <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/40">
-                                        <div>
-                                            <p className="font-medium">{goal.description}</p>
-                                            {goal.targetDate && (
+                                {resolvedActiveGoals.map((goal) => (
+                                    <div key={goal.id} className="flex items-start justify-between gap-3 p-3 rounded-lg bg-muted/40">
+                                        <div className="min-w-0">
+                                            <p className="font-medium">{goal.goal_title}</p>
+                                            {goal.goal_description && (
+                                                <p className="text-xs text-muted-foreground mt-1">{goal.goal_description}</p>
+                                            )}
+                                            {goal.target_date && (
                                                 <p className="text-xs text-muted-foreground mt-1">
-                                                    Alvo: {format(new Date(goal.targetDate), "dd/MM/yyyy")}
+                                                    Alvo: {format(new Date(goal.target_date), "dd/MM/yyyy")}
                                                 </p>
                                             )}
                                         </div>
-                                        {goal.targetDate && (
-                                            <Badge variant="outline" className="bg-background">
-                                                {Math.ceil((new Date(goal.targetDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} dias
-                                            </Badge>
-                                        )}
+                                        <div className="flex items-center gap-2">
+                                            {goal.target_date && (
+                                                <Badge variant="outline" className="bg-background whitespace-nowrap">
+                                                    {Math.ceil((new Date(goal.target_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} dias
+                                                </Badge>
+                                            )}
+                                            <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                className="h-8 w-8 text-violet-700 hover:bg-violet-50"
+                                                onClick={() => {
+                                                    if (!goal.editableGoal) return;
+                                                    setEditingGoal(goal.editableGoal);
+                                                    setGoalModalOpen(true);
+                                                }}
+                                                disabled={!goal.editableGoal}
+                                                title="Editar meta"
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                className="h-8 w-8 text-green-700 hover:bg-green-50"
+                                                onClick={() => completeGoal.mutate(goal.id)}
+                                                disabled={!goal.editableGoal || completeGoal.isPending}
+                                                title="Concluir meta"
+                                            >
+                                                <CheckCircle2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-muted-foreground text-sm flex items-center gap-2">
-                                <Target className="w-4 h-4 opacity-50" />
-                                Nenhum objetivo pendente.
-                            </p>
+                            <div className="rounded-lg border border-dashed border-violet-200 bg-violet-50/50 p-4">
+                                <p className="text-sm text-muted-foreground">
+                                    Nenhuma meta ativa no momento. Cadastre a primeira meta daqui mesmo.
+                                </p>
+                                <Button
+                                    variant="secondary"
+                                    className="mt-3 bg-violet-600 text-white hover:bg-violet-700"
+                                    onClick={() => {
+                                        setEditingGoal(null);
+                                        setGoalModalOpen(true);
+                                    }}
+                                    disabled={!patientId}
+                                >
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Criar meta
+                                </Button>
+                            </div>
                         )}
-                        <Button variant="link" className="px-0 mt-2 text-violet-600" onClick={() => onAction('goals')}>
-                            Gerenciar Objetivos
-                        </Button>
                     </CardContent>
                 </Card>
 
                 {/* Pathologies */}
                 <Card className="h-full border-l-4 border-l-rose-500">
-                    <CardHeader className="pb-2">
+                    <CardHeader className="pb-2 flex flex-row items-center justify-between">
                         <CardTitle className="flex items-center gap-2 text-lg">
                             <Activity className="w-5 h-5 text-rose-500" />
                             Patologias Ativas
                         </CardTitle>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-rose-200 text-rose-700 hover:bg-rose-50"
+                            onClick={() => {
+                                setEditingPathology(null);
+                                setPathologyModalOpen(true);
+                            }}
+                            disabled={!patientId}
+                        >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Nova patologia
+                        </Button>
                     </CardHeader>
-                    <CardContent>
-                        {activePathologies.length > 0 ? (
+                    <CardContent className="space-y-3">
+                        {resolvedActivePathologies.length > 0 ? (
                             <div className="space-y-3">
-                                {activePathologies.map((pathology, i: number) => (
-                                    <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-rose-100 bg-rose-50/50 dark:bg-rose-950/10">
-                                        <div>
-                                            <p className="font-medium">{pathology.name}</p>
-                                            <p className="text-xs text-muted-foreground">Diagnóstico: {pathology.diagnosedAt ? format(new Date(pathology.diagnosedAt), "dd/MM/yyyy") : 'N/A'}</p>
+                                {resolvedActivePathologies.map((pathology) => (
+                                    <div key={pathology.id} className="flex items-start justify-between gap-3 p-3 rounded-lg border border-rose-100 bg-rose-50/50 dark:bg-rose-950/10">
+                                        <div className="min-w-0">
+                                            <p className="font-medium">{pathology.pathology_name}</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                Diagnóstico: {pathology.diagnosis_date ? format(new Date(pathology.diagnosis_date), "dd/MM/yyyy") : 'N/A'}
+                                            </p>
                                         </div>
+                                        <Button
+                                            size="icon"
+                                            variant="ghost"
+                                            className="h-8 w-8 text-rose-700 hover:bg-rose-50"
+                                            onClick={() => {
+                                                if (!pathology.editablePathology) {
+                                                    onAction('anamnesis');
+                                                    return;
+                                                }
+                                                setEditingPathology(pathology.editablePathology);
+                                                setPathologyModalOpen(true);
+                                            }}
+                                            title="Editar patologia"
+                                        >
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
                                     </div>
                                 ))}
                             </div>
                         ) : (
-                            <p className="text-muted-foreground text-sm">Nenhuma patologia ativa registrada.</p>
+                            <div className="rounded-lg border border-dashed border-rose-200 bg-rose-50/50 p-4">
+                                <p className="text-sm text-muted-foreground">
+                                    Nenhuma patologia ativa registrada. Adicione a principal condição clínica do paciente aqui.
+                                </p>
+                                <Button
+                                    variant="secondary"
+                                    className="mt-3 bg-rose-600 text-white hover:bg-rose-700"
+                                    onClick={() => {
+                                        setEditingPathology(null);
+                                        setPathologyModalOpen(true);
+                                    }}
+                                    disabled={!patientId}
+                                >
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Registrar patologia
+                                </Button>
+                            </div>
                         )}
-                        <Button variant="link" className="px-0 mt-2 text-rose-600" onClick={() => onAction('anamnesis')}>
-                            Ver Histórico Completo
-                        </Button>
                     </CardContent>
                 </Card>
             </div>
@@ -576,6 +736,30 @@ export const PatientDashboard360 = ({
                     </div>
                 </CardContent>
             </Card>
+
+            {patientId && (
+                <MetaFormModal
+                    open={goalModalOpen}
+                    onOpenChange={(open) => {
+                        setGoalModalOpen(open);
+                        if (!open) setEditingGoal(null);
+                    }}
+                    patientId={patientId}
+                    goal={editingGoal}
+                />
+            )}
+
+            {patientId && (
+                <PathologyFormModal
+                    open={pathologyModalOpen}
+                    onOpenChange={(open) => {
+                        setPathologyModalOpen(open);
+                        if (!open) setEditingPathology(null);
+                    }}
+                    patientId={patientId}
+                    pathology={editingPathology}
+                />
+            )}
 
         </div>
     );

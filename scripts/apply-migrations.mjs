@@ -3,7 +3,7 @@
  * Uso: node scripts/apply-migrations.mjs
  */
 import { Client } from 'pg';
-import { readFileSync } from 'fs';
+import { readFileSync, readdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -64,23 +64,11 @@ CREATE TABLE IF NOT EXISTS evaluation_form_fields (
 CREATE INDEX IF NOT EXISTS idx_evaluation_form_fields_form ON evaluation_form_fields (form_id, ordem);
 `;
 
-// Migrations a aplicar em ordem
-const MIGRATIONS = [
-  '0018_exercise_sessions.sql',
-  '0022_time_entries.sql',
-  '0022_innovations_support.sql',
-  '0023_tarefas_invitations_surveys.sql',
-  '0023_lgpd_consents.sql',
-  '0024_wearables_annotations_signatures.sql',
-  '0024_vouchers.sql',
-  '0025_evento_templates_and_standardized_tests.sql',
-  '0026_asset_annotations.sql',
-  '0027_patient_evaluation_responses.sql',
-  '0028_activity_lab.sql',
-  '0029_knowledge_base.sql',
-  '0030_marketing.sql',
-  '0031_wiki_library.sql',
-];
+function getMigrationFiles() {
+  return readdirSync(MIGRATIONS_DIR)
+    .filter((file) => file.endsWith('.sql'))
+    .sort((a, b) => a.localeCompare(b));
+}
 
 async function runSQL(client, label, sql) {
   try {
@@ -104,9 +92,10 @@ async function main() {
 
   // 2. Migrations
   console.log('\n🚀 Aplicando migrations...');
+  const migrations = getMigrationFiles();
   let success = 0;
   let failed = 0;
-  for (const file of MIGRATIONS) {
+  for (const file of migrations) {
     const sql = readFileSync(join(MIGRATIONS_DIR, file), 'utf8');
     const ok = await runSQL(client, file, sql);
     if (ok) success++; else failed++;
