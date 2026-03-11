@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { httpsCallable } from 'firebase/functions';
+import { getStorage, ref, uploadBytes, getDownloadURL } from '@/lib/storage';
+import { httpsCallable } from '@/lib/functions';
 import { functions, getRemoteValue } from '@/lib/firebase';
 import { useTheme } from '@/hooks/useTheme';
 import { Icon } from '@/components/ui/Icon';
@@ -44,7 +44,7 @@ export function MultimodalAIAnalysis({ patientId, onAnalysisResult }: Props) {
       setPreview(uri);
       setAnalyzing(true);
 
-      // 1. Upload to Firebase Storage
+      // 1. Upload to the configured storage backend
       const storage = getStorage();
       const filename = `analysis/${patientId}/${Date.now()}.jpg`;
       const storageRef = ref(storage, filename);

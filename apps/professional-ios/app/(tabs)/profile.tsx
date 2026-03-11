@@ -12,9 +12,9 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { signOut } from 'firebase/auth';
+import { signOut } from '@/lib/auth';
 import { auth } from '@/lib/firebase';
-import { collection, query, where, getCountFromServer } from 'firebase/firestore';
+import { collection, query, where, getCountFromServer } from '@/lib/firestore';
 import { db } from '@/lib/firebase';
 import { Avatar } from '@/components/ui/Avatar';
 import { Card } from '@/components/ui/Card';

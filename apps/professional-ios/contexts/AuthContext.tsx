@@ -12,7 +12,7 @@ interface AuthContextValue {
   updateProfile: (data: Partial<Profile>) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
 
@@ -35,8 +35,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Por compatibilidade, mapeamos os campos do better-auth
         setProfile({
           id: neonUser.id,
+          uid: neonUser.id,
           email: neonUser.email,
           full_name: neonUser.name || '',
+          name: neonUser.name || '',
           role: (neonUser as any).role || 'fisioterapeuta',
           phone: (neonUser as any).phone || '',
           photo_url: neonUser.image || '',

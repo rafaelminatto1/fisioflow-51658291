@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { profApi } from '@/lib/api';
+import { api, profApi } from '@/lib/api';
 import { useAuth } from './useAuth';
 import type { Appointment, AppointmentStatus } from '@/types';
 

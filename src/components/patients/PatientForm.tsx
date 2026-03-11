@@ -33,7 +33,8 @@ import { AddressAutocomplete } from '@/components/forms/AddressAutocomplete';
 import { MagicTextarea } from '@/components/ai/MagicTextarea';
 import { BrasilService } from '@/services/brasilApi';
 import { toast } from 'sonner';
-import { SmartDatePicker } from '@/components/ui/smart-date-picker';
+import { MultiSelect } from '@/components/ui/multi-select';
+import { PATHOLOGY_OPTIONS } from '@/lib/constants/pathologies';
 
 // ============================================================================================
 // COMPONENT
@@ -361,11 +362,21 @@ export const PatientForm: React.FC<PatientFormProps> = ({
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="main_condition">Queixa Principal / Condição</Label>
-                  <Input
-                    id="main_condition"
-                    placeholder="Ex: Dor lombar crônica, Pós-operatório de LCA"
-                    {...register('main_condition')}
+                  <Controller
+                    name="main_condition"
+                    control={form.control}
+                    render={({ field }) => (
+                      <MultiSelect
+                        options={PATHOLOGY_OPTIONS}
+                        selected={field.value ? field.value.split(',').map(s => s.trim()).filter(Boolean) : []}
+                        onChange={(vals) => field.onChange(vals.join(', '))}
+                        placeholder="Pesquisar ou selecionar patologias..."
+                      />
+                    )}
                   />
+                  {errors.main_condition && (
+                    <p className="text-sm text-destructive">{errors.main_condition.message}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">

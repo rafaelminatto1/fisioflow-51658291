@@ -19,8 +19,8 @@ export {
   // Funções principais
   getCertificatePinningManager,
   initializeCertificatePinning,
-  validateFirebaseURL,
-  validateFirebaseURLs,
+  validateSecureURL,
+  validateSecureURLs,
 
   // Hooks
   useCertificatePinning,

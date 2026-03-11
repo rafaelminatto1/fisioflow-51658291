@@ -3,8 +3,7 @@
  *
  * Implementa uma camada de segurança de rede com validação de certificados.
  *
- * Nota: No React Native/Expo, o certificate pinning tradicional é limitado pelo fato
- * de que a biblioteca do Firebase gerencia suas próprias conexões HTTPS.
+ * Nota: No React Native/Expo, o certificate pinning tradicional é limitado.
  * Esta implementação fornece:
  * 1. Validação de endpoints personalizados
  * 2. Monitoramento de falhas de certificado
@@ -26,11 +25,8 @@ const __DEV__ = typeof process !== 'undefined' && process.env.NODE_ENV === 'deve
  * Domínios que requerem validação rigorosa de certificados
  */
 export const SECURE_DOMAINS = [
-  'firebasestorage.googleapis.com',
-  'firestore.googleapis.com',
-  'identitytoolkit.googleapis.com',
-  'securetoken.googleapis.com',
-  'www.googleapis.com',
+  'api-profissional.moocafisio.com.br',
+  'api.moocafisio.com.br',
 ] as const;
 
 /**
@@ -422,17 +418,17 @@ export function useCertificatePinning() {
 }
 
 /**
- * Função de conveniência para validar URLs Firebase
+ * Função de conveniência para validar URLs seguras
  */
-export async function validateFirebaseURL(url: string): Promise<boolean> {
+export async function validateSecureURL(url: string): Promise<boolean> {
   const manager = getCertificatePinningManager();
   return manager.validateURL(url);
 }
 
 /**
- * Valida uma lista de URLs Firebase
+ * Valida uma lista de URLs seguras
  */
-export async function validateFirebaseURLs(urls: string[]): Promise<Record<string, boolean>> {
+export async function validateSecureURLs(urls: string[]): Promise<Record<string, boolean>> {
   const manager = getCertificatePinningManager();
   return manager.validateURLs(urls);
 }
