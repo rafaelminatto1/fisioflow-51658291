@@ -20,8 +20,8 @@ import { Icon, IconName } from '@/components/ui/Icon';
 import { Avatar } from '@/components/ui/Avatar';
 import { useTheme } from '@/hooks/useTheme';
 import { HapticFeedback } from '@/lib/haptics';
-import { doc, getDoc, updateDoc, serverTimestamp, onSnapshot } from '@/lib/firestore';
-import { db } from '@/lib/firebase';
+import { doc, getDoc, updateDoc, serverTimestamp, onSnapshot } from '@/lib/data-store';
+import { db } from '@/lib/platform';
 import type { Appointment } from '@/types';
 
 type SessionStatus = 'not_started' | 'running' | 'paused' | 'completed';

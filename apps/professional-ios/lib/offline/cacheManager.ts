@@ -14,8 +14,8 @@ import {
   where,
   orderBy,
   limit,
-} from '@/lib/firestore';
-import { db } from '@/lib/firebase';
+} from '@/lib/data-store';
+import { db } from '@/lib/platform';
 
 const CACHE_PREFIX = '@fisioflow_cache_';
 const CACHE_METADATA_PREFIX = '@fisioflow_cache_meta_';

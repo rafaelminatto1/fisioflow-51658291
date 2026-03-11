@@ -19,8 +19,8 @@ import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/hooks/useTheme';
 import { HapticFeedback } from '@/lib/haptics';
-import { doc, getDoc, deleteDoc } from '@/lib/firestore';
-import { db } from '@/lib/firebase';
+import { doc, getDoc, deleteDoc } from '@/lib/data-store';
+import { db } from '@/lib/platform';
 import type { Evaluation } from '@/types';
 
 export default function EvaluationDetailScreen() {

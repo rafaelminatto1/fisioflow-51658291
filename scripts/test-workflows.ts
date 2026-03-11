@@ -132,7 +132,7 @@ async function runTests() {
                 subjective: 'Paciente relata dor persistente no joelho.',
                 assessment: 'Provável meniscopatia.'
             },
-            examUrls: ['gs://fisioflow-migration.firebasestorage.app/test/exam.pdf']
+            examUrls: ['https://media.moocafisio.com.br/test/exam.pdf']
         });
         console.log('✅ AI Clinical Analysis Response (Multimodal):', clinicalRes.success ? 'Success' : 'Failed');
 

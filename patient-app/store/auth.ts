@@ -5,4 +5,4 @@ export {
   db,
   storage,
   type User,
-} from '@/lib/firebase';
+} from '@/lib/platform';
