@@ -54,9 +54,11 @@ const mapWorkerToAppProtocol = (p: WorkersProtocol): ExerciseProtocol => ({
   protocol_type: p.protocolType as any,
   evidence_level: p.evidenceLevel || undefined,
   weeks_total: p.weeksTotal || undefined,
-  milestones: [],
-  restrictions: [],
-  progression_criteria: [],
+  milestones: p.milestones || [],
+  restrictions: p.restrictions || [],
+  progression_criteria: p.progressionCriteria || [],
+  references: p.references || [],
+  clinical_tests: p.clinicalTests || [],
   wiki_page_id: p.wikiPageId || null,
 });
 
