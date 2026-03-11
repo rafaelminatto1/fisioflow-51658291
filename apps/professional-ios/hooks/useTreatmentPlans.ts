@@ -12,7 +12,7 @@ import {
   doc,
   getDoc,
   serverTimestamp,
-} from 'firebase/firestore';
+} from '@/lib/firestore';
 import { db } from '@/lib/firebase';
 import type { ExercisePlan } from '@/types';
 

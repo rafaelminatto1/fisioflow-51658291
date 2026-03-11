@@ -23,7 +23,7 @@ import { VitalSignsInput } from '@/components/VitalSignsInput';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { HapticFeedback } from '@/lib/haptics';
-import { doc, getDoc, setDoc, serverTimestamp, collection } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, collection } from '@/lib/firestore';
 import { db } from '@/lib/firebase';
 
 export default function NewEvaluationScreen() {
