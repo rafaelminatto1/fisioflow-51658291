@@ -416,7 +416,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                                                             Objetivos Terapêuticos
                                                         </h5>
                                                         <ul className="grid gap-2.5">
-                                                            {phase.goals.map((goal: string, j: number) => (
+                                                            {(phase.goals || []).map((goal: string, j: number) => (
                                                                 <li key={j} className="flex items-start gap-3 p-3 rounded-2xl bg-muted/30 border border-transparent hover:border-primary/10 transition-colors group">
                                                                     <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-primary group-hover:text-white transition-colors">
                                                                         <div className="h-1.5 w-1.5 rounded-full bg-current" />
@@ -434,7 +434,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                                                                 Critérios de Progressão
                                                             </h5>
                                                             <ul className="grid gap-2.5">
-                                                                {phase.criteria.map((crit: string, j: number) => (
+                                                                {(phase.criteria || []).map((crit: string, j: number) => (
                                                                     <li key={j} className="flex items-start gap-3 p-3 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 transition-all hover:bg-emerald-500/10">
                                                                         <div className="h-5 w-5 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
                                                                             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
@@ -471,7 +471,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                                                             Precauções & Contraindicações
                                                         </h5>
                                                         <ul className="grid gap-2.5">
-                                                            {phase.precautions.map((prec: string, j: number) => (
+                                                            {(phase.precautions || []).map((prec: string, j: number) => (
                                                                 <li key={j} className="flex items-start gap-3 p-3 rounded-2xl bg-amber-500/5 border border-amber-500/10 transition-all hover:border-amber-500/30">
                                                                     <div className="h-5 w-5 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
                                                                         <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />

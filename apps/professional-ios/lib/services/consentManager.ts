@@ -9,7 +9,7 @@ import {
   orderBy, 
   serverTimestamp, 
   Timestamp
-} from 'firebase/firestore';
+} from '@/lib/firestore';
 import { db } from '../firebase';
 import { Consent, ConsentHistory, ConsentType, ConsentCategory } from '../../types/consent';
 import { CONSENT_TYPES } from '../../constants/consentTypes';

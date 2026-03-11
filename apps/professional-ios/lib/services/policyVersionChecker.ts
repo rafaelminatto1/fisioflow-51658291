@@ -8,7 +8,7 @@
  */
 
 import { db, auth } from '../firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc } from '@/lib/firestore';
 import { LEGAL_VERSIONS } from '../../constants/legalVersions';
 
 export interface PolicyVersionStatus {

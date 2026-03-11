@@ -21,7 +21,7 @@ import { Icon } from '@/components/ui/Icon';
 import { Avatar } from '@/components/ui/Avatar';
 import { useTheme } from '@/hooks/useTheme';
 import { HapticFeedback } from '@/lib/haptics';
-import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, deleteDoc } from '@/lib/firestore';
 import { db } from '@/lib/firebase';
 import type { Appointment } from '@/types';
 

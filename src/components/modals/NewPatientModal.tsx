@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
@@ -17,6 +17,8 @@ import { cleanCPF, cleanPhone, emailSchema, cpfSchema, phoneSchema, sanitizeStri
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { patientsApi } from '@/lib/api/workers-client';
 import { DatePicker } from '@/components/ui/date-picker';
+import { MultiSelect } from '@/components/ui/multi-select';
+import { PATHOLOGY_OPTIONS } from '@/lib/constants/pathologies';
 
 const patientSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(200, 'Nome muito longo'),
@@ -497,11 +499,17 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
 
               <div className="space-y-2">
                 <Label htmlFor="main_condition">Condição Principal *</Label>
-                <Input
-                  id="main_condition"
-                  {...register('main_condition')}
-                  placeholder="Ex: Dor lombar, Lesão no joelho"
-                  aria-required="true"
+                <Controller
+                  name="main_condition"
+                  control={form.control}
+                  render={({ field }) => (
+                    <MultiSelect
+                      options={PATHOLOGY_OPTIONS}
+                      selected={field.value ? field.value.split(',').map(s => s.trim()).filter(Boolean) : []}
+                      onChange={(vals) => field.onChange(vals.join(', '))}
+                      placeholder="Pesquisar ou selecionar patologias..."
+                    />
+                  )}
                 />
                 {errors.main_condition && (
                   <p className="text-sm text-destructive">{errors.main_condition.message}</p>
