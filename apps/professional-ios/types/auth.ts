@@ -6,8 +6,10 @@ export type UserRole = 'admin' | 'fisioterapeuta' | 'estagiario' | 'recepcionist
 
 export interface Profile {
   id: string;
+  uid?: string;
   email: string;
   full_name: string;
+  name?: string;
   role: UserRole;
   phone?: string;
   photo_url?: string;

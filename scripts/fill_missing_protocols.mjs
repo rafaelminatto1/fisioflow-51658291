@@ -11,7 +11,13 @@ async function run() {
     
     console.log(`Iniciando atualização forçada de ${protocols.length} protocolos...`);
     
-    // Mapeamento de dados específicos por protocolo (Opcional, mas melhora a experiência)
+    const ensureArrays = (obj) => ({
+        ...obj,
+        goals: obj.goals || [],
+        precautions: obj.precautions || [],
+        criteria: obj.criteria || []
+    });
+
     const protocolOverrides = {
         "Reconstrução do LCA": {
             phases: [
@@ -61,12 +67,17 @@ async function run() {
           restrictions = protocolOverrides[prot.name].restrictions;
       }
 
+      // Ensure all phases have the required arrays
+      if (phases && phases.length > 0) {
+          phases = phases.map(ensureArrays);
+      }
+
       // Se ainda estiverem vazios, usa os defaults genéricos
       if (!phases || phases.length === 0) {
           phases = [
-            { name: "Fase 1: Controle de Dor e Edema", weekStart: 0, weekEnd: 2, goals: ["Reduzir dor", "Controlar inflamação", "Proteger a região"], precautions: ["Evitar sobrecarga mecânica", "Respeitar quadro álgico"] },
-            { name: "Fase 2: Recuperação de Mobilidade e Força", weekStart: 3, weekEnd: 6, goals: ["Restaurar amplitude de movimento", "Iniciar exercícios resistidos leves"], precautions: ["Progressão gradual de carga"] },
-            { name: "Fase 3: Fortalecimento e Retorno Funcional", weekStart: 7, weekEnd: 12, goals: ["Desenvolver força muscular", "Treino proprioceptivo e funcional"], precautions: ["Evitar fadiga excessiva"] }
+            { name: "Fase 1: Controle de Dor e Edema", weekStart: 0, weekEnd: 2, goals: ["Reduzir dor", "Controlar inflamação", "Proteger a região"], precautions: ["Evitar sobrecarga mecânica", "Respeitar quadro álgico"], criteria: ["Redução da dor em repouso", "Mobilidade controlada"] },
+            { name: "Fase 2: Recuperação de Mobilidade e Força", weekStart: 3, weekEnd: 6, goals: ["Restaurar amplitude de movimento", "Iniciar exercícios resistidos leves"], precautions: ["Progressão gradual de carga"], criteria: ["Ganho de amplitude de movimento", "Aumento da força muscular"] },
+            { name: "Fase 3: Fortalecimento e Retorno Funcional", weekStart: 7, weekEnd: 12, goals: ["Desenvolver força muscular", "Treino proprioceptivo e funcional"], precautions: ["Evitar fadiga excessiva"], criteria: ["Retorno às atividades funcionais", "Simetria de força"] }
           ];
       }
 

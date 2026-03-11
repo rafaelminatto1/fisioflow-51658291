@@ -32,11 +32,12 @@ import {
   query,
   where,
   orderBy,
+  limit as limitQuery,
   onSnapshot,
   updateDoc,
   doc,
   writeBatch,
-} from 'firebase/firestore';
+} from '@/lib/firestore';
 import { db } from '@/lib/firebase';
 
 export interface NotificationItem {
@@ -56,7 +57,7 @@ interface NotificationCenterProps {
 }
 
 export function NotificationCenter({
-  limit,
+  limit: maxItems,
   showHeader = true,
   onNotificationPress,
 }: NotificationCenterProps) {
@@ -73,7 +74,7 @@ export function NotificationCenter({
     const q = query(
       collection(db, 'users', profile.uid, 'notifications'),
       orderBy('createdAt', 'desc'),
-      limit(limit || 50)
+      limitQuery(maxItems || 50)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -88,7 +89,7 @@ export function NotificationCenter({
     });
 
     return () => unsubscribe();
-  }, [profile?.uid, limit]);
+  }, [profile?.uid, maxItems]);
 
   const handleNotificationPress = useCallback(
     async (notification: NotificationItem) => {
