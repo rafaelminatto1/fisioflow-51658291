@@ -370,7 +370,8 @@ export const PatientForm: React.FC<PatientFormProps> = ({
                         options={PATHOLOGY_OPTIONS}
                         selected={field.value ? field.value.split(',').map(s => s.trim()).filter(Boolean) : []}
                         onChange={(vals) => field.onChange(vals.join(', '))}
-                        placeholder="Pesquisar ou selecionar patologias..."
+                        placeholder="Pesquisar, selecionar ou digitar patologias..."
+                        allowCustom={true}
                       />
                     )}
                   />

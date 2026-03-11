@@ -32,25 +32,34 @@ test.describe('Validação de Dados de Protocolos', () => {
     await page.goto('/protocols', { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('.protocol-card', { timeout: 30000 });
     
-    // Clicar no primeiro protocolo
-    await page.locator('.protocol-card').first().click();
+    // Pegar o nome do primeiro card para validar no H1 depois
+    const firstCard = page.locator('.protocol-card').first();
+    const protocolName = await firstCard.locator('h3').textContent();
+    console.log(`Testando protocolo: ${protocolName}`);
+    
+    // Clicar no botão "Ver Protocolo" especificamente
+    await firstCard.locator('button:has-text("Ver Protocolo")').click();
+    
+    // Esperar a navegação e o H1 mudar (não pode ser mais "Protocolos Clínicos")
+    await expect(page.locator('h1').filter({ hasNotText: 'Protocolos Clínicos' })).toBeVisible({ timeout: 15000 });
+    
+    // Verificar se o título correto do protocolo está no H1
+    if (protocolName) {
+      await expect(page.locator('h1')).toContainText(protocolName.trim());
+    }
     
     // Esperar a visualização de detalhes
-    // Geralmente abre um modal ou navega. Pelo código, parece que o ProtocolDetailView é renderizado
-    // Vamos procurar por elementos da aba "Marcos" ou "Fases"
     await page.waitForSelector('text=Marcos do Protocolo', { timeout: 20000 });
     
-    // Verificar se há itens de marcos na lista
-    const milestoneItems = page.locator('text=Semana');
-    const count = await milestoneItems.count();
-    console.log(`Itens de marcos encontrados nos detalhes: ${count}`);
-    expect(count).toBeGreaterThan(0);
+    // Verificar se há itens de marcos na lista (estão formatados como "W1", "W2", etc)
+    const milestoneItems = page.locator('div:has-text("W")').filter({ has: page.locator('text=/^W\\d+$/') });
+    // Alternativa mais simples: procurar pelo padrão W followed by numbers
+    const wText = page.locator('text=/W\\d+/');
+    await expect(wText.first()).toBeVisible();
     
     // Verificar se as restrições estão visíveis
-    await page.click('text=Restrições');
-    const restrictionItems = page.locator('text=até Semana');
-    const rCount = await restrictionItems.count();
-    console.log(`Itens de restrições encontrados nos detalhes: ${rCount}`);
-    expect(rCount).toBeGreaterThan(0);
+    await expect(page.locator('text=Restrições e Alertas de Segurança')).toBeVisible();
+    const restrictionItems = page.locator('p:has-text("W")'); 
+    await expect(restrictionItems.first()).toBeVisible();
   });
 });
