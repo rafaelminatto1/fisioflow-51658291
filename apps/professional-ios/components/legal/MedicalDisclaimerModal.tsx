@@ -22,7 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { getMedicalDisclaimerContent } from '@/constants/legalContent';
 import { LEGAL_VERSIONS } from '@/constants/legalVersions';
 import { db, auth } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp } from '@/lib/firestore';
 import type { MedicalDisclaimerAcknowledgment } from '@/types/legal';
 
 interface MedicalDisclaimerModalProps {

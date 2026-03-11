@@ -25,7 +25,7 @@ import { VitalSignsInput } from '@/components/VitalSignsInput';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { HapticFeedback } from '@/lib/haptics';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, serverTimestamp } from '@/lib/firestore';
 import { db } from '@/lib/firebase';
 import type { Evaluation } from '@/types';
 

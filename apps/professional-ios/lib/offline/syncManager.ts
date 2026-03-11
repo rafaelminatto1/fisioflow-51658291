@@ -1,6 +1,6 @@
 /**
  * Offline Sync Manager
- * Handles offline data synchronization with Firebase
+ * Handles offline data synchronization with the current backend
  */
 
 import { AppState, AppStateStatus } from 'react-native';
@@ -15,7 +15,7 @@ import {
   deleteDoc,
   serverTimestamp,
   getDoc,
-} from 'firebase/firestore';
+} from '@/lib/firestore';
 import { db } from '@/lib/firebase';
 
 const SYNC_QUEUE_KEY = '@fisioflow_sync_queue';

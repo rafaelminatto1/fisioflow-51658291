@@ -19,7 +19,7 @@ import {
   onSnapshot,
   serverTimestamp,
   limit as limitQuery,
-} from 'firebase/firestore';
+} from '@/lib/firestore';
 import { db } from '@/lib/firebase';
 
 type WhereClause = [
@@ -115,7 +115,7 @@ export function useOfflineDoc<T>(
         setLoading(false);
       }
 
-      // Then fetch from Firestore
+      // Then fetch from the active data backend
       try {
         const docRef = doc(db, collectionName, documentId);
 
@@ -218,7 +218,7 @@ export function useOfflineCollection<T>(
         setLoading(false);
       }
 
-      // Then fetch from Firestore
+      // Then fetch from the active data backend
       try {
         let q = collection(db, collectionName);
 
@@ -311,7 +311,7 @@ export function useOfflineMutations(collectionName: string) {
             _pending: true,
           };
         } else {
-          // Write directly to Firestore
+          // Write directly to the active data backend
           const docRef = await addDoc(collection(db, collectionName), documentData);
           return { id: docRef.id, ...data };
         }
@@ -354,7 +354,7 @@ export function useOfflineMutations(collectionName: string) {
 
           return true;
         } else {
-          // Write directly to Firestore
+          // Write directly to the active data backend
           await updateDoc(doc(db, collectionName, documentId), documentData);
           return true;
         }
@@ -388,7 +388,7 @@ export function useOfflineMutations(collectionName: string) {
 
           return true;
         } else {
-          // Delete directly from Firestore
+          // Delete directly from the active data backend
           await deleteDoc(doc(db, collectionName, documentId));
           return true;
         }

@@ -21,7 +21,7 @@ import { WeeklyChart, generateWeekData } from '@/components/ui/WeeklyChart';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { HapticFeedback } from '@/lib/haptics';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy } from '@/lib/firestore';
 import { db } from '@/lib/firebase';
 
 const { width } = Dimensions.get('window');

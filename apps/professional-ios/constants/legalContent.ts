@@ -78,14 +78,13 @@ O tratamento de dados é baseado em:
 
 ## 4. Compartilhamento de Dados
 
-### 4.1 Firebase (Google Cloud Platform)
-Compartilhamos dados com o Firebase para:
-- **Firestore**: Armazenamento de registros clínicos
-- **Firebase Authentication**: Gerenciamento de login e autenticação
-- **Firebase Storage**: Armazenamento de fotos e documentos
-- **Firebase Cloud Functions**: Processamento de dados e notificações
+### 4.1 Neon + Cloudflare
+Compartilhamos dados com a nossa infraestrutura para:
+- **Neon PostgreSQL**: Armazenamento de registros clínicos
+- **Neon Auth**: Gerenciamento de login e autenticação
+- **Cloudflare Workers/R2**: APIs, arquivos e automações operacionais
 
-**Localização dos dados**: Servidores na região southamerica-east1 (São Paulo, Brasil)
+**Localização dos dados**: Infraestrutura primária em São Paulo (Brasil) e borda Cloudflare
 **Certificações**: ISO 27001, SOC 2, HIPAA-compliant infrastructure
 
 ### 4.2 Expo (Notificações Push)
@@ -121,7 +120,7 @@ Usamos o serviço Expo para enviar notificações push sobre:
 - Você pode visualizar seu próprio log de auditoria
 
 ### 5.4 Proteção Adicional
-- Certificado pinning para conexões Firebase
+- Proteção reforçada para conexões com Neon Auth, APIs e storage
 - Detecção de dispositivos com jailbreak
 - Limpeza automática de cache ao fazer logout
 - Prevenção de capturas de tela em telas com PHI
@@ -177,8 +176,8 @@ Você pode solicitar informações sobre entidades com as quais compartilhamos d
 
 ## 8. Transferência Internacional de Dados
 
-Os dados são armazenados primariamente em servidores no Brasil (região southamerica-east1 do Google Cloud). Em casos específicos, pode haver transferência para:
-- Estados Unidos (infraestrutura do Firebase/Google)
+Os dados são armazenados primariamente em servidores no Brasil, com distribuição global controlada pela borda da Cloudflare quando necessário. Em casos específicos, pode haver transferência para:
+- Estados Unidos e outras regiões da borda Cloudflare, conforme roteamento e resiliência
 - Mecanismos de proteção: Cláusulas contratuais padrão, certificações ISO 27001 e SOC 2
 
 ## 9. Cookies e Tecnologias Similares

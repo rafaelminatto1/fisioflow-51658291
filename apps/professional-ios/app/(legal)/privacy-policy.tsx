@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { PRIVACY_POLICY_CONTENT } from '@/constants/legalContent';
 import { LEGAL_VERSIONS } from '@/constants/legalVersions';
 import { db, auth } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp } from '@/lib/firestore';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 

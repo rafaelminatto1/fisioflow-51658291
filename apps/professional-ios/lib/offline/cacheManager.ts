@@ -14,7 +14,7 @@ import {
   where,
   orderBy,
   limit,
-} from 'firebase/firestore';
+} from '@/lib/firestore';
 import { db } from '@/lib/firebase';
 
 const CACHE_PREFIX = '@fisioflow_cache_';
@@ -237,7 +237,7 @@ class CacheManager {
   }
 
   /**
-   * Cache a collection from Firestore
+   * Cache a collection from the active data backend
    */
   async cacheCollection(
     collectionName: string,
@@ -259,7 +259,7 @@ class CacheManager {
           q = query(collection(db, collectionName), where(...firstWhere));
 
           for (let i = 1; i < whereClauses.length; i++) {
-            // Note: Firestore only supports one where clause without composite indexes
+            // Local compatibility layer keeps query constraints simple here
             // In production, you'd need to handle this differently
           }
         }
@@ -288,7 +288,7 @@ class CacheManager {
   }
 
   /**
-   * Cache a single document from Firestore
+   * Cache a single document from the active data backend
    */
   async cacheDocument(
     collectionName: string,
