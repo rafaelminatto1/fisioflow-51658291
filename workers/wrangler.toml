@@ -1,6 +1,6 @@
 name = "fisioflow-api"
 main = "src/index.ts"
-compatibility_date = "2025-01-01"
+compatibility_date = "2026-01-01"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 
@@ -17,7 +17,7 @@ routes = [
 [[hyperdrive]]
 binding = "HYPERDRIVE"
 id = "12b9fefcfbc04074a63342a9212e1b4f"
-localConnectionString = "postgresql://neondb_owner:REDACTED-NEON-PASSWORD@ep-wandering-bonus-acj4zwvo-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require"
+# localConnectionString definido em workers/.dev.vars (não commitado)
 
 # ===== CLOUDFLARE R2 (Media Storage) =====
 # Crie com: wrangler r2 bucket create fisioflow-media
@@ -34,7 +34,7 @@ GOOGLE_MAPS_API_KEY = ""
 # Neon Auth JWT verification (obrigatório para rotas protegidas)
 # Ajuste para os valores reais do seu tenant Neon Auth.
 NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
-NEON_AUTH_ISSUER = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth"
+NEON_AUTH_ISSUER = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
 # NEON_AUTH_AUDIENCE = "fisioflow-api"  # habilitar se Neon Auth configurar audience
 
 # ===== AMBIENTE DE STAGING =====
