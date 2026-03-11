@@ -1,123 +1,65 @@
-/**
- * Exercise Service
- * Handles exercise plan and exercise-related operations
- */
-
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-  updateDoc,
-  setDoc,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { patientApi } from '@/lib/api';
 import { asyncResult, Result } from '@/lib/async';
 import { log } from '@/lib/logger';
 import { perf } from '@/lib/performance';
 
-/**
- * Get active exercise plan for a user
- */
-export async function getActiveExercisePlan(userId: string): Promise<Result<any>> {
+function buildPlan(exercises: any[]) {
+  if (!exercises.length) return null;
+
+  return {
+    id: exercises[0]?.plan?.id || 'plan',
+    name: exercises[0]?.plan?.name || 'Plano atual',
+    description: exercises[0]?.plan?.description || '',
+    exercises: exercises.map((exercise) => ({
+      id: exercise.id,
+      exerciseId: exercise.exerciseId || exercise.exercise_id,
+      name: exercise.exercise?.name || 'Exercício',
+      description: exercise.exercise?.description,
+      completed: exercise.completed,
+      completed_at: exercise.completedAt,
+      sets: exercise.sets,
+      reps: exercise.reps,
+    })),
+  };
+}
+
+export async function getActiveExercisePlan(_userId: string): Promise<Result<any>> {
   return asyncResult(async () => {
-    perf.start('firestore_get_exercise_plan');
-
-    const plansRef = collection(db, 'users', userId, 'exercise_plans');
-    const q = query(
-      plansRef,
-      where('status', '==', 'active'),
-      orderBy('created_at', 'desc')
-    );
-
-    const snapshot = await getDocs(q);
-
-    perf.end('firestore_get_exercise_plan', true);
-
-    if (snapshot.empty) {
-      return null;
-    }
-
-    const planDoc = snapshot.docs[0];
-    return {
-      id: planDoc.id,
-      ...planDoc.data(),
-    };
+    perf.start('api_get_exercise_plan');
+    const exercises = await patientApi.getExercises();
+    perf.end('api_get_exercise_plan', true);
+    return buildPlan(exercises);
   }, 'getActiveExercisePlan');
 }
 
-/**
- * Subscribe to exercise plan updates
- */
 export function subscribeToExercisePlan(
   userId: string,
-  callback: (plan: any | null) => void
+  callback: (plan: any | null) => void,
 ): () => void {
-  const plansRef = collection(db, 'users', userId, 'exercise_plans');
-  const q = query(
-    plansRef,
-    where('status', '==', 'active'),
-    orderBy('created_at', 'desc')
-  );
+  const load = async () => {
+    const result = await getActiveExercisePlan(userId);
+    callback(result.success ? result.data ?? null : null);
+  };
 
-  const unsubscribe = onSnapshot(q, (snapshot) => {
-    if (snapshot.empty) {
-      callback(null);
-    } else {
-      const planDoc = snapshot.docs[0];
-      callback({
-        id: planDoc.id,
-        ...planDoc.data(),
-      });
-    }
-  });
-
-  return unsubscribe;
+  load();
+  const interval = setInterval(load, 30000);
+  return () => clearInterval(interval);
 }
 
-/**
- * Toggle exercise completion status
- */
 export async function toggleExercise(
-  userId: string,
-  planId: string,
+  _userId: string,
+  _planId: string,
   exerciseId: string,
-  completed: boolean
+  completed: boolean,
 ): Promise<Result<void>> {
   return asyncResult(async () => {
-    perf.start('firestore_toggle_exercise');
-
-    const planRef = doc(db, 'users', userId, 'exercise_plans', planId);
-    const planDoc = await getDoc(planRef);
-
-    if (!planDoc.exists()) {
-      throw new Error('Exercise plan not found');
-    }
-
-    const plan = planDoc.data();
-    const exercises = plan.exercises || [];
-
-    const updatedExercises = exercises.map((ex: any) =>
-      ex.id === exerciseId
-        ? { ...ex, completed, completed_at: completed ? new Date() : null }
-        : ex
-    );
-
-    await updateDoc(planRef, { exercises: updatedExercises });
-
-    perf.end('firestore_toggle_exercise', true);
-    log.info('EXERCISE', 'Exercise toggled', { userId, exerciseId, completed });
+    perf.start('api_toggle_exercise');
+    await patientApi.completeExercise(exerciseId, { completed });
+    perf.end('api_toggle_exercise', true);
+    log.info('EXERCISE', 'Exercise toggled', { exerciseId, completed });
   }, 'toggleExercise');
 }
 
-/**
- * Submit exercise feedback
- */
 export interface ExerciseFeedback {
   exerciseId: string;
   planId: string;
@@ -127,59 +69,35 @@ export interface ExerciseFeedback {
 }
 
 export async function submitExerciseFeedback(
-  userId: string,
-  feedback: ExerciseFeedback
+  _userId: string,
+  feedback: ExerciseFeedback,
 ): Promise<Result<void>> {
   return asyncResult(async () => {
-    perf.start('firestore_submit_feedback');
-
-    const feedbackRef = doc(
-      db,
-      'users',
-      userId,
-      'exercise_plans',
-      feedback.planId,
-      'feedback',
-      feedback.exerciseId
-    );
-
-    await setDoc(feedbackRef, {
-      ...feedback,
-      created_at: serverTimestamp(),
+    perf.start('api_submit_feedback');
+    await patientApi.completeExercise(feedback.exerciseId, {
+      completed: true,
+      difficulty: feedback.difficulty,
+      painLevel: feedback.painLevel,
+      notes: feedback.notes,
     });
-
-    perf.end('firestore_submit_feedback', true);
-    log.info('EXERCISE', 'Feedback submitted', { userId, exerciseId: feedback.exerciseId });
+    perf.end('api_submit_feedback', true);
+    log.info('EXERCISE', 'Feedback submitted', { exerciseId: feedback.exerciseId });
   }, 'submitExerciseFeedback');
 }
 
-/**
- * Get exercise statistics for a user
- */
-export async function getExerciseStats(userId: string): Promise<Result<any>> {
+export async function getExerciseStats(_userId: string): Promise<Result<any>> {
   return asyncResult(async () => {
-    perf.start('firestore_get_exercise_stats');
-
-    const plansRef = collection(db, 'users', userId, 'exercise_plans');
-    const snapshot = await getDocs(plansRef);
-
-    let totalExercises = 0;
-    let completedExercises = 0;
-
-    snapshot.forEach((doc) => {
-      const plan = doc.data();
-      const exercises = plan.exercises || [];
-      totalExercises += exercises.length;
-      completedExercises += exercises.filter((e: any) => e.completed).length;
-    });
-
-    perf.end('firestore_get_exercise_stats', true);
+    perf.start('api_get_exercise_stats');
+    const exercises = await patientApi.getExercises();
+    const completed = exercises.filter((exercise: any) => exercise.completed).length;
+    const total = exercises.length;
+    perf.end('api_get_exercise_stats', true);
 
     return {
-      total: totalExercises,
-      completed: completedExercises,
-      remaining: totalExercises - completedExercises,
-      completionRate: totalExercises > 0 ? completedExercises / totalExercises : 0,
+      total,
+      completed,
+      remaining: total - completed,
+      completionRate: total > 0 ? completed / total : 0,
     };
   }, 'getExerciseStats');
 }

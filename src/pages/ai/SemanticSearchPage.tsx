@@ -63,7 +63,7 @@ export function SemanticSearchPage() {
 
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              A busca semântica requer índices vetoriais configurados no Firestore.
+              A busca semântica requer índices vetoriais configurados no banco principal.
               Entre em contato com o administrador do sistema para ativar esta funcionalidade.
             </p>
 
@@ -105,7 +105,7 @@ export function SemanticSearchPage() {
 
           <Badge variant="outline" className="hidden sm:flex">
             <Search className="h-3 w-3 mr-1" />
-            Firestore Vector Search
+            Vector Search
           </Badge>
         </div>
       </div>

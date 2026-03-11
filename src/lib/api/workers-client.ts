@@ -290,7 +290,6 @@ export const exercisesApi = {
 
 export interface ExerciseTemplateRecord {
   id: string;
-  firestoreId?: string | null;
   name: string;
   description?: string | null;
   category?: string | null;

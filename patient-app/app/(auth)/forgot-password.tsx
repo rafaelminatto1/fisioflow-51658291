@@ -10,12 +10,11 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
 import { Button, Input } from '@/components';
 import { useColors } from '@/hooks/useColorScheme';
 import { Ionicons } from '@expo/vector-icons';
 import { validators } from '@/lib/validation';
+import { resetPassword } from '@/services/authService';
 
 export default function ForgotPasswordScreen() {
   const colors = useColors();
@@ -36,13 +35,17 @@ export default function ForgotPasswordScreen() {
     setIsLoading(true);
 
     try {
-      await sendPasswordResetEmail(auth, email.trim().toLowerCase());
+      const result = await resetPassword(email.trim().toLowerCase());
+      if (!result.success) {
+        throw result.error || new Error('Erro ao enviar email');
+      }
       setSent(true);
     } catch (error: any) {
       let message = 'Erro ao enviar email de recuperação';
-      if (error.code === 'auth/user-not-found') {
+      const rawMessage = String(error?.message || '').toLowerCase();
+      if (rawMessage.includes('not found')) {
         message = 'Email não encontrado';
-      } else if (error.code === 'auth/invalid-email') {
+      } else if (rawMessage.includes('email')) {
         message = 'Email inválido';
       }
       Alert.alert('Erro', message);

@@ -14,8 +14,7 @@ import {
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { updateDoc, doc, getDoc, query, collection, where, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { patientApi } from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
 import { useColors } from '@/hooks/useColorScheme';
 import { Card, Button, Input } from '@/components';
@@ -38,27 +37,23 @@ export default function LinkProfessionalScreen() {
   const [searching, setSearching] = useState(false);
   const [foundProfessional, setFoundProfessional] = useState<Professional | null>(null);
   const [alreadyLinked, setAlreadyLinked] = useState(false);
-  const [skipForNow, setSkipForNow] = useState(false);
 
   // Check if already linked
   useEffect(() => {
     checkExistingLink();
-  }, []);
+  }, [user?.id]);
 
   const checkExistingLink = async () => {
     if (!user?.id) return;
 
     try {
-      const userDoc = await getDoc(doc(db, 'users', user.id));
-      if (userDoc.exists()) {
-        const userData = userDoc.data();
-        if (userData.professional_id && userData.professional_name) {
-          setAlreadyLinked(true);
-          setFoundProfessional({
-            id: userData.professional_id,
-            name: userData.professional_name,
-          });
-        }
+      const profile = await patientApi.getProfile();
+      if (profile?.professional_id && profile?.professional_name) {
+        setAlreadyLinked(true);
+        setFoundProfessional({
+          id: profile.professional_id,
+          name: profile.professional_name,
+        });
       }
     } catch (error) {
       log.error('Error checking link:', error);
@@ -66,15 +61,14 @@ export default function LinkProfessionalScreen() {
   };
 
   const formatInviteCode = (text: string) => {
-    // Remove non-alphanumeric characters and convert to uppercase
-    return text.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+    return text.trimStart().slice(0, 80);
   };
 
   const handleSearchProfessional = async () => {
-    const cleanCode = formatInviteCode(inviteCode);
+    const cleanCode = formatInviteCode(inviteCode).trim();
 
-    if (cleanCode.length < 4) {
-      Alert.alert('Código inválido', 'Digite um código válido de pelo menos 4 caracteres.');
+    if (cleanCode.length < 2) {
+      Alert.alert('Busca inválida', 'Digite pelo menos 2 caracteres para buscar.');
       return;
     }
 
@@ -82,30 +76,18 @@ export default function LinkProfessionalScreen() {
     setFoundProfessional(null);
 
     try {
-      // Search for professional with this invite code
-      const professionalsRef = collection(db, 'users');
-      const q = query(
-        professionalsRef,
-        where('role', '==', 'professional'),
-        where('invite_code', '==', cleanCode)
-      );
+      const professionals = await patientApi.getTherapists(cleanCode);
 
-      const snapshot = await getDocs(q);
-
-      if (snapshot.empty) {
+      if (!professionals.length) {
         Alert.alert(
           'Profissional não encontrado',
-          'Nenhum profissional encontrado com este código. Verifique com seu fisioterapeuta.'
+          'Nenhum profissional encontrado com esse nome, email ou código.'
         );
       } else {
-        const profDoc = snapshot.docs[0];
-        const profData = profDoc.data();
         setFoundProfessional({
-          id: profDoc.id,
-          name: profData.name || profData.displayName || 'Profissional',
-          email: profData.email,
-          clinic_name: profData.clinic_name,
-          specialty: profData.specialty,
+          id: professionals[0].id,
+          name: professionals[0].name || 'Profissional',
+          email: professionals[0].email,
         });
       }
     } catch (error) {
@@ -122,26 +104,7 @@ export default function LinkProfessionalScreen() {
     setLoading(true);
 
     try {
-      // Update user document with professional info
-      await updateDoc(doc(db, 'users', user.id), {
-        professional_id: foundProfessional.id,
-        professional_name: foundProfessional.name,
-        updated_at: new Date(),
-      });
-
-      // Also add patient to professional's patients list
-      const profRef = doc(db, 'users', foundProfessional.id);
-      const profDoc = await getDoc(profRef);
-
-      if (profDoc.exists()) {
-        const profData = profDoc.data();
-        const patients = profData.patients || [];
-        if (!patients.includes(user.id)) {
-          await updateDoc(profRef, {
-            patients: [...patients, user.id],
-          });
-        }
-      }
+      await patientApi.linkProfessional(foundProfessional.id);
 
       Alert.alert(
         'Vinculado com sucesso!',
@@ -196,7 +159,7 @@ export default function LinkProfessionalScreen() {
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
               {alreadyLinked
                 ? 'Você já está conectado com um profissional'
-                : 'Digite o código fornecido pelo seu fisioterapeuta'}
+                : 'Busque pelo nome, email ou código do seu fisioterapeuta'}
             </Text>
           </View>
 
@@ -227,27 +190,31 @@ export default function LinkProfessionalScreen() {
               {/* Search Card */}
               <Card style={styles.searchCard}>
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                  Código do Convite
+                  Buscar Profissional
                 </Text>
                 <Text style={[styles.sectionDescription, { color: colors.textSecondary }]}>
-                  Peça o código de 6 dígitos ao seu fisioterapeuta
+                  Digite nome, email ou código de convite
                 </Text>
 
                 <View style={styles.inputRow}>
                   <Input
-                    placeholder="XXXXXX"
+                    placeholder="Nome, email ou código"
                     value={inviteCode}
                     onChangeText={(text) => {
                       setInviteCode(formatInviteCode(text));
-                      if (formatInviteCode(text).length >= 4) {
-                        handleSearchProfessional();
-                      }
                     }}
                     onSubmitEditing={handleSearchProfessional}
-                    autoCapitalize="characters"
+                    autoCapitalize="none"
                     autoCorrect={false}
                     style={styles.input}
                   />
+                  <TouchableOpacity
+                    onPress={handleSearchProfessional}
+                    style={[styles.searchAction, { backgroundColor: colors.primary }]}
+                    disabled={searching}
+                  >
+                    <Ionicons name="search" size={18} color="#FFFFFF" />
+                  </TouchableOpacity>
                   {searching ? (
                     <ActivityIndicator size="small" color={colors.primary} />
                   ) : null}
@@ -278,22 +245,22 @@ export default function LinkProfessionalScreen() {
               {/* Instructions Card */}
               <Card style={styles.instructionsCard}>
                 <Text style={[styles.instructionTitle, { color: colors.text }]}>
-                  Como obter o código?
+                  Como localizar o profissional?
                 </Text>
                 <View style={styles.instructionList}>
                   <InstructionStep
                     number={1}
-                    text="Entre em contato com seu fisioterapeuta"
+                    text="Peça o nome, email ou código do profissional"
                     colors={colors}
                   />
                   <InstructionStep
                     number={2}
-                    text="Solicite o código de convite do app"
+                    text="Faça a busca acima e confira o profissional encontrado"
                     colors={colors}
                   />
                   <InstructionStep
                     number={3}
-                    text="Digite o código acima para vincular"
+                    text="Confirme a vinculação para liberar seu portal"
                     colors={colors}
                   />
                 </View>
@@ -426,6 +393,14 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
+  },
+  searchAction: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 6,
   },
   foundCard: {
     flexDirection: 'row',

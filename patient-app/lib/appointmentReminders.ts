@@ -1,22 +1,9 @@
-/**
- * Appointment Reminders System
- *
- * Sistema de lembretes de consultas com notificações baseadas
- * na data e hora dos agendamentos.
- *
- * @module lib/appointmentReminders
- */
-
 import { useEffect, useState } from 'react';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { collection, doc, getDoc, getDocs, orderBy, query, updateDoc, where } from 'firebase/firestore';
-import { db } from './firebase';
+import { patientApi } from './api';
 import { log } from '@/lib/logger';
 
-/**
- * Dados de uma consulta/agendamento
- */
 export interface Appointment {
   id: string;
   date: Date;
@@ -27,176 +14,147 @@ export interface Appointment {
   notes?: string;
 }
 
-/**
- * Configuração de lembretes de consultas
- */
 export interface AppointmentReminderConfig {
   enabled: boolean;
   reminders: {
     hoursBefore: number[];
-    }[];
+  }[];
 }
 
-/**
- * Tipos de lembrete de consulta
- */
 export type AppointmentReminderType = '24h_before' | '1h_before' | 'day_of';
 
-/**
- * Chaves para armazenamento local
- */
 const STORAGE_KEYS = {
   APPOINTMENT_REMINDERS: '@fisioflow_appointment_reminders',
   SCHEDULED_REMINDERS: '@fisioflow_scheduled_appointment_reminders',
 };
 
-/**
- * Classe gerenciadora de lembretes de consultas
- */
+const DEFAULT_CONFIG: AppointmentReminderConfig = {
+  enabled: true,
+  reminders: [{ hoursBefore: [24, 1] }],
+};
+
+function parseAppointmentDate(raw: Record<string, unknown>): Date | null {
+  const primary =
+    raw.date ??
+    raw.appointment_date ??
+    raw.scheduled_at ??
+    raw.start_at ??
+    null;
+
+  if (!primary) return null;
+
+  const parsed = new Date(String(primary));
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function parseAppointmentTime(raw: Record<string, unknown>, date: Date): string {
+  const explicit =
+    raw.time ??
+    raw.start_time ??
+    raw.scheduled_time ??
+    null;
+
+  if (typeof explicit === 'string' && explicit.trim()) {
+    return explicit.trim().slice(0, 5);
+  }
+
+  return date.toLocaleTimeString('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function normalizeAppointment(raw: unknown): Appointment | null {
+  if (!raw || typeof raw !== 'object') return null;
+
+  const row = raw as Record<string, unknown>;
+  const date = parseAppointmentDate(row);
+  if (!date) return null;
+
+  return {
+    id: String(row.id ?? ''),
+    date,
+    time: parseAppointmentTime(row, date),
+    type: typeof row.type === 'string' && row.type.trim() ? row.type.trim() : 'Consulta',
+    professionalName:
+      (typeof row.professional_name === 'string' && row.professional_name.trim()) ||
+      (typeof row.therapist_name === 'string' && row.therapist_name.trim()) ||
+      'Profissional',
+    professionalId:
+      typeof row.professional_id === 'string' && row.professional_id.trim()
+        ? row.professional_id.trim()
+        : undefined,
+    notes: typeof row.notes === 'string' && row.notes.trim() ? row.notes.trim() : undefined,
+  };
+}
+
 export class AppointmentReminders {
   private userId: string | undefined;
-  private config: AppointmentReminderConfig = {
-    enabled: true,
-    reminders: [
-      { hoursBefore: [24, 1] },
-    ],
-  };
+  private config: AppointmentReminderConfig = DEFAULT_CONFIG;
 
   constructor(userId?: string) {
     this.userId = userId;
   }
 
-  /**
-   * Inicializa o sistema de lembretes de consultas
-   */
   async initialize(): Promise<void> {
     await this.loadConfig();
 
-    // Carregar consultas agendadas e criar lembretes
     if (this.config.enabled && this.userId) {
       await this.syncWithAppointments();
     }
   }
 
-  /**
-   * Carrega a configuração de lembretes
-   */
   private async loadConfig(): Promise<void> {
     try {
-      // Tentar buscar do Firestore primeiro
-      if (this.userId) {
-        const userDoc = await getDoc(doc(db, 'users', this.userId));
-        if (userDoc.exists()) {
-          const data = userDoc.data();
-          if (data.appointmentReminders) {
-            this.config = data.appointmentReminders;
-            return;
-          }
-        }
-      }
-
-      // Fallback para AsyncStorage
       const stored = await AsyncStorage.getItem(STORAGE_KEYS.APPOINTMENT_REMINDERS);
       if (stored) {
         this.config = JSON.parse(stored);
       }
     } catch (error) {
       log.error('Error loading appointment reminder config:', error);
+      this.config = DEFAULT_CONFIG;
     }
   }
 
-  /**
-   * Salva a configuração de lembretes
-   */
   private async saveConfig(): Promise<void> {
     try {
       await AsyncStorage.setItem(
         STORAGE_KEYS.APPOINTMENT_REMINDERS,
-        JSON.stringify(this.config)
+        JSON.stringify(this.config),
       );
-
-      if (this.userId) {
-        await updateDoc(doc(db, 'users', this.userId), {
-          appointmentReminders: this.config,
-        });
-      }
     } catch (error) {
       log.error('Error saving appointment reminder config:', error);
     }
   }
 
-  /**
-   * Retorna a configuração atual
-   */
   getConfig(): AppointmentReminderConfig {
     return { ...this.config };
   }
 
-  /**
-   * Atualiza a configuração de lembretes
-   */
   async updateConfig(updates: Partial<AppointmentReminderConfig>): Promise<void> {
     this.config = { ...this.config, ...updates };
     await this.saveConfig();
 
-    // Reagendar notificações com a nova configuração
     if (this.config.enabled && this.userId) {
       await this.syncWithAppointments();
-    } else {
-      await this.cancelAll();
+      return;
     }
+
+    await this.cancelAll();
   }
 
-  /**
-   * Sincroniza lembretes com as consultas agendadas
-   */
   async syncWithAppointments(): Promise<void> {
     if (!this.userId || !this.config.enabled) {
       return;
     }
 
     try {
-      // Cancelar lembretes antigos
       await this.cancelAll();
 
-      // Buscar próximas consultas
-      const appointmentsRef = collection(db, 'users', this.userId, 'appointments');
-      const now = new Date();
-      const q = query(
-        appointmentsRef,
-        where('date', '>=', now),
-        where('status', '==', 'scheduled'),
-        orderBy('date', 'asc')
-      );
+      const appointments = (await patientApi.getAppointments(true))
+        .map((appointment) => normalizeAppointment(appointment))
+        .filter((appointment): appointment is Appointment => appointment !== null);
 
-      const snapshot = await getDocs(q);
-      const appointments: Appointment[] = [];
-
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        if (data.date) {
-          let parsedDate = new Date();
-          if (typeof data.date.toDate === 'function') {
-            parsedDate = data.date.toDate();
-          } else if (typeof data.date === 'string' || typeof data.date === 'number') {
-            parsedDate = new Date(data.date);
-          } else if (data.date instanceof Date) {
-            parsedDate = data.date;
-          }
-
-          appointments.push({
-            id: doc.id,
-            date: parsedDate,
-            time: data.time || '09:00',
-            type: data.type || 'Consulta',
-            professionalName: data.professional_name || 'Profissional',
-            professionalId: data.professional_id,
-            notes: data.notes,
-          });
-        }
-      });
-
-      // Agendar lembretes para cada consulta
       const scheduledIds: string[] = [];
 
       for (const appointment of appointments) {
@@ -210,29 +168,23 @@ export class AppointmentReminders {
         }
       }
 
-      // Salvar IDs das notificações agendadas
       await AsyncStorage.setItem(
         STORAGE_KEYS.SCHEDULED_REMINDERS,
-        JSON.stringify(scheduledIds)
+        JSON.stringify(scheduledIds),
       );
     } catch (error) {
       log.error('Error syncing appointment reminders:', error);
     }
   }
 
-  /**
-   * Agenda um lembrete para uma consulta específica
-   */
   private async scheduleReminder(
     appointment: Appointment,
-    hoursBefore: number
+    hoursBefore: number,
   ): Promise<string | null> {
     try {
-      // Calcular data/hora do lembrete
       const reminderDate = new Date(appointment.date);
       reminderDate.setHours(reminderDate.getHours() - hoursBefore);
 
-      // Verificar se a data do lembrete já passou
       if (reminderDate < new Date()) {
         return null;
       }
@@ -240,17 +192,17 @@ export class AppointmentReminders {
       let message = '';
       if (hoursBefore >= 24) {
         const days = Math.floor(hoursBefore / 24);
-        message = `Sua consulta de ${appointment.type} é em ${days} dia${days !== 1 ? 's' : ''}.`;
+        message = `Sua consulta de ${appointment.type} e em ${days} dia${days !== 1 ? 's' : ''}.`;
       } else if (hoursBefore === 1) {
-        message = `Sua consulta de ${appointment.type} é em 1 hora.`;
+        message = `Sua consulta de ${appointment.type} e em 1 hora.`;
       } else {
-        message = `Sua consulta de ${appointment.type} é em ${hoursBefore} horas.`;
+        message = `Sua consulta de ${appointment.type} e em ${hoursBefore} horas.`;
       }
 
-      const scheduledId = await Notifications.scheduleNotificationAsync({
+      return Notifications.scheduleNotificationAsync({
         content: {
-          title: '📅 Lembrete de Consulta',
-          body: `${message}\nCom ${appointment.professionalName} às ${appointment.time}.`,
+          title: 'Lembrete de Consulta',
+          body: `${message}\nCom ${appointment.professionalName} as ${appointment.time}.`,
           data: {
             type: 'appointment_reminder',
             appointmentId: appointment.id,
@@ -261,25 +213,18 @@ export class AppointmentReminders {
           date: reminderDate,
         },
       });
-
-      return scheduledId;
     } catch (error) {
       log.error('Error scheduling appointment reminder:', error);
       return null;
     }
   }
 
-  /**
-   * Cancela todos os lembretes de consultas
-   */
   async cancelAll(): Promise<void> {
     try {
       const storedIds = await AsyncStorage.getItem(STORAGE_KEYS.SCHEDULED_REMINDERS);
       if (storedIds) {
-        const ids = JSON.parse(storedIds);
-        await Promise.all(
-          ids.map((id: string) => Notifications.cancelScheduledNotificationAsync(id))
-        );
+        const ids = JSON.parse(storedIds) as string[];
+        await Promise.all(ids.map((id) => Notifications.cancelScheduledNotificationAsync(id)));
       }
 
       await AsyncStorage.removeItem(STORAGE_KEYS.SCHEDULED_REMINDERS);
@@ -288,13 +233,9 @@ export class AppointmentReminders {
     }
   }
 
-  /**
-   * Solicita permissões para notificações
-   */
   async requestPermissions(): Promise<boolean> {
     try {
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
-
       if (existingStatus === 'granted') {
         return true;
       }
@@ -307,9 +248,6 @@ export class AppointmentReminders {
     }
   }
 
-  /**
-   * Retorna os lembretes agendados
-   */
   async getScheduledReminders(): Promise<Notifications.NotificationRequest[]> {
     try {
       const allScheduled = await Notifications.getAllScheduledNotificationsAsync();
@@ -319,8 +257,8 @@ export class AppointmentReminders {
         return [];
       }
 
-      const ids = JSON.parse(storedIds);
-      return allScheduled.filter((n) => ids.includes(n.identifier));
+      const ids = JSON.parse(storedIds) as string[];
+      return allScheduled.filter((notification) => ids.includes(notification.identifier));
     } catch (error) {
       log.error('Error getting scheduled appointment reminders:', error);
       return [];
@@ -328,15 +266,12 @@ export class AppointmentReminders {
   }
 }
 
-/**
- * Hook React para gerenciar lembretes de consultas
- */
 export function useAppointmentReminders(userId?: string) {
   const [reminders] = useState(() => new AppointmentReminders(userId));
 
   useEffect(() => {
     reminders.initialize();
-  }, []);
+  }, [reminders]);
 
   return {
     config: reminders.getConfig(),
@@ -348,12 +283,9 @@ export function useAppointmentReminders(userId?: string) {
   };
 }
 
-/**
- * Função helper para criar um lembrete de consulta específico
- */
 export async function createAppointmentReminder(
   appointment: Appointment,
-  hoursBefore: number = 24
+  hoursBefore = 24,
 ): Promise<string | null> {
   const reminderDate = new Date(appointment.date);
   reminderDate.setHours(reminderDate.getHours() - hoursBefore);
@@ -362,10 +294,10 @@ export async function createAppointmentReminder(
     return null;
   }
 
-  const scheduledId = await Notifications.scheduleNotificationAsync({
+  return Notifications.scheduleNotificationAsync({
     content: {
-      title: '📅 Lembrete de Consulta',
-      body: `Sua consulta de ${appointment.type} é em ${hoursBefore} horas.\nCom ${appointment.professionalName} às ${appointment.time}.`,
+      title: 'Lembrete de Consulta',
+      body: `Sua consulta de ${appointment.type} e em ${hoursBefore} horas.\nCom ${appointment.professionalName} as ${appointment.time}.`,
       data: {
         type: 'appointment_reminder',
         appointmentId: appointment.id,
@@ -376,16 +308,11 @@ export async function createAppointmentReminder(
       date: reminderDate,
     },
   });
-
-  return scheduledId;
 }
 
-/**
- * Função helper para cancelar um lembrete de consulta específico
- */
 export async function cancelAppointmentReminder(
   appointmentId: string,
-  hoursBefore: number
+  hoursBefore: number,
 ): Promise<void> {
   const identifier = `appointment-reminder-${appointmentId}-${hoursBefore}h`;
   await Notifications.cancelScheduledNotificationAsync(identifier);

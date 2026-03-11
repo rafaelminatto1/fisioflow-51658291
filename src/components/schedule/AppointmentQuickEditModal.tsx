@@ -4,7 +4,6 @@ import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { parseResponseDate } from '@/utils/dateUtils';
 import {
-
   Dialog,
   DialogContent,
   DialogHeader,
@@ -53,14 +52,12 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
+import { useUpdateAppointment } from '@/hooks/useAppointments';
 import { useScheduleSettings } from '@/hooks/useScheduleSettings';
 import { checkAppointmentConflict, formatTimeRange } from '@/utils/appointmentValidation';
-import { getAppointmentConflictUserMessage } from '@/utils/appointmentErrors';
 import { PatientService } from '@/services/patientService';
-import { AppointmentService } from '@/services/appointmentService';
-import { getUserOrganizationId } from '@/utils/userHelpers';
 import type { Appointment, AppointmentStatus, AppointmentBase } from '@/types/appointment';
 import { appointmentsApi } from '@/lib/api/workers-client';
 import {
@@ -135,6 +132,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
   const queryClient = useQueryClient();
   const { cancelAppointment, isCanceling } = useAppointmentActions();
   const { cancellationRules } = useScheduleSettings();
+  const { mutateAsync: updateAppointment, isPending: isSaving } = useUpdateAppointment();
 
   // States
   const [isEditing, setIsEditing] = useState(false);
@@ -215,98 +213,6 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
     },
     staleTime: 30000,
     enabled: open && !!appointment?.patientId && !!formData.appointment_date,
-  });
-
-  // Mutation para atualizar agendamento com atualização otimista completa
-  const updateAppointmentMutation = useMutation({
-    mutationFn: async ({ appointmentId, updates }: {
-      appointmentId: string;
-      updates: {
-        appointment_date: string;
-        appointment_time: string;
-        duration: number;
-        status: AppointmentStatus;
-        notes: string;
-        therapist_id: string | null;
-      };
-    }) => {
-      const organizationId = await getUserOrganizationId();
-      return await AppointmentService.updateAppointment(appointmentId, updates, organizationId);
-    },
-    onMutate: async ({ appointmentId, updates }) => {
-      // Cancela qualquer refetch em andamento para evitar sobrescrever nossa atualização otimista
-      await queryClient.cancelQueries({
-        predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === 'appointments'
-      });
-
-      // Snapshot dos valores anteriores - coletar todas as queries de appointments
-      const previousQueries = queryClient.getQueriesData({
-        predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === 'appointments'
-      });
-
-      // Atualização otimista: atualiza localmente todos os campos modificados
-      queryClient.setQueriesData(
-        { predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === 'appointments' },
-        (old: unknown) => {
-          if (!old || typeof old !== 'object') return old;
-
-          const oldData = old as { data?: AppointmentBase[]; isFromCache?: boolean; cacheTimestamp?: string | null };
-
-          if (!oldData.data || !Array.isArray(oldData.data)) return old;
-
-          return {
-            ...oldData,
-            data: oldData.data.map((apt) =>
-              apt.id === appointmentId
-                ? {
-                  ...apt,
-                  // Atualiza todos os campos que podem mudar visualmente
-                  ...(updates.appointment_date && {
-                    date: new Date(updates.appointment_date + 'T12:00:00')
-                  }),
-                  ...(updates.appointment_time && { time: updates.appointment_time }),
-                  ...(updates.duration && { duration: updates.duration }),
-                  ...(updates.status && { status: updates.status }),
-                  ...(updates.notes !== undefined && { notes: updates.notes }),
-                  updatedAt: new Date(),
-                }
-                : apt
-            )
-          };
-        }
-      );
-
-      return { previousQueries, appointmentId };
-    },
-    onSuccess: () => {
-      // Invalida queries para garantir sincronia com o servidor
-      queryClient.invalidateQueries({
-        predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === 'appointments'
-      });
-      queryClient.invalidateQueries({ queryKey: ['appointments-for-conflict'] });
-
-      toast.success('Agendamento atualizado com sucesso');
-      setIsEditing(false);
-    },
-    onError: (error: Error, _variables, context) => {
-      // Reverte para o estado anterior em caso de erro
-      if (context?.previousQueries) {
-        context.previousQueries.forEach(([key, data]) => {
-          queryClient.setQueryData(key, data);
-        });
-      }
-
-      // Mensagem de erro mais descritiva (inclui 409 do backend)
-      const errorMessage =
-        getAppointmentConflictUserMessage(error) ??
-        (error.message.includes('duplicate')
-          ? 'Já existe um agendamento neste horário.'
-          : error.message.includes('permission')
-            ? 'Você não tem permissão para alterar este agendamento.'
-            : 'Erro ao atualizar agendamento. Tente novamente.');
-
-      toast.error(errorMessage);
-    },
   });
 
   // Carregar detalhes do paciente
@@ -452,7 +358,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
   ]);
 
   // Handlers
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (!appointment) return;
 
     if (conflictError) {
@@ -460,18 +366,23 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
       return;
     }
 
-    updateAppointmentMutation.mutate({
-      appointmentId: appointment.id,
-      updates: {
-        appointment_date: formData.appointment_date,
-        appointment_time: formData.appointment_time,
-        duration: formData.duration,
-        status: formData.status,
-        notes: formData.notes,
-        therapist_id: formData.therapist_id || null,
-      },
-    });
-  }, [appointment, formData, conflictError, updateAppointmentMutation]);
+    try {
+      await updateAppointment({
+        appointmentId: appointment.id,
+        updates: {
+          appointment_date: formData.appointment_date,
+          appointment_time: formData.appointment_time,
+          duration: formData.duration,
+          status: formData.status,
+          notes: formData.notes,
+          therapist_id: formData.therapist_id || null,
+        },
+      });
+      setIsEditing(false);
+    } catch (_error) {
+      // Erro já tratado pelo hook useUpdateAppointment
+    }
+  }, [appointment, formData, conflictError, updateAppointment]);
 
   const handleCancel = useCallback(() => {
     if (!appointment) return;
@@ -563,8 +474,6 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
   };
 
   if (!appointment) return null;
-
-  const isSaving = updateAppointmentMutation.isPending;
 
   return (
     <>

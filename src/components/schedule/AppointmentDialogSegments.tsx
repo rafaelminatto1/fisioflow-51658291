@@ -42,14 +42,17 @@ export const PatientSelectionSection = ({
     isLoading,
     disabled,
     onCreateNew,
-    fallbackPatientName
+    fallbackPatientName,
+    fallbackDescription
 }: {
     patients: Patient[],
     isLoading: boolean,
     disabled: boolean,
     onCreateNew: (name: string) => void,
     /** Nome do paciente recém-criado (cadastro rápido) para exibir até a lista atualizar */
-    fallbackPatientName?: string
+    fallbackPatientName?: string,
+    /** Descrição opcional para o fallback (ex.: "Recém-cadastrado") */
+    fallbackDescription?: string
 }) => {
     const { watch, setValue, formState: { errors } } = useFormContext<AppointmentFormData>();
 
@@ -69,6 +72,7 @@ export const PatientSelectionSection = ({
                 })}
                 onCreateNew={onCreateNew}
                 fallbackDisplayName={fallbackPatientName}
+                fallbackDescription={fallbackDescription}
                 disabled={disabled || isLoading}
                 aria-invalid={!!errors.patient_id}
                 aria-describedby={errors.patient_id ? "patient-id-error" : undefined}

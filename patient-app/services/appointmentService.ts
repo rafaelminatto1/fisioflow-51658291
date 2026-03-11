@@ -1,141 +1,75 @@
-/**
- * Appointment Service
- * Handles appointment-related operations
- */
-
-import {
-  collection,
-  doc,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-  getDocs,
-  updateDoc,
-  getDoc,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { patientApi } from '@/lib/api';
 import { asyncResult, Result } from '@/lib/async';
 import { log } from '@/lib/logger';
 import { perf } from '@/lib/performance';
 
-/**
- * Subscribe to appointments for a user
- */
 export function subscribeToAppointments(
   userId: string,
-  callback: (appointments: any[]) => void
+  callback: (appointments: any[]) => void,
 ): () => void {
-  const appointmentsRef = collection(db, 'users', userId, 'appointments');
-  const q = query(appointmentsRef, orderBy('date', 'desc'));
+  const load = async () => {
+    try {
+      const appointments = await patientApi.getAppointments();
+      callback(appointments);
+    } catch (error) {
+      log.error('APPOINTMENT', 'Error polling appointments', error);
+    }
+  };
 
-  const unsubscribe = onSnapshot(q, (snapshot) => {
-    const appointments = snapshot.docs.map(docSnap => ({
-      id: docSnap.id,
-      ...docSnap.data(),
-    }));
-    callback(appointments);
-  });
-
-  return unsubscribe;
+  load();
+  const interval = setInterval(load, 30000);
+  return () => clearInterval(interval);
 }
 
-/**
- * Get upcoming appointments for a user
- */
-export async function getUpcomingAppointments(userId: string): Promise<Result<any[]>> {
+export async function getUpcomingAppointments(_userId: string): Promise<Result<any[]>> {
   return asyncResult(async () => {
-    perf.start('firestore_get_upcoming_appointments');
-
-    const now = new Date();
-    const appointmentsRef = collection(db, 'users', userId, 'appointments');
-    const q = query(
-      appointmentsRef,
-      where('date', '>=', now),
-      orderBy('date', 'asc')
-    );
-
-    const snapshot = await getDocs(q);
-
-    perf.end('firestore_get_upcoming_appointments', true);
-
-    return snapshot.docs.map(docSnap => ({
-      id: docSnap.id,
-      ...docSnap.data(),
-    }));
+    perf.start('api_get_upcoming_appointments');
+    const appointments = await patientApi.getAppointments(true);
+    perf.end('api_get_upcoming_appointments', true);
+    return appointments;
   }, 'getUpcomingAppointments');
 }
 
-/**
- * Get past appointments for a user
- */
-export async function getPastAppointments(userId: string): Promise<Result<any[]>> {
+export async function getPastAppointments(_userId: string): Promise<Result<any[]>> {
   return asyncResult(async () => {
-    perf.start('firestore_get_past_appointments');
-
-    const now = new Date();
-    const appointmentsRef = collection(db, 'users', userId, 'appointments');
-    const q = query(
-      appointmentsRef,
-      where('date', '<', now),
-      orderBy('date', 'desc')
-    );
-
-    const snapshot = await getDocs(q);
-
-    perf.end('firestore_get_past_appointments', true);
-
-    return snapshot.docs.map(docSnap => ({
-      id: docSnap.id,
-      ...docSnap.data(),
-    }));
+    perf.start('api_get_past_appointments');
+    const appointments = await patientApi.getAppointments();
+    const now = Date.now();
+    const pastAppointments = appointments.filter((appointment: any) => {
+      const appointmentDate = new Date(appointment.date).getTime();
+      return (
+        appointmentDate < now ||
+        appointment.status === 'completed' ||
+        appointment.status === 'cancelled'
+      );
+    });
+    perf.end('api_get_past_appointments', true);
+    return pastAppointments;
   }, 'getPastAppointments');
 }
 
-/**
- * Get next appointment for a user
- */
 export async function getNextAppointment(userId: string): Promise<Result<any | null>> {
   return asyncResult(async () => {
     const result = await getUpcomingAppointments(userId);
-
-    if (!result.success || !result.data || result.data.length === 0) {
+    if (!result.success || !result.data?.length) {
       return null;
     }
-
     return result.data[0];
   }, 'getNextAppointment');
 }
 
-/**
- * Get appointment by ID
- */
 export async function getAppointmentById(
-  userId: string,
-  appointmentId: string
+  _userId: string,
+  appointmentId: string,
 ): Promise<Result<any | null>> {
   return asyncResult(async () => {
-    perf.start('firestore_get_appointment_by_id');
-
-    const appointmentRef = doc(db, 'users', userId, 'appointments', appointmentId);
-    const appointmentDoc = await getDoc(appointmentRef);
-
-    perf.end('firestore_get_appointment_by_id', true);
-
-    if (!appointmentDoc.exists()) {
-      return null;
-    }
-
-    return {
-      id: appointmentDoc.id,
-      ...appointmentDoc.data(),
-    };
+    perf.start('api_get_appointment_by_id');
+    const appointments = await patientApi.getAppointments();
+    perf.end('api_get_appointment_by_id', true);
+    return appointments.find((appointment: any) => appointment.id === appointmentId) ?? null;
   }, 'getAppointmentById');
 }
 
-/**
- * Update appointment (for patient to confirm attendance or add notes)
- */
 export interface AppointmentUpdate {
   confirmed?: boolean;
   patientNotes?: string;
@@ -143,42 +77,29 @@ export interface AppointmentUpdate {
 }
 
 export async function updateAppointment(
-  userId: string,
+  _userId: string,
   appointmentId: string,
-  updates: AppointmentUpdate
+  updates: AppointmentUpdate,
 ): Promise<Result<void>> {
   return asyncResult(async () => {
-    perf.start('firestore_update_appointment');
+    perf.start('api_update_appointment');
 
-    const appointmentRef = doc(db, 'users', userId, 'appointments', appointmentId);
-    const updateData: any = {
-      updated_at: new Date(),
-    };
-
-    if (updates.confirmed !== undefined) {
-      updateData.confirmed = updates.confirmed;
-      updateData.confirmed_at = updates.confirmed ? new Date() : null;
-    }
-    if (updates.patientNotes !== undefined) {
-      updateData.patient_notes = updates.patientNotes;
-    }
-    if (updates.responseToReminder !== undefined) {
-      updateData.response_to_reminder = updates.responseToReminder;
+    if (updates.confirmed === true || updates.responseToReminder === true) {
+      await patientApi.confirmAppointment(appointmentId);
     }
 
-    await updateDoc(appointmentRef, updateData);
+    if (updates.confirmed === false) {
+      await patientApi.cancelAppointment(appointmentId, updates.patientNotes);
+    }
 
-    perf.end('firestore_update_appointment', true);
-    log.info('APPOINTMENT', 'Appointment updated by patient', { userId, appointmentId, updates });
+    perf.end('api_update_appointment', true);
+    log.info('APPOINTMENT', 'Appointment updated by patient', { appointmentId, updates });
   }, 'updateAppointment');
 }
 
-/**
- * Confirm appointment attendance
- */
 export async function confirmAppointment(
   userId: string,
-  appointmentId: string
+  appointmentId: string,
 ): Promise<Result<void>> {
   return updateAppointment(userId, appointmentId, { confirmed: true });
 }

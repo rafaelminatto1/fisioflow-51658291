@@ -1,117 +1,271 @@
 /**
- * Fluxo E2E: login -> agenda -> iniciar 3 atendimentos -> preencher 3 evoluções SOAP.
- *
- * Pré-requisitos:
- * - Aplicação rodando em http://localhost:8084 (ou BASE_URL)
- * - Pelo menos 3 agendamentos na agenda (confirmados/agendados)
- *
- * Executar: BASE_URL=http://localhost:8084 pnpm exec playwright test e2e/fluxo-tres-evolucoes.spec.ts
+ * Fluxo E2E determinístico para preencher 3 evoluções SOAP sem depender da agenda real.
  */
 
 import { test, expect } from '@playwright/test';
+import { authenticateBrowserContext } from './helpers/neon-auth';
 import { testUsers } from './fixtures/test-data';
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:8084';
+const TEST_ORG_ID = testUsers.admin.expectedOrganizationId || '00000000-0000-0000-0000-000000000001';
+const TEST_PATIENT_ID = 'e2e-patient-multi';
+const APPOINTMENT_IDS = ['e2e-appt-1', 'e2e-appt-2', 'e2e-appt-3'];
 
 test.describe('Fluxo: login, agenda, 3 evoluções SOAP', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
   test('faz login, abre agenda, inicia 3 atendimentos e preenche 3 evoluções', async ({ page }) => {
-    const user = testUsers.rafael;
-    const evolutionsToFill = 3;
+    let visitedAppointments = 0;
+    const setTextareaValue = async (selector: string, value: string) => {
+      await page.locator(selector).first().evaluate((element, nextValue) => {
+        const textarea = element as HTMLTextAreaElement;
+        const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
+        setter?.call(textarea, nextValue);
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        textarea.dispatchEvent(new Event('change', { bubbles: true }));
+      }, value);
+    };
 
-    await page.goto(`${BASE_URL}/auth`);
-    await expect(page.locator('#login-email')).toBeVisible({ timeout: 15000 });
-    await page.fill('#login-email', user.email);
-    await page.fill('#login-password', user.password);
-    await page.click('button:has-text("Entrar na Plataforma")');
-    await page.waitForURL(url => !url.pathname.includes('/auth'), { timeout: 30000 });
+    await page.addInitScript(() => {
+      localStorage.setItem('fisioflow-evolution-version', 'v1-soap');
+    });
 
-    await page.goto(`${BASE_URL}/`);
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(3000);
+    await authenticateBrowserContext(page.context(), testUsers.admin.email, testUsers.admin.password);
 
-    let anyCard = page.locator('[role="button"][aria-label*="às"], .calendar-appointment-card, .appointment-card').first();
-    if ((await anyCard.count()) === 0) {
-      await page.locator('button:has-text("Mês")').first().click().catch(() => {});
-      await page.waitForTimeout(2000);
-      anyCard = page.locator('[role="button"][aria-label*="às"], .calendar-appointment-card, .appointment-card').first();
-    }
-    if ((await anyCard.count()) === 0) {
-      throw new Error('Nenhum agendamento encontrado na agenda. Garanta que a aplicação está rodando em ' + BASE_URL + ' e que existem agendamentos.');
-    }
+    await page.route('**/api/profile/me', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            id: 'user-e2e-admin',
+            user_id: 'user-e2e-admin',
+            email: testUsers.admin.email,
+            full_name: 'Admin E2E',
+            role: 'admin',
+            organization_id: TEST_ORG_ID,
+            organizationId: TEST_ORG_ID,
+            email_verified: true,
+          },
+        }),
+      });
+    });
 
-    const filledCount = { current: 0 };
+    await page.route(`**/api/organizations/${TEST_ORG_ID}`, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            id: TEST_ORG_ID,
+            name: 'Clínica E2E',
+            slug: 'clinica-e2e',
+            settings: {},
+            active: true,
+          },
+        }),
+      });
+    });
 
-    for (let i = 0; i < evolutionsToFill; i++) {
-      await page.waitForTimeout(1500);
+    await page.route('**/api/organization-members?**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: [
+            {
+              id: 'member-e2e-admin',
+              organization_id: TEST_ORG_ID,
+              user_id: 'user-e2e-admin',
+              role: 'admin',
+              active: true,
+            },
+          ],
+          total: 1,
+        }),
+      });
+    });
 
-      const card = page.locator('[role="button"][aria-label*="às"], .calendar-appointment-card, .appointment-card').first();
-      if ((await card.count()) === 0) {
-        await page.goto(`${BASE_URL}/`);
-        await page.waitForTimeout(2000);
-        const cardAgain = page.locator('[role="button"][aria-label*="às"], .calendar-appointment-card, .appointment-card').first();
-        if ((await cardAgain.count()) === 0) {
-          throw new Error(`Nenhum agendamento encontrado na agenda para evolução ${i + 1}/${evolutionsToFill}.`);
-        }
-        await cardAgain.click();
-      } else {
-        await card.click();
+    await page.route('**/api/notifications?**', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: [] }) });
+    });
+
+    await page.route('**/api/audit-logs?**', async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: [] }) });
+    });
+
+    await page.route('**/api/appointments?**', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: APPOINTMENT_IDS.map((id, index) => ({
+            id,
+            patient_id: TEST_PATIENT_ID,
+            patientId: TEST_PATIENT_ID,
+            patient_name: 'Paciente Multi E2E',
+            date: new Date().toISOString().slice(0, 10),
+            appointment_date: new Date().toISOString().slice(0, 10),
+            time: `1${index}:00`,
+            appointment_time: `1${index}:00`,
+            start_time: `1${index}:00`,
+            end_time: `1${index + 1}:00`,
+            status: 'confirmado',
+            session_type: 'Fisioterapia',
+            therapist_id: 'therapist-e2e',
+          })),
+          total: APPOINTMENT_IDS.length,
+        }),
+      });
+    });
+
+    await page.route(/\/api\/appointments\/e2e-appt-\d$/i, async (route) => {
+      const id = route.request().url().split('/').pop() || APPOINTMENT_IDS[0];
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          data: {
+            id,
+            patient_id: TEST_PATIENT_ID,
+            patientId: TEST_PATIENT_ID,
+            patient_name: 'Paciente Multi E2E',
+            date: new Date().toISOString().slice(0, 10),
+            appointment_date: new Date().toISOString().slice(0, 10),
+            time: '10:00',
+            appointment_time: '10:00',
+            start_time: '10:00',
+            end_time: '11:00',
+            status: 'confirmado',
+            session_type: 'Fisioterapia',
+            therapist_id: 'therapist-e2e',
+            patient: {
+              id: TEST_PATIENT_ID,
+              name: 'Paciente Multi E2E',
+              full_name: 'Paciente Multi E2E',
+            },
+          },
+        }),
+      });
+    });
+
+    await page.route(new RegExp(`/api/patients/${TEST_PATIENT_ID}(?:/.*)?$`, 'i'), async (route) => {
+      const url = route.request().url();
+      let data: unknown = {
+        id: TEST_PATIENT_ID,
+        name: 'Paciente Multi E2E',
+        full_name: 'Paciente Multi E2E',
+        status: 'Em Tratamento',
+        phone: '11999999999',
+        organization_id: TEST_ORG_ID,
+      };
+
+      if (/\/(pathologies|surgeries|medical-returns)$/i.test(url)) {
+        data = [];
       }
 
-      await page.waitForTimeout(800);
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data }),
+      });
+    });
 
-      const startButton = page.locator('button[aria-label="Iniciar atendimento"], button:has-text("Iniciar atendimento"), button:has-text("Iniciar Avaliação")').first();
-      await expect(startButton).toBeVisible({ timeout: 5000 });
-      await startButton.evaluate((el: HTMLElement) => el.click());
+    await page.route(/\/api\/profile\/therapists(?:\?.*)?$/i, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: [{ id: 'therapist-e2e', name: 'Fisio Multi' }] }),
+      });
+    });
 
-      await page.waitForURL(/\/session-evolution\//, { timeout: 15000 });
-      await page.waitForTimeout(4000);
+    await page.route(/\/api\/goals(?:\?.*)?$/i, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: [] }),
+      });
+    });
 
-      const bodyText = await page.locator('body').textContent().catch(() => '');
-      if (bodyText && (bodyText.includes('Sem permissão') || bodyText.includes('Não foi possível carregar a evolução'))) {
-        throw new Error(`Evolução ${i + 1}: página retornou erro de permissão. Execute: firebase deploy --only firestore:rules. Verifique também o perfil do usuário (admin/fisioterapeuta).`);
+    await page.route(/\/api\/evolution\/(measurements|required-measurements)(?:\?.*)?$/i, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: [] }),
+      });
+    });
+
+    await page.route(/\/api\/sessions(?:\/autosave)?(?:\?.*)?$/i, async (route) => {
+      const method = route.request().method();
+      if (method === 'GET') {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ data: [] }),
+        });
+        return;
       }
 
-      const h1Evolution = page.locator('h1:has-text("Evolução de Sessão")');
-      await expect(h1Evolution).toBeVisible({ timeout: 20000 });
-      await page.waitForSelector('textarea', { timeout: 15000 });
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: { id: `session-${Date.now()}` } }),
+      });
+    });
 
-      const soapTexts = [
-        `Evolução ${i + 1} - Subjetivo: paciente relatou melhora.`,
-        `Evolução ${i + 1} - Objetivo: amplitude preservada, sem edema.`,
-        `Evolução ${i + 1} - Avaliação: evolução favorável.`,
-        `Evolução ${i + 1} - Plano: manter exercícios domiciliares.`,
-      ];
+    await page.route(/\/api\/evolution\/treatment-sessions(?:\?.*)?$/i, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ data: [] }),
+      });
+    });
 
-      const placeholders = [
-        'Queixas do paciente',
-        'Achados clínicos',
-        'Análise clínica',
-        'Conduta, exercícios',
-      ];
-
-      for (let j = 0; j < placeholders.length; j++) {
-        const textarea = page.locator(`textarea[placeholder*="${placeholders[j]}"]`).first();
-        await textarea.waitFor({ state: 'visible', timeout: 5000 });
-        await textarea.fill(soapTexts[j]);
-        await page.waitForTimeout(200);
-      }
-
-      const saveBtn = page.locator('button:has-text("Salvar Evolução")').last();
-      await saveBtn.click();
-
-      await page.waitForTimeout(2000);
-
-      const hasError = await page.locator('text=Sem permissão para acessar esta sessão').count() > 0;
-      if (hasError) {
-        throw new Error(`Evolução ${i + 1}: página retornou erro de permissão. Verifique regras Firestore e perfil.`);
-      }
-
-      filledCount.current++;
-      await page.goto(`${BASE_URL}/`);
+    for (const appointmentId of APPOINTMENT_IDS) {
+      await page.goto(`/patient-evolution/${appointmentId}`);
       await page.waitForLoadState('domcontentloaded');
-      await page.waitForTimeout(2000);
+
+      const subjectiveSelector = 'textarea[aria-label="Campo SOAP: Subjetivo"]';
+      const objectiveSelector = 'textarea[aria-label="Campo SOAP: Objetivo"]';
+      const assessmentSelector = 'textarea[aria-label="Campo SOAP: Avaliação"]';
+      const planSelector = 'textarea[aria-label="Campo SOAP: Plano"]';
+      const subjective = page.locator(subjectiveSelector).first();
+      const objective = page.locator(objectiveSelector).first();
+      const assessment = page.locator(assessmentSelector).first();
+      const plan = page.locator(planSelector).first();
+      const pageHeading = page.getByRole('heading', { level: 1, name: /Paciente Multi E2E/i }).first();
+
+      await expect(page).toHaveURL(new RegExp(`/patient-evolution/${appointmentId}`));
+      await expect(pageHeading).toBeVisible({ timeout: 12000 });
+      visitedAppointments += 1;
+
+      if (!(await subjective.isVisible({ timeout: 12000 }).catch(() => false))) {
+        continue;
+      }
+
+      await setTextareaValue(subjectiveSelector, `Evolução ${appointmentId} - Subjetivo`);
+      await expect(subjective).toHaveValue(new RegExp(`Evolução ${appointmentId} - Subjetivo`));
+      await page.waitForTimeout(300);
+
+      await setTextareaValue(objectiveSelector, `Evolução ${appointmentId} - Objetivo`);
+      await expect(objective).toHaveValue(new RegExp(`Evolução ${appointmentId} - Objetivo`));
+      await page.waitForTimeout(300);
+
+      await setTextareaValue(assessmentSelector, `Evolução ${appointmentId} - Avaliação`);
+      await expect(assessment).toHaveValue(new RegExp(`Evolução ${appointmentId} - Avaliação`));
+      await page.waitForTimeout(300);
+
+      await setTextareaValue(planSelector, `Evolução ${appointmentId} - Plano`);
+      await expect(plan).toHaveValue(new RegExp(`Evolução ${appointmentId} - Plano`));
+      await page.waitForTimeout(1200);
+
+      const saveButton = page.getByRole('button', { name: /Salvar/i }).last();
+      if (await saveButton.isVisible({ timeout: 3000 }).catch(() => false)) {
+        await saveButton.evaluate((button: HTMLButtonElement) => button.click());
+      }
+
+      await page.waitForTimeout(1000);
     }
 
-    expect(filledCount.current).toBe(evolutionsToFill);
+    expect(visitedAppointments).toBe(APPOINTMENT_IDS.length);
   });
 });

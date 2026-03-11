@@ -79,17 +79,10 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     };
   }, []);
 
-  const loadUserAndProfile = useCallback(async (newUser: AuthUser | null) => {
+  const loadUserAndProfile = useCallback(async (newUser: AuthUser | null, neonUser?: any) => {
     setUser(newUser);
     if (newUser) {
-      let profileData: Profile | null = null;
-      try {
-        const session = await authClient.getSession();
-        const neonUser = session?.data?.user as Record<string, unknown> | undefined;
-        profileData = buildProfile(neonUser, newUser);
-      } catch {
-        profileData = buildProfile(null, newUser);
-      }
+      const profileData = buildProfile(neonUser, newUser);
       setProfile(profileData);
       prefetchDashboardData(profileData?.organization_id || DEFAULT_ORG_ID);
     } else {
@@ -104,18 +97,23 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     let mounted = true;
     const init = async () => {
       try {
+        setLoading(true);
         // Limita a 5s para não travar o carregamento
         const timeout = new Promise<null>((res) => setTimeout(() => res(null), 5000));
-        const result = await Promise.race([authClient.getSession(), timeout]);
+        const result = await Promise.race([authClient.getSession(), timeout]) as any;
+        
         if (!mounted) return;
+        
         if (result && 'data' in result && result.data?.user) {
-          await loadUserAndProfile(adaptNeonUser(result.data.user));
+          await loadUserAndProfile(adaptNeonUser(result.data.user), result.data.user);
         } else {
           await loadUserAndProfile(null);
         }
-      } catch {
-        if (!mounted) return;
-        await loadUserAndProfile(null);
+      } catch (error) {
+        console.error('Auth init error:', error);
+        if (mounted) await loadUserAndProfile(null);
+      } finally {
+        if (mounted) setLoading(false);
       }
     };
     init();

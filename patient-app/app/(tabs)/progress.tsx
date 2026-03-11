@@ -19,14 +19,7 @@ import { Card, SyncIndicator } from '@/components';
 import { Spacing } from '@/constants/spacing';
 import { format, subDays, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import {
-  collection,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { patientApi } from '@/lib/api';
 import { log } from '@/lib/logger';
 
 interface Evolution {
@@ -92,58 +85,36 @@ export default function ProgressScreen() {
       return;
     }
 
-    // Fetch medical reports from root relatorios_medicos collection
-    const reportsRef = collection(db, 'relatorios_medicos');
-    const qReports = query(
-      reportsRef,
-      where('patientId', '==', user.id),
-      orderBy('data_emissao', 'desc')
-    );
+    let cancelled = false;
 
-    const unsubReports = onSnapshot(qReports, (snapshot) => {
-      const reportsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setReports(reportsData);
-    });
+    const load = async () => {
+      try {
+        const progress = await patientApi.getProgress();
+        if (cancelled) return;
 
-    // Fetch finalized evolutions from root soap_records collection
-    const evolutionsRef = collection(db, 'soap_records');
-    const q = query(
-      evolutionsRef,
-      where('patient_id', '==', user.id),
-      where('status', '==', 'finalized'),
-      orderBy('record_date', 'desc')
-    );
+        const evolutionsData = (progress.evolutions || []) as Evolution[];
+        setReports(progress.reports || []);
+        setEvolutions(evolutionsData);
+        calculateStats(evolutionsData);
+      } catch (error) {
+        log.error('Error fetching evolutions:', error);
+        if (!cancelled) {
+          setReports([]);
+          setEvolutions([]);
+          calculateStats([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const evolutionsData = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-        } as Evolution;
-      });
+    load();
 
-      setEvolutions(evolutionsData);
-      calculateStats(evolutionsData);
-      setLoading(false);
-    }, (error) => {
-      log.error('Error fetching evolutions:', error);
-      // Fallback to legacy user subcollection if empty
-      const legacyRef = collection(db, 'users', user.id, 'evolutions');
-      const legacyQuery = query(legacyRef, orderBy('date', 'desc'));
-      
-      onSnapshot(legacyQuery, (legacySnap) => {
-        const legacyData = legacySnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
-        setEvolutions(legacyData);
-        calculateStats(legacyData);
-        setLoading(false);
-      });
-    });
-
-    return unsubscribe;
+    return () => {
+      cancelled = true;
+    };
   }, [user?.id, refreshKey]);
 
   const calculateStats = (evolutionsData: Evolution[]) => {

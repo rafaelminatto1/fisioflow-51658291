@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react';
-import {
-  doc,
-  onSnapshot,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { gamificationApi } from '@/lib/api';
+import { log } from '@/lib/logger';
 
 export interface GamificationProfile {
   id: string;
@@ -27,16 +24,31 @@ export function useGamification(patientId: string | undefined) {
       return;
     }
 
-    const docRef = doc(db, 'patient_gamification', patientId);
-    
-    const unsubscribe = onSnapshot(docRef, (snapshot) => {
-      if (snapshot.exists()) {
-        setProfile({ id: snapshot.id, ...snapshot.data() } as GamificationProfile);
-      }
-      setLoading(false);
-    });
+    let cancelled = false;
 
-    return unsubscribe;
+    const load = async () => {
+      try {
+        const data = await gamificationApi.getProfile();
+        if (!cancelled) {
+          setProfile(data as GamificationProfile);
+        }
+      } catch (error) {
+        log.error('Error loading gamification profile:', error);
+        if (!cancelled) {
+          setProfile(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
   }, [patientId]);
 
   const xpPerLevel = 1000;

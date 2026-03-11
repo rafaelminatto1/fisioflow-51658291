@@ -17,12 +17,7 @@ import { useAuthStore } from '@/store/auth';
 import { Card, VideoModal, SyncIndicator, ExerciseFeedbackModal, ExerciseFeedback } from '@/components';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { Spacing } from '@/constants/spacing';
-import {
-  updateDoc,
-  doc,
-  setDoc,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { patientApi } from '@/lib/api';
 import { usePatientExercisesPostgres } from '@/hooks';
 import { GamificationService } from '@/services/GamificationService';
 import { log } from '@/lib/logger';
@@ -79,9 +74,9 @@ export default function ExercisesScreen() {
     // Se temos dados do Postgres, usamos eles para montar o plano "virtual"
     if (exercisesPostgres && exercisesPostgres.length > 0) {
       setExercisePlan({
-        id: 'postgres-plan', // ID virtual
-        name: 'Plano Atual (Sincronizado)',
-        description: 'Seus exercícios prescritos mais recentes.',
+        id: exercisesPostgres[0]?.plan?.id || 'portal-plan',
+        name: exercisesPostgres[0]?.plan?.name || 'Plano Atual',
+        description: exercisesPostgres[0]?.plan?.description || 'Seus exercícios prescritos mais recentes.',
         exercises: exercisesPostgres.map((ex: any) => ({
           id: ex.id,
           name: ex.exercise?.name || 'Exercício',
@@ -90,6 +85,7 @@ export default function ExercisesScreen() {
           reps: ex.reps,
           completed: ex.completed,
           video_url: ex.exercise?.videoUrl,
+          image_url: ex.exercise?.imageUrl,
           // Adaptação de campos
           hold_time: 0,
           rest_time: 0
@@ -145,18 +141,16 @@ export default function ExercisesScreen() {
       });
 
       if (isOnline) {
-        // Online: sync directly to Firestore
-        const planRef = doc(db, 'users', user.id, 'exercise_plans', exercisePlan.id);
-        await updateDoc(planRef, { exercises: updatedExercises });
-        
+        await patientApi.completeExercise(exercise.id, {
+          completed: newCompletedState,
+        });
+
         if (newCompletedState) {
-          GamificationService.awardExerciseCompletion(user.id, exercise.id);
+          await GamificationService.awardExerciseCompletion(user.id, exercise.id);
         }
       } else {
-        // Offline: queue the operation
         await queueOperation('complete_exercise', {
-          planId: exercisePlan.id,
-          exerciseId: exercise.id,
+          assignmentId: exercise.id,
           completed: newCompletedState,
         });
 
@@ -192,38 +186,20 @@ export default function ExercisesScreen() {
       });
 
       if (isOnline) {
-        // Online: sync directly to Firestore
-        const planRef = doc(db, 'users', user.id, 'exercise_plans', exercisePlan.id);
-        await updateDoc(planRef, { exercises: updatedExercises });
-
-        // Save feedback
-        const feedbackRef = doc(
-          db,
-          'users',
-          user.id,
-          'exercise_plans',
-          exercisePlan.id,
-          'feedback',
-          feedbackExercise.id
-        );
-        await setDoc(feedbackRef, {
+        await patientApi.completeExercise(feedbackExercise.id, {
+          completed: true,
           ...feedback,
-          created_at: new Date(),
-          exercise_name: feedbackExercise.name,
         });
 
-        GamificationService.awardExerciseCompletion(user.id, feedbackExercise.id);
+        await GamificationService.awardExerciseCompletion(user.id, feedbackExercise.id);
       } else {
-        // Offline: queue both operations
         await queueOperation('complete_exercise', {
-          planId: exercisePlan.id,
-          exerciseId: feedbackExercise.id,
+          assignmentId: feedbackExercise.id,
           completed: true,
         });
 
         await queueOperation('submit_feedback', {
-          exerciseId: feedbackExercise.id,
-          planId: exercisePlan.id,
+          assignmentId: feedbackExercise.id,
           ...feedback,
         });
       }

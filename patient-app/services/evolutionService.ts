@@ -1,78 +1,37 @@
-/**
- * Evolution Service
- * Handles evolution (SOAP note) related operations
- */
-
-import {
-  collection,
-  query,
-  orderBy,
-  onSnapshot,
-  getDocs,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { patientApi } from '@/lib/api';
 import { asyncResult, Result } from '@/lib/async';
 import { perf } from '@/lib/performance';
 
-/**
- * Subscribe to evolutions for a user
- */
 export function subscribeToEvolutions(
   userId: string,
-  callback: (evolutions: any[]) => void
+  callback: (evolutions: any[]) => void,
 ): () => void {
-  const evolutionsRef = collection(db, 'users', userId, 'evolutions');
-  const q = query(evolutionsRef, orderBy('date', 'desc'));
+  const load = async () => {
+    const result = await getEvolutions(userId);
+    callback(result.success ? result.data ?? [] : []);
+  };
 
-  const unsubscribe = onSnapshot(q, (snapshot) => {
-    const evolutions = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    callback(evolutions);
-  });
-
-  return unsubscribe;
+  load();
+  const interval = setInterval(load, 30000);
+  return () => clearInterval(interval);
 }
 
-/**
- * Get evolutions for a user within a date range
- */
 export async function getEvolutions(
-  userId: string,
+  _userId: string,
   startDate?: Date,
-  endDate?: Date
+  endDate?: Date,
 ): Promise<Result<any[]>> {
   return asyncResult(async () => {
-    perf.start('firestore_get_evolutions');
+    perf.start('api_get_evolutions');
+    const progress = await patientApi.getProgress();
+    perf.end('api_get_evolutions', true);
 
-    const evolutionsRef = collection(db, 'users', userId, 'evolutions');
-    const q = query(evolutionsRef, orderBy('date', 'desc'));
-
-    // Note: Firestore doesn't support multiple range queries
-    // If filtering by date is needed, it should be done client-side
-
-    const snapshot = await getDocs(q);
-
-    perf.end('firestore_get_evolutions', true);
-
-    let evolutions = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
-    // Filter by date range if provided
+    let evolutions = progress.evolutions || [];
     if (startDate || endDate) {
-      evolutions = evolutions.filter((evo: any) => {
-        let evoDate = new Date();
-        if (evo.date) {
-          if (typeof evo.date.toDate === 'function') evoDate = evo.date.toDate();
-          else if (typeof evo.date === 'string' || typeof evo.date === 'number') evoDate = new Date(evo.date);
-          else if (evo.date instanceof Date) evoDate = evo.date;
-        }
-        
-        if (startDate && evoDate < startDate) return false;
-        if (endDate && evoDate > endDate) return false;
+      evolutions = evolutions.filter((evolution: any) => {
+        const evolutionDate = new Date(evolution.record_date || evolution.date || Date.now());
+        if (startDate && evolutionDate < startDate) return false;
+        if (endDate && evolutionDate > endDate) return false;
         return true;
       });
     }
@@ -81,17 +40,11 @@ export async function getEvolutions(
   }, 'getEvolutions');
 }
 
-/**
- * Get evolution statistics for a user
- */
 export async function getEvolutionStats(userId: string): Promise<Result<any>> {
   return asyncResult(async () => {
-    perf.start('firestore_get_evolution_stats');
-
-    const evolutionsRef = collection(db, 'users', userId, 'evolutions');
-    const snapshot = await getDocs(evolutionsRef);
-
-    const evolutions = snapshot.docs.map(doc => doc.data());
+    perf.start('api_get_evolution_stats');
+    const evolutionsResult = await getEvolutions(userId);
+    const evolutions = evolutionsResult.success ? evolutionsResult.data ?? [] : [];
 
     if (evolutions.length === 0) {
       return {
@@ -103,33 +56,25 @@ export async function getEvolutionStats(userId: string): Promise<Result<any>> {
     }
 
     const totalSessions = evolutions.length;
-    const painLevels = evolutions.map(e => e.pain_level || 0);
-    const averagePain = painLevels.reduce((sum, level) => sum + level, 0) / painLevels.length;
+    const painLevels = evolutions.map((evolution: any) => evolution.pain_level || 0);
+    const averagePain = painLevels.reduce((sum: number, value: number) => sum + value, 0) / painLevels.length;
 
-    // Calculate date range
     const dates = evolutions
-      .map(e => {
-        if (!e.date) return new Date();
-        if (typeof e.date.toDate === 'function') return e.date.toDate();
-        if (typeof e.date === 'string' || typeof e.date === 'number') return new Date(e.date);
-        if (e.date instanceof Date) return e.date;
-        return new Date();
-      })
-      .sort((a, b) => a.getTime() - b.getTime());
+      .map((evolution: any) => new Date(evolution.record_date || evolution.date || Date.now()))
+      .sort((a: Date, b: Date) => a.getTime() - b.getTime());
 
     const firstDate = dates[0];
     const lastDate = dates[dates.length - 1];
     const totalDays = Math.max(
       1,
-      Math.ceil((lastDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24))
+      Math.ceil((lastDate.getTime() - firstDate.getTime()) / (1000 * 60 * 60 * 24)),
     );
 
-    // Calculate pain improvement (first vs last)
     const firstPain = evolutions[evolutions.length - 1]?.pain_level || 0;
     const lastPain = evolutions[0]?.pain_level || 0;
     const painImprovement = firstPain - lastPain;
 
-    perf.end('firestore_get_evolution_stats', true);
+    perf.end('api_get_evolution_stats', true);
 
     return {
       totalSessions,

@@ -17,13 +17,7 @@ import { Card, SyncIndicator } from '@/components';
 import { Spacing } from '@/constants/spacing';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import {
-  collection,
-  query,
-  orderBy,
-  onSnapshot,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { patientApi } from '@/lib/api';
 import { log } from '@/lib/logger';
 
 interface Appointment {
@@ -64,30 +58,33 @@ export default function AppointmentsScreen() {
       return;
     }
 
-    // Fetch appointments
-    const appointmentsRef = collection(db, 'users', user.id, 'appointments');
-    const q = query(
-      appointmentsRef,
-      orderBy('date', 'desc')
-    );
+    let cancelled = false;
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const appointmentsData = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          date: data.date, // Keep as Firestore Timestamp
-        } as Appointment;
-      });
-      setAppointments(appointmentsData);
-      setLoading(false);
-    }, (error) => {
-      log.error('Error fetching appointments:', error);
-      setLoading(false);
-    });
+    const load = async () => {
+      try {
+        const appointmentsData = await patientApi.getAppointments();
+        if (!cancelled) {
+          setAppointments(
+            appointmentsData.map((appointment: any) => ({
+              ...appointment,
+              professional_name: appointment.professional_name || 'Fisioterapeuta',
+            })),
+          );
+        }
+      } catch (error) {
+        log.error('Error fetching appointments:', error);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
 
-    return unsubscribe;
+    load();
+
+    return () => {
+      cancelled = true;
+    };
   }, [user?.id, refreshKey]);
 
   const onRefresh = async () => {

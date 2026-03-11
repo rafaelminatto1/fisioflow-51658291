@@ -1,6 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api/v2/client';
-import { API_URLS } from '@/lib/api/v2/config';
+import { aiApi } from '@/lib/api/workers-client';
 
 export interface AISummaryResponse {
   summary: string;
@@ -11,11 +10,19 @@ export const usePatientAISummary = () => {
   return useMutation({
     mutationKey: ['patient-ai-summary'],
     mutationFn: async (patientId: string) => {
-      const response = await apiClient.post<{ data: AISummaryResponse }>(
-        API_URLS.clinical.getAiSummary,
-        { patientId }
-      );
-      return response.data;
+      const response = await aiApi.service<
+        { patientId: string; message: string; context: Record<string, unknown> },
+        { response: string }
+      >('clinicalChat', {
+        patientId,
+        message: 'Gerar um resumo clinico objetivo do paciente.',
+        context: { patientId },
+      });
+
+      return {
+        summary: response.data.response,
+        timestamp: new Date().toISOString(),
+      };
     },
   });
 };

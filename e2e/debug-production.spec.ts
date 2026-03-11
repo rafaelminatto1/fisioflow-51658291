@@ -2,6 +2,8 @@ import { test, expect } from '@playwright/test';
 import { testUsers } from './fixtures/test-data';
 
 test.describe('Debug Produção - moocafisio.com.br', () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
   test('deve tentar login e verificar erros de IA', async ({ page }) => {
     const targetBaseUrl = process.env.E2E_PROD_BASE_URL || process.env.BASE_URL || 'https://moocafisio.com.br';
     const loginEmail = testUsers.admin.email;
