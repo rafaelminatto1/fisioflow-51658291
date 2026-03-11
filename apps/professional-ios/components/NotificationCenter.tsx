@@ -37,8 +37,8 @@ import {
   updateDoc,
   doc,
   writeBatch,
-} from '@/lib/firestore';
-import { db } from '@/lib/firebase';
+} from '@/lib/data-store';
+import { db } from '@/lib/platform';
 
 export interface NotificationItem {
   id: string;

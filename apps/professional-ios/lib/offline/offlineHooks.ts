@@ -19,8 +19,8 @@ import {
   onSnapshot,
   serverTimestamp,
   limit as limitQuery,
-} from '@/lib/firestore';
-import { db } from '@/lib/firebase';
+} from '@/lib/data-store';
+import { db } from '@/lib/platform';
 
 type WhereClause = [
   Parameters<typeof where>[0],

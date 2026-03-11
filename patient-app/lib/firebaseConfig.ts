@@ -1,3 +1,3 @@
-import { auth, db, storage, functions } from './firebase';
+import { auth, db, storage, functions } from './platform';
 
 export { auth, db, storage, functions };

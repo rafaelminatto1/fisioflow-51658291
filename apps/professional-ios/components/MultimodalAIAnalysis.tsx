@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { getStorage, ref, uploadBytes, getDownloadURL } from '@/lib/storage';
 import { httpsCallable } from '@/lib/functions';
-import { functions, getRemoteValue } from '@/lib/firebase';
+import { functions, getRemoteValue } from '@/lib/platform';
 import { useTheme } from '@/hooks/useTheme';
 import { Icon } from '@/components/ui/Icon';
 import { Button } from '@/components/ui/Button';
