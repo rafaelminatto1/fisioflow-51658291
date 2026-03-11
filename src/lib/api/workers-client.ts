@@ -147,6 +147,7 @@ export interface Protocol {
   wikiPageId?: string | null;
   milestones?: any[];
   restrictions?: any[];
+  phases?: any[];
   progressionCriteria?: any[];
   references?: any[];
   clinicalTests?: string[];
@@ -984,13 +985,40 @@ export const goalsApi = {
   list: (patientId: string) =>
     request<{ data: PatientGoal[] }>(`/api/goals?patientId=${encodeURIComponent(patientId)}`),
 
-  create: (data: { patient_id: string; description?: string; goal_title?: string; target_date?: string; priority?: string; status?: string }) =>
+  create: (data: {
+    patient_id: string;
+    description?: string;
+    goal_title?: string;
+    goal_description?: string;
+    category?: string;
+    target_date?: string;
+    target_value?: string;
+    current_value?: string;
+    current_progress?: number;
+    priority?: string;
+    status?: string;
+    metadata?: Record<string, unknown>;
+  }) =>
     request<{ data: PatientGoal }>('/api/goals', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  update: (id: string, data: Partial<Pick<PatientGoal, 'status' | 'description' | 'priority' | 'target_date' | 'achieved_at'>>) =>
+  update: (id: string, data: {
+    status?: string;
+    description?: string;
+    goal_title?: string;
+    goal_description?: string;
+    category?: string;
+    priority?: string;
+    target_date?: string;
+    target_value?: string;
+    current_value?: string;
+    current_progress?: number;
+    achieved_at?: string;
+    completed_at?: string;
+    metadata?: Record<string, unknown>;
+  }) =>
     request<{ data: PatientGoal }>(`/api/goals/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -1368,6 +1396,7 @@ export interface PatientRow {
   observations?: string | null;
   status?: string;
   progress?: number;
+  session_value?: number | null;
   incomplete_registration?: boolean;
   is_active?: boolean;
   created_at?: string;
@@ -4097,6 +4126,11 @@ export interface AssetAnnotationVersionRecord {
 }
 
 export const mediaApi = {
+  getUploadUrl: (data: { filename: string; contentType: string; folder?: string }) =>
+    request<{ data: { uploadUrl: string; publicUrl: string; key: string; expiresIn: number } }>(
+      '/api/media/upload-url',
+      { method: 'POST', body: JSON.stringify(data) },
+    ),
   annotations: {
     list: (assetId: string) =>
       request<{ data: AssetAnnotationVersionRecord[] }>(
@@ -4146,22 +4180,22 @@ export interface EventoTemplateRow {
   updated_at: string;
 }
 export const eventosApi = {
-  list: (p?:{status?:string;categoria?:string;limit?:number;offset?:number}) => request<{data:Evento[]}>(`/api/eventos?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`),
-  get: (id:string) => request<{data:Evento}>(`/api/eventos/${id}`),
-  create: (d:Partial<Evento>) => request<{data:Evento}>('/api/eventos',{method:'POST',body:JSON.stringify(d)}),
-  update: (id:string,d:Partial<Evento>) => request<{data:Evento}>(`/api/eventos/${id}`,{method:'PUT',body:JSON.stringify(d)}),
-  delete: (id:string) => request<{ok:boolean}>(`/api/eventos/${id}`,{method:'DELETE'}),
+  list: (p?:{status?:string;categoria?:string;limit?:number;offset?:number}) => request<{data:Evento[]}>(`/api/activities?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`),
+  get: (id:string) => request<{data:Evento}>(`/api/activities/${id}`),
+  create: (d:Partial<Evento>) => request<{data:Evento}>('/api/activities',{method:'POST',body:JSON.stringify(d)}),
+  update: (id:string,d:Partial<Evento>) => request<{data:Evento}>(`/api/activities/${id}`,{method:'PUT',body:JSON.stringify(d)}),
+  delete: (id:string) => request<{ok:boolean}>(`/api/activities/${id}`,{method:'DELETE'}),
 };
 export const eventoTemplatesApi = {
-  list: () => request<{ data: EventoTemplateRow[] }>('/api/evento-templates'),
-  get: (id: string) => request<{ data: EventoTemplateRow }>(`/api/evento-templates/${id}`),
+  list: () => request<{ data: EventoTemplateRow[] }>('/api/activity-templates'),
+  get: (id: string) => request<{ data: EventoTemplateRow }>(`/api/activity-templates/${id}`),
   create: (data: Partial<EventoTemplateRow>) =>
-    request<{ data: EventoTemplateRow }>('/api/evento-templates', {
+    request<{ data: EventoTemplateRow }>('/api/activity-templates', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
   delete: (id: string) =>
-    request<{ ok: boolean }>(`/api/evento-templates/${id}`, { method: 'DELETE' }),
+    request<{ ok: boolean }>(`/api/activity-templates/${id}`, { method: 'DELETE' }),
 };
 export const checklistApi = {
   list: (eventoId: string) => request<{ data: ChecklistItem[] }>(`/api/checklist?eventoId=${encodeURIComponent(eventoId)}`),
@@ -4188,10 +4222,10 @@ export const contratadosApi = {
   delete: (id:string) => request<{ok:boolean}>(`/api/contratados/${id}`,{method:'DELETE'}),
 };
 export const eventoContratadosApi = {
-  list: (p?:{eventoId?:string;contratadoId?:string}) => request<{data:EventoContratado[]}>(`/api/evento-contratados?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`),
-  create: (d:Partial<EventoContratado>) => request<{data:EventoContratado}>('/api/evento-contratados',{method:'POST',body:JSON.stringify(d)}),
-  update: (id:string,d:Partial<EventoContratado>) => request<{data:EventoContratado}>(`/api/evento-contratados/${id}`,{method:'PUT',body:JSON.stringify(d)}),
-  delete: (id:string) => request<{ok:boolean}>(`/api/evento-contratados/${id}`,{method:'DELETE'}),
+  list: (p?:{eventoId?:string;contratadoId?:string}) => request<{data:EventoContratado[]}>(`/api/activity-contractors?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`),
+  create: (d:Partial<EventoContratado>) => request<{data:EventoContratado}>('/api/activity-contractors',{method:'POST',body:JSON.stringify(d)}),
+  update: (id:string,d:Partial<EventoContratado>) => request<{data:EventoContratado}>(`/api/activity-contractors/${id}`,{method:'PUT',body:JSON.stringify(d)}),
+  delete: (id:string) => request<{ok:boolean}>(`/api/activity-contractors/${id}`,{method:'DELETE'}),
 };
 export const participantesApi = {
   list: (p?:{eventoId?:string;limit?:number;offset?:number}) => request<{data:Participante[]}>(`/api/participantes?${new URLSearchParams(Object.fromEntries(Object.entries(p??{}).filter(([,v])=>v!=null).map(([k,v])=>[k,String(v)])))}`),
