@@ -234,13 +234,13 @@ export const PatientService = {
 
     /**
      * Fetch active patients for an organization
-     * Uses Firebase Cloud Functions API
+     * Uses the Neon-backed Workers API
      */
     async getActivePatients(organizationId: string): Promise<ServiceResult<Patient[]>> {
         if (!organizationId) throw AppError.badRequest('Organization ID is required');
 
         try {
-            logger.info('PatientService: fetching patients from Firebase Functions', { organizationId }, 'PatientService');
+            logger.info('PatientService: fetching patients from Workers API', { organizationId }, 'PatientService');
             // TEMP: Removendo filtro de status para debug
             const response = await patientsApi.list({ organizationId, limit: 1000 });
 

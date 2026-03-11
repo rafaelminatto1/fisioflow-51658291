@@ -60,7 +60,10 @@ const queryClient = new QueryClient({
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Backoff exponencial
       refetchOnWindowFocus: true,
       refetchOnReconnect: true,
-      networkMode: 'online',
+      networkMode: 'offlineFirst',
+    },
+    mutations: {
+      networkMode: 'offlineFirst',
     },
   },
 });

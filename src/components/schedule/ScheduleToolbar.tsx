@@ -10,7 +10,6 @@ import { ptBR } from 'date-fns/locale';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import {
-
   ChevronLeft,
   ChevronRight,
   Settings as SettingsIcon,
@@ -31,6 +30,7 @@ import { AdvancedFilters } from './AdvancedFilters';
 import { toast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { SmartDatePicker } from '@/components/ui/smart-date-picker';
 
 export interface ScheduleToolbarProps {
   currentDate: Date;
@@ -93,37 +93,6 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
     }
   }, [currentDate, viewType]);
 
-  // Format abbreviated date for mobile
-  const formattedDateShort = React.useMemo(() => {
-    return format(currentDate, 'MMM yyyy', { locale: ptBR });
-  }, [currentDate]);
-
-  const _handleNavigate = (direction: 'prev' | 'next') => {
-    const daysToAdd = direction === 'next' ? 1 : -1;
-    const newDate = new Date(currentDate);
-
-    switch (viewType) {
-      case 'day':
-        newDate.setDate(newDate.getDate() + daysToAdd);
-        break;
-      case 'week':
-        addWeeks(newDate, direction === 'next' ? 1 : -1);
-        newDate.setDate(newDate.getDate() + (daysToAdd * 7));
-        break;
-      case 'month':
-        newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
-        break;
-    }
-    // Note: Parent component should handle state updates via onDateChange callback
-    // This is a limitation of current props - we'll address it
-    return newDate;
-  };
-
-  const _handleToday = () => {
-    // Note: Parent component should handle this
-    window.dispatchEvent(new CustomEvent('schedule-today-click'));
-  };
-
   // For desktop - show all controls
   const DesktopToolbar = () => (
     <div className="flex items-center justify-between px-8 py-4 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl sticky top-0 z-40">
@@ -178,9 +147,16 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
             Hoje
           </Button>
 
-          <h2 className="ml-4 text-lg font-black text-slate-900 dark:text-white capitalize tracking-tight">
-            {formattedDateRange}
-          </h2>
+          <SmartDatePicker
+            date={currentDate}
+            onChange={(date) => {
+              if (date) {
+                window.dispatchEvent(new CustomEvent('schedule-date-change', { detail: date }));
+              }
+            }}
+            className="h-10 min-w-[220px] border-none bg-transparent hover:bg-slate-50 dark:hover:bg-slate-900 font-black text-lg"
+            placeholder={formattedDateRange}
+          />
         </div>
       </div>
 
@@ -205,219 +181,162 @@ export const ScheduleToolbar: React.FC<ScheduleToolbarProps> = ({
         </div>
       </div>
 
-      {/* Right Group: Actions */}
+      {/* Right Group: Global Actions & Filters */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1.5 mr-2">
-            <AdvancedFilters
-                filters={filters}
-                onChange={onFiltersChange}
-                onClear={onClearFilters}
-            />
-            
-            <Link to="/agenda/settings">
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-10 w-10 rounded-xl text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900"
-                    title="Configurações"
-                >
-                    <SettingsIcon className="w-4 h-4" />
-                </Button>
-            </Link>
-        </div>
+        {/* Selection Actions */}
+        {isSelectionMode && (
+          <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-950/20 px-3 py-1.5 rounded-2xl border border-amber-100 dark:border-amber-900/30 animate-in fade-in zoom-in duration-300">
+            <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider mr-2">
+              Modo Seleção
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onCancelAllToday}
+              className="h-8 gap-2 text-xs font-bold text-amber-700 hover:bg-amber-100"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Cancelar Selecionados
+            </Button>
+          </div>
+        )}
 
-        {/* Selection Mode */}
-        <Button
-          variant={isSelectionMode ? "default" : "outline"}
-          size="icon"
-          className={cn(
-            "h-10 w-10 rounded-xl transition-all",
-            isSelectionMode ? "bg-blue-600 shadow-lg shadow-blue-500/40 border-blue-500" : "border-slate-200 dark:border-slate-800"
-          )}
-          onClick={onToggleSelection}
-          title="Modo Seleção"
-        >
-          <CheckSquare className="w-4 h-4" />
-        </Button>
-
-        {/* New Appointment - High End CTA */}
+        {/* Create Button */}
         <Button
           onClick={onCreateAppointment}
-          className="h-11 px-6 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-black text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-slate-900/20 gap-2"
+          className="h-10 px-5 gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl shadow-xl shadow-slate-900/10 transition-all hover:scale-105 active:scale-95 font-bold text-xs uppercase tracking-widest"
         >
           <Plus className="w-4 h-4" />
-          Agendar
+          Novo Agendamento
         </Button>
+
+        <div className="h-8 w-[1px] bg-slate-200 dark:bg-slate-800 mx-1" />
+
+        {/* Utility Actions */}
+        <div className="flex items-center gap-1">
+          <AdvancedFilters
+            filters={filters}
+            onFiltersChange={onFiltersChange}
+            onClear={onClearFilters}
+          />
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleSelection}
+            className={cn(
+              "h-10 w-10 rounded-xl transition-all",
+              isSelectionMode ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900" : "hover:bg-slate-100 dark:hover:bg-slate-800"
+            )}
+            title={isSelectionMode ? "Desativar seleção" : "Ativar seleção em massa"}
+          >
+            <CheckSquare className="w-4 h-4" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
+            title="Configurações da Agenda"
+          >
+            <SettingsIcon className="w-4 h-4" />
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <MoreVertical className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl shadow-2xl">
+              <DropdownMenuItem className="rounded-xl gap-2 font-medium">
+                <Sparkles className="w-4 h-4 text-amber-500" />
+                Otimizar Agenda (AI)
+              </DropdownMenuItem>
+              <DropdownMenuItem className="rounded-xl gap-2 font-medium">
+                <CheckSquare className="w-4 h-4 text-emerald-500" />
+                Confirmar todos por WhatsApp
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
     </div>
   );
 
-  // For tablet - medium density
-  const _TabletToolbar = () => (
-    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 sticky top-0 z-40">
-      {/* Left: Date Nav + View Switcher */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-1">
+  // For mobile - compact simplified view
+  const MobileToolbar = () => (
+    <div className="flex flex-col gap-4 px-4 py-4 bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-900">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => window.dispatchEvent(new CustomEvent('schedule-navigate', { detail: { direction: 'prev' } }))}
-            className="h-8 w-8 p-0"
+            className="h-10 w-10 p-0 rounded-xl"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-5 h-5" />
           </Button>
-          <div className="min-w-[120px]" />
+          
+          <SmartDatePicker
+            date={currentDate}
+            onChange={(date) => {
+              if (date) {
+                window.dispatchEvent(new CustomEvent('schedule-date-change', { detail: date }));
+              }
+            }}
+            className="h-10 min-w-[140px] border-none bg-transparent font-black text-base px-0"
+            placeholder={format(currentDate, 'MMM yyyy', { locale: ptBR })}
+          />
+
           <Button
             variant="ghost"
             size="sm"
             onClick={() => window.dispatchEvent(new CustomEvent('schedule-navigate', { detail: { direction: 'next' } }))}
-            className="h-8 w-8 p-0"
+            className="h-10 w-10 p-0 rounded-xl"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-5 h-5" />
           </Button>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => window.dispatchEvent(new CustomEvent('schedule-today-click'))}
-          className="h-8 px-3"
-        >
-          Hoje
-        </Button>
-
-        <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
-          {(['day', 'week'] as const).map((view) => (
-            <button
-              key={view}
-              onClick={() => onViewChange(view)}
-              className={cn(
-                "px-3 py-1 text-sm font-medium rounded-md",
-                viewType === view
-                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm"
-                  : "text-gray-600 dark:text-gray-400"
-              )}
-            >
-              {VIEW_LABELS[view]}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Right: Actions */}
-      <div className="flex items-center gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon" className="h-9 w-9">
-              <MoreVertical className="w-4 h-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onToggleSelection}>
-              <CheckSquare className="w-4 h-4 mr-2" />
-              Modo seleção
-            </DropdownMenuItem>
-            {onCancelAllToday && (
-              <DropdownMenuItem onClick={onCancelAllToday} className="text-red-600">
-                <Trash2 className="w-4 h-4 mr-2" />
-                Cancelar todos
-              </DropdownMenuItem>
-            )}
-            <DropdownMenuItem asChild>
-              <Link to="/agenda/settings">
-                <SettingsIcon className="w-4 h-4 mr-2" />
-                Configurações
-              </Link>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <Button onClick={onCreateAppointment} className="bg-blue-600 hover:bg-blue-700 text-white">
-          <Plus className="w-4 h-4" />
-        </Button>
-      </div>
-    </div>
-  );
-
-  // For mobile - minimal
-  const MobileToolbar = () => (
-    <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 sticky top-0 z-40">
-      <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => window.dispatchEvent(new CustomEvent('schedule-navigate', { detail: { direction: 'prev' } }))}
-          className="h-8 w-8 p-0"
-          aria-label="Data anterior"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </Button>
-        <div className="min-w-[60px]" />
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => window.dispatchEvent(new CustomEvent('schedule-navigate', { detail: { direction: 'next' } }))}
-          className="h-8 w-8 p-0"
-          aria-label="Próxima data"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => window.dispatchEvent(new CustomEvent('schedule-today-click'))}
-          className="h-7 px-2 text-xs"
-          aria-label="Ir para hoje"
-        >
-          Hoje
-        </Button>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <div className="flex bg-gray-100 dark:bg-gray-800 p-0.5 rounded-lg" role="group" aria-label="Tipo de visualização">
-          {(['day', 'week'] as const).map((view) => (
-            <button
-              key={view}
-              onClick={() => onViewChange(view)}
-              className={cn(
-                "px-2 py-1 text-xs font-medium rounded-md",
-                viewType === view
-                  ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  : "text-gray-600 dark:text-gray-400"
-              )}
-              aria-pressed={viewType === view}
-              aria-label={`Visualização por ${VIEW_LABELS[view]}`}
-            >
-              {view === 'day' ? 'D' : 'S'}
-            </button>
-          ))}
-        </div>
-
-        <Button
-          variant="outline"
-          size="icon"
-          className={cn("h-8 w-8", isSelectionMode && "bg-primary text-primary-foreground")}
-          onClick={onToggleSelection}
-          aria-label="Alternar modo de seleção"
-        >
-          <CheckSquare className="w-3.5 h-3.5" />
-        </Button>
 
         <Button
           onClick={onCreateAppointment}
-          className="bg-blue-600 hover:bg-blue-700 text-white h-8 w-8 p-0"
-          aria-label="Criar novo agendamento"
+          size="icon"
+          className="h-12 w-12 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl shadow-lg"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-6 h-6" />
         </Button>
+      </div>
+
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        {(['day', 'week', 'month'] as const).map((view) => (
+          <Button
+            key={view}
+            variant={viewType === view ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onViewChange(view)}
+            className={cn(
+              "h-9 px-5 rounded-xl font-bold text-[10px] uppercase tracking-widest",
+              viewType === view ? "bg-slate-900 dark:bg-white" : "border-slate-200 text-slate-500"
+            )}
+          >
+            {VIEW_LABELS[view]}
+          </Button>
+        ))}
+        <div className="ml-auto flex gap-2">
+          <AdvancedFilters
+            filters={filters}
+            onFiltersChange={onFiltersChange}
+            onClear={onClearFilters}
+          />
+        </div>
       </div>
     </div>
   );
 
-  if (isMobile) {
-    return <MobileToolbar />;
-  }
-
-  return <DesktopToolbar />;
+  return isMobile ? <MobileToolbar /> : <DesktopToolbar />;
 };
-
-export default ScheduleToolbar;

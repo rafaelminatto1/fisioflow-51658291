@@ -8,6 +8,9 @@
 // Patients & Medical Records (RF01.2)
 export * from './patients';
 
+// Core / Legacy
+export * from './organizations';
+
 // Appointments & Calendar (RF02)
 export * from './appointments';
 

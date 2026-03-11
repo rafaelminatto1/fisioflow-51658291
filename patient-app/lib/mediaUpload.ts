@@ -1,39 +1,20 @@
-/**
- * Media Upload Module
- *
- * Sistema de upload de mídia (fotos e vídeos) para Firebase Storage
- * com compressão automática, cache local e suporte offline.
- *
- * @module lib/mediaUpload
- */
-
 import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import * as FileSystem from 'expo-file-system/legacy';
-import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
-import { storage } from './firebase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { mediaApi, api } from './api';
 import { log } from '@/lib/logger';
 
-/**
- * Tipos de mídia suportados
- */
 export type MediaType = 'image' | 'video' | 'document';
 
-/**
- * Configuração de upload
- */
 export interface UploadConfig {
   compress?: boolean;
   maxWidth?: number;
   maxHeight?: number;
-  quality?: number; // 0-1
+  quality?: number;
 }
 
-/**
- * Resultado de um upload
- */
 export interface UploadResult {
   url: string;
   name: string;
@@ -42,18 +23,12 @@ export interface UploadResult {
   path: string;
 }
 
-/**
- * Progresso de upload
- */
 export interface UploadProgress {
   bytesTransferred: number;
   totalBytes: number;
-  progress: number; // 0-1
+  progress: number;
 }
 
-/**
- * Configurações padrão
- */
 const DEFAULT_CONFIG: UploadConfig = {
   compress: true,
   maxWidth: 1920,
@@ -61,20 +36,36 @@ const DEFAULT_CONFIG: UploadConfig = {
   quality: 0.8,
 };
 
-/**
- * Classe gerenciadora de uploads de mídia
- */
+function sanitizeFileName(fileName: string, fallback: string): string {
+  const trimmed = fileName.trim();
+  if (!trimmed) return fallback;
+  return trimmed.replace(/[^a-zA-Z0-9._-]/g, '_');
+}
+
+function inferContentType(fileName: string, fallback: MediaType): string {
+  const normalized = fileName.toLowerCase();
+  if (normalized.endsWith('.png')) return 'image/png';
+  if (normalized.endsWith('.webp')) return 'image/webp';
+  if (normalized.endsWith('.gif')) return 'image/gif';
+  if (normalized.endsWith('.mp4')) return 'video/mp4';
+  if (normalized.endsWith('.webm')) return 'video/webm';
+  if (normalized.endsWith('.mov')) return 'video/quicktime';
+  if (normalized.endsWith('.pdf')) return 'application/pdf';
+  if (normalized.endsWith('.doc')) return 'application/msword';
+  if (normalized.endsWith('.docx')) {
+    return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  }
+  return fallback === 'video' ? 'video/mp4' : fallback === 'document' ? 'application/octet-stream' : 'image/jpeg';
+}
+
 export class MediaUploader {
   private userId: string;
-  private uploadTasks: Map<string, any> = new Map();
+  private uploadTasks: Map<string, AbortController> = new Map();
 
   constructor(userId: string) {
     this.userId = userId;
   }
 
-  /**
-   * Solicita permissão para acessar a galeria
-   */
   async requestGalleryPermission(): Promise<boolean> {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -85,9 +76,6 @@ export class MediaUploader {
     }
   }
 
-  /**
-   * Solicita permissão para acessar a câmera
-   */
   async requestCameraPermission(): Promise<boolean> {
     try {
       const permission = await ImagePicker.requestCameraPermissionsAsync();
@@ -98,282 +86,113 @@ export class MediaUploader {
     }
   }
 
-  /**
-   * Abre o seletor de imagem
-   */
   async pickImage(
     config: UploadConfig = DEFAULT_CONFIG,
-    onProgress?: (progress: UploadProgress) => void
+    onProgress?: (progress: UploadProgress) => void,
   ): Promise<UploadResult | null> {
-    try {
-      // Verificar permissão
-      const hasPermission = await this.requestGalleryPermission();
-      if (!hasPermission) {
-        throw new Error('Permissão negada para acessar a galeria');
-      }
-
-      // Abrir seletor
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 1,
-      });
-
-      if (result.canceled || !result.assets[0]) {
-        return null;
-      }
-
-      const asset = result.assets[0];
-
-      // Processar e fazer upload
-      return await this.uploadImage(asset.uri, asset.fileName || 'image.jpg', config, onProgress);
-    } catch (error) {
-      log.error('Error picking image:', error);
-      throw error;
+    const hasPermission = await this.requestGalleryPermission();
+    if (!hasPermission) {
+      throw new Error('Permissao negada para acessar a galeria');
     }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (result.canceled || !result.assets[0]) {
+      return null;
+    }
+
+    const asset = result.assets[0];
+    return this.uploadImage(asset.uri, asset.fileName || 'image.jpg', config, onProgress);
   }
 
-  /**
-   * Tira uma foto com a câmera
-   */
   async takePhoto(
     config: UploadConfig = DEFAULT_CONFIG,
-    onProgress?: (progress: UploadProgress) => void
+    onProgress?: (progress: UploadProgress) => void,
   ): Promise<UploadResult | null> {
-    try {
-      // Verificar permissão
-      const hasPermission = await this.requestCameraPermission();
-      if (!hasPermission) {
-        throw new Error('Permissão negada para acessar a câmera');
-      }
-
-      // Abrir câmera
-      const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 1,
-      });
-
-      if (result.canceled || !result.assets[0]) {
-        return null;
-      }
-
-      const asset = result.assets[0];
-
-      // Processar e fazer upload
-      return await this.uploadImage(asset.uri, asset.fileName || 'photo.jpg', config, onProgress);
-    } catch (error) {
-      log.error('Error taking photo:', error);
-      throw error;
+    const hasPermission = await this.requestCameraPermission();
+    if (!hasPermission) {
+      throw new Error('Permissao negada para acessar a camera');
     }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (result.canceled || !result.assets[0]) {
+      return null;
+    }
+
+    const asset = result.assets[0];
+    return this.uploadImage(asset.uri, asset.fileName || 'photo.jpg', config, onProgress);
   }
 
-  /**
-   * Seleciona um vídeo
-   */
   async pickVideo(onProgress?: (progress: UploadProgress) => void): Promise<UploadResult | null> {
-    try {
-      const hasPermission = await this.requestGalleryPermission();
-      if (!hasPermission) {
-        throw new Error('Permissão negada');
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-        allowsEditing: false,
-        quality: 1,
-      });
-
-      if (result.canceled || !result.assets[0]) {
-        return null;
-      }
-
-      const asset = result.assets[0];
-      return await this.uploadVideo(asset.uri, asset.fileName || 'video.mp4', onProgress);
-    } catch (error) {
-      log.error('Error picking video:', error);
-      throw error;
+    const hasPermission = await this.requestGalleryPermission();
+    if (!hasPermission) {
+      throw new Error('Permissao negada para acessar a galeria');
     }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+      allowsEditing: false,
+      quality: 1,
+    });
+
+    if (result.canceled || !result.assets[0]) {
+      return null;
+    }
+
+    const asset = result.assets[0];
+    return this.uploadVideo(asset.uri, asset.fileName || 'video.mp4', onProgress);
   }
 
-  /**
-   * Faz upload de uma imagem
-   */
   async uploadImage(
     uri: string,
     fileName: string,
     config: UploadConfig = DEFAULT_CONFIG,
-    onProgress?: (progress: UploadProgress) => void
+    onProgress?: (progress: UploadProgress) => void,
   ): Promise<UploadResult> {
-    try {
-      // Comprimir imagem se configurado
-      let processedUri = uri;
+    let processedUri = uri;
 
-      if (config.compress) {
-        const manipulated = await ImageManipulator.manipulateAsync(
-          uri,
-          [{ resize: { width: config.maxWidth, height: config.maxHeight } }],
-          { compress: config.quality, format: ImageManipulator.SaveFormat.JPEG }
-        );
-        processedUri = manipulated.uri;
-      }
-
-      // Obter tamanho do arquivo
-      const fileInfo = await FileSystem.getInfoAsync(processedUri);
-      const size = fileInfo.exists && 'size' in fileInfo ? fileInfo.size || 0 : 0;
-
-      // Ler arquivo como blob
-      const blob = await this.uriToBlob(processedUri);
-
-      // Gerar path único
-      const timestamp = Date.now();
-      const path = `users/${this.userId}/media/${timestamp}_${fileName}`;
-
-      // Upload para Firebase Storage
-      const storageRef = ref(storage, path);
-      const uploadTask = uploadBytesResumable(storageRef, blob);
-
-      // Monitorar progresso
-      uploadTask.on('state_changed', (snapshot) => {
-        const progress = snapshot.bytesTransferred / snapshot.totalBytes;
-        onProgress?.({
-          bytesTransferred: snapshot.bytesTransferred,
-          totalBytes: snapshot.totalBytes,
-          progress,
-        });
-      });
-
-      // Aguardar conclusão
-      await uploadTask;
-
-      // Obter URL de download
-      const url = await getDownloadURL(storageRef);
-
-      // Salvar cache local
-      await this.saveToCache(path, url, 'image', size);
-
-      return {
-        url,
-        name: fileName,
-        type: 'image',
-        size,
-        path,
-      };
-    } catch (error) {
-      log.error('Error uploading image:', error);
-      throw error;
+    if (config.compress) {
+      const manipulated = await ImageManipulator.manipulateAsync(
+        uri,
+        [{ resize: { width: config.maxWidth, height: config.maxHeight } }],
+        { compress: config.quality, format: ImageManipulator.SaveFormat.JPEG },
+      );
+      processedUri = manipulated.uri;
     }
+
+    return this.uploadToR2(processedUri, sanitizeFileName(fileName, 'image.jpg'), 'image', onProgress);
   }
 
-  /**
-   * Faz upload de um vídeo
-   */
   async uploadVideo(
     uri: string,
     fileName: string,
-    onProgress?: (progress: UploadProgress) => void
+    onProgress?: (progress: UploadProgress) => void,
   ): Promise<UploadResult> {
-    try {
-      // Obter tamanho do arquivo
-      const fileInfo = await FileSystem.getInfoAsync(uri);
-      const size = fileInfo.exists && 'size' in fileInfo ? fileInfo.size || 0 : 0;
-
-      // Ler arquivo como blob
-      const blob = await this.uriToBlob(uri);
-
-      // Gerar path único
-      const timestamp = Date.now();
-      const path = `users/${this.userId}/media/${timestamp}_${fileName}`;
-
-      // Upload
-      const storageRef = ref(storage, path);
-      const uploadTask = uploadBytesResumable(storageRef, blob);
-
-      uploadTask.on('state_changed', (snapshot) => {
-        const progress = snapshot.bytesTransferred / snapshot.totalBytes;
-        onProgress?.({
-          bytesTransferred: snapshot.bytesTransferred,
-          totalBytes: snapshot.totalBytes,
-          progress,
-        });
-      });
-
-      await uploadTask;
-
-      const url = await getDownloadURL(storageRef);
-
-      await this.saveToCache(path, url, 'video', size);
-
-      return {
-        url,
-        name: fileName,
-        type: 'video',
-        size,
-        path,
-      };
-    } catch (error) {
-      log.error('Error uploading video:', error);
-      throw error;
-    }
+    return this.uploadToR2(uri, sanitizeFileName(fileName, 'video.mp4'), 'video', onProgress);
   }
 
-  /**
-   * Faz upload de um documento genérico
-   */
   async uploadDocument(
     uri: string,
     fileName: string,
-    onProgress?: (progress: UploadProgress) => void
+    onProgress?: (progress: UploadProgress) => void,
   ): Promise<UploadResult> {
-    try {
-      const blob = await this.uriToBlob(uri);
-      const timestamp = Date.now();
-      const path = `users/${this.userId}/documents/${timestamp}_${fileName}`;
-
-      const storageRef = ref(storage, path);
-      const uploadTask = uploadBytesResumable(storageRef, blob);
-
-      uploadTask.on('state_changed', (snapshot) => {
-        const progress = snapshot.bytesTransferred / snapshot.totalBytes;
-        onProgress?.({
-          bytesTransferred: snapshot.bytesTransferred,
-          totalBytes: snapshot.totalBytes,
-          progress,
-        });
-      });
-
-      await uploadTask;
-
-      const url = await getDownloadURL(storageRef);
-      const fileInfo = await FileSystem.getInfoAsync(uri);
-      const size = fileInfo.exists && 'size' in fileInfo ? fileInfo.size || 0 : 0;
-
-      await this.saveToCache(path, url, 'document', size);
-
-      return {
-        url,
-        name: fileName,
-        type: 'document',
-        size,
-        path,
-      };
-    } catch (error) {
-      log.error('Error uploading document:', error);
-      throw error;
-    }
+    return this.uploadToR2(uri, sanitizeFileName(fileName, 'document.bin'), 'document', onProgress);
   }
 
-  /**
-   * Deleta um arquivo do storage
-   */
   async deleteFile(storagePath: string): Promise<void> {
     try {
-      const storageRef = ref(storage, storagePath);
-      await deleteObject(storageRef);
-
-      // Remover do cache
+      await api.delete(`/api/media/${storagePath}`);
       await this.removeFromCache(storagePath);
     } catch (error) {
       log.error('Error deleting file:', error);
@@ -381,22 +200,80 @@ export class MediaUploader {
     }
   }
 
-  /**
-   * Converte URI para Blob
-   */
-  private async uriToBlob(uri: string): Promise<Blob> {
-    const response = await fetch(uri);
-    return await response.blob();
+  private async uploadToR2(
+    uri: string,
+    fileName: string,
+    type: MediaType,
+    onProgress?: (progress: UploadProgress) => void,
+  ): Promise<UploadResult> {
+    const fileInfo = await FileSystem.getInfoAsync(uri);
+    const size = fileInfo.exists && 'size' in fileInfo ? fileInfo.size || 0 : 0;
+    const contentType = inferContentType(fileName, type);
+    const taskId = `${this.userId}:${Date.now()}:${fileName}`;
+    const controller = new AbortController();
+    this.uploadTasks.set(taskId, controller);
+
+    try {
+      const upload = await mediaApi.getUploadUrl({
+        filename: fileName,
+        contentType,
+        folder: type === 'document' ? 'documents' : 'uploads',
+      });
+
+      const blob = await this.uriToBlob(uri);
+
+      onProgress?.({
+        bytesTransferred: 0,
+        totalBytes: size,
+        progress: 0,
+      });
+
+      const response = await fetch(upload.uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': contentType,
+        },
+        body: blob,
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Falha no upload (${response.status})`);
+      }
+
+      onProgress?.({
+        bytesTransferred: size,
+        totalBytes: size,
+        progress: 1,
+      });
+
+      await this.saveToCache(upload.key, upload.publicUrl, type, size);
+
+      return {
+        url: upload.publicUrl,
+        name: fileName,
+        type,
+        size,
+        path: upload.key,
+      };
+    } catch (error) {
+      log.error('Error uploading media:', error);
+      throw error;
+    } finally {
+      this.uploadTasks.delete(taskId);
+    }
   }
 
-  /**
-   * Salva informações do arquivo no cache local
-   */
+  private async uriToBlob(uri: string): Promise<Blob> {
+    const response = await fetch(uri);
+    return response.blob();
+  }
+
   private async saveToCache(
     path: string,
     url: string,
     type: MediaType,
-    size: number
+    size: number,
   ): Promise<void> {
     try {
       const cacheKey = `media_cache_${this.userId}`;
@@ -411,27 +288,23 @@ export class MediaUploader {
     }
   }
 
-  /**
-   * Remove do cache local
-   */
   private async removeFromCache(path: string): Promise<void> {
     try {
       const cacheKey = `media_cache_${this.userId}`;
       const cached = await AsyncStorage.getItem(cacheKey);
 
-      if (cached) {
-        const cache = JSON.parse(cached);
-        delete cache[path];
-        await AsyncStorage.setItem(cacheKey, JSON.stringify(cache));
+      if (!cached) {
+        return;
       }
+
+      const cache = JSON.parse(cached);
+      delete cache[path];
+      await AsyncStorage.setItem(cacheKey, JSON.stringify(cache));
     } catch (error) {
       log.error('Error removing from cache:', error);
     }
   }
 
-  /**
-   * Busca metadados do cache local
-   */
   async getFromCache(path: string): Promise<{ url: string; type: MediaType; size: number } | null> {
     try {
       const cacheKey = `media_cache_${this.userId}`;
@@ -447,9 +320,6 @@ export class MediaUploader {
     }
   }
 
-  /**
-   * Limpa o cache local
-   */
   async clearCache(): Promise<void> {
     try {
       await AsyncStorage.removeItem(`media_cache_${this.userId}`);
@@ -458,21 +328,17 @@ export class MediaUploader {
     }
   }
 
-  /**
-   * Cancela um upload em andamento
-   */
   cancelUpload(taskId: string): void {
-    const task = this.uploadTasks.get(taskId);
-    if (task) {
-      task.cancel();
-      this.uploadTasks.delete(taskId);
+    const controller = this.uploadTasks.get(taskId);
+    if (!controller) {
+      return;
     }
+
+    controller.abort();
+    this.uploadTasks.delete(taskId);
   }
 }
 
-/**
- * Hook React para usar MediaUploader
- */
 export function useMediaUploader(userId?: string) {
   const [uploader] = useState(() => new MediaUploader(userId || ''));
   const [uploading, setUploading] = useState(false);
@@ -484,11 +350,9 @@ export function useMediaUploader(userId?: string) {
     setProgress(0);
 
     try {
-      const result = await uploader.pickImage(config, (p) => {
-        setProgress(p.progress);
+      return await uploader.pickImage(config, (state) => {
+        setProgress(state.progress);
       });
-
-      return result;
     } finally {
       setUploading(false);
       setProgress(0);
@@ -501,11 +365,9 @@ export function useMediaUploader(userId?: string) {
     setProgress(0);
 
     try {
-      const result = await uploader.takePhoto(config, (p) => {
-        setProgress(p.progress);
+      return await uploader.takePhoto(config, (state) => {
+        setProgress(state.progress);
       });
-
-      return result;
     } finally {
       setUploading(false);
       setProgress(0);
@@ -518,11 +380,9 @@ export function useMediaUploader(userId?: string) {
     setProgress(0);
 
     try {
-      const result = await uploader.pickVideo((p) => {
-        setProgress(p.progress);
+      return await uploader.pickVideo((state) => {
+        setProgress(state.progress);
       });
-
-      return result;
     } finally {
       setUploading(false);
       setProgress(0);
@@ -535,19 +395,13 @@ export function useMediaUploader(userId?: string) {
     setProgress(0);
 
     try {
-      const result = await uploader.uploadDocument(uri, fileName, (p) => {
-        setProgress(p.progress);
+      return await uploader.uploadDocument(uri, fileName, (state) => {
+        setProgress(state.progress);
       });
-
-      return result;
     } finally {
       setUploading(false);
       setProgress(0);
     }
-  };
-
-  const deleteFile = async (storagePath: string) => {
-    return await uploader.deleteFile(storagePath);
   };
 
   return {
@@ -558,7 +412,7 @@ export function useMediaUploader(userId?: string) {
     takePhoto,
     pickVideo,
     uploadDocument,
-    deleteFile,
+    deleteFile: async (storagePath: string) => uploader.deleteFile(storagePath),
     clearCache: () => uploader.clearCache(),
   };
 }

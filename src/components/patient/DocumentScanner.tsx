@@ -2,8 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Camera, FileSearch, Loader2 } from 'lucide-react';
-import { apiClient } from '@/lib/api/v2/client';
-import { API_URLS } from '@/lib/api/v2/config';
+import { aiApi } from '@/lib/api/workers-client';
 import { useToast } from '@/hooks/use-toast';
 
 export const DocumentScanner = ({ onScanComplete }: { onScanComplete: (text: string) => void }) => {
@@ -22,23 +21,28 @@ export const DocumentScanner = ({ onScanComplete }: { onScanComplete: (text: str
   };
 
   const startScan = async () => {
-    if (!preview) return;
+    if (!preview || !fileInputRef.current?.files?.[0]) return;
     
     try {
       setIsScanning(true);
-      const base64 = preview.split(',')[1];
+      const file = fileInputRef.current.files[0];
       
-      const response = await apiClient.post<{ data: { text: string } }>(
-        API_URLS.clinical.scanReport,
-        { imageBase64: base64 }
-      );
+      const response = await aiApi.documentAnalyze({
+        fileName: file.name,
+        fileUrl: preview,
+        mediaType: file.type || 'image/jpeg',
+        options: { extractText: true },
+      });
+
+      const extractedData = (response.data.extractedData ?? {}) as Record<string, unknown>;
+      const text = typeof extractedData.text === 'string' ? extractedData.text : '';
 
       toast({
         title: 'Scanner Concluído',
         description: 'O texto do laudo foi extraído com sucesso.'
       });
 
-      onScanComplete(response.data.text);
+      onScanComplete(text);
       setPreview(null);
     } catch (_err) {
       toast({

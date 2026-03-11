@@ -715,13 +715,18 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                 <PatientSelectionSection
                   patients={activePatients || []}
                   isLoading={patientsLoading}
-                  disabled={currentMode === 'view'}
+                  disabled={currentMode === 'view' || currentMode === 'edit'}
                   onCreateNew={(searchTerm) => {
                     setSuggestedPatientName(searchTerm);
                     setQuickPatientModalOpen(true);
                   }}
                   fallbackPatientName={
-                    lastCreatedPatient?.id === watchedPatientId ? lastCreatedPatient.name : undefined
+                    lastCreatedPatient?.id === watchedPatientId 
+                      ? lastCreatedPatient.name 
+                      : (currentMode === 'edit' ? appointment?.patientName : undefined)
+                  }
+                  fallbackDescription={
+                    lastCreatedPatient?.id === watchedPatientId ? 'Recém-cadastrado' : undefined
                   }
                 />
 

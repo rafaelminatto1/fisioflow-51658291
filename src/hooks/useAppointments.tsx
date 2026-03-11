@@ -15,6 +15,7 @@ import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 import { isAppointmentConflictError } from '@/utils/appointmentErrors';
 import { invalidateAffectedPeriods } from '@/utils/cacheInvalidation';
 import { formatDateToLocalISO } from '@/utils/dateUtils';
+import { appointmentPeriodKeys } from '@/hooks/useAppointmentsByPeriod';
 
 export const appointmentKeys = {
   all: ['appointments_v2'] as const,
@@ -24,7 +25,7 @@ export const appointmentKeys = {
   detail: (id: string) => [...appointmentKeys.details(), id] as const,
 } as const;
 
-// Função auxiliar para criar timeout em promises (suporta PromiseLike do Firestore)
+// Função auxiliar para criar timeout em promises
 function withTimeout<T>(promise: PromiseLike<T>, timeoutMs: number): Promise<T> {
   return Promise.race([
     Promise.resolve(promise),
@@ -66,7 +67,7 @@ export interface AppointmentsQueryResult {
   data: AppointmentBase[];
   isFromCache: boolean;
   cacheTimestamp: string | null;
-  source?: 'firestore' | 'indexeddb' | 'localstorage' | 'memory';
+  source?: 'server' | 'indexeddb' | 'localstorage' | 'memory';
 }
 
 // Salvar backup de emergência em localStorage (compactado)
@@ -151,7 +152,7 @@ function getEmergencyBackup(organizationId?: string): AppointmentsQueryResult {
 async function fetchAppointments(organizationIdOverride?: string | null): Promise<AppointmentsQueryResult> {
   const timer = logger.startTimer('fetchAppointments');
 
-  logger.info('Carregando agendamentos do Firestore', {}, 'useAppointments');
+  logger.info('Carregando agendamentos da API principal', {}, 'useAppointments');
 
   // Checar se está offline primeiro
   if (!navigator.onLine) {
@@ -183,7 +184,7 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
     saveEmergencyBackup(data, organizationId || undefined);
 
     timer();
-    return { data, isFromCache: false, cacheTimestamp: null, source: 'firestore' };
+    return { data, isFromCache: false, cacheTimestamp: null, source: 'server' };
 
   } catch (error: unknown) {
     logger.error('Erro crítico no fetchAppointments', error, 'useAppointments');
@@ -408,6 +409,7 @@ export function useCreateAppointment() {
 
       // Force refresh of lists to ensure consistency
       queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
+      await queryClient.refetchQueries({ queryKey: appointmentPeriodKeys.all });
 
       toast({
         title: 'Sucesso',
@@ -457,36 +459,70 @@ export function useUpdateAppointment() {
       const organizationId = profile?.organization_id || await requireUserOrganizationId();
       return await AppointmentService.updateAppointment(appointmentId, { ...updates, ignoreCapacity }, organizationId);
     },
+    // Ensure mutation works offline and retries on reconnect
+    networkMode: 'offlineFirst',
     onMutate: async (variables) => {
-      // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: appointmentKeys.list(profile?.organization_id) });
+      const organizationId = profile?.organization_id;
 
-      // Snapshot previous value
-      const previousData = queryClient.getQueryData<AppointmentsQueryResult>(appointmentKeys.list(profile?.organization_id));
+      // Cancel outgoing refetches for standard lists and ALL period queries
+      // This is crucial to prevent background refetches from overwriting our optimistic data
+      await queryClient.cancelQueries({ queryKey: appointmentKeys.list(organizationId) });
+      await queryClient.cancelQueries({ queryKey: appointmentPeriodKeys.all });
 
-      // Optimistically update the appointment
+      // Snapshot previous values for ALL affected queries
+      const previousData = queryClient.getQueryData<AppointmentsQueryResult>(appointmentKeys.list(organizationId));
+      
+      // Also snapshot period queries
+      const previousPeriodQueries = queryClient.getQueriesData({ queryKey: appointmentPeriodKeys.all });
+
+      const parsedUpdates = parseUpdatesToAppointment(variables.updates);
+
+      // 1. Optimistically update standard list
       queryClient.setQueryData(
-        appointmentKeys.list(profile?.organization_id),
+        appointmentKeys.list(organizationId),
         (old: AppointmentsQueryResult | undefined) => ({
           ...old,
           data: old?.data.map(apt =>
-            apt.id === variables.appointmentId
-              ? { ...apt, ...parseUpdatesToAppointment(variables.updates) }
-              : apt
+            apt.id === variables.appointmentId ? { ...apt, ...parsedUpdates } : apt
           ) || []
         })
       );
 
-      return { previousData };
-    },
-    onSuccess: async (data) => {
-      // Use selective cache invalidation for period-based queries
-      const appointmentDate = formatDateToLocalISO(data.date);
-      await invalidateAffectedPeriods(appointmentDate, queryClient, profile?.organization_id || '');
+      // 2. Optimistically update ALL period-based calendar queries that might contain this appointment
+      queryClient.setQueriesData(
+        { queryKey: appointmentPeriodKeys.all },
+        (old: AppointmentBase[] | undefined) => {
+          if (!old) return old;
+          return old.map(apt =>
+            apt.id === variables.appointmentId ? { ...apt, ...parsedUpdates } : apt
+          );
+        }
+      );
 
-      // Invalidate to ensure we have the latest data
-      queryClient.invalidateQueries({ queryKey: appointmentKeys.list(profile?.organization_id) });
+      return { previousData, previousPeriodQueries };
+    },
+    onSuccess: async (data, variables) => {
+      const organizationId = profile?.organization_id || '';
+      
+      // 1. Invalidate new date
+      const newDate = formatDateToLocalISO(data.date);
+      await invalidateAffectedPeriods(newDate, queryClient, organizationId);
+
+      // 2. Invalidate old date if it changed
+      if (variables.updates.appointment_date || variables.updates.date) {
+        await queryClient.invalidateQueries({ queryKey: appointmentPeriodKeys.all });
+      }
+
+      // 3. Invalidate standard lists and details
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.list(organizationId), exact: false });
       queryClient.invalidateQueries({ queryKey: appointmentKeys.detail(data.id) });
+      
+      // 4. Force refetch of ACTIVE period-based queries to ensure calendar is perfectly in sync
+      // We use refetch to trigger fresh data loading while keeping UI reactive
+      await queryClient.refetchQueries({ 
+        queryKey: appointmentPeriodKeys.all,
+        type: 'active' 
+      });
 
       toast({
         title: 'Sucesso',
@@ -494,12 +530,18 @@ export function useUpdateAppointment() {
       });
     },
     onError: (error: Error, _variables, context) => {
-      // Rollback to previous value
+      const organizationId = profile?.organization_id;
+
+      // Rollback standard list
       if (context?.previousData) {
-        queryClient.setQueryData(
-          appointmentKeys.list(profile?.organization_id),
-          context.previousData
-        );
+        queryClient.setQueryData(appointmentKeys.list(organizationId), context.previousData);
+      }
+
+      // Rollback period queries
+      if (context?.previousPeriodQueries) {
+        context.previousPeriodQueries.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
       }
 
       // 409: toast amigável já é mostrado no modal ou no drag; só suprimimos a notificação genérica
@@ -561,6 +603,7 @@ export function useDeleteAppointment() {
       // Invalidate both list and detail queries
       queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
       queryClient.removeQueries({ queryKey: appointmentKeys.detail(appointmentId) });
+      await queryClient.refetchQueries({ queryKey: appointmentPeriodKeys.all });
 
       toast({
         title: 'Sucesso',
@@ -595,6 +638,7 @@ export function useUpdateAppointmentStatus() {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
+      queryClient.refetchQueries({ queryKey: appointmentPeriodKeys.all });
       // Otimistic update: atualizar na cache imediatamente
       queryClient.setQueryData(
         appointmentKeys.list(),
