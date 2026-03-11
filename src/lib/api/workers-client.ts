@@ -3217,6 +3217,14 @@ export interface NFSeConfigRecord {
   inscricao_municipal?: string | null;
   aliquota_iss: number;
   auto_emissao: boolean;
+  razao_social_prestador?: string | null;
+  endereco_prestador?: string | null;
+  telefone_prestador?: string | null;
+  codigo_tuss?: string | null;
+  nome_responsavel?: string | null;
+  conselho_tipo?: string | null;
+  conselho_numero?: string | null;
+  percentual_impostos?: number | null;
   created_at?: string;
   updated_at?: string;
 }
