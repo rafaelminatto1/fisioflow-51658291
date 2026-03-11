@@ -72,27 +72,6 @@ jobs:
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps chromium
 
-      - name: Cache Firebase emulators
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/firebase/emulators
-          key: firebase-emulators-${{ hashFiles('firebase.json') }}
-          restore-keys: |
-            firebase-emulators-
-
-      - name: Start Firebase Emulators
-        run: |
-          npx firebase-tools emulators:start --only auth,firestore --project fisioflow-test &
-          echo $! > /tmp/emulator.pid
-          for i in {1..60}; do
-            if nc -z localhost 9099 2>/dev/null && nc -z localhost 8080 2>/dev/null; then
-              echo "Firebase emulators ready"
-              break
-            fi
-            echo "Waiting for Firebase emulators... ($i/60)"
-            sleep 1
-          done
-
       - name: Start dev server
         run: |
           pnpm dev --port 8084 &
@@ -109,8 +88,6 @@ jobs:
       - name: Run Playwright tests
         env:
           BASE_URL: http://127.0.0.1:8084
-          VITE_FIREBASE_AUTH_EMULATOR_HOST: localhost:9099
-          VITE_FIRESTORE_EMULATOR_HOST: localhost:8080
         run: |
           pnpm exec playwright test e2e --project=chromium --shard=${{ matrix.shard }}/4 --reporter=list
 
@@ -127,9 +104,6 @@ jobs:
       - name: Cleanup
         if: always()
         run: |
-          if [ -f /tmp/emulator.pid ]; then
-            kill $(cat /tmp/emulator.pid) 2>/dev/null || true
-          fi
           if [ -f /tmp/server.pid ]; then
             kill $(cat /tmp/server.pid) 2>/dev/null || true
           fi

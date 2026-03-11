@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Verifica se o build do hosting produziu dist/ com index.html.
+ * Verifica se o build do frontend produziu dist/ com index.html.
  * Escreve NDJSON em .cursor/debug.log para análise de hipóteses (Page Not Found).
  */
-import { readFileSync, existsSync, readdirSync, statSync, appendFileSync } from 'fs';
+import { existsSync, readdirSync, statSync, appendFileSync } from 'fs';
 import { join, resolve } from 'path';
 
 const LOG_PATH = resolve(process.cwd(), '.cursor/debug.log');
@@ -25,15 +25,8 @@ function appendLog(payload) {
 }
 
 // #region agent log
-const firebaseJsonPath = resolve(process.cwd(), 'firebase.json');
-let hostingPublic = 'dist';
-try {
-  const fc = JSON.parse(readFileSync(firebaseJsonPath, 'utf8'));
-  hostingPublic = fc.hosting?.public ?? 'dist';
-  appendLog({ hypothesisId: 'H5', location: 'verify-hosting-build.mjs:firebase.json', message: 'firebase.json hosting.public', data: { hostingPublic, path: firebaseJsonPath } });
-} catch (e) {
-  appendLog({ hypothesisId: 'H5', location: 'verify-hosting-build.mjs:firebase.json', message: 'firebase.json read error', data: { error: e.message } });
-}
+const hostingPublic = 'dist';
+appendLog({ hypothesisId: 'H5', location: 'verify-hosting-build.mjs:dist', message: 'frontend output dir', data: { hostingPublic } });
 // #endregion
 
 // #region agent log
