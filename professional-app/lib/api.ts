@@ -280,7 +280,7 @@ export async function fetchApi<T>(
 // DASHBOARD API
 // ============================================================
 export async function getDashboardStats(organizationId?: string): Promise<ApiDashboardStats> {
-    const response = await fetchApi<ApiResponse<ApiDashboardStats>>('/api/analytics/dashboard', {
+    const response = await fetchApi<ApiResponse<ApiDashboardStats>>('/api/insights/dashboard', {
         params: { organizationId }
     });
     return response.data || {

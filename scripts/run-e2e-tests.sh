@@ -62,14 +62,8 @@ cleanup() {
         wait $DEV_SERVER_PID 2>/dev/null || true
     fi
 
-    if [ -n "$EMULATOR_PID" ] && kill -0 $EMULATOR_PID 2>/dev/null; then
-        log "Parando Firebase Emulators (PID: $EMULATOR_PID)..."
-        kill $EMULATOR_PID 2>/dev/null || true
-        wait $EMULATOR_PID 2>/dev/null || true
-    fi
-
     # Remover arquivos de PID temporários
-    rm -f /tmp/dev-server.pid /tmp/emulator.pid
+    rm -f /tmp/dev-server.pid
 
     log "Limpeza concluída"
 }
@@ -129,37 +123,12 @@ check_dependencies() {
     log_success "Dependências verificadas"
 }
 
-# Função para iniciar Firebase Emulators
-start_firebase_emulators() {
-    log "Verificando Firebase Emulators..."
-
-    # Verificar se já está rodando
-    if nc -z localhost 9099 2>/dev/null; then
-        log_warning "Firebase Emulators já parecem estar rodando"
-        return 0
-    fi
-
-    # Iniciar emulators em background
-    log "Iniciando Firebase Emulators..."
-    firebase emulators:start --only auth,firestore --project fisioflow-test > /tmp/firebase-emulators.log 2>&1 &
-    EMULATOR_PID=$!
-    echo $EMULATOR_PID > /tmp/emulator.pid
-
-    # Aguardar emulators estarem prontos
-    log "Aguardando Firebase Emulators..."
-    sleep 10
-
-    log_success "Firebase Emulators iniciados"
-}
-
 # Função para iniciar servidor de desenvolvimento
 start_dev_server() {
     log "Iniciando servidor de desenvolvimento na porta $DEV_SERVER_PORT..."
 
     # Configurar variáveis de ambiente para teste
     export BASE_URL="$E2E_BASE_URL"
-    export VITE_FIREBASE_AUTH_EMULATOR_HOST=localhost:9099
-    export VITE_FIRESTORE_EMULATOR_HOST=localhost:8080
 
     # Iniciar servidor em background
     pnpm dev --port $DEV_SERVER_PORT > /tmp/dev-server.log 2>&1 &
@@ -272,9 +241,7 @@ main() {
     # Verificar dependências
     check_dependencies
 
-    # Iniciar Firebase Emulators se necessário
     if [ "$START_SERVER" = true ]; then
-        start_firebase_emulators
         start_dev_server
     fi
 
