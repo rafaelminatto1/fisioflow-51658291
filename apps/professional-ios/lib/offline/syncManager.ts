@@ -15,8 +15,8 @@ import {
   deleteDoc,
   serverTimestamp,
   getDoc,
-} from '@/lib/firestore';
-import { db } from '@/lib/firebase';
+} from '@/lib/data-store';
+import { db } from '@/lib/platform';
 
 const SYNC_QUEUE_KEY = '@fisioflow_sync_queue';
 const LAST_SYNC_KEY = '@fisioflow_last_sync';

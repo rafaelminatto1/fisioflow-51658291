@@ -16,8 +16,8 @@
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
-import { doc, getDoc, setDoc, updateDoc } from '@/lib/firestore';
-import { db } from '../firebase';
+import { doc, getDoc, setDoc, updateDoc } from '@/lib/data-store';
+import { db } from '../platform';
 import { BiometricConfig, BiometricType, AUTH_CONSTANTS } from '../../types/auth';
 
 /**

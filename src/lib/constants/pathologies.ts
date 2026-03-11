@@ -49,7 +49,15 @@ export const PATHOLOGIES: Pathology[] = [
   { id: 'po_labrum_quadril', label: 'Pós-Op Reparo de Labrum (Quadril)', category: 'post-op' },
 ];
 
+const CATEGORY_MAP: Record<string, string> = {
+  orthopedics: 'Ortopedia Geral',
+  sports: 'Fisioterapia Esportiva',
+  'post-op': 'Pós-Operatório',
+  other: 'Outros'
+};
+
 export const PATHOLOGY_OPTIONS = PATHOLOGIES.map(p => ({
-  value: p.label, // Usando o label como value para facilitar salvar no DB como string legível
-  label: p.label
+  value: p.label,
+  label: p.label,
+  category: CATEGORY_MAP[p.category] || p.category
 })).sort((a, b) => a.label.localeCompare(b.label));

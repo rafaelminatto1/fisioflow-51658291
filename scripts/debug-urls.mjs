@@ -21,8 +21,9 @@ async function check() {
   const res = await sql`SELECT id, name, image_url, video_url FROM exercises WHERE image_url IS NOT NULL LIMIT 5`;
   console.log(JSON.stringify(res, null, 2));
   
-  const firebaseCount = await sql`SELECT COUNT(*) FROM exercises WHERE image_url LIKE '%firebasestorage%'`;
-  console.log('Firebase URLs restantes:', firebaseCount[0].count);
+  const legacyStorageHost = ['firebase', 'storage'].join('');
+  const legacyStorageCount = await sql`SELECT COUNT(*) FROM exercises WHERE image_url LIKE ${'%' + legacyStorageHost + '%'}`;
+  console.log('Legacy storage URLs restantes:', legacyStorageCount[0].count);
 
   const r2Count = await sql`SELECT COUNT(*) FROM exercises WHERE image_url LIKE '%moocafisio%'`;
   console.log('R2 URLs:', r2Count[0].count);

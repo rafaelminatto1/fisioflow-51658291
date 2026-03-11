@@ -13,9 +13,9 @@ import {
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { signOut } from '@/lib/auth';
-import { auth } from '@/lib/firebase';
-import { collection, query, where, getCountFromServer } from '@/lib/firestore';
-import { db } from '@/lib/firebase';
+import { auth } from '@/lib/platform';
+import { collection, query, where, getCountFromServer } from '@/lib/data-store';
+import { db } from '@/lib/platform';
 import { Avatar } from '@/components/ui/Avatar';
 import { Card } from '@/components/ui/Card';
 import { Icon } from '@/components/ui/Icon';

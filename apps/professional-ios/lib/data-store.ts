@@ -5,7 +5,7 @@ import { authClient } from './neonAuth';
 const DOC_PREFIX = '@fisioflow_firestore_doc:';
 const POLL_INTERVAL_MS = 30000;
 
-type FirestorePath = string[];
+type DataStorePath = string[];
 type FilterOperator = '==' | '!=' | '>' | '>=' | '<' | '<=' | 'array-contains';
 type WhereConstraint = { kind: 'where'; field: string; op: FilterOperator; value: unknown };
 type OrderConstraint = { kind: 'orderBy'; field: string; direction: 'asc' | 'desc' };
@@ -15,18 +15,18 @@ type DocumentData = Record<string, any>;
 
 type CollectionReference = {
   kind: 'collection';
-  path: FirestorePath;
+  path: DataStorePath;
 };
 
 type DocumentReference = {
   kind: 'doc';
-  path: FirestorePath;
+  path: DataStorePath;
   id: string;
 };
 
 type QueryReference = {
   kind: 'query';
-  path: FirestorePath;
+  path: DataStorePath;
   constraints: QueryConstraint[];
 };
 
@@ -132,24 +132,24 @@ function hydrateDocument<T extends DocumentData>(value: T | null) {
   return hydrateValue('', value) as T;
 }
 
-function docStorageKey(path: FirestorePath) {
+function docStorageKey(path: DataStorePath) {
   return `${DOC_PREFIX}${path.join('/')}`;
 }
 
-async function readLocalDocument(path: FirestorePath) {
+async function readLocalDocument(path: DataStorePath) {
   const raw = await AsyncStorage.getItem(docStorageKey(path));
   return raw ? (JSON.parse(raw) as DocumentData) : null;
 }
 
-async function writeLocalDocument(path: FirestorePath, data: DocumentData) {
+async function writeLocalDocument(path: DataStorePath, data: DocumentData) {
   await AsyncStorage.setItem(docStorageKey(path), JSON.stringify(dehydrateValue(data)));
 }
 
-async function deleteLocalDocument(path: FirestorePath) {
+async function deleteLocalDocument(path: DataStorePath) {
   await AsyncStorage.removeItem(docStorageKey(path));
 }
 
-async function readLocalCollection(path: FirestorePath) {
+async function readLocalCollection(path: DataStorePath) {
   const prefix = `${docStorageKey(path)}/`;
   const keys = (await AsyncStorage.getAllKeys()).filter((key) => {
     if (!key.startsWith(prefix)) return false;
@@ -164,7 +164,7 @@ async function readLocalCollection(path: FirestorePath) {
     .filter(Boolean) as DocumentData[];
 }
 
-async function cacheCollection(path: FirestorePath, docs: DocumentData[]) {
+async function cacheCollection(path: DataStorePath, docs: DocumentData[]) {
   await Promise.all(
     docs
       .filter((item) => typeof item?.id === 'string' && item.id.length > 0)
@@ -172,7 +172,7 @@ async function cacheCollection(path: FirestorePath, docs: DocumentData[]) {
   );
 }
 
-function getCollectionName(path: FirestorePath) {
+function getCollectionName(path: DataStorePath) {
   return path[0] ?? '';
 }
 
@@ -288,7 +288,7 @@ const serverProviders: Record<string, ServerCollectionProvider> = {
   },
 };
 
-async function getServerProvider(path: FirestorePath) {
+async function getServerProvider(path: DataStorePath) {
   return serverProviders[getCollectionName(path)] ?? null;
 }
 
@@ -355,7 +355,7 @@ async function readQuery(ref: QueryReference) {
   return applyConstraints(localDocs, ref.constraints);
 }
 
-async function mergeUserProfile(path: FirestorePath, data: DocumentData, merge = false) {
+async function mergeUserProfile(path: DataStorePath, data: DocumentData, merge = false) {
   const existing = merge ? ((await readLocalDocument(path)) ?? {}) : {};
   const next = { ...existing, ...data, id: path[1], uid: path[1] };
 
@@ -407,14 +407,14 @@ async function writeWithProvider(ref: DocumentReference, data: DocumentData, mer
   return normalized;
 }
 
-export function collection(dbOrRef: { path?: FirestorePath } | CollectionReference, ...segments: string[]): CollectionReference {
+export function collection(dbOrRef: { path?: DataStorePath } | CollectionReference, ...segments: string[]): CollectionReference {
   const basePath = 'path' in dbOrRef && Array.isArray(dbOrRef.path) ? dbOrRef.path : [];
   return { kind: 'collection', path: [...basePath, ...segments] };
 }
 
 export function doc(
   base:
-    | { path?: FirestorePath }
+    | { path?: DataStorePath }
     | CollectionReference
     | DocumentReference,
   ...segments: string[]

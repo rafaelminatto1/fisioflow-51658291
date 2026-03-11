@@ -21,8 +21,8 @@ import { WeeklyChart, generateWeekData } from '@/components/ui/WeeklyChart';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { HapticFeedback } from '@/lib/haptics';
-import { collection, query, where, getDocs, orderBy } from '@/lib/firestore';
-import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs, orderBy } from '@/lib/data-store';
+import { db } from '@/lib/platform';
 
 const { width } = Dimensions.get('window');
 const CHART_WIDTH = width - 32;

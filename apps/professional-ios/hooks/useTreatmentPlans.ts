@@ -12,8 +12,8 @@ import {
   doc,
   getDoc,
   serverTimestamp,
-} from '@/lib/firestore';
-import { db } from '@/lib/firebase';
+} from '@/lib/data-store';
+import { db } from '@/lib/platform';
 import type { ExercisePlan } from '@/types';
 
 export function useTreatmentPlans(patientId?: string) {

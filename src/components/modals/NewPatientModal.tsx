@@ -1,22 +1,50 @@
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { useForm, Controller } from 'react-hook-form';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { User, Search, Loader2 } from 'lucide-react';
+import { 
+  User, 
+  Search, 
+  Loader2, 
+  Phone, 
+  Mail, 
+  MapPin, 
+  HeartPulse, 
+  Shield, 
+  Briefcase, 
+  UserPlus,
+  AlertCircle,
+  CheckCircle2,
+  Building,
+  Home,
+  Users,
+  Stethoscope,
+  Pill,
+  Scale,
+  Droplet,
+  Heart,
+  GraduationCap,
+  CreditCard,
+  IdCard
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { formatCPF, formatPhoneInput, formatCEP } from '@/utils/formatInputs';
 import { cleanCPF, cleanPhone, emailSchema, cpfSchema, phoneSchema, sanitizeString, sanitizeEmail } from '@/lib/validations';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { patientsApi } from '@/lib/api/workers-client';
-import { DatePicker } from '@/components/ui/date-picker';
+import { SmartDatePicker } from '@/components/ui/smart-date-picker';
+import { cn } from '@/lib/utils';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { PATHOLOGY_OPTIONS } from '@/lib/constants/pathologies';
 
@@ -25,7 +53,7 @@ const patientSchema = z.object({
   email: emailSchema.optional().or(z.literal('')),
   phone: phoneSchema.optional().or(z.literal('')),
   cpf: z.string().optional().refine((val) => {
-    if (!val || val === '') return true; // Campo vazio é válido
+    if (!val || val === '') return true;
     return cpfSchema.safeParse(val).success;
   }, { message: 'CPF inválido' }),
   birth_date: z.date().optional(),
@@ -68,9 +96,11 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isFetchingAddress, setIsFetchingAddress] = React.useState(false);
+  const [activeTab, setActiveTab] = useState<'basic' | 'medical' | 'address' | 'additional'>('basic');
 
   const form = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
+    mode: 'onChange',
     defaultValues: {
       name: '',
       email: '',
@@ -103,12 +133,14 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
     }
   });
 
-  const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting }, reset } = form;
+  const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting, isValid, isDirty }, reset, trigger } = form;
 
   const watchedBirthDate = watch('birth_date');
   const watchedPhone = watch('phone');
   const watchedCpf = watch('cpf');
   const watchedZipCode = watch('zip_code');
+  const watchedName = watch('name');
+  const watchedMainCondition = watch('main_condition');
 
   // Handlers para formatação de CPF, telefone e CEP
   const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,7 +157,6 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
     const formatted = formatCEP(e.target.value);
     setValue('zip_code', formatted, { shouldValidate: false });
     
-    // Auto-fetch address if CEP is complete
     if (formatted.replace(/\D/g, '').length === 8) {
       void fetchAddress(formatted.replace(/\D/g, ''));
     }
@@ -168,8 +199,6 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
       const cleanPhoneValue = data.phone ? cleanPhone(data.phone) : undefined;
       const cleanEmailValue = data.email ? sanitizeEmail(data.email) : undefined;
       
-      // Combine address fields for the single 'address' field in backend if needed, 
-      // or send separately if backend supports it. Assuming current backend uses a single field.
       const fullAddress = data.address 
         ? `${data.address}${data.address_number ? `, ${data.address_number}` : ''}${data.address_complement ? ` - ${data.address_complement}` : ''}${data.neighborhood ? ` - ${data.neighborhood}` : ''}${data.city ? ` - ${data.city}` : ''}${data.state ? ` / ${data.state}` : ''}${data.zip_code ? ` (CEP: ${data.zip_code})` : ''}`
         : null;
@@ -184,8 +213,6 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
         gender: data.gender,
         session_value: data.session_value && typeof data.session_value === 'number' ? data.session_value : null,
         address: fullAddress,
-        // If the backend is updated to support structured address, we could send them separately
-        // For now, let's keep it compatible with existing structure if it's just a string
         emergency_contact: data.emergency_contact ? sanitizeString(data.emergency_contact, 200) : null,
         emergency_contact_relationship: data.emergency_contact_relationship ? sanitizeString(data.emergency_contact_relationship, 100) : null,
         medical_history: data.medical_history ? sanitizeString(data.medical_history, 5000) : null,
@@ -239,6 +266,7 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
 
       queryClient.invalidateQueries({ queryKey: ['patients'] });
       reset();
+      setActiveTab('basic');
       onOpenChange(false);
     } catch (error: unknown) {
       logger.error('Erro ao cadastrar paciente', error, 'NewPatientModal');
@@ -263,431 +291,691 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
     }
   };
 
+  // Calcular progresso do formulário
+  const filledFields = [
+    watchedName,
+    watchedMainCondition,
+    watchedPhone,
+    watchedCpf,
+    watchedBirthDate,
+    watch('email'),
+    watch('address'),
+    watch('emergency_contact'),
+  ].filter(Boolean).length;
+
+  const progressPercentage = Math.round((filledFields / 8) * 100);
+
+  // Função para navegar entre tabs
+  const handleNextTab = () => {
+    if (activeTab === 'basic') setActiveTab('medical');
+    else if (activeTab === 'medical') setActiveTab('address');
+    else if (activeTab === 'address') setActiveTab('additional');
+  };
+
+  const handlePrevTab = () => {
+    if (activeTab === 'additional') setActiveTab('address');
+    else if (activeTab === 'address') setActiveTab('medical');
+    else if (activeTab === 'medical') setActiveTab('basic');
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[85vh] flex flex-col p-0">
-        <DialogHeader className="p-6 pb-2">
-          <DialogTitle className="flex items-center gap-2">
-            <User className="w-5 h-5" />
-            Novo Paciente
-          </DialogTitle>
+      <DialogContent className="sm:max-w-[750px] max-h-[90vh] flex flex-col p-0 gap-0">
+        {/* Header com gradiente */}
+        <DialogHeader className="p-6 pb-4 bg-gradient-to-r from-primary/5 via-primary/3 to-transparent border-b">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-gradient-to-br from-primary to-primary/70 rounded-xl shadow-lg shadow-primary/20">
+              <UserPlus className="w-6 h-6 text-primary-foreground" />
+            </div>
+            <div className="flex-1">
+              <DialogTitle className="text-xl font-bold">Novo Paciente</DialogTitle>
+              <DialogDescription className="text-muted-foreground mt-1">
+                Preencha os dados do paciente para criar o cadastro
+              </DialogDescription>
+            </div>
+            {/* Indicador de progresso */}
+            <div className="flex flex-col items-end gap-1">
+              <Badge variant="outline" className="text-xs font-medium">
+                {progressPercentage}% completo
+              </Badge>
+              <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-primary to-primary/60 rounded-full transition-all duration-300"
+                  style={{ width: `${progressPercentage}%` }}
+                />
+              </div>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-2">
+        {/* Tabs de navegação */}
+        <div className="border-b bg-muted/30 px-6 py-2">
+          <TabsList className="grid w-full grid-cols-4 h-10 bg-transparent gap-1">
+            <TabsTrigger 
+              value="basic" 
+              className={cn(
+                "data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all",
+                "flex items-center gap-2 text-sm"
+              )}
+              onClick={() => setActiveTab('basic')}
+            >
+              <User className="w-4 h-4" />
+              <span className="hidden sm:inline">Básico</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="medical" 
+              className={cn(
+                "data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all",
+                "flex items-center gap-2 text-sm"
+              )}
+              onClick={() => setActiveTab('medical')}
+            >
+              <HeartPulse className="w-4 h-4" />
+              <span className="hidden sm:inline">Médico</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="address" 
+              className={cn(
+                "data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all",
+                "flex items-center gap-2 text-sm"
+              )}
+              onClick={() => setActiveTab('address')}
+            >
+              <MapPin className="w-4 h-4" />
+              <span className="hidden sm:inline">Endereço</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="additional" 
+              className={cn(
+                "data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all",
+                "flex items-center gap-2 text-sm"
+              )}
+              onClick={() => setActiveTab('additional')}
+            >
+              <Briefcase className="w-4 h-4" />
+              <span className="hidden sm:inline">Adicional</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        {/* Conteúdo do formulário */}
+        <div className="flex-1 overflow-y-auto px-6 py-4">
           <form id="patient-form" onSubmit={handleSubmit(handleSave)} className="space-y-6">
-            {/* Basic Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Informações Básicas</h3>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nome Completo *</Label>
-                  <Input
-                    id="name"
-                    {...register('name')}
-                    placeholder="Nome completo do paciente"
-                    aria-required="true"
-                    aria-invalid={!!errors.name}
-                  />
-                  {errors.name && (
-                    <p className="text-sm text-destructive">{String(errors.name.message)}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    {...register('email')}
-                    placeholder="email@exemplo.com"
-                  />
-                  {errors.email && (
-                    <p className="text-sm text-destructive">{errors.email.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Telefone</Label>
-                  <Input
-                    id="phone"
-                    value={watchedPhone || ''}
-                    onChange={handlePhoneChange}
-                    placeholder="(11) 99999-9999"
-                    maxLength={15}
-                  />
-                  {errors.phone && (
-                    <p className="text-sm text-destructive">{errors.phone.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="cpf">CPF</Label>
-                  <Input
-                    id="cpf"
-                    value={watchedCpf || ''}
-                    onChange={handleCpfChange}
-                    placeholder="000.000.000-00"
-                    maxLength={14}
-                  />
-                  {errors.cpf && (
-                    <p className="text-sm text-destructive">{errors.cpf.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label id="birth-date-label">Data de Nascimento</Label>
-                  <DatePicker
-                    date={watchedBirthDate}
-                    onChange={(date) => setValue('birth_date', date, { shouldValidate: true })}
-                    placeholder="Selecione ou digite"
-                    fromYear={1900}
-                    toYear={new Date().getFullYear()}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="gender">Gênero *</Label>
-                  <Select
-                    value={watch('gender')}
-                    onValueChange={(value) => setValue('gender', value as 'masculino' | 'feminino' | 'outro')}
-                  >
-                    <SelectTrigger id="gender">
-                      <SelectValue placeholder="Selecione o gênero" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="masculino">Masculino</SelectItem>
-                      <SelectItem value="feminino">Feminino</SelectItem>
-                      <SelectItem value="outro">Outro</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.gender && (
-                    <p className="text-sm text-destructive">{errors.gender.message}</p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="session_value">Valor por Sessão (R$)</Label>
-                  <Input
-                    id="session_value"
-                    type="number"
-                    step="0.01"
-                    {...register('session_value', { valueAsNumber: true })}
-                    placeholder="0,00"
-                  />
-                  {errors.session_value && (
-                    <p className="text-sm text-destructive">{errors.session_value.message}</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Address Section */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Endereço</h3>
+            <Tabs value={activeTab} className="w-full">
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="zip_code">CEP</Label>
-                  <div className="relative">
-                    <Input
-                      id="zip_code"
-                      value={watchedZipCode || ''}
-                      onChange={handleZipCodeChange}
-                      placeholder="00000-000"
-                      maxLength={9}
-                      className="pr-10"
-                    />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      {isFetchingAddress ? (
-                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                      ) : (
-                        <Search className="h-4 w-4 text-muted-foreground" />
+              {/* Tab: Informações Básicas */}
+              <TabsContent value="basic" className="space-y-4 mt-0">
+                <Card className="border-0 shadow-none">
+                  <CardHeader className="px-0 pt-0">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                        <User className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      Informações Pessoais
+                    </CardTitle>
+                    <CardDescription>Dados básicos de identificação do paciente</CardDescription>
+                  </CardHeader>
+                  <CardContent className="px-0 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Nome Completo */}
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="name" className="flex items-center gap-1">
+                          Nome Completo <span className="text-destructive">*</span>
+                        </Label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="name"
+                            {...register('name')}
+                            placeholder="Nome completo do paciente"
+                            className={cn("pl-10", errors.name && "border-destructive")}
+                            aria-required="true"
+                          />
+                        </div>
+                        {errors.name && (
+                          <p className="text-sm text-destructive flex items-center gap-1">
+                            <AlertCircle className="w-3 h-3" />
+                            {String(errors.name.message)}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Email */}
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="email"
+                            type="email"
+                            {...register('email')}
+                            placeholder="email@exemplo.com"
+                            className={cn("pl-10", errors.email && "border-destructive")}
+                          />
+                        </div>
+                        {errors.email && (
+                          <p className="text-sm text-destructive">{errors.email.message}</p>
+                        )}
+                      </div>
+
+                      {/* Telefone */}
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">Telefone</Label>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="phone"
+                            value={watchedPhone || ''}
+                            onChange={handlePhoneChange}
+                            placeholder="(11) 99999-9999"
+                            maxLength={15}
+                            className={cn("pl-10", errors.phone && "border-destructive")}
+                          />
+                        </div>
+                        {errors.phone && (
+                          <p className="text-sm text-destructive">{errors.phone.message}</p>
+                        )}
+                      </div>
+
+                      {/* CPF */}
+                      <div className="space-y-2">
+                        <Label htmlFor="cpf">CPF</Label>
+                        <div className="relative">
+                          <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="cpf"
+                            value={watchedCpf || ''}
+                            onChange={handleCpfChange}
+                            placeholder="000.000.000-00"
+                            maxLength={14}
+                            className={cn("pl-10", errors.cpf && "border-destructive")}
+                          />
+                        </div>
+                        {errors.cpf && (
+                          <p className="text-sm text-destructive">{errors.cpf.message}</p>
+                        )}
+                      </div>
+
+                      {/* Data de Nascimento */}
+                      <div className="space-y-2">
+                        <Label>Data de Nascimento</Label>
+                        <SmartDatePicker
+                          date={watchedBirthDate}
+                          onChange={(date) => setValue('birth_date', date || undefined, { shouldValidate: true })}
+                          placeholder="Selecione ou digite"
+                          fromYear={1920}
+                          toYear={new Date().getFullYear()}
+                        />
+                      </div>
+
+                      {/* Gênero */}
+                      <div className="space-y-2">
+                        <Label htmlFor="gender">Gênero <span className="text-destructive">*</span></Label>
+                        <Select
+                          value={watch('gender')}
+                          onValueChange={(value) => setValue('gender', value as 'masculino' | 'feminino' | 'outro')}
+                        >
+                          <SelectTrigger id="gender" className={cn(errors.gender && "border-destructive")}>
+                            <SelectValue placeholder="Selecione o gênero" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="masculino">Masculino</SelectItem>
+                            <SelectItem value="feminino">Feminino</SelectItem>
+                            <SelectItem value="outro">Outro</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Valor por Sessão */}
+                      <div className="space-y-2">
+                        <Label htmlFor="session_value">Valor por Sessão (R$)</Label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">R$</span>
+                          <Input
+                            id="session_value"
+                            type="number"
+                            step="0.01"
+                            {...register('session_value', { valueAsNumber: true })}
+                            placeholder="0,00"
+                            className="pl-10"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Tab: Informações Médicas */}
+              <TabsContent value="medical" className="space-y-4 mt-0">
+                <Card className="border-0 shadow-none">
+                  <CardHeader className="px-0 pt-0">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <div className="p-1.5 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                        <HeartPulse className="w-4 h-4 text-red-600 dark:text-red-400" />
+                      </div>
+                      Histórico Clínico
+                    </CardTitle>
+                    <CardDescription>Informações médicas e condições de saúde</CardDescription>
+                  </CardHeader>
+                  <CardContent className="px-0 space-y-4">
+                    {/* Condição Principal */}
+                    <div className="space-y-2">
+                      <Label htmlFor="main_condition" className="flex items-center gap-1">
+                        <Stethoscope className="w-4 h-4 text-muted-foreground" />
+                        Condição Principal <span className="text-destructive">*</span>
+                      </Label>
+                      <Controller
+                        name="main_condition"
+                        control={form.control}
+                        render={({ field }) => (
+                          <MultiSelect
+                            options={PATHOLOGY_OPTIONS}
+                            selected={field.value ? field.value.split(',').map(s => s.trim()).filter(Boolean) : []}
+                            onChange={(vals) => field.onChange(vals.join(', '))}
+                            placeholder="Pesquisar, selecionar ou digitar patologias..."
+                            allowCustom={true}
+                          />
+                        )}
+                      />
+                      {errors.main_condition && (
+                        <p className="text-sm text-destructive flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          {errors.main_condition.message}
+                        </p>
                       )}
                     </div>
-                  </div>
-                </div>
 
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="address">Logradouro (Rua/Avenida)</Label>
-                  <Input
-                    id="address"
-                    {...register('address')}
-                    placeholder="Nome da rua ou avenida"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="address_number">Número</Label>
-                  <Input
-                    id="address_number"
-                    {...register('address_number')}
-                    placeholder="Número"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="address_complement">Complemento</Label>
-                  <Input
-                    id="address_complement"
-                    {...register('address_complement')}
-                    placeholder="Apto, Sala, Bloco..."
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="neighborhood">Bairro</Label>
-                  <Input
-                    id="neighborhood"
-                    {...register('neighborhood')}
-                    placeholder="Bairro"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="col-span-2 space-y-2">
-                      <Label htmlFor="city">Cidade</Label>
-                      <Input
-                        id="city"
-                        {...register('city')}
-                        placeholder="Cidade"
-                      />
-                    </div>
+                    {/* Histórico Médico */}
                     <div className="space-y-2">
-                      <Label htmlFor="state">UF</Label>
-                      <Input
-                        id="state"
-                        {...register('state')}
-                        placeholder="UF"
-                        maxLength={2}
+                      <Label htmlFor="medical_history">Histórico Médico</Label>
+                      <Textarea
+                        id="medical_history"
+                        {...register('medical_history')}
+                        placeholder="Descreva o histórico de saúde, cirurgias anteriores, etc."
+                        rows={3}
+                        className="resize-none"
                       />
                     </div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            {/* Emergency Contact */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Contato de Emergência</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Alergias */}
+                      <div className="space-y-2">
+                        <Label htmlFor="allergies" className="flex items-center gap-1">
+                          <AlertCircle className="w-4 h-4 text-muted-foreground" />
+                          Alergias
+                        </Label>
+                        <Input
+                          id="allergies"
+                          {...register('allergies')}
+                          placeholder="Alergias conhecidas"
+                        />
+                      </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="emergency_contact">Contato</Label>
-                  <Input
-                    id="emergency_contact"
-                    {...register('emergency_contact')}
-                    placeholder="Nome e telefone"
-                  />
-                </div>
+                      {/* Medicamentos */}
+                      <div className="space-y-2">
+                        <Label htmlFor="medications" className="flex items-center gap-1">
+                          <Pill className="w-4 h-4 text-muted-foreground" />
+                          Medicamentos
+                        </Label>
+                        <Input
+                          id="medications"
+                          {...register('medications')}
+                          placeholder="Medicamentos em uso"
+                        />
+                      </div>
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="emergency_contact_relationship">Parentesco</Label>
-                  <Input
-                    id="emergency_contact_relationship"
-                    {...register('emergency_contact_relationship')}
-                    placeholder="Ex: Mãe, Pai, Cônjuge"
-                  />
-                </div>
-              </div>
-            </div>
+                    {/* Dados físicos */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                      <div className="space-y-2">
+                        <Label htmlFor="weight_kg" className="flex items-center gap-1">
+                          <Scale className="w-4 h-4 text-muted-foreground" />
+                          Peso (kg)
+                        </Label>
+                        <Input
+                          id="weight_kg"
+                          type="number"
+                          {...register('weight_kg', { valueAsNumber: true })}
+                          placeholder="70"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="height_cm">Altura (cm)</Label>
+                        <Input
+                          id="height_cm"
+                          type="number"
+                          {...register('height_cm', { valueAsNumber: true })}
+                          placeholder="170"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="blood_type" className="flex items-center gap-1">
+                          <Droplet className="w-4 h-4 text-muted-foreground" />
+                          Tipo Sanguíneo
+                        </Label>
+                        <Select
+                          value={watch('blood_type')}
+                          onValueChange={(value) => setValue('blood_type', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((type) => (
+                              <SelectItem key={type} value={type}>{type}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-            {/* Medical Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Informações Médicas</h3>
+              {/* Tab: Endereço */}
+              <TabsContent value="address" className="space-y-4 mt-0">
+                <Card className="border-0 shadow-none">
+                  <CardHeader className="px-0 pt-0">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <div className="p-1.5 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                        <MapPin className="w-4 h-4 text-green-600 dark:text-green-400" />
+                      </div>
+                      Endereço
+                    </CardTitle>
+                    <CardDescription>Localização e contato de emergência</CardDescription>
+                  </CardHeader>
+                  <CardContent className="px-0 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* CEP */}
+                      <div className="space-y-2">
+                        <Label htmlFor="zip_code">CEP</Label>
+                        <div className="relative">
+                          <Input
+                            id="zip_code"
+                            value={watchedZipCode || ''}
+                            onChange={handleZipCodeChange}
+                            placeholder="00000-000"
+                            maxLength={9}
+                            className="pr-10"
+                          />
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            {isFetchingAddress ? (
+                              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                            ) : (
+                              <Search className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="main_condition">Condição Principal *</Label>
-                <Controller
-                  name="main_condition"
-                  control={form.control}
-                  render={({ field }) => (
-                    <MultiSelect
-                      options={PATHOLOGY_OPTIONS}
-                      selected={field.value ? field.value.split(',').map(s => s.trim()).filter(Boolean) : []}
-                      onChange={(vals) => field.onChange(vals.join(', '))}
-                      placeholder="Pesquisar ou selecionar patologias..."
-                    />
-                  )}
-                />
-                {errors.main_condition && (
-                  <p className="text-sm text-destructive">{errors.main_condition.message}</p>
-                )}
-              </div>
+                      {/* Logradouro */}
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="address" className="flex items-center gap-1">
+                          <Home className="w-4 h-4 text-muted-foreground" />
+                          Logradouro
+                        </Label>
+                        <Input
+                          id="address"
+                          {...register('address')}
+                          placeholder="Nome da rua ou avenida"
+                        />
+                      </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="medical_history">Histórico Médico</Label>
-                <Textarea
-                  id="medical_history"
-                  {...register('medical_history')}
-                  placeholder="Histórico médico relevante"
-                  rows={3}
-                />
-              </div>
+                      {/* Número */}
+                      <div className="space-y-2">
+                        <Label htmlFor="address_number">Número</Label>
+                        <Input
+                          id="address_number"
+                          {...register('address_number')}
+                          placeholder="Número"
+                        />
+                      </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="allergies">Alergias</Label>
-                  <Input
-                    id="allergies"
-                    {...register('allergies')}
-                    placeholder="Alergias conhecidas"
-                  />
-                </div>
+                      {/* Complemento */}
+                      <div className="space-y-2">
+                        <Label htmlFor="address_complement">Complemento</Label>
+                        <Input
+                          id="address_complement"
+                          {...register('address_complement')}
+                          placeholder="Apto, Sala, Bloco..."
+                        />
+                      </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="medications">Medicamentos</Label>
-                  <Input
-                    id="medications"
-                    {...register('medications')}
-                    placeholder="Medicamentos em uso"
-                  />
-                </div>
+                      {/* Bairro */}
+                      <div className="space-y-2">
+                        <Label htmlFor="neighborhood">Bairro</Label>
+                        <Input
+                          id="neighborhood"
+                          {...register('neighborhood')}
+                          placeholder="Bairro"
+                        />
+                      </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="weight_kg">Peso (kg)</Label>
-                  <Input
-                    id="weight_kg"
-                    type="number"
-                    {...register('weight_kg', { valueAsNumber: true })}
-                    placeholder="70"
-                  />
-                </div>
+                      {/* Cidade e UF */}
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="col-span-2 space-y-2">
+                            <Label htmlFor="city" className="flex items-center gap-1">
+                              <Building className="w-4 h-4 text-muted-foreground" />
+                              Cidade
+                            </Label>
+                            <Input
+                              id="city"
+                              {...register('city')}
+                              placeholder="Cidade"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="state">UF</Label>
+                            <Input
+                              id="state"
+                              {...register('state')}
+                              placeholder="UF"
+                              maxLength={2}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="height_cm">Altura (cm)</Label>
-                  <Input
-                    id="height_cm"
-                    type="number"
-                    {...register('height_cm', { valueAsNumber: true })}
-                    placeholder="170"
-                  />
-                </div>
+                    {/* Contato de Emergência */}
+                    <div className="border-t pt-4 mt-4">
+                      <h4 className="text-sm font-semibold mb-4 flex items-center gap-2">
+                        <div className="p-1 bg-amber-100 dark:bg-amber-900/30 rounded">
+                          <Users className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                        </div>
+                        Contato de Emergência
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="emergency_contact">Nome do Contato</Label>
+                          <Input
+                            id="emergency_contact"
+                            {...register('emergency_contact')}
+                            placeholder="Nome e telefone"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="emergency_contact_relationship">Parentesco</Label>
+                          <Input
+                            id="emergency_contact_relationship"
+                            {...register('emergency_contact_relationship')}
+                            placeholder="Ex: Mãe, Pai, Cônjuge"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                <div className="space-y-2">
-                  <Label htmlFor="blood_type">Tipo Sanguíneo</Label>
-                  <Select
-                    value={watch('blood_type')}
-                    onValueChange={(value) => setValue('blood_type', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="A+">A+</SelectItem>
-                      <SelectItem value="A-">A-</SelectItem>
-                      <SelectItem value="B+">B+</SelectItem>
-                      <SelectItem value="B-">B-</SelectItem>
-                      <SelectItem value="AB+">AB+</SelectItem>
-                      <SelectItem value="AB-">AB-</SelectItem>
-                      <SelectItem value="O+">O+</SelectItem>
-                      <SelectItem value="O-">O-</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
+              {/* Tab: Informações Adicionais */}
+              <TabsContent value="additional" className="space-y-4 mt-0">
+                <Card className="border-0 shadow-none">
+                  <CardHeader className="px-0 pt-0">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <div className="p-1.5 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                        <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                      </div>
+                      Informações Complementares
+                    </CardTitle>
+                    <CardDescription>Dados profissionais, convênio e escolaridade</CardDescription>
+                  </CardHeader>
+                  <CardContent className="px-0 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Estado Civil */}
+                      <div className="space-y-2">
+                        <Label htmlFor="marital_status" className="flex items-center gap-1">
+                          <Heart className="w-4 h-4 text-muted-foreground" />
+                          Estado Civil
+                        </Label>
+                        <Select
+                          value={watch('marital_status')}
+                          onValueChange={(value) => setValue('marital_status', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="solteiro">Solteiro(a)</SelectItem>
+                            <SelectItem value="casado">Casado(a)</SelectItem>
+                            <SelectItem value="divorciado">Divorciado(a)</SelectItem>
+                            <SelectItem value="viuvo">Viúvo(a)</SelectItem>
+                            <SelectItem value="uniao_estavel">União Estável</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
 
-            {/* Additional Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Informações Adicionais</h3>
+                      {/* Profissão */}
+                      <div className="space-y-2">
+                        <Label htmlFor="profession" className="flex items-center gap-1">
+                          <Briefcase className="w-4 h-4 text-muted-foreground" />
+                          Profissão
+                        </Label>
+                        <Input
+                          id="profession"
+                          {...register('profession')}
+                          placeholder="Profissão"
+                        />
+                      </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="marital_status">Estado Civil</Label>
-                  <Select
-                    value={watch('marital_status')}
-                    onValueChange={(value) => setValue('marital_status', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="solteiro">Solteiro(a)</SelectItem>
-                      <SelectItem value="casado">Casado(a)</SelectItem>
-                      <SelectItem value="divorciado">Divorciado(a)</SelectItem>
-                      <SelectItem value="viuvo">Viúvo(a)</SelectItem>
-                      <SelectItem value="uniao_estavel">União Estável</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                      {/* Escolaridade */}
+                      <div className="space-y-2">
+                        <Label htmlFor="education_level" className="flex items-center gap-1">
+                          <GraduationCap className="w-4 h-4 text-muted-foreground" />
+                          Escolaridade
+                        </Label>
+                        <Select
+                          value={watch('education_level')}
+                          onValueChange={(value) => setValue('education_level', value)}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="fundamental">Ensino Fundamental</SelectItem>
+                            <SelectItem value="medio">Ensino Médio</SelectItem>
+                            <SelectItem value="superior">Ensino Superior</SelectItem>
+                            <SelectItem value="pos">Pós-graduação</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="profession">Profissão</Label>
-                  <Input
-                    id="profession"
-                    {...register('profession')}
-                    placeholder="Profissão"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="education_level">Escolaridade</Label>
-                  <Select
-                    value={watch('education_level')}
-                    onValueChange={(value) => setValue('education_level', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="fundamental">Ensino Fundamental</SelectItem>
-                      <SelectItem value="medio">Ensino Médio</SelectItem>
-                      <SelectItem value="superior">Ensino Superior</SelectItem>
-                      <SelectItem value="pos">Pós-graduação</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="insurance_plan">Plano de Saúde</Label>
-                  <Input
-                    id="insurance_plan"
-                    {...register('insurance_plan')}
-                    placeholder="Nome do plano"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="insurance_number">Número da Carteira</Label>
-                  <Input
-                    id="insurance_number"
-                    {...register('insurance_number')}
-                    placeholder="Número da carteira do plano"
-                  />
-                </div>
-              </div>
-            </div>
+                    {/* Convênio */}
+                    <div className="border-t pt-4 mt-2">
+                      <h4 className="text-sm font-semibold mb-4 flex items-center gap-2">
+                        <div className="p-1 bg-cyan-100 dark:bg-cyan-900/30 rounded">
+                          <CreditCard className="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
+                        </div>
+                        Convênio Médico
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="insurance_plan">Plano de Saúde</Label>
+                          <Input
+                            id="insurance_plan"
+                            {...register('insurance_plan')}
+                            placeholder="Nome do plano"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="insurance_number">Número da Carteira</Label>
+                          <Input
+                            id="insurance_number"
+                            {...register('insurance_number')}
+                            placeholder="Número da carteira do plano"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </form>
         </div>
 
-        <div className="flex justify-end gap-3 p-6 pt-2 border-t mt-auto bg-background">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
-            Cancelar
-          </Button>
-
-          <Button
-            type="submit"
-            form="patient-form"
-            disabled={isSubmitting}
-            className="bg-primary hover:bg-primary/90"
-          >
-            {isSubmitting ? (
-              <>
-                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                Salvando...
-              </>
-            ) : (
-              'Cadastrar Paciente'
+        {/* Footer com navegação e ações */}
+        <div className="border-t bg-muted/30 p-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            {activeTab !== 'basic' && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handlePrevTab}
+                disabled={isSubmitting}
+                className="text-muted-foreground"
+              >
+                Anterior
+              </Button>
             )}
-          </Button>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                reset();
+                setActiveTab('basic');
+                onOpenChange(false);
+              }}
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </Button>
+
+            {activeTab !== 'additional' ? (
+              <Button
+                type="button"
+                onClick={handleNextTab}
+                className="bg-primary hover:bg-primary/90 gap-2"
+              >
+                Próximo
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                form="patient-form"
+                disabled={isSubmitting || !watchedName || !watchedMainCondition}
+                className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/20 gap-2 min-w-[160px] transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    Cadastrar Paciente
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

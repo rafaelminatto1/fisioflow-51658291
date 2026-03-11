@@ -26,7 +26,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { biometricAuthService } from '@/lib/services/biometricAuthService';
-import { auth } from '@/lib/firebase';
+import { auth } from '@/lib/platform';
 import type { BiometricType } from '@/types/auth';
 
 type SetupStep = 'intro' | 'biometric' | 'pin' | 'complete';

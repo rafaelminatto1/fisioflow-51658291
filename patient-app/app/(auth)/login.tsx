@@ -14,7 +14,7 @@ import { Link, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input } from '@/components';
 import { useColors } from '@/hooks/useColorScheme';
-import { useAuthStore } from '@/lib/firebase';
+import { useAuthStore } from '@/lib/platform';
 import { validators } from '@/lib/validation';
 import logoIcon from '../../assets/icon.png';
 
