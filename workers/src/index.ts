@@ -67,6 +67,7 @@ import { marketingRoutes } from './routes/marketing';
 import { aiRoutes } from './routes/ai';
 import { dicomRoutes } from './routes/dicom';
 import { fcmTokensRoutes } from './routes/fcmTokens';
+import { webhooksRoutes } from './routes/webhooks';
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -169,6 +170,7 @@ app.route('/api/marketing', marketingRoutes);
 app.route('/api/ai', aiRoutes);
 app.route('/api/dicom', dicomRoutes);
 app.route('/api/fcm-tokens', fcmTokensRoutes);
+app.route('/api/webhooks', webhooksRoutes);
 
 app.notFound((c) => c.json({ error: 'Rota não encontrada' }, 404));
 
