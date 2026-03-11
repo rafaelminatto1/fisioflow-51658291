@@ -1,95 +1,84 @@
 /**
- * Configuração das URLs da API V2 (Cloud Functions)
+ * Legacy API URL compatibility.
  *
- * Prioridade de Configuração:
- * 1. VITE_CLOUD_RUN_BASE_URL (URL base completa sem a função, ex: https://<function>-<project>.region.run.app)
- * 2. Construção dinâmica via PROJECT_NUMBER + REGION (padrão Cloud Functions v2)
- * 3. Fallback legado por HASH (compatibilidade)
+ * These URLs now point to Cloudflare Workers instead of Cloud Run / Firebase.
+ * Dynamic resources still need an id appended by the caller or by the
+ * compatibility layer in `function-http.ts`.
  */
 
-const _REGION = 'southamerica-east1';
-const _PROJECT_NUMBER = '412418905255';
-const _LEGACY_HASH = import.meta.env.VITE_CLOUD_FUNCTIONS_HASH || 'tfecm5cqoq';
-const _RUN_APP_PATTERN = import.meta.env.VITE_CLOUD_RUN_PATTERN || 'legacy-hash';
+import { getWorkersApiUrl } from '../config';
 
-// URL base para Cloud Run (Firebase Functions v2)
-// Mantém barra final para evitar preflight em endpoint sem slash que costuma responder 404.
-const CLOUD_RUN_BASE_URL = (func: string) => {
-  const normalized = func.toLowerCase();
-  if (_RUN_APP_PATTERN === 'legacy-hash') {
-    return `https://${normalized}-${_LEGACY_HASH}-rj.a.run.app/`;
-  }
-  return `https://${normalized}-${_PROJECT_NUMBER}.${_REGION}.run.app/`;
-};
+const WORKERS_BASE_URL = getWorkersApiUrl();
+const WORKERS_ENDPOINT = (path: string) => `${WORKERS_BASE_URL}${path}`;
 
 export const API_URLS = {
   patients: {
-    list: CLOUD_RUN_BASE_URL('listPatientsV2'),
-    get: CLOUD_RUN_BASE_URL('getPatientHttp'),
-    create: CLOUD_RUN_BASE_URL('createPatientV2'),
-    update: CLOUD_RUN_BASE_URL('updatePatientV2'),
-    delete: CLOUD_RUN_BASE_URL('deletePatientV2'),
-    stats: CLOUD_RUN_BASE_URL('getPatientStatsV2'),
+    list: WORKERS_ENDPOINT('/api/patients'),
+    get: WORKERS_ENDPOINT('/api/patients'),
+    create: WORKERS_ENDPOINT('/api/patients'),
+    update: WORKERS_ENDPOINT('/api/patients'),
+    delete: WORKERS_ENDPOINT('/api/patients'),
+    stats: WORKERS_ENDPOINT('/api/patients'),
   },
   appointments: {
-    list: CLOUD_RUN_BASE_URL('listAppointments'),
-    get: CLOUD_RUN_BASE_URL('getAppointmentV2'),
-    create: CLOUD_RUN_BASE_URL('createAppointmentV2'),
-    update: CLOUD_RUN_BASE_URL('updateAppointmentV2'),
-    cancel: CLOUD_RUN_BASE_URL('cancelAppointmentV2'),
-    checkConflict: CLOUD_RUN_BASE_URL('checkTimeConflictV2'),
+    list: WORKERS_ENDPOINT('/api/appointments'),
+    get: WORKERS_ENDPOINT('/api/appointments'),
+    create: WORKERS_ENDPOINT('/api/appointments'),
+    update: WORKERS_ENDPOINT('/api/appointments'),
+    cancel: WORKERS_ENDPOINT('/api/appointments'),
+    checkConflict: WORKERS_ENDPOINT('/api/appointments/check-conflict'),
   },
   doctors: {
-    list: CLOUD_RUN_BASE_URL('listDoctors'),
-    search: CLOUD_RUN_BASE_URL('searchDoctorsV2'),
+    list: WORKERS_ENDPOINT('/api/doctors'),
+    search: WORKERS_ENDPOINT('/api/doctors'),
   },
   exercises: {
-    list: CLOUD_RUN_BASE_URL('listExercisesV2'),
-    get: CLOUD_RUN_BASE_URL('getExerciseV2'),
-    searchSimilar: CLOUD_RUN_BASE_URL('searchSimilarExercisesV2'),
+    list: WORKERS_ENDPOINT('/api/exercises'),
+    get: WORKERS_ENDPOINT('/api/exercises'),
+    searchSimilar: WORKERS_ENDPOINT('/api/exercises/search/semantic'),
   },
   assessments: {
-    listTemplates: CLOUD_RUN_BASE_URL('listAssessmentTemplatesV2'),
+    listTemplates: WORKERS_ENDPOINT('/api/evaluation-forms'),
   },
   profile: {
-    get: CLOUD_RUN_BASE_URL('getProfile'),
-    update: CLOUD_RUN_BASE_URL('updateProfile'),
+    get: WORKERS_ENDPOINT('/api/profile/me'),
+    update: WORKERS_ENDPOINT('/api/profile/me'),
   },
   services: {
-    patient: CLOUD_RUN_BASE_URL('patientServiceHttp'),
-    appointment: CLOUD_RUN_BASE_URL('appointmentServiceHttp'),
-    evolution: CLOUD_RUN_BASE_URL('evolutionServiceHttp'),
-    ai: CLOUD_RUN_BASE_URL('aiServiceHttp'),
+    patient: WORKERS_ENDPOINT('/api/patients'),
+    appointment: WORKERS_ENDPOINT('/api/appointments'),
+    evolution: WORKERS_ENDPOINT('/api/evolution'),
+    ai: WORKERS_ENDPOINT('/api/ai/service'),
   },
   financial: {
-    listTransactions: CLOUD_RUN_BASE_URL('listTransactionsV2'),
-    createTransaction: CLOUD_RUN_BASE_URL('createTransactionV2'),
-    updateTransaction: CLOUD_RUN_BASE_URL('updateTransactionV2'),
-    deleteTransaction: CLOUD_RUN_BASE_URL('deleteTransactionV2'),
-    findTransactionByAppointmentId: CLOUD_RUN_BASE_URL('findTransactionByAppointmentIdV2'),
-    getEventReport: CLOUD_RUN_BASE_URL('getEventReportV2'),
-    getSummary: CLOUD_RUN_BASE_URL('getFinancialSummaryV2'),
+    listTransactions: WORKERS_ENDPOINT('/api/financial/transacoes'),
+    createTransaction: WORKERS_ENDPOINT('/api/financial/transacoes'),
+    updateTransaction: WORKERS_ENDPOINT('/api/financial/transacoes'),
+    deleteTransaction: WORKERS_ENDPOINT('/api/financial/transacoes'),
+    findTransactionByAppointmentId: WORKERS_ENDPOINT('/api/financial/pagamentos'),
+    getEventReport: WORKERS_ENDPOINT('/api/analytics/financial'),
+    getSummary: WORKERS_ENDPOINT('/api/analytics/financial'),
   },
   clinical: {
-    listGoals: CLOUD_RUN_BASE_URL('listpatientgoalshttp'),
-    createGoal: CLOUD_RUN_BASE_URL('createpatientgoalhttp'),
-    listPathologies: CLOUD_RUN_BASE_URL('listpatientpathologieshttp'),
-    createPathology: CLOUD_RUN_BASE_URL('createpatientpathologyhttp'),
-    getInsights: CLOUD_RUN_BASE_URL('getclinicalinsightshttp'),
-    getAiSummary: CLOUD_RUN_BASE_URL('getpatientaisummaryhttp'),
-    transcribe: CLOUD_RUN_BASE_URL('transcribeaudio'),
-    scanReport: CLOUD_RUN_BASE_URL('scanmedicalreporthttp'),
+    listGoals: WORKERS_ENDPOINT('/api/goals'),
+    createGoal: WORKERS_ENDPOINT('/api/goals'),
+    listPathologies: WORKERS_ENDPOINT('/api/patients'),
+    createPathology: WORKERS_ENDPOINT('/api/patients'),
+    getInsights: WORKERS_ENDPOINT('/api/clinical/insights'),
+    getAiSummary: WORKERS_ENDPOINT('/api/ai/service'),
+    transcribe: WORKERS_ENDPOINT('/api/ai/transcribe-audio'),
+    scanReport: WORKERS_ENDPOINT('/api/ai/document/analyze'),
   },
   analytics: {
-    setup: CLOUD_RUN_BASE_URL('setupAnalytics'),
-    dashboard: CLOUD_RUN_BASE_URL('dashboardMetrics'),
-    evolution: CLOUD_RUN_BASE_URL('patientEvolution'),
-    organization: CLOUD_RUN_BASE_URL('organizationStats'),
-    exercises: CLOUD_RUN_BASE_URL('topExercises'),
-    painMap: CLOUD_RUN_BASE_URL('painMapAnalysis'),
-    usage: CLOUD_RUN_BASE_URL('usageStats'),
+    setup: WORKERS_ENDPOINT('/api/analytics/dashboard'),
+    dashboard: WORKERS_ENDPOINT('/api/analytics/dashboard'),
+    evolution: WORKERS_ENDPOINT('/api/analytics/patient-evolution'),
+    organization: WORKERS_ENDPOINT('/api/analytics/dashboard'),
+    exercises: WORKERS_ENDPOINT('/api/analytics/top-exercises'),
+    painMap: WORKERS_ENDPOINT('/api/analytics/pain-map'),
+    usage: WORKERS_ENDPOINT('/api/analytics/dashboard'),
   },
   external: {
-    exerciseService: 'https://exercise-service-412418905255.us-central1.run.app/',
-  }
+    exerciseService: WORKERS_ENDPOINT('/api/exercises'),
+  },
 };

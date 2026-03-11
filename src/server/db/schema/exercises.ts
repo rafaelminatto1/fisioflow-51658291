@@ -18,7 +18,15 @@ import {
   integer,
   pgEnum,
   index,
+  customType,
 } from 'drizzle-orm/pg-core';
+
+// Vector Type
+const vector = customType<{ data: number[] }>({
+  dataType() {
+    return 'vector(1536)';
+  },
+});
 import { relations } from 'drizzle-orm';
 import { protocolExercises } from './protocols';
 
@@ -109,7 +117,9 @@ export const exercises = pgTable('exercises', {
   // Referências
   references: text('references'),                // JSON string com {title, authors, year, url}
 
-  // Controle
+  // Controle & Legacy
+  firestoreId: varchar('firestore_id', { length: 150 }),
+  embedding: vector('embedding'),
   isActive: boolean('is_active').default(true).notNull(),
   isPublic: boolean('is_public').default(true).notNull(),   // false = privado da organização
   organizationId: uuid('organization_id'),                   // null = padrão da plataforma

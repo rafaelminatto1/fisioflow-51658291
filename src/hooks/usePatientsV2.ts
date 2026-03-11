@@ -59,7 +59,7 @@ export const useActivePatientsV2 = () => {
   const queryClient = useQueryClient();
   const lastUpdatedRef = useRef<string | null>(null);
 
-  // Setup realtime subscription via Firebase Realtime Database
+  // Poll the Workers API for freshness without depending on Firebase services
   useEffect(() => {
     if (!organizationId) return;
     let active = true;

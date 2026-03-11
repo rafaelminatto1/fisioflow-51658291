@@ -16,16 +16,16 @@ export { EnhancedLeaderboard } from './EnhancedLeaderboard';
 
 // Other components
 export { LevelUpModal } from './LevelUpModal';
-export { AchievementModal } from './AchievementModal';
+export { default as AchievementModal } from './AchievementModal';
 export { DailyQuests } from './DailyQuests';
-export { WeeklyChallenges } from './WeeklyChallenges';
-export { StreakFreezeModal } from './StreakFreezeModal';
-export { RewardsShop } from './RewardsShop';
-export { UserInventory } from './UserInventory';
-export { GamificationHistory } from './GamificationHistory';
-export { StreakCalendar } from './StreakCalendar';
+export { default as WeeklyChallenges } from './WeeklyChallenges';
+export { default as StreakFreezeModal } from './StreakFreezeModal';
+export { default as RewardsShop } from './RewardsShop';
+export { default as UserInventory } from './UserInventory';
+export { default as GamificationHistory } from './GamificationHistory';
+export { default as StreakCalendar } from './StreakCalendar';
 export { JourneyMap } from './JourneyMap';
-export { LevelJourneyMap } from './LevelJourneyMap';
-export { GamificationHeader } from './GamificationHeader';
-export { GamificationNotifications } from './GamificationNotifications';
+export { default as LevelJourneyMap } from './LevelJourneyMap';
+export { default as GamificationHeader } from './GamificationHeader';
+export { default as GamificationNotifications } from './GamificationNotifications';
 export { PatientGamification } from './PatientGamification';

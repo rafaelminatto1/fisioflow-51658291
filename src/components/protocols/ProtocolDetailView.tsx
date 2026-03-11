@@ -39,13 +39,16 @@ interface ProtocolDetailViewProps {
 
 interface Milestone {
     week: number;
-    description: string;
+    title: string;
+    criteria: string[];
+    notes?: string;
 }
 
 interface Restriction {
-    week_start: number;
-    week_end?: number;
+    weekStart: number;
+    weekEnd?: number;
     description: string;
+    type: 'weight_bearing' | 'range_of_motion' | 'activity' | 'general';
 }
 
 interface LinkedClinicalTest {
@@ -80,14 +83,12 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
 
     const getMilestones = (): Milestone[] => {
         if (!protocol.milestones) return [];
-        if (Array.isArray(protocol.milestones)) return protocol.milestones as Milestone[];
-        return [];
+        return protocol.milestones as Milestone[];
     };
 
     const getRestrictions = (): Restriction[] => {
         if (!protocol.restrictions) return [];
-        if (Array.isArray(protocol.restrictions)) return protocol.restrictions as Restriction[];
-        return [];
+        return protocol.restrictions as Restriction[];
     };
 
     const togglePhase = (phaseName: string) => {
@@ -235,7 +236,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                 {[
                     { label: 'Semanas', value: protocol.weeks_total, icon: Calendar, color: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
                     { label: 'Marcos', value: getMilestones().length, icon: Target, color: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
-                    { label: 'Fases', value: details?.phases.length || 4, icon: Zap, color: 'text-purple-500', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
+                    { label: 'Fases', value: protocol.phases?.length || details?.phases?.length || 0, icon: Zap, color: 'text-purple-500', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
                     { label: 'Restrições', value: getRestrictions().length, icon: AlertTriangle, color: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/20' }
                 ].map((stat, i) => (
                     <Card key={i} className={cn("p-5 flex flex-col items-center justify-center backdrop-blur-xl bg-background/40 border-border/40 shadow-sm transition-all hover:scale-[1.02]", stat.border)}>
@@ -315,15 +316,32 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                                             <div className="absolute top-1/2 h-16 w-px bg-primary/20 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                                         </div>
                                     </TooltipTrigger>
-                                    <TooltipContent side="top" className="max-w-xs p-3 glass-card" sideOffset={15}>
-                                        <div className="flex items-start gap-3">
-                                            <div className="h-8 w-8 rounded-lg bg-emerald-500/20 flex items-center justify-center shrink-0">
-                                                <Target className="h-4 w-4 text-emerald-600" />
+                                    <TooltipContent side="top" className="max-w-xs p-4 glass-card shadow-xl border-emerald-500/20" sideOffset={15}>
+                                        <div className="flex flex-col gap-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-10 w-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
+                                                    <Target className="h-5 w-5 text-emerald-600" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-sm">Semana {milestone.week}</p>
+                                                    <p className="text-xs text-emerald-600 font-semibold uppercase tracking-wider">{milestone.title}</p>
+                                                </div>
                                             </div>
-                                            <div className="space-y-1">
-                                                <p className="font-bold text-sm">Meta Semana {milestone.week}</p>
-                                                <p className="text-xs text-muted-foreground leading-relaxed">{milestone.description}</p>
+                                            
+                                            <div className="space-y-1.5">
+                                                {milestone.criteria.map((c, idx) => (
+                                                    <div key={idx} className="flex items-start gap-2 text-[11px] text-muted-foreground leading-relaxed">
+                                                        <div className="h-1 w-1 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                                                        <span>{c}</span>
+                                                    </div>
+                                                ))}
                                             </div>
+                                            
+                                            {milestone.notes && (
+                                                <p className="text-[10px] italic text-muted-foreground border-t border-border/40 pt-2 mt-1">
+                                                    Note: {milestone.notes}
+                                                </p>
+                                            )}
                                         </div>
                                     </TooltipContent>
                                 </Tooltip>
@@ -334,7 +352,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
             </Card>
 
             {/* Phases */}
-            {details && (
+            {(protocol.phases?.length || details?.phases?.length) && (
                 <div className="space-y-4">
                     <div className="flex items-center justify-between px-2">
                         <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -344,12 +362,12 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                             Fases do Tratamento
                         </h3>
                         <Badge variant="outline" className="font-normal text-muted-foreground bg-background/40">
-                            {details.phases.length} Fases
+                            {protocol.phases?.length || details?.phases.length} Fases
                         </Badge>
                     </div>
 
                     <div className="relative pl-6 md:pl-10 space-y-12 before:absolute before:left-[11px] md:left-[19px] before:top-4 before:bottom-4 before:w-0.5 before:bg-gradient-to-b before:from-indigo-500/10 before:via-indigo-500/40 before:to-indigo-500/10">
-                        {details.phases.map((phase, i) => {
+                        {(protocol.phases && protocol.phases.length > 0 ? protocol.phases : (details?.phases || [])).map((phase: any, i: number) => {
                             const phaseColors = [
                                 { bg: 'bg-red-500', text: 'text-red-600', border: 'border-red-500/20', light: 'bg-red-500/5', gradient: 'from-red-500 to-rose-600' },
                                 { bg: 'bg-amber-500', text: 'text-amber-600', border: 'border-amber-500/20', light: 'bg-amber-500/5', gradient: 'from-amber-500 to-orange-600' },
@@ -357,6 +375,10 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                                 { bg: 'bg-emerald-500', text: 'text-emerald-600', border: 'border-emerald-500/20', light: 'bg-emerald-500/5', gradient: 'from-emerald-500 to-green-600' }
                             ];
                             const color = phaseColors[i % phaseColors.length];
+                            
+                            // Handle both static and dynamic object structures
+                            const weekInfo = 'weeks' in phase ? phase.weeks : `${phase.weekStart} - ${phase.weekEnd} semanas`;
+                            const exerciseList = 'exercises' in phase ? phase.exercises : (phase.exerciseIds || []);
 
                             return (
                                 <div key={i} className="relative animate-in slide-in-from-left-4 duration-500" style={{ transitionDelay: `${i * 100}ms` }}>
@@ -378,7 +400,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                                                     <h4 className="font-bold text-lg leading-tight">{phase.name}</h4>
                                                     <div className="flex items-center gap-2 text-xs text-muted-foreground font-semibold mt-0.5">
                                                         <Clock className="h-3.5 w-3.5" />
-                                                        {phase.weeks}
+                                                        {weekInfo}
                                                     </div>
                                                 </div>
                                             </div>
@@ -394,7 +416,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                                                             Objetivos Terapêuticos
                                                         </h5>
                                                         <ul className="grid gap-2.5">
-                                                            {phase.goals.map((goal, j) => (
+                                                            {phase.goals.map((goal: string, j: number) => (
                                                                 <li key={j} className="flex items-start gap-3 p-3 rounded-2xl bg-muted/30 border border-transparent hover:border-primary/10 transition-colors group">
                                                                     <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-primary group-hover:text-white transition-colors">
                                                                         <div className="h-1.5 w-1.5 rounded-full bg-current" />
@@ -405,39 +427,43 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                                                         </ul>
                                                     </section>
 
-                                                    <section>
-                                                        <h5 className="font-bold text-[10px] uppercase tracking-widest text-emerald-500 mb-4 flex items-center gap-2">
-                                                            <CheckCircle2 className="h-3 w-3" />
-                                                            Critérios de Progressão
-                                                        </h5>
-                                                        <ul className="grid gap-2.5">
-                                                            {phase.criteria.map((crit, j) => (
-                                                                <li key={j} className="flex items-start gap-3 p-3 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 transition-all hover:bg-emerald-500/10">
-                                                                    <div className="h-5 w-5 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                                                                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-                                                                    </div>
-                                                                    <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-300 leading-snug">{crit}</span>
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    </section>
+                                                    {phase.criteria && (
+                                                        <section>
+                                                            <h5 className="font-bold text-[10px] uppercase tracking-widest text-emerald-500 mb-4 flex items-center gap-2">
+                                                                <CheckCircle2 className="h-3 w-3" />
+                                                                Critérios de Progressão
+                                                            </h5>
+                                                            <ul className="grid gap-2.5">
+                                                                {phase.criteria.map((crit: string, j: number) => (
+                                                                    <li key={j} className="flex items-start gap-3 p-3 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 transition-all hover:bg-emerald-500/10">
+                                                                        <div className="h-5 w-5 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                                                                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                                                                        </div>
+                                                                        <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-300 leading-snug">{crit}</span>
+                                                                    </li>
+                                                                ))}
+                                                            </ul>
+                                                        </section>
+                                                    )}
                                                 </div>
 
                                                 {/* Interventions & Safety */}
                                                 <div className="space-y-6">
-                                                    <section>
-                                                        <h5 className="font-bold text-[10px] uppercase tracking-widest text-indigo-500 mb-4 flex items-center gap-2">
-                                                            <Dumbbell className="h-3 w-3" />
-                                                            Intervenções Chave
-                                                        </h5>
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {phase.exercises.map((ex, j) => (
-                                                                <Badge key={j} variant="secondary" className="bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/10 py-1.5 px-4 rounded-full text-[11px] font-bold shadow-sm hover:scale-105 transition-transform">
-                                                                    {ex}
-                                                                </Badge>
-                                                            ))}
-                                                        </div>
-                                                    </section>
+                                                    {exerciseList.length > 0 && (
+                                                        <section>
+                                                            <h5 className="font-bold text-[10px] uppercase tracking-widest text-indigo-500 mb-4 flex items-center gap-2">
+                                                                <Dumbbell className="h-3 w-3" />
+                                                                Intervenções Chave
+                                                            </h5>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {exerciseList.map((ex: string, j: number) => (
+                                                                    <Badge key={j} variant="secondary" className="bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/10 py-1.5 px-4 rounded-full text-[11px] font-bold shadow-sm hover:scale-105 transition-transform">
+                                                                        {ex}
+                                                                    </Badge>
+                                                                ))}
+                                                            </div>
+                                                        </section>
+                                                    )}
 
                                                     <section>
                                                         <h5 className="font-bold text-[10px] uppercase tracking-widest text-amber-500 mb-4 flex items-center gap-2">
@@ -445,7 +471,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                                                             Precauções & Contraindicações
                                                         </h5>
                                                         <ul className="grid gap-2.5">
-                                                            {phase.precautions.map((prec, j) => (
+                                                            {phase.precautions.map((prec: string, j: number) => (
                                                                 <li key={j} className="flex items-start gap-3 p-3 rounded-2xl bg-amber-500/5 border border-amber-500/10 transition-all hover:border-amber-500/30">
                                                                     <div className="h-5 w-5 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
                                                                         <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
@@ -485,12 +511,19 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                         ) : (
                             getMilestones().map((milestone: Milestone, i: number) => (
                                 <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 hover:bg-emerald-500/10 transition-colors group">
-                                    <div className="h-10 w-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-md group-hover:scale-110 transition-transform">
-                                        {milestone.week}
+                                    <div className="h-10 w-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-md group-hover:scale-110 transition-transform px-4 min-w-[3rem]">
+                                        W{milestone.week}
                                     </div>
-                                    <div className="space-y-0.5">
-                                        <p className="font-bold text-sm tracking-tight text-emerald-700 dark:text-emerald-400">Semana {milestone.week}</p>
-                                        <p className="text-sm text-muted-foreground leading-snug">{milestone.description}</p>
+                                    <div className="space-y-0.5 flex-1">
+                                        <p className="font-bold text-sm tracking-tight text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">{milestone.title}</p>
+                                        <div className="space-y-1 mt-1">
+                                            {milestone.criteria.slice(0, 2).map((c, idx) => (
+                                                <p key={idx} className="text-xs text-muted-foreground leading-tight flex items-start gap-2">
+                                                    <span className="h-1 w-1 rounded-full bg-emerald-500/40 mt-1.5 shrink-0" />
+                                                    {c}
+                                                </p>
+                                            ))}
+                                        </div>
                                     </div>
                                 </div>
                             ))
@@ -559,7 +592,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                                     <div className="flex items-baseline gap-2 mb-2">
                                         <span className="text-[10px] font-bold uppercase tracking-widest text-amber-600/60 font-mono">PÉRIODO</span>
                                         <Badge variant="outline" className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 font-bold px-3">
-                                            W{restriction.week_start}{restriction.week_end ? ` - W${restriction.week_end}` : '+'}
+                                            W{restriction.weekStart}{restriction.weekEnd ? ` - W${restriction.weekEnd}` : '+'}
                                         </Badge>
                                     </div>
                                     <p className="text-sm font-medium leading-relaxed">{restriction.description}</p>

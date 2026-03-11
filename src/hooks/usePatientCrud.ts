@@ -208,7 +208,7 @@ export const useCreatePatient = () => {
         organization_id: input.organization_id,
       };
 
-      // Use Firebase Functions API
+      // Use Workers API backed by Neon/Postgres
       const response = await patientsApi.create(sanitizedData);
       return response.data as Patient;
     },
@@ -289,7 +289,7 @@ export const useUpdatePatient = () => {
       if (inputData.medical_report_done !== undefined) sanitizedData.medical_report_done = inputData.medical_report_done;
       if (inputData.medical_report_sent !== undefined) sanitizedData.medical_report_sent = inputData.medical_report_sent;
 
-      // Use Firebase Functions API
+      // Use Workers API backed by Neon/Postgres
       const response = await patientsApi.update(id, sanitizedData);
       return response.data as Patient;
     },
