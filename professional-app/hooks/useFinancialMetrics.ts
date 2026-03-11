@@ -1,0 +1,114 @@
+import { useQuery } from '@tanstack/react-query';
+import { authApi } from '@/lib/auth-api';
+import { config } from '@/lib/config';
+
+export interface FinancialMetrics {
+  totalRevenue: number;
+  pendingRevenue: number;
+  paidRevenue: number;
+  sessionsCount: number;
+  patientsCount: number;
+  newPatientsThisMonth: number;
+  revenueByDay: Array<{ date: string; total: string | number }>;
+}
+
+export interface UseFinancialMetricsOptions {
+  startDate?: string;
+  endDate?: string;
+  enabled?: boolean;
+}
+
+const API_URL = config.apiUrl;
+
+async function fetchApi(endpoint: string) {
+  const token = await authApi.getToken();
+  if (!token) throw new Error('Not authenticated');
+
+  const res = await fetch(`${API_URL}${endpoint}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ message: 'Request failed' }));
+    throw new Error(error.message || `API Error: ${res.status}`);
+  }
+  return res.json();
+}
+
+/**
+ * Hook to fetch financial metrics for reports
+ */
+export function useFinancialMetrics(options?: UseFinancialMetricsOptions) {
+  const { startDate, endDate, enabled = true } = options || {};
+
+  // Default to current month if not provided
+  const start = startDate || new Date(new Date().setDate(1)).toISOString().split('T')[0];
+  const end = endDate || new Date().toISOString().split('T')[0];
+
+  const params = new URLSearchParams();
+  params.set('startDate', start);
+  params.set('endDate', end);
+
+  return useQuery<FinancialMetrics>({
+    queryKey: ['financial-metrics', start, end],
+    queryFn: () => fetchApi(`/api/financial-metrics?${params.toString()}`),
+    enabled,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    refetchOnWindowFocus: true,
+  });
+}
+
+/**
+ * Hook to get formatted revenue data for charts
+ */
+export function useRevenueChartData(options?: UseFinancialMetricsOptions) {
+  const { data, isLoading, error } = useFinancialMetrics(options);
+
+  const chartData = data?.revenueByDay?.map(item => ({
+    date: item.date,
+    value: typeof item.total === 'string' ? parseFloat(item.total) : item.total,
+  })) || [];
+
+  // Calculate totals
+  const totalRevenue = data?.totalRevenue || 0;
+  const pendingRevenue = data?.pendingRevenue || 0;
+  const averagePerSession = data?.sessionsCount 
+    ? totalRevenue / data.sessionsCount 
+    : 0;
+
+  return {
+    chartData,
+    metrics: {
+      totalRevenue,
+      pendingRevenue,
+      paidRevenue: data?.paidRevenue || 0,
+      sessionsCount: data?.sessionsCount || 0,
+      patientsCount: data?.patientsCount || 0,
+      newPatientsThisMonth: data?.newPatientsThisMonth || 0,
+      averagePerSession,
+    },
+    isLoading,
+    error,
+  };
+}
+
+/**
+ * Format currency for display
+ */
+export function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value);
+}
+
+/**
+ * Format number with thousand separators
+ */
+export function formatNumber(value: number): string {
+  return new Intl.NumberFormat('pt-BR').format(value);
+}

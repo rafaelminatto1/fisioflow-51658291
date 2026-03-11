@@ -20,8 +20,8 @@ import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { useExercises } from '@/hooks/useExercises';
 import { HapticFeedback } from '@/lib/haptics';
-import { doc, setDoc, serverTimestamp, collection, getDoc } from '@/lib/firestore';
-import { db } from '@/lib/firebase';
+import { doc, setDoc, serverTimestamp, collection, getDoc } from '@/lib/data-store';
+import { db } from '@/lib/platform';
 import type { Exercise } from '@/types';
 
 interface ExercisePlanItem {

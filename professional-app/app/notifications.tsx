@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,17 +14,9 @@ import { useRouter } from 'expo-router';
 import { useColors } from '@/hooks/useColorScheme';
 import { Card } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: 'appointment' | 'system' | 'patient' | 'financial';
-  read: boolean;
-  createdAt: Date;
-}
+import { useNotifications, useNotificationMutations, Notification } from '@/hooks/useNotifications';
 
 export default function NotificationsScreen() {
   const colors = useColors();
@@ -31,58 +24,44 @@ export default function NotificationsScreen() {
   const { light, medium } = useHaptics();
   const [refreshing, setRefreshing] = useState(false);
 
-  // Mock notifications for now (Backend push service TODO)
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      title: 'Novo Agendamento',
-      message: 'Maria Silva agendou uma consulta para amanhã às 14:00.',
-      type: 'appointment',
-      read: false,
-      createdAt: new Date(),
-    },
-    {
-      id: '2',
-      title: 'Pagamento Recebido',
-      message: 'O pagamento do paciente João Pereira foi confirmado.',
-      type: 'financial',
-      read: true,
-      createdAt: new Date(Date.now() - 3600000 * 2),
-    },
-    {
-      id: '3',
-      title: 'Lembrete de Evolução',
-      message: 'Você tem 3 evoluções pendentes de preenchimento hoje.',
-      type: 'system',
-      read: false,
-      createdAt: new Date(Date.now() - 3600000 * 24),
-    },
-  ]);
+  // Use real notifications hook
+  const { data, isLoading, error, refetch } = useNotifications();
+  const { markAsRead: markAsReadMutation, markAllAsRead, deleteNotification: deleteMutation } = useNotificationMutations();
 
-  const onRefresh = async () => {
+  const notifications = data?.notifications || [];
+  const unreadCount = data?.unreadCount || 0;
+
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
     light();
-    // Simulate fetch
-    setTimeout(() => setRefreshing(false), 1000);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch, light]);
+
+  const handleMarkAsRead = (id: string) => {
+    medium();
+    markAsReadMutation.mutate(id);
   };
 
-  const markAsRead = (id: string) => {
+  const handleDelete = (id: string) => {
     medium();
-    setNotifications(prev =>
-      prev.map(n => (n.id === id ? { ...n, read: true } : n))
-    );
+    deleteMutation.mutate(id);
   };
 
-  const deleteNotification = (id: string) => {
+  const handleMarkAllAsRead = () => {
     medium();
-    setNotifications(prev => prev.filter(n => n.id !== id));
+    markAllAsRead.mutate();
   };
 
   const getIcon = (type: Notification['type']) => {
     switch (type) {
       case 'appointment': return 'calendar';
-      case 'financial': return 'cash';
-      case 'patient': return 'person';
+      case 'payment': return 'cash';
+      case 'whatsapp': return 'logo-whatsapp';
+      case 'waitlist': return 'time';
+      case 'success': return 'checkmark-circle';
+      case 'warning': return 'warning';
+      case 'error': return 'alert-circle';
       default: return 'notifications';
     }
   };
@@ -90,11 +69,75 @@ export default function NotificationsScreen() {
   const getIconColor = (type: Notification['type']) => {
     switch (type) {
       case 'appointment': return colors.primary;
-      case 'financial': return colors.success;
-      case 'patient': return colors.info;
-      default: return colors.warning;
+      case 'payment': return colors.success;
+      case 'whatsapp': return '#25D366';
+      case 'waitlist': return colors.warning;
+      case 'success': return colors.success;
+      case 'warning': return colors.warning;
+      case 'error': return colors.error;
+      default: return colors.textSecondary;
     }
   };
+
+  const formatNotificationDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffHours = diffMs / (1000 * 60 * 60);
+      
+      if (diffHours < 24) {
+        return formatDistanceToNow(date, { addSuffix: true, locale: ptBR });
+      }
+      return format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+    } catch {
+      return '';
+    }
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
+        <View style={[styles.header, { borderBottomColor: colors.border }]}>
+          <TouchableOpacity onPress={() => { light(); router.back(); }}>
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Notificações</Text>
+          <View style={{ width: 50 }} />
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Carregando...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
+        <View style={[styles.header, { borderBottomColor: colors.border }]}>
+          <TouchableOpacity onPress={() => { light(); router.back(); }}>
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Notificações</Text>
+          <View style={{ width: 50 }} />
+        </View>
+        <View style={styles.emptyContainer}>
+          <Ionicons name="cloud-offline-outline" size={64} color={colors.error} />
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>Erro ao carregar</Text>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+            Não foi possível carregar as notificações.
+          </Text>
+          <TouchableOpacity onPress={() => refetch()} style={[styles.retryButton, { backgroundColor: colors.primary }]}>
+            <Text style={styles.retryText}>Tentar novamente</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
@@ -103,19 +146,22 @@ export default function NotificationsScreen() {
         <TouchableOpacity onPress={() => { light(); router.back(); }}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Notificações</Text>
-        <TouchableOpacity onPress={() => {
-          medium();
-          setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-        }}>
-          <Text style={[styles.markAll, { color: colors.primary }]}>Lidas</Text>
-        </TouchableOpacity>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
+          Notificações {unreadCount > 0 && `(${unreadCount})`}
+        </Text>
+        {unreadCount > 0 ? (
+          <TouchableOpacity onPress={handleMarkAllAsRead}>
+            <Text style={[styles.markAll, { color: colors.primary }]}>Ler todas</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={{ width: 50 }} />
+        )}
       </View>
 
       <ScrollView
         style={styles.content}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
       >
         {notifications.length === 0 ? (
@@ -130,13 +176,14 @@ export default function NotificationsScreen() {
           notifications.map((notification) => (
             <TouchableOpacity
               key={notification.id}
-              onPress={() => markAsRead(notification.id)}
+              onPress={() => handleMarkAsRead(notification.id)}
+              onLongPress={() => handleDelete(notification.id)}
               activeOpacity={0.7}
             >
               <Card
                 style={[
                   styles.notificationCard,
-                  !notification.read && { backgroundColor: colors.primary + '05', borderColor: colors.primary + '30' }
+                  !notification.is_read && { backgroundColor: colors.primary + '08', borderColor: colors.primary + '40' }
                 ] as any}
                 padding="none"
               >
@@ -146,18 +193,18 @@ export default function NotificationsScreen() {
                   </View>
                   <View style={styles.textContainer}>
                     <View style={styles.titleRow}>
-                      <Text style={[styles.title, { color: colors.text }, !notification.read && { fontWeight: 'bold' }]}>
+                      <Text style={[styles.title, { color: colors.text }, !notification.is_read && { fontWeight: '700' }]}>
                         {notification.title}
                       </Text>
                       <Text style={[styles.date, { color: colors.textSecondary }]}>
-                        {format(notification.createdAt, 'HH:mm', { locale: ptBR })}
+                        {formatNotificationDate(notification.created_at)}
                       </Text>
                     </View>
                     <Text style={[styles.message, { color: colors.textSecondary }]} numberOfLines={2}>
                       {notification.message}
                     </Text>
                   </View>
-                  {!notification.read && (
+                  {!notification.is_read && (
                     <View style={[styles.unreadDot, { backgroundColor: colors.primary }]} />
                   )}
                 </View>
@@ -253,5 +300,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
     paddingHorizontal: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    fontSize: 14,
+    marginTop: 12,
+  },
+  retryButton: {
+    marginTop: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
