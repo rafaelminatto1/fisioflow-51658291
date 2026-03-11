@@ -140,17 +140,9 @@ function setupConsoleListeners(page, errors, warnings) {
     // Ignorar erros esperados em dev/headless
     if (errText === 'net::ERR_ABORTED') {
       if (url.includes('google-analytics.com') || url.includes('googletagmanager.com')) return;
-      if (url.includes('firestore.googleapis.com') && (url.includes('Listen/channel') || url.includes('Write/channel'))) return;
-      if (url.includes('cloudfunctions.net')) return;
       // Recursos locais/vite abortados ao navegar rapidamente (react-pdf, node_modules, src)
       if (url.includes('127.0.0.1') || url.includes('localhost')) return;
     }
-    if (errText === 'net::ERR_BLOCKED_BY_ORB') {
-      if (url.includes('firebasestorage.googleapis.com')) return;
-    }
-    if (errText === 'net::ERR_ABORTED' && url.includes('firebasestorage.googleapis.com')) return;
-    if (url.includes('firestore.googleapis.com') && url.includes('runAggregationQuery')) return;
-    if (url.includes('firestore.googleapis.com') && url.includes('documents:runAggregationQuery')) return;
     errors.push({
       text: `Request failed: ${url}`,
       errorText: failure.errorText,

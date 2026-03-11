@@ -260,7 +260,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                         Objetivos do Protocolo
                     </h3>
                     <div className="grid md:grid-cols-2 gap-4">
-                        {details.objectives.map((obj, i) => (
+                        {(details.objectives || []).map((obj, i) => (
                             <div key={i} className="flex items-start gap-4 p-4 rounded-2xl bg-emerald-500/[0.03] border border-emerald-500/10 transition-colors hover:bg-emerald-500/5">
                                 <div className="h-6 w-6 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
                                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
@@ -329,7 +329,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                                             </div>
                                             
                                             <div className="space-y-1.5">
-                                                {milestone.criteria.map((c, idx) => (
+                                                {(milestone.criteria || []).map((c, idx) => (
                                                     <div key={idx} className="flex items-start gap-2 text-[11px] text-muted-foreground leading-relaxed">
                                                         <div className="h-1 w-1 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
                                                         <span>{c}</span>
@@ -456,7 +456,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                                                                 Intervenções Chave
                                                             </h5>
                                                             <div className="flex flex-wrap gap-2">
-                                                                {exerciseList.map((ex: string, j: number) => (
+                                                                {(exerciseList || []).map((ex: string, j: number) => (
                                                                     <Badge key={j} variant="secondary" className="bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/10 py-1.5 px-4 rounded-full text-[11px] font-bold shadow-sm hover:scale-105 transition-transform">
                                                                         {ex}
                                                                     </Badge>
@@ -517,7 +517,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                                     <div className="space-y-0.5 flex-1">
                                         <p className="font-bold text-sm tracking-tight text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">{milestone.title}</p>
                                         <div className="space-y-1 mt-1">
-                                            {milestone.criteria.slice(0, 2).map((c, idx) => (
+                                            {(milestone.criteria || []).slice(0, 2).map((c, idx) => (
                                                 <p key={idx} className="text-xs text-muted-foreground leading-tight flex items-start gap-2">
                                                     <span className="h-1 w-1 rounded-full bg-emerald-500/40 mt-1.5 shrink-0" />
                                                     {c}
@@ -547,7 +547,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                                 <p className="text-[10px] uppercase tracking-wider mt-1">Vincule na Biblioteca de Testes</p>
                             </div>
                         ) : (
-                            linkedTests.map((test: LinkedClinicalTest) => (
+                            (linkedTests || []).map((test: LinkedClinicalTest) => (
                                 <div key={test.id} className="p-4 rounded-2xl bg-teal-500/5 border border-teal-500/10 flex items-center justify-between group hover:bg-teal-500/10 transition-colors">
                                     <div className="space-y-0.5">
                                         <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{test.name}</span>
@@ -614,7 +614,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                         Referências Científicas
                     </h3>
                     <div className="grid md:grid-cols-2 gap-4">
-                        {protocol.references.map((ref, i) => (
+                        {(protocol.references || []).map((ref, i) => (
                             <div key={i} className="group flex flex-col justify-between p-5 rounded-3xl bg-blue-500/[0.02] hover:bg-blue-500/[0.05] border border-blue-500/10 transition-all duration-300">
                                 <div>
                                     <div className="flex items-center gap-2 mb-3">
@@ -664,7 +664,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                             Contraindicações
                         </h3>
                         <div className="space-y-3">
-                            {details.contraindications.map((item, i) => (
+                            {(details.contraindications || []).map((item, i) => (
                                 <div key={i} className="flex items-start gap-3 p-4 rounded-2xl bg-red-500/[0.03] border border-red-500/10">
                                     <div className="h-6 w-6 rounded-full bg-red-500/10 flex items-center justify-center shrink-0 mt-0.5">
                                         <AlertTriangle className="h-3 v-3 text-red-500" />
@@ -686,7 +686,7 @@ export function ProtocolDetailView({ protocol, onBack, onEdit, onDelete }: Proto
                             Resultados Esperados
                         </h3>
                         <div className="space-y-3">
-                            {details.expectedOutcomes.map((item, i) => (
+                            {(details.expectedOutcomes || []).map((item, i) => (
                                 <div key={i} className="flex items-start gap-3 p-4 rounded-2xl bg-emerald-500/[0.03] border border-emerald-500/10">
                                     <div className="h-6 w-6 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0 mt-0.5">
                                         <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />

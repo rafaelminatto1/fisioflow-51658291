@@ -10,7 +10,7 @@ import { chromium } from 'playwright';
 const PRODUCTION_URL = 'https://moocafisio.com.br/calendar?view=week&date=2026-02-19';
 
 async function checkErrors() {
-  console.log('🔍 Verificando erros de índices do Firestore...\n');
+  console.log('🔍 Verificando erros de índices legados...\n');
 
   const browser = await chromium.launch({
     headless: true // Headless para evitar captcha
@@ -28,14 +28,14 @@ async function checkErrors() {
     allErrors.push({ type: msg.type(), text });
 
     // Verificar erros de índice
-    if (/requires an index|failed-precondition|create_composite|firestore.*index/i.test(text)) {
+    if (/requires an index|failed-precondition|create_composite/i.test(text)) {
       indexErrors.push({ type: msg.type(), text });
     }
   });
 
   page.on('pageerror', error => {
     allErrors.push({ type: 'pageerror', text: error.message });
-    if (/requires an index|failed-precondition|create_composite|firestore.*index/i.test(error.message)) {
+    if (/requires an index|failed-precondition|create_composite/i.test(error.message)) {
       indexErrors.push({ type: 'pageerror', text: error.message });
     }
   });
@@ -44,7 +44,7 @@ async function checkErrors() {
     console.log('📍 Acessando:', PRODUCTION_URL);
     await page.goto(PRODUCTION_URL, { waitUntil: 'domcontentloaded', timeout: 60000 });
     
-    console.log('⏳ Aguardando 20 segundos para queries do Firestore...');
+    console.log('⏳ Aguardando 20 segundos para consultas da aplicação...');
     await page.waitForTimeout(20000);
 
     console.log('\n📊 Resultados:\n');
@@ -59,7 +59,7 @@ async function checkErrors() {
       console.log('\n⚠️  Alguns índices ainda podem estar sendo construídos.');
     } else {
       console.log('✅ Nenhum erro de índice encontrado!');
-      console.log('   Os índices do Firestore estão funcionando corretamente.');
+      console.log('   Nenhum erro de índice legado foi encontrado.');
     }
 
     // Mostrar alguns erros gerais se houver

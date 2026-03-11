@@ -18,8 +18,8 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { db, auth } from '@/lib/firebase';
-import { doc, setDoc, serverTimestamp, getDoc } from '@/lib/firestore';
+import { db, auth } from '@/lib/platform';
+import { doc, setDoc, serverTimestamp, getDoc } from '@/lib/data-store';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { LEGAL_VERSIONS } from '@/constants/legalVersions';
