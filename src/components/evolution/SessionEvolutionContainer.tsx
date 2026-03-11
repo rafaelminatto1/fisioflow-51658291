@@ -799,12 +799,14 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
               });
               setSessionExercises(newData.exercises.map(ex => ({
                 id: ex.id,
+                exerciseId: (ex as any).exerciseId || '',
                 name: ex.name,
-                sets: ex.sets,
-                reps: ex.reps,
-                weight: ex.weight,
-                notes: ex.notes,
-                feedback: ex.feedback as any
+                sets: parseInt(ex.prescription?.split('x')[0]) || 3,
+                repetitions: parseInt(ex.prescription?.split('x')[1]?.split(' ')[0]) || 10,
+                weight: ex.prescription?.includes('c/') ? ex.prescription.split('c/')[1].trim() : '',
+                completed: ex.completed || false,
+                observations: ex.observations || '',
+                feedback: (ex as any).patientFeedback as any
               })));
             }}
             onSave={handleSave}
@@ -845,12 +847,14 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
               });
               setSessionExercises(newData.exercises.map(ex => ({
                 id: ex.id,
+                exerciseId: (ex as any).exerciseId || '',
                 name: ex.name,
-                sets: ex.sets,
-                reps: ex.reps,
-                weight: ex.weight,
-                notes: ex.notes,
-                feedback: ex.feedback as any
+                sets: parseInt(ex.prescription?.split('x')[0]) || 3,
+                repetitions: parseInt(ex.prescription?.split('x')[1]?.split(' ')[0]) || 10,
+                weight: ex.prescription?.includes('c/') ? ex.prescription.split('c/')[1].trim() : '',
+                completed: ex.completed || false,
+                observations: ex.observations || '',
+                feedback: (ex as any).patientFeedback as any
               })));
             }}
             onSave={handleSave}

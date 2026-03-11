@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback, lazy, Suspense } from 'react';
+import { useState, useMemo, useCallback, lazy, Suspense, useEffect } from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,11 +42,39 @@ export default function Exercises() {
   const { templates, loading: loadingTemplates } = useExerciseTemplates();
 
   const [editingExercise, setEditingExercise] = useState<Exercise | null>(null);
-  const [activeTab, setActiveTab] = useState<'library' | 'videos' | 'templates' | 'protocols' | 'ai' | 'analytics'>('library');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTabState] = useState(() => searchParams.get('tab') || 'library');
+
+  // Sync state from URL
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTabState(tabFromUrl);
+    } else if (!tabFromUrl && activeTab !== 'library') {
+      setActiveTabState('library');
+    }
+  }, [searchParams, activeTab]);
+
+  const handleTabChange = useCallback((v: string) => {
+    setActiveTabState(v);
+    setSearchParams(prev => {
+      const newParams = new URLSearchParams(prev);
+      newParams.set('tab', v);
+      return newParams;
+    }, { replace: true });
+  }, [setSearchParams]);
+
   const [showNewModal, setShowNewModal] = useState(false);
   const [showVideoUpload, setShowVideoUpload] = useState(false);
 
-  // Memoized computed values to prevent unnecessary recalculations
+  // Filter exercises based on search and active tab
+  const tabExercises = useMemo(() => {
+    if (activeTab === 'videos') {
+      return exercises.filter(ex => !!ex.video_url);
+    }
+    return exercises;
+  }, [exercises, activeTab]);
+// Memoized computed values to prevent unnecessary recalculations
   const exercisesWithoutVideo = useMemo(() =>
     exercises.filter(ex => !ex.video_url),
     [exercises]
@@ -102,9 +131,6 @@ export default function Exercises() {
     setShowVideoUpload(open);
   }, []);
 
-  const handleTabChange = useCallback((v: string) => {
-    setActiveTab(v as 'library' | 'videos' | 'templates' | 'protocols' | 'ai' | 'analytics');
-  }, []);
 
   const handleUploadClick = useCallback(() => {
     setShowVideoUpload(true);
