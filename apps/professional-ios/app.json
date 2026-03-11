@@ -28,35 +28,14 @@
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": false,
           "NSExceptionDomains": {
-            "firebasestorage.googleapis.com": {
+            "api-profissional.moocafisio.com.br": {
               "NSIncludesSubdomains": true,
               "NSExceptionAllowsInsecureHTTPLoads": false,
               "NSExceptionMinimumTLSVersion": "TLSv1.3",
               "NSExceptionRequiresForwardSecrecy": true,
               "NSRequiresCertificateTransparency": true
             },
-            "firestore.googleapis.com": {
-              "NSIncludesSubdomains": true,
-              "NSExceptionAllowsInsecureHTTPLoads": false,
-              "NSExceptionMinimumTLSVersion": "TLSv1.3",
-              "NSExceptionRequiresForwardSecrecy": true,
-              "NSRequiresCertificateTransparency": true
-            },
-            "identitytoolkit.googleapis.com": {
-              "NSIncludesSubdomains": true,
-              "NSExceptionAllowsInsecureHTTPLoads": false,
-              "NSExceptionMinimumTLSVersion": "TLSv1.3",
-              "NSExceptionRequiresForwardSecrecy": true,
-              "NSRequiresCertificateTransparency": true
-            },
-            "securetoken.googleapis.com": {
-              "NSIncludesSubdomains": true,
-              "NSExceptionAllowsInsecureHTTPLoads": false,
-              "NSExceptionMinimumTLSVersion": "TLSv1.3",
-              "NSExceptionRequiresForwardSecrecy": true,
-              "NSRequiresCertificateTransparency": true
-            },
-            "www.googleapis.com": {
+            "api.moocafisio.com.br": {
               "NSIncludesSubdomains": true,
               "NSExceptionAllowsInsecureHTTPLoads": false,
               "NSExceptionMinimumTLSVersion": "TLSv1.3",

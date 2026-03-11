@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { getStorage, ref, getDownloadURL } from 'firebase/storage';
+import { getStorage, ref, getDownloadURL } from '@/lib/storage';
 import { EncryptionService } from '@/lib/services/encryptionService';
 import { useAuth } from '@/hooks/useAuth';
 import { phiCacheManager, type ClearableCache } from '@/lib/services/phiCacheManager';
@@ -42,12 +42,12 @@ phiCacheManager.registerCache('photos', photoCache);
  * Hook for decrypting and displaying patient photos
  * 
  * Features:
- * - Decrypts photos on load from Firebase Storage
+ * - Decrypts photos on load from the current storage backend
  * - Caches decrypted images in memory only
  * - Cache is cleared automatically by PHI Cache Manager after 5 minutes in background
  * - Handles loading and error states
  * 
- * @param encryptedPhotoUrl - Firebase Storage URL or path to encrypted photo
+ * @param encryptedPhotoUrl - URL or path to encrypted photo
  * @returns Object with decrypted photo URI, loading state, and error
  */
 export function usePhotoDecryption(encryptedPhotoUrl?: string | null) {
@@ -73,7 +73,7 @@ export function usePhotoDecryption(encryptedPhotoUrl?: string | null) {
         return;
       }
 
-      // Download encrypted photo from Firebase Storage
+      // Download encrypted photo from the current storage backend
       const storage = getStorage();
       const photoRef = ref(storage, photoUrl);
       const downloadUrl = await getDownloadURL(photoRef);

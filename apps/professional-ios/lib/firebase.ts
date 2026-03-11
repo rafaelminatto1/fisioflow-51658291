@@ -1,47 +1,54 @@
+import { authClient } from './neonAuth';
+import { db } from './firestore';
+import { getStorage } from './storage';
 
-// Firebase configuration from environment variables
-
-import { initializeApp, getApps } from 'firebase/app';
-import { 
-  getFirestore, 
-  initializeFirestore, 
-  persistentLocalCache, 
-  persistentMultipleTabManager,
-  CACHE_SIZE_UNLIMITED
-} from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
-import { getStorage } from 'firebase/storage';
-import Constants from 'expo-constants';
-
-const firebaseConfig = {
-  apiKey: Constants.expoConfig?.extra?.firebaseApiKey || process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
-  authDomain: Constants.expoConfig?.extra?.firebaseAuthDomain || process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: Constants.expoConfig?.extra?.firebaseProjectId || process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: Constants.expoConfig?.extra?.firebaseStorageBucket || process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: Constants.expoConfig?.extra?.firebaseMessagingSenderId || process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: Constants.expoConfig?.extra?.firebaseAppId || process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
-  measurementId: Constants.expoConfig?.extra?.firebaseMeasurementId || process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID,
+type CompatUser = {
+  id: string;
+  uid: string;
+  email?: string;
+  displayName?: string;
+  photoURL?: string;
 };
 
-// Initialize Firebase
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+type RemoteValue = {
+  asBoolean: () => boolean;
+  asString: () => string;
+};
 
-// Initialize Firestore
-export const db = (typeof window !== 'undefined') 
-  ? initializeFirestore(app, {
-      localCache: persistentLocalCache({
-        tabManager: persistentMultipleTabManager(),
-        cacheSizeBytes: CACHE_SIZE_UNLIMITED
-      }),
-      experimentalForceLongPolling: true,
-      experimentalAutoDetectLongPolling: false
-    })
-  : getFirestore(app);
+let currentUser: CompatUser | null = null;
 
-// Initialize Auth
-export const auth = getAuth(app);
+authClient.useSession.subscribe((session) => {
+  const user = session?.data?.user;
+  currentUser = user
+    ? {
+        id: user.id,
+        uid: user.id,
+        email: user.email,
+        displayName: user.name || '',
+        photoURL: user.image || '',
+      }
+    : null;
+});
 
-// Initialize Storage
-export const storage = getStorage(app);
+export const auth = {
+  get currentUser() {
+    return currentUser;
+  },
+};
 
-export default app;
+export const storage = getStorage();
+export const functions = { provider: 'cloudflare-workers-compat' } as const;
+
+const REMOTE_DEFAULTS: Record<string, boolean | string> = {
+  enable_multimodal_ai: false,
+};
+
+export function getRemoteValue(key: string): RemoteValue {
+  const value = REMOTE_DEFAULTS[key];
+  return {
+    asBoolean: () => value === true,
+    asString: () => String(value ?? ''),
+  };
+}
+
+export { db };
