@@ -2603,47 +2603,47 @@ export const analyticsApi = {
     const qs = new URLSearchParams(
       Object.entries(params ?? {}).map(([k, v]) => [k, String(v)]),
     ).toString();
-    return request<DashboardResponse>(`/api/analytics/dashboard${qs ? `?${qs}` : ''}`);
+    return request<DashboardResponse>(`/api/insights/dashboard${qs ? `?${qs}` : ''}`);
   },
   financial: (params: { startDate: string; endDate: string }) =>
-    request<FinancialReportResponse>(`/api/analytics/financial?startDate=${encodeURIComponent(
+    request<FinancialReportResponse>(`/api/insights/financial?startDate=${encodeURIComponent(
       params.startDate,
     )}&endDate=${encodeURIComponent(params.endDate)}`),
   topExercises: (limit?: number) =>
     request<{ data: AnalyticsExerciseUsage[] }>(
-      `/api/analytics/top-exercises${limit ? `?limit=${encodeURIComponent(String(limit))}` : ''}`,
+      `/api/insights/top-exercises${limit ? `?limit=${encodeURIComponent(String(limit))}` : ''}`,
     ),
   painMap: (limit?: number) =>
     request<{ data: AnalyticsPainRegion[] }>(
-      `/api/analytics/pain-map${limit ? `?limit=${encodeURIComponent(String(limit))}` : ''}`,
+      `/api/insights/pain-map${limit ? `?limit=${encodeURIComponent(String(limit))}` : ''}`,
     ),
   intelligentReports: {
     list: (patientId: string) =>
-      request<{ data: IntelligentReportRecord[] }>(`/api/analytics/intelligent-reports/${patientId}`),
+      request<{ data: IntelligentReportRecord[] }>(`/api/insights/intelligent-reports/${patientId}`),
     generate: (payload: {
       patientId: string;
       reportType: string;
       dateRange: { start: string; end: string };
     }) =>
-      request<{ data: IntelligentReportResponse }>('/api/analytics/intelligent-reports', {
+      request<{ data: IntelligentReportResponse }>('/api/insights/intelligent-reports', {
         method: 'POST',
         body: JSON.stringify(payload),
       }),
   },
   patientEvolution: (patientId: string) =>
-    request<{ data: PatientEvolutionPoint[] }>(`/api/analytics/patient-evolution/${patientId}`),
+    request<{ data: PatientEvolutionPoint[] }>(`/api/insights/patient-evolution/${patientId}`),
   patientProgress: (patientId: string) =>
-    request<{ data: PatientProgressSummary }>(`/api/analytics/patient-progress/${patientId}`),
+    request<{ data: PatientProgressSummary }>(`/api/insights/patient-progress/${patientId}`),
   patientLifecycleEvents: {
     list: (patientId: string) =>
-      request<{ data: PatientLifecycleEvent[] }>(`/api/analytics/patient-lifecycle-events/${patientId}`),
+      request<{ data: PatientLifecycleEvent[] }>(`/api/insights/patient-lifecycle-events/${patientId}`),
     create: (data: {
       patient_id: string;
       event_type: string;
       event_date?: string;
       notes?: string;
     }) =>
-      request<{ data: PatientLifecycleEvent }>('/api/analytics/patient-lifecycle-events', {
+      request<{ data: PatientLifecycleEvent }>('/api/insights/patient-lifecycle-events', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
@@ -2656,7 +2656,7 @@ export const analyticsApi = {
           .map(([k, v]) => [k, String(v)]),
       ).toString();
       return request<{ data: PatientOutcomeMeasure[] }>(
-        `/api/analytics/patient-outcome-measures/${patientId}${qs ? `?${qs}` : ''}`,
+        `/api/insights/patient-outcome-measures/${patientId}${qs ? `?${qs}` : ''}`,
       );
     },
     create: (data: {
@@ -2672,7 +2672,7 @@ export const analyticsApi = {
       context?: string;
       notes?: string;
     }) =>
-      request<{ data: PatientOutcomeMeasure }>('/api/analytics/patient-outcome-measures', {
+      request<{ data: PatientOutcomeMeasure }>('/api/insights/patient-outcome-measures', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
@@ -2685,11 +2685,11 @@ export const analyticsApi = {
           .map(([k, v]) => [k, String(v)]),
       ).toString();
       return request<{ data: PatientSessionMetrics[] }>(
-        `/api/analytics/patient-session-metrics/${patientId}${qs ? `?${qs}` : ''}`,
+        `/api/insights/patient-session-metrics/${patientId}${qs ? `?${qs}` : ''}`,
       );
     },
     create: (data: Partial<PatientSessionMetricsType & { patient_id: string }>) =>
-      request<{ data: PatientSessionMetrics }>('/api/analytics/patient-session-metrics', {
+      request<{ data: PatientSessionMetrics }>('/api/insights/patient-session-metrics', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
@@ -2702,7 +2702,7 @@ export const analyticsApi = {
           .map(([k, v]) => [k, String(v)]),
       ).toString();
       return request<{ data: PatientPrediction[] }>(
-        `/api/analytics/patient-predictions/${patientId}${qs ? `?${qs}` : ''}`,
+        `/api/insights/patient-predictions/${patientId}${qs ? `?${qs}` : ''}`,
       );
     },
     upsert: (payload: {
@@ -2724,13 +2724,13 @@ export const analyticsApi = {
         similar_cases?: Record<string, unknown>;
       }>;
     }) =>
-      request<{ data: PatientPrediction[] }>('/api/analytics/patient-predictions/upsert', {
+      request<{ data: PatientPrediction[] }>('/api/insights/patient-predictions/upsert', {
         method: 'POST',
         body: JSON.stringify(payload),
       }),
   },
   patientRisk: (patientId: string) =>
-    request<{ data: PatientRiskScore | null }>(`/api/analytics/patient-risk/${patientId}`),
+    request<{ data: PatientRiskScore | null }>(`/api/insights/patient-risk/${patientId}`),
   patientInsights: {
     list: (patientId: string, params?: { includeAcknowledged?: boolean }) => {
       const qs = new URLSearchParams(
@@ -2739,50 +2739,50 @@ export const analyticsApi = {
           .map(([k, v]) => [k, String(v)]),
       ).toString();
       return request<{ data: PatientInsight[] }>(
-        `/api/analytics/patient-insights/${patientId}${qs ? `?${qs}` : ''}`,
+        `/api/insights/patient-insights/${patientId}${qs ? `?${qs}` : ''}`,
       );
     },
     acknowledge: (insightId: string) =>
-      request<{ data: PatientInsight }>(`/api/analytics/patient-insights/${insightId}/acknowledge`, {
+      request<{ data: PatientInsight }>(`/api/insights/patient-insights/${insightId}/acknowledge`, {
         method: 'PATCH',
       }),
   },
   patientGoals: {
     list: (patientId: string) =>
-      request<{ data: PatientGoalTracking[] }>(`/api/analytics/patient-goals/${patientId}`),
+      request<{ data: PatientGoalTracking[] }>(`/api/insights/patient-goals/${patientId}`),
     create: (data: Partial<PatientGoalTracking & { patient_id: string }>) =>
-      request<{ data: PatientGoalTracking }>('/api/analytics/patient-goals', {
+      request<{ data: PatientGoalTracking }>('/api/insights/patient-goals', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
     update: (id: string, data: Partial<PatientGoalTracking>) =>
-      request<{ data: PatientGoalTracking }>(`/api/analytics/patient-goals/${id}`, {
+      request<{ data: PatientGoalTracking }>(`/api/insights/patient-goals/${id}`, {
         method: 'PUT',
         body: JSON.stringify(data),
       }),
     complete: (id: string) =>
-      request<{ data: PatientGoalTracking }>(`/api/analytics/patient-goals/${id}/complete`, {
+      request<{ data: PatientGoalTracking }>(`/api/insights/patient-goals/${id}/complete`, {
         method: 'PATCH',
       }),
   },
   clinicalBenchmarks: {
     list: (category?: string) => {
       const qs = category ? `?category=${encodeURIComponent(category)}` : '';
-      return request<{ data: ClinicalBenchmark[] }>(`/api/analytics/clinical-benchmarks${qs}`);
+      return request<{ data: ClinicalBenchmark[] }>(`/api/insights/clinical-benchmarks${qs}`);
     },
   },
   mlTrainingData: {
     collect: (patientId: string) =>
-      request<{ data: MLTrainingData }>(`/api/analytics/ml-training-data/patient/${patientId}`),
+      request<{ data: MLTrainingData }>(`/api/insights/ml-training-data/patient/${patientId}`),
     upsert: (data: Partial<MLTrainingData>) =>
-      request<{ data: MLTrainingData }>('/api/analytics/ml-training-data', {
+      request<{ data: MLTrainingData }>('/api/insights/ml-training-data', {
         method: 'POST',
         body: JSON.stringify(data),
       }),
-    stats: () => request<{ data: MlTrainingStats }>('/api/analytics/ml-training-data/stats'),
+    stats: () => request<{ data: MlTrainingStats }>('/api/insights/ml-training-data/stats'),
     patients: (params?: { limit?: number }) => {
       const qs = params?.limit ? `?limit=${encodeURIComponent(String(params.limit))}` : '';
-      return request<{ data: MlTrainingPatientRecord[] }>(`/api/analytics/ml-training-data/patients${qs}`);
+      return request<{ data: MlTrainingPatientRecord[] }>(`/api/insights/ml-training-data/patients${qs}`);
     },
     similar: (options: {
       condition: string;
@@ -2799,7 +2799,7 @@ export const analyticsApi = {
         }).filter(([, v]) => v != null).map(([k, v]) => [k, String(v)]),
       ).toString();
       return request<{ data: MLTrainingData[] }>(
-        `/api/analytics/ml-training-data/similar${qs ? `?${qs}` : ''}`,
+        `/api/insights/ml-training-data/similar${qs ? `?${qs}` : ''}`,
       );
     },
   },
@@ -2810,7 +2810,7 @@ export const analyticsApi = {
         endDate: params.endDate,
       }).toString();
       return request<{ data: PopulationHealthResponse }>(
-        `/api/analytics/population-health?${qs}`,
+        `/api/insights/population-health?${qs}`,
       );
     },
   },

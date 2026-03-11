@@ -34,17 +34,11 @@ function mockMobileModules() {
   return {
     name: 'mock-mobile-modules',
     resolveId(id: string) {
-      if (id === '@firebase/crashlytics') {
-        return { id: '\0virtual-crashlytics-stub', external: false };
-      }
       if (mobileModules.some(m => id === m || id.includes(m))) {
         return { id: '/virtual-mobile-stub', external: false };
       }
     },
     load(id: string) {
-      if (id === '\0virtual-crashlytics-stub') {
-        return 'export function getCrashlytics() { return {}; };';
-      }
       if (id === '/virtual-mobile-stub') {
         return 'export default {}; export const Platform = { OS: "web" }; export const AsyncStorage = { getItem: () => null, setItem: () => {}, removeItem: () => {} };';
       }
@@ -57,7 +51,6 @@ export default defineConfig(({ mode }) => {
   const buildTime = Date.now().toString();
   const VERSION_SUFFIX = '-v2.4.5-react-core-fix';
   const appVersion = (process.env.GIT_COMMIT_SHA || process.env.VITE_APP_VERSION || buildTime) + VERSION_SUFFIX;
-  const useFunctionsProxy = process.env.VITE_USE_FUNCTIONS_PROXY === 'true';
 
   return {
     define: {
@@ -120,8 +113,6 @@ export default defineConfig(({ mode }) => {
                   packageName.includes('lucide-react')) {
                 return 'react-lib';
               }
-              if (packageName.includes('firebase')) return 'firebase-vendor';
-              
               if (packageName.includes('framer-motion')) return 'motion';
               if (packageName.includes('recharts')) return 'charts';
               if (packageName.includes('react-grid-layout')) return 'grid-layout';
@@ -163,17 +154,6 @@ export default defineConfig(({ mode }) => {
       watch: {
         ignored: ['**/node_modules/**', '**/dist/**', '**/.git/**', '**/*.log'],
       },
-      ...(useFunctionsProxy
-        ? {
-          proxy: {
-            '/functions': {
-              target: 'http://127.0.0.1:5001/fisioflow-migration/southamerica-east1',
-              changeOrigin: true,
-              rewrite: (path) => path.replace(/^\/functions/, ''),
-            },
-          },
-        }
-        : {}),
     },
   };
 });
