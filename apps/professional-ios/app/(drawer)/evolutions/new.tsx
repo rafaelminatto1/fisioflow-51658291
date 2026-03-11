@@ -27,7 +27,7 @@ import { MultimodalAIAnalysis } from '@/components/MultimodalAIAnalysis';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { HapticFeedback } from '@/lib/haptics';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from '@/lib/firestore';
 import { db } from '@/lib/firebase';
 
 export default function NewEvolutionScreen() {

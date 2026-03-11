@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { profApi } from '@/lib/api';
+import { api, profApi } from '@/lib/api';
 import type { Exercise } from '@/types';
 
 export function useExercises() {

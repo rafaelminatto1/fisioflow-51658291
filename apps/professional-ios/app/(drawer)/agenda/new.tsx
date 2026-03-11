@@ -23,7 +23,7 @@ import { DateTimePicker } from '@/components/DateTimePicker';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { HapticFeedback } from '@/lib/haptics';
-import { doc, setDoc, serverTimestamp, collection, getDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, collection, getDoc } from '@/lib/firestore';
 import { db } from '@/lib/firebase';
 import type { AppointmentType, AppointmentStatus } from '@/types';
 

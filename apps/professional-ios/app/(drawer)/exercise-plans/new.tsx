@@ -20,7 +20,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { useExercises } from '@/hooks/useExercises';
 import { HapticFeedback } from '@/lib/haptics';
-import { doc, setDoc, serverTimestamp, collection, getDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, collection, getDoc } from '@/lib/firestore';
 import { db } from '@/lib/firebase';
 import type { Exercise } from '@/types';
 

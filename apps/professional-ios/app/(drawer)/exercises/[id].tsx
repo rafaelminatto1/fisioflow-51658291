@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Icon } from '@/components/ui/Icon';
 import { useTheme } from '@/hooks/useTheme';
 import { HapticFeedback } from '@/lib/haptics';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc } from '@/lib/firestore';
 import { db } from '@/lib/firebase';
 import type { Exercise } from '@/types';
 

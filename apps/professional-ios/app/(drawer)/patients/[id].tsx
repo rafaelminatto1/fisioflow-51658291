@@ -24,7 +24,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { HapticFeedback } from '@/lib/haptics';
 import { calculateAge, formatPhone } from '@/lib/utils';
 import { useEvolutions } from '@/hooks/useEvolutions';
-import { doc, getDoc, collection, query, where, orderBy, onSnapshot, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, orderBy, onSnapshot, deleteDoc } from '@/lib/firestore';
 import { db } from '@/lib/firebase';
 import type { Patient, SOAPRecord, Appointment, Evaluation } from '@/types';
 

@@ -16,7 +16,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { updateDoc, doc } from 'firebase/firestore';
+import { updateDoc, doc } from '@/lib/firestore';
 import { db } from '@/lib/firebase';
 
 import { Icon } from '@/components/ui/Icon';
