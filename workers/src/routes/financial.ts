@@ -1378,8 +1378,11 @@ app.put('/nfse-config', requireAuth, async (c) => {
     `
       INSERT INTO nfse_config (
         organization_id, ambiente, municipio_codigo, cnpj_prestador, inscricao_municipal,
-        aliquota_iss, auto_emissao, created_at, updated_at
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,NOW(),NOW())
+        aliquota_iss, auto_emissao,
+        razao_social_prestador, endereco_prestador, telefone_prestador,
+        codigo_tuss, nome_responsavel, conselho_tipo, conselho_numero, percentual_impostos,
+        created_at, updated_at
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,NOW(),NOW())
       ON CONFLICT (organization_id) DO UPDATE SET
         ambiente = EXCLUDED.ambiente,
         municipio_codigo = EXCLUDED.municipio_codigo,
@@ -1387,6 +1390,14 @@ app.put('/nfse-config', requireAuth, async (c) => {
         inscricao_municipal = EXCLUDED.inscricao_municipal,
         aliquota_iss = EXCLUDED.aliquota_iss,
         auto_emissao = EXCLUDED.auto_emissao,
+        razao_social_prestador = EXCLUDED.razao_social_prestador,
+        endereco_prestador = EXCLUDED.endereco_prestador,
+        telefone_prestador = EXCLUDED.telefone_prestador,
+        codigo_tuss = EXCLUDED.codigo_tuss,
+        nome_responsavel = EXCLUDED.nome_responsavel,
+        conselho_tipo = EXCLUDED.conselho_tipo,
+        conselho_numero = EXCLUDED.conselho_numero,
+        percentual_impostos = EXCLUDED.percentual_impostos,
         updated_at = NOW()
       RETURNING *
     `,
@@ -1398,6 +1409,14 @@ app.put('/nfse-config', requireAuth, async (c) => {
       body.inscricao_municipal ?? null,
       body.aliquota_iss ?? 5,
       body.auto_emissao ?? false,
+      body.razao_social_prestador ?? null,
+      body.endereco_prestador ?? null,
+      body.telefone_prestador ?? null,
+      body.codigo_tuss ?? '04391',
+      body.nome_responsavel ?? null,
+      body.conselho_tipo ?? 'CREFITO-3',
+      body.conselho_numero ?? null,
+      body.percentual_impostos ?? 8.70,
     ],
   );
 
