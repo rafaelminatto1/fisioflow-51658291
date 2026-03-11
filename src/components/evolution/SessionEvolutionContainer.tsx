@@ -22,6 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeGoalRows } from '@/lib/clinical/goalNormalization';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { useAuth } from '@/contexts/AuthContext';
 import { SOAPFormPanel } from './SOAPFormPanel';
@@ -38,6 +39,7 @@ import { MandatoryTestAlertService, type AlertCheckResult } from '@/lib/services
 import { ProtocolMilestonesAlert } from './ProtocolMilestonesAlert';
 import { SessionExercisesPanel, type SessionExercise } from './SessionExercisesPanel';
 import { PatientHelpers } from '@/types';
+import type { PatientGoal } from '@/types/evolution';
 import { GamificationTriggerService } from '@/lib/services/gamificationTriggers';
 import { GamificationNotificationService } from '@/lib/services/gamificationNotifications';
 import { PatientService } from '@/lib/services/PatientService';
@@ -48,7 +50,9 @@ import { NotionEvolutionPanel } from './v2-improved/NotionEvolutionPanel';
 import { NotionEvolutionPanel as NotionV3Panel } from './v3-notion/NotionEvolutionPanel';
 import { EvolutionVersionToggle } from './v2-improved/EvolutionVersionToggle';
 import { NotionEvolutionEditor } from './NotionEvolutionEditor';
+import { EvolutionSettingsModal, getEvolutionSettings } from './EvolutionSettingsModal';
 import { appointmentsApi, evolutionApi, goalsApi, patientsApi, sessionsApi } from '@/lib/api/workers-client';
+import { Settings } from 'lucide-react';
 
 interface SessionEvolutionContainerProps {
   appointmentId?: string;
@@ -82,13 +86,16 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
   const [, setAppointment] = useState<Record<string, unknown> | null>(null);
   const [appointmentLoadedFromApi, setAppointmentLoadedFromApi] = useState(false);
   const [activeTab, setActiveTab] = useState('evolution');
-  const [viewVersion, setViewVersion] = useState<'classic' | 'improved' | 'v3-notion' | 'v4-tiptap'>('v4-tiptap');
+  const [viewVersion, setViewVersion] = useState<'classic' | 'improved' | 'v3-notion' | 'v4-tiptap'>(() => {
+    return getEvolutionSettings().defaultViewVersion as any || 'v4-tiptap';
+  });
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Patient data
   // Using any[] to avoid strict type conflicts with child components that expect specific interfaces
   const [surgeries, setSurgeries] = useState<Record<string, unknown>[]>([]);
   const [pathologies, setPathologies] = useState<Record<string, unknown>[]>([]);
-  const [goals, setGoals] = useState<Record<string, unknown>[]>([]);
+  const [goals, setGoals] = useState<PatientGoal[]>([]);
 
   // SOAP Form State
   const [soapData, setSoapData] = useState({
@@ -247,9 +254,7 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
           notes: row.notes ?? undefined,
           created_at: row.created_at,
         })));
-        if (goalsRes.data) {
-          setGoals(goalsRes.data as any);
-        }
+        setGoals(normalizeGoalRows(goalsRes.data));
         // Check mandatory tests
         const result = await MandatoryTestAlertService.checkMandatoryTests(
           currentPatientId,
@@ -661,6 +666,9 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
                   version={viewVersion === 'classic' ? 'v1-soap' : viewVersion === 'v3-notion' ? 'v3-notion' : viewVersion === 'v4-tiptap' ? 'v4-tiptap' : 'v2-texto'}
                   onToggle={(v) => setViewVersion(v === 'v1-soap' ? 'classic' : v === 'v3-notion' ? 'v3-notion' : v === 'v4-tiptap' ? 'v4-tiptap' : 'improved')}
                 />
+                <Button variant="ghost" size="icon" onClick={() => setIsSettingsOpen(true)} title="Configurações">
+                  <Settings className="w-5 h-5 text-muted-foreground" />
+                </Button>
               </div>
               {patient && (
                 <p className="text-sm text-muted-foreground">
@@ -986,6 +994,13 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
           </div>
         )}
       </div>
+
+      <EvolutionSettingsModal
+        open={isSettingsOpen}
+        onOpenChange={setIsSettingsOpen}
+        currentViewVersion={viewVersion}
+        onViewVersionChange={(v) => setViewVersion(v as any)}
+      />
     </div>
   );
 };

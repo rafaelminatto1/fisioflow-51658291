@@ -72,9 +72,9 @@ const LazyPatientSmartSummary = lazy(() => import('@/components/ai/PatientSmartS
 const LazyDoctorReferralReportGenerator = lazy(() => import('@/components/reports/DoctorReferralReportGenerator').then(m => ({ default: m.DoctorReferralReportGenerator })));
 const LazyPatientLifecycleChart = lazy(() => import('@/components/patients/analytics/PatientLifecycleChart').then(m => ({ default: m.PatientLifecycleChart })));
 const LazyPatientInsightsPanel = lazy(() => import('@/components/patients/analytics/PatientInsightsPanel').then(m => ({ default: m.PatientInsightsPanel })));
-const LazyGamificationHeader = lazy(() => import('@/components/gamification/GamificationHeader').then(m => ({ default: m.GamificationHeader })));
-const LazyStreakCalendar = lazy(() => import('@/components/gamification/StreakCalendar').then(m => ({ default: m.StreakCalendar })));
-const LazyLevelJourneyMap = lazy(() => import('@/components/gamification/LevelJourneyMap').then(m => ({ default: m.LevelJourneyMap })));
+const LazyGamificationHeader = lazy(() => import('@/components/gamification/GamificationHeader'));
+const LazyStreakCalendar = lazy(() => import('@/components/gamification/StreakCalendar'));
+const LazyLevelJourneyMap = lazy(() => import('@/components/gamification/LevelJourneyMap'));
 const LazyLeaderboard = lazy(() => import('@/components/gamification/Leaderboard').then(m => ({ default: m.Leaderboard })));
 const LazyRewardShop = lazy(() => import('@/components/gamification/RewardShop').then(m => ({ default: m.RewardShop })));
 const LazyPatientActivityLabTab = lazy(() => import('@/components/patient/PatientActivityLabTab').then(m => ({ default: m.PatientActivityLabTab })));
@@ -194,7 +194,7 @@ const OverviewTab = ({ patient, upcomingAppointments, invalidateTab }: { patient
                         gender: patient.gender,
                         status: patient.status
                     }}
-                    upcomingAppointments={upcomingAppointments}
+                    appointments={upcomingAppointments}
                     onAction={() => { }}
                 />
             </Suspense>

@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { normalizeGoalRows } from '@/lib/clinical/goalNormalization';
 import { AppointmentService } from '@/services/appointmentService';
 import { appointmentsApi, evaluationFormsApi, goalsApi, patientsApi } from '@/lib/api/workers-client';
 
@@ -71,7 +72,7 @@ export default function NewEvaluationPage() {
 
             return {
                 ...patientRes.data,
-                goals: goalsRes?.data ?? [],
+                goals: normalizeGoalRows(goalsRes?.data),
                 pathologies: pathologiesRes?.data ?? [],
                 surgeries: surgeriesRes?.data ?? [],
                 appointments: appointmentsRes?.data ?? [],
