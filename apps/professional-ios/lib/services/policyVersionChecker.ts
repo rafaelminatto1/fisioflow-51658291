@@ -7,8 +7,8 @@
  * Requirements: 1.13
  */
 
-import { db, auth } from '../firebase';
-import { doc, getDoc } from '@/lib/firestore';
+import { db, auth } from '../platform';
+import { doc, getDoc } from '@/lib/data-store';
 import { LEGAL_VERSIONS } from '../../constants/legalVersions';
 
 export interface PolicyVersionStatus {

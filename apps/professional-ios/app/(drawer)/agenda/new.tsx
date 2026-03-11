@@ -23,8 +23,8 @@ import { DateTimePicker } from '@/components/DateTimePicker';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { HapticFeedback } from '@/lib/haptics';
-import { doc, setDoc, serverTimestamp, collection, getDoc } from '@/lib/firestore';
-import { db } from '@/lib/firebase';
+import { doc, setDoc, serverTimestamp, collection, getDoc } from '@/lib/data-store';
+import { db } from '@/lib/platform';
 import type { AppointmentType, AppointmentStatus } from '@/types';
 
 const APPOINTMENT_TYPES: AppointmentType[] = [

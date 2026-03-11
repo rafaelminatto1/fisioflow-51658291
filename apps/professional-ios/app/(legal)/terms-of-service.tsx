@@ -13,8 +13,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TERMS_OF_SERVICE_CONTENT } from '@/constants/legalContent';
 import { LEGAL_VERSIONS } from '@/constants/legalVersions';
-import { db, auth } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp } from '@/lib/firestore';
+import { db, auth } from '@/lib/platform';
+import { collection, addDoc, serverTimestamp } from '@/lib/data-store';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 

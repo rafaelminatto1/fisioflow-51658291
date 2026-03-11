@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Check, ChevronDown, X } from 'lucide-react';
+import { Check, ChevronDown, X, Plus, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,6 +9,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
 } from '@/components/ui/command';
 import {
   Popover,
@@ -20,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 export interface MultiSelectOption {
   value: string;
   label: string;
+  category?: string;
 }
 
 interface MultiSelectProps {
@@ -29,6 +31,7 @@ interface MultiSelectProps {
   placeholder?: string;
   className?: string;
   maxCount?: number;
+  allowCustom?: boolean;
 }
 
 export function MultiSelect({
@@ -38,8 +41,10 @@ export function MultiSelect({
   placeholder = 'Selecionar...',
   className,
   maxCount = 3,
+  allowCustom = true,
 }: MultiSelectProps) {
   const [open, setOpen] = React.useState(false);
+  const [inputValue, setInputValue] = React.useState("");
 
   const toggleValue = (value: string) => {
     if (selected.includes(value)) {
@@ -54,6 +59,16 @@ export function MultiSelect({
     onChange([]);
   };
 
+  const categories = Array.from(new Set(options.map(o => o.category).filter(Boolean))) as string[];
+
+  const handleAddCustom = () => {
+    if (!inputValue.trim()) return;
+    if (!selected.includes(inputValue.trim())) {
+      onChange([...selected, inputValue.trim()]);
+    }
+    setInputValue("");
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -62,7 +77,7 @@ export function MultiSelect({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            'w-full justify-between min-h-[40px] h-auto px-3 py-2 text-left font-normal hover:bg-background border-input',
+            'w-full justify-between min-h-[40px] h-auto px-3 py-2 text-left font-normal hover:bg-background border-input transition-all',
             className
           )}
         >
@@ -75,11 +90,11 @@ export function MultiSelect({
                     <Badge
                       key={value}
                       variant="secondary"
-                      className="rounded-md border-none bg-slate-100 text-slate-900 font-medium px-1 py-0 h-6 flex items-center gap-1"
+                      className="rounded-md border-none bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-medium px-1.5 py-0 h-6 flex items-center gap-1"
                     >
                       {option?.label || value}
                       <X
-                        className="h-3 w-3 cursor-pointer hover:text-destructive"
+                        className="h-3 w-3 cursor-pointer hover:text-destructive transition-colors"
                         onClick={(e) => {
                           e.stopPropagation();
                           toggleValue(value);
@@ -91,7 +106,7 @@ export function MultiSelect({
                 {selected.length > maxCount && (
                   <Badge
                     variant="secondary"
-                    className="rounded-md border-none bg-slate-100 text-slate-900 font-medium px-1 py-0 h-6"
+                    className="rounded-md border-none bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-medium px-1.5 py-0 h-6"
                   >
                     +{selected.length - maxCount}
                   </Badge>
@@ -104,7 +119,7 @@ export function MultiSelect({
           <div className="flex items-center gap-2">
              {selected.length > 0 && (
                 <X 
-                  className="h-4 w-4 text-muted-foreground hover:text-destructive cursor-pointer" 
+                  className="h-4 w-4 text-muted-foreground hover:text-destructive cursor-pointer transition-colors" 
                   onClick={handleClear}
                 />
              )}
@@ -112,32 +127,90 @@ export function MultiSelect({
           </div>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
-        <Command className="w-full">
-          <CommandInput placeholder="Pesquisar..." />
-          <CommandList className="max-h-[300px] overflow-y-auto">
-            <CommandEmpty>Nenhum resultado encontrado.</CommandEmpty>
-            <CommandGroup>
-              {options.map((option) => (
-                <CommandItem
-                  key={option.value}
-                  onSelect={() => toggleValue(option.value)}
-                  className="cursor-pointer"
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+        <Command className="w-full" shouldFilter={true}>
+          <CommandInput 
+            placeholder="Pesquisar ou digitar nova queixa..." 
+            value={inputValue}
+            onValueChange={setInputValue}
+          />
+          <CommandList className="max-h-[300px] overflow-y-auto scrollbar-thin">
+            <CommandEmpty>
+              {allowCustom && inputValue.length > 0 ? (
+                <div 
+                  className="flex items-center gap-2 w-full p-2 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer rounded-md text-sm text-primary font-medium"
+                  onClick={handleAddCustom}
                 >
-                  <div
-                    className={cn(
-                      'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
-                      selected.includes(option.value)
-                        ? 'bg-primary text-primary-foreground'
-                        : 'opacity-50 [&_svg]:invisible'
-                    )}
+                  <Plus className="h-4 w-4" />
+                  Adicionar: "{inputValue}"
+                </div>
+              ) : (
+                <p className="p-4 text-center text-sm text-muted-foreground">Nenhum resultado.</p>
+              )}
+            </CommandEmpty>
+            
+            {categories.length > 0 ? (
+              categories.map(category => (
+                <CommandGroup key={category} heading={category}>
+                  {options
+                    .filter(opt => opt.category === category)
+                    .map((option) => (
+                      <CommandItem
+                        key={option.value}
+                        onSelect={() => toggleValue(option.value)}
+                        className="cursor-pointer"
+                      >
+                        <div
+                          className={cn(
+                            'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary transition-all',
+                            selected.includes(option.value)
+                              ? 'bg-primary text-primary-foreground'
+                              : 'opacity-50 [&_svg]:invisible'
+                          )}
+                        >
+                          <Check className={cn('h-4 w-4')} />
+                        </div>
+                        <span className="flex-1">{option.label}</span>
+                      </CommandItem>
+                    ))}
+                </CommandGroup>
+              ))
+            ) : (
+              <CommandGroup>
+                {options.map((option) => (
+                  <CommandItem
+                    key={option.value}
+                    onSelect={() => toggleValue(option.value)}
+                    className="cursor-pointer"
                   >
-                    <Check className={cn('h-4 w-4')} />
-                  </div>
-                  <span>{option.label}</span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
+                    <div
+                      className={cn(
+                        'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary transition-all',
+                        selected.includes(option.value)
+                          ? 'bg-primary text-primary-foreground'
+                          : 'opacity-50 [&_svg]:invisible'
+                      )}
+                    >
+                      <Check className={cn('h-4 w-4')} />
+                    </div>
+                    <span className="flex-1">{option.label}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+
+            {/* Opção de adicionar customizado mesmo que existam outros resultados */}
+            {allowCustom && inputValue.length > 0 && !options.some(o => o.label.toLowerCase() === inputValue.toLowerCase()) && (
+              <>
+                <CommandSeparator />
+                <CommandGroup>
+                  <CommandItem onSelect={handleAddCustom} className="cursor-pointer text-primary font-medium">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Adicionar "{inputValue}"
+                  </CommandItem>
+                </CommandGroup>
+              </>
+            )}
           </CommandList>
         </Command>
       </PopoverContent>

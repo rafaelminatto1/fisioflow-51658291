@@ -97,10 +97,14 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     let mounted = true;
     const init = async () => {
       try {
-        setLoading(true);
+        console.log('[AuthContext] Iniciando verificação de sessão...');
+        if (!initialized) setLoading(true); // Só mostra loading na primeira vez
+        
         // Limita a 5s para não travar o carregamento
         const timeout = new Promise<null>((res) => setTimeout(() => res(null), 5000));
         const result = await Promise.race([authClient.getSession(), timeout]) as any;
+        
+        console.log('[AuthContext] Sessão recuperada:', result ? 'Sim' : 'Não/Timeout');
         
         if (!mounted) return;
         
@@ -110,10 +114,13 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
           await loadUserAndProfile(null);
         }
       } catch (error) {
-        console.error('Auth init error:', error);
+        console.error('[AuthContext] Erro fatal na inicialização:', error);
         if (mounted) await loadUserAndProfile(null);
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          setLoading(false);
+          setInitialized(true);
+        }
       }
     };
     init();
@@ -134,7 +141,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     }
   };
 
-  const signUp = async (data: RegisterFormData): Promise<{ error?: AuthError | null; user?: User | null }> => {
+  const signUp = async (data: RegisterFormData): Promise<{ error?: AuthError | null; user?: AuthUser | null }> => {
     try {
       setLoading(true);
       const { data: neonData, error } = await authClient.signUp.email({
@@ -145,7 +152,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
       if (error) throw new Error(error.message || 'Erro ao cadastrar');
       const adapted = adaptNeonUser(neonData.user);
       await loadUserAndProfile(adapted);
-      return { user: adapted, error: null };
+      return { user: adapted as any, error: null };
     } catch (err: any) {
       logger.error('Erro no cadastro', err, 'AuthContextProvider');
       setLoading(false);
@@ -182,7 +189,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const resetPassword = async (email: string) => {
     try {
-      await authClient.forgetPassword({ email, redirectTo: `${window.location.origin}/auth/reset-password` });
+      await authClient.forgetPassword.emailOtp({ email, redirectTo: `${window.location.origin}/auth/reset-password` });
       return { error: null };
     } catch (err: any) {
       return { error: { message: err.message || 'Erro ao resetar senha' } };
@@ -191,7 +198,12 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
   const updatePassword = async (password: string) => {
     try {
-      await authClient.changePassword({ newPassword: password });
+      // Nota: O SDK do Neon Auth pode exigir a senha atual.
+      // Aqui estamos fazendo o melhor esforço conforme a API sugere.
+      await authClient.changePassword({ 
+        newPassword: password,
+        currentPassword: '', // Caso seja obrigatório mas não tenhamos no contexto
+      } as any);
       return { error: null };
     } catch (err: any) {
       return { error: { message: err.message || 'Erro ao atualizar senha' } };

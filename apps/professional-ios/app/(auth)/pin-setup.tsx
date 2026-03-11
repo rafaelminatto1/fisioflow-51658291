@@ -28,7 +28,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { biometricAuthService } from '@/lib/services/biometricAuthService';
-import { auth } from '@/lib/firebase';
+import { auth } from '@/lib/platform';
 
 type PINSetupMode = 'create' | 'change';
 type SetupStep = 'old-pin' | 'new-pin' | 'confirm-pin' | 'complete';

@@ -23,8 +23,8 @@ import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { HapticFeedback } from '@/lib/haptics';
 import { formatCPF, formatPhone, isValidCPF } from '@/lib/utils';
-import { doc, setDoc, serverTimestamp, collection } from '@/lib/firestore';
-import { db } from '@/lib/firebase';
+import { doc, setDoc, serverTimestamp, collection } from '@/lib/data-store';
+import { db } from '@/lib/platform';
 
 export default function NewPatientScreen() {
   const router = useRouter();

@@ -1,5 +1,5 @@
 import { authClient } from './neonAuth';
-import { db } from './firestore';
+import { db } from './data-store';
 import { getStorage } from './storage';
 
 type CompatUser = {

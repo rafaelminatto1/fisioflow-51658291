@@ -2,7 +2,7 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
 
 declare global {
   interface Window {
-    FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean | string;
+    APP_CHECK_DEBUG_TOKEN?: boolean | string;
   }
 }
 
