@@ -1,7 +1,11 @@
 import { test, expect } from '@playwright/test';
+import { testUsers } from './fixtures/test-data';
 
 test.describe('Debug Produção - moocafisio.com.br', () => {
   test('deve tentar login e verificar erros de IA', async ({ page }) => {
+    const targetBaseUrl = process.env.E2E_PROD_BASE_URL || process.env.BASE_URL || 'https://moocafisio.com.br';
+    const loginEmail = testUsers.admin.email;
+    const loginPassword = testUsers.admin.password;
     const failedRequests: string[] = [];
     const consoleErrors: string[] = [];
 
@@ -20,13 +24,13 @@ test.describe('Debug Produção - moocafisio.com.br', () => {
     });
 
     // 1. Acessar o domínio customizado
-    console.log('[Test] Acessando moocafisio.com.br...');
-    await page.goto('https://moocafisio.com.br/auth', { waitUntil: 'networkidle' });
+    console.log(`[Test] Acessando ${targetBaseUrl}...`);
+    await page.goto(`${targetBaseUrl}/auth`, { waitUntil: 'networkidle' });
 
     // 2. Tentar realizar o login
-    console.log('[Test] Tentando login para rafael.minatto@yahoo.com...');
-    await page.fill('input[name="email"]', 'rafael.minatto@yahoo.com');
-    await page.fill('input[name="password"]', 'REDACTED');
+    console.log(`[Test] Tentando login para ${loginEmail}...`);
+    await page.locator('#login-email, input[type="email"]').first().fill(loginEmail);
+    await page.locator('#login-password, input[type="password"]').first().fill(loginPassword);
     await page.click('button[type="submit"]');
 
     // Aguardar transição ou erro

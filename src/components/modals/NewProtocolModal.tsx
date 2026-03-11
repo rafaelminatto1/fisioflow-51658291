@@ -304,14 +304,14 @@ export const NewProtocolModal: React.FC<NewProtocolModalProps> = ({
                       <div className="col-span-2 space-y-2">
                         <Label>Vincular Página da Wiki</Label>
                         <Select 
-                          value={formData.wiki_page_id} 
-                          onValueChange={v => setFormData(prev => ({ ...prev, wiki_page_id: v }))}
+                          value={formData.wiki_page_id || 'none'} 
+                          onValueChange={v => setFormData(prev => ({ ...prev, wiki_page_id: v === 'none' ? '' : v }))}
                         >
                           <SelectTrigger className="h-12">
                             <SelectValue placeholder="Selecione um artigo/consenso" />
                           </SelectTrigger>
                           <SelectContent className="max-h-[300px]">
-                            <SelectItem value="">Nenhum vínculo</SelectItem>
+                            <SelectItem value="none">Nenhum vínculo</SelectItem>
                             {wikiArticles.map(art => (
                               <SelectItem key={art.id} value={art.id}>
                                 {art.title} ({art.subgroup})
