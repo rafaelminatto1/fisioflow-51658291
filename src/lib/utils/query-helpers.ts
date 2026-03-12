@@ -1,7 +1,6 @@
 /**
- * Query utility functions for Firebase/Firestore
- * Reusable helpers for common query patterns
- *
+ * Query utility functions for the local data layer
+ * Reusable helpers for common query patterns.
  */
 
 // ==============================================================================
@@ -10,7 +9,7 @@
 
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-const normalizeFirestoreData = (d: any) => d;
+const normalizeRecordData = (d: any) => d;
 
 export type Query<T> = {
   source?: unknown;
@@ -20,7 +19,7 @@ export type Query<T> = {
 
 export type CollectionReference<T> = Query<T>;
 
-const firestoreQuery = <T>(query: Query<T>, ...constraints: unknown[]): Query<T> => ({
+const appendQueryConstraints = <T>(query: Query<T>, ...constraints: unknown[]): Query<T> => ({
   ...query,
   constraints: [...(query.constraints ?? []), ...constraints],
 });
@@ -85,7 +84,7 @@ export function isNetworkError(error: unknown): boolean {
       message.includes('ECONNREFUSED') ||
       message.includes('ENOTFOUND') ||
       message.includes('ETIMEDOUT') ||
-      message.includes('firestore') ||
+      message.includes('database') ||
       message.includes('unavailable')
     );
   }
@@ -93,7 +92,7 @@ export function isNetworkError(error: unknown): boolean {
 }
 
 // ==============================================================================
-// FIRESTORE QUERY BUILDERS
+// QUERY BUILDERS
 // ==============================================================================
 
 export function applyFilters<T>(
@@ -114,33 +113,33 @@ export function applyFilters<T>(
 
   // Organization filter
   if (filters.organizationId) {
-    result = firestoreQuery(result, where('organization_id', '==', filters.organizationId));
+    result = appendQueryConstraints(result, where('organization_id', '==', filters.organizationId));
   }
 
   // Status filters
   if (filters.status && typeof filters.status === 'string') {
-    result = firestoreQuery(result, where('status', '==', filters.status));
+    result = appendQueryConstraints(result, where('status', '==', filters.status));
   } else if (filters.inStatus) {
-    // Firestore doesn't support 'in' with multiple values directly in the same way
+    // The local query abstraction keeps single-value filters deterministic
     // Use array-contains-any for array fields or multiple queries
     if (filters.inStatus.length === 1) {
-      result = firestoreQuery(result, where('status', '==', filters.inStatus[0]));
+      result = appendQueryConstraints(result, where('status', '==', filters.inStatus[0]));
     }
     // For multiple values, you'd need to run multiple queries and merge results
   }
 
   // Ordering
   if (filters.orderBy) {
-    result = firestoreQuery(result, orderBy(filters.orderBy, filters.ascending ? 'asc' : 'desc'));
+    result = appendQueryConstraints(result, orderBy(filters.orderBy, filters.ascending ? 'asc' : 'desc'));
   }
 
   // Pagination
   if (filters.limit) {
-    result = firestoreQuery(result, limit(filters.limit));
+    result = appendQueryConstraints(result, limit(filters.limit));
   }
 
   if (filters.startAfter) {
-    result = firestoreQuery(result, startAfter(filters.startAfter));
+    result = appendQueryConstraints(result, startAfter(filters.startAfter));
   }
 
   return result;
@@ -154,7 +153,7 @@ export function isEmpty<T>(data: T[] | null | undefined): data is null | undefin
   return !data || data.length === 0;
 }
 
-export function isFirebaseError(error: unknown): error is { message: string; code?: string; details?: unknown } {
+export function isServiceError(error: unknown): error is { message: string; code?: string; details?: unknown } {
   return (
     typeof error === 'object' &&
     error !== null &&
@@ -165,7 +164,7 @@ export function isFirebaseError(error: unknown): error is { message: string; cod
 export function getErrorMessage(error: unknown): string {
   if (typeof error === 'string') return error;
   if (error instanceof Error) return error.message;
-  if (isFirebaseError(error)) return error.message;
+  if (isServiceError(error)) return error.message;
   return 'Erro desconhecido';
 }
 
@@ -266,7 +265,7 @@ export function throttle<T extends (...args: unknown[]) => unknown>(
 }
 
 // ==============================================================================
-// FIRESTORE-SPECIFIC HELPERS
+// QUERY CONSTRAINT HELPERS
 // ==============================================================================
 
 export function createPaginatedQuery<T>(
@@ -279,28 +278,28 @@ export function createPaginatedQuery<T>(
     filters?: Array<{ field: string; op: '==' | '!=' | '>' | '>=' | '<' | '<=' | 'array-contains' | 'in'; value: unknown }>;
   }
 ): Query<T> {
-  let q = firestoreQuery(collectionRef);
+  let q = appendQueryConstraints(collectionRef);
 
   // Apply filters
   if (options.filters) {
     for (const filter of options.filters) {
-      q = firestoreQuery(q, where(filter.field, filter.op, filter.value));
+      q = appendQueryConstraints(q, where(filter.field, filter.op, filter.value));
     }
   }
 
   // Apply ordering
   if (options.orderBy) {
-    q = firestoreQuery(q, orderBy(options.orderBy, options.orderDirection || 'asc'));
+    q = appendQueryConstraints(q, orderBy(options.orderBy, options.orderDirection || 'asc'));
   }
 
   // Apply limit
   if (options.pageSize) {
-    q = firestoreQuery(q, limit(options.pageSize));
+    q = appendQueryConstraints(q, limit(options.pageSize));
   }
 
   // Apply cursor
   if (options.startAfter) {
-    q = firestoreQuery(q, startAfter(options.startAfter));
+    q = appendQueryConstraints(q, startAfter(options.startAfter));
   }
 
   return q;
@@ -309,6 +308,6 @@ export function createPaginatedQuery<T>(
 export function snapshotToArray<T>(snapshot: { docs: Array<{ id: string; data: () => T }> }): Array<T & { id: string }> {
   return snapshot.docs.map(doc => ({
     id: doc.id,
-    ...normalizeFirestoreData(doc.data()),
+    ...normalizeRecordData(doc.data()),
   })) as Array<T & { id: string }>;
 }

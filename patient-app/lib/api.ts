@@ -177,6 +177,21 @@ export const mediaApi = {
     api.post<{ uploadUrl: string; publicUrl: string; key: string; expiresIn: number }>('/api/media/upload-url', payload),
 };
 
+export const messagingApi = {
+  getConversations: () => api.get<any[]>('/api/messaging/conversations'),
+  getMessages: (participantId: string, limit?: number) =>
+    api.get<any[]>(`/api/messaging/conversations/${participantId}/messages`, { limit }),
+  sendMessage: (payload: {
+    recipientId: string;
+    content: string;
+    type?: string;
+    attachmentUrl?: string;
+    attachmentName?: string;
+  }) => api.post<any>('/api/messaging/messages', payload),
+  markConversationRead: (participantId: string) =>
+    api.post<{ success: boolean }>(`/api/messaging/conversations/${participantId}/read`, {}),
+};
+
 export function getApiBaseUrl() {
   return API_BASE_URL;
 }

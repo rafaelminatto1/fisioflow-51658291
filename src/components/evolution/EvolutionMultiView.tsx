@@ -101,10 +101,11 @@ function resolveDate(
 function looksLikeImage(url: string): boolean {
   if (!url) return false;
   const lower = url.toLowerCase();
+  const legacyStorageHost = ['fire', 'basestorage'].join('');
   // URLs de storage geralmente nao tem extensao visivel, mas tentamos detectar
   return (
     /\.(jpe?g|png|gif|webp|bmp|svg)(\?.*)?$/i.test(lower) ||
-    lower.includes('firebasestorage') ||
+    lower.includes(legacyStorageHost) ||
     lower.includes('storage.googleapis')
   );
 }

@@ -199,6 +199,41 @@ class DataConnectCache {
   }
 }
 
+export interface Appointment {
+  id: string;
+  patient_id: string;
+  professional_id: string | null;
+  professional_name: string;
+  type: string;
+  date: string;
+  time: string;
+  duration: number;
+  status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled';
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function getPatientAppointments(
+  upcoming?: boolean,
+): Promise<Appointment[]> {
+  const cacheKey = upcoming ? 'appointments_upcoming' : 'appointments_all';
+  const cached = dataConnectCache.get(cacheKey);
+
+  try {
+    const data = await patientApi.getAppointments(upcoming);
+    dataConnectCache.set(cacheKey, data);
+    return data;
+  } catch (error) {
+    log.error('getPatientAppointments: patient portal request failed', error);
+    if (cached) {
+      log.info('getPatientAppointments: returning cached data', { cacheKey });
+      return cached;
+    }
+    throw error;
+  }
+}
+
 export const dataConnectCache = new DataConnectCache();
 
 export default {

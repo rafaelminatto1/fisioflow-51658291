@@ -11,7 +11,7 @@ import { BiometricAuthService } from '../../lib/services/biometricAuthService';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
-import { doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteDoc } from '@/lib/data-store';
 
 // Mock expo-local-authentication
 vi.mock('expo-local-authentication', () => ({
@@ -41,8 +41,8 @@ vi.mock('expo-crypto', () => ({
   },
 }));
 
-// Mock firebase/firestore
-vi.mock('firebase/firestore', () => ({
+// Mock @/lib/data-store
+vi.mock('@/lib/data-store', () => ({
   doc: vi.fn(),
   getDoc: vi.fn(),
   setDoc: vi.fn(),
@@ -50,8 +50,8 @@ vi.mock('firebase/firestore', () => ({
   deleteDoc: vi.fn(),
 }));
 
-// Mock firebase config
-vi.mock('../../lib/firebase', () => ({
+// mock platform config
+vi.mock('../../lib/platform', () => ({
   db: {},
   auth: {},
   storage: {},
@@ -290,11 +290,11 @@ describe('BiometricAuthService', () => {
       );
     });
 
-    it('should throw error if Firestore write fails', async () => {
-      (setDoc as any).mockRejectedValue(new Error('Firestore write failed'));
+    it('should throw error if Data Store write fails', async () => {
+      (setDoc as any).mockRejectedValue(new Error('Data Store write failed'));
 
       await expect(biometricAuthService.setup(testUserId)).rejects.toThrow(
-        'Firestore write failed'
+        'Data Store write failed'
       );
     });
   });
@@ -314,11 +314,11 @@ describe('BiometricAuthService', () => {
       );
     });
 
-    it('should throw error if Firestore update fails', async () => {
-      (updateDoc as any).mockRejectedValue(new Error('Firestore update failed'));
+    it('should throw error if Data Store update fails', async () => {
+      (updateDoc as any).mockRejectedValue(new Error('Data Store update failed'));
 
       await expect(biometricAuthService.disable(testUserId)).rejects.toThrow(
-        'Firestore update failed'
+        'Data Store update failed'
       );
     });
   });
@@ -558,7 +558,7 @@ describe('BiometricAuthService', () => {
       expect(timeDiff).toBeLessThan(1000);
     });
 
-    it('should update Firestore with lockout time', async () => {
+    it('should update Data Store with lockout time', async () => {
       (SecureStore.getItemAsync as any).mockResolvedValue('4');
 
       await biometricAuthService.handleFailedAttempt(testUserId);
@@ -599,7 +599,7 @@ describe('BiometricAuthService', () => {
   });
 
   describe('getConfig', () => {
-    it('should return config from Firestore', async () => {
+    it('should return config from Data Store', async () => {
       const mockConfig = {
         userId: testUserId,
         enabled: true,
@@ -632,7 +632,7 @@ describe('BiometricAuthService', () => {
     });
 
     it('should return null on error', async () => {
-      (getDoc as any).mockRejectedValue(new Error('Firestore read failed'));
+      (getDoc as any).mockRejectedValue(new Error('Data Store read failed'));
 
       const config = await biometricAuthService.getConfig(testUserId);
 
@@ -674,7 +674,7 @@ describe('BiometricAuthService', () => {
     });
 
     it('should return false on error', async () => {
-      (getDoc as any).mockRejectedValue(new Error('Firestore read failed'));
+      (getDoc as any).mockRejectedValue(new Error('Data Store read failed'));
 
       const enabled = await biometricAuthService.isEnabled(testUserId);
 

@@ -17,17 +17,17 @@
  */
 
 import * as fc from 'fast-check';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp } from '@/lib/data-store';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock Firebase
-vi.mock('../../lib/firebase', () => ({
+vi.mock('../../lib/platform', () => ({
   db: {},
   auth: { currentUser: null },
 }));
 
 // Mock Firestore functions
-vi.mock('firebase/firestore', () => ({
+vi.mock('@/lib/data-store', () => ({
   doc: vi.fn(),
   getDoc: vi.fn(),
   setDoc: vi.fn(),

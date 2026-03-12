@@ -643,3 +643,55 @@ export async function markFinancialRecordAsPaid(
   if (response.error) throw new Error(response.error);
   return response.data;
 }
+// ============================================================
+// MESSAGING API
+// ============================================================
+
+export interface ApiConversation {
+  id: string;
+  participantId: string;
+  participantName: string;
+  participantType: 'patient' | 'professional';
+  lastMessage?: string;
+  lastMessageAt?: string;
+  unreadCount: number;
+}
+
+export interface ApiMessage {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  content: string;
+  type: 'text' | 'image' | 'video' | 'file';
+  createdAt: string;
+  readAt?: string;
+}
+
+export async function getConversations(): Promise<ApiConversation[]> {
+  const response = await fetchApi<ApiResponse<ApiConversation[]>>('/api/messaging/conversations');
+  return response.data || [];
+}
+
+export async function getConversationMessages(participantId: string): Promise<ApiMessage[]> {
+  const response = await fetchApi<ApiResponse<ApiMessage[]>>(`/api/messaging/conversations/${encodeURIComponent(participantId)}/messages`);
+  return response.data || [];
+}
+
+export async function sendMessage(participantId: string, content: string, type: string = 'text'): Promise<ApiMessage> {
+  const response = await fetchApi<ApiResponse<ApiMessage>>('/api/messaging/messages', {
+    method: 'POST',
+    data: {
+      receiverId: participantId,
+      content,
+      type
+    }
+  });
+  if (response.error) throw new Error(response.error);
+  return response.data;
+}
+
+export async function markAsRead(participantId: string): Promise<{ success: boolean }> {
+  return fetchApi<{ success: boolean }>(`/api/messaging/conversations/${encodeURIComponent(participantId)}/read`, {
+    method: 'POST'
+  });
+}

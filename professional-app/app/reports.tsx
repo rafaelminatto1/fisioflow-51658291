@@ -6,11 +6,13 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { startOfMonth, endOfMonth } from 'date-fns';
+import { startOfMonth, endOfMonth, subMonths, format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { useColors } from '@/hooks/useColorScheme';
 import { Card } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
@@ -19,6 +21,7 @@ import { usePatients } from '@/hooks/usePatients';
 import { getDashboardStats } from '@/lib/api';
 import { useAuthStore } from '@/store/auth';
 import { useQuery } from '@tanstack/react-query';
+import { useFinancialMetrics, formatCurrency, formatNumber } from '@/hooks/useFinancialMetrics';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -382,32 +385,173 @@ export default function ReportsScreen() {
             )}
 
             {selectedTab === 'financial' && (
-              <>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                  Resumo Financeiro
-                </Text>
-                <View style={styles.statsGrid}>
-                  {([
-                    { label: 'Faturamento', value: 'R$ 0,00', icon: 'cash', color: colors.success },
-                    { label: 'Consultas', value: appointments.length, icon: 'calendar', color: colors.primary },
-                    { label: 'Pendente', value: 'R$ 0,00', icon: 'time', color: colors.warning },
-                  ] as StatCard[]).map(renderStatCard)}
-                </View>
-
-                <Card style={styles.infoCard} padding="md">
-                  <View style={styles.infoContent}>
-                    <Ionicons name="information-circle" size={20} color={colors.info} />
-                    <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-                      Módulo financeiro em desenvolvimento. Configure seus valores e planos de tratamento no perfil de cada paciente.
-                    </Text>
-                  </View>
-                </Card>
-              </>
+              <FinancialTab 
+                colors={colors} 
+                selectedPeriod={selectedPeriod}
+                renderStatCard={renderStatCard}
+              />
             )}
           </>
         )}
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+// Financial Tab Component
+function FinancialTab({ 
+  colors, 
+  selectedPeriod,
+  renderStatCard 
+}: { 
+  colors: any; 
+  selectedPeriod: PeriodType;
+  renderStatCard: (stat: StatCard) => React.ReactNode;
+}) {
+  // Calculate date range based on selected period
+  const dateRange = useMemo(() => {
+    const now = new Date();
+    switch (selectedPeriod) {
+      case 'week': {
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - 7);
+        return { startDate: weekStart.toISOString().split('T')[0], endDate: now.toISOString().split('T')[0] };
+      }
+      case 'month':
+        return { 
+          startDate: startOfMonth(now).toISOString().split('T')[0], 
+          endDate: endOfMonth(now).toISOString().split('T')[0] 
+        };
+      case 'quarter': {
+        const quarterStart = subMonths(now, 3);
+        return { startDate: quarterStart.toISOString().split('T')[0], endDate: now.toISOString().split('T')[0] };
+      }
+      case 'year': {
+        const yearStart = new Date(now.getFullYear(), 0, 1);
+        return { startDate: yearStart.toISOString().split('T')[0], endDate: now.toISOString().split('T')[0] };
+      }
+      default:
+        return { 
+          startDate: startOfMonth(now).toISOString().split('T')[0], 
+          endDate: endOfMonth(now).toISOString().split('T')[0] 
+        };
+    }
+  }, [selectedPeriod]);
+
+  const { data: metrics, isLoading, error } = useFinancialMetrics(dateRange);
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+          Carregando dados financeiros...
+        </Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card style={styles.infoCard} padding="md">
+        <View style={styles.infoContent}>
+          <Ionicons name="alert-circle" size={20} color={colors.error} />
+          <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+            Erro ao carregar dados financeiros. Verifique sua conexão.
+          </Text>
+        </View>
+      </Card>
+    );
+  }
+
+  const financialStats: StatCard[] = [
+    {
+      label: 'Faturamento Total',
+      value: formatCurrency(metrics?.totalRevenue || 0),
+      icon: 'cash',
+      color: colors.success,
+    },
+    {
+      label: 'Sessões Realizadas',
+      value: metrics?.sessionsCount || 0,
+      icon: 'calendar',
+      color: colors.primary,
+    },
+    {
+      label: 'Pagamento Pendente',
+      value: formatCurrency(metrics?.pendingRevenue || 0),
+      icon: 'time',
+      color: colors.warning,
+    },
+    {
+      label: 'Ticket Médio',
+      value: formatCurrency(metrics?.sessionsCount ? (metrics.totalRevenue / metrics.sessionsCount) : 0),
+      icon: 'trending-up',
+      color: colors.info,
+    },
+  ];
+
+  return (
+    <>
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>
+        Resumo Financeiro
+      </Text>
+      <View style={styles.statsGrid}>
+        {financialStats.map(renderStatCard)}
+      </View>
+
+      {/* Revenue Chart */}
+      {metrics?.revenueByDay && metrics.revenueByDay.length > 0 && (
+        <Card style={styles.chartCard} padding="md">
+          <Text style={[styles.chartTitle, { color: colors.text }]}>
+            Faturamento Diário
+          </Text>
+          <View style={styles.chartContent}>
+            {metrics.revenueByDay.slice(-7).map((item, idx) => {
+              const maxRevenue = Math.max(...metrics.revenueByDay.map(d => 
+                typeof d.total === 'string' ? parseFloat(d.total) : d.total
+              ), 0);
+              const value = typeof item.total === 'string' ? parseFloat(item.total) : item.total;
+              return (
+                <Bar 
+                  key={idx} 
+                  label={format(new Date(item.date), 'dd', { locale: ptBR })} 
+                  value={Math.round(value / 100)} 
+                  maxValue={maxRevenue / 100} 
+                  color={colors.success} 
+                />
+              );
+            })}
+          </View>
+        </Card>
+      )}
+
+      {/* Patient Metrics */}
+      <Card style={styles.infoCard} padding="md">
+        <Text style={[styles.chartTitle, { color: colors.text, marginBottom: 12 }]}>
+          Métricas de Pacientes
+        </Text>
+        <View style={styles.metricsRow}>
+          <View style={styles.metricItem}>
+            <Text style={[styles.metricValue, { color: colors.text }]}>
+              {formatNumber(metrics?.patientsCount || 0)}
+            </Text>
+            <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>
+              Pacientes Ativos
+            </Text>
+          </View>
+          <View style={[styles.metricDivider, { backgroundColor: colors.border }]} />
+          <View style={styles.metricItem}>
+            <Text style={[styles.metricValue, { color: colors.success }]}>
+              +{formatNumber(metrics?.newPatientsThisMonth || 0)}
+            </Text>
+            <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>
+              Novos este mês
+            </Text>
+          </View>
+        </View>
+      </Card>
+    </>
   );
 }
 
@@ -616,5 +760,27 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 13,
+  },
+  metricsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  metricItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  metricDivider: {
+    width: 1,
+    height: 40,
+    marginHorizontal: 16,
+  },
+  metricValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  metricLabel: {
+    fontSize: 12,
+    marginTop: 4,
+    textAlign: 'center',
   },
 });

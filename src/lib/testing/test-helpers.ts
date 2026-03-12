@@ -110,7 +110,7 @@ export const mockFirebaseUser = {
   }),
   reload: async () => {},
   toJSON: () => ({}),
-  providerId: 'firebase',
+  providerId: 'neon-auth',
 };
 
 /**

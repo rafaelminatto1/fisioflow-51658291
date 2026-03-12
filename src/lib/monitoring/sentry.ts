@@ -340,15 +340,15 @@ export const fisioflowSentry = {
   },
 
   /**
-   * Rastreia erro de Firestore
+   * Rastreia erro da camada de dados
    */
-  trackFirestoreError: (
+  trackDataLayerError: (
     collection: string,
     operation: string,
     error: Error | unknown
   ) => {
     captureError(error, {
-      category: 'firestore_error',
+      category: 'data_layer_error',
       collection,
       operation,
     });

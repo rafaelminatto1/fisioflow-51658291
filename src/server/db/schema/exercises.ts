@@ -103,7 +103,7 @@ export const exercises = pgTable('exercises', {
   durationSeconds: integer('duration_seconds'),
   restSeconds: integer('rest_seconds'),
 
-  // Mídia (Firebase Storage)
+  // Mídia
   imageUrl: text('image_url'),
   thumbnailUrl: text('thumbnail_url'),
   videoUrl: text('video_url'),
@@ -117,8 +117,7 @@ export const exercises = pgTable('exercises', {
   // Referências
   references: text('references'),                // JSON string com {title, authors, year, url}
 
-  // Controle & Legacy
-  firestoreId: varchar('firestore_id', { length: 150 }),
+  // Controle
   embedding: vector('embedding'),
   isActive: boolean('is_active').default(true).notNull(),
   isPublic: boolean('is_public').default(true).notNull(),   // false = privado da organização
