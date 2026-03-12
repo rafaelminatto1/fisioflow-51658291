@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import type { Env } from '../types/env';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import { createPool } from '../lib/db';
+import { triggerInngestEvent } from '../lib/inngest-client';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -742,7 +743,17 @@ app.post('/', async (c) => {
       return c.json({ error: 'Falha ao criar paciente' }, 500);
     }
 
-    return c.json({ data: normalizePatientRow(row) }, 201);
+    const patient = normalizePatientRow(row);
+
+    // Inngest Event: Patient Created (Sequência de Boas-vindas)
+    triggerInngestEvent(c.env, c.executionCtx, 'patient.created', {
+      patientId: patient.id,
+      name: patient.name,
+      email: patient.email,
+      phone: patient.phone,
+    }, { id: user.uid });
+
+    return c.json({ data: patient }, 201);
   } catch (error) {
     console.error('[Patients/Create] Error:', error);
     return c.json(

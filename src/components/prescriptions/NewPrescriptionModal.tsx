@@ -1,15 +1,13 @@
 import { useState } from 'react';
-import { Dumbbell, GripVertical, Loader2, Plus, Trash2 } from 'lucide-react';
+import { Dumbbell, GripVertical, Loader2, Plus, Trash2, BadgeCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import {
-
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  CustomModal,
+  CustomModalHeader,
+  CustomModalTitle,
+  CustomModalBody,
+  CustomModalFooter,
+} from '@/components/ui/custom-modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -27,6 +25,7 @@ import { useExercises } from '@/hooks/useExercises';
 import { usePrescriptions, PrescriptionExercise } from '@/hooks/usePrescriptions';
 import { useDebounce } from '@/hooks/performance/useDebounce';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Helper function to generate UUID - using crypto.randomUUID() to avoid "ne is not a function" error in production
 const uuidv4 = (): string => crypto.randomUUID();
@@ -46,6 +45,7 @@ export function NewPrescriptionModal({
   patientName,
   onSuccess,
 }: NewPrescriptionModalProps) {
+  const isMobile = useIsMobile();
   const [filters, setFilters] = useState({
     searchTerm: '',
     category: 'all',
@@ -133,20 +133,26 @@ export function NewPrescriptionModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Dumbbell className="h-5 w-5 text-primary" />
-            Nova Prescrição de Exercícios
-          </DialogTitle>
-          <DialogDescription>
-            Criando prescrição para: <strong>{patientName}</strong>
-          </DialogDescription>
-        </DialogHeader>
+    <CustomModal 
+      open={open} 
+      onOpenChange={onOpenChange}
+      isMobile={isMobile}
+      contentClassName="max-w-2xl"
+    >
+      <CustomModalHeader onClose={() => onOpenChange(false)}>
+        <CustomModalTitle className="flex items-center gap-2">
+          <Dumbbell className="h-5 w-5 text-primary" />
+          Nova Prescrição de Exercícios
+        </CustomModalTitle>
+      </CustomModalHeader>
 
-        <ScrollArea className="flex-1 pr-4">
-          <div className="space-y-6 py-4">
+      <CustomModalBody className="p-0 sm:p-0">
+        <div className="px-6 py-4">
+          <p className="text-sm text-muted-foreground mb-6">
+            Criando prescrição para: <strong>{patientName}</strong>
+          </p>
+
+          <div className="space-y-6">
             {/* Basic Info */}
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
@@ -201,7 +207,6 @@ export function NewPrescriptionModal({
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  {/* We could add more filters here like Body Parts simply as text search for now or multi-select if components exist */}
                   <Label className="text-xs">Buscar por nome</Label>
                   <Input
                     placeholder="Nome do exercício..."
@@ -338,18 +343,38 @@ export function NewPrescriptionModal({
               />
             </div>
           </div>
-        </ScrollArea>
+        </div>
+      </CustomModalBody>
 
-        <DialogFooter className="pt-4 border-t">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSubmit} disabled={isCreating || selectedExercises.length === 0}>
-            {isCreating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            Criar Prescrição
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      <CustomModalFooter isMobile={isMobile}>
+        <Button
+          type="button"
+          variant="ghost"
+          className="rounded-xl h-11 px-6 font-bold text-slate-500 hover:bg-slate-100"
+          onClick={() => onOpenChange(false)}
+          disabled={isCreating}
+        >
+          Cancelar
+        </Button>
+        <Button
+          type="button"
+          onClick={handleSubmit}
+          className="rounded-xl h-11 px-8 gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl shadow-slate-900/10 font-bold uppercase tracking-wider transition-all hover:scale-105 active:scale-95"
+          disabled={isCreating || selectedExercises.length === 0}
+        >
+          {isCreating ? (
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              Salvando...
+            </div>
+          ) : (
+            <>
+              <BadgeCheck className="w-4 h-4" />
+              Criar Prescrição
+            </>
+          )}
+        </Button>
+      </CustomModalFooter>
+    </CustomModal>
   );
 }

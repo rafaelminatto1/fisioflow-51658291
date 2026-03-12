@@ -82,8 +82,8 @@ export const CustomModal: React.FC<CustomModalProps> = ({
   // Mobile: Bottom sheet com altura fixa para footer sempre visível
   // Usar 85dvh para garantir que o footer não seja cortado por safe areas do iOS
   const modalContainerClass = isMobile
-    ? "fixed inset-0 z-[90] flex items-end pt-3"
-    : "fixed inset-0 z-[90] flex items-center justify-center p-4";
+    ? "fixed inset-0 z-50 flex items-end pt-3"
+    : "fixed inset-0 z-50 flex items-center justify-center p-4";
 
   const modalContentClass = isMobile
     ? "bg-background w-full rounded-t-2xl shadow-2xl flex flex-col h-[calc(100dvh-0.75rem)] max-h-[calc(100dvh-0.75rem)] min-h-0 overflow-hidden overscroll-contain"
@@ -93,7 +93,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
     <div
       ref={overlayRef}
       className={cn(
-        "fixed inset-0 z-[80] bg-black/50 backdrop-blur-sm",
+        "fixed inset-0 z-40 bg-black/50 backdrop-blur-sm",
         "animate-in fade-in duration-200",
         className
       )}

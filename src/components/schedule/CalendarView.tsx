@@ -39,10 +39,8 @@ import { RescheduleCapacityDialog } from './RescheduleCapacityDialog';
 import { AdvancedFilters } from './AdvancedFilters';
 import { useAvailableTimeSlots } from '@/hooks/useAvailableTimeSlots';
 import { CalendarDayView } from './CalendarDayView';
-import { CalendarWeekView } from './CalendarWeekView';
 import { CalendarWeekViewDndKit } from './CalendarWeekViewDndKit';
 import { CalendarMonthView } from './CalendarMonthView';
-import { useCalendarDrag } from '@/hooks/useCalendarDrag';
 import { useCalendarDragDndKit } from '@/hooks/useCalendarDragDndKit';
 import { useScheduleCapacity } from '@/hooks/useScheduleCapacity';
 import { formatDateToLocalISO } from '@/lib/utils/dateFormat';
@@ -50,8 +48,10 @@ import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { WaitlistIndicator } from './WaitlistIndicator';
-
-const USE_DND_KIT = true;
+import {
+  NON_CAPACITY_STATUSES,
+  isMarkedOverbooked,
+} from './shared/capacity';
 
 export type CalendarViewType = 'day' | 'week' | 'month';
 
@@ -85,16 +85,6 @@ interface CalendarViewProps {
   patientFilter?: string | null;
   onPatientFilterChange?: (patientName: string | null) => void;
 }
-
-const OVERBOOK_MARKER = '[EXCEDENTE]';
-const NON_CAPACITY_STATUSES = new Set([
-  'cancelado',
-  'falta',
-  'faltou',
-  'remarcado',
-  'reagendado',
-  'paciente_faltou'
-]);
 
 const normalizeSlotTime = (time: string | undefined | null): string => {
   if (!time || typeof time !== 'string') return '00:00';
@@ -245,7 +235,7 @@ export const CalendarView = memo(({
         }
 
         const capacityForInterval = getMinCapacityForInterval(aptDate.getDay(), normalizedTime, durationMinutes);
-        const markedByNote = apt.notes?.includes(OVERBOOK_MARKER) || false;
+        const markedByNote = isMarkedOverbooked(apt.notes);
 
         if (markedByNote || activeIntervals.length + 1 > capacityForInterval) {
           result.add(apt.id);
@@ -351,47 +341,21 @@ export const CalendarView = memo(({
     setOptimisticAppointments([]);
   }, []);
 
-  // Drag and drop logic from hook (HTML5 Native)
-  const {
-    dragState: dragStateNative,
-    dropTarget: dropTargetNative,
-    showConfirmDialog: showConfirmDialogNative,
-    pendingReschedule: pendingRescheduleNative,
-    targetAppointments,
-    handleDragStart: handleDragStartNative,
-    handleDragEnd: handleDragEndNative,
-    handleDragOver: handleDragOverNative,
-    handleDragLeave: handleDragLeaveNative,
-    handleDrop: handleDropNative,
-    handleConfirmReschedule: handleConfirmRescheduleNative,
-    handleCancelReschedule: handleCancelRescheduleNative,
-    showOverCapacityDialog: showOverCapacityDialogNative,
-    pendingOverCapacity: pendingOverCapacityNative,
-    handleConfirmOverCapacity: handleConfirmOverCapacityNative,
-    handleCancelOverCapacity: handleCancelOverCapacityNative
-  } = useCalendarDrag({
-    onAppointmentReschedule,
-    onOptimisticUpdate: handleOptimisticUpdate,
-    onRevertUpdate: handleRevertUpdate,
-    getAppointmentsForSlot,
-    getMinCapacityForInterval
-  });
-
   // Drag and drop logic from hook (@dnd-kit)
   const {
-    dragState: dragStateDndKit,
-    dropTarget: dropTargetDndKit,
-    showConfirmDialog: showConfirmDialogDndKit,
-    pendingReschedule: pendingRescheduleDndKit,
+    dragState,
+    dropTarget,
+    showConfirmDialog,
+    pendingReschedule,
     handleDragStart: handleDragStartDndKit,
     handleDragOver: handleDragOverDndKit,
     handleDragEnd: handleDragEndDndKit,
-    handleConfirmReschedule: handleConfirmRescheduleDndKit,
-    handleCancelReschedule: handleCancelRescheduleDndKit,
-    showOverCapacityDialog: showOverCapacityDialogDndKit,
-    pendingOverCapacity: pendingOverCapacityDndKit,
-    handleConfirmOverCapacity: handleConfirmOverCapacityDndKit,
-    handleCancelOverCapacity: handleCancelOverCapacityDndKit,
+    handleConfirmReschedule,
+    handleCancelReschedule,
+    showOverCapacityDialog,
+    pendingOverCapacity,
+    handleConfirmOverCapacity,
+    handleCancelOverCapacity,
   } = useCalendarDragDndKit({
     onAppointmentReschedule,
     onOptimisticUpdate: handleOptimisticUpdate,
@@ -399,20 +363,6 @@ export const CalendarView = memo(({
     getAppointmentsForSlot,
     getMinCapacityForInterval,
   });
-
-  // Choose drag & drop engine based on view (DndKit only in week view for now)
-  const useDndKitMode = USE_DND_KIT && viewType === 'week';
-
-  const dragState = useDndKitMode ? dragStateDndKit : dragStateNative;
-  const dropTarget = useDndKitMode ? dropTargetDndKit : dropTargetNative;
-  const showConfirmDialog = useDndKitMode ? showConfirmDialogDndKit : showConfirmDialogNative;
-  const pendingReschedule = useDndKitMode ? pendingRescheduleDndKit : pendingRescheduleNative;
-  const handleConfirmReschedule = useDndKitMode ? handleConfirmRescheduleDndKit : handleConfirmRescheduleNative;
-  const handleCancelReschedule = useDndKitMode ? handleCancelRescheduleDndKit : handleCancelRescheduleNative;
-  const showOverCapacityDialog = useDndKitMode ? showOverCapacityDialogDndKit : showOverCapacityDialogNative;
-  const pendingOverCapacity = useDndKitMode ? pendingOverCapacityDndKit : pendingOverCapacityNative;
-  const handleConfirmOverCapacity = useDndKitMode ? handleConfirmOverCapacityDndKit : handleConfirmOverCapacityNative;
-  const handleCancelOverCapacity = useDndKitMode ? handleCancelOverCapacityDndKit : handleCancelOverCapacityNative;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -568,7 +518,7 @@ export const CalendarView = memo(({
 
   // Helper to check if appointment is over capacity
   const isOverCapacity = useCallback((apt: Appointment): boolean => {
-    return Boolean(apt.isOverbooked || apt.notes?.includes(OVERBOOK_MARKER));
+    return isMarkedOverbooked(apt.notes, apt.isOverbooked);
   }, []);
 
   // Hook for time slots availability
@@ -1060,56 +1010,28 @@ export const CalendarView = memo(({
 
             {viewType === 'week' && (
               <div key="week-view" className="h-full animate-in fade-in duration-300 slide-in-from-bottom-2">
-                {USE_DND_KIT ? (
-                  <CalendarWeekViewDndKit
-                    currentDate={currentDate}
-                    appointments={displayAppointments}
-                    savingAppointmentId={dragState.savingAppointmentId}
-                    timeSlots={weekTimeSlots}
-                    onTimeSlotClick={onTimeSlotClick}
-                    onEditAppointment={onEditAppointment}
-                    onDeleteAppointment={onDeleteAppointment}
-                    onAppointmentReschedule={onAppointmentReschedule}
-                    checkTimeBlocked={checkTimeBlocked}
-                    isDayClosedForDate={isDayClosedForDate}
-                    openPopoverId={openPopoverId}
-                    setOpenPopoverId={setOpenPopoverId}
-                    dragState={dragState}
-                    dropTarget={dropTarget}
-                    handleDragStart={handleDragStartDndKit}
-                    handleDragOver={handleDragOverDndKit}
-                    handleDragEnd={handleDragEndDndKit}
-                    selectionMode={selectionMode}
-                    selectedIds={selectedIds}
-                    onToggleSelection={onToggleSelection}
-                  />
-                ) : (
-                  <CalendarWeekView
-                    currentDate={currentDate}
-                    appointments={displayAppointments}
-                    savingAppointmentId={dragState.savingAppointmentId}
-                    timeSlots={weekTimeSlots}
-                    onTimeSlotClick={onTimeSlotClick}
-                    onEditAppointment={onEditAppointment}
-                    onDeleteAppointment={onDeleteAppointment}
-                    onAppointmentReschedule={onAppointmentReschedule}
-                    dragState={dragState}
-                    dropTarget={dropTarget}
-                    targetAppointments={targetAppointments}
-                    handleDragStart={handleDragStartNative}
-                    handleDragEnd={handleDragEndNative}
-                    handleDragOver={handleDragOverNative}
-                    handleDragLeave={handleDragLeaveNative}
-                    handleDrop={handleDropNative}
-                    checkTimeBlocked={checkTimeBlocked}
-                    isDayClosedForDate={isDayClosedForDate}
-                    openPopoverId={openPopoverId}
-                    setOpenPopoverId={setOpenPopoverId}
-                    selectionMode={selectionMode}
-                    selectedIds={selectedIds}
-                    onToggleSelection={onToggleSelection}
-                  />
-                )}
+                <CalendarWeekViewDndKit
+                  currentDate={currentDate}
+                  appointments={displayAppointments}
+                  savingAppointmentId={dragState.savingAppointmentId}
+                  timeSlots={weekTimeSlots}
+                  onTimeSlotClick={onTimeSlotClick}
+                  onEditAppointment={onEditAppointment}
+                  onDeleteAppointment={onDeleteAppointment}
+                  onAppointmentReschedule={onAppointmentReschedule}
+                  checkTimeBlocked={checkTimeBlocked}
+                  isDayClosedForDate={isDayClosedForDate}
+                  openPopoverId={openPopoverId}
+                  setOpenPopoverId={setOpenPopoverId}
+                  dragState={dragState}
+                  dropTarget={dropTarget}
+                  handleDragStart={handleDragStartDndKit}
+                  handleDragOver={handleDragOverDndKit}
+                  handleDragEnd={handleDragEndDndKit}
+                  selectionMode={selectionMode}
+                  selectedIds={selectedIds}
+                  onToggleSelection={onToggleSelection}
+                />
               </div>
             )}
 

@@ -40,7 +40,7 @@ export default function PatientDetailScreen() {
   const params = useLocalSearchParams();
   const { id, patientName, tab, autoCreate, date: initialDateParam } = params;
   const colors = useColors();
-  const { light, medium } = useHaptics();
+  const { light, medium, success, error } = useHaptics();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'info' | 'financial' | 'evolutions' | 'biofeedback'>((tab as any) || 'info');
 
@@ -232,7 +232,7 @@ export default function PatientDetailScreen() {
         {selectedTab === 'biofeedback' && (
           <View style={styles.aiHistoryContainer}>
             <TouchableOpacity
-              style={[styles.addEvolutionBtn, { backgroundColor: '#8B5CF6' }]}
+              style={[styles.addEvolutionBtn, { backgroundColor: colors.primary }]}
               onPress={() => {
                 medium();
                 router.push(`/patient/${id}/ai-assessment?name=${name}`);
@@ -1105,7 +1105,8 @@ const styles = StyleSheet.create({
   },
   emptyEvolutionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: -0.4,
     marginTop: 16,
   },
   emptyEvolutionText: {
@@ -1356,8 +1357,9 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   infoSectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 17,
+    fontWeight: '700',
+    letterSpacing: -0.4,
     marginBottom: 8,
   },
   emptyFinancial: {

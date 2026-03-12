@@ -352,6 +352,8 @@ export default function SettingsScreen() {
                   onPress={item.onPress}
                   activeOpacity={item.type === 'toggle' ? 1 : 0.7}
                   disabled={item.type === 'toggle' || item.type === 'info'}
+                  accessibilityLabel={item.label}
+                  accessibilityRole={item.type === 'navigation' || item.type === 'action' ? 'button' : 'text'}
                 >
                   <View style={styles.settingLeft}>
                     <View style={[styles.settingIcon, { backgroundColor: colors.primary + '20' }]}>
@@ -383,6 +385,9 @@ export default function SettingsScreen() {
                       onValueChange={item.onPress}
                       trackColor={{ false: colors.border, true: colors.primary + '80' }}
                       thumbColor={item.value ? colors.primary : colors.textMuted}
+                      accessibilityLabel={`Alternar ${item.label}`}
+                      accessibilityRole="switch"
+                      accessibilityState={{ checked: item.value }}
                     />
                   )}
                   {item.type === 'navigation' && (

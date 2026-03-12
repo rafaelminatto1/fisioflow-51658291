@@ -1,19 +1,8 @@
-import { financialApi } from '@/lib/api/workers-client';
+import { financialApi } from '@/api/v2/financial';
 import { AppError } from '@/lib/errors/AppError';
+import type { Transacao } from '@/types/workers';
 
-export interface Transaction {
-    id: string;
-    user_id?: string;
-    tipo: string;
-    descricao?: string;
-    valor: number;
-    status: string;
-    stripe_payment_intent_id?: string;
-    stripe_refund_id?: string;
-    metadata?: Record<string, unknown>;
-    created_at?: string;
-    updated_at?: string;
-}
+export type Transaction = Transacao;
 
 export interface FinancialStats {
     totalRevenue: number;

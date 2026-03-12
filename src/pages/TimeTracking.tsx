@@ -49,14 +49,14 @@ export default function TimeTrackingPage() {
 
   const {
     activeTimer,
-    _isRunning,
+    isRunning,
     currentDuration,
     entries,
     isLoading,
-    _error,
+    error,
     startTimer,
     pauseTimer,
-    _resumeTimer,
+    resumeTimer,
     stopTimer,
     loadEntries,
     createEntry,
@@ -249,7 +249,7 @@ export default function TimeTrackingPage() {
               value={`${periodMetrics.utilizationRate.toFixed(0)}%`}
               subtitle="tempo faturável / total"
               icon={TrendingUp}
-              color="purple"
+              color="blue"
             />
             <StatCard
               title="Valor Total"
@@ -289,6 +289,7 @@ export default function TimeTrackingPage() {
                   value={period}
                   onChange={(e) => setPeriod(e.target.value as ReportPeriod)}
                   className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+                  aria-label="Selecionar período do relatório"
                 >
                   <option value="today">Hoje</option>
                   <option value="yesterday">Ontem</option>
@@ -298,7 +299,7 @@ export default function TimeTrackingPage() {
                   <option value="last_month">Mês Passado</option>
                   <option value="all_time">Todo o Período</option>
                 </select>
-                <Button variant="outline" size="icon">
+                <Button variant="outline" size="icon" title="Baixar relatório">
                   <Download className="w-4 h-4" />
                 </Button>
               </div>
@@ -366,14 +367,14 @@ interface StatCardProps {
   value: string;
   subtitle: string;
   icon: React.ComponentType<{ className?: string }>;
-  color: 'blue' | 'green' | 'purple' | 'yellow';
+  color: 'blue' | 'green' | 'cyan' | 'yellow';
 }
 
 function StatCard({ title, value, subtitle, icon: Icon, color }: StatCardProps) {
   const colorClasses = {
     blue: 'bg-blue-500/10 text-blue-500',
     green: 'bg-green-500/10 text-green-500',
-    purple: 'bg-purple-500/10 text-purple-500',
+    cyan: 'bg-cyan-500/10 text-cyan-500',
     yellow: 'bg-yellow-500/10 text-yellow-500',
   };
 
