@@ -12,7 +12,7 @@
  * - Exercise modification suggestions
  * - Performance tracking
  *
- * @see https://firebase.google.com/docs/ai/realtime-audio
+ * Live audio integration is disabled until a Cloudflare-compatible endpoint is available.
  */
 
 // ============================================================================
@@ -850,55 +850,11 @@ export class ExerciseCoach {
   // ========================================================================
 
   /**
-   * Connect to Firebase AI Live API
+   * Connect to the live AI API
    */
   private async connectToLiveAPI(): Promise<void> {
     if (!this.session) throw new Error('No active session');
-
-    return new Promise((resolve, reject) => {
-      try {
-        const ws = new WebSocket(
-          `wss://firebaseremoteconfig.googleapis.com/v1/live/${this.session.config.model}?session=${this.session.sessionId}`
-        );
-
-        ws.onopen = () => {
-          ws.send(
-            JSON.stringify({
-              type: 'config',
-              config: {
-                model: this.session?.config.model,
-                language: this.session?.config.language,
-                audio: this.session?.config.audio,
-                video: this.session?.config.video,
-                systemInstruction: this.session?.config.systemInstruction,
-              },
-            })
-          );
-          resolve();
-        };
-
-        ws.onmessage = async (event) => {
-          await this.handleLiveAPIMessage(event.data);
-        };
-
-        ws.onerror = (error) => {
-          logger.error('WebSocket connection error', error, 'ExerciseCoach');
-          this.session!.state.hasError = true;
-          this.callbacks.onError(new Error('WebSocket connection failed'));
-          reject(error);
-        };
-
-        ws.onclose = () => {
-          if (this.session?.state.isActive) {
-            this.callbacks.onSessionEnd();
-          }
-        };
-
-        this.session.ws = ws;
-      } catch (error) {
-        reject(error);
-      }
-    });
+    throw new Error('Live AI is not available on the Neon/Cloudflare stack yet.');
   }
 
   /**

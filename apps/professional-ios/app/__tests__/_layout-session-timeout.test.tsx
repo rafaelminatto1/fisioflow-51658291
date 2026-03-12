@@ -59,7 +59,7 @@ vi.mock('../../lib/services/phiCacheManager', () => ({
 }));
 
 // Mock Firebase auth
-vi.mock('firebase/auth', () => ({
+vi.mock('@/lib/auth', () => ({
   signOut: vi.fn(),
 }));
 

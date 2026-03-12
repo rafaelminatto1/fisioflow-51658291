@@ -15,7 +15,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useAuthStore, unlockSessionWithPIN } from '../auth';
 import { biometricAuthService } from '../../lib/services/biometricAuthService';
 import { encryptionService } from '../../lib/services/encryptionService';
-import { signOut as firebaseSignOut } from 'firebase/auth';
+import { signOut as platformSignOut } from '@/lib/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Mock AsyncStorage
@@ -48,12 +48,12 @@ vi.mock('../../lib/services/encryptionService', () => ({
   },
 }));
 
-// Mock Firebase auth
-vi.mock('../../lib/firebase', () => ({
+// Mock platform auth
+vi.mock('../../lib/platform', () => ({
   auth: {},
 }));
 
-vi.mock('firebase/auth', () => ({
+vi.mock('@/lib/auth', () => ({
   signOut: vi.fn(),
 }));
 
@@ -475,7 +475,7 @@ describe('Auth Store - Session Management', () => {
       // Setup default mock implementations
       vi.mocked(encryptionService.clearKeys).mockResolvedValue(undefined);
       vi.mocked(biometricAuthService.clearBiometricData).mockResolvedValue(undefined);
-      vi.mocked(firebaseSignOut).mockResolvedValue(undefined);
+      vi.mocked(platformSignOut).mockResolvedValue(undefined);
       vi.mocked(AsyncStorage.getAllKeys).mockResolvedValue([]);
       vi.mocked(AsyncStorage.multiRemove).mockResolvedValue(undefined);
     });
@@ -531,8 +531,8 @@ describe('Auth Store - Session Management', () => {
     it('should invalidate Firebase Auth token', async () => {
       await useAuthStore.getState().logout(userId);
 
-      expect(firebaseSignOut).toHaveBeenCalled();
-      expect(firebaseSignOut).toHaveBeenCalledTimes(1);
+      expect(platformSignOut).toHaveBeenCalled();
+      expect(platformSignOut).toHaveBeenCalledTimes(1);
     });
 
     it('should clear auth-related AsyncStorage items', async () => {
@@ -567,7 +567,7 @@ describe('Auth Store - Session Management', () => {
 
       // Should still clear other data
       expect(biometricAuthService.clearBiometricData).toHaveBeenCalled();
-      expect(firebaseSignOut).toHaveBeenCalled();
+      expect(platformSignOut).toHaveBeenCalled();
     });
 
     it('should continue logout even if biometric data clearing fails', async () => {
@@ -580,7 +580,7 @@ describe('Auth Store - Session Management', () => {
 
       // Should still clear other data
       expect(encryptionService.clearKeys).toHaveBeenCalled();
-      expect(firebaseSignOut).toHaveBeenCalled();
+      expect(platformSignOut).toHaveBeenCalled();
     });
 
     it('should continue logout even if cache clearing fails', async () => {
@@ -594,11 +594,11 @@ describe('Auth Store - Session Management', () => {
 
       // Should still clear other data
       expect(encryptionService.clearKeys).toHaveBeenCalled();
-      expect(firebaseSignOut).toHaveBeenCalled();
+      expect(platformSignOut).toHaveBeenCalled();
     });
 
     it('should continue logout even if Firebase signOut fails', async () => {
-      vi.mocked(firebaseSignOut).mockRejectedValue(
+      vi.mocked(platformSignOut).mockRejectedValue(
         new Error('Network error')
       );
 
@@ -614,7 +614,7 @@ describe('Auth Store - Session Management', () => {
       // Make everything fail
       vi.mocked(encryptionService.clearKeys).mockRejectedValue(new Error('Fail'));
       vi.mocked(biometricAuthService.clearBiometricData).mockRejectedValue(new Error('Fail'));
-      vi.mocked(firebaseSignOut).mockRejectedValue(new Error('Fail'));
+      vi.mocked(platformSignOut).mockRejectedValue(new Error('Fail'));
 
       // Set some session data
       useAuthStore.getState().updateLastActivity();
@@ -663,14 +663,14 @@ describe('Auth Store - Session Management', () => {
       const { getSyncManager } = await import('../../lib/offline/syncManager');
       vi.mocked(getSyncManager).mockReturnValue(mockSyncManager as any);
 
-      vi.mocked(firebaseSignOut).mockImplementation(async () => {
-        callOrder.push('firebase');
+      vi.mocked(platformSignOut).mockImplementation(async () => {
+        callOrder.push('platform');
       });
 
       await useAuthStore.getState().logout(userId);
 
-      // Verify order: encryption -> biometric -> cache -> sync -> session -> firebase
-      expect(callOrder).toEqual(['encryption', 'biometric', 'cache', 'sync', 'firebase']);
+      // Verify order: encryption -> biometric -> cache -> sync -> session -> platform
+      expect(callOrder).toEqual(['encryption', 'biometric', 'cache', 'sync', 'platform']);
     });
 
     it('should handle logout with no AsyncStorage keys to clear', async () => {

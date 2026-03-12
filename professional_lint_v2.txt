@@ -1,0 +1,516 @@
+npm warn Unknown project config "node-linker". This will stop working in the next major version of npm. See `npm help npmrc` for supported config options.
+
+> fisioflow-professional@1.0.0 lint
+> eslint .
+
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/.expo/types/router.d.ts
+  1:1  warning  Unused eslint-disable directive (no problems were reported)
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/(auth)/biometric-setup.tsx
+  45:10  warning  'showPinSetup' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/(auth)/forgot-password.tsx
+  34:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/(auth)/login.tsx
+   24:49  warning  'user' is assigned a value but never used. Allowed unused vars must match /^_/u                                       @typescript-eslint/no-unused-vars
+   42:6   warning  React Hook useEffect has a missing dependency: 'checkAvailability'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+   76:14  warning  'err' is defined but never used. Allowed unused caught errors must match /^_/u                                        @typescript-eslint/no-unused-vars
+   76:19  warning  Unexpected any. Specify a different type                                                                              @typescript-eslint/no-explicit-any
+   99:18  warning  'err' is defined but never used. Allowed unused caught errors must match /^_/u                                        @typescript-eslint/no-unused-vars
+   99:23  warning  Unexpected any. Specify a different type                                                                              @typescript-eslint/no-explicit-any
+  203:47  warning  Unexpected any. Specify a different type                                                                              @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/(auth)/pin-setup.tsx
+  207:21  warning  Unexpected any. Specify a different type                                                                                                                                                     @typescript-eslint/no-explicit-any
+  307:6   warning  React Hook useEffect has missing dependencies: 'getCurrentPin', 'isLoading', 'proceedToConfirmation', 'setupNewPIN', and 'verifyOldPIN'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/(auth)/unlock.tsx
+  62:6   warning  React Hook useEffect has a missing dependency: 'handleBiometricAuth'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  67:38  warning  'currentUserId' is defined but never used. Allowed unused args must match /^_/u                                         @typescript-eslint/no-unused-vars
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/(legal)/onboarding.tsx
+   34:74  warning  Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+   62:36  warning  Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+   66:6   warning  React Hook useEffect has a missing dependency: 'checkOnboardingStatus'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  172:62  warning  Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  225:81  warning  Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+  255:83  warning  Unexpected any. Specify a different type                                                                                  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/(legal)/privacy-policy.tsx
+  21:11  warning  'PrivacyPolicyScreenProps' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/(legal)/terms-of-service.tsx
+  21:11  warning  'TermsOfServiceScreenProps' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/(settings)/audit-log.tsx
+  26:6   warning  React Hook useEffect has a missing dependency: 'loadLogs'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  94:57  warning  Unexpected any. Specify a different type                                                                     @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/(settings)/consent-management.tsx
+  28:6   warning  React Hook useEffect has a missing dependency: 'loadConsents'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  61:41  warning  Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/(settings)/data-deletion.tsx
+  30:6   warning  React Hook useEffect has a missing dependency: 'loadDeletionStatus'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  72:29  warning  Unexpected any. Specify a different type                                                                               @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/(settings)/data-transparency.tsx
+  75:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  92:50  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/(settings)/notification-preferences.tsx
+   22:74  warning  Unexpected any. Specify a different type                                                                            @typescript-eslint/no-explicit-any
+   57:6   warning  React Hook useEffect has a missing dependency: 'loadPreferences'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  133:37  warning  Unexpected any. Specify a different type                                                                            @typescript-eslint/no-explicit-any
+  180:32  warning  Unexpected any. Specify a different type                                                                            @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/(tabs)/agenda.tsx
+  23:9   warning  Unexpected any. Specify a different type                                            @typescript-eslint/no-explicit-any
+  76:42  warning  'refetch' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/(tabs)/financials.tsx
+  18:21  warning  'setDateRange' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  49:31  warning  Unexpected any. Specify a different type                                                 @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/(tabs)/index.tsx
+   91:120  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  118:105  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  153:105  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/(tabs)/messages.tsx
+  118:68  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/(tabs)/profile.tsx
+   64:22  warning  'err' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+   82:40  warning  Unexpected any. Specify a different type                                        @typescript-eslint/no-explicit-any
+   90:40  warning  Unexpected any. Specify a different type                                        @typescript-eslint/no-explicit-any
+   98:37  warning  Unexpected any. Specify a different type                                        @typescript-eslint/no-explicit-any
+  122:43  warning  Unexpected any. Specify a different type                                        @typescript-eslint/no-explicit-any
+  151:46  warning  Unexpected any. Specify a different type                                        @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/_layout.tsx
+  4:21  warning  'useCallback' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  4:21  warning  'useCallback' is defined but never used                                        unused-imports/no-unused-imports
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/apply-protocol.tsx
+  63:79  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  72:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/appointment-form.tsx
+   64:9    warning  'createFinancialMutation' is assigned a value but never used. Allowed unused vars must match /^_/u                      @typescript-eslint/no-unused-vars
+   87:6    warning  React Hook useEffect has a missing dependency: 'loadAppointmentData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  111:14   warning  'err' is defined but never used. Allowed unused caught errors must match /^_/u                                          @typescript-eslint/no-unused-vars
+  200:19   warning  Unexpected any. Specify a different type                                                                                @typescript-eslint/no-explicit-any
+  223:22   warning  'err' is defined but never used. Allowed unused caught errors must match /^_/u                                          @typescript-eslint/no-unused-vars
+  422:163  warning  Unexpected any. Specify a different type                                                                                @typescript-eslint/no-explicit-any
+  425:81   warning  Unexpected any. Specify a different type                                                                                @typescript-eslint/no-explicit-any
+  436:76   warning  Unexpected any. Specify a different type                                                                                @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/change-password.tsx
+   10:3   warning  'ActivityIndicator' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+   10:3   warning  'ActivityIndicator' is defined but never used                                        unused-imports/no-unused-imports
+   25:11  warning  'user' is assigned a value but never used. Allowed unused vars must match /^_/u      @typescript-eslint/no-unused-vars
+   26:11  warning  'light' is assigned a value but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+  102:19  warning  Unexpected any. Specify a different type                                             @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/evolution-detail.tsx
+   82:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   88:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  114:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/evolution-form.tsx
+  124:54  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  134:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/evolutions-list.tsx
+   78:96   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  141:100  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  154:130  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/exercise-form.tsx
+   73:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  100:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  123:27  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  133:61  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/exercises.tsx
+   22:7   warning  'DIFFICULTIES' is assigned a value but never used. Allowed unused vars must match /^_/u           @typescript-eslint/no-unused-vars
+   33:10  warning  'selectedDifficulty' is assigned a value but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+   33:30  warning  'setSelectedDifficulty' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+   66:14  warning  Unexpected any. Specify a different type                                                          @typescript-eslint/no-explicit-any
+   75:14  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u                  @typescript-eslint/no-unused-vars
+  185:64  warning  Unexpected any. Specify a different type                                                          @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/financial-form.tsx
+   37:16  warning  'setDate' is assigned a value but never used. Allowed unused vars must match /^_/u              @typescript-eslint/no-unused-vars
+   45:10  warning  'showStatusPicker' is assigned a value but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+   45:28  warning  'setShowStatusPicker' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+   55:9   warning  'formatCurrency' is assigned a value but never used. Allowed unused vars must match /^_/u       @typescript-eslint/no-unused-vars
+  101:42  warning  Unexpected any. Specify a different type                                                        @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/messages/[id].tsx
+  22:10  warning  'ptBR' is defined but never used. Allowed unused vars must match /^_/u                         @typescript-eslint/no-unused-vars
+  22:10  warning  'ptBR' is defined but never used                                                               unused-imports/no-unused-imports
+  35:27  warning  'setParticipantName' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/notifications.tsx
+  187:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  192:67  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/patient-form.tsx
+  156:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  310:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/patient/[id].tsx
+   45:111  warning  Unexpected any. Specify a different type                                                     @typescript-eslint/no-explicit-any
+   47:37   warning  'isLoadingPatient' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  197:84   warning  Unexpected any. Specify a different type                                                     @typescript-eslint/no-explicit-any
+  350:57   warning  Unexpected any. Specify a different type                                                     @typescript-eslint/no-explicit-any
+  366:88   warning  Unexpected any. Specify a different type                                                     @typescript-eslint/no-explicit-any
+  386:33   warning  Unexpected any. Specify a different type                                                     @typescript-eslint/no-explicit-any
+  412:89   warning  Unexpected any. Specify a different type                                                     @typescript-eslint/no-explicit-any
+  430:120  warning  Unexpected any. Specify a different type                                                     @typescript-eslint/no-explicit-any
+  565:37   warning  Unexpected any. Specify a different type                                                     @typescript-eslint/no-explicit-any
+  569:43   warning  Unexpected any. Specify a different type                                                     @typescript-eslint/no-explicit-any
+  676:58   warning  Unexpected any. Specify a different type                                                     @typescript-eslint/no-explicit-any
+  724:54   warning  Unexpected any. Specify a different type                                                     @typescript-eslint/no-explicit-any
+  870:44   warning  Unexpected any. Specify a different type                                                     @typescript-eslint/no-explicit-any
+  876:62   warning  Unexpected any. Specify a different type                                                     @typescript-eslint/no-explicit-any
+  881:42   warning  Unexpected any. Specify a different type                                                     @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/patient/[id]/ai-assessment.tsx
+   52:15  warning  'name' is assigned a value but never used. Allowed unused vars must match /^_/u                                                                                                                                                                                    @typescript-eslint/no-unused-vars
+   56:11  warning  'playWarning' is assigned a value but never used. Allowed unused vars must match /^_/u                                                                                                                                                                             @typescript-eslint/no-unused-vars
+   62:24  warning  'setExerciseType' is assigned a value but never used. Allowed unused vars must match /^_/u                                                                                                                                                                         @typescript-eslint/no-unused-vars
+   66:52  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+   72:28  warning  The ref value 'engineRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'engineRef.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+   93:9   warning  'handleFrame' is assigned a value but never used. Allowed unused vars must match /^_/u                                                                                                                                                                             @typescript-eslint/no-unused-vars
+   93:24  warning  'frame' is defined but never used. Allowed unused args must match /^_/u                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+   93:31  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+  103:31  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                           @typescript-eslint/no-explicit-any
+  135:14  warning  'e' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/patient/[id]/evolution.tsx
+   23:16   warning  'SCREEN_WIDTH' is assigned a value but never used. Allowed unused vars must match /^_/u        @typescript-eslint/no-unused-vars
+   52:11   warning  Unexpected any. Specify a different type                                                       @typescript-eslint/no-explicit-any
+   72:131  warning  Unexpected any. Specify a different type                                                       @typescript-eslint/no-explicit-any
+  103:11   warning  Unexpected any. Specify a different type                                                       @typescript-eslint/no-explicit-any
+  137:9    warning  'patientName' is assigned a value but never used. Allowed unused vars must match /^_/u         @typescript-eslint/no-unused-vars
+  147:5    warning  'isDeleting' is assigned a value but never used. Allowed unused vars must match /^_/u          @typescript-eslint/no-unused-vars
+  164:22   warning  'isLoadingEvolution' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  222:82   warning  Unexpected any. Specify a different type                                                       @typescript-eslint/no-explicit-any
+  224:56   warning  Unexpected any. Specify a different type                                                       @typescript-eslint/no-explicit-any
+  231:19   warning  Unexpected any. Specify a different type                                                       @typescript-eslint/no-explicit-any
+  256:29   warning  Unexpected any. Specify a different type                                                       @typescript-eslint/no-explicit-any
+  274:53   warning  Unexpected any. Specify a different type                                                       @typescript-eslint/no-explicit-any
+  281:14   warning  'err' is defined but never used. Allowed unused caught errors must match /^_/u                 @typescript-eslint/no-unused-vars
+  300:14   warning  'err' is defined but never used. Allowed unused caught errors must match /^_/u                 @typescript-eslint/no-unused-vars
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/profile-edit.tsx
+   37:60  warning  Unexpected any. Specify a different type                                                 @typescript-eslint/no-explicit-any
+   75:10  warning  'isLoading' is assigned a value but never used. Allowed unused vars must match /^_/u     @typescript-eslint/no-unused-vars
+   75:21  warning  'setIsLoading' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  109:33  warning  Unexpected any. Specify a different type                                                 @typescript-eslint/no-explicit-any
+  110:36  warning  Unexpected any. Specify a different type                                                 @typescript-eslint/no-explicit-any
+  111:34  warning  Unexpected any. Specify a different type                                                 @typescript-eslint/no-explicit-any
+  131:15  warning  'err' is defined but never used. Allowed unused args must match /^_/u                    @typescript-eslint/no-unused-vars
+  204:74  warning  Unexpected any. Specify a different type                                                 @typescript-eslint/no-explicit-any
+  207:18  warning  'uploadErr' is defined but never used. Allowed unused caught errors must match /^_/u     @typescript-eslint/no-unused-vars
+  214:14  warning  'err' is defined but never used. Allowed unused caught errors must match /^_/u           @typescript-eslint/no-unused-vars
+  466:51  warning  Unexpected any. Specify a different type                                                 @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/protocol-detail.tsx
+   23:11  warning  'light' is assigned a value but never used. Allowed unused vars must match /^_/u          @typescript-eslint/no-unused-vars
+   27:77  warning  'isDuplicating' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+   31:62  warning  Unexpected any. Specify a different type                                                  @typescript-eslint/no-explicit-any
+   48:27  warning  Unexpected any. Specify a different type                                                  @typescript-eslint/no-explicit-any
+   78:27  warning  Unexpected any. Specify a different type                                                  @typescript-eslint/no-explicit-any
+   90:63  warning  Unexpected any. Specify a different type                                                  @typescript-eslint/no-explicit-any
+  179:48  warning  'index' is defined but never used. Allowed unused args must match /^_/u                   @typescript-eslint/no-unused-vars
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/protocol-form.tsx
+   38:46  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   59:72  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  132:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/protocols.tsx
+   58:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  147:51  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  161:77  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  211:82  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/app/reports.tsx
+  407:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/Button.tsx
+  121:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/CheckInButton.tsx
+  13:31  warning  Unexpected any. Specify a different type                                                                                                                                                                                                                  @typescript-eslint/no-explicit-any
+  29:11  warning  'light' is assigned a value but never used. Allowed unused vars must match /^_/u                                                                                                                                                                          @typescript-eslint/no-unused-vars
+  31:54  warning  'error' is assigned a value but never used. Allowed unused vars must match /^_/u                                                                                                                                                                          @typescript-eslint/no-unused-vars
+  64:6   warning  React Hook useEffect has a missing dependency: 'status.hasCheckedIn'. Either include it or remove the dependency array. You can also replace multiple useState variables with useReducer if 'setStatus' needs the current value of 'status.hasCheckedIn'  react-hooks/exhaustive-deps
+  82:14  warning  'err' is defined but never used. Allowed unused caught errors must match /^_/u                                                                                                                                                                            @typescript-eslint/no-unused-vars
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/Modal.tsx
+  26:10  warning  'modalHeight' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/PhotoGrid.tsx
+  37:39  warning  'isLoading' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/Slider.tsx
+  5:7  warning  'SCREEN_WIDTH' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/SyncStatus.tsx
+  14:38  warning  'isOnline' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/TextArea.tsx
+  14:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/ai/AIExerciseHistoryCard.tsx
+  11:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/ai/ExerciseSuggestionsCard.tsx
+  29:15  warning  Unexpected any. Specify a different type                                                                            @typescript-eslint/no-explicit-any
+  30:21  warning  Unexpected any. Specify a different type                                                                            @typescript-eslint/no-explicit-any
+  51:6   warning  React Hook useEffect has a missing dependency: 'loadSuggestions'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/calendar/DayView.tsx
+   36:76  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  152:84  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/calendar/MonthView.tsx
+  25:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  37:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/calendar/WeekView.tsx
+   31:76   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  116:108  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/evolution/ClinicalSelectorModal.tsx
+  10:3   warning  'ActivityIndicator' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  10:3   warning  'ActivityIndicator' is defined but never used                                        unused-imports/no-unused-imports
+  21:11  warning  Unexpected any. Specify a different type                                             @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/evolution/EvolutionCard.tsx
+  16:11  warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  24:5   warning  'objective' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+  26:5   warning  'plan' is defined but never used. Allowed unused args must match /^_/u       @typescript-eslint/no-unused-vars
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/evolution/ExerciseSelectorModal.tsx
+  21:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/evolution/FillingStyleToggle.tsx
+  2:52  warning  'Animated' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  2:52  warning  'Animated' is defined but never used                                        unused-imports/no-unused-imports
+  9:11  warning  Unexpected any. Specify a different type                                    @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/evolution/NotionForm.tsx
+  13:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/evolution/PainLevelSlider.tsx
+  8:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/evolution/PhotoUpload.tsx
+  20:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/evolution/SOAPForm.tsx
+  14:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  48:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/evolution/SlashMenu.tsx
+   77:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  104:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/evolution/TiptapForm.tsx
+  13:11  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  85:44  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/patient/PainProgressChart.tsx
+  7:10  warning  'useFont' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  7:10  warning  'useFont' is defined but never used                                        unused-imports/no-unused-imports
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/components/permissions/PermissionExplainerModal.tsx
+  91:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/hooks/useAIExerciseHistory.ts
+  14:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/hooks/useAIExercisePersistence.ts
+  22:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/hooks/useAppointments.ts
+   13:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  132:78  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/hooks/useAudioFeedback.ts
+  18:10  warning  'audioModule' is assigned a value but never used. Allowed unused vars must match /^_/u                                                                                                                                                                           @typescript-eslint/no-unused-vars
+  18:23  warning  'setAudioModule' is assigned a value but never used. Allowed unused vars must match /^_/u                                                                                                                                                                        @typescript-eslint/no-unused-vars
+  46:18  warning  The ref value 'soundRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'soundRef.current' to a variable inside the effect, and use that variable in the cleanup function  react-hooks/exhaustive-deps
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/hooks/useBiometricAuth.ts
+   65:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   95:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  108:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  120:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/hooks/useCamera.ts
+  22:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  47:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/hooks/useCheckIn.ts
+  65:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/hooks/useExercises.ts
+  130:95  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/hooks/useNotifications.ts
+  13:28  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  25:74  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/hooks/usePatientProtocols.ts
+  17:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/hooks/useProtocols.ts
+  17:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  29:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  83:39  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/lib/ai/analysisEngine.ts
+   84:11  warning  'orientation' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  136:75  warning  Unexpected any. Specify a different type                                                @typescript-eslint/no-explicit-any
+  137:39  warning  Unexpected any. Specify a different type                                                @typescript-eslint/no-explicit-any
+  167:58  warning  'angles' is defined but never used. Allowed unused args must match /^_/u                @typescript-eslint/no-unused-vars
+  167:81  warning  Unexpected any. Specify a different type                                                @typescript-eslint/no-explicit-any
+  205:53  warning  Unexpected any. Specify a different type                                                @typescript-eslint/no-explicit-any
+  213:30  warning  'angles' is defined but never used. Allowed unused args must match /^_/u                @typescript-eslint/no-unused-vars
+  213:53  warning  Unexpected any. Specify a different type                                                @typescript-eslint/no-explicit-any
+  217:34  warning  'angles' is defined but never used. Allowed unused args must match /^_/u                @typescript-eslint/no-unused-vars
+  217:57  warning  Unexpected any. Specify a different type                                                @typescript-eslint/no-explicit-any
+  217:64  warning  Unexpected any. Specify a different type                                                @typescript-eslint/no-explicit-any
+  221:50  warning  'angles' is defined but never used. Allowed unused args must match /^_/u                @typescript-eslint/no-unused-vars
+  221:73  warning  Unexpected any. Specify a different type                                                @typescript-eslint/no-explicit-any
+  251:29  warning  'pivot' is defined but never used. Allowed unused args must match /^_/u                 @typescript-eslint/no-unused-vars
+  252:29  warning  'pivot' is defined but never used. Allowed unused args must match /^_/u                 @typescript-eslint/no-unused-vars
+  264:92  warning  Unexpected any. Specify a different type                                                @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/lib/ai/exerciseSuggestions.ts
+   42:21  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  224:45  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/lib/api.ts
+  187:48  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  187:70  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  188:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  198:10  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  269:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  606:51  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/lib/auth-api.ts
+   7:60  warning  Unexpected any. Specify a different type                                      @typescript-eslint/no-explicit-any
+  20:19  warning  Unexpected any. Specify a different type                                      @typescript-eslint/no-explicit-any
+  44:16  warning  'e' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/lib/biometrics.ts
+  82:19  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/lib/camera.ts
+  123:36  warning  'uri' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/lib/errors/logger.ts
+  20:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  26:32  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  30:34  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  34:33  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/lib/lazy.ts
+   8:20  warning  'useEffect' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+   8:20  warning  'useEffect' is defined but never used                                        unused-imports/no-unused-imports
+  11:37  warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  72:58  warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  73:27  warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+  74:33  warning  Unexpected any. Specify a different type                                     @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/lib/notifications.ts
+   25:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  132:25  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  145:37  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  149:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/lib/polyfills.ts
+   8:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   9:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   9:38  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  10:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  10:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  11:41  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:16  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  12:40  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/lib/services/auditLogger.ts
+    7:18  warning  Unexpected any. Specify a different type                                      @typescript-eslint/no-explicit-any
+   11:10  warning  'e' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+   43:28  warning  Unexpected any. Specify a different type                                      @typescript-eslint/no-explicit-any
+  108:30  warning  Unexpected any. Specify a different type                                      @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/lib/services/biometricAuthService.ts
+  30:75  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/lib/services/consentManager.ts
+   18:75  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   52:31  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  157:47  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/lib/services/permissionManager.ts
+   76:26  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  122:35  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/services/ai/nativePoseProvider.ts
+  22:25  warning  Unexpected any. Specify a different type                                      @typescript-eslint/no-explicit-any
+  26:10  warning  'e' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+  54:23  warning  Unexpected any. Specify a different type                                      @typescript-eslint/no-explicit-any
+  71:15  warning  'video' is defined but never used. Allowed unused args must match /^_/u       @typescript-eslint/no-unused-vars
+  71:22  warning  Unexpected any. Specify a different type                                      @typescript-eslint/no-explicit-any
+  71:27  warning  'callback' is defined but never used. Allowed unused args must match /^_/u    @typescript-eslint/no-unused-vars
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/store/auth.ts
+    2:19  warning  'AuthResponse' is defined but never used. Allowed unused vars must match /^_/u    @typescript-eslint/no-unused-vars
+    2:19  warning  'AuthResponse' is defined but never used                                          unused-imports/no-unused-imports
+   37:44  warning  'pin' is defined but never used. Allowed unused args must match /^_/u             @typescript-eslint/no-unused-vars
+   66:27  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+   84:21  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  148:27  warning  Unexpected any. Specify a different type                                          @typescript-eslint/no-explicit-any
+  161:14  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/types/audit.ts
+  34:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/types/consent.ts
+  16:29  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/types/dataExport.ts
+  41:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  42:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  43:12  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  44:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  45:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:18  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/types/index.ts
+  129:15  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/home/rafael/Documents/fisioflow/fisioflow-51658291/professional-app/types/pose.ts
+  217:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  218:13  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  225:14  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  250:17  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  251:22  warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  274:6   warning  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 315 problems (0 errors, 315 warnings)
+  0 errors and 9 warnings potentially fixable with the `--fix` option.
+

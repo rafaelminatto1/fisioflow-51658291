@@ -13,9 +13,9 @@ import { EncryptionService } from '../../lib/services/encryptionService';
 import * as Crypto from 'expo-crypto';
 import * as SecureStore from 'expo-secure-store';
 import * as FileSystem from 'expo-file-system';
-import { getStorage, ref, uploadString, getDownloadURL } from 'firebase/storage';
-import { collection, addDoc, getDoc, doc } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
+import { getStorage, ref, uploadString, getDownloadURL } from '@/lib/storage';
+import { collection, addDoc, getDoc, doc } from '@/lib/data-store';
+import { db } from '../../lib/platform';
 
 // Mock expo-crypto
 vi.mock('expo-crypto', () => ({
@@ -45,16 +45,16 @@ vi.mock('expo-file-system', () => ({
   },
 }));
 
-// Mock Firebase Storage
-vi.mock('firebase/storage', () => ({
+// Mock platform Storage
+vi.mock('@/lib/storage', () => ({
   getStorage: vi.fn(),
   ref: vi.fn(),
   uploadString: vi.fn(),
   getDownloadURL: vi.fn(),
 }));
 
-// Mock Firebase Firestore
-vi.mock('firebase/firestore', () => ({
+// Mock platform Data Store
+vi.mock('@/lib/data-store', () => ({
   collection: vi.fn(),
   addDoc: vi.fn(),
   getDoc: vi.fn(),
@@ -62,8 +62,8 @@ vi.mock('firebase/firestore', () => ({
   serverTimestamp: vi.fn(() => new Date()),
 }));
 
-// Mock Firebase lib
-vi.mock('../../lib/firebase', () => ({
+// Mock platform lib
+vi.mock('../../lib/platform', () => ({
   db: {},
   auth: {
     currentUser: {
@@ -362,12 +362,12 @@ describe('Encrypted Data Flow Integration Tests', () => {
       expect(encryptedAssessment).toHaveProperty('ciphertext');
       expect(encryptedPlan).toHaveProperty('ciphertext');
 
-      // Step 3: Store encrypted SOAP note in Firestore
+      // Step 3: Store encrypted SOAP note in Data Store
       const mockDocRef = { id: 'soap-note-123' };
       (addDoc as any).mockResolvedValue(mockDocRef);
       (collection as any).mockReturnValue('evolutions-collection');
 
-      const firestoreData = {
+      const storedData = {
         patient_id: soapNote.patientId,
         appointment_id: soapNote.appointmentId,
         session_number: soapNote.sessionNumber,
@@ -380,7 +380,7 @@ describe('Encrypted Data Flow Integration Tests', () => {
         updated_at: new Date(),
       };
 
-      const docRef = await addDoc(collection(db, 'evolutions'), firestoreData);
+      const docRef = await addDoc(collection(db, 'evolutions'), storedData);
       expect(docRef.id).toBe('soap-note-123');
       expect(addDoc).toHaveBeenCalledWith(
         'evolutions-collection',
@@ -392,12 +392,12 @@ describe('Encrypted Data Flow Integration Tests', () => {
         })
       );
 
-      // Step 4: Retrieve encrypted SOAP note from Firestore
+      // Step 4: Retrieve encrypted SOAP note from Data Store
       (doc as any).mockReturnValue('soap-note-doc-ref');
       (getDoc as any).mockResolvedValue({
         exists: () => true,
         id: 'soap-note-123',
-        data: () => firestoreData,
+        data: () => storedData,
       });
 
       const docSnap = await getDoc(doc(db, 'evolutions', 'soap-note-123'));

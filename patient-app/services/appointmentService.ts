@@ -1,3 +1,4 @@
+import { getPatientAppointments } from '@/lib/dataConnect';
 import { patientApi } from '@/lib/api';
 import { asyncResult, Result } from '@/lib/async';
 import { log } from '@/lib/logger';
@@ -9,10 +10,10 @@ export function subscribeToAppointments(
 ): () => void {
   const load = async () => {
     try {
-      const appointments = await patientApi.getAppointments();
+      const appointments = await getPatientAppointments();
       callback(appointments);
     } catch (error) {
-      log.error('APPOINTMENT', 'Error polling appointments', error);
+      log.error('APPOINTMENT', 'Error polling appointments (no cache available)', error);
     }
   };
 
@@ -24,7 +25,7 @@ export function subscribeToAppointments(
 export async function getUpcomingAppointments(_userId: string): Promise<Result<any[]>> {
   return asyncResult(async () => {
     perf.start('api_get_upcoming_appointments');
-    const appointments = await patientApi.getAppointments(true);
+    const appointments = await getPatientAppointments(true);
     perf.end('api_get_upcoming_appointments', true);
     return appointments;
   }, 'getUpcomingAppointments');
@@ -33,7 +34,7 @@ export async function getUpcomingAppointments(_userId: string): Promise<Result<a
 export async function getPastAppointments(_userId: string): Promise<Result<any[]>> {
   return asyncResult(async () => {
     perf.start('api_get_past_appointments');
-    const appointments = await patientApi.getAppointments();
+    const appointments = await getPatientAppointments();
     const now = Date.now();
     const pastAppointments = appointments.filter((appointment: any) => {
       const appointmentDate = new Date(appointment.date).getTime();
@@ -64,7 +65,7 @@ export async function getAppointmentById(
 ): Promise<Result<any | null>> {
   return asyncResult(async () => {
     perf.start('api_get_appointment_by_id');
-    const appointments = await patientApi.getAppointments();
+    const appointments = await getPatientAppointments();
     perf.end('api_get_appointment_by_id', true);
     return appointments.find((appointment: any) => appointment.id === appointmentId) ?? null;
   }, 'getAppointmentById');

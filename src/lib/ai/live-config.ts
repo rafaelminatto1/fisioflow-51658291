@@ -1,8 +1,7 @@
 /**
- * Firebase AI Live API Configuration
+ * Live AI session configuration
  *
- * Types and configuration for real-time audio/video AI sessions.
- * Local stub definitions to replace @fisioflow/shared-api/firebase/ai/live-config
+ * Types and configuration for real-time audio/video sessions on the current stack.
  */
 
 /**

@@ -9,7 +9,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from '@/lib/data-store';
 
 // Mock dependencies
 const mockReplace = vi.fn();
@@ -29,14 +29,14 @@ const mockCurrentUser = {
   uid: 'test-user-id',
 };
 
-vi.mock('@/lib/firebase', () => ({
+vi.mock('@/lib/platform', () => ({
   db: {},
   auth: {
     currentUser: mockCurrentUser,
   },
 }));
 
-vi.mock('firebase/firestore', () => ({
+vi.mock('@/lib/data-store', () => ({
   doc: vi.fn(),
   setDoc: vi.fn(),
   getDoc: vi.fn(),
