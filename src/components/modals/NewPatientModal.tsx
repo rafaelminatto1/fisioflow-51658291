@@ -573,8 +573,9 @@ export const NewPatientModal: React.FC<NewPatientModalProps> = ({
                             options={PATHOLOGY_OPTIONS}
                             selected={field.value ? field.value.split(',').map(s => s.trim()).filter(Boolean) : []}
                             onChange={(vals) => field.onChange(vals.join(', '))}
-                            placeholder="Pesquisar, selecionar ou digitar patologias..."
+                            placeholder="Selecione as queixas principais..."
                             allowCustom={true}
+                            className={cn(errors.main_condition && "border-destructive ring-destructive/20")}
                           />
                         )}
                       />

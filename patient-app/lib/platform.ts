@@ -27,7 +27,7 @@ interface AuthState {
   initialize: () => () => void;
 }
 
-// Mocks para manter compatibilidade temporária com quem importa db/storage/functions de lib/firebase
+// Placeholders neutros para consumidores legados do store de autenticação
 export const auth = null as any;
 export const db = null as any;
 export const storage = null as any;
