@@ -5,6 +5,7 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
 import { toast } from 'sonner';
 import { APPOINTMENT_CONFLICT_MESSAGE, isAppointmentConflictError } from '@/utils/appointmentErrors';
 import { createSimpleDragPreview } from '@/lib/calendar/dragPreview';
+import { isCapacityCountedStatus } from '@/components/schedule/shared/capacity';
 
 interface DragState {
     appointment: Appointment | null;
@@ -49,19 +50,6 @@ const normalizeDate = (date: Date | string): Date => {
  */
 const createLocalDate = (year: number, month: number, day: number): Date => {
     return new Date(year, month, day, 12, 0, 0); // Meio-dia para evitar edge cases
-};
-
-const NON_CAPACITY_STATUSES = new Set([
-    'cancelado',
-    'falta',
-    'faltou',
-    'remarcado',
-    'reagendado',
-    'paciente_faltou'
-]);
-
-const isCapacityCountedStatus = (status: string | undefined): boolean => {
-    return !NON_CAPACITY_STATUSES.has((status || '').toLowerCase());
 };
 
 interface PendingReschedule {

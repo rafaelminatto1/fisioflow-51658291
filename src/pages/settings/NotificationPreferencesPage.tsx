@@ -107,19 +107,23 @@ export default function NotificationPreferencesPage() {
   }, [mappedWorkerPrefs]);
 
   const savePreferences = async () => {
-    writeLocalPrefs(preferences);
-    updatePreferences({
-      appointment_reminders: preferences.appointmentReminders,
-      exercise_reminders: preferences.exerciseReminders,
-      progress_updates: preferences.progressUpdates,
-      system_alerts: preferences.systemAlerts,
-      therapist_messages: preferences.therapistMessages,
-      payment_reminders: preferences.paymentReminders,
-      quiet_hours_start: preferences.quietHours.start,
-      quiet_hours_end: preferences.quietHours.end,
-      weekend_notifications: preferences.weekendNotifications,
-    });
-    toast.success('Preferências salvas com sucesso!');
+    try {
+      await updatePreferences({
+        appointment_reminders: preferences.appointmentReminders,
+        exercise_reminders: preferences.exerciseReminders,
+        progress_updates: preferences.progressUpdates,
+        system_alerts: preferences.systemAlerts,
+        therapist_messages: preferences.therapistMessages,
+        payment_reminders: preferences.paymentReminders,
+        quiet_hours_start: preferences.quietHours.start,
+        quiet_hours_end: preferences.quietHours.end,
+        weekend_notifications: preferences.weekendNotifications,
+      });
+      writeLocalPrefs(preferences);
+      toast.success('Preferências salvas com sucesso!');
+    } catch (_error) {
+      toast.error('Erro ao salvar preferências');
+    }
   };
 
   const handlePushToggle = async (enabled: boolean) => {

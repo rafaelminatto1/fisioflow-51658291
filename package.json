@@ -93,6 +93,7 @@
     "test:e2e:critical": "playwright test e2e/critical-flows.spec.ts e2e/deploy-gate.spec.ts e2e/auth.spec.ts e2e/patients.spec.ts e2e/agenda.spec.ts e2e/financial.spec.ts --project=chromium --workers=1",
     "test:e2e:deploy-gate": "playwright test e2e/deploy-gate.spec.ts --project=chromium",
     "test:e2e:a11y": "playwright test e2e/accessibility-extended.spec.ts",
+    "type-check": "tsc --noEmit --skipLibCheck",
     "perf:routes": "node scripts/perf-routes.mjs --output test-results/perf-routes-report.json",
     "test:components": "vitest run src/components/**/*.test.tsx",
     "test:hooks": "vitest run src/hooks/**/*.test.ts",

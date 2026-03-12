@@ -51,7 +51,7 @@ const onboardingSteps: OnboardingStep[] = [
     title: 'Acompanhe seu Progresso',
     description: 'Visualize sua evolução ao longo do tempo com gráficos e estatísticas detalhadas do seu tratamento.',
     icon: 'trending-up',
-    color: '#8b5cf6',
+    color: '#6366f1',
   },
   {
     id: '4',
@@ -104,7 +104,12 @@ export default function OnboardingScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
       {/* Skip Button */}
       {currentStep < onboardingSteps.length - 1 && (
-        <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
+        <TouchableOpacity 
+          style={styles.skipButton} 
+          onPress={handleSkip}
+          accessibilityLabel="Pular introdução"
+          accessibilityRole="button"
+        >
           <Text style={[styles.skipButtonText, { color: colors.textSecondary }]}>Pular</Text>
         </TouchableOpacity>
       )}
@@ -264,6 +269,8 @@ export default function OnboardingScreen() {
             <TouchableOpacity
               style={[styles.backButton, { borderColor: colors.border }]}
               onPress={() => setCurrentStep(currentStep - 1)}
+              accessibilityLabel="Voltar para o passo anterior"
+              accessibilityRole="button"
             >
               <Text style={[styles.backButtonText, { color: colors.text }]}>Voltar</Text>
             </TouchableOpacity>

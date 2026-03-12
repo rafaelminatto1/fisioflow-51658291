@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 12,
     borderRadius: 8,
-    backgroundColor: "#8B5CF6",
+    backgroundColor: "#06b6d4", // Cyan 500 (Brand Primary)
     gap: 8,
   },
   aiButtonText: {
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   },
   suggestionsContainer: {
     marginTop: 8,
-    backgroundColor: "rgba(139, 92, 246, 0.1)",
+    backgroundColor: "rgba(6, 182, 212, 0.1)",
     borderRadius: 8,
     padding: 12,
   },
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
   suggestionItem: {
     padding: 8,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(139, 92, 246, 0.1)",
+    borderBottomColor: "rgba(6, 182, 212, 0.1)",
   },
   suggestionText: {
     fontSize: 14,

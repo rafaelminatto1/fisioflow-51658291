@@ -17,24 +17,31 @@ WHAT IT CHECKS:
 Usage:
     python seo_checker.py <project_path>
 """
+import os
+import re
 import sys
 import json
-import re
 from pathlib import Path
 from datetime import datetime
 
 # Fix Windows console encoding
-try:
-    sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-except:
-    pass
+if hasattr(sys.stdout, 'reconfigure'):
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace') # type: ignore
+    except:
+        pass
 
 
 # Directories to skip
 SKIP_DIRS = {
     'node_modules', '.next', 'dist', 'build', '.git', '.github',
     '__pycache__', '.vscode', '.idea', 'coverage', 'test', 'tests',
-    '__tests__', 'spec', 'docs', 'documentation', 'examples'
+    '__tests__', 'spec', 'docs', 'documentation', 'examples',
+    'diagnostics', 'playwright-report', 'stich', 'minatto',
+    '.playwright', 'playwright', 'playwright-screenshots', 'playwright-video',
+    'test-results', 'screenshots', '.gemini', '.claude', '.cursor', '.trae',
+    '.jules', '.kiro', 'docs2026', 'docker', 'e2e', 'e2e-tests', 'claude-skills',
+    'fisioflow-screenshots', 'public', 'temp', 'tmp', 'out'
 }
 
 # Files to skip (not pages)
@@ -77,20 +84,29 @@ def is_page_file(file_path: Path) -> bool:
 
 def find_pages(project_path: Path) -> list:
     """Find page files to check."""
-    patterns = ['**/*.html', '**/*.htm', '**/*.jsx', '**/*.tsx']
     
     files = []
-    for pattern in patterns:
-        for f in project_path.glob(pattern):
-            # Skip excluded directories
-            if any(skip in f.parts for skip in SKIP_DIRS):
-                continue
-            
-            # Check if it's likely a page
-            if is_page_file(f):
-                files.append(f)
     
-    return files[:50]  # Limit to 50 files
+    for root, dirs, filenames in os.walk(project_path):
+        # Prune directories to skip
+        filtered_dirs = [d for d in dirs if d not in SKIP_DIRS and not d.startswith('.')]
+        dirs.clear()
+        dirs.extend(filtered_dirs)
+        
+        # Extra safety check for current path (if a parent dir was skipped, os.walk might still enter)
+        if any(part in SKIP_DIRS for part in Path(root).parts):
+            continue
+
+        for f_name in filenames:
+            file_path = Path(root) / f_name
+            
+            # Check file extensions
+            if file_path.suffix.lower() in {'.html', '.htm', '.jsx', '.tsx'}:
+                # Check if it's likely a page using the existing logic
+                if is_page_file(file_path):
+                    files.append(file_path)
+    
+    return files[:50] # type: ignore
 
 
 def check_page(file_path: Path) -> dict:
@@ -103,20 +119,17 @@ def check_page(file_path: Path) -> dict:
         return {"file": str(file_path.name), "issues": [f"Error: {e}"]}
     
     # Detect if this is a layout/template file (has Head component)
-    is_layout = 'Head>' in content or '<head' in content.lower()
+    is_layout = bool(re.search(r'Head>|<head', content, re.I))
     
-    # 1. Title tag
-    has_title = '<title' in content.lower() or 'title=' in content or 'Head>' in content
+    has_title = bool(re.search(r'<title|title=|Head>', content, re.I))
     if not has_title and is_layout:
-        issues.append("Missing <title> tag")
+        issues.append("Missing title indicator")
     
-    # 2. Meta description
-    has_description = 'name="description"' in content.lower() or 'name=\'description\'' in content.lower()
+    has_description = bool(re.search(r'name=["\']description["\']', content, re.I))
     if not has_description and is_layout:
         issues.append("Missing meta description")
     
-    # 3. Open Graph tags
-    has_og = 'og:' in content or 'property="og:' in content.lower()
+    has_og = bool(re.search(r'og:|property=["\']og:', content, re.I))
     if not has_og and is_layout:
         issues.append("Missing Open Graph tags")
     
@@ -191,7 +204,9 @@ def main():
             print(f"  [{count}] {issue}")
         
         print(f"\nAffected files ({len(all_issues)}):")
-        for item in all_issues[:5]:
+        # Fix: Using a loop with range/counter to avoid slice typing issues in strict environments
+        for i in range(min(5, len(all_issues))):
+            item = all_issues[i]
             print(f"  - {item['file']}")
         if len(all_issues) > 5:
             print(f"  ... and {len(all_issues) - 5} more")

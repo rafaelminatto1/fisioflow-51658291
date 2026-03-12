@@ -27,7 +27,7 @@ import { common, createLowlight } from 'lowlight';
 import { Dumbbell, Search, Target, Activity, History, ClipboardCheck, Sparkles, PenTool, CheckCircle2 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
-import { useRichTextContext } from '@/context/RichTextContext';
+import { useRichTextContext } from '@/contexts/RichTextContext';
 import { SlashCommand, suggestionConfig, ExerciseAutocomplete, exerciseSuggestionConfig } from './slash-command/suggestion';
 import { useExercises } from '@/hooks/useExercises';
 import { usePatientGoals, usePatientPathologies } from '@/hooks/usePatientEvolution';

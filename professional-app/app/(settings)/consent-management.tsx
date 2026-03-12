@@ -98,10 +98,18 @@ export default function ConsentManagementScreen() {
               onValueChange={() => handleToggleConsent(type, isGranted ? 'granted' : 'withdrawn')}
               trackColor={{ false: colors.border, true: colors.primary }}
               thumbColor="#FFFFFF"
+              accessibilityLabel={`Consentimento para ${title}`}
+              accessibilityRole="switch"
+              accessibilityState={{ checked: isGranted }}
             />
           )}
           {isRequired && (
-             <Ionicons name="checkmark-circle" size={24} color={colors.success} />
+             <Ionicons 
+                name="checkmark-circle" 
+                size={24} 
+                color={colors.success} 
+                accessibilityLabel="Consentimento obrigatório concedido"
+              />
           )}
         </View>
         <Text style={[styles.consentDescription, { color: colors.textSecondary }]}>

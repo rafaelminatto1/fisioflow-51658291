@@ -1,16 +1,17 @@
-import React from 'react';
-import { Filter, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { Filter, X, ChevronRight, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet';
+  CustomModal,
+  CustomModalHeader,
+  CustomModalTitle,
+  CustomModalBody,
+  CustomModalFooter,
+} from '@/components/ui/custom-modal';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface FilterOptions {
   status: string[];
@@ -30,12 +31,12 @@ interface AdvancedFiltersProps {
 }
 
 const STATUS_OPTIONS = [
-  { value: 'agendado', label: 'Agendado', color: 'bg-blue-500' },
-  { value: 'confirmado', label: 'Confirmado', color: 'bg-emerald-500' },
-  { value: 'aguardando_confirmacao', label: 'Aguardando', color: 'bg-amber-500' },
-  { value: 'em_andamento', label: 'Em Andamento', color: 'bg-cyan-500' },
-  { value: 'concluido', label: 'Concluído', color: 'bg-purple-500' },
-  { value: 'cancelado', label: 'Cancelado', color: 'bg-red-500' },
+  { value: 'agendado', label: 'Agendado', color: 'bg-blue-500 hover:bg-blue-600' },
+  { value: 'confirmado', label: 'Confirmado', color: 'bg-emerald-500 hover:bg-emerald-600' },
+  { value: 'aguardando_confirmacao', label: 'Aguardando', color: 'bg-amber-500 hover:bg-amber-600' },
+  { value: 'em_andamento', label: 'Em Andamento', color: 'bg-cyan-500 hover:bg-cyan-600' },
+  { value: 'concluido', label: 'Concluído', color: 'bg-purple-500 hover:bg-purple-600' },
+  { value: 'cancelado', label: 'Cancelado', color: 'bg-red-500 hover:bg-red-600' },
 ];
 
 const TYPE_OPTIONS = [
@@ -54,6 +55,8 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   dateRange,
   onDateRangeChange,
 }) => {
+  const isMobile = useIsMobile();
+  const [isOpen, setIsOpen] = useState(false);
   const activeFiltersCount =
     filters.status.length + filters.types.length + filters.therapists.length;
 
@@ -67,115 +70,167 @@ export const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
   };
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className={cn(
-            'relative gap-2 animate-slide-up-fade min-h-[44px] sm:min-h-0',
-            activeFiltersCount > 0 && 'border-primary'
-          )}
-          aria-label={activeFiltersCount > 0 ? `Abrir filtros avançados (${activeFiltersCount} ativos)` : 'Abrir filtros avançados'}
-        >
-          <Filter className="h-4 w-4" />
-          Filtros
+    <>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setIsOpen(true)}
+        className={cn(
+          'relative gap-2 animate-slide-up-fade min-h-[44px] sm:min-h-0 rounded-xl transition-all',
+          activeFiltersCount > 0 ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary/20' : 'border-slate-200'
+        )}
+        aria-label={activeFiltersCount > 0 ? `Abrir filtros avançados (${activeFiltersCount} ativos)` : 'Abrir filtros avançados'}
+      >
+        <Filter className="h-4 w-4" />
+        <span className="hidden xs:inline">Filtros</span>
+        {activeFiltersCount > 0 && (
+          <Badge
+            variant="default"
+            className="h-5 w-5 p-0 flex items-center justify-center text-[10px] rounded-full"
+          >
+            {activeFiltersCount}
+          </Badge>
+        )}
+      </Button>
+
+      <CustomModal 
+        open={isOpen} 
+        onOpenChange={setIsOpen}
+        isMobile={isMobile}
+        contentClassName="max-w-md h-[80vh]"
+      >
+        <CustomModalHeader onClose={() => setIsOpen(false)}>
+          <div className="flex flex-col gap-1">
+            <CustomModalTitle className="flex items-center gap-2 text-xl font-bold">
+              <SlidersHorizontal className="h-5 w-5 text-primary" />
+              Filtros Avançados
+            </CustomModalTitle>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+              Refine a visualização da sua agenda
+            </p>
+          </div>
           {activeFiltersCount > 0 && (
-            <Badge
-              variant="default"
-              className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClear}
+              className="ml-auto mr-4 h-8 text-xs font-bold text-primary hover:bg-primary/5 rounded-lg"
             >
-              {activeFiltersCount}
-            </Badge>
+              Limpar Tudo
+            </Button>
           )}
-        </Button>
-      </SheetTrigger>
+        </CustomModalHeader>
 
-      <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-        <SheetHeader className="mb-6">
-          <SheetTitle className="flex items-center justify-between">
-            Filtros Avançados
-            {activeFiltersCount > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClear}
-                className="h-8 text-xs min-h-[44px] sm:min-h-0"
-                aria-label="Limpar filtros"
-              >
-                <X className="h-3.5 w-3.5 mr-1" />
-                Limpar
-              </Button>
-            )}
-          </SheetTitle>
-        </SheetHeader>
-
-        <div className="space-y-6">
-          {/* Date Range Filters */}
-          {dateRange && onDateRangeChange && (
-            <div className="space-y-3">
-              <h3 className="font-semibold text-sm text-foreground">Período</h3>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">De</label>
-                  <input
-                    type="date"
-                    value={dateRange.from}
-                    onChange={(e) => onDateRangeChange({ ...dateRange, from: e.target.value })}
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                  />
+        <CustomModalBody className="p-0 sm:p-0">
+          <ScrollArea className="h-full">
+            <div className="p-6 space-y-8">
+              {/* Date Range Filters */}
+              {dateRange && onDateRangeChange && (
+                <div className="space-y-4">
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                    <ChevronRight className="h-3.5 w-3.5" />
+                    Período de Visualização
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase text-slate-500 pl-1">Data Início</label>
+                      <input
+                        type="date"
+                        value={dateRange.from}
+                        onChange={(e) => onDateRangeChange({ ...dateRange, from: e.target.value })}
+                        className="flex h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase text-slate-500 pl-1">Data Fim</label>
+                      <input
+                        type="date"
+                        value={dateRange.to}
+                        onChange={(e) => onDateRangeChange({ ...dateRange, to: e.target.value })}
+                        className="flex h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold shadow-sm focus:ring-2 focus:ring-primary/20 outline-none"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">Até</label>
-                  <input
-                    type="date"
-                    value={dateRange.to}
-                    onChange={(e) => onDateRangeChange({ ...dateRange, to: e.target.value })}
-                    className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                  />
+              )}
+
+              {/* Status Filters */}
+              <div className="space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                  <ChevronRight className="h-3.5 w-3.5" />
+                  Status do Agendamento
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {STATUS_OPTIONS.map((option) => {
+                    const isActive = filters.status.includes(option.value);
+                    return (
+                      <button
+                        key={option.value}
+                        onClick={() => toggleFilter('status', option.value)}
+                        className={cn(
+                          'px-3 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-2',
+                          isActive 
+                            ? `${option.color} text-white border-transparent shadow-md scale-105` 
+                            : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                        )}
+                      >
+                        {!isActive && <div className={cn("w-2 h-2 rounded-full", option.color.split(' ')[0])} />}
+                        {option.label}
+                        {isActive && <X className="h-3 w-3 ml-1 opacity-70" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Type Filters */}
+              <div className="space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                  <ChevronRight className="h-3.5 w-3.5" />
+                  Tipo de Serviço
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {TYPE_OPTIONS.map((type) => {
+                    const isActive = filters.types.includes(type);
+                    return (
+                      <button
+                        key={type}
+                        onClick={() => toggleFilter('types', type)}
+                        className={cn(
+                          'px-3 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-2',
+                          isActive 
+                            ? 'bg-slate-900 text-white border-transparent shadow-md scale-105' 
+                            : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                        )}
+                      >
+                        {type}
+                        {isActive && <X className="h-3 w-3 ml-1 opacity-70" />}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
-          )}
+          </ScrollArea>
+        </CustomModalBody>
 
-          {/* Status Filters */}
-          <div className="space-y-3">
-            <h3 className="font-semibold text-sm text-foreground">Status</h3>
-            <div className="flex flex-wrap gap-2">
-              {STATUS_OPTIONS.map((option) => (
-                <Badge
-                  key={option.value}
-                  variant={filters.status.includes(option.value) ? 'default' : 'outline'}
-                  className={cn(
-                    'cursor-pointer transition-all duration-200 hover:scale-105',
-                    filters.status.includes(option.value) && option.color
-                  )}
-                  onClick={() => toggleFilter('status', option.value)}
-                >
-                  {option.label}
-                </Badge>
-              ))}
-            </div>
-          </div>
-
-          {/* Type Filters */}
-          <div className="space-y-3">
-            <h3 className="font-semibold text-sm text-foreground">Tipo de Serviço</h3>
-            <div className="flex flex-wrap gap-2">
-              {TYPE_OPTIONS.map((type) => (
-                <Badge
-                  key={type}
-                  variant={filters.types.includes(type) ? 'default' : 'outline'}
-                  className="cursor-pointer transition-all duration-200 hover:scale-105"
-                  onClick={() => toggleFilter('types', type)}
-                >
-                  {type}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+        <CustomModalFooter isMobile={isMobile} className="bg-slate-50 border-t-0">
+          <Button 
+            variant="ghost" 
+            onClick={() => setIsOpen(false)} 
+            className="rounded-xl h-11 px-6 font-bold text-slate-500"
+          >
+            Fechar
+          </Button>
+          <div className="flex-1" />
+          <Button 
+            onClick={() => setIsOpen(false)}
+            className="rounded-xl h-11 px-8 bg-slate-900 text-white shadow-xl shadow-slate-900/20 font-bold uppercase tracking-wider"
+          >
+            Ver Resultados
+          </Button>
+        </CustomModalFooter>
+      </CustomModal>
+    </>
   );
 };

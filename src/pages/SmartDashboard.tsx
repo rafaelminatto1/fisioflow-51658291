@@ -179,9 +179,9 @@ export default function SmartDashboard() {
       label: 'Pacientes Ativos',
       value: metrics?.pacientesAtivos || 0,
       subLabel: `${metrics?.pacientesNovos || 0}% vs. mês anterior`, // Using new patients as growth proxy?
-      gradient: 'from-purple-500 to-violet-500',
-      bgGradient: 'from-purple-500/15 to-violet-500/10',
-      borderColor: 'border-purple-500/30',
+      gradient: 'from-teal-500 to-emerald-500',
+      bgGradient: 'from-teal-500/15 to-emerald-500/10',
+      borderColor: 'border-teal-500/30',
     },
     {
       id: 'stat-occupancy',

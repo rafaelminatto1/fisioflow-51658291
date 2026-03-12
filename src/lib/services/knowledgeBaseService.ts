@@ -1,4 +1,4 @@
-import { knowledgeApi } from '@/lib/api/workers-client';
+import { knowledgeApi } from '@/api/v2/knowledge';
 import type {
   KnowledgeAnnotation,
   KnowledgeAuditEntry,

@@ -17,7 +17,9 @@ routes = [
 [[hyperdrive]]
 binding = "HYPERDRIVE"
 id = "12b9fefcfbc04074a63342a9212e1b4f"
-# localConnectionString definido em workers/.dev.vars (não commitado)
+# Caching: Armazena resultados de queries por 60s (padrão) e serve stale por 30s se o banco estiver lento.
+# Isso reduz a latência drasticamente para consultas frequentes.
+caching = { max_age = 60, stale_while_revalidate = 30 }
 
 # ===== CLOUDFLARE R2 (Media Storage) =====
 # Crie com: wrangler r2 bucket create fisioflow-media
@@ -28,6 +30,8 @@ bucket_name = "fisioflow-media"
 # ===== VARIÁVEIS DE AMBIENTE =====
 [vars]
 ENVIRONMENT = "production"
+# Habilita transformações de imagem via URL no painel Cloudflare
+IMAGE_TRANSFORMATIONS = "enabled" 
 # CORS: domínio do frontend em Cloudflare Pages
 ALLOWED_ORIGINS = "https://minatto-fisio.pages.dev,https://fisioflow.pages.dev,https://moocafisio.com.br,https://www.moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173"
 GOOGLE_MAPS_API_KEY = ""
@@ -36,6 +40,18 @@ GOOGLE_MAPS_API_KEY = ""
 NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
 NEON_AUTH_ISSUER = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
 # NEON_AUTH_AUDIENCE = "fisioflow-api"  # habilitar se Neon Auth configurar audience
+
+# Hasura (Produção)
+VITE_HASURA_PROJECT_URL = "https://capital-duckling-42.hasura.app/v1/graphql"
+VITE_HASURA_ADMIN_SECRET = "0phHoTnXL6XUIqvIHDiTi01XlvCmov2aYvoOC60hthgwDm6ZVZcIoSVG7mkZZLc1"
+
+# Axiom Logging (Produção)
+AXIOM_ORG_ID = "activity-dbyc"
+AXIOM_DATASET = "fisioflow-logs"
+# AXIOM_TOKEN deve ser setado via 'wrangler secret put AXIOM_TOKEN'
+
+# Inngest (Produção)
+# INNGEST_EVENT_KEY e INNGEST_SIGNING_KEY devem ser setados via wrangler secret
 
 # ===== AMBIENTE DE STAGING =====
 [env.staging]
@@ -46,9 +62,20 @@ ENVIRONMENT = "staging"
 ALLOWED_ORIGINS = "https://fisioflow-staging.pages.dev,http://localhost:5173"
 NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
 
-# [[env.staging.hyperdrive]]
-# binding = "HYPERDRIVE"
-# id = "SUBSTITUA_PELO_ID_STAGING"  # Descomentar e preencher ao criar staging
+# Hasura (Staging)
+VITE_HASURA_PROJECT_URL = "https://capital-duckling-42.hasura.app/v1/graphql" # Mude para staging se desejar
+
+# Axiom (Staging)
+AXIOM_ORG_ID = "activity-dbyc"
+AXIOM_DATASET = "fisioflow-logs-staging"
+
+# Inngest (Staging)
+INNGEST_EVENT_KEY = "9wvvKcSTUi2STGzvwEImNg_j1XUcKjUgP-o-1HfIt-j9eKulwyfV-B1J95OXTKSHoO3huyTgcZCI6b5AEMD-xw"
+
+[[env.staging.hyperdrive]]
+binding = "HYPERDRIVE"
+id = "DEVE_SER_CRIADO_NO_DASHBOARD" # wrangler hyperdrive create fisioflow-neon-staging
+caching = { max_age = 30 }
 
 [[env.staging.r2_buckets]]
 binding = "MEDIA_BUCKET"

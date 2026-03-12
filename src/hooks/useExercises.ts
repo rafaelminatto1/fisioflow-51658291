@@ -4,7 +4,8 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { exerciseService, type ExerciseFilters } from '@/services/exercises';
-import { exercisesApi, type Exercise as WorkersExercise } from '@/lib/api/workers-client';
+import { exercisesApi } from '@/api/v2/exercises';
+import type { Exercise as WorkersExercise } from '@/types/workers';
 import type { Exercise } from '@/types';
 import { toast } from 'sonner';
 import { fisioLogger as logger } from '@/lib/errors/logger';

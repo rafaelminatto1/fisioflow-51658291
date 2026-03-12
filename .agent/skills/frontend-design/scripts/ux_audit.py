@@ -102,18 +102,22 @@ class UXAuditor:
         self.passed_count = 0
         self.files_checked = 0
     
-    def audit_file(self, filepath: str) -> None:
+    def audit_file(self, file_path: str) -> None:
+        # Use full path for clarity in reports
+        filename = file_path 
         try:
-            with open(filepath, 'r', encoding='utf-8', errors='replace') as f:
+            with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
                 content = f.read()
         except: return
         
         self.files_checked += 1
-        filename = os.path.basename(filepath)
+        # The instruction implies using the full path for issues/warnings.
+        # The original code used os.path.basename(filepath) for 'filename'.
+        # To use the full path, we'll use 'file_path' directly in messages.
 
         # Pre-calculate common flags
         has_long_text = bool(re.search(r'<p|<div.*class=.*text|article|<span.*text', content, re.IGNORECASE))
-        has_form = bool(re.search(r'<form|<input|password|credit|card|payment', content, re.IGNORECASE))
+        has_form = bool(re.search(r'<form\b|<input\b|password\b|credit\b|\bcard\b|payment\b', content, re.IGNORECASE))
         complex_elements = len(re.findall(r'<input|<select|<textarea|<option', content, re.IGNORECASE))
 
         # --- 1. PSYCHOLOGY LAWS ---
@@ -208,10 +212,11 @@ class UXAuditor:
             self.warnings.append(f"[Cognitive Load] {filename}: High visual noise detected. Many colors and borders increase cognitive load.")
 
         # Familiar patterns
-        if has_form:
-            has_standard_labels = bool(re.search(r'<label|placeholder|aria-label', content, re.IGNORECASE))
-            if not has_standard_labels:
-                self.issues.append(f"[Cognitive Load] {filename}: Form inputs without labels. Use <label> for accessibility and clarity.")
+        # 1.5 Accessibility - Input Labels
+        has_input = bool(re.search(r'<input|<select|<textarea|<TextInput|Picker|<Switch', content, re.IGNORECASE))
+        has_label = bool(re.search(r'<label|aria-label|aria-labelledby|placeholder|accessibilityLabel|accessibilityHint', content, re.IGNORECASE))
+        if has_input and not has_label:
+            self.issues.append(f"[Cognitive Load] {filename}: Form inputs without labels or accessibilityLabel. Use <label> or accessibilityLabel for clarity.")
 
         # --- 1.8 PERSUASIVE DESIGN (Ethical) ---
 
@@ -357,7 +362,9 @@ class UXAuditor:
 
             # Common scale ratios: 1.067, 1.125, 1.2, 1.25, 1.333, 1.5, 1.618
             common_ratios = {1.067, 1.125, 1.2, 1.25, 1.333, 1.5, 1.618}
-            for ratio in ratios[:3]:  # Check first 3 ratios
+            # Check first 3 ratios
+            for i in range(min(3, len(ratios))):
+                ratio = ratios[i]
                 if not any(abs(ratio - cr) < 0.05 for cr in common_ratios):
                     self.warnings.append(f"[Typography] {filename}: Font sizes may not follow modular scale (ratio: {ratio:.2f}). Consider consistent ratio like 1.25 (Major Third).")
                     break
@@ -673,13 +680,28 @@ class UXAuditor:
 
     def audit_directory(self, directory: str) -> None:
         extensions = {'.tsx', '.jsx', '.html', '.vue', '.svelte', '.css'}
+        skip_set = {
+            'node_modules', '.git', 'dist', 'build', '.next', 'diagnostics',
+            'playwright-report', 'coverage', 'stich', 'minatto', 'test',
+            'tests', '__tests__', '.playwright', 'playwright', 'playwright-screenshots',
+            'playwright-video', 'test-results', 'screenshots', '.gemini',
+            '.claude', '.cursor', '.trae', '.jules', '.kiro', 'docs2026',
+            'docker', 'e2e', 'e2e-tests', 'claude-skills', 'fisioflow-screenshots',
+            'public', 'temp', 'tmp', 'out'
+        }
         for root, dirs, files in os.walk(directory):
-            dirs[:] = [d for d in dirs if d not in {'node_modules', '.git', 'dist', 'build', '.next'}]
+            # Prune directories to skip in-place
+            filtered_dirs = [d for d in dirs if d not in skip_set and not d.startswith('.')]
+            dirs.clear()
+            dirs.extend(filtered_dirs)
+            
             for file in files:
                 if Path(file).suffix in extensions:
-                    self.audit_file(os.path.join(root, file))
+                    curr_file_path = os.path.join(root, file)
+                    # print(f"Auditing: {curr_file_path}")
+                    self.audit_file(curr_file_path)
 
-    def get_report(self):
+    def get_report(self) -> dict:
         return {
             "files_checked": self.files_checked,
             "issues": self.issues,
@@ -706,12 +728,23 @@ def main():
         # Use ASCII-safe output for Windows console compatibility
         print(f"\n[UX AUDIT] {report['files_checked']} files checked")
         print("-" * 50)
-        if report['issues']:
-            print(f"[!] ISSUES ({len(report['issues'])}):")
-            for i in report['issues'][:10]: print(f"  - {i}")
-        if report['warnings']:
-            print(f"[*] WARNINGS ({len(report['warnings'])}):")
-            for w in report['warnings'][:15]: print(f"  - {w}")
+        issues = report.get('issues')
+        if isinstance(issues, list) and len(issues) > 0:
+            print(f"[!] ISSUES ({len(issues)}):")
+            count = 0
+            for i in issues:
+                if count >= 10: break
+                print(f"  - {i}")
+                count += 1
+        
+        warnings = report.get('warnings')
+        if isinstance(warnings, list) and len(warnings) > 0:
+            print(f"[*] WARNINGS ({len(warnings)}):")
+            count = 0
+            for w in warnings:
+                if count >= 15: break
+                print(f"  - {w}")
+                count += 1
         print(f"[+] PASSED CHECKS: {report['passed_checks']}")
         status = "PASS" if report['compliant'] else "FAIL"
         print(f"STATUS: {status}")

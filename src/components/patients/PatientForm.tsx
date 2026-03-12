@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, forwardRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import type { FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -35,6 +35,7 @@ import { BrasilService } from '@/services/brasilApi';
 import { toast } from 'sonner';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { PATHOLOGY_OPTIONS } from '@/lib/constants/pathologies';
+import { SmartDatePicker } from '@/components/ui/smart-date-picker';
 
 // ============================================================================================
 // COMPONENT
@@ -46,15 +47,17 @@ interface PatientFormProps {
   isLoading?: boolean;
   submitLabel?: string;
   organizationId: string;
+  hideActions?: boolean;
 }
 
-export const PatientForm: React.FC<PatientFormProps> = ({
+export const PatientForm = forwardRef<HTMLFormElement, PatientFormProps>(({
   patient,
   onSubmit,
   isLoading = false,
   submitLabel = 'Salvar',
   organizationId,
-}) => {
+  hideActions = false,
+}, ref) => {
   const [activeTab, setActiveTab] = useState<'basic' | 'medical' | 'address' | 'additional'>('basic');
 
   const isEditing = !!patient;
@@ -172,7 +175,7 @@ export const PatientForm: React.FC<PatientFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit(onFormSubmit, onFormInvalid)} className="space-y-6" data-testid="patient-form">
+    <form ref={ref} onSubmit={handleSubmit(onFormSubmit, onFormInvalid)} className="space-y-6" data-testid="patient-form">
       <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)} className="w-full">
         <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 overflow-x-auto -mx-1 px-1 scrollbar-hide">
           <TabsTrigger value="basic">
@@ -583,34 +586,38 @@ export const PatientForm: React.FC<PatientFormProps> = ({
       </Tabs>
 
       {/* Action Buttons */}
-      <div className="flex items-center justify-end gap-3 pt-4 sticky bottom-0 bg-background/80 backdrop-blur-md pb-4 z-10 border-t border-slate-100 dark:border-slate-800">
-        <Button
-          type="button"
-          variant="ghost"
-          className="rounded-xl h-11 px-6 font-bold text-slate-500 hover:bg-slate-100"
-          onClick={() => window.history.back()}
-          disabled={isLoading}
-        >
-          Cancelar
-        </Button>
-        <Button
-          type="submit"
-          className="rounded-xl h-11 px-8 gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl shadow-slate-900/10 font-bold uppercase tracking-wider transition-all hover:scale-105 active:scale-95"
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              Processando...
-            </div>
-          ) : (
-            <>
-              <BadgeCheck className="w-4 h-4" />
-              {submitLabel}
-            </>
-          )}
-        </Button>
-      </div>
+      {!hideActions && (
+        <div className="flex items-center justify-end gap-3 pt-4 sticky bottom-0 bg-background/80 backdrop-blur-md pb-4 z-10 border-t border-slate-100 dark:border-slate-800">
+          <Button
+            type="button"
+            variant="ghost"
+            className="rounded-xl h-11 px-6 font-bold text-slate-500 hover:bg-slate-100"
+            onClick={() => window.history.back()}
+            disabled={isLoading}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            className="rounded-xl h-11 px-8 gap-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xl shadow-slate-900/10 font-bold uppercase tracking-wider transition-all hover:scale-105 active:scale-95"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                Processando...
+              </div>
+            ) : (
+              <>
+                <BadgeCheck className="w-4 h-4" />
+                {submitLabel}
+              </>
+            )}
+          </Button>
+        </div>
+      )}
     </form>
   );
-};
+});
+
+PatientForm.displayName = 'PatientForm';
