@@ -1,5 +1,5 @@
 import { ConsentManager, consentManager } from '../consentManager';
-import { db } from '../../firebase';
+import { db } from '../../platform';
 import { 
   setDoc, 
   getDoc, 
@@ -7,13 +7,13 @@ import {
   collection, 
   doc, 
   serverTimestamp 
-} from 'firebase/firestore';
+} from '@/lib/data-store';
 
-jest.mock('../../firebase', () => ({
+jest.mock('../../platform', () => ({
   db: {}
 }));
 
-jest.mock('firebase/firestore', () => ({
+jest.mock('@/lib/data-store', () => ({
   collection: jest.fn(),
   doc: jest.fn(),
   setDoc: jest.fn(),

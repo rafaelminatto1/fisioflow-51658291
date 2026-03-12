@@ -12,7 +12,7 @@
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { biometricAuthService } from '../../../lib/services/biometricAuthService';
-import { auth } from '../../../lib/firebase';
+import { auth } from '../../../lib/platform';
 import type { BiometricType } from '../../../types/auth';
 
 // Mock biometric auth service
@@ -27,7 +27,7 @@ vi.mock('../../../lib/services/biometricAuthService', () => ({
 }));
 
 // Mock Firebase auth
-vi.mock('../../../lib/firebase', () => ({
+vi.mock('../../../lib/platform', () => ({
   auth: {
     currentUser: {
       uid: 'test-user-123',

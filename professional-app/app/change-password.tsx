@@ -4,345 +4,299 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TextInput,
   TouchableOpacity,
+  TextInput,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useColors } from '@/hooks/useColorScheme';
-import { Button } from '@/components';
+import { useAuthStore } from '@/store/auth';
+import { Button, Card } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
 import { authApi } from '@/lib/auth-api';
-
-interface FormErrors {
-  currentPassword?: string;
-  newPassword?: string;
-  confirmPassword?: string;
-}
+import { config } from '@/lib/config';
 
 export default function ChangePasswordScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { user } = useAuthStore();
   const { light, medium, success, error } = useHaptics();
 
-  const [formData, setFormData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: '',
-  });
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showPasswords, setShowPasswords] = useState({
-    current: false,
-    new: false,
-    confirm: false,
-  });
+  const [errors, setErrors] = useState<{
+    currentPassword?: string;
+    newPassword?: string;
+    confirmPassword?: string;
+  }>({});
 
   const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
+    const newErrors: typeof errors = {};
 
-    if (!formData.currentPassword) {
-      newErrors.currentPassword = 'Senha atual é obrigatória';
+    if (!currentPassword) {
+      newErrors.currentPassword = 'Digite sua senha atual';
     }
 
-    if (!formData.newPassword) {
-      newErrors.newPassword = 'Nova senha é obrigatória';
-    } else if (formData.newPassword.length < 6) {
-      newErrors.newPassword = 'A senha deve ter pelo menos 6 caracteres';
+    if (!newPassword) {
+      newErrors.newPassword = 'Digite a nova senha';
+    } else if (newPassword.length < 8) {
+      newErrors.newPassword = 'A senha deve ter pelo menos 8 caracteres';
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(newPassword)) {
+      newErrors.newPassword = 'A senha deve conter letras maiúsculas, minúsculas e números';
     }
 
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = 'Confirmação de senha é obrigatória';
-    } else if (formData.newPassword !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'As senhas não coincidem';
+    if (!confirmPassword) {
+      newErrors.confirmPassword = 'Confirme a nova senha';
+    } else if (confirmPassword !== newPassword) {
+      newErrors.confirmPassword = 'As senhas não conferem';
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async () => {
-    light();
+  const handleChangePassword = async () => {
+    medium();
 
     if (!validateForm()) {
       error();
       return;
     }
 
-    medium();
-    setIsSubmitting(true);
-
+    setIsLoading(true);
     try {
-      await authApi.updatePassword(formData.newPassword);
+      // Call Neon Auth API to change password
+      const token = await authApi.getToken();
+      const response = await fetch(`${config.apiUrl}/api/auth/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || 'Erro ao alterar senha');
+      }
 
       success();
       Alert.alert(
-        'Senha alterada',
-        'Sua senha foi alterada com sucesso.',
-        [
-          {
-            text: 'OK',
-            onPress: () => router.back(),
-          },
-        ]
+        'Sucesso',
+        'Sua senha foi alterada com sucesso!',
+        [{ text: 'OK', onPress: () => router.back() }]
       );
-
-      setFormData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-      });
-      setErrors({});
     } catch (err: any) {
       error();
-      let message = 'Não foi possível alterar a senha.';
-
-      if (err.code === 'auth/requires-recent-login') {
-        message = 'Por segurança, você precisa fazer login novamente antes de alterar sua senha.';
-      } else if (err.code === 'auth/weak-password') {
-        message = 'A senha é muito fraca. Escolha uma senha mais forte.';
-      }
-
-      Alert.alert('Erro', message);
+      Alert.alert('Erro', err.message || 'Não foi possível alterar a senha. Tente novamente.');
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  const getPasswordStrength = (password: string): { label: string; color: string; percentage: number } => {
-    if (!password) {
-      return { label: '', color: colors.border, percentage: 0 };
-    }
-
+  const getPasswordStrength = (): { label: string; color: string } => {
+    if (!newPassword) return { label: '', color: colors.textMuted };
+    
     let strength = 0;
-    if (password.length >= 6) strength++;
-    if (password.length >= 10) strength++;
-    if (/[A-Z]/.test(password)) strength++;
-    if (/[0-9]/.test(password)) strength++;
-    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    if (newPassword.length >= 8) strength++;
+    if (newPassword.length >= 12) strength++;
+    if (/[a-z]/.test(newPassword)) strength++;
+    if (/[A-Z]/.test(newPassword)) strength++;
+    if (/\d/.test(newPassword)) strength++;
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(newPassword)) strength++;
 
-    if (strength <= 2) {
-      return { label: 'Fraca', color: colors.error, percentage: 33 };
-    } else if (strength <= 3) {
-      return { label: 'Média', color: colors.warning, percentage: 66 };
-    } else {
-      return { label: 'Forte', color: colors.success, percentage: 100 };
-    }
+    if (strength <= 2) return { label: 'Fraca', color: colors.error };
+    if (strength <= 4) return { label: 'Média', color: colors.warning };
+    return { label: 'Forte', color: colors.success };
   };
 
-  const passwordStrength = getPasswordStrength(formData.newPassword);
+  const passwordStrength = getPasswordStrength();
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
+      {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <TouchableOpacity
-          onPress={() => {
-            light();
-            router.back();
-          }}
-          style={styles.backButton}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={28} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]}>Alterar Senha</Text>
-        <View style={styles.headerSpacer} />
+        <View style={{ width: 28 }} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.infoSection}>
-          <Ionicons name="information-circle-outline" size={20} color={colors.info} />
-          <Text style={[styles.infoText, { color: colors.textSecondary }]}>
-            Por segurança, você será desconectado de todos os dispositivos após alterar sua senha.
-          </Text>
-        </View>
-
-        {/* Current Password */}
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>Senha Atual</Text>
-          <View style={[styles.inputContainer, { borderColor: errors.currentPassword ? colors.error : colors.border }]}>
-            <TextInput
-              style={[styles.input, { color: colors.text }]}
-              placeholder="Digite sua senha atual"
-              placeholderTextColor={colors.textMuted}
-              value={formData.currentPassword}
-              onChangeText={(text) => {
-                setFormData({ ...formData, currentPassword: text });
-                if (errors.currentPassword) {
-                  setErrors({ ...errors, currentPassword: undefined });
-                }
-              }}
-              secureTextEntry={!showPasswords.current}
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!isSubmitting}
-            />
-            <TouchableOpacity
-              onPress={() => {
-                light();
-                setShowPasswords({ ...showPasswords, current: !showPasswords.current });
-              }}
-              style={styles.eyeButton}
-            >
-              <Ionicons
-                name={showPasswords.current ? 'eye-outline' : 'eye-off-outline'}
-                size={20}
-                color={colors.textSecondary}
-              />
-            </TouchableOpacity>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        {/* Info Card */}
+        <Card style={styles.infoCard} padding="md">
+          <View style={styles.infoContent}>
+            <Ionicons name="lock-closed" size={24} color={colors.primary} />
+            <View style={styles.infoTextContainer}>
+              <Text style={[styles.infoTitle, { color: colors.text }]}>Segurança da Conta</Text>
+              <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+                Crie uma senha forte com pelo menos 8 caracteres, incluindo letras maiúsculas, minúsculas e números.
+              </Text>
+            </View>
           </View>
-          {errors.currentPassword && (
-            <Text style={[styles.errorText, { color: colors.error }]}>{errors.currentPassword}</Text>
-          )}
-        </View>
+        </Card>
 
-        {/* New Password */}
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>Nova Senha</Text>
-          <View style={[styles.inputContainer, { borderColor: errors.newPassword ? colors.error : colors.border }]}>
-            <TextInput
-              style={[styles.input, { color: colors.text }]}
-              placeholder="Digite sua nova senha"
-              placeholderTextColor={colors.textMuted}
-              value={formData.newPassword}
-              onChangeText={(text) => {
-                setFormData({ ...formData, newPassword: text });
-                if (errors.newPassword) {
-                  setErrors({ ...errors, newPassword: undefined });
-                }
-              }}
-              secureTextEntry={!showPasswords.new}
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!isSubmitting}
-            />
-            <TouchableOpacity
-              onPress={() => {
-                light();
-                setShowPasswords({ ...showPasswords, new: !showPasswords.new });
-              }}
-              style={styles.eyeButton}
-            >
-              <Ionicons
-                name={showPasswords.new ? 'eye-outline' : 'eye-off-outline'}
-                size={20}
-                color={colors.textSecondary}
+        {/* Form */}
+        <Card style={styles.formCard} padding="md">
+          {/* Current Password */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.text }]}>Senha Atual</Text>
+            <View style={[styles.inputContainer, { borderColor: errors.currentPassword ? colors.error : colors.border }]}>
+              <TextInput
+                style={[styles.input, { backgroundColor: colors.surface, color: colors.text }]}
+                value={currentPassword}
+                onChangeText={(value) => {
+                  setCurrentPassword(value);
+                  if (errors.currentPassword) setErrors(prev => ({ ...prev, currentPassword: undefined }));
+                }}
+                placeholder="Digite sua senha atual"
+                placeholderTextColor={colors.textMuted}
+                secureTextEntry={!showCurrentPassword}
+                autoCapitalize="none"
               />
-            </TouchableOpacity>
-          </View>
-          {errors.newPassword && (
-            <Text style={[styles.errorText, { color: colors.error }]}>{errors.newPassword}</Text>
-          )}
-
-          {/* Password Strength Indicator */}
-          {formData.newPassword && (
-            <View style={styles.strengthContainer}>
-              <View style={[styles.strengthBar, { backgroundColor: colors.border }]}>
-                <View
-                  style={[
-                    styles.strengthFill,
-                    { backgroundColor: passwordStrength.color, width: `${passwordStrength.percentage}%` },
-                  ]}
+              <TouchableOpacity onPress={() => setShowCurrentPassword(!showCurrentPassword)}>
+                <Ionicons 
+                  name={showCurrentPassword ? 'eye-off-outline' : 'eye-outline'} 
+                  size={22} 
+                  color={colors.textSecondary} 
                 />
+              </TouchableOpacity>
+            </View>
+            {errors.currentPassword && (
+              <Text style={[styles.errorText, { color: colors.error }]}>{errors.currentPassword}</Text>
+            )}
+          </View>
+
+          {/* New Password */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.text }]}>Nova Senha</Text>
+            <View style={[styles.inputContainer, { borderColor: errors.newPassword ? colors.error : colors.border }]}>
+              <TextInput
+                style={[styles.input, { backgroundColor: colors.surface, color: colors.text }]}
+                value={newPassword}
+                onChangeText={(value) => {
+                  setNewPassword(value);
+                  if (errors.newPassword) setErrors(prev => ({ ...prev, newPassword: undefined }));
+                }}
+                placeholder="Digite a nova senha"
+                placeholderTextColor={colors.textMuted}
+                secureTextEntry={!showNewPassword}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity onPress={() => setShowNewPassword(!showNewPassword)}>
+                <Ionicons 
+                  name={showNewPassword ? 'eye-off-outline' : 'eye-outline'} 
+                  size={22} 
+                  color={colors.textSecondary} 
+                />
+              </TouchableOpacity>
+            </View>
+            {errors.newPassword && (
+              <Text style={[styles.errorText, { color: colors.error }]}>{errors.newPassword}</Text>
+            )}
+            {/* Password Strength */}
+            {newPassword.length > 0 && (
+              <View style={styles.strengthContainer}>
+                <View style={styles.strengthBars}>
+                  {[1, 2, 3].map((level) => (
+                    <View
+                      key={level}
+                      style={[
+                        styles.strengthBar,
+                        {
+                          backgroundColor: passwordStrength.color,
+                          opacity: (passwordStrength.label === 'Fraca' && level <= 1) ||
+                                   (passwordStrength.label === 'Média' && level <= 2) ||
+                                   passwordStrength.label === 'Forte'
+                            ? 1 : 0.2
+                        }
+                      ]}
+                    />
+                  ))}
+                </View>
+                <Text style={[styles.strengthLabel, { color: passwordStrength.color }]}>
+                  {passwordStrength.label}
+                </Text>
               </View>
-              <Text style={[styles.strengthLabel, { color: passwordStrength.color }]}>
-                Força: {passwordStrength.label}
-              </Text>
-            </View>
-          )}
-
-          {/* Password Requirements */}
-          <View style={styles.requirements}>
-            <Text style={[styles.requirementTitle, { color: colors.textSecondary }]}>
-              Requisitos mínimos:
-            </Text>
-            <View style={styles.requirement}>
-              <Ionicons
-                name={formData.newPassword.length >= 6 ? 'checkmark-circle' : 'ellipse-outline'}
-                size={16}
-                color={formData.newPassword.length >= 6 ? colors.success : colors.textMuted}
-              />
-              <Text style={[styles.requirementText, { color: colors.textSecondary }]}>
-                Pelo menos 6 caracteres
-              </Text>
-            </View>
-            <View style={styles.requirement}>
-              <Ionicons
-                name={/[A-Z]/.test(formData.newPassword) ? 'checkmark-circle' : 'ellipse-outline'}
-                size={16}
-                color={/[A-Z]/.test(formData.newPassword) ? colors.success : colors.textMuted}
-              />
-              <Text style={[styles.requirementText, { color: colors.textSecondary }]}>
-                Letra maiúscula (recomendado)
-              </Text>
-            </View>
-            <View style={styles.requirement}>
-              <Ionicons
-                name={/[0-9]/.test(formData.newPassword) ? 'checkmark-circle' : 'ellipse-outline'}
-                size={16}
-                color={/[0-9]/.test(formData.newPassword) ? colors.success : colors.textMuted}
-              />
-              <Text style={[styles.requirementText, { color: colors.textSecondary }]}>
-                Número (recomendado)
-              </Text>
-            </View>
+            )}
           </View>
-        </View>
 
-        {/* Confirm Password */}
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: colors.text }]}>Confirmar Nova Senha</Text>
-          <View style={[styles.inputContainer, { borderColor: errors.confirmPassword ? colors.error : colors.border }]}>
-            <TextInput
-              style={[styles.input, { color: colors.text }]}
-              placeholder="Digite novamente a nova senha"
-              placeholderTextColor={colors.textMuted}
-              value={formData.confirmPassword}
-              onChangeText={(text) => {
-                setFormData({ ...formData, confirmPassword: text });
-                if (errors.confirmPassword) {
-                  setErrors({ ...errors, confirmPassword: undefined });
-                }
-              }}
-              secureTextEntry={!showPasswords.confirm}
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!isSubmitting}
-            />
-            <TouchableOpacity
-              onPress={() => {
-                light();
-                setShowPasswords({ ...showPasswords, confirm: !showPasswords.confirm });
-              }}
-              style={styles.eyeButton}
-            >
-              <Ionicons
-                name={showPasswords.confirm ? 'eye-outline' : 'eye-off-outline'}
-                size={20}
-                color={colors.textSecondary}
+          {/* Confirm Password */}
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.text }]}>Confirmar Senha</Text>
+            <View style={[styles.inputContainer, { borderColor: errors.confirmPassword ? colors.error : colors.border }]}>
+              <TextInput
+                style={[styles.input, { backgroundColor: colors.surface, color: colors.text }]}
+                value={confirmPassword}
+                onChangeText={(value) => {
+                  setConfirmPassword(value);
+                  if (errors.confirmPassword) setErrors(prev => ({ ...prev, confirmPassword: undefined }));
+                }}
+                placeholder="Confirme a nova senha"
+                placeholderTextColor={colors.textMuted}
+                secureTextEntry={!showConfirmPassword}
+                autoCapitalize="none"
               />
-            </TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+                <Ionicons 
+                  name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} 
+                  size={22} 
+                  color={colors.textSecondary} 
+                />
+              </TouchableOpacity>
+            </View>
+            {errors.confirmPassword && (
+              <Text style={[styles.errorText, { color: colors.error }]}>{errors.confirmPassword}</Text>
+            )}
           </View>
-          {errors.confirmPassword && (
-            <Text style={[styles.errorText, { color: colors.error }]}>{errors.confirmPassword}</Text>
-          )}
-        </View>
+
+          {/* Requirements */}
+          <View style={styles.requirementsContainer}>
+            <Text style={[styles.requirementsTitle, { color: colors.textSecondary }]}>Requisitos:</Text>
+            {[
+              { text: 'Mínimo 8 caracteres', valid: newPassword.length >= 8 },
+              { text: 'Letras maiúsculas e minúsculas', valid: /(?=.*[a-z])(?=.*[A-Z])/.test(newPassword) },
+              { text: 'Pelo menos um número', valid: /\d/.test(newPassword) },
+            ].map((req, idx) => (
+              <View key={idx} style={styles.requirementItem}>
+                <Ionicons
+                  name={req.valid ? 'checkmark-circle' : 'ellipse-outline'}
+                  size={16}
+                  color={req.valid ? colors.success : colors.textMuted}
+                />
+                <Text style={[
+                  styles.requirementText,
+                  { color: req.valid ? colors.success : colors.textSecondary }
+                ]}>
+                  {req.text}
+                </Text>
+              </View>
+            ))}
+          </View>
+        </Card>
 
         {/* Submit Button */}
-        <View style={styles.buttonContainer}>
-          <Button
-            title={isSubmitting ? 'Alterando...' : 'Alterar Senha'}
-            onPress={handleSubmit}
-            disabled={isSubmitting}
-            loading={isSubmitting}
-            style={styles.submitButton}
-          />
-        </View>
+        <Button
+          title="Alterar Senha"
+          onPress={handleChangePassword}
+          loading={isLoading}
+          disabled={!currentPassword || !newPassword || !confirmPassword}
+          style={styles.submitButton}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -357,93 +311,101 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
   },
   backButton: {
-    padding: 8,
-    marginLeft: -8,
+    padding: 4,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
   },
-  headerSpacer: {
-    width: 40,
+  scrollView: {
+    flex: 1,
   },
   scrollContent: {
     padding: 16,
   },
-  infoSection: {
+  infoCard: {
+    marginBottom: 16,
+  },
+  infoContent: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 24,
-    gap: 8,
+    alignItems: 'center',
+    gap: 12,
+  },
+  infoTextContainer: {
+    flex: 1,
+  },
+  infoTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
   },
   infoText: {
-    flex: 1,
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  formCard: {
+    marginBottom: 16,
   },
   inputGroup: {
     marginBottom: 20,
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
     marginBottom: 8,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 10,
     paddingHorizontal: 16,
-    height: 52,
   },
   input: {
     flex: 1,
+    paddingVertical: 12,
     fontSize: 16,
-  },
-  eyeButton: {
-    padding: 8,
   },
   errorText: {
     fontSize: 12,
-    marginTop: 6,
-    marginLeft: 4,
+    marginTop: 4,
   },
   strengthContainer: {
-    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  strengthBars: {
+    flexDirection: 'row',
+    gap: 4,
   },
   strengthBar: {
+    flex: 1,
     height: 4,
     borderRadius: 2,
-    overflow: 'hidden',
-  },
-  strengthFill: {
-    height: '100%',
   },
   strengthLabel: {
     fontSize: 12,
-    marginTop: 4,
     fontWeight: '500',
+    marginLeft: 8,
   },
-  requirements: {
+  requirementsContainer: {
     marginTop: 16,
-    backgroundColor: 'rgba(0, 0, 0, 0.03)',
-    borderRadius: 12,
-    padding: 12,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
   },
-  requirementTitle: {
-    fontSize: 12,
-    fontWeight: '600',
+  requirementsTitle: {
+    fontSize: 13,
+    fontWeight: '500',
     marginBottom: 8,
   },
-  requirement: {
+  requirementItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
@@ -452,11 +414,7 @@ const styles = StyleSheet.create({
   requirementText: {
     fontSize: 13,
   },
-  buttonContainer: {
-    marginTop: 16,
-    marginBottom: 32,
-  },
   submitButton: {
-    minHeight: 52,
+    marginTop: 8,
   },
 });

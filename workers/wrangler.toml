@@ -54,6 +54,13 @@ NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws
 binding = "MEDIA_BUCKET"
 bucket_name = "fisioflow-media-staging"
 
+# ===== CRON TRIGGERS =====
+[triggers]
+crons = [
+  "0 9 * * *",   # Diário às 09:00 - Lembretes de Consultas
+  "0 0 * * *",   # Diário à meia-noite - Relatórios e Limpeza
+]
+
 # ===== OBSERVABILIDADE =====
 [observability]
 enabled = true

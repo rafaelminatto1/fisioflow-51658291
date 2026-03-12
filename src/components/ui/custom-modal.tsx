@@ -10,6 +10,7 @@
  */
 
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useFocusTrap, useFocusRestoration } from '@/lib/a11y';
@@ -81,18 +82,18 @@ export const CustomModal: React.FC<CustomModalProps> = ({
   // Mobile: Bottom sheet com altura fixa para footer sempre visível
   // Usar 85dvh para garantir que o footer não seja cortado por safe areas do iOS
   const modalContainerClass = isMobile
-    ? "fixed inset-x-0 bottom-0 top-auto z-50 flex flex-col safe-bottom"
-    : "fixed inset-0 z-50 flex items-center justify-center p-4";
+    ? "fixed inset-0 z-[90] flex items-end pt-3"
+    : "fixed inset-0 z-[90] flex items-center justify-center p-4";
 
   const modalContentClass = isMobile
-    ? "bg-white w-full rounded-t-2xl shadow-2xl flex flex-col h-[calc(100dvh-2rem)] max-h-[calc(100dvh-2rem)] min-h-0 overflow-hidden"
-    : "bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden";
+    ? "bg-background w-full rounded-t-2xl shadow-2xl flex flex-col h-[calc(100dvh-0.75rem)] max-h-[calc(100dvh-0.75rem)] min-h-0 overflow-hidden overscroll-contain"
+    : "bg-background rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden";
 
-  return (
+  const modal = (
     <div
       ref={overlayRef}
       className={cn(
-        "fixed inset-0 z-50 bg-black/50 backdrop-blur-sm",
+        "fixed inset-0 z-[80] bg-black/50 backdrop-blur-sm",
         "animate-in fade-in duration-200",
         className
       )}
@@ -114,6 +115,12 @@ export const CustomModal: React.FC<CustomModalProps> = ({
       </div>
     </div>
   );
+
+  if (typeof document === 'undefined') {
+    return modal;
+  }
+
+  return createPortal(modal, document.body);
 };
 
 /**
@@ -176,8 +183,10 @@ export const CustomModalFooter: React.FC<{
 }> = ({ className, children, isMobile = false }) => {
   return (
     <div className={cn(
-      "flex items-center justify-end gap-3 px-4 sm:px-6 py-4 border-t bg-gray-50 shrink-0",
-      isMobile && "pb-[calc(env(safe-area-inset-bottom)+1rem)]",
+      "flex items-center justify-end gap-3 px-4 sm:px-6 py-4 border-t shrink-0",
+      isMobile
+        ? "sticky bottom-0 z-10 border-border/80 bg-background/95 pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-[0_-8px_24px_-20px_rgba(15,23,42,0.45)] backdrop-blur supports-[backdrop-filter]:bg-background/90"
+        : "bg-gray-50",
       className
     )}>
       {children}

@@ -164,9 +164,6 @@ export const sessions = pgTable('sessions', {
     activityLabDuration: doublePrecision('duration'),
     activityLabNotes: text('notes'),
 
-    // Legacy
-    firestoreId: varchar('firestore_id', { length: 150 }),
-
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => ({

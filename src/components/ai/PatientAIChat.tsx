@@ -55,10 +55,10 @@ export function PatientAIChat({ patientId, patientName }: Props) {
 
       setMessages(prev => [...prev, { role: 'model', content: aiResponse }]);
     } catch (error: unknown) {
-      const firebaseError = error as { code?: string; message?: string };
+      const serviceError = error as { code?: string; message?: string };
       console.error('[PatientAIChat] aiClinicalChat failed', {
-        code: firebaseError.code,
-        message: firebaseError.message,
+        code: serviceError.code,
+        message: serviceError.message,
         patientId,
       });
       setMessages(prev => [

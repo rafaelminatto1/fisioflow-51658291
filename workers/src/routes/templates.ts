@@ -17,7 +17,6 @@ const evidenceLevelEnum = pgEnum('evidence_level', ['A', 'B', 'C', 'D']);
 
 const exerciseTemplates = pgTable('exercise_templates', {
   id: uuid('id').primaryKey().defaultRandom(),
-  firestoreId: varchar('firestore_id', { length: 255 }),
   name: varchar('name', { length: 500 }).notNull(),
   description: text('description'),
   category: varchar('category', { length: 200 }),
@@ -39,7 +38,6 @@ const exerciseTemplates = pgTable('exercise_templates', {
 
 const exerciseTemplateItems = pgTable('exercise_template_items', {
   id: uuid('id').primaryKey().defaultRandom(),
-  firestoreId: varchar('firestore_id', { length: 255 }),
   templateId: uuid('template_id').notNull(),
   exerciseId: text('exercise_id').notNull(),
   orderIndex: integer('order_index').default(0).notNull(),

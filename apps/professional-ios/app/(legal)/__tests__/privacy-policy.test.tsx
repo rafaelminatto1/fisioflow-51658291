@@ -6,7 +6,7 @@
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import PrivacyPolicyScreen from '../privacy-policy';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc } from '@/lib/data-store';
 
 // Mock dependencies
 jest.mock('expo-router', () => ({
@@ -15,7 +15,7 @@ jest.mock('expo-router', () => ({
   }),
 }));
 
-jest.mock('@/lib/firebase', () => ({
+jest.mock('@/lib/platform', () => ({
   db: {},
   auth: {
     currentUser: {
@@ -24,7 +24,7 @@ jest.mock('@/lib/firebase', () => ({
   },
 }));
 
-jest.mock('firebase/firestore', () => ({
+jest.mock('@/lib/data-store', () => ({
   collection: jest.fn(),
   addDoc: jest.fn(),
   serverTimestamp: jest.fn(() => new Date()),

@@ -19,14 +19,14 @@ export {
   createMockStore,
 } from './utils/test-utils';
 
-// Firebase mocks
+// Platform mocks
 export {
   setMockAuthUser,
   setMockAuthError,
   getMockAuthUser,
   setMockDocument,
   getMockDocument,
-  clearMockFirestore,
+  clearMockDataStore,
   setMockQueryResults,
   getMockQueryResults,
   setMockUser,
@@ -44,4 +44,4 @@ export {
   mockNetworkDelay,
   mockNetworkError,
   resetAllMocks,
-} from './mocks/firebase';
+} from './mocks/platform';

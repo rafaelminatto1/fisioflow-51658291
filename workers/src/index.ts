@@ -69,8 +69,19 @@ import { dicomRoutes } from './routes/dicom';
 import { fcmTokensRoutes } from './routes/fcmTokens';
 import { webhooksRoutes } from './routes/webhooks';
 import { patientPortalRoutes } from './routes/patientPortal';
+import { messagingRoutes } from './routes/messaging';
+
+import { perf } from './lib/perf';
 
 const app = new Hono<{ Bindings: Env }>();
+
+// Performance Middleware
+app.use('*', async (c, next) => {
+  const label = `${c.req.method} ${c.req.path}`;
+  perf.start(label);
+  await next();
+  perf.end(label);
+});
 
 app.use('*', logger());
 app.use('*', secureHeaders());
@@ -80,18 +91,26 @@ app.use('*', async (c, next) => {
 
   return cors({
     origin: (origin) => {
-      if (!origin) return '*';
+      // Se não houver origin (mobile apps, scripts), reflete se possível ou retorna o primeiro permitido
+      if (!origin || origin === 'null') {
+        return origin || allowedOrigins[0] || '*';
+      }
+
+      // Whitelist explícita e domínios confiáveis
       if (
         origin.endsWith('.pages.dev') ||
         origin.endsWith('moocafisio.com.br') ||
         origin.includes('localhost') ||
-        origin.includes('127.0.0.1')
+        origin.includes('127.0.0.1') ||
+        allowedOrigins.includes(origin)
       ) {
         return origin;
       }
-      return allowedOrigins.includes(origin) ? origin : allowedOrigins[0] ?? '*';
+
+      // Fallback seguro (não pode usar '*' com credentials: true)
+      return allowedOrigins[0] || '*';
     },
-    allowHeaders: ['Content-Type', 'Authorization'],
+    allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
     allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     exposeHeaders: ['X-Request-Id'],
     maxAge: 86400,
@@ -174,6 +193,7 @@ app.route('/api/ai', aiRoutes);
 app.route('/api/dicom', dicomRoutes);
 app.route('/api/fcm-tokens', fcmTokensRoutes);
 app.route('/api/webhooks', webhooksRoutes);
+app.route('/api/messaging', messagingRoutes);
 
 app.notFound((c) => c.json({ error: 'Rota não encontrada' }, 404));
 
@@ -194,4 +214,9 @@ app.onError((err, c) => {
   return c.json({ data: [], error: err.message }, 200);
 });
 
-export default app;
+import { handleScheduled } from './cron';
+
+export default {
+  fetch: app.fetch,
+  scheduled: handleScheduled,
+};

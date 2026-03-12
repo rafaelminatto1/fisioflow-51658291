@@ -8,10 +8,13 @@ export const config = {
   useCloudFunctions: true, // Forcing true as we migrate to standard APIs
   
   // Cloudflare Worker API Configuration
-  apiUrl: process.env.EXPO_PUBLIC_API_URL || 'https://api-pro.moocafisio.com.br',
+  apiUrl: process.env.EXPO_PUBLIC_API_URL || 'https://fisioflow-api.rafalegollas.workers.dev',
+  
+  // Legacy API (for fallback)
+  legacyApiUrl: 'https://api-pro.moocafisio.com.br',
   
   // Feature flags
-  enablePushNotifications: false, // Requires Expo project ID
+  enablePushNotifications: true, // Enabled via Cloudflare Worker + Expo Push
   enableBiometrics: true,
   enableOfflineMode: true,
 } as const;

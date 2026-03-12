@@ -17,7 +17,7 @@
  */
 
 import * as fc from 'fast-check';
-import { collection, query, where, getDocs, addDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, deleteDoc } from '@/lib/data-store';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock constants
@@ -32,14 +32,14 @@ const db: any = {};
 const auth: any = { currentUser: null };
 
 // Mock Firebase Auth for testing
-vi.mock('@/lib/firebase', () => ({
+vi.mock('@/lib/platform', () => ({
   db: {},
   auth: {
     currentUser: null,
   },
 }));
 
-vi.mock('firebase/firestore', () => ({
+vi.mock('@/lib/data-store', () => ({
   collection: vi.fn(),
   query: vi.fn(),
   where: vi.fn(),

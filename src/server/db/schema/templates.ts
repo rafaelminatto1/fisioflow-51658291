@@ -23,8 +23,6 @@ export const evidenceLevelEnum = pgEnum('evidence_level', ['A', 'B', 'C', 'D']);
 // ===== EXERCISE TEMPLATES =====
 export const exerciseTemplates = pgTable('exercise_templates', {
   id: uuid('id').primaryKey().defaultRandom(),
-  // Firestore original ID (para mapeamento na migração)
-  firestoreId: varchar('firestore_id', { length: 255 }),
 
   name: varchar('name', { length: 500 }).notNull(),
   description: text('description'),
@@ -53,14 +51,11 @@ export const exerciseTemplates = pgTable('exercise_templates', {
 // ===== EXERCISE TEMPLATE ITEMS =====
 export const exerciseTemplateItems = pgTable('exercise_template_items', {
   id: uuid('id').primaryKey().defaultRandom(),
-  // Firestore original ID
-  firestoreId: varchar('firestore_id', { length: 255 }),
-
   templateId: uuid('template_id')
     .notNull()
     .references(() => exerciseTemplates.id, { onDelete: 'cascade' }),
 
-  // Reference to exercise (can be Neon UUID or Firestore ID for legacy)
+  // Reference to exercise
   exerciseId: text('exercise_id').notNull(),
 
   orderIndex: integer('order_index').default(0).notNull(),

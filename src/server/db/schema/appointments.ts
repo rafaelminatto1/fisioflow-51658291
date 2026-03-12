@@ -98,9 +98,6 @@ export const appointments = pgTable('appointments', {
     recurrencePattern: varchar('recurrence_pattern', { length: 50 }), // 'weekly', 'biweekly'
     recurrenceGroupId: uuid('recurrence_group_id'),
 
-    // Legacy
-    firestoreId: varchar('firestore_id', { length: 150 }),
-
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
     createdBy: uuid('created_by'),
