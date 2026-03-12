@@ -917,14 +917,14 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
         </Tabs>
       </FormProvider>
 
-      <CustomModalFooter isMobile={isMobile} className="flex-col-reverse sm:flex-row sm:justify-between gap-3 bg-background">
+      <CustomModalFooter isMobile={isMobile} className="items-stretch flex-col-reverse gap-3 bg-background sm:flex-row sm:items-center sm:justify-between">
         <div className="flex justify-center sm:justify-start w-full sm:w-auto">
           {currentMode === 'edit' && appointment && (
             <Button
               type="button"
               variant="ghost"
               onClick={handleDelete}
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 sm:w-auto"
               size="default"
             >
               <X className="w-4 h-4 mr-1" />
@@ -933,12 +933,13 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
           )}
         </div>
 
-        <div className="flex gap-2 justify-end flex-wrap w-full sm:w-auto">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
           {currentMode === 'view' && appointment && (
             <Button
               type="button"
               variant="default"
               onClick={() => setCurrentMode('edit')}
+              className="w-full sm:w-auto"
               size="default"
             >
               Editar
@@ -950,6 +951,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
             variant="outline"
             onClick={onClose}
             disabled={isCreating || isUpdating}
+            className="w-full sm:w-auto"
             size="default"
           >
             {currentMode === 'view' ? 'Fechar' : 'Cancelar'}
@@ -961,7 +963,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
               variant="outline"
               disabled={isCreating || isUpdating}
               size="default"
-              className="min-w-[100px]"
+              className="w-full min-w-[100px] sm:w-auto"
               onClick={() => {
                 scheduleOnlyRef.current = true;
                 handleSubmit(handleSave)();
@@ -984,7 +986,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
               disabled={isCreating || isUpdating}
               onClick={() => { scheduleOnlyRef.current = false; }}
               className={cn(
-                "min-w-[100px] transition-all duration-200",
+                "w-full min-w-[100px] transition-all duration-200 sm:w-auto",
                 watchedStatus === 'avaliacao' && "bg-violet-600 hover:bg-violet-700 text-white",
                 (isCreating || isUpdating) && "opacity-80"
               )}

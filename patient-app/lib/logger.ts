@@ -76,7 +76,7 @@ class Logger {
     if (this.isDevelopment) {
       this.info('ANALYTICS', `Action: ${action}`, properties);
     }
-    // TODO: Send to analytics service (e.g., Firebase Analytics, Mixpanel)
+    // TODO: Send to analytics service (e.g., PostHog, Mixpanel)
   }
 
   /**
@@ -109,10 +109,10 @@ class Logger {
   }
 
   /**
-   * Log Firebase operations
+   * Log backend data operations
    */
-  firebase(operation: string, collection: string, docId?: string) {
-    this.debug('FIRESTORE', `${operation} ${collection}${docId ? `/${docId}` : ''}`);
+  dataOperation(operation: string, collection: string, docId?: string) {
+    this.debug('DATA', `${operation} ${collection}${docId ? `/${docId}` : ''}`);
   }
 
   /**
@@ -157,8 +157,8 @@ export const log = {
   apiRequest: (method: string, url: string, data?: any) => logger.apiRequest(method, url, data),
   apiResponse: (method: string, url: string, status: number, data?: any) =>
     logger.apiResponse(method, url, status, data),
-  firebase: (operation: string, collection: string, docId?: string) =>
-    logger.firebase(operation, collection, docId),
+  dataOperation: (operation: string, collection: string, docId?: string) =>
+    logger.dataOperation(operation, collection, docId),
 };
 
 export default logger;

@@ -165,10 +165,10 @@ export const PerformanceMarkers = {
   AUTH_LOGOUT: 'auth_logout',
   AUTH_REGISTER: 'auth_register',
 
-  // Firebase
-  FIRESTORE_QUERY: 'firestore_query',
-  FIRESTORE_WRITE: 'firestore_write',
-  FIRESTORE_BATCH: 'firestore_batch',
+  // Data layer
+  DATA_QUERY: 'data_query',
+  DATA_WRITE: 'data_write',
+  DATA_BATCH: 'data_batch',
 
   // API
   API_REQUEST: 'api_request',

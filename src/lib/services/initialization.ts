@@ -1,7 +1,7 @@
 /**
- * Inicialização de Serviços do Firebase
+ * Inicialização de serviços de plataforma
  *
- * Inicializa todos os serviços monitorados e tracking
+ * Inicializa monitoramento, analytics e feature flags.
  */
 
 import { initPerformanceMonitoring } from '@/lib/monitoring/performance';
@@ -11,10 +11,10 @@ import { initSentry, setUser } from '@/lib/monitoring/sentry';
 import { logger } from '@/lib/errors/logger';
 
 /**
- * Inicializa todos os serviços do Firebase
+ * Inicializa todos os serviços de plataforma
  */
 export async function initializeServices() {
-  logger.info('[Init] Inicializando serviços do Firebase');
+  logger.info('[Init] Inicializando serviços de plataforma');
 
   try {
     // 1. Sentry (Error Tracking) - PRIMEIRO para capturar erros
@@ -101,11 +101,11 @@ export async function checkServicesHealth(): Promise<{
 
     // Analytics
     health.analytics = typeof window !== 'undefined' &&
-                       (window as any).firebase !== undefined;
+                       (window as any).gtag !== undefined;
 
     // Performance
     health.performance = typeof window !== 'undefined' &&
-                         (window as any).firebase !== undefined;
+                         'performance' in window;
 
     // Remote Config
     // Não há como verificar sem chamar uma função, então assumimos true se inicializou
@@ -138,11 +138,11 @@ export async function initializeOnClient(): Promise<void> {
 /**
  * Exportar tudo em um único objeto
  */
-export const firebaseServices = {
+export const platformServices = {
   initialize: initializeServices,
   setupUser: setupUserTracking,
   clearUser: clearUserTracking,
   checkHealth: checkServicesHealth,
 };
 
-export default firebaseServices;
+export default platformServices;

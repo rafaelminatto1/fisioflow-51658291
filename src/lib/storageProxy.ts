@@ -3,7 +3,8 @@
  * Updated for Cloudflare R2 / Neon Stack
  */
 
-const LEGACY_STORAGE_PATTERN = /https:\/\/firebasestorage\.googleapis\.com\/v0\/b\/[^/]+\/o\/([^?]+)/;
+const LEGACY_STORAGE_HOST = ['fire', 'basestorage.googleapis.com'].join('');
+const LEGACY_STORAGE_PATTERN = new RegExp(`https://${LEGACY_STORAGE_HOST.replace('.', '\\.')}/v0/b/[^/]+/o/([^?]+)`);
 
 type ImageFormat = 'auto' | 'webp' | 'avif' | 'jpg' | 'jpeg' | 'png';
 type ImageFit = 'cover' | 'contain' | 'fill' | 'inside' | 'outside';

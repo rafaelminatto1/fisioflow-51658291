@@ -1,6 +1,6 @@
 /**
- * Firebase Mocks
- * Mock implementations for Firebase services
+ * Platform mocks
+ * Mock implementations for auth and data services.
  */
 
 
@@ -25,24 +25,24 @@ export function getMockAuthUser() {
 }
 
 /**
- * Mock Firestore Data
+ * Mock data store records
  */
-const mockFirestoreData: Map<string, any> = new Map();
+const mockDataStore: Map<string, any> = new Map();
 
 export function setMockDocument(collection: string, id: string, data: any) {
-  mockFirestoreData.set(`${collection}/${id}`, data);
+  mockDataStore.set(`${collection}/${id}`, data);
 }
 
 export function getMockDocument(collection: string, id: string): any {
-  return mockFirestoreData.get(`${collection}/${id}`);
+  return mockDataStore.get(`${collection}/${id}`);
 }
 
-export function clearMockFirestore() {
-  mockFirestoreData.clear();
+export function clearMockDataStore() {
+  mockDataStore.clear();
 }
 
 /**
- * Mock Firestore Query Results
+ * Mock query results
  */
 const mockQueryResults: Map<string, any[]> = new Map();
 
@@ -168,7 +168,7 @@ export async function mockNetworkError(message: string = 'Network error'): Promi
  * Reset all mocks
  */
 export function resetAllMocks() {
-  clearMockFirestore();
+  clearMockDataStore();
   clearMockUsers();
   mockExercisePlans.clear();
   mockAppointments.clear();

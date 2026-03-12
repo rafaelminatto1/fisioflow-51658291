@@ -168,9 +168,9 @@ export default function SeedData() {
                         ] as Array<{ id: string }> // Cast to avoid strict type checks on ID which is generated backend
                     });
 
-                    // Also create entry in `treatment_sessions` to mirror `usePatientEvolution.firebase.ts` logic?
+                    // Also create entry in `treatment_sessions` to mirror the legacy evolution flow?
                     // `SessionEvolutionService` only writes to `soap_records`.
-                    // But `usePatientEvolution.firebase.ts` writes to `treatment_sessions` too.
+                    // But the legacy evolution flow writes to `treatment_sessions` too.
                     // I should duplicate to `treatment_sessions` to ensure all views work.
                     await clinicalApi.treatmentSessions.upsert({
                         patient_id: patientId,

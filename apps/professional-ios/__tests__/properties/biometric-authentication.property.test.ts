@@ -49,8 +49,8 @@ vi.mock('expo-crypto', () => ({
   },
 }));
 
-// Mock firebase/firestore
-vi.mock('firebase/firestore', () => ({
+// Mock @/lib/data-store
+vi.mock('@/lib/data-store', () => ({
   doc: vi.fn(),
   getDoc: vi.fn(),
   setDoc: vi.fn(),
@@ -58,8 +58,8 @@ vi.mock('firebase/firestore', () => ({
   deleteDoc: vi.fn(),
 }));
 
-// Mock firebase config
-vi.mock('../../lib/firebase', () => ({
+// mock platform config
+vi.mock('../../lib/platform', () => ({
   db: {},
   auth: {},
   storage: {},

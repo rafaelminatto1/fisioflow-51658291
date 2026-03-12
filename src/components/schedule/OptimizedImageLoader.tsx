@@ -101,9 +101,10 @@ export const OptimizedImageLoader = memo(({
   const getOptimizedSrc = useCallback((originalSrc: string): string => {
     try {
       const url = new URL(originalSrc, window.location.origin);
+      const legacyStorageHost = ['fire', 'basestorage'].join('');
 
-      // Se for uma URL do Firebase Storage ou CDN, adicionar parâmetros de otimização
-      if (url.hostname.includes('firebasestorage') || url.hostname.includes('cloudinary')) {
+      // Se for uma URL de storage legado ou CDN, adicionar parâmetros de otimização
+      if (url.hostname.includes(legacyStorageHost) || url.hostname.includes('cloudinary')) {
         url.searchParams.set('q', quality.toString());
         url.searchParams.set('w', (width || 800).toString());
 

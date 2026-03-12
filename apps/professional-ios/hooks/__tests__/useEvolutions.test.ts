@@ -8,7 +8,7 @@
 import { renderHook, waitFor } from '@testing-library/react-native';
 import { useEvolutions } from '../useEvolutions';
 import { encryptionService } from '@/lib/services/encryptionService';
-import { auth, db } from '@/lib/firebase';
+import { auth, db } from '@/lib/platform';
 import {
   collection,
   addDoc,
@@ -16,10 +16,10 @@ import {
   doc,
   getDocs,
   query,
-} from 'firebase/firestore';
+} from '@/lib/data-store';
 
-// Mock Firebase modules
-jest.mock('@/lib/firebase', () => ({
+// Mock platform modules
+jest.mock('@/lib/platform', () => ({
   db: {},
   auth: {
     currentUser: {
@@ -28,7 +28,7 @@ jest.mock('@/lib/firebase', () => ({
   },
 }));
 
-jest.mock('firebase/firestore', () => ({
+jest.mock('@/lib/data-store', () => ({
   collection: jest.fn(),
   query: jest.fn(),
   where: jest.fn(),
@@ -118,7 +118,7 @@ describe('useEvolutions - E2EE for SOAP notes', () => {
       );
     });
 
-    it('should not store plaintext PHI in Firestore', async () => {
+    it('should not store plaintext PHI in Data Store', async () => {
       const mockEncryptedData = {
         ciphertext: 'encrypted-data',
         iv: 'random-iv',
@@ -144,12 +144,12 @@ describe('useEvolutions - E2EE for SOAP notes', () => {
 
       await result.current.create(soapNote);
 
-      // Verify plaintext fields are NOT in the Firestore document
-      const firestoreDoc = (addDoc as jest.Mock).mock.calls[0][1];
-      expect(firestoreDoc).not.toHaveProperty('subjective');
-      expect(firestoreDoc).not.toHaveProperty('objective');
-      expect(firestoreDoc).not.toHaveProperty('assessment');
-      expect(firestoreDoc).not.toHaveProperty('plan');
+      // Verify plaintext fields are NOT in the Data Store document
+      const storedDoc = (addDoc as jest.Mock).mock.calls[0][1];
+      expect(storedDoc).not.toHaveProperty('subjective');
+      expect(storedDoc).not.toHaveProperty('objective');
+      expect(storedDoc).not.toHaveProperty('assessment');
+      expect(storedDoc).not.toHaveProperty('plan');
     });
 
     it('should handle partial PHI fields', async () => {
@@ -237,7 +237,7 @@ describe('useEvolutions - E2EE for SOAP notes', () => {
         keyId: 'key-123',
       };
 
-      const mockFirestoreDoc = {
+      const mockData StoreDoc = {
         id: 'soap-123',
         patient_id: mockPatientId,
         session_number: 1,
@@ -262,7 +262,7 @@ describe('useEvolutions - E2EE for SOAP notes', () => {
           docs: [
             {
               id: 'soap-123',
-              data: () => mockFirestoreDoc,
+              data: () => mockData StoreDoc,
             },
           ],
         });
@@ -286,7 +286,7 @@ describe('useEvolutions - E2EE for SOAP notes', () => {
     });
 
     it('should handle legacy unencrypted data', async () => {
-      const mockFirestoreDoc = {
+      const mockData StoreDoc = {
         id: 'soap-legacy',
         patient_id: mockPatientId,
         session_number: 1,
@@ -305,7 +305,7 @@ describe('useEvolutions - E2EE for SOAP notes', () => {
           docs: [
             {
               id: 'soap-legacy',
-              data: () => mockFirestoreDoc,
+              data: () => mockData StoreDoc,
             },
           ],
         });

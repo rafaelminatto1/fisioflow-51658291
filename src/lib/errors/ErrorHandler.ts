@@ -181,19 +181,20 @@ export const ErrorHandler = {
     },
 
     /**
-     * Check if error is a Firebase error
+     * Check if error is a backend/data layer error
      */
-    isFirebaseError(error: Error): boolean {
+    isDataLayerError(error: Error): boolean {
         const message = error.message.toLowerCase();
         return (
-            message.includes('firebase') ||
-            message.includes('firestore') ||
-            message.includes('cloud functions') ||
+            message.includes('database') ||
+            message.includes('postgres') ||
+            message.includes('supabase') ||
+            message.includes('worker') ||
             message.includes('permission-denied') ||
             message.includes('not-found') ||
             message.includes('already-exists') ||
             message.includes('unauthenticated') ||
-            error.name === 'FirebaseError'
+            error.name === 'PostgrestError'
         );
     },
 
@@ -201,7 +202,7 @@ export const ErrorHandler = {
      * Check if error is a database error (legacy compatibility)
      */
     isSupabaseError(error: Error): boolean {
-        return this.isFirebaseError(error);
+        return this.isDataLayerError(error);
     },
 
     /**

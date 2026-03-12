@@ -1,7 +1,7 @@
 /**
- * Firebase AI Logic Integration
+ * Neon/Cloudflare AI integration
  *
- * Main integration file for Firebase AI Logic service.
+ * Main integration file for the current AI runtime.
  */
 
 
@@ -77,7 +77,7 @@ export const MODEL_CONFIGS = {
 
 // AI Model Factory (local stub)
 class AIModelFactory {
-  static getModel(modelType: AIModelType, _ai: unknown): unknown {
+  static getModel(modelType: AIModelType, _ai: unknown): AIModel {
     // Stub implementation - returns a mock model
     return {
       modelType,
@@ -95,16 +95,16 @@ class AIModelFactory {
   }
 }
 
-// Stub for getFirebaseAI
-function getFirebaseAI() {
+// Stub for AI runtime client
+function getAiRuntime() {
   return {
     model: 'gemini-2.5-flash',
     apiKey: import.meta.env.VITE_GEMINI_API_KEY,
   };
 }
 
-// Stub for FirebaseAIModel
-interface FirebaseAIModel {
+// Stub for AI model contract
+interface AIModel {
   modelType: AIModelType;
   generate(prompt: string, options?: AIRequestOptions): Promise<{
     content: string;
@@ -170,20 +170,20 @@ export class AIServiceError extends Error {
 }
 
 /**
- * Firebase AI Logic Service class
+ * AI runtime service
  */
-export class FirebaseAIService {
-  private static instance: FirebaseAIService;
+export class NeonAIService {
+  private static instance: NeonAIService;
   private initialized = false;
-  private models: Map<AIModelType, FirebaseAIModel> = new Map();
+  private models: Map<AIModelType, AIModel> = new Map();
 
   private constructor() {}
 
-  static getInstance(): FirebaseAIService {
-    if (!FirebaseAIService.instance) {
-      FirebaseAIService.instance = new FirebaseAIService();
+  static getInstance(): NeonAIService {
+    if (!NeonAIService.instance) {
+      NeonAIService.instance = new NeonAIService();
     }
-    return FirebaseAIService.instance;
+    return NeonAIService.instance;
   }
 
   async initialize(): Promise<void> {
@@ -194,24 +194,24 @@ export class FirebaseAIService {
       try {
         initAppCheck();
       } catch (error) {
-        logger.warn('App Check initialization failed', error, 'firebase-ai');
+        logger.warn('App Check initialization failed', error, 'ai-runtime');
       }
 
-      const ai = getFirebaseAI();
-      if (!ai) throw new Error('Firebase AI Logic service not available');
+      const ai = getAiRuntime();
+      if (!ai) throw new Error('AI runtime service not available');
 
       for (const modelType of Object.values(AIModelType)) {
         try {
           const model = AIModelFactory.getModel(modelType, ai);
           this.models.set(modelType, model);
         } catch (error) {
-          logger.warn(`Failed to initialize model ${modelType}`, error, 'firebase-ai');
+          logger.warn(`Failed to initialize model ${modelType}`, error, 'ai-runtime');
         }
       }
 
       this.initialized = true;
     } catch (error) {
-      logger.error('Failed to initialize Firebase AI Service', error, 'firebase-ai');
+      logger.error('Failed to initialize AI runtime service', error, 'ai-runtime');
     }
   }
 
@@ -224,7 +224,7 @@ export class FirebaseAIService {
     const startTime = Date.now();
 
     try {
-      const modelType = options?.model || AIModelType.FLASH;
+      const modelType = options?.model || AIModelType.GEMINI_2_5_FLASH;
       const model = this.getModel(modelType);
 
       const response = await model.generate(prompt, options);
@@ -251,7 +251,7 @@ export class FirebaseAIService {
     }
   }
 
-  private getModel(modelType: AIModelType): FirebaseAIModel {
+  private getModel(modelType: AIModelType): AIModel {
     const model = this.models.get(modelType);
     if (!model) throw new AIServiceError(`Model ${modelType} is not available`, 'MODEL_NOT_AVAILABLE');
     return model;
@@ -266,8 +266,8 @@ export class FirebaseAIService {
   }
 }
 
-export function getAIService(): FirebaseAIService {
-  return FirebaseAIService.getInstance();
+export function getAIService(): NeonAIService {
+  return NeonAIService.getInstance();
 }
 
 export const AI = {
