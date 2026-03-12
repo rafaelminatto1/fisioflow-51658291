@@ -33,15 +33,12 @@ type OfflineDataSource =
     | 'indexeddb'
     | 'localstorage'
     | 'memory'
-    | 'firestore'
-    | 'firebase';
+    | (string & {});
 
-const sourceLabels: Record<OfflineDataSource, string> = {
+const sourceLabels: Partial<Record<OfflineDataSource, string>> = {
     neon: 'Neon',
     cloudflare: 'Cloudflare',
     server: 'Neon/Cloudflare',
-    firestore: 'Neon/Cloudflare',
-    firebase: 'Neon/Cloudflare',
     indexeddb: 'Cache Local',
     localstorage: 'Backup de Emergência',
     memory: 'Memória',
@@ -54,7 +51,7 @@ export interface OfflineIndicatorProps {
     isOnline: boolean;
     /** Se os dados podem estar desatualizados */
     isStale?: boolean;
-    /** Origem dos dados. Valores legados seguem aceitos por compatibilidade. */
+    /** Origem dos dados. Strings desconhecidas serão tratadas como backend remoto. */
     dataSource?: OfflineDataSource;
     /** Se está verificando conexão */
     isChecking?: boolean;

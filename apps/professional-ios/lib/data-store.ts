@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { api, profApi } from './api';
 import { authClient } from './neonAuth';
 
-const DOC_PREFIX = '@fisioflow_firestore_doc:';
+const DOC_PREFIX = '@fisioflow_data_doc:';
 const POLL_INTERVAL_MS = 30000;
 
 type DataStorePath = string[];

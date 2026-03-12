@@ -59,8 +59,8 @@ function getErrorType(error: any): ErrorType {
     message.includes('connection') ||
     message.includes('fetch') ||
     message.includes('offline') ||
-    error?.code === 'firestore/failed-precondition' ||
-    error?.code === 'firestore/unavailable'
+    error?.code === 'failed-precondition' ||
+    error?.code === 'service-unavailable'
   ) {
     return ErrorType.NETWORK;
   }
@@ -105,7 +105,7 @@ function getErrorMessage(error: any): string {
   // Check for specific error messages
   const message = error?.message?.toLowerCase() || '';
 
-  // Firebase auth errors
+  // Auth errors
   if (error?.code === 'auth/user-not-found') {
     return 'Usuário não encontrado.';
   }
@@ -122,11 +122,11 @@ function getErrorMessage(error: any): string {
     return 'A senha deve ter pelo menos 6 caracteres.';
   }
 
-  // Firestore errors
-  if (error?.code === 'firestore/permission-denied') {
+  // Data layer errors
+  if (error?.code === 'permission-denied') {
     return 'Você não tem permissão para acessar este dado.';
   }
-  if (error?.code === 'firestore/unavailable') {
+  if (error?.code === 'service-unavailable') {
     return 'Serviço temporariamente indisponível. Verifique sua conexão.';
   }
 

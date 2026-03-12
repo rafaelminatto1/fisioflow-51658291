@@ -315,7 +315,7 @@ export function trackSearch(
 function getUserId(): string | null {
   // Buscar do localStorage, auth atual, ou gerar temporário
   try {
-    const authKeys = ['neonUser', 'authUser', 'firebaseUser'];
+    const authKeys = ['neonUser', 'authUser'];
     for (const authKey of authKeys) {
       const storedUser = window.localStorage.getItem(authKey);
       if (storedUser) {

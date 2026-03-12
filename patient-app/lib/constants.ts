@@ -124,16 +124,7 @@ export const SCREENS = {
   SETTINGS: 'Settings',
 } as const;
 
-/**
- * Firebase collection paths
- */
-export const COLLECTIONS = {
-  USERS: 'users',
-  EXERCISE_PLANS: 'exercise_plans',
-  APPOINTMENTS: 'appointments',
-  EVOLUTIONS: 'evolutions',
-  FEEDBACK: 'feedback',
-} as const;
+// COLLECTIONS removed - using REST API
 
 /**
  * Exercise difficulty levels
