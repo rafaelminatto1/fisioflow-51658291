@@ -29,7 +29,11 @@ export const roundToNextSlot = (date: Date): string => {
   return `${String(hour).padStart(2, '0')}:${String(roundedMinutes).padStart(2, '0')}`;
 };
 
-export function useScheduleHandlers(currentDate: Date, refetchAppointments: () => void, isSelectionMode: boolean) {
+export function useScheduleHandlers(
+  currentDate: Date, 
+  refetchAppointments: () => void, 
+  isSelectionMode: boolean
+) {
   const [, setSearchParams] = useSearchParams();
 
   // Modals state

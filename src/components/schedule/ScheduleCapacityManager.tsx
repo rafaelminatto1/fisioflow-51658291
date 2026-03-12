@@ -151,12 +151,15 @@ export function ScheduleCapacityManager() {
       max_patients: newCapacity.max_patients,
     }));
 
-    createMultipleCapacities(formDataArray);
-
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-    setIsAdding(false);
-    setNewCapacity({ selectedDays: [], start_time: '07:00', end_time: '13:00', max_patients: 3 });
+    try {
+      await createMultipleCapacities.mutateAsync(formDataArray);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+      setIsAdding(false);
+      setNewCapacity({ selectedDays: [], start_time: '07:00', end_time: '13:00', max_patients: 3 });
+    } catch {
+      // O hook já exibe o toast de erro; mantemos o formulário aberto para correção/reenvio.
+    }
   };
 
   const handleUpdateGroup = (group: CapacityGroup, max_patients: number) => {
@@ -190,7 +193,7 @@ export function ScheduleCapacityManager() {
     setIsAdding(false);
   };
 
-  const handleEditSave = () => {
+  const handleEditSave = async () => {
     if (!editingGroup) return;
     if (editData.selectedDays.length === 0) {
       toast({ title: 'Erro', description: 'Selecione pelo menos um dia', variant: 'destructive' }); return;
@@ -215,13 +218,17 @@ export function ScheduleCapacityManager() {
       end_time: editData.end_time,
       max_patients: editData.max_patients,
     }));
-    replaceCapacityGroup({ ids: editingGroup.ids, formDataArray });
-    setEditingGroup(null);
+    try {
+      await replaceCapacityGroup.mutateAsync({ ids: editingGroup.ids, formDataArray });
+      setEditingGroup(null);
+    } catch {
+      // O hook já exibe o toast de erro; mantemos a edição aberta.
+    }
   };
 
   const applyTimePreset = (preset: typeof TIME_PRESETS[0], target: 'new' | 'edit' = 'new') => {
     if (target === 'edit') setEditData((d) => ({ ...d, start_time: preset.start, end_time: preset.end }));
-    else setNewCapacity({ ...newCapacity, start_time: preset.start, end_time: preset.end });
+    else setNewCapacity((current) => ({ ...current, start_time: preset.start, end_time: preset.end }));
   };
 
   const getCapacityLevel = (maxPatients: number) => {
@@ -563,7 +570,7 @@ export function ScheduleCapacityManager() {
                 {CAPACITY_PRESETS.map((preset) => (
                   <button
                     key={preset.label}
-                    onClick={() => setNewCapacity({ ...newCapacity, max_patients: preset.value })}
+                    onClick={() => setNewCapacity((current) => ({ ...current, max_patients: preset.value }))}
                     className={cn(
                       "flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all hover:scale-[1.02]",
                       newCapacity.max_patients === preset.value
@@ -590,15 +597,17 @@ export function ScheduleCapacityManager() {
                       checked={newCapacity.selectedDays.includes(day.value)}
                       onCheckedChange={(checked) => {
                         if (checked) {
-                          setNewCapacity({
-                            ...newCapacity,
-                            selectedDays: [...newCapacity.selectedDays, day.value],
-                          });
+                          setNewCapacity((current) => ({
+                            ...current,
+                            selectedDays: current.selectedDays.includes(day.value)
+                              ? current.selectedDays
+                              : [...current.selectedDays, day.value],
+                          }));
                         } else {
-                          setNewCapacity({
-                            ...newCapacity,
-                            selectedDays: newCapacity.selectedDays.filter(d => d !== day.value),
-                          });
+                          setNewCapacity((current) => ({
+                            ...current,
+                            selectedDays: current.selectedDays.filter((d) => d !== day.value),
+                          }));
                         }
                       }}
                     />
@@ -620,7 +629,7 @@ export function ScheduleCapacityManager() {
                 <Input
                   type="time"
                   value={newCapacity.start_time}
-                  onChange={(e) => setNewCapacity({ ...newCapacity, start_time: e.target.value })}
+                  onChange={(e) => setNewCapacity((current) => ({ ...current, start_time: e.target.value }))}
                   className="font-medium"
                 />
               </div>
@@ -629,7 +638,7 @@ export function ScheduleCapacityManager() {
                 <Input
                   type="time"
                   value={newCapacity.end_time}
-                  onChange={(e) => setNewCapacity({ ...newCapacity, end_time: e.target.value })}
+                  onChange={(e) => setNewCapacity((current) => ({ ...current, end_time: e.target.value }))}
                   className="font-medium"
                 />
               </div>
@@ -646,7 +655,7 @@ export function ScheduleCapacityManager() {
                   size="icon"
                   variant="ghost"
                   className="h-9 w-9 shrink-0 rounded-r-none"
-                  onClick={() => setNewCapacity({ ...newCapacity, max_patients: Math.max(1, newCapacity.max_patients - 1) })}
+                  onClick={() => setNewCapacity((current) => ({ ...current, max_patients: Math.max(1, current.max_patients - 1) }))}
                   disabled={newCapacity.max_patients <= 1}
                   aria-label="Diminuir"
                 >
@@ -659,12 +668,12 @@ export function ScheduleCapacityManager() {
                   value={newCapacity.max_patients}
                   onChange={(e) => {
                     const v = e.target.value === '' ? 1 : parseInt(e.target.value, 10);
-                    if (!Number.isNaN(v)) setNewCapacity({ ...newCapacity, max_patients: Math.min(20, Math.max(1, v)) });
+                    if (!Number.isNaN(v)) setNewCapacity((current) => ({ ...current, max_patients: Math.min(20, Math.max(1, v)) }));
                   }}
                   onBlur={(e) => {
                     const v = parseInt(e.target.value, 10);
-                    if (Number.isNaN(v) || v < 1) setNewCapacity({ ...newCapacity, max_patients: 1 });
-                    if (v > 20) setNewCapacity({ ...newCapacity, max_patients: 20 });
+                    if (Number.isNaN(v) || v < 1) setNewCapacity((current) => ({ ...current, max_patients: 1 }));
+                    if (v > 20) setNewCapacity((current) => ({ ...current, max_patients: 20 }));
                   }}
                   className="h-9 w-14 text-center border-0 rounded-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
@@ -673,7 +682,7 @@ export function ScheduleCapacityManager() {
                   size="icon"
                   variant="ghost"
                   className="h-9 w-9 shrink-0 rounded-l-none"
-                  onClick={() => setNewCapacity({ ...newCapacity, max_patients: Math.min(20, newCapacity.max_patients + 1) })}
+                  onClick={() => setNewCapacity((current) => ({ ...current, max_patients: Math.min(20, current.max_patients + 1) }))}
                   disabled={newCapacity.max_patients >= 20}
                   aria-label="Aumentar"
                 >

@@ -137,6 +137,7 @@ export default function NotificationPreferencesScreen() {
             value={pref.enabled}
             onValueChange={(enabled) => updateCategory(category, { enabled })}
             trackColor={{ false: colors.border, true: colors.primary }}
+            accessibilityLabel={`Habilitar notificações de ${title}`}
           />
         </View>
 
@@ -150,6 +151,7 @@ export default function NotificationPreferencesScreen() {
                 value={pref.quietHoursEnabled}
                 onValueChange={(quietHoursEnabled) => updateCategory(category, { quietHoursEnabled })}
                 trackColor={{ false: colors.border, true: colors.primary }}
+                accessibilityLabel={`Habilitar horário de silêncio para ${title}`}
               />
             </View>
             

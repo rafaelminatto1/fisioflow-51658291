@@ -1,6 +1,6 @@
 import Fuse from 'fuse.js';
 import * as React from 'react';
-import { Check, ChevronsUpDown, UserPlus, User } from 'lucide-react';
+import { Check, ChevronsUpDown, Search, User, UserPlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,7 +20,7 @@ import {
 import type { Patient } from "@/types";
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-interface PatientComboboxProps {
+interface PatientComboboxProps extends Omit<React.ComponentPropsWithoutRef<typeof Button>, 'value' | 'onChange' | 'children'> {
   patients: Patient[];
   value?: string;
   onValueChange: (value: string) => void;
@@ -42,6 +42,7 @@ export function PatientCombobox({
   fallbackDescription,
   disabled = false,
   className,
+  ...buttonProps
 }: PatientComboboxProps) {
   React.useEffect(() => {
     logger.debug('PatientCombobox mounted', { patientsLength: patients?.length }, 'PatientCombobox');
@@ -51,11 +52,32 @@ export function PatientCombobox({
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = React.useState("");
   const canCreateNew = typeof onCreateNew === 'function';
+  const hasFallbackDisplay = Boolean(fallbackDisplayName && (value || disabled));
 
   const selectedPatient = React.useMemo(() =>
     patients.find((patient) => patient.id === value),
     [patients, value]
   );
+
+  const getPatientName = (patient?: Patient | null) =>
+    patient?.name || patient?.full_name || 'Paciente sem nome';
+
+  const getPatientMeta = (patient?: Patient | null, description?: string) => {
+    if (!patient) {
+      return description || 'Busque por nome, CPF ou telefone';
+    }
+
+    const details = [
+      patient.phone,
+      patient.cpf ? `CPF ${patient.cpf}` : null,
+    ].filter(Boolean) as string[];
+
+    if (patient.incomplete_registration) {
+      details.unshift('Cadastro incompleto');
+    }
+
+    return details.slice(0, 2).join(' • ') || description || 'Paciente selecionado';
+  };
 
   // Initialize Fuse instance with improved settings
   const fuse = React.useMemo(() => {
@@ -114,7 +136,6 @@ export function PatientCombobox({
 
   const handleSelect = (patientId: string) => {
     logger.debug('PatientCombobox handleSelect called', { patientId, callback: !!onValueChange }, 'PatientCombobox');
-    console.log('PatientCombobox handleSelect called:', patientId);
     onValueChange(patientId === value ? "" : patientId);
     setOpen(false);
     setInputValue("");
@@ -136,51 +157,102 @@ export function PatientCombobox({
     }}>
       <PopoverTrigger asChild>
         <Button
+          type="button"
           variant="outline"
           role="combobox"
           data-testid="patient-select"
           aria-expanded={open}
+          aria-label={
+            selectedPatient
+              ? `Paciente selecionado: ${getPatientName(selectedPatient)}`
+              : hasFallbackDisplay
+                ? `Paciente selecionado: ${fallbackDisplayName}`
+                : 'Selecionar paciente'
+          }
           className={cn(
-            "w-full justify-between bg-background text-left font-normal",
-            !selectedPatient && "text-muted-foreground",
+            "h-auto min-h-12 w-full justify-between rounded-xl border-border/70 bg-background px-3 py-2.5 text-left font-normal shadow-sm transition-[border-color,box-shadow,background-color] hover:border-primary/40 hover:bg-muted/30 focus-visible:ring-primary/30 data-[state=open]:border-primary/40 data-[state=open]:shadow-[0_0_0_4px_hsl(var(--primary)/0.08)] aria-[invalid=true]:border-destructive/70 aria-[invalid=true]:shadow-[0_0_0_4px_hsl(var(--destructive)/0.08)] disabled:bg-muted/40 disabled:text-muted-foreground",
             className
           )}
           disabled={disabled}
+          {...buttonProps}
         >
-          {selectedPatient ? (
-            <div className="flex items-center gap-2 overflow-hidden">
-              <User className="h-4 w-4 shrink-0 opacity-50" />
-              <div className="flex flex-col items-start truncate leading-tight">
-                <span className="truncate font-medium">{selectedPatient.name || selectedPatient.full_name}</span>
-                {selectedPatient.incomplete_registration && (
-                  <span className="text-[10px] text-amber-600 font-normal">Cadastro incompleto</span>
-                )}
-              </div>
+          <div className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
+            <div className={cn(
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors",
+              selectedPatient || hasFallbackDisplay
+                ? "border-primary/15 bg-primary/10 text-primary"
+                : "border-border/60 bg-muted/50 text-muted-foreground"
+            )}>
+              <User className="h-4 w-4" />
             </div>
-          ) : value && fallbackDisplayName ? (
-            <div className="flex items-center gap-2 overflow-hidden">
-              <User className="h-4 w-4 shrink-0 opacity-50" />
-              <div className="flex flex-col items-start truncate leading-tight">
-                <span className="truncate font-medium">{fallbackDisplayName}</span>
-                {fallbackDescription && (
-                  <span className="text-[10px] text-amber-600 font-normal">{fallbackDescription}</span>
-                )}
+
+            {selectedPatient ? (
+              <div className="flex min-w-0 flex-1 flex-col items-start text-left leading-tight">
+                <span className="truncate text-sm font-semibold text-foreground">
+                  {getPatientName(selectedPatient)}
+                </span>
+                <span className="truncate text-xs text-muted-foreground">
+                  {getPatientMeta(selectedPatient)}
+                </span>
               </div>
-            </div>
-          ) : (
-            "Selecione o paciente..."
-          )}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            ) : hasFallbackDisplay ? (
+              <div className="flex min-w-0 flex-1 flex-col items-start text-left leading-tight">
+                <span className="truncate text-sm font-semibold text-foreground">{fallbackDisplayName}</span>
+                <span className="truncate text-xs text-muted-foreground">
+                  {getPatientMeta(undefined, fallbackDescription)}
+                </span>
+              </div>
+            ) : (
+              <div className="flex min-w-0 flex-1 flex-col items-start text-left leading-tight">
+                <span className="truncate text-sm font-medium text-foreground">Selecione o paciente</span>
+                <span className="truncate text-xs text-muted-foreground">
+                  Busque por nome, CPF ou telefone
+                </span>
+              </div>
+            )}
+          </div>
+
+          <ChevronsUpDown className={cn(
+            "ml-3 h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
+            open && "rotate-180 text-primary"
+          )} />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[300px] sm:w-[400px] p-2" align="start">
-        <Command shouldFilter={false}>
+      <PopoverContent
+        className="z-[100] w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-border/70 bg-popover p-0 shadow-2xl"
+        align="start"
+        sideOffset={8}
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          inputRef.current?.focus();
+        }}
+      >
+        <Command shouldFilter={false} loop className="rounded-[inherit] bg-background">
+          <div className="border-b border-border/60 bg-muted/20 px-3 py-3">
+            <div className="mb-2 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                  Buscar paciente
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  Nome, CPF ou telefone
+                </p>
+              </div>
+              <span className="shrink-0 rounded-full bg-background px-2.5 py-1 text-[11px] font-medium text-muted-foreground shadow-sm ring-1 ring-border/60">
+                {filteredPatients.length} {filteredPatients.length === 1 ? 'resultado' : 'resultados'}
+              </span>
+            </div>
+
           <CommandInput
             ref={inputRef}
             data-testid="patient-search"
             placeholder="Buscar por nome, CPF ou telefone..."
             value={inputValue}
             onValueChange={setInputValue}
+            autoFocus
+            wrapperClassName="mx-0 mt-0 rounded-xl border border-border/70 bg-background px-3 shadow-sm"
+            iconClassName="text-muted-foreground/70"
+            className="h-11 py-0 text-sm"
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 if (canCreateNew && inputValue && filteredPatients.length === 0) {
@@ -190,22 +262,31 @@ export function PatientCombobox({
               }
             }}
           />
-          <CommandList className="max-h-[300px] overflow-y-auto">
+          </div>
+
+          <CommandList className="max-h-[22rem] overflow-y-auto p-2">
             {filteredPatients.length === 0 && (
-              <CommandEmpty>
-                <div className="py-4 px-2 flex flex-col items-center gap-2">
-                  <p className="text-sm text-muted-foreground text-center">
-                    Nenhum paciente encontrado com "{inputValue}"
-                  </p>
+              <CommandEmpty className="py-0">
+                <div className="flex flex-col items-center gap-3 px-4 py-8 text-center">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                    <Search className="h-4 w-4" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-foreground">Nenhum paciente encontrado</p>
+                    <p className="text-xs text-muted-foreground">
+                      {inputValue ? `Nenhum resultado para "${inputValue}".` : 'Digite para buscar um paciente.'}
+                    </p>
+                  </div>
                   {canCreateNew && (
                     <Button
+                      type="button"
                       size="sm"
                       variant="secondary"
                       onClick={handleCreateNew}
-                      className="w-full mt-2 gap-2"
+                      className="mt-1 w-full gap-2 rounded-xl"
                     >
                       <UserPlus className="w-4 h-4" />
-                      Cadastrar "{inputValue}"
+                      Cadastrar novo paciente
                     </Button>
                   )}
                 </div>
@@ -213,37 +294,62 @@ export function PatientCombobox({
             )}
 
             {filteredPatients.length > 0 && (
-              <CommandGroup heading="Pacientes Encontrados">
+              <CommandGroup
+                heading="Pacientes encontrados"
+                className="px-1 pt-1 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pb-2 [&_[cmdk-group-heading]]:pt-0 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.12em]"
+              >
                 {filteredPatients.map((patient) => (
                   <CommandItem
                     key={patient.id}
-                    value={`${patient.name || ''} ${patient.cpf || ''} ${patient.id}`} // Helper for cmdk internal keying if needed, though filtered manually
+                    value={`${patient.name || patient.full_name || ''} ${patient.cpf || ''} ${patient.id}`}
                     onSelect={() => handleSelect(patient.id)}
-                    className="cursor-pointer flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0 py-2"
+                    className="mb-1 cursor-pointer rounded-xl border border-transparent px-3 py-3 transition-colors data-[selected=true]:border-primary/15 data-[selected=true]:bg-primary/5"
                   >
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
                       <div className={cn(
-                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border",
-                        value === patient.id ? "bg-primary text-primary-foreground border-primary" : "bg-muted border-transparent"
+                        "mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors",
+                        value === patient.id
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border/60 bg-muted/50 text-muted-foreground"
                       )}>
-                        {value === patient.id ? <Check className="h-4 w-4" /> : <User className="h-4 w-4 opacity-50" />}
+                        {value === patient.id ? <Check className="h-4 w-4" /> : <User className="h-4 w-4" />}
                       </div>
-                      <div className="flex flex-col">
-                        <span className="font-medium truncate">{patient.name || patient.full_name}</span>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          {patient.phone && <span>{patient.phone}</span>}
-                          {patient.cpf && <span>• CPF: {patient.cpf}</span>}
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="truncate text-sm font-semibold text-foreground">
+                            {getPatientName(patient)}
+                          </span>
+                          {value === patient.id && (
+                            <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                              Selecionado
+                            </span>
+                          )}
                         </div>
+
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                          {patient.phone && (
+                            <span className="rounded-full bg-muted px-2 py-0.5">
+                              {patient.phone}
+                            </span>
+                          )}
+                          {patient.cpf && (
+                            <span className="rounded-full bg-muted px-2 py-0.5">
+                              CPF {patient.cpf}
+                            </span>
+                          )}
+                          {!patient.phone && !patient.cpf && (
+                            <span>Sem telefone ou CPF cadastrado</span>
+                          )}
+                        </div>
+
+                        {patient.incomplete_registration && (
+                          <span className="mt-2 inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                            Cadastro incompleto
+                          </span>
+                        )}
                       </div>
                     </div>
-
-                    {patient.incomplete_registration && (
-                      <div className="shrink-0 flex items-start sm:items-center">
-                        <span className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded-full font-medium whitespace-nowrap">
-                          ⚠️ Incompleto
-                        </span>
-                      </div>
-                    )}
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -251,18 +357,26 @@ export function PatientCombobox({
 
             {/* Always show create option at bottom if there is input */}
             {canCreateNew && inputValue.length > 0 && filteredPatients.length > 0 && (
-              <>
-                <div className="h-px bg-border mx-2 my-1" />
-                <CommandGroup>
+              <div className="border-t border-border/60 p-2">
+                <CommandGroup className="p-0">
                   <CommandItem
                     onSelect={handleCreateNew}
-                    className="cursor-pointer text-primary"
+                    className="cursor-pointer rounded-xl px-3 py-3 text-primary data-[selected=true]:bg-primary/5"
                   >
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    <span>Cadastrar novo: "{inputValue}"</span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <UserPlus className="h-4 w-4" />
+                      </div>
+                      <div className="flex flex-col text-left">
+                        <span className="text-sm font-semibold">Cadastrar novo paciente</span>
+                        <span className="text-xs text-muted-foreground">
+                          Usar "{inputValue}" como nome inicial
+                        </span>
+                      </div>
+                    </div>
                   </CommandItem>
                 </CommandGroup>
-              </>
+              </div>
             )}
           </CommandList>
         </Command>

@@ -5,17 +5,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
-import { ClipboardList, Plus, Pencil, Trash2, Eye, Settings, BookOpen, Copy, Download, Upload, Play, Sparkles } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  CustomModal,
+  CustomModalHeader,
+  CustomModalTitle,
+  CustomModalBody,
+  CustomModalFooter,
+} from '@/components/ui/custom-modal';
+import { ClipboardList, Plus, Pencil, Trash2, Eye, Settings, BookOpen, Copy, Download, Upload, Play, Sparkles, Loader2, Save, FileText, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
-
   useEvaluationForms,
   useCreateEvaluationForm,
   useUpdateEvaluationForm,
@@ -28,7 +34,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useNavigate } from 'react-router-dom';
 import { StandardFormsManager } from '@/components/clinical/StandardFormsManager';
 import { useImportEvaluationForm, EvaluationFormImportData } from '@/hooks/useEvaluationForms';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { DynamicFieldRenderer } from '@/components/evaluation/DynamicFieldRenderer';
 // New components
 import { PageHeader } from '@/components/evaluation/PageHeader';
@@ -37,6 +42,8 @@ import { TemplateFilters as TemplateFiltersComponent } from '@/components/evalua
 import { useToggleFavorite } from '@/hooks/useTemplateFavorites';
 import { useTemplateStats } from '@/hooks/useTemplateStats';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 interface EvaluationFormField {
   tipo_campo: string;
@@ -65,6 +72,7 @@ const TIPOS_FICHA = [
 
 export default function EvaluationFormsPage() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<'minhas' | 'padrao'>('minhas');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -287,17 +295,17 @@ export default function EvaluationFormsPage() {
             recentlyUsed: stats.recentlyUsed,
           } : undefined}
           action={
-            <Button onClick={() => handleOpenDialog()}>
-              <Plus className="h-4 w-4 mr-2" />
+            <Button onClick={() => handleOpenDialog()} className="rounded-xl shadow-lg gap-2">
+              <Plus className="h-4 w-4" />
               Nova Ficha
             </Button>
           }
         />
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'minhas' | 'padrao')}>
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="minhas">Minhas Fichas</TabsTrigger>
-            <TabsTrigger value="padrao">Fichas Padrão</TabsTrigger>
+          <TabsList className="grid w-full max-w-md grid-cols-2 bg-slate-100 p-1 rounded-xl">
+            <TabsTrigger value="minhas" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">Minhas Fichas</TabsTrigger>
+            <TabsTrigger value="padrao" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm">Fichas Padrão</TabsTrigger>
           </TabsList>
 
           <TabsContent value="minhas" className="space-y-6 mt-4">
@@ -314,8 +322,8 @@ export default function EvaluationFormsPage() {
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-primary" />
-                  <h2 className="text-lg font-semibold">Acesso Rápido</h2>
-                  <Badge variant="secondary" className="text-xs">
+                  <h2 className="text-lg font-bold text-slate-800">Acesso Rápido</h2>
+                  <Badge variant="secondary" className="text-[10px] font-bold uppercase rounded-lg h-5 px-2 bg-slate-100 text-slate-500">
                     Favoritos e Recentes
                   </Badge>
                 </div>
@@ -334,12 +342,12 @@ export default function EvaluationFormsPage() {
               </div>
             )}
 
-            <Separator />
+            <Separator className="bg-slate-100" />
 
             {/* Full List - Table View */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Todos os Templates ({filteredForms.length})</h2>
+                <h2 className="text-lg font-bold text-slate-800">Todos os Templates ({filteredForms.length})</h2>
                 <div className="flex gap-2">
                   <input
                     type="file"
@@ -348,159 +356,171 @@ export default function EvaluationFormsPage() {
                     accept=".json"
                     onChange={handleImportFile}
                   />
-                  <Button variant="outline" size="sm" onClick={() => document.getElementById('import-file')?.click()}>
+                  <Button variant="outline" size="sm" onClick={() => document.getElementById('import-file')?.click()} className="rounded-xl h-9 border-slate-200 hover:bg-slate-50">
                     <Upload className="h-4 w-4 mr-2" />
                     Importar
                   </Button>
                 </div>
               </div>
 
-              <Card>
+              <Card className="border-slate-100 shadow-sm overflow-hidden">
                 <CardContent className="p-0">
                   {isLoading ? (
-                    <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
                   ) : filteredForms.length === 0 ? (
                     <div className="text-center py-12">
-                      <div className="text-4xl mb-2">📋</div>
-                      <p className="text-muted-foreground">
+                      <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <FileText className="h-8 w-8 text-slate-300" />
+                      </div>
+                      <p className="text-muted-foreground font-medium">
                         {filters.favorites
                           ? 'Nenhum template favorito encontrado'
                           : 'Nenhuma ficha encontrada'}
                       </p>
                     </div>
                   ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-[10px]"></TableHead>
-                          <TableHead>Nome</TableHead>
-                          <TableHead className="w-[60px] text-center">Ref</TableHead>
-                          <TableHead>Tipo</TableHead>
-                          <TableHead>Campos</TableHead>
-                          <TableHead>Uso</TableHead>
-                          <TableHead className="text-right">Ações</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredForms.map((form) => (
-                          <TableRow key={form.id}>
-                            <TableCell>
-                              {form.is_favorite && (
-                                <span className="text-yellow-500">⭐</span>
-                              )}
-                            </TableCell>
-                            <TableCell className="font-medium">{form.nome}</TableCell>
-                            <TableCell className="text-center">
-                              {form.referencias && (
-                                <TooltipProvider>
-                                  <Tooltip delayDuration={300}>
-                                    <TooltipTrigger asChild>
-                                      <div className="flex items-center justify-center cursor-help">
-                                        <BookOpen className="h-4 w-4 text-primary/70" />
-                                      </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="max-w-xs p-3">
-                                      <p className="font-semibold text-xs mb-1">Referências:</p>
-                                      <p className="text-xs text-muted-foreground">{form.referencias}</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="secondary">
-                                {TIPOS_FICHA.find(t => t.value === form.tipo)?.label || form.tipo}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground text-sm">
-                              {(form.evaluation_form_fields?.length || 0)} campos
-                            </TableCell>
-                            <TableCell className="text-muted-foreground text-sm">
-                              {form.usage_count ? (
-                                <span>{form.usage_count}x</span>
-                              ) : (
-                                <span className="text-xs">-</span>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex items-center justify-end gap-1">
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => handleUseTemplate(form.id)}
-                                        className="hover:bg-primary/10 hover:text-primary"
-                                      >
-                                        <Play className="h-4 w-4" />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Usar Template</TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => duplicateMutation.mutate(form.id)}
-                                        disabled={duplicateMutation.isPending}
-                                      >
-                                        <Copy className="h-4 w-4" />
-                                      </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>Duplicar</TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleExport(form)}
-                                >
-                                  <Download className="h-4 w-4" />
-                                </Button>
-
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => setPreviewForm(form)}
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => navigate(`/cadastros/fichas-avaliacao/${form.id}/campos`)}
-                                >
-                                  <Settings className="h-4 w-4" />
-                                </Button>
-
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleOpenDialog(form)}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => setDeleteId(form.id)}
-                                >
-                                  <Trash2 className="h-4 w-4 text-destructive" />
-                                </Button>
-                              </div>
-                            </TableCell>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="hover:bg-transparent border-slate-100">
+                            <TableHead className="w-[10px]"></TableHead>
+                            <TableHead className="font-bold text-xs uppercase tracking-wider">Nome</TableHead>
+                            <TableHead className="w-[60px] text-center font-bold text-xs uppercase tracking-wider">Ref</TableHead>
+                            <TableHead className="font-bold text-xs uppercase tracking-wider">Tipo</TableHead>
+                            <TableHead className="font-bold text-xs uppercase tracking-wider">Campos</TableHead>
+                            <TableHead className="font-bold text-xs uppercase tracking-wider">Uso</TableHead>
+                            <TableHead className="text-right font-bold text-xs uppercase tracking-wider pr-6">Ações</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredForms.map((form) => (
+                            <TableRow key={form.id} className="hover:bg-slate-50/50 border-slate-100">
+                              <TableCell className="pl-4">
+                                {form.is_favorite && (
+                                  <span className="text-yellow-500">⭐</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="font-bold text-slate-700">{form.nome}</TableCell>
+                              <TableCell className="text-center">
+                                {form.referencias && (
+                                  <TooltipProvider>
+                                    <Tooltip delayDuration={300}>
+                                      <TooltipTrigger asChild>
+                                        <div className="flex items-center justify-center cursor-help">
+                                          <BookOpen className="h-4 w-4 text-primary/70" />
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent className="max-w-xs p-3 rounded-xl shadow-xl">
+                                        <p className="font-bold text-xs mb-1 uppercase tracking-widest text-slate-500">Referências:</p>
+                                        <p className="text-xs text-muted-foreground">{form.referencias}</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="secondary" className="rounded-lg bg-blue-50 text-blue-700 border-blue-100">
+                                  {TIPOS_FICHA.find(t => t.value === form.tipo)?.label || form.tipo}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-slate-500 text-sm font-medium">
+                                {(form.evaluation_form_fields?.length || 0)} campos
+                              </TableCell>
+                              <TableCell className="text-slate-500 text-sm font-bold">
+                                {form.usage_count ? (
+                                  <span>{form.usage_count}x</span>
+                                ) : (
+                                  <span className="text-xs font-normal opacity-40">-</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-right pr-6">
+                                <div className="flex items-center justify-end gap-1">
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => handleUseTemplate(form.id)}
+                                          className="h-8 w-8 rounded-lg hover:bg-emerald-50 hover:text-emerald-600"
+                                        >
+                                          <Play className="h-4 w-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent className="rounded-lg">Usar Template</TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          onClick={() => duplicateMutation.mutate(form.id)}
+                                          disabled={duplicateMutation.isPending}
+                                          className="h-8 w-8 rounded-lg text-slate-400 hover:text-primary"
+                                        >
+                                          <Copy className="h-4 w-4" />
+                                        </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent className="rounded-lg">Duplicar</TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleExport(form)}
+                                    className="h-8 w-8 rounded-lg text-slate-400"
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setPreviewForm(form)}
+                                    className="h-8 w-8 rounded-lg text-slate-400"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
+
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => navigate(`/cadastros/fichas-avaliacao/${form.id}/campos`)}
+                                    className="h-8 w-8 rounded-lg text-slate-400 hover:text-primary"
+                                  >
+                                    <Settings className="h-4 w-4" />
+                                  </Button>
+
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleOpenDialog(form)}
+                                    className="h-8 w-8 rounded-lg text-slate-400 hover:text-primary"
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setDeleteId(form.id)}
+                                    className="h-8 w-8 rounded-lg text-slate-400 hover:text-destructive"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -512,164 +532,211 @@ export default function EvaluationFormsPage() {
           </TabsContent>
         </Tabs>
 
-        {/* Create/Edit Dialog */}
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>
-                {editingForm ? 'Editar Ficha' : 'Nova Ficha de Avaliação'}
-              </DialogTitle>
-              <DialogDescription>
+        {/* Create/Edit Modal - Refactored to CustomModal */}
+        <CustomModal 
+          open={isDialogOpen} 
+          onOpenChange={setIsDialogOpen}
+          isMobile={isMobile}
+          contentClassName="max-w-2xl h-[90vh]"
+        >
+          <CustomModalHeader onClose={() => setIsDialogOpen(false)}>
+            <CustomModalTitle className="flex items-center gap-2">
+              {editingForm ? <Pencil className="h-5 w-5 text-primary" /> : <Plus className="h-5 w-5 text-primary" />}
+              {editingForm ? 'Editar Ficha' : 'Nova Ficha de Avaliação'}
+            </CustomModalTitle>
+          </CustomModalHeader>
+
+          <CustomModalBody className="p-0 sm:p-0">
+            <div className="p-6 space-y-6">
+              <p className="text-sm text-muted-foreground">
                 {editingForm
-                  ? 'Edite as informações básicas da ficha'
-                  : 'Preencha os dados e configure os campos da avaliação'
+                  ? 'Edite as informações básicas da ficha de avaliação.'
+                  : 'Preencha os dados básicos para criar uma nova estrutura de avaliação clínica.'
                 }
-              </DialogDescription>
-            </DialogHeader>
+              </p>
 
-            <form onSubmit={handleSubmit} id="evaluation-form-form" className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2 space-y-2">
-                  <Label htmlFor="nome">Nome da Ficha *</Label>
-                  <Input
-                    id="nome"
-                    value={formData.nome}
-                    onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
-                    placeholder="Ex: Anamnese Fisioterapia Esportiva"
-                    required
+              <form onSubmit={handleSubmit} id="evaluation-form-form" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="col-span-1 md:col-span-2 space-y-2">
+                    <Label htmlFor="nome" className="font-bold text-xs uppercase text-slate-500">Nome da Ficha *</Label>
+                    <Input
+                      id="nome"
+                      value={formData.nome}
+                      onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
+                      placeholder="Ex: Anamnese Fisioterapia Esportiva"
+                      required
+                      className="rounded-xl border-slate-200 h-11 font-semibold"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="tipo" className="font-bold text-xs uppercase text-slate-500">Tipo / Categoria *</Label>
+                    <Select
+                      value={formData.tipo}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, tipo: value }))}
+                    >
+                      <SelectTrigger className="rounded-xl border-slate-200 h-11">
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TIPOS_FICHA.map(t => (
+                          <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="descricao" className="font-bold text-xs uppercase text-slate-500">Descrição Breve</Label>
+                    <Input
+                      id="descricao"
+                      value={formData.descricao || ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
+                      placeholder="Finalidade desta ficha"
+                      className="rounded-xl border-slate-200 h-11"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="referencias" className="flex items-center gap-2 font-bold text-xs uppercase text-slate-500">
+                    <BookOpen className="h-3.5 w-3.5" />
+                    Referências Científicas
+                  </Label>
+                  <Textarea
+                    id="referencias"
+                    value={formData.referencias || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, referencias: e.target.value }))}
+                    placeholder="Cite as referências bibliográficas, artigos ou diretrizes utilizadas (Opcional)"
+                    rows={4}
+                    className="rounded-xl border-slate-200 resize-none bg-slate-50/50"
                   />
+                  <p className="text-[10px] text-slate-400 italic">
+                    Estas referências serão exibidas como consulta rápida durante o atendimento.
+                  </p>
                 </div>
+              </form>
+            </div>
+          </CustomModalBody>
 
-                <div className="col-span-2 md:col-span-1 space-y-2">
-                  <Label htmlFor="tipo">Tipo *</Label>
-                  <Select
-                    value={formData.tipo}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, tipo: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {TIPOS_FICHA.map(t => (
-                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="descricao">Descrição</Label>
-                <Input
-                  id="descricao"
-                  value={formData.descricao || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))}
-                  placeholder="Breve descrição da finalidade desta ficha"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="referencias" className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4" />
-                  Referências Científicas
-                </Label>
-                <Textarea
-                  id="referencias"
-                  value={formData.referencias || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, referencias: e.target.value }))}
-                  placeholder="Cite as referências bibliográficas, artigos ou diretrizes utilizadas (Opcional)"
-                  rows={3}
-                />
-                <p className="text-[0.8rem] text-muted-foreground">
-                  Estas referências serão exibidas durante o preenchimento da avaliação para consulta rápida.
-                </p>
-              </div>
-            </form>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                form="evaluation-form-form"
-                disabled={createMutation.isPending || updateMutation.isPending}
-              >
-                {editingForm ? 'Salvar Alterações' : 'Criar e Configurar Campos'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          <CustomModalFooter isMobile={isMobile} className="bg-slate-50">
+            <Button variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-xl h-11 px-6 font-bold text-slate-500">
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              form="evaluation-form-form"
+              disabled={createMutation.isPending || updateMutation.isPending}
+              className="rounded-xl h-11 px-8 gap-2 bg-slate-900 text-white shadow-xl shadow-slate-900/10 font-bold uppercase tracking-wider transition-all hover:scale-105"
+            >
+              {createMutation.isPending || updateMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                editingForm ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />
+              )}
+              {editingForm ? 'Salvar Alterações' : 'Criar e Configurar'}
+            </Button>
+          </CustomModalFooter>
+        </CustomModal>
 
         {/* Delete Confirmation */}
         <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-          <AlertDialogContent>
+          <AlertDialogContent className="rounded-3xl p-6">
             <AlertDialogHeader>
-              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-              <AlertDialogDescription>
-                Tem certeza que deseja excluir esta ficha? Todos os campos e respostas associadas serão perdidos permanentemente.
+              <AlertDialogTitle className="text-xl font-bold">Confirmar exclusão?</AlertDialogTitle>
+              <AlertDialogDescription className="text-slate-500">
+                Tem certeza que deseja excluir esta ficha? Todos os campos e respostas associadas serão perdidos permanentemente. Esta ação não pode ser desfeita.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogFooter className="mt-6 gap-2">
+              <AlertDialogCancel className="rounded-xl border-slate-200">Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl">
                 Excluir Definitivamente
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Preview Sheet */}
-        <Sheet open={!!previewForm} onOpenChange={() => setPreviewForm(null)}>
-          <SheetContent className="overflow-y-auto sm:max-w-xl w-full">
-            <SheetHeader className="mb-6">
-              <SheetTitle>{previewForm?.nome}</SheetTitle>
-              <SheetDescription>
-                {previewForm?.descricao}
+        {/* Preview Modal - Refactored from Sheet to CustomModal */}
+        <CustomModal 
+          open={!!previewForm} 
+          onOpenChange={() => setPreviewForm(null)}
+          isMobile={isMobile}
+          contentClassName="max-w-3xl h-[95vh]"
+        >
+          <CustomModalHeader onClose={() => setPreviewForm(null)}>
+            <div className="flex flex-col gap-1">
+              <Badge className="w-fit rounded-lg bg-emerald-50 text-emerald-700 border-emerald-100 uppercase text-[10px] font-bold">Pré-visualização</Badge>
+              <CustomModalTitle className="text-2xl font-bold text-slate-800 leading-tight">
+                {previewForm?.nome}
+              </CustomModalTitle>
+            </div>
+          </CustomModalHeader>
+
+          <CustomModalBody className="p-0 sm:p-0">
+            <ScrollArea className="h-full">
+              <div className="p-6 space-y-6">
+                {previewForm?.descricao && (
+                  <p className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    {previewForm.descricao}
+                  </p>
+                )}
+
                 {previewForm?.referencias && (
-                  <div className="mt-2 p-2 bg-muted/50 rounded-md text-xs border">
-                    <div className="flex items-center gap-2 mb-1 text-primary">
-                      <BookOpen className="h-3 w-3" />
-                      <span className="font-semibold">Referências Científicas:</span>
+                  <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                    <div className="flex items-center gap-2 mb-2 text-primary font-bold text-xs uppercase tracking-widest">
+                      <BookOpen className="h-4 w-4" />
+                      Referências Científicas
                     </div>
-                    {previewForm.referencias}
+                    <p className="text-xs text-slate-600 leading-relaxed italic">{previewForm.referencias}</p>
                   </div>
                 )}
-              </SheetDescription>
-            </SheetHeader>
-            {previewForm && (
-              <div className="pb-10">
-                <DynamicFieldRenderer
-                  fields={(previewForm.evaluation_form_fields || []).map((f: EvaluationFormField) => ({
-                    ...f,
-                    section: f.grupo,
-                    min: f.minimo,
-                    max: f.maximo,
-                    description: f.descricao,
-                    opcoes: typeof f.opcoes === 'string' ? JSON.parse(f.opcoes) : f.opcoes,
-                  })).sort((a: EvaluationFormField, b: EvaluationFormField) => a.ordem - b.ordem)}
-                  values={{}}
-                  onChange={() => { }}
-                  readOnly={true}
-                />
-                <div className="mt-6 pt-6 border-t flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setPreviewForm(null)}>
-                    Fechar
-                  </Button>
-                  <Button onClick={() => {
-                    if (previewForm) {
-                      setPreviewForm(null);
-                      handleUseTemplate(previewForm.id);
-                    }
-                  }}>
-                    <Play className="h-4 w-4 mr-2" />
-                    Usar Este Template
-                  </Button>
+
+                <div className="border-t border-slate-100 pt-6">
+                  <h4 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6 flex items-center gap-2">
+                    <Eye className="h-3.5 w-3.5" />
+                    Simulação do Formulário
+                  </h4>
+                  {previewForm && (
+                    <DynamicFieldRenderer
+                      fields={(previewForm.evaluation_form_fields || []).map((f: EvaluationFormField) => ({
+                        ...f,
+                        section: f.grupo,
+                        min: f.minimo,
+                        max: f.maximo,
+                        description: f.descricao,
+                        opcoes: typeof f.opcoes === 'string' ? JSON.parse(f.opcoes) : f.opcoes,
+                      })).sort((a: EvaluationFormField, b: EvaluationFormField) => a.ordem - b.ordem)}
+                      values={{}}
+                      onChange={() => { }}
+                      readOnly={true}
+                    />
+                  )}
                 </div>
               </div>
-            )}
-          </SheetContent>
-        </Sheet>
+            </ScrollArea>
+          </CustomModalBody>
+
+          <CustomModalFooter isMobile={isMobile} className="bg-slate-50 border-t-0">
+            <Button variant="ghost" onClick={() => setPreviewForm(null)} className="rounded-xl h-11 px-6 font-bold text-slate-500">
+              Fechar Visualização
+            </Button>
+            <div className="flex-1" />
+            <Button 
+              onClick={() => {
+                if (previewForm) {
+                  const id = previewForm.id;
+                  setPreviewForm(null);
+                  handleUseTemplate(id);
+                }
+              }}
+              className="rounded-xl h-11 px-8 gap-2 bg-emerald-600 text-white shadow-xl shadow-emerald-600/10 font-bold uppercase tracking-wider transition-all hover:scale-105"
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              Usar Este Template
+            </Button>
+          </CustomModalFooter>
+        </CustomModal>
       </div>
     </MainLayout>
   );
