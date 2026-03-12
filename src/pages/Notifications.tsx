@@ -33,7 +33,7 @@ const typeIcons: Record<Notification['type'], React.ReactNode> = {
   appointment: <Calendar className="h-5 w-5 text-primary" />,
   payment: <DollarSign className="h-5 w-5 text-emerald-500" />,
   whatsapp: <MessageCircle className="h-5 w-5 text-green-600" />,
-  waitlist: <Users className="h-5 w-5 text-purple-500" />,
+  waitlist: <Users className="h-5 w-5 text-cyan-500" />,
 };
 
 const typeLabels: Record<Notification['type'], string> = {
@@ -55,7 +55,7 @@ const typeColors: Record<Notification['type'], string> = {
   appointment: 'bg-primary/10 border-primary/20',
   payment: 'bg-emerald-500/10 border-emerald-500/20',
   whatsapp: 'bg-green-600/10 border-green-600/20',
-  waitlist: 'bg-purple-500/10 border-purple-500/20',
+  waitlist: 'bg-cyan-500/10 border-cyan-500/20',
 };
 
 const NotificationCard: React.FC<{

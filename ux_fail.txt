@@ -1,0 +1,32 @@
+
+[UX AUDIT] 1278 files checked
+--------------------------------------------------
+[!] ISSUES (605):
+  - [Hick's Law] index.html: 12 nav items (Max 7)
+  - [Cognitive Load] index.html: Form inputs without labels. Use <label> for accessibility and clarity.
+  - [Hick's Law] playwright-setup-timeout.html: 13 nav items (Max 7)
+  - [Typography] playwright-setup-timeout.html: 4 font families detected. Limit to 2-3 for cohesion.
+  - [Performance] playwright-setup-timeout.html: will-change on 'width' (layout property). Use only for transform/opacity.
+  - [Performance] playwright-setup-timeout.html: will-change on 'height' (layout property). Use only for transform/opacity.
+  - [Performance] playwright-setup-timeout.html: will-change on 'width' (layout property). Use only for transform/opacity.
+  - [Color] playwright-setup-timeout.html: PURPLE DETECTED ('#8B5CF6'). Banned by Maestro rules. Use Teal/Cyan/Emerald instead.
+  - [Hick's Law] index.html: 19 nav items (Max 7)
+  - [Color] index.html: PURPLE DETECTED ('purple'). Banned by Maestro rules. Use Teal/Cyan/Emerald instead.
+[*] WARNINGS (9097):
+  - [Fitts' Law] index.html: Small targets (< 44px)
+  - [Serial Position] index.html: Last nav item may not be important. Place key actions at start/end.
+  - [Reflective] index.html: Long-form content without brand story/values. Add 'About' or 'Why We Exist' section.
+  - [Trust] index.html: No social proof detected. Consider adding testimonials, ratings, or 'Trusted by' logos.
+  - [Typography] index.html: No line length constraint (45-75ch). Use max-w-prose or max-w-[65ch].
+  - [Typography] index.html: Text elements found without line-height. Body: 1.4-1.6, Headings: 1.1-1.3
+  - [Typography] index.html: Fixed font sizes without clamp(). Consider fluid typography: clamp(MIN, PREFERRED, MAX)
+  - [Performance] index.html: Animating expensive properties (bottom, height, top, left, width, margin). Use transform/opacity where possible.
+  - [Accessibility] index.html: Animations found without prefers-reduced-motion check
+  - [Visual] index.html: Flat design with no depth. Consider shadows or subtle gradients for hierarchy.
+  - [Color] index.html: 9 distinct colors. Consider 60-30-10 rule: dominant (60%), secondary (30%), accent (10%).
+  - [Color] index.html: Color variables without HSL. Consider HSL for easier palette adjustment (Hue, Saturation, Lightness).
+  - [Fitts' Law] playwright-setup-timeout.html: Small targets (< 44px)
+  - [Serial Position] playwright-setup-timeout.html: Last nav item may not be important. Place key actions at start/end.
+  - [Cognitive Load] playwright-setup-timeout.html: High visual noise detected. Many colors and borders increase cognitive load.
+[+] PASSED CHECKS: 707
+STATUS: FAIL

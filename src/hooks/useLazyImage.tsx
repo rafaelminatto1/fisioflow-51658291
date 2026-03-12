@@ -97,7 +97,8 @@ export const useLazyImage = ({
       className,
       onLoad: handleLoad,
       onError: handleError,
-      loading: 'lazy',
+      loading: 'lazy' as const,
+      style: {} as React.CSSProperties,
     },
   };
 };
@@ -115,19 +116,20 @@ interface LazyImageProps extends UseLazyImageOptions {
   height?: number;
 }
 
-export const LazyImage: React.FC<LazyImageProps> = (props) => {
-  const { imgRef, isVisible, isLoaded, isError, imageProps } = useLazyImage(props);
+export const LazyImage: React.FC<LazyImageProps> = ({ alt, ...props }) => {
+  const { imgRef, isVisible, isLoaded, isError, imageProps } = useLazyImage({ alt, ...props });
 
   return (
     <img
       ref={imgRef}
       {...imageProps}
+      alt={imageProps.alt}
       style={{
         ...imageProps.style,
         width: props.width,
         height: props.height,
         // Blur placeholder while loading
-        ...(!isLoaded && !isError && LAZY_IMAGE_PLACEHOLDER_STYLE),
+        ...(!isLoaded && !isError ? (LAZY_IMAGE_PLACEHOLDER_STYLE as any) : {}),
       }}
     />
   );

@@ -123,12 +123,14 @@ export function PhotoUpload({ photos, onPhotosChange, maxPhotos = 6, colors }: P
           {photos.map((photo, index) => (
             <View key={index} style={styles.photoContainer}>
               <Image source={{ uri: photo }} style={styles.photo} />
-              <TouchableOpacity
-                style={[styles.removeButton, { backgroundColor: colors.error }]}
-                onPress={() => removePhoto(index)}
-              >
-                <Ionicons name="close" size={16} color="#fff" />
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.removeButton, { backgroundColor: colors.error }]}
+                  onPress={() => removePhoto(index)}
+                  accessibilityLabel="Remover foto"
+                  accessibilityRole="button"
+                >
+                  <Ionicons name="close" size={16} color="#fff" />
+                </TouchableOpacity>
             </View>
           ))}
         </ScrollView>
@@ -140,6 +142,8 @@ export function PhotoUpload({ photos, onPhotosChange, maxPhotos = 6, colors }: P
             style={[styles.actionButton, { backgroundColor: colors.primary }]}
             onPress={() => pickImage(true)}
             disabled={uploading}
+            accessibilityLabel="Tirar nova foto com a câmera"
+            accessibilityRole="button"
           >
             {uploading ? (
               <ActivityIndicator color="#fff" size="small" />
@@ -155,6 +159,8 @@ export function PhotoUpload({ photos, onPhotosChange, maxPhotos = 6, colors }: P
             style={[styles.actionButton, { backgroundColor: colors.info }]}
             onPress={() => pickImage(false)}
             disabled={uploading}
+            accessibilityLabel="Escolher foto da galeria"
+            accessibilityRole="button"
           >
             {uploading ? (
               <ActivityIndicator color="#fff" size="small" />

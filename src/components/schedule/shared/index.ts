@@ -26,3 +26,10 @@ export {
   isToday,
   formatAppointmentType,
 } from './utils';
+
+export {
+  NON_CAPACITY_STATUSES,
+  OVERBOOK_MARKER,
+  isCapacityCountedStatus,
+  isMarkedOverbooked,
+} from './capacity';

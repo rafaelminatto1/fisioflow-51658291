@@ -8,6 +8,8 @@ export interface Env {
   DATABASE_URL: string;
   AUTH_TOKEN: string;
   JWT_SECRET: string;
+  OPENAI_API_KEY?: string;
+  GEMINI_API_KEY?: string;
 }
 
 interface Notification {
@@ -253,6 +255,170 @@ export default {
         await queryNeon(sql, [notificationId, user.userId], env.DATABASE_URL);
 
         return new Response(JSON.stringify({ success: true }), { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        });
+      }
+
+      // =====================
+      // PUSH NOTIFICATIONS SEND API
+      // =====================
+      
+      // POST /api/notifications/send - Send push notification to user
+      if (path === '/api/notifications/send' && request.method === 'POST') {
+        const user = verifyToken(request.headers.get('Authorization'), env.JWT_SECRET);
+        if (!user) {
+          return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
+            status: 401, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          });
+        }
+
+        const body = await request.json() as {
+          userId: string;
+          notification: {
+            title: string;
+            body: string;
+            data?: Record<string, any>;
+            type?: string;
+          };
+        };
+
+        // Get user's push tokens
+        const tokensSql = `
+          SELECT expo_push_token 
+          FROM push_tokens 
+          WHERE user_id = $1 AND is_active = true
+        `;
+        const tokens = await queryNeon(tokensSql, [body.userId], env.DATABASE_URL);
+
+        if (tokens.length === 0) {
+          // No push tokens, just save as in-app notification
+          const notifSql = `
+            INSERT INTO notifications (user_id, type, title, message, metadata)
+            VALUES ($1, $2, $3, $4, $5)
+            RETURNING *
+          `;
+          const notif = await queryNeon(notifSql, [
+            body.userId,
+            body.notification.type || 'info',
+            body.notification.title,
+            body.notification.body,
+            body.notification.data || {}
+          ], env.DATABASE_URL);
+
+          return new Response(JSON.stringify({ 
+            success: true, 
+            sent: false, 
+            reason: 'No push tokens registered',
+            notification: notif[0]
+          }), { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          });
+        }
+
+        // Send push notification via Expo
+        const pushTokens = tokens.map((t: any) => t.expo_push_token);
+        const pushResults = await sendExpoPushNotifications(pushTokens, {
+          title: body.notification.title,
+          body: body.notification.body,
+          data: body.notification.data || {},
+        });
+
+        // Also save as in-app notification
+        const notifSql = `
+          INSERT INTO notifications (user_id, type, title, message, metadata)
+          VALUES ($1, $2, $3, $4, $5)
+          RETURNING *
+        `;
+        const notif = await queryNeon(notifSql, [
+          body.userId,
+          body.notification.type || 'info',
+          body.notification.title,
+          body.notification.body,
+          { ...body.notification.data, pushResults }
+        ], env.DATABASE_URL);
+
+        return new Response(JSON.stringify({ 
+          success: true, 
+          sent: true,
+          pushResults,
+          notification: notif[0]
+        }), { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        });
+      }
+
+      // POST /api/notifications/send-batch - Send to multiple users
+      if (path === '/api/notifications/send-batch' && request.method === 'POST') {
+        const user = verifyToken(request.headers.get('Authorization'), env.JWT_SECRET);
+        if (!user) {
+          return new Response(JSON.stringify({ error: 'Unauthorized' }), { 
+            status: 401, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          });
+        }
+
+        const body = await request.json() as {
+          userIds: string[];
+          notification: {
+            title: string;
+            body: string;
+            data?: Record<string, any>;
+            type?: string;
+          };
+        };
+
+        // Get all push tokens for users
+        const tokensSql = `
+          SELECT user_id, expo_push_token 
+          FROM push_tokens 
+          WHERE user_id = ANY($1) AND is_active = true
+        `;
+        const tokens = await queryNeon(tokensSql, [body.userIds], env.DATABASE_URL);
+
+        // Group tokens by user
+        const userTokens: Record<string, string[]> = {};
+        for (const token of tokens) {
+          if (!userTokens[token.user_id]) {
+            userTokens[token.user_id] = [];
+          }
+          userTokens[token.user_id].push(token.expo_push_token);
+        }
+
+        // Send push notifications
+        const allTokens = tokens.map((t: any) => t.expo_push_token);
+        let pushResults: any[] = [];
+        
+        if (allTokens.length > 0) {
+          pushResults = await sendExpoPushNotifications(allTokens, {
+            title: body.notification.title,
+            body: body.notification.body,
+            data: body.notification.data || {},
+          });
+        }
+
+        // Save in-app notifications for all users
+        for (const userId of body.userIds) {
+          const notifSql = `
+            INSERT INTO notifications (user_id, type, title, message, metadata)
+            VALUES ($1, $2, $3, $4, $5)
+          `;
+          await queryNeon(notifSql, [
+            userId,
+            body.notification.type || 'info',
+            body.notification.title,
+            body.notification.body,
+            body.notification.data || {}
+          ], env.DATABASE_URL);
+        }
+
+        return new Response(JSON.stringify({ 
+          success: true, 
+          sent: allTokens.length > 0,
+          tokensCount: allTokens.length,
+          usersCount: body.userIds.length,
+          pushResults
+        }), { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         });
       }
@@ -605,9 +771,8 @@ export default {
           painLevel: number;
         };
         
-        // Generate AI-powered suggestions
-        // In production, this would call an AI service like OpenAI or similar
-        const suggestions = await generateAIExerciseSuggestions(body);
+        // Generate AI-powered suggestions with cache (priority: Cache > Gemini > OpenAI > Local)
+        const suggestions = await generateAIExerciseSuggestions(body, env.OPENAI_API_KEY, env.GEMINI_API_KEY, env.DATABASE_URL);
         
         return new Response(JSON.stringify(suggestions), { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -953,12 +1118,268 @@ interface ExerciseSuggestion {
   };
 }
 
-async function generateAIExerciseSuggestions(context: {
+async function generateAIExerciseSuggestions(
+  context: {
+    patientId: string;
+    conditions: any[];
+    recentEvolutions: any[];
+    painLevel: number;
+  },
+  openaiApiKey?: string,
+  geminiApiKey?: string,
+  databaseUrl?: string
+): Promise<ExerciseSuggestion[]> {
+  // Step 1: Check cache first (FREE!)
+  if (databaseUrl) {
+    const cacheKey = generateCacheKey(context);
+    const cached = await getCachedSuggestion(cacheKey, databaseUrl);
+    if (cached) {
+      console.log('✅ Cache HIT - saved API call!');
+      return cached;
+    }
+  }
+
+  // Step 2: Try Gemini with File Search (cheaper)
+  if (geminiApiKey) {
+    try {
+      const suggestions = await generateGeminiSuggestions(context, geminiApiKey);
+      // Cache the result
+      if (databaseUrl) {
+        await cacheSuggestion(generateCacheKey(context), suggestions, 'gemini', databaseUrl);
+      }
+      return suggestions;
+    } catch (error) {
+      console.error('Gemini API error, trying OpenAI fallback:', error);
+    }
+  }
+  
+  // Step 3: Try OpenAI as fallback
+  if (openaiApiKey) {
+    try {
+      const suggestions = await generateOpenAISuggestions(context, openaiApiKey);
+      // Cache the result
+      if (databaseUrl) {
+        await cacheSuggestion(generateCacheKey(context), suggestions, 'openai', databaseUrl);
+      }
+      return suggestions;
+    } catch (error) {
+      console.error('OpenAI API error, falling back to local:', error);
+    }
+  }
+  
+  // Step 4: Local fallback (FREE!)
+  return generateLocalSuggestions(context);
+}
+
+// Cache helper functions
+function generateCacheKey(context: any): string {
+  const str = JSON.stringify({
+    conditions: context.conditions?.map((c: any) => c.bodyPart || c.body_part || 'general').sort(),
+    painLevel: context.painLevel > 7 ? 'high' : context.painLevel > 4 ? 'medium' : 'low'
+  });
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return `cache-${Math.abs(hash).toString(16)}`;
+}
+
+async function getCachedSuggestion(cacheKey: string, databaseUrl: string): Promise<ExerciseSuggestion[] | null> {
+  try {
+    const sql = `
+      SELECT response FROM ai_cache 
+      WHERE query_hash = $1 AND expires_at > NOW()
+      LIMIT 1
+    `;
+    const results = await queryNeon(sql, [cacheKey], databaseUrl);
+    if (results.length > 0) {
+      // Update hit count
+      await queryNeon('UPDATE ai_cache SET hit_count = hit_count + 1 WHERE query_hash = $1', [cacheKey], databaseUrl);
+      return JSON.parse(results[0].response);
+    }
+    return null;
+  } catch (error) {
+    console.error('Cache lookup error:', error);
+    return null;
+  }
+}
+
+async function cacheSuggestion(cacheKey: string, suggestions: ExerciseSuggestion[], model: string, databaseUrl: string): Promise<void> {
+  try {
+    // Cache for 7 days
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const sql = `
+      INSERT INTO ai_cache (query_hash, query_text, response, model_used, expires_at)
+      VALUES ($1, $2, $3, $4, $5)
+      ON CONFLICT (query_hash) DO UPDATE SET
+        response = EXCLUDED.response,
+        model_used = EXCLUDED.model_used,
+        expires_at = EXCLUDED.expires_at,
+        hit_count = 0
+    `;
+    await queryNeon(sql, [cacheKey, 'exercise_suggestions', JSON.stringify(suggestions), model, expiresAt], databaseUrl);
+  } catch (error) {
+    console.error('Cache save error:', error);
+  }
+}
+
+async function generateGeminiSuggestions(
+  context: {
+    patientId: string;
+    conditions: any[];
+    recentEvolutions: any[];
+    painLevel: number;
+  },
+  apiKey: string
+): Promise<ExerciseSuggestion[]> {
+  const prompt = `Você é um fisioterapeuta especialista. Sugira 5 exercícios para o seguinte paciente:
+
+Condições: ${JSON.stringify(context.conditions)}
+Nível de dor (0-10): ${context.painLevel}
+Evoluções recentes: ${context.recentEvolutions?.length || 0} sessões
+
+Responda APENAS com um JSON válido (sem markdown, sem explicações), contendo um array de objetos:
+[{
+  "exerciseId": "string",
+  "exerciseName": "string (nome em português)",
+  "reason": "string (razão em português)",
+  "priority": "high|medium|low",
+  "targetArea": "string",
+  "estimatedDuration": number (minutos),
+  "difficulty": "easy|medium|hard",
+  "contraindications": ["string"],
+  "benefits": ["string"]
+}]`;
+
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      contents: [{
+        parts: [{
+          text: prompt
+        }]
+      }],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 1500,
+      }
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Gemini API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  
+  if (!content) {
+    throw new Error('No response from Gemini');
+  }
+
+  // Parse JSON from response
+  const jsonMatch = content.match(/\[[\s\S]*\]/);
+  if (!jsonMatch) {
+    throw new Error('Invalid JSON response from Gemini');
+  }
+
+  const suggestions = JSON.parse(jsonMatch[0]);
+  
+  // Add progressMetrics to each suggestion
+  return suggestions.map((s: any) => ({
+    ...s,
+    progressMetrics: {
+      targetScore: 80,
+      improvement: 10
+    }
+  }));
+}
+
+async function generateOpenAISuggestions(
+  context: {
+    patientId: string;
+    conditions: any[];
+    recentEvolutions: any[];
+    painLevel: number;
+  },
+  apiKey: string
+): Promise<ExerciseSuggestion[]> {
+  const prompt = `Você é um fisioterapeuta especialista. Sugira 5 exercícios para o seguinte paciente:
+
+Condições: ${JSON.stringify(context.conditions)}
+Nível de dor (0-10): ${context.painLevel}
+Evoluções recentes: ${context.recentEvolutions?.length || 0} sessões
+
+Responda em JSON com array de objetos:
+{
+  "exerciseId": "string",
+  "exerciseName": "string (nome em português)",
+  "reason": "string (razão em português)",
+  "priority": "high|medium|low",
+  "targetArea": "string",
+  "estimatedDuration": number (minutos),
+  "difficulty": "easy|medium|hard",
+  "contraindications": ["string"],
+  "benefits": ["string"]
+}`;
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: 'Você é um assistente especializado em fisioterapia. Responda apenas com JSON válido.' },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 1500
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`OpenAI API error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices[0]?.message?.content;
+  
+  if (!content) {
+    throw new Error('No response from OpenAI');
+  }
+
+  // Parse JSON from response
+  const jsonMatch = content.match(/\[[\s\S]*\]/);
+  if (!jsonMatch) {
+    throw new Error('Invalid JSON response from OpenAI');
+  }
+
+  const suggestions = JSON.parse(jsonMatch[0]);
+  
+  // Add progressMetrics to each suggestion
+  return suggestions.map((s: any) => ({
+    ...s,
+    progressMetrics: {
+      targetScore: 80,
+      improvement: 10
+    }
+  }));
+}
+
+function generateLocalSuggestions(context: {
   patientId: string;
   conditions: any[];
   recentEvolutions: any[];
   painLevel: number;
-}): Promise<ExerciseSuggestion[]> {
+}): ExerciseSuggestion[] {
   const suggestions: ExerciseSuggestion[] = [];
   
   // Exercise database based on body parts
@@ -1198,4 +1619,50 @@ function generatePatientInsights(patientData: any): {
       averagePain: Math.round(avgPain * 10) / 10,
     },
   };
+}
+
+// =====================
+// PUSH NOTIFICATION HELPER
+// =====================
+
+async function sendExpoPushNotifications(
+  tokens: string[],
+  notification: {
+    title: string;
+    body: string;
+    data?: Record<string, any>;
+  }
+): Promise<any[]> {
+  const expoPushUrl = 'https://exp.host/--/api/v2/push/send';
+  
+  const messages = tokens.map(token => ({
+    to: token,
+    title: notification.title,
+    body: notification.body,
+    data: notification.data || {},
+    sound: 'default',
+    priority: 'high',
+  }));
+
+  try {
+    const response = await fetch(expoPushUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify(messages),
+    });
+
+    if (!response.ok) {
+      console.error('Expo Push API error:', response.status);
+      return [{ status: 'error', message: `HTTP ${response.status}` }];
+    }
+
+    const result = await response.json();
+    return result.data || [];
+  } catch (error) {
+    console.error('Failed to send push notifications:', error);
+    return [{ status: 'error', message: String(error) }];
+  }
 }

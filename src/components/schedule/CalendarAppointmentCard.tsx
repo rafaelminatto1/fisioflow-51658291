@@ -10,6 +10,7 @@ import { useCardSize } from '@/hooks/useCardSize';
 import { useStatusConfig } from '@/hooks/useStatusConfig';
 import { useReducedMotion } from '@/lib/accessibility/a11y-utils';
 import { normalizeTime, calculateEndTime } from './shared/utils';
+import { isMarkedOverbooked } from './shared/capacity';
 import { AppointmentCard } from '@fisioflow/ui';
 
 interface CalendarAppointmentCardProps {
@@ -77,8 +78,6 @@ const getStatusStyles = (status: string) => {
     return styles[normalized] || styles.default;
 };
 
-const OVERBOOK_MARKER = '[EXCEDENTE]';
-
 const overbookStyles = {
     className: 'calendar-card-cancelado ring-2 ring-red-600 ring-offset-2',
     accent: 'bg-red-700',
@@ -116,7 +115,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
     const { getStatusConfig } = useStatusConfig();
     const isCompact = density === 'compact';
 
-    const isOverbooked = Boolean(appointment.isOverbooked || appointment.notes?.includes(OVERBOOK_MARKER));
+    const isOverbooked = isMarkedOverbooked(appointment.notes, appointment.isOverbooked);
     const normalizedStatus = normalizeStatus(appointment.status || 'agendado');
     const statusStyles = isOverbooked ? overbookStyles : getStatusStyles(normalizedStatus);
     const sharedStatusConfig = getStatusConfig(normalizedStatus);

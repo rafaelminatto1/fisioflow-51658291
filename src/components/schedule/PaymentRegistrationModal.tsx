@@ -4,8 +4,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { CalendarIcon, Loader2, DollarSign } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { CalendarIcon, Loader2, DollarSign, BadgeCheck, CreditCard, Wallet, Banknote } from 'lucide-react';
+import {
+  CustomModal,
+  CustomModalHeader,
+  CustomModalTitle,
+  CustomModalBody,
+  CustomModalFooter,
+} from '@/components/ui/custom-modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,6 +23,7 @@ import { toast } from 'sonner';
 import { FinancialService } from '@/services/financialService';
 import { useUpdateAppointment } from '@/hooks/useAppointments';
 import type { Appointment } from '@/types/appointment';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const paymentSchema = z.object({
     type: z.enum(['single_session', 'package']),
@@ -41,6 +48,7 @@ export function PaymentRegistrationModal({
     onOpenChange,
     onSuccess,
 }: PaymentRegistrationModalProps) {
+    const isMobile = useIsMobile();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { mutateAsync: updateAppointment } = useUpdateAppointment();
 
@@ -78,21 +86,7 @@ export function PaymentRegistrationModal({
         try {
             // 1. Create Financial Transaction
             await FinancialService.createTransaction({
-                tipo: 'income', // 'income' for receiving payment
-                // @ts-expect-error - Property is required but missing in FinancialService might be strict string, but 'income' is usually correct for transaction type
-                // If type is 'receita' in backend, we should use that. 
-                // Checking existing code, FinancialApi uses 'income' | 'expense'.
-                // But FinancialService.createTransaction Omit<Transaction...> might expect backend DB string.
-                // Let's assume 'receita' based on typical portuguese systems or strict to what FinancialApi expects.
-                // Wait, FinancialService.createTransaction takes `Omit<Transaction...>`
-                // Let's stick to 'receita' as per common convention if the interface allows string.
-                // Actually, FinancialApi.Transaction has `type: 'income' | 'expense'`.
-                // Let's check `Transaction` interface in `financialService.ts` again.
-                // It says `tipo: string`. So 'receita' is probably what we want if it's localized, or 'income'.
-                // Let's use 'receita' for safety with backend, or check existing usage?
-                // Usage in `FinanceiroTab` shows `pagamento.tipo` as 'prestador', 'insumo', 'outro'.
-                // Those are expenses.
-                // For income, let's use 'receita'.
+                tipo: 'receita', 
                 category: data.type === 'package' ? 'Pacote' : 'Atendimento',
                 descricao: data.description || `Pagamento - ${appointment.patientName}`,
                 valor: data.amount,
@@ -111,8 +105,6 @@ export function PaymentRegistrationModal({
                 appointmentId: appointment.id,
                 updates: {
                     payment_status: 'paid',
-                    // payment_method: data.method, // If these columns exist on appointment
-                    // payment_amount: data.amount, 
                 },
             });
 
@@ -128,119 +120,160 @@ export function PaymentRegistrationModal({
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>Registrar Pagamento</DialogTitle>
-                    <DialogDescription>
-                        Confirme os detalhes do pagamento para este atendimento.
-                    </DialogDescription>
-                </DialogHeader>
+        <CustomModal 
+            open={open} 
+            onOpenChange={onOpenChange}
+            isMobile={isMobile}
+            contentClassName="max-w-md"
+        >
+            <CustomModalHeader onClose={() => onOpenChange(false)}>
+                <CustomModalTitle className="flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 text-emerald-600" />
+                    Registrar Pagamento
+                </CustomModalTitle>
+            </CustomModalHeader>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-2">
-
-                    {/* Tipo de Pagamento */}
-                    <div className="space-y-2">
-                        <Label>Tipo de Referência</Label>
-                        <Select
-                            value={watch('type')}
-                            onValueChange={(val) => setValue('type', val as 'single_session' | 'package')}
-                        >
-                            <SelectTrigger>
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="single_session">Sessão Avulsa</SelectItem>
-                                <SelectItem value="package">Pacote / Plano</SelectItem>
-                            </SelectContent>
-                        </Select>
+            <CustomModalBody className="p-0 sm:p-0">
+                <div className="px-6 py-4 space-y-6">
+                    <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 mb-2">
+                        <p className="text-xs text-emerald-700 font-bold uppercase tracking-wider mb-1">Paciente</p>
+                        <p className="text-sm font-semibold text-emerald-900">{appointment.patientName}</p>
                     </div>
 
-                    {/* Valor */}
-                    <div className="space-y-2">
-                        <Label htmlFor="amount">Valor (R$)</Label>
-                        <div className="relative">
-                            <DollarSign className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                id="amount"
-                                type="number"
-                                step="0.01"
-                                className="pl-9"
-                                placeholder="0.00"
-                                {...register('amount', { valueAsNumber: true })}
-                            />
+                    <form id="payment-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                        {/* Tipo de Pagamento */}
+                        <div className="space-y-2">
+                            <Label className="font-semibold text-xs">Tipo de Referência</Label>
+                            <Select
+                                value={watch('type')}
+                                onValueChange={(val) => setValue('type', val as 'single_session' | 'package')}
+                            >
+                                <SelectTrigger className="rounded-xl border-slate-200">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="single_session">Sessão Avulsa</SelectItem>
+                                    <SelectItem value="package">Pacote / Plano</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
-                        {errors.amount && (
-                            <p className="text-xs text-destructive">{errors.amount.message}</p>
-                        )}
-                    </div>
 
-                    {/* Método de Pagamento */}
-                    <div className="space-y-2">
-                        <Label>Forma de Pagamento</Label>
-                        <Select
-                            value={watch('method')}
-                            onValueChange={(val) => setValue('method', val)}
-                        >
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="pix">Pix</SelectItem>
-                                <SelectItem value="credit_card">Cartão de Crédito</SelectItem>
-                                <SelectItem value="debit_card">Cartão de Débito</SelectItem>
-                                <SelectItem value="cash">Dinheiro</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        {errors.method && (
-                            <p className="text-xs text-destructive">{errors.method.message}</p>
-                        )}
-                    </div>
-
-                    {/* Data */}
-                    <div className="space-y-2">
-                        <Label>Data do Pagamento</Label>
-                        <Popover>
-                            <PopoverTrigger asChild>
-                                <Button
-                                    variant="outline"
-                                    className={cn(
-                                        "w-full justify-start text-left font-normal",
-                                        !date && "text-muted-foreground"
-                                    )}
-                                >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {date ? format(date, "PPP", { locale: ptBR }) : <span>Selecione a data</span>}
-                                </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                                <Calendar
-                                    mode="single"
-                                    selected={date}
-                                    onSelect={(d) => d && setValue('date', d)}
-                                    initialFocus
-                                    locale={ptBR}
+                        {/* Valor */}
+                        <div className="space-y-2">
+                            <Label htmlFor="amount" className="font-semibold text-xs">Valor Recebido (R$)</Label>
+                            <div className="relative">
+                                <DollarSign className="absolute left-3 top-3 h-4 w-4 text-emerald-600" />
+                                <Input
+                                    id="amount"
+                                    type="number"
+                                    step="0.01"
+                                    className="pl-9 rounded-xl border-slate-200 h-11 text-lg font-bold"
+                                    placeholder="0.00"
+                                    {...register('amount', { valueAsNumber: true })}
                                 />
-                            </PopoverContent>
-                        </Popover>
-                    </div>
+                            </div>
+                            {errors.amount && (
+                                <p className="text-[10px] text-destructive font-medium">{errors.amount.message}</p>
+                            )}
+                        </div>
 
-                    <DialogFooter className="pt-4">
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => onOpenChange(false)}
-                            disabled={isSubmitting}
-                        >
-                            Cancelar
-                        </Button>
-                        <Button type="submit" disabled={isSubmitting}>
-                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Confirmar Pagamento
-                        </Button>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
+                        {/* Método de Pagamento */}
+                        <div className="space-y-2">
+                            <Label className="font-semibold text-xs">Forma de Pagamento</Label>
+                            <Select
+                                value={watch('method')}
+                                onValueChange={(val) => setValue('method', val)}
+                            >
+                                <SelectTrigger className="rounded-xl border-slate-200">
+                                    <SelectValue placeholder="Selecione..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="pix">
+                                        <div className="flex items-center gap-2">
+                                            <Wallet className="h-4 w-4 text-emerald-500" />
+                                            Pix
+                                        </div>
+                                    </SelectItem>
+                                    <SelectItem value="credit_card">
+                                        <div className="flex items-center gap-2">
+                                            <CreditCard className="h-4 w-4 text-blue-500" />
+                                            Cartão de Crédito
+                                        </div>
+                                    </SelectItem>
+                                    <SelectItem value="debit_card">
+                                        <div className="flex items-center gap-2">
+                                            <CreditCard className="h-4 w-4 text-purple-500" />
+                                            Cartão de Débito
+                                        </div>
+                                    </SelectItem>
+                                    <SelectItem value="cash">
+                                        <div className="flex items-center gap-2">
+                                            <Banknote className="h-4 w-4 text-orange-500" />
+                                            Dinheiro
+                                        </div>
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            {errors.method && (
+                                <p className="text-[10px] text-destructive font-medium">{errors.method.message}</p>
+                            )}
+                        </div>
+
+                        {/* Data */}
+                        <div className="space-y-2">
+                            <Label className="font-semibold text-xs">Data do Recebimento</Label>
+                            <Popover>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        className={cn(
+                                            "w-full justify-start text-left font-normal rounded-xl border-slate-200 h-11",
+                                            !date && "text-muted-foreground"
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4 text-slate-400" />
+                                        {date ? format(date, "PPP", { locale: ptBR }) : <span>Selecione a data</span>}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0 z-[110]" align="start">
+                                    <Calendar
+                                        mode="single"
+                                        selected={date}
+                                        onSelect={(d) => d && setValue('date', d)}
+                                        initialFocus
+                                        locale={ptBR}
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+                    </form>
+                </div>
+            </CustomModalBody>
+
+            <CustomModalFooter isMobile={isMobile}>
+                <Button
+                    type="button"
+                    variant="ghost"
+                    className="rounded-xl h-11 px-6 font-bold text-slate-500"
+                    onClick={() => onOpenChange(false)}
+                    disabled={isSubmitting}
+                >
+                    Cancelar
+                </Button>
+                <Button 
+                    type="submit" 
+                    form="payment-form"
+                    disabled={isSubmitting}
+                    className="rounded-xl h-11 px-8 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/20 font-bold uppercase tracking-wider"
+                >
+                    {isSubmitting ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                        <BadgeCheck className="h-4 w-4" />
+                    )}
+                    Confirmar Pagamento
+                </Button>
+            </CustomModalFooter>
+        </CustomModal>
     );
 }

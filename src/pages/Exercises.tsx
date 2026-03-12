@@ -363,11 +363,11 @@ export default function Exercises() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="ai"
-                  className="gap-1.5 sm:gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-3 sm:px-4 md:px-6 text-xs sm:text-sm bg-gradient-to-r from-purple-500/10 to-pink-500/10 hover:from-purple-500/20 hover:to-pink-500/20"
+                  className="gap-1.5 sm:gap-2 h-full rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-3 sm:px-4 md:px-6 text-xs sm:text-sm bg-gradient-to-r from-cyan-500/10 to-teal-500/10 hover:from-cyan-500/20 hover:to-teal-500/20"
                 >
-                  <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-purple-600" />
+                  <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-cyan-600" />
                   <span className="hidden xs:inline">IA Assistente</span>
-                  <Badge variant="secondary" className="ml-0.5 sm:ml-1 h-4 sm:h-5 text-[10px] sm:text-xs bg-purple-500/20 text-purple-600">
+                  <Badge variant="secondary" className="ml-0.5 sm:ml-1 h-4 sm:h-5 text-[10px] sm:text-xs bg-cyan-500/20 text-cyan-600">
                     NOVO
                   </Badge>
                 </TabsTrigger>

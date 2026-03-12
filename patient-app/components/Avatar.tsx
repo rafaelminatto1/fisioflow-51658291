@@ -73,8 +73,8 @@ export function Avatar({
       '#3b82f6', // blue
       '#f59e0b', // orange
       '#ef4444', // red
-      '#8b5cf6', // purple
-      '#ec4899', // pink
+      '#0891b2', // cyan
+      '#10b981', // emerald
       '#14b8a6', // teal
     ];
 

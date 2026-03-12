@@ -126,7 +126,7 @@ const PreCadastro = () => {
   return (
     <div className="premium-container">
       <div className="glow-blob blob-teal" />
-      <div className="glow-blob blob-purple" />
+      <div className="glow-blob blob-blue" />
 
       <div className="premium-card">
         <h1 className="premium-title">{tokenData?.nome || 'Pré-cadastro'}</h1>

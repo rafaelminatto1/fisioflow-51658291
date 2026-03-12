@@ -8,16 +8,11 @@ import { useEffect } from 'react';
 import { startOfMonth, subMonths, subDays, startOfWeek, endOfWeek } from 'date-fns';
 import { formatDateToLocalISO } from '@/utils/dateUtils';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import {
-  appointmentsApi,
-  financialApi,
-  patientsApi,
-  profileApi,
-  type AppointmentRow,
-  type ContaFinanceira,
-  type Pagamento,
-  type TherapistSummary,
-} from '@/lib/api/workers-client';
+import { appointmentsApi } from '@/api/v2/appointments';
+import { financialApi } from '@/api/v2/financial';
+import { patientsApi } from '@/api/v2/patients';
+import { profileApi } from '@/api/v2/system';
+import type { AppointmentRow, ContaFinanceira, Pagamento, TherapistSummary } from '@/types/workers';
 
 export interface TherapistPerformance {
   id: string;

@@ -18,7 +18,7 @@ const FeedbackPreCadastro = () => {
     <div className="premium-container">
       {/* Background Glow Blobs */}
       <div className="glow-blob blob-teal"></div>
-      <div className="glow-blob blob-purple"></div>
+      <div className="glow-blob blob-cyan"></div>
 
       <div className="premium-card" style={{ textAlign: 'center' }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '2rem' }}>

@@ -115,8 +115,8 @@ const SOAP_SECTIONS = [
     label: 'Avaliação',
     shortLabel: 'A',
     iconName: 'brain-outline' as keyof typeof Ionicons.glyphMap,
-    color: '#8B5CF6',
-    bgColor: '#EDE9FE',
+    color: COLORS.primary,
+    bgColor: '#E0F2FE',
     placeholder: 'Análise do progresso, resposta ao tratamento...',
     description: 'Sua interpretação profissional',
   },
@@ -133,10 +133,10 @@ const SOAP_SECTIONS = [
 ];
 
 const PAIN_LEVELS = [
-  { value: 0, label: 'Sem dor', color: COLORS.success, iconName: 'happy-outline' },
-  { value: 3, label: 'Dor leve', color: '#84CC16', iconName: 'sad-outline' },
-  { value: 6, label: 'Dor moderada', color: COLORS.warning, iconName: 'sad-outline' },
-  { value: 10, label: 'Dor intensa', color: COLORS.error, iconName: 'alert-circle-outline' },
+  { value: 0, label: 'Sem dor', color: COLORS.success, iconName: 'happy-outline' as any },
+  { value: 3, label: 'Dor leve', color: '#84CC16', iconName: 'sad-outline' as any },
+  { value: 6, label: 'Dor moderada', color: COLORS.warning, iconName: 'sad-outline' as any },
+  { value: 10, label: 'Dor intensa', color: COLORS.error, iconName: 'alert-circle-outline' as any },
 ];
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
