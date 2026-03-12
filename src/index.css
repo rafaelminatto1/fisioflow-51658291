@@ -1919,7 +1919,7 @@ All colors MUST be HSL.
 
 /* Optimize progress bars */
 .progress-optimized {
-  will-change: width;
+  will-change: transform;
   transform: translateZ(0);
 }
 
@@ -1995,7 +1995,7 @@ All colors MUST be HSL.
 
 /* Optimize resizable elements */
 .resizable-optimized {
-  will-change: width will-change-height;
+  will-change: transform;
   contain: layout style;
 }
 
@@ -2056,7 +2056,7 @@ All colors MUST be HSL.
 /* Optimize text areas */
 .textarea-optimized {
   @apply transition-all duration-150;
-  will-change: height;
+  will-change: transform;
 }
 
 /* Optimize file inputs */
@@ -2067,7 +2067,7 @@ All colors MUST be HSL.
 
 /* Optimize range sliders */
 .range-slider-optimized {
-  will-change: width;
+  will-change: transform;
   @apply gpu-layer;
 }
 

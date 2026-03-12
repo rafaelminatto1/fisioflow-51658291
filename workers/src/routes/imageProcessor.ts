@@ -1,12 +1,12 @@
 import { Hono } from 'hono';
 import type { Env } from '../types/env';
+import { getResizedImage } from '../lib/images';
 
 const app = new Hono<{ Bindings: Env }>();
 
 /**
  * Endpoint de processamento de imagens
- * Implementa redimensionamento e otimização (WebP/AVIF) na borda.
- * Suporta imagens do R2 e fallback para Firebase (se necessário).
+ * Implementa redimensionamento e otimização (WebP/AVIF) na borda via Cloudflare Images.
  */
 app.get('/:key{.*}', async (c) => {
   const key = c.req.param('key');
@@ -16,32 +16,31 @@ app.get('/:key{.*}', async (c) => {
     return c.json({ error: 'Bucket R2 não configurado' }, 501);
   }
 
-  // Pegar parâmetros de transformação da query (para uso futuro com Image Resizing pago ou Custom Worker)
-  // const width = parseInt(c.req.query('w') || '0');
-  // const height = parseInt(c.req.query('h') || '0');
-  // const quality = parseInt(c.req.query('q') || '85');
-  // const format = c.req.query('fmt') || 'auto';
+  // Parâmetros de transformação da query string (Ex: ?w=200&h=200&fit=cover)
+  const width = parseInt(c.req.query('w') || '0');
+  const height = parseInt(c.req.query('h') || '0');
+  const quality = parseInt(c.req.query('q') || '85');
+  const fit = (c.req.query('fit') as any) || 'scale-down';
 
   try {
-    // Tenta buscar do R2 primeiro
+    // 1. Verificar se a imagem existe no R2
     const object = await bucket.get(key);
+    if (!object) return c.notFound();
 
-    if (!object) {
-       // Se não encontrar no R2, poderíamos implementar um fetch do Firebase aqui 
-       // para "migrar sob demanda", mas o ideal é que os uploads já apontem para cá.
-       return c.notFound();
+    // 2. Se não houver parâmetros de redimensionamento, servir original
+    if (!width && !height) {
+      const headers = new Headers();
+      object.writeHttpMetadata(headers);
+      headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+      return new Response(object.body, { headers });
     }
 
-    const headers = new Headers();
-    object.writeHttpMetadata(headers);
-    headers.set('etag', object.httpEtag);
-    headers.set('Cache-Control', 'public, max-age=31536000, immutable');
-    
-    // Indica que permitimos compressão e formatos modernos
-    headers.set('Vary', 'Accept');
-
-    return new Response(object.body, {
-      headers,
+    // 3. Usar utilitário de redimensionamento
+    return getResizedImage(c.env, c.req.url, {
+      width: width > 0 ? width : undefined,
+      height: height > 0 ? height : undefined,
+      fit,
+      quality,
     });
   } catch (e) {
     console.error('[ImageProcessor] Erro ao buscar imagem:', e);

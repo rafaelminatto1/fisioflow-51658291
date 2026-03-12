@@ -53,7 +53,7 @@ export default function ScheduleSettings() {
       title: 'Notificações',
       description: 'Alertas e lembretes automáticos',
       icon: Bell,
-      color: 'from-violet-500 to-purple-500',
+      color: 'from-blue-500 to-teal-500',
       impactLabel: 'Automação',
       impactClass: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800'
     },
@@ -69,7 +69,7 @@ export default function ScheduleSettings() {
       title: 'Cores de Status',
       description: 'Personalize as cores dos agendamentos',
       icon: Palette,
-      color: 'from-pink-500 to-fuchsia-500',
+      color: 'from-cyan-500 to-teal-500',
       impactLabel: 'Local',
       impactClass: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800'
     },
@@ -85,7 +85,7 @@ export default function ScheduleSettings() {
       title: 'Presets',
       description: 'Configurações otimizadas',
       icon: Sparkles,
-      color: 'from-purple-500 to-pink-500',
+      color: 'from-cyan-500 to-blue-500',
       impactLabel: 'Local',
       impactClass: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800'
     },

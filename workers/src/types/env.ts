@@ -31,4 +31,17 @@ export interface Env {
   R2_ACCESS_KEY_ID: string;
   R2_SECRET_ACCESS_KEY: string;
   R2_PUBLIC_URL: string;
+
+  // Hasura GraphQL Configuration
+  VITE_HASURA_PROJECT_URL?: string;
+  VITE_HASURA_ADMIN_SECRET?: string;
+
+  // Axiom Logging Configuration
+  AXIOM_TOKEN?: string;
+  AXIOM_ORG_ID?: string;
+  AXIOM_DATASET?: string;
+
+  // Inngest Configuration
+  INNGEST_EVENT_KEY?: string;
+  INNGEST_SIGNING_KEY?: string;
 }

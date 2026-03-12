@@ -1,20 +1,19 @@
 import { useState } from 'react';
 import {
-
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+  CustomModal,
+  CustomModalHeader,
+  CustomModalTitle,
+  CustomModalBody,
+  CustomModalFooter,
+} from '@/components/ui/custom-modal';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useAddToWaitlist, PRIORITY_CONFIG } from '@/hooks/useWaitlist';
-import { Users, Calendar, Clock, AlertCircle } from 'lucide-react';
+import { Users, Calendar, Clock, AlertCircle, Loader2, BadgeCheck } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface AddToWaitlistDialogProps {
   open: boolean;
@@ -46,6 +45,7 @@ export function AddToWaitlistDialog({
   patientName,
   onSuccess,
 }: AddToWaitlistDialogProps) {
+  const isMobile = useIsMobile();
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [selectedPeriods, setSelectedPeriods] = useState<string[]>([]);
   const [priority, setPriority] = useState<'normal' | 'high' | 'urgent'>('normal');
@@ -70,57 +70,67 @@ export function AddToWaitlistDialog({
       return;
     }
 
-    await addMutation.mutateAsync({
-      patient_id: patientId,
-      preferred_days: selectedDays,
-      preferred_periods: selectedPeriods,
-      priority,
-      notes: notes.trim() || undefined,
-    });
+    try {
+      await addMutation.mutateAsync({
+        patient_id: patientId,
+        preferred_days: selectedDays,
+        preferred_periods: selectedPeriods,
+        priority,
+        notes: notes.trim() || undefined,
+      });
 
-    onSuccess?.();
-    onOpenChange(false);
-    
-    // Reset form
-    setSelectedDays([]);
-    setSelectedPeriods([]);
-    setPriority('normal');
-    setNotes('');
+      onSuccess?.();
+      onOpenChange(false);
+      
+      // Reset form
+      setSelectedDays([]);
+      setSelectedPeriods([]);
+      setPriority('normal');
+      setNotes('');
+    } catch (error) {
+      // Error handled by mutation
+    }
   };
 
   const isValid = selectedDays.length > 0 && selectedPeriods.length > 0;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            Adicionar à Lista de Espera
-          </DialogTitle>
-          <DialogDescription>
-            Configure as preferências de horário para {patientName}
-          </DialogDescription>
-        </DialogHeader>
+    <CustomModal 
+      open={open} 
+      onOpenChange={onOpenChange}
+      isMobile={isMobile}
+      contentClassName="max-w-md"
+    >
+      <CustomModalHeader onClose={() => onOpenChange(false)}>
+        <CustomModalTitle className="flex items-center gap-2">
+          <Users className="w-5 h-5 text-primary" />
+          Adicionar à Lista de Espera
+        </CustomModalTitle>
+      </CustomModalHeader>
 
-        <div className="space-y-6 py-4">
+      <CustomModalBody className="p-0 sm:p-0">
+        <div className="px-6 py-4 space-y-6">
+          <p className="text-sm text-muted-foreground">
+            Configure as preferências de horário para <strong>{patientName}</strong>
+          </p>
+
           {/* Dias preferidos */}
           <div className="space-y-3">
-            <Label className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
+            <Label className="flex items-center gap-2 font-semibold">
+              <Calendar className="w-4 h-4 text-primary" />
               Dias preferidos
             </Label>
             <div className="grid grid-cols-3 gap-2">
               {DAYS.map(day => (
-                <div key={day.value} className="flex items-center space-x-2">
+                <div key={day.value} className="flex items-center space-x-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
                   <Checkbox
-                    id={day.value}
+                    id={`add-day-${day.value}`}
                     checked={selectedDays.includes(day.value)}
                     onCheckedChange={() => handleDayToggle(day.value)}
                   />
                   <Label
-                    htmlFor={day.value}
-                    className="text-sm font-normal cursor-pointer"
+                    htmlFor={`add-day-${day.value}`}
+                    className="text-xs font-medium cursor-pointer"
                   >
                     {day.label}
                   </Label>
@@ -128,7 +138,7 @@ export function AddToWaitlistDialog({
               ))}
             </div>
             {selectedDays.length === 0 && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[10px] text-destructive animate-pulse">
                 Selecione pelo menos um dia
               </p>
             )}
@@ -136,30 +146,30 @@ export function AddToWaitlistDialog({
 
           {/* Períodos preferidos */}
           <div className="space-y-3">
-            <Label className="flex items-center gap-2">
-              <Clock className="w-4 h-4" />
+            <Label className="flex items-center gap-2 font-semibold">
+              <Clock className="w-4 h-4 text-primary" />
               Períodos preferidos
             </Label>
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 gap-2">
               {PERIODS.map(period => (
-                <div key={period.value} className="flex items-center space-x-2">
+                <div key={period.value} className="flex items-center space-x-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
                   <Checkbox
-                    id={period.value}
+                    id={`add-period-${period.value}`}
                     checked={selectedPeriods.includes(period.value)}
                     onCheckedChange={() => handlePeriodToggle(period.value)}
                   />
                   <Label
-                    htmlFor={period.value}
-                    className="text-sm font-normal cursor-pointer flex-1"
+                    htmlFor={`add-period-${period.value}`}
+                    className="text-xs font-medium cursor-pointer flex-1 flex justify-between items-center"
                   >
-                    {period.label}
-                    <span className="text-muted-foreground ml-2">({period.time})</span>
+                    <span>{period.label}</span>
+                    <span className="text-[10px] text-muted-foreground">({period.time})</span>
                   </Label>
                 </div>
               ))}
             </div>
             {selectedPeriods.length === 0 && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[10px] text-destructive animate-pulse">
                 Selecione pelo menos um período
               </p>
             )}
@@ -167,8 +177,8 @@ export function AddToWaitlistDialog({
 
           {/* Prioridade */}
           <div className="space-y-3">
-            <Label className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4" />
+            <Label className="flex items-center gap-2 font-semibold">
+              <AlertCircle className="w-4 h-4 text-primary" />
               Prioridade
             </Label>
             <RadioGroup
@@ -178,10 +188,10 @@ export function AddToWaitlistDialog({
             >
               {Object.entries(PRIORITY_CONFIG).map(([value, config]) => (
                 <div key={value} className="flex items-center space-x-2">
-                  <RadioGroupItem value={value} id={`priority-${value}`} />
+                  <RadioGroupItem value={value} id={`add-priority-${value}`} />
                   <Label
-                    htmlFor={`priority-${value}`}
-                    className="text-sm font-normal cursor-pointer"
+                    htmlFor={`add-priority-${value}`}
+                    className="text-xs font-medium cursor-pointer"
                   >
                     {config.label}
                   </Label>
@@ -192,30 +202,36 @@ export function AddToWaitlistDialog({
 
           {/* Notas */}
           <div className="space-y-2">
-            <Label htmlFor="notes">Observações (opcional)</Label>
+            <Label htmlFor="add-notes" className="font-semibold text-xs">Observações (opcional)</Label>
             <Textarea
-              id="notes"
+              id="add-notes"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Ex: Prefere horários mais cedo, evitar terça-feira..."
               rows={2}
+              className="text-sm"
             />
           </div>
         </div>
+      </CustomModalBody>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
-          <Button 
-            onClick={handleSubmit}
-            disabled={!isValid || addMutation.isPending}
-          >
-            {addMutation.isPending ? 'Adicionando...' : 'Adicionar à Lista'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      <CustomModalFooter isMobile={isMobile}>
+        <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl">
+          Cancelar
+        </Button>
+        <Button 
+          onClick={handleSubmit}
+          disabled={!isValid || addMutation.isPending}
+          className="rounded-xl px-8 bg-slate-900 text-white hover:bg-slate-800 gap-2"
+        >
+          {addMutation.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <BadgeCheck className="h-4 w-4" />
+          )}
+          Adicionar à Lista
+        </Button>
+      </CustomModalFooter>
+    </CustomModal>
   );
 }
-

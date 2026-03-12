@@ -11,12 +11,9 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { differenceInDays } from 'date-fns';
-import {
-  appointmentsApi,
-  sessionsApi,
-  type AppointmentRow,
-  type SessionRecord,
-} from '@/lib/api/workers-client';
+import { appointmentsApi } from '@/api/v2/appointments';
+import { sessionsApi } from '@/api/v2/clinical';
+import type { AppointmentRow, SessionRecord } from '@/types/workers';
 
 export interface PatientStats {
   sessionsCompleted: number;

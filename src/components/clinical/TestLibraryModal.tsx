@@ -2,12 +2,12 @@ import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query';
 import { clinicalTestsApi, type ClinicalTestTemplateRecord } from '@/lib/api/workers-client';
 import {
-
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+  CustomModal,
+  CustomModalHeader,
+  CustomModalTitle,
+  CustomModalBody,
+  CustomModalFooter,
+} from '@/components/ui/custom-modal';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export type ClinicalTest = ClinicalTestTemplateRecord;
 
@@ -53,7 +54,7 @@ const CATEGORIES = [
     { id: 'Respiratório', label: 'Respiratório', icon: Wind, color: 'bg-cyan-50 text-cyan-700 border-cyan-200' },
 ];
 
-const JOINTS = ['Todos', 'Ombro', 'Joelho', 'Quadril', 'Tornozelo', 'Coluna', 'Cervical', 'Punho', 'Cotovelo', 'Mão', 'Quadril', 'Pelve'];
+const JOINTS = ['Todos', 'Ombro', 'Joelho', 'Quadril', 'Tornozelo', 'Coluna', 'Cervical', 'Punho', 'Cotovelo', 'Mão', 'Pelve'];
 
 const TEST_TYPES = [
     { id: 'all', label: 'Todos' },
@@ -62,6 +63,7 @@ const TEST_TYPES = [
 ];
 
 export function TestLibraryModal({ open, onOpenChange, onAddTest, patientId }: TestLibraryModalProps) {
+    const isMobile = useIsMobile();
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('Todos');
     const [selectedJoint, setSelectedJoint] = useState('Todos');
@@ -72,7 +74,6 @@ export function TestLibraryModal({ open, onOpenChange, onAddTest, patientId }: T
     const [focusedIndex, setFocusedIndex] = useState(-1);
 
     const searchInputRef = useRef<HTMLInputElement>(null);
-    const _listRef = useRef<HTMLDivElement>(null);
 
     // Load recent tests from localStorage
     useEffect(() => {
@@ -98,43 +99,6 @@ export function TestLibraryModal({ open, onOpenChange, onAddTest, patientId }: T
             setFocusedIndex(-1);
         }
     }, [open]);
-
-    // Keyboard navigation
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (!open) return;
-
-            const filtered = getFilteredTests();
-
-            switch (e.key) {
-                case 'ArrowDown':
-                    e.preventDefault();
-                    setFocusedIndex(prev => Math.min(prev + 1, filtered.length - 1));
-                    break;
-                case 'ArrowUp':
-                    e.preventDefault();
-                    setFocusedIndex(prev => Math.max(prev - 1, 0));
-                    break;
-                case 'Enter':
-                    e.preventDefault();
-                    if (focusedIndex >= 0 && filtered[focusedIndex]) {
-                        handleAddTest(filtered[focusedIndex]);
-                    }
-                    break;
-                case 'Escape':
-                    if (selectedTest) {
-                        setSelectedTest(null);
-                    } else {
-                        onOpenChange(false);
-                    }
-                    break;
-            }
-        };
-
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [open, focusedIndex, selectedTest]);
 
     const { data: tests = [], isLoading } = useQuery({
         queryKey: ['clinical-tests-library'],
@@ -164,6 +128,33 @@ export function TestLibraryModal({ open, onOpenChange, onAddTest, patientId }: T
     }, [tests, searchTerm, selectedCategory, selectedJoint, selectedType]);
 
     const filteredTests = useMemo(() => getFilteredTests(), [getFilteredTests]);
+
+    // Keyboard navigation
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!open) return;
+
+            switch (e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    setFocusedIndex(prev => Math.min(prev + 1, filteredTests.length - 1));
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    setFocusedIndex(prev => Math.max(prev - 1, 0));
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    if (focusedIndex >= 0 && filteredTests[focusedIndex]) {
+                        handleAddTest(filteredTests[focusedIndex]);
+                    }
+                    break;
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [open, focusedIndex, filteredTests]);
 
     const groupedTests = useMemo(() => {
         const groups: Record<string, ClinicalTest[]> = {};
@@ -318,40 +309,43 @@ export function TestLibraryModal({ open, onOpenChange, onAddTest, patientId }: T
     };
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
-                {/* Header */}
-                <DialogHeader className="px-6 py-4 border-b bg-gradient-to-r from-teal-600 to-teal-700 shrink-0">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-white/20 rounded-lg">
-                                <HeartPulse className="h-5 w-5 text-white" />
-                            </div>
-                            <div>
-                                <DialogTitle className="text-xl font-bold text-white flex items-center gap-2">
-                                    Biblioteca de Testes
-                                    <Badge className="bg-white/20 text-white hover:bg-white/30 border-0 text-xs">
-                                        {tests.length}
-                                    </Badge>
-                                </DialogTitle>
-                                <p className="text-teal-100 text-sm">
-                                    Pesquise e adicione testes à evolução do paciente
-                                </p>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <div className="hidden md:flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-lg">
-                                <Keyboard className="h-3.5 w-3.5 text-white/70" />
-                                <span className="text-xs text-white/80">↑↓ navegar • Enter adicionar • Esc fechar</span>
-                            </div>
+        <CustomModal 
+            open={open} 
+            onOpenChange={onOpenChange}
+            isMobile={isMobile}
+            contentClassName="max-w-5xl h-[90vh]"
+        >
+            <CustomModalHeader className="bg-gradient-to-r from-teal-600 to-teal-700" onClose={() => onOpenChange(false)}>
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-white/20 rounded-lg">
+                        <HeartPulse className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                        <CustomModalTitle className="text-xl font-bold text-white flex items-center gap-2">
+                            Biblioteca de Testes
+                            <Badge className="bg-white/20 text-white hover:bg-white/30 border-0 text-xs">
+                                {tests.length}
+                            </Badge>
+                        </CustomModalTitle>
+                        <p className="text-teal-100 text-sm">
+                            Pesquise e adicione testes à evolução do paciente
+                        </p>
+                    </div>
+                </div>
+                {!isMobile && (
+                    <div className="flex items-center gap-2 ml-auto mr-4">
+                        <div className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-lg">
+                            <Keyboard className="h-3.5 w-3.5 text-white/70" />
+                            <span className="text-xs text-white/80">↑↓ navegar • Enter adicionar • Esc fechar</span>
                         </div>
                     </div>
-                </DialogHeader>
+                )}
+            </CustomModalHeader>
 
-                {/* Main Content */}
-                <div className="flex-1 flex overflow-hidden">
+            <CustomModalBody className="p-0 sm:p-0">
+                <div className="flex h-full overflow-hidden">
                     {/* Left Panel - List */}
-                    <div className="flex-1 flex flex-col min-w-0 border-r">
+                    <div className="flex-1 flex flex-col min-w-0 border-r h-full overflow-hidden">
                         {/* Search and Filters */}
                         <div className="p-4 border-b bg-slate-50 space-y-3 shrink-0">
                             <div className="relative">
@@ -559,29 +553,14 @@ export function TestLibraryModal({ open, onOpenChange, onAddTest, patientId }: T
                                 )}
                             </div>
                         </ScrollArea>
-
-                        {/* Footer */}
-                        <div className="px-4 py-2 border-t bg-slate-50 flex items-center justify-between shrink-0">
-                            <div className="flex items-center gap-2 text-xs text-slate-500">
-                                <Info className="h-3.5 w-3.5" />
-                                <span>
-                                    {filteredTests.length} teste{filteredTests.length !== 1 ? 's' : ''} disponível{filteredTests.length !== 1 ? 'is' : ''}
-                                </span>
-                            </div>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => onOpenChange(false)}
-                                className="h-7"
-                            >
-                                Fechar
-                            </Button>
-                        </div>
                     </div>
 
                     {/* Right Panel - Test Details */}
                     {selectedTest && (
-                        <div className="w-96 bg-slate-50 flex flex-col shrink-0 border-l">
+                        <div className={cn(
+                            "w-96 bg-slate-50 flex flex-col shrink-0 border-l",
+                            isMobile && "fixed inset-0 z-[60] w-full"
+                        )}>
                             <div className="p-4 border-b bg-white flex items-center justify-between">
                                 <div>
                                     <h3 className="font-semibold text-slate-800">{selectedTest.name}</h3>
@@ -690,7 +669,7 @@ export function TestLibraryModal({ open, onOpenChange, onAddTest, patientId }: T
                             {/* Add Button */}
                             <div className="p-4 border-t bg-white">
                                 <Button
-                                    className="w-full bg-teal-600 hover:bg-teal-700"
+                                    className="w-full bg-teal-600 hover:bg-teal-700 text-white"
                                     onClick={() => handleAddTest(selectedTest)}
                                 >
                                     <Plus className="h-4 w-4 mr-2" />
@@ -700,7 +679,24 @@ export function TestLibraryModal({ open, onOpenChange, onAddTest, patientId }: T
                         </div>
                     )}
                 </div>
-            </DialogContent>
-        </Dialog>
+            </CustomModalBody>
+
+            <CustomModalFooter isMobile={isMobile} className="bg-slate-50 justify-between py-2">
+                <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <Info className="h-3.5 w-3.5" />
+                    <span>
+                        {filteredTests.length} teste{filteredTests.length !== 1 ? 's' : ''} disponível{filteredTests.length !== 1 ? 'is' : ''}
+                    </span>
+                </div>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onOpenChange(false)}
+                    className="h-8"
+                >
+                    Fechar
+                </Button>
+            </CustomModalFooter>
+        </CustomModal>
     );
 }

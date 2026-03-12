@@ -54,10 +54,13 @@
   <link rel="shortcut icon" href="/favicon.ico" />
   <link rel="manifest" href="/site.webmanifest" />
 
-  <meta property="og:title" content="FisioFlow - Sistema de Gestão para Clínicas de Fisioterapia" />
+  <meta property="og:title" content="FisioFlow - Gestão Inteligente para Fisioterapia" />
   <meta property="og:description"
-    content="Sistema completo de gestão para clínicas de fisioterapia com dashboard, agendamentos, pacientes e relatórios" />
+    content="Plataforma líder em gestão de clínicas: agendamento inteligente, prontuário digital e IA para reabilitação." />
   <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://fisioflow.com.br" />
+  <meta property="og:site_name" content="FisioFlow" />
+  <meta property="og:locale" content="pt_BR" />
   <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.avif" />
 
   <meta name="twitter:card" content="summary_large_image" />
@@ -68,27 +71,52 @@
 <body>
   <div id="root">
     <style>
+      :root {
+        --primary-h: 199;
+        --primary-s: 89%;
+        --primary-l: 48%;
+        --primary: hsl(var(--primary-h), var(--primary-s), var(--primary-l));
+        --background: 0 0% 100%;
+        --foreground: 222.2 84% 4.9%;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --background: 222.2 84% 4.9%;
+          --foreground: 210 40% 98%;
+        }
+      }
+
       #initial-loader {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         min-height: 100vh;
-        background-color: #ffffff;
+        background-color: hsl(var(--background));
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
       }
+
       .loader-icon {
         width: 64px;
         height: 64px;
-        background-color: rgba(14, 165, 233, 0.1);
+        background: linear-gradient(135deg, 
+          hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.15) 0%, 
+          hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.05) 100%
+        );
         border-radius: 16px;
         position: relative;
         margin-bottom: 24px;
+        box-shadow: 
+          0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+          0 2px 4px -1px rgba(0, 0, 0, 0.06),
+          inset 0 0 0 1px hsla(var(--primary-h), var(--primary-s), var(--primary-l), 0.1);
       }
+
       .spinner {
         width: 32px;
         height: 32px;
-        border: 2px solid #0ea5e9;
+        border: 2px solid var(--primary);
         border-top-color: transparent;
         border-radius: 50%;
         animation: spin 1s linear infinite;
@@ -97,46 +125,74 @@
         left: 50%;
         margin-top: -16px;
         margin-left: -16px;
+        filter: drop-shadow(0 2px 4px rgba(var(--primary-h), var(--primary-s), var(--primary-l), 0.2));
       }
+
+      @media (prefers-reduced-motion: reduce) {
+        .spinner {
+          animation: none;
+          border-top-color: var(--primary);
+          opacity: 0.5;
+        }
+      }
+
       .loader-text {
-        color: #0f172a;
+        color: hsl(var(--foreground));
         font-weight: 500;
         margin-bottom: 8px;
         font-size: 1rem;
       }
+
       .loader-subtext {
-        color: #64748b;
+        color: hsla(215, 16%, 47%, 1);
         font-size: 0.875rem;
       }
+
       @keyframes spin {
-        to { transform: rotate(360deg); }
+        to {
+          transform: rotate(360deg);
+        }
       }
+
       .progress-bar {
         width: 100%;
         max-width: 320px;
         height: 4px;
-        background-color: #f1f5f9;
+        background-color: hsla(210, 40%, 96%, 1);
         border-radius: 9999px;
         overflow: hidden;
         margin-top: 24px;
       }
+
+      @media (prefers-color-scheme: dark) {
+        .progress-bar {
+          background-color: hsla(217, 33%, 17%, 1);
+        }
+        .loader-subtext {
+          color: hsla(215, 20%, 65%, 1);
+        }
+      }
+
       .progress-value {
         width: 60%;
         height: 100%;
-        background-color: #0ea5e9;
+        background-color: var(--primary);
         border-radius: 9999px;
         animation: loading-progress 2s ease-in-out infinite;
       }
+
       @keyframes loading-progress {
-        0% { width: 20%; transform: translateX(-100%); }
-        50% { width: 60%; transform: translateX(0); }
-        100% { width: 20%; transform: translateX(400%); }
-      }
-      @media (prefers-color-scheme: dark) {
-        #initial-loader { background-color: #020817; }
-        .loader-text { color: #f8fafc; }
-        .loader-subtext { color: #94a3b8; }
-        .progress-bar { background-color: #1e293b; }
+        0% {
+          transform: translateX(-100%) scaleX(0.2);
+        }
+
+        50% {
+          transform: translateX(0) scaleX(0.6);
+        }
+
+        100% {
+          transform: translateX(400%) scaleX(0.2);
+        }
       }
     </style>
     <div id="initial-loader">

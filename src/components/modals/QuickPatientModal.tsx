@@ -1,388 +1,256 @@
-
-// ===== Schema de validação =====
-
 import React, { useCallback, useEffect, useTransition, memo } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  CustomModal,
+  CustomModalHeader,
+  CustomModalTitle,
+  CustomModalBody,
+  CustomModalFooter,
+} from '@/components/ui/custom-modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useForm } from 'react-hook-form';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { AlertTriangle, UserPlus, Loader2, Phone, User } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { fisioLogger as logger } from '@/lib/errors/logger';
-import { useQueryClient, useMutation } from '@tanstack/react-query';
-import { patientsApi } from '@/lib/api/workers-client';
+import * as z from 'zod';
+import { useCreatePatient } from '@/hooks/usePatientCrud';
+import { useOrganizations } from '@/hooks/useOrganizations';
+import { toast } from 'sonner';
+import { UserPlus, Loader2, Phone, Mail, BadgeCheck, AlertCircle } from 'lucide-react';
+import { formatPhoneInput } from '@/utils/formatInputs';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
+// ===== Schema de validação =====
 const quickPatientSchema = z.object({
-  name: z.string()
-    .min(2, 'Nome deve ter pelo menos 2 caracteres')
-    .max(150, 'Nome deve ter no máximo 150 caracteres'),
-  phone: z.string()
-    .optional()
-    .refine(val => !val || val.replace(/\D/g, '').length >= 10, {
-      message: 'Telefone deve ter pelo menos 10 dígitos'
-    }),
+  full_name: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
+  phone: z.string().optional(),
+  email: z.string().email('E-mail inválido').optional().or(z.literal('')),
+  send_welcome_whatsapp: z.boolean().default(true),
 });
 
 type QuickPatientFormData = z.infer<typeof quickPatientSchema>;
 
-// ===== Tipos =====
 interface QuickPatientModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onPatientCreated: (patientId: string, patientName: string) => void;
   suggestedName?: string;
+  onSuccess?: (patient: { id: string; name: string }) => void;
 }
 
-// ===== Funções utilitárias =====
-// Memoizadas fora do componente para evitar recriação
-const formatPhoneNumber = (value: string): string => {
-  if (!value) return '';
-  // Remove tudo que não é dígito e limita a 11 dígitos (2 DDD + 9 número)
-  let numbers = value.replace(/\D/g, '').slice(0, 11);
-
-  // Se começar com 55 (código do Brasil), remove
-  if (numbers.startsWith('55')) {
-    numbers = numbers.slice(2);
-  }
-
-  if (numbers.length <= 2) {
-    return `(${numbers}`;
-  } else if (numbers.length <= 7) {
-    return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
-  } else {
-    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7)}`;
-  }
-};
-
-const cleanPhoneNumber = (phone: string | undefined): string | null => {
-  if (!phone) return null;
-  const cleaned = phone.replace(/\D/g, '');
-  return cleaned.length >= 10 ? cleaned : null;
-};
-
-// ===== Mensagens de erro amigáveis =====
-const getErrorMessage = (error: { code?: string; message?: string; functionName?: string } | null | undefined): string => {
-  const code = error?.code;
-  const message = error?.message || '';
-  const functionName = error?.functionName || 'createPatient';
-
-  // Log detalhado para debug
-  logger.error('[QuickPatientModal] Erro ao criar paciente', { code, message, functionName, error }, 'QuickPatientModal');
-
-  // Erros específicos de API/Postgres
-  const errorMessages: Record<string, string> = {
-    '23505': 'Já existe um paciente com este nome ou telefone cadastrado.',
-    '42501': 'Sem permissão para criar pacientes. Verifique suas permissões.',
-    '23503': 'Erro de referência: organização não encontrada.',
-    'not-found': 'Recurso não encontrado. Verifique a configuração do sistema.',
-    'permission-denied': 'Sem permissão para criar pacientes.',
-    'unauthenticated': 'Sessão expirada. Faça login novamente.',
-    'already-exists': 'Já existe um paciente com estes dados.',
-  };
-
-  if (code && errorMessages[code]) {
-    return errorMessages[code];
-  }
-
-  if ((code === 'functions/invalid-argument' || code === 'api/invalid-argument') && message.includes('[createPatient]')) {
-    return message.replace('[createPatient] ', '');
-  }
-
-  if (code === 'functions/internal' || code === 'api/internal' || message.includes('internal')) {
-    return 'Erro interno ao criar paciente. Tente novamente ou contate o suporte.';
-  }
-
-  if (message.includes('Failed to fetch') || message.includes('NetworkError') || message.includes('The project')) {
-    return 'Erro de conexão com o servidor. Tente novamente.';
-  }
-
-  if (message.includes('row-level security') || message.includes('insufficient permissions')) {
-    return 'Sem permissão para criar pacientes. Verifique suas permissões.';
-  }
-
-  if (message.includes('organization_id') || message.includes('organization')) {
-    return 'Erro ao associar paciente à organização. Verifique seu perfil.';
-  }
-
-  if (message.includes('network')) {
-    return 'Erro de conexão. Verifique sua internet e tente novamente.';
-  }
-
-  if (error instanceof Error && error.name === 'FunctionCallError') {
-    return `Erro ao chamar a API ${functionName}. Verifique a conexão.`;
-  }
-
-  return message || 'Não foi possível criar o paciente. Tente novamente.';
-};
-
-// ===== Componente Principal =====
-// Usando memo para evitar re-renders desnecessários quando props não mudam
 const QuickPatientModalComponent: React.FC<QuickPatientModalProps> = ({
   open,
   onOpenChange,
-  onPatientCreated,
-  suggestedName = ''
+  suggestedName = '',
+  onSuccess,
 }) => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  // useTransition para melhor UX durante operações assíncronas (React 18)
+  const isMobile = useIsMobile();
   const [isPending, startTransition] = useTransition();
-
-  const form = useForm<QuickPatientFormData>({
-    resolver: zodResolver(quickPatientSchema),
-    defaultValues: {
-      name: suggestedName,
-      phone: '',
-    },
-    mode: 'onChange', // Validação em tempo real
-  });
+  const { currentOrganization } = useOrganizations();
+  const createMutation = useCreatePatient();
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isValid },
+    control,
     reset,
     setValue,
-    watch
-  } = form;
-
-  const phoneValue = watch('phone');
-  const nameValue = watch('name');
-
-  // ===== Mutation para criar paciente =====
-  const createPatientMutation = useMutation({
-    mutationFn: async (data: QuickPatientFormData) => {
-      logger.info('Criando paciente via Workers', {
-        name: data.name.trim(),
-        phone: cleanPhoneNumber(data.phone),
-      }, 'QuickPatientModal');
-
-      try {
-        const response = await patientsApi.create({
-          name: data.name.trim(),
-          full_name: data.name.trim(),
-          phone: cleanPhoneNumber(data.phone) || undefined,
-          status: 'active',
-          incomplete_registration: true,
-        });
-        const newPatient = response.data;
-
-        if (!newPatient) {
-          throw new Error('Paciente não foi criado. Tente novamente.');
-        }
-
-        logger.info('Paciente criado com sucesso via Workers', {
-          patientId: newPatient.id,
-          patientName: newPatient.name || newPatient.full_name
-        }, 'QuickPatientModal');
-
-        return newPatient;
-      } catch (err: unknown) {
-        const error = err instanceof Error ? err : new Error(String(err));
-        logger.error('Erro ao criar paciente via Workers', {
-          error,
-          errorMessage: error.message,
-          errorCode: (error as { code?: string }).code,
-          errorDetails: (error as { details?: unknown }).details,
-        }, 'QuickPatientModal');
-
-        const enhancedError = {
-          code: (err as { code?: string })?.code,
-          message: (err as Error)?.message,
-          functionName: 'createPatient',
-        };
-        throw enhancedError;
-      }
-    },
-    onSuccess: (newPatient) => {
-      logger.info('Paciente criado com sucesso', {
-        patientId: newPatient.id,
-        patientName: newPatient.name || newPatient.full_name
-      }, 'QuickPatientModal');
-
-      // Usar startTransition para atualizações de estado não urgentes (React 18)
-      startTransition(() => {
-        // Invalidar cache para recarregar lista de pacientes
-        queryClient.invalidateQueries({ queryKey: ['patients'] });
-        queryClient.invalidateQueries({ queryKey: ['activePatients'] });
-        queryClient.invalidateQueries({ queryKey: ['current-organization'] });
-
-        toast({
-          title: '✅ Paciente criado!',
-          description: `${newPatient.name || newPatient.full_name} foi adicionado. Complete o cadastro quando possível.`,
-        });
-
-        reset();
-        onOpenChange(false);
-        onPatientCreated(newPatient.id, (newPatient.name || newPatient.full_name || 'Paciente') as string);
-      });
-    },
-    onError: (error: unknown) => {
-      logger.error('Erro ao criar paciente rápido', error, 'QuickPatientModal');
-      if (typeof error === 'object' && error && 'name' in error && error.name === 'FunctionCallError') {
-        logger.error('Detalhes do erro FunctionCallError', {
-          functionName: 'functionName' in error ? error.functionName : undefined,
-          originalError: 'originalError' in error ? error.originalError : undefined,
-        }, 'QuickPatientModal');
-      }
-
-      toast({
-        title: 'Erro ao criar paciente',
-        description: getErrorMessage(error),
-        variant: 'destructive',
-      });
+    watch,
+    formState: { errors },
+  } = useForm<QuickPatientFormData>({
+    resolver: zodResolver(quickPatientSchema),
+    defaultValues: {
+      full_name: suggestedName,
+      phone: '',
+      email: '',
+      send_welcome_whatsapp: true,
     },
   });
 
-  // ===== Handlers =====
-  const handlePhoneChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue('phone', formatPhoneNumber(e.target.value), { shouldValidate: true });
-  }, [setValue]);
-
-  const handleClose = useCallback(() => {
-    reset();
-    onOpenChange(false);
-  }, [reset, onOpenChange]);
-
-  const onSubmit = useCallback((data: QuickPatientFormData) => {
-    createPatientMutation.mutate(data);
-  }, [createPatientMutation]);
-
-  // ===== Gerenciar estado do formulário ao abrir/fechar =====
-  // Combinando dois useEffects em um para melhor performance
+  // Atualizar nome sugerido quando o modal abrir
   useEffect(() => {
     if (open) {
-      // Ao abrir, sincronizar nome sugerido
-      if (suggestedName) {
-        setValue('name', suggestedName, { shouldValidate: true });
-      }
-    } else {
-      // Ao fechar, resetar formulário
-      reset();
+      reset({
+        full_name: suggestedName,
+        phone: '',
+        email: '',
+        send_welcome_whatsapp: true,
+      });
     }
-  }, [open, suggestedName, setValue, reset]);
+  }, [open, suggestedName, reset]);
 
-  // ===== Computed values =====
-  const isFormDisabled = createPatientMutation.isPending || isPending;
-  const canSubmit = isValid && !isFormDisabled && nameValue?.trim();
+  const onSubmit = async (data: QuickPatientFormData) => {
+    if (!currentOrganization?.id) {
+      toast.error('Organização não identificada');
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        const result = await createMutation.mutateAsync({
+          ...data,
+          organization_id: currentOrganization.id,
+          status: 'Inicial',
+        });
+
+        toast.success('Paciente cadastrado com sucesso!');
+        onSuccess?.({ id: result.id, name: result.full_name });
+        onOpenChange(false);
+      } catch (error) {
+        console.error('[QuickPatientModal] Erro ao criar:', error);
+        // Toast de erro já é disparado pelo hook
+      }
+    });
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneInput(e.target.value);
+    setValue('phone', formatted);
+  };
+
+  const isLoading = isPending || createMutation.isPending;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
-            <div className="p-2.5 bg-gradient-to-br from-primary/20 to-primary/5 rounded-xl">
-              <UserPlus className="w-5 h-5 text-primary" />
-            </div>
-            <span className="text-lg">Cadastro Rápido</span>
-          </DialogTitle>
-          <DialogDescription className="text-muted-foreground/80">
-            Cadastre um paciente rapidamente e complete os dados depois.
-          </DialogDescription>
-        </DialogHeader>
+    <CustomModal 
+      open={open} 
+      onOpenChange={onOpenChange}
+      isMobile={isMobile}
+      contentClassName="max-w-md"
+    >
+      <CustomModalHeader onClose={() => onOpenChange(false)}>
+        <CustomModalTitle className="flex items-center gap-2">
+          <UserPlus className="h-5 w-5 text-primary" />
+          Cadastro Rápido de Paciente
+        </CustomModalTitle>
+      </CustomModalHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 pt-2">
-          {/* Aviso de cadastro incompleto */}
-          <div className="flex items-start gap-3 p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-            <AlertTriangle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
-            <div className="space-y-0.5">
-              <p className="text-sm font-medium text-amber-900 dark:text-amber-100">
-                Cadastro Incompleto
-              </p>
-              <p className="text-xs text-amber-700/90 dark:text-amber-200/80">
-                O paciente será marcado para completar dados posteriormente.
-              </p>
-            </div>
-          </div>
+      <CustomModalBody className="p-0 sm:p-0">
+        <div className="px-6 py-4 space-y-6">
+          <p className="text-sm text-muted-foreground">
+            Cadastre as informações essenciais para realizar o agendamento agora.
+          </p>
 
-          {/* Campo Nome */}
-          <div className="space-y-2">
-            <Label htmlFor="name" className="flex items-center gap-2 text-sm font-medium">
-              <User className="w-4 h-4 text-muted-foreground" />
-              Nome Completo <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="name"
-              {...register('name')}
-              placeholder="Ex: João da Silva"
-              autoFocus
-              autoComplete="name"
-              disabled={isFormDisabled}
-              className={errors.name ? 'border-destructive focus-visible:ring-destructive' : ''}
-            />
-            {errors.name && (
-              <p className="text-xs text-destructive flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3" />
-                {errors.name.message}
-              </p>
-            )}
-          </div>
-
-          {/* Campo Telefone */}
-          <div className="space-y-2">
-            <Label htmlFor="phone" className="flex items-center gap-2 text-sm font-medium">
-              <Phone className="w-4 h-4 text-muted-foreground" />
-              Telefone <span className="text-muted-foreground text-xs">(opcional)</span>
-            </Label>
-            <Input
-              id="phone"
-              type="tel"
-              value={phoneValue || ''}
-              onChange={handlePhoneChange}
-              placeholder="(11) 99999-9999"
-              autoComplete="tel"
-              disabled={isFormDisabled}
-              className={errors.phone ? 'border-destructive focus-visible:ring-destructive' : ''}
-            />
-            {errors.phone && (
-              <p className="text-xs text-destructive flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3" />
-                {errors.phone.message}
-              </p>
-            )}
-          </div>
-
-          {/* Botões de ação */}
-          <div className="flex justify-end gap-3 pt-3 border-t">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleClose}
-              disabled={isFormDisabled}
-            >
-              Cancelar
-            </Button>
-
-            <Button
-              type="submit"
-              disabled={!canSubmit}
-              className="min-w-[140px]"
-            >
-              {createPatientMutation.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Criando...
-                </>
-              ) : (
-                <>
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Criar Paciente
-                </>
+          <form id="quick-patient-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            {/* Nome Completo */}
+            <div className="space-y-2">
+              <Label htmlFor="quick-name" className="font-bold text-xs uppercase tracking-wider text-slate-500">
+                Nome Completo *
+              </Label>
+              <Input
+                id="quick-name"
+                placeholder="Ex: Maria Oliveira"
+                className={cn("rounded-xl border-slate-200 h-11 font-medium", errors.full_name && "border-destructive")}
+                {...register('full_name')}
+                autoFocus
+              />
+              {errors.full_name && (
+                <p className="text-[10px] text-destructive font-bold uppercase">{errors.full_name.message}</p>
               )}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4">
+              {/* Telefone */}
+              <div className="space-y-2">
+                <Label htmlFor="quick-phone" className="font-bold text-xs uppercase tracking-wider text-slate-500">
+                  Telefone / WhatsApp
+                </Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Input
+                    id="quick-phone"
+                    placeholder="(00) 00000-0000"
+                    className="pl-9 rounded-xl border-slate-200 h-11"
+                    value={watch('phone') || ''}
+                    onChange={handlePhoneChange}
+                  />
+                </div>
+              </div>
+
+              {/* Email */}
+              <div className="space-y-2">
+                <Label htmlFor="quick-email" className="font-bold text-xs uppercase tracking-wider text-slate-500">
+                  E-mail (opcional)
+                </Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Input
+                    id="quick-email"
+                    type="email"
+                    placeholder="exemplo@email.com"
+                    className={cn("pl-9 rounded-xl border-slate-200 h-11", errors.email && "border-destructive")}
+                    {...register('email')}
+                  />
+                </div>
+                {errors.email && (
+                  <p className="text-[10px] text-destructive font-bold uppercase">{errors.email.message}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Welcome WhatsApp */}
+            <div className="pt-2">
+              <div className="flex items-center space-x-3 p-3 rounded-xl bg-slate-50 border border-slate-100 transition-all hover:bg-slate-100/50">
+                <Controller
+                  name="send_welcome_whatsapp"
+                  control={control}
+                  render={({ field }) => (
+                    <Checkbox
+                      id="send-welcome"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      className="rounded-md"
+                    />
+                  )}
+                />
+                <div className="space-y-0.5">
+                  <Label htmlFor="send-welcome" className="text-sm font-bold text-slate-700 cursor-pointer">
+                    Enviar boas-vindas via WhatsApp
+                  </Label>
+                  <p className="text-[10px] text-slate-500 leading-tight">
+                    O paciente receberá uma mensagem automática com o link do portal.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          {!currentOrganization?.id && (
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-50 border border-amber-100 text-amber-800 text-[10px] font-bold uppercase">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              Selecione uma organização antes de cadastrar
+            </div>
+          )}
+        </div>
+      </CustomModalBody>
+
+      <CustomModalFooter isMobile={isMobile}>
+        <Button
+          type="button"
+          variant="ghost"
+          className="rounded-xl h-11 px-6 font-bold text-slate-500"
+          onClick={() => onOpenChange(false)}
+          disabled={isLoading}
+        >
+          Cancelar
+        </Button>
+        <Button
+          type="submit"
+          form="quick-patient-form"
+          className="rounded-xl h-11 px-8 gap-2 bg-slate-900 text-white shadow-xl shadow-slate-900/10 font-bold uppercase tracking-wider transition-all hover:scale-105 active:scale-95"
+          disabled={isLoading || !currentOrganization?.id}
+        >
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <BadgeCheck className="h-4 w-4" />
+          )}
+          Cadastrar e Usar
+        </Button>
+      </CustomModalFooter>
+    </CustomModal>
   );
 };
 
-// ===== Export com memo para otimização =====
-// Usa memo para evitar re-renders quando as props não mudam
-// Comparação customizada para onOpenChange e onPatientCreated (funções)
 export const QuickPatientModal = memo(QuickPatientModalComponent, (prevProps, nextProps) => {
   return (
     prevProps.open === nextProps.open &&

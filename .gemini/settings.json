@@ -1,51 +1,19 @@
 {
   "mcpServers": {
-    "neon": {
-      "url": "https://server.smithery.ai/neon/mcp",
-      "type": "http"
-    },
-    "context7-mcp": {
-      "url": "https://server.smithery.ai/@upstash/context7-mcp/mcp",
-      "type": "http"
-    },
-    "brave": {
+    "playwright": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-brave-search"
-      ],
-      "env": {
-        "BRAVE_API_KEY": "BSAePlz76pot2NxzuGXngp-gEDzIxkv"
-      }
+      "args": ["-y", "@playwright/mcp@latest"],
+      "description": "Local Playwright MCP server for browser automation"
     },
-    "server-sequential-thinking": {
-      "url": "https://server.smithery.ai/@smithery-ai/server-sequential-thinking/mcp",
-      "type": "http"
+    "cloudflare-api": {
+      "httpUrl": "https://mcp.cloudflare.com/mcp",
+      "description": "Cloudflare managed MCP server for the Cloudflare API",
+      "timeout": 600000
     },
-    "exa": {
-      "url": "https://server.smithery.ai/exa/mcp",
-      "type": "http"
-    },
-    "mcpsemanticscholar": {
-      "url": "https://server.smithery.ai/hamid-vakilzadeh/mcpsemanticscholar/mcp",
-      "type": "http"
-    },
-    "paper-search-mcp-openai": {
-      "url": "https://server.smithery.ai/adamamer20/paper-search-mcp-openai/mcp",
-      "type": "http"
-    },
-    "reference-servers": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@smithery/cli@latest",
-        "run",
-        "kiennd/reference-servers"
-      ]
-    },
-    "serena": {
-      "url": "https://server.smithery.ai/chris/serena/mcp",
-      "type": "http"
+    "expo-mcp": {
+      "httpUrl": "https://mcp.expo.dev/mcp",
+      "description": "Expo hosted MCP server for Expo and EAS workflows",
+      "timeout": 600000
     }
   }
 }

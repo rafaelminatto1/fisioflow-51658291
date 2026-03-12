@@ -263,6 +263,9 @@ export default function ProfileScreen() {
                 onValueChange={handleToggleNotifications}
                 trackColor={{ false: colors.border, true: colors.primary + '80' }}
                 thumbColor={notificationsEnabled ? colors.primary : colors.textMuted}
+                accessibilityLabel="Ativar ou desativar notificações push"
+                accessibilityRole="switch"
+                accessibilityState={{ checked: notificationsEnabled }}
               />
             )}
           </View>
@@ -281,6 +284,8 @@ export default function ProfileScreen() {
                 },
               ]}
               onPress={item.onPress}
+              accessibilityLabel={item.label}
+              accessibilityRole="button"
             >
               <View style={styles.menuItemLeft}>
                 <Ionicons

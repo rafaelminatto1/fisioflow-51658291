@@ -572,6 +572,7 @@ export const CalendarWeekViewDndKit = memo(({
               isDraggingOver={isDraggingOver}
               targetAppointments={slotAppointments}
               draggedAppointment={draggedAppointment}
+              slotHeight={slotHeight}
               onClick={() => {
                 if (!blocked && !isClosed) {
                   onTimeSlotClick(day, time);

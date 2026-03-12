@@ -1,12 +1,11 @@
 import React, { useState, useEffect, memo } from 'react';
 import {
-
-    Sheet,
-    SheetContent,
-    SheetDescription,
-    SheetHeader,
-    SheetTitle,
-} from '@/components/ui/sheet';
+  CustomModal,
+  CustomModalHeader,
+  CustomModalTitle,
+  CustomModalBody,
+  CustomModalFooter,
+} from '@/components/ui/custom-modal';
 import {
     Tabs,
     TabsContent,
@@ -17,9 +16,10 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Calendar, Check, Loader2 } from 'lucide-react';
+import { Clock, Calendar, Check, Loader2, Settings2, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useScheduleSettings, type BusinessHour } from '@/hooks/useScheduleSettings';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ScheduleConfig {
     businessHours: {
@@ -93,6 +93,7 @@ function configFromBusinessHours(hours: BusinessHour[]): ScheduleConfig {
 }
 
 export const QuickSettingsSheet = memo(({ open, onOpenChange }: QuickSettingsSheetProps) => {
+    const isMobile = useIsMobile();
     const { businessHours, upsertBusinessHours } = useScheduleSettings();
     const [config, setConfig] = useState<ScheduleConfig>(defaultConfig);
     const [hasChanges, setHasChanges] = useState(false);
@@ -158,193 +159,203 @@ export const QuickSettingsSheet = memo(({ open, onOpenChange }: QuickSettingsShe
     };
 
     return (
-        <Sheet open={open} onOpenChange={onOpenChange}>
-            <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-                <SheetHeader>
-                    <SheetTitle>Configurações da Agenda</SheetTitle>
-                    <SheetDescription>
-                        Ajuste horários e dias de trabalho
-                    </SheetDescription>
-                </SheetHeader>
-
-                <Tabs defaultValue="hours" className="mt-6">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="hours" className="gap-1.5">
-                            <Clock className="w-4 h-4" />
-                            Horários
-                        </TabsTrigger>
-                        <TabsTrigger value="days" className="gap-1.5">
-                            <Calendar className="w-4 h-4" />
-                            Dias
-                        </TabsTrigger>
-                    </TabsList>
-
-                    {/* Hours Tab */}
-                    <TabsContent value="hours" className="space-y-6">
-                        <div className="space-y-4">
-                            {/* Weekdays */}
-                            <div className="space-y-3">
-                                <Label className="text-sm font-medium flex items-center gap-2">
-                                    <Badge variant="outline" className="font-normal">Seg-Sex</Badge>
-                                    Horário de Funcionamento
-                                </Label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="space-y-1.5">
-                                        <Label htmlFor="weekday-start" className="text-xs text-slate-500">
-                                            Abertura
-                                        </Label>
-                                        <select
-                                            id="weekday-start"
-                                            value={config.businessHours.weekdays.start}
-                                            onChange={(e) => handleTimeChange('weekdays', 'start', e.target.value)}
-                                            className="w-full h-10 px-3 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm"
-                                        >
-                                            {timeSlots.map(slot => (
-                                                <option key={`start-${slot}`} value={slot}>{slot}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label htmlFor="weekday-end" className="text-xs text-slate-500">
-                                            Fechamento
-                                        </Label>
-                                        <select
-                                            id="weekday-end"
-                                            value={config.businessHours.weekdays.end}
-                                            onChange={(e) => handleTimeChange('weekdays', 'end', e.target.value)}
-                                            className="w-full h-10 px-3 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm"
-                                        >
-                                            {timeSlots.map(slot => (
-                                                <option key={`end-${slot}`} value={slot}>{slot}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Saturday */}
-                            <div className="space-y-3">
-                                <Label className="text-sm font-medium flex items-center gap-2">
-                                    <Badge variant="outline" className="font-normal">Sábado</Badge>
-                                    Horário de Funcionamento
-                                </Label>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="space-y-1.5">
-                                        <Label htmlFor="saturday-start" className="text-xs text-slate-500">
-                                            Abertura
-                                        </Label>
-                                        <select
-                                            id="saturday-start"
-                                            value={config.businessHours.saturday.start}
-                                            onChange={(e) => handleTimeChange('saturday', 'start', e.target.value)}
-                                            className="w-full h-10 px-3 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm"
-                                        >
-                                            {timeSlots.map(slot => (
-                                                <option key={`sat-start-${slot}`} value={slot}>{slot}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="space-y-1.5">
-                                        <Label htmlFor="saturday-end" className="text-xs text-slate-500">
-                                            Fechamento
-                                        </Label>
-                                        <select
-                                            id="saturday-end"
-                                            value={config.businessHours.saturday.end}
-                                            onChange={(e) => handleTimeChange('saturday', 'end', e.target.value)}
-                                            className="w-full h-10 px-3 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm"
-                                        >
-                                            {timeSlots.map(slot => (
-                                                <option key={`sat-end-${slot}`} value={slot}>{slot}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </TabsContent>
-
-                    {/* Days Tab */}
-                    <TabsContent value="days" className="space-y-6">
-                        <div className="space-y-3">
-                            <p className="text-sm text-slate-500 dark:text-gray-500">
-                                Selecione os dias da semana em que a clínica funciona
-                            </p>
-
-                            {[
-                                { key: 'monday' as const, label: 'Segunda-feira' },
-                                { key: 'tuesday' as const, label: 'Terça-feira' },
-                                { key: 'wednesday' as const, label: 'Quarta-feira' },
-                                { key: 'thursday' as const, label: 'Quinta-feira' },
-                                { key: 'friday' as const, label: 'Sexta-feira' },
-                                { key: 'saturday' as const, label: 'Sábado' },
-                                { key: 'sunday' as const, label: 'Domingo' },
-                            ].map(({ key, label }) => (
-                                <div
-                                    key={key}
-                                    className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                                >
-                                    <Label htmlFor={`day-${key}`} className="cursor-pointer font-medium">
-                                        {label}
-                                    </Label>
-                                    <Switch
-                                        id={`day-${key}`}
-                                        checked={config.workingDays[key]}
-                                        onCheckedChange={() => handleWorkingDayToggle(key)}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 space-y-2">
-                            <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                                Dias ativos: {Object.values(config.workingDays).filter(Boolean).length}/7
-                            </p>
-                            <p className="text-xs text-blue-700 dark:text-blue-300">
-                                {Object.values(config.workingDays).filter(Boolean).length === 7
-                                    ? "Todos os dias da semana estão ativos"
-                                    : `${Object.values(config.workingDays).filter(Boolean).length} dias de trabalho por semana`}
-                            </p>
-                        </div>
-                    </TabsContent>
-                </Tabs>
-
-                {/* Actions */}
-                <div className="flex gap-2 mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
-                    <Button
-                        variant="outline"
-                        onClick={handleReset}
-                        className="flex-1"
-                        disabled={!hasChanges || upsertBusinessHours.isPending}
-                    >
-                        Resetar
-                    </Button>
-                    <Button
-                        onClick={() => void handleSave()}
-                        disabled={!hasChanges || upsertBusinessHours.isPending}
-                        className={cn(
-                            "flex-1 gap-2",
-                            saved && "bg-emerald-600 hover:bg-emerald-700"
-                        )}
-                    >
-                        {upsertBusinessHours.isPending ? (
-                            <>
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Salvando...
-                            </>
-                        ) : saved ? (
-                            <>
-                                <Check className="w-4 h-4" />
-                                Salvo!
-                            </>
-                        ) : (
-                            'Salvar Alterações'
-                        )}
-                    </Button>
+        <CustomModal 
+            open={open} 
+            onOpenChange={onOpenChange}
+            isMobile={isMobile}
+            contentClassName="max-w-md h-[85vh]"
+        >
+            <CustomModalHeader onClose={() => onOpenChange(false)}>
+                <div className="flex flex-col gap-1">
+                    <CustomModalTitle className="flex items-center gap-2 text-xl font-bold">
+                        <Settings2 className="h-5 w-5 text-primary" />
+                        Configurações da Agenda
+                    </CustomModalTitle>
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+                        Personalize horários e dias de trabalho
+                    </p>
                 </div>
-            </SheetContent>
-        </Sheet>
+            </CustomModalHeader>
+
+            <Tabs defaultValue="hours" className="flex-1 flex flex-col overflow-hidden">
+                <TabsList className="grid w-full grid-cols-2 bg-slate-50 border-b rounded-none h-12">
+                    <TabsTrigger value="hours" className="gap-1.5 data-[state=active]:bg-white rounded-none border-b-2 border-transparent data-[state=active]:border-primary transition-all">
+                        <Clock className="w-4 h-4" />
+                        Horários
+                    </TabsTrigger>
+                    <TabsTrigger value="days" className="gap-1.5 data-[state=active]:bg-white rounded-none border-b-2 border-transparent data-[state=active]:border-primary transition-all">
+                        <Calendar className="w-4 h-4" />
+                        Dias
+                    </TabsTrigger>
+                </TabsList>
+
+                <CustomModalBody className="p-0 sm:p-0">
+                    <ScrollArea className="h-full">
+                        <div className="p-6 space-y-6">
+                            {/* Hours Tab */}
+                            <TabsContent value="hours" className="mt-0 space-y-6">
+                                <div className="space-y-6">
+                                    {/* Weekdays */}
+                                    <div className="space-y-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                                        <Label className="text-xs font-bold flex items-center gap-2 uppercase tracking-widest text-slate-500">
+                                            <Badge variant="outline" className="font-bold bg-white text-primary border-primary/20">Seg-Sex</Badge>
+                                            Horário Base
+                                        </Label>
+                                        <div className="grid grid-cols-2 gap-4 pt-2">
+                                            <div className="space-y-1.5">
+                                                <Label htmlFor="weekday-start" className="text-[10px] font-bold uppercase text-slate-400">
+                                                    Início
+                                                </Label>
+                                                <select
+                                                    id="weekday-start"
+                                                    value={config.businessHours.weekdays.start}
+                                                    onChange={(e) => handleTimeChange('weekdays', 'start', e.target.value)}
+                                                    className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm font-semibold focus:ring-2 focus:ring-primary/20"
+                                                >
+                                                    {timeSlots.map(slot => (
+                                                        <option key={`start-${slot}`} value={slot}>{slot}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <Label htmlFor="weekday-end" className="text-[10px] font-bold uppercase text-slate-400">
+                                                    Término
+                                                </Label>
+                                                <select
+                                                    id="weekday-end"
+                                                    value={config.businessHours.weekdays.end}
+                                                    onChange={(e) => handleTimeChange('weekdays', 'end', e.target.value)}
+                                                    className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm font-semibold focus:ring-2 focus:ring-primary/20"
+                                                >
+                                                    {timeSlots.map(slot => (
+                                                        <option key={`end-${slot}`} value={slot}>{slot}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Saturday */}
+                                    <div className="space-y-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-100">
+                                        <Label className="text-xs font-bold flex items-center gap-2 uppercase tracking-widest text-slate-500">
+                                            <Badge variant="outline" className="font-bold bg-white text-orange-600 border-orange-200">Sábado</Badge>
+                                            Horário Reduzido
+                                        </Label>
+                                        <div className="grid grid-cols-2 gap-4 pt-2">
+                                            <div className="space-y-1.5">
+                                                <Label htmlFor="saturday-start" className="text-[10px] font-bold uppercase text-slate-400">
+                                                    Início
+                                                </Label>
+                                                <select
+                                                    id="saturday-start"
+                                                    value={config.businessHours.saturday.start}
+                                                    onChange={(e) => handleTimeChange('saturday', 'start', e.target.value)}
+                                                    className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm font-semibold focus:ring-2 focus:ring-primary/20"
+                                                >
+                                                    {timeSlots.map(slot => (
+                                                        <option key={`sat-start-${slot}`} value={slot}>{slot}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="space-y-1.5">
+                                                <Label htmlFor="saturday-end" className="text-[10px] font-bold uppercase text-slate-400">
+                                                    Término
+                                                </Label>
+                                                <select
+                                                    id="saturday-end"
+                                                    value={config.businessHours.saturday.end}
+                                                    onChange={(e) => handleTimeChange('saturday', 'end', e.target.value)}
+                                                    className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm font-semibold focus:ring-2 focus:ring-primary/20"
+                                                >
+                                                    {timeSlots.map(slot => (
+                                                        <option key={`sat-end-${slot}`} value={slot}>{slot}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </TabsContent>
+
+                            {/* Days Tab */}
+                            <TabsContent value="days" className="mt-0 space-y-4">
+                                <div className="bg-primary/5 p-4 rounded-2xl border border-primary/10 mb-4 flex items-start gap-3">
+                                    <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                                    <p className="text-xs text-primary/80 leading-relaxed font-medium">
+                                        Os dias desativados não aparecerão como disponíveis para novos agendamentos na grade da agenda.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    {[
+                                        { key: 'monday' as const, label: 'Segunda-feira' },
+                                        { key: 'tuesday' as const, label: 'Terça-feira' },
+                                        { key: 'wednesday' as const, label: 'Quarta-feira' },
+                                        { key: 'thursday' as const, label: 'Quinta-feira' },
+                                        { key: 'friday' as const, label: 'Sexta-feira' },
+                                        { key: 'saturday' as const, label: 'Sábado' },
+                                        { key: 'sunday' as const, label: 'Domingo' },
+                                    ].map(({ key, label }) => (
+                                        <div
+                                            key={key}
+                                            className={cn(
+                                                "flex items-center justify-between p-4 rounded-2xl border transition-all",
+                                                config.workingDays[key] 
+                                                    ? "bg-white border-slate-200 shadow-sm" 
+                                                    : "bg-slate-50 border-slate-100 opacity-60"
+                                            )}
+                                        >
+                                            <Label htmlFor={`day-${key}`} className="cursor-pointer font-bold text-sm text-slate-700">
+                                                {label}
+                                            </Label>
+                                            <Switch
+                                                id={`day-${key}`}
+                                                checked={config.workingDays[key]}
+                                                onCheckedChange={() => handleWorkingDayToggle(key)}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            </TabsContent>
+                        </div>
+                    </ScrollArea>
+                </CustomModalBody>
+            </Tabs>
+
+            <CustomModalFooter isMobile={isMobile} className="bg-slate-50 border-t-0">
+                <Button
+                    variant="ghost"
+                    onClick={handleReset}
+                    className="rounded-xl h-11 px-6 font-bold text-slate-500"
+                    disabled={!hasChanges || upsertBusinessHours.isPending}
+                >
+                    Resetar
+                </Button>
+                <div className="flex-1" />
+                <Button
+                    onClick={() => void handleSave()}
+                    disabled={!hasChanges || upsertBusinessHours.isPending}
+                    className={cn(
+                        "rounded-xl h-11 px-8 gap-2 font-bold uppercase tracking-wider shadow-lg transition-all",
+                        saved ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20" : "bg-slate-900 shadow-slate-900/20"
+                    )}
+                >
+                    {upsertBusinessHours.isPending ? (
+                        <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Salvando...
+                        </>
+                    ) : saved ? (
+                        <>
+                            <Check className="w-4 h-4" />
+                            Salvo!
+                        </>
+                    ) : (
+                        'Aplicar Alterações'
+                    )}
+                </Button>
+            </CustomModalFooter>
+        </CustomModal>
     );
 });
 

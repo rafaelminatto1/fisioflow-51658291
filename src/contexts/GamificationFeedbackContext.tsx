@@ -35,7 +35,7 @@ export function GamificationFeedbackProvider({ children }: { children: React.Rea
       particleCount: 200,
       spread: 90,
       origin: { y: 0.6 },
-      colors: ['#EAB308', '#A855F7', '#EC4899']
+      colors: ['#EAB308', '#06B6D4', '#3B82F6']
     });
     
     toast.success(`NÍVEL ${level} ALCANÇADO!`, {

@@ -88,9 +88,7 @@ const RelatorioConvenioPage = lazy(() => import(/* webpackChunkName: "reports-co
 const Partner = lazy(() => import(/* webpackChunkName: "vouchers-partners" */ "./pages/Partner"));
 const Vouchers = lazy(() => import(/* webpackChunkName: "vouchers" */ "./pages/Vouchers"));
 const Install = lazy(() => import(/* webpackChunkName: "install" */ "./pages/Install"));
-const Waitlist = lazy(() => import(/* webpackChunkName: "waitlist" */ "./pages/Waitlist"));
 const Surveys = lazy(() => import(/* webpackChunkName: "surveys" */ "./pages/Surveys"));
-const Tarefas = lazy(() => import(/* webpackChunkName: "tasks" */ "./pages/Tarefas"));
 const TarefasV2 = lazy(() => import(/* webpackChunkName: "tasks-v2" */ "./pages/TarefasV2"));
 const Projects = lazy(() => import(/* webpackChunkName: "projects" */ "./pages/Projects"));
 const ProjectDetails = lazy(() => import(/* webpackChunkName: "project-details" */ "./pages/ProjectDetails"));
@@ -252,7 +250,6 @@ export function AppRoutes() {
             <Route path="/communications" element={<ProtectedRoute><Communications /></ProtectedRoute>} />
             <Route path="/communications/email-test" element={<ProtectedRoute><EmailTest /></ProtectedRoute>} />
             <Route path="/partner" element={<ProtectedRoute><Partner /></ProtectedRoute>} />
-            <Route path="/waitlist" element={<ProtectedRoute><Waitlist /></ProtectedRoute>} />
             <Route path="/surveys" element={<ProtectedRoute><Surveys /></ProtectedRoute>} />
             <Route path="/vouchers" element={<ProtectedRoute><Vouchers /></ProtectedRoute>} />
             <Route path="/install" element={<Install />} />
@@ -311,7 +308,7 @@ export function AppRoutes() {
             <Route path="/pre-cadastro-admin" element={<ProtectedRoute allowedRoles={['admin']}><PreCadastroAdmin /></ProtectedRoute>} />
             <Route path="/telemedicine-room/:roomId" element={<ProtectedRoute><TelemedicineRoom /></ProtectedRoute>} />
 
-            <Route path="/tarefas" element={<ProtectedRoute><Tarefas /></ProtectedRoute>} />
+            <Route path="/tarefas" element={<Navigate to="/tarefas-v2" replace />} />
             <Route path="/tarefas-v2" element={<ProtectedRoute><TarefasV2 /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><AdvancedAnalytics /></ProtectedRoute>} />
             <Route path="/smart-dashboard" element={<ProtectedRoute><SmartDashboard /></ProtectedRoute>} />

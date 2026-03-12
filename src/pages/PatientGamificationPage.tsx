@@ -67,7 +67,7 @@ export default function PatientGamificationPage() {
     allAchievements,
     freezeStreak,
     freezeCost
-  } = useGamification(user?.id || '');
+  } = useGamification(user?.uid || '');
 
   const [search, setSearch] = useState('');
   const [rankingPeriod, setRankingPeriod] = useState<'weekly' | 'monthly' | 'all'>('all');
@@ -220,7 +220,7 @@ export default function PatientGamificationPage() {
               <LevelJourneyMap currentLevel={profile?.level || 1} />
 
               {/* 3.5. Weekly Challenges */}
-              <WeeklyChallenges patientId={user?.id || ''} />
+              <WeeklyChallenges patientId={user?.uid || ''} />
 
             </div>
 
@@ -237,7 +237,7 @@ export default function PatientGamificationPage() {
               <Card className="overflow-hidden border border-border/50 shadow-sm bg-gradient-to-br from-slate-50 to-white">
                 <div className="p-4 border-b flex justify-between items-center bg-white/50 backdrop-blur-sm">
                   <h3 className="font-semibold flex items-center gap-2">
-                    <Award className="w-5 h-5 text-purple-500" />
+                    <Award className="w-5 h-5 text-blue-500" />
                     Conquistas
                   </h3>
                   <span className="text-xs text-muted-foreground">
@@ -252,7 +252,7 @@ export default function PatientGamificationPage() {
                         <div className={`
                                     w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300
                                     ${isUnlocked
-                            ? 'bg-purple-100 text-purple-600 shadow-sm group-hover:scale-110'
+                            ? 'bg-blue-100 text-blue-600 shadow-sm group-hover:scale-110'
                             : 'bg-muted text-muted-foreground/30 grayscale'
                           }
                                 `}>
@@ -272,8 +272,7 @@ export default function PatientGamificationPage() {
 
               {/* 5.5 Rewards Shop */}
               <RewardsShop
-                patientId={user?.id || ''}
-                currentPoints={profile?.total_points || 0}
+                patientId={user?.uid || ''}
               />
 
               {/* 6. Leaderboard */}
@@ -313,7 +312,7 @@ export default function PatientGamificationPage() {
                     </div>
                   ) : (
                     filteredLeaderboard.map((entry, index) => {
-                      const isCurrentUser = entry.patient_id === user?.id;
+                      const isCurrentUser = entry.patient_id === user?.uid;
                       return (
                         <div
                           key={entry.patient_id}

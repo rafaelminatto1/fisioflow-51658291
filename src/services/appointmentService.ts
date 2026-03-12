@@ -2,7 +2,7 @@
 
 // Type for appointment item from API
 
-import { appointmentsApi } from '@/lib/api/workers-client';
+import { appointmentsApi } from '@/api/v2/appointments';
 import { AppointmentBase, AppointmentFormData, AppointmentStatus, AppointmentType } from '@/types/appointment';
 import { VerifiedAppointmentSchema } from '@/schemas/appointment';
 import { dateSchema, timeSchema } from '@/lib/validations/agenda';
@@ -11,29 +11,12 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 import { FinancialService } from '@/services/financialService';
 import { AgentIngestPayload, agentIngest } from '@/lib/debug/agentIngest';
+import type { AppointmentRow } from '@/types/workers';
 
-interface AppointmentApiItem {
-    id: string;
-    patient_id?: string;
+interface AppointmentApiItem extends AppointmentRow {
     patient_name?: string;
     patient_phone?: string;
-    therapist_id?: string;
     therapist_name?: string;
-    date?: string;
-    appointment_date?: string; // Legacy support
-    start_time?: string;
-    appointment_time?: string;
-    duration?: number;
-    type?: string;
-    status?: string;
-    notes?: string;
-    created_at?: string;
-    updated_at?: string;
-    room?: string;
-    payment_status?: string;
-    payment_method?: string;
-    payment_amount?: number;
-    session_package_id?: string;
 }
 
 // Helper for time calculation
@@ -267,7 +250,7 @@ export class AppointmentService {
                 phone: newAppointment.patient_phone || '',
                 date: parseResponseDate(newAppointment.date || newAppointment.appointment_date),
                 time: newAppointment.start_time || newAppointment.appointment_time,
-                duration: newAppointment.duration,
+                duration: newAppointment.duration_minutes || newAppointment.duration || 60,
                 type: newAppointment.type as AppointmentType,
                 status: newAppointment.status as AppointmentStatus,
                 notes: newAppointment.notes || '',

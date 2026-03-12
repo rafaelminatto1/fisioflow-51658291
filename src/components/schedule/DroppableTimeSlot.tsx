@@ -27,6 +27,7 @@ interface DroppableTimeSlotProps {
   // Preview props
   targetAppointments?: Appointment[];
   draggedAppointment?: Appointment | null;
+  slotHeight?: number;
 }
 
 const isHourStart = (time: string): boolean => time.endsWith(':00');
@@ -50,7 +51,8 @@ export const DroppableTimeSlot = ({
   children,
   onClick,
   targetAppointments = [],
-  draggedAppointment = null
+  draggedAppointment = null,
+  slotHeight = 40
 }: DroppableTimeSlotProps) => {
   // ID único para o droppable: "slot-YYYY-MM-DD-HH:mm"
   const dateStr = formatDateToLocalISO(day);
@@ -155,6 +157,7 @@ export const DroppableTimeSlot = ({
                 leftOffset={leftOffset}
                 showText={showText}
                 variant="week"
+                slotHeight={slotHeight}
               />
             );
           })}

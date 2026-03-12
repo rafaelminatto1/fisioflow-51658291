@@ -213,7 +213,7 @@ export default function ExercisesScreen() {
                     )}
                     {/* IA Badge */}
                     {['squat', 'pushup', 'plank', 'lunge'].includes(exercise.id?.toLowerCase() || '') && (
-                      <View style={[styles.iaBadge, { backgroundColor: '#8B5CF6' }]}>
+                      <View style={[styles.iaBadge, { backgroundColor: '#0D9488' }]}>
                         <Ionicons name="sparkles" size={10} color="#fff" />
                         <Text style={styles.iaBadgeText}>IA</Text>
                       </View>

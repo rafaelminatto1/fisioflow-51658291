@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { RichTextProvider, useRichTextContext } from '@/context/RichTextContext';
+import { RichTextProvider, useRichTextContext } from '@/contexts/RichTextContext';
 import { RichTextToolbar } from '@/components/ui/RichTextToolbar';
 import { RichTextEditor } from '@/components/ui/RichTextEditor';
 import { uploadFile } from '@/lib/storage/upload';
