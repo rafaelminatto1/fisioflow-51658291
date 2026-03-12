@@ -10,8 +10,8 @@ export * from './marketingAITemplateService';
 // Gemini Vision Service
 export * from './geminiVisionService';
 
-// Firebase AI Service
-export * from './firebaseAIService';
+// AI runtime service
+export * from '@/integrations/neon/ai';
 
 export type {
   GenerateReviewTemplateInput,

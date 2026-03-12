@@ -101,8 +101,7 @@ export const exerciseProtocols = pgTable('exercise_protocols', {
   isPublic: boolean('is_public').default(true).notNull(),
   organizationId: uuid('organization_id'),
   wikiPageId: uuid('wiki_page_id'),
-  // Controle & Legacy
-  firestoreId: varchar('firestore_id', { length: 150 }),
+  // Controle
   embedding: customType<{ data: number[] }>({ dataType() { return 'vector(1536)'; } })('embedding'),
   createdBy: text('created_by'),
 

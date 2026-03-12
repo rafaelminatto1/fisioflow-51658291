@@ -1,4 +1,4 @@
-// Re-export auth store from lib/firebase to maintain backward compatibility
+// Re-export do store principal para compatibilidade de imports
 export {
   useAuthStore,
   auth,

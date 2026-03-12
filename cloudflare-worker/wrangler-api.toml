@@ -1,0 +1,18 @@
+# FisioFlow API Worker - Wrangler Config
+name = "fisioflow-api"
+main = "fisioflow-api.ts"
+compatibility_date = "2024-03-06"
+
+# D1 Database (optional - for caching)
+[[d1_databases]]
+binding = "DB"
+database_name = "fisioflow-db"
+database_id = "bf781be2-527d-471d-9cf2-dd18f8e6c2b2"
+
+# Environment Variables (set via wrangler secret for sensitive data)
+[vars]
+AUTH_TOKEN = "FISIOFLOW_SECRET_TOKEN_2026"
+
+# Secrets (set via: wrangler secret put JWT_SECRET)
+# JWT_SECRET - Neon Auth JWT secret
+# DATABASE_URL - Neon connection string (use HTTP API instead)

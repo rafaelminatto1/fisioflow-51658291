@@ -91,14 +91,6 @@ export function initPerformanceMonitoring(onMetricUpdate?: (metric: PerformanceM
       });
     }
 
-    // Enviar para Firebase Analytics se disponível
-    if (typeof window !== 'undefined' && 'firebaseAnalytics' in window) {
-      (window as { firebaseAnalytics?: () => { logEvent: (name: string, params: Record<string, unknown>) => void } }).firebaseAnalytics?.().logEvent('web_vital', {
-        name: metric.name,
-        value: metric.value,
-        rating: performanceMetric.rating,
-      });
-    }
   };
 
   // Configurar observers do web-vitals

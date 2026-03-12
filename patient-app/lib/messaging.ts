@@ -1,103 +1,138 @@
 import { useEffect, useState } from 'react';
 import { log } from '@/lib/logger';
+import { messagingApi } from './api';
 
 export type MessageType = 'text' | 'image' | 'video' | 'audio' | 'document';
 export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
 
 export interface Message {
   id: string;
-  conversationId: string;
-  senderId: string;
-  recipientId: string;
+  sender_id: string;
+  recipient_id: string;
   type: MessageType;
   content: string;
-  attachmentUrl?: string;
-  attachmentName?: string;
+  attachment_url?: string;
+  attachment_name?: string;
   status: MessageStatus;
-  createdAt: string | Date | null;
-  readAt?: string | Date | null;
-  deletedFor?: string[];
+  created_at: string | Date | null;
+  read_at?: string | Date | null;
 }
 
 export interface Conversation {
   id: string;
   participantIds: string[];
   participantNames: Record<string, string>;
-  participantAvatars: Record<string, string>;
   lastMessage?: {
     content: string;
     senderId: string;
     createdAt: string | Date | null;
   };
   unreadCount: Record<string, number>;
-  createdAt: string | Date | null;
   updatedAt: string | Date | null;
 }
 
 export interface MessagingCallbacks {
   onNewMessage?: (message: Message) => void;
-  onMessageUpdated?: (message: Message) => void;
-  onConversationUpdated?: (conversation: Conversation) => void;
+  onConversationsUpdated?: (conversations: Conversation[]) => void;
   onError?: (error: Error) => void;
 }
 
-export const MESSAGING_UNAVAILABLE_REASON =
-  'Chat em migracao para o backend Cloudflare. Este fluxo ainda nao possui endpoint dedicado no portal do paciente.';
-
 export class MessagingManager {
+  private pollInterval: any = null;
+  private callbacks: MessagingCallbacks = {};
+
   constructor(private readonly userId: string) {}
 
   isAvailable(): boolean {
-    return false;
-  }
-
-  getUnavailableReason(): string {
-    return MESSAGING_UNAVAILABLE_REASON;
+    return true;
   }
 
   async getConversations(): Promise<Conversation[]> {
-    return [];
+    try {
+      const data = await messagingApi.getConversations();
+      return data;
+    } catch (error) {
+      log.error('MESSAGING', 'Failed to get conversations', error);
+      return [];
+    }
   }
 
-  subscribeToConversations(_callbacks: MessagingCallbacks): void {}
-
-  unsubscribeFromConversations(): void {}
-
-  async getMessages(_conversationId: string, _limit = 50): Promise<Message[]> {
-    return [];
+  startPolling(conversationId: string, intervalMs = 5000) {
+    this.stopPolling();
+    this.pollInterval = setInterval(async () => {
+      try {
+        const messages = await this.getMessages(conversationId);
+        if (messages.length > 0 && this.callbacks.onNewMessage) {
+          // This is a naive implementation; in a real app, we'd check for NEW messages
+          messages.forEach(msg => this.callbacks.onNewMessage!(msg));
+        }
+      } catch (error) {
+        log.error('MESSAGING', 'Polling failed', error);
+      }
+    }, intervalMs);
   }
 
-  subscribeToMessages(_conversationId: string, _callbacks: MessagingCallbacks): void {}
+  stopPolling() {
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+      this.pollInterval = null;
+    }
+  }
 
-  unsubscribeFromMessages(_conversationId: string): void {}
+  setCallbacks(callbacks: MessagingCallbacks) {
+    this.callbacks = callbacks;
+  }
 
-  async sendMessage(_conversationId: string, _content: string): Promise<Message | null> {
-    log.warn('MESSAGING', `Blocked legacy chat send for user ${this.userId}`);
-    return null;
+  async getMessages(participantId: string, limit = 50): Promise<Message[]> {
+    try {
+      return await messagingApi.getMessages(participantId, limit);
+    } catch (error) {
+      log.error('MESSAGING', `Failed to get messages for ${participantId}`, error);
+      return [];
+    }
+  }
+
+  async sendMessage(recipientId: string, content: string): Promise<Message | null> {
+    try {
+      return await messagingApi.sendMessage({ recipientId, content });
+    } catch (error) {
+      log.error('MESSAGING', 'Failed to send message', error);
+      return null;
+    }
   }
 
   async sendMessageWithAttachment(
-    _conversationId: string,
-    _type: MessageType,
-    _content: string,
-    _fileUri: string,
-    _fileName: string,
+    recipientId: string,
+    type: MessageType,
+    content: string,
+    attachmentUrl: string,
+    attachmentName: string,
   ): Promise<Message | null> {
-    log.warn('MESSAGING', `Blocked legacy chat attachment for user ${this.userId}`);
-    return null;
+    try {
+      return await messagingApi.sendMessage({ 
+        recipientId, 
+        content, 
+        type, 
+        attachmentUrl, 
+        attachmentName 
+      });
+    } catch (error) {
+      log.error('MESSAGING', 'Failed to send message with attachment', error);
+      return null;
+    }
   }
 
-  async markMessageAsRead(_conversationId: string, _messageId: string): Promise<void> {}
-
-  async markConversationAsRead(_conversationId: string): Promise<void> {}
-
-  async createConversation(_otherParticipantId: string, _otherParticipantName: string): Promise<string | null> {
-    return null;
+  async markConversationAsRead(participantId: string): Promise<void> {
+    try {
+      await messagingApi.markConversationRead(participantId);
+    } catch (error) {
+      log.error('MESSAGING', 'Failed to mark conversation as read', error);
+    }
   }
 
-  async deleteMessageForMe(_conversationId: string, _messageId: string): Promise<void> {}
-
-  cleanup(): void {}
+  cleanup(): void {
+    this.stopPolling();
+  }
 }
 
 export function useMessaging(userId: string) {
