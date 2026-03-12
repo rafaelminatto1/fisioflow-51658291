@@ -1,5 +1,5 @@
 import type { Exercise } from '@/types';
-import { exercisesApi } from '@/lib/api/workers-client';
+import { exercisesApi } from '@/api/v2/exercises';
 import { NO_EQUIPMENT_GROUP_ID, EQUIPMENT, HOME_EQUIPMENT_GROUP } from '@/lib/constants/exerciseConstants';
 
 export interface ExerciseFilters {

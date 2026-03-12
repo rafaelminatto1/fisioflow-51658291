@@ -27,16 +27,16 @@ import { seedKnowledgeBase } from '@/features/wiki/utils/seedData';
 import { toast } from 'sonner';
 
 export default function WikiDashboard() {
-  const { user } = useAuth();
+  const { organizationId, user } = useAuth();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedArtifact, setSelectedArtifact] = useState<KnowledgeArtifact | null>(null);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
 
   const { data: artifacts = [], isLoading } = useQuery({
-    queryKey: ['knowledge-artifacts', user?.organizationId],
-    queryFn: () => user?.organizationId ? knowledgeService.listArtifacts(user.organizationId) : Promise.resolve([]),
-    enabled: !!user?.organizationId
+    queryKey: ['knowledge-artifacts', organizationId],
+    queryFn: () => organizationId ? knowledgeService.listArtifacts(organizationId) : Promise.resolve([]),
+    enabled: !!organizationId
   });
 
   const filteredArtifacts = artifacts.filter(art => 
@@ -135,7 +135,7 @@ export default function WikiDashboard() {
         <Card className="bg-white border-slate-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Novos Insights</CardTitle>
-            <Sparkles className="h-4 w-4 text-violet-500 group-hover:scale-110 transition-transform" />
+            <Sparkles className="h-4 w-4 text-cyan-500 group-hover:scale-110 transition-transform" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-slate-900">12</div>

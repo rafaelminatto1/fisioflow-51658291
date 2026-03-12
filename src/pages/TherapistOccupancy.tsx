@@ -223,7 +223,7 @@ export default function TherapistOccupancyPage() {
             value={data?.fisioterapeutasAtivos || 0}
             icon={Users}
             subtitle="Profissionais disponíveis"
-            gradient="bg-gradient-to-br from-purple-500/10 to-purple-500/5"
+            gradient="bg-gradient-to-br from-teal-500/10 to-teal-500/5"
           />
         </div>
 

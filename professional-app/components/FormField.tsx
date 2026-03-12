@@ -11,6 +11,7 @@ interface FormFieldProps {
     containerStyle?: ViewStyle;
     icon?: keyof typeof Ionicons.glyphMap;
     description?: string;
+    accessibilityLabel?: string;
 }
 
 /**
@@ -28,11 +29,16 @@ export function FormField({
     containerStyle,
     icon,
     description,
+    accessibilityLabel,
 }: FormFieldProps) {
     const colors = useColors();
 
     return (
-        <View style={[styles.container, containerStyle]}>
+        <View 
+            style={[styles.container, containerStyle]}
+            accessibilityLabel={accessibilityLabel || label}
+            accessibilityRole="none"
+        >
             {label && (
                 <View style={styles.labelContainer}>
                     {icon && (

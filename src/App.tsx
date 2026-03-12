@@ -4,7 +4,6 @@ import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient } from '@tanstack/react-query';
 import { BrowserRouter, useLocation } from 'react-router-dom';
-import { DataProvider } from '@/contexts/DataContext';
 import { RealtimeProvider } from '@/contexts/RealtimeContext';
 import { AuthContextProvider } from '@/contexts/AuthContextProvider';
 import { TourProvider } from '@/contexts/TourContext';
@@ -150,9 +149,7 @@ const AppProviders = ({ children }: { children: React.ReactNode }) => {
                   <StatsigProviderWrapper>
                     <GamificationFeedbackProvider>
                       <RealtimeProvider>
-                        <DataProvider>
-                          {children}
-                        </DataProvider>
+                        {children}
                       </RealtimeProvider>
                     </GamificationFeedbackProvider>
                   </StatsigProviderWrapper>

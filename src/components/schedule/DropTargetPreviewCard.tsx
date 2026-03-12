@@ -15,6 +15,7 @@ interface DropTargetPreviewCardProps {
     leftOffset: number;
     showText: boolean;
     variant?: 'day' | 'week';
+    slotHeight?: number;
 }
 
 /**
@@ -28,15 +29,21 @@ export const DropTargetPreviewCard = memo(({
     cardWidthPercent,
     leftOffset,
     showText,
-    variant = 'day'
+    variant = 'day',
+    slotHeight = 40 // Default fallback height
 }: DropTargetPreviewCardProps) => {
     const statusColors = getStatusCardClasses(appointment.status || 'agendado');
     const isCompact = variant === 'week';
 
+    // Calculate height based on duration (30 min slots)
+    const duration = appointment.duration || 60;
+    const slotCount = Math.max(1, duration / 30);
+    const heightInPixels = (slotHeight * slotCount) - 8;
+
     return (
         <div
             className={cn(
-                "absolute h-[calc(100%-8px)] rounded-lg border-2 border-dashed",
+                "absolute rounded-lg border-2 border-dashed",
                 "flex flex-col overflow-hidden",
                 "transition-[box-shadow,background-color,border-color] duration-150 ease-out",
                 "animate-in fade-in duration-150 ease-out",
@@ -48,7 +55,9 @@ export const DropTargetPreviewCard = memo(({
             style={{
                 left: `calc(${leftOffset}% + 2px)`,
                 width: `calc(${cardWidthPercent}% - 4px)`,
-                top: '4px'
+                top: '4px',
+                height: `${heightInPixels}px`,
+                minHeight: `${slotHeight - 8}px`
             }}
         >
             <div className={cn(

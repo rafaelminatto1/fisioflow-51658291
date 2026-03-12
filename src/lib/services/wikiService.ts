@@ -1,7 +1,7 @@
 /**
  * Wiki / Knowledge Base - Migrated to Neon/Workers
  */
-import { wikiApi } from '@/lib/api/workers-client';
+import { wikiApi } from '@/api/v2/knowledge';
 import type { WikiPage, WikiCategory, WikiComment, WikiPageVersion, WikiTriageEvent } from '@/types/wiki';
 
 export const wikiService = {

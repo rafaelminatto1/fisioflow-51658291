@@ -8,19 +8,10 @@
 import React, { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { financialApi, Transacao } from '@/lib/api/workers-client';
+import { financialApi } from '@/api/v2/financial';
+import type { Transacao } from '@/types/workers';
 
-export interface Transaction {
-  id: string;
-  tipo: string;
-  valor: number;
-  descricao?: string;
-  status?: string;
-  categoria?: string;
-  metadata?: Record<string, unknown>;
-  created_at: string;
-  updated_at: string;
-}
+export type Transaction = Transacao;
 
 export interface FinancialStats {
   totalRevenue: number;

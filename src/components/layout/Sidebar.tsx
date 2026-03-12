@@ -128,12 +128,7 @@ const menuItems = [
   // CLÍNICA DIÁRIA - Fluxo principal de atendimento
   { icon: Activity, label: 'Exercícios', href: '/exercises' },
   { icon: Target, label: 'Protocolos', href: '/protocols' },
-
-  // GESTÃO E OPERAÇÕES
   { icon: MessageSquare, label: 'Comunicação', href: '/communications' },
-  { icon: Clock, label: 'Lista de Espera', href: '/waitlist' },
-  { icon: LayoutGrid, label: 'Tarefas', href: '/tarefas', preload: () => import('@/pages/Tarefas') },
-  { icon: Sparkles, label: 'Tarefas V2', href: '/tarefas-v2', preload: () => import('@/pages/TarefasV2') },
 ];
 
 const avaliacoesSubmenu = [
@@ -253,6 +248,9 @@ const maisSubmenu = [
   { icon: Clock, label: 'Time Tracking', href: '/timetracking' },
   { icon: Zap, label: 'Automação', href: '/automation' },
   { icon: Plug, label: 'Integrações', href: '/integrations' },
+  { icon: LayoutGrid, label: 'Tarefas', href: '/tarefas' },
+  { icon: Sparkles, label: 'Tarefas V2', href: '/tarefas-v2' },
+  { icon: Clock, label: 'Lista de Espera', href: '/waitlist' },
 ];
 
 export function Sidebar() {
@@ -288,7 +286,7 @@ export function Sidebar() {
   const isOperacionaisActive = location.pathname.startsWith('/eventos') || location.pathname === '/vouchers' || location.pathname === '/inventory' || location.pathname === '/telemedicine' || location.pathname === '/pre-cadastro-admin';
   const isGamificacaoActive = location.pathname.startsWith('/gamification');
   const isMarketingActive = location.pathname.startsWith('/marketing');
-  const isMaisActive = location.pathname === '/portal' || location.pathname === '/ocupacao-fisioterapeutas' || location.pathname === '/clinical-tests' || location.pathname.startsWith('/wiki') || location.pathname === '/timetracking' || location.pathname === '/automation' || location.pathname === '/integrations';
+  const isMaisActive = location.pathname === '/portal' || location.pathname === '/ocupacao-fisioterapeutas' || location.pathname === '/clinical-tests' || location.pathname.startsWith('/wiki') || location.pathname === '/timetracking' || location.pathname === '/automation' || location.pathname === '/integrations' || location.pathname === '/tarefas' || location.pathname === '/tarefas-v2' || location.pathname === '/waitlist';
 
   const renderMenuItem = (item: { icon: React.ComponentType<{ className?: string }>; label: string; href: string; preload?: () => void | Promise<unknown> }, collapsed: boolean, location: { pathname: string }) => {
     const Icon = item.icon;
@@ -530,6 +528,28 @@ export function Sidebar() {
               </div>
             )}
             {menuItems.slice(6).map((item) => renderMenuItem(item, collapsed, location))}
+
+            {renderSubmenu({
+              icon: LayoutGrid,
+              label: 'Operacional',
+              items: operacionaisSubmenu,
+              isOpen: operacionaisOpen || isOperacionaisActive,
+              onOpenChange: setOperacionaisOpen,
+              isActive: isOperacionaisActive,
+              collapsed,
+              location
+            })}
+
+            {renderSubmenu({
+              icon: FileText,
+              label: 'Cadastros',
+              items: cadastrosSubmenu,
+              isOpen: cadastrosOpen || isCadastrosActive,
+              onOpenChange: setCadastrosOpen,
+              isActive: isCadastrosActive,
+              collapsed,
+              location
+            })}
 
             {renderSubmenu({
               icon: Star,

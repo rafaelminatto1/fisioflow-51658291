@@ -99,6 +99,27 @@ const normalizeTime = (time?: string): string => {
   return `${match[1].padStart(2, '0')}:${match[2]}`;
 };
 
+type AppointmentWithPatientFallback = AppointmentBase & {
+  patient_id?: string;
+  patient_name?: string;
+  patient?: {
+    name?: string;
+    full_name?: string;
+  };
+};
+
+const getAppointmentPatientId = (
+  appointment?: AppointmentWithPatientFallback | null,
+  fallbackPatientId?: string
+) => appointment?.patientId || appointment?.patient_id || fallbackPatientId || '';
+
+const getAppointmentPatientName = (appointment?: AppointmentWithPatientFallback | null) =>
+  appointment?.patientName ||
+  appointment?.patient_name ||
+  appointment?.patient?.full_name ||
+  appointment?.patient?.name ||
+  '';
+
 export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   isOpen,
   onClose,
@@ -146,6 +167,9 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const { data: appointments = [] } = useAppointments({ enabled: isOpen, enableRealtime: false });
   const { getMinCapacityForInterval } = useScheduleCapacity();
   const { mutateAsync: consumeSession } = useUsePackageSession();
+  const normalizedAppointment = appointment as AppointmentWithPatientFallback | null | undefined;
+  const normalizedAppointmentPatientId = getAppointmentPatientId(normalizedAppointment, defaultPatientId);
+  const normalizedAppointmentPatientName = getAppointmentPatientName(normalizedAppointment);
 
   // Cache para checkPatientHasPreviousSessions - evita filtrar o array inteiro repetidamente
   const patientSessionsCache = useRef(new SimpleCache<string, boolean>(60000)); // 60s TTL
@@ -218,7 +242,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const methods = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentFormSchema),
     defaultValues: {
-      patient_id: appointment?.patientId || defaultPatientId || '',
+      patient_id: normalizedAppointmentPatientId,
       appointment_date: appointment?.date ? format(new Date(appointment.date), 'yyyy-MM-dd') : (defaultDate ? format(defaultDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd')),
       appointment_time: normalizeTime(appointment?.time || defaultTime || ''),
       duration: appointment?.duration || 60,
@@ -245,6 +269,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
 
   // Helper to normalize appointment data for form
   const getInitialFormData = useCallback((apt: AppointmentBase | null | undefined, defaults: { date?: Date, time?: string, patientId?: string }): AppointmentFormData => {
+    const normalizedApt = apt as AppointmentWithPatientFallback | null | undefined;
     // 1. Determine Date
     let formattedDate = format(new Date(), 'yyyy-MM-dd');
     if (apt?.date) {
@@ -265,7 +290,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     // 2. Return complete form data
     if (apt) {
       return {
-        patient_id: apt.patientId || defaults.patientId || '',
+        patient_id: getAppointmentPatientId(normalizedApt, defaults.patientId),
         appointment_date: formattedDate,
         appointment_time: normalizeTime(apt.time || defaults.time || '00:00'),
         duration: apt.duration || 60,
@@ -715,7 +740,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                 <PatientSelectionSection
                   patients={activePatients || []}
                   isLoading={patientsLoading}
-                  disabled={currentMode === 'view' || currentMode === 'edit'}
+                  disabled={currentMode === 'view' || currentMode === 'edit' || !!defaultPatientId}
                   onCreateNew={(searchTerm) => {
                     setSuggestedPatientName(searchTerm);
                     setQuickPatientModalOpen(true);
@@ -723,7 +748,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                   fallbackPatientName={
                     lastCreatedPatient?.id === watchedPatientId 
                       ? lastCreatedPatient.name 
-                      : (currentMode === 'edit' ? appointment?.patientName : undefined)
+                      : normalizedAppointmentPatientName || undefined
                   }
                   fallbackDescription={
                     lastCreatedPatient?.id === watchedPatientId ? 'Recém-cadastrado' : undefined

@@ -4,11 +4,13 @@
 // ============================================================================================
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { patientsApi } from '@/lib/api/workers-client';
+import { patientsApi } from '@/api/v2/patients';
+import { PatientService } from '@/services/patientService';
 import { toast } from '@/hooks/use-toast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { sanitizeString, sanitizeEmail, cleanCPF, cleanPhone } from '@/lib/validations';
 import { useState, useCallback } from 'react';
+import type { PatientRow } from '@/types/workers';
 
 export interface Patient {
   id: string;
@@ -29,9 +31,10 @@ export interface Patient {
   observations?: string | null;
   medical_history?: string | null;
   main_condition?: string | null;
+  main_condition_legacy?: string | null;
   health_insurance?: string | null;
   insurance_number?: string | null;
-  status?: 'Inicial' | 'Em Tratamento' | 'Recuperação' | 'Concluído' | null;
+  status?: string | null;
   progress?: number | null;
   allergies?: string | null;
   medications?: string | null;
@@ -45,12 +48,6 @@ export interface Patient {
   consent_image?: boolean | null;
   incomplete_registration?: boolean | null;
   organization_id?: string | null;
-  /** Médico assistente / retorno médico */
-  referring_doctor_name?: string | null;
-  referring_doctor_phone?: string | null;
-  medical_return_date?: string | null;
-  medical_report_done?: boolean | null;
-  medical_report_sent?: boolean | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -139,7 +136,7 @@ export const usePatients = (organizationId?: string | null) => {
     queryFn: async (): Promise<Patient[]> => {
       if (!organizationId) return [];
       const response = await patientsApi.list({ limit: 1000 });
-      return (response.data as Patient[]) ?? [];
+      return (response.data || []).map(p => PatientService.mapToApp(p)) as unknown as Patient[];
     },
     enabled: !!organizationId,
     staleTime: 1000 * 60 * 5,
@@ -156,7 +153,7 @@ export const usePatient = (id: string | undefined) => {
     queryFn: async (): Promise<Patient | null> => {
       if (!id) return null;
       const response = await patientsApi.get(id);
-      return (response.data as Patient | null) ?? null;
+      return PatientService.mapToApp(response.data) as unknown as Patient;
     },
     enabled: !!id,
     staleTime: 1000 * 60 * 10,
@@ -200,17 +197,14 @@ export const useCreatePatient = () => {
         profession: input.profession ? sanitizeString(input.profession, 200) : null,
         education_level: input.education_level || null,
         observations: input.observations ? sanitizeString(input.observations, 5000) : null,
-        status: 'Inicial' as const,
+        status: 'active',
         progress: 0,
-        consent_data: true,
-        consent_image: false,
-        incomplete_registration: false,
         organization_id: input.organization_id,
       };
 
       // Use Workers API backed by Neon/Postgres
-      const response = await patientsApi.create(sanitizedData);
-      return response.data as Patient;
+      const response = await patientsApi.create(sanitizedData as Partial<PatientRow>);
+      return PatientService.mapToApp(response.data) as unknown as Patient;
     },
     onSuccess: (data) => {
       // Dado sensível removido: nome completo mascarado para logs (LGPD)
@@ -248,7 +242,7 @@ export const useUpdatePatient = () => {
   return useMutation({
     mutationFn: async ({ id, data: inputData }: { id: string; data: PatientUpdateInput }): Promise<Patient> => {
       // Sanitize data
-      const sanitizedData: Record<string, string | number | boolean | null> = {
+      const sanitizedData: Record<string, any> = {
         updated_at: new Date().toISOString(),
       };
 
@@ -280,18 +274,10 @@ export const useUpdatePatient = () => {
       if (inputData.observations !== undefined) sanitizedData.observations = inputData.observations ? sanitizeString(inputData.observations, 5000) : null;
       if (inputData.status !== undefined) sanitizedData.status = inputData.status;
       if (inputData.progress !== undefined) sanitizedData.progress = inputData.progress;
-      if (inputData.consent_data !== undefined) sanitizedData.consent_data = inputData.consent_data;
-      if (inputData.consent_image !== undefined) sanitizedData.consent_image = inputData.consent_image;
-      if (inputData.incomplete_registration !== undefined) sanitizedData.incomplete_registration = inputData.incomplete_registration;
-      if (inputData.referring_doctor_name !== undefined) sanitizedData.referring_doctor_name = inputData.referring_doctor_name ? sanitizeString(inputData.referring_doctor_name, 200) : null;
-      if (inputData.referring_doctor_phone !== undefined) sanitizedData.referring_doctor_phone = inputData.referring_doctor_phone ? cleanPhone(inputData.referring_doctor_phone) : null;
-      if (inputData.medical_return_date !== undefined) sanitizedData.medical_return_date = inputData.medical_return_date || null;
-      if (inputData.medical_report_done !== undefined) sanitizedData.medical_report_done = inputData.medical_report_done;
-      if (inputData.medical_report_sent !== undefined) sanitizedData.medical_report_sent = inputData.medical_report_sent;
 
       // Use Workers API backed by Neon/Postgres
-      const response = await patientsApi.update(id, sanitizedData);
-      return response.data as Patient;
+      const response = await patientsApi.update(id, sanitizedData as Partial<PatientRow>);
+      return PatientService.mapToApp(response.data) as unknown as Patient;
     },
     onSuccess: (data) => {
       logger.info('Paciente atualizado com sucesso', { id: data.id }, 'useUpdatePatient');
@@ -351,8 +337,8 @@ export const useUpdatePatientStatus = () => {
 
   return useMutation({
     mutationFn: async ({ id, status }: { id: string; status: 'Inicial' | 'Em Tratamento' | 'Recuperação' | 'Concluído' }): Promise<Patient> => {
-      const response = await patientsApi.update(id, { status });
-      return response.data as Patient;
+      const response = await patientsApi.update(id, { status } as Partial<PatientRow>);
+      return PatientService.mapToApp(response.data) as unknown as Patient;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
@@ -401,7 +387,7 @@ export const usePatientsPaginated = (params: PatientsQueryParams = {}): Patients
       });
 
       return {
-        data: (response.data as Patient[]) || [],
+        data: (response.data || []).map(p => PatientService.mapToApp(p)) as unknown as Patient[],
         count: response.total || 0,
       };
     },

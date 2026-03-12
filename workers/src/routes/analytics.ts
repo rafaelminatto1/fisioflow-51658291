@@ -1475,4 +1475,45 @@ app.get('/population-health', requireAuth, async (c) => {
   });
 });
 
+app.get('/weekly-activity', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = createPool(c.env);
+  
+  const now = new Date();
+  const start = new Date(now);
+  start.setDate(now.getDate() - now.getDay()); // Start of week (Sunday)
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6); // End of week (Saturday)
+
+  const [apptsRes, exercisesRes] = await Promise.all([
+    pool.query(
+      `SELECT extract(dow from date) as day_index, count(*)::int as count
+       FROM appointments
+       WHERE organization_id = $1 AND date BETWEEN $2::date AND $3::date
+       GROUP BY 1`,
+      [user.organizationId, start.toISOString().split('T')[0], end.toISOString().split('T')[0]]
+    ),
+    pool.query(
+      `SELECT extract(dow from created_at) as day_index, count(*)::int as count
+       FROM prescribed_exercises
+       WHERE organization_id = $1 AND created_at BETWEEN $2::timestamp AND $3::timestamp
+       GROUP BY 1`,
+      [user.organizationId, start.toISOString().split('T')[0] + 'T00:00:00', end.toISOString().split('T')[0] + 'T23:59:59']
+    )
+  ]);
+
+  const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const activity = days.map((day, index) => {
+    const appt = apptsRes.rows.find(r => Number(r.day_index) === index);
+    const ex = exercisesRes.rows.find(r => Number(r.day_index) === index);
+    return {
+      day,
+      consultas: appt ? Number(appt.count) : 0,
+      exercicios: ex ? Number(ex.count) : 0
+    };
+  });
+
+  return c.json({ data: activity });
+});
+
 export { app as analyticsRoutes };

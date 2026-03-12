@@ -214,6 +214,7 @@ const CalendarDayView = memo(({
                                                         leftOffset={leftOffset}
                                                         showText={showText}
                                                         variant="day"
+                                                        slotHeight={slotHeightMobile}
                                                     />
                                                 );
                                             })}

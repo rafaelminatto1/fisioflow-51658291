@@ -18,8 +18,8 @@ export class GamificationNotificationService {
           <Zap className="w-5 h-5 text-yellow-500" />
           <span>+{amount} XP</span>
         </div>
-      ),
-      description: leveledUp
+      ) as any,
+      description: (leveledUp
         ? (
           <div className="space-y-1">
             <p>{description}</p>
@@ -28,9 +28,9 @@ export class GamificationNotificationService {
             </p>
           </div>
         )
-        : description,
+        : description) as any,
       variant: leveledUp ? 'default' : 'default',
-    });
+    } as any);
   }
 
   /**
@@ -43,7 +43,7 @@ export class GamificationNotificationService {
           <Award className="w-5 h-5 text-yellow-500" />
           <span>Conquista Desbloqueada!</span>
         </div>
-      ),
+      ) as any,
       description: (
         <div className="space-y-1">
           <p className="font-semibold">{title}</p>
@@ -52,9 +52,9 @@ export class GamificationNotificationService {
             +{xpReward} XP
           </p>
         </div>
-      ),
+      ) as any,
       variant: 'default',
-    });
+    } as any);
   }
 
   /**
@@ -67,7 +67,7 @@ export class GamificationNotificationService {
           <Target className="w-5 h-5 text-green-500" />
           <span>Missão Concluída!</span>
         </div>
-      ),
+      ) as any,
       description: (
         <div className="space-y-1">
           <p>{title}</p>
@@ -75,9 +75,9 @@ export class GamificationNotificationService {
             +{xpReward} XP
           </p>
         </div>
-      ),
+      ) as any,
       variant: 'default',
-    });
+    } as any);
   }
 
   /**
@@ -90,7 +90,7 @@ export class GamificationNotificationService {
           <Trophy className="w-5 h-5 text-yellow-500" />
           <span>Parabéns!</span>
         </div>
-      ),
+      ) as any,
       description: (
         <div className="space-y-2">
           <p className="font-semibold text-lg">Você alcançou o nível <span className="text-yellow-600">{newLevel}</span>!</p>
@@ -105,9 +105,9 @@ export class GamificationNotificationService {
             </div>
           )}
         </div>
-      ),
+      ) as any,
       variant: 'default',
-    });
+    } as any);
   }
 
   /**
@@ -137,7 +137,7 @@ export class GamificationNotificationService {
           <Flame className="w-5 h-5 text-orange-500" />
           <span>Sequência de {days} dias!</span>
         </div>
-      ),
+      ) as any,
       description: (
         <div className="space-y-1">
           <p className="font-semibold">{emoji} {message}</p>
@@ -145,9 +145,9 @@ export class GamificationNotificationService {
             Bônus: +{bonusXP} XP
           </p>
         </div>
-      ),
+      ) as any,
       variant: 'default',
-    });
+    } as any);
   }
 
   /**
@@ -157,10 +157,10 @@ export class GamificationNotificationService {
     return toast({
       title: (
         <div className="flex items-center gap-2">
-          <Gift className="w-5 h-5 text-purple-500" />
+          <Gift className="w-5 h-5 text-cyan-500" />
           <span>Compra Realizada!</span>
         </div>
-      ),
+      ) as any,
       description: (
         <div className="space-y-1">
           <p>Você comprou: <span className="font-semibold">{itemName}</span></p>
@@ -168,9 +168,9 @@ export class GamificationNotificationService {
             -{cost} pontos
           </p>
         </div>
-      ),
+      ) as any,
       variant: 'default',
-    });
+    } as any);
   }
 
   /**
@@ -183,7 +183,7 @@ export class GamificationNotificationService {
           <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
           <span>Dia Perfeito!</span>
         </div>
-      ),
+      ) as any,
       description: (
         <div className="space-y-1">
           <p className="font-semibold">Todas as missões diárias concluídas!</p>
@@ -191,9 +191,9 @@ export class GamificationNotificationService {
             +{totalXP} XP total
           </p>
         </div>
-      ),
+      ) as any,
       variant: 'default',
-    });
+    } as any);
   }
 
   /**
@@ -206,15 +206,15 @@ export class GamificationNotificationService {
           <Trophy className="w-5 h-5 text-yellow-500" />
           <span>Marco Alcançado!</span>
         </div>
-      ),
+      ) as any,
       description: (
         <div className="space-y-1">
           <p className="font-semibold">{milestone}</p>
           <p className="text-sm text-muted-foreground">{reward}</p>
         </div>
-      ),
+      ) as any,
       variant: 'default',
-    });
+    } as any);
   }
 
   /**
@@ -227,7 +227,7 @@ export class GamificationNotificationService {
           <Trophy className="w-5 h-5 text-yellow-500" />
           <span>Ranking Atualizado!</span>
         </div>
-      ),
+      ) as any,
       description: (
         <div className="space-y-1">
           <p className="font-semibold">
@@ -237,9 +237,9 @@ export class GamificationNotificationService {
             Posição atual: #{newPosition}
           </p>
         </div>
-      ),
+      ) as any,
       variant: 'default',
-    });
+    } as any);
   }
 
   /**
@@ -252,7 +252,7 @@ export class GamificationNotificationService {
           <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
           <span>Bônus de XP!</span>
         </div>
-      ),
+      ) as any,
       description: (
         <div className="space-y-1">
           <p>{reason}</p>
@@ -260,9 +260,9 @@ export class GamificationNotificationService {
             +{amount} XP
           </p>
         </div>
-      ),
+      ) as any,
       variant: 'default',
-    });
+    } as any);
   }
 }
 
