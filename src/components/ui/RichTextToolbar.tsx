@@ -39,7 +39,7 @@ import {
     Command as CommandIcon,
     Dumbbell,
 } from 'lucide-react';
-import { useRichTextContext } from '@/context/RichTextContext';
+import { useRichTextContext } from '@/contexts/RichTextContext';
 import { cn } from '@/lib/utils';
 import { uploadFile, STORAGE_FOLDERS } from '@/lib/storage/upload';
 import { Button } from '@/components/ui/button';

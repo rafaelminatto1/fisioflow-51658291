@@ -18,24 +18,24 @@ import { useCRMAutomacoes, useCreateAutomacao, useToggleAutomacao, useDeleteAuto
 
 const TIPOS_AUTOMACAO = [
   { value: 'aniversario', label: 'Aniversário', icon: Cake, description: 'Mensagem automática no aniversário' },
+  { value: 'lembrete_consulta', label: 'Lembrete de Consulta', icon: Clock, description: 'Envia lembrete 24h antes da sessão' },
   { value: 'reengajamento', label: 'Reengajamento', icon: RefreshCw, description: 'Contato com leads inativos' },
   { value: 'pos_avaliacao', label: 'Pós-Avaliação', icon: Star, description: 'Follow-up após avaliação' },
   { value: 'boas_vindas', label: 'Boas-vindas', icon: MessageSquare, description: 'Mensagem para novos leads' },
-  { value: 'follow_up_automatico', label: 'Follow-up Automático', icon: Clock, description: 'Lembrete de acompanhamento' },
 ];
 
 const CANAIS = [
   { value: 'whatsapp', label: 'WhatsApp', icon: MessageSquare },
   { value: 'email', label: 'Email', icon: Mail },
-  { value: 'sms', label: 'SMS', icon: Smartphone },
 ];
 
-type TipoAutomacao = 'aniversario' | 'reengajamento' | 'pos_avaliacao' | 'boas_vindas' | 'follow_up_automatico';
-type CanalAutomacao = 'whatsapp' | 'email' | 'sms';
+type TipoAutomacao = 'aniversario' | 'lembrete_consulta' | 'reengajamento' | 'pos_avaliacao' | 'boas_vindas';
+type CanalAutomacao = 'whatsapp' | 'email';
 
 interface GatilhoConfig {
   dias_inativo?: number;
   horas_apos?: number;
+  horas_antes?: number;
   intervalo_dias?: number;
 }
 
@@ -91,10 +91,10 @@ export function CRMAutomacoes() {
   const getGatilhoDescription = (tipo: string, config: GatilhoConfig) => {
     switch (tipo) {
       case 'aniversario': return 'Dispara no aniversário do lead';
+      case 'lembrete_consulta': return `Dispara ${config.horas_antes || 24}h antes da sessão agendada`;
       case 'reengajamento': return `Dispara após ${config.dias_inativo || 7} dias sem contato`;
       case 'pos_avaliacao': return `Dispara ${config.horas_apos || 24}h após avaliação`;
       case 'boas_vindas': return 'Dispara quando um novo lead é cadastrado';
-      case 'follow_up_automatico': return `Dispara a cada ${config.intervalo_dias || 3} dias`;
       default: return 'Gatilho personalizado';
     }
   };

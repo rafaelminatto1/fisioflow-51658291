@@ -1,42 +1,17 @@
-import { patientsApi } from '@/lib/api/workers-client';
+import { patientsApi } from '@/api/v2/patients';
 import { PatientSchema } from '@/schemas/patient';
 import { AppError } from '@/lib/errors/AppError';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import type { PatientRow } from '@/types/workers';
 import type { Patient } from '@/types';
 import { isValidCPF, isValidEmail, isValidPhone, stripNonDigits } from '@/utils/validators';
-import {
-
-    getPatientName,
-    type PatientDBStandard
-} from '@/lib/constants/patient-queries';
-
-// Extended patient DB record with optional gender
-interface PatientDBExtended extends PatientDBStandard {
-    gender?: string;
-}
-
-// Patient input for create/update operations
-interface PatientInput {
-    name?: string;
-    email?: string;
-    phone?: string;
-    cpf?: string;
-    birth_date?: string;
-    gender?: string;
-    observations?: string;
-    status?: string;
-    progress?: number;
-    organization_id?: string;
-}
 
 // Service result wrapper
 interface ServiceResult<T> {
     data: T | null;
     error: Error | null;
 }
-
-type PatientRecord = (PatientDBStandard | PatientDBExtended) & Record<string, unknown>;
 
 const normalizeString = (value: unknown): string | undefined => {
     if (typeof value !== 'string') return undefined;
@@ -88,183 +63,81 @@ const normalizeStatus = (value: unknown): string => {
     const raw = normalizeString(value)?.toLowerCase();
     if (!raw) return 'Inicial';
 
-    if (['active', 'ativo', 'em tratamento', 'em_tratamento', 'in_progress'].includes(raw)) {
-        return 'Em Tratamento';
-    }
-    if (['initial', 'inicial', 'inactive', 'inativo', 'novo'].includes(raw)) {
-        return 'Inicial';
-    }
-    if (['recuperacao', 'recuperação', 'recovery'].includes(raw)) {
-        return 'Recuperação';
-    }
-    if (['concluido', 'concluído', 'completed'].includes(raw)) {
-        return 'Concluído';
-    }
-    if (['alta', 'discharged'].includes(raw)) {
-        return 'Alta';
-    }
-    if (['arquivado', 'archived'].includes(raw)) {
-        return 'Arquivado';
-    }
+    const statusMap: Record<string, string> = {
+        'active': 'Em Tratamento',
+        'ativo': 'Em Tratamento',
+        'em tratamento': 'Em Tratamento',
+        'em_tratamento': 'Em Tratamento',
+        'in_progress': 'Em Tratamento',
+        'initial': 'Inicial',
+        'inicial': 'Inicial',
+        'inactive': 'Inicial',
+        'inativo': 'Inicial',
+        'novo': 'Inicial',
+        'recuperacao': 'Recuperação',
+        'recuperação': 'Recuperação',
+        'recovery': 'Recuperação',
+        'concluido': 'Concluído',
+        'concluído': 'Concluído',
+        'completed': 'Concluído',
+        'alta': 'Alta',
+        'discharged': 'Alta',
+        'arquivado': 'Arquivado',
+        'archived': 'Arquivado'
+    };
 
-    return String(value);
-};
-
-const normalizeProgress = (value: unknown): number => {
-    const num = typeof value === 'number' ? value : Number(value);
-    if (!Number.isFinite(num)) return 0;
-    return Math.max(0, Math.min(100, Math.round(num)));
-};
-
-const normalizePhone = (value: unknown): string | undefined => {
-    const str = normalizeString(value);
-    if (!str) return undefined;
-    return isValidPhone(str) ? str : undefined;
-};
-
-const normalizeCPF = (value: unknown): string | undefined => {
-    const str = normalizeString(value);
-    if (!str) return undefined;
-
-    const digits = stripNonDigits(str);
-    return isValidCPF(digits) ? digits : undefined;
-};
-
-const normalizeEmail = (value: unknown): string | undefined => {
-    const str = normalizeString(value);
-    if (!str) return undefined;
-    return isValidEmail(str) ? str.toLowerCase() : undefined;
+    return statusMap[raw] || String(value);
 };
 
 /**
  * Service to handle Patient business logic and data access
+ * Centralized for Neon DB & Cloudflare Workers
  */
 export const PatientService = {
     /**
      * Map database patient record to application Patient type
      */
-    mapToApp(dbPatient: PatientDBStandard | PatientDBExtended): Patient {
-        const raw = dbPatient as PatientRecord;
-        const fallbackName = getPatientName({
-            full_name: normalizeString(raw.full_name),
-            name: normalizeString(raw.name),
-            phone: normalizeString(raw.phone),
-        });
-        const fullName = normalizeString(raw.full_name) || normalizeString(raw.name) || fallbackName || 'Sem nome';
-        const birthDate = normalizeBirthDate(raw.birth_date);
-        const createdAt = normalizeIsoDateTime(raw.created_at);
-        const updatedAt = normalizeIsoDateTime(raw.updated_at);
-        const mainCondition = normalizeString(raw.main_condition) || normalizeString(raw.observations) || '';
+    mapToApp(dbPatient: PatientRow | any): Patient {
+        const fullName = dbPatient.full_name || dbPatient.name || 'Sem nome';
+        const birthDate = normalizeBirthDate(dbPatient.date_of_birth || dbPatient.birth_date);
+        const createdAt = normalizeIsoDateTime(dbPatient.created_at);
+        const updatedAt = normalizeIsoDateTime(dbPatient.updated_at);
 
         return {
-            id: String(raw.id),
+            id: String(dbPatient.id),
             full_name: fullName,
             name: fullName,
-            email: normalizeEmail(raw.email),
-            phone: normalizePhone(raw.phone),
-            cpf: normalizeCPF(raw.cpf),
+            email: dbPatient.email || null,
+            phone: dbPatient.phone || null,
+            cpf: dbPatient.cpf || null,
             birthDate: birthDate || '',
             birth_date: birthDate,
-            gender: normalizeGender(raw.gender),
-            mainCondition,
-            observations: normalizeString(raw.observations),
-            status: normalizeStatus(raw.status),
-            progress: normalizeProgress(raw.progress),
-            incomplete_registration: Boolean(raw.incomplete_registration),
+            gender: normalizeGender(dbPatient.gender),
+            mainCondition: dbPatient.main_condition || dbPatient.observations || '',
+            main_condition: dbPatient.main_condition || '',
+            observations: dbPatient.notes || dbPatient.observations || null,
+            status: normalizeStatus(dbPatient.status),
+            progress: typeof dbPatient.progress === 'number' ? dbPatient.progress : 0,
+            incomplete_registration: Boolean(dbPatient.incomplete_registration),
             createdAt,
             created_at: createdAt,
             updatedAt,
             updated_at: updatedAt
-        };
-    },
-
-    /**
-     * Validate and map multiple patients from database
-     */
-    mapPatientsFromDB(dbPatients: PatientDBStandard[] | Patient[] | null | undefined): Patient[] {
-        if (!dbPatients || dbPatients.length === 0) return [];
-
-        const normalizedPatients: Patient[] = [];
-        const invalidPatientIds: string[] = [];
-
-        for (const dbPatient of dbPatients) {
-            try {
-                const mapped = this.mapToApp(dbPatient as PatientDBStandard);
-                const result = PatientSchema.safeParse({
-                    id: mapped.id,
-                    full_name: mapped.full_name || mapped.name,
-                    name: mapped.name,
-                    email: mapped.email ?? null,
-                    phone: mapped.phone ?? null,
-                    cpf: mapped.cpf ?? null,
-                    birth_date: mapped.birth_date ?? null,
-                    gender: mapped.gender,
-                    main_condition: mapped.mainCondition || null,
-                    status: mapped.status,
-                    progress: mapped.progress,
-                    incomplete_registration: mapped.incomplete_registration ?? false,
-                    created_at: mapped.createdAt,
-                    updated_at: mapped.updatedAt,
-                    organization_id: normalizeString((dbPatient as PatientRecord).organization_id) ?? null,
-                });
-
-                if (result.success) {
-                    normalizedPatients.push(mapped);
-                } else {
-                    if (mapped.id && mapped.name) {
-                        normalizedPatients.push(mapped);
-                        invalidPatientIds.push(mapped.id);
-                    }
-                }
-            } catch (error) {
-                ErrorHandler.handle(error, 'PatientService');
-            }
-        }
-
-        if (invalidPatientIds.length > 0) {
-            logger.warn('Patient validation failed for normalized legacy records', {
-                invalidCount: invalidPatientIds.length,
-                total: dbPatients.length,
-                sampleIds: invalidPatientIds.slice(0, 10),
-            }, 'PatientService');
-        }
-
-        return normalizedPatients;
+        } as unknown as Patient;
     },
 
     /**
      * Fetch active patients for an organization
-     * Uses the Neon-backed Workers API
      */
     async getActivePatients(organizationId: string): Promise<ServiceResult<Patient[]>> {
         if (!organizationId) throw AppError.badRequest('Organization ID is required');
 
         try {
-            logger.info('PatientService: fetching patients from Workers API', { organizationId }, 'PatientService');
-            // TEMP: Removendo filtro de status para debug
-            const response = await patientsApi.list({ organizationId, limit: 1000 });
-
-            logger.debug('📊 [PatientService] Raw response received', {
-                count: response.data?.length,
-                error: response.error
-            }, 'PatientService');
-
-            // Map from API model to domain model and validate
-            const patientsRaw = response.data || [];
-            const patients = this.mapPatientsFromDB(patientsRaw as PatientDBStandard[]);
-
-            logger.info('PatientService: patients mapped and validated', {
-                count: patients.length,
-                organizationId
-            }, 'PatientService');
-
+            const response = await patientsApi.list({ limit: 1000 });
+            const patients = (response.data || []).map(p => this.mapToApp(p));
             return { data: patients, error: null };
-        } catch (error: UnknownError) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            logger.error('PatientService: error fetching patients', {
-                error: errorMessage,
-                organizationId
-            }, 'PatientService');
+        } catch (error) {
+            ErrorHandler.handle(error, 'PatientService.getActivePatients');
             return { data: [], error: error instanceof Error ? error : new Error(String(error)) };
         }
     },
@@ -277,9 +150,9 @@ export const PatientService = {
 
         try {
             const response = await patientsApi.get(id);
-            const mapped = this.mapToApp((response?.data ?? response) as unknown);
+            const mapped = this.mapToApp(response.data);
             return { data: mapped, error: null };
-        } catch (error: UnknownError) {
+        } catch (error) {
             return { data: null, error: error instanceof Error ? error : new Error(String(error)) };
         }
     },
@@ -287,17 +160,12 @@ export const PatientService = {
     /**
      * Create a new patient
      */
-    async createPatient(patient: PatientInput): Promise<ServiceResult<Patient>> {
+    async createPatient(patient: Partial<PatientRow>): Promise<ServiceResult<Patient>> {
         try {
-            const response = await patientsApi.create({
-                ...patient,
-                name: patient.name || 'Sem Nome',
-                status: patient.status || 'active',
-                progress: patient.progress || 0,
-            });
-            const mapped = this.mapToApp(response as unknown);
+            const response = await patientsApi.create(patient);
+            const mapped = this.mapToApp(response.data);
             return { data: mapped, error: null };
-        } catch (error: UnknownError) {
+        } catch (error) {
             return { data: null, error: error instanceof Error ? error : new Error(String(error)) };
         }
     },
@@ -305,15 +173,12 @@ export const PatientService = {
     /**
      * Update a patient
      */
-    async updatePatient(id: string, updates: Partial<PatientInput>): Promise<ServiceResult<Patient>> {
+    async updatePatient(id: string, updates: Partial<PatientRow>): Promise<ServiceResult<Patient>> {
         try {
-            const response = await patientsApi.update(id, {
-                ...updates,
-                updated_at: new Date().toISOString(),
-            });
-            const mapped = this.mapToApp(response as unknown);
+            const response = await patientsApi.update(id, updates);
+            const mapped = this.mapToApp(response.data);
             return { data: mapped, error: null };
-        } catch (error: UnknownError) {
+        } catch (error) {
             return { data: null, error: error instanceof Error ? error : new Error(String(error)) };
         }
     },
@@ -325,7 +190,7 @@ export const PatientService = {
         try {
             await patientsApi.delete(id);
             return { data: null, error: null };
-        } catch (error: UnknownError) {
+        } catch (error) {
             return { data: null, error: error instanceof Error ? error : new Error(String(error)) };
         }
     }

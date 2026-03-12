@@ -5,6 +5,7 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
 import { toast } from 'sonner';
 import { APPOINTMENT_CONFLICT_MESSAGE, isAppointmentConflictError } from '@/utils/appointmentErrors';
 import { parseResponseDate } from '@/utils/dateUtils';
+import { isCapacityCountedStatus } from '@/components/schedule/shared/capacity';
 
 interface DragState {
   appointment: Appointment | null;
@@ -53,19 +54,6 @@ interface PendingOverCapacity extends PendingReschedule {
   currentCount: number;
   maxCapacity: number;
 }
-
-const NON_CAPACITY_STATUSES = new Set([
-  'cancelado',
-  'falta',
-  'faltou',
-  'remarcado',
-  'reagendado',
-  'paciente_faltou'
-]);
-
-const isCapacityCountedStatus = (status: string | undefined): boolean => {
-  return !NON_CAPACITY_STATUSES.has((status || '').toLowerCase());
-};
 
 /**
  * Hook for managing calendar drag and drop with @dnd-kit.

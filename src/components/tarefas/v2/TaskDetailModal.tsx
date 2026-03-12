@@ -5,7 +5,6 @@ import { z } from 'zod';
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
-
   CalendarIcon,
   Tag,
   X,
@@ -22,17 +21,21 @@ import {
   Image,
   Video,
   File,
-  User
+  User,
+  CheckCircle2,
+  Clock,
+  History
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
+  CustomModal,
+  CustomModalHeader,
+  CustomModalTitle,
+  CustomModalBody,
+  CustomModalFooter,
+} from '@/components/ui/custom-modal';
 import {
   Form,
   FormControl,
@@ -42,8 +45,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-
-
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Popover,
@@ -79,6 +80,7 @@ import {
 import { useUpdateTarefa, useTarefas } from '@/hooks/useTarefas';
 import { useProjects } from '@/hooks/useProjects';
 import { toast } from 'sonner';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const attachmentSchema = z.object({
   id: z.string(),
@@ -147,12 +149,12 @@ export function TaskDetailModal({
   tarefa,
   teamMembers
 }: TaskDetailModalProps) {
+  const isMobile = useIsMobile();
   const updateTarefa = useUpdateTarefa();
   const { data: projects } = useProjects();
   const { data: _allTarefas } = useTarefas();
 
   const [activeTab, setActiveTab] = useState('details');
-  const [_newComment, _setNewComment] = useState('');
   const [newChecklistTitle, setNewChecklistTitle] = useState('');
 
   const form = useForm<TarefaDetailFormData>({
@@ -290,7 +292,6 @@ export function TaskDetailModal({
 
   const checklists = form.watch('checklists');
 
-  // Calculate checklist progress
   const checklistProgress = useMemo(() => {
     const checklistItems = checklists || [];
     const totalItems = checklistItems.reduce((acc, cl) => acc + cl.items.length, 0);
@@ -329,7 +330,6 @@ export function TaskDetailModal({
     }
   };
 
-  // Auto-save on blur
   const handleAutoSave = () => {
     if (form.formState.isDirty) {
       form.handleSubmit(onSubmit)();
@@ -348,578 +348,474 @@ export function TaskDetailModal({
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-2xl p-0 flex flex-col">
-        <SheetHeader className="p-6 pb-4 border-b">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge className={cn('text-xs', STATUS_COLORS[tarefa.status].bg, STATUS_COLORS[tarefa.status].text)}>
-                  {STATUS_LABELS[tarefa.status]}
-                </Badge>
-                <Badge className={cn('text-xs', PRIORIDADE_COLORS[tarefa.prioridade])}>
-                  <Flag className="h-3 w-3 mr-1" />
-                  {PRIORIDADE_LABELS[tarefa.prioridade]}
-                </Badge>
-              </div>
-              <SheetTitle className="text-xl">{tarefa.titulo}</SheetTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Criado {formatDistanceToNow(new Date(tarefa.created_at), { addSuffix: true, locale: ptBR })}
-              </p>
-            </div>
+    <CustomModal 
+      open={open} 
+      onOpenChange={onOpenChange}
+      isMobile={isMobile}
+      contentClassName="max-w-3xl h-[95vh]"
+    >
+      <CustomModalHeader onClose={() => onOpenChange(false)}>
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2">
+            <Badge className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full uppercase', STATUS_COLORS[tarefa.status].bg, STATUS_COLORS[tarefa.status].text)}>
+              {STATUS_LABELS[tarefa.status]}
+            </Badge>
+            <Badge className={cn('text-[10px] font-bold px-2 py-0.5 rounded-full uppercase', PRIORIDADE_COLORS[tarefa.prioridade])}>
+              <Flag className="h-3 w-3 mr-1" />
+              {PRIORIDADE_LABELS[tarefa.prioridade]}
+            </Badge>
           </div>
-        </SheetHeader>
+          <CustomModalTitle className="text-xl font-bold text-slate-800 leading-tight">
+            {tarefa.titulo}
+          </CustomModalTitle>
+          <div className="flex items-center gap-2 text-[10px] text-slate-400 font-medium uppercase tracking-widest">
+            <Clock className="h-3 w-3" />
+            Criado {formatDistanceToNow(new Date(tarefa.created_at), { addSuffix: true, locale: ptBR })}
+          </div>
+        </div>
+      </CustomModalHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className="mx-6 mt-4 grid grid-cols-4">
-            <TabsTrigger value="details">
-              <FileText className="h-4 w-4 mr-2" />
-              Detalhes
-            </TabsTrigger>
-            <TabsTrigger value="checklists">
-              <CheckSquare className="h-4 w-4 mr-2" />
-              Checklists
-              {checklistProgress && (
-                <span className="ml-1 text-xs">({checklistProgress.completed}/{checklistProgress.total})</span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="attachments">
-              <Paperclip className="h-4 w-4 mr-2" />
-              Anexos
-              {attachmentFields.length > 0 && (
-                <span className="ml-1 text-xs">({attachmentFields.length})</span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="references">
-              <BookOpen className="h-4 w-4 mr-2" />
-              Referências
-              {referenceFields.length > 0 && (
-                <span className="ml-1 text-xs">({referenceFields.length})</span>
-              )}
-            </TabsTrigger>
-          </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+        <TabsList className="bg-slate-50 border-b rounded-none px-6 h-12 justify-start gap-4 overflow-x-auto scrollbar-hide">
+          <TabsTrigger value="details" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-t-lg h-9 mt-auto">
+            <FileText className="h-4 w-4 mr-2" />
+            Detalhes
+          </TabsTrigger>
+          <TabsTrigger value="checklists" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-t-lg h-9 mt-auto">
+            <CheckSquare className="h-4 w-4 mr-2" />
+            Checklists
+            {checklistProgress && (
+              <Badge variant="outline" className="ml-2 text-[10px] h-4 px-1">{checklistProgress.completed}/{checklistProgress.total}</Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="attachments" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-t-lg h-9 mt-auto">
+            <Paperclip className="h-4 w-4 mr-2" />
+            Anexos
+            {attachmentFields.length > 0 && (
+              <Badge variant="outline" className="ml-2 text-[10px] h-4 px-1">{attachmentFields.length}</Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="references" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-t-lg h-9 mt-auto">
+            <BookOpen className="h-4 w-4 mr-2" />
+            Wiki / Refs
+          </TabsTrigger>
+        </TabsList>
 
+        <CustomModalBody className="p-0 sm:p-0">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 overflow-hidden flex flex-col">
-              <ScrollArea className="flex-1 px-6">
-                {/* Details Tab */}
-                <TabsContent value="details" className="mt-4 space-y-6 pb-6">
-                  {/* Title */}
-                  <FormField
-                    control={form.control}
-                    name="titulo"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Título</FormLabel>
-                        <FormControl>
-                          <Input {...field} onBlur={handleAutoSave} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Description */}
-                  <FormField
-                    control={form.control}
-                    name="descricao"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Descrição</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Descreva a tarefa..."
-                            className="resize-none min-h-[100px]"
-                            {...field}
-                            onBlur={handleAutoSave}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Status */}
+            <form id="task-detail-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <ScrollArea className="h-full">
+                <div className="p-6">
+                  {/* Details Tab */}
+                  <TabsContent value="details" className="mt-0 space-y-6">
                     <FormField
                       control={form.control}
-                      name="status"
+                      name="titulo"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Status</FormLabel>
-                          <Select
-                            onValueChange={(v) => { field.onChange(v); handleAutoSave(); }}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {(Object.keys(STATUS_LABELS) as TarefaStatus[]).map(status => (
-                                <SelectItem key={status} value={status}>
-                                  {STATUS_LABELS[status]}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <FormLabel className="font-bold text-xs text-slate-500 uppercase">Título da Tarefa</FormLabel>
+                          <FormControl>
+                            <Input {...field} onBlur={handleAutoSave} className="rounded-xl border-slate-200 font-semibold" />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
 
-                    {/* Priority */}
                     <FormField
                       control={form.control}
-                      name="prioridade"
+                      name="descricao"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Prioridade</FormLabel>
-                          <Select
-                            onValueChange={(v) => { field.onChange(v); handleAutoSave(); }}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {(Object.keys(PRIORIDADE_LABELS) as TarefaPrioridade[]).map(p => (
-                                <SelectItem key={p} value={p}>
-                                  {PRIORIDADE_LABELS[p]}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Type */}
-                    <FormField
-                      control={form.control}
-                      name="tipo"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Tipo</FormLabel>
-                          <Select
-                            onValueChange={(v) => { field.onChange(v); handleAutoSave(); }}
-                            value={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {(Object.keys(TIPO_LABELS) as TarefaTipo[]).map(t => (
-                                <SelectItem key={t} value={t}>
-                                  {TIPO_LABELS[t]}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <FormLabel className="font-bold text-xs text-slate-500 uppercase">Descrição e Contexto</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Descreva a tarefa..."
+                              className="rounded-xl border-slate-200 resize-none min-h-[120px] bg-slate-50/50"
+                              {...field}
+                              onBlur={handleAutoSave}
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
 
-                    {/* Assignee */}
-                    <FormField
-                      control={form.control}
-                      name="responsavel_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Responsável</FormLabel>
-                          <Select
-                            onValueChange={(v) => { field.onChange(v === 'none' ? null : v); handleAutoSave(); }}
-                            value={field.value || 'none'}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Nenhum" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="none">
-                                <div className="flex items-center gap-2">
-                                  <User className="h-4 w-4" />
-                                  Nenhum
-                                </div>
-                              </SelectItem>
-                              {teamMembers.map(member => (
-                                <SelectItem key={member.id} value={member.id}>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="status"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="font-bold text-xs text-slate-500 uppercase">Status</FormLabel>
+                            <Select
+                              onValueChange={(v) => { field.onChange(v); handleAutoSave(); }}
+                              value={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="rounded-xl border-slate-200">
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {(Object.keys(STATUS_LABELS) as TarefaStatus[]).map(status => (
+                                  <SelectItem key={status} value={status}>
+                                    {STATUS_LABELS[status]}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="prioridade"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="font-bold text-xs text-slate-500 uppercase">Prioridade</FormLabel>
+                            <Select
+                              onValueChange={(v) => { field.onChange(v); handleAutoSave(); }}
+                              value={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="rounded-xl border-slate-200">
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {(Object.keys(PRIORIDADE_LABELS) as TarefaPrioridade[]).map(p => (
+                                  <SelectItem key={p} value={p}>
+                                    <div className="flex items-center gap-2">
+                                      <div className={cn("w-2 h-2 rounded-full", PRIORIDADE_COLORS[p].split(' ')[0])} />
+                                      {PRIORIDADE_LABELS[p]}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="tipo"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="font-bold text-xs text-slate-500 uppercase">Tipo</FormLabel>
+                            <Select
+                              onValueChange={(v) => { field.onChange(v); handleAutoSave(); }}
+                              value={field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="rounded-xl border-slate-200">
+                                  <SelectValue />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {(Object.keys(TIPO_LABELS) as TarefaTipo[]).map(t => (
+                                  <SelectItem key={t} value={t}>
+                                    {TIPO_LABELS[t]}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="responsavel_id"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="font-bold text-xs text-slate-500 uppercase">Responsável</FormLabel>
+                            <Select
+                              onValueChange={(v) => { field.onChange(v === 'none' ? null : v); handleAutoSave(); }}
+                              value={field.value || 'none'}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="rounded-xl border-slate-200">
+                                  <SelectValue placeholder="Nenhum" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="none">
                                   <div className="flex items-center gap-2">
-                                    <Avatar className="h-5 w-5">
-                                      <AvatarImage src={member.avatar_url} />
-                                      <AvatarFallback className="text-[10px]">
-                                        {member.full_name?.slice(0, 2).toUpperCase()}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    {member.full_name}
+                                    <User className="h-4 w-4 text-slate-400" />
+                                    Nenhum
                                   </div>
                                 </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Start Date */}
-                    <FormField
-                      control={form.control}
-                      name="start_date"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                          <FormLabel>Data de Início</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant="outline"
-                                  className={cn(
-                                    'w-full pl-3 text-left font-normal',
-                                    !field.value && 'text-muted-foreground'
-                                  )}
-                                >
-                                  {field.value ? format(field.value, 'dd/MM/yyyy') : <span>Definir início</span>}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={field.value || undefined}
-                                onSelect={(d) => { field.onChange(d); handleAutoSave(); }}
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    {/* Due Date */}
-                    <FormField
-                      control={form.control}
-                      name="data_vencimento"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-col">
-                          <FormLabel>Prazo</FormLabel>
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  variant="outline"
-                                  className={cn(
-                                    'w-full pl-3 text-left font-normal',
-                                    !field.value && 'text-muted-foreground'
-                                  )}
-                                >
-                                  {field.value ? format(field.value, 'dd/MM/yyyy') : <span>Definir prazo</span>}
-                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={field.value || undefined}
-                                onSelect={(d) => { field.onChange(d); handleAutoSave(); }}
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  {/* Tags */}
-                  <FormField
-                    control={form.control}
-                    name="tags"
-                    render={() => (
-                      <FormItem>
-                        <FormLabel>Tags</FormLabel>
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-2">
-                            <Tag className="h-4 w-4 text-muted-foreground" />
-                            <Input
-                              placeholder="Digite e pressione Enter..."
-                              onKeyDown={handleAddTag}
-                              className="flex-1"
-                              onBlur={handleAutoSave}
-                            />
-                          </div>
-                          {tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1">
-                              {tags.map((tag, i) => (
-                                <Badge key={i} variant="secondary" className="gap-1">
-                                  {tag}
-                                  <X
-                                    className="h-3 w-3 cursor-pointer hover:text-destructive"
-                                    onClick={() => { handleRemoveTag(tag); handleAutoSave(); }}
-                                  />
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Project */}
-                  {projects && projects.length > 0 && (
-                    <FormField
-                      control={form.control}
-                      name="project_id"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Projeto</FormLabel>
-                          <Select
-                            onValueChange={(v) => { field.onChange(v === 'none' ? null : v); handleAutoSave(); }}
-                            value={field.value || 'none'}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Sem projeto" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="none">Sem projeto</SelectItem>
-                              {projects.map(p => (
-                                <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
-                </TabsContent>
-
-                {/* Checklists Tab */}
-                <TabsContent value="checklists" className="mt-4 space-y-4 pb-6">
-                  {/* Progress */}
-                  {checklistProgress && (
-                    <Card>
-                      <CardContent className="pt-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium">Progresso</span>
-                          <span className="text-sm text-muted-foreground">
-                            {checklistProgress.completed}/{checklistProgress.total} ({Math.round(checklistProgress.percent)}%)
-                          </span>
-                        </div>
-                        <Progress value={checklistProgress.percent} />
-                      </CardContent>
-                    </Card>
-                  )}
-
-                  {/* Add Checklist */}
-                  <div className="flex items-center gap-2">
-                    <Input
-                      placeholder="Nome do checklist..."
-                      value={newChecklistTitle}
-                      onChange={(e) => setNewChecklistTitle(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && addChecklist()}
-                    />
-                    <Button type="button" onClick={addChecklist} disabled={!newChecklistTitle.trim()}>
-                      <Plus className="h-4 w-4 mr-1" />
-                      Adicionar
-                    </Button>
-                  </div>
-
-                  {/* Checklists */}
-                  {checklistFields.map((checklist, checklistIndex) => (
-                    <Card key={checklist.id}>
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-base flex items-center gap-2">
-                            <CheckSquare className="h-4 w-4" />
-                            {checklist.title}
-                          </CardTitle>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeChecklist(checklistIndex)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        {checklist.items.map((item, itemIndex) => (
-                          <div key={item.id} className="flex items-center gap-2 group">
-                            <Checkbox
-                              checked={item.completed}
-                              onCheckedChange={(checked) => {
-                                updateChecklistItem(checklistIndex, itemIndex, { completed: !!checked });
-                                handleAutoSave();
-                              }}
-                            />
-                            <Input
-                              value={item.text}
-                              onChange={(e) => updateChecklistItem(checklistIndex, itemIndex, { text: e.target.value })}
-                              onBlur={handleAutoSave}
-                              className={cn(
-                                "h-8 flex-1 border-none focus-visible:ring-1 bg-transparent",
-                                item.completed && "line-through text-muted-foreground"
-                              )}
-                              placeholder="Item do checklist..."
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 opacity-0 group-hover:opacity-100"
-                              onClick={() => { removeChecklistItem(checklistIndex, itemIndex); handleAutoSave(); }}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => addChecklistItem(checklistIndex)}
-                        >
-                          <Plus className="h-4 w-4 mr-1" />
-                          Adicionar item
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-
-                  {checklistFields.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <CheckSquare className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                      <p>Nenhum checklist ainda</p>
-                      <p className="text-sm">Adicione checklists para organizar subtarefas</p>
+                                {teamMembers.map(member => (
+                                  <SelectItem key={member.id} value={member.id}>
+                                    <div className="flex items-center gap-2">
+                                      <Avatar className="h-5 w-5">
+                                        <AvatarImage src={member.avatar_url} />
+                                        <AvatarFallback className="text-[10px]">
+                                          {member.full_name?.slice(0, 2).toUpperCase()}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      {member.full_name}
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )}
+                      />
                     </div>
-                  )}
-                </TabsContent>
 
-                {/* Attachments Tab */}
-                <TabsContent value="attachments" className="mt-4 space-y-4 pb-6">
-                  <div className="flex items-center gap-2">
-                    <Button type="button" variant="outline" onClick={() => addAttachment('link')}>
-                      <Link2 className="h-4 w-4 mr-2" />
-                      Adicionar Link
-                    </Button>
-                    <Button type="button" variant="outline" onClick={() => addAttachment('file')}>
-                      <Upload className="h-4 w-4 mr-2" />
-                      Upload Arquivo
-                    </Button>
-                  </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="data_vencimento"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-col">
+                            <FormLabel className="font-bold text-xs text-slate-500 uppercase">Prazo de Entrega</FormLabel>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      'w-full pl-3 text-left font-normal rounded-xl border-slate-200 h-11',
+                                      !field.value && 'text-muted-foreground'
+                                    )}
+                                  >
+                                    {field.value ? format(field.value, 'dd/MM/yyyy') : <span>Definir prazo</span>}
+                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 z-[110]" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value || undefined}
+                                  onSelect={(d) => { field.onChange(d); handleAutoSave(); }}
+                                  initialFocus
+                                  locale={ptBR}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </FormItem>
+                        )}
+                      />
 
-                  {attachmentFields.map((attachment, index) => (
-                    <Card key={attachment.id}>
-                      <CardContent className="pt-4">
-                        <div className="flex items-start gap-3">
-                          <div className="h-10 w-10 rounded bg-muted flex items-center justify-center shrink-0">
-                            {getFileIcon(attachment.type)}
-                          </div>
-                          <div className="flex-1 space-y-2">
-                            <FormField
-                              control={form.control}
-                              name={`attachments.${index}.name`}
-                              render={({ field }) => (
-                                <Input
-                                  {...field}
-                                  placeholder="Nome do anexo..."
-                                  className="h-8"
-                                  onBlur={handleAutoSave}
+                      <div className="space-y-2">
+                        <Label className="font-bold text-xs text-slate-500 uppercase">Etiquetas / Tags</Label>
+                        <div className="flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl min-h-[44px]">
+                          <Tag className="h-4 w-4 text-slate-400 shrink-0 ml-1" />
+                          <Input
+                            placeholder="Add tag..."
+                            onKeyDown={handleAddTag}
+                            className="flex-1 border-none bg-transparent focus-visible:ring-0 h-7 text-sm"
+                          />
+                        </div>
+                        {tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {tags.map((tag, i) => (
+                              <Badge key={i} variant="secondary" className="gap-1 rounded-lg px-2 py-1 bg-white border-slate-200 text-slate-600">
+                                {tag}
+                                <X
+                                  className="h-3 w-3 cursor-pointer hover:text-destructive"
+                                  onClick={() => { handleRemoveTag(tag); handleAutoSave(); }}
                                 />
-                              )}
-                            />
-                            <FormField
-                              control={form.control}
-                              name={`attachments.${index}.url`}
-                              render={({ field }) => (
-                                <Input
-                                  {...field}
-                                  placeholder="URL..."
-                                  className="h-8 font-mono text-xs"
-                                  onBlur={handleAutoSave}
-                                />
-                              )}
-                            />
+                              </Badge>
+                            ))}
                           </div>
-                          <div className="flex items-center gap-1">
-                            {attachment.url && (
+                        )}
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Checklists Tab */}
+                  <TabsContent value="checklists" className="mt-0 space-y-6">
+                    {checklistProgress && (
+                      <Card className="border-emerald-100 bg-emerald-50/30 overflow-hidden">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-bold text-emerald-700 uppercase">Progresso do Checklist</span>
+                            <span className="text-sm font-bold text-emerald-700">
+                              {checklistProgress.completed}/{checklistProgress.total} ({Math.round(checklistProgress.percent)}%)
+                            </span>
+                          </div>
+                          <Progress value={checklistProgress.percent} className="h-2 bg-emerald-100" />
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    <div className="flex items-center gap-2">
+                      <Input
+                        placeholder="Novo checklist (ex: Documentação, Testes...)"
+                        value={newChecklistTitle}
+                        onChange={(e) => setNewChecklistTitle(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && addChecklist()}
+                        className="rounded-xl border-slate-200"
+                      />
+                      <Button type="button" onClick={addChecklist} disabled={!newChecklistTitle.trim()} className="rounded-xl px-4 bg-slate-900">
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {checklistFields.map((checklist, checklistIndex) => (
+                        <Card key={checklist.id} className="border-slate-100 shadow-sm overflow-hidden">
+                          <CardHeader className="p-4 border-b bg-slate-50/50">
+                            <div className="flex items-center justify-between">
+                              <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-700 uppercase tracking-wider">
+                                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                                {checklist.title}
+                              </CardTitle>
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8"
-                                onClick={() => window.open(attachment.url, '_blank')}
+                                className="h-8 w-8 text-slate-400 hover:text-destructive"
+                                onClick={() => removeChecklist(checklistIndex)}
                               >
-                                <ExternalLink className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4" />
                               </Button>
-                            )}
+                            </div>
+                          </CardHeader>
+                          <CardContent className="p-4 space-y-2 bg-white">
+                            {checklist.items.map((item, itemIndex) => (
+                              <div key={item.id} className="flex items-center gap-3 group bg-slate-50/50 p-2 rounded-xl transition-all hover:bg-slate-50">
+                                <Checkbox
+                                  checked={item.completed}
+                                  onCheckedChange={(checked) => {
+                                    updateChecklistItem(checklistIndex, itemIndex, { completed: !!checked });
+                                    handleAutoSave();
+                                  }}
+                                  className="rounded-md"
+                                />
+                                <Input
+                                  value={item.text}
+                                  onChange={(e) => updateChecklistItem(checklistIndex, itemIndex, { text: e.target.value })}
+                                  onBlur={handleAutoSave}
+                                  className={cn(
+                                    "h-8 flex-1 border-none focus-visible:ring-0 bg-transparent text-sm font-medium",
+                                    item.completed && "line-through text-slate-400 font-normal"
+                                  )}
+                                  placeholder="O que precisa ser feito?"
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                                  onClick={() => { removeChecklistItem(checklistIndex, itemIndex); handleAutoSave(); }}
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            ))}
                             <Button
                               type="button"
                               variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => { removeAttachment(index); handleAutoSave(); }}
+                              size="sm"
+                              className="w-full h-9 rounded-xl border border-dashed border-slate-200 text-slate-500 hover:bg-slate-50 mt-2"
+                              onClick={() => addChecklistItem(checklistIndex)}
                             >
-                              <Trash2 className="h-4 w-4 text-destructive" />
+                              <Plus className="h-3.5 w-3.5 mr-2" />
+                              Adicionar item ao checklist
                             </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-
-                  {attachmentFields.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Paperclip className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                      <p>Nenhum anexo ainda</p>
-                      <p className="text-sm">Adicione links ou arquivos relacionados à tarefa</p>
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
-                  )}
-                </TabsContent>
+                  </TabsContent>
 
-                {/* References Tab */}
-                <TabsContent value="references" className="mt-4 space-y-4 pb-6">
-                  <Button type="button" onClick={addReference}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Adicionar Referência
-                  </Button>
+                  {/* Attachments Tab */}
+                  <TabsContent value="attachments" className="mt-0 space-y-6">
+                    <div className="flex items-center gap-3">
+                      <Button type="button" variant="outline" onClick={() => addAttachment('link')} className="rounded-xl flex-1 h-11 gap-2 border-slate-200">
+                        <Link2 className="h-4 w-4" />
+                        Adicionar Link
+                      </Button>
+                      <Button type="button" variant="outline" onClick={() => addAttachment('file')} className="rounded-xl flex-1 h-11 gap-2 border-slate-200">
+                        <Upload className="h-4 w-4" />
+                        Upload Arquivo
+                      </Button>
+                    </div>
 
-                  {referenceFields.map((reference, index) => (
-                    <Card key={reference.id}>
-                      <CardContent className="pt-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <FormField
-                            control={form.control}
-                            name={`references.${index}.type`}
-                            render={({ field }) => (
+                    <div className="grid grid-cols-1 gap-3">
+                      {attachmentFields.map((attachment, index) => (
+                        <Card key={attachment.id} className="border-slate-100 shadow-sm overflow-hidden">
+                          <CardContent className="p-3">
+                            <div className="flex items-center gap-3">
+                              <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
+                                {getFileIcon(attachment.type)}
+                              </div>
+                              <div className="flex-1 min-w-0 space-y-1">
+                                <Input
+                                  value={form.watch(`attachments.${index}.name`)}
+                                  onChange={(e) => form.setValue(`attachments.${index}.name`, e.target.value)}
+                                  placeholder="Nome do anexo..."
+                                  className="h-7 border-none bg-transparent focus-visible:ring-0 font-bold text-sm p-0"
+                                  onBlur={handleAutoSave}
+                                />
+                                <Input
+                                  value={form.watch(`attachments.${index}.url`)}
+                                  onChange={(e) => form.setValue(`attachments.${index}.url`, e.target.value)}
+                                  placeholder="URL ou Caminho..."
+                                  className="h-5 border-none bg-transparent focus-visible:ring-0 font-mono text-[10px] p-0 text-slate-400"
+                                  onBlur={handleAutoSave}
+                                />
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {attachment.url && (
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 rounded-lg text-slate-400"
+                                    onClick={() => window.open(attachment.url, '_blank')}
+                                  >
+                                    <ExternalLink className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 rounded-lg text-slate-400 hover:text-destructive"
+                                  onClick={() => { removeAttachment(index); handleAutoSave(); }}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </TabsContent>
+
+                  {/* Wiki Tab */}
+                  <TabsContent value="references" className="mt-0 space-y-6">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-bold text-slate-700 uppercase tracking-wider">Base de Conhecimento</h4>
+                      <Button type="button" onClick={addReference} size="sm" className="rounded-xl gap-2 bg-slate-900 h-8">
+                        <Plus className="h-3.5 w-3.5" />
+                        Nova Ref
+                      </Button>
+                    </div>
+
+                    <div className="space-y-4">
+                      {referenceFields.map((reference, index) => (
+                        <Card key={reference.id} className="border-slate-100 shadow-sm overflow-hidden">
+                          <CardContent className="p-4 space-y-4">
+                            <div className="flex items-center justify-between">
                               <Select
-                                onValueChange={(v) => { field.onChange(v); handleAutoSave(); }}
-                                value={field.value}
+                                onValueChange={(v) => { form.setValue(`references.${index}.type`, v as any); handleAutoSave(); }}
+                                value={form.watch(`references.${index}.type`)}
                               >
-                                <SelectTrigger className="w-32">
+                                <SelectTrigger className="w-32 h-8 rounded-lg border-slate-200 text-xs">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -928,130 +824,77 @@ export function TaskDetailModal({
                                   <SelectItem value="website">Website</SelectItem>
                                   <SelectItem value="video">Vídeo</SelectItem>
                                   <SelectItem value="internal">Interno</SelectItem>
-                                  <SelectItem value="other">Outro</SelectItem>
                                 </SelectContent>
                               </Select>
-                            )}
-                          />
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => { removeReference(index); handleAutoSave(); }}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-
-                        <FormField
-                          control={form.control}
-                          name={`references.${index}.title`}
-                          render={({ field }) => (
-                            <Input
-                              {...field}
-                              placeholder="Título da referência..."
-                              onBlur={handleAutoSave}
-                            />
-                          )}
-                        />
-
-                        <div className="grid grid-cols-2 gap-2">
-                          <FormField
-                            control={form.control}
-                            name={`references.${index}.author`}
-                            render={({ field }) => (
-                              <Input
-                                {...field}
-                                placeholder="Autor(es)..."
-                                onBlur={handleAutoSave}
-                              />
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name={`references.${index}.year`}
-                            render={({ field }) => (
-                              <Input
-                                {...field}
-                                placeholder="Ano..."
-                                onBlur={handleAutoSave}
-                              />
-                            )}
-                          />
-                        </div>
-
-                        <FormField
-                          control={form.control}
-                          name={`references.${index}.url`}
-                          render={({ field }) => (
-                            <div className="flex items-center gap-2">
-                              <Input
-                                {...field}
-                                placeholder="URL (opcional)..."
-                                className="font-mono text-xs"
-                                onBlur={handleAutoSave}
-                              />
-                              {field.value && (
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => window.open(field.value, '_blank')}
-                                >
-                                  <ExternalLink className="h-4 w-4" />
-                                </Button>
-                              )}
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-slate-400"
+                                onClick={() => { removeReference(index); handleAutoSave(); }}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
-                          )}
-                        />
 
-                        <FormField
-                          control={form.control}
-                          name={`references.${index}.description`}
-                          render={({ field }) => (
-                            <Textarea
-                              {...field}
-                              placeholder="Descrição ou notas..."
-                              className="resize-none"
-                              rows={2}
+                            <Input
+                              value={form.watch(`references.${index}.title`)}
+                              onChange={(e) => form.setValue(`references.${index}.title`, e.target.value)}
+                              placeholder="Título da obra..."
+                              className="rounded-xl border-slate-200 font-bold"
                               onBlur={handleAutoSave}
                             />
-                          )}
-                        />
-                      </CardContent>
-                    </Card>
-                  ))}
 
-                  {referenceFields.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-20" />
-                      <p>Nenhuma referência bibliográfica</p>
-                      <p className="text-sm">Adicione artigos, livros ou outras referências</p>
+                            <div className="grid grid-cols-2 gap-3">
+                              <Input
+                                value={form.watch(`references.${index}.author`)}
+                                onChange={(e) => form.setValue(`references.${index}.author`, e.target.value)}
+                                placeholder="Autor..."
+                                className="rounded-xl h-9 text-xs border-slate-200"
+                                onBlur={handleAutoSave}
+                              />
+                              <Input
+                                value={form.watch(`references.${index}.year`)}
+                                onChange={(e) => form.setValue(`references.${index}.year`, e.target.value)}
+                                placeholder="Ano..."
+                                className="rounded-xl h-9 text-xs border-slate-200"
+                                onBlur={handleAutoSave}
+                              />
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
-                  )}
-                </TabsContent>
-              </ScrollArea>
-
-              {/* Footer */}
-              <div className="p-6 pt-4 border-t bg-background">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-muted-foreground">
-                    Alterações são salvas automaticamente
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                      Fechar
-                    </Button>
-                    <Button type="submit" disabled={updateTarefa.isPending}>
-                      {updateTarefa.isPending ? 'Salvando...' : 'Salvar'}
-                    </Button>
-                  </div>
+                  </TabsContent>
                 </div>
-              </div>
+              </ScrollArea>
             </form>
           </Form>
-        </Tabs>
-      </SheetContent>
-    </Sheet>
+        </CustomModalBody>
+
+        <CustomModalFooter isMobile={isMobile} className="bg-slate-50 border-t-0">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+              <History className="h-3.5 w-3.5" />
+              Auto-save ativo
+            </div>
+            <div className="flex items-center gap-3">
+              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl h-11 px-6 font-bold text-slate-500">
+                Fechar
+              </Button>
+              <Button 
+                type="submit" 
+                form="task-detail-form" 
+                disabled={updateTarefa.isPending}
+                className="rounded-xl h-11 px-8 bg-slate-900 text-white shadow-xl shadow-slate-900/10 font-bold uppercase tracking-wider"
+              >
+                {updateTarefa.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                Salvar Agora
+              </Button>
+            </div>
+          </div>
+        </CustomModalFooter>
+      </Tabs>
+    </CustomModal>
   );
 }

@@ -68,8 +68,8 @@ interface QuickAction {
 const quickActions: QuickAction[] = [
   { id: '1', label: 'Exercícios', icon: 'barbell-outline', route: '/(tabs)/exercises', color: '#22c55e' },
   { id: '2', label: 'Evoluções', icon: 'trending-up-outline', route: '/(tabs)/progress', color: '#3b82f6' },
-  { id: '3', label: 'Consultas', icon: 'calendar-outline', route: '/(tabs)/appointments', color: '#8b5cf6' },
-  { id: '4', label: 'Perfil', icon: 'person-outline', route: '/(tabs)/profile', color: '#ec4899' },
+  { id: '3', label: 'Consultas', icon: 'calendar-outline', route: '/(tabs)/appointments', color: '#0891b2' },
+  { id: '4', label: 'Perfil', icon: 'person-outline', route: '/(tabs)/profile', color: '#059669' },
 ];
 
 // Helper safely parses dates

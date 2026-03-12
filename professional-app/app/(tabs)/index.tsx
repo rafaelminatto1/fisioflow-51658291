@@ -105,7 +105,7 @@ export default function DashboardScreen() {
             
             {upcomingAppointments.length === 0 ? (
                 <Card style={styles.emptyCard}>
-                  <View style={[styles.emptyIconContainer, { backgroundColor: colors.surfaceHighlight || colors.border }]}>
+                  <View style={[styles.emptyIconContainer, { backgroundColor: colors.border }]}>
                     <Ionicons name="calendar-clear-outline" size={32} color={colors.textMuted} />
                   </View>
                   <Text style={[styles.emptyTitle, { color: colors.text }]}>Agenda Livre</Text>
@@ -140,7 +140,7 @@ export default function DashboardScreen() {
             
             {recentPatients.length === 0 ? (
                  <Card style={styles.emptyCard}>
-                    <View style={[styles.emptyIconContainer, { backgroundColor: colors.surfaceHighlight || colors.border }]}>
+                    <View style={[styles.emptyIconContainer, { backgroundColor: colors.border }]}>
                       <Ionicons name="people-outline" size={32} color={colors.textMuted} />
                     </View>
                     <Text style={[styles.emptyTitle, { color: colors.text }]}>Sem Pacientes</Text>
@@ -177,8 +177,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 48 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 },
-  greeting: { fontSize: 16 },
-  name: { fontSize: 28, fontWeight: 'bold' },
+  greeting: { fontSize: 16, letterSpacing: 0.1 },
+  name: { fontSize: 32, fontWeight: '800', letterSpacing: -1, lineHeight: 36 },
   notificationBtn: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
   loadingContainer: { alignItems: 'center', justifyContent: 'center', flex: 1, paddingVertical: 60 },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 28, fontWeight: 'bold' },
   statLabel: { fontSize: 12, textAlign: 'center', marginTop: 4 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginTop: 24 },
-  sectionTitle: { fontSize: 20, fontWeight: '700', letterSpacing: -0.5 },
+  sectionTitle: { fontSize: 20, fontWeight: '800', letterSpacing: -0.6 },
   seeAllBtn: { flexDirection: 'row', alignItems: 'center', padding: 4 },
   seeAll: { fontSize: 14, fontWeight: '600' },
   emptyCard: { alignItems: 'center', paddingVertical: 40, gap: 8, borderRadius: 16, borderStyle: 'dashed' },

@@ -47,6 +47,7 @@ import { whatsappRoutes } from './routes/whatsapp';
 import { precadastroRoutes } from './routes/precadastro';
 import { telemedicineRoutes } from './routes/telemedicine';
 import { imageProcessorRoutes } from './routes/imageProcessor';
+import { inngestRoutes } from './routes/inngest';
 import { projectsRoutes } from './routes/projects';
 import { reportsRoutes } from './routes/reports';
 import { publicBookingRoutes } from './routes/publicBooking';
@@ -72,8 +73,34 @@ import { patientPortalRoutes } from './routes/patientPortal';
 import { messagingRoutes } from './routes/messaging';
 
 import { perf } from './lib/perf';
+import { logToAxiom } from './lib/axiom';
 
 const app = new Hono<{ Bindings: Env }>();
+
+// Middleware de Logs para o Axiom (Observabilidade Total)
+app.use('*', async (c, next) => {
+  const start = Date.now();
+  const requestId = crypto.randomUUID();
+  c.header('X-Request-Id', requestId);
+
+  await next();
+
+  const duration = Date.now() - start;
+  const status = c.res.status;
+
+  // Envia log estruturado para o Axiom em segundo plano
+  logToAxiom(c.env, c.executionCtx, {
+    level: status >= 400 ? 'error' : 'info',
+    message: `${c.req.method} ${c.req.path} - ${status}`,
+    requestId,
+    method: c.req.method,
+    path: c.req.path,
+    status,
+    duration,
+    userAgent: c.req.header('user-agent'),
+    ip: c.req.header('cf-connecting-ip'),
+  });
+});
 
 // Performance Middleware
 app.use('*', async (c, next) => {
@@ -100,6 +127,7 @@ app.use('*', async (c, next) => {
       if (
         origin.endsWith('.pages.dev') ||
         origin.endsWith('moocafisio.com.br') ||
+        origin.endsWith('inngest.com') ||
         origin.includes('localhost') ||
         origin.includes('127.0.0.1') ||
         allowedOrigins.includes(origin)
@@ -172,6 +200,7 @@ app.route('/api/whatsapp', whatsappRoutes);
 app.route('/api/precadastro', precadastroRoutes);
 app.route('/api/telemedicine', telemedicineRoutes);
 app.route('/api/exercise-image', imageProcessorRoutes);
+app.route('/api/inngest', inngestRoutes);
 app.route('/api/projects', projectsRoutes);
 app.route('/api/reports', reportsRoutes);
 app.route('/api/public', publicBookingRoutes);
@@ -209,9 +238,30 @@ app.all('/api/*', (c) => {
 
 // ERROR HANDLER BLINDADO
 app.onError((err, c) => {
-  console.error('[Worker Error]', err.message);
-  // Retorna sucesso vazio para o frontend não explodir
-  return c.json({ data: [], error: err.message }, 200);
+  console.error('[Worker Error]', err.message, err.stack);
+
+  // Envia erro rico para o Axiom
+  logToAxiom(c.env, c.executionCtx, {
+    level: 'error',
+    message: `Unhandled Error: ${err.message}`,
+    error: {
+      name: err.name,
+      stack: err.stack,
+      cause: (err as any).cause,
+    },
+    request: {
+      method: c.req.method,
+      path: c.req.path,
+      url: c.req.url,
+    }
+  });
+
+  // Retorna sucesso vazio ou erro formatado dependendo do ambiente
+  const status = (err as any).status || 500;
+  return c.json({ 
+    data: [], 
+    error: c.env.ENVIRONMENT === 'production' ? 'Ocorreu um erro interno no servidor.' : err.message 
+  }, status === 404 ? 404 : 200); // Manter 200 para o frontend não quebrar se for decisão de design antiga
 });
 
 import { handleScheduled } from './cron';
