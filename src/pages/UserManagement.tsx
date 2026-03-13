@@ -31,8 +31,7 @@ import {
 } from '@/components/ui/dialog';
 import { useUsers } from '@/hooks/useUsers';
 import { Search, UserPlus } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { safeFormat } from '@/lib/utils';
 
 
 
@@ -150,9 +149,7 @@ export default function UserManagement() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {format(new Date(user.created_at), 'dd/MM/yyyy', {
-                            locale: ptBR,
-                          })}
+                          {safeFormat(user.created_at, 'dd/MM/yyyy')}
                         </TableCell>
                         <TableCell className="text-right">
                           <Dialog

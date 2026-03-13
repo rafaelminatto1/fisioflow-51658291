@@ -1690,6 +1690,43 @@ function WikiHistoryDiff({ page, versions }: { page: WikiPage; versions: WikiPag
 export function WikiEditor({ page, draft, onCancel, onSave }: WikiEditorProps) {
   const { user, organizationId } = useAuth();
   const source = page ?? draft ?? null;
+
+  // Auto-Save Local
+  useEffect(() => {
+    const draftKey = `wiki_draft_${page?.id || 'new'}`;
+    const timeout = setTimeout(() => {
+      if (blocks.length > 0 || title) {
+        localStorage.setItem(draftKey, JSON.stringify({
+          title,
+          blocks,
+          timestamp: Date.now()
+        }));
+      }
+    }, 5000);
+    return () => clearTimeout(timeout);
+  }, [blocks, title, page?.id]);
+
+  const recoverLocalDraft = () => {
+    const draftKey = `wiki_draft_${page?.id || 'new'}`;
+    const saved = localStorage.getItem(draftKey);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setTitle(parsed.title);
+        setBlocks(parsed.blocks);
+        toast.info('Rascunho recuperado com sucesso!');
+      } catch (e) {
+        toast.error('Erro ao carregar rascunho salvo.');
+      }
+    } else {
+      toast.info('Nenhum rascunho encontrado para esta página.');
+    }
+  };
+
+  const clearLocalDraft = () => {
+    const draftKey = `wiki_draft_${page?.id || 'new'}`;
+    localStorage.removeItem(draftKey);
+  };
   const [title, setTitle] = useState(source?.title || '');
   const [icon, setIcon] = useState(source?.icon || '');
   const [category, setCategory] = useState(source?.category || '');
@@ -1934,14 +1971,26 @@ export function WikiEditor({ page, draft, onCancel, onSave }: WikiEditorProps) {
             {showPreview ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
             {showPreview ? 'Ocultar preview' : 'Mostrar preview'}
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={recoverLocalDraft}
+            title="Recuperar rascunho salvo localmente"
+          >
+            <Clock className="mr-2 h-4 w-4" />
+            Recuperar
+          </Button>
+
           <Button variant="outline" size="sm" onClick={onCancel}>
             <X className="mr-2 h-4 w-4" />
             Cancelar
           </Button>
+
           <Button size="sm" onClick={handleSave}>
             <Save className="mr-2 h-4 w-4" />
             Salvar
           </Button>
+
         </div>
       </div>
 
