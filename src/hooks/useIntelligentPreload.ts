@@ -4,34 +4,39 @@
  * Usa requestIdleCallback para não bloquear a UI
  */
 
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
+
+// Mapa de componentes para prefetch manual
+// Usamos a função de import que o React.lazy usa internamente
+const routeImports: Record<string, () => Promise<unknown>> = {
+  '/agenda': () => import('@/pages/Schedule'),
+  '/patients': () => import('@/pages/Patients'),
+  '/exercises': () => import('@/pages/Exercises'),
+  '/eventos': () => import('@/pages/Eventos'),
+  '/tarefas': () => import('@/pages/TarefasV2'),
+  '/financial': () => import('@/pages/Financial'),
+  '/reports': () => import('@/pages/Reports'),
+  '/settings': () => import('@/pages/Settings'),
+};
 
 export const useIntelligentPreload = () => {
   useEffect(() => {
-    // Rotas prioritárias para preload (baseado em padrões de uso)
-    const priorityRoutes = [
-      '/agenda',
-      '/patients',
-      '/exercises',
-      '/eventos',
-      '/tarefas',
-    ];
-
     const preloadRoutes = () => {
       if ('requestIdleCallback' in window) {
         requestIdleCallback(() => {
-          priorityRoutes.forEach((route) => {
-            const link = document.createElement('link');
-            link.rel = 'prefetch';
-            link.href = route;
-            document.head.appendChild(link);
+          // Preload apenas das 3 mais prováveis inicialmente
+          ['/agenda', '/patients', '/dashboard'].forEach((route) => {
+            const importFn = routeImports[route];
+            if (importFn) {
+              importFn().catch(() => {}); // Preload silancioso
+            }
           });
         });
       }
     };
 
-    // Preload após 2 segundos (usuário já interagiu)
-    const timer = setTimeout(preloadRoutes, 2000);
+    // Preload após 3 segundos (usuário já estabilizou na página)
+    const timer = setTimeout(preloadRoutes, 3000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -42,16 +47,16 @@ export const useIntelligentPreload = () => {
  * Usado no Sidebar para fazer prefetch de rotas ao passar o mouse
  */
 export const useNavPreload = () => {
-  const preloadRoute = (route: string) => {
-    if ('requestIdleCallback' in window) {
-      requestIdleCallback(() => {
-        const link = document.createElement('link');
-        link.rel = 'prefetch';
-        link.href = route;
-        document.head.appendChild(link);
-      });
+  const preloadRoute = useCallback((route: string) => {
+    // Normalizar a rota (remover query params se necessário)
+    const baseRoute = route.split('?')[0];
+    const importFn = routeImports[baseRoute];
+    
+    if (importFn) {
+      // Dispara o import dinâmico que o Vite/Webpack irá cachear
+      importFn().catch(() => {});
     }
-  };
+  }, []);
 
   return { preloadRoute };
 };

@@ -5,6 +5,8 @@ interface OptimizedImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 
   src: string;
   alt: string;
   fallback?: string;
+  /** Imagem de baixa qualidade (Data URI ou small thumb) para o efeito blur-up */
+  lqip?: string;
   blur?: boolean;
   aspectRatio?: '1:1' | '4:3' | '16:9' | '3:2' | 'auto';
   priority?: boolean;
@@ -90,6 +92,7 @@ export function OptimizedImage({
   src,
   alt,
   fallback = '/placeholder.svg',
+  lqip,
   blur = true,
   aspectRatio = 'auto',
   priority = false,
@@ -215,9 +218,20 @@ export function OptimizedImage({
         className
       )}
     >
-      {/* Placeholder/Loading state */}
-      {!isLoaded && blur && (
-        <div className="absolute inset-0 animate-pulse bg-muted" />
+      {/* LQIP / Placeholder / Loading state */}
+      {!isLoaded && (
+        <>
+          {lqip ? (
+            <img
+              src={lqip}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full object-cover blur-2xl scale-110"
+            />
+          ) : (
+            blur && <div className="absolute inset-0 animate-pulse bg-muted" />
+          )}
+        </>
       )}
 
       <img
