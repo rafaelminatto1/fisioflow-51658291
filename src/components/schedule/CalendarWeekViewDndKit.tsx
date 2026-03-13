@@ -67,6 +67,7 @@ const SLOT_DURATION_MINUTES = 30;
 const MIN_WEEK_SLOT_HEIGHT = 14; // low enough to never prevent fit-to-screen
 const GRID_HEIGHT_ADJUSTMENT = 3;
 const WEEK_GRID_HEIGHT_BOOST = 0;
+const WEEK_TIME_COLUMN_WIDTH_PX = 60;
 const INITIAL_MEASUREMENT_SETTLE_MS = 0;
 const INITIAL_MEASUREMENT_MAX_WAIT_MS = 200;
 const INITIAL_MEASUREMENT_MAX_RETRIES = 3;
@@ -559,6 +560,56 @@ export const CalendarWeekViewDndKit = memo(({
     [activeId, dragState]
   );
 
+  const handleBlankGridClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (dragState.isDragging) return;
+
+    const target = event.target as HTMLElement | null;
+    if (!target) return;
+
+    if (target.closest('[data-week-appointment="true"]')) {
+      return;
+    }
+
+    const scrollElement = weekScrollRef.current;
+    if (!scrollElement) return;
+
+    const rect = scrollElement.getBoundingClientRect();
+    const relativeX = event.clientX - rect.left;
+    const relativeY = event.clientY - rect.top + scrollElement.scrollTop;
+
+    if (relativeX < WEEK_TIME_COLUMN_WIDTH_PX || relativeY < 0) {
+      return;
+    }
+
+    const dayColumnWidth = (scrollElement.clientWidth - WEEK_TIME_COLUMN_WIDTH_PX) / weekDays.length;
+    if (dayColumnWidth <= 0) return;
+
+    const dayIndex = Math.floor((relativeX - WEEK_TIME_COLUMN_WIDTH_PX) / dayColumnWidth);
+    const rowIndex = Math.floor(relativeY / slotHeight);
+
+    if (dayIndex < 0 || dayIndex >= weekDays.length || rowIndex < 0 || rowIndex >= timeSlots.length) {
+      return;
+    }
+
+    const day = weekDays[dayIndex];
+    const time = timeSlots[rowIndex];
+    if (!day || !time) return;
+    if (isDayClosedForDate(day)) return;
+
+    const { blocked } = checkTimeBlocked(day, time);
+    if (blocked) return;
+
+    onTimeSlotClick(day, time);
+  }, [
+    dragState.isDragging,
+    weekDays,
+    slotHeight,
+    timeSlots,
+    isDayClosedForDate,
+    checkTimeBlocked,
+    onTimeSlotClick
+  ]);
+
   // Render function for virtualization
   const renderSlot = useCallback((time: string, _rowIndex: number) => {
     const isHour = time.endsWith(':00');
@@ -608,11 +659,6 @@ export const CalendarWeekViewDndKit = memo(({
               targetAppointments={slotAppointments}
               draggedAppointment={previewTarget ? null : draggedAppointment}
               slotHeight={slotHeight}
-              onClick={() => {
-                if (!blocked && !isClosed) {
-                  onTimeSlotClick(day, time);
-                }
-              }}
             >
               {/* Appointments starting in this cell */}
               {appointmentsInThisCell.map(apt => {
@@ -622,7 +668,7 @@ export const CalendarWeekViewDndKit = memo(({
                 const isPreviewDraggedAppointment = !!previewTarget && draggedAppointment?.id === apt.id;
                 const isDraggingThisOne = isDraggingThis(apt.id);
                 // Se estiver arrastando este card, escondemos o original (ghost) 
-                // para que apenas o DragOverlay (o maior com cantos arredondados) seja visível.
+                // para que apenas o DragOverlay (o mais sutil e reto) seja visível.
                 const hideGhostWhenDragging = isDraggingThisOne;
 
                 // Adjust style for relative positioning in DroppableTimeSlot
@@ -710,7 +756,6 @@ export const CalendarWeekViewDndKit = memo(({
     getAppointmentsForSlot,
     draggedAppointment,
     previewTarget,
-    onTimeSlotClick,
     getAppointmentStyle,
     isDraggingThis,
     isDraggable,
@@ -784,11 +829,13 @@ export const CalendarWeekViewDndKit = memo(({
           {/* Virtualized Grid */}
           <div className="flex-1 relative bg-white dark:bg-slate-950" id="calendar-grid-dndkit" data-calendar-drop-zone>
             <VirtualizedCalendarGrid
+              containerRef={weekScrollRef}
               timeSlots={timeSlots}
               slotHeight={slotHeight}
               containerHeight={containerHeight}
               className="custom-scrollbar"
               renderSlot={renderSlot}
+              onClick={handleBlankGridClick}
               overscan={10} // Higher overscan for appointments spanning multiple slots
             >
               {/* Current Time Indicator Line */}
