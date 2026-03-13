@@ -15,6 +15,20 @@ export const knowledgeBaseService = {
     return (res.data ?? []) as KnowledgeArticle[];
   },
 
+  async createArticle(data: Partial<KnowledgeArticle>): Promise<KnowledgeArticle> {
+    const res = await knowledgeApi.createArticle(data as Record<string, unknown>);
+    return res.data as unknown as KnowledgeArticle;
+  },
+
+  async updateArticle(articleId: string, data: Partial<KnowledgeArticle>): Promise<KnowledgeArticle> {
+    const res = await knowledgeApi.updateArticle(articleId, data as Record<string, unknown>);
+    return res.data as unknown as KnowledgeArticle;
+  },
+
+  async deleteArticle(articleId: string): Promise<void> {
+    await knowledgeApi.deleteArticle(articleId);
+  },
+
   async listAnnotations(_organizationId: string, _userId?: string): Promise<KnowledgeAnnotation[]> {
     const res = await knowledgeApi.listAnnotations();
     return (res.data ?? []) as KnowledgeAnnotation[];

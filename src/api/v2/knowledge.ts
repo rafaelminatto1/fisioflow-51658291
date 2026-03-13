@@ -23,6 +23,10 @@ export const knowledgeApi = {
       method: 'PUT',
       body: JSON.stringify(data),
     }),
+  deleteArticle: (articleId: string) =>
+    request<{ success: boolean }>(`/api/knowledge/articles/${encodeURIComponent(articleId)}`, {
+      method: 'DELETE',
+    }),
   syncArticles: (articles: KnowledgeArticleRow[]) =>
     request<{ indexed: number }>('/api/knowledge/articles/sync', {
       method: 'POST',

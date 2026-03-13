@@ -25,6 +25,17 @@ export interface KnowledgeArticle {
   highlights: string[];
   observations: string[];
   keyQuestions: string[];
+  summary?: string;
+  metadata?: {
+    attachments?: Array<{
+      name: string;
+      url: string;
+      type: 'image' | 'video' | 'document' | 'link';
+    }>;
+    journal?: string;
+    authors?: string[];
+    [key: string]: any;
+  };
 }
 
 export interface KnowledgeGroupMeta {
