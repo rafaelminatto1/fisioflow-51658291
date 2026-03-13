@@ -333,7 +333,6 @@ export function AppRoutes() {
             <Route path="/admin/goals" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><GoalProfileListPage /></ProtectedRoute>} />
             <Route path="/admin/goals/:id" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><GoalProfileEditorPage /></ProtectedRoute>} />
 
-            <Route path="/admin/professionals" element={<ProtectedRoute allowedRoles={['admin']}><ProfessionalManagement /></ProtectedRoute>} />
             <Route path="/clinical-tests" element={<ProtectedRoute><ClinicalTestsLibrary /></ProtectedRoute>} />
             <Route path="/admin/analytics" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><Admin /></ProtectedRoute>} />
             <Route path="/admin/cohorts" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><CohortAnalysis /></ProtectedRoute>} />
