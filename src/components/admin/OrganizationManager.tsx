@@ -9,6 +9,7 @@ import { Building2, Users, Settings, Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { InviteUserModal } from './InviteUserModal';
 import { Badge } from '@/components/ui/badge';
+import { safeFormat } from '@/lib/utils';
 
 export const OrganizationManager = () => {
   const { currentOrganization, isLoading } = useOrganizations();
@@ -110,7 +111,7 @@ export const OrganizationManager = () => {
                   <div className="flex-1">
                     <p className="font-medium">Membro ID: {member.user_id.slice(0, 8)}</p>
                     <p className="text-sm text-muted-foreground">
-                      Entrou em: {new Date(member.joined_at).toLocaleDateString('pt-BR')}
+                      Entrou em: {safeFormat(member.joined_at, 'dd/MM/yyyy')}
                     </p>
                   </div>
                   <div className="flex items-center gap-4">

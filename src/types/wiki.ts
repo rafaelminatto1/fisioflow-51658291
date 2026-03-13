@@ -17,26 +17,27 @@ type TimestampLikeLike =
 
 export interface WikiPage {
   id: string;
-  slug: string;                    // URL-friendly, único por organização
+  slug: string;
   title: string;
-  template_id?: string;            // Template usado para criar a página
-  triage_order?: number;           // Ordem dos cards no board de triagem
-  content: string;                 // Markdown
-  html_content?: string;           // Renderizado (cache para performance)
-  parent_id?: string;              // Hierarquia: página pai
+  template_id?: string;
+  triage_order?: number;
+  content: string;
+  html_content?: string;
+  parent_id?: string;
   organization_id: string;
   created_by: string;
   updated_by: string;
   tags: string[];
   category?: string;
   is_published: boolean;
+  is_pinned?: boolean;             // Novo: Páginas fixadas no topo
   view_count: number;
   attachments: WikiAttachment[];
-  icon?: string;                   // Emoji para ícone da página
-  cover_image?: string;            // URL da imagem de capa
+  icon?: string;
+  cover_image?: string;
   created_at: TimestampLike;
   updated_at: TimestampLike;
-  version: number;                 // Versão atual
+  version: number;
   deleted_at?: TimestampLike;
 }
 
