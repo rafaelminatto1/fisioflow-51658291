@@ -51,7 +51,7 @@ import { NotionEvolutionPanel as NotionV3Panel } from './v3-notion/NotionEvoluti
 import { EvolutionVersionToggle } from './v2-improved/EvolutionVersionToggle';
 import { NotionEvolutionEditor } from './NotionEvolutionEditor';
 import { EvolutionSettingsModal, getEvolutionSettings } from './EvolutionSettingsModal';
-import { appointmentsApi, evolutionApi, goalsApi, patientsApi, sessionsApi } from '@/lib/api/workers-client';
+import { appointmentsApi, auditApi, evolutionApi, goalsApi, patientsApi, sessionsApi } from '@/lib/api/workers-client';
 import { Settings } from 'lucide-react';
 
 interface SessionEvolutionContainerProps {
@@ -449,12 +449,42 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       if (existingDraft?.id) {
         soapRecordId = existingDraft.id;
         await sessionsApi.update(existingDraft.id, { ...soapRecordData, updated_at: now } as any);
+        
+        // Log de auditoria: Atualização de Evolução
+        try {
+          await auditApi.create({
+            action: 'UPDATE',
+            entity_type: 'evolutions',
+            entity_id: soapRecordId,
+            metadata: { 
+              patient: (patient as any)?.full_name || patientId,
+              therapist_id: user.uid,
+              summary: trimmedAssessment.substring(0, 100),
+              timestamp: new Date().toISOString()
+            }
+          });
+        } catch (e) { /* silent fail */ }
       } else {
         const created = await sessionsApi.create({
           ...soapRecordData,
           created_at: now,
         } as any);
         soapRecordId = created.data.id;
+
+        // Log de auditoria: Criação de Evolução
+        try {
+          await auditApi.create({
+            action: 'INSERT',
+            entity_type: 'evolutions',
+            entity_id: soapRecordId,
+            metadata: { 
+              patient: (patient as any)?.full_name || patientId,
+              therapist_id: user.uid,
+              summary: trimmedAssessment.substring(0, 100),
+              timestamp: new Date().toISOString()
+            }
+          });
+        } catch (e) { /* silent fail */ }
       }
 
       const therapistId = selectedTherapistId || user.uid;

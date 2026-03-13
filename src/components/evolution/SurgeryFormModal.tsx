@@ -441,5 +441,3 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
     </>
   );
 };
-  );
-};

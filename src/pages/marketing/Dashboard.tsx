@@ -8,6 +8,7 @@ import {
   Star,
   TrendingUp,
   Video,
+  Link2,
   MessageSquare,
   Mail,
   ArrowUpRight,

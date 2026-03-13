@@ -551,5 +551,3 @@ export const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
     </Card>
   );
 };
-
-export { NotionEvolutionPanel };

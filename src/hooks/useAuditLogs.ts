@@ -125,11 +125,24 @@ export function useAuditLogs(filters?: AuditFilters) {
   const uniqueTables = [...new Set(logs.map((log) => log.table_name).filter(Boolean))];
   const uniqueActions = [...new Set(logs.map((log) => log.action).filter(Boolean))];
 
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  const loginLogs = logs.filter(l => l.action.startsWith('LOGIN_'));
+  const loginSuccesses = loginLogs.filter(l => l.action === 'LOGIN_SUCCESS').length;
+  const loginFailures = loginLogs.filter(l => l.action === 'LOGIN_FAILURE').length;
+  const totalLogins = loginLogs.length;
+
   const stats = {
     total: logs.length,
     inserts: logs.filter((l) => l.action === 'INSERT').length,
     updates: logs.filter((l) => l.action === 'UPDATE').length,
     deletes: logs.filter((l) => l.action === 'DELETE').length,
+    logins: {
+      total: totalLogins,
+      successes: loginSuccesses,
+      failures: loginFailures,
+      successRate: totalLogins > 0 ? (loginSuccesses / totalLogins) * 100 : 0,
+      suspicious: loginLogs.filter(l => l.action === 'LOGIN_FAILURE' && new Date(l.timestamp) >= oneHourAgo).length
+    },
     byTable: uniqueTables.reduce((acc, table) => {
       acc[table] = logs.filter((l) => l.table_name === table).length;
       return acc;

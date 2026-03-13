@@ -333,6 +333,77 @@ export const GOAL_PROFILES_SEED: GoalProfile[] = [
         evidence: [],
         defaultPinnedMetricKeys: ["romberg.romberg_ratio_EC_over_EO", "romberg.sway_area_mm2_EC"],
         tags: ["ankle", "balance", "romberg"]
+    },
+
+    {
+        id: "post_surgical_knee_tkr",
+        name: "Pós-Operatório de Joelho (ATJ/TKR) — Funcionalidade",
+        description:
+            "Focado em amplitude de movimento (ADM) e independência funcional precoce após Artroplastia Total de Joelho.",
+        applicableTests: ["GAIT", "SQUAT_OVERHEAD"],
+        qualityGate: { minAnalysisConfidence0_100: 60 },
+        targets: [
+            {
+                key: "prom.koos_jr_0_100",
+                mode: "IMPROVEMENT_ABS",
+                minDeltaAbs: 15,
+                notes: "Melhora significativa na escala resumida de joelho."
+            },
+            {
+                key: "squat.depth_score_mean_0_100",
+                mode: "IMPROVEMENT_ABS",
+                minDeltaAbs: 20,
+                notes: "Ganho gradual de profundidade (flexão de joelho)."
+            },
+            {
+                key: "gait.symmetry_step_time_pct",
+                mode: "IMPROVEMENT_PCT",
+                minDeltaPct: 15,
+                notes: "Melhorar a descarga de peso e simetria do passo."
+            }
+        ],
+        clinicianNotesTemplate: "Priorize ADM passiva e ativa nos primeiros dias. O KOOS-JR ajuda a monitorar a percepção de dor e função.",
+        patientNotesTemplate: "Nosso objetivo agora é dobrar mais o joelho e caminhar com mais firmeza.",
+        evidence: [
+            {
+                label: "KOOS-JR MCID ~15-20 pontos",
+                source: "Lyman et al. (2016)"
+            }
+        ],
+        tags: ["knee", "surgery", "tkr", "elderly"]
+    },
+
+    {
+        id: "neuro_rehab_stroke",
+        name: "Reabilitação Neuro — AVC / Stroke (template)",
+        description:
+            "Template focado em equilíbrio dinâmico e simetria de marcha para pacientes em reabilitação neurológica.",
+        applicableTests: ["GAIT", "ROMBERG"],
+        qualityGate: { minAnalysisConfidence0_100: 50 },
+        targets: [
+            {
+                key: "gait.symmetry_step_time_pct",
+                mode: "IMPROVEMENT_PCT",
+                minDeltaPct: 20,
+                notes: "Reduzir assimetria temporal da marcha."
+            },
+            {
+                key: "romberg.time_to_stabilize_s",
+                mode: "IMPROVEMENT_PCT",
+                minDeltaPct: 15,
+                notes: "Melhorar controle postural estático."
+            },
+            {
+                key: "romberg.sway_area_mm2_EO",
+                mode: "IMPROVEMENT_PCT",
+                minDeltaPct: 20,
+                notes: "Reduzir área de oscilação com olhos abertos."
+            }
+        ],
+        clinicianNotesTemplate: "Foco em neuroplasticidade e segurança (prevenção de quedas). Use Romberg para monitorar controle de tronco.",
+        patientNotesTemplate: "Estamos trabalhando para que você caminhe com mais equilíbrio e segurança no dia a dia.",
+        evidence: [],
+        tags: ["neuro", "stroke", "balance", "gait"]
     }
 ];
 
