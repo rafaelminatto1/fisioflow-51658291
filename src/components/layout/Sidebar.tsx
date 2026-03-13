@@ -143,63 +143,26 @@ const avaliacoesSubmenu = [
 
 const operacionaisSubmenu = [
   { icon: CalendarDays, label: 'Eventos', href: '/eventos' },
-  { icon: ShoppingCart, label: 'Treinos/Vouchers', href: '/vouchers' },
-  { icon: Package, label: 'Estoque', href: '/inventory' },
+  { icon: LayoutGrid, label: 'Tarefas', href: '/tarefas-v2' },
+  { icon: Package, label: 'Estoque e Vouchers', href: '/inventory' },
   { icon: Video, label: 'Telemedicina', href: '/telemedicine' },
-  { icon: LinkIcon, label: 'Pré-Cadastro', href: '/pre-cadastro-admin' },
+  { icon: BookOpen, label: 'Wiki Clínica', href: '/wiki' },
+  { icon: Zap, label: 'Automação e APIs', href: '/automation' },
 ];
 
 const cadastrosSubmenu = [
-  { icon: FileText, label: 'Serviços', href: '/cadastros/servicos' },
-  { icon: Stethoscope, label: 'Médicos', href: '/cadastros/medicos' },
-  { icon: UserCheck, label: 'Contratados', href: '/cadastros/contratados' },
-  { icon: Building2, label: 'Fornecedores', href: '/cadastros/fornecedores' },
-  { icon: CalendarOff, label: 'Feriados', href: '/cadastros/feriados' },
-  { icon: FileCheck, label: 'Atestados', href: '/cadastros/atestados' },
-  { icon: FileSignature, label: 'Contratos', href: '/cadastros/contratos' },
-  { icon: FileText, label: 'Templates Evolução', href: '/cadastros/templates-evolucao' },
-  { icon: ClipboardList, label: 'Fichas Avaliação', href: '/cadastros/fichas-avaliacao' },
-  { icon: Target, label: 'Objetivos', href: '/cadastros/objetivos' },
+  { icon: FileText, label: 'Hub de Cadastros', href: '/cadastros' },
 ];
 
 const financeiroSubmenu = [
-  { icon: DollarSign, label: 'Dashboard', href: '/financial' },
-  { icon: FileText, label: 'Contas', href: '/financeiro/contas' },
-  { icon: TrendingUp, label: 'Fluxo de Caixa', href: '/financeiro/fluxo-caixa' },
-  { icon: Receipt, label: 'NFSe', href: '/financeiro/nfse' },
-  { icon: Receipt, label: 'Recibos', href: '/financeiro/recibos' },
-  { icon: FileText, label: 'Demonstrativo', href: '/financeiro/demonstrativo' },
-];
-
-const relatoriosSubmenu = [
-  { icon: BarChart3, label: 'Dashboard', href: '/reports' },
-  { icon: Users, label: 'Aniversariantes', href: '/relatorios/aniversariantes' },
-  { icon: TrendingUp, label: 'Taxa de Comparecimento', href: '/relatorios/comparecimento' },
-  { icon: Trophy, label: 'Performance da Equipe', href: '/performance-equipe' },
-  { icon: Stethoscope, label: 'Relatório Médico', href: '/relatorios/medico' },
-  { icon: FileText, label: 'Relatório Convênio', href: '/relatorios/convenio' },
-];
-
-const crmSubmenu = [
-  { icon: LayoutGrid, label: 'Painel Central CRM', href: '/crm' },
+  { icon: DollarSign, label: 'Financeiro Hub', href: '/financial' },
+  { icon: Receipt, label: 'Faturamento e Recibos', href: '/financeiro/recibos' },
 ];
 
 const marketingSubmenu = [
-  { icon: BarChart3, label: 'Dashboard', href: '/marketing/dashboard' },
-  { icon: Star, label: 'Avaliações Google', href: '/marketing/reviews' },
-  { icon: Search, label: 'Rastreador SEO', href: '/marketing/seo' },
-  { icon: Calendar, label: 'Calendário de Conteúdo', href: '/marketing/calendar' },
-  { icon: Sparkles, label: 'Gerador de Conteúdo', href: '/marketing/content-generator' },
-  { icon: ImageIcon, label: 'Antes e Depois', href: '/marketing/before-after' },
-  { icon: Film, label: 'Timelapse Evolução', href: '/marketing/timelapse' },
-  { icon: MessageSquare, label: 'Scripts WhatsApp', href: '/marketing/whatsapp' },
-  { icon: Video, label: 'Exportações', href: '/marketing/exports' },
-  { icon: Users, label: 'Programa de Indicação', href: '/marketing/referral' },
-  { icon: Link2, label: 'FisioLink', href: '/marketing/fisiolink' },
-  { icon: Calculator, label: 'Calculadora ROI', href: '/marketing/roi' },
-  { icon: CheckCircle2, label: 'Mito vs Verdade', href: '/marketing/myth-truth' },
-  { icon: Trophy, label: 'Gamificação Adesão', href: '/marketing/gamification' },
-  { icon: Settings, label: 'Configurações', href: '/marketing/settings' },
+  { icon: BarChart3, label: 'Marketing Hub', href: '/marketing/dashboard' },
+  { icon: Link2, label: 'FisioLink (Bio)', href: '/marketing/fisiolink' },
+  { icon: Users, label: 'Indicações', href: '/marketing/referral' },
 ];
 
 const configuracoesSubmenu = [
@@ -244,15 +207,7 @@ const gamificacaoSubmenu = [
 
 const maisSubmenu = [
   { icon: UserCircle, label: 'Portal Paciente', href: '/portal' },
-  { icon: BarChart3, label: 'Ocupação', href: '/ocupacao-fisioterapeutas' },
   { icon: FlaskConical, label: 'Testes Clínicos', href: '/clinical-tests' },
-  { icon: BookOpen, label: 'Wiki', href: '/wiki' },
-  { icon: Clock, label: 'Time Tracking', href: '/timetracking' },
-  { icon: Zap, label: 'Automação', href: '/automation' },
-  { icon: Plug, label: 'Integrações', href: '/integrations' },
-  { icon: LayoutGrid, label: 'Tarefas', href: '/tarefas' },
-  { icon: Sparkles, label: 'Tarefas V2', href: '/tarefas-v2' },
-  { icon: Clock, label: 'Lista de Espera', href: '/waitlist' },
 ];
 
 export function Sidebar() {
@@ -260,8 +215,6 @@ export function Sidebar() {
   const [cadastrosOpen, setCadastrosOpen] = useState(false);
   const [avaliacoesOpen, setAvaliacoesOpen] = useState(false);
   const [financeiroOpen, setFinanceiroOpen] = useState(false);
-  const [relatoriosOpen, setRelatoriosOpen] = useState(false);
-  const [crmOpen, setCrmOpen] = useState(false);
   const [configuracoesOpen, setConfiguracoesOpen] = useState(false);
   const [dashboardIaOpen, setDashboardIaOpen] = useState(false);
   const [googleAiOpen, setGoogleAiOpen] = useState(false);
@@ -279,16 +232,14 @@ export function Sidebar() {
   const isCadastrosActive = location.pathname.startsWith('/cadastros');
   const isAvaliacoesActive = location.pathname.startsWith('/dashboard/imagens');
   const isFinanceiroActive = location.pathname.startsWith('/financeiro') || location.pathname === '/financial';
-  const isRelatoriosActive = location.pathname.startsWith('/relatorios') || location.pathname === '/reports';
-  const isCrmActive = location.pathname.startsWith('/crm');
   const isConfiguracoesActive = location.pathname.startsWith('/configuracoes') || location.pathname === '/settings';
   const isDashboardIaActive = location.pathname.startsWith('/smart-dashboard') || location.pathname.startsWith('/smart-ai') || location.pathname === '/analytics';
   const isGoogleAiActive = location.pathname.startsWith('/ai/');
   const isAdminActive = location.pathname.startsWith('/admin');
-  const isOperacionaisActive = location.pathname.startsWith('/eventos') || location.pathname === '/vouchers' || location.pathname === '/inventory' || location.pathname === '/telemedicine' || location.pathname === '/pre-cadastro-admin';
+  const isOperacionaisActive = location.pathname.startsWith('/eventos') || location.pathname === '/inventory' || location.pathname === '/telemedicine' || location.pathname === '/tarefas-v2' || location.pathname === '/waitlist' || location.pathname.startsWith('/wiki');
   const isGamificacaoActive = location.pathname.startsWith('/gamification');
   const isMarketingActive = location.pathname.startsWith('/marketing');
-  const isMaisActive = location.pathname === '/portal' || location.pathname === '/ocupacao-fisioterapeutas' || location.pathname === '/clinical-tests' || location.pathname.startsWith('/wiki') || location.pathname === '/timetracking' || location.pathname === '/automation' || location.pathname === '/integrations' || location.pathname === '/tarefas' || location.pathname === '/tarefas-v2' || location.pathname === '/waitlist';
+  const isMaisActive = location.pathname === '/portal' || location.pathname === '/clinical-tests' || location.pathname === '/automation';
 
   const { preloadRoute } = useNavPreload();
 
@@ -600,17 +551,6 @@ export function Sidebar() {
               isOpen: financeiroOpen || isFinanceiroActive,
               onOpenChange: setFinanceiroOpen,
               isActive: isFinanceiroActive,
-              collapsed,
-              location
-            })}
-
-            {renderSubmenu({
-              icon: BarChart3,
-              label: 'Relatórios',
-              items: relatoriosSubmenu,
-              isOpen: relatoriosOpen || isRelatoriosActive,
-              onOpenChange: setRelatoriosOpen,
-              isActive: isRelatoriosActive,
               collapsed,
               location
             })}
