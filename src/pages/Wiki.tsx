@@ -1,6 +1,6 @@
 /**
  * Wiki Page - Knowledge Base colaborativa estilo Notion
- * Refatorada para ser modular e simplificada.
+ * Refatorada para ser modular e simplificada com navegação aprimorada.
  */
 
 import { useState, useMemo, useEffect } from 'react';
@@ -13,6 +13,8 @@ import {
   Star,
   Clock,
   Sparkles,
+  History,
+  Library,
 } from 'lucide-react';
 
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -71,6 +73,7 @@ export default function WikiPage() {
   const queryClient = useQueryClient();
 
   // Estados Locais
+  const [activeView, setActiveView] = useState<'dashboard' | 'knowledge-hub' | 'page'>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [selectedPage, setSelectedPage] = useState<WikiPage | null>(null);
@@ -152,11 +155,15 @@ export default function WikiPage() {
   // Efeitos
   useEffect(() => {
     if (!slug) {
+      if (activeView === 'page') setActiveView('dashboard');
       setSelectedPage(null);
       return;
     }
     const page = pages.find((p) => p.slug === slug || p.id === slug) ?? null;
-    setSelectedPage(page);
+    if (page) {
+      setSelectedPage(page);
+      setActiveView('page');
+    }
   }, [pages, slug]);
 
   useEffect(() => {
@@ -172,6 +179,7 @@ export default function WikiPage() {
   // Handlers
   const handlePageSelect = (page: WikiPage) => {
     setSelectedPage(page);
+    setActiveView('page');
     navigate(`/wiki/${page.slug}`);
   };
 
@@ -234,7 +242,11 @@ export default function WikiPage() {
         queryFn: () => wikiService.listPages(currentOrganizationId!),
       });
       const page = refreshed.find(p => p.id === savedId);
-      if (page) navigate(`/wiki/${page.slug}`);
+      if (page) {
+        setSelectedPage(page);
+        setActiveView('page');
+        navigate(`/wiki/${page.slug}`);
+      }
     } catch (err) {
       // Toast já exibido no hook
     }
@@ -264,6 +276,18 @@ export default function WikiPage() {
     }
   };
 
+  const handleDashboardSelect = () => {
+    setActiveView('dashboard');
+    setSelectedPage(null);
+    navigate('/wiki');
+  };
+
+  const handleKnowledgeHubSelect = () => {
+    setActiveView('knowledge-hub');
+    setSelectedPage(null);
+    navigate('/wiki');
+  };
+
   // Renderização Condicional: Editor
   if (isEditing) {
     return (
@@ -283,157 +307,170 @@ export default function WikiPage() {
     );
   }
 
-  // Renderização Condicional: Visualização de Página
-  if (slug && selectedPage) {
-    return (
-      <MainLayout>
-        <div className="h-screen flex">
-          <WikiSidebar
-            pages={pages}
-            categories={categories}
-            selectedPageId={selectedPage.id}
-            onPageSelect={handlePageSelect}
-            onCreatePage={handleCreatePage}
-          />
-          <div className="flex-1 overflow-auto">
-            <WikiPageViewer
-              page={selectedPage}
-              onEdit={() => setIsEditing(true)}
-              onBack={() => navigate('/wiki')}
-            />
-          </div>
-        </div>
-      </MainLayout>
-    );
-  }
-
-  // Renderização Principal: Dashboard da Wiki
+  // Renderização Principal
   return (
     <MainLayout>
       <div className="h-full flex overflow-hidden">
         <WikiSidebar
           pages={pages}
           categories={categories}
+          selectedPageId={selectedPage?.id}
           onPageSelect={handlePageSelect}
           onCreatePage={handleCreatePage}
+          onDashboardSelect={handleDashboardSelect}
+          onKnowledgeHubSelect={handleKnowledgeHubSelect}
         />
 
-        <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
-          {/* Triage Section */}
-          <section className="mb-10">
-            <div className="mb-6 flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight">Triagem de Documentacao</h2>
-                <p className="text-muted-foreground">Gerencie o fluxo de criação de conteúdo técnico e clínico.</p>
-              </div>
-              <Button onClick={handleCreatePage}>
-                <Plus className="mr-2 h-4 w-4" /> Nova Demanda
-              </Button>
-            </div>
-            
-            <WikiTriageBoard 
-              triageBuckets={triageBuckets}
-              onDragEnd={handleTriageDragEnd}
-              onOpenPage={handlePageSelect}
-              onMoveStatus={handleQuickStatusChange}
-              dragEnabled={!hasActiveTriageFilters}
-              wipLimits={TRIAGE_WIP_LIMITS}
-            />
-
-            <div className="mt-4 rounded-lg border p-3">
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Histórico de mudanças</p>
-              <div className="mt-2 space-y-2 text-xs">
-                {triageEvents.length === 0 && <p className="text-muted-foreground">Sem eventos recentes.</p>}
-                {triageEvents.slice(0, 6).map((event) => (
-                  <div key={event.id} className="flex items-center justify-between rounded border px-2 py-1">
-                    <span className="truncate">{event.page_title || event.page_id}: {event.from_status} → {event.to_status}</span>
-                    <span className="text-muted-foreground">{(event.created_at as any)?.toDate?.()?.toLocaleString('pt-BR') || '-'}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* Knowledge Hub Section */}
-          <KnowledgeHubView 
-            knowledgeStats={knowledgeStats}
-            knowledgeGroupsFiltered={knowledgeGroupsFiltered}
-            filteredKnowledge={filteredKnowledge}
-            auditItems={auditItems}
-            auditProfiles={queryClient.getQueryData(['knowledge-audit-profiles', []]) || {}}
-            semanticScoreMap={semanticScoreMap}
-            kbFilters={kbFilters}
-            setKbFilters={setKbFilters}
-            syncing={syncing}
-            indexing={indexing}
-            onSync={handleSyncArticles}
-            onIndex={handleIndexArticles}
-            onEditArticle={openAnnotationDialog}
-            onAuditArticle={setAuditArticle}
-            articleTitleMap={articleTitleMap}
-          />
-
-          {/* Pages Sections */}
-          <div className="space-y-8">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar páginas, conteúdo, tags..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          {activeView === 'page' && selectedPage ? (
+            <div className="animate-in fade-in duration-300 h-full">
+              <WikiPageViewer
+                page={selectedPage}
+                onEdit={() => setIsEditing(true)}
+                onBack={handleDashboardSelect}
               />
             </div>
-
-            {/* Favorites */}
-            {favorites.length > 0 && !searchQuery && (
-              <div>
-                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Star className="w-5 h-5 text-yellow-500" /> Populares
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {favorites.map((page) => (
-                    <WikiPageCard key={page.id} page={page} onClick={() => handlePageSelect(page)} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Recent */}
-            {!searchQuery && (
-              <div>
-                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Clock className="w-5 h-5" /> Recentes
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {recentPages.map((page) => (
-                    <WikiPageCard key={page.id} page={page} onClick={() => handlePageSelect(page)} />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* All Pages */}
-            <div>
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <FileText className="w-5 h-5" /> Todas as Páginas
-                {filteredPages.length > 0 && <Badge variant="secondary" className="ml-2">{filteredPages.length}</Badge>}
-              </h2>
-
-              {isLoading ? (
-                <div className="text-center py-12 text-muted-foreground">Carregando páginas...</div>
-              ) : filteredPages.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredPages.map((page) => (
-                    <WikiPageCard key={page.id} page={page} onClick={() => handlePageSelect(page)} onDelete={() => deletePage(page.id)} />
-                  ))}
-                </div>
-              ) : (
-                <Card><CardContent className="p-12 text-center text-muted-foreground">Nenhuma página encontrada.</CardContent></Card>
-              )}
+          ) : activeView === 'knowledge-hub' ? (
+            <div className="p-4 md:p-8 animate-in slide-in-from-bottom-4 duration-500">
+              <KnowledgeHubView 
+                knowledgeStats={knowledgeStats}
+                knowledgeGroupsFiltered={knowledgeGroupsFiltered}
+                filteredKnowledge={filteredKnowledge}
+                auditItems={auditItems}
+                auditProfiles={queryClient.getQueryData(['knowledge-audit-profiles', []]) || {}}
+                semanticScoreMap={semanticScoreMap}
+                kbFilters={kbFilters}
+                setKbFilters={setKbFilters}
+                syncing={syncing}
+                indexing={indexing}
+                onSync={handleSyncArticles}
+                onIndex={handleIndexArticles}
+                onEditArticle={openAnnotationDialog}
+                onAuditArticle={setAuditArticle}
+                articleTitleMap={articleTitleMap}
+              />
             </div>
-          </div>
+          ) : (
+            <div className="p-4 md:p-8 space-y-10 animate-in fade-in duration-500">
+              {/* Dashboard Header */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold tracking-tight">Wiki & Documentação</h1>
+                  <p className="text-muted-foreground">Central de conhecimento e triagem de documentação clínica.</p>
+                </div>
+                <Button onClick={handleCreatePage} size="lg" className="shadow-md">
+                  <Plus className="mr-2 h-5 w-5" /> Nova Página
+                </Button>
+              </div>
+
+              {/* Triage Section */}
+              <section className="space-y-6">
+                <div className="flex items-center gap-2 border-b pb-2">
+                  <Badge variant="secondary" className="px-2 py-0.5">Workflow</Badge>
+                  <h2 className="text-xl font-semibold">Triagem de Documentação</h2>
+                </div>
+                
+                <WikiTriageBoard 
+                  triageBuckets={triageBuckets}
+                  onDragEnd={handleTriageDragEnd}
+                  onOpenPage={handlePageSelect}
+                  onMoveStatus={handleQuickStatusChange}
+                  dragEnabled={!hasActiveTriageFilters}
+                  wipLimits={TRIAGE_WIP_LIMITS}
+                />
+
+                <div className="rounded-xl border bg-muted/5 p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <History className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-xs uppercase tracking-wider font-bold text-muted-foreground">Atividade Recente no Workflow</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+                    {triageEvents.length === 0 && <p className="text-muted-foreground italic col-span-full py-4 text-center">Nenhuma movimentação registrada.</p>}
+                    {triageEvents.slice(0, 6).map((event) => (
+                      <div key={event.id} className="flex flex-col gap-1 rounded-lg border bg-background p-3 shadow-sm">
+                        <span className="font-semibold text-foreground truncate">{event.page_title || 'Página sem título'}</span>
+                        <div className="flex items-center gap-2 text-muted-foreground">
+                          <Badge variant="outline" className="text-[10px] h-4 px-1">{event.from_status}</Badge>
+                          <span className="text-[10px]">→</span>
+                          <Badge variant="outline" className="text-[10px] h-4 px-1">{event.to_status}</Badge>
+                        </div>
+                        <span className="text-[10px] mt-1 opacity-60">{(event.created_at as any)?.toDate?.()?.toLocaleString('pt-BR') || '-'}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              {/* Explorer Section */}
+              <section className="space-y-8 pt-4 border-t">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                   <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="px-2 py-0.5">Explorar</Badge>
+                    <h2 className="text-xl font-semibold">Base de Conhecimento</h2>
+                  </div>
+                  
+                  <div className="relative w-full md:w-96">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar em todas as páginas..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 h-10 shadow-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Grid Lists */}
+                <div className="space-y-10">
+                  {/* Favorites */}
+                  {favorites.length > 0 && !searchQuery && (
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                        <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" /> Mais Visitadas
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {favorites.map((page) => (
+                          <WikiPageCard key={page.id} page={page} onClick={() => handlePageSelect(page)} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* All / Filtered Pages */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                      <FileText className="w-4 h-4" /> 
+                      {searchQuery ? `Resultados para "${searchQuery}"` : 'Todas as Páginas'}
+                      {filteredPages.length > 0 && <Badge variant="secondary" className="ml-2 font-mono">{filteredPages.length}</Badge>}
+                    </h3>
+
+                    {isLoading ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {[1, 2, 3].map(i => <div key={i} className="h-40 rounded-xl bg-muted animate-pulse" />)}
+                      </div>
+                    ) : filteredPages.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {filteredPages.map((page) => (
+                          <WikiPageCard key={page.id} page={page} onClick={() => handlePageSelect(page)} onDelete={() => deletePage(page.id)} />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded-2xl border border-dashed p-20 text-center space-y-4">
+                        <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                          <Search className="w-6 h-6 text-muted-foreground" />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="font-medium">Nenhuma página encontrada</p>
+                          <p className="text-sm text-muted-foreground">Tente ajustar seus filtros ou termos de busca.</p>
+                        </div>
+                        <Button variant="outline" onClick={() => setSearchQuery('')}>Limpar busca</Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
         </div>
       </div>
 
