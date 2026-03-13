@@ -67,17 +67,18 @@ export {
   QueryKeys,
 } from './useReactQueryOptimized';
 
-// Prefetching inteligente
-export {
-  usePrefetchOnHover,
-  usePrefetchRelated,
-  usePrefetchMultiple,
-  usePrefetchOnProximity,
-  usePrefetchPatientData,
-  usePrefetchUpcomingAppointments,
+// Prefetching - carrega dados antecipadamente
+export { 
+  usePrefetchOnHover, 
+  usePrefetchRelated, 
+  usePrefetchMultiple, 
+  usePrefetchOnProximity, 
+  usePrefetchPatientOnHover,
+  usePrefetchUpcomingAppointments, 
   usePrefetchEvolutionTemplates,
-  PrefetchOnHover,
+  PrefetchOnHover 
 } from './usePrefetch';
+
 
 // Queries com cancelamento automático
 export {
