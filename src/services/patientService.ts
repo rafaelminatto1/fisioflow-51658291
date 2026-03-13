@@ -1,4 +1,5 @@
 import { patientsApi } from '@/api/v2/patients';
+import { auditApi } from '@/lib/api/workers-client';
 import { PatientSchema } from '@/schemas/patient';
 import { AppError } from '@/lib/errors/AppError';
 import { ErrorHandler } from '@/lib/errors/ErrorHandler';
@@ -164,6 +165,22 @@ export const PatientService = {
         try {
             const response = await patientsApi.create(patient);
             const mapped = this.mapToApp(response.data);
+            
+            // Log de auditoria: Criação de Paciente
+            try {
+                await auditApi.create({
+                    action: 'INSERT',
+                    entity_type: 'patients',
+                    entity_id: mapped.id,
+                    metadata: { 
+                        name: mapped.full_name,
+                        email: mapped.email,
+                        status: mapped.status,
+                        timestamp: new Date().toISOString()
+                    }
+                });
+            } catch (e) { /* silent fail */ }
+
             return { data: mapped, error: null };
         } catch (error) {
             return { data: null, error: error instanceof Error ? error : new Error(String(error)) };
@@ -177,6 +194,21 @@ export const PatientService = {
         try {
             const response = await patientsApi.update(id, updates);
             const mapped = this.mapToApp(response.data);
+
+            // Log de auditoria: Atualização de Paciente
+            try {
+                await auditApi.create({
+                    action: 'UPDATE',
+                    entity_type: 'patients',
+                    entity_id: id,
+                    metadata: { 
+                        name: mapped.full_name,
+                        updates: Object.keys(updates),
+                        timestamp: new Date().toISOString()
+                    }
+                });
+            } catch (e) { /* silent fail */ }
+
             return { data: mapped, error: null };
         } catch (error) {
             return { data: null, error: error instanceof Error ? error : new Error(String(error)) };
@@ -188,7 +220,25 @@ export const PatientService = {
      */
     async deletePatient(id: string): Promise<ServiceResult<null>> {
         try {
+            // Pegamos o nome antes de deletar para o log ficar rico
+            const patientBefore = await this.getPatientById(id);
+            const name = patientBefore.data?.full_name || id;
+
             await patientsApi.delete(id);
+
+            // Log de auditoria: Exclusão de Paciente
+            try {
+                await auditApi.create({
+                    action: 'DELETE',
+                    entity_type: 'patients',
+                    entity_id: id,
+                    metadata: { 
+                        name: name,
+                        timestamp: new Date().toISOString()
+                    }
+                });
+            } catch (e) { /* silent fail */ }
+
             return { data: null, error: null };
         } catch (error) {
             return { data: null, error: error instanceof Error ? error : new Error(String(error)) };

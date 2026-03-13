@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
+import { PatientCombobox } from '@/components/ui/patient-combobox';
 import { 
   Activity, 
   Users, 
@@ -14,22 +14,41 @@ import {
   ClipboardList,
   Building2,
   User as UserIcon,
-  Search,
 } from 'lucide-react';
 import { useActivityLabPatients, useActivityLabSessions, useActivityLabClinic } from '@/hooks/useActivityLab';
+import { useActivePatients } from '@/hooks/usePatients';
 import { ActivityLabChart } from '@/components/ai/ActivityLabChart';
 import { ActivityLabComparisonChart } from '@/components/ai/ActivityLabComparisonChart';
 import type { 
   ActivityLabPatient, 
   ActivityLabSession, 
 } from '@/types/activityLab';
+import type { Patient } from '@/types';
 import { format } from 'date-fns';
 
-const normalizeSearch = (value: string) =>
-  value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase();
+function mapToActivityLabPatient(p: Patient | ActivityLabPatient): ActivityLabPatient {
+  if ('source' in p && p.source === 'activity_lab') return p;
+  
+  const patient = p as Patient;
+  return {
+    id: patient.id,
+    full_name: patient.full_name || patient.name,
+    name: patient.name,
+    birth_date: patient.birth_date || patient.birthDate || '',
+    gender: (patient.gender as any) || 'masculino',
+    phone: patient.phone || '',
+    email: patient.email || '',
+    cpf: patient.cpf || '',
+    status: patient.status === 'Ativo' ? 'active' : 'inactive',
+    is_active: true,
+    created_at: patient.created_at || (patient as any).createdAt || new Date().toISOString(),
+    updated_at: patient.updated_at || (patient as any).updatedAt || new Date().toISOString(),
+    main_condition: patient.mainCondition || '',
+    organization_id: (patient as any).organization_id || '',
+    incomplete_registration: !!patient.incomplete_registration,
+    source: 'activity_lab',
+  };
+}
 
 export default function ActivityLabPage() {
   const [selectedPatient, setSelectedPatient] = useState<ActivityLabPatient | null>(null);
@@ -37,43 +56,16 @@ export default function ActivityLabPage() {
   const [compareSession, setCompareSession] = useState<ActivityLabSession | null>(null);
   const [comparisonMode, setComparisonMode] = useState(false);
   const [activeTab, setActiveTab] = useState('patients');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 250);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [searchTerm]);
-
-  const { data: patients = [], isLoading: loadingPatients, isFetching: fetchingPatients } = useActivityLabPatients(debouncedSearchTerm);
+  const { data: activityLabPatients = [], isLoading: loadingLabPatients } = useActivityLabPatients();
+  const { data: allPatients = [], isLoading: loadingAllPatients } = useActivePatients();
   const { data: sessions = [], isLoading: loadingSessions } = useActivityLabSessions(selectedPatient?.id);
   const { data: clinic } = useActivityLabClinic();
-  const isInitialPatientsLoading = loadingPatients && patients.length === 0 && searchTerm.trim().length === 0;
+  
+  const isInitialLoading = (loadingLabPatients && activityLabPatients.length === 0) || (loadingAllPatients && allPatients.length === 0);
 
-  const filteredPatients = useMemo(() => {
-    const trimmedTerm = searchTerm.trim();
-    if (!trimmedTerm) return patients;
-
-    const normalizedTerm = normalizeSearch(trimmedTerm);
-    const numericSearch = trimmedTerm.replace(/\D/g, '');
-
-    return patients.filter((p) => {
-      const patientName = p.full_name || p.name || '';
-      const normalizedPatientName = normalizeSearch(patientName);
-      const patientCpf = (p.cpf || '').replace(/\D/g, '');
-
-      const nameMatches = normalizedPatientName.includes(normalizedTerm);
-      const cpfMatches = numericSearch ? patientCpf.includes(numericSearch) : false;
-
-      return nameMatches || cpfMatches;
-    });
-  }, [patients, searchTerm]);
-
-  const handleSelectPatient = (patient: ActivityLabPatient) => {
-    setSelectedPatient(patient);
+  const handleSelectPatient = (patient: Patient | ActivityLabPatient) => {
+    setSelectedPatient(mapToActivityLabPatient(patient));
     setActiveTab('sessions');
     setSelectedSession(null);
     setCompareSession(null);
@@ -96,7 +88,7 @@ export default function ActivityLabPage() {
     }
   };
 
-  if (isInitialPatientsLoading) {
+  if (isInitialLoading) {
     return (
       <MainLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -159,22 +151,21 @@ export default function ActivityLabPage() {
                       <Users className="w-5 h-5 text-indigo-500" />
                       Pacientes
                     </CardTitle>
-                    <div className="relative mt-2">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      {fetchingPatients && (
-                        <Activity className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-500 animate-spin" />
-                      )}
-                      <Input 
-                        placeholder="Buscar por nome ou CPF..." 
-                        className="pl-9 pr-9 bg-white border-slate-200"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                    <div className="mt-2">
+                      <PatientCombobox
+                        patients={allPatients}
+                        value={selectedPatient?.id}
+                        onValueChange={(id) => {
+                          const p = allPatients.find(p => p.id === id);
+                          if (p) handleSelectPatient(p);
+                        }}
+                        className="min-h-[44px] py-2"
                       />
                     </div>
                   </CardHeader>
                   <CardContent className="p-0">
                     <div className="divide-y max-h-[500px] overflow-y-auto custom-scrollbar">
-                      {filteredPatients.map((patient) => (
+                      {activityLabPatients.map((patient) => (
                         <button
                           key={patient.id}
                           onClick={() => handleSelectPatient(patient)}
@@ -198,17 +189,18 @@ export default function ActivityLabPage() {
                           }`} />
                         </button>
                       ))}
-                      {filteredPatients.length === 0 && (
+                      {activityLabPatients.length === 0 && (
                         <div className="p-12 text-center text-gray-400">
-                          {fetchingPatients ? (
+                          {loadingLabPatients ? (
                             <>
                               <Activity className="w-8 h-8 mx-auto mb-2 opacity-40 animate-spin" />
                               <p className="text-sm">Buscando pacientes...</p>
                             </>
                           ) : (
                             <>
-                              <Search className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                              <p className="text-sm">Nenhum paciente encontrado.</p>
+                              <Users className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                              <p className="text-sm">Nenhum paciente com testes vinculados.</p>
+                              <p className="text-xs mt-1">Use a busca acima para encontrar qualquer paciente.</p>
                             </>
                           )}
                         </div>
