@@ -21,15 +21,35 @@ export const THERAPIST_PLACEHOLDER = 'Escolher fisioterapeuta';
 const THERAPISTS_QUERY_KEY = ['therapists'] as const;
 
 async function fetchTherapists(): Promise<TherapistOption[]> {
-  const res = await profileApi.listTherapists();
-  const list = (res?.data ?? []) as TherapistOption[];
-  return list
-    .map((t) => ({
+  try {
+    const res = await profileApi.listTherapists();
+    const list = (res?.data ?? []) as TherapistOption[];
+    
+    const mappedList = list.map((t) => ({
       id: String(t.id),
       name: String(t.name ?? 'Sem nome').trim(),
       crefito: t.crefito ? String(t.crefito).trim() : undefined,
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+    }));
+
+    // Sempre incluir o perfil padrão solicitado
+    const hasDefault = mappedList.some(t => t.name.toLowerCase().includes('rafael minatto') || t.id === 'default-rafael');
+    if (!hasDefault) {
+      mappedList.push({
+        id: 'default-rafael',
+        name: 'Rafael Minatto',
+        crefito: '000000-F' // Placeholder, o usuário não forneceu
+      });
+    }
+
+    return mappedList.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+  } catch (error) {
+    console.error('Error fetching therapists, using default', error);
+    return [{
+      id: 'default-rafael',
+      name: 'Rafael Minatto',
+      crefito: '000000-F'
+    }];
+  }
 }
 
 export function useTherapists() {

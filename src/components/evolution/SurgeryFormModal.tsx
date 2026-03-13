@@ -37,7 +37,7 @@ import type { Surgery, SurgeryFormData } from '@/types/evolution';
 import { toast } from 'sonner';
 
 const formSchema = z.object({
-  surgery_name: z.string().min(2, 'Nome da cirurgia é obrigatório'),
+  surgery_name: z.string().optional(),
   surgery_date: z.string().min(1, 'Data da cirurgia é obrigatória'),
   affected_side: z.enum(['direito', 'esquerdo', 'bilateral', 'nao_aplicavel']),
   surgeon_name: z.string().optional(),
@@ -66,6 +66,8 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
 }) => {
   const queryClient = useQueryClient();
   const isEditing = !!surgery;
+  const [showOtherModal, setShowOtherModal] = React.useState(false);
+  const [newSurgeryType, setNewSurgeryType] = React.useState('');
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -80,6 +82,32 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
       complications: '',
     },
   });
+
+  const handleTypeChange = (val: string) => {
+    if (val === 'outro') {
+      setShowOtherModal(true);
+    } else {
+      form.setValue('surgery_type', val);
+      // Opcionalmente preencher o nome da cirurgia com o label do tipo se estiver vazio
+      if (!form.getValues('surgery_name')) {
+        const label = SURGERY_TYPES.find(t => t.value === val)?.label;
+        if (label) form.setValue('surgery_name', label);
+      }
+    }
+  };
+
+  const handleRegisterNewType = () => {
+    if (newSurgeryType.trim()) {
+      // Aqui poderíamos salvar em uma tabela de tipos customizados, 
+      // mas por simplificação vamos apenas usar o texto no campo surgery_type
+      form.setValue('surgery_type', newSurgeryType);
+      if (!form.getValues('surgery_name')) {
+        form.setValue('surgery_name', newSurgeryType);
+      }
+      setShowOtherModal(false);
+      setNewSurgeryType('');
+    }
+  };
 
   useEffect(() => {
     if (surgery) {
@@ -150,7 +178,7 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
   const onSubmit = (values: FormValues) => {
     const data: SurgeryFormData = {
       patient_id: patientId,
-      surgery_name: values.surgery_name,
+      surgery_name: values.surgery_name || values.surgery_type || 'Cirurgia não especificada',
       surgery_date: values.surgery_date,
       affected_side: values.affected_side,
       surgeon_name: values.surgeon_name || null,
@@ -176,6 +204,7 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
   const isPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -193,28 +222,14 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="surgery_name"
-                render={({ field }) => (
-                  <FormItem className="col-span-2">
-                    <FormLabel>Nome da Cirurgia *</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Ex: Reconstrução do LCA" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
                 name="surgery_type"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="col-span-2">
                     <FormLabel>Tipo de Cirurgia</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select onValueChange={handleTypeChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Selecione..." />
+                          <SelectValue placeholder="Selecione o tipo..." />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -225,6 +240,20 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="surgery_name"
+                render={({ field }) => (
+                  <FormItem className="col-span-2">
+                    <FormLabel>Nome Personalizado (Opcional)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ex: Artroscopia de Ombro" {...field} />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -293,13 +322,13 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
                 control={form.control}
                 name="hospital"
                 render={({ field }) => (
-                  <FormItem className="col-span-2">
+                  <FormItem>
                     <FormLabel className="flex items-center gap-1">
                       <Building2 className="h-3 w-3" />
-                      Hospital / Clínica
+                      Hospital
                     </FormLabel>
                     <FormControl>
-                      <Input placeholder="Nome do hospital" {...field} />
+                      <Input placeholder="Clínica/Hospital" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -314,7 +343,7 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
                     <FormLabel>Observações</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Detalhes adicionais sobre a cirurgia..."
+                        placeholder="Detalhes adicionais..."
                         rows={2}
                         {...field}
                       />
@@ -335,7 +364,7 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
                     </FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Registre complicações, se houver..."
+                        placeholder="Registre complicações..."
                         rows={2}
                         {...field}
                       />
@@ -377,5 +406,40 @@ export const SurgeryFormModal: React.FC<SurgeryFormModalProps> = ({
         </Form>
       </DialogContent>
     </Dialog>
+
+    <Dialog open={showOtherModal} onOpenChange={setShowOtherModal}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Outro Tipo de Cirurgia</DialogTitle>
+          <DialogDescription>
+            Digite o nome da cirurgia que não foi encontrada na lista.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <FormItem>
+            <FormLabel>Nome da Cirurgia</FormLabel>
+            <Input 
+              value={newSurgeryType} 
+              onChange={(e) => setNewSurgeryType(e.target.value)}
+              placeholder="Ex: Reconstrução de tendão"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleRegisterNewType();
+                }
+              }}
+            />
+          </FormItem>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setShowOtherModal(false)}>Cancelar</Button>
+          <Button onClick={handleRegisterNewType}>Confirmar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
+  );
+};
   );
 };
