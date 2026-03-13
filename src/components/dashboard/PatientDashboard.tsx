@@ -1,222 +1,311 @@
-// Dashboard de Paciente (Refatorado para usar RealtimeContext)
-// Agora usa dados centralizados do contexto, eliminando subscrições duplicadas
-
-import { useState, useMemo, useCallback } from 'react';
-import { StatCard } from './StatCard';
-import { ChartWidget } from './ChartWidget';
-import { toast } from '@/hooks/use-toast';
-import { useRealtime, type Appointment } from '@/contexts/RealtimeContext';
-import { Profile } from '@/types/auth';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useMemo } from 'react';
+import { differenceInCalendarDays, format, isAfter, startOfDay } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import {
-
-  Calendar,
   Activity,
+  Calendar,
+  CheckCircle2,
+  Clock3,
   MessageSquare,
-  Download,
-  Play,
-  CheckCircle,
-  TrendingUp
+  ShieldCheck,
+  TrendingUp,
 } from 'lucide-react';
-import { format } from 'date-fns';
-import { fisioLogger as logger } from '@/lib/errors/logger';
+import { useRealtime } from '@/contexts/RealtimeContext';
+import { Profile } from '@/types/auth';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChartWidget } from './ChartWidget';
+import { cn } from '@/lib/utils';
 
 interface PatientDashboardProps {
   _lastUpdate: Date;
   profile: Profile;
 }
 
-export function PatientDashboard({ _lastUpdate, profile }: PatientDashboardProps) {
-  // Usar contexto Realtime central para obter dados
-  const { appointments, metrics } = useRealtime();
+interface SummaryCardProps {
+  icon: React.ElementType;
+  label: string;
+  value: string | number;
+  description: string;
+  tone?: 'primary' | 'emerald' | 'amber';
+}
 
-  // Estado local para dados específicos (opcional)
-  const [upcomingAppointments, setUpcomingAppointments] = useState<Appointment[]>([]);
-  const [todayExercises, setTodayExercises] = useState<Array<{ date: string; value: number }>>([]);
-  const [progressData, setProgressData] = useState<Array<{ date: string, value: number }>>([]);
-  const [messages, setMessages] = useState<Array<{ type: 'success' | 'error', text: string }>>([]);
+const toneStyles = {
+  primary: 'bg-primary/10 text-primary',
+  emerald: 'bg-emerald-500/10 text-emerald-600',
+  amber: 'bg-amber-500/10 text-amber-600',
+};
 
-  /**
-   * Carregar dados específicos do paciente
-   * Usa os dados do contexto Realtime como base
-   */
-  const loadDashboardData = useCallback(async () => {
-    try {
-      // Próximos agendamentos (limitados a 5 do contexto)
-      const sortedAppointments = [...appointments]
-        .sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
-        .slice(0, 5);
+function normalizeName(name?: string | null) {
+  return (name || '').trim().toLocaleLowerCase('pt-BR');
+}
 
-      // Exercícios de hoje
-      const todayExercisesData = Array.from({ length: 5 }, (_, i) => ({
-        date: format(new Date(), 'dd/MM'),
-        value: Math.floor(Math.random() * 30) + (i * 5),
-      }));
+function SummaryCard({ icon: Icon, label, value, description, tone = 'primary' }: SummaryCardProps) {
+  return (
+    <Card className="rounded-[1.75rem] border-border/60 bg-background/85 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-md">
+      <CardHeader className="space-y-3 pb-2">
+        <div className={cn('flex h-10 w-10 items-center justify-center rounded-2xl', toneStyles[tone])}>
+          <Icon className="h-4 w-4" />
+        </div>
+        <CardTitle className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          {label}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="text-3xl font-bold tracking-tight text-foreground">{value}</div>
+        <p className="mt-2 text-xs leading-5 text-muted-foreground">{description}</p>
+      </CardContent>
+    </Card>
+  );
+}
 
-      // Progresso do tratamento
-      const progressChartData = Array.from({ length: 7 }, (_, i) => ({
-        date: format(new Date(Date.now() - (6 - i) * 24 * 60 * 60 * 1000), 'dd/MM'),
-        value: Math.floor(Math.random() * 30) + (i * 5),
-      }));
+export function PatientDashboard({ profile }: PatientDashboardProps) {
+  const { appointments, lastUpdate, isSubscribed } = useRealtime();
 
-      setUpcomingAppointments(sortedAppointments);
-      setTodayExercises(todayExercisesData);
-      setProgressData(progressChartData);
+  const dashboardData = useMemo(() => {
+    const today = startOfDay(new Date());
+    const patientName = normalizeName(profile.full_name);
+    const patientAppointments = appointments
+      .filter((appointment) => normalizeName(appointment.patient_name) === patientName)
+      .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
 
-      // Mensagens de notificação
-      if (metrics.totalAppointments > 0 && sortedAppointments.length > 0) {
-        setMessages([
-          {
-            type: 'success',
-            text: `${metrics.totalAppointments} agendamentos encontrados`
-          }
-        ]);
-      }
+    const upcomingAppointments = patientAppointments.filter(
+      (appointment) => appointment.status !== 'cancelled' && isAfter(new Date(appointment.start_time), today)
+    );
+    const pastAppointments = patientAppointments.filter(
+      (appointment) => appointment.status !== 'cancelled' && !isAfter(new Date(appointment.start_time), today)
+    );
 
-    } catch (error) {
-      logger.error('Erro ao carregar dados do dashboard', error, 'PatientDashboard');
-      toast({
-        variant: 'destructive',
-        title: 'Erro',
-        description: 'Não foi possível carregar os dados do paciente'
-      });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appointments, metrics, profile]);  
+    const confirmationRate =
+      patientAppointments.length > 0
+        ? Math.round(
+            (patientAppointments.filter((appointment) => appointment.status === 'confirmed').length /
+              patientAppointments.length) *
+              100
+          )
+        : 0;
 
-  const stats = useMemo(() => ({
-    nextAppointments: Math.min(upcomingAppointments.length, 5),
-    todayExercises: todayExercises.length,
-    treatmentProgress: progressData.length > 0
-      ? Math.round(progressData.reduce((sum, p) => sum + p.value, 0) / progressData.length)
-      : 0,
-    totalMessages: messages.length,
-  }), [upcomingAppointments, todayExercises, progressData, messages]);
+    const nextAppointment = upcomingAppointments[0] || null;
+    const daysUntilNext = nextAppointment
+      ? Math.max(differenceInCalendarDays(new Date(nextAppointment.start_time), today), 0)
+      : null;
+
+    const cadenceData = patientAppointments.slice(-6).map((appointment, index) => ({
+      name: format(new Date(appointment.start_time), 'dd/MM'),
+      value: index + 1,
+    }));
+
+    return {
+      patientAppointments,
+      upcomingAppointments,
+      pastAppointments,
+      confirmationRate,
+      nextAppointment,
+      daysUntilNext,
+      cadenceData,
+    };
+  }, [appointments, profile.full_name]);
+
+  const {
+    patientAppointments,
+    upcomingAppointments,
+    pastAppointments,
+    confirmationRate,
+    nextAppointment,
+    daysUntilNext,
+    cadenceData,
+  } = dashboardData;
+
+  const careStatus =
+    upcomingAppointments.length > 0
+      ? 'Plano ativo'
+      : patientAppointments.length > 0
+        ? 'Sem nova sessao marcada'
+        : 'Sem agenda vinculada';
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Welcome Section */}
-      <div className="bg-gradient-primary rounded-xl p-6 text-primary-foreground shadow-medical">
-        <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      <Card className="rounded-[2rem] border-border/60 bg-background/75 shadow-sm backdrop-blur-xl">
+        <CardContent className="flex flex-col gap-4 p-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="text-2xl font-bold mb-2">
-              Olá, {profile.full_name?.split(' ')[0]}!
-            </h1>
-            <p className="text-primary-foreground/90">
-              Acompanhe seu tratamento e evolução
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/75">
+              Minha jornada
+            </p>
+            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
+              {profile.full_name?.split(' ')[0]}, acompanhe seu cuidado
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Sessões, próximos passos e sinais de acompanhamento em uma leitura só.
             </p>
           </div>
-          <div className="hidden md:block">
-            <Activity className="w-16 h-16 text-primary-foreground/80" />
+
+          <div className="grid gap-3 sm:grid-cols-2 lg:w-[420px]">
+            <div className="rounded-2xl border border-border/60 bg-background px-4 py-3 shadow-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Status do cuidado
+              </p>
+              <p className="mt-2 text-sm font-semibold text-foreground">{careStatus}</p>
+            </div>
+            <div className="rounded-2xl border border-border/60 bg-background px-4 py-3 shadow-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Última atualização
+              </p>
+              <p className="mt-2 text-sm font-semibold text-foreground">
+                {format(new Date(lastUpdate), 'HH:mm', { locale: ptBR })}
+              </p>
+            </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-testid="stats-cards">
-        <StatCard
-          title="Próximas Consultas"
-          value={stats.nextAppointments}
-          change={stats.nextAppointments > 0 ? 'positivo' : undefined}
-          changeType={stats.nextAppointments > 0 ? 'positive' : 'neutral'}
-          icon={<Calendar className="w-5 h-5 text-primary" />}
-          gradient
-          loading={false}
+      <div className="grid gap-4 md:grid-cols-3" data-testid="stats-cards">
+        <SummaryCard
+          icon={Calendar}
+          label="Próxima sessão"
+          value={nextAppointment ? (daysUntilNext === 0 ? 'Hoje' : `${daysUntilNext}d`) : 'Sem data'}
+          description={
+            nextAppointment
+              ? format(new Date(nextAppointment.start_time), "EEEE, d 'de' MMM", { locale: ptBR })
+              : 'Nenhuma sessão futura confirmada'
+          }
         />
-
-        <StatCard
-          title="Exercícios Hoje"
-          value={stats.todayExercises}
-          change={stats.todayExercises > 0 ? 'concluído' : undefined}
-          changeType={stats.todayExercises > 0 ? 'positive' : 'neutral'}
-          icon={<Activity className="w-5 h-5 text-secondary" />}
-          gradient
-          loading={false}
+        <SummaryCard
+          icon={CheckCircle2}
+          label="Sessões realizadas"
+          value={pastAppointments.length}
+          description="Atendimentos não cancelados já concluídos no seu histórico"
+          tone="emerald"
         />
-
-        <StatCard
-          title="Progresso do Tratamento"
-          value={`${stats.treatmentProgress}%`}
-          change={stats.treatmentProgress >= 80 ? 'positivo' : stats.treatmentProgress >= 50 ? 'estável' : 'atenção'}
-          changeType={stats.treatmentProgress >= 80 ? 'positive' : stats.treatmentProgress >= 50 ? 'neutral' : 'negative'}
-          icon={<TrendingUp className="w-5 h-5 text-orange-500" />}
-          gradient
-          loading={false}
-        />
-
-        <StatCard
-          title="Mensagens"
-          value={stats.totalMessages}
-          change="neutro"
-          changeType="neutral"
-          icon={<MessageSquare className="w-5 h-5 text-blue-500" />}
-          gradient
-          loading={false}
+        <SummaryCard
+          icon={ShieldCheck}
+          label="Confirmação"
+          value={`${confirmationRate}%`}
+          description="Sessões confirmadas em relação ao total localizado"
+          tone="amber"
         />
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex gap-4 mt-6" data-testid="today-schedule">
-        <Button
-          onClick={loadDashboardData}
-          variant="default"
-        >
-          <Download className="mr-2 h-4 w-4" />
-          Atualizar Dados
-        </Button>
-
-        <Button
-          onClick={() => window.location.reload()}
-          variant="outline"
-        >
-          <Play className="mr-2 h-4 w-4" />
-          Recarregar
-        </Button>
-      </div>
-
-      {/* Progress Section */}
-      {messages.length > 0 && (
-        <div className="mt-6 space-y-4">
-          {messages.map((msg, index) => (
-            <div
-              key={index}
-              className={`p-4 rounded-lg border ${msg.type === 'success'
-                  ? 'bg-green-500/10 border-green-500'
-                  : 'bg-red-500/10 border-red-500'
-                }`}
-            >
-              <div className="flex items-start gap-3">
-                {msg.type === 'success' ? (
-                  <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
-                ) : (
-                  <MessageSquare className="h-5 w-5 text-red-600 flex-shrink-0" />
-                )}
-                <p className="text-sm">{msg.text}</p>
+      <div className="grid gap-6 lg:grid-cols-12">
+        <Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl lg:col-span-7" data-testid="today-schedule">
+          <CardHeader className="border-b border-border/60 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <Clock3 className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/75">
+                  Próximos passos
+                </p>
+                <h3 className="text-lg font-semibold tracking-tight text-foreground">
+                  Agenda do tratamento
+                </h3>
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          </CardHeader>
+          <CardContent className="space-y-3 p-5">
+            {upcomingAppointments.length > 0 ? (
+              upcomingAppointments.slice(0, 4).map((appointment) => (
+                <div
+                  key={appointment.id}
+                  className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-background px-4 py-4 shadow-sm md:flex-row md:items-center md:justify-between"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {format(new Date(appointment.start_time), "EEEE, d 'de' MMMM", { locale: ptBR })}
+                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {format(new Date(appointment.start_time), 'HH:mm', { locale: ptBR })}
+                      {appointment.type ? ` • ${appointment.type}` : ''}
+                    </p>
+                  </div>
+                  <div className="inline-flex w-fit items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+                    <span className="h-2 w-2 rounded-full bg-primary" />
+                    {appointment.status === 'confirmed' ? 'Confirmada' : 'Pendente'}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-2xl border border-dashed border-border bg-muted/20 px-5 py-8 text-center">
+                <p className="text-sm font-semibold text-foreground">Nenhuma sessão futura encontrada.</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Quando uma nova sessão for agendada, ela aparecerá aqui.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-      {/* Progress Section */}
-      {progressData.length > 0 && (
-        <div className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Evolução do Progresso</CardTitle>
-              <CardDescription>Histórico do progresso do tratamento</CardDescription>
+        <div className="space-y-6 lg:col-span-5">
+          <Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl">
+            <CardHeader className="border-b border-border/60 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600">
+                  <TrendingUp className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-600/80">
+                    Evolução
+                  </p>
+                  <h3 className="text-lg font-semibold tracking-tight text-foreground">Ritmo recente</h3>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-5">
               <ChartWidget
-                title="Evolução do Progresso"
-                data={progressData.map((p) => ({ name: p.date, value: p.value }))}
-                height={200}
+                title="Linha de sessões"
+                data={cadenceData}
+                height={220}
               />
             </CardContent>
           </Card>
+
+          <Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl">
+            <CardHeader className="border-b border-border/60 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-600">
+                  <MessageSquare className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-600/80">
+                    Orientações
+                  </p>
+                  <h3 className="text-lg font-semibold tracking-tight text-foreground">Leitura rápida</h3>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3 p-5 text-sm text-muted-foreground">
+              <div className="rounded-2xl border border-border/60 bg-background px-4 py-3 shadow-sm">
+                <div className="flex items-center gap-2 font-semibold text-foreground">
+                  <Activity className="h-4 w-4 text-primary" />
+                  Histórico localizado
+                </div>
+                <p className="mt-2">{patientAppointments.length} sessão(ões) encontradas para o seu cadastro.</p>
+              </div>
+
+              <div className="rounded-2xl border border-border/60 bg-background px-4 py-3 shadow-sm">
+                <div className="flex items-center gap-2 font-semibold text-foreground">
+                  <Calendar className="h-4 w-4 text-primary" />
+                  Próxima ação
+                </div>
+                <p className="mt-2">
+                  {nextAppointment
+                    ? `Sua próxima sessão está prevista para ${format(new Date(nextAppointment.start_time), "d 'de' MMMM 'às' HH:mm", { locale: ptBR })}.`
+                    : 'No momento não há uma nova sessão agendada.'}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-border/60 bg-background px-4 py-3 shadow-sm">
+                <div className="flex items-center gap-2 font-semibold text-foreground">
+                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                  Conexão
+                </div>
+                <p className="mt-2">
+                  {isSubscribed ? 'Sincronização ativa com a agenda em tempo quase real.' : 'Sincronização temporariamente indisponível.'}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      )}
+      </div>
     </div>
   );
 }

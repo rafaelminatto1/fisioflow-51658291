@@ -50,10 +50,17 @@ export async function signIn(email: string, password: string): Promise<AuthResul
  * Entrar com Google
  */
 export async function signInWithGoogle(): Promise<AuthResult> {
+  return signInWithOAuth('google');
+}
+
+/**
+ * Entrar com provedor OAuth genérico
+ */
+export async function signInWithOAuth(provider: 'google' | 'github' | 'apple'): Promise<AuthResult> {
   if (!isNeonAuthEnabled()) {
     throw new Error('Neon Auth não configurado. Defina VITE_NEON_AUTH_URL.');
   }
-  const { data, error } = await authClient.signIn.social({ provider: 'google' });
+  const { data, error } = await authClient.signIn.social({ provider });
   if (error) throw new Error(error.message);
   invalidateNeonTokenCache();
   return { user: data.user as unknown as NeonUser };

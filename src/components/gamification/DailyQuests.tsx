@@ -3,11 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
-import * as Icons from 'lucide-react';
-import { CheckCircle2, Circle, Trophy } from 'lucide-react';
+import { CheckCircle2, Circle, Star, Trophy } from 'lucide-react';
 import { DailyQuestItem } from '@/hooks/useGamification';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGamificationSound } from '@/hooks/useGamificationSound';
+import { getGamificationIcon } from './iconMap';
 
 interface DailyQuestsProps {
     quests: DailyQuestItem[];
@@ -76,7 +76,7 @@ export function DailyQuests({ quests, onComplete, isLoading }: DailyQuestsProps)
                         ) : (
                             <AnimatePresence mode='popLayout'>
                                 {quests.map((quest) => {
-                                    const IconComponent = (Icons as Record<string, React.ComponentType<{ className?: string }>>)[quest.icon] || Icons.Star;
+                                    const IconComponent = getGamificationIcon(quest.icon, Star);
 
                                     return (
                                         <motion.div
