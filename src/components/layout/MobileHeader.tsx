@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import fisioflowLogo from '@/assets/logo.avif';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import {
 
   LayoutDashboard,
@@ -86,7 +87,7 @@ export function MobileHeader() {
               {/* Header do Menu */}
               <div className="p-6 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-center bg-slate-50/50 dark:bg-slate-900/30">
                 <Link to="/agenda" className="flex items-center gap-3 active:scale-95 transition-transform">
-                  <img src={fisioflowLogo} alt="FisioFlow" className="h-9 w-auto" />
+                  <OptimizedImage src={fisioflowLogo} alt="FisioFlow" width={100} className="h-9 w-auto" priority />
                 </Link>
               </div>
 
@@ -147,7 +148,7 @@ export function MobileHeader() {
 
         {/* Logo */}
         <Link to="/agenda" className="flex items-center gap-2 active:scale-95 transition-transform">
-          <img src={fisioflowLogo} alt="FisioFlow" className="h-7 w-auto" />
+          <OptimizedImage src={fisioflowLogo} alt="FisioFlow" width={80} className="h-7 w-auto" priority />
         </Link>
 
         {/* Notificações */}
