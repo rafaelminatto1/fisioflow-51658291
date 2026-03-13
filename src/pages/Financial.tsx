@@ -48,6 +48,7 @@ import { RecibosContent } from './financeiro/RecibosPage';
 import { NFSeContent } from './financeiro/NFSePage';
 
 const PackagesManager = lazy(() => import('@/components/financial').then(m => ({ default: m.PackagesManager })));
+const FinancialAIAdvisor = lazy(() => import('@/components/financial').then(m => ({ default: m.FinancialAIAdvisor })));
 
 const Financial = () => {
   const [activeTab, setActiveTab] = useState('overview');
