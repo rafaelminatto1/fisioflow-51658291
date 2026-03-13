@@ -7,7 +7,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { limit = '100', offset = '0' } = c.req.query();
   const limitNum = Math.min(500, Math.max(1, Number(limit) || 100));
   const offsetNum = Math.max(0, Number(offset) || 0);
@@ -21,7 +21,7 @@ app.get('/', requireAuth, async (c) => {
 
 app.get('/last-number', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query(
     'SELECT MAX(numero_recibo)::bigint AS last_number FROM recibos WHERE organization_id = $1',
     [user.organizationId],
@@ -31,7 +31,7 @@ app.get('/last-number', requireAuth, async (c) => {
 
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const lastNumberRes = await pool.query(

@@ -7,7 +7,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const result = await db.query(
     `SELECT * FROM user_invitations WHERE organization_id = $1 ORDER BY created_at DESC`,
     [user.organizationId]
@@ -18,7 +18,7 @@ app.get('/', requireAuth, async (c) => {
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
   const body = await c.req.json();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   // Check for pending invitation with same email
   const existing = await db.query(
@@ -45,7 +45,7 @@ app.patch('/:id', requireAuth, async (c) => {
   const user = c.get('user');
   const id = c.req.param('id');
   const body = await c.req.json();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   const result = await db.query(
     `UPDATE user_invitations SET email = COALESCE($1, email), role = COALESCE($2, role),
@@ -60,7 +60,7 @@ app.patch('/:id', requireAuth, async (c) => {
 app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
   const id = c.req.param('id');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   await db.query(`DELETE FROM user_invitations WHERE id = $1 AND organization_id = $2`, [id, user.organizationId]);
   return c.json({ ok: true });
 });
@@ -68,7 +68,7 @@ app.delete('/:id', requireAuth, async (c) => {
 // Validate token (public - for onboarding flow)
 app.get('/validate/:token', async (c) => {
   const token = c.req.param('token');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const result = await db.query(
     `SELECT * FROM user_invitations WHERE token = $1 AND used_at IS NULL AND expires_at > NOW()`,
     [token]
@@ -80,7 +80,7 @@ app.get('/validate/:token', async (c) => {
 // Mark invitation as used
 app.post('/use/:token', async (c) => {
   const token = c.req.param('token');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const result = await db.query(
     `UPDATE user_invitations SET used_at = NOW() WHERE token = $1 AND used_at IS NULL AND expires_at > NOW() RETURNING *`,
     [token]

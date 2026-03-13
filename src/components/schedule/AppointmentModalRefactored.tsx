@@ -407,6 +407,15 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     return typeof watchedDateStr === 'string' ? parseISO(watchedDateStr) : watchedDateStr;
   }, [watchedDateStr]);
 
+  const selectedPatientName = useMemo(() => {
+    if (lastCreatedPatient?.id === watchedPatientId) {
+      return lastCreatedPatient.name;
+    }
+
+    const selectedPatient = activePatients?.find((patient) => patient.id === watchedPatientId);
+    return selectedPatient?.full_name || selectedPatient?.name || normalizedAppointmentPatientName || '';
+  }, [activePatients, lastCreatedPatient, normalizedAppointmentPatientName, watchedPatientId]);
+
   const watchedTherapistId = watch('therapist_id');
   const effectiveTherapistId = (watchedTherapistId && String(watchedTherapistId).trim()) || user?.uid || '';
 
@@ -875,6 +884,7 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                     watchPaymentMethod={watchPaymentMethod || ''}
                     watchPaymentAmount={watchPaymentAmount || 0}
                     patientId={watchedPatientId}
+                    patientName={selectedPatientName}
                   />
                 </div>
 

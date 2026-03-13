@@ -69,7 +69,7 @@ async function ensureTelemedicineSchema(pool: Pool) {
 
 app.get('/rooms', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     await ensureTelemedicineSchema(pool);
 
@@ -97,7 +97,7 @@ app.get('/rooms', requireAuth, async (c) => {
 
 app.get('/rooms/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
     await ensureTelemedicineSchema(pool);
@@ -127,7 +127,7 @@ app.get('/rooms/:id', requireAuth, async (c) => {
 
 app.post('/rooms', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     await ensureTelemedicineSchema(pool);
     const body = (await c.req.json()) as Record<string, unknown>;
@@ -174,7 +174,7 @@ app.post('/rooms', requireAuth, async (c) => {
 
 app.post('/rooms/:id/start', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
     await ensureTelemedicineSchema(pool);
@@ -219,7 +219,7 @@ app.post('/rooms/:id/start', requireAuth, async (c) => {
 
 app.put('/rooms/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
     await ensureTelemedicineSchema(pool);

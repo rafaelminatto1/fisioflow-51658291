@@ -33,7 +33,7 @@ async function tableHasColumn(pool: any, tableName: string, columnName: string) 
 
 app.get('/activities', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { status, categoria, limit = '50', offset = '0' } = c.req.query();
 
   const conditions = ['organization_id = $1'];
@@ -51,7 +51,7 @@ app.get('/activities', requireAuth, async (c) => {
 
 app.get('/activities/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await pool.query(
@@ -64,7 +64,7 @@ app.get('/activities/:id', requireAuth, async (c) => {
 
 app.post('/activities', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const b = (await c.req.json()) as Record<string, unknown>;
   const result = await pool.query(
     `INSERT INTO eventos (organization_id, nome, descricao, categoria, local, data_inicio, data_fim, hora_inicio, hora_fim, gratuito, link_whatsapp, valor_padrao_prestador, status)
@@ -78,7 +78,7 @@ app.post('/activities', requireAuth, async (c) => {
 
 app.put('/activities/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const b = (await c.req.json()) as Record<string, unknown>;
   const result = await pool.query(
@@ -96,7 +96,7 @@ app.put('/activities/:id', requireAuth, async (c) => {
 
 app.delete('/activities/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   await pool.query('DELETE FROM eventos WHERE id=$1 AND organization_id=$2', [id, user.organizationId]);
   return c.json({ ok: true });
@@ -106,7 +106,7 @@ app.delete('/activities/:id', requireAuth, async (c) => {
 
 app.get('/salas', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query(
     'SELECT * FROM salas WHERE organization_id=$1 ORDER BY nome', [user.organizationId]);
   try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
@@ -114,7 +114,7 @@ app.get('/salas', requireAuth, async (c) => {
 
 app.post('/salas', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const b = (await c.req.json()) as Record<string, unknown>;
   const result = await pool.query(
     'INSERT INTO salas (organization_id, nome, capacidade, descricao, cor, ativo) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
@@ -125,7 +125,7 @@ app.post('/salas', requireAuth, async (c) => {
 
 app.put('/salas/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const b = (await c.req.json()) as Record<string, unknown>;
   const result = await pool.query(
@@ -139,7 +139,7 @@ app.put('/salas/:id', requireAuth, async (c) => {
 
 app.delete('/salas/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   await pool.query('DELETE FROM salas WHERE id=$1 AND organization_id=$2', [id, user.organizationId]);
   return c.json({ ok: true });
@@ -149,7 +149,7 @@ app.delete('/salas/:id', requireAuth, async (c) => {
 
 app.get('/servicos', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query(
     'SELECT * FROM servicos WHERE organization_id=$1 ORDER BY nome', [user.organizationId]);
   try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
@@ -157,7 +157,7 @@ app.get('/servicos', requireAuth, async (c) => {
 
 app.post('/servicos', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const b = (await c.req.json()) as Record<string, unknown>;
   const result = await pool.query(
     'INSERT INTO servicos (organization_id, nome, descricao, duracao, valor, cor, ativo) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
@@ -168,7 +168,7 @@ app.post('/servicos', requireAuth, async (c) => {
 
 app.put('/servicos/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const b = (await c.req.json()) as Record<string, unknown>;
   const result = await pool.query(
@@ -182,7 +182,7 @@ app.put('/servicos/:id', requireAuth, async (c) => {
 
 app.delete('/servicos/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   await pool.query('DELETE FROM servicos WHERE id=$1 AND organization_id=$2', [id, user.organizationId]);
   return c.json({ ok: true });
@@ -192,7 +192,7 @@ app.delete('/servicos/:id', requireAuth, async (c) => {
 
 app.get('/contratados', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const hasOrg = await tableHasColumn(pool, 'contratados', 'organization_id');
 
   const result = hasOrg
@@ -204,7 +204,7 @@ app.get('/contratados', requireAuth, async (c) => {
 
 app.post('/contratados', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
   if (!body.nome) return c.json({ error: 'nome é obrigatório' }, 400);
 
@@ -243,7 +243,7 @@ app.post('/contratados', requireAuth, async (c) => {
 
 app.put('/contratados/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
   const hasOrg = await tableHasColumn(pool, 'contratados', 'organization_id');
@@ -283,7 +283,7 @@ app.put('/contratados/:id', requireAuth, async (c) => {
 
 app.get('/checklist', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const eventoId = c.req.query('eventoId');
   if (!eventoId) return c.json({ error: 'eventoId é obrigatório' }, 400);
 
@@ -302,7 +302,7 @@ app.get('/checklist', requireAuth, async (c) => {
 
 app.post('/checklist', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
   if (!body.evento_id) return c.json({ error: 'evento_id é obrigatório' }, 400);
   if (!body.titulo) return c.json({ error: 'titulo é obrigatório' }, 400);
@@ -330,7 +330,7 @@ app.post('/checklist', requireAuth, async (c) => {
 
 app.put('/checklist/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -359,7 +359,7 @@ app.put('/checklist/:id', requireAuth, async (c) => {
 
 app.delete('/checklist/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   await pool.query('DELETE FROM checklist_items WHERE id = $1 AND organization_id = $2', [
@@ -372,7 +372,7 @@ app.delete('/checklist/:id', requireAuth, async (c) => {
 
 app.delete('/contratados/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const hasOrg = await tableHasColumn(pool, 'contratados', 'organization_id');
 
@@ -388,7 +388,7 @@ app.delete('/contratados/:id', requireAuth, async (c) => {
 
 app.get('/activity-contractors', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { eventoId, contratadoId } = c.req.query();
 
   const conditions: string[] = ['e.organization_id = $1'];
@@ -409,7 +409,7 @@ app.get('/activity-contractors', requireAuth, async (c) => {
 
 app.post('/activity-contractors', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.evento_id || !body.contratado_id) {
@@ -461,7 +461,7 @@ app.post('/activity-contractors', requireAuth, async (c) => {
 
 app.put('/activity-contractors/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -491,7 +491,7 @@ app.put('/activity-contractors/:id', requireAuth, async (c) => {
 
 app.delete('/activity-contractors/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   await pool.query(
@@ -510,7 +510,7 @@ app.delete('/activity-contractors/:id', requireAuth, async (c) => {
 
 app.get('/participantes', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { eventoId, limit = '100', offset = '0' } = c.req.query();
 
   const conditions: string[] = ['e.organization_id = $1'];
@@ -532,7 +532,7 @@ app.get('/participantes', requireAuth, async (c) => {
 
 app.post('/participantes', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.evento_id || !body.nome) return c.json({ error: 'evento_id e nome são obrigatórios' }, 400);
@@ -580,7 +580,7 @@ app.post('/participantes', requireAuth, async (c) => {
 
 app.put('/participantes/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -610,7 +610,7 @@ app.put('/participantes/:id', requireAuth, async (c) => {
 
 app.delete('/participantes/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   await pool.query(
@@ -629,7 +629,7 @@ app.delete('/participantes/:id', requireAuth, async (c) => {
 
 app.get('/activity-templates', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   const result = await pool.query(
     `
@@ -646,7 +646,7 @@ app.get('/activity-templates', requireAuth, async (c) => {
 
 app.get('/activity-templates/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await pool.query(
@@ -665,7 +665,7 @@ app.get('/activity-templates/:id', requireAuth, async (c) => {
 
 app.post('/activity-templates', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.nome) return c.json({ error: 'nome é obrigatório' }, 400);
@@ -696,7 +696,7 @@ app.post('/activity-templates', requireAuth, async (c) => {
 
 app.delete('/activity-templates/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   await pool.query(

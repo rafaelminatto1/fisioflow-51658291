@@ -3,6 +3,11 @@ import { getWorkersApiUrl } from '@/lib/api/config';
 
 const BASE_URL = getWorkersApiUrl();
 
+type RequestError = Error & {
+  status?: number;
+  payload?: unknown;
+};
+
 async function getAuthHeader(): Promise<Record<string, string>> {
   const token = await getNeonAccessToken();
   return { Authorization: `Bearer ${token}` };
@@ -37,7 +42,10 @@ export async function request<T>(
 
     if (!retry.ok) {
       const retryBody = await retry.json().catch(() => ({ error: retry.statusText }));
-      throw new Error(retryBody?.error ?? `HTTP ${retry.status}`);
+      const error = new Error(retryBody?.error ?? `HTTP ${retry.status}`) as RequestError;
+      error.status = retry.status;
+      error.payload = retryBody;
+      throw error;
     }
 
     return retry.json() as Promise<T>;
@@ -45,7 +53,10 @@ export async function request<T>(
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(body?.error ?? `HTTP ${res.status}`);
+    const error = new Error(body?.error ?? `HTTP ${res.status}`) as RequestError;
+    error.status = res.status;
+    error.payload = body;
+    throw error;
   }
 
   return res.json() as Promise<T>;

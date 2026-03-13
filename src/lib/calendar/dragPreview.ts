@@ -16,6 +16,12 @@
  */
 
 import { Appointment } from '@/types/appointment';
+import { formatDateToLocalISO, parseResponseDate } from '@/utils/dateUtils';
+
+export interface AppointmentPreviewTarget {
+  date: Date;
+  time: string;
+}
 
 export const CARD_GAP_PERCENT = 2;
 
@@ -106,6 +112,57 @@ export type StatusColors = typeof APPOINTMENT_STATUS_COLORS[keyof typeof APPOINT
  */
 export const getStatusCardClasses = (status: string): { bg: string; border: string; accent?: string } => {
   return APPOINTMENT_STATUS_COLORS[status as keyof typeof APPOINTMENT_STATUS_COLORS] || APPOINTMENT_STATUS_COLORS.default;
+};
+
+const normalizePreviewDate = (date: Appointment['date']): Date | null => {
+  if (!date) return null;
+  if (date instanceof Date) return Number.isNaN(date.getTime()) ? null : date;
+  if (typeof date === 'string') {
+    const parsed = parseResponseDate(date);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+  return null;
+};
+
+const normalizePreviewTime = (time: string | null | undefined): string => {
+  if (!time || !time.trim()) return '00:00';
+  return time.substring(0, 5);
+};
+
+export const isSameAppointmentSlot = (
+  appointment: Appointment,
+  target: AppointmentPreviewTarget
+): boolean => {
+  const appointmentDate = normalizePreviewDate(appointment.date);
+  if (!appointmentDate) return false;
+
+  return (
+    formatDateToLocalISO(appointmentDate) === formatDateToLocalISO(target.date) &&
+    normalizePreviewTime(appointment.time) === normalizePreviewTime(target.time)
+  );
+};
+
+export const buildDragPreviewAppointments = (
+  appointments: Appointment[],
+  draggedAppointment: Appointment | null,
+  target: AppointmentPreviewTarget | null
+): Appointment[] => {
+  if (!draggedAppointment || !target || isSameAppointmentSlot(draggedAppointment, target)) {
+    return appointments;
+  }
+
+  const targetDate = formatDateToLocalISO(target.date) as Appointment['date'];
+  const targetTime = normalizePreviewTime(target.time);
+
+  return appointments.map((appointment) => (
+    appointment.id === draggedAppointment.id
+      ? {
+        ...appointment,
+        date: targetDate,
+        time: targetTime,
+      }
+      : appointment
+  ));
 };
 
 /**

@@ -195,6 +195,11 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
             draggable={rootDraggable}
             onDragStart={(e: React.DragEvent) => {
                 if (rootDraggable && e && 'dataTransfer' in e) {
+                    // Hide native browser ghost
+                    const img = new Image();
+                    img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+                    e.dataTransfer.setDragImage(img, 0, 0);
+
                     onOpenPopover(null);
                     onDragStart(e, appointment);
                 }

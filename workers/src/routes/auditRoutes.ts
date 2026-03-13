@@ -7,7 +7,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     const result = await pool.query(
       `SELECT * FROM audit_logs WHERE organization_id = $1 ORDER BY created_at DESC LIMIT 50`,

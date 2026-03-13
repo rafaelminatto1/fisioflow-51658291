@@ -41,6 +41,9 @@ export const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({
   onSelectionChange,
   disabled = false
 }) => {
+  const compactFieldClass =
+    "h-9 rounded-xl border border-border/70 bg-gradient-to-b from-background to-muted/20 text-xs shadow-[0_12px_24px_-22px_rgba(15,23,42,0.35)] focus-visible:ring-4 focus-visible:ring-primary/10 focus-visible:border-primary/30";
+
   const isSelected = (equipmentId: string) =>
     selectedEquipments.some(e => e.equipmentId === equipmentId);
 
@@ -86,14 +89,14 @@ export const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({
             onClick={() => toggleEquipment(equipment)}
             disabled={disabled}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border transition-all",
+              "flex items-center gap-2 rounded-2xl border px-3 py-2 text-sm shadow-[0_14px_24px_-22px_rgba(15,23,42,0.32)] transition-[transform,box-shadow,border-color,background-color]",
               isSelected(equipment.id) 
-                ? "bg-primary text-primary-foreground border-primary" 
-                : "bg-background hover:bg-muted border-border",
+                ? "border-primary/20 bg-gradient-to-b from-primary to-primary/90 text-primary-foreground shadow-[0_18px_30px_-22px_rgba(37,99,235,0.55)]" 
+                : "border-border/70 bg-gradient-to-b from-background to-muted/20 hover:-translate-y-px hover:border-primary/20 hover:bg-primary/[0.04]",
               disabled && "opacity-50 cursor-not-allowed"
             )}
           >
-            <span>{equipment.icon}</span>
+            <span className="text-base">{equipment.icon}</span>
             <span>{equipment.name}</span>
           </button>
         ))}
@@ -107,9 +110,9 @@ export const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({
             if (!equipment?.hasParameters) return null;
 
             return (
-              <div key={selected.equipmentId} className="bg-muted/40 rounded-lg p-3 border">
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge variant="secondary" className="text-xs">
+              <div key={selected.equipmentId} className="rounded-[22px] border border-border/70 bg-gradient-to-b from-background to-muted/25 p-4 shadow-[0_18px_32px_-28px_rgba(15,23,42,0.35)]">
+                <div className="mb-3 flex items-center gap-2">
+                  <Badge variant="secondary" className="rounded-full border border-primary/10 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
                     {equipment.icon} {equipment.name}
                   </Badge>
                 </div>
@@ -125,10 +128,10 @@ export const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({
                           onValueChange={(value) => updateParameter(selected.equipmentId, param.id, value)}
                           disabled={disabled}
                         >
-                          <SelectTrigger className="h-8 text-xs">
+                          <SelectTrigger className={compactFieldClass}>
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="rounded-[20px] border border-border/70 bg-background/95 p-1 shadow-[0_24px_70px_-30px_rgba(15,23,42,0.45)] backdrop-blur-xl">
                             {param.options?.map((option) => (
                               <SelectItem key={option} value={option}>{option}</SelectItem>
                             ))}
@@ -144,7 +147,7 @@ export const EquipmentSelector: React.FC<EquipmentSelectorProps> = ({
                             param.type === 'number' ? Number(e.target.value) : e.target.value
                           )}
                           disabled={disabled}
-                          className="h-8 text-xs"
+                          className={compactFieldClass}
                         />
                       )}
                     </div>
