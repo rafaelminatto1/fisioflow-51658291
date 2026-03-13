@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { authClient } from '@/integrations/neon/auth';
 import { fisioLogger as logger } from '@/lib/errors/logger';
+import { auditApi } from '@/lib/api/workers-client';
 import { getNeonAccessToken, invalidateNeonTokenCache } from '@/lib/auth/neon-token';
 import { getNeonAuthUrl } from '@/lib/config/neon';
 import { AuthContextType, AuthContext, AuthError, AuthUser } from './AuthContext';
@@ -132,8 +133,44 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     try {
       setLoading(true);
       const { data, error } = await authClient.signIn.email({ email, password });
-      if (error) throw new Error(error.message || 'Credenciais inválidas');
-      if (data?.user) await loadUserAndProfile(adaptNeonUser(data.user));
+      
+      if (error) {
+        // Log de falha de login (antes do throw)
+        try {
+          await auditApi.create({
+            action: 'LOGIN_FAILURE',
+            entity_type: 'auth',
+            metadata: { 
+              email, 
+              error: error.message,
+              reason: 'invalid_credentials',
+              timestamp: new Date().toISOString()
+            }
+          });
+        } catch (e) { /* silent fail for audit */ }
+        
+        throw new Error(error.message || 'Credenciais inválidas');
+      }
+
+      if (data?.user) {
+        await loadUserAndProfile(adaptNeonUser(data.user));
+        
+        // Log de sucesso de login
+        try {
+          await auditApi.create({
+            action: 'LOGIN_SUCCESS',
+            entity_type: 'auth',
+            entity_id: data.user.id,
+            metadata: { 
+              email, 
+              user_id: data.user.id,
+              name: data.user.name,
+              timestamp: new Date().toISOString()
+            }
+          });
+        } catch (e) { /* silent fail for audit */ }
+      }
+      
       return { error: null };
     } catch (err: any) {
       logger.error('Erro no login', err, 'AuthContextProvider');

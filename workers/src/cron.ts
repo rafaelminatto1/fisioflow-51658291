@@ -80,12 +80,28 @@ async function sendAppointmentReminders(pool: any, env: Env, ctx: ExecutionConte
   console.log('[Cron] Syncing daily reminders...');
 }
 
-async function generateDailyReports(pool: any, env: Env) {
-  console.log('[Cron] Generating daily statistics reports...');
-  // Aggregate financial data and session counts for the previous day
-}
-
 async function performDatabaseCleanup(pool: any, env: Env) {
   console.log('[Cron] Performing database maintenance...');
-  // Delete expired tokens, temporary files, etc.
+  
+  try {
+    // 1. Limpeza de Logs de Segurança (Manter apenas 90 dias)
+    // Ações: LOGIN_SUCCESS, LOGIN_FAILURE
+    const securityCleanup = await pool.query(`
+      DELETE FROM audit_logs 
+      WHERE action IN ('LOGIN_SUCCESS', 'LOGIN_FAILURE')
+        AND created_at < (CURRENT_DATE - INTERVAL '90 days')
+    `);
+    console.log(`[Cleanup] Deleted ${securityCleanup.rowCount} old security logs.`);
+
+    // 2. Limpeza de Logs de Sistema (Opcional, manter 1 ano se não for clínico)
+    // Aqui poderíamos limpar INSERT/UPDATE de tabelas menos críticas, 
+    // mas por segurança e legislação (20 anos para prontuários), 
+    // manteremos os logs de 'patients', 'evolutions' e 'appointments' intactos.
+    
+    // 3. Limpeza de tokens expirados (se houver tabela de sessions ou tokens)
+    // await pool.query('DELETE FROM auth_tokens WHERE expires_at < NOW()');
+
+  } catch (error) {
+    console.error('[Cleanup] Error during database maintenance:', error);
+  }
 }

@@ -13,4 +13,4 @@ database_id = "bf781be2-527d-471d-9cf2-dd18f8e6c2b2"
 
 [vars]
 AUTH_TOKEN = "FISIOFLOW_SECRET_TOKEN_2026"
-R2_PUBLIC_URL = "https://r2-worker.fisioflow.workers.dev"
+R2_PUBLIC_URL = "https://r2-worker.rafalegollas.workers.dev"

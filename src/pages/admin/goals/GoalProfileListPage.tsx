@@ -1,17 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
-import {
-
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow
-} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
     Dialog,
@@ -31,11 +22,27 @@ import {
     SelectTrigger,
     SelectValue
 } from "@/components/ui/select";
-import { Plus, Edit, Send, Loader2, Search, Filter } from 'lucide-react';
+import { 
+    Plus, 
+    Edit, 
+    Send, 
+    Loader2, 
+    Search, 
+    Filter, 
+    Target, 
+    Info, 
+    ArrowRight,
+    ClipboardList,
+    Activity,
+    Stethoscope,
+    ShieldCheck
+} from 'lucide-react';
 import { goalsAdminService } from '@/services/goals/goalsAdminService';
 import { useToast } from "@/hooks/use-toast";
 import { format } from 'date-fns';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { EmptyState } from '@/components/ui/empty-state';
+import { GOAL_PROFILES_SEED } from '@/lib/goals/goalProfiles.seed';
 
 export default function GoalProfileListPage() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -68,7 +75,7 @@ export default function GoalProfileListPage() {
             setNewProfile({ id: '', name: '', description: '' });
             navigate(`/admin/goals/${data.id}`);
         },
-        onError: (error: unknown) => {
+        onError: (error: any) => {
             toast({
                 title: "Erro ao criar perfil",
                 description: error.message,
@@ -87,7 +94,7 @@ export default function GoalProfileListPage() {
                 description: "O perfil agora está disponível para uso clínico.",
             });
         },
-        onError: (error: unknown) => {
+        onError: (error: any) => {
             toast({
                 title: "Erro ao publicar",
                 description: error.message,
@@ -95,14 +102,6 @@ export default function GoalProfileListPage() {
             });
         }
     });
-
-    if (error) {
-        toast({
-            title: "Erro ao carregar perfis",
-            description: (error as Error).message,
-            variant: "destructive",
-        });
-    }
 
     const handleCreateProfile = () => {
         if (!newProfile.id || !newProfile.name) {
@@ -123,7 +122,8 @@ export default function GoalProfileListPage() {
 
     const filteredProfiles = profiles.filter(p => {
         const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            p.id.toLowerCase().includes(searchTerm.toLowerCase());
+            p.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            p.description?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = statusFilter === 'all' || p.status === statusFilter;
         return matchesSearch && matchesStatus;
     });
@@ -131,190 +131,315 @@ export default function GoalProfileListPage() {
     const getStatusBadge = (status: string) => {
         switch (status) {
             case 'PUBLISHED':
-                return <Badge className="bg-green-100 text-green-800 border-green-200">Publicado</Badge>;
+                return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200">Publicado</Badge>;
             case 'DRAFT':
-                return <Badge variant="secondary">Rascunho</Badge>;
+                return <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">Rascunho</Badge>;
             case 'ARCHIVED':
-                return <Badge variant="outline" className="text-muted-foreground">Arquivado</Badge>;
+                return <Badge variant="outline" className="text-muted-foreground bg-gray-50">Arquivado</Badge>;
             default:
                 return <Badge variant="outline">{status}</Badge>;
         }
     };
 
+    const handleQuickCreate = (seed: typeof GOAL_PROFILES_SEED[0]) => {
+        createProfileMutation.mutate({
+            id: seed.id,
+            name: seed.name,
+            description: seed.description
+        });
+    };
+
     return (
         <MainLayout>
-            <div className="container mx-auto p-6 space-y-6">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold">Gestão de Metas</h1>
-                        <p className="text-muted-foreground">
-                            Gerencie templates de metas baseados em evidência para análise clínica.
+            <div className="container mx-auto p-6 space-y-8 bg-[#f8faff] min-h-screen">
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div className="space-y-2">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-semibold uppercase tracking-wider">
+                            <ShieldCheck className="w-3 h-3" />
+                            Governança Clínica
+                        </div>
+                        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">Gestão de Metas</h1>
+                        <p className="text-lg text-slate-500 max-w-2xl">
+                            Crie e gerencie templates de metas baseados em evidência científica (SMART) para elevar o padrão da sua análise clínica.
                         </p>
                     </div>
+                    
                     <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                         <DialogTrigger asChild>
-                            <Button className="gap-2">
-                                <Plus className="h-4 w-4" />
-                                Novo Template
+                            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 gap-2 h-12 px-6 rounded-xl transition-all hover:scale-[1.02]">
+                                <Plus className="h-5 w-5" />
+                                Novo Template Customizado
                             </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="max-w-2xl">
                             <DialogHeader>
-                                <DialogTitle>Criar Novo Template de Metas</DialogTitle>
-                                <DialogDescription>
-                                    Crie um novo template que poderá ser customizado com metas específicas.
+                                <DialogTitle className="text-2xl">Criar Novo Template de Metas</DialogTitle>
+                                <DialogDescription className="text-base">
+                                    Templates permitem padronizar o acompanhamento de metas SMART para seus pacientes.
                                 </DialogDescription>
                             </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="id">ID Único (ex: acl_rts)</Label>
-                                    <Input
-                                        id="id"
-                                        value={newProfile.id}
-                                        onChange={(e) => setNewProfile({ ...newProfile, id: e.target.value.toLowerCase().replace(/\s+/g, '_') })}
-                                        placeholder="identificador_unico"
-                                    />
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-6">
+                                <div className="space-y-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="id" className="font-semibold">ID Único</Label>
+                                        <Input
+                                            id="id"
+                                            value={newProfile.id}
+                                            onChange={(e) => setNewProfile({ ...newProfile, id: e.target.value.toLowerCase().replace(/\s+/g, '_') })}
+                                            placeholder="ex: acl_rts_avancado"
+                                            className="h-11 rounded-lg"
+                                        />
+                                        <p className="text-[10px] text-muted-foreground uppercase tracking-tight">Identificador técnico sem espaços</p>
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="name" className="font-semibold">Nome do Template</Label>
+                                        <Input
+                                            id="name"
+                                            value={newProfile.name}
+                                            onChange={(e) => setNewProfile({ ...newProfile, name: e.target.value })}
+                                            placeholder="Ex: LCA — Prontidão para Esporte"
+                                            className="h-11 rounded-lg"
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="description" className="font-semibold">Descrição Curta</Label>
+                                        <Input
+                                            id="description"
+                                            value={newProfile.description}
+                                            onChange={(e) => setNewProfile({ ...newProfile, description: e.target.value })}
+                                            placeholder="Para que serve este template..."
+                                            className="h-11 rounded-lg"
+                                        />
+                                    </div>
                                 </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="name">Nome do Template</Label>
-                                    <Input
-                                        id="name"
-                                        value={newProfile.name}
-                                        onChange={(e) => setNewProfile({ ...newProfile, name: e.target.value })}
-                                        placeholder="Ex: LCA / ACL — Prontidão"
-                                    />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="description">Descrição Curta</Label>
-                                    <Input
-                                        id="description"
-                                        value={newProfile.description}
-                                        onChange={(e) => setNewProfile({ ...newProfile, description: e.target.value })}
-                                        placeholder="Para que serve este template..."
-                                    />
+                                
+                                <div className="bg-slate-50 p-5 rounded-xl border border-slate-100 space-y-4">
+                                    <h4 className="font-bold text-slate-800 flex items-center gap-2">
+                                        <Target className="w-4 h-4 text-blue-500" />
+                                        Metodologia SMART
+                                    </h4>
+                                    <ul className="text-xs space-y-3 text-slate-600">
+                                        <li className="flex gap-2">
+                                            <span className="font-bold text-blue-600 min-w-[15px]">S</span>
+                                            <span><strong>Específica:</strong> O que exatamente será alcançado?</span>
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <span className="font-bold text-blue-600 min-w-[15px]">M</span>
+                                            <span><strong>Mensurável:</strong> Como mediremos o sucesso (métrica)?</span>
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <span className="font-bold text-blue-600 min-w-[15px]">A</span>
+                                            <span><strong>Alcançável:</strong> A meta é realista para o paciente?</span>
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <span className="font-bold text-blue-600 min-w-[15px]">R</span>
+                                            <span><strong>Relevante:</strong> Faz sentido para a patologia?</span>
+                                        </li>
+                                        <li className="flex gap-2">
+                                            <span className="font-bold text-blue-600 min-w-[15px]">T</span>
+                                            <span><strong>Temporal:</strong> Qual o prazo esperado?</span>
+                                        </li>
+                                    </ul>
                                 </div>
                             </div>
-                            <DialogFooter>
-                                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancelar</Button>
-                                <Button onClick={handleCreateProfile} disabled={createProfileMutation.isPending}>
+                            
+                            <DialogFooter className="gap-2">
+                                <Button variant="ghost" onClick={() => setIsCreateDialogOpen(false)} className="rounded-lg">Cancelar</Button>
+                                <Button 
+                                    onClick={handleCreateProfile} 
+                                    disabled={createProfileMutation.isPending}
+                                    className="bg-blue-600 hover:bg-blue-700 rounded-lg h-11 px-8"
+                                >
                                     {createProfileMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    Criar Rascunho
+                                    Criar e Configurar
                                 </Button>
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
                 </div>
 
-                <Card>
-                    <CardHeader className="pb-3">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <div>
-                                <CardTitle>Templates Disponíveis</CardTitle>
-                                <CardDescription>
-                                    Lista de perfis de metas cadastrados no sistema.
-                                </CardDescription>
+                {/* Quick Templates Section */}
+                <div className="space-y-4">
+                    <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <ClipboardList className="w-5 h-5 text-blue-500" />
+                        Sugestões de Templates Rápidos
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {GOAL_PROFILES_SEED.slice(0, 4).map((seed) => (
+                            <Card key={seed.id} className="group hover:border-blue-300 transition-all cursor-pointer border-dashed bg-white/50" onClick={() => handleQuickCreate(seed)}>
+                                <CardHeader className="p-4 pb-2">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="p-2 rounded-lg bg-blue-50 group-hover:bg-blue-100 transition-colors">
+                                            <Activity className="w-4 h-4 text-blue-600" />
+                                        </div>
+                                        <Plus className="w-4 h-4 text-slate-300 group-hover:text-blue-500 transition-colors" />
+                                    </div>
+                                    <CardTitle className="text-sm font-bold group-hover:text-blue-700 transition-colors">{seed.name}</CardTitle>
+                                </CardHeader>
+                                <CardContent className="p-4 pt-0">
+                                    <p className="text-xs text-slate-500 line-clamp-2">{seed.description}</p>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Main List Section */}
+                <div className="space-y-4 pt-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                            <Target className="w-5 h-5 text-blue-500" />
+                            Seus Templates
+                        </h2>
+                        
+                        <div className="flex items-center gap-2">
+                            <div className="relative w-full sm:w-80">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                                <Input
+                                    placeholder="Pesquisar templates..."
+                                    className="pl-10 h-10 border-slate-200 bg-white rounded-xl focus-visible:ring-blue-400"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                                    <SelectTrigger className="w-[140px]">
-                                        <Filter className="mr-2 h-4 w-4" />
-                                        <SelectValue placeholder="Status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">Todos</SelectItem>
-                                        <SelectItem value="PUBLISHED">Publicados</SelectItem>
-                                        <SelectItem value="DRAFT">Rascunhos</SelectItem>
-                                        <SelectItem value="ARCHIVED">Arquivados</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <div className="relative w-64">
-                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        placeholder="Buscar por nome ou ID..."
-                                        className="pl-8"
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
+                            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                <SelectTrigger className="w-[140px] h-10 border-slate-200 bg-white rounded-xl">
+                                    <Filter className="mr-2 h-4 w-4 text-slate-400" />
+                                    <SelectValue placeholder="Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">Todos</SelectItem>
+                                    <SelectItem value="PUBLISHED">Publicados</SelectItem>
+                                    <SelectItem value="DRAFT">Rascunhos</SelectItem>
+                                    <SelectItem value="ARCHIVED">Arquivados</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+
+                    {isLoading ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {[1, 2, 3].map((i) => (
+                                <Card key={i} className="h-48 animate-pulse bg-slate-100 border-none" />
+                            ))}
+                        </div>
+                    ) : filteredProfiles.length === 0 ? (
+                        <EmptyState
+                            icon={Target}
+                            title="Nenhum template encontrado"
+                            description="Você ainda não criou nenhum template customizado de metas para sua clínica."
+                            action={{
+                                label: "Criar Primeiro Template",
+                                onClick: () => setIsCreateDialogOpen(true)
+                            }}
+                        />
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {filteredProfiles.map((p) => (
+                                <Card 
+                                    key={p.id} 
+                                    className="group hover:shadow-xl hover:shadow-blue-900/5 transition-all border-slate-200 overflow-hidden flex flex-col bg-white"
+                                >
+                                    <CardHeader className="space-y-1 pb-4">
+                                        <div className="flex justify-between items-start mb-2">
+                                            {getStatusBadge(p.status)}
+                                            <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">{p.id}</span>
+                                        </div>
+                                        <CardTitle className="text-xl font-bold group-hover:text-blue-600 transition-colors leading-tight">
+                                            {p.name}
+                                        </CardTitle>
+                                        <CardDescription className="line-clamp-2 text-slate-500 pt-1">
+                                            {p.description || "Sem descrição disponível."}
+                                        </CardDescription>
+                                    </CardHeader>
+                                    
+                                    <CardContent className="flex-grow pt-0 pb-6">
+                                        <div className="flex items-center gap-4 text-xs text-slate-400 border-t border-slate-50 pt-4">
+                                            <div className="flex items-center gap-1.5">
+                                                <Badge variant="outline" className="text-[10px] font-bold border-slate-100 bg-slate-50/50">v{p.version}</Badge>
+                                            </div>
+                                            <div className="flex items-center gap-1.5">
+                                                <Activity className="w-3 h-3" />
+                                                <span>{format(new Date(p.updated_at), 'dd MMM yy')}</span>
+                                            </div>
+                                        </div>
+                                    </CardContent>
+                                    
+                                    <CardFooter className="bg-slate-50/50 p-4 flex gap-2 border-t border-slate-100">
+                                        <Button 
+                                            variant="secondary" 
+                                            className="w-full bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 gap-2 h-10 rounded-lg"
+                                            onClick={() => navigate(`/admin/goals/${p.id}`)}
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                            Editar
+                                        </Button>
+                                        {p.status === 'DRAFT' && (
+                                            <Button 
+                                                className="w-full bg-blue-600 hover:bg-blue-700 text-white gap-2 h-10 rounded-lg"
+                                                onClick={(e) => handlePublish(p.id, e)}
+                                                disabled={publishProfileMutation.isPending}
+                                            >
+                                                {publishProfileMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                                Publicar
+                                            </Button>
+                                        )}
+                                        {p.status === 'PUBLISHED' && (
+                                            <Button 
+                                                variant="ghost" 
+                                                className="w-full text-slate-400 hover:text-blue-600 hover:bg-blue-50 gap-2 h-10 rounded-lg"
+                                                onClick={() => navigate(`/admin/goals/${p.id}`)}
+                                            >
+                                                Ver Detalhes
+                                                <ArrowRight className="w-4 h-4" />
+                                            </Button>
+                                        )}
+                                    </CardFooter>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                {/* Info Section */}
+                <div className="bg-blue-600 rounded-2xl p-8 text-white relative overflow-hidden shadow-2xl shadow-blue-200 mt-12">
+                    <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                        <div className="space-y-4 max-w-xl">
+                            <h3 className="text-2xl font-bold flex items-center gap-2">
+                                <Info className="w-6 h-6" />
+                                O Poder das Metas SMART
+                            </h3>
+                            <p className="text-blue-100 opacity-90 leading-relaxed">
+                                Pacientes com metas bem definidas apresentam 40% mais engajamento no tratamento. Use nossos templates para garantir que cada plano de evolução seja específico, mensurável e baseado em evidência.
+                            </p>
+                            <Button variant="outline" className="bg-transparent border-white text-white hover:bg-white hover:text-blue-600 rounded-xl h-11 px-6">
+                                Ler Guia de Melhores Práticas
+                            </Button>
+                        </div>
+                        <div className="hidden lg:block p-6 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
+                            <Stethoscope className="w-24 h-24 text-blue-100 opacity-20 absolute -right-4 -bottom-4" />
+                            <div className="space-y-4 relative z-20">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-emerald-400/20 flex items-center justify-center">
+                                        <Badge className="bg-emerald-400 text-slate-900 border-none">95%</Badge>
+                                    </div>
+                                    <p className="text-sm font-medium">Precisão Clínica</p>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full bg-amber-400/20 flex items-center justify-center">
+                                        <Badge className="bg-amber-400 text-slate-900 border-none">12</Badge>
+                                    </div>
+                                    <p className="text-sm font-medium">Templates Ativos</p>
                                 </div>
                             </div>
                         </div>
-                    </CardHeader>
-                    <CardContent>
-                        {isLoading ? (
-                            <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                                <p className="text-sm text-muted-foreground">Carregando templates...</p>
-                            </div>
-                        ) : filteredProfiles.length === 0 ? (
-                            <div className="text-center py-12">
-                                <p className="text-muted-foreground">Nenhum template encontrado.</p>
-                            </div>
-                        ) : (
-                            <div className="rounded-md border">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Template</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead>Versão</TableHead>
-                                            <TableHead>Última Atualização</TableHead>
-                                            <TableHead className="text-right">Ações</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {filteredProfiles.map((p) => (
-                                            <TableRow
-                                                key={p.id}
-                                                className="cursor-pointer"
-                                                onClick={() => navigate(`/admin/goals/${p.id}`)}
-                                            >
-                                                <TableCell>
-                                                    <div className="flex flex-col">
-                                                        <span className="font-medium text-blue-600 hover:underline">{p.name}</span>
-                                                        <span className="text-xs text-muted-foreground uppercase">{p.id}</span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>{getStatusBadge(p.status)}</TableCell>
-                                                <TableCell>
-                                                    <Badge variant="outline">v{p.version}</Badge>
-                                                </TableCell>
-                                                <TableCell className="text-muted-foreground text-xs">
-                                                    {format(new Date(p.updated_at), 'dd/MM/yyyy HH:mm')}
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <div className="flex justify-end gap-2">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                navigate(`/admin/goals/${p.id}`);
-                                                            }}
-                                                        >
-                                                            <Edit className="h-4 w-4" />
-                                                        </Button>
-                                                        {p.status === 'DRAFT' && (
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="text-primary"
-                                                                title="Publicar"
-                                                                onClick={(e) => handlePublish(p.id, e)}
-                                                                disabled={publishProfileMutation.isPending}
-                                                            >
-                                                                {publishProfileMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                                                            </Button>
-                                                        )}
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+                    </div>
+                    {/* Decorative Background Pattern */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+                </div>
             </div>
         </MainLayout>
     );

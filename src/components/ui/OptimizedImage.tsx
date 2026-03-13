@@ -71,7 +71,7 @@ function getOptimizedUrl(src: string, options: { width?: number; quality?: numbe
   }
 
   const { width = 800, quality = 85 } = options;
-  const workerUrl = 'https://r2-worker.fisioflow.workers.dev/cdn-cgi/image';
+  const workerUrl = 'https://r2-worker.rafalegollas.workers.dev/cdn-cgi/image';
   
   try {
     const encodedSrc = encodeURIComponent(src.startsWith('/') ? `${window.location.origin}${src}` : src);

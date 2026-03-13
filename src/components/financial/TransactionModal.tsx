@@ -87,10 +87,10 @@ export function TransactionModal({
                   name="tipo"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="font-bold text-xs">Tipo de Lançamento</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <FormLabel className="font-bold text-xs" htmlFor="transaction-tipo">Tipo de Lançamento</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value} name="tipo">
                         <FormControl>
-                          <SelectTrigger className="rounded-xl border-slate-200">
+                          <SelectTrigger id="transaction-tipo" className="rounded-xl border-slate-200">
                             <SelectValue placeholder="Selecione" />
                           </SelectTrigger>
                         </FormControl>
@@ -121,10 +121,10 @@ export function TransactionModal({
                   name="status"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="font-bold text-xs">Status Atual</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <FormLabel className="font-bold text-xs" htmlFor="transaction-status">Status Atual</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value} name="status">
                         <FormControl>
-                          <SelectTrigger className="rounded-xl border-slate-200">
+                          <SelectTrigger id="transaction-status" className="rounded-xl border-slate-200">
                             <SelectValue placeholder="Selecione" />
                           </SelectTrigger>
                         </FormControl>
@@ -160,11 +160,13 @@ export function TransactionModal({
                 name="valor"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-bold text-xs">Valor (R$)*</FormLabel>
+                    <FormLabel className="font-bold text-xs" htmlFor="transaction-valor">Valor (R$)*</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <span className="absolute left-3 top-2.5 text-slate-400 font-medium text-sm">R$</span>
                         <Input
+                          id="transaction-valor"
+                          name="valor"
                           type="number"
                           step="0.01"
                           placeholder="0,00"
@@ -185,9 +187,11 @@ export function TransactionModal({
                 name="descricao"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-bold text-xs">Descrição / Identificação*</FormLabel>
+                    <FormLabel className="font-bold text-xs" htmlFor="transaction-descricao">Descrição / Identificação*</FormLabel>
                     <FormControl>
                       <Textarea 
+                        id="transaction-descricao"
+                        name="descricao"
                         {...field} 
                         placeholder="Ex: Aluguel da sala, Compra de materiais..."
                         rows={3}

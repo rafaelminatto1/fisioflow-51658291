@@ -19,9 +19,11 @@ interface TimelineEntry {
 
 interface ProgressTimelineProps {
   className?: string;
+  patientId?: string;
+  patientName?: string;
 }
 
-export function ProgressTimeline({ className }: ProgressTimelineProps) {
+export function ProgressTimeline({ className, patientId, patientName = 'Paciente' }: ProgressTimelineProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<'30d' | '90d' | '180d' | 'all'>('90d');
 
   // Mock data - em produção viria do backend
