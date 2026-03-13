@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -106,21 +105,20 @@ export default function ContasFinanceirasPage() {
   };
 
   return (
-    <MainLayout>
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <DollarSign className="h-8 w-8 text-primary" />
-              Contas Financeiras
-            </h1>
-            <p className="text-muted-foreground mt-1">Gerencie contas a receber e a pagar</p>
-          </div>
-          <Button onClick={() => handleOpenDialog()}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Conta
-          </Button>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <DollarSign className="h-8 w-8 text-primary" />
+            Contas Financeiras
+          </h1>
+          <p className="text-muted-foreground mt-1">Gerencie contas a receber e a pagar</p>
         </div>
+        <Button onClick={() => handleOpenDialog()}>
+          <Plus className="h-4 w-4 mr-2" />
+          Nova Conta
+        </Button>
+      </div>
 
         {/* Resumo */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -309,6 +307,5 @@ export default function ContasFinanceirasPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </MainLayout>
   );
 }

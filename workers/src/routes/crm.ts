@@ -17,7 +17,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 app.get('/leads', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { estagio, responsavelId, limit = '50', offset = '0' } = c.req.query();
 
   const conditions: string[] = ['organization_id = $1'];
@@ -37,7 +37,7 @@ app.get('/leads', requireAuth, async (c) => {
 
 app.get('/leads/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await pool.query(
@@ -50,7 +50,7 @@ app.get('/leads/:id', requireAuth, async (c) => {
 
 app.post('/leads', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.nome) return c.json({ error: 'nome é obrigatório' }, 400);
@@ -82,7 +82,7 @@ app.post('/leads', requireAuth, async (c) => {
 
 app.put('/leads/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -114,7 +114,7 @@ app.put('/leads/:id', requireAuth, async (c) => {
 
 app.delete('/leads/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const check = await pool.query(
@@ -131,7 +131,7 @@ app.delete('/leads/:id', requireAuth, async (c) => {
 
 app.get('/leads/:id/historico', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const leadCheck = await pool.query(
@@ -149,7 +149,7 @@ app.get('/leads/:id/historico', requireAuth, async (c) => {
 
 app.post('/leads/:id/historico', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id: leadId } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -182,7 +182,7 @@ app.post('/leads/:id/historico', requireAuth, async (c) => {
 
 app.get('/tarefas', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { status, responsavelId, leadId } = c.req.query();
 
   const conditions: string[] = ['organization_id = $1'];
@@ -202,7 +202,7 @@ app.get('/tarefas', requireAuth, async (c) => {
 
 app.post('/tarefas', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.titulo) return c.json({ error: 'titulo é obrigatório' }, 400);
@@ -227,7 +227,7 @@ app.post('/tarefas', requireAuth, async (c) => {
 
 app.put('/tarefas/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -254,7 +254,7 @@ app.put('/tarefas/:id', requireAuth, async (c) => {
 
 app.delete('/tarefas/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const check = await pool.query(
@@ -271,7 +271,7 @@ app.delete('/tarefas/:id', requireAuth, async (c) => {
 
 app.get('/campanhas', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { status, tipo, limit = '50', offset = '0' } = c.req.query();
 
   const conditions: string[] = ['organization_id = $1'];
@@ -293,7 +293,7 @@ app.get('/campanhas', requireAuth, async (c) => {
 
 app.post('/campanhas', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.nome || !body.tipo) {
@@ -345,7 +345,7 @@ app.post('/campanhas', requireAuth, async (c) => {
 
 app.put('/campanhas/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -382,7 +382,7 @@ app.put('/campanhas/:id', requireAuth, async (c) => {
 
 app.delete('/campanhas/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   await pool.query(
     'DELETE FROM crm_campanhas WHERE id = $1 AND organization_id = $2',

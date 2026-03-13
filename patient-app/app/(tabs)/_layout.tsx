@@ -2,9 +2,15 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
 import { useNotificationResponse, useNotificationReceived } from '@/lib/notificationsSystem';
+import { useCalendarSync } from '@/hooks/useCalendarSync';
+import { useAuthStore } from '@/store/auth';
 
 export default function TabsLayout() {
   const colors = useColors();
+  const { user } = useAuthStore();
+
+  // Ativa a sincronização automática de calendário em segundo plano
+  useCalendarSync(user?.id);
 
   // Set up notification listeners
   useNotificationResponse();

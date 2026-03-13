@@ -8,7 +8,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 app.use('*', requireAuth);
 
 app.post('/', async (c) => {
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   try {
     const body = await c.req.json();
     const { token, userId, tenantId, deviceInfo, active = true } = body;
@@ -44,7 +44,7 @@ app.post('/', async (c) => {
 });
 
 app.delete('/:token', async (c) => {
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { token } = c.req.param();
   try {
     const result = await db.query(
@@ -59,7 +59,7 @@ app.delete('/:token', async (c) => {
 });
 
 app.get('/user/:userId', async (c) => {
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { userId } = c.req.param();
   try {
     const result = await db.query(
@@ -74,7 +74,7 @@ app.get('/user/:userId', async (c) => {
 });
 
 app.get('/tenant/:tenantId', async (c) => {
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { tenantId } = c.req.param();
   try {
     const result = await db.query(

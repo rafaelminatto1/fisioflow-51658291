@@ -62,6 +62,15 @@ export function PatientCombobox({
   const getPatientName = (patient?: Patient | null) =>
     patient?.name || patient?.full_name || 'Paciente sem nome';
 
+  const getPatientInitials = (name?: string | null) => {
+    const resolvedName = name?.trim();
+    if (!resolvedName) return 'PT';
+
+    const parts = resolvedName.split(/\s+/).filter(Boolean);
+    const initials = parts.slice(0, 2).map((part) => part[0]?.toUpperCase() || '').join('');
+    return initials || 'PT';
+  };
+
   const getPatientMeta = (patient?: Patient | null, description?: string) => {
     if (!patient) {
       return description || 'Busque por nome, CPF ou telefone';
@@ -170,24 +179,34 @@ export function PatientCombobox({
                 : 'Selecionar paciente'
           }
           className={cn(
-            "h-auto min-h-12 w-full justify-between rounded-xl border-border/70 bg-background px-3 py-2.5 text-left font-normal shadow-sm transition-[border-color,box-shadow,background-color] hover:border-primary/40 hover:bg-muted/30 focus-visible:ring-primary/30 data-[state=open]:border-primary/40 data-[state=open]:shadow-[0_0_0_4px_hsl(var(--primary)/0.08)] aria-[invalid=true]:border-destructive/70 aria-[invalid=true]:shadow-[0_0_0_4px_hsl(var(--destructive)/0.08)] disabled:bg-muted/40 disabled:text-muted-foreground",
+            "group relative h-auto min-h-[60px] w-full overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-b from-background via-background to-muted/30 px-3 py-3 text-left font-normal shadow-[0_1px_2px_rgba(15,23,42,0.06),0_18px_34px_-26px_rgba(15,23,42,0.35)] transition-[border-color,box-shadow,background-color,transform] hover:border-primary/35 hover:from-background hover:to-primary/[0.03] hover:shadow-[0_1px_2px_rgba(15,23,42,0.08),0_24px_40px_-28px_rgba(37,99,235,0.38)] focus-visible:ring-primary/20 data-[state=open]:border-primary/40 data-[state=open]:from-background data-[state=open]:to-primary/[0.03] data-[state=open]:shadow-[0_1px_2px_rgba(15,23,42,0.08),0_28px_50px_-32px_rgba(37,99,235,0.45)] aria-[invalid=true]:border-destructive/70 aria-[invalid=true]:shadow-[0_0_0_4px_hsl(var(--destructive)/0.08)] disabled:bg-muted/40 disabled:text-muted-foreground",
             className
           )}
           disabled={disabled}
           {...buttonProps}
         >
+          <span className="pointer-events-none absolute inset-x-5 top-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent opacity-80" />
+
           <div className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
             <div className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors",
+              "relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border text-[11px] font-semibold tracking-[0.16em] shadow-sm transition-all",
               selectedPatient || hasFallbackDisplay
-                ? "border-primary/15 bg-primary/10 text-primary"
-                : "border-border/60 bg-muted/50 text-muted-foreground"
+                ? "border-primary/15 bg-gradient-to-br from-primary/20 via-primary/10 to-sky-500/10 text-primary"
+                : "border-border/60 bg-gradient-to-br from-muted/80 to-background text-muted-foreground"
             )}>
-              <User className="h-4 w-4" />
+              <span className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.9),transparent_58%)] opacity-70" />
+              {selectedPatient || hasFallbackDisplay ? (
+                <span className="relative">{getPatientInitials(selectedPatient ? getPatientName(selectedPatient) : fallbackDisplayName)}</span>
+              ) : (
+                <User className="relative h-4 w-4" />
+              )}
             </div>
 
             {selectedPatient ? (
               <div className="flex min-w-0 flex-1 flex-col items-start text-left leading-tight">
+                <span className="mb-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary/80">
+                  Paciente
+                </span>
                 <span className="truncate text-sm font-semibold text-foreground">
                   {getPatientName(selectedPatient)}
                 </span>
@@ -197,6 +216,9 @@ export function PatientCombobox({
               </div>
             ) : hasFallbackDisplay ? (
               <div className="flex min-w-0 flex-1 flex-col items-start text-left leading-tight">
+                <span className="mb-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary/80">
+                  Paciente
+                </span>
                 <span className="truncate text-sm font-semibold text-foreground">{fallbackDisplayName}</span>
                 <span className="truncate text-xs text-muted-foreground">
                   {getPatientMeta(undefined, fallbackDescription)}
@@ -204,6 +226,9 @@ export function PatientCombobox({
               </div>
             ) : (
               <div className="flex min-w-0 flex-1 flex-col items-start text-left leading-tight">
+                <span className="mb-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Seleção
+                </span>
                 <span className="truncate text-sm font-medium text-foreground">Selecione o paciente</span>
                 <span className="truncate text-xs text-muted-foreground">
                   Busque por nome, CPF ou telefone
@@ -212,14 +237,19 @@ export function PatientCombobox({
             )}
           </div>
 
-          <ChevronsUpDown className={cn(
-            "ml-3 h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200",
-            open && "rotate-180 text-primary"
-          )} />
+          <div className={cn(
+            "ml-3 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border/70 bg-background/80 shadow-sm transition-all",
+            open && "border-primary/20 bg-primary/5 text-primary"
+          )}>
+            <ChevronsUpDown className={cn(
+              "h-4 w-4 text-muted-foreground transition-transform duration-200",
+              open && "rotate-180 text-primary"
+            )} />
+          </div>
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="z-[100] w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-border/70 bg-popover p-0 shadow-2xl"
+        className="z-[100] w-[var(--radix-popover-trigger-width)] max-w-[calc(100vw-2rem)] overflow-hidden rounded-[24px] border border-border/70 bg-background/95 p-0 shadow-[0_24px_80px_-28px_rgba(15,23,42,0.45)] backdrop-blur-xl"
         align="start"
         sideOffset={8}
         onOpenAutoFocus={(e) => {
@@ -227,48 +257,49 @@ export function PatientCombobox({
           inputRef.current?.focus();
         }}
       >
-        <Command shouldFilter={false} loop className="rounded-[inherit] bg-background">
-          <div className="border-b border-border/60 bg-muted/20 px-3 py-3">
-            <div className="mb-2 flex items-center justify-between gap-3">
+        <Command shouldFilter={false} loop className="relative rounded-[inherit] bg-transparent">
+          <div className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent" />
+          <div className="border-b border-border/60 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.07),transparent_26%),linear-gradient(180deg,rgba(248,250,252,0.92),rgba(248,250,252,0.78))] px-3 py-3.5 dark:bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.12),transparent_28%),linear-gradient(180deg,rgba(2,6,23,0.96),rgba(2,6,23,0.88))]">
+            <div className="mb-3 flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/75">
                   Buscar paciente
                 </p>
                 <p className="truncate text-xs text-muted-foreground">
-                  Nome, CPF ou telefone
+                  Encontre rapidamente por nome, CPF ou telefone
                 </p>
               </div>
-              <span className="shrink-0 rounded-full bg-background px-2.5 py-1 text-[11px] font-medium text-muted-foreground shadow-sm ring-1 ring-border/60">
+              <span className="shrink-0 rounded-full border border-white/70 bg-white/80 px-2.5 py-1 text-[11px] font-semibold text-slate-600 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
                 {filteredPatients.length} {filteredPatients.length === 1 ? 'resultado' : 'resultados'}
               </span>
             </div>
 
-          <CommandInput
-            ref={inputRef}
-            data-testid="patient-search"
-            placeholder="Buscar por nome, CPF ou telefone..."
-            value={inputValue}
-            onValueChange={setInputValue}
-            autoFocus
-            wrapperClassName="mx-0 mt-0 rounded-xl border border-border/70 bg-background px-3 shadow-sm"
-            iconClassName="text-muted-foreground/70"
-            className="h-11 py-0 text-sm"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                if (canCreateNew && inputValue && filteredPatients.length === 0) {
-                  e.preventDefault();
-                  handleCreateNew();
+            <CommandInput
+              ref={inputRef}
+              data-testid="patient-search"
+              placeholder="Buscar por nome, CPF ou telefone..."
+              value={inputValue}
+              onValueChange={setInputValue}
+              autoFocus
+              wrapperClassName="mx-0 mt-0 rounded-2xl border border-white/80 bg-white/85 px-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_12px_24px_-20px_rgba(15,23,42,0.45)] backdrop-blur dark:border-white/10 dark:bg-white/5"
+              iconClassName="text-primary/70"
+              className="h-12 py-0 text-sm"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  if (canCreateNew && inputValue && filteredPatients.length === 0) {
+                    e.preventDefault();
+                    handleCreateNew();
+                  }
                 }
-              }
-            }}
-          />
+              }}
+            />
           </div>
 
-          <CommandList className="max-h-[22rem] overflow-y-auto p-2">
+          <CommandList className="max-h-[22rem] overflow-y-auto px-2 pb-2 pt-1.5">
             {filteredPatients.length === 0 && (
               <CommandEmpty className="py-0">
                 <div className="flex flex-col items-center gap-3 px-4 py-8 text-center">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-border/60 bg-gradient-to-br from-muted to-background text-muted-foreground shadow-sm">
                     <Search className="h-4 w-4" />
                   </div>
                   <div className="space-y-1">
@@ -283,7 +314,7 @@ export function PatientCombobox({
                       size="sm"
                       variant="secondary"
                       onClick={handleCreateNew}
-                      className="mt-1 w-full gap-2 rounded-xl"
+                      className="mt-1 w-full gap-2 rounded-2xl border border-primary/10 bg-primary/5 text-primary shadow-sm hover:bg-primary/10"
                     >
                       <UserPlus className="w-4 h-4" />
                       Cadastrar novo paciente
@@ -296,23 +327,28 @@ export function PatientCombobox({
             {filteredPatients.length > 0 && (
               <CommandGroup
                 heading="Pacientes encontrados"
-                className="px-1 pt-1 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pb-2 [&_[cmdk-group-heading]]:pt-0 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.12em]"
+                className="px-1 pt-1 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pb-2 [&_[cmdk-group-heading]]:pt-0 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.18em] [&_[cmdk-group-heading]]:text-muted-foreground/80"
               >
                 {filteredPatients.map((patient) => (
                   <CommandItem
                     key={patient.id}
                     value={`${patient.name || patient.full_name || ''} ${patient.cpf || ''} ${patient.id}`}
                     onSelect={() => handleSelect(patient.id)}
-                    className="mb-1 cursor-pointer rounded-xl border border-transparent px-3 py-3 transition-colors data-[selected=true]:border-primary/15 data-[selected=true]:bg-primary/5"
+                    className="group mb-1 cursor-pointer rounded-2xl border border-transparent bg-gradient-to-b from-background to-background px-3 py-3 transition-[transform,box-shadow,border-color,background-color] hover:-translate-y-px hover:border-border/80 hover:shadow-[0_16px_30px_-26px_rgba(15,23,42,0.35)] data-[selected=true]:border-primary/20 data-[selected=true]:bg-gradient-to-b data-[selected=true]:from-primary/[0.07] data-[selected=true]:to-background data-[selected=true]:shadow-[0_20px_34px_-28px_rgba(37,99,235,0.45)]"
                   >
                     <div className="flex min-w-0 flex-1 items-start gap-3">
                       <div className={cn(
-                        "mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition-colors",
+                        "relative mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border text-[11px] font-semibold tracking-[0.16em] shadow-sm transition-all",
                         value === patient.id
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border/60 bg-muted/50 text-muted-foreground"
+                          ? "border-primary/20 bg-gradient-to-br from-primary via-primary/90 to-sky-500 text-primary-foreground"
+                          : "border-border/60 bg-gradient-to-br from-muted/90 to-background text-foreground/70 group-hover:border-primary/15 group-hover:text-primary"
                       )}>
-                        {value === patient.id ? <Check className="h-4 w-4" /> : <User className="h-4 w-4" />}
+                        <span className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.7),transparent_58%)] opacity-70" />
+                        {value === patient.id ? (
+                          <Check className="relative h-4 w-4" />
+                        ) : (
+                          <span className="relative">{getPatientInitials(getPatientName(patient))}</span>
+                        )}
                       </div>
 
                       <div className="min-w-0 flex-1">
@@ -321,7 +357,7 @@ export function PatientCombobox({
                             {getPatientName(patient)}
                           </span>
                           {value === patient.id && (
-                            <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                            <span className="shrink-0 rounded-full border border-primary/10 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
                               Selecionado
                             </span>
                           )}
@@ -329,12 +365,12 @@ export function PatientCombobox({
 
                         <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                           {patient.phone && (
-                            <span className="rounded-full bg-muted px-2 py-0.5">
+                            <span className="rounded-full border border-border/60 bg-muted/60 px-2 py-0.5">
                               {patient.phone}
                             </span>
                           )}
                           {patient.cpf && (
-                            <span className="rounded-full bg-muted px-2 py-0.5">
+                            <span className="rounded-full border border-border/60 bg-muted/60 px-2 py-0.5">
                               CPF {patient.cpf}
                             </span>
                           )}
@@ -349,6 +385,15 @@ export function PatientCombobox({
                           </span>
                         )}
                       </div>
+
+                      <div className={cn(
+                        "mt-0.5 hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl border shadow-sm sm:flex",
+                        value === patient.id
+                          ? "border-primary/15 bg-primary/10 text-primary"
+                          : "border-border/60 bg-background text-muted-foreground group-hover:border-primary/15 group-hover:text-primary"
+                      )}>
+                        <Check className={cn("h-4 w-4 transition-opacity", value === patient.id ? "opacity-100" : "opacity-40")} />
+                      </div>
                     </div>
                   </CommandItem>
                 ))}
@@ -361,10 +406,10 @@ export function PatientCombobox({
                 <CommandGroup className="p-0">
                   <CommandItem
                     onSelect={handleCreateNew}
-                    className="cursor-pointer rounded-xl px-3 py-3 text-primary data-[selected=true]:bg-primary/5"
+                    className="cursor-pointer rounded-2xl border border-transparent px-3 py-3 text-primary transition-[border-color,background-color,box-shadow] data-[selected=true]:border-primary/10 data-[selected=true]:bg-primary/5 data-[selected=true]:shadow-sm"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary/10 bg-gradient-to-br from-primary/15 to-sky-500/10 text-primary shadow-sm">
                         <UserPlus className="h-4 w-4" />
                       </div>
                       <div className="flex flex-col text-left">

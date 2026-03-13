@@ -138,5 +138,6 @@ export { Textarea } from './textarea';
 export * from './toggle-group';
 export * from './toggle';
 export { Tooltip } from './tooltip';
+export { SmartDatePicker } from './smart-date-picker';
 export { toast, useToast } from './use-toast';
 export { Toaster } from './toaster';

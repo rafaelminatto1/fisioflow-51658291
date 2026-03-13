@@ -8,7 +8,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
   const { projectId } = c.req.query();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   let sql = `SELECT *, task_references as references FROM tarefas WHERE organization_id = $1`;
   const params: unknown[] = [user.organizationId];
@@ -23,7 +23,7 @@ app.get('/', requireAuth, async (c) => {
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
   const body = await c.req.json();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   const result = await db.query(
     `INSERT INTO tarefas (organization_id, created_by, responsavel_id, project_id, parent_id,
@@ -50,7 +50,7 @@ app.patch('/:id', requireAuth, async (c) => {
   const user = c.get('user');
   const id = c.req.param('id');
   const body = await c.req.json();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   // Map frontend field 'references' to DB column 'task_references'
   if ('references' in body && !('task_references' in body)) body.task_references = body.references;
@@ -89,7 +89,7 @@ app.patch('/:id', requireAuth, async (c) => {
 app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
   const id = c.req.param('id');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   await db.query(`DELETE FROM tarefas WHERE id = $1 AND organization_id = $2`, [id, user.organizationId]);
   return c.json({ ok: true });
 });
@@ -98,7 +98,7 @@ app.delete('/:id', requireAuth, async (c) => {
 app.post('/bulk', requireAuth, async (c) => {
   const user = c.get('user');
   const { updates } = await c.req.json() as { updates: Array<{ id: string; status?: string; order_index?: number }> };
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   await Promise.all(updates.map(({ id, ...fields }) => {
     const sets: string[] = ['updated_at = NOW()'];

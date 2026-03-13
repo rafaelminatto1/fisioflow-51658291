@@ -16,7 +16,7 @@ function safeJsonArray(value: unknown, fallback: unknown[] = []): unknown[] {
 }
 
 app.get('/consents/:patientId', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const { patientId } = c.req.param();
 
@@ -32,7 +32,7 @@ app.get('/consents/:patientId', requireAuth, async (c) => {
 });
 
 app.put('/consents/:patientId', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const { patientId } = c.req.param();
   const body = await c.req.json() as Record<string, unknown>;
@@ -74,7 +74,7 @@ app.put('/consents/:patientId', requireAuth, async (c) => {
 });
 
 app.post('/consents/:patientId/revoke', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const { patientId } = c.req.param();
 
@@ -92,7 +92,7 @@ app.post('/consents/:patientId/revoke', requireAuth, async (c) => {
 });
 
 app.get('/review-config', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
 
   const result = await pool.query(
@@ -115,7 +115,7 @@ app.get('/review-config', requireAuth, async (c) => {
 });
 
 app.put('/review-config', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const body = await c.req.json() as Record<string, unknown>;
 
@@ -145,7 +145,7 @@ app.put('/review-config', requireAuth, async (c) => {
 });
 
 app.get('/birthday-config', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
 
   const result = await pool.query(
@@ -167,7 +167,7 @@ app.get('/birthday-config', requireAuth, async (c) => {
 });
 
 app.put('/birthday-config', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const body = await c.req.json() as Record<string, unknown>;
 
@@ -195,7 +195,7 @@ app.put('/birthday-config', requireAuth, async (c) => {
 });
 
 app.get('/recall-campaigns', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
 
   const result = await pool.query(
@@ -210,7 +210,7 @@ app.get('/recall-campaigns', requireAuth, async (c) => {
 });
 
 app.post('/recall-campaigns', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const body = await c.req.json() as Record<string, unknown>;
 
@@ -233,7 +233,7 @@ app.post('/recall-campaigns', requireAuth, async (c) => {
 });
 
 app.put('/recall-campaigns/:id', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const { id } = c.req.param();
   const body = await c.req.json() as Record<string, unknown>;
@@ -267,7 +267,7 @@ app.put('/recall-campaigns/:id', requireAuth, async (c) => {
 });
 
 app.delete('/recall-campaigns/:id', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const { id } = c.req.param();
 
@@ -282,7 +282,7 @@ app.delete('/recall-campaigns/:id', requireAuth, async (c) => {
 });
 
 app.get('/referrals/stats', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
 
   const [codesRes, redemptionsRes] = await Promise.all([
@@ -315,7 +315,7 @@ app.get('/referrals/stats', requireAuth, async (c) => {
 });
 
 app.post('/referrals', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const body = await c.req.json() as Record<string, unknown>;
 
@@ -342,7 +342,7 @@ app.post('/referrals', requireAuth, async (c) => {
 });
 
 app.get('/referrals/code/:code', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const { code } = c.req.param();
 
@@ -358,7 +358,7 @@ app.get('/referrals/code/:code', requireAuth, async (c) => {
 });
 
 app.get('/referrals/patient/:patientId', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const { patientId } = c.req.param();
 
@@ -376,7 +376,7 @@ app.get('/referrals/patient/:patientId', requireAuth, async (c) => {
 });
 
 app.post('/referrals/redeem', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const body = await c.req.json() as Record<string, unknown>;
   const code = String(body.code ?? '').toUpperCase();
@@ -429,7 +429,7 @@ app.post('/referrals/redeem', requireAuth, async (c) => {
 });
 
 app.get('/fisiolink', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const result = await pool.query(
     `SELECT organization_id, slug, whatsapp_number, google_maps_url, phone,
@@ -443,7 +443,7 @@ app.get('/fisiolink', requireAuth, async (c) => {
 });
 
 app.put('/fisiolink', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const body = await c.req.json() as Record<string, unknown>;
 
@@ -483,7 +483,7 @@ app.put('/fisiolink', requireAuth, async (c) => {
 });
 
 app.get('/fisiolink/:slug/analytics', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { slug } = c.req.param();
 
   const result = await pool.query(
@@ -500,7 +500,7 @@ app.get('/fisiolink/:slug/analytics', requireAuth, async (c) => {
 });
 
 app.get('/exports', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const patientId = c.req.query('patientId');
 
@@ -525,7 +525,7 @@ app.get('/exports', requireAuth, async (c) => {
 });
 
 app.get('/content-calendar', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
 
   const result = await pool.query(
@@ -540,7 +540,7 @@ app.get('/content-calendar', requireAuth, async (c) => {
 });
 
 app.post('/content-calendar', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const body = await c.req.json() as Record<string, unknown>;
 
@@ -565,7 +565,7 @@ app.post('/content-calendar', requireAuth, async (c) => {
 });
 
 app.put('/content-calendar/:id', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const { id } = c.req.param();
   const body = await c.req.json() as Record<string, unknown>;
@@ -601,7 +601,7 @@ app.put('/content-calendar/:id', requireAuth, async (c) => {
 });
 
 app.delete('/content-calendar/:id', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const { id } = c.req.param();
 
@@ -613,7 +613,7 @@ app.delete('/content-calendar/:id', requireAuth, async (c) => {
 });
 
 app.post('/exports', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const body = await c.req.json() as Record<string, unknown>;
 
@@ -641,7 +641,7 @@ app.post('/exports', requireAuth, async (c) => {
 });
 
 app.delete('/exports/:id', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const { id } = c.req.param();
 
@@ -658,7 +658,7 @@ app.delete('/exports/:id', requireAuth, async (c) => {
 });
 
 app.get('/roi', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const startDate = c.req.query('startDate');
   const endDate = c.req.query('endDate');
@@ -686,7 +686,7 @@ app.get('/roi', requireAuth, async (c) => {
 });
 
 app.get('/public/fisiolink/:slug', async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { slug } = c.req.param();
 
   const result = await pool.query(
@@ -701,7 +701,7 @@ app.get('/public/fisiolink/:slug', async (c) => {
 });
 
 app.post('/public/fisiolink/:slug/click', async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { slug } = c.req.param();
   const body = await c.req.json().catch(() => ({})) as Record<string, unknown>;
 

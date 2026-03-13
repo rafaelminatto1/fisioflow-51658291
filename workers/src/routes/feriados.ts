@@ -20,7 +20,7 @@ type FeriadoRow = {
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
   const { year } = c.req.query();
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   const conditions = ['organization_id = $1'];
   const params: unknown[] = [user.organizationId];
@@ -39,7 +39,7 @@ app.get('/', requireAuth, async (c) => {
 
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Partial<FeriadoRow>;
 
   const result = await pool.query(
@@ -62,7 +62,7 @@ app.post('/', requireAuth, async (c) => {
 
 app.put('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Partial<FeriadoRow>;
   const sets: string[] = [];
@@ -99,7 +99,7 @@ app.put('/:id', requireAuth, async (c) => {
 
 app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await pool.query(

@@ -42,12 +42,18 @@ import { CalendarDayView } from './CalendarDayView';
 import { CalendarWeekViewDndKit } from './CalendarWeekViewDndKit';
 import { CalendarMonthView } from './CalendarMonthView';
 import { useCalendarDragDndKit } from '@/hooks/useCalendarDragDndKit';
+import { useCalendarDrag } from '@/hooks/useCalendarDrag';
 import { useScheduleCapacity } from '@/hooks/useScheduleCapacity';
 import { formatDateToLocalISO } from '@/lib/utils/dateFormat';
 import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { WaitlistIndicator } from './WaitlistIndicator';
+import {
+  applyOptimisticAppointmentOverlay,
+  hasOptimisticUpdateSynced,
+  type PendingOptimisticUpdate,
+} from './calendarOptimistic';
 import {
   NON_CAPACITY_STATUSES,
   isMarkedOverbooked,
@@ -185,14 +191,12 @@ export const CalendarView = memo(({
   const { getMinCapacityForInterval } = useScheduleCapacity();
 
   // Optimistic updates state - maintains a local copy of appointments with pending changes
-  const [optimisticAppointments, setOptimisticAppointments] = useState<Appointment[]>([]);
-  const [pendingOptimisticUpdate, setPendingOptimisticUpdate] = useState<{ id: string; originalDate: string; originalTime: string } | null>(null);
+  const [pendingOptimisticUpdate, setPendingOptimisticUpdate] = useState<PendingOptimisticUpdate | null>(null);
 
-  // Use optimistic appointments when there's a pending update, otherwise use original appointments (filter out null/undefined to avoid "reading 'id'" on drag)
   const baseDisplayAppointments = useMemo(() => {
-    const base = pendingOptimisticUpdate && optimisticAppointments.length > 0 ? optimisticAppointments : appointments;
+    const base = applyOptimisticAppointmentOverlay(appointments, pendingOptimisticUpdate);
     return (base || []).filter((a): a is Appointment => a != null && typeof (a as Appointment).id === 'string');
-  }, [appointments, optimisticAppointments, pendingOptimisticUpdate]);
+  }, [appointments, pendingOptimisticUpdate]);
 
   // Marca automaticamente os agendamentos que excedem a capacidade configurada.
   const overbookedAppointmentIds = useMemo(() => {
@@ -319,43 +323,57 @@ export const CalendarView = memo(({
     setPendingOptimisticUpdate({
       id: appointmentId,
       originalDate: appointment.date,
-      originalTime: appointment.time
+      originalTime: appointment.time,
+      targetDate: formatDateToLocalISO(newDate) as Appointment['date'],
+      targetTime: newTime,
     });
-
-    // Create updated appointment with new date/time
-    const updatedAppointment: Appointment = {
-      ...appointment,
-      date: formatDateToLocalISO(newDate) as any, // Type cast for date-fns compatibility
-      time: newTime
-    };
-
-    // Update local state immediately (optimistic)
-    setOptimisticAppointments(
-      safeAppointments.map(a => a.id === appointmentId ? updatedAppointment : a)
-    );
   }, [appointments]);
 
   const handleRevertUpdate = useCallback((_appointmentId: string) => {
-    // Clear optimistic state to revert to original appointments
     setPendingOptimisticUpdate(null);
-    setOptimisticAppointments([]);
   }, []);
+
+  // Drag and drop logic from hook (native HTML5)
+  const {
+    dragState: dragStateNative,
+    dropTarget: dropTargetNative,
+    showConfirmDialog: showConfirmNative,
+    showOverCapacityDialog: showOverCapacityNative,
+    pendingReschedule: pendingRescheduleNative,
+    pendingOverCapacity: pendingOverCapacityNative,
+    targetAppointments,
+    handleDragStart: handleDragStartNative,
+    handleDragEnd: handleDragEndNative,
+    handleDragOver: handleDragOverNative,
+    handleDragLeave: handleDragLeaveNative,
+    handleDrop: handleDropNative,
+    handleConfirmReschedule: handleConfirmNative,
+    handleCancelReschedule: handleCancelNative,
+    handleConfirmOverCapacity: handleConfirmOverCapacityNative,
+    handleCancelOverCapacity: handleCancelOverCapacityNative,
+  } = useCalendarDrag({
+    onAppointmentReschedule,
+    onOptimisticUpdate: handleOptimisticUpdate,
+    onRevertUpdate: handleRevertUpdate,
+    getAppointmentsForSlot,
+    getMinCapacityForInterval,
+  });
 
   // Drag and drop logic from hook (@dnd-kit)
   const {
     dragState,
     dropTarget,
-    showConfirmDialog,
-    pendingReschedule,
+    showConfirmDialog: showConfirmDndKit,
+    pendingReschedule: pendingRescheduleDndKit,
     handleDragStart: handleDragStartDndKit,
     handleDragOver: handleDragOverDndKit,
     handleDragEnd: handleDragEndDndKit,
-    handleConfirmReschedule,
-    handleCancelReschedule,
-    showOverCapacityDialog,
-    pendingOverCapacity,
-    handleConfirmOverCapacity,
-    handleCancelOverCapacity,
+    handleConfirmReschedule: handleConfirmDndKit,
+    handleCancelReschedule: handleCancelDndKit,
+    showOverCapacityDialog: showOverCapacityDndKit,
+    pendingOverCapacity: pendingOverCapacityDndKit,
+    handleConfirmOverCapacity: handleConfirmOverCapacityDndKit,
+    handleCancelOverCapacity: handleCancelOverCapacityDndKit,
   } = useCalendarDragDndKit({
     onAppointmentReschedule,
     onOptimisticUpdate: handleOptimisticUpdate,
@@ -363,6 +381,17 @@ export const CalendarView = memo(({
     getAppointmentsForSlot,
     getMinCapacityForInterval,
   });
+
+  // Merged states for shared components
+  const isConfirmDialogOpen = showConfirmNative || showConfirmDndKit;
+  const isOverCapacityDialogOpen = showOverCapacityNative || showOverCapacityDndKit;
+  const activePendingReschedule = pendingRescheduleNative || pendingRescheduleDndKit;
+  const activePendingOverCapacity = pendingOverCapacityNative || pendingOverCapacityDndKit;
+
+  const handleConfirmReschedule = showConfirmNative ? handleConfirmNative : handleConfirmDndKit;
+  const handleCancelReschedule = showConfirmNative ? handleCancelNative : handleCancelDndKit;
+  const handleConfirmOverCapacity = showOverCapacityNative ? handleConfirmOverCapacityNative : handleConfirmOverCapacityDndKit;
+  const handleCancelOverCapacity = showOverCapacityNative ? handleCancelOverCapacityNative : handleCancelOverCapacityDndKit;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -372,19 +401,22 @@ export const CalendarView = memo(({
     return () => clearInterval(timer);
   }, []);
 
-  // Clear optimistic state when save completes successfully (savingAppointmentId becomes null)
+  const activeSavingAppointmentId = dragState.savingAppointmentId || dragStateNative.savingAppointmentId;
+
+  // Keep the optimistic overlay until upstream appointments already reflect the target slot.
   useEffect(() => {
-    if (!dragState.savingAppointmentId && !pendingOptimisticUpdate) {
-      // No pending update, nothing to do
+    if (!pendingOptimisticUpdate) {
       return;
     }
 
-    if (!dragState.savingAppointmentId && pendingOptimisticUpdate) {
-      // Save completed successfully - clear optimistic state
-      setPendingOptimisticUpdate(null);
-      setOptimisticAppointments([]);
+    if (activeSavingAppointmentId) {
+      return;
     }
-  }, [dragState.savingAppointmentId, pendingOptimisticUpdate]);
+
+    if (hasOptimisticUpdateSynced(appointments, pendingOptimisticUpdate)) {
+      setPendingOptimisticUpdate(null);
+    }
+  }, [activeSavingAppointmentId, appointments, pendingOptimisticUpdate]);
 
   const currentTimePosition = useMemo(() => {
     const hours = currentTime.getHours();
@@ -433,7 +465,7 @@ export const CalendarView = memo(({
 
   // Restore focus to calendar grid when a reschedule dialog closes
   const calendarGridRef = useRef<HTMLDivElement>(null);
-  const isAnyRescheduleDialogOpen = showConfirmDialog || showOverCapacityDialog;
+  const isAnyRescheduleDialogOpen = isConfirmDialogOpen || isOverCapacityDialogOpen;
   const prevShowDialogRef = useRef(isAnyRescheduleDialogOpen);
   useEffect(() => {
     const didClose = prevShowDialogRef.current && !isAnyRescheduleDialogOpen;
@@ -1057,22 +1089,22 @@ export const CalendarView = memo(({
       </Card>
 
       <RescheduleConfirmDialog
-        open={showConfirmDialog}
+        open={isConfirmDialogOpen}
         onOpenChange={(open) => !open && handleCancelReschedule()}
-        appointment={pendingReschedule?.appointment || null}
-        newDate={pendingReschedule?.newDate || null}
-        newTime={pendingReschedule?.newTime || null}
+        appointment={activePendingReschedule?.appointment || null}
+        newDate={activePendingReschedule?.newDate || null}
+        newTime={activePendingReschedule?.newTime || null}
         onConfirm={handleConfirmReschedule}
       />
 
       <RescheduleCapacityDialog
-        open={showOverCapacityDialog}
+        open={isOverCapacityDialogOpen}
         onOpenChange={(open) => !open && handleCancelOverCapacity()}
-        appointment={pendingOverCapacity?.appointment || null}
-        newDate={pendingOverCapacity?.newDate || null}
-        newTime={pendingOverCapacity?.newTime || null}
-        currentCount={pendingOverCapacity?.currentCount || 0}
-        maxCapacity={pendingOverCapacity?.maxCapacity || 0}
+        appointment={activePendingOverCapacity?.appointment || null}
+        newDate={activePendingOverCapacity?.newDate || null}
+        newTime={activePendingOverCapacity?.newTime || null}
+        currentCount={activePendingOverCapacity?.currentCount || 0}
+        maxCapacity={activePendingOverCapacity?.maxCapacity || 0}
         onConfirm={handleConfirmOverCapacity}
         onCancel={handleCancelOverCapacity}
       />
