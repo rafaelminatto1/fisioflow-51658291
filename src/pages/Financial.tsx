@@ -42,13 +42,12 @@ import { exportFinancialReport } from '@/lib/export/excelExport';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
+import { ContasFinanceirasContent } from './financeiro/ContasFinanceirasPage';
+import { FluxoCaixaContent } from './financeiro/FluxoCaixaPage';
+import { RecibosContent } from './financeiro/RecibosPage';
+import { NFSeContent } from './financeiro/NFSePage';
+
 const PackagesManager = lazy(() => import('@/components/financial').then(m => ({ default: m.PackagesManager })));
-const PackageUsageReport = lazy(() => import('@/components/financial/PackageUsageReport').then(m => ({ default: m.PackageUsageReport })));
-const FinancialAIAdvisor = lazy(() => import('@/components/financial/FinancialAIAdvisor').then(m => ({ default: m.FinancialAIAdvisor })));
-const ContasFinanceirasPage = lazy(() => import('./financeiro/ContasFinanceirasPage'));
-const FluxoCaixaPage = lazy(() => import('./financeiro/FluxoCaixaPage'));
-const RecibosPage = lazy(() => import('./financeiro/RecibosPage'));
-const NFSePage = lazy(() => import('./financeiro/NFSePage'));
 
 const Financial = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -359,27 +358,19 @@ const Financial = () => {
           </TabsContent>
 
           <TabsContent value="fluxo_caixa" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
-            <Suspense fallback={<LoadingSkeleton type="list" rows={4} />}>
-              <FluxoCaixaPage />
-            </Suspense>
+            <FluxoCaixaContent />
           </TabsContent>
 
           <TabsContent value="contas" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
-            <Suspense fallback={<LoadingSkeleton type="list" rows={4} />}>
-              <ContasFinanceirasPage />
-            </Suspense>
+            <ContasFinanceirasContent />
           </TabsContent>
 
           <TabsContent value="recibos" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
-            <Suspense fallback={<LoadingSkeleton type="list" rows={4} />}>
-              <RecibosPage />
-            </Suspense>
+            <RecibosContent />
           </TabsContent>
 
           <TabsContent value="nfe" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
-            <Suspense fallback={<LoadingSkeleton type="list" rows={4} />}>
-              <NFSePage />
-            </Suspense>
+            <NFSeContent />
           </TabsContent>
 
           <TabsContent value="pacotes" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300">

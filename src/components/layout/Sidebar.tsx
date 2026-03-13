@@ -155,8 +155,7 @@ const cadastrosSubmenu = [
 ];
 
 const financeiroSubmenu = [
-  { icon: DollarSign, label: 'Financeiro Hub', href: '/financial' },
-  { icon: Receipt, label: 'Faturamento e Recibos', href: '/financeiro/recibos' },
+  { icon: DollarSign, label: 'Painel Financeiro', href: '/financial' },
 ];
 
 const marketingSubmenu = [
