@@ -1,10 +1,10 @@
 /**
  * WikiSidebar - Sidebar de navegação da Wiki
- * Mostra árvore de páginas organizadas por categoria
+ * Mostra árvore de páginas organizadas por categoria, favoritos, recentes e tags.
  */
 
 import React, { useMemo } from 'react';
-import { ChevronRight, Folder, File, Star, Clock, Library, Search, Plus } from 'lucide-react';
+import { ChevronRight, Folder, File, Star, Clock, Library, Search, Plus, Tag, Pin } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,7 @@ interface WikiSidebarProps {
   onCreatePage: () => void;
   onKnowledgeHubSelect?: () => void;
   onDashboardSelect?: () => void;
+  onTagSelect?: (tag: string) => void;
 }
 
 export function WikiSidebar({
@@ -31,15 +32,22 @@ export function WikiSidebar({
   onCreatePage,
   onKnowledgeHubSelect,
   onDashboardSelect,
+  onTagSelect,
 }: WikiSidebarProps) {
   const [searchQuery, setSearchQuery] = React.useState('');
   const [expandedCategories, setExpandedCategories] = React.useState<Set<string>>(
     new Set(categories.map((c) => c.id))
   );
 
-  // Favorites (mocked logic or based on view_count)
+  // Pinned Pages
+  const pinned = useMemo(() => 
+    pages.filter(p => p.is_pinned).slice(0, 5),
+    [pages]
+  );
+
+  // Favorites (based on view_count)
   const favorites = useMemo(() => 
-    pages.filter(p => p.view_count > 10).slice(0, 5),
+    pages.filter(p => p.view_count > 10 && !p.is_pinned).slice(0, 5),
     [pages]
   );
 
@@ -52,6 +60,15 @@ export function WikiSidebar({
     }).slice(0, 5),
     [pages]
   );
+
+  // Tags mais usadas
+  const allTags = useMemo(() => {
+    const counts: Record<string, number> = {};
+    pages.forEach(p => p.tags?.forEach(t => counts[t] = (counts[t] || 0) + 1));
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10);
+  }, [pages]);
 
   // Build tree structure
   const pageTree = useMemo(() => {
@@ -133,11 +150,28 @@ export function WikiSidebar({
       {/* Pages */}
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-6">
+          {/* Pinned */}
+          {pinned.length > 0 && (
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground px-2 py-1 font-bold mb-1 flex items-center gap-1">
+                <Pin className="w-3 h-3 text-orange-500 fill-orange-500" /> Fixados
+              </div>
+              {pinned.map((page) => (
+                <PageItem
+                  key={`pin-${page.id}`}
+                  page={page}
+                  isSelected={selectedPageId === page.id}
+                  onClick={() => onPageSelect(page)}
+                />
+              ))}
+            </div>
+          )}
+
           {/* Favorites */}
           {favorites.length > 0 && (
             <div>
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground px-2 py-1 font-bold mb-1 flex items-center gap-1">
-                <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" /> Favoritos
+                <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" /> Populares
               </div>
               {favorites.map((page) => (
                 <PageItem
@@ -228,6 +262,27 @@ export function WikiSidebar({
               );
             })}
           </div>
+
+          {/* Tags */}
+          {allTags.length > 0 && (
+            <div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground px-2 py-1 font-bold mb-1 flex items-center gap-1">
+                <Tag className="w-3 h-3" /> Tags Populares
+              </div>
+              <div className="flex flex-wrap gap-1 px-2 mt-2">
+                {allTags.map(([tag, count]) => (
+                  <Badge 
+                    key={tag} 
+                    variant="outline" 
+                    className="text-[10px] px-1.5 py-0 cursor-pointer hover:bg-muted transition-colors"
+                    onClick={() => onTagSelect?.(tag)}
+                  >
+                    #{tag}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </ScrollArea>
 
@@ -288,4 +343,3 @@ const Sparkles = ({ className }: { className?: string }) => (
     <path d="M17 19h4"/>
   </svg>
 );
-
