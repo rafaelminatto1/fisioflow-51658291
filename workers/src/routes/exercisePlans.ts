@@ -8,7 +8,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 // List plans for a patient
 app.get('/', requireAuth, async (c) => {
   const { patientId } = c.req.query();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   let sql = `SELECT p.*, json_agg(i.* ORDER BY i.order_index) FILTER (WHERE i.id IS NOT NULL) AS items
              FROM exercise_plans p
@@ -25,7 +25,7 @@ app.get('/', requireAuth, async (c) => {
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
   const body = await c.req.json();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   const planResult = await db.query(
     `INSERT INTO exercise_plans (patient_id, created_by, name, description, status, start_date, end_date)
@@ -59,7 +59,7 @@ app.post('/', requireAuth, async (c) => {
 app.patch('/:id', requireAuth, async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   const allowed = ['name', 'description', 'status', 'start_date', 'end_date'];
   const sets: string[] = [];
@@ -83,7 +83,7 @@ app.patch('/:id', requireAuth, async (c) => {
 // Delete plan (cascades to items)
 app.delete('/:id', requireAuth, async (c) => {
   const id = c.req.param('id');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   await db.query(`DELETE FROM exercise_plans WHERE id = $1`, [id]);
   return c.json({ ok: true });
 });
@@ -92,7 +92,7 @@ app.delete('/:id', requireAuth, async (c) => {
 app.post('/:id/items', requireAuth, async (c) => {
   const planId = c.req.param('id');
   const body = await c.req.json();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   const result = await db.query(
     `INSERT INTO exercise_plan_items (plan_id, exercise_id, order_index, sets, repetitions, duration, notes)

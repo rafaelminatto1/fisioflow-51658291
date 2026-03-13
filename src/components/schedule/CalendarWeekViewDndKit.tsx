@@ -14,6 +14,7 @@ import { VirtualizedCalendarGrid } from './virtualized/VirtualizedCalendarGrid';
 import { useCardSize } from '@/hooks/useCardSize';
 import { calculateSlotHeightFromCardSize } from '@/lib/calendar/cardHeightCalculator';
 import { getOverlapStackPosition } from '@/lib/calendar';
+import { buildDragPreviewAppointments, isSameAppointmentSlot } from '@/lib/calendar/dragPreview';
 import {
 
   DndContext,
@@ -69,6 +70,7 @@ const WEEK_GRID_HEIGHT_BOOST = 0;
 const INITIAL_MEASUREMENT_SETTLE_MS = 0;
 const INITIAL_MEASUREMENT_MAX_WAIT_MS = 200;
 const INITIAL_MEASUREMENT_MAX_RETRIES = 3;
+const SLOT_ID_REGEX = /slot-(\d{4}-\d{2}-\d{2})-(\d{2}:\d{2})/;
 
 /** Margem e espaçamento entre cards sobrepostos (layout lateral, em px). */
 const _OVERLAP_LAYOUT_MARGIN_PX = 1;
@@ -86,6 +88,19 @@ const normalizeTime = (time: string | null | undefined): string => {
 const parseAppointmentDate = (date: string | Date | null | undefined): Date | null => {
   if (!date) return null;
   return typeof date === 'string' ? parseISO(date) : date;
+};
+
+const parseSlotDroppableId = (slotId: string | null): { date: Date; time: string } | null => {
+  if (!slotId) return null;
+
+  const match = slotId.match(SLOT_ID_REGEX);
+  if (!match) return null;
+
+  const [, dateStr, timeStr] = match;
+  return {
+    date: parseResponseDate(dateStr),
+    time: timeStr,
+  };
 };
 
 // =====================================================================
@@ -106,7 +121,7 @@ export const CalendarWeekViewDndKit = memo(({
   openPopoverId,
   setOpenPopoverId,
   dragState,
-  dropTarget,
+  dropTarget: _dropTarget,
   handleDragStart: handleDragStartHook,
   handleDragOver: handleDragOverHook,
   handleDragEnd: handleDragEndHook,
@@ -116,7 +131,7 @@ export const CalendarWeekViewDndKit = memo(({
 }: CalendarWeekViewDndKitProps) => {
   // Get card size configuration from user preferences
   const { cardSize, heightScale } = useCardSize();
-  const preferredSlotHeight = calculateSlotHeightFromCardSize(cardSize, heightScale);
+  const _preferredSlotHeight = calculateSlotHeightFromCardSize(cardSize, heightScale);
 
   const isMobile = useIsMobile();
   const isTouch = useIsTouch();
@@ -299,7 +314,6 @@ export const CalendarWeekViewDndKit = memo(({
       }
       observer?.disconnect();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount only — slot count changes are handled via timeSlotsLengthRef
 
   // Current time indicator
@@ -338,23 +352,43 @@ export const CalendarWeekViewDndKit = memo(({
     });
   }, [appointments, weekDays]);
 
+  const hoveredSlotTarget = useMemo(() => {
+    return parseSlotDroppableId(currentOverId);
+  }, [currentOverId]);
+
+  const previewTarget = useMemo(() => {
+    if (!dragState.isDragging || !draggedAppointment || !hoveredSlotTarget) {
+      return null;
+    }
+
+    if (isSameAppointmentSlot(draggedAppointment, hoveredSlotTarget)) {
+      return null;
+    }
+
+    return hoveredSlotTarget;
+  }, [dragState.isDragging, draggedAppointment, hoveredSlotTarget]);
+
+  const previewWeekAppointments = useMemo(() => {
+    return buildDragPreviewAppointments(weekAppointments, draggedAppointment, previewTarget);
+  }, [weekAppointments, draggedAppointment, previewTarget]);
+
   // Group appointments by day index
   const appointmentsByDayIndex = useMemo(() => {
     const map = new Map<number, Appointment[]>();
     weekDays.forEach((day, dayIndex) => {
-      const dayApts = weekAppointments.filter((apt) => {
+      const dayApts = previewWeekAppointments.filter((apt) => {
         const d = parseAppointmentDate(apt.date);
         return d && isSameDay(d, day);
       });
       map.set(dayIndex, dayApts);
     });
     return map;
-  }, [weekAppointments, weekDays]);
+  }, [previewWeekAppointments, weekDays]);
 
   // Group appointments by time and day for virtualization
   const appointmentsByTimeAndDay = useMemo(() => {
     const map = new Map<string, Map<number, Appointment[]>>();
-    weekAppointments.forEach(apt => {
+    previewWeekAppointments.forEach(apt => {
       const time = normalizeTime(apt.time);
       const aptDate = parseAppointmentDate(apt.date);
       if (!aptDate) return;
@@ -367,7 +401,7 @@ export const CalendarWeekViewDndKit = memo(({
       dayMap.get(dayIndex)!.push(apt);
     });
     return map;
-  }, [weekAppointments, weekDays]);
+  }, [previewWeekAppointments, weekDays]);
 
   // Blocked time cache
   const blockedStatusCache = useMemo(() => {
@@ -454,7 +488,8 @@ export const CalendarWeekViewDndKit = memo(({
     const heightInPixels = Math.max(MIN_WEEK_SLOT_HEIGHT - 1, (slotHeight * slotCount) - 2);
 
     const dayAppointments = appointmentsByDayIndex.get(dayIndex) ?? [];
-    // Keep card sizing stable while dragging; drop preview already communicates target arrangement.
+    // Recalculate overlap using the simulated day layout so the destination column
+    // shows the same split the user will get after dropping.
     const { index, count } = getOverlapStackPosition(dayAppointments, apt);
 
     // Margem lateral para garantir que o grid seja clicável
@@ -525,7 +560,7 @@ export const CalendarWeekViewDndKit = memo(({
   );
 
   // Render function for virtualization
-  const renderSlot = useCallback((time: string, rowIndex: number) => {
+  const renderSlot = useCallback((time: string, _rowIndex: number) => {
     const isHour = time.endsWith(':00');
     const dayAppointmentsMap = appointmentsByTimeAndDay.get(time);
 
@@ -550,10 +585,10 @@ export const CalendarWeekViewDndKit = memo(({
           const key = `${colIndex}-${time}`;
           const { blocked } = blockedStatusCache.get(key) || { blocked: false };
 
-          const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === time;
+          const isDropTarget = hoveredSlotTarget && isSameDay(hoveredSlotTarget.date, day) && hoveredSlotTarget.time === time;
           const isDraggingOver = currentOverId === `slot-${formatDateToLocalISO(day)}-${time}`;
 
-          const slotAppointments = isDropTarget || isDraggingOver
+          const slotAppointments = !previewTarget && (isDropTarget || isDraggingOver)
             ? getAppointmentsForSlot(day, time).filter(a => a.id !== draggedAppointment?.id)
             : [];
 
@@ -571,7 +606,7 @@ export const CalendarWeekViewDndKit = memo(({
               isDropTarget={!!isDropTarget}
               isDraggingOver={isDraggingOver}
               targetAppointments={slotAppointments}
-              draggedAppointment={draggedAppointment}
+              draggedAppointment={previewTarget ? null : draggedAppointment}
               slotHeight={slotHeight}
               onClick={() => {
                 if (!blocked && !isClosed) {
@@ -584,11 +619,11 @@ export const CalendarWeekViewDndKit = memo(({
                 const style = getAppointmentStyle(apt);
                 if (!style) return null;
 
+                const isPreviewDraggedAppointment = !!previewTarget && draggedAppointment?.id === apt.id;
                 const isDraggingThisOne = isDraggingThis(apt.id);
-                const dayIndex = colIndex;
-                const dayAppointmentsForGhost = appointmentsByDayIndex.get(dayIndex) ?? [];
-                const overlapCount = getOverlapStackPosition(dayAppointmentsForGhost, apt).count;
-                const hideGhostWhenSiblings = isDraggingThisOne && overlapCount > 1;
+                // Se estiver arrastando este card, escondemos o original (ghost) 
+                // para que apenas o DragOverlay (o maior com cantos arredondados) seja visível.
+                const hideGhostWhenDragging = isDraggingThisOne;
 
                 // Adjust style for relative positioning in DroppableTimeSlot
                 const cellStyle: React.CSSProperties = {
@@ -599,6 +634,29 @@ export const CalendarWeekViewDndKit = memo(({
                   width: style.width,
                   zIndex: 10 + (style.zIndex as number || 0),
                 };
+
+                if (isPreviewDraggedAppointment) {
+                  return (
+                    <CalendarAppointmentCard
+                      key={apt.id}
+                      appointment={apt}
+                      style={{ ...cellStyle, pointerEvents: 'none' }}
+                      isDraggable={false}
+                      isDragging={false}
+                      isSaving={false}
+                      isDropTarget={!!isDropTarget || isDraggingOver}
+                      hideGhostWhenSiblings={false}
+                      onDragStart={() => { }}
+                      onDragEnd={() => { }}
+                      onDragOver={() => { }}
+                      onDrop={() => { }}
+                      onOpenPopover={() => { }}
+                      isPopoverOpen={false}
+                      dragHandleOnly={false}
+                      density="compact"
+                    />
+                  );
+                }
 
                 return (
                   <DraggableAppointment
@@ -617,7 +675,7 @@ export const CalendarWeekViewDndKit = memo(({
                       isDragging={isDraggingThisOne}
                       isSaving={apt.id === savingAppointmentId}
                       isDropTarget={!!isDropTarget}
-                      hideGhostWhenSiblings={hideGhostWhenSiblings}
+                      hideGhostWhenSiblings={hideGhostWhenDragging}
                       onDragStart={() => { }}
                       onDragEnd={() => { }}
                       onDragOver={() => { }}
@@ -647,13 +705,13 @@ export const CalendarWeekViewDndKit = memo(({
     weekDays,
     dayClosedStatus,
     blockedStatusCache,
-    dropTarget,
+    hoveredSlotTarget,
     currentOverId,
     getAppointmentsForSlot,
     draggedAppointment,
+    previewTarget,
     onTimeSlotClick,
     getAppointmentStyle,
-    appointmentsByDayIndex,
     isDraggingThis,
     isDraggable,
     isMobile,

@@ -49,10 +49,12 @@ interface CreatePackageInput {
 
 interface PurchasePackageInput {
   patient_id: string;
-  package_id: string;
+  package_id?: string;
+  name?: string;
   custom_sessions?: number;
   custom_price?: number;
   payment_method?: string;
+  validity_days?: number;
 }
 
 const mapTemplate = (row: SessionPackageTemplateRow): SessionPackage => ({

@@ -97,7 +97,7 @@ app.use('*', requireAuth);
 
 app.get('/articles', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query(
     `
       SELECT *
@@ -112,7 +112,7 @@ app.get('/articles', async (c) => {
 
 app.post('/articles', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
   const metadata = (body.metadata && typeof body.metadata === 'object') ? body.metadata as Record<string, unknown> : {};
   const articleId = String(body.article_id ?? body.id ?? crypto.randomUUID());
@@ -161,7 +161,7 @@ app.post('/articles', async (c) => {
 
 app.put('/articles/:articleId', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { articleId } = c.req.param();
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
   const metadata = (body.metadata && typeof body.metadata === 'object') ? body.metadata as Record<string, unknown> : undefined;
@@ -212,7 +212,7 @@ app.put('/articles/:articleId', async (c) => {
 
 app.post('/articles/sync', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json().catch(() => ({}))) as { articles?: Record<string, unknown>[] };
   const articles = Array.isArray(body.articles) ? body.articles : [];
 
@@ -273,7 +273,7 @@ app.post('/articles/sync', async (c) => {
 
 app.post('/articles/index', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query(
     `SELECT count(*)::int AS total FROM knowledge_articles WHERE organization_id = $1`,
     [user.organizationId],
@@ -283,7 +283,7 @@ app.post('/articles/index', async (c) => {
 
 app.post('/articles/:articleId/process', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { articleId } = c.req.param();
   const body = (await c.req.json().catch(() => ({}))) as { textContent?: string };
   const rawText = String(body.textContent ?? '');
@@ -311,7 +311,7 @@ app.post('/articles/:articleId/process', async (c) => {
 
 app.post('/articles/:articleId/ask', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { articleId } = c.req.param();
   const body = (await c.req.json().catch(() => ({}))) as { query?: string };
   const question = String(body.query ?? '').trim();
@@ -340,7 +340,7 @@ app.post('/articles/:articleId/ask', async (c) => {
 
 app.post('/semantic-search', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json().catch(() => ({}))) as { query?: string; limit?: number };
   const search = String(body.query ?? '').trim().toLowerCase();
   const limit = Math.max(1, Math.min(Number(body.limit ?? 20), 100));
@@ -383,7 +383,7 @@ app.post('/semantic-search', async (c) => {
 
 app.get('/annotations', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query(
     `
       SELECT *
@@ -402,7 +402,7 @@ app.get('/annotations', async (c) => {
 
 app.put('/annotations/:articleId', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const articleId = c.req.param('articleId');
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
   const scope = body.scope === 'user' ? 'user' : 'organization';
@@ -467,7 +467,7 @@ app.put('/annotations/:articleId', async (c) => {
 
 app.get('/curation', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query(
     `
       SELECT *
@@ -482,7 +482,7 @@ app.get('/curation', async (c) => {
 
 app.get('/articles/:articleId/notes', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { articleId } = c.req.param();
   const result = await pool.query(
     `SELECT id, article_id, user_id, content, page_ref, highlight_color, created_at
@@ -496,7 +496,7 @@ app.get('/articles/:articleId/notes', async (c) => {
 
 app.post('/articles/:articleId/notes', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { articleId } = c.req.param();
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
   const result = await pool.query(
@@ -518,7 +518,7 @@ app.post('/articles/:articleId/notes', async (c) => {
 
 app.put('/curation/:articleId', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const articleId = c.req.param('articleId');
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
 
@@ -554,7 +554,7 @@ app.put('/curation/:articleId', async (c) => {
 
 app.get('/audit', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query(
     `
       SELECT *
@@ -570,7 +570,7 @@ app.get('/audit', async (c) => {
 
 app.post('/audit', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
   const result = await pool.query(
     `
@@ -596,7 +596,7 @@ app.post('/audit', async (c) => {
 
 app.get('/profiles', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const ids = String(c.req.query('ids') ?? '')
     .split(',')
     .map((value) => value.trim())

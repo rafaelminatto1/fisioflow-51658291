@@ -105,6 +105,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   const sessionTotal = linkedPackage ? linkedPackage.sessions_purchased : null;
   const _paymentAmount = appointment.payment_amount != null ? Number(appointment.payment_amount) : null;
   const isPaid = localPaymentStatus === 'paid' || localPaymentStatus === 'pago';
+  const isPackagePayment = Boolean(appointment.session_package_id) || appointment.payment_method === 'package';
 
   // Sync local state when appointment prop changes
   useEffect(() => {
@@ -480,14 +481,25 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
               >
                 <SelectTrigger className={cn(
                   "h-9 w-full border-slate-200 dark:border-slate-800",
-                  isPaid ? "bg-emerald-50/50 dark:bg-emerald-900/20" : "bg-amber-50/50 dark:bg-amber-900/20"
+                  isPaid
+                    ? isPackagePayment
+                      ? "bg-blue-50/60 dark:bg-blue-900/20"
+                      : "bg-emerald-50/50 dark:bg-emerald-900/20"
+                    : "bg-amber-50/50 dark:bg-amber-900/20"
                 )}>
                   <SelectValue>
                     {isPaid ? (
-                      <span className="flex items-center gap-1.5 font-bold text-emerald-700 dark:text-emerald-400 text-[11px]">
-                        <CheckCircle2 className="h-3 w-3 shrink-0" />
-                        Pago
-                      </span>
+                      isPackagePayment ? (
+                        <span className="flex items-center gap-1.5 font-bold text-blue-700 dark:text-blue-400 text-[11px]">
+                          <Package className="h-3 w-3 shrink-0" />
+                          Pago via pacote
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1.5 font-bold text-emerald-700 dark:text-emerald-400 text-[11px]">
+                          <CheckCircle2 className="h-3 w-3 shrink-0" />
+                          Pago
+                        </span>
+                      )
                     ) : (
                       <span className="flex items-center gap-1.5 font-bold text-amber-700 dark:text-amber-400 text-[11px]">
                         <AlertCircle className="h-3 w-3 shrink-0" />
@@ -501,6 +513,13 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
                   <SelectItem value="pending">Pendente</SelectItem>
                 </SelectContent>
               </Select>
+              {isPackagePayment && (
+                <p className="mt-1 text-[10px] font-medium text-blue-700/80 dark:text-blue-300/80">
+                  {linkedPackage
+                    ? `${linkedPackage.package?.name ?? 'Pacote vinculado'} · ${linkedPackage.sessions_remaining ?? 0} sessoes restantes`
+                    : 'Sessao vinculada ao pacote do paciente'}
+                </p>
+              )}
             </div>
           </div>
         </div>

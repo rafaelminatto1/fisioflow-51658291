@@ -34,7 +34,7 @@ function normalizeTemplateRow(row: Record<string, unknown>) {
 
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { patientId } = c.req.query();
   if (!patientId) return c.json({ error: 'patientId é obrigatório' }, 400);
 
@@ -49,7 +49,7 @@ app.get('/', requireAuth, async (c) => {
 
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const patientId = String(body.patient_id ?? '').trim();
@@ -78,7 +78,7 @@ app.post('/', requireAuth, async (c) => {
 
 app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const check = await pool.query(
@@ -93,7 +93,7 @@ app.delete('/:id', requireAuth, async (c) => {
 
 app.get('/atestado-templates', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query(
     `
       SELECT *
@@ -109,7 +109,7 @@ app.get('/atestado-templates', requireAuth, async (c) => {
 
 app.post('/atestado-templates', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.nome || !body.conteudo) {
@@ -139,7 +139,7 @@ app.post('/atestado-templates', requireAuth, async (c) => {
 
 app.put('/atestado-templates/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -175,7 +175,7 @@ app.put('/atestado-templates/:id', requireAuth, async (c) => {
 
 app.delete('/atestado-templates/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   await pool.query('DELETE FROM atestado_templates WHERE id = $1 AND organization_id = $2', [
@@ -187,7 +187,7 @@ app.delete('/atestado-templates/:id', requireAuth, async (c) => {
 
 app.get('/contrato-templates', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query(
     `
       SELECT *
@@ -203,7 +203,7 @@ app.get('/contrato-templates', requireAuth, async (c) => {
 
 app.post('/contrato-templates', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.nome || !body.conteudo) {
@@ -234,7 +234,7 @@ app.post('/contrato-templates', requireAuth, async (c) => {
 
 app.put('/contrato-templates/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -272,7 +272,7 @@ app.put('/contrato-templates/:id', requireAuth, async (c) => {
 
 app.delete('/contrato-templates/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   await pool.query('DELETE FROM contrato_templates WHERE id = $1 AND organization_id = $2', [

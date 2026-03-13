@@ -13,7 +13,7 @@ import type { Env } from '../types/env';
 const app = new Hono<{ Bindings: Env }>();
 
 app.get('/', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { patientId, limit = '50' } = c.req.query();
 
   if (!patientId) {
@@ -32,14 +32,14 @@ app.get('/', requireAuth, async (c) => {
 });
 
 app.put('/:id/read', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   await pool.query('UPDATE gamification_notifications SET read_at = NOW() WHERE id = $1', [id]);
   return c.json({ ok: true });
 });
 
 app.put('/read-all', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as { patientId?: string };
 
   if (!body?.patientId) {
@@ -55,7 +55,7 @@ app.put('/read-all', requireAuth, async (c) => {
 });
 
 app.delete('/:id', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   await pool.query('DELETE FROM gamification_notifications WHERE id = $1', [id]);
   return c.json({ ok: true });

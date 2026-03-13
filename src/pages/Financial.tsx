@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-
   Select,
   SelectContent,
   SelectItem,
@@ -20,7 +19,11 @@ import {
   Filter,
   Edit,
   Check,
-  Clock
+  Clock,
+  LineChart,
+  Wallet,
+  Receipt,
+  FileText
 } from 'lucide-react';
 import { EmptyState, LoadingSkeleton } from '@/components/ui';
 import { useFinancial, type Transaction } from '@/hooks/useFinancial';
@@ -42,8 +45,13 @@ import { cn } from '@/lib/utils';
 const PackagesManager = lazy(() => import('@/components/financial').then(m => ({ default: m.PackagesManager })));
 const PackageUsageReport = lazy(() => import('@/components/financial/PackageUsageReport').then(m => ({ default: m.PackageUsageReport })));
 const FinancialAIAdvisor = lazy(() => import('@/components/financial/FinancialAIAdvisor').then(m => ({ default: m.FinancialAIAdvisor })));
+const ContasFinanceirasPage = lazy(() => import('./financeiro/ContasFinanceirasPage'));
+const FluxoCaixaPage = lazy(() => import('./financeiro/FluxoCaixaPage'));
+const RecibosPage = lazy(() => import('./financeiro/RecibosPage'));
+const NFSePage = lazy(() => import('./financeiro/NFSePage'));
 
 const Financial = () => {
+  const [activeTab, setActiveTab] = useState('overview');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -236,17 +244,38 @@ const Financial = () => {
           </Card>
         </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="transactions" className="w-full">
-          <TabsList className="bg-slate-100 dark:bg-slate-800/50 p-1.5 rounded-2xl mb-6 sm:mb-8 grid grid-cols-3 w-full max-w-md mx-auto shadow-inner-border">
-            <TabsTrigger value="transactions" className="rounded-xl text-[10px] font-black uppercase tracking-widest transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:shadow-md">Transações</TabsTrigger>
-            <TabsTrigger value="packages" className="rounded-xl text-[10px] font-black uppercase tracking-widest transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:shadow-md">Pacotes</TabsTrigger>
-            <TabsTrigger value="reports" className="rounded-xl text-[10px] font-black uppercase tracking-widest transition-all data-[state=active]:bg-white dark:data-[state=active]:bg-slate-900 data-[state=active]:shadow-md">Insights</TabsTrigger>
+        {/* Super Tabs do Hub Financeiro */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="flex flex-wrap gap-2 bg-transparent h-auto p-0 justify-start w-full mb-6">
+            <TabsTrigger value="overview" className="gap-2 data-[state=active]:bg-emerald-500/10 data-[state=active]:text-emerald-600 border border-transparent data-[state=active]:border-emerald-500/20 rounded-xl px-4 py-2">
+              <TrendingUp className="h-4 w-4" />
+              <span className="hidden sm:inline">Visão Geral</span>
+            </TabsTrigger>
+            <TabsTrigger value="fluxo_caixa" className="gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2">
+              <LineChart className="h-4 w-4" />
+              <span className="hidden sm:inline">Fluxo de Caixa</span>
+            </TabsTrigger>
+            <TabsTrigger value="contas" className="gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2">
+              <Wallet className="h-4 w-4" />
+              <span className="hidden sm:inline">Contas</span>
+            </TabsTrigger>
+            <TabsTrigger value="recibos" className="gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2">
+              <Receipt className="h-4 w-4" />
+              <span className="hidden sm:inline">Recibos</span>
+            </TabsTrigger>
+            <TabsTrigger value="nfe" className="gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2">
+              <FileText className="h-4 w-4" />
+              <span className="hidden sm:inline">NFS-e</span>
+            </TabsTrigger>
+            <TabsTrigger value="pacotes" className="gap-2 data-[state=active]:bg-primary/10 data-[state=active]:text-primary border border-transparent data-[state=active]:border-primary/20 rounded-xl px-4 py-2">
+              <DollarSign className="h-4 w-4" />
+              <span className="hidden sm:inline">Pacotes</span>
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="transactions" className="space-y-6">
+          <TabsContent value="overview" className="space-y-6 animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <h3 className="text-xl font-black tracking-tighter text-slate-900 dark:text-white uppercase tracking-[0.1em]">Fluxo de Caixa</h3>
+              <h3 className="text-xl font-black tracking-tighter text-slate-900 dark:text-white uppercase tracking-[0.1em]">Transações Recentes</h3>
               <Select
                 value={period}
                 onValueChange={(value: 'daily' | 'weekly' | 'monthly' | 'all') => setPeriod(value)}
@@ -329,15 +358,33 @@ const Financial = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="packages">
+          <TabsContent value="fluxo_caixa" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
             <Suspense fallback={<LoadingSkeleton type="list" rows={4} />}>
-              <PackagesManager />
+              <FluxoCaixaPage />
             </Suspense>
           </TabsContent>
 
-          <TabsContent value="reports">
+          <TabsContent value="contas" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
             <Suspense fallback={<LoadingSkeleton type="list" rows={4} />}>
-              <PackageUsageReport />
+              <ContasFinanceirasPage />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="recibos" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
+            <Suspense fallback={<LoadingSkeleton type="list" rows={4} />}>
+              <RecibosPage />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="nfe" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
+            <Suspense fallback={<LoadingSkeleton type="list" rows={4} />}>
+              <NFSePage />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="pacotes" className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300">
+            <Suspense fallback={<LoadingSkeleton type="list" rows={4} />}>
+              <PackagesManager />
             </Suspense>
           </TabsContent>
         </Tabs>

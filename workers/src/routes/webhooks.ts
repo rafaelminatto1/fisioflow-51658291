@@ -135,7 +135,7 @@ app.post('/neon-auth', async (c) => {
     }
 
     try {
-      const pool = createPool(c.env);
+      const pool = await createPool(c.env);
       // Upsert do perfil: cria se não existir, ignora se já existir
       await pool.query(
         `INSERT INTO profiles (id, user_id, full_name, role, organization_id, created_at, updated_at)

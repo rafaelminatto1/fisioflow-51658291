@@ -26,7 +26,7 @@ async function hasTable(
 
 app.get('/transacoes', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { tipo, status, dateFrom, dateTo, limit = '50', offset = '0' } = c.req.query();
 
   const conditions: string[] = ['organization_id = $1'];
@@ -48,7 +48,7 @@ app.get('/transacoes', requireAuth, async (c) => {
 
 app.post('/transacoes', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.tipo) return c.json({ error: 'tipo é obrigatório' }, 400);
@@ -78,7 +78,7 @@ app.post('/transacoes', requireAuth, async (c) => {
 
 app.put('/transacoes/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -105,7 +105,7 @@ app.put('/transacoes/:id', requireAuth, async (c) => {
 
 app.delete('/transacoes/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const check = await pool.query(
@@ -122,7 +122,7 @@ app.delete('/transacoes/:id', requireAuth, async (c) => {
 
 app.get('/contas', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { tipo, status, dateFrom, dateTo, limit = '50', offset = '0' } = c.req.query();
 
   const conditions: string[] = ['organization_id = $1'];
@@ -144,7 +144,7 @@ app.get('/contas', requireAuth, async (c) => {
 
 app.post('/contas', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.tipo) return c.json({ error: 'tipo é obrigatório' }, 400);
@@ -174,7 +174,7 @@ app.post('/contas', requireAuth, async (c) => {
 
 app.put('/contas/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -201,7 +201,7 @@ app.put('/contas/:id', requireAuth, async (c) => {
 
 app.delete('/contas/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const check = await pool.query(
@@ -218,7 +218,7 @@ app.delete('/contas/:id', requireAuth, async (c) => {
 
 app.get('/centros-custo', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { ativo } = c.req.query();
 
   const conditions: string[] = ['organization_id = $1'];
@@ -235,7 +235,7 @@ app.get('/centros-custo', requireAuth, async (c) => {
 
 app.post('/centros-custo', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.nome) return c.json({ error: 'nome é obrigatório' }, 400);
@@ -258,7 +258,7 @@ app.post('/centros-custo', requireAuth, async (c) => {
 
 app.put('/centros-custo/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -283,7 +283,7 @@ app.put('/centros-custo/:id', requireAuth, async (c) => {
 
 app.delete('/centros-custo/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const check = await pool.query(
@@ -300,7 +300,7 @@ app.delete('/centros-custo/:id', requireAuth, async (c) => {
 
 app.get('/empresas-parceiras', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   if (!(await hasTable(pool, 'empresas_parceiras'))) {
     return c.json({ data: [] });
@@ -315,7 +315,7 @@ app.get('/empresas-parceiras', requireAuth, async (c) => {
 
 app.post('/empresas-parceiras', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.nome) return c.json({ error: 'nome é obrigatório' }, 400);
@@ -341,7 +341,7 @@ app.post('/empresas-parceiras', requireAuth, async (c) => {
 
 app.put('/empresas-parceiras/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -369,7 +369,7 @@ app.put('/empresas-parceiras/:id', requireAuth, async (c) => {
 
 app.delete('/empresas-parceiras/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await pool.query(
@@ -384,7 +384,7 @@ app.delete('/empresas-parceiras/:id', requireAuth, async (c) => {
 
 app.get('/fornecedores', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   if (!(await hasTable(pool, 'fornecedores'))) {
     return c.json({ data: [] });
@@ -399,7 +399,7 @@ app.get('/fornecedores', requireAuth, async (c) => {
 
 app.post('/fornecedores', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.razao_social) return c.json({ error: 'razao_social é obrigatório' }, 400);
@@ -434,7 +434,7 @@ app.post('/fornecedores', requireAuth, async (c) => {
 
 app.put('/fornecedores/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -470,7 +470,7 @@ app.put('/fornecedores/:id', requireAuth, async (c) => {
 
 app.delete('/fornecedores/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await pool.query(
@@ -485,7 +485,7 @@ app.delete('/fornecedores/:id', requireAuth, async (c) => {
 
 app.get('/formas-pagamento', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   if (!(await hasTable(pool, 'formas_pagamento'))) {
     return c.json({ data: [] });
@@ -500,7 +500,7 @@ app.get('/formas-pagamento', requireAuth, async (c) => {
 
 app.post('/formas-pagamento', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.nome) return c.json({ error: 'nome é obrigatório' }, 400);
@@ -524,7 +524,7 @@ app.post('/formas-pagamento', requireAuth, async (c) => {
 
 app.put('/formas-pagamento/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -550,7 +550,7 @@ app.put('/formas-pagamento/:id', requireAuth, async (c) => {
 
 app.delete('/formas-pagamento/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await pool.query(
@@ -565,7 +565,7 @@ app.delete('/formas-pagamento/:id', requireAuth, async (c) => {
 
 app.get('/convenios', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { ativo } = c.req.query();
 
   const conditions: string[] = ['organization_id = $1'];
@@ -582,7 +582,7 @@ app.get('/convenios', requireAuth, async (c) => {
 
 app.post('/convenios', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.nome) return c.json({ error: 'nome é obrigatório' }, 400);
@@ -611,7 +611,7 @@ app.post('/convenios', requireAuth, async (c) => {
 
 app.put('/convenios/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -641,7 +641,7 @@ app.put('/convenios/:id', requireAuth, async (c) => {
 
 app.delete('/convenios/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const check = await pool.query(
@@ -658,7 +658,7 @@ app.delete('/convenios/:id', requireAuth, async (c) => {
 
 app.get('/pagamentos', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { eventoId, patientId, appointmentId, dateFrom, dateTo, limit = '50', offset = '0' } = c.req.query();
 
   const conditions: string[] = ['organization_id = $1'];
@@ -681,7 +681,7 @@ app.get('/pagamentos', requireAuth, async (c) => {
 
 app.post('/pagamentos', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (body.valor == null) return c.json({ error: 'valor é obrigatório' }, 400);
@@ -708,7 +708,7 @@ app.post('/pagamentos', requireAuth, async (c) => {
 
 app.put('/pagamentos/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -733,7 +733,7 @@ app.put('/pagamentos/:id', requireAuth, async (c) => {
 
 app.delete('/pagamentos/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const check = await pool.query(
@@ -750,7 +750,7 @@ app.delete('/pagamentos/:id', requireAuth, async (c) => {
 
 app.get('/package-templates', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   const result = await pool.query(
     `
@@ -767,7 +767,7 @@ app.get('/package-templates', requireAuth, async (c) => {
 
 app.post('/package-templates', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.name || !body.sessions_count || !body.price) {
@@ -798,7 +798,7 @@ app.post('/package-templates', requireAuth, async (c) => {
 
 app.put('/package-templates/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -826,7 +826,7 @@ app.put('/package-templates/:id', requireAuth, async (c) => {
 
 app.delete('/package-templates/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   await pool.query(
@@ -838,7 +838,7 @@ app.delete('/package-templates/:id', requireAuth, async (c) => {
 
 app.get('/patient-packages', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { patientId, status, limit = '100', offset = '0' } = c.req.query();
 
   const conditions: string[] = ['pp.organization_id = $1'];
@@ -886,7 +886,7 @@ app.get('/patient-packages', requireAuth, async (c) => {
 
 app.post('/patient-packages', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const patientId = String(body.patient_id ?? '').trim();
@@ -935,7 +935,7 @@ app.post('/patient-packages', requireAuth, async (c) => {
 
 app.post('/patient-packages/:id/consume', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
 
@@ -991,7 +991,7 @@ app.post('/patient-packages/:id/consume', requireAuth, async (c) => {
 
 app.get('/vouchers', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { all, ativo } = c.req.query();
   const conditions: string[] = ['organization_id = $1'];
   const params: unknown[] = [user.organizationId];
@@ -1019,7 +1019,7 @@ app.get('/vouchers', requireAuth, async (c) => {
 
 app.post('/vouchers', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.nome) return c.json({ error: 'nome é obrigatório' }, 400);
@@ -1051,7 +1051,7 @@ app.post('/vouchers', requireAuth, async (c) => {
 
 app.put('/vouchers/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
   const sets: string[] = ['updated_at = NOW()'];
@@ -1083,7 +1083,7 @@ app.put('/vouchers/:id', requireAuth, async (c) => {
 
 app.delete('/vouchers/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   await pool.query('DELETE FROM vouchers WHERE id = $1 AND organization_id = $2', [id, user.organizationId]);
@@ -1092,7 +1092,7 @@ app.delete('/vouchers/:id', requireAuth, async (c) => {
 
 app.get('/user-vouchers', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query(
     `
       SELECT
@@ -1111,7 +1111,7 @@ app.get('/user-vouchers', requireAuth, async (c) => {
 
 app.post('/user-vouchers/:id/consume', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const currentResult = await pool.query(
@@ -1148,7 +1148,7 @@ app.post('/user-vouchers/:id/consume', requireAuth, async (c) => {
 
 app.post('/vouchers/:id/checkout', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const voucherResult = await pool.query(
@@ -1185,7 +1185,7 @@ app.post('/vouchers/:id/checkout', requireAuth, async (c) => {
 
 app.post('/vouchers/checkout/verify', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
   const sessionId = String(body.sessionId ?? '').trim();
 
@@ -1246,7 +1246,7 @@ app.post('/vouchers/checkout/verify', requireAuth, async (c) => {
 
 app.get('/nfse', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   const result = await pool.query(
     `
@@ -1263,7 +1263,7 @@ app.get('/nfse', requireAuth, async (c) => {
 
 app.post('/nfse', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.numero) return c.json({ error: 'numero é obrigatório' }, 400);
@@ -1303,7 +1303,7 @@ app.post('/nfse', requireAuth, async (c) => {
 
 app.put('/nfse/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -1345,7 +1345,7 @@ app.put('/nfse/:id', requireAuth, async (c) => {
 
 app.delete('/nfse/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await pool.query(
@@ -1359,7 +1359,7 @@ app.delete('/nfse/:id', requireAuth, async (c) => {
 
 app.get('/nfse-config', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   const result = await pool.query(
     'SELECT * FROM nfse_config WHERE organization_id = $1 LIMIT 1',
@@ -1371,7 +1371,7 @@ app.get('/nfse-config', requireAuth, async (c) => {
 
 app.put('/nfse-config', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const result = await pool.query(

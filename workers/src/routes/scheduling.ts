@@ -557,7 +557,7 @@ const generateRecurringOccurrences = (row: Record<string, any>, limit = 24) => {
 
 async function handleUpsertBusinessHours(c: any) {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   try {
     await ensureSchedulingSchema(pool, 'businessHours');
@@ -600,7 +600,7 @@ async function handleUpsertBusinessHours(c: any) {
 
 async function handleUpsertCancellationRules(c: any) {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   try {
     await ensureSchedulingSchema(pool, 'cancellationRules');
@@ -658,7 +658,7 @@ async function handleUpsertCancellationRules(c: any) {
 
 async function handleUpsertNotificationSettings(c: any) {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   try {
     await ensureSchedulingSchema(pool, 'notificationSettings');
@@ -725,7 +725,7 @@ async function handleUpsertNotificationSettings(c: any) {
 
 app.get('/waitlist', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     await ensureSchedulingSchema(pool, 'waitlist');
     const { status, priority } = c.req.query();
@@ -753,7 +753,7 @@ app.get('/waitlist', requireAuth, async (c) => {
 
 app.post('/waitlist', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     await ensureSchedulingSchema(pool, 'waitlist');
     const body = await c.req.json();
@@ -795,7 +795,7 @@ app.post('/waitlist', requireAuth, async (c) => {
 
 app.put('/waitlist/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
     await ensureSchedulingSchema(pool, 'waitlist');
@@ -856,7 +856,7 @@ app.put('/waitlist/:id', requireAuth, async (c) => {
 
 app.delete('/waitlist/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
     await ensureSchedulingSchema(pool, 'waitlist');
@@ -872,7 +872,7 @@ app.delete('/waitlist/:id', requireAuth, async (c) => {
 
 app.get('/waitlist-offers', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     await ensureSchedulingSchema(pool, 'waitlistOffers');
     const { waitlistId } = c.req.query();
@@ -893,7 +893,7 @@ app.get('/waitlist-offers', requireAuth, async (c) => {
 
 app.post('/waitlist-offers', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     await ensureSchedulingSchema(pool, 'waitlistOffers');
     const body = await c.req.json();
@@ -930,7 +930,7 @@ app.post('/waitlist-offers', requireAuth, async (c) => {
 
 app.post('/waitlist-offers/:id/respond', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
     await ensureSchedulingSchema(pool, 'waitlistOffers');
@@ -959,7 +959,7 @@ app.post('/waitlist-offers/:id/respond', requireAuth, async (c) => {
 
 app.get('/settings/business-hours', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     await ensureSchedulingSchema(pool, 'businessHours');
     const result = await pool.query(
@@ -977,7 +977,7 @@ app.put('/settings/business-hours', requireAuth, handleUpsertBusinessHours);
 
 app.get('/settings/blocked-times', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     await ensureSchedulingSchema(pool, 'blockedTimes');
     const result = await pool.query(
@@ -992,7 +992,7 @@ app.get('/settings/blocked-times', requireAuth, async (c) => {
 
 app.post('/settings/blocked-times', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     await ensureSchedulingSchema(pool, 'blockedTimes');
     const body = await c.req.json();
@@ -1027,7 +1027,7 @@ app.post('/settings/blocked-times', requireAuth, async (c) => {
 
 app.delete('/settings/blocked-times/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
     await ensureSchedulingSchema(pool, 'blockedTimes');
@@ -1043,7 +1043,7 @@ app.delete('/settings/blocked-times/:id', requireAuth, async (c) => {
 
 app.get('/settings/cancellation-rules', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     await ensureSchedulingSchema(pool, 'cancellationRules');
     const result = await pool.query(
@@ -1061,7 +1061,7 @@ app.put('/settings/cancellation-rules', requireAuth, handleUpsertCancellationRul
 
 app.get('/settings/notification-settings', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     await ensureSchedulingSchema(pool, 'notificationSettings');
     const result = await pool.query(
@@ -1079,7 +1079,7 @@ app.put('/settings/notification-settings', requireAuth, handleUpsertNotification
 
 app.get('/capacity-config', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     await ensureSchedulingSchema(pool, 'capacity');
     const result = await pool.query(
@@ -1094,7 +1094,7 @@ app.get('/capacity-config', requireAuth, async (c) => {
 
 app.post('/capacity-config', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     await ensureSchedulingSchema(pool, 'capacity');
     const body = await c.req.json();
@@ -1126,7 +1126,7 @@ app.post('/capacity-config', requireAuth, async (c) => {
 
 app.put('/capacity-config/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
     await ensureSchedulingSchema(pool, 'capacity');
@@ -1171,7 +1171,7 @@ app.put('/capacity-config/:id', requireAuth, async (c) => {
 
 app.delete('/capacity-config/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
     await ensureSchedulingSchema(pool, 'capacity');
@@ -1187,7 +1187,7 @@ app.delete('/capacity-config/:id', requireAuth, async (c) => {
 
 app.get('/recurring-series', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     await ensureSchedulingSchema(pool, 'recurringSeries');
     const { patientId, isActive } = c.req.query();
@@ -1215,7 +1215,7 @@ app.get('/recurring-series', requireAuth, async (c) => {
 
 app.post('/recurring-series', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     await ensureSchedulingSchema(pool, 'recurringSeries');
     const body = await c.req.json();
@@ -1255,7 +1255,7 @@ app.post('/recurring-series', requireAuth, async (c) => {
 
 app.put('/recurring-series/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
     await ensureSchedulingSchema(pool, 'recurringSeries');
@@ -1319,7 +1319,7 @@ app.put('/recurring-series/:id', requireAuth, async (c) => {
 
 app.delete('/recurring-series/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
     await ensureSchedulingSchema(pool, 'recurringSeries');
@@ -1335,7 +1335,7 @@ app.delete('/recurring-series/:id', requireAuth, async (c) => {
 
 app.get('/recurring-series/:id/occurrences', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   try {
     await ensureSchedulingSchema(pool, 'recurringSeries');
