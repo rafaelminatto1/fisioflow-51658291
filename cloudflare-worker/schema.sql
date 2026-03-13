@@ -21,3 +21,14 @@ CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
 -- Índices para busca de pacientes
 CREATE INDEX IF NOT EXISTS idx_patients_name_trgm ON patients USING gin (full_name gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_patients_status_last_visit ON patients(status, last_visit_date);
+
+-- Mapeamento de cartões para automação financeira
+CREATE TABLE IF NOT EXISTS patient_card_mappings (
+  id TEXT PRIMARY KEY,
+  patient_id TEXT NOT NULL,
+  card_last_digits TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(card_last_digits)
+);
+
+CREATE INDEX IF NOT EXISTS idx_card_digits ON patient_card_mappings(card_last_digits);

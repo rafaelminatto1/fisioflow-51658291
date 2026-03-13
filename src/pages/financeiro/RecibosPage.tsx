@@ -58,23 +58,49 @@ export function RecibosContent() {
     referente: '',
     cpf_cnpj_pagador: '',
     usar_dados_clinica: true,
+    card_last_digits: '',
+    is_first_payment: false,
+    package_sessions: '10',
+    is_package: false,
   });
 
   const { data: recibos = [], isLoading } = useRecibos();
   const createRecibo = useCreateRecibo();
 
-  const handleOCRExtracted = (data: { valor: number; nome?: string }) => {
+  const handleOCRExtracted = (data: { 
+    valor: number; 
+    nome?: string; 
+    cardLastDigits?: string; 
+    isFirstPayment?: boolean;
+    patientId?: string;
+  }) => {
+    const isHighValue = data.valor >= 300;
+    
     setFormData(prev => ({
       ...prev,
       valor: String(data.valor),
-      referente: data.nome ? `Sessão de fisioterapia - ${data.nome}` : prev.referente
+      card_last_digits: data.cardLastDigits || '',
+      is_first_payment: data.isFirstPayment || false,
+      patient_id: data.patientId || prev.patient_id,
+      is_package: isHighValue,
+      referente: data.nome ? `Pagamento - ${data.nome}` : prev.referente
     }));
     
-    if (data.nome) {
+    if (data.nome && !data.patientId) {
       const match = pacientes.find(p => p.full_name.toLowerCase().includes(data.nome!.toLowerCase()));
       if (match) {
         setFormData(prev => ({ ...prev, patient_id: match.id }));
       }
+    }
+
+    if (isHighValue) {
+      toast("Valor de pacote detectado!", {
+        description: "Deseja registrar como um pacote de 5 ou 10 sessões?",
+        action: {
+          label: "Ver Detalhes",
+          onClick: () => {}
+        }
+      });
     }
   };
 
@@ -135,6 +161,22 @@ export function RecibosContent() {
       cpf_cnpj_emitente: clinicaConfig?.profile?.cpf_cnpj,
       assinado: true,
     });
+
+    // Salvar mapeamento de cartão para automação futura
+    if (formData.card_last_digits && formData.patient_id) {
+      try {
+        await fetch('/api/financial/card-mapping', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            patientId: formData.patient_id,
+            cardLastDigits: formData.card_last_digits
+          })
+        });
+      } catch (e) {
+        console.error('Failed to save card mapping:', e);
+      }
+    }
 
     const novoRecibo: ReciboData = {
       numero: created.numero_recibo,
@@ -297,6 +339,73 @@ export function RecibosContent() {
                 </div>
                 
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  {formData.card_last_digits && (
+                    <div className="p-4 rounded-2xl bg-amber-50 border border-amber-100 flex items-center gap-3 animate-in fade-in zoom-in duration-500">
+                       <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+                          <Plus className="h-5 w-5 text-amber-600" />
+                       </div>
+                       <div className="flex-1">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-amber-700">Novo Cartão: **** {formData.card_last_digits}</p>
+                          <p className="text-xs font-bold text-amber-600/80">Vincule a um paciente para automatizar o próximo faturamento.</p>
+                       </div>
+                    </div>
+                  )}
+
+                  {(formData.is_first_payment || formData.valor && Number(formData.valor) > 0) && (
+                    <div className="space-y-4 p-6 rounded-[2rem] bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center justify-between mb-2">
+                         <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Classificação Inteligente</h4>
+                         {formData.is_first_payment && <Badge className="bg-purple-500 text-white border-none text-[9px] uppercase font-black">Primeiro Pagamento</Badge>}
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[9px] font-black uppercase text-slate-400">Tipo de Atendimento</Label>
+                          <Select
+                            onValueChange={(v) => {
+                              const patient = pacientes.find(p => p.id === formData.patient_id);
+                              const name = patient?.full_name || '';
+                              setFormData(prev => ({
+                                ...prev,
+                                referente: `${v} - ${name}`
+                              }));
+                            }}
+                          >
+                            <SelectTrigger className="rounded-xl h-10 bg-white">
+                              <SelectValue placeholder="Selecione o serviço" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-xl">
+                              <SelectItem value="Avaliação Inicial">Avaliação Inicial</SelectItem>
+                              <SelectItem value="Sessão de Fisioterapia">Sessão Individual</SelectItem>
+                              <SelectItem value="Recovery Esportivo">Recovery</SelectItem>
+                              <SelectItem value="Pacote de Tratamento">Pacote de Tratamento</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {Number(formData.valor) >= 300 && (
+                          <div className="space-y-2 animate-in slide-in-from-top-2">
+                            <Label className="text-[9px] font-black uppercase text-slate-400">Qtd. Sessões no Pacote</Label>
+                            <Select
+                              defaultValue="10"
+                              onValueChange={(v) => setFormData(prev => ({ ...prev, package_sessions: v, is_package: true }))}
+                            >
+                              <SelectTrigger className="rounded-xl h-10 bg-white">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="rounded-xl">
+                                <SelectItem value="5">05 Sessões</SelectItem>
+                                <SelectItem value="10">10 Sessões (Padrão)</SelectItem>
+                                <SelectItem value="12">12 Sessões</SelectItem>
+                                <SelectItem value="20">20 Sessões</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Paciente</Label>
                     <Select
