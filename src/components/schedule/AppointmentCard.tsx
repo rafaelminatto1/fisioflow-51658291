@@ -172,6 +172,13 @@ export const AppointmentCard = memo(React.forwardRef<HTMLDivElement, Appointment
                 EM ANDAMENTO
               </span>
             )}
+
+            {(appointment as any).highNoShowRisk && (
+              <span className="flex items-center gap-1.5 px-3 py-2 bg-red-600 text-white rounded-2xl text-[9px] font-black tracking-[0.2em] uppercase shadow-lg shadow-red-500/40">
+                <AlertCircle className="w-3 h-3" />
+                RISCO DE FALTA
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
