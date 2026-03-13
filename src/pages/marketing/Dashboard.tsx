@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-
   Star,
   TrendingUp,
   Video,
@@ -15,10 +15,19 @@ import {
   Activity,
   BarChart3,
   Calendar,
-  ExternalLink
+  ExternalLink,
+  Search,
+  Calculator,
+  Target,
+  Sparkles,
+  Share2,
+  MapPin
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { crmApi, integrationsApi, marketingApi, type GoogleBusinessReviewRecord } from '@/lib/api/workers-client';
+import { ReviewsContent } from './Reviews';
+import { ROICalculatorContent } from './ROI';
+import { LocalSEOTracker } from '@/components/marketing/LocalSEOTracker';
 
 type GoogleReview = GoogleBusinessReviewRecord;
 
@@ -105,14 +114,6 @@ export default function MarketingDashboard() {
     fetchMetrics();
   }, []);
 
-  const _getRatingColor = (rating: number) => {
-    if (rating >= 4.5) return 'text-emerald-600 bg-emerald-50 border-emerald-200';
-    if (rating >= 4) return 'text-green-600 bg-green-50 border-green-200';
-    if (rating >= 3.5) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-    if (rating >= 3) return 'text-orange-600 bg-orange-50 border-orange-200';
-    return 'text-red-600 bg-red-50 border-red-200';
-  };
-
   const StatCard = ({
     title,
     value,
@@ -157,18 +158,10 @@ export default function MarketingDashboard() {
               </div>
             )}
           </div>
-          {href && (
-            <div className="mt-2 flex items-center text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
-              Ver detalhes <ExternalLink className="h-3 w-3 ml-1" />
-            </div>
-          )}
         </CardContent>
       </Card>
     );
 
-    if (href) {
-      return <Link to={href}>{cardContent}</Link>;
-    }
     return cardContent;
   };
 
@@ -179,26 +172,9 @@ export default function MarketingDashboard() {
           <div className="flex items-center justify-center h-64">
             <div className="flex flex-col items-center gap-4">
               <Activity className="h-8 w-8 animate-pulse text-primary" />
-              <p className="text-muted-foreground">Carregando métricas de marketing...</p>
+              <p className="text-muted-foreground">Carregando hub de marketing...</p>
             </div>
           </div>
-        </div>
-      </MainLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <MainLayout>
-        <div className="p-6 max-w-7xl mx-auto">
-          <Card className="border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
-                <Activity className="h-5 w-5" />
-                <p>{error}</p>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </MainLayout>
     );
@@ -206,205 +182,124 @@ export default function MarketingDashboard() {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard de Marketing</h1>
-          <p className="text-muted-foreground mt-1">
-            Visão geral das métricas e atividades de marketing
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <Calendar className="h-4 w-4 mr-2" />
-            Últimos 30 dias
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Avaliações Google"
-          value={metrics?.totalReviews || 0}
-          icon={Star}
-          color="amber"
-          trend={{ value: 12, isPositive: true }}
-          href="/marketing/reviews"
-        />
-        <StatCard
-          title="Média de Avaliação"
-          value={metrics?.averageRating.toFixed(1) || '-'}
-          icon={TrendingUp}
-          color="emerald"
-        />
-        <StatCard
-          title="Exportações de Conteúdo"
-          value={metrics?.totalExports || 0}
-          icon={Video}
-          color="purple"
-          href="/marketing/exports"
-        />
-        <StatCard
-          title="Campanhas Ativas"
-          value={metrics?.totalCampaigns || 0}
-          icon={Mail}
-          color="blue"
-          href="/crm"
-        />
-      </div>
-
-      {/* Rating Distribution */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Distribuição de Avaliações
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {[5, 4, 3, 2, 1].map((star) => {
-              const count = metrics?.[`rating${star}` as keyof MarketingMetrics] as number || 0;
-              const percentage = metrics?.totalReviews
-                ? (count / metrics.totalReviews) * 100
-                : 0;
-              return (
-                <div key={star} className="flex items-center gap-3">
-                  <div className="flex items-center gap-1 w-16">
-                    <span className="text-sm font-medium">{star}</span>
-                    <Star className={cn(
-                      'h-4 w-4',
-                      count > 0 ? 'fill-amber-400 text-amber-400' : 'text-gray-300'
-                    )} />
-                  </div>
-                  <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                    <div
-                      className={cn(
-                        'h-full transition-all duration-500',
-                        star >= 4 ? 'bg-emerald-500' :
-                        star === 3 ? 'bg-yellow-500' : 'bg-red-500'
-                      )}
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                  <span className="text-sm text-muted-foreground w-12 text-right">
-                    {count}
-                  </span>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
-
-        {/* Recent Reviews */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Avaliações Recentes
-              </div>
-              <Link to="/marketing/reviews">
-                <Button variant="ghost" size="sm">
-                  Ver todas
-                  <ExternalLink className="h-3 w-3 ml-1" />
-                </Button>
-              </Link>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {metrics?.recentReviews && metrics.recentReviews.length > 0 ? (
-                metrics.recentReviews.map((review, i) => (
-                  <div key={i} className="flex gap-3 p-3 rounded-lg bg-muted/30">
-                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-semibold">
-                      {review.author.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="font-medium truncate">{review.author}</p>
-                        <div className="flex items-center gap-1">
-                          {[...Array(5)].map((_, j) => (
-                            <Star
-                              key={j}
-                              className={cn(
-                                'h-3 w-3',
-                                j < review.rating
-                                  ? 'fill-amber-400 text-amber-400'
-                                  : 'text-gray-300'
-                              )}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                        {review.comment}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Star className="h-12 w-12 mx-auto mb-3 opacity-30" />
-                  <p>Nenhuma avaliação encontrada</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Ações Rápidas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
-            <Link to="/marketing/content-generator" className="group">
-              <div className="p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400">
-                    <Video className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Criar Conteúdo</p>
-                    <p className="text-sm text-muted-foreground">Gerar posts para redes sociais</p>
-                  </div>
-                </div>
-              </div>
-            </Link>
-            <Link to="/marketing/reviews" className="group">
-              <div className="p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400">
-                    <Star className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Ver Avaliações</p>
-                    <p className="text-sm text-muted-foreground">Gerenciar avaliações do Google</p>
-                  </div>
-                </div>
-              </div>
-            </Link>
-            <Link to="/crm" className="group">
-              <div className="p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
-                    <Mail className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Campanhas e CRM</p>
-                    <p className="text-sm text-muted-foreground">Gerenciar comunicações e leads</p>
-                  </div>
-                </div>
-              </div>
-            </Link>
+      <div className="p-6 max-w-7xl mx-auto space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Marketing Hub</h1>
+            <p className="text-muted-foreground mt-1">
+              Gestão centralizada de crescimento, autoridade e ROI
+            </p>
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/marketing/fisiolink">
+                <Link2 className="h-4 w-4 mr-2" />
+                Meu FisioLink
+              </Link>
+            </Button>
+            <Button size="sm" asChild>
+              <Link to="/marketing/content-generator">
+                <Sparkles className="h-4 w-4 mr-2" />
+                Gerar Conteúdo
+              </Link>
+            </Button>
+          </div>
+        </div>
+
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 h-auto p-1 bg-muted/50 rounded-xl">
+            <TabsTrigger value="overview" className="rounded-lg py-2.5">Visão Geral</TabsTrigger>
+            <TabsTrigger value="reviews" className="rounded-lg py-2.5 text-amber-600">Avaliações</TabsTrigger>
+            <TabsTrigger value="seo" className="rounded-lg py-2.5 text-emerald-600">SEO Local</TabsTrigger>
+            <TabsTrigger value="roi" className="rounded-lg py-2.5 text-blue-600">Calculadora ROI</TabsTrigger>
+            <TabsTrigger value="strategy" className="rounded-lg py-2.5 text-purple-600">Estratégia</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-6 mt-6">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <StatCard title="Avaliações Google" value={metrics?.totalReviews || 0} icon={Star} color="amber" />
+              <StatCard title="Média" value={metrics?.averageRating.toFixed(1) || '-'} icon={TrendingUp} color="emerald" />
+              <StatCard title="Exportações" value={metrics?.totalExports || 0} icon={Video} color="purple" />
+              <StatCard title="Leads CRM" value={metrics?.totalLeads || 0} icon={Mail} color="blue" />
+            </div>
+
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card>
+                <CardHeader><CardTitle className="text-sm flex items-center gap-2"><BarChart3 className="h-4 w-4" /> Distribuição de Notas</CardTitle></CardHeader>
+                <CardContent className="space-y-3">
+                  {[5, 4, 3, 2, 1].map((star) => {
+                    const count = metrics?.[`rating${star}` as keyof MarketingMetrics] as number || 0;
+                    const percentage = metrics?.totalReviews ? (count / metrics.totalReviews) * 100 : 0;
+                    return (
+                      <div key={star} className="flex items-center gap-3">
+                        <span className="text-xs font-medium w-4">{star}</span>
+                        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div className={cn('h-full', star >= 4 ? 'bg-emerald-500' : 'bg-amber-500')} style={{ width: `${percentage}%` }} />
+                        </div>
+                        <span className="text-xs text-muted-foreground w-8">{count}</span>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader><CardTitle className="text-sm flex items-center gap-2"><MessageSquare className="h-4 w-4" /> Últimas Avaliações</CardTitle></CardHeader>
+                <CardContent className="space-y-4">
+                  {metrics?.recentReviews.map((r, i) => (
+                    <div key={i} className="flex gap-3 text-sm">
+                      <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs">{r.author[0]}</div>
+                      <div className="flex-1">
+                        <p className="font-semibold">{r.author}</p>
+                        <p className="text-muted-foreground line-clamp-1">{r.comment}</p>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="reviews" className="mt-6">
+            <ReviewsContent />
+          </TabsContent>
+
+          <TabsContent value="seo" className="mt-6">
+            <LocalSEOTracker />
+          </TabsContent>
+
+          <TabsContent value="roi" className="mt-6">
+            <ROICalculatorContent />
+          </TabsContent>
+
+          <TabsContent value="strategy" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5" />
+                  Estratégia de Crescimento IA
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 rounded-lg bg-purple-50 border border-purple-100 dark:bg-purple-950/20 dark:border-purple-900">
+                  <p className="text-sm text-purple-800 dark:text-purple-300">
+                    Seu perfil local tem <strong>12% mais visualizações</strong> que a média da região. 
+                    Recomendamos focar em <strong>Google Reviews</strong> este mês para subir para o Top 3 no termo "Fisioterapia em [Cidade]".
+                  </p>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Button variant="outline" className="justify-start h-auto p-4 flex-col items-start gap-1">
+                    <span className="font-bold">Scripts de WhatsApp</span>
+                    <span className="text-xs text-muted-foreground text-left">Modelos prontos para solicitar reviews e indicações</span>
+                  </Button>
+                  <Button variant="outline" className="justify-start h-auto p-4 flex-col items-start gap-1">
+                    <span className="font-bold">Calendário Editorial</span>
+                    <span className="text-xs text-muted-foreground text-left">O que postar para atrair novos pacientes esta semana</span>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </MainLayout>
   );

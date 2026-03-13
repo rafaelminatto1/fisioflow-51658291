@@ -6,12 +6,12 @@
 
 import React, { useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import {
-
   Select,
   SelectContent,
   SelectItem,
@@ -21,13 +21,8 @@ import {
 import {
   Calculator,
   DollarSign,
-  TrendingUp,
-  TrendingDown,
   Users,
-  Target,
-  BarChart3,
   PiggyBank,
-  Info,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { calculateMarketingROI } from '@/services/marketing/marketingService';
@@ -43,9 +38,9 @@ interface ROIMetrics {
   returnOnAdSpend: number;
 }
 
-export default function ROICalculatorPage() {
-  const { user } = useAuth();
-  const organizationId = user?.organizationId || '';
+export function ROICalculatorContent() {
+  const { profile } = useAuth();
+  const organizationId = profile?.organization_id || '';
 
   const [period, setPeriod] = useState<'30' | '60' | '90' | 'custom'>('30');
   const [adSpend, setAdSpend] = useState<string>('');
@@ -95,11 +90,10 @@ export default function ROICalculatorPage() {
   };
 
   const getROIStatus = (roi: number) => {
-    if (roi >= 300) return { label: 'Excelente', color: 'text-emerald-600 bg-emerald-50' };
-    if (roi >= 200) return { label: 'Muito Bom', color: 'text-green-600 bg-green-50' };
-    if (roi >= 100) return { label: 'Bom', color: 'text-blue-600 bg-blue-50' };
-    if (roi >= 0) return { label: 'Atenção', color: 'text-amber-600 bg-amber-50' };
-    return { label: 'Prejuízo', color: 'text-red-600 bg-red-50' };
+    if (roi >= 300) return { label: 'Excelente', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' };
+    if (roi >= 100) return { label: 'Bom', color: 'bg-blue-500/10 text-blue-600 border-blue-500/20' };
+    if (roi >= 0) return { label: 'Regular', color: 'bg-amber-500/10 text-amber-600 border-amber-500/20' };
+    return { label: 'Prejuízo', color: 'bg-red-500/10 text-red-600 border-red-500/20' };
   };
 
   const formatCurrency = (value: number) => {
@@ -114,34 +108,32 @@ export default function ROICalculatorPage() {
   };
 
   return (
-    <MainLayout>
-      <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <Calculator className="h-8 w-8" />
-          Calculadora de ROI de Marketing
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Analise o retorno dos seus investimentos em marketing
-        </p>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <Calculator className="h-6 w-6" />
+            Calculadora de ROI
+          </h2>
+          <p className="text-muted-foreground mt-1">
+            Analise o retorno dos seus investimentos em anúncios
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
-        {/* Input Panel */}
         <Card className="md:col-span-1">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <DollarSign className="h-4 w-4" />
               Dados da Campanha
             </CardTitle>
-            <CardDescription>Insira os dados para calcular o ROI</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Período de Análise</Label>
-              <Select value={period} onValueChange={(value: unknown) => setPeriod(value)}>
-                <SelectTrigger>
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Período</Label>
+              <Select value={period} onValueChange={(value: any) => setPeriod(value)}>
+                <SelectTrigger className="h-9">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -153,197 +145,97 @@ export default function ROICalculatorPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Investimento em Ads (R$)</Label>
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Investimento Ads (R$)</Label>
               <Input
                 type="number"
                 placeholder="Ex: 1000"
                 value={adSpend}
                 onChange={(e) => setAdSpend(e.target.value)}
+                className="h-9"
               />
-              <p className="text-xs text-muted-foreground">
-                Valor total investido em Facebook Ads, Google Ads, etc.
-              </p>
             </div>
 
             <div className="space-y-2">
-              <Label>Ticket Médio por Paciente (R$)</Label>
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Ticket Médio (R$)</Label>
               <Input
                 type="number"
                 placeholder="Ex: 500"
                 value={avgTicket}
                 onChange={(e) => setAvgTicket(e.target.value)}
+                className="h-9"
               />
-              <p className="text-xs text-muted-foreground">
-                Valor médio que cada paciente gera no tratamento
-              </p>
             </div>
 
             <Button onClick={handleCalculate} disabled={calculating} className="w-full">
-              {calculating ? (
-                <>
-                  <Calculator className="h-4 w-4 mr-2 animate-pulse" />
-                  Calculando...
-                </>
-              ) : (
-                <>
-                  <Calculator className="h-4 w-4 mr-2" />
-                  Calcular ROI
-                </>
-              )}
+              {calculating ? 'Calculando...' : 'Calcular ROI'}
             </Button>
           </CardContent>
         </Card>
 
-        {/* Results Panel */}
         <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Resultados
-            </CardTitle>
-            <CardDescription>
-              {results
-                ? 'Métricas de desempenho da campanha'
-                : 'Preencha os dados e clique em calcular'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             {results ? (
               <div className="space-y-6">
-                {/* Main ROI Display */}
-                <div className="text-center p-6 rounded-lg bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950">
-                  <p className="text-sm text-muted-foreground mb-2">Retorno sobre Investimento</p>
+                <div className="text-center p-6 rounded-xl bg-muted/30 border border-border/50">
+                  <p className="text-sm text-muted-foreground mb-1">ROI da Campanha</p>
                   <div className="flex items-center justify-center gap-3">
-                    <p className="text-5xl font-bold">{formatPercent(results.roi)}</p>
-                    <div className={cn('px-3 py-1 rounded-full text-sm font-medium', getROIStatus(results.roi).color)}>
+                    <p className="text-5xl font-bold tracking-tighter">{formatPercent(results.roi)}</p>
+                    <Badge variant="outline" className={cn('px-3 py-1 rounded-full text-xs font-bold', getROIStatus(results.roi).color)}>
                       {getROIStatus(results.roi).label}
-                    </div>
+                    </Badge>
                   </div>
-                  {results.roi >= 0 ? (
-                    <TrendingUp className="h-6 w-6 mx-auto mt-3 text-emerald-600" />
-                  ) : (
-                    <TrendingDown className="h-6 w-6 mx-auto mt-3 text-red-600" />
-                  )}
                 </div>
 
-                {/* Metrics Grid */}
                 <div className="grid gap-4 md:grid-cols-2">
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                      <Users className="h-4 w-4" />
-                      <span className="text-sm">Leads Gerados</span>
+                  <div className="p-4 border rounded-xl bg-card">
+                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                      <Users className="h-3.5 w-3.5" />
+                      <span className="text-xs font-bold uppercase tracking-wider">Leads</span>
                     </div>
-                    <p className="text-2xl font-bold">{results.totalLeads}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Pacientes vindos de canais pagos
-                    </p>
+                    <p className="text-xl font-bold">{results.totalLeads}</p>
                   </div>
 
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                      <DollarSign className="h-4 w-4" />
-                      <span className="text-sm">Custo por Lead (CPL)</span>
+                  <div className="p-4 border rounded-xl bg-card">
+                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                      <PiggyBank className="h-3.5 w-3.5" />
+                      <span className="text-xs font-bold uppercase tracking-wider">ROAS</span>
                     </div>
-                    <p className="text-2xl font-bold">{formatCurrency(results.costPerLead)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Quanto custou cada novo paciente
-                    </p>
-                  </div>
-
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                      <Target className="h-4 w-4" />
-                      <span className="text-sm">Taxa de Conversão</span>
-                    </div>
-                    <p className="text-2xl font-bold">{formatPercent(results.conversionRate)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Leads que viraram pacientes ativos
-                    </p>
-                  </div>
-
-                  <div className="p-4 border rounded-lg">
-                    <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                      <PiggyBank className="h-4 w-4" />
-                      <span className="text-sm">Retorno (ROAS)</span>
-                    </div>
-                    <p className="text-2xl font-bold">
-                      {results.returnOnAdSpend.toFixed(2)}x
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Valor retornado por cada R$ 1 investido
-                    </p>
+                    <p className="text-xl font-bold">{results.returnOnAdSpend.toFixed(2)}x</p>
                   </div>
                 </div>
 
-                {/* Revenue Breakdown */}
-                <div className="p-4 border rounded-lg bg-muted/30">
-                  <h4 className="font-semibold mb-3">Breakdown de Receita</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
+                <div className="p-4 border rounded-xl bg-muted/20 space-y-2">
+                   <div className="flex justify-between text-xs text-muted-foreground uppercase tracking-widest font-bold">
+                      <span>Resumo Financeiro</span>
+                   </div>
+                   <div className="flex justify-between text-sm">
                       <span>Investimento:</span>
-                      <span className="font-medium text-red-600">
-                        -{formatCurrency(parseFloat(adSpend))}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Receita Gerada:</span>
-                      <span className="font-medium text-emerald-600">
-                        +{formatCurrency(
-                          results.totalLeads *
-                            (results.conversionRate / 100) *
-                            parseFloat(avgTicket)
-                        )}
-                      </span>
-                    </div>
-                    <div className="border-t pt-2 flex justify-between font-semibold">
-                      <span>Lucro/Prejuízo:</span>
-                      <span
-                        className={cn(
-                          results.roi >= 0 ? 'text-emerald-600' : 'text-red-600'
-                        )}
-                      >
-                        {formatCurrency(
-                          results.totalLeads *
-                            (results.conversionRate / 100) *
-                            parseFloat(avgTicket) -
-                            parseFloat(adSpend)
-                        )}
-                      </span>
-                    </div>
-                  </div>
+                      <span className="font-mono text-red-500">-{formatCurrency(Number(adSpend))}</span>
+                   </div>
+                   <div className="flex justify-between text-sm">
+                      <span>Receita Bruta Estimada:</span>
+                      <span className="font-mono text-emerald-500">+{formatCurrency(results.totalLeads * (results.conversionRate/100) * Number(avgTicket))}</span>
+                   </div>
                 </div>
               </div>
             ) : (
               <div className="text-center py-12">
-                <Calculator className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-30" />
-                <p className="text-muted-foreground">
-                  Preencha os dados da campanha para ver os resultados
-                </p>
+                <Calculator className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-20" />
+                <p className="text-muted-foreground text-sm font-medium">Preencha os dados e clique em calcular</p>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
+    </div>
+  );
+}
 
-      {/* Tips Card */}
-      <Card className="border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-950">
-        <CardContent className="p-4">
-          <div className="flex items-start gap-3">
-            <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-            <div className="text-sm">
-              <p className="font-medium text-blue-900 dark:text-blue-100 mb-2">
-                Dicas para Melhorar seu ROI
-              </p>
-              <ul className="space-y-1 text-blue-800 dark:text-blue-200">
-                <li>• CRM bem segmentado aumenta conversão em até 40%</li>
-                <li>• Anúncios com antes/depois têm CTR 3x maior</li>
-                <li>• Email marketing para pacientes inativos tem ROI de 4200%</li>
-                <li>• Google My Business otimizado aumenta contatos em 50%</li>
-              </ul>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+export default function ROICalculatorPage() {
+  return (
+    <MainLayout>
+      <div className="p-6 max-w-7xl mx-auto">
+        <ROICalculatorContent />
       </div>
     </MainLayout>
   );
