@@ -19,6 +19,7 @@ import { AuthLayout } from '@/components/auth/AuthLayout';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { RegisterForm } from '@/components/auth/RegisterForm';
 import { OAuthButtons } from '@/components/auth/OAuthButtons';
+import { signInWithOAuth } from '@/integrations/neon/auth';
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -135,15 +136,8 @@ export default function Auth() {
     setLoading(true);
     setError('');
 
-    // OAuth redirects handled by context/hooks or direct Firebase SDK
     try {
-      // Note: In modern Firebase, signInWithPopup works well.
-      // We rely on the AuthContextProvider to detect the session change.
-      // Firebase OAuth implementation usually doesn't need much here if using Popup.
-      // For Redirect, we'd need getRedirectResult.
-      const { signInWithOAuth } = await import('@/integrations/neon/auth');
       await signInWithOAuth('google');
-      // On success, the onAuthStateChange in AuthContextProvider will trigger
     } catch (err) {
       logger.error('Erro no login com Google', err, 'Auth');
       const errorMessage = err instanceof Error ? err.message : 'Erro ao conectar com Google.';
@@ -163,7 +157,6 @@ export default function Auth() {
     setError('');
 
     try {
-      const { signInWithOAuth } = await import('@/integrations/neon/auth');
       await signInWithOAuth('github');
     } catch (err: unknown) {
       logger.error('Erro no login com GitHub', err, 'Auth');
@@ -184,7 +177,6 @@ export default function Auth() {
     setError('');
 
     try {
-      const { signInWithOAuth } = await import('@/integrations/neon/auth');
       await signInWithOAuth('apple');
     } catch (err: unknown) {
       logger.error('Erro no login com Apple', err, 'Auth');

@@ -14,7 +14,6 @@ import { useRealtimeEventos } from '@/hooks/useRealtimeEventos';
 import { usePermissions } from '@/hooks/usePermissions';
 import { EventosStatsWidget } from '@/components/eventos/EventosStatsWidget';
 import {
-
   Calendar, 
   MapPin, 
   DollarSign, 
@@ -25,7 +24,12 @@ import {
   MoreVertical,
   Eye,
   Edit,
-  Trash2
+  Trash2,
+  CalendarDays,
+  ChevronRight,
+  TrendingUp,
+  LayoutGrid,
+  ListFilter
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -54,6 +58,7 @@ import {
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { EventPlannerAI } from '@/components/eventos/EventPlannerAI';
+import { cn } from '@/lib/utils';
 
 interface Evento {
   id: string;
@@ -105,27 +110,26 @@ export default function Eventos() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'AGENDADO':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';
+        return 'bg-blue-500/10 text-blue-600 border-blue-200 dark:border-blue-900/50';
       case 'EM_ANDAMENTO':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
+        return 'bg-amber-500/10 text-amber-600 border-amber-200 dark:border-amber-900/50';
       case 'CONCLUIDO':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
+        return 'bg-emerald-500/10 text-emerald-600 border-emerald-200 dark:border-emerald-900/50';
       case 'CANCELADO':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
+        return 'bg-rose-500/10 text-rose-600 border-rose-200 dark:border-rose-900/50';
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
+        return 'bg-slate-500/10 text-slate-600 border-slate-200 dark:border-slate-900/50';
     }
   };
 
-  const getCategoriaLabel = (categoria: string) => {
-    const labels: Record<string, string> = {
-      corrida: 'Corrida',
-      corporativo: 'Corporativo',
-      ativacao: 'Ativação',
-      workshop: 'Workshop',
-      outro: 'Outro',
-    };
-    return labels[categoria] || categoria;
+  const getCategoriaIcon = (categoria: string) => {
+    switch (categoria) {
+      case 'corrida': return '🏃';
+      case 'corporativo': return '🏢';
+      case 'ativacao': return '🎯';
+      case 'workshop': return '📚';
+      default: return '📌';
+    }
   };
 
   const eventosFiltrados = eventos;
@@ -142,362 +146,307 @@ export default function Eventos() {
       )}
       
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-3xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita e todos os dados relacionados (prestadores, participantes, checklist) serão removidos.
+            <AlertDialogTitle className="font-black text-2xl tracking-tight">Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription className="font-medium">
+              Tem certeza que deseja excluir este evento? Esta ação não pode ser desfeita e todos os dados relacionados (prestadores, participantes, checklist) serão removidos permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
-              Excluir
+            <AlertDialogCancel className="rounded-2xl font-bold">Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90 rounded-2xl font-bold">
+              Confirmar Exclusão
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="space-y-4 sm:space-y-6 animate-fade-in pb-20 md:pb-0">
-        {/* Header com gradiente e melhor hierarquia */}
-        <div className="flex flex-col gap-3 sm:gap-4">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
-            <div className="space-y-1">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                Eventos
-              </h1>
-              <p className="text-sm sm:text-base text-muted-foreground">
-                Gerencie corridas, ativações e eventos corporativos
-              </p>
+      <div className="space-y-8 animate-fade-in pb-20 md:pb-0">
+        {/* Header Compacto e Moderno */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.2em] text-[10px] mb-2">
+              <CalendarDays className="w-3 h-3" />
+              Gestão de Operações
             </div>
+            <h1 className="text-4xl md:text-5xl font-black tracking-tighter bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
+              Eventos
+            </h1>
+            <p className="text-slate-500 font-medium max-w-lg">
+              Centralize a logística, equipe e materiais de suas ativações externas em um único lugar.
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="outline"
+              size="lg"
+              className="rounded-2xl border-border/60 font-bold hover:bg-slate-100 transition-all dark:hover:bg-slate-800"
+              onClick={() => navigate('/eventos/analytics')}
+            >
+              <TrendingUp className="w-4 h-4 mr-2 text-primary" />
+              Analytics
+            </Button>
+            
             {canWrite('eventos') && (
               <Button 
-                size="sm"
-                className="gap-2 shadow-lg hover:shadow-xl transition-all duration-300 w-full sm:w-auto"
+                size="lg"
+                className="gap-2 shadow-premium hover:shadow-premium-lg transition-all duration-300 rounded-2xl font-black bg-primary hover:bg-primary/90 px-6"
                 onClick={() => setNewEventoOpen(true)}
               >
-                <Plus className="w-4 h-4" />
-                <span className="sm:hidden">Novo</span>
-                <span className="hidden sm:inline">Novo Evento</span>
+                <Plus className="w-5 h-5" />
+                Novo Evento
               </Button>
             )}
           </div>
-
-          <EventPlannerAI />
-          
-          <EventosStatsWidget />
-          
-          {/* Stats cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            <Card className="hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-medical shrink-0">
-                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-lg sm:text-2xl font-bold">{eventos.length}</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Total</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0">
-                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-lg sm:text-2xl font-bold">
-                      {eventos.filter(e => e.status === 'AGENDADO').length}
-                    </p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Agendados</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="hover:shadow-lg transition-all duration-300">
-              <CardContent className="p-3 sm:p-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0">
-                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-green-500" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-lg sm:text-2xl font-bold">
-                      {eventos.filter(e => e.status === 'CONCLUIDO').length}
-                    </p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">Concluídos</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Button 
-              variant="outline" 
-              className="h-full min-h-[72px] sm:min-h-[84px] hover:bg-accent/80 transition-all"
-              onClick={() => navigate('/eventos/analytics')}
-            >
-              <div className="flex flex-col items-center gap-1 sm:gap-2">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-accent flex items-center justify-center">
-                  <span className="text-lg sm:text-xl">📊</span>
-                </div>
-                <span className="text-xs sm:text-sm font-medium">Analytics</span>
-              </div>
-            </Button>
-          </div>
         </div>
 
-        {/* Filtros modernos e mobile-friendly */}
-        <Card className="shadow-card">
-          <CardContent className="p-3 sm:p-4 md:p-6">
-            <div className="flex flex-col gap-3 sm:gap-4">
-              {/* Busca principal */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar eventos por nome ou local..."
-                  value={busca}
-                  onChange={(e) => setBusca(e.target.value)}
-                  className="pl-10 h-11 bg-background/50"
-                />
-              </div>
-              
-              {/* Filtros em grid responsivo */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Select value={filtroStatus} onValueChange={setFiltroStatus}>
-                  <SelectTrigger className="h-11">
+        {/* Dashboard Section */}
+        <div className="space-y-6">
+          <EventPlannerAI />
+          <EventosStatsWidget />
+        </div>
+        
+        {/* Toolbar & Filters */}
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col lg:flex-row items-center gap-4 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md p-2 rounded-[2.5rem] border border-border/40 shadow-sm">
+            <div className="relative flex-1 w-full lg:w-auto">
+              <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Input
+                placeholder="Buscar por nome, local ou descrição..."
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
+                className="pl-12 h-14 bg-white dark:bg-slate-950 border-none rounded-[2rem] text-base font-medium shadow-inner focus-visible:ring-2 focus-visible:ring-primary/20"
+              />
+            </div>
+            
+            <div className="flex items-center gap-3 w-full lg:w-auto overflow-x-auto pb-1 lg:pb-0 px-2 lg:px-0">
+               <Select value={filtroStatus} onValueChange={setFiltroStatus}>
+                  <SelectTrigger className="h-12 w-[180px] rounded-2xl border-none bg-white dark:bg-slate-950 shadow-sm font-bold">
                     <div className="flex items-center gap-2">
-                      <Filter className="w-4 h-4" />
-                      <SelectValue placeholder="Filtrar por status" />
+                      <ListFilter className="w-4 h-4 text-primary" />
+                      <SelectValue placeholder="Status" />
                     </div>
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">📋 Todos os status</SelectItem>
-                    <SelectItem value="AGENDADO">🕐 Agendado</SelectItem>
-                    <SelectItem value="EM_ANDAMENTO">⚡ Em Andamento</SelectItem>
-                    <SelectItem value="CONCLUIDO">✅ Concluído</SelectItem>
-                    <SelectItem value="CANCELADO">❌ Cancelado</SelectItem>
+                  <SelectContent className="rounded-2xl border-border/40">
+                    <SelectItem value="todos" className="font-bold">📋 Todos</SelectItem>
+                    <SelectItem value="AGENDADO">🕐 Agendados</SelectItem>
+                    <SelectItem value="EM_ANDAMENTO">⚡ Ativos</SelectItem>
+                    <SelectItem value="CONCLUIDO">✅ Concluídos</SelectItem>
+                    <SelectItem value="CANCELADO">❌ Cancelados</SelectItem>
                   </SelectContent>
                 </Select>
 
                 <Select value={filtroCategoria} onValueChange={setFiltroCategoria}>
-                  <SelectTrigger className="h-11">
+                  <SelectTrigger className="h-12 w-[180px] rounded-2xl border-none bg-white dark:bg-slate-950 shadow-sm font-bold">
                     <div className="flex items-center gap-2">
-                      <Filter className="w-4 h-4" />
-                      <SelectValue placeholder="Filtrar por categoria" />
+                      <LayoutGrid className="w-4 h-4 text-primary" />
+                      <SelectValue placeholder="Categoria" />
                     </div>
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">🏷️ Todas as categorias</SelectItem>
-                    <SelectItem value="corrida">🏃 Corrida</SelectItem>
+                  <SelectContent className="rounded-2xl border-border/40">
+                    <SelectItem value="todos" className="font-bold">🏷️ Categorias</SelectItem>
+                    <SelectItem value="corrida">🏃 Corridas</SelectItem>
                     <SelectItem value="corporativo">🏢 Corporativo</SelectItem>
-                    <SelectItem value="ativacao">🎯 Ativação</SelectItem>
-                    <SelectItem value="workshop">📚 Workshop</SelectItem>
-                    <SelectItem value="outro">📌 Outro</SelectItem>
+                    <SelectItem value="ativacao">🎯 Ativações</SelectItem>
+                    <SelectItem value="workshop">📚 Workshops</SelectItem>
+                    <SelectItem value="outro">📌 Outros</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              
-              {/* Indicador de filtros ativos */}
-              {(filtroStatus !== 'todos' || filtroCategoria !== 'todos' || busca) && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <span>{eventosFiltrados.length} evento(s) encontrado(s)</span>
+                
+                {(filtroStatus !== 'todos' || filtroCategoria !== 'todos' || busca) && (
                   <Button 
                     variant="ghost" 
-                    size="sm" 
-                    className="h-7 text-xs"
+                    size="icon" 
+                    className="h-12 w-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-rose-500 shrink-0"
                     onClick={() => {
                       setBusca('');
                       setFiltroStatus('todos');
                       setFiltroCategoria('todos');
                     }}
                   >
-                    Limpar filtros
+                    <Trash2 className="w-5 h-5" />
                   </Button>
-                </div>
-              )}
+                )}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+          
+          {(filtroStatus !== 'todos' || filtroCategoria !== 'todos' || busca) && (
+            <div className="px-6 flex items-center gap-2 animate-in fade-in slide-in-from-left-4">
+              <span className="text-xs font-black uppercase tracking-widest text-primary/60">
+                Filtros Ativos:
+              </span>
+              <div className="flex items-center gap-2">
+                {filtroStatus !== 'todos' && (
+                  <Badge variant="outline" className="rounded-full bg-primary/5 border-primary/20 text-primary font-bold">
+                    Status: {filtroStatus}
+                  </Badge>
+                )}
+                {filtroCategoria !== 'todos' && (
+                  <Badge variant="outline" className="rounded-full bg-primary/5 border-primary/20 text-primary font-bold">
+                    Categoria: {filtroCategoria}
+                  </Badge>
+                )}
+                <span className="text-xs font-bold text-slate-400 ml-2">
+                  {eventosFiltrados.length} resultados
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
 
-        {/* Grid responsivo de Eventos */}
+        {/* Content Area */}
         {isLoading ? (
-          <LoadingSkeleton type="card" rows={3} />
+          <div className="space-y-4">
+            <LoadingSkeleton type="card" rows={3} />
+          </div>
         ) : eventosFiltrados.length === 0 ? (
-          <EmptyState
-            icon={Calendar}
-            title="Nenhum evento encontrado"
-            description={
-              busca || filtroStatus !== 'todos' || filtroCategoria !== 'todos'
-                ? 'Tente ajustar os filtros de busca'
-                : 'Comece criando seu primeiro evento'
-            }
-            action={
-              !busca && filtroStatus === 'todos' && filtroCategoria === 'todos' && canWrite('eventos')
-                ? {
-                    label: 'Criar Primeiro Evento',
-                    onClick: () => setNewEventoOpen(true)
+          <div className="py-12">
+            <EmptyState
+              icon={CalendarDays}
+              title="Nenhum evento encontrado"
+              description={
+                busca || filtroStatus !== 'todos' || filtroCategoria !== 'todos'
+                  ? 'Não encontramos eventos com os critérios selecionados. Tente limpar os filtros.'
+                  : 'Sua agenda de eventos está vazia. Comece planejando sua próxima ativação agora mesmo.'
+              }
+              action={
+                !busca && filtroStatus === 'todos' && filtroCategoria === 'todos' && canWrite('eventos')
+                  ? {
+                      label: 'Criar Primeiro Evento',
+                      onClick: () => setNewEventoOpen(true)
+                    }
+                  : {
+                      label: 'Limpar Filtros',
+                      onClick: () => {
+                        setBusca('');
+                        setFiltroStatus('todos');
+                        setFiltroCategoria('todos');
+                      }
                   }
-                : undefined
-            }
-          />
+              }
+            />
+          </div>
           ) : (
-            <div className="grid gap-4 animate-fade-in">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 animate-fade-in">
               {eventosFiltrados.map((evento, index) => (
                 <Card 
                   key={evento.id} 
-                  className="group overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                  className="group relative overflow-hidden border-border/40 hover:border-primary/40 hover:shadow-premium transition-all duration-500 hover:-translate-y-2 rounded-[2.5rem] bg-white dark:bg-slate-900"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <CardHeader className="pb-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
-                          <CardTitle className="text-xl md:text-2xl truncate">
-                            {evento.nome}
-                          </CardTitle>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <Badge className={getStatusColor(evento.status)}>
-                              {evento.status === 'AGENDADO' && '🕐'}
-                              {evento.status === 'EM_ANDAMENTO' && '⚡'}
-                              {evento.status === 'CONCLUIDO' && '✅'}
-                              {evento.status === 'CANCELADO' && '❌'}
-                              {' '}{evento.status.replace('_', ' ')}
-                            </Badge>
-                            <Badge variant="secondary">
-                              {evento.categoria === 'corrida' && '🏃'}
-                              {evento.categoria === 'corporativo' && '🏢'}
-                              {evento.categoria === 'ativacao' && '🎯'}
-                              {evento.categoria === 'workshop' && '📚'}
-                              {evento.categoria === 'outro' && '📌'}
-                              {' '}{getCategoriaLabel(evento.categoria)}
-                            </Badge>
-                            {evento.gratuito && (
-                              <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400">
-                                Gratuito
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                        {evento.descricao && (
-                          <p className="text-muted-foreground text-sm line-clamp-2">
-                            {evento.descricao}
-                          </p>
-                        )}
+                  {/* Status Bar Top */}
+                  <div className={cn("h-2 w-full", 
+                    evento.status === 'EM_ANDAMENTO' ? 'bg-amber-500' : 
+                    evento.status === 'CONCLUIDO' ? 'bg-emerald-500' : 
+                    evento.status === 'CANCELADO' ? 'bg-rose-500' : 'bg-primary'
+                  )} />
+
+                  <CardHeader className="p-8 pb-4">
+                    <div className="flex justify-between items-start gap-4 mb-4">
+                      <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-border/50 group-hover:bg-primary/5 group-hover:border-primary/20 transition-colors">
+                        <span className="text-2xl">{getCategoriaIcon(evento.categoria)}</span>
                       </div>
                       
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            className="opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem onClick={() => navigate(`/eventos/${evento.id}`)}>
-                            <Eye className="w-4 h-4 mr-2" />
-                            Visualizar detalhes
-                          </DropdownMenuItem>
-                          {canWrite('eventos') && (
-                            <DropdownMenuItem onClick={() => {
-                              setSelectedEvento(evento);
-                              setEditEventoOpen(true);
-                            }}>
-                              <Edit className="w-4 h-4 mr-2" />
-                              Editar evento
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className={cn("rounded-full px-3 py-1 font-black text-[10px] uppercase tracking-wider border", getStatusColor(evento.status))}>
+                          {evento.status.replace('_', ' ')}
+                        </Badge>
+                        
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              className="h-8 w-8 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl border-border/40 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl">
+                            <DropdownMenuItem onClick={() => navigate(`/eventos/${evento.id}`)} className="rounded-xl p-3 font-bold">
+                              <Eye className="w-4 h-4 mr-3 text-primary" />
+                              Detalhes Operacionais
                             </DropdownMenuItem>
-                          )}
-                          {canDelete('eventos') && (
-                            <>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                className="text-destructive focus:text-destructive"
-                                onClick={() => {
-                                  setEventoToDelete(evento.id);
-                                  setDeleteDialogOpen(true);
-                                }}
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Excluir evento
+                            {canWrite('eventos') && (
+                              <DropdownMenuItem onClick={() => {
+                                setSelectedEvento(evento);
+                                setEditEventoOpen(true);
+                              }} className="rounded-xl p-3 font-bold">
+                                <Edit className="w-4 h-4 mr-3 text-amber-500" />
+                                Editar Informações
                               </DropdownMenuItem>
-                            </>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            )}
+                            {canDelete('eventos') && (
+                              <>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem 
+                                  className="rounded-xl p-3 font-bold text-rose-500 focus:text-rose-500 focus:bg-rose-50 dark:focus:bg-rose-950/20"
+                                  onClick={() => {
+                                    setEventoToDelete(evento.id);
+                                    setDeleteDialogOpen(true);
+                                  }}
+                                >
+                                  <Trash2 className="w-4 h-4 mr-3" />
+                                  Excluir Evento
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
+                    
+                    <CardTitle className="text-2xl font-black tracking-tight group-hover:text-primary transition-colors line-clamp-1">
+                      {evento.nome}
+                    </CardTitle>
+                    {evento.descricao && (
+                      <p className="text-slate-500 text-sm font-medium line-clamp-2 mt-2 leading-relaxed">
+                        {evento.descricao}
+                      </p>
+                    )}
                   </CardHeader>
                   
-                  <CardContent className="pt-0">
-                    {/* Informações principais em grid responsivo */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                          <Calendar className="w-5 h-5 text-primary" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs text-muted-foreground mb-1">Data</p>
-                          <p className="font-semibold text-sm truncate">
-                            {format(new Date(evento.data_inicio), 'dd/MM/yyyy', { locale: ptBR })}
+                  <CardContent className="p-8 pt-4">
+                    <div className="grid grid-cols-2 gap-4 mb-8">
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Quando</p>
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-primary" />
+                          <p className="font-bold text-sm">
+                            {format(new Date(evento.data_inicio), "dd 'de' MMM", { locale: ptBR })}
                           </p>
                         </div>
                       </div>
-                      
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-accent flex items-center justify-center shrink-0">
-                          <MapPin className="w-5 h-5 text-foreground" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs text-muted-foreground mb-1">Local</p>
-                          <p className="font-semibold text-sm truncate" title={evento.local}>
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Onde</p>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <MapPin className="h-3 w-3 text-primary shrink-0" />
+                          <p className="font-bold text-sm truncate" title={evento.local}>
                             {evento.local}
                           </p>
                         </div>
                       </div>
-                      
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
-                          <Users className="w-5 h-5 text-blue-500" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs text-muted-foreground mb-1">Participantes</p>
-                          <p className="font-semibold text-sm">0</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center shrink-0">
-                          <DollarSign className="w-5 h-5 text-green-500" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs text-muted-foreground mb-1">Custo</p>
-                          <p className="font-semibold text-sm">R$ 0,00</p>
-                        </div>
-                      </div>
                     </div>
                     
-                    {/* Footer com ações */}
-                    <div className="pt-4 border-t flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="outline" className="text-xs font-normal">
-                          <Users className="w-3 h-3 mr-1" />
-                          0 prestadores
-                        </Badge>
+                    <div className="flex items-center justify-between pt-6 border-t border-border/40">
+                      <div className="flex -space-x-3">
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className="w-9 h-9 rounded-full border-4 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-[10px] font-black shadow-sm">
+                            <Users className="w-3.5 h-3.5 text-slate-500" />
+                          </div>
+                        ))}
+                        <div className="w-9 h-9 rounded-full border-4 border-white dark:border-slate-900 bg-primary/10 flex items-center justify-center text-[10px] font-black text-primary shadow-sm">
+                          +0
+                        </div>
                       </div>
                       
                       <Button 
-                        variant="default" 
-                        size="sm" 
-                        className="w-full sm:w-auto shadow-md hover:shadow-lg transition-all"
                         onClick={() => navigate(`/eventos/${evento.id}`)}
+                        className="rounded-2xl h-12 w-12 p-0 bg-slate-50 dark:bg-slate-800 hover:bg-primary hover:text-white text-slate-900 dark:text-white transition-all duration-300 border-none group/btn"
                       >
-                        <Eye className="w-4 h-4 mr-2" />
-                        Ver Detalhes
+                        <ChevronRight className="w-6 h-6 group-hover/btn:translate-x-1 transition-transform" />
                       </Button>
                     </div>
                   </CardContent>

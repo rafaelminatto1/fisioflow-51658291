@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
-import { FileText, Stethoscope, MessageCircle, Copy, Check, Download } from 'lucide-react';
-import { PDFDownloadLink } from '@react-pdf/renderer';
-import ClinicalReportPDF from './ClinicalReportPDF';
+import { FileText, Stethoscope, MessageCircle, Copy, Check, Download, Loader2 } from 'lucide-react';
 import { generateWhatsAppText, generateDoctorLetterText, logExportEvent } from '@/services/report/reportExportService';
 import { AIAnalysisResult } from '@/services/ai/clinicalAnalysisService';
+
+// Lazy load heavy PDF components
+const PDFDownloadLink = lazy(() => import('@react-pdf/renderer').then(m => ({ default: m.PDFDownloadLink })));
+const ClinicalReportPDF = lazy(() => import('./ClinicalReportPDF'));
 
 interface ShareReportModalProps {
     isOpen: boolean;
@@ -78,23 +80,29 @@ const ShareReportModal: React.FC<ShareReportModalProps> = ({ isOpen, onClose, re
                             <p><strong>Ideal para:</strong> Registro em prontuário, impressão ou envio por e-mail.</p>
                         </div>
                         <div className="flex justify-end">
-                            <PDFDownloadLink
-                                document={
-                                    <ClinicalReportPDF
-                                        report={report}
-                                        patientName={patientName}
-                                        professionalName={professionalName}
-                                        date={new Date().toLocaleDateString('pt-BR')}
-                                    />
-                                }
-                                fileName={`Relatorio_Clinico_${patientName.replace(/\s+/g, '_')}.pdf`}
-                            >
-                                {({ loading }) => (
-                                    <Button disabled={loading} onClick={handleDownloadAudit} className="gap-2">
-                                        {loading ? 'Gerando PDF...' : <><Download className="w-4 h-4" /> Baixar PDF Completo</>}
-                                    </Button>
-                                )}
-                            </PDFDownloadLink>
+                            <Suspense fallback={
+                                <Button disabled className="gap-2">
+                                    <Loader2 className="w-4 h-4 animate-spin" /> Carregando Gerador...
+                                </Button>
+                            }>
+                                <PDFDownloadLink
+                                    document={
+                                        <ClinicalReportPDF
+                                            report={report}
+                                            patientName={patientName}
+                                            professionalName={professionalName}
+                                            date={new Date().toLocaleDateString('pt-BR')}
+                                        />
+                                    }
+                                    fileName={`Relatorio_Clinico_${patientName.replace(/\s+/g, '_')}.pdf`}
+                                >
+                                    {({ loading }) => (
+                                        <Button disabled={loading} onClick={handleDownloadAudit} className="gap-2">
+                                            {loading ? 'Gerando PDF...' : <><Download className="w-4 h-4" /> Baixar PDF Completo</>}
+                                        </Button>
+                                    )}
+                                </PDFDownloadLink>
+                            </Suspense>
                         </div>
                     </TabsContent>
 
