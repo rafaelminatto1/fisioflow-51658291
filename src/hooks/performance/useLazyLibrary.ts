@@ -198,3 +198,14 @@ export function useXLSX() {
     timeout: 10000,
   });
 }
+
+/**
+ * Hook específico para ExcelJS
+ */
+export function useExcelJS() {
+  return useLazyLibrary({
+    importFn: () => import('exceljs'),
+    moduleName: 'ExcelJS',
+    timeout: 10000,
+  });
+}

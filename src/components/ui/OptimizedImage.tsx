@@ -24,6 +24,41 @@ const aspectRatioClasses = {
   'auto': '',
 };
 
+const HOST_FAILURE_STORAGE_KEY = 'optimized-image-host-failures';
+
+const hostFailureCache = new Set<string>();
+
+(function initHostFailureCache() {
+  if (typeof window === 'undefined') return;
+  try {
+    const saved = localStorage.getItem(HOST_FAILURE_STORAGE_KEY);
+    if (!saved) return;
+    const parsed: string[] = JSON.parse(saved);
+    parsed.filter(Boolean).forEach(host => hostFailureCache.add(host));
+  } catch {
+    // Ignore parse errors
+  }
+})();
+
+function persistHostFailure(host: string) {
+  hostFailureCache.add(host);
+  if (typeof window === 'undefined') return;
+  try {
+    const serialized = JSON.stringify(Array.from(hostFailureCache));
+    localStorage.setItem(HOST_FAILURE_STORAGE_KEY, serialized);
+  } catch {}
+}
+
+function extractHost(src: string): string | null {
+  try {
+    const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+    const url = new URL(src, base);
+    return url.origin;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Componente de imagem otimizado com:
  * - Lazy loading nativo
@@ -69,8 +104,9 @@ export function OptimizedImage({
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
+  const srcHost = extractHost(src);
 
-  const srcInvalid = !isValidImageSrc(src);
+  const srcInvalid = !isValidImageSrc(src) || (srcHost ? hostFailureCache.has(srcHost) : false);
   const effectiveSrc = srcInvalid || hasError ? fallback : src;
   const skipLoad = srcInvalid;
 
@@ -126,6 +162,9 @@ export function OptimizedImage({
 
   const handleError = () => {
     setHasError(true);
+    if (srcHost) {
+      persistHostFailure(srcHost);
+    }
     onError?.();
   };
 

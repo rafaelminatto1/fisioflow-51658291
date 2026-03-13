@@ -1,9 +1,9 @@
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useGamification } from '@/hooks/useGamification';
-import * as Icons from 'lucide-react';
 import { Loader2, Package, Zap } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getGamificationIcon } from './iconMap';
 
 interface UserInventoryProps {
   patientId: string;
@@ -11,14 +11,6 @@ interface UserInventoryProps {
 
 export function UserInventory({ patientId }: UserInventoryProps) {
   const { userInventory, isLoading } = useGamification(patientId);
-
-  // Helper to dynamically get icon component
-  const getIcon = (iconName: string | undefined, defaultIcon: React.ComponentType) => {
-    if (!iconName) return defaultIcon;
-    // @ts-expect-error - dynamic icon access from Icons
-    const IconComponent = Icons[iconName] || defaultIcon;
-    return IconComponent;
-  };
 
   if (isLoading) {
     return (
@@ -44,7 +36,7 @@ export function UserInventory({ patientId }: UserInventoryProps) {
         const item = inventoryItem.item;
         if (!item) return null;
         
-        const Icon = getIcon(item.icon, Zap);
+        const Icon = getGamificationIcon(item.icon, Zap);
 
         return (
           <Card key={inventoryItem.id} className="flex flex-row items-center p-4 gap-4 hover:bg-muted/50 transition-colors">

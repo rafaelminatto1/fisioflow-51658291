@@ -14,6 +14,7 @@ export {
   useReactPDF,
   useJsPDF,
   useXLSX,
+  useExcelJS,
 } from './useLazyLibrary';
 
 // Debounce - adia execução até parar de receber eventos
