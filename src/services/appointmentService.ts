@@ -1,8 +1,8 @@
 
-
 // Type for appointment item from API
 
 import { appointmentsApi } from '@/api/v2/appointments';
+import { auditApi } from '@/lib/api/workers-client';
 import { AppointmentBase, AppointmentFormData, AppointmentStatus, AppointmentType } from '@/types/appointment';
 import { VerifiedAppointmentSchema } from '@/schemas/appointment';
 import { dateSchema, timeSchema } from '@/lib/validations/agenda';
@@ -180,7 +180,7 @@ export class AppointmentService {
             }, 'AppointmentService');
 
             return validAppointments;
-        } catch (error: UnknownError) {
+        } catch (error: any) {
             throw AppError.from(error, 'AppointmentService.fetchAppointments');
         }
     }
@@ -239,6 +239,22 @@ export class AppointmentService {
 
             const response = await appointmentsApi.create(payload);
             const newAppointment = response.data as AppointmentApiItem;
+
+            // Log de auditoria: Novo Agendamento
+            try {
+                await auditApi.create({
+                    action: 'INSERT',
+                    entity_type: 'appointments',
+                    entity_id: newAppointment.id,
+                    metadata: { 
+                        patient: newAppointment.patient_name || data.patient_id,
+                        date: rawDate,
+                        time: rawTime,
+                        type: data.type,
+                        timestamp: new Date().toISOString()
+                    }
+                });
+            } catch (e) { /* silent fail */ }
 
             // Helper to parse date string as local date (avoiding timezone issues)
             // new Date("2026-02-05") is parsed as UTC midnight, which becomes previous day in Brazil (UTC-3)
@@ -371,6 +387,20 @@ export class AppointmentService {
             const response = await appointmentsApi.update(id, updateData);
             const fetchedUpdatedAppointment = response.data as AppointmentApiItem;
 
+            // Log de auditoria: Atualização de Agendamento
+            try {
+                await auditApi.create({
+                    action: 'UPDATE',
+                    entity_type: 'appointments',
+                    entity_id: id,
+                    metadata: { 
+                        patient: fetchedUpdatedAppointment.patient_name || id,
+                        updates: Object.keys(updateData),
+                        timestamp: new Date().toISOString()
+                    }
+                });
+            } catch (e) { /* silent fail */ }
+
             // #region agent log
             logAgentEvent({
                 location: 'src/services/appointmentService.ts:updateAppointment:response',
@@ -457,9 +487,27 @@ export class AppointmentService {
             const normalizedStatus = String(status || '').toLowerCase();
             if (normalizedStatus === 'cancelado' || normalizedStatus === 'cancelled') {
                 await appointmentsApi.cancel(id);
+                // Log de auditoria: Cancelamento
+                try {
+                    await auditApi.create({
+                        action: 'UPDATE',
+                        entity_type: 'appointments',
+                        entity_id: id,
+                        metadata: { status: 'cancelled', timestamp: new Date().toISOString() }
+                    });
+                } catch (e) { /* silent fail */ }
                 return;
             }
             await appointmentsApi.update(id, { status });
+            // Log de auditoria: Mudança de Status
+            try {
+                await auditApi.create({
+                    action: 'UPDATE',
+                    entity_type: 'appointments',
+                    entity_id: id,
+                    metadata: { status, timestamp: new Date().toISOString() }
+                });
+            } catch (e) { /* silent fail */ }
         } catch (error) {
             throw AppError.from(error, 'AppointmentService.updateStatus');
         }
@@ -471,6 +519,15 @@ export class AppointmentService {
     static async cancelAppointment(id: string, reason?: string): Promise<void> {
         try {
             await appointmentsApi.cancel(id, reason);
+            // Log de auditoria: Cancelamento com motivo
+            try {
+                await auditApi.create({
+                    action: 'DELETE',
+                    entity_type: 'appointments',
+                    entity_id: id,
+                    metadata: { status: 'cancelled', reason, timestamp: new Date().toISOString() }
+                });
+            } catch (e) { /* silent fail */ }
         } catch (error) {
             throw AppError.from(error, 'AppointmentService.cancelAppointment');
         }
@@ -481,6 +538,15 @@ export class AppointmentService {
     static async deleteAppointment(id: string, _organizationId: string): Promise<void> {
         try {
             await appointmentsApi.cancel(id, 'Deletado pelo usuário');
+            // Log de auditoria: Exclusão (via cancelamento)
+            try {
+                await auditApi.create({
+                    action: 'DELETE',
+                    entity_type: 'appointments',
+                    entity_id: id,
+                    metadata: { reason: 'Deletado pelo usuário', timestamp: new Date().toISOString() }
+                });
+            } catch (e) { /* silent fail */ }
         } catch (error) {
             throw AppError.from(error, 'AppointmentService.deleteAppointment');
         }

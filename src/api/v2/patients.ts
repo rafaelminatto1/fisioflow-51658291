@@ -178,4 +178,8 @@ export const patientsApi = {
       `/api/patients/${encodeURIComponent(patientId)}/surgeries/${encodeURIComponent(surgeryId)}`,
       { method: 'DELETE' },
     ),
+  pathologies: (patientId: string) =>
+    request<{ data: Array<{ id: string; name: string; status: string; severity?: string }> }>(
+      `/api/patients/${encodeURIComponent(patientId)}/pathologies`,
+    ),
 };

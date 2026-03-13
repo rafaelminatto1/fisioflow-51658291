@@ -4,7 +4,7 @@
 
 import React, { lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Bell, Shield, Clock, Contrast } from 'lucide-react';
+import { User, Bell, Shield, Clock, Contrast, Building2 } from 'lucide-react';
 
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,6 +18,7 @@ import { NotificationsTab } from '@/components/settings/tabs/NotificationsTab';
 import { SecurityTab } from '@/components/settings/tabs/SecurityTab';
 import { ScheduleTab } from '@/components/settings/tabs/ScheduleTab';
 import { AccessibilityTab } from '@/components/settings/tabs/AccessibilityTab';
+import { OrganizationTab } from '@/components/settings/tabs/OrganizationTab';
 
 // Lazy Modals
 const InviteUserModal = lazy(() => import('@/components/admin/InviteUserModal').then(m => ({ default: m.InviteUserModal })));
@@ -35,7 +36,7 @@ export default function Settings() {
         </div>
 
         <Tabs value={state.activeTab} onValueChange={state.handleTabChange} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 h-9 sm:h-10 gap-0.5">
+          <TabsList className={`grid w-full ${state.isAdmin ? 'grid-cols-6' : 'grid-cols-5'} h-9 sm:h-10 gap-0.5`}>
             <TabsTrigger value="profile" className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs">
               <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden xs:inline">Perfil</span>
             </TabsTrigger>
@@ -45,6 +46,11 @@ export default function Settings() {
             <TabsTrigger value="security" className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs">
               <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden xs:inline">Segurança</span>
             </TabsTrigger>
+            {state.isAdmin && (
+              <TabsTrigger value="organization" className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs">
+                <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden xs:inline">Clínica</span>
+              </TabsTrigger>
+            )}
             <TabsTrigger value="schedule" className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs">
               <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" /><span className="hidden xs:inline">Horários</span>
             </TabsTrigger>
@@ -61,6 +67,9 @@ export default function Settings() {
               password={state.password} navigate={navigate} onInvite={() => state.setInviteModalOpen(true)} 
             />
           </TabsContent>
+          {state.isAdmin && (
+            <TabsContent value="organization" className="pt-4"><OrganizationTab /></TabsContent>
+          )}
           <TabsContent value="schedule" className="pt-4">
             <ScheduleTab workingHours={state.workingHours} setWorkingHours={state.setWorkingHours} onSave={state.saveWorkingHours} />
           </TabsContent>

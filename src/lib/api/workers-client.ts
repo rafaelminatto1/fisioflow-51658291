@@ -695,7 +695,8 @@ export const prestadoresApi = {
 };
 
 export const auditLogsApi = {
-  list: () => request<{data:AuditLog[]}>('/api/audit-logs'),
+  list: (params?: { entityType?: string; entityId?: string; limit?: number }) => 
+    request<{data:AuditLog[]}>(withQuery('/api/audit-logs', params)),
   create: (d:Partial<AuditLog>) => request<{data:AuditLog}>('/api/audit-logs',{method:'POST',body:JSON.stringify(d)}),
 };
 

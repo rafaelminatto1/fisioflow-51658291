@@ -43,12 +43,15 @@ export function RegisterForm({
     return (
         <form onSubmit={onSubmit} className="space-y-4">
             {invitationData && (
-                <Alert className="bg-primary/5 border-primary/20 text-primary">
-                    <Mail className="h-4 w-4" />
-                    <AlertDescription className="text-sm font-medium">
-                        Convite aceito: <strong>{invitationData.role}</strong>
-                    </AlertDescription>
-                </Alert>
+                <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 p-4 rounded-2xl flex items-start gap-3 text-emerald-800 dark:text-emerald-400 mb-6 animate-in fade-in slide-in-from-top-2 duration-500">
+                    <div className="p-1.5 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg">
+                        <CheckCircle className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <div className="text-xs leading-relaxed">
+                        <p className="font-bold mb-0.5">Convite Validado!</p>
+                        <p>Você está se juntando à clínica como <span className="font-bold uppercase tracking-tight">{invitationData.role}</span>. Complete seu perfil abaixo.</p>
+                    </div>
+                </div>
             )}
 
             <div className="space-y-4">

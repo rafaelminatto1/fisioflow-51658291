@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { usePermissions } from '@/hooks/usePermissions';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
-export type TabValue = 'profile' | 'notifications' | 'security' | 'schedule' | 'a11y';
+export type TabValue = 'profile' | 'notifications' | 'security' | 'schedule' | 'a11y' | 'organization';
 
 export interface WorkingHours {
   start: string;
@@ -50,7 +50,7 @@ const DEFAULT_ACCESSIBILITY_SETTINGS: AccessibilitySettings = {
   fontSize: 'medium',
 };
 
-const VALID_TABS: TabValue[] = ['profile', 'notifications', 'security', 'schedule', 'a11y'];
+const VALID_TABS: TabValue[] = ['profile', 'notifications', 'security', 'schedule', 'a11y', 'organization'];
 
 export function useSettingsState() {
   const [searchParams] = useSearchParams();
@@ -88,8 +88,14 @@ export function useSettingsState() {
   // Sync tab with URL
   useEffect(() => {
     const tab = searchParams.get('tab') as TabValue;
-    if (tab && VALID_TABS.includes(tab)) setActiveTab(tab);
-  }, [searchParams]);
+    if (tab && VALID_TABS.includes(tab)) {
+      if (tab === 'organization' && !isAdmin) {
+        setActiveTab('profile');
+      } else {
+        setActiveTab(tab);
+      }
+    }
+  }, [searchParams, isAdmin]);
 
   const handleTabChange = useCallback((value: string) => {
     const tabValue = value as TabValue;

@@ -311,21 +311,38 @@ export const TaskTableVirtualized: React.FC<TaskTableVirtualizedProps> = ({
     onArchiveTask,
   };
 
+  // Guard against null/undefined dimensions from AutoSizer
+  // This prevents "Cannot convert undefined or null to object" error in react-window
+  if (!tasks || tasks.length === 0) {
+    return (
+      <div className="border rounded-lg overflow-hidden flex items-center justify-center h-64 text-muted-foreground">
+        Nenhuma tarefa para exibir
+      </div>
+    );
+  }
+
   return (
-    <div className="border rounded-lg overflow-hidden">
+    <div className="border rounded-lg overflow-hidden" style={{ minHeight: 200 }}>
       <AutoSizer>
-        {({ width, height }) => (
-          <List
-            width={width}
-            height={height}
-            itemCount={tasks.length}
-            itemSize={rowHeight}
-            overscanCount={overscanCount}
-            itemData={rowData}
-          >
-            {TaskRow}
-          </List>
-        )}
+        {({ width, height }) => {
+          // Ensure width and height are valid numbers before passing to List
+          // AutoSizer can return undefined/null when container is not yet mounted
+          const safeWidth = typeof width === 'number' && !isNaN(width) ? width : 100;
+          const safeHeight = typeof height === 'number' && !isNaN(height) ? height : 200;
+          
+          return (
+            <List
+              width={safeWidth}
+              height={safeHeight}
+              itemCount={tasks.length}
+              itemSize={rowHeight}
+              overscanCount={overscanCount}
+              itemData={rowData}
+            >
+              {TaskRow}
+            </List>
+          );
+        }}
       </AutoSizer>
     </div>
   );
