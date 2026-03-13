@@ -39,6 +39,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
+// Cache headers for read-heavy routes
+const cacheHeaders = {
+  ...corsHeaders,
+  'Cache-Control': 'public, max-age=60, s-maxage=3600, stale-while-revalidate=86400',
+};
+
 // Simple Neon DB query helper using fetch
 async function queryNeon(sql: string, params: any[] = [], databaseUrl: string): Promise<any[]> {
   // Neon HTTP API
@@ -143,7 +149,7 @@ export default {
           unreadCount,
           total: notifications.length 
         }), { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...cacheHeaders, 'Content-Type': 'application/json' } 
         });
       }
 
@@ -518,7 +524,7 @@ export default {
         };
 
         return new Response(JSON.stringify(metrics), { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...cacheHeaders, 'Content-Type': 'application/json' } 
         });
       }
 
