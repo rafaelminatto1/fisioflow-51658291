@@ -7,7 +7,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 app.get('/me', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   
   const fallbackProfile = {
     id: user.uid,
@@ -32,7 +32,7 @@ app.get('/me', requireAuth, async (c) => {
 
 app.get('/therapists', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     const result = await pool.query(
       `SELECT id, full_name as name FROM profiles WHERE organization_id = $1 AND role IN ('admin', 'fisioterapeuta')`,

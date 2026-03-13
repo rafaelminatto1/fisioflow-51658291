@@ -26,7 +26,7 @@ app.get('/', requireAuth, async (c) => {
     return c.json({ data: [], total: 0, page: 1, perPage: limitNum });
   }
 
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     const params: Array<string | number> = [user.organizationId];
     let where = 'WHERE organization_id = $1 AND is_active = true';
@@ -85,7 +85,7 @@ app.get('/:id', requireAuth, async (c) => {
     return c.json({ error: 'Tabela doctors não disponível no Neon' }, 404);
   }
 
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     const result = await pool.query(
       `
@@ -127,7 +127,7 @@ app.post('/', requireAuth, async (c) => {
     return c.json({ error: 'Tabela doctors não disponível no Neon' }, 501);
   }
 
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     const result = await pool.query(
       `
@@ -194,7 +194,7 @@ app.put('/:id', requireAuth, async (c) => {
     return c.json({ error: 'Tabela doctors não disponível no Neon' }, 501);
   }
 
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     const current = await pool.query(
       'SELECT * FROM doctors WHERE id = $1 AND organization_id = $2 LIMIT 1',
@@ -267,7 +267,7 @@ app.delete('/:id', requireAuth, async (c) => {
     return c.json({ error: 'Tabela doctors não disponível no Neon' }, 501);
   }
 
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     const result = await pool.query(
       `

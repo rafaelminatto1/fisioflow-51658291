@@ -1,9 +1,10 @@
 import { Env } from './types/env';
 import { createPool } from './lib/db';
 
+import { triggerInngestEvent } from './lib/inngest-client';
+
 /**
  * Cloudflare Worker Cron Trigger Handler
- * Replaces Inngest workflows with native Worker scheduling
  */
 export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
   const pool = createPool(env);
@@ -13,11 +14,13 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
 
   try {
     switch (cron) {
-      case "0 9 * * *": // Daily at 9:00 AM - Appointment Reminders
-        await sendAppointmentReminders(pool, env);
+      case "0 9 * * *": // Daily at 9:00 AM
+        await sendAppointmentReminders(pool, env, ctx);
+        await processBirthdays(pool, env, ctx);
+        await processInactivePatients(pool, env, ctx);
         break;
       
-      case "0 0 * * *": // Daily at Midnight - Database Cleanup & Daily Reports
+      case "0 0 * * *": // Daily at Midnight
         await generateDailyReports(pool, env);
         await performDatabaseCleanup(pool, env);
         break;
@@ -30,13 +33,51 @@ export async function handleScheduled(event: ScheduledEvent, env: Env, ctx: Exec
   }
 }
 
-async function sendAppointmentReminders(pool: any, env: Env) {
-  console.log('[Cron] Sending appointment reminders...');
-  // 1. Fetch appointments for tomorrow that haven't been reminded
-  // 2. For each, send notification via FCM or WhatsApp (if implemented)
-  // 3. Mark as reminded
-  
-  // Implementation will be expanded in future steps
+async function processBirthdays(db: any, env: Env, ctx: ExecutionContext) {
+  console.log('[Cron] Checking for birthdays...');
+  const result = await db.query(`
+    SELECT id, full_name, phone 
+    FROM patients 
+    WHERE is_active = true 
+      AND EXTRACT(MONTH FROM birth_date) = EXTRACT(MONTH FROM CURRENT_DATE)
+      AND EXTRACT(DAY FROM birth_date) = EXTRACT(DAY FROM CURRENT_DATE)
+  `);
+
+  for (const row of result.rows) {
+    await triggerInngestEvent(env, ctx, 'patient.birthday', {
+      patientId: row.id,
+      name: row.full_name,
+      phone: row.phone
+    });
+  }
+}
+
+async function processInactivePatients(db: any, env: Env, ctx: ExecutionContext) {
+  console.log('[Cron] Checking for inactive patients...');
+  const result = await db.query(`
+    SELECT p.id, p.full_name, p.phone
+    FROM patients p
+    WHERE p.is_active = true
+      AND NOT EXISTS (
+        SELECT 1 FROM appointments a 
+        WHERE a.patient_id = p.id 
+          AND a.date >= (CURRENT_DATE - INTERVAL '15 days')
+      )
+  `);
+
+  for (const row of result.rows) {
+    await triggerInngestEvent(env, ctx, 'patient.inactive', {
+      patientId: row.id,
+      name: row.full_name,
+      phone: row.phone
+    });
+  }
+}
+
+async function sendAppointmentReminders(pool: any, env: Env, ctx: ExecutionContext) {
+  // Já gerenciado via eventos Inngest no momento da criação, 
+  // mas aqui serviria como um fallback de segurança.
+  console.log('[Cron] Syncing daily reminders...');
 }
 
 async function generateDailyReports(pool: any, env: Env) {

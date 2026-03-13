@@ -1,4 +1,5 @@
 import { createAuthClient } from '@neondatabase/neon-js/auth';
+import { getNeonAuthUrl, isNeonAuthConfigured } from '@/lib/config/neon';
 
 export interface NeonUser {
   id: string;
@@ -14,13 +15,13 @@ export interface NeonUser {
  * Neon Auth Client
  * Configurado usando a URL do Neon Auth provida pelas variáveis de ambiente.
  */
-export const authClient = createAuthClient(import.meta.env.VITE_NEON_AUTH_URL);
+export const authClient = createAuthClient(getNeonAuthUrl());
 
 /**
  * Helper para verificar se o Neon Auth está configurado
  */
 export const isNeonAuthEnabled = () => {
-  return !!import.meta.env.VITE_NEON_AUTH_URL;
+  return isNeonAuthConfigured();
 };
 
 /**

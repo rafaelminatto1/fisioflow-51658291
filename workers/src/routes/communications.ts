@@ -7,7 +7,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { channel, status, limit = '100' } = c.req.query();
 
   const conditions = ['cl.organization_id = $1'];
@@ -60,7 +60,7 @@ app.get('/', requireAuth, async (c) => {
 
 app.get('/stats', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   const result = await pool.query(
     `
@@ -98,7 +98,7 @@ app.get('/stats', requireAuth, async (c) => {
 
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.type || !body.recipient || !body.body) {
@@ -136,7 +136,7 @@ app.post('/', requireAuth, async (c) => {
 
 app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   await pool.query('DELETE FROM communication_logs WHERE id = $1 AND organization_id = $2', [
@@ -148,7 +148,7 @@ app.delete('/:id', requireAuth, async (c) => {
 
 app.post('/:id/resend', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await pool.query(
@@ -167,7 +167,7 @@ app.post('/:id/resend', requireAuth, async (c) => {
 
 app.post('/test-email', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const recipient = String(body.to ?? '').trim();

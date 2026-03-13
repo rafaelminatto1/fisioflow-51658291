@@ -84,7 +84,7 @@ function rowToRecord(row: Record<string, unknown>) {
 // ===== LISTA =====
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { patientId, status, appointmentId, limit = '20', offset = '0' } = c.req.query();
 
   if (!patientId) return c.json({ error: 'patientId é obrigatório' }, 400);
@@ -126,7 +126,7 @@ app.get('/', requireAuth, async (c) => {
 // ===== AUTOSAVE (declarado antes de /:id para evitar conflito de rota) =====
 app.post('/autosave', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const patientId = String(body.patient_id ?? '').trim();
@@ -224,7 +224,7 @@ app.post('/autosave', requireAuth, async (c) => {
 // ===== DETALHE =====
 app.get('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await pool.query(
@@ -239,7 +239,7 @@ app.get('/:id', requireAuth, async (c) => {
 // ===== FINALIZAR / ASSINAR =====
 app.post('/:id/finalize', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await pool.query(
@@ -260,7 +260,7 @@ app.post('/:id/finalize', requireAuth, async (c) => {
 // ===== CRIAR =====
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const patientId = String(body.patient_id ?? '').trim();
@@ -312,7 +312,7 @@ app.post('/', requireAuth, async (c) => {
 // ===== ATUALIZAR =====
 app.put('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -370,7 +370,7 @@ app.put('/:id', requireAuth, async (c) => {
 // ===== EXCLUIR (apenas drafts) =====
 app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const check = await pool.query(
@@ -395,7 +395,7 @@ app.delete('/:id', requireAuth, async (c) => {
 
 app.get('/:id/attachments', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await pool.query(
@@ -411,7 +411,7 @@ app.get('/:id/attachments', requireAuth, async (c) => {
 
 app.post('/:id/attachments', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -454,7 +454,7 @@ app.post('/:id/attachments', requireAuth, async (c) => {
 
 app.delete('/:id/attachments/:attachmentId', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id, attachmentId } = c.req.param();
 
   const check = await pool.query(
@@ -473,7 +473,7 @@ app.delete('/:id/attachments/:attachmentId', requireAuth, async (c) => {
 
 app.get('/templates', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   const result = await pool.query(
     `SELECT * FROM session_templates
@@ -486,7 +486,7 @@ app.get('/templates', requireAuth, async (c) => {
 
 app.post('/templates', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const toJsonb = (v: unknown) => (v != null ? JSON.stringify({ text: String(v) }) : null);
@@ -514,7 +514,7 @@ app.post('/templates', requireAuth, async (c) => {
 
 app.put('/templates/:templateId', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { templateId } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -555,7 +555,7 @@ app.put('/templates/:templateId', requireAuth, async (c) => {
 
 app.delete('/templates/:templateId', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { templateId } = c.req.param();
 
   const check = await pool.query(

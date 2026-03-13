@@ -46,7 +46,7 @@ function normalizeOptions(value: unknown): unknown[] | null {
 
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { tipo, ativo, favorite } = c.req.query();
 
   if (!(await hasTable(pool, 'evaluation_forms'))) {
@@ -80,7 +80,7 @@ app.get('/', requireAuth, async (c) => {
 
 app.get('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   if (!(await hasTable(pool, 'evaluation_forms'))) {
@@ -113,7 +113,7 @@ app.get('/:id', requireAuth, async (c) => {
 
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!(await hasTable(pool, 'evaluation_forms'))) {
@@ -148,7 +148,7 @@ app.post('/', requireAuth, async (c) => {
 
 app.put('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -213,7 +213,7 @@ app.put('/:id', requireAuth, async (c) => {
 
 app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   if (!(await hasTable(pool, 'evaluation_forms'))) {
@@ -234,7 +234,7 @@ app.delete('/:id', requireAuth, async (c) => {
 
 app.post('/:id/duplicate', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   if (!(await hasTable(pool, 'evaluation_forms'))) {
@@ -307,7 +307,7 @@ app.post('/:id/duplicate', requireAuth, async (c) => {
 
 app.post('/:id/fields', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -347,7 +347,7 @@ app.post('/:id/fields', requireAuth, async (c) => {
 
 app.put('/fields/:fieldId', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { fieldId } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -425,7 +425,7 @@ app.put('/fields/:fieldId', requireAuth, async (c) => {
 
 app.delete('/fields/:fieldId', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { fieldId } = c.req.param();
 
   if (!(await hasTable(pool, 'evaluation_forms')) || !(await hasTable(pool, 'evaluation_form_fields'))) {
@@ -449,7 +449,7 @@ app.delete('/fields/:fieldId', requireAuth, async (c) => {
 
 app.get('/:id/responses', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const patientId = c.req.query('patientId');
 
@@ -477,7 +477,7 @@ app.get('/:id/responses', requireAuth, async (c) => {
 
 app.post('/:id/responses', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 

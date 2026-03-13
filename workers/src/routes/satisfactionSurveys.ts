@@ -8,7 +8,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
   const { patientId, therapistId, startDate, endDate, responded } = c.req.query();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   let sql = `SELECT * FROM satisfaction_surveys WHERE organization_id = $1`;
   const params: unknown[] = [user.organizationId];
@@ -29,7 +29,7 @@ app.get('/', requireAuth, async (c) => {
 
 app.get('/stats', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   const result = await db.query(
     `SELECT
@@ -72,7 +72,7 @@ app.get('/stats', requireAuth, async (c) => {
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
   const body = await c.req.json();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   const result = await db.query(
     `INSERT INTO satisfaction_surveys
@@ -94,7 +94,7 @@ app.patch('/:id', requireAuth, async (c) => {
   const user = c.get('user');
   const id = c.req.param('id');
   const body = await c.req.json();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   const allowed = ['nps_score', 'q_care_quality', 'q_professionalism', 'q_facility_cleanliness',
     'q_scheduling_ease', 'q_communication', 'comments', 'suggestions', 'responded_at'];
@@ -119,7 +119,7 @@ app.patch('/:id', requireAuth, async (c) => {
 app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
   const id = c.req.param('id');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   await db.query(`DELETE FROM satisfaction_surveys WHERE id = $1 AND organization_id = $2`, [id, user.organizationId]);
   return c.json({ ok: true });
 });

@@ -17,11 +17,19 @@ export const PosePreloadManager = () => {
     // Inicia o pré-carregamento apenas se o usuário estiver logado
     // e o sistema ainda não estiver pronto ou carregando
     if (user && !isReady && !isPreloading) {
-      // Pequeno delay para priorizar o carregamento inicial do dashboard
+      // Delay maior e uso de requestIdleCallback para não competir com 
+      // o carregamento crítico de chunks da agenda e dashboard
       const timer = setTimeout(() => {
-        logger.info('[PosePreloadManager] Iniciando pré-carregamento agendado...', null, 'PosePreload');
-        preload();
-      }, 3000);
+        if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+          (window as any).requestIdleCallback(() => {
+            logger.info('[PosePreloadManager] Iniciando pré-carregamento em modo idle...', null, 'PosePreload');
+            preload();
+          }, { timeout: 15000 });
+        } else {
+          logger.info('[PosePreloadManager] Iniciando pré-carregamento agendado...', null, 'PosePreload');
+          preload();
+        }
+      }, 10000); // 10s de espera inicial
 
       return () => clearTimeout(timer);
     }

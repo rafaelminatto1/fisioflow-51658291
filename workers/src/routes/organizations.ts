@@ -62,7 +62,7 @@ app.get('/:id', async (c) => {
     return c.json({ data: buildFallbackOrganization(id) });
   }
 
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   // ... resto do código original como fallback secundário
 
   if (!(await hasTable(pool, 'organizations'))) {
@@ -124,7 +124,7 @@ app.post('/', async (c) => {
     return c.json({ error: 'Slug obrigatório' }, 400);
   }
 
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query(
     `
       INSERT INTO organizations (name, slug, settings, active, created_at, updated_at)
@@ -140,7 +140,7 @@ app.post('/', async (c) => {
 app.put('/:id', async (c) => {
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   const sets: string[] = ['updated_at = NOW()'];
   const params: unknown[] = [];

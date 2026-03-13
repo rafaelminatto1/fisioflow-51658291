@@ -8,7 +8,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
   const { patientId } = c.req.query();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   let sql = `SELECT * FROM treatment_cycles WHERE therapist_id = $1`;
   const params: unknown[] = [user.uid];
@@ -24,7 +24,7 @@ app.get('/', requireAuth, async (c) => {
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
   const body = await c.req.json();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   const result = await db.query(
     `INSERT INTO treatment_cycles
@@ -44,7 +44,7 @@ app.post('/', requireAuth, async (c) => {
 app.patch('/:id', requireAuth, async (c) => {
   const id = c.req.param('id');
   const body = await c.req.json();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   const allowed = ['title', 'description', 'status', 'start_date', 'end_date', 'goals', 'metadata'];
   const sets: string[] = [];
@@ -74,7 +74,7 @@ app.patch('/:id', requireAuth, async (c) => {
 
 app.delete('/:id', requireAuth, async (c) => {
   const id = c.req.param('id');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   await db.query(`DELETE FROM treatment_cycles WHERE id = $1`, [id]);
   return c.json({ ok: true });
 });

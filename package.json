@@ -47,6 +47,7 @@
     "test:e2e:dashboard": "playwright test e2e/dashboard.spec.ts --project=chromium",
     "test:e2e:patients": "playwright test e2e/patients.spec.ts --project=chromium",
     "test:e2e:agenda": "playwright test e2e/agenda.spec.ts --project=chromium",
+    "test:e2e:agenda-optimistic": "E2E_SKIP_AUTH_SETUP=true playwright test e2e/agenda-optimistic-reschedule.spec.ts --project=chromium --workers=1",
     "test:e2e:agenda-regression": "playwright test --project=chromium --workers=1 e2e/agenda-dnd.spec.ts e2e/agenda-grid-stability.spec.ts",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:auto": "E2E_AUTO_SEED=true playwright test",

@@ -12,7 +12,7 @@ app.use('*', requireAuth);
  */
 app.get('/conversations', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   // Note: This logic assumes a 'conversations' table or deriving from 'messages'
   // For now, we'll derive active conversations from the messages table
@@ -70,7 +70,7 @@ app.get('/conversations', async (c) => {
  */
 app.get('/conversations/:participantId/messages', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const participantId = c.req.param('participantId');
   const limit = parseInt(c.req.query('limit') || '50');
 
@@ -94,7 +94,7 @@ app.get('/conversations/:participantId/messages', async (c) => {
  */
 app.post('/messages', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = await c.req.json();
 
   const { recipientId, content, type = 'text', attachmentUrl, attachmentName } = body;
@@ -128,7 +128,7 @@ app.post('/messages', async (c) => {
  */
 app.post('/conversations/:participantId/read', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const participantId = c.req.param('participantId');
 
   await pool.query(

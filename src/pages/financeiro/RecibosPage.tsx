@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -152,22 +151,20 @@ export default function RecibosPage() {
   };
 
   return (
-    <MainLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <FileText className="h-8 w-8 text-primary" />
-              Recibos
-            </h1>
-            <p className="text-muted-foreground mt-1">Emita e gerencie recibos de pagamento</p>
-          </div>
-          <Button onClick={() => { setActiveTab('criar'); setIsDialogOpen(true); }} className="rounded-xl shadow-lg gap-2">
-            <Plus className="h-4 w-4" />
-            Novo Recibo
-          </Button>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <FileText className="h-8 w-8 text-primary" />
+            Recibos
+          </h1>
+          <p className="text-muted-foreground mt-1">Emita e gerencie recibos de pagamento</p>
         </div>
+        <Button onClick={() => { setActiveTab('criar'); setIsDialogOpen(true); }} className="rounded-xl shadow-lg gap-2">
+          <Plus className="h-4 w-4" />
+          Novo Recibo
+        </Button>
+      </div>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'lista' | 'criar' | 'config')}>
           <TabsList className="bg-slate-100 p-1 rounded-xl">
@@ -535,6 +532,5 @@ export default function RecibosPage() {
           </CustomModalFooter>
         </CustomModal>
       </div>
-    </MainLayout>
   );
 }

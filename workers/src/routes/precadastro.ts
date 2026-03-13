@@ -76,7 +76,7 @@ function normalizePrecadastro(row: Record<string, unknown>) {
 }
 
 app.get('/public/:token', async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { token } = c.req.param();
 
   if (!(await hasTable(pool, 'precadastro_tokens'))) {
@@ -113,7 +113,7 @@ app.get('/public/:token', async (c) => {
 });
 
 app.post('/public/:token/submissions', async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { token } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -202,7 +202,7 @@ app.post('/public/:token/submissions', async (c) => {
 
 app.get('/tokens', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   if (!(await hasTable(pool, 'precadastro_tokens'))) {
     return c.json({ data: [] });
@@ -223,7 +223,7 @@ app.get('/tokens', requireAuth, async (c) => {
 
 app.post('/tokens', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!(await hasTable(pool, 'precadastro_tokens'))) {
@@ -262,7 +262,7 @@ app.post('/tokens', requireAuth, async (c) => {
 
 app.put('/tokens/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -319,7 +319,7 @@ app.put('/tokens/:id', requireAuth, async (c) => {
 
 app.get('/submissions', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   if (!(await hasTable(pool, 'precadastros'))) {
     return c.json({ data: [] });
@@ -345,7 +345,7 @@ app.get('/submissions', requireAuth, async (c) => {
 
 app.put('/submissions/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 

@@ -34,9 +34,28 @@ import { useScheduleHandlers } from '@/hooks/useScheduleHandlers';
 
 // Kick off the CalendarView chunk download immediately at module evaluation
 // so it runs in parallel with Schedule's own execution (eliminates waterfall).
-const _calendarViewPreload = import('@/components/schedule/CalendarView');
+const lazyRetry = (importFn: () => Promise<any>, maxRetries = 3) => {
+  return new Promise<any>((resolve, reject) => {
+    let retries = 0;
+    const attempt = () => {
+      importFn()
+        .then(resolve)
+        .catch((error) => {
+          retries++;
+          if (retries <= maxRetries) {
+            console.warn(`[LazyRetry] Falha ao carregar componente da agenda. Tentativa ${retries}/${maxRetries}...`, error);
+            setTimeout(attempt, 1500 * retries); // Backoff progressivo
+          } else {
+            reject(error);
+          }
+        });
+    };
+    attempt();
+  });
+};
+
 const CalendarView = lazy(() =>
-  _calendarViewPreload.then(mod => ({ default: mod.CalendarView }))
+  lazyRetry(() => import('@/components/schedule/CalendarView')).then(mod => ({ default: mod.CalendarView }))
 );
 
 // Lazy load modals for better initial load performance
@@ -272,31 +291,35 @@ const Schedule = () => {
           <div className="flex-1 flex flex-col min-w-0 min-h-0 bg-white dark:bg-slate-950" data-testid="mobile-schedule-list">
             <div className="flex-1 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-950 relative min-h-0">
               <Suspense fallback={<CalendarSkeletonEnhanced viewType={viewType as CalendarViewType} />}>
-                <CalendarView
-                  appointments={appointments}
-                  currentDate={currentDate}
-                  onDateChange={setCurrentDate}
-                  viewType={viewType as CalendarViewType}
-                  onViewTypeChange={setViewType}
-                  onAppointmentClick={actions.handleAppointmentClick}
-                  onTimeSlotClick={actions.handleTimeSlotClick}
-                  onAppointmentReschedule={actions.handleAppointmentReschedule}
-                  onEditAppointment={actions.handleEditAppointment}
-                  onDeleteAppointment={actions.handleDeleteAppointment}
-                  selectionMode={isSelectionMode}
-                  selectedIds={selectedIds}
-                  onToggleSelection={toggleSelection}
-                  rescheduleSuccessMessage={modals.rescheduleSuccessMessage}
-                  onCreateAppointment={actions.handleCreateAppointment}
-                  onToggleSelectionMode={toggleSelectionMode}
-                  onCancelAllToday={() => modals.setShowCancelAllTodayDialog(true)}
-                  filters={filters}
-                  onFiltersChange={setFilters}
-                  onClearFilters={clearFilters}
-                  totalAppointmentsCount={appointments.length}
-                  patientFilter={patientFilter}
-                  onPatientFilterChange={setPatientFilter}
-                />
+                {loading && appointments.length === 0 ? (
+                  <CalendarSkeletonEnhanced viewType={viewType as CalendarViewType} />
+                ) : (
+                  <CalendarView
+                    appointments={appointments}
+                    currentDate={currentDate}
+                    onDateChange={setCurrentDate}
+                    viewType={viewType as CalendarViewType}
+                    onViewTypeChange={setViewType}
+                    onAppointmentClick={actions.handleAppointmentClick}
+                    onTimeSlotClick={actions.handleTimeSlotClick}
+                    onAppointmentReschedule={actions.handleAppointmentReschedule}
+                    onEditAppointment={actions.handleEditAppointment}
+                    onDeleteAppointment={actions.handleDeleteAppointment}
+                    selectionMode={isSelectionMode}
+                    selectedIds={selectedIds}
+                    onToggleSelection={toggleSelection}
+                    rescheduleSuccessMessage={modals.rescheduleSuccessMessage}
+                    onCreateAppointment={actions.handleCreateAppointment}
+                    onToggleSelectionMode={toggleSelectionMode}
+                    onCancelAllToday={() => modals.setShowCancelAllTodayDialog(true)}
+                    filters={filters}
+                    onFiltersChange={setFilters}
+                    onClearFilters={clearFilters}
+                    totalAppointmentsCount={appointments.length}
+                    patientFilter={patientFilter}
+                    onPatientFilterChange={setPatientFilter}
+                  />
+                )}
               </Suspense>
             </div>
           </div>

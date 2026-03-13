@@ -33,6 +33,8 @@ NEON_AUTH_JWKS_URL=...
 R2_BUCKET_NAME=fisioflow-media
 ```
 
+Em Cloudflare Pages, configure `VITE_NEON_AUTH_URL` em `Production` e `Preview`. O frontend tem um fallback de producao para evitar `POST /api/auth/... -> 405`, mas a env continua sendo a configuracao canonica.
+
 ### 3. Scripts Principais
 
 ```bash

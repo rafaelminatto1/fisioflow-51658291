@@ -1,30 +1,44 @@
 import { neon } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
+import { drizzle as drizzleHttp } from 'drizzle-orm/neon-http';
+import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres';
+import { Client } from 'pg';
 import type { Env } from '../types/env';
 
-import * as exercises from '../../../src/server/db/schema/exercises';
-import * as protocols from '../../../src/server/db/schema/protocols';
-import * as wiki from '../../../src/server/db/schema/wiki';
+import * as schema from './worker-schema';
 
-const schema = { ...exercises, ...protocols, ...wiki };
+export type Database = any; // ReturnType<typeof createDb> is now async
 
-export type Database = ReturnType<typeof createDb>;
-
-export function createDb(env: Env) {
+export async function createDb(env: Env) {
   const url = env.NEON_URL || env.HYPERDRIVE?.connectionString || process.env.DATABASE_URL;
   if (!url) throw new Error('DB URL missing');
-  return drizzle(neon(url), { schema });
+
+  // Se for uma URL do Hyperdrive (TCP), usamos o driver 'pg'
+  if (url.startsWith('postgres://') || url.startsWith('postgresql://')) {
+    const client = new Client({ connectionString: url });
+    await client.connect();
+    return drizzlePg(client, { schema });
+  }
+
+  // Fallback para HTTP (Neon)
+  return drizzleHttp(neon(url), { schema });
 }
 
 /**
  * Mock de Pool para compatibilidade total.
- * Usa o driver HTTP stateless do Neon.
+ * Usa o driver 'pg' nativo para Hyperdrive.
  */
-export function createPool(env: Env) {
+export async function createPool(env: Env) {
   const url = env.NEON_URL || env.HYPERDRIVE?.connectionString || process.env.DATABASE_URL;
   if (!url) throw new Error('DB URL missing');
-  const sql = neon(url);
 
+  if (url.startsWith('postgres://') || url.startsWith('postgresql://')) {
+    const client = new Client({ connectionString: url });
+    await client.connect();
+    return client; // Retorna o client diretamente que tem o método .query compatível
+  }
+
+  // Fallback para neon HTTP
+  const sql = neon(url);
   return {
     query: async (text: string, params: any[] = []) => {
       const rows = await sql.query(text, params);

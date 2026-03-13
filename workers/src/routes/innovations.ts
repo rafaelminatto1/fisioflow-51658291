@@ -12,7 +12,7 @@ const hasTable = async (pool: ReturnType<typeof createPool>, tableName: string):
 
 app.get('/inventory', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const activeOnly = c.req.query('activeOnly') !== 'false';
 
   if (!(await hasTable(pool, 'clinic_inventory'))) return c.json({ data: [] });
@@ -33,7 +33,7 @@ app.get('/inventory', requireAuth, async (c) => {
 
 app.post('/inventory', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.item_name) return c.json({ error: 'item_name é obrigatório' }, 400);
@@ -65,7 +65,7 @@ app.post('/inventory', requireAuth, async (c) => {
 
 app.put('/inventory/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -101,7 +101,7 @@ app.put('/inventory/:id', requireAuth, async (c) => {
 
 app.get('/inventory-movements', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const inventoryId = c.req.query('inventoryId');
   const limit = Math.min(Number(c.req.query('limit') ?? 100) || 100, 500);
 
@@ -126,7 +126,7 @@ app.get('/inventory-movements', requireAuth, async (c) => {
 
 app.post('/inventory-movements', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const inventoryId = String(body.inventory_id ?? '').trim();
@@ -188,7 +188,7 @@ app.post('/inventory-movements', requireAuth, async (c) => {
 
 app.get('/staff-performance', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const therapistId = c.req.query('therapistId');
   const startDate = c.req.query('startDate');
   const endDate = c.req.query('endDate');
@@ -220,7 +220,7 @@ app.get('/staff-performance', requireAuth, async (c) => {
 
 app.get('/appointment-predictions', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const limit = Math.min(Number(c.req.query('limit') ?? 50) || 50, 200);
 
   if (!(await hasTable(pool, 'patient_predictions'))) return c.json({ data: [] });
@@ -256,7 +256,7 @@ app.get('/appointment-predictions', requireAuth, async (c) => {
 
 app.get('/revenue-forecasts', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const limit = Math.min(Number(c.req.query('limit') ?? 90) || 90, 365);
 
   if (!(await hasTable(pool, 'revenue_forecasts'))) return c.json({ data: [] });
@@ -273,7 +273,7 @@ app.get('/revenue-forecasts', requireAuth, async (c) => {
 
 app.get('/whatsapp-exercise-queue', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const limit = Math.min(Number(c.req.query('limit') ?? 100) || 100, 500);
 
   if (!(await hasTable(pool, 'whatsapp_exercise_queue'))) return c.json({ data: [] });
@@ -290,7 +290,7 @@ app.get('/whatsapp-exercise-queue', requireAuth, async (c) => {
 
 app.post('/whatsapp-exercise-queue', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   if (!body.patient_id) return c.json({ error: 'patient_id é obrigatório' }, 400);
@@ -322,7 +322,7 @@ app.post('/whatsapp-exercise-queue', requireAuth, async (c) => {
 
 app.get('/patient-self-assessments', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const patientId = c.req.query('patientId');
   const limit = Math.min(Number(c.req.query('limit') ?? 100) || 100, 500);
 

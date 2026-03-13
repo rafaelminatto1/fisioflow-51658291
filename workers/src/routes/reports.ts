@@ -87,7 +87,7 @@ function normalizeConvenioReport(row: Record<string, unknown>) {
 
 app.get('/medical-templates', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   if (!(await hasTable(pool, 'medical_report_templates'))) return c.json({ data: [] });
 
   const result = await pool.query(
@@ -105,7 +105,7 @@ app.get('/medical-templates', requireAuth, async (c) => {
 
 app.post('/medical-templates', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   if (!(await hasTable(pool, 'medical_report_templates'))) {
     return c.json({ error: 'Tabela medical_report_templates indisponível' }, 501);
   }
@@ -136,7 +136,7 @@ app.post('/medical-templates', requireAuth, async (c) => {
 
 app.put('/medical-templates/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
   if (!(await hasTable(pool, 'medical_report_templates'))) {
@@ -171,7 +171,7 @@ app.put('/medical-templates/:id', requireAuth, async (c) => {
 
 app.delete('/medical-templates/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   if (!(await hasTable(pool, 'medical_report_templates'))) return c.json({ ok: true });
 
@@ -184,7 +184,7 @@ app.delete('/medical-templates/:id', requireAuth, async (c) => {
 
 app.get('/medical', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   if (!(await hasTable(pool, 'medical_reports'))) return c.json({ data: [] });
 
   const result = await pool.query(
@@ -202,7 +202,7 @@ app.get('/medical', requireAuth, async (c) => {
 
 app.post('/medical', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   if (!(await hasTable(pool, 'medical_reports'))) {
     return c.json({ error: 'Tabela medical_reports indisponível' }, 501);
   }
@@ -230,7 +230,7 @@ app.post('/medical', requireAuth, async (c) => {
 
 app.put('/medical/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   if (!(await hasTable(pool, 'medical_reports'))) {
     return c.json({ error: 'Tabela medical_reports indisponível' }, 501);
@@ -265,7 +265,7 @@ app.put('/medical/:id', requireAuth, async (c) => {
 
 app.delete('/medical/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   if (!(await hasTable(pool, 'medical_reports'))) return c.json({ ok: true });
 
@@ -275,7 +275,7 @@ app.delete('/medical/:id', requireAuth, async (c) => {
 
 app.get('/convenio', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   if (!(await hasTable(pool, 'convenio_reports'))) return c.json({ data: [] });
 
   const result = await pool.query(
@@ -293,7 +293,7 @@ app.get('/convenio', requireAuth, async (c) => {
 
 app.post('/convenio', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   if (!(await hasTable(pool, 'convenio_reports'))) {
     return c.json({ error: 'Tabela convenio_reports indisponível' }, 501);
   }
@@ -323,7 +323,7 @@ app.post('/convenio', requireAuth, async (c) => {
 
 app.put('/convenio/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   if (!(await hasTable(pool, 'convenio_reports'))) {
     return c.json({ error: 'Tabela convenio_reports indisponível' }, 501);
@@ -360,7 +360,7 @@ app.put('/convenio/:id', requireAuth, async (c) => {
 
 app.delete('/convenio/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   if (!(await hasTable(pool, 'convenio_reports'))) return c.json({ ok: true });
 

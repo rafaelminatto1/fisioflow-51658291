@@ -50,7 +50,7 @@ app.get('/', requireAuth, async (c) => {
   if (!eventoId) return c.json({ error: 'eventoId é obrigatório' }, 400);
 
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const isOwner = await ensureEventBelongsToOrg(pool, eventoId, user.organizationId);
   if (isOwner === null) return c.json({ error: 'Evento não encontrado' }, 404);
   if (!isOwner) return c.json({ error: 'Acesso negado ao evento' }, 403);
@@ -68,7 +68,7 @@ app.get('/metrics', requireAuth, async (c) => {
   if (!eventoId) return c.json({ error: 'eventoId é obrigatório' }, 400);
 
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const isOwner = await ensureEventBelongsToOrg(pool, eventoId, user.organizationId);
   if (isOwner === null) return c.json({ error: 'Evento não encontrado' }, 404);
   if (!isOwner) return c.json({ error: 'Acesso negado ao evento' }, 403);
@@ -88,7 +88,7 @@ app.post('/', requireAuth, async (c) => {
   if (!evento_id || !nome) return c.json({ error: 'evento_id e nome são obrigatórios' }, 400);
 
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const isOwner = await ensureEventBelongsToOrg(pool, evento_id, user.organizationId);
   if (isOwner === null) return c.json({ error: 'Evento não encontrado' }, 404);
   if (!isOwner) return c.json({ error: 'Acesso negado ao evento' }, 403);
@@ -115,7 +115,7 @@ app.put('/:id', requireAuth, async (c) => {
   const { nome, contato, cpf_cnpj, valor_acordado, status_pagamento } = body;
 
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const prestador = await getPrestadorWithEvent(pool, id);
   if (!prestador) return c.json({ error: 'Prestador não encontrado' }, 404);
   if (prestador.organization_id !== user.organizationId) return c.json({ error: 'Acesso negado' }, 403);
@@ -140,7 +140,7 @@ app.put('/:id', requireAuth, async (c) => {
 app.delete('/:id', requireAuth, async (c) => {
   const { id } = c.req.param();
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const prestador = await getPrestadorWithEvent(pool, id);
   if (!prestador) return c.json({ error: 'Prestador não encontrado' }, 404);
   if (prestador.organization_id !== user.organizationId) return c.json({ error: 'Acesso negado' }, 403);
@@ -153,7 +153,7 @@ app.put('/:id/status', requireAuth, async (c) => {
   const { id } = c.req.param();
   const body = (await c.req.json()) as { status?: 'PENDENTE' | 'PAGO' };
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const prestador = await getPrestadorWithEvent(pool, id);
   if (!prestador) return c.json({ error: 'Prestador não encontrado' }, 404);
   if (prestador.organization_id !== user.organizationId) return c.json({ error: 'Acesso negado' }, 403);
