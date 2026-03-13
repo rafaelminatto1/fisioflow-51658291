@@ -8,7 +8,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
   const { patientId, dataType, source, limit } = c.req.query();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   let sql = `SELECT * FROM wearable_data WHERE organization_id = $1`;
   const params: unknown[] = [user.organizationId];
@@ -28,7 +28,7 @@ app.get('/', requireAuth, async (c) => {
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
   const body = await c.req.json();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   const result = await db.query(
     `INSERT INTO wearable_data (organization_id, patient_id, source, data_type, value, unit, timestamp)
@@ -47,7 +47,7 @@ app.post('/bulk', requireAuth, async (c) => {
   const { entries } = await c.req.json() as {
     entries: Array<{ patient_id: string; source: string; data_type: string; value: number; unit?: string; timestamp?: string }>;
   };
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   const inserted = await Promise.all(entries.map(e =>
     db.query(

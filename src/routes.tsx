@@ -138,9 +138,7 @@ const ImageAnalysisDashboard = lazy(() => import(/* webpackChunkName: "analysis-
 const DynamicCompareDetailsPage = lazy(() => import(/* webpackChunkName: "analysis-dynamic" */ "./pages/dashboard/dinamica/DynamicCompareDetailsPage"));
 
 // CRM & Portal
-const LeadsPage = lazy(() => import(/* webpackChunkName: "crm-leads" */ "./pages/crm/LeadsPage"));
 const CRMDashboard = lazy(() => import(/* webpackChunkName: "crm-dashboard" */ "./pages/crm/CRMDashboard"));
-const CRMCampanhasPage = lazy(() => import(/* webpackChunkName: "crm-campanhas" */ "./pages/crm/CRMCampanhasPage"));
 const PatientPortal = lazy(() => import(/* webpackChunkName: "portal-patient" */ "./pages/PatientPortal"));
 
 // Pre-cadastro
@@ -300,8 +298,8 @@ export function AppRoutes() {
 
             {/* Marketing/CRM - Fase 6 */}
             <Route path="/crm" element={<ProtectedRoute><CRMDashboard /></ProtectedRoute>} />
-            <Route path="/crm/leads" element={<ProtectedRoute><LeadsPage /></ProtectedRoute>} />
-            <Route path="/crm/campanhas" element={<ProtectedRoute><CRMCampanhasPage /></ProtectedRoute>} />
+            <Route path="/crm/leads" element={<Navigate to="/crm" replace />} />
+            <Route path="/crm/campanhas" element={<Navigate to="/crm" replace />} />
 
             {/* Portal do Paciente */}
             <Route path="/portal" element={<ProtectedRoute><PatientPortal /></ProtectedRoute>} />

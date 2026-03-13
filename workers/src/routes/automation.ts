@@ -7,7 +7,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 app.get('/logs', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const limit = Math.min(200, Math.max(10, Number(c.req.query('limit') ?? 50)));
 
   const result = await pool.query(

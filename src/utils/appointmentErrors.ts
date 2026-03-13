@@ -14,6 +14,9 @@ export const APPOINTMENT_CONFLICT_TITLE = 'Conflito de horário';
 
 export function isAppointmentConflictError(error: unknown): boolean {
   if (error == null) return false;
+  if (typeof error === 'object' && error !== null && 'status' in error && (error as { status?: unknown }).status === 409) {
+    return true;
+  }
   const msg =
     typeof error === 'object' && 'message' in error && typeof (error as { message: unknown }).message === 'string'
       ? (error as { message: string }).message
@@ -22,6 +25,7 @@ export function isAppointmentConflictError(error: unknown): boolean {
         : String(error);
   return msg.includes('409') ||
          msg.includes('Conflito de horário') ||
+         msg.includes('Capacidade do horário excedida') ||
          msg.includes('duplicate key value violates unique constraint') ||
          msg.includes('idx_appointments_time_conflict') ||
          msg.includes('time_conflict');

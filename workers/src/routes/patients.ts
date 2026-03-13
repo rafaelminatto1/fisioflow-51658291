@@ -589,7 +589,7 @@ app.use('*', requireAuth);
 
 app.get('/', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const columns = await getTableColumns(db, 'patients');
 
   if (columns.size === 0) {
@@ -675,7 +675,7 @@ app.get('/', async (c) => {
 
 app.get('/last-updated', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   if (!(await hasColumn(db, 'patients', 'updated_at'))) {
     return c.json({ data: { last_updated_at: null } });
@@ -696,7 +696,7 @@ app.get('/last-updated', async (c) => {
 
 app.get('/by-profile/:profileId', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { profileId } = c.req.param();
 
   if (!(await hasColumn(db, 'patients', 'profile_id'))) {
@@ -720,7 +720,7 @@ app.get('/by-profile/:profileId', async (c) => {
 
 app.post('/', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const body = (await c.req.json()) as PatientPayload;
   const columns = await getTableColumns(db, 'patients');
 
@@ -765,7 +765,7 @@ app.post('/', async (c) => {
 
 app.get('/:id/stats', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id } = c.req.param();
 
   if (!(await hasTable(db, 'appointments'))) {
@@ -803,7 +803,7 @@ app.get('/:id/stats', async (c) => {
 
 app.get('/:id', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id } = c.req.param();
 
   try {
@@ -831,7 +831,7 @@ app.get('/:id', async (c) => {
 
 const updatePatientHandler = async (c: any) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as PatientPayload;
   const columns = await getTableColumns(db, 'patients');
@@ -861,7 +861,7 @@ app.patch('/:id', updatePatientHandler);
 
 app.delete('/:id', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id } = c.req.param();
 
   try {
@@ -889,7 +889,7 @@ app.delete('/:id', async (c) => {
 
 app.get('/:id/medical-records', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await db.query(
@@ -908,7 +908,7 @@ app.get('/:id/medical-records', async (c) => {
 
 app.post('/:id/medical-records', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as PatientPayload;
 
@@ -966,7 +966,7 @@ app.post('/:id/medical-records', async (c) => {
 
 app.put('/:id/medical-records/:recordId', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id, recordId } = c.req.param();
   const body = (await c.req.json()) as PatientPayload;
 
@@ -1012,7 +1012,7 @@ app.put('/:id/medical-records/:recordId', async (c) => {
 
 app.delete('/:id/medical-records/:recordId', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id, recordId } = c.req.param();
 
   await db.query(
@@ -1030,7 +1030,7 @@ app.delete('/:id/medical-records/:recordId', async (c) => {
 
 app.get('/:id/physical-examinations', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await db.query(
@@ -1049,7 +1049,7 @@ app.get('/:id/physical-examinations', async (c) => {
 
 app.post('/:id/physical-examinations', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as PatientPayload;
 
@@ -1116,7 +1116,7 @@ app.post('/:id/physical-examinations', async (c) => {
 
 app.put('/:id/physical-examinations/:examId', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id, examId } = c.req.param();
   const body = (await c.req.json()) as PatientPayload;
 
@@ -1168,7 +1168,7 @@ app.put('/:id/physical-examinations/:examId', async (c) => {
 
 app.delete('/:id/physical-examinations/:examId', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id, examId } = c.req.param();
 
   await db.query(
@@ -1186,7 +1186,7 @@ app.delete('/:id/physical-examinations/:examId', async (c) => {
 
 app.get('/:id/treatment-plans', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await db.query(
@@ -1205,7 +1205,7 @@ app.get('/:id/treatment-plans', async (c) => {
 
 app.post('/:id/treatment-plans', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as PatientPayload;
 
@@ -1260,7 +1260,7 @@ app.post('/:id/treatment-plans', async (c) => {
 
 app.put('/:id/treatment-plans/:planId', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id, planId } = c.req.param();
   const body = (await c.req.json()) as PatientPayload;
 
@@ -1304,7 +1304,7 @@ app.put('/:id/treatment-plans/:planId', async (c) => {
 
 app.delete('/:id/treatment-plans/:planId', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id, planId } = c.req.param();
 
   await db.query(
@@ -1322,7 +1322,7 @@ app.delete('/:id/treatment-plans/:planId', async (c) => {
 
 app.get('/:id/attachments', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id } = c.req.param();
   const recordId = trimmedString(c.req.query('recordId'));
 
@@ -1349,7 +1349,7 @@ app.get('/:id/attachments', async (c) => {
 
 app.post('/:id/attachments', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as PatientPayload;
 
@@ -1406,7 +1406,7 @@ app.post('/:id/attachments', async (c) => {
 
 app.delete('/:id/attachments/:attachmentId', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id, attachmentId } = c.req.param();
 
   await db.query(
@@ -1424,7 +1424,7 @@ app.delete('/:id/attachments/:attachmentId', async (c) => {
 
 app.get('/:id/pathologies', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await db.query(
@@ -1443,7 +1443,7 @@ app.get('/:id/pathologies', async (c) => {
 
 app.post('/:id/pathologies', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as PatientPayload;
 
@@ -1498,7 +1498,7 @@ app.post('/:id/pathologies', async (c) => {
 
 app.put('/:id/pathologies/:pathologyId', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id, pathologyId } = c.req.param();
   const body = (await c.req.json()) as PatientPayload;
 
@@ -1542,7 +1542,7 @@ app.put('/:id/pathologies/:pathologyId', async (c) => {
 
 app.delete('/:id/pathologies/:pathologyId', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id, pathologyId } = c.req.param();
 
   await db.query(
@@ -1560,7 +1560,7 @@ app.delete('/:id/pathologies/:pathologyId', async (c) => {
 
 app.get('/:id/surgeries', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await db.query(
@@ -1579,7 +1579,7 @@ app.get('/:id/surgeries', async (c) => {
 
 app.post('/:id/surgeries', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as PatientPayload;
 
@@ -1637,7 +1637,7 @@ app.post('/:id/surgeries', async (c) => {
 
 app.put('/:id/surgeries/:surgeryId', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id, surgeryId } = c.req.param();
   const body = (await c.req.json()) as PatientPayload;
 
@@ -1683,7 +1683,7 @@ app.put('/:id/surgeries/:surgeryId', async (c) => {
 
 app.delete('/:id/surgeries/:surgeryId', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id, surgeryId } = c.req.param();
 
   await db.query(
@@ -1701,7 +1701,7 @@ app.delete('/:id/surgeries/:surgeryId', async (c) => {
 
 app.get('/:id/medical-returns', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await db.query(
@@ -1720,7 +1720,7 @@ app.get('/:id/medical-returns', async (c) => {
 
 app.post('/:id/medical-returns', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as PatientPayload;
 
@@ -1772,7 +1772,7 @@ app.post('/:id/medical-returns', async (c) => {
 
 app.put('/:id/medical-returns/:medicalReturnId', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id, medicalReturnId } = c.req.param();
   const body = (await c.req.json()) as PatientPayload;
 
@@ -1814,7 +1814,7 @@ app.put('/:id/medical-returns/:medicalReturnId', async (c) => {
 
 app.delete('/:id/medical-returns/:medicalReturnId', async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const { id, medicalReturnId } = c.req.param();
 
   await db.query(

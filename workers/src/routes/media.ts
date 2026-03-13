@@ -21,7 +21,7 @@ const ALLOWED_TYPES: Record<string, string> = {
 
 app.get('/annotations', requireAuth, async (c) => {
     const user = c.get('user');
-    const pool = createPool(c.env);
+    const pool = await createPool(c.env);
     const assetId = c.req.query('assetId');
 
     if (!assetId) {
@@ -43,7 +43,7 @@ app.get('/annotations', requireAuth, async (c) => {
 
 app.post('/annotations', requireAuth, async (c) => {
     const user = c.get('user');
-    const pool = createPool(c.env);
+    const pool = await createPool(c.env);
     const body = await c.req.json() as Record<string, unknown>;
 
     if (!body.asset_id) {

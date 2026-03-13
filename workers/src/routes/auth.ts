@@ -6,7 +6,7 @@ const app = new Hono<{ Bindings: Env }>();
 
 app.post('/login', async (c) => {
   const { email, password } = await c.req.json();
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   if (!email) {
     return c.json({ error: 'Email é obrigatório' }, 400);

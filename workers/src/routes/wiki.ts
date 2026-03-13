@@ -17,7 +17,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 // ===== CATEGORIAS (ANTES de /:slug para evitar conflito de rota) =====
 app.get('/categories', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const result = await db.query(
     `SELECT * FROM wiki_categories WHERE organization_id = $1 ORDER BY order_index ASC, name ASC`,
     [user.organizationId]
@@ -27,7 +27,7 @@ app.get('/categories', requireAuth, async (c) => {
 
 app.post('/categories', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const body = await c.req.json();
   const slug = body.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
   const result = await db.query(
@@ -41,7 +41,7 @@ app.post('/categories', requireAuth, async (c) => {
 
 app.delete('/categories/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   await db.query(`DELETE FROM wiki_categories WHERE id = $1 AND organization_id = $2`, [c.req.param('id'), user.organizationId]);
   return c.json({ ok: true });
 });
@@ -49,7 +49,7 @@ app.delete('/categories/:id', requireAuth, async (c) => {
 // ===== LISTA DE PÁGINAS =====
 app.get('/', async (c) => {
   const authUser = await verifyToken(c.req.header('Authorization'), c.env);
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
 
   const { q, category, page = '1', limit = '30' } = c.req.query();
 
@@ -104,7 +104,7 @@ app.get('/', async (c) => {
 // ===== PÁGINA COMPLETA =====
 app.get('/:slug', async (c) => {
   const authUser = await verifyToken(c.req.header('Authorization'), c.env);
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const { slug } = c.req.param();
 
   const row = await db
@@ -136,7 +136,7 @@ app.get('/:slug', async (c) => {
 // ===== SUB-PÁGINAS =====
 app.get('/:slug/children', async (c) => {
   const authUser = await verifyToken(c.req.header('Authorization'), c.env);
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const { slug } = c.req.param();
 
   const parent = await db
@@ -173,7 +173,7 @@ app.get('/:slug/children', async (c) => {
 // ===== HISTÓRICO DE VERSÕES (auth obrigatório) =====
 app.get('/:slug/versions', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const { slug } = c.req.param();
 
   const page = await db
@@ -197,7 +197,7 @@ app.get('/:slug/versions', requireAuth, async (c) => {
 // ===== LISTA PÁGINAS DA ORGANIZAÇÃO (auth required) =====
 app.get('/org/list', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const { q, category } = c.req.query();
 
   const conditions = [
@@ -224,7 +224,7 @@ app.get('/org/list', requireAuth, async (c) => {
 app.get('/by-id/:id', requireAuth, async (c) => {
   const { id } = c.req.param();
   const user = c.get('user');
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
 
   const rows = await db
     .select()
@@ -239,7 +239,7 @@ app.get('/by-id/:id', requireAuth, async (c) => {
 // ===== BULK UPDATE TRIAGE ORDERING =====
 app.patch('/triage', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const { updates } = await c.req.json() as {
     updates: Array<{ id: string; triage_order?: number; tags?: string[]; category?: string }>;
   };
@@ -260,7 +260,7 @@ app.patch('/triage', requireAuth, async (c) => {
 
 // ===== CRIAR PÁGINA =====
 app.post('/', requireAuth, async (c) => {
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const user = c.get('user');
   const body = await c.req.json();
   const { comment, ...pageData } = body;
@@ -302,7 +302,7 @@ app.post('/', requireAuth, async (c) => {
 
 // ===== ATUALIZAR PÁGINA =====
 app.put('/:slug', requireAuth, async (c) => {
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const user = c.get('user');
   const { slug } = c.req.param();
   const body = await c.req.json();
@@ -352,7 +352,7 @@ app.put('/:slug', requireAuth, async (c) => {
 
 // ===== DELETAR PÁGINA (soft delete) =====
 app.delete('/:slug', requireAuth, async (c) => {
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const { slug } = c.req.param();
 
   const [row] = await db
@@ -372,7 +372,7 @@ app.delete('/:slug', requireAuth, async (c) => {
 // ===== COMENTÁRIOS =====
 app.get('/:pageId/comments', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const result = await db.query(
     `SELECT * FROM wiki_comments WHERE page_id = $1 AND organization_id = $2 AND deleted_at IS NULL ORDER BY created_at ASC`,
     [c.req.param('pageId'), user.organizationId]
@@ -382,7 +382,7 @@ app.get('/:pageId/comments', requireAuth, async (c) => {
 
 app.post('/:pageId/comments', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const body = await c.req.json();
   const result = await db.query(
     `INSERT INTO wiki_comments (organization_id, page_id, parent_comment_id, content, created_by, block_id, selection_text, selection_start, selection_end)
@@ -395,7 +395,7 @@ app.post('/:pageId/comments', requireAuth, async (c) => {
 
 app.patch('/comments/:id/resolve', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   await db.query(
     `UPDATE wiki_comments SET resolved = TRUE, updated_at = NOW() WHERE id = $1 AND organization_id = $2`,
     [c.req.param('id'), user.organizationId]

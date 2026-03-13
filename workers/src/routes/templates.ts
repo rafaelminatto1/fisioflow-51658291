@@ -56,7 +56,7 @@ const exerciseTemplateItems = pgTable('exercise_template_items', {
 
 // ===== LISTA =====
 app.get('/', async (c) => {
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const { q, category, page = '1', limit = '20' } = c.req.query();
 
   const pageNum = Math.max(1, parseInt(page));
@@ -101,7 +101,7 @@ app.get('/', async (c) => {
 
 // ===== DETALHE COM ITENS =====
 app.get('/:id', async (c) => {
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const { id } = c.req.param();
 
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);
@@ -128,7 +128,7 @@ app.get('/:id', async (c) => {
 
 // ===== CRIAR TEMPLATE =====
 app.post('/', requireAuth, async (c) => {
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const user = c.get('user');
   const body = await c.req.json();
   const { items, ...templateData } = body;
@@ -160,7 +160,7 @@ app.post('/', requireAuth, async (c) => {
 
 // ===== ATUALIZAR TEMPLATE =====
 app.put('/:id', requireAuth, async (c) => {
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const { id } = c.req.param();
   const body = await c.req.json();
   const { items, ...templateData } = body;
@@ -215,7 +215,7 @@ app.put('/:id', requireAuth, async (c) => {
 
 // ===== DELETAR TEMPLATE (soft delete) =====
 app.delete('/:id', requireAuth, async (c) => {
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const { id } = c.req.param();
 
   const [template] = await db

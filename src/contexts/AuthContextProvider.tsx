@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { authClient } from '@/integrations/neon/auth';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { getNeonAccessToken, invalidateNeonTokenCache } from '@/lib/auth/neon-token';
+import { getNeonAuthUrl } from '@/lib/config/neon';
 import { AuthContextType, AuthContext, AuthError, AuthUser } from './AuthContext';
 import { Profile, RegisterFormData, UserRole } from '@/types/auth';
 import { useQueryClient } from '@tanstack/react-query';
@@ -169,7 +170,7 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
     // 2. Direct fetch to ensure server-side session/cookie invalidation.
     // The SDK does not always hit the network, so we call the endpoint directly.
     // We await this before clearing local state so the cookie is cleared before navigation.
-    const neonAuthUrl = import.meta.env.VITE_NEON_AUTH_URL as string | undefined;
+    const neonAuthUrl = getNeonAuthUrl();
     if (neonAuthUrl) {
       try {
         await fetch(`${neonAuthUrl}/sign-out`, {
