@@ -96,30 +96,35 @@ export default defineConfig(({ mode }) => {
           assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
           manualChunks: (id) => {
             if (id.includes('node_modules')) {
-              // Extract base package name from node_modules path
-              const match = id.match(/node_modules\/([^/]+)\//);
-              const packageName = match ? match[1] : '';
+              // Extract base package name from node_modules path (handles pnpm structure)
+              const parts = id.split('node_modules/');
+              const lastPart = parts[parts.length - 1];
+              const packageName = lastPart.startsWith('@') 
+                ? lastPart.split('/').slice(0, 2).join('/') 
+                : lastPart.split('/')[0];
 
               // React core and its common ecosystem MUST be in the same chunk
               // to avoid "Cannot read properties of undefined (reading 'forwardRef')" errors
+              if (packageName.includes('lucide-react')) return 'icons';
+              if (packageName.includes('react-grid-layout')) return 'grid-layout';
+              if (packageName.includes('react-day-picker')) return 'date-ui';
+              if (packageName.includes('react-konva') || packageName.includes('konva')) return 'canvas-vendor';
+              
+              if (packageName.includes('jspdf')) return 'pdf-generator';
+
               if (packageName === 'react' || 
                   packageName === 'react-dom' || 
                   packageName === 'scheduler' ||
-                  packageName.startsWith('react-') || 
-                  packageName.includes('react-') ||
-                  packageName.includes('@radix-ui') ||
-                  packageName.includes('tiptap') || 
-                  packageName.includes('prosemirror') ||
-                  packageName.includes('lucide-react')) {
+                  packageName === 'react-router' ||
+                  packageName === 'react-router-dom') {
                 return 'react-lib';
               }
               if (packageName.includes('framer-motion')) return 'motion';
               if (packageName.includes('recharts')) return 'charts';
-              if (packageName.includes('react-grid-layout')) return 'grid-layout';
               
-              // PDF e Excel (lazy load)
-              if (packageName.includes('jspdf') || packageName.includes('@react-pdf')) return 'pdf-generator';
-              if (packageName.includes('xlsx') || packageName.includes('exceljs')) return 'excel-generator';
+              // PDF segue em chunk dedicado.
+              // Excel e libs de renderização pesada ficam com split automático do Rollup.
+              // O agrupamento manual anterior gerava ciclos entre chunks.
 
               // Monitoring
               if (packageName.includes('sentry')) return 'sentry-vendor';
@@ -127,8 +132,7 @@ export default defineConfig(({ mode }) => {
               // AI e ML
               if (packageName.includes('@google') || packageName.includes('openai') || packageName.includes('ai-sdk')) return 'ai-vendor';
 
-              // WebGL e Computer Vision
-              if (packageName.includes('mediapipe') || packageName.includes('three') || packageName.includes('konva')) return 'webgl-vendor';
+              // WebGL / CV também ficam sem chunk manual para evitar referências circulares.
             }
           }
         }
