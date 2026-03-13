@@ -46,22 +46,25 @@ function setCachedJwt(token: string): void {
 }
 
 async function fetchJwtFromSdk(): Promise<string | null> {
-  const directSdkTokenGetter = (authClient as { getJWTToken?: () => Promise<string | null> }).getJWTToken;
-
-  if (typeof directSdkTokenGetter === 'function') {
-    try {
-      const sdkToken = await directSdkTokenGetter.call(authClient);
-      if (typeof sdkToken === 'string' && looksLikeJwt(sdkToken)) return sdkToken;
-    } catch {
-      // Fallbacks below
+  // 1. Tenta o método recomendado .token() (disponível no SDK do Neon Auth / Better Auth)
+  try {
+    const tokenGetter = (authClient as any).token;
+    if (typeof tokenGetter === 'function') {
+      const { data } = await tokenGetter.call(authClient);
+      const token = data?.token;
+      if (typeof token === 'string' && looksLikeJwt(token)) return token;
     }
+  } catch (err) {
+    // Silently continue to next fallback
   }
 
+  // 2. Tenta obter da sessão ativa
   try {
     const { data } = await authClient.getSession();
     const token =
       (data as any)?.session?.token ||
-      (data as any)?.token;
+      (data as any)?.token ||
+      (data as any)?.session?.access_token;
     if (typeof token === 'string' && looksLikeJwt(token)) return token;
   } catch {
     // Fallback below
