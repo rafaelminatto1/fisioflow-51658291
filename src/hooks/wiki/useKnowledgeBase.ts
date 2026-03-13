@@ -57,6 +57,26 @@ export function useKnowledgeBase(currentOrganizationId?: string | null, currentU
     enabled: !!currentOrganizationId,
   });
 
+  const auditItems = useMemo(() => {
+    const getTime = (value?: KnowledgeAuditEntry['created_at']) => {
+      if (!value) return 0;
+      const maybeDate = (value as { toDate?: () => Date }).toDate?.();
+      return maybeDate ? maybeDate.getTime() : 0;
+    };
+    return [...knowledgeAudit]
+      .sort((a, b) => getTime(b.created_at) - getTime(a.created_at))
+      .slice(0, 8);
+  }, [knowledgeAudit]);
+
+  const { data: auditProfiles = {} } = useQuery({
+    queryKey: ['knowledge-audit-profiles', auditItems.map((i) => i.actor_id)],
+    queryFn: () =>
+      currentOrganizationId
+        ? knowledgeBaseService.getProfilesSummary(currentOrganizationId, auditItems.map((i) => i.actor_id))
+        : Promise.resolve({}),
+    enabled: !!currentOrganizationId && auditItems.length > 0,
+  });
+
   const { data: semanticResults = [] } = useQuery({
     queryKey: ['knowledge-semantic', currentOrganizationId, kbQuery],
     queryFn: () =>
@@ -150,17 +170,6 @@ export function useKnowledgeBase(currentOrganizationId?: string | null, currentU
     return map;
   }, [filteredKnowledge]);
 
-  const auditItems = useMemo(() => {
-    const getTime = (value?: KnowledgeAuditEntry['created_at']) => {
-      if (!value) return 0;
-      const maybeDate = (value as { toDate?: () => Date }).toDate?.();
-      return maybeDate ? maybeDate.getTime() : 0;
-    };
-    return [...knowledgeAudit]
-      .sort((a, b) => getTime(b.created_at) - getTime(a.created_at))
-      .slice(0, 8);
-  }, [knowledgeAudit]);
-
   const semanticScoreMap = useMemo(() => {
     const map = new Map<string, number>();
     semanticResults.forEach((result) => map.set(result.article_id, result.score));
@@ -196,6 +205,50 @@ export function useKnowledgeBase(currentOrganizationId?: string | null, currentU
       toast.error('Nao foi possivel indexar a base.');
     } finally {
       setIndexing(false);
+    }
+  };
+
+  const handleCreateArticle = async (article: Partial<KnowledgeArticle>) => {
+    if (!currentOrganizationId) return;
+    try {
+      const newArticle = await knowledgeBaseService.createArticle({
+        ...article,
+        organizationId: currentOrganizationId,
+      } as any);
+      await queryClient.invalidateQueries({ queryKey: ['knowledge-articles', currentOrganizationId] });
+      toast.success('Artigo criado com sucesso.');
+      return newArticle;
+    } catch (error) {
+      console.error('Erro ao criar artigo:', error);
+      toast.error('Não foi possível criar o artigo.');
+      throw error;
+    }
+  };
+
+  const handleUpdateArticle = async (articleId: string, data: Partial<KnowledgeArticle>) => {
+    if (!currentOrganizationId) return;
+    try {
+      const updated = await knowledgeBaseService.updateArticle(articleId, data);
+      await queryClient.invalidateQueries({ queryKey: ['knowledge-articles', currentOrganizationId] });
+      toast.success('Artigo atualizado.');
+      return updated;
+    } catch (error) {
+      console.error('Erro ao atualizar artigo:', error);
+      toast.error('Não foi possível atualizar o artigo.');
+      throw error;
+    }
+  };
+
+  const handleDeleteArticle = async (articleId: string) => {
+    if (!currentOrganizationId) return;
+    try {
+      await knowledgeBaseService.deleteArticle(articleId);
+      await queryClient.invalidateQueries({ queryKey: ['knowledge-articles', currentOrganizationId] });
+      toast.success('Artigo excluído.');
+    } catch (error) {
+      console.error('Erro ao excluir artigo:', error);
+      toast.error('Não foi possível excluir o artigo.');
+      throw error;
     }
   };
 
@@ -255,6 +308,7 @@ export function useKnowledgeBase(currentOrganizationId?: string | null, currentU
     knowledgeGroupsFiltered,
     filteredKnowledge,
     auditItems,
+    auditProfiles,
     semanticScoreMap,
     knowledgeStats: {
       total: (knowledgeArticles.length > 0 ? knowledgeArticles : knowledgeBase).length,
@@ -280,6 +334,9 @@ export function useKnowledgeBase(currentOrganizationId?: string | null, currentU
     indexing,
     handleSyncArticles,
     handleIndexArticles,
+    handleCreateArticle,
+    handleUpdateArticle,
+    handleDeleteArticle,
     handleSaveAnnotation,
     curationMap,
     annotationMap,

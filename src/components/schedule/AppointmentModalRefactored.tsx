@@ -61,7 +61,7 @@ import {
 } from '@/types/appointment';
 import { appointmentFormSchema } from '@/lib/validations/agenda';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
-import { isAppointmentConflictError } from '@/utils/appointmentErrors';
+import { isAppointmentConflictError, getAppointmentConflictUserMessage } from '@/utils/appointmentErrors';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -699,7 +699,8 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       setPendingFormData(null);
     } catch (error: unknown) {
       if (isAppointmentConflictError(error)) {
-        toast.error('Não foi possível confirmar acima da capacidade neste horário.');
+        const conflictMessage = getAppointmentConflictUserMessage(error);
+        toast.error(conflictMessage || 'Não foi possível confirmar acima da capacidade neste horário.');
         ErrorHandler.handle(error, 'AppointmentModalRefactored:handleScheduleAnyway', { showNotification: false });
       } else {
         ErrorHandler.handle(error, 'AppointmentModalRefactored:handleScheduleAnyway');
