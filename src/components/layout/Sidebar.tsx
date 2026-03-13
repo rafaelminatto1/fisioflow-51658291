@@ -186,8 +186,6 @@ const adminSubmenu = [
   { icon: BarChart3, label: 'Analytics', href: '/admin/analytics' },
   { icon: Users, label: 'Equipe & Profissionais', href: '/admin/professionals' },
   { icon: Shield, label: 'Segurança', href: '/admin/security' },
-];
-
   { icon: FileText, label: 'Logs de Auditoria', href: '/admin/audit-logs' },
   { icon: Mail, label: 'Convites', href: '/admin/invitations' },
   { icon: Building2, label: 'Organização', href: '/admin/organization' },

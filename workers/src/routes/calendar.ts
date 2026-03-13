@@ -34,7 +34,7 @@ app.get('/feed/:patientId.ics', async (c) => {
 
   const clinicName = appointments[0].clinic_name;
 
-  let icsContent = [
+  const icsContent = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
     'METHOD:PUBLISH',
