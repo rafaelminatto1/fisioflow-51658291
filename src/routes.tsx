@@ -71,10 +71,7 @@ const PatientObjectivesPage = lazy(() => import(/* webpackChunkName: "cadastros-
 const DoctorManagement = lazy(() => import(/* webpackChunkName: "cadastros-doctors" */ "./pages/DoctorManagement").then(module => ({ default: module.DoctorManagement })));
 
 // Financial pages
-const ContasFinanceirasPage = lazy(() => import(/* webpackChunkName: "financial-accounts" */ "./pages/financeiro/ContasFinanceirasPage"));
-const FluxoCaixaPage = lazy(() => import(/* webpackChunkName: "financial-cashflow" */ "./pages/financeiro/FluxoCaixaPage"));
-const NFSePage = lazy(() => import(/* webpackChunkName: "financial-nfse" */ "./pages/financeiro/NFSePage"));
-const RecibosPage = lazy(() => import(/* webpackChunkName: "financial-recibos" */ "./pages/financeiro/RecibosPage"));
+const Financial = lazy(() => import(/* webpackChunkName: "financial" */ "./pages/Financial"));
 const DemonstrativoMensalPage = lazy(() => import(/* webpackChunkName: "financial-demonstrativo" */ "./pages/financeiro/DemonstrativoMensalPage"));
 
 // Reports pages
@@ -279,14 +276,14 @@ export function AppRoutes() {
             <Route path="/cadastros/fichas-avaliacao" element={<ProtectedRoute><EvaluationFormsPage /></ProtectedRoute>} />
             <Route path="/cadastros/fichas-avaliacao/:id/campos" element={<ProtectedRoute><EvaluationFormBuilderPage /></ProtectedRoute>} />
             <Route path="/cadastros/objetivos" element={<ProtectedRoute><PatientObjectivesPage /></ProtectedRoute>} />
-            <Route path="/cadastros/medicos" element={<ProtectedRoute><DoctorManagement /></ProtectedRoute>} />
+            {/* Financeiro Hub e Redirecionamentos */}
+            <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />
+            <Route path="/financeiro/contas" element={<Navigate to="/financial" replace />} />
+            <Route path="/financeiro/fluxo-caixa" element={<Navigate to="/financial" replace />} />
+            <Route path="/financeiro/nfse" element={<Navigate to="/financial" replace />} />
+            <Route path="/financeiro/recibos" element={<Navigate to="/financial" replace />} />
+            <Route path="/financeiro/demonstrativo" element={<Navigate to="/financial" replace />} />
 
-            {/* Financeiro Avançado - Fase 4 */}
-            <Route path="/financeiro/contas" element={<ProtectedRoute><ContasFinanceirasPage /></ProtectedRoute>} />
-            <Route path="/financeiro/fluxo-caixa" element={<ProtectedRoute><FluxoCaixaPage /></ProtectedRoute>} />
-            <Route path="/financeiro/nfse" element={<ProtectedRoute><NFSePage /></ProtectedRoute>} />
-            <Route path="/financeiro/recibos" element={<ProtectedRoute><RecibosPage /></ProtectedRoute>} />
-            <Route path="/financeiro/demonstrativo" element={<ProtectedRoute><DemonstrativoMensalPage /></ProtectedRoute>} />
 
             {/* Relatórios - Fase 5 */}
             <Route path="/relatorios/aniversariantes" element={<ProtectedRoute><AniversariantesPage /></ProtectedRoute>} />
