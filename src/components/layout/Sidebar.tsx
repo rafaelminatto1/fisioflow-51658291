@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import fisioflowLogo from '@/assets/logo.avif';
 import { Button } from '@/components/ui/button';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import { useNavPreload } from '@/hooks/useIntelligentPreload';
 import { useToast } from '@/hooks/use-toast';
 import { QueryKeys } from '@/hooks/queryKeys';
@@ -427,7 +428,13 @@ export function Sidebar() {
 
         <div className="flex items-center justify-between w-full">
           <Link to="/agenda" className="flex items-center gap-3 group transition-transform duration-500 hover:scale-105">
-            <img src={fisioflowLogo} alt="FisioFlow" className={cn("h-8 w-auto transition-all", collapsed ? "h-10" : "")} />
+            <OptimizedImage 
+              src={fisioflowLogo} 
+              alt="FisioFlow" 
+              width={collapsed ? 40 : 120}
+              className={cn("h-8 w-auto transition-all", collapsed ? "h-10" : "")} 
+              priority
+            />
             {!collapsed && (
               <div className="flex flex-col">
                 <span className="text-xs font-black tracking-[0.2em] text-slate-900 dark:text-white">FISIOFLOW</span>
