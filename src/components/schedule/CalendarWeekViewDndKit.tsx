@@ -242,13 +242,14 @@ export const CalendarWeekViewDndKit = memo(({
     // - forceUpdateFit=false → only updates containerHeight (used by ResizeObserver after initial measurement
     //   to avoid the feedback loop where page-load layout settling inflates slot height)
     const updateSlotHeight = (forceUpdateFit = false) => {
-      const cHeight = weekScrollRef.current?.clientHeight ?? weekContainerRef.current?.clientHeight ?? 0;
+      const cHeight = weekContainerRef.current?.clientHeight ?? 0;
       const headerHeight = weekHeaderRef.current?.clientHeight ?? 0;
       const slotCount = timeSlotsLengthRef.current;
 
       if (cHeight <= 0 || slotCount === 0) return false;
 
-      setContainerHeight(cHeight - headerHeight);
+      const nextContainerHeight = cHeight - headerHeight;
+      setContainerHeight(nextContainerHeight);
 
       // Only recalculate fitSlotHeight during the initial measurement phase or on explicit
       // window resize. After the initial measurement, ResizeObserver callbacks caused by
