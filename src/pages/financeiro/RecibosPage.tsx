@@ -19,6 +19,7 @@ import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ReciboPreview, ReciboPDF, ReciboData } from '@/components/financial/ReciboPDF';
+import { ReceiptOCR } from '@/components/financial/ReceiptOCR';
 import { useRecibos, useCreateRecibo, valorPorExtenso } from '@/hooks/useRecibos';
 import { useOrganizations } from '@/hooks/useOrganizations';
 import { useAuth } from '@/contexts/AuthContext';
@@ -61,6 +62,21 @@ export function RecibosContent() {
 
   const { data: recibos = [], isLoading } = useRecibos();
   const createRecibo = useCreateRecibo();
+
+  const handleOCRExtracted = (data: { valor: number; nome?: string }) => {
+    setFormData(prev => ({
+      ...prev,
+      valor: String(data.valor),
+      referente: data.nome ? `Sessão de fisioterapia - ${data.nome}` : prev.referente
+    }));
+    
+    if (data.nome) {
+      const match = pacientes.find(p => p.full_name.toLowerCase().includes(data.nome!.toLowerCase()));
+      if (match) {
+        setFormData(prev => ({ ...prev, patient_id: match.id }));
+      }
+    }
+  };
 
   // Buscar configurações da clínica
   const { data: clinicaConfig } = useQuery({
@@ -276,6 +292,10 @@ export function RecibosContent() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-8">
+                <div className="mb-8">
+                   <ReceiptOCR onDataExtracted={handleOCRExtracted} />
+                </div>
+                
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Paciente</Label>
