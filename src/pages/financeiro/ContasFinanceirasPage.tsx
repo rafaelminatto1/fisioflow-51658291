@@ -13,11 +13,12 @@ import { DollarSign, Plus, ArrowUpCircle, ArrowDownCircle, AlertCircle, Clock, C
 import { useContasFinanceiras, useCreateContaFinanceira, useUpdateContaFinanceira, useResumoFinanceiro, ContaFinanceira } from '@/hooks/useContasFinanceiras';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { MainLayout } from '@/components/layout/MainLayout';
 
 const CATEGORIAS = ['Consulta', 'Pacote', 'Aluguel', 'Salário', 'Material', 'Equipamento', 'Marketing', 'Outros'];
 const FORMAS_PAGAMENTO = ['PIX', 'Dinheiro', 'Cartão Débito', 'Cartão Crédito', 'Boleto', 'Transferência'];
 
-export default function ContasFinanceirasPage() {
+export function ContasFinanceirasContent() {
   const [tab, setTab] = useState<'receber' | 'pagar'>('receber');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -97,10 +98,10 @@ export default function ContasFinanceirasPage() {
 
   const getStatusBadge = (status: string, vencimento: string) => {
     const hoje = new Date().toISOString().split('T')[0];
-    if (status === 'pago') return <Badge className="bg-green-500"><CheckCircle className="h-3 w-3 mr-1" />Pago</Badge>;
+    if (status === 'pago') return <Badge className="bg-green-500 text-white"><CheckCircle className="h-3 w-3 mr-1" />Pago</Badge>;
     if (status === 'cancelado') return <Badge variant="secondary">Cancelado</Badge>;
     if (vencimento < hoje) return <Badge variant="destructive"><AlertCircle className="h-3 w-3 mr-1" />Atrasado</Badge>;
-    if (vencimento === hoje) return <Badge className="bg-yellow-500"><Clock className="h-3 w-3 mr-1" />Hoje</Badge>;
+    if (vencimento === hoje) return <Badge className="bg-yellow-500 text-white"><Clock className="h-3 w-3 mr-1" />Hoje</Badge>;
     return <Badge variant="outline">Pendente</Badge>;
   };
 
@@ -108,13 +109,10 @@ export default function ContasFinanceirasPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <DollarSign className="h-8 w-8 text-primary" />
-            Contas Financeiras
-          </h1>
-          <p className="text-muted-foreground mt-1">Gerencie contas a receber e a pagar</p>
+          <h2 className="text-2xl font-bold tracking-tight">Contas a Pagar e Receber</h2>
+          <p className="text-muted-foreground mt-1">Gestão detalhada de fluxos futuros e compromissos</p>
         </div>
-        <Button onClick={() => handleOpenDialog()}>
+        <Button onClick={() => handleOpenDialog()} className="rounded-xl">
           <Plus className="h-4 w-4 mr-2" />
           Nova Conta
         </Button>
@@ -122,74 +120,76 @@ export default function ContasFinanceirasPage() {
 
         {/* Resumo */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
+          <Card className="rounded-2xl border-none shadow-sm bg-white dark:bg-slate-900">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-muted-foreground">A Receber</CardTitle>
+              <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">A Receber</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-2xl font-black text-emerald-600">
                 R$ {resumo?.totalReceber.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
               </div>
               {(resumo?.receberAtrasado || 0) > 0 && (
-                <p className="text-xs text-destructive">{resumo?.receberAtrasado} atrasados</p>
+                <p className="text-[10px] font-bold text-destructive uppercase mt-1">{resumo?.receberAtrasado} atrasados</p>
               )}
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-2xl border-none shadow-sm bg-white dark:bg-slate-900">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-muted-foreground">A Pagar</CardTitle>
+              <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">A Pagar</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">
+              <div className="text-2xl font-black text-red-600">
                 R$ {resumo?.totalPagar.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}
               </div>
               {(resumo?.pagarAtrasado || 0) > 0 && (
-                <p className="text-xs text-destructive">{resumo?.pagarAtrasado} atrasados</p>
+                <p className="text-[10px] font-bold text-destructive uppercase mt-1">{resumo?.pagarAtrasado} atrasados</p>
               )}
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-2xl border-none shadow-sm bg-white dark:bg-slate-900">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-muted-foreground">Vencendo Hoje</CardTitle>
+              <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Vencendo Hoje</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">
+              <div className="text-2xl font-black text-amber-500">
                 {(resumo?.receberHoje || 0) + (resumo?.pagarHoje || 0)}
               </div>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">Lançamentos</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-2xl border-none shadow-sm bg-white dark:bg-slate-900">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-muted-foreground">Saldo Projetado</CardTitle>
+              <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Projetado</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${(resumo?.totalReceber || 0) - (resumo?.totalPagar || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`text-2xl font-black ${(resumo?.totalReceber || 0) - (resumo?.totalPagar || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                 R$ {((resumo?.totalReceber || 0) - (resumo?.totalPagar || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">Saldo Final</p>
             </CardContent>
           </Card>
         </div>
 
-        <Card>
-          <CardContent className="pt-6">
+        <Card className="rounded-2xl border-none shadow-sm bg-white dark:bg-slate-900 overflow-hidden">
+          <CardContent className="p-0">
             <Tabs value={tab} onValueChange={(v) => setTab(v as 'receber' | 'pagar')}>
-              <div className="flex items-center justify-between mb-4">
-                <TabsList>
-                  <TabsTrigger value="receber" className="gap-2">
-                    <ArrowUpCircle className="h-4 w-4" />
-                    A Receber
+              <div className="flex items-center justify-between p-6 border-b border-slate-50 dark:border-slate-800/50">
+                <TabsList className="bg-slate-100 dark:bg-slate-800 rounded-xl p-1">
+                  <TabsTrigger value="receber" className="rounded-lg px-4 font-bold text-xs uppercase tracking-wider gap-2">
+                    <ArrowUpCircle className="h-3.5 w-3.5" />
+                    Entradas
                   </TabsTrigger>
-                  <TabsTrigger value="pagar" className="gap-2">
-                    <ArrowDownCircle className="h-4 w-4" />
-                    A Pagar
+                  <TabsTrigger value="pagar" className="rounded-lg px-4 font-bold text-xs uppercase tracking-wider gap-2">
+                    <ArrowDownCircle className="h-3.5 w-3.5" />
+                    Saídas
                   </TabsTrigger>
                 </TabsList>
                 <Select value={statusFilter || "all"} onValueChange={(value) => setStatusFilter(value === "all" ? "" : value)}>
-                  <SelectTrigger className="w-[150px]">
-                    <SelectValue placeholder="Todos" />
+                  <SelectTrigger className="w-[150px] rounded-xl font-bold text-xs h-10">
+                    <SelectValue placeholder="Status" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="all">Todos Status</SelectItem>
                     <SelectItem value="pendente">Pendentes</SelectItem>
                     <SelectItem value="pago">Pagos</SelectItem>
                     <SelectItem value="atrasado">Atrasados</SelectItem>
@@ -197,45 +197,47 @@ export default function ContasFinanceirasPage() {
                 </Select>
               </div>
 
-              <TabsContent value={tab}>
+              <TabsContent value={tab} className="m-0">
                 {isLoading ? (
-                  <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+                  <div className="text-center py-20 text-muted-foreground font-bold uppercase tracking-widest text-[10px]">Carregando dados...</div>
                 ) : contas.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">Nenhuma conta encontrada.</div>
+                  <div className="text-center py-20 text-muted-foreground font-bold uppercase tracking-widest text-[10px]">Nenhum lançamento encontrado</div>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Descrição</TableHead>
-                        <TableHead>Categoria</TableHead>
-                        <TableHead>Vencimento</TableHead>
-                        <TableHead>Valor</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {contas.map((conta) => (
-                        <TableRow key={conta.id}>
-                          <TableCell className="font-medium">{conta.descricao}</TableCell>
-                          <TableCell>{conta.categoria || '-'}</TableCell>
-                          <TableCell>{format(new Date(conta.data_vencimento), 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
-                          <TableCell className="font-medium">
-                            R$ {Number(conta.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </TableCell>
-                          <TableCell>{getStatusBadge(conta.status, conta.data_vencimento)}</TableCell>
-                          <TableCell className="text-right">
-                            {conta.status === 'pendente' && (
-                              <Button variant="ghost" size="sm" onClick={() => handleQuitar(conta)}>
-                                <CheckCircle className="h-4 w-4 mr-1" />
-                                Quitar
-                              </Button>
-                            )}
-                          </TableCell>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader className="bg-slate-50/50 dark:bg-slate-800/20">
+                        <TableRow className="border-none">
+                          <TableHead className="px-6 py-4 text-[10px] font-black uppercase tracking-widest">Descrição</TableHead>
+                          <TableHead className="px-6 py-4 text-[10px] font-black uppercase tracking-widest">Categoria</TableHead>
+                          <TableHead className="px-6 py-4 text-[10px] font-black uppercase tracking-widest">Vencimento</TableHead>
+                          <TableHead className="px-6 py-4 text-[10px] font-black uppercase tracking-widest">Valor</TableHead>
+                          <TableHead className="px-6 py-4 text-[10px] font-black uppercase tracking-widest">Status</TableHead>
+                          <TableHead className="px-6 py-4 text-right text-[10px] font-black uppercase tracking-widest">Ações</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {contas.map((conta) => (
+                          <TableRow key={conta.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all border-slate-50 dark:border-slate-800/50">
+                            <TableCell className="px-6 py-4 font-bold text-slate-900 dark:text-white">{conta.descricao}</TableCell>
+                            <TableCell className="px-6 py-4 text-xs font-medium text-slate-500 uppercase tracking-wider">{conta.categoria || '-'}</TableCell>
+                            <TableCell className="px-6 py-4 text-xs font-mono text-slate-500">{format(new Date(conta.data_vencimento), 'dd/MM/yyyy', { locale: ptBR })}</TableCell>
+                            <TableCell className={`px-6 py-4 font-black ${tab === 'receber' ? 'text-emerald-600' : 'text-red-600'}`}>
+                              R$ {Number(conta.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </TableCell>
+                            <TableCell className="px-6 py-4">{getStatusBadge(conta.status, conta.data_vencimento)}</TableCell>
+                            <TableCell className="px-6 py-4 text-right">
+                              {conta.status === 'pendente' && (
+                                <Button variant="ghost" size="sm" onClick={() => handleQuitar(conta)} className="h-8 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 font-bold text-[10px] uppercase tracking-wider">
+                                  <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
+                                  Quitar
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 )}
               </TabsContent>
             </Tabs>
@@ -244,68 +246,69 @@ export default function ContasFinanceirasPage() {
 
         {/* Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent>
+          <DialogContent className="rounded-2xl">
             <DialogHeader>
-              <DialogTitle>{editingConta ? 'Editar Conta' : 'Nova Conta'}</DialogTitle>
+              <DialogTitle className="text-xl font-black tracking-tighter">{editingConta ? 'Editar Lançamento' : 'Novo Lançamento'}</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label>Tipo</Label>
-                <Select value={formData.tipo} onValueChange={(v) => setFormData(prev => ({ ...prev, tipo: v as 'receber' | 'pagar' }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="receber">A Receber</SelectItem>
-                    <SelectItem value="pagar">A Pagar</SelectItem>
-                  </SelectContent>
-                </Select>
+            <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tipo</Label>
+                  <Select value={formData.tipo} onValueChange={(v) => setFormData(prev => ({ ...prev, tipo: v as 'receber' | 'pagar' }))}>
+                    <SelectTrigger className="rounded-xl h-11"><SelectValue /></SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      <SelectItem value="receber">Entrada (A Receber)</SelectItem>
+                      <SelectItem value="pagar">Saída (A Pagar)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Valor (R$)</Label>
+                  <Input type="number" step="0.01" value={formData.valor} onChange={(e) => setFormData(prev => ({ ...prev, valor: e.target.value }))} className="rounded-xl h-11" required />
+                </div>
               </div>
               <div className="space-y-2">
-                <Label>Descrição *</Label>
-                <Input value={formData.descricao} onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))} required />
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Descrição</Label>
+                <Input value={formData.descricao} onChange={(e) => setFormData(prev => ({ ...prev, descricao: e.target.value }))} className="rounded-xl h-11" placeholder="Ex: Aluguel da Sala" required />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Valor *</Label>
-                  <Input type="number" step="0.01" value={formData.valor} onChange={(e) => setFormData(prev => ({ ...prev, valor: e.target.value }))} required />
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Vencimento</Label>
+                  <Input type="date" value={formData.data_vencimento} onChange={(e) => setFormData(prev => ({ ...prev, data_vencimento: e.target.value }))} className="rounded-xl h-11" required />
                 </div>
                 <div className="space-y-2">
-                  <Label>Vencimento *</Label>
-                  <Input type="date" value={formData.data_vencimento} onChange={(e) => setFormData(prev => ({ ...prev, data_vencimento: e.target.value }))} required />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Categoria</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Categoria</Label>
                   <Select value={formData.categoria} onValueChange={(v) => setFormData(prev => ({ ...prev, categoria: v }))}>
-                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                    <SelectContent>
+                    <SelectTrigger className="rounded-xl h-11"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                    <SelectContent className="rounded-xl">
                       {CATEGORIAS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Forma de Pagamento</Label>
-                  <Select value={formData.forma_pagamento} onValueChange={(v) => setFormData(prev => ({ ...prev, forma_pagamento: v }))}>
-                    <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-                    <SelectContent>
-                      {FORMAS_PAGAMENTO.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
               </div>
               <div className="space-y-2">
-                <Label>Observações</Label>
-                <Textarea value={formData.observacoes} onChange={(e) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))} />
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Observações</Label>
+                <Textarea value={formData.observacoes} onChange={(e) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))} className="rounded-xl min-h-[80px]" />
               </div>
-              <DialogFooter>
-                <Button variant="outline" type="button" onClick={() => setIsDialogOpen(false)}>Cancelar</Button>
-                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                  {editingConta ? 'Salvar' : 'Criar'}
+              <DialogFooter className="gap-2 pt-4">
+                <Button variant="outline" type="button" onClick={() => setIsDialogOpen(false)} className="rounded-xl h-11 font-bold text-xs uppercase tracking-wider border-slate-200">Cancelar</Button>
+                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending} className="rounded-xl h-11 font-bold text-xs uppercase tracking-wider bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900">
+                  {editingConta ? 'Salvar Alterações' : 'Confirmar Lançamento'}
                 </Button>
               </DialogFooter>
             </form>
           </DialogContent>
         </Dialog>
+    </div>
+  );
+}
+
+export default function ContasFinanceirasPage() {
+  return (
+    <MainLayout>
+      <div className="p-6 max-w-7xl mx-auto">
+        <ContasFinanceirasContent />
       </div>
+    </MainLayout>
   );
 }
