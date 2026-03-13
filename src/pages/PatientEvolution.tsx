@@ -168,17 +168,49 @@ const PatientEvolution = () => {
     <CardGrid>
       <MedicalReturnCard patient={state.patient} patientId={state.patientId} onPatientUpdated={() => state.invalidateData('all')} />
       <SurgeriesCard patientId={state.patientId} />
-      <div className="lg:row-span-2"><EvolutionSummaryCard stats={{ totalEvolutions: state.previousEvolutions.length, totalGoals: state.goals.length, completedGoals: state.goals.filter((g: any) => g.status === 'concluido').length }} /></div>
+      <div className="lg:row-span-2">
+        <EvolutionSummaryCard 
+          stats={{ 
+            totalEvolutions: state.previousEvolutions.length, 
+            totalGoals: state.goals.length, 
+            completedGoals: state.goals.filter((g: any) => g.status === 'concluido').length,
+            activePathologiesCount: state.activePathologies.length,
+            totalMeasurements: state.measurements.length,
+            avgGoalProgress: state.goals.length > 0 
+              ? Math.round((state.goals.filter((g: any) => g.status === 'concluido').length / state.goals.length) * 100)
+              : 0,
+            completionRate: state.previousEvolutions.length > 0 ? 100 : 0 // Placeholder logic
+          }} 
+        />
+      </div>
       <div className="sm:col-span-2 lg:col-span-2"><MetasCard patientId={state.patientId} /></div>
     </CardGrid>
-  ), [state.patient, state.patientId, state.goals, state.previousEvolutions.length]);
+  ), [state.patient, state.patientId, state.goals, state.previousEvolutions.length, state.activePathologies.length, state.measurements.length]);
 
   const mainGridContent = useMemo(() => {
+    if (state.evolutionVersion === 'v4-tiptap') {
+      return (
+        <Suspense fallback={<LoadingSkeleton type="card" />}>
+          <LazyNotionEvolutionEditor 
+            initialContent={state.evolutionV2Data.evolutionText || ''}
+            evolutionId={state.currentSoapRecordId || state.appointmentId}
+            patientId={state.patientId}
+            onSave={(content) => {
+              state.setEvolutionV2Data((prev: any) => ({ ...prev, evolutionText: content }));
+              handlers.handleSave();
+            }}
+            isSaving={autoSaveMutation.isPending}
+            soapData={state.soapData}
+            onAiAssist={() => state.setActiveTab('assistente')}
+          />
+        </Suspense>
+      );
+    }
     if (state.evolutionVersion === 'v3-notion') {
       return <Suspense fallback={<LoadingSkeleton type="card" />}><LazyNotionEvolutionPanelV3 data={state.evolutionV2Data} onChange={state.setEvolutionV2Data} isSaving={autoSaveMutation.isPending} autoSaveEnabled={state.autoSaveEnabled} lastSaved={lastSavedAt} /></Suspense>;
     }
     if (state.evolutionVersion === 'v2-texto') {
-      return <Suspense fallback={<LoadingSkeleton type="card" />}><LazyNotionEvolutionPanel data={state.evolutionV2Data} onChange={state.setEvolutionV2Data} isSaving={autoSaveMutation.isPending} autoSaveEnabled={state.autoSaveEnabled} lastSaved={lastSavedAt} /></Suspense>;
+      return <Suspense fallback={<LoadingSkeleton type="card" />}><LazyNotionEvolutionPanel data={state.evolutionV2Data} onChange={state.setEvolutionV2Data} isSaving={autoSaveMutation.isPending} autoSaveEnabled={state.autoSaveEnabled} lastSaved={lastSavedAt} previousEvolutions={state.previousEvolutions} /></Suspense>;
     }
     return (
       <EvolutionGridContainer>
@@ -212,6 +244,9 @@ const PatientEvolution = () => {
             lastSavedAt={lastSavedAt} activeTab={state.activeTab} onTabChange={(v) => state.setActiveTab(v as EvolutionTab)}
             evolutionVersion={state.evolutionVersion} onVersionChange={state.setEvolutionVersion}
             onRestoreVersion={handlers.handleRestoreVersion}
+            therapists={state.therapists}
+            selectedTherapistId={state.selectedTherapistId}
+            onTherapistChange={state.setSelectedTherapistId}
           />
 
           <Tabs value={state.activeTab} onValueChange={(v) => state.setActiveTab(v as EvolutionTab)} className="w-full pb-20">
