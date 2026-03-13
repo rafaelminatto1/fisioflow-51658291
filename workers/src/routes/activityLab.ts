@@ -100,7 +100,7 @@ app.use('*', requireAuth);
 
 app.get('/patients', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const search = String(c.req.query('search') ?? '').trim();
   const limit = Math.min(200, Math.max(1, Number.parseInt(c.req.query('limit') ?? '50', 10) || 50));
   const hasIncompleteRegistration = await hasColumn(pool, 'patients', 'incomplete_registration');
@@ -145,7 +145,7 @@ app.get('/patients', async (c) => {
 
 app.get('/patients/:id', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const hasIncompleteRegistration = await hasColumn(pool, 'patients', 'incomplete_registration');
 
@@ -180,7 +180,7 @@ app.get('/patients/:id', async (c) => {
 
 app.get('/patients/:id/sessions', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await pool.query(
@@ -201,7 +201,7 @@ app.get('/patients/:id/sessions', async (c) => {
 
 app.get('/sessions/:id', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await pool.query(
@@ -222,7 +222,7 @@ app.get('/sessions/:id', async (c) => {
 
 app.get('/clinic/profile', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const hasCrefito = await hasColumn(pool, 'profiles', 'crefito');
 
   const profileResult = await pool.query(

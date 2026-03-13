@@ -58,7 +58,7 @@ function cleanupMetadata(metadata: Record<string, unknown>): Record<string, unkn
 
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { patientId } = c.req.query();
   if (!patientId) return c.json({ error: 'patientId é obrigatório' }, 400);
 
@@ -73,7 +73,7 @@ app.get('/', requireAuth, async (c) => {
 
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const patientId = String(body.patient_id ?? '').trim();
@@ -122,7 +122,7 @@ app.post('/', requireAuth, async (c) => {
 
 app.put('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -228,7 +228,7 @@ app.put('/:id', requireAuth, async (c) => {
 
 app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const check = await pool.query(

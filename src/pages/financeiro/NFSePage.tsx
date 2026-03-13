@@ -3,7 +3,6 @@
  */
 
 import { useState } from 'react';
-import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -601,28 +600,28 @@ export default function NFSePage() {
   return (
     <MainLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <FileText className="h-8 w-8 text-primary" />
-              NFSe Eletrônica
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Emissão e gerenciamento de Notas Fiscais de Serviço Eletrônicas
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => setIsConfigOpen(true)}>
-              <Settings className="h-4 w-4 mr-2" />
-              Configurar
-            </Button>
-            <Button onClick={() => setIsDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nova NFSe
-            </Button>
-          </div>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <FileText className="h-8 w-8 text-primary" />
+            NFSe Eletrônica
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Emissão e gerenciamento de Notas Fiscais de Serviço Eletrônicas
+          </p>
         </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setIsConfigOpen(true)}>
+            <Settings className="h-4 w-4 mr-2" />
+            Configurar
+          </Button>
+          <Button onClick={() => setIsDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nova NFSe
+          </Button>
+        </div>
+      </div>
 
         {/* Status Indicator */}
         {config?.auto_emissao && (

@@ -20,7 +20,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 // ===== LISTA DE PROTOCOLOS =====
 app.get('/', async (c) => {
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const {
     q,
     type,
@@ -105,7 +105,7 @@ app.get('/', async (c) => {
 
 // ===== DETALHE DO PROTOCOLO =====
 app.get('/:id', async (c) => {
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const { id } = c.req.param();
 
   const isUuid = /^[0-9a-f-]{36}$/i.test(id);
@@ -145,7 +145,7 @@ app.get('/:id', async (c) => {
 // ===== CRIAR PROTOCOLO (AUTH) =====
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const body = await c.req.json();
 
   // Gerar slug a partir do nome
@@ -188,7 +188,7 @@ app.post('/', requireAuth, async (c) => {
 // ===== ATUALIZAR PROTOCOLO (AUTH) =====
 app.put('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const { id } = c.req.param();
   const body = await c.req.json();
 
@@ -233,7 +233,7 @@ app.put('/:id', requireAuth, async (c) => {
 // ===== EXCLUIR PROTOCOLO (AUTH, soft-delete) =====
 app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const { id } = c.req.param();
 
   const [deleted] = await db

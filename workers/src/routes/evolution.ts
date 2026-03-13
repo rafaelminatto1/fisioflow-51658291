@@ -58,7 +58,7 @@ const mapTreatmentSession = (row: Record<string, unknown>) => ({
 
 app.get('/treatment-sessions', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const patientId = c.req.query('patientId');
   if (!patientId) return c.json({ error: 'patientId é obrigatório' }, 400);
 
@@ -79,7 +79,7 @@ app.get('/treatment-sessions', requireAuth, async (c) => {
 
 app.get('/measurements', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const patientId = c.req.query('patientId');
   if (!patientId) return c.json({ error: 'patientId é obrigatório' }, 400);
 
@@ -107,7 +107,7 @@ app.get('/measurements', requireAuth, async (c) => {
 
 app.post('/measurements', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
   const patientId = String(body.patient_id ?? '').trim();
   const measurementType = String(body.measurement_type ?? '').trim();
@@ -154,7 +154,7 @@ app.post('/measurements', requireAuth, async (c) => {
 
 app.get('/required-measurements', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const pathologiesParam = c.req.query('pathologies') ?? '';
   const pathologies = pathologiesParam
     .split(',')
@@ -188,7 +188,7 @@ app.get('/required-measurements', requireAuth, async (c) => {
 
 app.post('/treatment-sessions', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
   const patientId = String(body.patient_id ?? '').trim();
   const appointmentId = String(body.appointment_id ?? '').trim();

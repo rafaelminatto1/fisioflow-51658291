@@ -111,7 +111,7 @@ app.get('/wado', async (c) => {
 });
 
 app.get('/config', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const org = await pool.query('SELECT id FROM organizations WHERE id = $1 LIMIT 1', [user.organizationId]);
   return c.json({

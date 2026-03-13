@@ -1,6 +1,8 @@
 import { authClient, isNeonAuthEnabled } from '@/integrations/neon/auth';
+import { getNeonAuthUrl } from '@/lib/config/neon';
 
 const JWT_SEGMENTS = 3;
+const SESSION_FETCH_TIMEOUT_MS = 5000;
 
 function looksLikeJwt(token: string): boolean {
   return token.split('.').length === JWT_SEGMENTS;
@@ -43,12 +45,18 @@ function setCachedJwt(token: string): void {
   cachedJwtExpiry = payload?.exp ?? 0;
 }
 
-/**
- * Obtém JWT via authClient.getSession() — o token JWT fica em data.session.token.
- * Fallback: intercepta o header set-auth-jwt da resposta HTTP.
- */
-async function fetchJwt(): Promise<string | null> {
-  // Método primário: data.session.token retornado por getSession()
+async function fetchJwtFromSdk(): Promise<string | null> {
+  const directSdkTokenGetter = (authClient as { getJWTToken?: () => Promise<string | null> }).getJWTToken;
+
+  if (typeof directSdkTokenGetter === 'function') {
+    try {
+      const sdkToken = await directSdkTokenGetter.call(authClient);
+      if (typeof sdkToken === 'string' && looksLikeJwt(sdkToken)) return sdkToken;
+    } catch {
+      // Fallbacks below
+    }
+  }
+
   try {
     const { data } = await authClient.getSession();
     const token =
@@ -56,21 +64,57 @@ async function fetchJwt(): Promise<string | null> {
       (data as any)?.token;
     if (typeof token === 'string' && looksLikeJwt(token)) return token;
   } catch {
-    // Fallback abaixo
+    // Fallback below
   }
 
-  // Fallback: intercepta set-auth-jwt header retornado por getSession()
-  return new Promise((resolve) => {
-    authClient.getSession({
-      fetchOptions: {
-        onSuccess: (ctx: any) => {
-          const jwt = ctx.response?.headers?.get?.('set-auth-jwt');
-          resolve(typeof jwt === 'string' && looksLikeJwt(jwt) ? jwt : null);
-        },
-        onError: () => resolve(null),
+  return null;
+}
+
+async function fetchJwtFromDirectSessionFetch(): Promise<string | null> {
+  const neonAuthUrl = getNeonAuthUrl();
+  if (!neonAuthUrl || typeof fetch !== 'function') return null;
+
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timeoutId = controller
+    ? globalThis.setTimeout(() => controller.abort(), SESSION_FETCH_TIMEOUT_MS)
+    : null;
+
+  try {
+    const response = await fetch(`${neonAuthUrl}/get-session`, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        Accept: 'application/json',
       },
-    }).catch(() => resolve(null));
-  });
+      signal: controller?.signal,
+    });
+
+    const jwt = response.headers.get('set-auth-jwt');
+    return typeof jwt === 'string' && looksLikeJwt(jwt) ? jwt : null;
+  } catch {
+    return null;
+  } finally {
+    if (timeoutId !== null) {
+      globalThis.clearTimeout(timeoutId);
+    }
+  }
+}
+
+/**
+ * Obtém JWT do Neon Auth de forma resiliente.
+ *
+ * Ordem:
+ * 1. SDK (`getJWTToken` ou `getSession`)
+ * 2. Requisição direta para `/get-session`, lendo o header `set-auth-jwt`
+ *
+ * O fallback direto evita ficar preso no cache interno do SDK quando a sessão
+ * existe, mas o token ainda não foi materializado para as chamadas da API.
+ */
+async function fetchJwt(): Promise<string | null> {
+  const sdkJwt = await fetchJwtFromSdk();
+  if (sdkJwt) return sdkJwt;
+
+  return fetchJwtFromDirectSessionFetch();
 }
 
 export async function getNeonAccessToken(options: { forceSessionReload?: boolean } = {}): Promise<string> {

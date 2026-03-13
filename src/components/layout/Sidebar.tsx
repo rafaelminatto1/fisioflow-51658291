@@ -177,9 +177,7 @@ const relatoriosSubmenu = [
 ];
 
 const crmSubmenu = [
-  { icon: LayoutGrid, label: 'Dashboard CRM', href: '/crm' },
-  { icon: Users, label: 'Leads', href: '/crm/leads' },
-  { icon: Mail, label: 'Campanhas', href: '/crm/campanhas' },
+  { icon: LayoutGrid, label: 'Painel Central CRM', href: '/crm' },
 ];
 
 const marketingSubmenu = [

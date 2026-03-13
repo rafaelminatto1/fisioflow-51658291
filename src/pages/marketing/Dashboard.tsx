@@ -251,7 +251,7 @@ export default function MarketingDashboard() {
           value={metrics?.totalCampaigns || 0}
           icon={Mail}
           color="blue"
-          href="/crm/campanhas"
+          href="/crm"
         />
       </div>
 
@@ -389,15 +389,15 @@ export default function MarketingDashboard() {
                 </div>
               </div>
             </Link>
-            <Link to="/crm/campanhas" className="group">
+            <Link to="/crm" className="group">
               <div className="p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-primary/5 transition-all">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400">
                     <Mail className="h-5 w-5" />
                   </div>
                   <div>
-                    <p className="font-medium">Campanhas</p>
-                    <p className="text-sm text-muted-foreground">Gerenciar campanhas de marketing</p>
+                    <p className="font-medium">Campanhas e CRM</p>
+                    <p className="text-sm text-muted-foreground">Gerenciar comunicações e leads</p>
                   </div>
                 </div>
               </div>

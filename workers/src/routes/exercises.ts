@@ -21,7 +21,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 // ===== CATEGORIAS =====
 app.get('/categories', async (c) => {
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const rows = await db
     .select()
     .from(exerciseCategories)
@@ -32,7 +32,7 @@ app.get('/categories', async (c) => {
 
 // ===== LISTA DE EXERCÍCIOS =====
 app.get('/', async (c) => {
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const { q, category, difficulty, bodyPart, page = '1', limit = '20' } = c.req.query();
 
   const pageNum = Math.max(1, parseInt(page));
@@ -104,7 +104,7 @@ app.get('/', async (c) => {
 
 // ===== DETALHE DO EXERCÍCIO =====
 app.get('/:id', async (c) => {
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const { id } = c.req.param();
 
   // Aceita UUID ou slug
@@ -126,7 +126,7 @@ app.get('/:id', async (c) => {
 
 // ===== FAVORITAR (auth obrigatório) =====
 app.post('/:id/favorite', requireAuth, async (c) => {
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const user = c.get('user');
   const { id } = c.req.param();
 
@@ -139,7 +139,7 @@ app.post('/:id/favorite', requireAuth, async (c) => {
 });
 
 app.delete('/:id/favorite', requireAuth, async (c) => {
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const user = c.get('user');
   const { id } = c.req.param();
 
@@ -154,7 +154,7 @@ app.delete('/:id/favorite', requireAuth, async (c) => {
 
 // ===== EXERCÍCIOS FAVORITOS DO USUÁRIO =====
 app.get('/favorites/me', requireAuth, async (c) => {
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const user = c.get('user');
 
   const favs = await db
@@ -175,7 +175,7 @@ app.get('/favorites/me', requireAuth, async (c) => {
 
 // ===== CRIAR EXERCÍCIO =====
 app.post('/', requireAuth, async (c) => {
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const user = c.get('user');
   const body = await c.req.json();
 
@@ -192,7 +192,7 @@ app.post('/', requireAuth, async (c) => {
 
 // ===== ATUALIZAR EXERCÍCIO =====
 app.put('/:id', requireAuth, async (c) => {
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const { id } = c.req.param();
   const body = await c.req.json();
 
@@ -217,7 +217,7 @@ app.put('/:id', requireAuth, async (c) => {
 
 // ===== DELETAR EXERCÍCIO (soft delete) =====
 app.delete('/:id', requireAuth, async (c) => {
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const { id } = c.req.param();
 
   const [row] = await db
@@ -236,7 +236,7 @@ app.delete('/:id', requireAuth, async (c) => {
 
 // ===== BUSCA SEMÂNTICA (por nome, descrição e tags) =====
 app.get('/search/semantic', async (c) => {
-  const db = createDb(c.env);
+  const db = await createDb(c.env);
   const { q, limit = '10' } = c.req.query();
 
   if (!q || q.trim().length < 2) {

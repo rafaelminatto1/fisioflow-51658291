@@ -46,32 +46,19 @@ export class WhatsAppService {
   }
 
   /**
-   * Envia uma mensagem baseada em Template (Obrigatório para iniciar conversas)
+   * Envia um template com variáveis dinâmicas
+   * @param to - Número do paciente (ex: 5511...)
+   * @param templateName - Nome do template aprovado na Meta
+   * @param variables - Lista de textos para substituir {{1}}, {{2}}, etc.
    */
-  async sendTemplateMessage(to: string, templateName: string, languageCode: string = 'pt_BR', components: any[] = []) {
-    const phoneId = this.env.WHATSAPP_PHONE_NUMBER_ID;
-    const token = this.env.WHATSAPP_ACCESS_TOKEN;
+  async sendSmartTemplate(to: string, templateName: string, variables: string[]) {
+    const components = [
+      {
+        type: 'body',
+        parameters: variables.map(text => ({ type: 'text', text }))
+      }
+    ];
 
-    const endpoint = `${this.baseUrl}/${phoneId}/messages`;
-
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        to: to.replace(/\D/g, ''),
-        type: 'template',
-        template: {
-          name: templateName,
-          language: { code: languageCode },
-          components
-        },
-      }),
-    });
-
-    return response.json();
+    return this.sendTemplateMessage(to, templateName, 'pt_BR', components);
   }
 }
