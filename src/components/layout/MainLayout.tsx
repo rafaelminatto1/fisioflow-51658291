@@ -30,12 +30,13 @@ import {
   Bell,
   Search
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import fisioflowLogo from '@/assets/logo.avif';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -63,6 +64,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   const { profile, loading, getDisplayName, getInitials } = useUserProfile();
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     try {
@@ -231,9 +233,18 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
             maxWidth === 'full' && "max-w-full",
             !fullWidth && !maxWidth && "max-w-full"
           )}>
-            <div className="animate-slide-up-fade">
-              {children}
-            </div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={location.pathname}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                className="w-full"
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </main>
       </div>

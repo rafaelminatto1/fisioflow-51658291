@@ -1,10 +1,12 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDebounce } from '@/hooks/performance/useDebounce';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState } from '@/components/ui';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { IncompleteRegistrationAlert } from '@/components/dashboard/IncompleteRegistrationAlert';
+import { useNavPreload } from '@/hooks/useIntelligentPreload';
+import { usePrefetchPatientOnHover } from '@/hooks/performance';
 // ============================================================================
 // NOVOS COMPONENTES
 // ============================================================================
@@ -47,6 +49,48 @@ import {
 
 import { calculateAge, exportToCSV } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
+
+const PatientListItem = ({ 
+  patient, 
+  stats, 
+  onClick 
+}: { 
+  patient: any; 
+  stats: any; 
+  onClick: () => void 
+}) => {
+  const { prefetch } = usePrefetchPatientOnHover(patient.id);
+  const { preloadRoute } = useNavPreload();
+  
+  const handleMouseEnter = () => {
+    prefetch();
+    preloadRoute(`/patients/${patient.id}`);
+  };
+
+  const patientName = PatientHelpers.getName(patient);
+
+  return (
+    <div 
+      onMouseEnter={handleMouseEnter}
+      data-testid={`patient-card-${patient.id}`} 
+      data-patient-id={patient.id}
+      className="h-full"
+    >
+      <PatientCard
+        name={patientName || 'Sem Nome'}
+        condition={patient.main_condition}
+        status={patient.status}
+        stats={{
+          sessionsCompleted: stats?.sessionsCompleted || 0,
+          nextAppointment: stats?.nextAppointmentDate ? new Date(stats.nextAppointmentDate).toLocaleDateString('pt-BR') : undefined
+        }}
+        onClick={onClick}
+        actions={<PatientActions patient={patient} />}
+        className="h-full"
+      />
+    </div>
+  );
+};
 
 const Patients = () => {
   const { profile } = useAuth();
@@ -348,7 +392,6 @@ const Patients = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in" data-testid="patient-list">
               {filteredPatients.map((patient, index) => {
                 const patientStats = statsMap[patient.id];
-                const patientName = PatientHelpers.getName(patient);
                 
                 return (
                   <LazyComponent
@@ -356,20 +399,11 @@ const Patients = () => {
                     placeholder={<div className="h-[140px] w-full bg-muted/50 rounded-xl animate-pulse" />}
                     rootMargin="200px"
                   >
-                    <div data-testid={`patient-card-${patient.id}`} data-patient-id={patient.id}>
-                      <PatientCard
-                        name={patientName || 'Sem Nome'}
-                        condition={patient.main_condition}
-                        status={patient.status}
-                        stats={{
-                          sessionsCompleted: patientStats?.sessionsCompleted || 0,
-                          nextAppointment: patientStats?.nextAppointmentDate ? new Date(patientStats.nextAppointmentDate).toLocaleDateString('pt-BR') : undefined
-                        }}
-                        onClick={() => navigate(`/patients/${patient.id}`)}
-                        actions={<PatientActions patient={patient} />}
-                        className="h-full"
-                      />
-                    </div>
+                    <PatientListItem 
+                      patient={patient}
+                      stats={patientStats}
+                      onClick={() => navigate(`/patients/${patient.id}`)}
+                    />
                   </LazyComponent>
                 );
               })}
