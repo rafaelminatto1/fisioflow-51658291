@@ -57,6 +57,7 @@ import { useKnowledgeBase } from '@/hooks/wiki/useKnowledgeBase';
 import { WikiTriageBoard } from '@/features/wiki/components/WikiTriageBoard';
 import { KnowledgeHubView } from '@/features/wiki/components/KnowledgeHubView';
 import { WikiPageCard } from '@/features/wiki/components/WikiPageCard';
+import { KnowledgeArticleDialog } from '@/features/wiki/components/KnowledgeArticleDialog';
 
 const TRIAGE_WIP_LIMITS = {
   backlog: 30,
@@ -90,6 +91,8 @@ export default function WikiPage() {
   const [annotationStatus, setAnnotationStatus] = useState<KnowledgeCurationStatus>('pending');
   const [annotationNotes, setAnnotationNotes] = useState('');
   const [auditArticle, setAuditArticle] = useState<KnowledgeArticle | null>(null);
+  const [isArticleDialogOpen, setIsArticleDialogOpen] = useState(false);
+  const [editingArticle, setEditingArticle] = useState<KnowledgeArticle | null>(null);
 
   // Hooks Customizados
   const { 
@@ -123,6 +126,9 @@ export default function WikiPage() {
     indexing,
     handleSyncArticles,
     handleIndexArticles,
+    handleCreateArticle,
+    handleUpdateArticle,
+    handleDeleteArticle,
     handleSaveAnnotation,
     curationMap,
     annotationMap
@@ -290,6 +296,35 @@ export default function WikiPage() {
     }
   };
 
+  const handleCreateArticleClick = () => {
+    setEditingArticle(null);
+    setIsArticleDialogOpen(true);
+  };
+
+  const handleEditArticleClick = (article: KnowledgeArticle) => {
+    setEditingArticle(article);
+    setIsArticleDialogOpen(true);
+  };
+
+  const handleDeleteArticleClick = async (article: KnowledgeArticle) => {
+    if (window.confirm(`Tem certeza que deseja excluir o artigo "${article.title}"?`)) {
+      await handleDeleteArticle(article.id);
+    }
+  };
+
+  const handleSaveArticle = async (data: Partial<KnowledgeArticle>) => {
+    try {
+      if (editingArticle) {
+        await handleUpdateArticle(editingArticle.id, data);
+      } else {
+        await handleCreateArticle(data);
+      }
+      setIsArticleDialogOpen(false);
+    } catch (error) {
+      console.error('Failed to save article:', error);
+    }
+  };
+
   const handleDashboardSelect = () => {
     setActiveView('dashboard');
     setSelectedPage(null);
@@ -347,12 +382,12 @@ export default function WikiPage() {
             </div>
           ) : activeView === 'knowledge-hub' ? (
             <div className="p-4 md:p-8 animate-in slide-in-from-bottom-4 duration-500">
-              <KnowledgeHubView 
+              <KnowledgeHubView
                 knowledgeStats={knowledgeStats}
                 knowledgeGroupsFiltered={knowledgeGroupsFiltered}
                 filteredKnowledge={filteredKnowledge}
                 auditItems={auditItems}
-                auditProfiles={queryClient.getQueryData(['knowledge-audit-profiles', []]) || {}}
+                auditProfiles={auditProfiles}
                 semanticScoreMap={semanticScoreMap}
                 kbFilters={kbFilters}
                 setKbFilters={setKbFilters}
@@ -360,9 +395,12 @@ export default function WikiPage() {
                 indexing={indexing}
                 onSync={handleSyncArticles}
                 onIndex={handleIndexArticles}
-                onEditArticle={openAnnotationDialog}
+                onCreateArticle={handleCreateArticleClick}
+                onEditArticle={handleEditArticleClick}
+                onDeleteArticle={handleDeleteArticleClick}
                 onAuditArticle={setAuditArticle}
                 articleTitleMap={articleTitleMap}
+                curationMap={curationMap}
               />
             </div>
           ) : (
@@ -572,6 +610,13 @@ export default function WikiPage() {
           <DialogFooter><Button onClick={() => setAuditArticle(null)}>Fechar</Button></DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <KnowledgeArticleDialog
+        open={isArticleDialogOpen}
+        onOpenChange={setIsArticleDialogOpen}
+        article={editingArticle}
+        onSave={handleSaveArticle}
+      />
     </MainLayout>
   );
 }
