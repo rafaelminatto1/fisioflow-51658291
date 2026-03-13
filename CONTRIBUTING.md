@@ -20,6 +20,19 @@ src/
 │   └── ui/                 # Hooks de UI
 ├── lib/                    # Utilitários e configurações
 ├── pages/                  # Páginas/rotas
+├── routes/                 # Rotas modularizadas ⭐
+│   ├── index.tsx           # Barrel export
+│   ├── auth.tsx            # Rotas de autenticação
+│   ├── core.tsx            # Rotas do núcleo
+│   ├── patients.tsx        # Rotas de pacientes
+│   ├── cadastros.tsx       # Rotas de cadastros
+│   ├── financial.tsx       # Rotas financeiras
+│   ├── reports.tsx         # Rotas de relatórios
+│   ├── admin.tsx           # Rotas administrativas
+│   ├── marketing.tsx       # Rotas de marketing
+│   ├── ai.tsx              # Rotas de IA
+│   ├── gamification.tsx    # Rotas de gamificação
+│   └── enterprise.tsx      # Rotas enterprise
 ├── types/                  # Tipos TypeScript
 ├── utils/                  # Funções utilitárias
 └── contexts/               # Context providers
@@ -166,8 +179,35 @@ export function useFeatureName(options: UseFeatureNameOptions) {
 3. **Criar componentes** em `src/components/[dominio]/`
 4. **Adicionar exports** nos `index.ts`
 5. **Criar página** em `src/pages/` se necessário
-6. **Adicionar rota** em `src/routes.tsx`
+6. **Adicionar rota** (veja seção Rotas abaixo)
 7. **Testar**
+
+### Adicionando Nova Rota
+
+As rotas estão organizadas por domínio em `src/routes/`:
+
+```typescript
+// src/routes/patients.tsx
+import { lazy } from 'react';
+import { Route } from 'react-router-dom';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+
+// Lazy load da página
+const NewPage = lazy(() => import(/* webpackChunkName: "new-page" */ "@/pages/NewPage"));
+
+export const patientsRoutes = (
+  <>
+    <Route path="/new-page" element={<ProtectedRoute><NewPage /></ProtectedRoute>} />
+  </>
+);
+```
+
+**Ao adicionar uma nova rota:**
+1. Identifique o domínio correto (patients, financial, admin, etc.)
+2. Use lazy loading com webpackChunkName
+3. Envolva com `ProtectedRoute` se necessário
+4. Adicione ao arquivo do domínio ou crie um novo
+5. Exporte no `src/routes/index.tsx`
 
 ### Corrigindo Bug
 
