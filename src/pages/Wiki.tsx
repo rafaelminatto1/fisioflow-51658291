@@ -136,15 +136,29 @@ export default function WikiPage() {
 
   // Filtragem de páginas
   const filteredPages = useMemo(() => {
-    if (!searchQuery) return pages;
     const query = searchQuery.toLowerCase();
-    return pages.filter(
-      (page) =>
+    return pages.filter((page) => {
+      const matchesSearch = !searchQuery || 
         page.title.toLowerCase().includes(query) ||
         page.content.toLowerCase().includes(query) ||
-        page.tags.some((tag) => tag.toLowerCase().includes(query))
-    );
+        page.tags.some((tag) => tag.toLowerCase().includes(query));
+      
+      // Se a query começar com #, filtramos especificamente por tag
+      if (searchQuery.startsWith('#')) {
+        const tagName = searchQuery.slice(1).toLowerCase();
+        return page.tags.some(t => t.toLowerCase().includes(tagName));
+      }
+
+      return matchesSearch;
+    });
   }, [pages, searchQuery]);
+
+  const handleTagSelect = (tag: string) => {
+    setActiveView('dashboard');
+    setSearchQuery(`#${tag}`);
+    setSelectedPage(null);
+    navigate('/wiki');
+  };
 
   const articleTitleMap = useMemo(() => {
     const map = new Map<string, string>();
@@ -319,6 +333,7 @@ export default function WikiPage() {
           onCreatePage={handleCreatePage}
           onDashboardSelect={handleDashboardSelect}
           onKnowledgeHubSelect={handleKnowledgeHubSelect}
+          onTagSelect={handleTagSelect}
         />
 
         <div className="flex-1 overflow-y-auto custom-scrollbar">
