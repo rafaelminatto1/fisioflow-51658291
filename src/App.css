@@ -37,6 +37,15 @@
   padding: 2em;
 }
 
+@keyframes pulse-twice {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.02); }
+}
+
+.animate-pulse-twice {
+  animation: pulse-twice 1s ease-in-out 2;
+}
+
 /* Fixed contrast for WCAG AA compliance (4.5:1 minimum) */
 /* Using CSS variable for consistency with design system */
 .read-the-docs {

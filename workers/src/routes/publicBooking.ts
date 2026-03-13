@@ -29,7 +29,7 @@ async function hasColumn(
 }
 
 app.get('/booking/:slug', async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { slug } = c.req.param();
   if (!(await hasTable(pool, 'profiles'))) return c.json({ error: 'Perfis públicos indisponíveis' }, 404);
 
@@ -62,7 +62,7 @@ app.get('/booking/:slug', async (c) => {
 });
 
 app.post('/booking', async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
   const slug = String(body.slug ?? '').trim();
   const requestedDate = String(body.date ?? '').slice(0, 10);

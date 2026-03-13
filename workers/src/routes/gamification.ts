@@ -61,7 +61,7 @@ async function getPatientIdFromUser(c: any, pool: any): Promise<string | null> {
 
 // ─── GET /profile ────────────────────────────────────────────────────────────
 app.get('/profile', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const patientId = await getPatientIdFromUser(c, pool);
   if (!patientId) return c.json({ data: null, error: 'Paciente não encontrado' }, 404);
 
@@ -87,7 +87,7 @@ app.get('/profile', requireAuth, async (c) => {
 // ─── GET /profile/:patientId ─────────────────────────────────────────────────
 
 app.get('/profile/:patientId', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { patientId } = c.req.param();
 
   // Get or create profile
@@ -168,7 +168,7 @@ app.get('/profile/:patientId', requireAuth, async (c) => {
 
 app.post('/award-xp', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as {
     patientId: string;
     amount: number;
@@ -248,7 +248,7 @@ app.post('/award-xp', requireAuth, async (c) => {
 
 // ─── GET /quests ─────────────────────────────────────────────────────────────
 app.get('/quests', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const patientId = await getPatientIdFromUser(c, pool);
   if (!patientId) return c.json({ data: [] });
   const today = new Date().toISOString().split('T')[0];
@@ -259,7 +259,7 @@ app.get('/quests', requireAuth, async (c) => {
 // ─── GET /quests/:patientId ───────────────────────────────────────────────────
 
 app.get('/quests/:patientId', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { patientId } = c.req.param();
   const today = new Date().toISOString().split('T')[0];
 
@@ -294,7 +294,7 @@ app.get('/quests/:patientId', requireAuth, async (c) => {
 // ─── PUT /quests/:patientId/complete ─────────────────────────────────────────
 
 app.put('/quests/:patientId/complete', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { patientId } = c.req.param();
   const body = (await c.req.json()) as { questId: string };
   const today = new Date().toISOString().split('T')[0];
@@ -328,7 +328,7 @@ app.put('/quests/:patientId/complete', requireAuth, async (c) => {
 
 // ─── GET /achievements ───────────────────────────────────────────────────────
 app.get('/achievements', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const patientId = await getPatientIdFromUser(c, pool);
   if (!patientId) return c.json({ data: { all: [], unlocked: [] } });
   const [allResult, unlockedResult] = await Promise.all([
@@ -341,7 +341,7 @@ app.get('/achievements', requireAuth, async (c) => {
 // ─── GET /achievements/:patientId ────────────────────────────────────────────
 
 app.get('/achievements/:patientId', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { patientId } = c.req.param();
 
   const [allResult, unlockedResult] = await Promise.all([
@@ -358,7 +358,7 @@ app.get('/achievements/:patientId', requireAuth, async (c) => {
 // ─── GET /transactions/:patientId ────────────────────────────────────────────
 
 app.get('/transactions/:patientId', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { patientId } = c.req.param();
 
   const result = await pool.query(
@@ -374,7 +374,7 @@ app.get('/transactions/:patientId', requireAuth, async (c) => {
 
 app.get('/transactions', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { days = '30', limit = '500' } = c.req.query();
   const daysNum = Math.min(365, Math.max(1, Number.parseInt(days, 10) || 30));
   const limitNum = Math.min(5000, Math.max(1, Number.parseInt(limit, 10) || 500));
@@ -400,7 +400,7 @@ app.get('/transactions', requireAuth, async (c) => {
 
 app.get('/leaderboard', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { period = 'all', limit = '50' } = c.req.query();
   const limitNum = Math.min(100, Math.max(1, Number.parseInt(limit, 10) || 50));
 
@@ -452,7 +452,7 @@ app.get('/leaderboard', requireAuth, async (c) => {
 // ─── GET /shop ────────────────────────────────────────────────────────────────
 
 app.get('/shop', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query(
     'SELECT * FROM shop_items WHERE is_active = true ORDER BY cost ASC',
   );
@@ -461,7 +461,7 @@ app.get('/shop', requireAuth, async (c) => {
 
 // ─── GET /inventory ─────────────────────────────────────────────────────────
 app.get('/inventory', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const patientId = await getPatientIdFromUser(c, pool);
   if (!patientId) return c.json({ data: [] });
   const result = await pool.query(
@@ -478,7 +478,7 @@ app.get('/inventory', requireAuth, async (c) => {
 // ─── GET /inventory/:patientId ───────────────────────────────────────────────
 
 app.get('/inventory/:patientId', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { patientId } = c.req.param();
 
   const result = await pool.query(
@@ -496,7 +496,7 @@ app.get('/inventory/:patientId', requireAuth, async (c) => {
 // ─── POST /buy ────────────────────────────────────────────────────────────────
 
 app.post('/buy', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as { patientId: string; itemId: string };
   const { patientId, itemId } = body;
 
@@ -550,7 +550,7 @@ app.post('/buy', requireAuth, async (c) => {
 // ─── GET /settings ───────────────────────────────────────────────────────────
 
 app.get('/settings', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query(
     `SELECT id, key, value, description, updated_at
      FROM gamification_settings
@@ -560,7 +560,7 @@ app.get('/settings', requireAuth, async (c) => {
 });
 
 app.put('/settings', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as { settings?: Record<string, unknown> };
   const entries = Object.entries(body.settings ?? {});
 
@@ -588,7 +588,7 @@ app.put('/settings', requireAuth, async (c) => {
 
 app.get('/admin/stats', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { days = '30' } = c.req.query();
   const daysNum = Math.min(365, Math.max(1, Number.parseInt(days, 10) || 30));
   const startDate = new Date(Date.now() - daysNum * 86400000).toISOString();
@@ -650,7 +650,7 @@ app.get('/admin/stats', requireAuth, async (c) => {
 
 app.get('/admin/at-risk', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { limit = '50', days = '7' } = c.req.query();
   const limitNum = Math.min(200, Math.max(1, Number.parseInt(limit, 10) || 50));
   const inactiveSince = new Date(Date.now() - (Number.parseInt(days, 10) || 7) * 86400000).toISOString();
@@ -682,7 +682,7 @@ app.get('/admin/at-risk', requireAuth, async (c) => {
 
 app.get('/admin/popular-achievements', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { limit = '10' } = c.req.query();
   const limitNum = Math.min(50, Math.max(1, Number.parseInt(limit, 10) || 10));
 
@@ -718,7 +718,7 @@ app.get('/admin/popular-achievements', requireAuth, async (c) => {
 
 app.post('/admin/adjust-xp', requireAuth, async (c) => {
   const body = (await c.req.json()) as { patientId: string; amount: number; reason: string };
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const { patientId, amount, reason } = body;
 
@@ -764,7 +764,7 @@ app.post('/admin/adjust-xp', requireAuth, async (c) => {
 
 app.post('/admin/reset-streak', requireAuth, async (c) => {
   const body = (await c.req.json()) as { patientId: string };
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   if (!body.patientId) return c.json({ error: 'patientId é obrigatório' }, 400);
   const result = await pool.query(
     `UPDATE patient_gamification
@@ -779,13 +779,13 @@ app.post('/admin/reset-streak', requireAuth, async (c) => {
 // ─── CRUD /achievement-definitions ───────────────────────────────────────────
 
 app.get('/achievement-definitions', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query('SELECT * FROM achievements ORDER BY xp_reward ASC, title ASC');
   try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/achievement-definitions', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
   const result = await pool.query(
     `INSERT INTO achievements (code, title, description, xp_reward, icon, category, requirements, created_at, updated_at)
@@ -805,7 +805,7 @@ app.post('/achievement-definitions', requireAuth, async (c) => {
 });
 
 app.put('/achievement-definitions/:id', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
   const result = await pool.query(
@@ -835,7 +835,7 @@ app.put('/achievement-definitions/:id', requireAuth, async (c) => {
 });
 
 app.delete('/achievement-definitions/:id', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   await pool.query('DELETE FROM achievements WHERE id = $1', [id]);
   return c.json({ ok: true });
@@ -844,13 +844,13 @@ app.delete('/achievement-definitions/:id', requireAuth, async (c) => {
 // ─── CRUD /quest-definitions ─────────────────────────────────────────────────
 
 app.get('/quest-definitions', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query('SELECT * FROM quest_definitions ORDER BY created_at DESC NULLS LAST, title ASC');
   try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/quest-definitions', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
   const result = await pool.query(
     `INSERT INTO quest_definitions
@@ -875,7 +875,7 @@ app.post('/quest-definitions', requireAuth, async (c) => {
 });
 
 app.put('/quest-definitions/:id', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
   const result = await pool.query(
@@ -913,7 +913,7 @@ app.put('/quest-definitions/:id', requireAuth, async (c) => {
 });
 
 app.patch('/quest-definitions/:id/active', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as { is_active: boolean };
   const result = await pool.query(
@@ -924,7 +924,7 @@ app.patch('/quest-definitions/:id/active', requireAuth, async (c) => {
 });
 
 app.delete('/quest-definitions/:id', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   await pool.query('DELETE FROM quest_definitions WHERE id = $1', [id]);
   return c.json({ ok: true });
@@ -933,7 +933,7 @@ app.delete('/quest-definitions/:id', requireAuth, async (c) => {
 // ─── CRUD /weekly-challenges ─────────────────────────────────────────────────
 
 app.get('/weekly-challenges', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { active, patientId } = c.req.query();
   const conditions: string[] = [];
   const params: unknown[] = [];
@@ -972,7 +972,7 @@ app.get('/weekly-challenges', requireAuth, async (c) => {
 });
 
 app.post('/weekly-challenges', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
   const result = await pool.query(
     `INSERT INTO weekly_challenges
@@ -995,7 +995,7 @@ app.post('/weekly-challenges', requireAuth, async (c) => {
 });
 
 app.put('/weekly-challenges/:id', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
   const result = await pool.query(
@@ -1029,7 +1029,7 @@ app.put('/weekly-challenges/:id', requireAuth, async (c) => {
 });
 
 app.patch('/weekly-challenges/:id/active', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as { is_active: boolean };
   const result = await pool.query(
@@ -1040,7 +1040,7 @@ app.patch('/weekly-challenges/:id/active', requireAuth, async (c) => {
 });
 
 app.delete('/weekly-challenges/:id', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   await pool.query('DELETE FROM weekly_challenges WHERE id = $1', [id]);
   return c.json({ ok: true });
@@ -1048,7 +1048,7 @@ app.delete('/weekly-challenges/:id', requireAuth, async (c) => {
 
 // ─── GET /patient-challenges ────────────────────────────────────────────────
 app.get('/patient-challenges', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const patientId = await getPatientIdFromUser(c, pool);
   if (!patientId) return c.json({ data: [] });
   const result = await pool.query(
@@ -1059,7 +1059,7 @@ app.get('/patient-challenges', requireAuth, async (c) => {
 });
 
 app.get('/patient-challenges/:patientId', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { patientId } = c.req.param();
   const result = await pool.query(
     `SELECT * FROM patient_challenges WHERE patient_id = $1 ORDER BY completed DESC, completed_at DESC NULLS LAST`,
@@ -1071,13 +1071,13 @@ app.get('/patient-challenges/:patientId', requireAuth, async (c) => {
 // ─── CRUD /shop-items ────────────────────────────────────────────────────────
 
 app.get('/shop-items', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query('SELECT * FROM shop_items ORDER BY created_at DESC NULLS LAST, cost ASC');
   try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
 });
 
 app.post('/shop-items', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
   const result = await pool.query(
     `INSERT INTO shop_items (code, name, description, cost, type, icon, metadata, is_active, created_at, updated_at)
@@ -1098,7 +1098,7 @@ app.post('/shop-items', requireAuth, async (c) => {
 });
 
 app.put('/shop-items/:id', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
   const result = await pool.query(
@@ -1130,7 +1130,7 @@ app.put('/shop-items/:id', requireAuth, async (c) => {
 });
 
 app.delete('/shop-items/:id', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   await pool.query('DELETE FROM shop_items WHERE id = $1', [id]);
   return c.json({ ok: true });

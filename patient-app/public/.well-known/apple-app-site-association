@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "G7FDW933SF.com.rafaelminatto.fisioflow",
+        "paths": ["/auth/*", "/appointments/*", "/profile/*"]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["G7FDW933SF.com.rafaelminatto.fisioflow"]
+  }
+}

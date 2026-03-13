@@ -113,7 +113,7 @@ app.get('/google/auth-url', async (c) => {
 
 app.get('/google/status', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query(
     `
       SELECT *
@@ -128,7 +128,7 @@ app.get('/google/status', async (c) => {
 
 app.get('/google/business/reviews', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const integrationRes = await pool.query(
     `
       SELECT settings
@@ -151,7 +151,7 @@ app.get('/google/business/reviews', async (c) => {
 app.post('/google/connect', async (c) => {
   const user = c.get('user');
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const integration = await ensureGoogleIntegration(
     c.env,
     user.uid,
@@ -172,7 +172,7 @@ app.post('/google/connect', async (c) => {
 
 app.post('/google/disconnect', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query(
     `
       UPDATE google_integrations
@@ -197,7 +197,7 @@ app.post('/google/disconnect', async (c) => {
 
 app.get('/google/calendar', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query(
     `
       SELECT *
@@ -213,7 +213,7 @@ app.get('/google/calendar', async (c) => {
 app.put('/google/calendar', async (c) => {
   const user = c.get('user');
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const integration = await ensureGoogleIntegration(c.env, user.uid, user.organizationId, user.email ?? null);
   const currentSettings = integration.settings && typeof integration.settings === 'object' ? integration.settings : {};
   const nextSettings = {
@@ -238,7 +238,7 @@ app.put('/google/calendar', async (c) => {
 
 app.get('/google/calendar/logs', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const integrationRes = await pool.query(
     `SELECT id FROM google_integrations WHERE user_id = $1 AND provider = 'google' LIMIT 1`,
     [user.uid],
@@ -261,7 +261,7 @@ app.get('/google/calendar/logs', async (c) => {
 
 app.post('/google/calendar/sync', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const integration = await ensureGoogleIntegration(c.env, user.uid, user.organizationId, user.email ?? null);
   const syncedCount = Number(integration.events_synced_count ?? 0) + 5;
   const updated = await pool.query(
@@ -312,7 +312,7 @@ app.post('/google/calendar/import-preview', async (c) => {
 app.post('/google/calendar/sync-appointment', async (c) => {
   const user = c.get('user');
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const integration = await ensureGoogleIntegration(c.env, user.uid, user.organizationId, user.email ?? null);
   const externalEventId = crypto.randomUUID();
 
@@ -348,7 +348,7 @@ app.post('/google/calendar/sync-appointment', async (c) => {
 
 app.get('/google/docs/templates', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const folderId = c.req.query('folderId');
   const params: unknown[] = [user.uid, 'template'];
   let where = 'WHERE user_id = $1 AND item_kind = $2';
@@ -373,7 +373,7 @@ app.get('/google/docs/templates', async (c) => {
 app.post('/google/docs/generate-report', async (c) => {
   const user = c.get('user');
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const integration = await ensureGoogleIntegration(c.env, user.uid, user.organizationId, user.email ?? null);
   const fileId = crypto.randomUUID();
   const fileName = `${String(body.patientName ?? 'Paciente')} - Relatorio`;
@@ -409,7 +409,7 @@ app.post('/google/docs/generate-report', async (c) => {
 
 app.get('/google/drive/files', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const folderId = c.req.query('folderId');
   const params: unknown[] = [user.uid];
   let where = 'WHERE user_id = $1';
@@ -434,7 +434,7 @@ app.get('/google/drive/files', async (c) => {
 app.post('/google/drive/folders', async (c) => {
   const user = c.get('user');
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const integration = await ensureGoogleIntegration(c.env, user.uid, user.organizationId, user.email ?? null);
   const folderId = crypto.randomUUID();
   const folderName = String(body.name ?? 'Nova pasta');

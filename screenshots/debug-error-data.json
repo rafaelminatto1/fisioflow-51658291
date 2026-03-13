@@ -1,7 +1,0 @@
-{
-  "error": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:8082/auth/login\nCall log:\n\u001b[2m  - navigating to \"http://localhost:8082/auth/login\", waiting until \"load\"\u001b[22m\n",
-  "stack": "page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:8082/auth/login\nCall log:\n\u001b[2m  - navigating to \"http://localhost:8082/auth/login\", waiting until \"load\"\u001b[22m\n\n    at /home/rafael/cursor/fisiolovable/fisioflow-51658291/e2e/debug-start-attendance.spec.ts:66:16",
-  "logs": [],
-  "networkLogs": [],
-  "url": "chrome-error://chromewebdata/"
-}

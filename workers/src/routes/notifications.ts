@@ -52,7 +52,7 @@ async function ensureNotificationsSchema(pool: Pool) {
 
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { unreadOnly, limit = '50' } = c.req.query();
 
   try {
@@ -76,7 +76,7 @@ app.get('/', requireAuth, async (c) => {
 
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     await ensureNotificationsSchema(pool);
 
@@ -102,7 +102,7 @@ app.post('/', requireAuth, async (c) => {
 
 app.put('/:id/read', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   try {
@@ -131,7 +131,7 @@ app.put('/:id/read', requireAuth, async (c) => {
 
 app.put('/read-all', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     await ensureNotificationsSchema(pool);
     await pool.query('UPDATE notifications SET is_read = true WHERE user_id = $1', [user.uid]);
@@ -144,7 +144,7 @@ app.put('/read-all', requireAuth, async (c) => {
 
 app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   try {

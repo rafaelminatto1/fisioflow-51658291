@@ -481,7 +481,7 @@ app.use('*', requireAuth);
 
 app.post('/bootstrap', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json().catch(() => ({}))) as PortalPayload;
 
   const context = await ensurePortalContext(pool, user, body, { forcePatientRole: true });
@@ -490,14 +490,16 @@ app.post('/bootstrap', async (c) => {
 
 app.get('/profile', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const context = await ensurePortalContext(pool, user);
+  // Cache de Perfil: 5 min na borda, revalidação em background (stale-while-revalidate)
+  c.header('Cache-Control', 'public, max-age=300, stale-while-revalidate=60');
   return c.json({ data: context.data });
 });
 
 app.patch('/profile', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as PortalPayload;
   const context = await ensurePortalContext(pool, user, body, { forcePatientRole: false });
   return c.json({ data: context.data });
@@ -505,7 +507,7 @@ app.patch('/profile', async (c) => {
 
 app.get('/therapists', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const search = trimmedString(c.req.query('search'))?.toLowerCase();
 
   const result = await pool.query(
@@ -544,7 +546,7 @@ app.get('/therapists', async (c) => {
 
 app.post('/link-professional', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as PortalPayload;
   const professionalId = trimmedString(body.professional_id ?? body.professionalId);
 
@@ -589,7 +591,7 @@ app.post('/link-professional', async (c) => {
 
 app.get('/appointments', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { data } = await ensurePortalContext(pool, user);
 
   if (!data.patient_id || !(await hasTable(pool, 'appointments'))) {
@@ -618,6 +620,9 @@ app.get('/appointments', async (c) => {
     params,
   );
 
+  // Cache de Consultas: 1 min na borda, revalidação em background (stale-while-revalidate)
+  c.header('Cache-Control', 'public, max-age=60, stale-while-revalidate=30');
+
   const appointments = result.rows.map((row) => ({
     id: String((row as DbRow).id ?? ''),
     patient_id: trimmedString((row as DbRow).patient_id) ?? data.patient_id,
@@ -638,7 +643,7 @@ app.get('/appointments', async (c) => {
 
 app.post('/appointments/:id/confirm', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { data } = await ensurePortalContext(pool, user);
   const id = c.req.param('id');
 
@@ -664,7 +669,7 @@ app.post('/appointments/:id/confirm', async (c) => {
 
 app.post('/appointments/:id/cancel', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { data } = await ensurePortalContext(pool, user);
   const id = c.req.param('id');
   const body = await c.req.json().catch(() => ({}));
@@ -691,7 +696,7 @@ app.post('/appointments/:id/cancel', async (c) => {
 
 app.get('/exercises', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { data } = await ensurePortalContext(pool, user);
 
   if (!data.patient_id || !(await hasTable(pool, 'exercise_plans')) || !(await hasTable(pool, 'exercise_plan_items'))) {
@@ -776,7 +781,7 @@ app.get('/exercises', async (c) => {
 
 app.post('/exercises/:assignmentId/complete', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { data } = await ensurePortalContext(pool, user);
   const assignmentId = c.req.param('assignmentId');
   const body = (await c.req.json().catch(() => ({}))) as PortalPayload;
@@ -877,7 +882,7 @@ app.post('/exercises/:assignmentId/complete', async (c) => {
 
 app.get('/notifications', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   if (!(await hasTable(pool, 'notifications'))) {
     return c.json({ data: [] });
@@ -910,7 +915,7 @@ app.get('/notifications', async (c) => {
 
 app.post('/notifications/:id/read', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   if (!(await hasTable(pool, 'notifications'))) {
     return c.json({ success: true });
@@ -931,7 +936,7 @@ app.post('/notifications/:id/read', async (c) => {
 
 app.post('/notifications/read-all', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   if (!(await hasTable(pool, 'notifications'))) {
     return c.json({ success: true });
@@ -943,7 +948,7 @@ app.post('/notifications/read-all', async (c) => {
 
 app.get('/progress', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { data } = await ensurePortalContext(pool, user);
 
   if (!data.patient_id) {
@@ -1005,7 +1010,7 @@ app.get('/progress', async (c) => {
 
 app.get('/stats', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const context = await ensurePortalContext(pool, user);
   const patientId = context.data.patient_id;
 

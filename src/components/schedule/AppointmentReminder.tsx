@@ -35,6 +35,9 @@ export const AppointmentReminder: React.FC<AppointmentReminderProps> = ({
   onRemindersChange,
   disabled = false
 }) => {
+  const compactFieldClass =
+    "h-9 rounded-xl border border-border/70 bg-gradient-to-b from-background to-muted/20 text-xs shadow-[0_12px_24px_-22px_rgba(15,23,42,0.35)] focus-visible:ring-4 focus-visible:ring-primary/10 focus-visible:border-primary/30";
+
   const [showCustom, setShowCustom] = useState(false);
   const [customReminder, setCustomReminder] = useState<Omit<AppointmentReminderData, 'id'>>({
     type: 'before',
@@ -99,7 +102,7 @@ export const AppointmentReminder: React.FC<AppointmentReminderProps> = ({
             <Badge 
               key={reminder.id} 
               variant="secondary" 
-              className="flex items-center gap-1.5 px-2 py-1"
+              className="flex items-center gap-1.5 rounded-full border border-primary/10 bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary"
             >
               <Bell className="h-3 w-3" />
               <span>{formatReminder(reminder)}</span>
@@ -107,7 +110,7 @@ export const AppointmentReminder: React.FC<AppointmentReminderProps> = ({
                 <button 
                   type="button"
                   onClick={() => removeReminder(reminder.id)} 
-                  className="ml-1 hover:text-destructive"
+                  className="ml-1 rounded-full p-0.5 transition-colors hover:bg-destructive/10 hover:text-destructive"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -134,7 +137,10 @@ export const AppointmentReminder: React.FC<AppointmentReminderProps> = ({
                 size="sm"
                 disabled={isAdded}
                 onClick={() => addQuickReminder(template)}
-                className={cn("text-xs h-7", isAdded && "opacity-50")}
+                className={cn(
+                  "h-8 rounded-full border border-border/70 bg-gradient-to-b from-background to-muted/20 px-3 text-xs shadow-[0_12px_24px_-22px_rgba(15,23,42,0.35)] hover:border-primary/20 hover:bg-primary/[0.04]",
+                  isAdded && "opacity-50"
+                )}
               >
                 <Clock className="h-3 w-3 mr-1" />
                 {template.label}
@@ -146,7 +152,7 @@ export const AppointmentReminder: React.FC<AppointmentReminderProps> = ({
             variant="ghost"
             size="sm"
             onClick={() => setShowCustom(!showCustom)}
-            className="text-xs h-7"
+            className="h-8 rounded-full px-3 text-xs text-primary hover:bg-primary/10 hover:text-primary"
           >
             <Plus className="h-3 w-3 mr-1" />
             Personalizar
@@ -156,7 +162,7 @@ export const AppointmentReminder: React.FC<AppointmentReminderProps> = ({
 
       {/* Custom Reminder Form */}
       {showCustom && !disabled && (
-        <div className="bg-muted/30 rounded-lg p-3 border space-y-3">
+        <div className="space-y-3 rounded-[22px] border border-border/70 bg-gradient-to-b from-background to-muted/25 p-4 shadow-[0_18px_32px_-28px_rgba(15,23,42,0.35)]">
           <div className="grid grid-cols-3 gap-2">
             <div className="space-y-1">
               <Label className="text-xs">Tempo</Label>
@@ -165,7 +171,7 @@ export const AppointmentReminder: React.FC<AppointmentReminderProps> = ({
                 min="1"
                 value={customReminder.timeValue}
                 onChange={(e) => setCustomReminder(prev => ({ ...prev, timeValue: Number(e.target.value) }))}
-                className="h-8 text-xs"
+                className={compactFieldClass}
               />
             </div>
             <div className="space-y-1">
@@ -174,10 +180,10 @@ export const AppointmentReminder: React.FC<AppointmentReminderProps> = ({
                 value={customReminder.timeUnit}
                 onValueChange={(value) => setCustomReminder(prev => ({ ...prev, timeUnit: value as 'minutes' | 'hours' | 'days' }))}
               >
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className={compactFieldClass}>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-[20px] border border-border/70 bg-background/95 p-1 shadow-[0_24px_70px_-30px_rgba(15,23,42,0.45)] backdrop-blur-xl">
                   <SelectItem value="minutes">Minutos</SelectItem>
                   <SelectItem value="hours">Horas</SelectItem>
                   <SelectItem value="days">Dias</SelectItem>
@@ -190,10 +196,10 @@ export const AppointmentReminder: React.FC<AppointmentReminderProps> = ({
                 value={customReminder.type}
                 onValueChange={(value) => setCustomReminder(prev => ({ ...prev, type: value as 'before' | 'after' }))}
               >
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className={compactFieldClass}>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="rounded-[20px] border border-border/70 bg-background/95 p-1 shadow-[0_24px_70px_-30px_rgba(15,23,42,0.45)] backdrop-blur-xl">
                   <SelectItem value="before">Antes</SelectItem>
                   <SelectItem value="after">Depois</SelectItem>
                 </SelectContent>
@@ -203,15 +209,20 @@ export const AppointmentReminder: React.FC<AppointmentReminderProps> = ({
 
           <div className="space-y-1">
             <Label className="text-xs">Notificar via</Label>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {(['whatsapp', 'email', 'push'] as const).map((channel) => (
                 <Button
                   key={channel}
                   type="button"
                   size="sm"
-                  variant={customReminder.notifyVia.includes(channel) ? 'default' : 'outline'}
+                  variant="outline"
                   onClick={() => toggleNotifyVia(channel)}
-                  className="h-7 text-xs capitalize"
+                  className={cn(
+                    "h-8 rounded-full border border-border/70 px-3 text-xs capitalize shadow-[0_12px_24px_-22px_rgba(15,23,42,0.35)]",
+                    customReminder.notifyVia.includes(channel)
+                      ? "border-primary/20 bg-primary text-primary-foreground hover:bg-primary/90"
+                      : "bg-gradient-to-b from-background to-muted/20 hover:border-primary/20 hover:bg-primary/[0.04]"
+                  )}
                 >
                   {channel === 'whatsapp' ? '📱 WhatsApp' : channel === 'email' ? '✉️ Email' : '🔔 Push'}
                 </Button>
@@ -226,7 +237,7 @@ export const AppointmentReminder: React.FC<AppointmentReminderProps> = ({
               onChange={(e) => setCustomReminder(prev => ({ ...prev, message: e.target.value }))}
               placeholder="Ex: Lembre-se de trazer os exames..."
               rows={2}
-              className="text-xs resize-none"
+              className="resize-none rounded-2xl border border-border/70 bg-gradient-to-b from-background to-muted/20 text-xs shadow-[0_12px_24px_-22px_rgba(15,23,42,0.35)] focus-visible:ring-4 focus-visible:ring-primary/10 focus-visible:border-primary/30"
             />
           </div>
 
@@ -236,6 +247,7 @@ export const AppointmentReminder: React.FC<AppointmentReminderProps> = ({
               variant="ghost"
               size="sm"
               onClick={() => setShowCustom(false)}
+              className="rounded-full px-4"
             >
               Cancelar
             </Button>
@@ -244,6 +256,7 @@ export const AppointmentReminder: React.FC<AppointmentReminderProps> = ({
               size="sm"
               onClick={addCustomReminder}
               disabled={customReminder.notifyVia.length === 0}
+              className="rounded-full px-4"
             >
               Adicionar Lembrete
             </Button>

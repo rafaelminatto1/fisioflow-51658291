@@ -79,7 +79,7 @@ async function loadOrganizationSettings(pool: ReturnType<typeof createPool>, org
 
 app.get('/config', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const settings = await loadOrganizationSettings(pool, user.organizationId);
   const config = (settings.whatsapp_config as Record<string, unknown>) ?? { enabled: false };
   return c.json({ data: config });
@@ -87,7 +87,7 @@ app.get('/config', requireAuth, async (c) => {
 
 app.get('/templates', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const settings = await loadOrganizationSettings(pool, user.organizationId);
   const rawTemplates = (settings.whatsapp_templates as unknown[]) ?? DEFAULT_TEMPLATES;
   const templates = Array.isArray(rawTemplates) && rawTemplates.length > 0 ? rawTemplates : DEFAULT_TEMPLATES;
@@ -96,7 +96,7 @@ app.get('/templates', requireAuth, async (c) => {
 
 app.put('/templates/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as { content?: string; status?: string };
   if (!body.content && !body.status) {
@@ -156,7 +156,7 @@ const toDateString = (value: unknown): string | null => {
 
 app.get('/messages', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { appointmentId, patientId, limit = '50' } = c.req.query();
 
   const conditions = ['organization_id = $1'];
@@ -208,7 +208,7 @@ app.get('/messages', requireAuth, async (c) => {
 
 app.get('/webhook-logs', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { limit = '100' } = c.req.query();
 
   const result = await pool.query(
@@ -241,7 +241,7 @@ app.get('/webhook-logs', requireAuth, async (c) => {
 
 app.post('/messages', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as {
     appointment_id?: string;
     patient_id?: string;
@@ -302,7 +302,7 @@ app.post('/messages', requireAuth, async (c) => {
 
 app.get('/pending-confirmations', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { limit = '100' } = c.req.query();
 
   const today = new Date().toISOString().split('T')[0];

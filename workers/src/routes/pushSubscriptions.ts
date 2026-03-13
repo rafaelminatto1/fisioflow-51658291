@@ -51,7 +51,7 @@ async function ensurePushSubscriptionsSchema(pool: Pool) {
 
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { userId, activeOnly } = c.req.query();
   const targetUser = userId || user.uid;
   if (!targetUser) {
@@ -85,7 +85,7 @@ app.get('/', requireAuth, async (c) => {
 
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     await ensurePushSubscriptionsSchema(pool);
     const body = (await c.req.json()) as {
@@ -171,7 +171,7 @@ app.post('/', requireAuth, async (c) => {
 
 app.put('/deactivate', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     await ensurePushSubscriptionsSchema(pool);
     const body = (await c.req.json()) as { endpoint?: string };

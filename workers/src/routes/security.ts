@@ -117,7 +117,7 @@ app.use('*', requireAuth);
 
 app.get('/mfa/settings', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query(
     `SELECT * FROM mfa_settings WHERE user_id = $1 LIMIT 1`,
     [user.uid],
@@ -127,7 +127,7 @@ app.get('/mfa/settings', async (c) => {
 
 app.get('/lgpd-consents', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query(
     `
       SELECT id, user_id, organization_id, consent_type, granted, granted_at, revoked_at, version, created_at, updated_at
@@ -142,7 +142,7 @@ app.get('/lgpd-consents', async (c) => {
 
 app.put('/lgpd-consents/:consentType', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const consentType = c.req.param('consentType');
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
   const granted = Boolean(body.granted);
@@ -198,7 +198,7 @@ app.put('/lgpd-consents/:consentType', async (c) => {
 
 app.post('/mfa/enable', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
   const method = String(body.method ?? 'email');
   const backupCodes = generateBackupCodes();
@@ -229,7 +229,7 @@ app.post('/mfa/enable', async (c) => {
 
 app.post('/mfa/disable', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query(
     `
       UPDATE mfa_settings
@@ -250,7 +250,7 @@ app.post('/mfa/disable', async (c) => {
 
 app.post('/mfa/send-otp', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const code = generateOtpCode();
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
@@ -282,7 +282,7 @@ app.post('/mfa/send-otp', async (c) => {
 
 app.post('/mfa/verify-otp', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
   const code = String(body.code ?? '').toUpperCase();
 
@@ -333,7 +333,7 @@ app.post('/mfa/verify-otp', async (c) => {
 
 app.post('/mfa/enroll', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
   const secret = generateTotpSecret();
   const factorId = crypto.randomUUID();
@@ -356,7 +356,7 @@ app.post('/mfa/enroll', async (c) => {
 
 app.post('/mfa/enroll/verify', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
   const factorId = String(body.factorId ?? '');
   const code = String(body.code ?? '');
@@ -396,7 +396,7 @@ app.post('/mfa/enroll/verify', async (c) => {
 
 app.get('/mfa/factors', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const result = await pool.query(
     `
       SELECT id, factor_id, type, friendly_name, verified, created_at, verified_at
@@ -411,7 +411,7 @@ app.get('/mfa/factors', async (c) => {
 
 app.delete('/mfa/factors/:factorId', async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { factorId } = c.req.param();
   await pool.query(
     `DELETE FROM mfa_enrollments WHERE user_id = $1 AND factor_id = $2`,

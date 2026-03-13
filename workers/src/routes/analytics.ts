@@ -29,7 +29,7 @@ const parseDate = (input: string | undefined): string | null => {
 
 app.get('/dashboard', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const period = c.req.query('period') || 'month';
   const endDate = parseDate(c.req.query('endDate')) ?? new Date().toISOString().split('T')[0];
   const startDate = parseDate(c.req.query('startDate')) ?? (() => {
@@ -165,7 +165,7 @@ app.get('/dashboard', requireAuth, async (c) => {
 
 app.get('/financial', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const startDate = parseDate(c.req.query('startDate')) ?? new Date().toISOString().split('T')[0];
   const endDate = parseDate(c.req.query('endDate')) ?? startDate;
 
@@ -234,7 +234,7 @@ app.get('/financial', requireAuth, async (c) => {
 
 app.get('/top-exercises', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const limitValue = Math.min(Number(c.req.query('limit') ?? 5) || 5, 20);
 
   if (!(await hasTable(pool, 'prescribed_exercises'))) {
@@ -264,7 +264,7 @@ app.get('/top-exercises', requireAuth, async (c) => {
 
 app.get('/pain-map', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const limitValue = Math.min(Number(c.req.query('limit') ?? 5) || 5, 20);
 
   try {
@@ -297,7 +297,7 @@ app.get('/pain-map', requireAuth, async (c) => {
 app.get('/intelligent-reports/:patientId', requireAuth, async (c) => {
   const { patientId } = c.req.param();
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   const reports = await pool.query(
     `
@@ -315,7 +315,7 @@ app.get('/intelligent-reports/:patientId', requireAuth, async (c) => {
 
 app.post('/intelligent-reports', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as {
     patientId?: string;
     reportType?: string;
@@ -457,7 +457,7 @@ app.post('/intelligent-reports', requireAuth, async (c) => {
 app.get('/patient-evolution/:patientId', requireAuth, async (c) => {
   const { patientId } = c.req.param();
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   const sessionsRes = await pool.query(
     `SELECT started_at, pain_level
@@ -481,7 +481,7 @@ app.get('/patient-evolution/:patientId', requireAuth, async (c) => {
 app.get('/patient-progress/:patientId', requireAuth, async (c) => {
   const { patientId } = c.req.param();
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   const metricsRes = await pool.query(
     `
@@ -564,7 +564,7 @@ app.get('/patient-progress/:patientId', requireAuth, async (c) => {
 app.get('/patient-lifecycle-events/:patientId', requireAuth, async (c) => {
   const { patientId } = c.req.param();
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   const eventsRes = await pool.query(
     `
@@ -581,7 +581,7 @@ app.get('/patient-lifecycle-events/:patientId', requireAuth, async (c) => {
 
 app.post('/patient-lifecycle-events', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as {
     patient_id?: string;
     event_type?: string;
@@ -673,7 +673,7 @@ const asNumber = (value: unknown): number | null =>
 app.get('/patient-session-metrics/:patientId', requireAuth, async (c) => {
   const { patientId } = c.req.param();
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const limitValue = Number(c.req.query('limit') ?? 0);
 
   const params: Array<string | number> = [patientId, user.organizationId];
@@ -699,7 +699,7 @@ app.get('/patient-session-metrics/:patientId', requireAuth, async (c) => {
 
 app.post('/patient-session-metrics', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
   const sessionDate = body.session_date
     ? new Date(String(body.session_date)).toISOString()
@@ -750,7 +750,7 @@ app.post('/patient-session-metrics', requireAuth, async (c) => {
 app.get('/patient-predictions/:patientId', requireAuth, async (c) => {
   const { patientId } = c.req.param();
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const predictionType = c.req.query('predictionType');
   const limit = Number(c.req.query('limit') ?? 0) || 50;
 
@@ -784,7 +784,7 @@ app.get('/patient-predictions/:patientId', requireAuth, async (c) => {
 
 app.get('/patient-risk/:patientId', requireAuth, async (c) => {
   const { patientId } = c.req.param();
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const riskRes = await pool.query('SELECT * FROM calculate_patient_risk($1)', [patientId]);
   return c.json({ data: riskRes.rows[0] ?? null });
 });
@@ -792,7 +792,7 @@ app.get('/patient-risk/:patientId', requireAuth, async (c) => {
 app.get('/patient-insights/:patientId', requireAuth, async (c) => {
   const { patientId } = c.req.param();
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const includeAcknowledged = c.req.query('includeAcknowledged') === 'true';
 
   const params = [user.organizationId, patientId];
@@ -820,7 +820,7 @@ app.get('/patient-insights/:patientId', requireAuth, async (c) => {
 app.patch('/patient-insights/:insightId/acknowledge', requireAuth, async (c) => {
   const { insightId } = c.req.param();
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   const res = await pool.query(
     `
@@ -848,7 +848,7 @@ app.patch('/patient-insights/:insightId/acknowledge', requireAuth, async (c) => 
 app.get('/patient-goals/:patientId', requireAuth, async (c) => {
   const { patientId } = c.req.param();
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   const rows = await pool.query(
     `
@@ -865,7 +865,7 @@ app.get('/patient-goals/:patientId', requireAuth, async (c) => {
 
 app.post('/patient-goals', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const patientId = asString(body.patient_id);
@@ -916,7 +916,7 @@ app.post('/patient-goals', requireAuth, async (c) => {
 app.put('/patient-goals/:goalId', requireAuth, async (c) => {
   const { goalId } = c.req.param();
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const allowedFields = [
@@ -998,7 +998,7 @@ app.put('/patient-goals/:goalId', requireAuth, async (c) => {
 app.patch('/patient-goals/:goalId/complete', requireAuth, async (c) => {
   const { goalId } = c.req.param();
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
 
   const res = await pool.query(
     `
@@ -1020,7 +1020,7 @@ app.patch('/patient-goals/:goalId/complete', requireAuth, async (c) => {
 });
 
 app.get('/clinical-benchmarks', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const category = c.req.query('category');
   const params: Array<string> = [];
   let where = '';
@@ -1064,7 +1064,7 @@ const matchesAgeGroup = (ageGroup: string | undefined, minAge?: number, maxAge?:
 app.get('/ml-training-data/patient/:patientId', requireAuth, async (c) => {
   const { patientId } = c.req.param();
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const salt = c.env.ML_SALT ?? c.env.VITE_ML_SALT ?? 'fisioflow-ml-salt';
 
   const patientRes = await pool.query(
@@ -1194,7 +1194,7 @@ app.get('/ml-training-data/patient/:patientId', requireAuth, async (c) => {
 });
 
 app.get('/ml-training-data/patients', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const limitValue = Math.min(Math.max(Number(c.req.query('limit') ?? 50), 1), 200);
   const rows = await pool.query(
@@ -1212,7 +1212,7 @@ app.get('/ml-training-data/patients', requireAuth, async (c) => {
 });
 
 app.get('/ml-training-data/stats', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const rows = await pool.query(
     `
@@ -1277,7 +1277,7 @@ app.get('/ml-training-data/stats', requireAuth, async (c) => {
 });
 
 app.get('/ml-training-data/similar', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const condition = c.req.query('condition');
   const minAge = Number(c.req.query('minAge') ?? 0);
@@ -1307,7 +1307,7 @@ app.get('/ml-training-data/similar', requireAuth, async (c) => {
 });
 
 app.post('/ml-training-data', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const payload = (await c.req.json()) as Record<string, unknown>;
   const columns = [
@@ -1353,7 +1353,7 @@ app.post('/ml-training-data', requireAuth, async (c) => {
 });
 
 app.post('/patient-predictions/upsert', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const body = (await c.req.json()) as {
     patient_id?: string;
@@ -1425,7 +1425,7 @@ app.post('/patient-predictions/upsert', requireAuth, async (c) => {
 });
 
 app.get('/population-health', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const startDate = parseDate(c.req.query('startDate')) ?? new Date().toISOString().split('T')[0];
   const endDate = parseDate(c.req.query('endDate')) ?? new Date().toISOString().split('T')[0];
@@ -1477,7 +1477,7 @@ app.get('/population-health', requireAuth, async (c) => {
 
 app.get('/weekly-activity', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   
   const now = new Date();
   const start = new Date(now);

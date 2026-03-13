@@ -76,7 +76,7 @@ const DEFAULT_PREFS = {
 
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     await ensureNotificationPreferencesSchema(pool);
 
@@ -105,7 +105,7 @@ app.get('/', requireAuth, async (c) => {
 
 app.put('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   try {
     await ensureNotificationPreferencesSchema(pool);
     const body = (await c.req.json()) as Record<string, unknown>;

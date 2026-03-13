@@ -9,7 +9,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
   const { userId, startDate, endDate, patientId, limit: lim } = c.req.query();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   let sql = `SELECT * FROM time_entries WHERE organization_id = $1 AND deleted_at IS NULL`;
   const params: unknown[] = [user.organizationId];
@@ -30,7 +30,7 @@ app.get('/', requireAuth, async (c) => {
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
   const body = await c.req.json();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   const {
     description, start_time, end_time, duration_seconds,
@@ -70,7 +70,7 @@ app.patch('/:id', requireAuth, async (c) => {
   const user = c.get('user');
   const id = c.req.param('id');
   const body = await c.req.json();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   const allowed = ['description', 'start_time', 'end_time', 'duration_seconds',
     'is_billable', 'hourly_rate', 'total_value', 'tags',
@@ -102,7 +102,7 @@ app.patch('/:id', requireAuth, async (c) => {
 app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
   const id = c.req.param('id');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   await db.query(
     `UPDATE time_entries SET deleted_at = NOW() WHERE id = $1 AND organization_id = $2`,
@@ -115,7 +115,7 @@ app.delete('/:id', requireAuth, async (c) => {
 app.get('/stats', requireAuth, async (c) => {
   const user = c.get('user');
   const { userId, startDate, endDate } = c.req.query();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   let sql = `SELECT
     COALESCE(SUM(duration_seconds), 0) AS total_seconds,
@@ -139,7 +139,7 @@ app.get('/stats', requireAuth, async (c) => {
 // GET /api/time-entries/timer-draft/:userId
 app.get('/timer-draft/:userId', requireAuth, async (c) => {
   const userId = c.req.param('userId');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   const result = await db.query(
     `SELECT timer, updated_at FROM timer_drafts WHERE user_id = $1`,
@@ -161,7 +161,7 @@ app.get('/timer-draft/:userId', requireAuth, async (c) => {
 app.put('/timer-draft/:userId', requireAuth, async (c) => {
   const userId = c.req.param('userId');
   const body = await c.req.json();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   await db.query(
     `INSERT INTO timer_drafts (user_id, timer, updated_at)
@@ -175,7 +175,7 @@ app.put('/timer-draft/:userId', requireAuth, async (c) => {
 // DELETE /api/time-entries/timer-draft/:userId
 app.delete('/timer-draft/:userId', requireAuth, async (c) => {
   const userId = c.req.param('userId');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   await db.query(`DELETE FROM timer_drafts WHERE user_id = $1`, [userId]);
   return c.json({ ok: true });
 });

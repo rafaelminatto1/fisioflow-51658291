@@ -75,7 +75,7 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
           statusStyle,
           // Dragging states
           isDragging && "opacity-50 scale-95 z-50 ring-2 ring-primary/40 shadow-2xl",
-          isSaving && "animate-pulse ring-2 ring-amber-400/50 z-30",
+          isSaving && "animate-pulse-twice ring-2 ring-amber-400/50 z-30",
           isDropTarget && "ring-2 ring-primary/60 shadow-2xl scale-105 z-25",
           isSelected && "ring-2 ring-primary shadow-xl z-40",
           // Density

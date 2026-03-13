@@ -13,12 +13,12 @@
  * Tabelas sem RLS ficam acessíveis a qualquer usuário autenticado.
  */
 import { createClient } from '@neondatabase/neon-js';
+import { getNeonAuthUrl } from '@/lib/config/neon';
 
-const NEON_AUTH_URL = import.meta.env.VITE_NEON_AUTH_URL as string | undefined;
 const NEON_DATA_API_URL = import.meta.env.VITE_NEON_DATA_API_URL as string | undefined;
 
 export function isDataApiEnabled(): boolean {
-  return !!(NEON_AUTH_URL && NEON_DATA_API_URL);
+  return !!(getNeonAuthUrl() && NEON_DATA_API_URL);
 }
 
 /**
@@ -29,7 +29,9 @@ export function isDataApiEnabled(): boolean {
 let _client: ReturnType<typeof createClient> | null = null;
 
 export function getDataApiClient() {
-  if (!NEON_AUTH_URL || !NEON_DATA_API_URL) {
+  const neonAuthUrl = getNeonAuthUrl();
+
+  if (!neonAuthUrl || !NEON_DATA_API_URL) {
     throw new Error(
       'Neon Data API não configurado. Defina VITE_NEON_AUTH_URL e VITE_NEON_DATA_API_URL no .env'
     );
@@ -37,7 +39,7 @@ export function getDataApiClient() {
 
   if (!_client) {
     _client = createClient({
-      auth: { url: NEON_AUTH_URL },
+      auth: { url: neonAuthUrl },
       dataApi: { url: NEON_DATA_API_URL },
     });
   }

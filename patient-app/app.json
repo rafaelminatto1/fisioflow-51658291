@@ -21,7 +21,9 @@
       "infoPlist": {
         "NSCameraUsageDescription": "Permitir acesso a camera para fotos de perfil e exercicios",
         "NSPhotoLibraryUsageDescription": "Permitir acesso a galeria para selecionar fotos",
-        "NSMicrophoneUsageDescription": "Permitir acesso ao microfone para gravar videos de exercicios"
+        "NSMicrophoneUsageDescription": "Permitir acesso ao microfone para gravar videos de exercicios",
+        "NSCalendarsUsageDescription": "O FisioFlow precisa de acesso ao seu calendário para sincronizar suas sessões de fisioterapia automaticamente.",
+        "NSRemindersUsageDescription": "O FisioFlow precisa de acesso aos seus lembretes para avisar sobre o horário das suas sessões."
       },
       "config": {
         "usesNonExemptEncryption": false
@@ -32,11 +34,16 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0D9488"
       },
-      "package": "com.fisioflow.patient"
+      "package": "com.fisioflow.patient",
+      "permissions": [
+        "android.permission.READ_CALENDAR",
+        "android.permission.WRITE_CALENDAR"
+      ]
     },
     "plugins": [
       "expo-router",
       "expo-secure-store",
+      "expo-calendar",
       [
         "expo-notifications",
         {

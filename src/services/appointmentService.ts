@@ -17,6 +17,15 @@ interface AppointmentApiItem extends AppointmentRow {
     patient_name?: string;
     patient_phone?: string;
     therapist_name?: string;
+    appointment_date?: string;
+    appointment_time?: string;
+    duration?: number;
+    duration_minutes?: number;
+    payment_status?: string;
+    payment_amount?: number | string | null;
+    payment_method?: string | null;
+    room_id?: string | null;
+    session_package_id?: string | null;
 }
 
 // Helper for time calculation
@@ -303,7 +312,9 @@ export class AppointmentService {
                 logger.warn('Attempted to update patient_id of an existing appointment. This action is blocked.', { appointmentId: id }, 'AppointmentService');
             }
 
-            if (updates.duration) updateData.duration = updates.duration;
+            const updateDuration = updates.duration;
+
+            if (updateDuration !== undefined) updateData.duration = updateDuration;
             if (updates.type) updateData.type = updates.type;
             if (updates.status) updateData.status = updates.status;
             if (updates.notes !== undefined) updateData.notes = updates.notes;
@@ -330,7 +341,11 @@ export class AppointmentService {
                 updateData.start_time = updateTime;
             }
 
-            const updateEndTime = updates.end_time || updates.endTime;
+            const explicitEndTime = updates.end_time || updates.endTime;
+            const derivedEndTime = updateTime && updateDuration !== undefined
+                ? calculateEndTime(updateTime, updateDuration)
+                : undefined;
+            const updateEndTime = explicitEndTime || derivedEndTime;
             if (updateEndTime) {
                 const timeValidation = timeSchema.safeParse(updateEndTime);
                 if (!timeValidation.success) throw AppError.badRequest(`Horário de término inválido: ${updateEndTime}`);
@@ -344,8 +359,8 @@ export class AppointmentService {
                 data: {
                     appointmentId: id,
                     updateData,
-                    candidateEndTime: updateTime && (updates.duration ? calculateEndTime(updateTime, updates.duration) : null),
-                    hasDuration: Boolean(updates.duration),
+                    candidateEndTime: updateEndTime ?? null,
+                    hasDuration: updateDuration !== undefined,
                     hasStartTime: Boolean(updateTime)
                 }
             });
@@ -387,7 +402,7 @@ export class AppointmentService {
                 phone: fetchedUpdatedAppointment.patient_phone || '',
                 date: parseResponseDate(fetchedUpdatedAppointment.date || fetchedUpdatedAppointment.appointment_date),
                 time: fetchedUpdatedAppointment.start_time || fetchedUpdatedAppointment.appointment_time,
-                duration: fetchedUpdatedAppointment.duration,
+                duration: fetchedUpdatedAppointment.duration_minutes || fetchedUpdatedAppointment.duration || updateDuration || 60,
                 type: fetchedUpdatedAppointment.type as AppointmentType,
                 status: fetchedUpdatedAppointment.status as AppointmentStatus,
                 notes: fetchedUpdatedAppointment.notes || '',

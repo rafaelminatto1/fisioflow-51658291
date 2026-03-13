@@ -8,7 +8,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 // GET /api/exercise-sessions?patientId=&exerciseId=&limit=20
 app.get('/', requireAuth, async (c) => {
   const { patientId, exerciseId, limit: lim } = c.req.query();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   let sql = 'SELECT * FROM exercise_sessions WHERE 1=1';
   const params: unknown[] = [];
@@ -26,7 +26,7 @@ app.get('/', requireAuth, async (c) => {
 // POST /api/exercise-sessions
 app.post('/', requireAuth, async (c) => {
   const body = await c.req.json();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   const {
     patient_id, exercise_id, exercise_type,
@@ -60,7 +60,7 @@ app.post('/', requireAuth, async (c) => {
 // GET /api/exercise-sessions/stats/:patientId
 app.get('/stats/:patientId', requireAuth, async (c) => {
   const patientId = c.req.param('patientId');
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   const result = await db.query(
     `SELECT

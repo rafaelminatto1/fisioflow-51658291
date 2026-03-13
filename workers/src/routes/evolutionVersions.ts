@@ -10,7 +10,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 app.get('/', requireAuth, async (c) => {
   const { soapRecordId } = c.req.query();
   if (!soapRecordId) return c.json({ error: 'soapRecordId required' }, 400);
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   const result = await db.query(
     `SELECT * FROM evolution_versions WHERE soap_record_id = $1 ORDER BY saved_at DESC LIMIT $2`,
@@ -22,7 +22,7 @@ app.get('/', requireAuth, async (c) => {
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
   const body = await c.req.json();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   const result = await db.query(
     `INSERT INTO evolution_versions (soap_record_id, saved_by, change_type, content)

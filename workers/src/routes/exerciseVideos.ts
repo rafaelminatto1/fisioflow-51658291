@@ -18,7 +18,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 // ─── GET / (lista) ────────────────────────────────────────────────────────────
 
 app.get('/', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const user = c.get('user');
   const q = c.req.query();
 
@@ -56,7 +56,7 @@ app.get('/', requireAuth, async (c) => {
 // ─── GET /by-exercise/:exerciseId ─────────────────────────────────────────────
 
 app.get('/by-exercise/:exerciseId', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { exerciseId } = c.req.param();
   const result = await pool.query(
     'SELECT * FROM exercise_videos WHERE exercise_id = $1 ORDER BY created_at DESC',
@@ -68,7 +68,7 @@ app.get('/by-exercise/:exerciseId', requireAuth, async (c) => {
 // ─── GET /:id ──────────────────────────────────────────────────────────────────
 
 app.get('/:id', requireAuth, async (c) => {
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const result = await pool.query('SELECT * FROM exercise_videos WHERE id = $1', [id]);
   if (!result.rows.length) return c.json({ error: 'Vídeo não encontrado' }, 404);
@@ -79,7 +79,7 @@ app.get('/:id', requireAuth, async (c) => {
 
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
   const title = String(body.title ?? '').trim();
@@ -117,7 +117,7 @@ app.post('/', requireAuth, async (c) => {
 
 app.put('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
@@ -147,7 +147,7 @@ app.put('/:id', requireAuth, async (c) => {
 
 app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = createPool(c.env);
+  const pool = await createPool(c.env);
   const { id } = c.req.param();
 
   const result = await pool.query(

@@ -7,7 +7,7 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 app.get('/', requireAuth, async (c) => {
   const { documentId } = c.req.query();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   let sql = `SELECT id, document_id, document_type, document_title, signer_name, signer_id,
                signature_hash, ip_address, user_agent, signed_at, created_at
@@ -26,7 +26,7 @@ app.get('/', requireAuth, async (c) => {
 
 app.post('/', requireAuth, async (c) => {
   const body = await c.req.json();
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
 
   // Capture metadata from request
   const ipAddress = c.req.header('CF-Connecting-IP') ?? c.req.header('X-Forwarded-For') ?? null;
@@ -52,7 +52,7 @@ app.get('/verify', async (c) => {
   const { documentId, hash } = c.req.query();
   if (!documentId || !hash) return c.json({ error: 'documentId and hash required' }, 400);
 
-  const db = createPool(c.env);
+  const db = await createPool(c.env);
   const result = await db.query(
     `SELECT id, document_id, document_type, document_title, signer_name, signer_id,
        signature_hash, signed_at, created_at
