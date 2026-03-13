@@ -179,7 +179,7 @@ export function PatientCombobox({
                 : 'Selecionar paciente'
           }
           className={cn(
-            "group relative h-auto min-h-[60px] w-full overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-b from-background via-background to-muted/30 px-3 py-3 text-left font-normal shadow-[0_1px_2px_rgba(15,23,42,0.06),0_18px_34px_-26px_rgba(15,23,42,0.35)] transition-[border-color,box-shadow,background-color,transform] hover:border-primary/35 hover:from-background hover:to-primary/[0.03] hover:shadow-[0_1px_2px_rgba(15,23,42,0.08),0_24px_40px_-28px_rgba(37,99,235,0.38)] focus-visible:ring-primary/20 data-[state=open]:border-primary/40 data-[state=open]:from-background data-[state=open]:to-primary/[0.03] data-[state=open]:shadow-[0_1px_2px_rgba(15,23,42,0.08),0_28px_50px_-32px_rgba(37,99,235,0.45)] aria-[invalid=true]:border-destructive/70 aria-[invalid=true]:shadow-[0_0_0_4px_hsl(var(--destructive)/0.08)] disabled:bg-muted/40 disabled:text-muted-foreground",
+            "group relative h-auto min-h-[60px] w-full overflow-hidden rounded-2xl border border-border/70 bg-gradient-to-b from-background via-background to-muted/30 px-3 py-3 text-left font-normal text-foreground shadow-[0_1px_2px_rgba(15,23,42,0.06),0_18px_34px_-26px_rgba(15,23,42,0.35)] transition-[border-color,box-shadow,background-color,transform] hover:border-primary/35 hover:!bg-transparent hover:from-background hover:to-primary/[0.03] hover:text-foreground hover:shadow-[0_1px_2px_rgba(15,23,42,0.08),0_24px_40px_-28px_rgba(37,99,235,0.38)] focus-visible:ring-primary/20 data-[state=open]:border-primary/40 data-[state=open]:!bg-transparent data-[state=open]:from-background data-[state=open]:to-primary/[0.03] data-[state=open]:text-foreground data-[state=open]:shadow-[0_1px_2px_rgba(15,23,42,0.08),0_28px_50px_-32px_rgba(37,99,235,0.45)] aria-[invalid=true]:border-destructive/70 aria-[invalid=true]:shadow-[0_0_0_4px_hsl(var(--destructive)/0.08)] disabled:bg-muted/40 disabled:text-muted-foreground",
             className
           )}
           disabled={disabled}
@@ -334,7 +334,7 @@ export function PatientCombobox({
                     key={patient.id}
                     value={`${patient.name || patient.full_name || ''} ${patient.cpf || ''} ${patient.id}`}
                     onSelect={() => handleSelect(patient.id)}
-                    className="group mb-1 cursor-pointer rounded-2xl border border-transparent bg-gradient-to-b from-background to-background px-3 py-3 transition-[transform,box-shadow,border-color,background-color] hover:-translate-y-px hover:border-border/80 hover:shadow-[0_16px_30px_-26px_rgba(15,23,42,0.35)] data-[selected=true]:border-primary/20 data-[selected=true]:bg-gradient-to-b data-[selected=true]:from-primary/[0.07] data-[selected=true]:to-background data-[selected=true]:shadow-[0_20px_34px_-28px_rgba(37,99,235,0.45)]"
+                    className="group mb-1 cursor-pointer rounded-2xl border border-transparent bg-gradient-to-b from-background to-background px-3 py-3 text-foreground transition-[transform,box-shadow,border-color,background-color] hover:-translate-y-px hover:border-border/80 hover:!bg-transparent hover:shadow-[0_16px_30px_-26px_rgba(15,23,42,0.35)] data-[selected=true]:border-primary/20 data-[selected=true]:!bg-primary/[0.05] data-[selected=true]:bg-gradient-to-b data-[selected=true]:from-primary/[0.07] data-[selected=true]:to-background data-[selected=true]:text-foreground data-[selected=true]:shadow-[0_20px_34px_-28px_rgba(37,99,235,0.45)]"
                   >
                     <div className="flex min-w-0 flex-1 items-start gap-3">
                       <div className={cn(
@@ -406,7 +406,7 @@ export function PatientCombobox({
                 <CommandGroup className="p-0">
                   <CommandItem
                     onSelect={handleCreateNew}
-                    className="cursor-pointer rounded-2xl border border-transparent px-3 py-3 text-primary transition-[border-color,background-color,box-shadow] data-[selected=true]:border-primary/10 data-[selected=true]:bg-primary/5 data-[selected=true]:shadow-sm"
+                    className="cursor-pointer rounded-2xl border border-transparent px-3 py-3 text-primary transition-[border-color,background-color,box-shadow] data-[selected=true]:border-primary/10 data-[selected=true]:!bg-primary/5 data-[selected=true]:text-primary data-[selected=true]:shadow-sm"
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-primary/10 bg-gradient-to-br from-primary/15 to-sky-500/10 text-primary shadow-sm">

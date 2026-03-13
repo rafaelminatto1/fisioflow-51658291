@@ -119,7 +119,7 @@ export function CalendarDragOverlay({ activeAppointment }: CalendarDragOverlayPr
     <DragOverlay>
       <div
         className={cn(
-          "calendar-appointment-card bg-white/95 dark:bg-slate-800/95 backdrop-blur-sm border rounded-lg shadow-2xl pointer-events-none",
+          "calendar-appointment-card bg-slate-50/80 dark:bg-slate-800/90 backdrop-blur-sm border rounded-sm shadow-xl pointer-events-none",
           "flex flex-col overflow-hidden",
           statusStyles.border,
           statusStyles.bg

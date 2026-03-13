@@ -3,7 +3,6 @@ import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/comp
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useGamification } from '@/hooks/useGamification';
-import * as Icons from 'lucide-react';
 import { Loader2, ShoppingCart, Zap, Lock, ShoppingBag, BadgeCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -14,6 +13,7 @@ import {
   CustomModalFooter,
 } from '@/components/ui/custom-modal';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { getGamificationIcon } from './iconMap';
 
 interface RewardsShopProps {
   patientId: string;
@@ -41,14 +41,6 @@ export function RewardsShop({ patientId }: RewardsShopProps) {
 
   const [selectedItem, setSelectedItem] = useState<ShopItem | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-
-  // Helper to dynamically get icon component
-  const getIcon = (iconName: string | undefined, defaultIcon: React.ComponentType) => {
-    if (!iconName) return defaultIcon;
-    // @ts-expect-error - dynamic icon access from Icons
-    const IconComponent = Icons[iconName] || defaultIcon;
-    return IconComponent;
-  };
 
   const handleBuyClick = (item: ShopItem) => {
     setSelectedItem(item);
@@ -100,7 +92,7 @@ export function RewardsShop({ patientId }: RewardsShopProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {shopItems.map((item) => {
-          const Icon = getIcon(item.icon, Zap);
+          const Icon = getGamificationIcon(item.icon, Zap);
           const canAfford = totalPoints >= item.cost;
           const ownedQuantity = userInventory.find(i => i.item_id === item.id)?.quantity || 0;
 
@@ -185,7 +177,7 @@ export function RewardsShop({ patientId }: RewardsShopProps) {
             <div className="w-24 h-24 rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center mx-auto relative">
               {selectedItem && (
                 (() => {
-                  const Icon = getIcon(selectedItem.icon, Zap);
+                  const Icon = getGamificationIcon(selectedItem.icon, Zap);
                   return <Icon className="h-12 w-12 text-primary animate-pulse" />;
                 })()
               )}
@@ -204,7 +196,10 @@ export function RewardsShop({ patientId }: RewardsShopProps) {
             </div>
 
             <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100 flex items-start gap-3 text-left">
-              <Icons.Info className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
+              {(() => {
+                const InfoIcon = getGamificationIcon('Info', Zap);
+                return <InfoIcon className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />;
+              })()}
               <p className="text-[10px] text-blue-700 font-bold leading-relaxed uppercase">
                 O item será adicionado ao seu inventário imediatamente após a confirmação. Alguns itens podem exigir ação do profissional.
               </p>

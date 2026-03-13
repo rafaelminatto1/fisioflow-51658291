@@ -1,5 +1,15 @@
 /**
  * FisioFlow - Exportações de hooks centralizadas
+ * 
+ * @description Este arquivo serve como barrel export para todos os hooks.
+ *              Para melhor organização, hooks relacionados estão agrupados em submódulos.
+ * 
+ * @example
+ * // Importar do barrel principal
+ * import { useAuth, usePatients } from '@/hooks';
+ * 
+ * // Importar de submódulo específico (recomendado para code-splitting)
+ * import { useAppointments, useScheduleHandlers } from '@/hooks/appointments';
  */
 
 // ============================================================================
@@ -11,11 +21,18 @@ export { useData } from './useData';
 export { useMobile } from './use-mobile';
 
 // ============================================================================
-// Schedule Hooks
+// Appointments/Schedule Hooks (Ver submódulo em ./appointments/)
 // ============================================================================
 
+// Re-exportar hooks principais de appointments para compatibilidade
 export { useAppointments } from './useAppointments';
 export { useAppointmentsByPeriod } from './useAppointmentsByPeriod';
+export { useAppointmentActions } from './useAppointmentActions';
+export { useFilteredAppointments } from './useFilteredAppointments';
+export { useScheduleHandlers } from './useScheduleHandlers';
+export { useScheduleState } from './useScheduleState';
+export { usePrefetchAdjacentPeriods } from './usePrefetchAdjacentPeriods';
+export { useWaitlist, useWaitlistOffers } from './useWaitlist';
 
 // ============================================================================
 // Quick Wins Hooks (Fase 1)

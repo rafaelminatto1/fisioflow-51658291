@@ -6,7 +6,7 @@
 
 // Types to match xlsx API
 
-import ExcelJS from 'exceljs';
+// Types to match xlsx API
 
 export interface WorkSheet {
   [key: string]: unknown;
@@ -75,7 +75,7 @@ class ExcelJSUtils implements Utils {
 
     // Convert rows to objects
     for (let r = range.s.r + 1; r <= range.e.r; r++) {
-      const row: unknown = {};
+      const row: any = {};
       let hasData = false;
       for (let c = range.s.c; c <= range.e.c; c++) {
         const cellRef = this.encodeCell(c, r);
@@ -146,6 +146,7 @@ export const utils = new ExcelJSUtils();
  * Read an Excel file from buffer/binary string
  */
 export async function read(data: ArrayBuffer | string, options?: { type?: 'buffer' | 'binary' }): Promise<WorkBook> {
+  const ExcelJS = (await import('exceljs')).default;
   const workbook = new ExcelJS.Workbook();
   const buffer = options?.type === 'binary' && typeof data === 'string'
     ? new TextEncoder().encode(data).buffer
@@ -159,7 +160,7 @@ export async function read(data: ArrayBuffer | string, options?: { type?: 'buffe
     Sheets: {}
   };
 
-  for (const sheetName of workbook.worksheets) {
+  for (const sheetName of (workbook as any).worksheets) {
     result.SheetNames.push(sheetName.name);
     result.Sheets[sheetName.name] = convertWorksheetToXlsxFormat(sheetName);
   }
@@ -171,6 +172,7 @@ export async function read(data: ArrayBuffer | string, options?: { type?: 'buffe
  * Write workbook to file
  */
 export async function writeFile(wb: WorkBook, filename: string): Promise<void> {
+  const ExcelJS = (await import('exceljs')).default;
   const workbook = new ExcelJS.Workbook();
 
   for (const sheetName of wb.SheetNames) {
@@ -183,7 +185,7 @@ export async function writeFile(wb: WorkBook, filename: string): Promise<void> {
       for (let r = range.s.r; r <= range.e.r; r++) {
         for (let c = range.s.c; c <= range.e.c; c++) {
           const cellRef = encodeCell(c, r);
-          const cell = sheet[cellRef];
+          const cell = sheet[cellRef] as any;
           if (cell) {
             const excelCol = excelEncodeCol(c);
             const excelRow = r + 1;
@@ -222,7 +224,7 @@ export async function writeFile(wb: WorkBook, filename: string): Promise<void> {
   });
 }
 
-function convertWorksheetToXlsxFormat(worksheet: ExcelJS.Worksheet): WorkSheet {
+function convertWorksheetToXlsxFormat(worksheet: any): WorkSheet {
   const sheet: WorkSheet = {};
   const colCount = worksheet.columnCount;
   const rowCount = worksheet.rowCount;
@@ -232,8 +234,8 @@ function convertWorksheetToXlsxFormat(worksheet: ExcelJS.Worksheet): WorkSheet {
     e: { c: Math.max(colCount - 1, 0), r: Math.max(rowCount - 1, 0) }
   };
 
-  worksheet.eachRow((row, rowNumber) => {
-    row.eachCell((cell, colNumber) => {
+  worksheet.eachRow((row: any, rowNumber: number) => {
+    row.eachCell((cell: any, colNumber: number) => {
       const c = colNumber - 1;
       const r = rowNumber - 1;
       const cellRef = encodeCell(c, r);
@@ -258,7 +260,7 @@ function convertWorksheetToXlsxFormat(worksheet: ExcelJS.Worksheet): WorkSheet {
 
   // Column widths
   const cols: ColInfo[] = [];
-  worksheet.columns.forEach((col, index) => {
+  worksheet.columns.forEach((col: any, index: number) => {
     if (col.width) {
       cols[index] = { wch: col.width };
     }
