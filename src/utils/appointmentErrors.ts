@@ -82,5 +82,14 @@ function extractConflictDetails(error: unknown): AppointmentConflictDetails | nu
 export function getAppointmentConflictUserMessage(error: unknown): string | null {
   const details = extractConflictDetails(error);
   if (details) return formatConflictMessage(details);
+  
+  // Se não tem detalhes estruturados, tenta pegar a mensagem de erro direto do payload
+  if (typeof error === 'object' && error !== null && 'payload' in error) {
+    const payload = (error as { payload?: any }).payload;
+    if (payload && typeof payload === 'object' && 'error' in payload && typeof payload.error === 'string') {
+      return payload.error;
+    }
+  }
+
   return isAppointmentConflictError(error) ? APPOINTMENT_CONFLICT_MESSAGE : null;
 }

@@ -3,7 +3,7 @@ import { isSameDay, startOfDay } from 'date-fns';
 import { Appointment } from '@/types/appointment';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { toast } from 'sonner';
-import { APPOINTMENT_CONFLICT_MESSAGE, isAppointmentConflictError } from '@/utils/appointmentErrors';
+import { APPOINTMENT_CONFLICT_MESSAGE, isAppointmentConflictError, getAppointmentConflictUserMessage } from '@/utils/appointmentErrors';
 import { createSimpleDragPreview } from '@/lib/calendar/dragPreview';
 import { isCapacityCountedStatus } from '@/components/schedule/shared/capacity';
 
@@ -315,8 +315,11 @@ export const useCalendarDrag = ({
         } catch (error) {
             logger.error('Erro ao reagendar', { error }, 'useCalendarDrag');
 
-            if (isAppointmentConflictError(error)) {
-                toast.error(APPOINTMENT_CONFLICT_MESSAGE);
+            const conflictMessage = getAppointmentConflictUserMessage(error);
+            if (conflictMessage) {
+                toast.error(conflictMessage);
+            } else {
+                toast.error('Erro ao reagendar: não foi possível salvar o agendamento.');
             }
 
             // 6. Reverte a atualização otimista em caso de erro
@@ -326,11 +329,18 @@ export const useCalendarDrag = ({
 
             setDragState({ appointment: null, isDragging: false, savingAppointmentId: null });
 
-            // 7. Reabre o diálogo apropriado para nova decisão do usuário
-            if (pendingOverCapacity) {
-                setShowOverCapacityDialog(true);
+            // 7. Reabre o diálogo apropriado para nova decisão do usuário, 
+            // mas apenas se ainda não estávamos ignorando a capacidade
+            if (!payload.ignoreCapacity) {
+                if (pendingOverCapacity) {
+                    setShowOverCapacityDialog(true);
+                } else {
+                    setShowConfirmDialog(true);
+                }
             } else {
-                setShowConfirmDialog(true);
+                // Se já estávamos ignorando e deu erro, limpamos o estado para não ficar preso
+                setPendingReschedule(null);
+                setPendingOverCapacity(null);
             }
         }
     }, [onAppointmentReschedule, onOptimisticUpdate, onRevertUpdate, pendingOverCapacity]);
