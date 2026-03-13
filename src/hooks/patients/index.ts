@@ -12,9 +12,28 @@
 // ============================================================================
 
 // Hook principal de pacientes
-export { usePatients } from '../usePatients';
+/**
+ * FisioFlow - Hooks de Pacientes
+ * @module hooks/patients
+ * 
+ * Este módulo centraliza todos os hooks relacionados a pacientes.
+ * 
+ * Hooks Principais:
+ * - usePatients: Hook principal para listar pacientes ativos
+ * - usePatientsV2: Versão otimizada com nova API
+ * - usePatientCrud: Operações CRUD de pacientes
+ * - useActivePatients: Lista apenas pacientes ativos
+ * - usePatientRetention: Análise de retenção
+ * 
+ * @example
+ * // Importação recomendada
+ * import { usePatients, usePatientCrud } from '@/hooks/patients';
+ */
 
-// Hook V2 de pacientes (versão otimizada)
+// Hook principal de pacientes (legacy - estável)
+export { usePatients, useActivePatients } from '../usePatients';
+
+// Hook V2 de pacientes (versão otimizada com nova API)
 export { usePatientsV2 } from '../usePatientsV2';
 
 // Hook de CRUD de paciente
