@@ -48,9 +48,11 @@ function setCachedJwt(token: string): void {
 async function fetchJwtFromSdk(): Promise<string | null> {
   // 1. Tenta o método recomendado .token() (disponível no SDK do Neon Auth / Better Auth)
   try {
-    const tokenGetter = (authClient as any).token;
-    if (typeof tokenGetter === 'function') {
-      const { data } = await tokenGetter.call(authClient);
+    // NOTA: authClient é um Proxy. Não utilize `.call(authClient)` aqui, 
+    // pois o Proxy intercepta chamadas internas (como fetchOptions) 
+    // e constrói caminhos de API inválidos (ex: /fetch-options/method/to-upper-case).
+    if (typeof (authClient as any).token === 'function') {
+      const { data } = await (authClient as any).token();
       const token = data?.token;
       if (typeof token === 'string' && looksLikeJwt(token)) return token;
     }
