@@ -17,16 +17,19 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
+import { QueryKeys } from '@/hooks/queryKeys';
+import { PatientService } from '@/services/patientService';
+import { soapRecordService } from '@/services/soapRecordService'; // Presumindo que exista
 
 export function usePrefetchOnHover<T>(
-  queryKey: string[],
+  queryKey: unknown[],
   queryFn: () => Promise<T>,
   enabled: boolean = true
 ) {
   const queryClient = useQueryClient();
 
-  const prefetch = () => {
+  const prefetch = useCallback(() => {
     if (!enabled) return;
     // Prefetch em background com staleTime longo
     queryClient.prefetchQuery({
@@ -34,7 +37,34 @@ export function usePrefetchOnHover<T>(
       queryFn,
       staleTime: 1000 * 60 * 5, // 5 minutos
     });
-  };
+  }, [enabled, queryClient, queryKey, queryFn]);
+
+  return { prefetch };
+}
+
+/**
+ * Hook para prefetch individual de paciente ao passar o mouse
+ */
+export function usePrefetchPatientOnHover(patientId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  const prefetch = useCallback(() => {
+    if (!patientId) return;
+
+    // Prefetch dos dados básicos
+    queryClient.prefetchQuery({
+      queryKey: QueryKeys.patient(patientId),
+      queryFn: () => PatientService.getPatientById(patientId),
+      staleTime: 1000 * 60 * 5,
+    });
+
+    // Prefetch de evoluções (muito provável que o usuário queira ver)
+    queryClient.prefetchQuery({
+      queryKey: QueryKeys.soapRecords(patientId),
+      queryFn: () => PatientService.getPatientEvolutions(patientId),
+      staleTime: 1000 * 60 * 2,
+    });
+  }, [patientId, queryClient]);
 
   return { prefetch };
 }

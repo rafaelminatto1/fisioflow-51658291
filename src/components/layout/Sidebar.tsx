@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
@@ -6,7 +6,11 @@ import fisioflowLogo from '@/assets/logo.avif';
 import { Button } from '@/components/ui/button';
 import { useNavPreload } from '@/hooks/useIntelligentPreload';
 import { useToast } from '@/hooks/use-toast';
-import { TAREFAS_QUERY_KEY, fetchTarefas } from '@/hooks/useTarefas';
+import { QueryKeys } from '@/hooks/queryKeys';
+import { fetchTarefas } from '@/hooks/useTarefas';
+import { PatientService } from '@/services/patientService';
+import { exerciseService } from '@/services/exercises';
+import { FinancialService } from '@/services/financialService';
 import {
   LayoutDashboard,
   Users,
@@ -286,15 +290,41 @@ export function Sidebar() {
   const isMarketingActive = location.pathname.startsWith('/marketing');
   const isMaisActive = location.pathname === '/portal' || location.pathname === '/ocupacao-fisioterapeutas' || location.pathname === '/clinical-tests' || location.pathname.startsWith('/wiki') || location.pathname === '/timetracking' || location.pathname === '/automation' || location.pathname === '/integrations' || location.pathname === '/tarefas' || location.pathname === '/tarefas-v2' || location.pathname === '/waitlist';
 
+  const { preloadRoute } = useNavPreload();
+
   const renderMenuItem = (item: { icon: React.ComponentType<{ className?: string }>; label: string; href: string; preload?: () => void | Promise<unknown> }, collapsed: boolean, location: { pathname: string }) => {
     const Icon = item.icon;
     const isActive = location.pathname === item.href;
 
     const handleMouseEnter = () => {
-      item.preload?.();
+      // 1. Prefetch do código da rota (JS Chunk)
+      preloadRoute(item.href);
+
+      // 2. Prefetch de dados específicos baseado na rota
       if (item.href === '/tarefas' || item.href === '/tarefas-v2') {
-        queryClient.prefetchQuery({ queryKey: TAREFAS_QUERY_KEY, queryFn: fetchTarefas });
+        queryClient.prefetchQuery({ queryKey: QueryKeys.tasks, queryFn: fetchTarefas });
+      } else if (item.href === '/patients') {
+        queryClient.prefetchQuery({ 
+          queryKey: QueryKeys.patients, 
+          queryFn: () => PatientService.getPatients() 
+        });
+      } else if (item.href === '/exercises') {
+        queryClient.prefetchQuery({ 
+          queryKey: QueryKeys.exercises, 
+          queryFn: () => exerciseService.getExercises() 
+        });
+      } else if (item.href === '/financial' || item.href.startsWith('/financeiro')) {
+        queryClient.prefetchQuery({ 
+          queryKey: QueryKeys.finances('all'), 
+          queryFn: () => FinancialService.fetchTransactions() 
+        });
       }
+ else if (item.href.startsWith('/marketing')) {
+        // Prefetch básico de marketing se houver
+      }
+      
+      // Chamada do preload customizado se existir
+      item.preload?.();
     };
 
     return (
@@ -350,6 +380,7 @@ export function Sidebar() {
       return (
         <Link
           to={items[0]?.href || '#'}
+          onMouseEnter={() => items[0]?.href && preloadRoute(items[0].href)}
           aria-label={label}
           className={cn(
             "flex items-center justify-center px-2 py-3.5 rounded-2xl transition-all duration-500 group relative overflow-hidden",
@@ -371,6 +402,7 @@ export function Sidebar() {
         <CollapsibleTrigger asChild>
           <button
             type="button"
+            onMouseEnter={() => items[0]?.href && preloadRoute(items[0].href)}
             aria-expanded={isOpen}
             aria-label={isOpen ? `Fechar menu ${label}` : `Abrir menu ${label}`}
             className={cn(
@@ -402,6 +434,7 @@ export function Sidebar() {
               <Link
                 key={item.href}
                 to={item.href}
+                onMouseEnter={() => preloadRoute(item.href)}
                 className={cn(
                   "block px-3 py-2.5 rounded-xl text-[11px] transition-all duration-300 relative overflow-hidden group font-bold uppercase tracking-tighter",
                   isSubActive
