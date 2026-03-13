@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 import { ExerciseAutocomplete } from './ExerciseAutocomplete';
 import { ExerciseLibraryModal } from '../exercises/ExerciseLibraryModal';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { withImageParams } from '@/lib/storageProxy';
+import { OptimizedImage } from '@/components/ui/OptimizedImage';
 
 export interface SessionExercise {
     id: string; // unique for this session instance (uuid)
@@ -134,12 +134,11 @@ export const SessionExercisesPanel: React.FC<SessionExercisesPanelProps> = ({
                                         {/* Thumbnail Section */}
                                         <div className="relative w-full lg:w-40 h-28 lg:h-auto bg-muted overflow-hidden shrink-0">
                                             {exercise.image_url ? (
-                                                <img
-                                                    src={withImageParams(exercise.image_url, { width: 420, height: 280, dpr: 2, format: 'auto', fit: 'cover', quality: 70 })}
+                                                <OptimizedImage
+                                                    src={exercise.image_url}
                                                     alt={exercise.name}
+                                                    width={200}
                                                     className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                                                    loading="lazy"
-                                                    decoding="async"
                                                 />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center">

@@ -25,6 +25,46 @@ export default {
     const key = url.searchParams.get('key');
     const method = request.method;
 
+    // 0. Cloudflare Image Optimization Proxy
+    // Formato: /cdn-cgi/image/width=X,quality=Y,format=auto/URL_ENCODADA
+    if (url.pathname.startsWith('/cdn-cgi/image/')) {
+      try {
+        const parts = url.pathname.split('/');
+        const optionsStr = parts[3]; // width=800,quality=85,format=auto
+        const originalUrlStr = decodeURIComponent(parts.slice(4).join('/'));
+        
+        if (!originalUrlStr) return new Response('Missing URL', { status: 400 });
+
+        // Parse options for Cloudflare Image Resizing
+        const cfOptions: Record<string, any> = {};
+        optionsStr.split(',').forEach(opt => {
+          const [k, v] = opt.split('=');
+          if (k === 'width') cfOptions.width = parseInt(v);
+          if (k === 'quality') cfOptions.quality = parseInt(v);
+          if (k === 'format') cfOptions.format = v;
+        });
+
+        // Fetch original image
+        const imageRes = await fetch(originalUrlStr, {
+          cf: {
+            image: {
+              ...cfOptions,
+              fit: 'cover',
+              metadata: 'none',
+            }
+          }
+        });
+
+        if (!imageRes.ok) return imageRes;
+
+        const response = new Response(imageRes.body, imageRes);
+        response.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+        return response;
+      } catch (e) {
+        return new Response('Image optimization failed', { status: 500 });
+      }
+    }
+
     // 1. Health Check & Monitoring (Item 2)
     if (url.pathname === '/health' && method === 'GET') {
       try {
