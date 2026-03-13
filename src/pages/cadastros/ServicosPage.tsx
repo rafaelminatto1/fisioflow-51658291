@@ -11,14 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
-
   Plus,
   Search,
   Edit,
   Trash2,
-  DollarSign,
   Clock,
-  Settings
 } from 'lucide-react';
 import { useServicos, useCreateServico, useUpdateServico, useDeleteServico, Servico, ServicoFormData } from '@/hooks/useServicos';
 import { useForm } from 'react-hook-form';
@@ -35,7 +32,7 @@ const defaultColors = [
   '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'
 ];
 
-export default function ServicosPage() {
+export function ServicosContent() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingServico, setEditingServico] = useState<Servico | null>(null);
@@ -50,311 +47,200 @@ export default function ServicosPage() {
     defaultValues: {
       nome: '',
       descricao: '',
-      duracao_padrao: 60,
-      tipo_cobranca: 'unitario',
       valor: 0,
-      centro_custo: '',
-      permite_agendamento_online: true,
+      duracao_minutos: 60,
+      tipo_cobranca: 'unitario',
       cor: '#3b82f6',
       ativo: true,
-      organization_id: null,
-    },
+    }
   });
 
-  const filteredServicos = servicos?.filter(s => 
-    s.nome.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
-
-  const openCreateModal = () => {
-    reset({
-      nome: '',
-      descricao: '',
-      duracao_padrao: 60,
-      tipo_cobranca: 'unitario',
-      valor: 0,
-      centro_custo: '',
-      permite_agendamento_online: true,
-      cor: '#3b82f6',
-      ativo: true,
-      organization_id: null,
-    });
-    setSelectedColor('#3b82f6');
-    setEditingServico(null);
-    setIsModalOpen(true);
+  const onSubmit = async (data: ServicoFormData) => {
+    try {
+      if (editingServico) {
+        await updateServico.mutateAsync({ id: editingServico.id, ...data });
+      } else {
+        await createServico.mutateAsync(data);
+      }
+      setIsModalOpen(false);
+      reset();
+      setEditingServico(null);
+    } catch (error) {
+      console.error('Erro ao salvar serviço:', error);
+    }
   };
 
-  const openEditModal = (servico: Servico) => {
+  const handleEdit = (servico: Servico) => {
+    setEditingServico(servico);
+    setSelectedColor(servico.cor || '#3b82f6');
     reset({
       nome: servico.nome,
       descricao: servico.descricao || '',
-      duracao_padrao: servico.duracao_padrao,
+      valor: Number(servico.valor),
+      duracao_minutos: servico.duracao_minutos,
       tipo_cobranca: servico.tipo_cobranca,
-      valor: servico.valor,
-      centro_custo: servico.centro_custo || '',
-      permite_agendamento_online: servico.permite_agendamento_online,
       cor: servico.cor || '#3b82f6',
       ativo: servico.ativo,
-      organization_id: servico.organization_id,
     });
-    setSelectedColor(servico.cor || '#3b82f6');
-    setEditingServico(servico);
     setIsModalOpen(true);
   };
 
-  const onSubmit = (data: ServicoFormData) => {
-    const formData = { ...data, cor: selectedColor };
-    
-    if (editingServico) {
-      updateServico.mutate({ id: editingServico.id, ...formData }, {
-        onSuccess: () => setIsModalOpen(false),
-      });
-    } else {
-      createServico.mutate(formData, {
-        onSuccess: () => setIsModalOpen(false),
-      });
-    }
-  };
-
-  const handleDelete = (id: string) => {
-    if (confirm('Tem certeza que deseja remover este serviço?')) {
-      deleteServico.mutate(id);
-    }
-  };
+  const filteredServicos = servicos?.filter(s => 
+    s.nome.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    s.descricao?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
-    <MainLayout>
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Settings className="h-6 w-6 text-primary" />
-              Tabela de Serviços
-            </h1>
-            <p className="text-muted-foreground">Gerencie os serviços e preços da clínica</p>
-          </div>
-          <Button onClick={openCreateModal}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Serviço
-          </Button>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Serviços e Procedimentos</h2>
+          <p className="text-muted-foreground">Gerencie o catálogo de serviços oferecidos pela clínica</p>
         </div>
+        <Button onClick={() => { setEditingServico(null); reset(); setIsModalOpen(true); }}>
+          <Plus className="h-4 w-4 mr-2" />
+          Novo Serviço
+        </Button>
+      </div>
 
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center gap-4">
-              <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar serviço..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              <Badge variant="secondary">
-                {filteredServicos.length} serviço(s)
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="text-center py-8 text-muted-foreground">Carregando...</div>
-            ) : filteredServicos.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Nenhum serviço cadastrado
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Serviço</TableHead>
-                    <TableHead>Duração</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Valor</TableHead>
-                    <TableHead>Online</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="w-[100px]">Ações</TableHead>
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar serviços..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Serviço</TableHead>
+                <TableHead>Cobrança</TableHead>
+                <TableHead>Duração</TableHead>
+                <TableHead>Valor</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow><TableCell colSpan={6} className="text-center py-10">Carregando...</TableCell></TableRow>
+              ) : filteredServicos?.length === 0 ? (
+                <TableRow><TableCell colSpan={6} className="text-center py-10 text-muted-foreground">Nenhum serviço encontrado</TableCell></TableRow>
+              ) : (
+                filteredServicos?.map((servico) => (
+                  <TableRow key={servico.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: servico.cor || '#3b82f6' }} />
+                        <div>
+                          <p className="font-medium">{servico.nome}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-1">{servico.descricao}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell><Badge variant="outline">{tipoCobrancaLabels[servico.tipo_cobranca as keyof typeof tipoCobrancaLabels]}</Badge></TableCell>
+                    <TableCell className="text-muted-foreground"><Clock className="h-3 w-3 inline mr-1" /> {servico.duracao_minutos} min</TableCell>
+                    <TableCell className="font-medium">R$ {Number(servico.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</TableCell>
+                    <TableCell><Badge variant={servico.ativo ? "default" : "secondary"}>{servico.ativo ? 'Ativo' : 'Inativo'}</Badge></TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(servico)}><Edit className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" className="text-destructive" onClick={() => deleteServico.mutate(servico.id)}><Trash2 className="h-4 w-4" /></Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredServicos.map((servico) => (
-                    <TableRow key={servico.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: servico.cor || '#3b82f6' }} 
-                          />
-                          <div>
-                            <p className="font-medium">{servico.nome}</p>
-                            {servico.descricao && (
-                              <p className="text-xs text-muted-foreground line-clamp-1">
-                                {servico.descricao}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1 text-sm">
-                          <Clock className="h-3 w-3" />
-                          {servico.duracao_padrao} min
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {tipoCobrancaLabels[servico.tipo_cobranca]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1 font-medium">
-                          <DollarSign className="h-3 w-3" />
-                          {servico.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={servico.permite_agendamento_online ? "default" : "secondary"}>
-                          {servico.permite_agendamento_online ? 'Sim' : 'Não'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={servico.ativo ? "default" : "secondary"}>
-                          {servico.ativo ? 'Ativo' : 'Inativo'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => openEditModal(servico)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => handleDelete(servico.id)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>{editingServico ? 'Editar Serviço' : 'Novo Serviço'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="nome">Nome do Serviço</Label>
+              <Input id="nome" {...register('nome', { required: true })} placeholder="Ex: Fisioterapia Ortopédica" />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="descricao">Descrição</Label>
+              <Textarea id="descricao" {...register('descricao')} placeholder="Breve descrição do procedimento..." />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="valor">Valor (R$)</Label>
+                <Input id="valor" type="number" step="0.01" {...register('valor', { required: true })} />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="duracao">Duração (min)</Label>
+                <Input id="duracao" type="number" {...register('duracao_minutos', { required: true })} />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Tipo de Cobrança</Label>
+                <Select 
+                  defaultValue={watch('tipo_cobranca')} 
+                  onValueChange={(v) => setValue('tipo_cobranca', v as any)}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unitario">Unitário</SelectItem>
+                    <SelectItem value="mensal">Mensal</SelectItem>
+                    <SelectItem value="pacote">Pacote</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label>Cor de Identificação</Label>
+                <div className="flex flex-wrap gap-2">
+                  {defaultColors.map(color => (
+                    <button
+                      key={color}
+                      type="button"
+                      className={cn(
+                        "w-6 h-6 rounded-full border-2 transition-all",
+                        selectedColor === color ? "border-primary scale-110 shadow-sm" : "border-transparent"
+                      )}
+                      style={{ backgroundColor: color }}
+                      onClick={() => { setSelectedColor(color); setValue('cor', color); }}
+                    />
                   ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Modal */}
-        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>
-                {editingServico ? 'Editar Serviço' : 'Novo Serviço'}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2 space-y-2">
-                  <Label>Nome *</Label>
-                  <Input {...register('nome', { required: true })} placeholder="Ex: Fisioterapia" />
-                </div>
-
-                <div className="col-span-2 space-y-2">
-                  <Label>Descrição</Label>
-                  <Textarea {...register('descricao')} placeholder="Descrição do serviço..." rows={2} />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Duração (min)</Label>
-                  <Input 
-                    type="number" 
-                    {...register('duracao_padrao', { valueAsNumber: true })} 
-                    min={15} 
-                    step={15} 
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Tipo de Cobrança</Label>
-                  <Select
-                    value={watch('tipo_cobranca')}
-                    onValueChange={(v) => setValue('tipo_cobranca', v as 'unitario' | 'mensal' | 'pacote')}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="unitario">Unitário</SelectItem>
-                      <SelectItem value="mensal">Mensal</SelectItem>
-                      <SelectItem value="pacote">Pacote</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Valor (R$)</Label>
-                  <Input 
-                    type="number" 
-                    {...register('valor', { valueAsNumber: true })} 
-                    min={0} 
-                    step={0.01} 
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Centro de Custo</Label>
-                  <Input {...register('centro_custo')} placeholder="Ex: Atendimentos" />
-                </div>
-
-                <div className="col-span-2 space-y-2">
-                  <Label>Cor</Label>
-                  <div className="flex gap-2 flex-wrap">
-                    {defaultColors.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        onClick={() => setSelectedColor(color)}
-                        className={cn(
-                          "w-8 h-8 rounded-full border-2 transition-all",
-                          selectedColor === color ? "border-foreground scale-110" : "border-transparent"
-                        )}
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Switch 
-                    checked={watch('permite_agendamento_online')} 
-                    onCheckedChange={(v) => setValue('permite_agendamento_online', v)} 
-                  />
-                  <Label>Agendamento Online</Label>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Switch 
-                    checked={watch('ativo')} 
-                    onCheckedChange={(v) => setValue('ativo', v)} 
-                  />
-                  <Label>Ativo</Label>
                 </div>
               </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch id="ativo" checked={watch('ativo')} onCheckedChange={(v) => setValue('ativo', v)} />
+              <Label htmlFor="ativo">Serviço Ativo</Label>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
+              <Button type="submit" disabled={createServico.isPending || updateServico.isPending}>
+                {editingServico ? 'Salvar Alterações' : 'Criar Serviço'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
 
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={createServico.isPending || updateServico.isPending}>
-                  {editingServico ? 'Salvar' : 'Criar'}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+export default function ServicosPage() {
+  return (
+    <MainLayout>
+      <div className="p-6 max-w-7xl mx-auto">
+        <ServicosContent />
       </div>
     </MainLayout>
   );

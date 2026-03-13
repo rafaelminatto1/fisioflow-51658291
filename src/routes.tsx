@@ -193,6 +193,7 @@ const FisioLinkPage = lazy(() => import(/* webpackChunkName: "marketing-fisiolin
 const MarketingReferral = lazy(() => import(/* webpackChunkName: "marketing-referral" */ "./pages/marketing/Referral"));
 const MarketingROI = lazy(() => import(/* webpackChunkName: "marketing-roi" */ "./pages/marketing/ROI"));
 const BeforeAfterPage = lazy(() => import(/* webpackChunkName: "marketing-beforeafter" */ "./pages/marketing/BeforeAfter"));
+const MasterDataHub = lazy(() => import(/* webpackChunkName: "cadastros-hub" */ "./pages/cadastros/MasterDataHub"));
 const TemplateAnalyticsPage = lazy(() => import(/* webpackChunkName: "wiki-template-analytics" */ "./features/wiki/pages/TemplateAnalyticsPage"));
 
 export function AppRoutes() {
@@ -265,6 +266,7 @@ export function AppRoutes() {
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
 
             {/* Cadastros Gerais */}
+            <Route path="/cadastros" element={<ProtectedRoute><MasterDataHub /></ProtectedRoute>} />
             <Route path="/cadastros/servicos" element={<ProtectedRoute><ServicosPage /></ProtectedRoute>} />
             <Route path="/cadastros/fornecedores" element={<ProtectedRoute><FornecedoresPage /></ProtectedRoute>} />
             <Route path="/cadastros/feriados" element={<ProtectedRoute><FeriadosPage /></ProtectedRoute>} />
