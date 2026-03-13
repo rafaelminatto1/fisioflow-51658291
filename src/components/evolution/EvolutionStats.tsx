@@ -18,12 +18,12 @@ interface EvolutionStatsProps {
 }
 
 const STAT_CONFIG = [
-    { label: 'Evoluções', getVal: (s: EvolutionStatsProps['stats']) => s.totalEvolutions, icon: FileText, color: 'blue' },
-    { label: 'Metas', getVal: (s: EvolutionStatsProps['stats']) => `${s.completedGoals}/${s.totalGoals}`, icon: Target, color: 'green' },
-    { label: 'Progresso', getVal: (s: EvolutionStatsProps['stats']) => `${s.avgGoalProgress}%`, icon: TrendingUp, color: 'purple' },
-    { label: 'Patologias', getVal: (s: EvolutionStatsProps['stats']) => s.activePathologiesCount, icon: Activity, color: 'orange' },
-    { label: 'Medições', getVal: (s: EvolutionStatsProps['stats']) => s.totalMeasurements, icon: BarChart3, color: 'cyan' },
-    { label: 'Sucesso', getVal: (s: EvolutionStatsProps['stats']) => `${s.completionRate}%`, icon: CheckCircle2, color: 'emerald' },
+    { label: 'Evoluções', getVal: (s: EvolutionStatsProps['stats']) => s.totalEvolutions || 0, icon: FileText, color: 'blue' },
+    { label: 'Metas', getVal: (s: EvolutionStatsProps['stats']) => `${s.completedGoals || 0}/${s.totalGoals || 0}`, icon: Target, color: 'green' },
+    { label: 'Progresso', getVal: (s: EvolutionStatsProps['stats']) => `${s.avgGoalProgress || 0}%`, icon: TrendingUp, color: 'purple' },
+    { label: 'Patologias', getVal: (s: EvolutionStatsProps['stats']) => s.activePathologiesCount || 0, icon: Activity, color: 'orange' },
+    { label: 'Medições', getVal: (s: EvolutionStatsProps['stats']) => s.totalMeasurements || 0, icon: BarChart3, color: 'cyan' },
+    { label: 'Sucesso', getVal: (s: EvolutionStatsProps['stats']) => `${s.completionRate || 0}%`, icon: CheckCircle2, color: 'emerald' },
 ] as const;
 
 const COLOR_CLASSES: Record<string, {

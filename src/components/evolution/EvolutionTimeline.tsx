@@ -81,6 +81,7 @@ import {
 } from '@/hooks/usePatientEvolution';
 import { useSessionAttachments } from '@/hooks/useSoapRecords';
 import { cn } from '@/lib/utils';
+import { getAffectedSideAbbreviation } from '@/lib/constants/surgery';
 import {
   Dialog,
   DialogContent,
@@ -1291,8 +1292,13 @@ export const EvolutionTimeline: React.FC<EvolutionTimelineProps> = ({
                                       {event.type === 'surgery' && (
                                         <div className="text-xs space-y-1">
                                           <div><span className="text-muted-foreground">Data:</span> {safeFormat(event.data.surgery_date, 'dd/MM/yyyy')}</div>
-                                          {event.data.affected_side && (
-                                            <div><span className="text-muted-foreground">Lado:</span> {event.data.affected_side}</div>
+                                          {event.data.affected_side && event.data.affected_side !== 'nao_aplicavel' && (
+                                            <div><span className="text-muted-foreground">Lado:</span> {getAffectedSideAbbreviation(event.data.affected_side)}</div>
+                                          )}
+                                          {event.data.complications && (
+                                            <div className="text-destructive font-medium flex items-center gap-1">
+                                              <span>⚠️</span> {event.data.complications}
+                                            </div>
                                           )}
                                           {event.data.notes && (
                                             <div><span className="text-muted-foreground">Obs:</span> {event.data.notes}</div>
