@@ -594,6 +594,22 @@ app.post('/audit', async (c) => {
   return c.json({ data: normalizeAudit(result.rows[0]) }, 201);
 });
 
+app.delete('/articles/:articleId', async (c) => {
+  const user = c.get('user');
+  const pool = await createPool(c.env);
+  const { articleId } = c.req.param();
+
+  const result = await pool.query(
+    `DELETE FROM knowledge_articles
+      WHERE organization_id = $1 AND article_id = $2
+      RETURNING *`,
+    [user.organizationId, articleId],
+  );
+
+  if (!result.rows.length) return c.json({ error: 'Artigo não encontrado' }, 404);
+  return c.json({ success: true });
+});
+
 app.get('/profiles', async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
