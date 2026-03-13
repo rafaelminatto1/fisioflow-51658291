@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { usePatientSurgeries } from '@/hooks/usePatientEvolution';
 import { SurgeryFormModal } from '@/components/evolution/SurgeryFormModal';
-import { getSurgeryTypeLabel, getAffectedSideLabel } from '@/lib/constants/surgery';
+import { getSurgeryTypeLabel, getAffectedSideAbbreviation } from '@/lib/constants/surgery';
 import type { Surgery } from '@/types/evolution';
 
 function formatTimeSinceSurgery(surgeryDate: string): string {
@@ -109,10 +109,18 @@ export const SurgeriesCard = memo(function SurgeriesCard({ patientId }: Surgerie
                               <span className="px-2 py-0.5 rounded bg-muted text-foreground/80 font-medium">{getSurgeryTypeLabel(surgeryType)}</span>
                             </>
                           )}
-                          {affectedSide && (
+                          {affectedSide && affectedSide !== 'nao_aplicavel' && (
                             <>
                               <span className="text-border">•</span>
-                              <span className="px-2 py-0.5 rounded bg-primary/10 text-primary font-medium">{getAffectedSideLabel(affectedSide)}</span>
+                              <span className="px-2 py-0.5 rounded bg-primary/10 text-primary font-medium">{getAffectedSideAbbreviation(affectedSide)}</span>
+                            </>
+                          )}
+                          {s.complications && (
+                            <>
+                              <span className="text-border">•</span>
+                              <span className="px-2 py-0.5 rounded bg-destructive/10 text-destructive font-medium flex items-center gap-1" title={s.complications}>
+                                ⚠️ {s.complications.length > 20 ? `${s.complications.substring(0, 20)}...` : s.complications}
+                              </span>
                             </>
                           )}
                         </div>

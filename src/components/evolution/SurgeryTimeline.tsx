@@ -6,12 +6,15 @@ import { Activity } from 'lucide-react';
 import { format, differenceInDays, differenceInMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+import { getAffectedSideAbbreviation } from '@/lib/constants/surgery';
+
 interface Surgery {
   id: string;
   surgery_name: string;
   surgery_date: string;
   affected_side: string;
   notes?: string;
+  complications?: string;
 }
 
 interface SurgeryTimelineProps {
@@ -83,9 +86,17 @@ export const SurgeryTimeline: React.FC<SurgeryTimelineProps> = ({ surgeries }) =
                       </span>
                     </div>
                     
-                    <Badge variant="outline" className="font-normal">
-                      Lado: {surgery.affected_side}
-                    </Badge>
+                    {surgery.affected_side && surgery.affected_side !== 'nao_aplicavel' && (
+                      <Badge variant="outline" className="font-normal">
+                        Lado: {getAffectedSideAbbreviation(surgery.affected_side)}
+                      </Badge>
+                    )}
+                    
+                    {surgery.complications && (
+                      <div className="flex items-center gap-1 mt-2 p-2 rounded bg-destructive/10 text-destructive text-sm font-medium">
+                        ⚠️ Complicações: {surgery.complications}
+                      </div>
+                    )}
                     
                     {surgery.notes && (
                       <p className="text-sm text-muted-foreground italic mt-2">
