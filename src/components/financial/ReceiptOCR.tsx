@@ -8,7 +8,13 @@ import { toast } from 'sonner';
 import { marketingApi } from '@/lib/api/workers-client';
 
 interface ReceiptOCRProps {
-  onDataExtracted: (data: { valor: number; nome?: string; data?: string }) => void;
+  onDataExtracted: (data: { 
+    valor: number; 
+    nome?: string; 
+    cardLastDigits?: string;
+    isFirstPayment?: boolean;
+    patientId?: string;
+  }) => void;
 }
 
 export function ReceiptOCR({ onDataExtracted }: ReceiptOCRProps) {
@@ -35,7 +41,27 @@ export function ReceiptOCR({ onDataExtracted }: ReceiptOCRProps) {
       const result = await marketingApi.analysis.extractReceiptData(formData);
       
       if (result.success && result.data) {
-        onDataExtracted(result.data);
+        let extractedData = result.data;
+        
+        // Se detectou final de cartão, tenta buscar paciente já mapeado
+        if (extractedData.cardLastDigits) {
+          try {
+            const mappingRes = await fetch(`/api/financial/card-mapping/${extractedData.cardLastDigits}`);
+            const mapping = await mappingRes.json();
+            if (mapping.data) {
+              extractedData = {
+                ...extractedData,
+                patientId: mapping.data.patient_id,
+                nome: mapping.data.patient_name
+              };
+              toast.success(`Paciente ${mapping.data.patient_name} reconhecido pelo cartão!`);
+            }
+          } catch (e) {
+            console.error('Mapping lookup error:', e);
+          }
+        }
+
+        onDataExtracted(extractedData);
         toast.success('Dados extraídos com sucesso via IA!');
       } else {
         throw new Error('Não foi possível ler os dados do comprovante');
