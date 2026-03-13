@@ -1,5 +1,6 @@
 import { createAuthClient } from '@neondatabase/neon-js/auth';
 import { getNeonAuthUrl, isNeonAuthConfigured } from '@/lib/config/neon';
+import { invalidateNeonTokenCache } from '@/lib/auth/neon-token';
 
 export interface NeonUser {
   id: string;
@@ -41,6 +42,7 @@ export async function signIn(email: string, password: string): Promise<AuthResul
   }
   const { data, error } = await authClient.signIn.email({ email, password });
   if (error) throw new Error(error.message);
+  invalidateNeonTokenCache();
   return { user: data.user as unknown as NeonUser };
 }
 
@@ -53,6 +55,7 @@ export async function signInWithGoogle(): Promise<AuthResult> {
   }
   const { data, error } = await authClient.signIn.social({ provider: 'google' });
   if (error) throw new Error(error.message);
+  invalidateNeonTokenCache();
   return { user: data.user as unknown as NeonUser };
 }
 
@@ -69,6 +72,7 @@ export async function signUp(
   }
   const { data, error } = await authClient.signUp.email({ email, password, name });
   if (error) throw new Error(error.message);
+  invalidateNeonTokenCache();
   return { user: data.user as unknown as NeonUser };
 }
 
@@ -80,6 +84,7 @@ export async function signOut(): Promise<void> {
     throw new Error('Neon Auth não configurado. Defina VITE_NEON_AUTH_URL.');
   }
   await authClient.signOut();
+  invalidateNeonTokenCache();
 }
 
 /**
