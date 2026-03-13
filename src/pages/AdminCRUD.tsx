@@ -115,7 +115,7 @@ export default function AdminCRUD() {
                 <p className="text-sm text-muted-foreground">Gerenciar vouchers e pacotes</p>
               </Card>
 
-              <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => window.location.href = '/user-management'}>
+              <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => window.location.href = '/admin/users'}>
                 <div className="flex items-center gap-3 mb-2">
                   <Users className="h-5 w-5 text-primary" />
                   <h3 className="font-semibold">Usuários</h3>
@@ -139,7 +139,7 @@ export default function AdminCRUD() {
                 <p className="text-sm text-muted-foreground">Gerar relatórios</p>
               </Card>
 
-              <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => window.location.href = '/audit-logs'}>
+              <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => window.location.href = '/admin/audit-logs'}>
                 <div className="flex items-center gap-3 mb-2">
                   <TrendingUp className="h-5 w-5 text-primary" />
                   <h3 className="font-semibold">Auditoria</h3>
