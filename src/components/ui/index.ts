@@ -141,3 +141,38 @@ export { Tooltip } from './tooltip';
 export { SmartDatePicker } from './smart-date-picker';
 export { toast, useToast } from './use-toast';
 export { Toaster } from './toaster';
+
+// ============================================================================
+// Additional Components
+// ============================================================================
+
+// Form inputs
+export { CPFInput } from './cpf-input';
+export { PhoneInput } from './phone-input';
+export { PasswordInput } from './password-input';
+export { NameInput } from './name-input';
+export { DateInputBR } from './date-input-br';
+export { DatePicker } from './date-picker';
+export { DateRangePicker } from './date-range-picker';
+export { InputOTP } from './input-otp';
+
+// Comboboxes
+export { PatientCombobox } from './patient-combobox';
+export { ClinicalTestCombobox } from './clinical-test-combobox';
+export { ContratadoCombobox } from './contratado-combobox';
+
+// Misc
+export { CommandPalette } from './CommandPalette';
+export { CustomModal } from './custom-modal';
+export { DraggableGrid } from './DraggableGrid';
+export { GridWidget } from './GridWidget';
+export { TabletResponsiveGrid } from './TabletResponsiveGrid';
+export { VirtualList } from './virtual-list';
+export { VirtualizedList } from './virtualized-list';
+export { LazyRenderList } from './lazy-render-list';
+export { MultiSelect } from './multi-select';
+export { SmartTextarea } from './SmartTextarea';
+export { PremiumThemeToggle } from './PremiumThemeToggle';
+export { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog';
+export { AppLoadingSkeleton } from './AppLoadingSkeleton';
+export { NetworkStatus, OfflineIndicator } from './network-status';
