@@ -87,7 +87,7 @@ const KEYBOARD_SHORTCUTS = {
 const Schedule = () => {
   const { user, organizationId: authOrganizationId } = useAuth();
   const organizationId = authOrganizationId || '';
-  const { birthdaysToday, sendBirthdayMessage, isSending } = useBirthdayNotification();
+  const { birthdaysToday, staffBirthdaysToday, sendBirthdayMessage, isSending } = useBirthdayNotification();
 
   // --- State & URL Sync ---
   const {
@@ -290,26 +290,33 @@ const Schedule = () => {
 
         <div className="flex flex-col flex-1 relative min-h-0">
           {/* Birthday Banner */}
-          {birthdaysToday.length > 0 && (
+          {(birthdaysToday.length > 0 || staffBirthdaysToday.length > 0) && (
             <div className="bg-gradient-to-r from-pink-500/10 to-purple-500/5 px-6 py-2 border-b border-pink-100 dark:border-pink-900/30 flex items-center justify-between animate-in slide-in-from-top duration-500">
               <div className="flex items-center gap-3">
                 <div className="bg-pink-100 dark:bg-pink-900/50 p-1.5 rounded-lg">
                   <Cake className="h-4 w-4 text-pink-600 dark:text-pink-400" />
                 </div>
                 <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                  <span className="text-pink-600 dark:text-pink-400">Aniversariantes de Hoje:</span> {birthdaysToday.map(p => p.name || p.full_name).join(', ')}
+                  <span className="text-pink-600 dark:text-pink-400">Aniversariantes de Hoje:</span> {
+                    [
+                      ...birthdaysToday.map(p => p.name || p.full_name),
+                      ...staffBirthdaysToday.map(s => `${s.name} (Equipe)`)
+                    ].join(', ')
+                  }
                 </p>
               </div>
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                className="h-8 text-[10px] font-black uppercase tracking-widest text-pink-600 hover:text-pink-700 hover:bg-pink-50 gap-2"
-                onClick={() => birthdaysToday.forEach(p => sendBirthdayMessage(p.id, p.phone || ''))}
-                disabled={isSending}
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                Enviar Parabéns + Desconto
-              </Button>
+              {birthdaysToday.length > 0 && (
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-8 text-[10px] font-black uppercase tracking-widest text-pink-600 hover:text-pink-700 hover:bg-pink-50 gap-2"
+                  onClick={() => birthdaysToday.forEach(p => sendBirthdayMessage(p.id, p.phone || ''))}
+                  disabled={isSending}
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Enviar Parabéns + Desconto (Pacientes)
+                </Button>
+              )}
             </div>
           )}
 
