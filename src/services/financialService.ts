@@ -1,4 +1,5 @@
 import { financialApi } from '@/api/v2/financial';
+import { auditApi } from '@/lib/api/workers-client';
 import { AppError } from '@/lib/errors/AppError';
 import type { Transacao } from '@/types/workers';
 
@@ -117,7 +118,24 @@ export class FinancialService {
     static async createTransaction(transaction: Omit<Transaction, 'id' | 'created_at' | 'updated_at'>): Promise<Transaction> {
         try {
             const response = await financialApi.transacoes.create(transaction);
-            return response.data as Transaction;
+            const newTransaction = response.data as Transaction;
+
+            // Log de auditoria: Lançamento Financeiro
+            try {
+                await auditApi.create({
+                    action: 'INSERT',
+                    entity_type: 'contas_financeiras',
+                    entity_id: newTransaction.id,
+                    metadata: { 
+                        description: newTransaction.descricao,
+                        value: newTransaction.valor,
+                        type: newTransaction.tipo,
+                        timestamp: new Date().toISOString()
+                    }
+                });
+            } catch (e) { /* silent fail */ }
+
+            return newTransaction;
         } catch (error) {
             throw AppError.from(error, 'FinancialService.createTransaction');
         }
@@ -129,7 +147,24 @@ export class FinancialService {
     static async updateTransaction(id: string, updates: Partial<Transaction>): Promise<Transaction> {
         try {
             const response = await financialApi.transacoes.update(id, updates);
-            return response.data as Transaction;
+            const updated = response.data as Transaction;
+
+            // Log de auditoria: Alteração Financeira
+            try {
+                await auditApi.create({
+                    action: 'UPDATE',
+                    entity_type: 'contas_financeiras',
+                    entity_id: id,
+                    metadata: { 
+                        description: updated.descricao,
+                        value: updated.valor,
+                        updates: Object.keys(updates),
+                        timestamp: new Date().toISOString()
+                    }
+                });
+            } catch (e) { /* silent fail */ }
+
+            return updated;
         } catch (error) {
             throw AppError.from(error, 'FinancialService.updateTransaction');
         }
@@ -141,6 +176,16 @@ export class FinancialService {
     static async deleteTransaction(id: string): Promise<void> {
         try {
             await financialApi.transacoes.delete(id);
+
+            // Log de auditoria: Exclusão Financeira
+            try {
+                await auditApi.create({
+                    action: 'DELETE',
+                    entity_type: 'contas_financeiras',
+                    entity_id: id,
+                    metadata: { timestamp: new Date().toISOString() }
+                });
+            } catch (e) { /* silent fail */ }
         } catch (error) {
             throw AppError.from(error, 'FinancialService.deleteTransaction');
         }
@@ -152,7 +197,23 @@ export class FinancialService {
     static async markAsPaid(id: string): Promise<Transaction> {
         try {
             const response = await financialApi.transacoes.update(id, { status: 'concluido' });
-            return response.data as Transaction;
+            const updated = response.data as Transaction;
+
+            // Log de auditoria: Pagamento Confirmado
+            try {
+                await auditApi.create({
+                    action: 'UPDATE',
+                    entity_type: 'contas_financeiras',
+                    entity_id: id,
+                    metadata: { 
+                        description: updated.descricao,
+                        status: 'paid',
+                        timestamp: new Date().toISOString()
+                    }
+                });
+            } catch (e) { /* silent fail */ }
+
+            return updated;
         } catch (error) {
             throw AppError.from(error, 'FinancialService.markAsPaid');
         }

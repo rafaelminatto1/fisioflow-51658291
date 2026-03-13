@@ -12,11 +12,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
-import { usePatientsPostgres } from '@/hooks/useDataConnect';
-import { useUserProfile } from '@/hooks/useUserProfile';
+import { useActivePatients } from '@/hooks/usePatients';
+import { useOrganizations } from '@/hooks/useOrganizations';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PatientCombobox } from '@/components/ui/patient-combobox';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -61,9 +61,11 @@ interface Alert {
 }
 
 export default function ClinicalAnalysisPage() {
-  const { profile } = useUserProfile();
-  const organizationId = profile?.organization_id || 'default';
-  const { data: patients } = usePatientsPostgres(organizationId);
+  const { currentOrganization } = useOrganizations();
+  const { data: patients, isLoading: patientsLoading } = useActivePatients({
+    enabled: true,
+    organizationId: currentOrganization?.id,
+  });
   const [selectedPatient, setSelectedPatient] = useState<string>('');
   const [activeTab, setActiveTab] = useState('chat');
   const [analysisHistory, setAnalysisHistory] = useState<AnalysisHistory[]>([]);
@@ -226,32 +228,23 @@ export default function ClinicalAnalysisPage() {
         {/* Patient Selection */}
         <Card>
           <CardContent className="pt-6">
-            <div className="flex items-center gap-4">
+            <div className="flex items-start gap-4">
               <div className="flex-1">
-                <label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Selecione o Paciente
-                </label>
-                <Select onValueChange={(value) => {
-                  setSelectedPatient(value);
-                }} value={selectedPatient}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione um paciente..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {patients?.map((p: Patient) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.name} {p.email && `(${p.email})`}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <PatientCombobox
+                  patients={patients || []}
+                  value={selectedPatient}
+                  onValueChange={(value) => {
+                    setSelectedPatient(value);
+                  }}
+                  disabled={patientsLoading}
+                />
               </div>
 
               {selectedPatient && (
                 <Button
                   variant="outline"
                   onClick={handleExportPDF}
-                  className="gap-2"
+                  className="gap-2 shrink-0"
                 >
                   <Download className="w-4 h-4" />
                   Exportar PDF
