@@ -37,7 +37,7 @@ type GoogleReview = GoogleBusinessReviewRecord;
 type SortOption = 'recent' | 'oldest' | 'highest' | 'lowest';
 type FilterRating = 'all' | 5 | 4 | 3 | 2 | 1;
 
-export default function ReviewsPage() {
+export function ReviewsContent() {
   const { toast } = useToast();
   const [reviews, setReviews] = useState<GoogleReview[]>([]);
   const [loading, setLoading] = useState(true);
@@ -195,51 +195,46 @@ export default function ReviewsPage() {
 
   if (loading) {
     return (
-      <MainLayout>
-        <div className="p-6 max-w-7xl mx-auto">
-          <div className="flex items-center justify-center h-64">
-            <div className="flex flex-col items-center gap-4">
-              <Star className="h-8 w-8 animate-pulse text-primary" />
-              <p className="text-muted-foreground">Carregando avaliações...</p>
-            </div>
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="flex flex-col items-center gap-4">
+            <Star className="h-8 w-8 animate-pulse text-primary" />
+            <p className="text-muted-foreground">Carregando avaliações...</p>
           </div>
         </div>
-      </MainLayout>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <MainLayout>
-        <div className="p-6 max-w-7xl mx-auto">
-          <Card className="border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
-                <AlertCircle className="h-5 w-5" />
-                <p>{error}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </MainLayout>
+      <div className="p-6">
+        <Card className="border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
+              <AlertCircle className="h-5 w-5" />
+              <p>{error}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <MainLayout>
-      <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-6">
+      {/* Content matches previous implementation but without MainLayout */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Star className="h-8 w-8 text-amber-500 fill-amber-500" />
+          <h2 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+            <Star className="h-6 w-6 text-amber-500 fill-amber-500" />
             Avaliações Google
-          </h1>
+          </h2>
           <p className="text-muted-foreground mt-1">
             Gerencie e acompanhe as avaliações dos seus pacientes
           </p>
         </div>
-        <Button variant="outline" asChild>
+        <Button variant="outline" asChild size="sm">
           <a
             href="https://search.google.com/local/writereview"
             target="_blank"
@@ -257,14 +252,14 @@ export default function ReviewsPage() {
           <div className="grid gap-6 md:grid-cols-3">
             {/* Overall Rating */}
             <Card className="md:col-span-1">
-              <CardHeader>
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
                   Avaliação Média
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-4">
-                  <div className="text-5xl font-bold">
+                  <div className="text-4xl font-bold">
                     {metrics.averageRating.toFixed(1)}
                   </div>
                   <div className="flex-1">
@@ -273,7 +268,7 @@ export default function ReviewsPage() {
                         <Star
                           key={i}
                           className={cn(
-                            'h-5 w-5',
+                            'h-4 w-4',
                             i < Math.round(metrics.averageRating)
                               ? 'fill-amber-400 text-amber-400'
                               : 'text-gray-300 dark:text-gray-600'
@@ -281,33 +276,23 @@ export default function ReviewsPage() {
                         />
                       ))}
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       {metrics.totalReviews} avaliações
                     </p>
                   </div>
                 </div>
-                <Button variant="outline" className="w-full" asChild>
-                  <a
-                    href="https://search.google.com/local/writereview"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <ThumbsUp className="h-4 w-4 mr-2" />
-                    Ver no Google
-                  </a>
-                </Button>
               </CardContent>
             </Card>
 
             {/* Rating Distribution */}
             <Card className="md:col-span-2">
-              <CardHeader>
+              <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Distribuição de Avaliações
+                  Distribuição
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {[5, 4, 3, 2, 1].map((star) => {
                     const count = metrics.ratingDistribution[star as keyof typeof metrics.ratingDistribution];
                     const percentage = metrics.totalReviews > 0
@@ -315,11 +300,11 @@ export default function ReviewsPage() {
                       : 0;
                     return (
                       <div key={star} className="flex items-center gap-3">
-                        <div className="flex items-center gap-1 w-16 shrink-0">
-                          <span className="text-sm font-medium">{star}</span>
-                          <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                        <div className="flex items-center gap-1 w-12 shrink-0">
+                          <span className="text-xs font-medium">{star}</span>
+                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                         </div>
-                        <div className="flex-1 h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                        <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                           <div
                             className={cn(
                               'h-full transition-all duration-500',
@@ -329,7 +314,7 @@ export default function ReviewsPage() {
                             style={{ width: `${percentage}%` }}
                           />
                         </div>
-                        <span className="text-sm text-muted-foreground w-12 text-right shrink-0">
+                        <span className="text-xs text-muted-foreground w-8 text-right shrink-0">
                           {count}
                         </span>
                       </div>
@@ -347,19 +332,19 @@ export default function ReviewsPage() {
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Buscar por nome ou comentário..."
+                    placeholder="Buscar avaliações..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Select value={filterRating} onValueChange={(v: FilterRating) => setFilterRating(v)}>
-                    <SelectTrigger className="w-[150px]">
-                      <SelectValue placeholder="Filtrar por nota" />
+                  <Select value={String(filterRating)} onValueChange={(v) => setFilterRating(v === 'all' ? 'all' : Number(v) as any)}>
+                    <SelectTrigger className="w-[130px]">
+                      <SelectValue placeholder="Nota" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Todas as notas</SelectItem>
+                      <SelectItem value="all">Todas</SelectItem>
                       <SelectItem value="5">5 estrelas</SelectItem>
                       <SelectItem value="4">4 estrelas</SelectItem>
                       <SelectItem value="3">3 estrelas</SelectItem>
@@ -367,184 +352,68 @@ export default function ReviewsPage() {
                       <SelectItem value="1">1 estrela</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Select value={sortBy} onValueChange={(v: SortOption) => setSortBy(v)}>
-                    <SelectTrigger className="w-[150px]">
-                      <SelectValue placeholder="Ordenar por" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="recent">Mais recentes</SelectItem>
-                      <SelectItem value="oldest">Mais antigas</SelectItem>
-                      <SelectItem value="highest">Maiores notas</SelectItem>
-                      <SelectItem value="lowest">Menores notas</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground mt-2">
-                Mostrando {filteredReviews.length} de {metrics.totalReviews} avaliações
-              </p>
             </CardContent>
           </Card>
 
           {/* Reviews List */}
-          {filteredReviews.length === 0 ? (
-            <Card>
-              <CardContent className="p-12">
-                <div className="text-center">
-                  <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
-                  <p className="text-muted-foreground">
-                    {searchTerm || filterRating !== 'all'
-                      ? 'Nenhuma avaliação encontrada com os filtros aplicados.'
-                      : 'Nenhuma avaliação encontrada.'}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <>
-              <div className="grid gap-4">
-                {paginatedReviews.map((review, index) => (
-                  <Card key={index} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-start gap-4 flex-1">
-                          {/* Avatar */}
-                          <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-semibold text-lg">
-                            {review.author.charAt(0).toUpperCase()}
-                          </div>
-
-                          {/* Content */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap mb-1">
-                              <h3 className="font-semibold">{review.author}</h3>
-                              <Badge className={getRatingColor(review.rating)}>
-                                <Star className="h-3 w-3 fill-current mr-1" />
-                                {review.rating}/5
-                              </Badge>
-                            </div>
-
-                            {/* Stars */}
-                            <div className="flex items-center gap-0.5 mb-2">
-                              {[...Array(5)].map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={cn(
-                                    'h-4 w-4',
-                                    i < review.rating
-                                      ? 'fill-amber-400 text-amber-400'
-                                      : 'text-gray-300 dark:text-gray-600'
-                                  )}
-                                />
-                              ))}
-                            </div>
-
-                            {/* Comment */}
-                            <p className="text-sm text-foreground whitespace-pre-wrap">
-                              {review.comment}
-                            </p>
-
-                            {/* Date */}
-                            <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                              {review.time
-                                ? format(new Date(review.time), "dd 'de' MMMM 'de' yyyy 'às' HH:mm", {
-                                    locale: ptBR,
-                                  })
-                                : review.date}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
-                            onClick={() => handleAIGenerateReply(review)}
-                            disabled={isGeneratingReply === review.author}
-                          >
-                            {isGeneratingReply === review.author ? (
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            ) : (
-                              <Sparkles className="h-4 w-4 mr-2" />
-                            )}
-                            Responder com IA
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleShare(review)}
-                            title="Compartilhar"
-                          >
-                            <Share2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+          <div className="grid gap-4">
+            {paginatedReviews.map((review, index) => (
+              <Card key={index} className="hover:shadow-sm transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-4 flex-1">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white font-semibold">
+                        {review.author.charAt(0).toUpperCase()}
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    Página {currentPage} de {totalPages}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <div className="flex items-center gap-1">
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        const page = i + 1;
-                        const isActive = page === currentPage;
-                        return (
-                          <Button
-                            key={page}
-                            variant={isActive ? 'default' : 'outline'}
-                            size="icon"
-                            className="w-9 h-9"
-                            onClick={() => setCurrentPage(page)}
-                          >
-                            {page}
-                          </Button>
-                        );
-                      })}
-                      {totalPages > 5 && (
-                        <>
-                          <span className="px-2">...</span>
-                          <Button
-                            variant={currentPage === totalPages ? 'default' : 'outline'}
-                            size="icon"
-                            className="w-9 h-9"
-                            onClick={() => setCurrentPage(totalPages)}
-                          >
-                            {totalPages}
-                          </Button>
-                        </>
-                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold text-sm">{review.author}</h3>
+                          <Badge variant="outline" className={cn("text-[10px] h-5", getRatingColor(review.rating))}>
+                            {review.rating}/5
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-foreground line-clamp-3">
+                          {review.comment}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground mt-2">
+                          {review.time ? format(new Date(review.time), "dd/MM/yyyy", { locale: ptBR }) : review.date}
+                        </p>
+                      </div>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                      disabled={currentPage === totalPages}
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-purple-600 h-8 text-xs"
+                        onClick={() => handleAIGenerateReply(review)}
+                        disabled={isGeneratingReply === review.author}
+                      >
+                        {isGeneratingReply === review.author ? (
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-3 w-3 mr-1" />
+                        )}
+                        Responder
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </>
-          )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </>
       )}
+    </div>
+  );
+}
+
+export default function ReviewsPage() {
+  return (
+    <MainLayout>
+      <div className="p-6 max-w-7xl mx-auto">
+        <ReviewsContent />
       </div>
     </MainLayout>
   );
