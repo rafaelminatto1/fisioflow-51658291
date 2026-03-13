@@ -109,6 +109,7 @@ export const DraggableAppointment = memo(({
         // Smooth scale animation on grab
         "transition-transform duration-75 ease-out will-change-transform"
       )}
+      data-week-appointment="true"
       data-appointment-popover-anchor={dataAnchor}
     >
       {children}

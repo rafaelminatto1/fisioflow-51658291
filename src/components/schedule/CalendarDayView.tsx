@@ -84,25 +84,36 @@ const CalendarDayView = memo(({
     const { cardSize, heightScale } = useCardSize();
     const preferredSlotHeight = calculateSlotHeightFromCardSize(cardSize, heightScale);
 
-    // containerHeight is measured below; use it to compute fit-all slot height
-    const [containerHeight, setContainerHeight] = React.useState<number>(600);
+    const gridViewportRef = React.useRef<HTMLDivElement | null>(null);
+    const [gridViewportHeight, setGridViewportHeight] = React.useState<number>(600);
+
     React.useLayoutEffect(() => {
+        const element = gridViewportRef.current;
+        if (!element) return;
+
         const updateHeight = () => {
-            const el = document.getElementById('day-view-scroll-container');
-            if (el) {
-                setContainerHeight(el.clientHeight);
+            if (element.clientHeight > 0) {
+                setGridViewportHeight(element.clientHeight);
             }
         };
+
         updateHeight();
+
+        let resizeObserver: ResizeObserver | null = null;
+        if (typeof ResizeObserver !== 'undefined') {
+            resizeObserver = new ResizeObserver(() => updateHeight());
+            resizeObserver.observe(element);
+        }
+
         window.addEventListener('resize', updateHeight);
-        return () => window.removeEventListener('resize', updateHeight);
+        return () => {
+            resizeObserver?.disconnect();
+            window.removeEventListener('resize', updateHeight);
+        };
     }, []);
 
-    const DAY_HEADER_HEIGHT = 80; // h-20 sticky day header
-    const MIN_SLOT_HEIGHT = 22;
-    const slotHeight = timeSlots.length > 0
-        ? Math.max(MIN_SLOT_HEIGHT, Math.floor((containerHeight - DAY_HEADER_HEIGHT) / timeSlots.length))
-        : preferredSlotHeight;
+    const MIN_SLOT_HEIGHT = 32;
+    const slotHeight = Math.max(MIN_SLOT_HEIGHT, preferredSlotHeight);
     const slotHeightMobile = slotHeight;
 
     // Calculate current time position in pixels for virtualization
@@ -265,7 +276,10 @@ const CalendarDayView = memo(({
                         const leftOffset = hasOverlap ? (stackIndex * (96 / stackCount)) + 2 : 3;
 
                         const duration = apt.duration ?? DEFAULT_APPOINTMENT_DURATION_MINUTES;
-                        const heightMobile = calculateAppointmentCardHeight(cardSize, duration, heightScale);
+                        const heightMobile = Math.max(
+                            28,
+                            calculateAppointmentCardHeight(cardSize, duration, heightScale) - 6
+                        );
                         const offsetPxMobile = (offsetMinutes / 30) * slotHeightMobile;
 
                         const isDraggable = !!onAppointmentReschedule;
@@ -359,9 +373,6 @@ const CalendarDayView = memo(({
         );
     }
 
-    // Calculate total grid height for proper scroll container
-    const _totalGridHeight = timeSlots.length * slotHeightMobile;
-
     return (
         <div className="flex flex-col flex-1 overflow-hidden bg-gradient-to-br from-background to-muted/20">
             {/* Styles for responsive positioning and custom scrollbar */}
@@ -384,7 +395,7 @@ const CalendarDayView = memo(({
                 `}} />
 
             {/* Main content area */}
-            <div className="flex flex-1 overflow-hidden relative" id="day-view-scroll-container">
+            <div className="flex flex-1 overflow-hidden relative">
                 <div className="flex-1 flex flex-col min-w-0">
                     {/* Sticky Day Header */}
                     <div className="h-16 md:h-20 border-b bg-gradient-to-r from-primary/10 to-primary/5 p-2 md:p-4 backdrop-blur-sm z-30 shadow-sm flex-shrink-0">
@@ -396,11 +407,16 @@ const CalendarDayView = memo(({
                     </div>
 
                     {/* Virtualized Grid area */}
-                    <div className="flex-1 relative" role="grid" data-calendar-drop-zone>
+                    <div
+                        ref={gridViewportRef}
+                        className="flex-1 relative min-h-0"
+                        role="grid"
+                        data-calendar-drop-zone
+                    >
                         <VirtualizedCalendarGrid
                             timeSlots={timeSlots}
                             slotHeight={slotHeightMobile}
-                            containerHeight={containerHeight}
+                            containerHeight={gridViewportHeight}
                             renderSlot={renderSlot}
                             className="custom-scrollbar"
                             overscan={5}

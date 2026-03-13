@@ -3,8 +3,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import XLSX from '@/lib/export/exceljsWrapper';
 import {
   analyticsApi,
@@ -145,7 +143,10 @@ function addBOMToCSV(csv: string): string {
 // PDF EXPORT
 // ============================================================================
 
-function generatePDF(data: AnalyticsExportData, patientName: string, options: ExportOptions): ExportResult {
+async function generatePDF(data: AnalyticsExportData, patientName: string, options: ExportOptions): Promise<ExportResult> {
+  const { default: jsPDF } = await import('jspdf');
+  const { default: autoTable } = await import('jspdf-autotable');
+
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -357,7 +358,7 @@ function formatGoalStatus(status: string): string {
 // EXCEL EXPORT
 // ============================================================================
 
-function generateExcel(data: AnalyticsExportData, patientName: string, options: ExportOptions): ExportResult {
+async function generateExcel(data: AnalyticsExportData, patientName: string, options: ExportOptions): Promise<ExportResult> {
   const timestamp = format(new Date(), 'yyyyMMdd_HHmm', { locale: ptBR });
   const sanitizedName = sanitizeFileName(patientName);
   const fileName = options.fileName || `analytics_${sanitizedName}_${timestamp}.xlsx`;
@@ -389,7 +390,7 @@ function generateExcel(data: AnalyticsExportData, patientName: string, options: 
   }
 
   // Save workbook
-  XLSX.writeFile(workbook, fileName);
+  await XLSX.writeFile(workbook, fileName);
 
   return { format: 'excel', fileName, timestamp };
 }
@@ -694,11 +695,11 @@ export function useAnalyticsExport() {
         }
 
         case 'pdf':
-          result = generatePDF(exportData, patientName, options);
+          result = await generatePDF(exportData, patientName, options);
           break;
 
         case 'excel':
-          result = generateExcel(exportData, patientName, options);
+          result = await generateExcel(exportData, patientName, options);
           break;
 
         default:
@@ -851,7 +852,7 @@ export function useBatchAnalyticsExport() {
         const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
         summarySheet['!cols'] = [{ wch: 35 }, { wch: 10 }, { wch: 12 }, { wch: 18 }, { wch: 15 }];
         XLSX.utils.book_append_sheet(workbook, summarySheet, 'Resumo');
-        XLSX.writeFile(workbook, `analytics_batch_${timestamp}.xlsx`);
+        await XLSX.writeFile(workbook, `analytics_batch_${timestamp}.xlsx`);
       } else {
         const jsonContent = JSON.stringify(results, null, 2);
         downloadBlob(

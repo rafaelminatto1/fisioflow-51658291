@@ -31,6 +31,10 @@ interface VirtualizedCalendarGridProps {
   className?: string;
   /** Optional callback when scroll position changes */
   onScrollChange?: (scrollTop: number) => void;
+  /** Optional click handler for the scroll container */
+  onClick?: React.MouseEventHandler<HTMLDivElement>;
+  /** Optional external ref to the scroll container */
+  containerRef?: React.MutableRefObject<HTMLDivElement | null>;
   /** Optional children to render inside the scroll container */
   children?: React.ReactNode;
 }
@@ -49,9 +53,18 @@ export const VirtualizedCalendarGrid: React.FC<VirtualizedCalendarGridProps> = (
   renderSlot,
   className = '',
   onScrollChange,
+  onClick,
+  containerRef,
   children,
 }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const setContainerRefs = useCallback((node: HTMLDivElement | null) => {
+    scrollContainerRef.current = node;
+    if (containerRef) {
+      containerRef.current = node;
+    }
+  }, [containerRef]);
 
   // Use virtualization hook
   const {
@@ -82,9 +95,10 @@ export const VirtualizedCalendarGrid: React.FC<VirtualizedCalendarGridProps> = (
   if (!isVirtualized) {
     return (
       <div
-        ref={scrollContainerRef}
+        ref={setContainerRefs}
         className={className}
         onScroll={handleScroll}
+        onClick={onClick}
         style={{
           overflowY: 'auto',
           height: containerHeight,
@@ -103,9 +117,10 @@ export const VirtualizedCalendarGrid: React.FC<VirtualizedCalendarGridProps> = (
   // Virtualized rendering
   return (
     <div
-      ref={scrollContainerRef}
+      ref={setContainerRefs}
       className={className}
       onScroll={handleScroll}
+      onClick={onClick}
       style={{
         overflowY: 'auto',
         height: containerHeight,

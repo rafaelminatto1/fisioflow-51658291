@@ -15,7 +15,6 @@ import {
   Loader2,
   Lock
 } from 'lucide-react';
-import * as Icons from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGamification, type Achievement } from '@/hooks/useGamification';
 import { formatDistanceToNow } from 'date-fns';
@@ -29,6 +28,7 @@ import { RewardsShop } from './RewardsShop';
 import { UserInventory } from './UserInventory';
 import { LevelUpModal } from './LevelUpModal';
 import { Leaderboard } from './Leaderboard';
+import { getGamificationIcon } from './iconMap';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -76,13 +76,6 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
   // Calculate if streak freeze is active (has item > 0)
   const hasFreeze = userInventory?.some(i => i.item?.code === 'streak_freeze' && i.quantity > 0);
 
-  // Helper to dynamically get icon component
-  const getIcon = (iconName: string, defaultIcon: React.ComponentType) => {
-    // @ts-expect-error - dynamic icon access from Icons
-    const IconComponent = Icons[iconName] || defaultIcon;
-    return IconComponent;
-  };
-
   const handleManualAward = async () => {
     setIsGivingXp(true);
     try {
@@ -102,7 +95,7 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
 
   const renderAchievementCard = (achievement: Achievement) => {
     const unlocked = unlockedAchievements.find(ua => ua.achievement_id === achievement.id);
-    const Icon = getIcon(achievement.icon, Star);
+    const Icon = getGamificationIcon(achievement.icon, Star);
 
     return (
       <Card
@@ -144,7 +137,10 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
             </p>
             {unlocked && (
               <p className="text-[10px] text-muted-foreground pt-1 flex items-center">
-                <Icons.CheckCheck className="h-3 w-3 mr-1 text-primary" />
+                {(() => {
+                  const CheckCheckIcon = getGamificationIcon('CheckCheck', Star);
+                  return <CheckCheckIcon className="h-3 w-3 mr-1 text-primary" />;
+                })()}
                 Desbloqueado {unlocked.unlocked_at && formatDistanceToNow(new Date(unlocked.unlocked_at), { addSuffix: true, locale: ptBR })}
               </p>
             )}
@@ -238,7 +234,10 @@ export function PatientGamification({ patientId }: PatientGamificationProps) {
             <div className="text-center p-4 bg-background/50 backdrop-blur-sm rounded-xl border border-border/50 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
               {hasFreeze && (
                 <div className="absolute top-1 right-1 text-blue-400 animate-pulse" title="Streak Protegido">
-                  <Icons.Shield className="h-4 w-4" />
+                  {(() => {
+                    const ShieldIcon = getGamificationIcon('Shield', Star);
+                    return <ShieldIcon className="h-4 w-4" />;
+                  })()}
                 </div>
               )}
               <div className="bg-orange-100 dark:bg-orange-900/20 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-2">
