@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, ImgHTMLAttributes } from 'react';
+import React, { useState, useRef, useEffect, ImgHTMLAttributes, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 
 interface OptimizedImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src'> {
@@ -12,6 +12,10 @@ interface OptimizedImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 
   priority?: boolean;
   srcset?: string;
   sizes?: string;
+  /** Largura desejada para otimização no Cloudflare */
+  width?: number;
+  /** Qualidade da compressão (1-100) */
+  quality?: number;
   onLoad?: () => void;
   onError?: () => void;
   /** Adiciona hint de pré-carregamento para DNS/TCP/TLS */
@@ -27,7 +31,6 @@ const aspectRatioClasses = {
 };
 
 const HOST_FAILURE_STORAGE_KEY = 'optimized-image-host-failures';
-
 const hostFailureCache = new Set<string>();
 
 (function initHostFailureCache() {
@@ -37,9 +40,7 @@ const hostFailureCache = new Set<string>();
     if (!saved) return;
     const parsed: string[] = JSON.parse(saved);
     parsed.filter(Boolean).forEach(host => hostFailureCache.add(host));
-  } catch {
-    // Ignore parse errors
-  }
+  } catch {}
 })();
 
 function persistHostFailure(host: string) {
@@ -62,30 +63,28 @@ function extractHost(src: string): string | null {
 }
 
 /**
- * Componente de imagem otimizado com:
- * - Lazy loading nativo
- * - Placeholder blur
- * - Fallback em caso de erro
- * - Aspect ratio mantido
- * - Suporte a srcset/sizes para responsive images
+ * Helper para gerar URL de otimização do Cloudflare via Worker
  */
-/** URLs válidas para imagem: http, https, data, blob ou caminho absoluto/relativo começando com / */
-function isValidImageSrc(src: string): boolean {
-  const s = src?.trim();
-  if (!s) return false;
-
-  // Rejeitar URLs de proxy que não funcionam
-  if (s.startsWith('/api/')) {
-    return false;
+function getOptimizedUrl(src: string, options: { width?: number; quality?: number }): string {
+  if (!src || src.startsWith('data:') || src.startsWith('blob:') || src.includes('localhost')) {
+    return src;
   }
 
-  return (
-    s.startsWith('http:') ||
-    s.startsWith('https:') ||
-    s.startsWith('data:') ||
-    s.startsWith('blob:') ||
-    s.startsWith('/')
-  );
+  const { width = 800, quality = 85 } = options;
+  const workerUrl = 'https://r2-worker.fisioflow.workers.dev/cdn-cgi/image';
+  
+  try {
+    const encodedSrc = encodeURIComponent(src.startsWith('/') ? `${window.location.origin}${src}` : src);
+    return `${workerUrl}/width=${width},quality=${quality},format=auto/${encodedSrc}`;
+  } catch {
+    return src;
+  }
+}
+
+function isValidImageSrc(src: string): boolean {
+  const s = src?.trim();
+  if (!s || s.startsWith('/api/')) return false;
+  return s.startsWith('http:') || s.startsWith('https:') || s.startsWith('data:') || s.startsWith('blob:') || s.startsWith('/');
 }
 
 export function OptimizedImage({
@@ -98,6 +97,8 @@ export function OptimizedImage({
   priority = false,
   srcset,
   sizes,
+  width,
+  quality,
   className,
   onLoad,
   onError,
@@ -109,53 +110,43 @@ export function OptimizedImage({
   const imgRef = useRef<HTMLImageElement>(null);
   const srcHost = extractHost(src);
 
+  const optimizedSrc = useMemo(() => {
+    if (hasError) return fallback;
+    return getOptimizedUrl(src, { width, quality });
+  }, [src, hasError, fallback, width, quality]);
+
   const srcInvalid = !isValidImageSrc(src) || (srcHost ? hostFailureCache.has(srcHost) : false);
-  const effectiveSrc = srcInvalid || hasError ? fallback : src;
+  const effectiveSrc = srcInvalid || hasError ? fallback : optimizedSrc;
   const skipLoad = srcInvalid;
 
-  // Reset states when src changes
   useEffect(() => {
-    if (srcInvalid) {
-      setIsLoaded(false);
-      setHasError(false);
-      return;
-    }
     setIsLoaded(false);
     setHasError(false);
   }, [src, srcInvalid]);
 
-  // Preload hints for priority images to warm up connection
   useEffect(() => {
     if (!preloadHints || !effectiveSrc || srcInvalid) return;
-
-    // Extract origin for preconnect
-    let origin: string | null = null;
     try {
       const url = new URL(effectiveSrc, window.location.origin);
-      origin = url.origin;
-    } catch {
-      return;
-    }
+      const origin = url.origin;
+      if (origin === window.location.origin) return;
 
-    if (!origin || origin === window.location.origin) return;
+      const preconnectLink = document.createElement('link');
+      preconnectLink.rel = 'preconnect';
+      preconnectLink.href = origin;
+      preconnectLink.crossOrigin = 'anonymous';
+      document.head.appendChild(preconnectLink);
 
-    // Add preconnect link hints
-    const preconnectLink = document.createElement('link');
-    preconnectLink.rel = 'preconnect';
-    preconnectLink.href = origin;
-    preconnectLink.crossOrigin = 'anonymous';
+      const dnsLink = document.createElement('link');
+      dnsLink.rel = 'dns-prefetch';
+      dnsLink.href = origin;
+      document.head.appendChild(dnsLink);
 
-    const dnsLink = document.createElement('link');
-    dnsLink.rel = 'dns-prefetch';
-    dnsLink.href = origin;
-
-    document.head.appendChild(preconnectLink);
-    document.head.appendChild(dnsLink);
-
-    return () => {
-      document.head.removeChild(preconnectLink);
-      document.head.removeChild(dnsLink);
-    };
+      return () => {
+        document.head.removeChild(preconnectLink);
+        document.head.removeChild(dnsLink);
+      };
+    } catch {}
   }, [preloadHints, effectiveSrc, srcInvalid]);
 
   const handleLoad = () => {
@@ -165,75 +156,29 @@ export function OptimizedImage({
 
   const handleError = () => {
     setHasError(true);
-    if (srcHost) {
-      persistHostFailure(srcHost);
-    }
+    if (srcHost) persistHostFailure(srcHost);
     onError?.();
   };
 
-  // URL inválida: mostrar fallback sem tentar carregar o src (evita 404 e request desnecessário)
   if (skipLoad) {
-    if (isValidImageSrc(fallback)) {
-      return (
-        <div
-          className={cn(
-            'relative overflow-hidden bg-muted',
-            aspectRatioClasses[aspectRatio],
-            className
-          )}
-        >
-          <img
-            ref={imgRef}
-            src={fallback}
-            alt={alt}
-            loading="lazy"
-            decoding="async"
-            onLoad={handleLoad}
-            onError={handleError}
-            className="h-full w-full object-cover"
-            {...props}
-          />
-        </div>
-      );
-    }
-    // src e fallback inválidos: placeholder visual sem request
     return (
-      <div
-        className={cn(
-          'relative overflow-hidden bg-muted flex items-center justify-center',
-          aspectRatioClasses[aspectRatio],
-          className
-        )}
-        role="img"
-        aria-label={alt}
-      />
+      <div className={cn('relative overflow-hidden bg-muted', aspectRatioClasses[aspectRatio], className)}>
+        <img ref={imgRef} src={fallback} alt={alt} loading="lazy" decoding="async" className="h-full w-full object-cover" {...props} />
+      </div>
     );
   }
 
   return (
-    <div
-      className={cn(
-        'relative overflow-hidden bg-muted',
-        aspectRatioClasses[aspectRatio],
-        className
-      )}
-    >
-      {/* LQIP / Placeholder / Loading state */}
+    <div className={cn('relative overflow-hidden bg-muted', aspectRatioClasses[aspectRatio], className)}>
       {!isLoaded && (
         <>
           {lqip ? (
-            <img
-              src={lqip}
-              alt=""
-              aria-hidden="true"
-              className="absolute inset-0 h-full w-full object-cover blur-2xl scale-110"
-            />
+            <img src={lqip} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover blur-2xl scale-110" />
           ) : (
             blur && <div className="absolute inset-0 animate-pulse bg-muted" />
           )}
         </>
       )}
-
       <img
         ref={imgRef}
         src={effectiveSrc}
@@ -245,19 +190,13 @@ export function OptimizedImage({
         {...(priority && { fetchPriority: 'high' })}
         onLoad={handleLoad}
         onError={handleError}
-        className={cn(
-          'h-full w-full object-cover transition-opacity duration-300',
-          isLoaded ? 'opacity-100' : 'opacity-0'
-        )}
+        className={cn('h-full w-full object-cover transition-opacity duration-300', isLoaded ? 'opacity-100' : 'opacity-0')}
         {...props}
       />
     </div>
   );
 }
 
-/**
- * Componente Avatar otimizado
- */
 interface AvatarImageProps {
   src?: string | null;
   name: string;
@@ -274,39 +213,25 @@ const sizeClasses = {
 
 export function AvatarImage({ src, name, size = 'md', className }: AvatarImageProps) {
   const [hasError, setHasError] = useState(false);
-
-  const initials = name
-    .split(' ')
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
+  const initials = name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase();
 
   if (!src || hasError) {
     return (
-      <div
-        className={cn(
-          'flex items-center justify-center rounded-full bg-primary text-primary-foreground font-medium',
-          sizeClasses[size],
-          className
-        )}
-      >
+      <div className={cn('flex items-center justify-center rounded-full bg-primary text-primary-foreground font-medium', sizeClasses[size], className)}>
         {initials}
       </div>
     );
   }
 
+  const optimizedSrc = getOptimizedUrl(src, { width: 128, quality: 80 });
+
   return (
     <img
-      src={src}
+      src={optimizedSrc}
       alt={name}
       loading="lazy"
       onError={() => setHasError(true)}
-      className={cn(
-        'rounded-full object-cover',
-        sizeClasses[size],
-        className
-      )}
+      className={cn('rounded-full object-cover', sizeClasses[size], className)}
     />
   );
 }
