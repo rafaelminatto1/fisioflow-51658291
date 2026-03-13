@@ -46,7 +46,11 @@ export function useCreateDoctor() {
     return useMutation({
         mutationFn: (data: DoctorFormData) => DoctorService.createDoctor(data),
         onSuccess: () => {
+            // Invalidate all doctor related queries
             queryClient.invalidateQueries({ queryKey: ['doctors'] });
+            // Specifically ensure search queries are refreshed
+            queryClient.refetchQueries({ queryKey: ['doctors', 'search'] });
+            
             toast.success('Médico cadastrado com sucesso!');
         },
         onError: (error) => {
