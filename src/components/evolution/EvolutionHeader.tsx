@@ -286,88 +286,49 @@ export const EvolutionHeader = memo(({
                 </div>
             </div>
 
-            {/* Linha 2: Fisioterapeuta | Cronômetro | Abas | Menu */}
+            {/* Linha 2: Cronômetro | Abas | Fisioterapeuta | Menu */}
             <div className="flex items-center gap-4 mt-5 pt-5 border-t border-border/60 flex-wrap">
-                {therapists.length > 0 && onTherapistChange && (
-                    <div className="flex items-center gap-2.5 shrink-0">
-                        <UserCog className="h-4 w-4 text-primary shrink-0" />
-                        <Select
-                            value={selectedTherapistId || THERAPIST_SELECT_NONE}
-                            onValueChange={(v) => onTherapistChange(v === THERAPIST_SELECT_NONE ? '' : v)}
-                            aria-label={THERAPIST_PLACEHOLDER}
-                        >
-                            <SelectTrigger className="h-10 w-[200px] text-sm font-medium bg-background/80 border-border/60">
-                                <SelectValue placeholder={THERAPIST_PLACEHOLDER} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value={THERAPIST_SELECT_NONE}>
-                                    {THERAPIST_PLACEHOLDER}
-                                </SelectItem>
-                                {showTherapistFallback && (
-                                    <SelectItem value={selectedTherapistId}>
-                                        Responsável atual
-                                    </SelectItem>
-                                )}
-                                {therapists.map((t) => (
-                                    <SelectItem key={t.id} value={t.id}>
-                                        {t.crefito ? `${t.name} (${t.crefito})` : t.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        {selectedTherapist?.crefito && (
-                            <Badge variant="secondary" className="text-sm font-mono font-bold shrink-0 bg-muted border-border">
-                                CREFITO {selectedTherapist.crefito}
-                            </Badge>
-                        )}
-                    </div>
-                )}
                 {tabsConfig.length > 0 && onTabChange && (
-                    <>
-                        {therapists.length > 0 && onTherapistChange && (
-                            <div className="h-8 w-px bg-border shrink-0 hidden sm:block" aria-hidden />
-                        )}
-                        <nav
-                            className="inline-flex h-10 items-center justify-center rounded-lg bg-muted/40 p-1 gap-1"
-                            role="tablist"
-                            aria-label="Abas de evolução"
-                        >
-                            {tabsConfig.map((tab) => {
-                                const isActive = activeTab === tab.value;
-                                const avaliacaoBadge = tab.value === 'avaliacao' && pendingRequiredMeasurements > 0;
-                                const tratamentoBadge = tab.value === 'tratamento' && upcomingGoalsCount > 0;
-                                const badgeCount = tab.value === 'avaliacao' ? pendingRequiredMeasurements : tab.value === 'tratamento' ? upcomingGoalsCount : 0;
+                    <nav
+                        className="inline-flex h-10 items-center justify-center rounded-lg bg-muted/40 p-1 gap-1"
+                        role="tablist"
+                        aria-label="Abas de evolução"
+                    >
+                        {tabsConfig.map((tab) => {
+                            const isActive = activeTab === tab.value;
+                            const avaliacaoBadge = tab.value === 'avaliacao' && pendingRequiredMeasurements > 0;
+                            const tratamentoBadge = tab.value === 'tratamento' && upcomingGoalsCount > 0;
+                            const badgeCount = tab.value === 'avaliacao' ? pendingRequiredMeasurements : tab.value === 'tratamento' ? upcomingGoalsCount : 0;
 
-                                return (
-                                    <button
-                                        key={tab.value}
-                                        type="button"
-                                        role="tab"
-                                        aria-selected={isActive}
-                                        aria-label={`${tab.label}${badgeCount > 0 ? `, ${badgeCount} pendente(s)` : ''}`}
-                                        onClick={() => onTabChange(tab.value)}
-                                        className={cn(
-                                            "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 py-2 text-sm font-bold transition-all",
-                                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                                            "disabled:pointer-events-none disabled:opacity-50",
-                                            isActive
-                                                ? "bg-background text-primary shadow-sm ring-1 ring-border/50"
-                                                : "text-muted-foreground hover:bg-background/50 hover:text-foreground"
-                                        )}
-                                    >
-                                        <tab.icon className="h-4 w-4 shrink-0" />
-                                        <span className="hidden sm:inline">{tab.label}</span>
-                                        <span className="sm:hidden">{tab.shortLabel}</span>
-                                        {(avaliacaoBadge || tratamentoBadge) && badgeCount > 0 && (
-                                            <Badge variant={avaliacaoBadge ? "destructive" : "secondary"} className="ml-1 h-5 min-w-5 px-1 text-[10px] font-black">
-                                                {badgeCount}
-                                            </Badge>
-                                        )}
-                                    </button>
-                                );
-                            })}
-                        </nav>
-                    </>
+                            return (
+                                <button
+                                    key={tab.value}
+                                    type="button"
+                                    role="tab"
+                                    aria-selected={isActive}
+                                    aria-label={`${tab.label}${badgeCount > 0 ? `, ${badgeCount} pendente(s)` : ''}`}
+                                    onClick={() => onTabChange(tab.value)}
+                                    className={cn(
+                                        "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 py-2 text-sm font-bold transition-all",
+                                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                                        "disabled:pointer-events-none disabled:opacity-50",
+                                        isActive
+                                            ? "bg-background text-primary shadow-sm ring-1 ring-border/50"
+                                            : "text-muted-foreground hover:bg-background/50 hover:text-foreground"
+                                    )}
+                                >
+                                    <tab.icon className="h-4 w-4 shrink-0" />
+                                    <span className="hidden sm:inline">{tab.label}</span>
+                                    <span className="sm:hidden">{tab.shortLabel}</span>
+                                    {(avaliacaoBadge || tratamentoBadge) && badgeCount > 0 && (
+                                        <Badge variant={avaliacaoBadge ? "destructive" : "secondary"} className="ml-1 h-5 min-w-5 px-1 text-[10px] font-black">
+                                            {badgeCount}
+                                        </Badge>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </nav>
                 )}
 
                 {/* Version toggle (SOAP / Texto Livre) */}
@@ -378,6 +339,45 @@ export const EvolutionHeader = memo(({
                             version={evolutionVersion}
                             onToggle={onVersionChange}
                         />
+                    </>
+                )}
+
+                {/* Fisioterapeuta ao lado do toggle */}
+                {onTherapistChange && (
+                    <>
+                        <div className="h-8 w-px bg-border shrink-0 hidden sm:block" aria-hidden />
+                        <div className="flex items-center gap-2.5 shrink-0">
+                            <UserCog className="h-4 w-4 text-primary shrink-0" />
+                            <Select
+                                value={selectedTherapistId || THERAPIST_SELECT_NONE}
+                                onValueChange={(v) => onTherapistChange(v === THERAPIST_SELECT_NONE ? '' : v)}
+                                aria-label={THERAPIST_PLACEHOLDER}
+                            >
+                                <SelectTrigger className="h-10 w-[200px] text-sm font-medium bg-background/80 border-border/60 shadow-sm transition-all hover:border-primary/30">
+                                    <SelectValue placeholder={THERAPIST_PLACEHOLDER} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value={THERAPIST_SELECT_NONE}>
+                                        {THERAPIST_PLACEHOLDER}
+                                    </SelectItem>
+                                    {showTherapistFallback && (
+                                        <SelectItem value={selectedTherapistId}>
+                                            Responsável atual
+                                        </SelectItem>
+                                    )}
+                                    {therapists.map((t) => (
+                                        <SelectItem key={t.id} value={t.id}>
+                                            {t.crefito ? `${t.name} (${t.crefito})` : t.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {selectedTherapist?.crefito && (
+                                <Badge variant="secondary" className="text-sm font-mono font-bold shrink-0 bg-primary/5 text-primary border-primary/20">
+                                    CREFITO {selectedTherapist.crefito}
+                                </Badge>
+                            )}
+                        </div>
                     </>
                 )}
 

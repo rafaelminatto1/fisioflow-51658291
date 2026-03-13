@@ -34,3 +34,12 @@ export function getAffectedSideLabel(value: string): string {
   const found = AFFECTED_SIDES.find((s) => s.value === value);
   return found?.label ?? (value || '—');
 }
+
+export function getAffectedSideAbbreviation(value: string): string {
+  switch (value) {
+    case 'direito': return 'D (R)';
+    case 'esquerdo': return 'E (L)';
+    case 'bilateral': return 'E/D (L/R)';
+    default: return '';
+  }
+}

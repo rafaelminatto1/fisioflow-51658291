@@ -2,8 +2,8 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import {
-
   User,
   Calendar,
   Phone,
@@ -19,6 +19,7 @@ import {
 import { format, formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { parseResponseDate } from '@/utils/dateUtils';
+import { getAffectedSideAbbreviation } from '@/lib/constants/surgery';
 import {
   usePatientSurgeries,
   usePatientGoals,
@@ -152,8 +153,16 @@ export const PatientDashboard360: React.FC<PatientDashboard360Props> = ({
                   <div key={surgery.id} className="text-sm">
                     <p className="font-medium">{surgery.surgery_name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {format(new Date(surgery.surgery_date), 'dd/MM/yyyy')} - {surgery.affected_side}
+                      {format(new Date(surgery.surgery_date), 'dd/MM/yyyy')}
+                      {surgery.affected_side && surgery.affected_side !== 'nao_aplicavel' && (
+                        <> - {getAffectedSideAbbreviation(surgery.affected_side)}</>
+                      )}
                     </p>
+                    {surgery.complications && (
+                      <p className="text-[10px] text-destructive font-medium flex items-center gap-1 mt-0.5">
+                        ⚠️ {surgery.complications}
+                      </p>
+                    )}
                   </div>
                 ))}
                 {surgeries.length > 2 && (

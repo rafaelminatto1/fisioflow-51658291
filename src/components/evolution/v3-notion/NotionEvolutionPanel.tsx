@@ -435,10 +435,10 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
       </header>
 
       {/* Content Scrollable Container */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-32">
-        <div className="sticky top-0 z-30 bg-white border-b border-[#E9E9E8]">
+      <div className="flex-1 overflow-y-auto custom-scrollbar pb-32">
+        <div className="sticky top-0 z-30 bg-white border-b border-[#E9E9E8] shadow-sm">
           <RichTextToolbar
-            className="border-t border-transparent"
+            className="border-none max-w-[1536px] mx-auto px-4 lg:px-8"
             imageUploadFolder={patientId ? `patients/${patientId}/evolutions/${safeEvolutionId}` : undefined}
           />
         </div>
@@ -712,51 +712,6 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
           </div>
         </div>
       </div>
-
-      {/* BEGIN: Bottom Action Bar */}
-      <footer className="absolute bottom-0 left-0 right-0 bg-white border-t border-[#E9E9E8] px-6 py-2 flex justify-between items-center z-50">
-        <div className="text-xs text-gray-400">
-          {/* Empty placeholder for balance */}
-        </div>
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="h-8 gap-2 border-[#D9D9D7] text-[#37352f] hover:bg-[#F0F0EF]">
-              <FileText className="h-4 w-4" />
-              <span>PDF</span>
-            </Button>
-            {onSave && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onSave}
-                disabled={disabled || isSaving}
-                className="h-8 gap-2 border-[#D9D9D7] text-[#37352f] hover:bg-[#F0F0EF]"
-              >
-                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                <span>Salvar</span>
-              </Button>
-            )}
-            <Button size="sm" className="h-8 gap-2 bg-[#22c55e] hover:bg-[#16a34a] text-white">
-              <CheckSquare className="h-4 w-4" />
-              <span>Concluir</span>
-            </Button>
-          </div>
-          <div className="h-4 w-px bg-gray-300"></div>
-          <div className="flex items-center gap-4 text-xs text-[#37352f]">
-            <span>{new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-green-500"></span>
-              <span className="text-gray-500">Online</span>
-            </div>
-            {resolvedAutoSaveEnabled && localLastSaved && (
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <CheckCircle2 className="h-3 w-3 text-green-500" />
-                Rascunho salvo às {localLastSaved.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            )}
-          </div>
-        </div>
-      </footer>
 
       {showShortcutsModal && (
         <div
