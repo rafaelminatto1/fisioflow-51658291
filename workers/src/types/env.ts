@@ -35,6 +35,13 @@ export interface Env {
   // Durable Objects
   ORGANIZATION_STATE: DurableObjectNamespace;
 
+  // AI & Browser Rendering
+  AI: any;
+  BROWSER: any;
+
+  // Queues
+  BACKGROUND_QUEUE: Queue;
+
   // Hasura GraphQL Configuration
   VITE_HASURA_PROJECT_URL?: string;
   VITE_HASURA_ADMIN_SECRET?: string;

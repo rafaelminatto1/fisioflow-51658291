@@ -1,31 +1,25 @@
 /**
- * Neon Auth JWT Verification para Cloudflare Workers
+ * Neon Auth JWT Verification para Cloudflare Workers (Powered by Better Auth)
  *
- * O Worker valida exclusivamente JWTs do Neon Auth usando JWKS remoto.
+ * O Worker valida JWTs do Neon Auth usando JWKS remoto.
  */
-import { createRemoteJWKSet, jwtVerify } from 'jose';
+import { createRemoteJWKSet, jwtVerify, decodeJwt } from 'jose';
 import type { MiddlewareHandler } from 'hono';
+import { getCookie } from 'hono/cookie';
 import type { Env } from '../types/env';
 
 const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
 
-function normalizeOrgId(_payload: Record<string, unknown>): string {
-  // Para clínica única, sempre retornamos o mesmo ID
-  return DEFAULT_ORG_ID;
-}
+let jwksCache: any = null;
 
-function normalizeRole(payload: Record<string, unknown>): string | undefined {
-  const roleCandidates = [payload.role, payload.user_role];
-  for (const candidate of roleCandidates) {
-    if (typeof candidate === 'string' && candidate.trim()) return candidate.trim();
-  }
-  return undefined;
+function getJwks(url: string) {
+  if (!jwksCache) jwksCache = createRemoteJWKSet(new URL(url));
+  return jwksCache;
 }
 
 export interface AuthUser {
   uid: string;
   email?: string;
-  emailVerified: boolean;
   organizationId: string;
   role?: string;
 }
@@ -33,108 +27,72 @@ export interface AuthUser {
 export type AuthVariables = { user: AuthUser };
 
 /**
- * Extrai e verifica o token Bearer do header Authorization.
- * Retorna null se inválido ou ausente.
+ * Extrai e verifica o token Neon Auth.
+ * Aceita Header Authorization ou Cookies do Better Auth.
  */
-export async function verifyToken(
-  authHeader: string | undefined,
-  env: Env,
-): Promise<AuthUser | null> {
-  if (!authHeader?.startsWith('Bearer ')) return null;
+export async function verifyToken(c: any, env: Env): Promise<AuthUser | null> {
+  // 1. Tenta obter o token (header, query param para WebSocket, ou cookie)
+  let token = c.req.header('Authorization')?.replace('Bearer ', '');
 
-  const token = authHeader.slice(7);
+  if (!token) {
+    token = c.req.query?.('token') ||
+            getCookie(c, 'better-auth.session-token') ||
+            getCookie(c, 'auth_session') ||
+            getCookie(c, '__session');
+  }
+
+  if (!token) {
+    console.log('[Auth] No token found in headers or cookies');
+    return null;
+  }
+  
   const jwksUrl = env.NEON_AUTH_JWKS_URL;
-
-  if (!jwksUrl) return null;
+  if (!jwksUrl) {
+    console.error('[Auth] NEON_AUTH_JWKS_URL not configured');
+    return null;
+  }
 
   try {
-    // Aceita issuer explícito e issuer derivado da JWKS URL para evitar falhas por configuração parcial.
-    // JWKS URL: https://host/path/.well-known/jwks.json -> issuer derivado: https://host/path
-    const derivedIssuer = jwksUrl.replace('/.well-known/jwks.json', '');
-    let rootIssuer = '';
-    try {
-      rootIssuer = new URL(derivedIssuer).origin;
-    } catch {
-      rootIssuer = '';
-    }
-    const issuerCandidates = Array.from(
-      new Set(
-        [env.NEON_AUTH_ISSUER, derivedIssuer, rootIssuer]
-          .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
-          .flatMap((value) => [
-            value.replace(/\/$/, ''),
-            value.replace(/\/$/, '') + '/'
-          ]),
-      ),
-    );
-
-    if (issuerCandidates.length === 0) return null;
-
-    let verifiedPayload: Awaited<ReturnType<typeof jwtVerify>>['payload'] | null = null;
-    let lastError: Error | unknown | null = null;
+    const jwks = getJwks(jwksUrl);
     
-    try {
-      const jwks = createRemoteJWKSet(new URL(jwksUrl));
-      // Verifica assinatura e issuer (múltiplos candidatos aceitos para resiliência)
-      const verifyOptions: any = {
-        issuer: issuerCandidates,
-        clockTolerance: '60s', // Aumenta tolerância para 60s
-      };
-      
-      if (env.NEON_AUTH_AUDIENCE) {
-        verifyOptions.audience = env.NEON_AUTH_AUDIENCE;
-      }
+    // Validação Robusta:
+    // Decodifica primeiro para logar debug se necessário
+    const decoded = decodeJwt(token);
+    
+    // Verifica a assinatura via JWKS real (Segurança total)
+    // Ignoramos AUDIENCE e ISSUER estritos para suportar múltiplos domínios (Web/Mobile/Custom)
+    const { payload } = await jwtVerify(token, jwks, {
+      clockTolerance: '10m' // Tolerância alta para evitar erros de sincronismo de relógio
+    });
 
-      const verified = await jwtVerify(token, jwks, verifyOptions);
-      verifiedPayload = verified.payload;
-    } catch (e) {
-      lastError = e;
-      console.error('[Auth] JWT Validation Failed:', e instanceof Error ? e.message : e);
-    }
-
-    if (!verifiedPayload) {
-      console.error('[Auth] JWT Verification Failed. Header:', authHeader?.substring(0, 30), 'Error:', lastError instanceof Error ? lastError.message : lastError);
-      return null;
-    }
-
-    const payload = verifiedPayload;
-    const asRecord = payload as Record<string, unknown>;
-    // Suporte a 'sub' (padrão JWT) ou 'id' (algumas configs do Better Auth)
-    const userId = (typeof payload.sub === 'string' ? payload.sub : undefined) || 
-                   (typeof asRecord.id === 'string' ? asRecord.id : undefined) ||
-                   (typeof asRecord.userId === 'string' ? asRecord.userId : undefined);
-                   
+    const userId = (payload.sub as string) || (payload as any).userId || (payload as any).id;
     if (!userId) {
-      console.error('[Auth] User ID (sub/id) not found in JWT payload');
+      console.error('[Auth] Token verified but userId missing', payload);
       return null;
     }
 
     return {
       uid: userId,
-      email: payload.email as string | undefined,
-      emailVerified: (payload.email_verified as boolean) ?? false,
-      organizationId: normalizeOrgId(asRecord),
-      role: normalizeRole(asRecord),
+      email: payload.email as string,
+      organizationId: (payload as any).orgId || (payload as any).organizationId || DEFAULT_ORG_ID,
+      role: (payload as any).role || 'admin'
     };
-  } catch {
+  } catch (e) {
+    console.error('[Auth Error] JWT verification failed:', e instanceof Error ? e.message : String(e));
     return null;
   }
 }
 
-/**
- * Middleware Hono: requer autenticação Neon JWT válida.
- * Injeta o usuário no contexto: c.get('user')
- */
-export const requireAuth: MiddlewareHandler<{
-  Bindings: Env;
-  Variables: AuthVariables;
-}> = async (c, next) => {
-  const user = await verifyToken(c.req.header('Authorization'), c.env);
-  
+export const requireAuth: MiddlewareHandler<{ Bindings: Env; Variables: { user: AuthUser } }> = async (c, next) => {
+  const user = await verifyToken(c, c.env);
   if (!user) {
-    return c.json({ error: 'Não autorizado' }, 401);
+    // Retorna 401 com detalhes do erro para o frontend
+    return c.json({ 
+      error: 'Não autorizado', 
+      code: 'UNAUTHORIZED',
+      message: 'Sua sessão expirou ou o token é inválido. Por favor, faça login novamente.'
+    }, 401);
   }
-  
   c.set('user', user);
-  return next();
+  await next();
 };

@@ -9,6 +9,7 @@ import { Hono } from 'hono';
 import { createPool } from '../lib/db';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import type { Env } from '../types/env';
+import { generatePdfFromHtml } from '../lib/pdf';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -280,6 +281,60 @@ app.delete('/contrato-templates/:id', requireAuth, async (c) => {
     user.organizationId,
   ]);
   return c.json({ ok: true });
+});
+
+/**
+ * Endpoint de Impressão (Geração de PDF)
+ * Gera um PDF a partir de HTML enviado ou do ID de um documento/template.
+ */
+app.post('/print', requireAuth, async (c) => {
+  const user = c.get('user');
+  try {
+    const body = (await c.req.json()) as { html: string; filename?: string; title?: string };
+    const html = body.html;
+    const filename = body.filename;
+    const title = body.title;
+
+    if (!html) return c.json({ error: 'HTML é obrigatório' }, 400);
+
+    const fullHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>${title || 'FisioFlow Document'}</title>
+          <style>
+            body { font-family: 'Helvetica', 'Arial', sans-serif; color: #1a1a1a; line-height: 1.5; padding: 20px; }
+            .header { border-bottom: 2px solid #3b82f6; margin-bottom: 30px; padding-bottom: 10px; }
+            .footer { position: fixed; bottom: 0; width: 100%; text-align: center; font-size: 10px; color: #666; border-top: 1px solid #eee; padding-top: 5px; }
+            h2 { color: #1e3a8a; margin: 0; }
+            .meta { font-size: 12px; color: #4b5563; }
+            .content { margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h2>FisioFlow - Clínica de Fisioterapia</h2>
+            <div class="meta">Data: ${new Date().toLocaleDateString('pt-BR')} | Profissional ID: ${user.uid}</div>
+          </div>
+          <div class="content">${html}</div>
+          <div class="footer">Gerado via FisioFlow Cloud System</div>
+        </body>
+      </html>
+    `;
+
+    const pdf = await generatePdfFromHtml(c.env, fullHtml);
+
+    return new Response(pdf, {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${filename || 'documento'}.pdf"`,
+      },
+    });
+  } catch (error: any) {
+    console.error('[Documents/Print] Error:', error);
+    return c.json({ error: 'Erro ao gerar PDF', details: error.message }, 500);
+  }
 });
 
 export { app as documentsRoutes };
