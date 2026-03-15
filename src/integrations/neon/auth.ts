@@ -13,10 +13,20 @@ export interface NeonUser {
 }
 
 /**
- * Neon Auth Client
- * Configurado usando a URL do Neon Auth provida pelas variáveis de ambiente.
+ * Neon Auth Client (Powered by Better Auth)
+ * Configurado com compartilhamento de cookie entre subdomínios.
  */
-export const authClient = createAuthClient(getNeonAuthUrl());
+export const authClient = createAuthClient(getNeonAuthUrl(), {
+  // Configuração crítica para que o login funcione entre www e api-pro
+  cookie: {
+    domain: '.moocafisio.com.br' 
+  },
+  // Mantém a sessão ativa por mais tempo
+  session: {
+    expiresIn: 60 * 60 * 24 * 7, // 7 dias
+    updateAge: 60 * 60 * 24 // Atualiza a cada 24h
+  }
+});
 
 /**
  * Helper para verificar se o Neon Auth está configurado

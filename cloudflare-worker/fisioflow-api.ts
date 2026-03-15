@@ -123,22 +123,37 @@ async function queryNeon(sql: string, params: any[] = [], databaseUrl: string): 
 
 // Verify JWT token (simplified - in production use proper JWT library)
 function verifyToken(authHeader: string | null, jwtSecret: string): { userId: string; orgId: string } | null {
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!authHeader) {
+    console.log('[Auth] Missing auth header');
     return null;
   }
+
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
   
-  const token = authHeader.slice(7);
-  // In production, verify JWT properly
-  // For now, we'll trust the token format
   try {
     const parts = token.split('.');
-    if (parts.length !== 3) return null;
+    if (parts.length !== 3) {
+      console.log('[Auth] Invalid token format (parts)');
+      return null;
+    }
     const base64Url = parts[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const json = atob(base64);
     const payload = JSON.parse(json);
-    return { userId: payload.sub || payload.userId, orgId: payload.orgId };
-  } catch {
+    
+    // Neon Auth typically uses 'sub' for userId. 
+    // We also fallback to organizationId or a default for testing if not present.
+    const userId = payload.sub || payload.userId || payload.id;
+    const orgId = payload.orgId || payload.organizationId || '00000000-0000-0000-0000-000000000001';
+
+    if (!userId) {
+      console.log('[Auth] Token missing userId/sub', payload);
+      return null;
+    }
+
+    return { userId, orgId };
+  } catch (e) {
+    console.log('[Auth] Token parse error', e);
     return null;
   }
 }

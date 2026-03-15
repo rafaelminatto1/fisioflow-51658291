@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
-import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { secureHeaders } from 'hono/secure-headers';
+import { cors } from 'hono/cors';
 import type { Env } from './types/env';
 import { exercisesRoutes } from './routes/exercises';
 import { protocolsRoutes } from './routes/protocols';
@@ -72,87 +72,53 @@ import { fcmTokensRoutes } from './routes/fcmTokens';
 import { webhooksRoutes } from './routes/webhooks';
 import { patientPortalRoutes } from './routes/patientPortal';
 import { messagingRoutes } from './routes/messaging';
+import { verifyToken } from './lib/auth';
+import { getRawSql } from './lib/db';
 
 import { perf } from './lib/perf';
 import { logToAxiom } from './lib/axiom';
 
 const app = new Hono<{ Bindings: Env }>();
 
-// Middleware de Logs para o Axiom (Observabilidade Total)
+// 1. MIDDLEWARE DE CORS GLOBAL (Executa antes de tudo)
 app.use('*', async (c, next) => {
-  const start = Date.now();
-  const requestId = crypto.randomUUID();
-  c.header('X-Request-Id', requestId);
+  const origin = c.req.header('Origin') || '*';
+  
+  if (c.req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Cookie',
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Max-Age': '86400',
+      },
+    });
+  }
 
   await next();
 
-  const duration = Date.now() - start;
-  const status = c.res.status;
-
-  // Envia log estruturado para o Axiom em segundo plano
-  logToAxiom(c.env, c.executionCtx, {
-    level: status >= 400 ? 'error' : 'info',
-    message: `${c.req.method} ${c.req.path} - ${status}`,
-    requestId,
-    method: c.req.method,
-    path: c.req.path,
-    status,
-    duration,
-    userAgent: c.req.header('user-agent'),
-    ip: c.req.header('cf-connecting-ip'),
-  });
-});
-
-// Performance Middleware
-app.use('*', async (c, next) => {
-  const label = `${c.req.method} ${c.req.path}`;
-  perf.start(label);
-  await next();
-  perf.end(label);
+  // Garante headers em respostas de sucesso
+  c.res.headers.set('Access-Control-Allow-Origin', origin);
+  c.res.headers.set('Access-Control-Allow-Credentials', 'true');
 });
 
 app.use('*', logger());
 app.use('*', secureHeaders());
 
-app.use('*', async (c, next) => {
-  const allowedOrigins = c.env.ALLOWED_ORIGINS?.split(',').map((o) => o.trim()) ?? [];
+// ===== HEALTH & DB DIAGNOSTIC =====
+app.get('/api/health', (c) => c.json({ status: 'ok', time: new Date().toISOString() }));
 
-  return cors({
-    origin: (origin) => {
-      // Se não houver origin (mobile apps, scripts), reflete se possível ou retorna o primeiro permitido
-      if (!origin || origin === 'null') {
-        return origin || allowedOrigins[0] || '*';
-      }
-
-      // Whitelist explícita e domínios confiáveis
-      if (
-        origin.endsWith('.pages.dev') ||
-        origin.endsWith('moocafisio.com.br') ||
-        origin.endsWith('inngest.com') ||
-        origin.includes('localhost') ||
-        origin.includes('127.0.0.1') ||
-        allowedOrigins.includes(origin)
-      ) {
-        return origin;
-      }
-
-      // Fallback seguro (não pode usar '*' com credentials: true)
-      return allowedOrigins[0] || '*';
-    },
-    allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-    allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    exposeHeaders: ['X-Request-Id'],
-    maxAge: 86400,
-    credentials: true,
-  })(c, next);
+app.get('/api/health/db', async (c) => {
+  try {
+    const sql = getRawSql(c.env);
+    const result = await sql`SELECT 1 as connection_test`;
+    return c.json({ status: 'connected', result });
+  } catch (error: any) {
+    return c.json({ status: 'error', message: error.message }, 500);
+  }
 });
-
-// ===== HEALTH CHECK BLINDADO =====
-app.get('/api/health', (c) => {
-  return c.json({ status: 'ok', timestamp: new Date().toISOString() }, 200);
-});
-
-app.get('/api/ping', (c) => c.json({ ok: true }, 200));
 
 // ===== ROTAS =====
 app.route('/api/exercises', exercisesRoutes);
@@ -180,8 +146,6 @@ app.route('/api/notifications', notificationsRoutes);
 app.route('/api', eventosRoutes);
 app.route('/api/insights', analyticsRoutes);
 app.route('/api/evolution', evolutionRoutes);
-app.route('/api/audit-logs', auditRoutes);
-
 app.route('/api/audit-logs', auditRoutes);
 app.route('/api/evaluation-forms', evaluationFormsRoutes);
 app.route('/api/organizations', organizationsRoutes);
@@ -224,86 +188,74 @@ app.route('/api/ai', aiRoutes);
 app.route('/api/dicom', dicomRoutes);
 app.route('/api/fcm-tokens', fcmTokensRoutes);
 app.route('/api/webhooks', webhooksRoutes);
-import { verifyToken } from './lib/auth';
-
+app.route('/api/patient-portal', patientPortalRoutes);
 app.route('/api/messaging', messagingRoutes);
 
-// =====================
-// REALTIME WEBSOCKET API
-// =====================
+// REALTIME
 app.get('/api/realtime', async (c) => {
-  if (c.req.header('Upgrade') !== 'websocket') {
-    return c.json({ error: 'Upgrade header required' }, 400);
-  }
-
+  if (c.req.header('Upgrade') !== 'websocket') return c.json({ error: 'Upgrade required' }, 400);
   const token = c.req.query('token');
-  if (!token) {
-    return c.json({ error: 'Token is required' }, 401);
-  }
-
-  const authUser = await verifyToken(`Bearer ${token}`, c.env);
-  if (!authUser) {
-    return c.json({ error: 'Invalid token' }, 401);
-  }
-
-  const orgId = authUser.organizationId;
-  const userId = authUser.uid;
-
-  const id = c.env.ORGANIZATION_STATE.idFromName(orgId);
+  if (!token) return c.json({ error: 'Token required' }, 401);
+  const authUser = await verifyToken(c, c.env);
+  if (!authUser) return c.json({ error: 'Invalid token' }, 401);
+  const id = c.env.ORGANIZATION_STATE.idFromName(authUser.organizationId);
   const obj = c.env.ORGANIZATION_STATE.get(id);
-
+  // Durable Object espera path /ws com userId e orgId
   const wsUrl = new URL(c.req.url);
   wsUrl.pathname = '/ws';
-  wsUrl.searchParams.set('userId', userId);
-  wsUrl.searchParams.set('orgId', orgId);
-
+  wsUrl.searchParams.set('userId', authUser.uid);
+  wsUrl.searchParams.set('orgId', authUser.organizationId);
   return obj.fetch(new Request(wsUrl.toString(), c.req.raw));
 });
 
-app.notFound((c) => c.json({ error: 'Rota não encontrada' }, 404));
-
-// Rota de Health Check
-app.get('/api/health', (c) => c.json({ status: 'ok', environment: c.env.ENVIRONMENT, timestamp: new Date().toISOString() }));
-
-// CATCH-ALL SUCCESS HANDLER para rotas /api não implementadas
-// Isso evita que o frontend quebre com 404 em funcionalidades ainda não migradas
-app.all('/api/*', (c) => {
-  console.log(`[Worker] Unmapped API Route accessed: ${c.req.path}`);
-  return c.json({ data: [], message: 'Funcionalidade em migração', unmapped: true }, 200);
-});
-
-// ERROR HANDLER BLINDADO
+// ERROR HANDLER (BLINDADO COM CORS)
 app.onError((err, c) => {
-  console.error('[Worker Error]', err.message, err.stack);
-
-  // Envia erro rico para o Axiom
-  logToAxiom(c.env, c.executionCtx, {
-    level: 'error',
-    message: `Unhandled Error: ${err.message}`,
-    error: {
-      name: err.name,
-      stack: err.stack,
-      cause: (err as any).cause,
-    },
-    request: {
-      method: c.req.method,
-      path: c.req.path,
-      url: c.req.url,
-    }
+  console.error('[CRITICAL WORKER ERROR]', err.message);
+  const origin = c.req.header('Origin') || '*';
+  
+  return c.json({
+    error: 'Internal Server Error',
+    message: err.message,
+    details: err.stack,
+  }, 500, {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Credentials': 'true',
   });
-
-  // Retorna sucesso vazio ou erro formatado dependendo do ambiente
-  const status = (err as any).status || 500;
-  return c.json({ 
-    data: [], 
-    error: c.env.ENVIRONMENT === 'production' ? 'Ocorreu um erro interno no servidor.' : err.message 
-  }, status === 404 ? 404 : 200); // Manter 200 para o frontend não quebrar se for decisão de design antiga
 });
 
 import { handleScheduled } from './cron';
+import { handleQueue } from './queue';
 export { OrganizationState } from './lib/realtime';
 
+/**
+ * WebSocket upgrades precisam ser tratados ANTES do middleware Hono para que os
+ * headers do middleware (CORS, secureHeaders) não corrompam a resposta 101.
+ */
+async function handleRealtimeWS(request: Request, env: any): Promise<Response> {
+  const url = new URL(request.url);
+  const token = url.searchParams.get('token');
+  if (!token) return new Response(JSON.stringify({ error: 'Token required' }), { status: 401 });
+
+  const authUser = await verifyToken({ req: { header: () => null, query: (k: string) => (k === 'token' ? token : null) } }, env);
+  if (!authUser) return new Response(JSON.stringify({ error: 'Invalid token' }), { status: 401 });
+
+  const id = env.ORGANIZATION_STATE.idFromName(authUser.organizationId);
+  const obj = env.ORGANIZATION_STATE.get(id);
+  const wsUrl = new URL(request.url);
+  wsUrl.pathname = '/ws';
+  wsUrl.searchParams.set('userId', authUser.uid);
+  wsUrl.searchParams.set('orgId', authUser.organizationId);
+  return obj.fetch(new Request(wsUrl.toString(), request));
+}
+
 export default {
-  fetch: app.fetch,
+  async fetch(request: Request, env: any, ctx: ExecutionContext): Promise<Response> {
+    // WebSocket upgrades: bypass Hono middleware (evita corrupção da resposta 101)
+    if (request.headers.get('Upgrade') === 'websocket' && new URL(request.url).pathname === '/api/realtime') {
+      return handleRealtimeWS(request, env);
+    }
+    return app.fetch(request, env, ctx);
+  },
   scheduled: handleScheduled,
+  queue: handleQueue,
 };

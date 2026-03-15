@@ -678,9 +678,9 @@ export const CalendarWeekViewDndKit = memo(({
 
                 const isPreviewDraggedAppointment = !!previewTarget && draggedAppointment?.id === apt.id;
                 const isDraggingThisOne = isDraggingThis(apt.id);
-                // Se estiver arrastando este card, escondemos o original (ghost) 
-                // para que apenas o DragOverlay (o mais sutil e reto) seja visível.
-                const hideGhostWhenDragging = isDraggingThisOne;
+                // Já que removemos o DragOverlay, não escondemos mais o original.
+                // O DraggableAppointment agora cuida do visual do arraste.
+                const hideGhostWhenDragging = false;
 
                 // Adjust style for relative positioning in DroppableTimeSlot
                 const cellStyle: React.CSSProperties = {
@@ -866,8 +866,6 @@ export const CalendarWeekViewDndKit = memo(({
             </VirtualizedCalendarGrid>
           </div>
         </div>
-
-        <CalendarDragOverlay activeAppointment={draggedAppointment} />
       </DndContext>
     </TooltipProvider>
   );
