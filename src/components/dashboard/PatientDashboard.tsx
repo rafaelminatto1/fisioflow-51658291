@@ -10,7 +10,7 @@ import {
   ShieldCheck,
   TrendingUp,
 } from 'lucide-react';
-import { useRealtime } from '@/contexts/RealtimeContext';
+import { useRealtime } from '@/hooks/useRealtimeContext';
 import { Profile } from '@/types/auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartWidget } from './ChartWidget';
