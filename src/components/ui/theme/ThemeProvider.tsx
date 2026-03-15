@@ -125,6 +125,7 @@ const THEME_STORAGE_KEY = 'fisioflow_theme_preferences';
 // ============================================================================
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
+ThemeContext.displayName = 'ThemeContext';
 
 export const useTheme = () => {
   const context = useContext(ThemeContext);

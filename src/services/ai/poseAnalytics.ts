@@ -1,7 +1,7 @@
 /**
  * Pose Analytics - Analytics para Exercícios com Pose Detection
  *
- * Integra os eventos de execução de exercícios com o Firebase Analytics
+ * Integra os eventos de execução de exercícios com o Analytics
  * existente no projeto.
  */
 

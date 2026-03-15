@@ -2,7 +2,7 @@
  * Predictive Dashboard Component
  *
  * Displays recovery predictions, risk factors, and milestones
- * Uses Firebase AI Logic predictions
+ * Uses Workers AI Logic predictions
  *
  * @module components/analytics/PredictiveDashboard
  * @version 1.0.0

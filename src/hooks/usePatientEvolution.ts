@@ -511,7 +511,7 @@ export function usePatientEvolutionData() {
         ...soapData
       });
 
-      // Save to treatment_sessions (Firebase)
+      // Save to treatment_sessions (Workers API)
       const user = getCurrentUser();
       if (user && appointmentId) {
         await evolutionApi.treatmentSessions.upsert({
