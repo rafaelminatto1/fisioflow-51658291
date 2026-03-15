@@ -1,10 +1,8 @@
 /**
- * useOnlineUsers - Migrated to Neon/Workers
+ * useOnlineUsers - Migrated to Realtime WebSocket (Cloudflare Durable Objects)
  */
 
-import { useQuery } from '@tanstack/react-query';
-import { auditApi, organizationMembersApi, type AuditLog, type OrganizationMember } from '@/lib/api/workers-client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useRealtime } from '@/hooks/useRealtimeContext';
 
 export interface PresenceUser {
   userId: string;
@@ -14,79 +12,22 @@ export interface PresenceUser {
   lastSeen: Date;
 }
 
-export interface PresenceState {
-  onlineUsers: PresenceUser[];
-  isConnected: boolean;
-}
-
-const ONLINE_WINDOW_MS = 15 * 60 * 1000;
-
-function mapOnlineUsers(members: OrganizationMember[], logs: AuditLog[]): PresenceUser[] {
-  const latestByUser = new Map<string, AuditLog>();
-
-  logs.forEach((log) => {
-    if (!log.user_id) return;
-    const current = latestByUser.get(log.user_id);
-    if (!current || new Date(log.created_at).getTime() > new Date(current.created_at).getTime()) {
-      latestByUser.set(log.user_id, log);
-    }
-  });
-
-  const now = Date.now();
-  return members
-    .filter((member) => member.active)
-    .map((member) => {
-      const latest = latestByUser.get(member.user_id);
-      if (!latest) return null;
-      const lastSeen = new Date(latest.created_at);
-      if (now - lastSeen.getTime() > ONLINE_WINDOW_MS) return null;
-
-      return {
-        userId: member.user_id,
-        userName: member.profiles?.full_name || member.profiles?.email || 'Usuário',
-        role: member.role,
-        joinedAt: lastSeen,
-        lastSeen,
-      } satisfies PresenceUser;
-    })
-    .filter((value): value is PresenceUser => value !== null)
-    .sort((a, b) => b.lastSeen.getTime() - a.lastSeen.getTime());
-}
-
 export function useOnlineUsers(_channelName: string = 'online-users') {
-  const { organizationId } = useAuth();
+  const { onlineUsers, isSubscribed } = useRealtime();
 
-  const query = useQuery({
-    queryKey: ['online-users', organizationId],
-    queryFn: async (): Promise<PresenceState> => {
-      if (!organizationId) {
-        return { onlineUsers: [], isConnected: false };
-      }
-
-      const [membersRes, logsRes] = await Promise.all([
-        organizationMembersApi.list({ organizationId, limit: 100 }),
-        auditApi.list({ limit: 200 }),
-      ]);
-
-      const members = (membersRes?.data ?? []) as OrganizationMember[];
-      const logs = (logsRes?.data ?? []) as AuditLog[];
-
-      return {
-        onlineUsers: mapOnlineUsers(members, logs),
-        isConnected: true,
-      };
-    },
-    enabled: !!organizationId,
-    refetchInterval: 30000,
-    refetchOnWindowFocus: false,
-  });
-
-  const state = query.data ?? { onlineUsers: [], isConnected: !!organizationId };
+  // Converter o Map do RealtimeContext para a interface PresenceUser esperada pelo componente
+  const mappedUsers: PresenceUser[] = Array.from(onlineUsers.values()).map(user => ({
+    userId: user.userId,
+    userName: user.name,
+    role: user.role || 'fisioterapeuta',
+    joinedAt: new Date(), // WebSocket não envia tempo de entrada por padrão ainda
+    lastSeen: new Date(),
+  }));
 
   return {
-    onlineUsers: state.onlineUsers,
-    isConnected: state.isConnected,
-    onlineCount: state.onlineUsers.length,
+    onlineUsers: mappedUsers,
+    isConnected: isSubscribed,
+    onlineCount: mappedUsers.length,
   };
 }
 

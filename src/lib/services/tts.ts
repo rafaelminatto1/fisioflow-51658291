@@ -38,7 +38,7 @@ class TextToSpeechService {
       return;
     }
 
-    this.baseUrl = import.meta.env.VITE_WORKERS_API_URL || 'https://fisioflow-api.rafalegollas.workers.dev';
+    this.baseUrl = import.meta.env.VITE_WORKERS_API_URL || 'https://api-pro.moocafisio.com.br';
   }
 
   /**

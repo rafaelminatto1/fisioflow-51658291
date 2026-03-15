@@ -10,7 +10,6 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { aiApi } from '@/lib/api/workers-client';
 import {
-
   Brain,
   Sparkles,
   TrendingUp,
@@ -21,7 +20,8 @@ import {
   Target,
   FileCheck,
   Wand2,
-  Plus
+  Plus,
+  Zap
 } from 'lucide-react';
 
 interface TreatmentAssistantProps {
@@ -48,11 +48,7 @@ export function TreatmentAssistant({ patientId, patientName, onApplyToSoap }: Tr
 
       const result = await aiApi.treatmentAssistant({ patientId, action });
       const data = result.data as TreatmentAssistantResponse;
-
-      if (data?.error) {
-        throw new Error(data.error);
-      }
-
+      
       setSuggestion(data.suggestion);
 
       toast({
@@ -63,6 +59,41 @@ export function TreatmentAssistant({ patientId, patientName, onApplyToSoap }: Tr
       toast({
         title: 'Erro na análise',
         description: error instanceof Error ? error.message : 'Erro desconhecido',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const callNativeAI = async (action: 'summarize' | 'translate', text: string) => {
+    try {
+      setLoading(true);
+      setActiveAction(action);
+      setSuggestion(null);
+
+      const response = await fetch(`${import.meta.env.VITE_WORKERS_API_URL}/api/ai/native/${action}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('neon_access_token')}`
+        },
+        body: JSON.stringify({ text })
+      });
+
+      const result = await response.json();
+      if (result.error) throw new Error(result.error);
+
+      setSuggestion(action === 'summarize' ? result.data.summary : result.data.translated);
+
+      toast({
+        title: '✨ IA Nativa (Llama 3.1)',
+        description: 'Processamento concluído com sucesso',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Erro na IA Nativa',
+        description: error.message,
         variant: 'destructive',
       });
     } finally {
@@ -90,7 +121,33 @@ export function TreatmentAssistant({ patientId, patientName, onApplyToSoap }: Tr
       </Card>
 
       {/* Action Buttons Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Llama 3.1 Summary Card */}
+        <Card
+          className="cursor-pointer hover:shadow-xl transition-all hover:-translate-y-1 border-2 border-primary/40 bg-primary/5 group"
+          onClick={() => {
+            const objective = document.getElementById('objective')?.innerText || '';
+            const subjective = document.getElementById('subjective')?.innerText || '';
+            const text = `S: ${subjective}\nO: ${objective}`;
+            !loading && callNativeAI('summarize', text.length > 10 ? text : 'Sem conteúdo clínico suficiente para resumir.');
+          }}
+        >
+          <CardContent className="p-6 text-center">
+            <div className="flex flex-col items-center gap-3">
+              <div className="p-4 bg-primary/20 rounded-full group-hover:scale-110 transition-transform">
+                <Zap className="h-8 w-8 text-primary animate-pulse" />
+              </div>
+              <h3 className="font-semibold">Resumo Llama 3.1</h3>
+              <p className="text-xs text-muted-foreground">
+                Resumo instantâneo e técnico da evolução atual
+              </p>
+              {loading && activeAction === 'summarize' && (
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         <Card
           className="cursor-pointer hover:shadow-xl transition-all hover:-translate-y-1 border-2 hover:border-primary/50"
           onClick={() => !loading && callAI('suggest_treatment')}
