@@ -17,17 +17,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Upgraded @testing-library/react to v16 for better React 18 compatibility
-- Improved Vercel deployment configuration with security headers
+- Improved Cloudflare deployment configuration with security headers
 - Enhanced test configuration with threads pool
 - Optimized build process with 4GB heap allocation
 
 ### Fixed
-- Removed exposed Supabase credentials from vercel.json
+- Removed exposed Supabase credentials from Cloudflare.json
 - Fixed AIAssistantPanel test imports
 - Resolved import issues with useDebounce hook consolidation
 
 ### Security
-- **CRITICAL**: Removed hardcoded Supabase credentials from vercel.json
+- **CRITICAL**: Removed hardcoded Supabase credentials from Cloudflare.json
 - Added Referrer-Policy and Permissions-Policy headers
 - Added cache-control headers for static assets
 

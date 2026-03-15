@@ -164,7 +164,7 @@ export const exerciseVideosService = {
     }
   },
 
-  // ── PROCESSING HELPERS (browser-side, sem Firebase) ───────────────────────
+  // ── PROCESSING HELPERS (browser-side, sem serviço externo) ───────────────────────
 
   validateVideoFile(file: File): { valid: boolean; error?: string } {
     if (file.size > MAX_VIDEO_SIZE) {

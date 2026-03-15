@@ -34,7 +34,7 @@ export function useCancellableQuery<T>(
     // Executar query com signal de abort
     return queryFn();
 
-    // Nota: Se a query_fn do Supabase não suportar AbortSignal,
+    // Nota: Se a query_fn não suportar AbortSignal,
     // o cancelamento será silencioso, mas o cleanup ainda acontecerá
   }, [queryFn]);
 

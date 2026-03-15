@@ -77,9 +77,9 @@ export const waitFor = (ms: number): Promise<void> =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
- * Mock Firebase Auth user
+ * Mock Auth user
  */
-export const mockFirebaseUser = {
+export const mockAuthUser = {
   uid: 'test-user-id',
   email: 'test@example.com',
   displayName: 'Test User',

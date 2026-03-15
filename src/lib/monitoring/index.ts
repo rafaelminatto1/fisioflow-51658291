@@ -168,7 +168,7 @@ export function trackMetric(
     });
   }
 
-  // Para analytics interno (Firebase Analytics)
+  // Para analytics interno
   if ((window as any).gtag) {
     (window as any).gtag('event', type, {
       ...data,
@@ -272,7 +272,7 @@ export function trackBusinessEvent(
 ) {
   trackMetric(event as MetricType, data);
 
-  // Firebase Analytics
+  // Analytics
   if ((window as any).gtag) {
     (window as any).gtag('event', event, {
       ...data,

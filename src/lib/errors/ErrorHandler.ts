@@ -4,7 +4,7 @@
  * Error notification options
  */
 
-import { AppError, SupabaseError } from './AppError';
+import { AppError, DatabaseError } from './AppError';
 import { logger } from './logger';
 import { toast } from 'sonner';
 
@@ -39,9 +39,9 @@ export const ErrorHandler = {
         if (error instanceof AppError) {
             appError = error;
         } else if (error instanceof Error) {
-            // Check if it's a Supabase error
-            if (this.isSupabaseError(error)) {
-                appError = SupabaseError.fromNetworkError(error);
+            // Check if it's a Database error
+            if (this.isDatabaseError(error)) {
+                appError = DatabaseError.fromNetworkError(error);
             } else {
                 // Wrap generic errors
                 appError = new AppError(error.message, 'UNKNOWN_ERROR', 500, false, { context }, error);
@@ -147,8 +147,8 @@ export const ErrorHandler = {
      * Get friendly title based on error code
      */
     getTitle(error: AppError): string {
-        // Supabase-specific titles
-        if (error instanceof SupabaseError) {
+        // Database-specific titles
+        if (error instanceof DatabaseError) {
             switch (error.code) {
                 case 'UNIQUE_VIOLATION': return 'Registro Duplicado';
                 case 'FOREIGN_KEY': return 'Registro Relacionado';
@@ -188,7 +188,6 @@ export const ErrorHandler = {
         return (
             message.includes('database') ||
             message.includes('postgres') ||
-            message.includes('supabase') ||
             message.includes('worker') ||
             message.includes('permission-denied') ||
             message.includes('not-found') ||
@@ -201,7 +200,7 @@ export const ErrorHandler = {
     /**
      * Check if error is a database error (legacy compatibility)
      */
-    isSupabaseError(error: Error): boolean {
+    isDatabaseError(error: Error): boolean {
         return this.isDataLayerError(error);
     },
 

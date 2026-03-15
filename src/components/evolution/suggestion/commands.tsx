@@ -1,6 +1,7 @@
 import { Extension } from '@tiptap/core';
 import Suggestion from '@tiptap/suggestion';
 import { ReactRenderer } from '@tiptap/react';
+import { PluginKey } from '@tiptap/pm/state';
 import tippy from 'tippy.js';
 import { ClipboardList, CheckSquare, Paperclip, ImageIcon, Sparkles, Book } from 'lucide-react';
 import { getEvolutionSettings } from '../EvolutionSettingsModal';
@@ -77,6 +78,7 @@ export const Commands = Extension.create({
   addProseMirrorPlugins() {
     return [
       Suggestion({
+        pluginKey: new PluginKey('clinicalCommands'),
         editor: this.editor,
         ...this.options.suggestion,
         items: ({ query }: { query: string }) => {

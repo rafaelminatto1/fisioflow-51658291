@@ -122,7 +122,7 @@ function combineDateTime(baseDate: Date, timeStr: string | null | undefined): Da
 // ============================================================================
 
 /**
- * Helper do Zod para campos de hora do Supabase (TIME columns come as strings)
+ * Helper do Zod para campos de hora do Database (TIME columns come as strings)
  */
 const timeString = () => z.string().nullable().optional();
 
@@ -166,7 +166,7 @@ function getTherapistName(
  * Schema base correspondente à estrutura do banco de dados.
  * Inclui campos novos e legados para compatibilidade durante migração.
  */
-/** Aceita UUID ou Firebase Auth UID (profiles.user_id pode não ser UUID) */
+/** Aceita UUID ou Neon Auth UID (profiles.user_id pode não ser UUID) */
 const idOrUid = () => z.string().min(1).nullable();
 
 export const AppointmentSchema = z.object({
@@ -180,7 +180,7 @@ export const AppointmentSchema = z.object({
     appointment_date: z.string().nullable().optional(),
     appointment_time: timeString(),
 
-    // Campos padrão (Supabase retorna DATE como string "YYYY-MM-DD")
+    // Campos padrão (Database retorna DATE como string "YYYY-MM-DD")
     date: z.string().nullable().optional(),
     start_time: timeString(),
     end_time: timeString(),
@@ -196,7 +196,7 @@ export const AppointmentSchema = z.object({
     notes: z.string().nullable().optional(),
     room: z.string().nullable().optional(),
 
-    // Campos de join (retornados pelo Supabase)
+    // Campos de join (retornados pelo Database)
     patient: z.object({
         full_name: z.string().nullable().optional(),
     }).nullable().optional(),

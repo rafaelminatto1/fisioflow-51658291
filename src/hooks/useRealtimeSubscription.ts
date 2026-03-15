@@ -13,14 +13,13 @@ interface UseRealtimeSubscriptionProps {
 }
 
 /**
- * Hook reutilizável para inscrições no Firebase Firestore Realtime.
- * Substitui o Supabase Realtime.
+ * Hook reutilizável para inscrições Realtime.
  * 
- * Adaptação do filtro: Tenta converter filtros simples do Supabase (col=eq.val)
+ * Adaptação do filtro: Tenta converter filtros simples (col=eq.val)
  */
 export function useRealtimeSubscription({
     table,
-    schema = 'public', // Ignored in Firebase
+    schema = 'public', // Ignored
     queryKey,
     event = '*',
     filter,

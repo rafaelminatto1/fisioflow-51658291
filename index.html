@@ -21,12 +21,12 @@
   <meta name="author" content="FisioFlow" />
   <meta name="keywords" content="fisioterapia, clínica, gestão, agendamento, pacientes, sistema médico" />
 
-  <!-- Google Fonts -->
+  <!-- Typography (Inter from Google Fonts) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+
+  <!-- Google Fonts Preconnect (Optional for other fallback fonts if needed) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
-    rel="stylesheet">
 
   <!-- Otimização de Carregamento (Hints para o Cloudflare Early Hints) -->
 
@@ -195,13 +195,13 @@
         }
       }
     </style>
-    <div id="initial-loader">
-      <div class="loader-icon">
+    <div id="initial-loader" aria-busy="true" aria-live="polite" role="status">
+      <div class="loader-icon" aria-hidden="true">
         <div class="spinner"></div>
       </div>
       <div class="loader-text" id="loader-joke">Carregando sistema...</div>
       <div class="loader-subtext">Preparando sua reabilitação digital</div>
-      <div class="progress-bar">
+      <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-label="Progresso de carregamento">
         <div class="progress-value"></div>
       </div>
     </div>

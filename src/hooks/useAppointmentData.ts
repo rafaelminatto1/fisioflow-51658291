@@ -1,5 +1,5 @@
 /**
- * useAppointmentData - Updated to use PostgreSQL via Firebase Functions
+ * useAppointmentData - Updated to use PostgreSQL via Cloudflare Workers
  *
  */
 
@@ -22,7 +22,7 @@ export const useAppointmentData = (
         initialPatientData?: Partial<Patient>;
     }
 ) => {
-    // Buscar dados do agendamento do PostgreSQL via Firebase Functions
+    // Buscar dados do agendamento do PostgreSQL via Cloudflare Workers
     const { data: appointment, isLoading: appointmentLoading, error: appointmentError } = useQuery({
         queryKey: ['appointment', appointmentId],
         queryFn: async () => {
@@ -77,7 +77,7 @@ export const useAppointmentData = (
         }, 'useAppointmentData');
     }
 
-    // Buscar informações do paciente do PostgreSQL via Firebase Functions
+    // Buscar informações do paciente do PostgreSQL via Cloudflare Workers
     // Se vier embutido no appointment, usa como initialData e evita fetch imediato
     const { data: patient, isLoading: patientLoading, error: patientError } = useQuery({
         queryKey: ['patient', patientId],

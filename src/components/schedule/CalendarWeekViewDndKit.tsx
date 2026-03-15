@@ -29,6 +29,7 @@ import {
 } from '@dnd-kit/core';
 import { useIsMobile } from '@/hooks/use-mobile.tsx';
 import { useIsTouch } from '@/hooks/use-touch.tsx';
+import { useRenderTracking } from '@/hooks/useRenderTracking';
 
 // =====================================================================
 // TYPES
@@ -130,6 +131,8 @@ export const CalendarWeekViewDndKit = memo(({
   selectedIds = new Set(),
   onToggleSelection
 }: CalendarWeekViewDndKitProps) => {
+  useRenderTracking('CalendarWeekViewDndKit', { appointmentsCount: appointments?.length });
+
   // Get card size configuration from user preferences
   const { cardSize, heightScale } = useCardSize();
   const _preferredSlotHeight = calculateSlotHeightFromCardSize(cardSize, heightScale);
@@ -387,15 +390,22 @@ export const CalendarWeekViewDndKit = memo(({
     return map;
   }, [previewWeekAppointments, weekDays]);
 
-  // Group appointments by time and day for virtualization
+  // Group appointments by time and day for virtualization - Optimized single-pass
   const appointmentsByTimeAndDay = useMemo(() => {
     const map = new Map<string, Map<number, Appointment[]>>();
+    
+    // Create day index map for faster lookup
+    const dayToIdx = new Map();
+    weekDays.forEach((d, i) => dayToIdx.set(formatDateToLocalISO(d), i));
+
     previewWeekAppointments.forEach(apt => {
       const time = normalizeTime(apt.time);
       const aptDate = parseAppointmentDate(apt.date);
       if (!aptDate) return;
-      const dayIndex = weekDays.findIndex(d => isSameDay(d, aptDate));
-      if (dayIndex === -1) return;
+      
+      const dateKey = formatDateToLocalISO(aptDate);
+      const dayIndex = dayToIdx.get(dateKey);
+      if (dayIndex === undefined) return;
 
       if (!map.has(time)) map.set(time, new Map());
       const dayMap = map.get(time)!;

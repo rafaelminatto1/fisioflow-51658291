@@ -137,7 +137,7 @@ export function isRetryableError(error: unknown): boolean {
       return true;
     }
 
-    // Retry on specific Supabase/Postgres errors
+    // Retry on specific Postgres errors
     if (
       error.message.includes('408') || // Request timeout
       error.message.includes('503') || // Service unavailable

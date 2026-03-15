@@ -15,7 +15,7 @@ interface PermissionsResult {
 }
 
 /**
- * Hook de permissões baseado no perfil do usuário do Firebase/Cloud SQL
+ * Hook de permissões baseado no perfil do usuário do Neon/Cloudflare
  */
 export function usePermissions(): PermissionsResult {
   const { profile, loading, initialized } = useAuth();

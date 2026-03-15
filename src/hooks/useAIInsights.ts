@@ -2,7 +2,7 @@
  * AI Insights Hook
  *
  * Provides AI-powered clinical insights and recommendations
- * via Firebase Cloud Functions (Vertex AI / Gemini).
+ * via Cloudflare Workers (Gemini).
  */
 
 import { useState, useMemo, useCallback } from 'react';
@@ -163,7 +163,7 @@ function buildTreatmentRecommendationsPrompt(options: AIInsightOptions & {
 // ============================================================================
 
 /**
- * Hook for generating AI-powered clinical insights (Firebase Cloud Functions)
+ * Hook for generating AI-powered clinical insights (Cloudflare Workers)
  */
 export function useAIInsights(options: AIInsightOptions) {
   const [completion, setCompletion] = useState('');
@@ -210,7 +210,7 @@ export function useAIInsights(options: AIInsightOptions) {
 }
 
 /**
- * Hook for generating AI-powered treatment recommendations (Firebase Cloud Functions)
+ * Hook for generating AI-powered treatment recommendations (Cloudflare Workers)
  */
 export function useAITreatmentRecommendations(
   options: AIInsightOptions & {
@@ -275,7 +275,7 @@ interface ChatMessage {
 }
 
 /**
- * Hook for AI chat assistant for patient analysis (Firebase Cloud Functions)
+ * Hook for AI chat assistant for patient analysis (Cloudflare Workers)
  */
 export function useAIPatientAssistant(
   patientId: string,
@@ -340,7 +340,7 @@ export function useAIPatientAssistant(
 }
 
 /**
- * Hook for batch AI analysis of multiple patients (Firebase - sequential calls)
+ * Hook for batch AI analysis of multiple patients (Cloudflare Workers - sequential calls)
  */
 export function useAIBatchInsights() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);

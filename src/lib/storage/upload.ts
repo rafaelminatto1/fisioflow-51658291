@@ -2,7 +2,7 @@
  * File Upload Service - Migrated to Cloudflare R2
  *
  * All uploads now go through Cloudflare R2 via pre-signed URLs.
- * Maintains compatibility with existing Firebase-style interfaces.
+ * Maintains compatibility with existing interfaces.
  *
  * @version 3.0.0 - Cloudflare R2 Migration
  */
@@ -104,10 +104,10 @@ export async function uploadToBlob(file: File, folder: string = 'uploads') {
   return uploadFile(file, { folder });
 }
 
-export async function uploadToFirebase(file: File, folder: string = 'documents') {
+export async function uploadToCloud(file: File, folder: string = 'documents') {
   return uploadFile(file, { folder });
 }
 
-// Other Firebase-specific exports are stubbed or removed if not used
+// Other legacy exports are stubbed or removed if not used
 export const getDownloadUrl = async (path: string) => path; // R2 URLs are direct
 export const deleteFiles = async (paths: string[]) => Promise.all(paths.map(deleteFile));

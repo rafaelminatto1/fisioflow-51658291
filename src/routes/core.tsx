@@ -53,7 +53,11 @@ export const coreRoutes = (
       </RouteErrorBoundary>
     } />
     <Route path="/protocols" element={<ProtectedRoute><ProtocolsPage /></ProtectedRoute>} />
-    <Route path="/financial" element={<ProtectedRoute><Financial /></ProtectedRoute>} />
+    <Route path="/financial" element={
+      <RouteErrorBoundary routeName="Financial">
+        <ProtectedRoute><Financial /></ProtectedRoute>
+      </RouteErrorBoundary>
+    } />
     <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
     <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
     <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

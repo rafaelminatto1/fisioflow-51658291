@@ -1,7 +1,7 @@
 /**
  * Legacy API URL compatibility.
  *
- * These URLs now point to Cloudflare Workers instead of Cloud Run / Firebase.
+ * These URLs point to Cloudflare Workers.
  * Dynamic resources still need an id appended by the caller or by the
  * compatibility layer in `function-http.ts`.
  */

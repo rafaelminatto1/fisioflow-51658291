@@ -66,7 +66,9 @@ function extractHost(src: string): string | null {
  * Helper para gerar URL de otimização do Cloudflare via Worker
  */
 function getOptimizedUrl(src: string, options: { width?: number; quality?: number }): string {
-  if (!src || src.startsWith('data:') || src.startsWith('blob:') || src.includes('localhost')) {
+  // If src is local/imported via Vite (already has hash or starts with /assets), skip Cloudflare Worker 
+  // as Vite already handles optimization and the Worker might return 404 for dynamic hashed paths.
+  if (!src || src.startsWith('data:') || src.startsWith('blob:') || src.includes('localhost') || src.includes('/assets/')) {
     return src;
   }
 

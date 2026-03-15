@@ -174,7 +174,7 @@ export type PatientDBAppointmentJoin = {
 // ==============================================================================
 
 /**
- * Convert column array to comma-separated string for Supabase queries
+ * Convert column array to comma-separated string for PostgreSQL queries
  */
 export function buildSelectQuery<T extends readonly string[]>(columns: T): string {
   return columns.join(',');

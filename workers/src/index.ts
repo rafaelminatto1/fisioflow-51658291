@@ -224,7 +224,41 @@ app.route('/api/ai', aiRoutes);
 app.route('/api/dicom', dicomRoutes);
 app.route('/api/fcm-tokens', fcmTokensRoutes);
 app.route('/api/webhooks', webhooksRoutes);
+import { verifyToken } from './lib/auth';
+
 app.route('/api/messaging', messagingRoutes);
+
+// =====================
+// REALTIME WEBSOCKET API
+// =====================
+app.get('/api/realtime', async (c) => {
+  if (c.req.header('Upgrade') !== 'websocket') {
+    return c.json({ error: 'Upgrade header required' }, 400);
+  }
+
+  const token = c.req.query('token');
+  if (!token) {
+    return c.json({ error: 'Token is required' }, 401);
+  }
+
+  const authUser = await verifyToken(`Bearer ${token}`, c.env);
+  if (!authUser) {
+    return c.json({ error: 'Invalid token' }, 401);
+  }
+
+  const orgId = authUser.organizationId;
+  const userId = authUser.uid;
+
+  const id = c.env.ORGANIZATION_STATE.idFromName(orgId);
+  const obj = c.env.ORGANIZATION_STATE.get(id);
+
+  const wsUrl = new URL(c.req.url);
+  wsUrl.pathname = '/ws';
+  wsUrl.searchParams.set('userId', userId);
+  wsUrl.searchParams.set('orgId', orgId);
+
+  return obj.fetch(new Request(wsUrl.toString(), c.req.raw));
+});
 
 app.notFound((c) => c.json({ error: 'Rota não encontrada' }, 404));
 
@@ -267,6 +301,7 @@ app.onError((err, c) => {
 });
 
 import { handleScheduled } from './cron';
+export { OrganizationState } from './lib/realtime';
 
 export default {
   fetch: app.fetch,

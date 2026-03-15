@@ -2,7 +2,7 @@
  * Quest Generator for Gamification
  *
  * Generates personalized quests based on patient state
- * Migrated from Supabase to Firebase Functions
+ * Migrated to Cloudflare Workers
  */
 
 import { differenceInDays } from 'date-fns';
@@ -33,7 +33,7 @@ export async function generateSmartQuests(
     const today = new Date().toISOString().split('T')[0];
 
     // 1. Core Quest: Always present (Session or Exercise)
-    // Check if there is an appointment today using Firebase Functions
+    // Check if there is an appointment today using Cloudflare Workers
     const hasAppointmentToday = await checkTodayAppointment(patientId, today);
 
     if (hasAppointmentToday) {

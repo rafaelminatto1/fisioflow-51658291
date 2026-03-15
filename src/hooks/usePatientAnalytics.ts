@@ -398,9 +398,8 @@ export function useUpdatePatientRiskScore() {
 
   return useMutation({
     mutationFn: async (_patientId: string) => {
-      // Firebase doesn't support RPC functions directly
-      // This would need to be implemented as a Cloud Function
-      throw new Error('RPC function not implemented - needs Cloud Function');
+      // Endpoint to be implemented in Cloudflare Workers
+      throw new Error('RPC function not implemented - needs Cloudflare Worker endpoint');
     },
     onSuccess: (_, patientId) => {
       queryClient.invalidateQueries({ queryKey: PATIENT_ANALYTICS_KEYS.risk(patientId) });

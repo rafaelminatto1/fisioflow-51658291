@@ -1,5 +1,5 @@
 /**
- * Performance Monitoring Utilities for Firebase
+ * Performance Monitoring Utilities
  *
  */
 
@@ -36,7 +36,7 @@ export interface PerformanceReport {
 // QUERY PERFORMANCE ANALYSIS
 // ============================================================================
 
-// In-memory storage for query metrics (in production, use Firebase Analytics)
+// In-memory storage for query metrics
 const queryMetrics: QueryMetrics[] = [];
 const MAX_METRICS = 1000;
 
@@ -109,7 +109,7 @@ export async function generatePerformanceReport(): Promise<PerformanceReport> {
   if (slowQueryMetrics.length > 0) {
     const avgDuration = slowQueryMetrics.reduce((sum, m) => sum + m.duration, 0) / slowQueryMetrics.length;
     if (avgDuration > 2000) {
-      recommendations.push('Average query time is high - consider using Firebase indexes or pagination');
+      recommendations.push('Average query time is high - consider using database indexes or pagination');
     }
   }
 

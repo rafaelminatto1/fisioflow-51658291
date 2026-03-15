@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { createPool } from '../lib/db';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import type { Env } from '../types/env';
+import { broadcastToOrg } from '../lib/realtime';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 type Pool = ReturnType<typeof createPool>;
@@ -94,7 +95,21 @@ app.post('/', requireAuth, async (c) => {
         JSON.stringify(body.metadata ?? {}),
       ],
     );
-    return c.json({ data: result.rows[0] }, 201);
+
+    const row = result.rows[0];
+
+    // Real-time Broadcast
+    await broadcastToOrg(c.env, user.organizationId, {
+      type: 'NOTIFICATION_RECEIVED',
+      payload: { 
+        userId: row.user_id, 
+        title: row.title,
+        message: row.message,
+        timestamp: new Date().toISOString() 
+      }
+    });
+
+    return c.json({ data: row }, 201);
   } catch (_error) {
     return c.json({ error: 'Erro ao criar notificação' }, 500);
   }

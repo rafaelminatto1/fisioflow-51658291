@@ -7,76 +7,36 @@ import { useCardSize } from '@/hooks/useCardSize';
 const getStatusStyles = (status: string) => {
   const styles = {
     confirmado: {
-      border: 'border-emerald-500',
-      bg: 'bg-emerald-50/95 dark:bg-emerald-500/20',
-      hoverBg: 'hover:bg-emerald-100/95 dark:hover:bg-emerald-500/30',
-      text: 'text-emerald-900 dark:text-emerald-400',
-      subtext: 'text-emerald-800/90 dark:text-emerald-300/90',
+      className: 'calendar-card-confirmado',
       accent: 'bg-emerald-600',
-      indicator: 'text-emerald-700'
     },
     agendado: {
-      border: 'border-sky-300',
-      bg: 'bg-sky-100/95 dark:bg-sky-200/30',
-      hoverBg: 'hover:bg-sky-200/95 dark:hover:bg-sky-300/40',
-      text: 'text-sky-900 dark:text-sky-300',
-      subtext: 'text-sky-800/90 dark:text-sky-400/90',
+      className: 'calendar-card-agendado',
       accent: 'bg-sky-400',
-      indicator: 'text-sky-700'
     },
     em_andamento: {
-      border: 'border-amber-500',
-      bg: 'bg-amber-50/95 dark:bg-amber-500/20',
-      hoverBg: 'hover:bg-amber-100/95 dark:hover:bg-amber-500/30',
-      text: 'text-amber-900 dark:text-amber-400',
-      subtext: 'text-amber-800/90 dark:text-amber-300/90',
+      className: 'calendar-card-em_andamento',
       accent: 'bg-amber-600',
-      indicator: 'text-amber-700'
     },
     cancelado: {
-      border: 'border-red-500',
-      bg: 'bg-red-50/95 dark:bg-red-500/20',
-      hoverBg: 'hover:bg-red-100/95 dark:hover:bg-red-500/30',
-      text: 'text-red-900 dark:text-red-400',
-      subtext: 'text-red-800/90 dark:text-red-300/90',
+      className: 'calendar-card-cancelado',
       accent: 'bg-red-600',
-      indicator: 'text-red-700'
     },
     falta: {
-      border: 'border-red-500',
-      bg: 'bg-red-50/95 dark:bg-red-500/20',
-      hoverBg: 'hover:bg-red-100/95 dark:hover:bg-red-500/30',
-      text: 'text-red-900 dark:text-red-400',
-      subtext: 'text-red-800/90 dark:text-red-300/90',
-      accent: 'bg-red-600',
-      indicator: 'text-red-700'
+      className: 'calendar-card-cancelado',
+      accent: 'bg-red-700',
     },
     concluido: {
-      border: 'border-teal-500',
-      bg: 'bg-teal-50/95 dark:bg-teal-500/20',
-      hoverBg: 'hover:bg-teal-100/95 dark:hover:bg-teal-500/30',
-      text: 'text-teal-900 dark:text-teal-400',
-      subtext: 'text-teal-800/90 dark:text-teal-300/90',
+      className: 'calendar-card-concluido',
       accent: 'bg-teal-600',
-      indicator: 'text-teal-700'
     },
     avaliacao: {
-      border: 'border-violet-500',
-      bg: 'bg-violet-50/95 dark:bg-violet-500/20',
-      hoverBg: 'hover:bg-violet-100/95 dark:hover:bg-violet-500/30',
-      text: 'text-violet-900 dark:text-violet-400',
-      subtext: 'text-violet-800/90 dark:text-violet-300/90',
+      className: 'calendar-card-avaliacao',
       accent: 'bg-violet-600',
-      indicator: 'text-violet-700'
     },
     default: {
-      border: 'border-slate-500',
-      bg: 'bg-slate-50/95 dark:bg-slate-500/20',
-      hoverBg: 'hover:bg-slate-100/95 dark:hover:bg-slate-500/30',
-      text: 'text-slate-900 dark:text-slate-300',
-      subtext: 'text-slate-700/90 dark:text-slate-300/90',
+      className: 'calendar-card-agendado',
       accent: 'bg-slate-600',
-      indicator: 'text-slate-700'
     }
   };
   return styles[status as keyof typeof styles] || styles.default;
@@ -116,18 +76,18 @@ export function CalendarDragOverlay({ activeAppointment }: CalendarDragOverlayPr
   const baseHeight = Math.max(48, Math.min(80, duration * 0.8));
 
   return (
-    <DragOverlay>
+    <DragOverlay dropAnimation={null}>
       <div
         className={cn(
-          "calendar-appointment-card bg-slate-50/80 dark:bg-slate-800/90 backdrop-blur-sm border rounded-sm shadow-xl pointer-events-none",
+          "calendar-appointment-card border rounded-lg shadow-2xl pointer-events-none scale-105 opacity-90",
           "flex flex-col overflow-hidden",
-          statusStyles.border,
-          statusStyles.bg
+          statusStyles.className
         )}
         style={{
-          minWidth: '180px',
-          maxWidth: '240px',
+          minWidth: '220px',
+          maxWidth: '280px',
           minHeight: `${baseHeight}px`,
+          zIndex: 9999
         }}
       >
         <div
@@ -140,12 +100,11 @@ export function CalendarDragOverlay({ activeAppointment }: CalendarDragOverlayPr
           <div className="flex items-center justify-between gap-2 mb-1 w-full">
             <div className="flex items-center gap-2 min-w-0">
               {/* Accent Bar */}
-              <div className={cn("w-1 h-3 rounded-full shrink-0 opacity-80", statusStyles.accent)} />
+              <div className={cn("w-1 h-3 rounded-full shrink-0 bg-white/40", statusStyles.accent)} />
 
               <span
                 className={cn(
-                  "font-mono font-semibold truncate leading-none tracking-tight",
-                  statusStyles.text,
+                  "font-mono font-bold truncate leading-none tracking-tight text-white",
                 )}
                 style={{ fontSize: `${Math.max(11, scaledTimeFontSize)}px` }}
               >
@@ -159,8 +118,7 @@ export function CalendarDragOverlay({ activeAppointment }: CalendarDragOverlayPr
             <div className="min-w-0 flex-1">
               <span
                 className={cn(
-                  "block font-bold leading-tight line-clamp-2",
-                  statusStyles.text,
+                  "block font-bold leading-tight line-clamp-2 text-white",
                 )}
                 style={{ fontSize: `${Math.max(12, scaledNameFontSize)}px` }}
               >
@@ -172,8 +130,7 @@ export function CalendarDragOverlay({ activeAppointment }: CalendarDragOverlayPr
           {/* Type (if space permits) */}
           {sizeConfig.showType && activeAppointment.type && (
             <div className={cn(
-              "truncate opacity-70 font-medium mt-1",
-              statusStyles.subtext
+              "truncate opacity-80 font-medium mt-1 text-white/90"
             )}
             style={{ fontSize: `${Math.max(10, scaledTypeFontSize)}px` }}
             >

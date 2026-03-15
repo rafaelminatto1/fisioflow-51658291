@@ -1,5 +1,5 @@
 /**
- * Firebase Analytics - Eventos Customizados
+ * Analytics - Eventos Customizados
  *
  * Rastreia eventos específicos do FisioFlow para analytics
  */

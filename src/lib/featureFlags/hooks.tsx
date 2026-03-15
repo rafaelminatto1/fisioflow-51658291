@@ -42,6 +42,7 @@ const FeatureFlagContext = createContext<FeatureFlagContextValue>({
   isInitialized: false,
   userId: null,
 });
+FeatureFlagContext.displayName = 'FeatureFlagContext';
 
 /**
  * Provider component for feature flags
