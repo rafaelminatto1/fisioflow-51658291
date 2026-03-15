@@ -245,7 +245,7 @@ export function ExerciseAI({
 
       setProgress(50);
 
-      // Firebase Cloud Functions - aiExerciseSuggestion
+      // Workers - aiExerciseSuggestion
       const { getExerciseSuggestions } = await import('@/services/ai/geminiAiService');
       const result = await getExerciseSuggestions({
         patientId,

@@ -19,6 +19,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ChartWidget } from './ChartWidget';
 import { Profile } from '@/types/auth';
 import { useAppointments } from '@/hooks/useAppointments';
+import { useRenderTracking } from '@/hooks/useRenderTracking';
 import type { DashboardPeriod } from '@/hooks/useDashboardMetrics';
 import { cn } from '@/lib/utils';
 
@@ -62,6 +63,7 @@ function SummaryCard({ icon: Icon, label, value, description, tone = 'primary' }
 }
 
 export function TherapistDashboard({ lastUpdate, profile, period = 'hoje' }: TherapistDashboardProps) {
+  useRenderTracking('TherapistDashboard', { period });
   const navigate = useNavigate();
   const { data: allAppointments = [], isLoading: appointmentsLoading } = useAppointments();
 

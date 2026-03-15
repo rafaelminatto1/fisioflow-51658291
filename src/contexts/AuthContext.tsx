@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 import { Profile, UserRole, RegisterFormData } from '@/types/auth';
 
-/** Tipo simplificado de usuário para o frontend, desacoplado do Firebase */
+/** Tipo simplificado de usuário para o frontend, desacoplado da infraestrutura */
 export interface AuthUser {
   uid: string;
   email: string | null;
@@ -35,6 +35,7 @@ interface AuthContextType {
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+AuthContext.displayName = 'AuthContext';
 
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);

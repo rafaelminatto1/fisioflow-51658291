@@ -47,8 +47,8 @@ import { FluxoCaixaContent } from './financeiro/FluxoCaixaPage';
 import { RecibosContent } from './financeiro/RecibosPage';
 import { NFSeContent } from './financeiro/NFSePage';
 
-const PackagesManager = lazy(() => import('@/components/financial').then(m => ({ default: m.PackagesManager })));
-const FinancialAIAdvisor = lazy(() => import('@/components/financial').then(m => ({ default: m.FinancialAIAdvisor })));
+const PackagesManager = lazy(() => import('@/components/financial/PackagesManager').then(m => ({ default: m.PackagesManager })));
+const FinancialAIAdvisor = lazy(() => import('@/components/financial/FinancialAIAdvisor').then(m => ({ default: m.FinancialAIAdvisor })));
 
 const Financial = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -77,10 +77,10 @@ const Financial = () => {
   const safeStats = {
     totalRevenue: stats?.totalRevenue ?? 0,
     monthlyGrowth: stats?.monthlyGrowth ?? 0,
-    pendingPayments: stats?.pendingPayments ?? 0,
-    paidCount: stats?.paidCount ?? 0,
-    totalCount: stats?.totalCount ?? 0,
-    averageTicket: stats?.averageTicket ?? 0,
+    pendingPayments: stats?.pendingAmount ?? 0,
+    paidCount: (stats as any)?.paidCount ?? 0,
+    totalCount: (stats as any)?.totalCount ?? 0,
+    averageTicket: (stats as any)?.averageTicket ?? 0,
   };
 
   const handleNewTransaction = () => {
@@ -300,8 +300,10 @@ const Financial = () => {
                 icon={DollarSign}
                 title="Sem transações"
                 description="Não encontramos registros financeiros para este período."
-                actionLabel="Nova Transação"
-                onAction={handleNewTransaction}
+                action={{
+                  label: "Nova Transação",
+                  onClick: handleNewTransaction
+                }}
               />
             ) : (
               <div className="border border-slate-100 dark:border-slate-800/50 rounded-2xl overflow-hidden bg-white dark:bg-slate-900 shadow-premium-sm">
@@ -383,11 +385,11 @@ const Financial = () => {
       </div>
 
       <TransactionModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
         onSubmit={handleSubmit}
         transaction={editingTransaction}
-        isSubmitting={isCreating || isUpdating}
+        isLoading={isCreating || isUpdating}
       />
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>

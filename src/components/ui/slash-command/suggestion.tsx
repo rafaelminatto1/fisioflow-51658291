@@ -438,6 +438,7 @@ export const SlashCommand = Extension.create({
     addProseMirrorPlugins() {
         return [
             Suggestion({
+                pluginKey: new PluginKey('slashCommand'),
                 editor: this.editor,
                 ...this.options.suggestion,
             }),
@@ -451,7 +452,6 @@ export const ExerciseAutocomplete = Extension.create({
         return {
             suggestion: {
                 char: '',
-                pluginKey: new PluginKey('exerciseAutocomplete'),
                 startOfLine: false,
                 allow: ({ state, range }: any) => {
                     const $from = state.doc.resolve(range.from);
@@ -473,6 +473,7 @@ export const ExerciseAutocomplete = Extension.create({
     addProseMirrorPlugins() {
         return [
             Suggestion({
+                pluginKey: new PluginKey('exerciseAutocomplete'),
                 editor: this.editor,
                 ...this.options.suggestion,
             }),

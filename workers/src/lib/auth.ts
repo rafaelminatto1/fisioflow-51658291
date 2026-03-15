@@ -75,9 +75,17 @@ export async function verifyToken(
     
     try {
       const jwks = createRemoteJWKSet(new URL(jwksUrl));
-      // Verifica assinatura EdDSA e issuer (origin da URL do Neon Auth)
-      const issuer = rootIssuer || derivedIssuer;
-      const verified = await jwtVerify(token, jwks, issuer ? { issuer } : undefined);
+      // Verifica assinatura e issuer (múltiplos candidatos aceitos para resiliência)
+      const verifyOptions: any = {
+        issuer: issuerCandidates,
+        clockTolerance: '60s', // Aumenta tolerância para 60s
+      };
+      
+      if (env.NEON_AUTH_AUDIENCE) {
+        verifyOptions.audience = env.NEON_AUTH_AUDIENCE;
+      }
+
+      const verified = await jwtVerify(token, jwks, verifyOptions);
       verifiedPayload = verified.payload;
     } catch (e) {
       lastError = e;
@@ -91,8 +99,15 @@ export async function verifyToken(
 
     const payload = verifiedPayload;
     const asRecord = payload as Record<string, unknown>;
-    const userId = typeof payload.sub === 'string' ? payload.sub : undefined;
-    if (!userId) return null;
+    // Suporte a 'sub' (padrão JWT) ou 'id' (algumas configs do Better Auth)
+    const userId = (typeof payload.sub === 'string' ? payload.sub : undefined) || 
+                   (typeof asRecord.id === 'string' ? asRecord.id : undefined) ||
+                   (typeof asRecord.userId === 'string' ? asRecord.userId : undefined);
+                   
+    if (!userId) {
+      console.error('[Auth] User ID (sub/id) not found in JWT payload');
+      return null;
+    }
 
     return {
       uid: userId,

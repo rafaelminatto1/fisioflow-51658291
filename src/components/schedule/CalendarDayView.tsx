@@ -208,33 +208,6 @@ const CalendarDayView = memo(({
                                             <Ban className="h-4 w-4 shrink-0" />
                                             <span className="text-[10px] uppercase tracking-wide">Bloqueado</span>
                                         </span>
-                                    ) : showPreview ? (
-                                        <div className="absolute inset-0 flex items-center px-1 gap-1 pointer-events-none" aria-hidden="true">
-                                            {previewCards.map((apt, index) => {
-                                                const cardWidthPercent = calculateCardWidthPercent(totalCards);
-                                                const leftOffset = calculateCardOffsetPercent(index, totalCards);
-                                                const isDraggedCard = apt.id === dragState.appointment?.id;
-                                                const showText = shouldShowText(cardWidthPercent, totalCards);
-
-                                                return (
-                                                    <DropTargetPreviewCard
-                                                        key={apt.id}
-                                                        appointment={apt}
-                                                        isDraggedCard={!!isDraggedCard}
-                                                        cardWidthPercent={cardWidthPercent}
-                                                        leftOffset={leftOffset}
-                                                        showText={showText}
-                                                        variant="day"
-                                                        slotHeight={slotHeightMobile}
-                                                    />
-                                                );
-                                            })}
-                                            {totalCards > MAX_CARDS_WITHOUT_BADGE && (
-                                                <div className="absolute bottom-1 right-1 bg-primary/80 text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
-                                                    {totalCards}
-                                                </div>
-                                            )}
-                                        </div>
                                     ) : (
                                         <span className={cn(
                                             "absolute inset-0 flex items-center justify-center text-xs transition-opacity duration-200",

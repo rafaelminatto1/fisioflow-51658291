@@ -1,7 +1,7 @@
 /**
  * FisioFlow Voice Assistant for Telemedicine
  *
- * Real-time voice assistant using Firebase AI Live API with
+ * Real-time voice assistant using AI Live API with
  * gemini-2.5-flash-native-audio-preview-12-2025 model.
  *
  * Features:

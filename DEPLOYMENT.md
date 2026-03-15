@@ -101,7 +101,7 @@ Nunca commite arquivos `.env` com dados sensíveis. Use sempre:
 ### GitHub Actions (Futuro)
 ```yaml
 # .github/workflows/deploy.yml
-name: Deploy to Vercel
+name: Deploy to Cloudflare
 on:
   push:
     branches: [main]

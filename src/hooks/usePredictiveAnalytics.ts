@@ -2,7 +2,7 @@
  * React Hook for Predictive Analytics
  *
  * Provides access to recovery predictions and risk assessments
- * Uses Firebase AI Logic for predictions
+ * Uses Cloudflare AI for predictions
  *
  * @module hooks/usePredictiveAnalytics
  * @version 1.0.0
