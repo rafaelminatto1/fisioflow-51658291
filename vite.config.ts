@@ -1,10 +1,7 @@
-
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import path from 'path';
-// import { componentTagger } from 'lovable-tagger';
-import viteCompression from 'vite-plugin-compression';
 
 function htmlPlugin(appVersion: string, buildTime: string): any {
   return {
@@ -60,14 +57,12 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       mockMobileModules(),
-      // mode === 'development' && componentTagger(),
       htmlPlugin(appVersion, buildTime),
       isProduction && process.env.SENTRY_AUTH_TOKEN && sentryVitePlugin({
         org: "fisioflow",
         project: "fisioflow-web",
         authToken: process.env.SENTRY_AUTH_TOKEN,
       }),
-      viteCompression(),
     ].filter(Boolean),
     resolve: {
       dedupe: ['react', 'react-dom', 'framer-motion'],
@@ -96,7 +91,6 @@ export default defineConfig(({ mode }) => {
           assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
           manualChunks: (id) => {
             if (id.includes('node_modules')) {
-              // Extract base package name from node_modules path (handles pnpm structure)
               const parts = id.split('node_modules/');
               const lastPart = parts[parts.length - 1];
               const packageName = lastPart.startsWith('@') 
@@ -105,13 +99,6 @@ export default defineConfig(({ mode }) => {
 
               // React core and its common ecosystem MUST be in the same chunk
               // to avoid "Cannot read properties of undefined (reading 'forwardRef')" errors
-              if (packageName.includes('lucide-react')) return 'icons';
-              if (packageName.includes('react-grid-layout')) return 'grid-layout';
-              if (packageName.includes('react-day-picker')) return 'date-ui';
-              if (packageName.includes('react-konva') || packageName.includes('konva')) return 'canvas-vendor';
-              
-              if (packageName.includes('jspdf')) return 'pdf-generator';
-
               if (packageName === 'react' || 
                   packageName === 'react-dom' || 
                   packageName === 'scheduler' ||
@@ -119,20 +106,9 @@ export default defineConfig(({ mode }) => {
                   packageName === 'react-router-dom') {
                 return 'react-lib';
               }
-              if (packageName.includes('framer-motion')) return 'motion';
-              if (packageName.includes('recharts')) return 'charts';
               
-              // PDF segue em chunk dedicado.
-              // Excel e libs de renderização pesada ficam com split automático do Rollup.
-              // O agrupamento manual anterior gerava ciclos entre chunks.
-
-              // Monitoring
-              if (packageName.includes('sentry')) return 'sentry-vendor';
-
-              // AI e ML
-              if (packageName.includes('@google') || packageName.includes('openai') || packageName.includes('ai-sdk')) return 'ai-vendor';
-
-              // WebGL / CV também ficam sem chunk manual para evitar referências circulares.
+              if (packageName.includes('jspdf')) return 'pdf-generator';
+              if (packageName.includes('react-konva') || packageName.includes('konva')) return 'canvas-vendor';
             }
           }
         }

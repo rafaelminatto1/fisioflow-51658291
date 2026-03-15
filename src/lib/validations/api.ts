@@ -420,7 +420,7 @@ export const userSchemas = {
   }),
 
   /**
-   * Auth user schema (Firebase Auth)
+   * Auth user schema
    */
   authUser: z.object({
     uid: commonSchemas.entityId,

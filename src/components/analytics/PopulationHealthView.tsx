@@ -2,7 +2,7 @@
  * Population Health Analytics View
  *
  * Displays clinic population health metrics, trends, and benchmarks
- * Uses Firebase AI Logic for population analysis
+ * Uses Workers AI Logic for population analysis
  *
  * @module components/analytics/PopulationHealthView
  * @version 1.0.0

@@ -1,14 +1,14 @@
 /**
- * Feature Flags Module - Barrel Export (Updated for Firebase)
+ * Feature Flags Module - Barrel Export
  *
  * Centralizes exports for all feature flag implementations:
- * - Firebase Remote Config (primary, recommended)
+ * - Remote Config Manager (primary, recommended)
  * - Statsig (fallback, unlimited free tier)
  * - Vercel Edge Config (legacy fallback)
  * - Environment Variables (ultimate fallback)
  *
  * Migration Path:
- * 1. Firebase Remote Config (NEW - Primary)
+ * 1. Remote Config Manager (NEW - Primary)
  * 2. Statsig (Optional - secondary)
  * 3. Edge Config (Legacy - will be removed)
  * 4. Env Variables (Fallback)
@@ -28,7 +28,7 @@
  */
 
 // ============================================================================
-// PRIMARY: Firebase Remote Config
+// PRIMARY: Remote Config Manager
 // ============================================================================
 
 export {

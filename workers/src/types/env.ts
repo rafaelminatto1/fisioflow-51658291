@@ -32,6 +32,9 @@ export interface Env {
   R2_SECRET_ACCESS_KEY: string;
   R2_PUBLIC_URL: string;
 
+  // Durable Objects
+  ORGANIZATION_STATE: DurableObjectNamespace;
+
   // Hasura GraphQL Configuration
   VITE_HASURA_PROJECT_URL?: string;
   VITE_HASURA_ADMIN_SECRET?: string;

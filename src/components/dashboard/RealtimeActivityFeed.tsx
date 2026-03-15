@@ -36,7 +36,7 @@ const safeFormatDate = (val: unknown): string => {
 
 /**
  * RealtimeActivityFeed otimizado com React.memo
- * Não cria subscriptions duplicadas - usa dados iniciais do Firebase Firestore
+ * Não cria subscriptions duplicadas - usa dados iniciais 
  * Implementa cleanup adequado para evitar memory leaks
  */
 export const RealtimeActivityFeed = memo(function RealtimeActivityFeed() {

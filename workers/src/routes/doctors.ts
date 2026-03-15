@@ -22,9 +22,7 @@ app.get('/', requireAuth, async (c) => {
   const limitNum = Math.min(1000, Math.max(1, Number.parseInt(limit, 10) || 50));
   const offsetNum = Math.max(0, Number.parseInt(offset, 10) || 0);
 
-  if (!(await hasDoctorsTable(c.env))) {
-    return c.json({ data: [], total: 0, page: 1, perPage: limitNum });
-  }
+  await ensureDoctorsTable(c.env);
 
   const pool = await createPool(c.env);
   try {
@@ -81,9 +79,7 @@ app.get('/:id', requireAuth, async (c) => {
   const user = c.get('user');
   const { id } = c.req.param();
 
-  if (!(await hasDoctorsTable(c.env))) {
-    return c.json({ error: 'Tabela doctors não disponível no Neon' }, 404);
-  }
+  await ensureDoctorsTable(c.env);
 
   const pool = await createPool(c.env);
   try {
@@ -117,15 +113,41 @@ app.get('/:id', requireAuth, async (c) => {
   }
 });
 
+async function ensureDoctorsTable(env: Env): Promise<void> {
+  const pool = await createPool(env);
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS doctors (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        organization_id UUID NOT NULL,
+        name TEXT NOT NULL,
+        specialty TEXT,
+        crm TEXT,
+        crm_state TEXT,
+        phone TEXT,
+        email TEXT,
+        clinic_name TEXT,
+        clinic_address TEXT,
+        clinic_phone TEXT,
+        notes TEXT,
+        is_active BOOLEAN DEFAULT true,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      )
+    `);
+  } finally {
+    await pool.end();
+  }
+}
+
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
   const body = (await c.req.json()) as Record<string, unknown>;
   const name = String(body.name ?? '').trim();
 
   if (!name) return c.json({ error: 'Nome é obrigatório' }, 400);
-  if (!(await hasDoctorsTable(c.env))) {
-    return c.json({ error: 'Tabela doctors não disponível no Neon' }, 501);
-  }
+  
+  await ensureDoctorsTable(c.env);
 
   const pool = await createPool(c.env);
   try {
@@ -190,9 +212,7 @@ app.put('/:id', requireAuth, async (c) => {
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
 
-  if (!(await hasDoctorsTable(c.env))) {
-    return c.json({ error: 'Tabela doctors não disponível no Neon' }, 501);
-  }
+  await ensureDoctorsTable(c.env);
 
   const pool = await createPool(c.env);
   try {
@@ -263,9 +283,7 @@ app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
   const { id } = c.req.param();
 
-  if (!(await hasDoctorsTable(c.env))) {
-    return c.json({ error: 'Tabela doctors não disponível no Neon' }, 501);
-  }
+  await ensureDoctorsTable(c.env);
 
   const pool = await createPool(c.env);
   try {

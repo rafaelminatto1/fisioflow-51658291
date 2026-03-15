@@ -3,7 +3,7 @@
  *
  * Biblioteca de exercícios de fisioterapia com:
  * - Categorias hierárquicas (por região corporal e especialidade)
- * - Imagens e vídeos no Firebase Storage
+ * - Imagens e vídeos no Cloudflare R2
  * - Patologias indicadas/contraindicadas
  * - Músculos e equipamentos
  */
@@ -145,7 +145,7 @@ export const exercisesRelations = relations(exercises, ({ one, many }) => ({
 export const exerciseFavorites = pgTable('exercise_favorites', {
   id: uuid('id').primaryKey().defaultRandom(),
   exerciseId: uuid('exercise_id').notNull().references(() => exercises.id, { onDelete: 'cascade' }),
-  userId: text('user_id').notNull(),             // Firebase Auth UID
+  userId: text('user_id').notNull(),             // Neon Auth UID
   organizationId: uuid('organization_id'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (table) => ({

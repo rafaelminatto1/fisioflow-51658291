@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/table';
 import { Package, Plus, Edit, Trash2, Users, Calendar, DollarSign, Save, Loader2 } from 'lucide-react';
 import { useSessionPackages, useCreatePackage, useUpdatePackage, useDeactivatePackage, type SessionPackage } from '@/hooks/usePackages';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PackageFormData {

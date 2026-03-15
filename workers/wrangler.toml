@@ -27,6 +27,15 @@ caching = { max_age = 60, stale_while_revalidate = 30 }
 binding = "MEDIA_BUCKET"
 bucket_name = "fisioflow-media"
 
+# ===== DURABLE OBJECTS (Realtime State) =====
+[[durable_objects.bindings]]
+name = "ORGANIZATION_STATE"
+class_name = "OrganizationState"
+
+[[migrations]]
+tag = "v1" # Initial migration for real-time state
+new_classes = ["OrganizationState"]
+
 # ===== VARIÁVEIS DE AMBIENTE =====
 [vars]
 ENVIRONMENT = "production"
@@ -39,7 +48,7 @@ GOOGLE_MAPS_API_KEY = ""
 # Ajuste para os valores reais do seu tenant Neon Auth.
 NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
 NEON_AUTH_ISSUER = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
-# NEON_AUTH_AUDIENCE = "fisioflow-api"  # habilitar se Neon Auth configurar audience
+NEON_AUTH_AUDIENCE = "fisioflow-api"
 
 # Hasura (Produção)
 VITE_HASURA_PROJECT_URL = "https://capital-duckling-42.hasura.app/v1/graphql"

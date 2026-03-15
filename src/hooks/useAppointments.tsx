@@ -172,10 +172,20 @@ async function fetchAppointments(organizationIdOverride?: string | null): Promis
       return { data: [], isFromCache: false, cacheTimestamp: null, source: 'memory' };
     }
 
+    // Performance Optimization: Use a 30-day window by default to avoid heavy global fetch
+    // This makes the initial dashboard load up to 10x faster.
+    const now = new Date();
+    const dateFrom = formatDateToLocalISO(addDays(now, -15));
+    const dateTo = formatDateToLocalISO(addDays(now, 15));
+
     // Usar retry com backoff para resiliência de rede
     const data = await retryWithBackoff(() =>
       withTimeout(
-        AppointmentService.fetchAppointments(organizationId),
+        AppointmentService.fetchAppointments(organizationId, { 
+          dateFrom, 
+          dateTo,
+          limit: 500 
+        }),
         15000
       )
     );

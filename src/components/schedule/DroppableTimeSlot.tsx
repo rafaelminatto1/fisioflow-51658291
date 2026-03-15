@@ -136,50 +136,8 @@ export const DroppableTimeSlot = ({
         </span>
       )}
 
-      {/* Preview dinâmica: como os cards ficarão após o drop */}
-      {showPreview && (
-        <div
-          className="absolute inset-0 flex items-center px-1 gap-1 pointer-events-none"
-          aria-hidden="true"
-        >
-          {previewCards.map((apt, index) => {
-            const cardWidthPercent = calculateCardWidthPercent(totalCards);
-            const leftOffset = calculateCardOffsetPercent(index, totalCards);
-            const isDraggedCard = apt.id === draggedAppointment?.id;
-            const showText = shouldShowText(cardWidthPercent, totalCards);
-
-            return (
-              <DropTargetPreviewCard
-                key={apt.id}
-                appointment={apt}
-                isDraggedCard={!!isDraggedCard}
-                cardWidthPercent={cardWidthPercent}
-                leftOffset={leftOffset}
-                showText={showText}
-                variant="week"
-                slotHeight={slotHeight}
-              />
-            );
-          })}
-
-          {/* Badge com número total de cards */}
-          {totalCards > MAX_CARDS_WITHOUT_BADGE && (
-            <div className="absolute bottom-1 right-1 bg-primary text-primary-foreground text-[8px] font-bold px-1.5 py-0.5 rounded-full shadow-sm animate-in zoom-in duration-150">
-              {totalCards}
-            </div>
-          )}
-
-          {/* Dica "Solte aqui" sobre o preview */}
-          <div className="absolute bottom-0.5 left-0 right-0 flex justify-center pointer-events-none">
-            <span className="text-[9px] font-medium text-primary/90 bg-background/80 dark:bg-background/90 px-1.5 py-0.5 rounded shadow-sm animate-in fade-in duration-200">
-              Solte aqui
-            </span>
-          </div>
-        </div>
-      )}
-
       {/* Drop target sem preview - indicador "Solte aqui" */}
-      {(isDraggingOver || isTargetActive) && !showPreview && !isInvalidDrop && (
+      {(isDraggingOver || isTargetActive) && !isInvalidDrop && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-primary font-medium animate-in fade-in duration-150" aria-hidden="true">
           <Calendar className="h-5 w-5 text-primary/80" />
           <span className="text-xs">Solte aqui</span>

@@ -6,7 +6,6 @@ import { MoreVertical } from 'lucide-react';
 import { AppointmentQuickView } from './AppointmentQuickView';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useIsTouch } from '@/hooks/use-touch';
-import { useCardSize } from '@/hooks/useCardSize';
 import { useStatusConfig } from '@/hooks/useStatusConfig';
 import { useReducedMotion } from '@/lib/accessibility/a11y-utils';
 import { normalizeTime, calculateEndTime } from './shared/utils';
@@ -32,9 +31,7 @@ interface CalendarAppointmentCardProps {
     selectionMode?: boolean;
     isSelected?: boolean;
     onToggleSelection?: (id: string) => void;
-    /** When true, drag starts only from the grip handle (reduces accidental drag when clicking to open) */
     dragHandleOnly?: boolean;
-    /** Compact visual density for tight weekly grid layouts */
     density?: 'normal' | 'compact';
     "data-appointment-popover-anchor"?: string;
 }
@@ -42,38 +39,14 @@ interface CalendarAppointmentCardProps {
 const getStatusStyles = (status: string) => {
     const normalized = normalizeStatus(status);
     const styles: Record<string, { className: string; accent: string }> = {
-        confirmado: {
-            className: 'calendar-card-confirmado',
-            accent: 'bg-emerald-600',
-        },
-        agendado: {
-            className: 'calendar-card-agendado',
-            accent: 'bg-sky-400',
-        },
-        em_andamento: {
-            className: 'calendar-card-em_andamento',
-            accent: 'bg-amber-600',
-        },
-        cancelado: {
-            className: 'calendar-card-cancelado',
-            accent: 'bg-red-600',
-        },
-        concluido: {
-            className: 'calendar-card-concluido',
-            accent: 'bg-slate-600',
-        },
-        falta: {
-            className: 'calendar-card-cancelado',
-            accent: 'bg-red-700',
-        },
-        avaliacao: {
-            className: 'calendar-card-avaliacao',
-            accent: 'bg-purple-600',
-        },
-        default: {
-            className: 'calendar-card-agendado',
-            accent: 'bg-slate-600',
-        }
+        confirmado: { className: 'calendar-card-confirmado', accent: 'bg-emerald-600' },
+        agendado: { className: 'calendar-card-agendado', accent: 'bg-sky-400' },
+        em_andamento: { className: 'calendar-card-em_andamento', accent: 'bg-amber-600' },
+        cancelado: { className: 'calendar-card-cancelado', accent: 'bg-red-600' },
+        concluido: { className: 'calendar-card-concluido', accent: 'bg-slate-600' },
+        falta: { className: 'calendar-card-cancelado', accent: 'bg-red-700' },
+        avaliacao: { className: 'calendar-card-avaliacao', accent: 'bg-purple-600' },
+        default: { className: 'calendar-card-agendado', accent: 'bg-slate-600' }
     };
     return styles[normalized] || styles.default;
 };
@@ -111,10 +84,8 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
     const reducedMotion = useReducedMotion();
     const [isHovered, setIsHovered] = useState(false);
 
-    const { cardSize } = useCardSize();
     const { getStatusConfig } = useStatusConfig();
     const isCompact = density === 'compact';
-
     const isOverbooked = isMarkedOverbooked(appointment.notes, appointment.isOverbooked);
     const normalizedStatus = normalizeStatus(appointment.status || 'agendado');
     const statusStyles = isOverbooked ? overbookStyles : getStatusStyles(normalizedStatus);
@@ -123,13 +94,9 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
     const handleMouseEnter = () => setIsHovered(true);
     const handleMouseLeave = () => setIsHovered(false);
 
-    const draggable = isDraggable && !selectionMode && !isTouch;
-    const rootDraggable = draggable;
-
     const handleClick = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-
         if (selectionMode && onToggleSelection) {
             onToggleSelection(appointment.id);
             return;
@@ -138,20 +105,9 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
         onOpenPopover(appointment.id);
     };
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            e.stopPropagation();
-            if (selectionMode && onToggleSelection) {
-                onToggleSelection(appointment.id);
-            } else {
-                onOpenPopover(appointment.id);
-            }
-        }
-    };
-
     const dragDuration = reducedMotion ? 0 : 0.15;
     const duration = appointment.duration || 60;
+    const draggable = isDraggable && !selectionMode && !isTouch;
 
     const cardContent = (
         <AppointmentCard
@@ -167,11 +123,10 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
             isSelected={isSelected}
             compact={isCompact}
             statusConfig={{
-                color: undefined, // Using classNames instead
+                color: undefined,
                 icon: sharedStatusConfig.icon
             }}
             data-appointment-popover-anchor={dataAnchor}
-            // Animation props passed to MotionCard
             layout={!reducedMotion}
             layoutId={isSaving ? `${appointment.id}-saving` : appointment.id}
             transition={{
@@ -191,15 +146,12 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                 scale: isTouch ? 0.97 : 0.99,
                 transition: { duration: 0.1 }
             }}
-            // Drag props
-            draggable={rootDraggable}
+            draggable={draggable}
             onDragStart={(e: React.DragEvent) => {
-                if (rootDraggable && e && 'dataTransfer' in e) {
-                    // Hide native browser ghost
+                if (draggable && e && 'dataTransfer' in e) {
                     const img = new Image();
                     img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
                     e.dataTransfer.setDragImage(img, 0, 0);
-
                     onOpenPopover(null);
                     onDragStart(e, appointment);
                 }
@@ -209,7 +161,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                 if (onDragOver && !selectionMode) {
                     e.preventDefault();
                     e.stopPropagation();
-                    // @ts-expect-error dataTransfer drops
+                    // @ts-ignore
                     e.dataTransfer.dropEffect = 'move';
                     onDragOver(e);
                 }
@@ -221,27 +173,23 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                     onDrop(e);
                 }
             }}
-            // Event handlers
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             onClick={handleClick}
-            onKeyDown={handleKeyDown}
-            // Classes and Styles
             className={cn(
-                "absolute", // Positioning needed for calendar grid
+                "absolute", 
                 statusStyles.className,
                 draggable && "cursor-grab active:cursor-grabbing"
             )}
             style={{
                 ...style,
-                pointerEvents: isDragging && hideGhostWhenSiblings && !dragHandleOnly ? 'none' : undefined,
+                pointerEvents: isDragging && hideGhostWhenSiblings ? 'none' : undefined,
                 borderRadius: '12px'
             }}
             tabIndex={0}
             role="button"
             aria-label={`${appointment.patientName} - ${normalizeTime(appointment.time)} - ${appointment.status}`}
         >
-            {/* Hover Actions - Injected as children */}
             {!isMobile && isHovered && !isDragging && !selectionMode && (
                 <div className="absolute top-1 right-1 flex items-center gap-1 z-50">
                     <button
@@ -277,7 +225,6 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
 });
 
 function appointmentCardAreEqual(prev: CalendarAppointmentCardProps, next: CalendarAppointmentCardProps) {
-    // 1. Primitive/Simple booleans
     if (
         prev.isDragging !== next.isDragging ||
         prev.isDraggable !== next.isDraggable ||
@@ -289,11 +236,8 @@ function appointmentCardAreEqual(prev: CalendarAppointmentCardProps, next: Calen
         prev.isPopoverOpen !== next.isPopoverOpen ||
         prev.dragHandleOnly !== next.dragHandleOnly ||
         prev.density !== next.density
-    ) {
-        return false;
-    }
+    ) return false;
 
-    // 2. Appointment Data (Check visual fields)
     if (
         prev.appointment.id !== next.appointment.id ||
         prev.appointment.status !== next.appointment.status ||
@@ -302,27 +246,19 @@ function appointmentCardAreEqual(prev: CalendarAppointmentCardProps, next: Calen
         prev.appointment.type !== next.appointment.type ||
         prev.appointment.duration !== next.appointment.duration ||
         prev.appointment.date !== next.appointment.date
-    ) {
-        return false;
-    }
+    ) return false;
 
-    // 3. Style (Shallow comparison)
     const prevStyle = prev.style;
     const nextStyle = next.style;
-
-    if (
-        prevStyle.height !== nextStyle.height ||
-        prevStyle.width !== nextStyle.width ||
-        prevStyle.top !== nextStyle.top ||
-        prevStyle.left !== nextStyle.left ||
-        prevStyle.gridColumn !== nextStyle.gridColumn ||
-        prevStyle.gridRow !== nextStyle.gridRow ||
-        prevStyle.zIndex !== nextStyle.zIndex
-    ) {
-        return false;
-    }
-
-    return true;
+    return (
+        prevStyle.height === nextStyle.height &&
+        prevStyle.width === nextStyle.width &&
+        prevStyle.top === nextStyle.top &&
+        prevStyle.left === nextStyle.left &&
+        prevStyle.gridColumn === nextStyle.gridColumn &&
+        prevStyle.gridRow === nextStyle.gridRow &&
+        prevStyle.zIndex === nextStyle.zIndex
+    );
 }
 
 export const CalendarAppointmentCard = memo(CalendarAppointmentCardBase, appointmentCardAreEqual);

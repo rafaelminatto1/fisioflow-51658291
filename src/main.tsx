@@ -22,6 +22,24 @@ const initServices = async () => {
     
     await Promise.allSettled(secondaryServices);
     logger.info('Serviços secundários inicializados', null, 'main.tsx');
+
+    // Register Service Worker for PWA and Push Notifications
+    if ('serviceWorker' in navigator && import.meta.env.PROD) {
+      try {
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        logger.info('Service Worker registrado com sucesso', { scope: registration.scope }, 'main.tsx');
+        
+        // Request Notification Permission
+        if (typeof window !== 'undefined' && 'Notification' in window) {
+          if (Notification.permission === 'default') {
+            const permission = await Notification.requestPermission();
+            logger.info('Notification permission:', { permission }, 'main.tsx');
+          }
+        }
+      } catch (swError) {
+        logger.error('Falha ao registrar Service Worker', swError as Error, 'main.tsx');
+      }
+    }
   } catch (error) {
     logger.error('Erro na inicialização de serviços', error as Error, 'main.tsx');
   }
@@ -58,7 +76,7 @@ const CHUNK_RELOAD_GUARD_KEY = '__fisioflow_chunk_reload_once__';
 
 function isChunkLoadError(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error ?? '');
-  return /chunk|dynamically imported module|failed to fetch/i.test(message);
+  return /chunk|dynamically imported module|failed to fetch|reading 'default'/i.test(message);
 }
 
 function reloadOnChunkError(reason: string) {

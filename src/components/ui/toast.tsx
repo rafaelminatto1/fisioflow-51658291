@@ -4,7 +4,11 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-const ToastProvider = ToastPrimitives.Provider
+const ToastProvider = ({ children, ...props }: React.ComponentProps<typeof ToastPrimitives.Provider>) => (
+  <ToastPrimitives.Provider {...props}>
+    {children}
+  </ToastPrimitives.Provider>
+)
 
 const ToastViewport = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Viewport>,

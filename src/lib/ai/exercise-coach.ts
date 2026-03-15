@@ -1,7 +1,7 @@
 /**
  * FisioFlow Exercise Coach
  *
- * Real-time exercise coaching using Firebase AI Live API with
+ * Real-time exercise coaching using AI Live API with
  * gemini-2.5-flash-native-audio-preview-12-2025 model.
  *
  * Features:

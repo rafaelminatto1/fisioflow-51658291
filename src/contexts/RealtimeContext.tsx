@@ -1,8 +1,11 @@
-import { createContext, useState, useCallback, useEffect } from 'react';
+import { createContext, useState, useCallback, useEffect, useRef } from 'react';
 import { appointmentsApi } from '@/lib/api/workers-client';
 import { useAuth } from '@/contexts/AuthContext';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useDebounce } from '@/hooks/performance/useDebounce';
+import { getWorkersApiUrl } from '@/lib/api/config';
+import { getNeonAccessToken } from '@/lib/auth/neon-token';
+import { useQueryClient } from '@tanstack/react-query';
 
 let _loggedRealtimeNoOrgId = false;
 
@@ -36,6 +39,7 @@ interface RealtimeContextType {
 
 // Criar o contexto (exportado para useRealtimeContext)
 export const RealtimeContext = createContext<RealtimeContextType | null>(null);
+RealtimeContext.displayName = 'RealtimeContext';
 
 /**
  * Provider central para gerenciar todas as subscrições realtime em um único lugar
@@ -51,6 +55,7 @@ export const RealtimeContext = createContext<RealtimeContextType | null>(null);
  */
 export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { profile } = useAuth();
+  const queryClient = useQueryClient();
   const organizationId = profile?.organization_id;
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [metrics, setMetrics] = useState<DashboardMetrics>({
@@ -63,6 +68,8 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   });
   const [lastUpdate, setLastUpdate] = useState(Date.now());
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<number | null>(null);
 
   /**
    * Atualizar métricas baseadas nos appointments atuais
@@ -159,7 +166,88 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [organizationId]);
 
   /**
-   * Substitui o antigo RTDB por polling leve contra a Workers API.
+   * Configura e gerencia a conexão WebSocket
+   */
+  const connectWebSocket = useCallback(async () => {
+    if (!organizationId) return;
+
+    try {
+      if (wsRef.current?.readyState === WebSocket.OPEN) return;
+
+      const token = await getNeonAccessToken();
+      const baseUrl = getWorkersApiUrl().replace(/^http/, 'ws');
+      const wsUrl = `${baseUrl}/api/realtime?token=${token}`;
+
+      logger.info('Realtime: Connecting to WebSocket...', { organizationId }, 'RealtimeContext');
+      
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        logger.info('Realtime: WebSocket Connected', { organizationId }, 'RealtimeContext');
+        setIsSubscribed(true);
+        if (reconnectTimeoutRef.current) {
+          window.clearTimeout(reconnectTimeoutRef.current);
+          reconnectTimeoutRef.current = null;
+        }
+        loadInitialAppointments();
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          logger.debug('Realtime: Message received', data, 'RealtimeContext');
+
+          if (data.type === 'APPOINTMENT_UPDATED' || data.type === 'REFRESH_DATA') {
+            loadInitialAppointments();
+            // Invalida via React Query (moderno)
+            queryClient.invalidateQueries({ queryKey: ['appointments_v2'] });
+          } else if (data.type === 'NOTIFICATION_RECEIVED') {
+            queryClient.invalidateQueries({ queryKey: ['notifications'] });
+          }
+        } catch (e) {
+          // Heartbeat or other non-json messages
+          if (event.data === 'pong') return;
+          logger.error('Realtime: Error parsing message', e, 'RealtimeContext');
+        }
+      };
+
+      ws.onclose = (event) => {
+        setIsSubscribed(false);
+        wsRef.current = null;
+        logger.warn('Realtime: WebSocket Closed', { code: event.code }, 'RealtimeContext');
+        
+        if (event.code !== 1000) {
+          reconnectTimeoutRef.current = window.setTimeout(() => {
+            connectWebSocket();
+          }, 5000);
+        }
+      };
+
+      ws.onerror = (error) => {
+        logger.error('Realtime: WebSocket Error', error, 'RealtimeContext');
+        ws.close();
+      };
+
+      // Heartbeat
+      const heartbeat = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send('ping');
+        } else {
+          clearInterval(heartbeat);
+        }
+      }, 30000);
+
+    } catch (error) {
+      logger.error('Realtime: Failed to connect WebSocket', error, 'RealtimeContext');
+      reconnectTimeoutRef.current = window.setTimeout(() => {
+        connectWebSocket();
+      }, 10000);
+    }
+  }, [organizationId, loadInitialAppointments]);
+
+  /**
+   * Substitui o antigo polling pela conexão WebSocket
    */
   const subscribeToAppointments = useCallback(() => {
     if (!organizationId) {
@@ -170,19 +258,20 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       return () => { };
     }
 
-    logger.debug('Realtime: Starting appointments polling', { organizationId }, 'RealtimeContext');
-    setIsSubscribed(true);
-    loadInitialAppointments();
-    const intervalId = window.setInterval(() => {
-      loadInitialAppointments();
-    }, 30000);
+    connectWebSocket();
 
     return () => {
-      logger.debug('Realtime: Stopping appointments polling', { organizationId }, 'RealtimeContext');
-      window.clearInterval(intervalId);
-      setIsSubscribed(false);
+      logger.debug('Realtime: Stopping Realtime connection', { organizationId }, 'RealtimeContext');
+      if (wsRef.current) {
+        wsRef.current.close(1000, 'Provider unmounting');
+        wsRef.current = null;
+      }
+      if (reconnectTimeoutRef.current) {
+        window.clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
+      }
     };
-  }, [organizationId, loadInitialAppointments]);
+  }, [organizationId, connectWebSocket]);
 
   /**
    * Carregar appointments iniciais ao montar o provider

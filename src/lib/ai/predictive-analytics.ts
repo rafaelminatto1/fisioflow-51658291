@@ -1,7 +1,7 @@
 /**
  * Predictive Analytics for Patient Recovery
  *
- * Uses Firebase AI Logic (gemini-2.5-pro) to predict:
+ * Uses Cloudflare AI / Gemini (gemini-2.5-pro) to predict:
  * - Recovery timeline with confidence intervals
  * - Key milestones and checkpoints
  * - Risk factors for delayed recovery
@@ -372,7 +372,7 @@ export async function predictRecoveryTimeline(
       requiresValidation: similarCases.length < 10,
     };
 
-    // Store prediction in Firestore
+    // Store prediction via Workers API
     await storePrediction(patientId, prediction);
 
     return prediction;

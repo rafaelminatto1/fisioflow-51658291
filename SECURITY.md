@@ -139,11 +139,11 @@ CRON_SECRET=your_random_secret_here
 
 1. **Rotation de chaves**
    - Rodar a cada 90 dias
-   - Usar ferramentas de secrets management (Vercel Env, AWS Secrets Manager)
+   - Usar ferramentas de secrets management (Cloudflare Env, AWS Secrets Manager)
    - Notificar equipe com antecedência
 
 2. **Monitoramento**
-   - Configurar alertas no Sentry/Vercel
+   - Configurar alertas no Sentry/Cloudflare
    - Revisar logs de segurança semanalmente
    - Penetration testing trimestral
 
@@ -202,7 +202,7 @@ npx snyk test
 - [OWASP Top 10](https://owasp.org/www-project-top-ten/)
 - [LGPD - Lei Geral de Proteção de Dados](https://www.gov.br/anatel/pt-br/regulares/lgpd)
 - [Supabase Security](https://supabase.com/docs/guides/platform/security)
-- [Vercel Security](https://vercel.com/docs/security)
+- [Cloudflare Security](https://Cloudflare.com/docs/security)
 
 ---
 

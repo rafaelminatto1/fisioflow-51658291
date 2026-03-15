@@ -10,12 +10,12 @@ O FisioFlow utiliza **Google Firebase** e **Google Cloud Platform** como infraes
 |---------|-----|-----------|
 | Firebase Authentication | Autenticação de usuários | Supabase Auth |
 | Firebase Firestore | Banco de dados principal | Supabase PostgreSQL |
-| Firebase Realtime Database | Cache distribuído | Vercel KV |
-| Firebase Storage | Armazenamento de arquivos | Vercel Blob |
-| Firebase Remote Config | Feature flags dinâmicos | Vercel Edge Config |
-| Firebase Cloud Functions | Funções serverless | Vercel Edge Functions |
-| Firebase Hosting | Hospedagem web | Vercel Hosting |
-| Google Analytics 4 | Analytics | Vercel Analytics |
+| Firebase Realtime Database | Cache distribuído | Cloudflare KV |
+| Firebase Storage | Armazenamento de arquivos | Cloudflare Blob |
+| Firebase Remote Config | Feature flags dinâmicos | Cloudflare Edge Config |
+| Firebase Cloud Functions | Funções serverless | Cloudflare Edge Functions |
+| Firebase Hosting | Hospedagem web | Cloudflare Hosting |
+| Google Analytics 4 | Analytics | Cloudflare Analytics |
 | Google Cloud Vertex AI | IA e ML | OpenAI API |
 
 ---

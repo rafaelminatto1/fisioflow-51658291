@@ -285,7 +285,7 @@ export function SOAPAssistant({
 
       setProgress(50);
 
-      // Firebase Cloud Functions - aiSoapNoteChat
+      // Workers - aiSoapNoteChat
       const { generateSOAPNote } = await import('@/services/ai/geminiAiService');
       const result = await generateSOAPNote({
         patientContext: {

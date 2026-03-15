@@ -3,6 +3,7 @@ import type { Env } from '../types/env';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import { createPool } from '../lib/db';
 import { triggerInngestEvent } from '../lib/inngest-client';
+import { broadcastToOrg } from '../lib/realtime';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -25,17 +26,44 @@ app.get('/', requireAuth, async (c) => {
     params.push(limitNum);
 
     const result = await db.query(
-      `SELECT a.*, p.full_name AS patient_name
+      `SELECT 
+        a.id, a.patient_id, a.therapist_id, a.date, a.start_time, a.end_time, 
+        a.status, a.type, a.notes, a.payment_status, a.payment_amount,
+        p.full_name AS patient_name, p.phone AS patient_phone
        FROM appointments a
        LEFT JOIN patients p ON p.id = a.patient_id
-       ${where} ORDER BY a.date, a.start_time LIMIT $${idx}`,
+       ${where} ORDER BY a.date DESC, a.start_time DESC LIMIT $${idx}`,
       params,
     );
     
-    // Cloudflare Edge Caching - cache list for 60 seconds
-    c.header('Cache-Control', 'public, max-age=60');
+    const rows = (result.rows || result) as any[];
     
-    return c.json({ data: result.rows || result });
+    // Real-time Sanitization: Ensure consistent time data
+    const sanitizedRows = rows.map(row => {
+      const startTime = row.start_time && row.start_time !== '' && row.start_time !== 'null' 
+        ? row.start_time.substring(0, 5) 
+        : '08:00';
+      
+      const duration = parseInt(row.duration_minutes) || 60;
+      
+      // Calculate end_time if missing or invalid
+      let endTime = row.end_time && row.end_time !== '' && row.end_time !== 'null'
+        ? row.end_time.substring(0, 5)
+        : calculateEndTime(startTime, duration);
+
+      return {
+        ...row,
+        start_time: startTime,
+        end_time: endTime,
+        duration_minutes: duration
+      };
+    });
+
+    // Aggressive Caching: 60s public, 5 minutes stale-while-revalidate
+    c.header('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+    c.header('X-Performance-Level', 'High');
+    
+    return c.json({ data: sanitizedRows });
   } catch (error: any) {
     console.error('[Appointments/List] Error:', error.message);
     return c.json({ data: [] });
@@ -231,6 +259,12 @@ app.post('/', requireAuth, async (c) => {
     );
     const row = (result.rows?.[0] || (result as any)[0]) as any;
     
+    // Real-time Broadcast
+    await broadcastToOrg(c.env, user.organizationId, {
+      type: 'APPOINTMENT_UPDATED',
+      payload: { id: row.id, action: 'created', timestamp: new Date().toISOString() }
+    });
+    
     // Busca dados do paciente para o lembrete
     const patientResult = await db.query('SELECT full_name, phone FROM patients WHERE id = $1', [patientId]);
     const patient = (patientResult.rows?.[0] || (patientResult as any)[0]) as any;
@@ -384,6 +418,12 @@ const updateAppointmentHandler = async (c: any) => {
     const row = (result.rows?.[0] || (result as any)[0]) as any;
     if (!row) return c.json({ error: 'Agendamento não encontrado' }, 404);
 
+    // Real-time Broadcast
+    await broadcastToOrg(c.env, user.organizationId, {
+      type: 'APPOINTMENT_UPDATED',
+      payload: { id: row.id, action: 'updated', timestamp: new Date().toISOString() }
+    });
+
     // Eventos Inngest baseados em mudança de status
     try {
       if (row.status === 'completed') {
@@ -436,6 +476,13 @@ app.post('/:id/cancel', requireAuth, async (c) => {
     );
     const row = result.rows?.[0] || (result as any)[0];
     if (!row) return c.json({ error: 'Agendamento não encontrado' }, 404);
+
+    // Real-time Broadcast
+    await broadcastToOrg(c.env, user.organizationId, {
+      type: 'APPOINTMENT_UPDATED',
+      payload: { id, action: 'cancelled', timestamp: new Date().toISOString() }
+    });
+
     return c.json({ success: true });
   } catch (error: any) {
     return c.json({ error: 'Erro ao cancelar agendamento', details: error.message }, 500);
@@ -453,6 +500,13 @@ app.delete('/:id', requireAuth, async (c) => {
     );
     const row = result.rows?.[0] || (result as any)[0];
     if (!row) return c.json({ error: 'Agendamento não encontrado' }, 404);
+
+    // Real-time Broadcast
+    await broadcastToOrg(c.env, user.organizationId, {
+      type: 'APPOINTMENT_UPDATED',
+      payload: { id, action: 'deleted', timestamp: new Date().toISOString() }
+    });
+
     return c.json({ success: true });
   } catch (error: any) {
     return c.json({ error: 'Erro ao excluir agendamento', details: error.message }, 500);

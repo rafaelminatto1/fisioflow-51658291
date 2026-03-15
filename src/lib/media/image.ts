@@ -9,7 +9,7 @@ type TransformOptions = {
     format?: 'avif' | 'webp' | 'jpg' | 'auto';
 };
 
-// Presets maintained for structure, though they won't transform on the fly with basic Firebase Storage
+// Presets maintained for structure, though they won't transform on the fly with basic Storage
 export const IMAGE_PRESETS = {
     avatar: { width: 64, height: 64, quality: 80, resize: 'cover' as const },
     thumbnail: { width: 320, height: 180, quality: 75, resize: 'cover' as const },
@@ -58,7 +58,7 @@ export const getOptimizedImageUrlWithPreset = async (
 
 /**
  * Gera URLs para diferentes tamanhos de imagem (para srcset)
- * Returns the same URL for all sizes in basic Firebase migration
+ * Returns the same URL for all sizes in basic storage migration
  */
 export const getResponsiveImageUrls = async (
     bucket: string,

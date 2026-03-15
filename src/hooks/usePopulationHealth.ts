@@ -2,7 +2,7 @@
  * React Hook for Population Health Analytics
  *
  * Provides access to clinic population health metrics and insights
- * Uses Firebase AI Logic for analysis
+ * Uses Cloudflare AI for analysis
  *
  * @module hooks/usePopulationHealth
  * @version 1.0.0

@@ -2,6 +2,7 @@ import { Extension } from '@tiptap/core';
 import Mention from '@tiptap/extension-mention';
 import Suggestion from '@tiptap/suggestion';
 import { ReactRenderer } from '@tiptap/react';
+import { PluginKey } from '@tiptap/pm/state';
 import tippy from 'tippy.js';
 
 export const Backlinks = Extension.create({
@@ -29,6 +30,7 @@ export const Backlinks = Extension.create({
   addProseMirrorPlugins() {
     return [
       Suggestion({
+        pluginKey: new PluginKey('backlinks'),
         editor: this.editor,
         ...this.options.suggestion,
         items: ({ query }: { query: string }) => {

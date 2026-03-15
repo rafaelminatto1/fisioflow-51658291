@@ -190,7 +190,7 @@ export function ClinicalDecisionSupport({
   }, [patient.id]);
 
   /**
-   * Analyze pain evolution (Firebase Cloud Functions)
+   * Analyze pain evolution (Workers)
    */
   const analyzePainEvolution = useCallback(async (): Promise<PainAnalysisResult> => {
     const { analyzePainEvolution: analyzePain } = await import('@/services/ai/geminiAiService');
@@ -199,7 +199,7 @@ export function ClinicalDecisionSupport({
   }, [patient.id, currentPainLevel]);
 
   /**
-   * Predict recovery timeline (Firebase Cloud Functions)
+   * Predict recovery timeline (Workers)
    */
   const predictRecovery = useCallback(async (): Promise<RecoveryPrediction> => {
     const { predictRecovery: predict } = await import('@/services/ai/geminiAiService');
@@ -213,7 +213,7 @@ export function ClinicalDecisionSupport({
   }, [patient, currentPainLevel, treatmentStartDate, sessionsCompleted, treatmentFrequency]);
 
   /**
-   * Evaluate treatment response (Firebase Cloud Functions)
+   * Evaluate treatment response (Workers)
    */
   const evaluateTreatmentResponse = useCallback(async (): Promise<TreatmentResponse> => {
     const { evaluateTreatmentResponse: evaluate } = await import('@/services/ai/geminiAiService');

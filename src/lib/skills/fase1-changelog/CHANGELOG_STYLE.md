@@ -126,7 +126,7 @@ O sistema agora sugere os melhores horários baseados no histórico do paciente.
 
 ### Mudanças Técnicas
 - Atualizado React para v19.1.0
-- Migrado de Supabase para Firebase Auth
+- Migrado para Neon Auth
 - Adicionado testes E2E para fluxo de agendamento
 
 ### Breaking Changes

@@ -2,7 +2,7 @@
  * Exemplos de uso do KVCacheService
  *
  * Este arquivo mostra como integrar o cache distribuído nas suas chamadas de API
- * Migrated from Supabase to Firebase Functions
+ * Migrated to Workers API
  */
 
 
@@ -31,7 +31,7 @@ export async function getPatientWithCache(patientId: string) {
   }
 
   console.log('❌ Cache MISS - Buscando do banco');
-  // Cache miss - buscar do banco via Firebase Functions
+  // Cache miss - buscar do banco via Workers API
   const data = await callFunction<DocumentData>('getPatient', { patientId });
 
   if (!data) {
@@ -59,7 +59,7 @@ export async function getExercisesWithCache(organizationId: string) {
     return cached as typeof cached;
   }
 
-  // Buscar do banco via Firebase Functions
+  // Buscar do banco via Workers API
   const data = await callFunction<DocumentData[]>('listExercises', { organizationId });
 
   // Salvar no cache por 2 horas
@@ -73,7 +73,7 @@ export async function getExercisesWithCache(organizationId: string) {
 // ========================================
 
 export async function updatePatient(patientId: string, updates: Record<string, unknown>) {
-  // Atualizar no banco via Firebase Functions
+  // Atualizar no banco via Workers API
   const data = await callFunction<DocumentData>('updatePatient', {
     patientId,
     updates,
@@ -100,7 +100,7 @@ export async function getPatientAppointments(patientId: string) {
     return cached;
   }
 
-  // Buscar do banco via Firebase Functions
+  // Buscar do banco via Workers API
   const data = await callFunction<DocumentData[]>('listAppointments', { patientId });
 
   // Salvar no cache (30 minutos)
@@ -168,7 +168,7 @@ export async function searchExercisesWithCache(
     return cached as typeof cached;
   }
 
-  // Buscar via Firebase Functions (semântica ou texto)
+  // Buscar via Workers API (semântica ou texto)
   const data = await callFunction<DocumentData[]>('searchExercises', {
     query,
     organizationId,

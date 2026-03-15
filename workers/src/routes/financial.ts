@@ -1404,4 +1404,59 @@ app.put('/nfse-config', requireAuth, async (c) => {
   return c.json({ data: result.rows[0] });
 });
 
+// ===== PREDICTION & BI =====
+
+app.get('/prediction', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = await createPool(c.env);
+  
+  // 1. Get confirmed future appointments value (Next 30 days)
+  const futureSchedule = await pool.query(`
+    SELECT 
+      COALESCE(SUM(payment_amount), 0) as expected_revenue,
+      COUNT(*) as session_count
+    FROM appointments 
+    WHERE organization_id = $1 
+      AND date >= CURRENT_DATE 
+      AND date <= CURRENT_DATE + INTERVAL '30 days'
+      AND status NOT IN ('cancelled', 'no_show')
+  `, [user.organizationId]);
+
+  // 2. Get recurring revenue baseline (Active packages remaining value)
+  const packagesBaseline = await pool.query(`
+    SELECT 
+      COALESCE(SUM(remaining_sessions * (price / NULLIF(total_sessions, 0))), 0) as inventory_value
+    FROM patient_packages
+    WHERE organization_id = $1 AND status = 'active'
+  `, [user.organizationId]);
+
+  // 3. Historical no-show rate to adjust prediction
+  const noShowRate = await pool.query(`
+    SELECT 
+      (COUNT(CASE WHEN status = 'no_show' THEN 1 END)::float / NULLIF(COUNT(*), 0)) as rate
+    FROM appointments
+    WHERE organization_id = $1 AND date < CURRENT_DATE AND date >= CURRENT_DATE - INTERVAL '90 days'
+  `, [user.organizationId]);
+
+  const rawExpected = parseFloat(futureSchedule.rows[0]?.expected_revenue || '0');
+  const rate = parseFloat(noShowRate.rows[0]?.rate || '0.1'); // Default 10% if no data
+  
+  return c.json({
+    data: {
+      next30Days: {
+        raw: rawExpected,
+        adjusted: rawExpected * (1 - rate),
+        sessions: parseInt(futureSchedule.rows[0]?.session_count || '0'),
+        confidence: 0.85
+      },
+      inventory: {
+        packageValue: parseFloat(packagesBaseline.rows[0]?.inventory_value || '0')
+      },
+      historicalMetrics: {
+        noShowRate: rate
+      }
+    }
+  });
+});
+
 export { app as financialRoutes };

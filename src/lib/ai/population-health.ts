@@ -1,7 +1,7 @@
 /**
  * Population Health Analytics
  *
- * Uses Firebase AI Logic (gemini-2.5-flash) to analyze clinic population patterns:
+ * Uses Cloudflare AI / Gemini (gemini-2.5-flash) to analyze clinic population patterns:
  * - Most common conditions identification
  * - Average recovery times by condition
  * - Treatment effectiveness trends
@@ -213,7 +213,7 @@ function getGoogleAI() {
 // ============================================================================
 
 /**
- * Aggregate anonymized population data from Firestore
+ * Aggregate anonymized population data from Workers API
  */
 async function aggregatePopulationData(
   clinicId: string,

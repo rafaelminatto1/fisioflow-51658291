@@ -229,7 +229,6 @@ The system integrates with:
 
 - **Sentry**: Automatic error tracking and performance monitoring
 - **Google Analytics**: Custom events for performance metrics
-- **Firebase Analytics**: Business metrics and user behavior
 
 ### Best Practices
 
