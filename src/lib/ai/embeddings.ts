@@ -1,8 +1,7 @@
 /**
  * Embeddings Service compatível com a API legada.
  *
- * Agora delega para o provedor Gemini direto já usado em `lib/vector/embeddings`,
- * removendo a dependência de Firebase Vertex AI.
+ * Agora delega para o provedor Gemini direto já usado em `lib/vector/embeddings`.
  */
 
 import { logger } from '@/lib/errors/logger';

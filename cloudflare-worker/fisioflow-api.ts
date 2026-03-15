@@ -10,6 +10,59 @@ export interface Env {
   JWT_SECRET: string;
   OPENAI_API_KEY?: string;
   GEMINI_API_KEY?: string;
+  ORGANIZATION_STATE: DurableObjectNamespace;
+}
+
+// =====================
+// DURABLE OBJECT: OrganizationState
+// =====================
+export class OrganizationState implements DurableObject {
+  private state: DurableObjectState;
+  private sessions: Set<WebSocket>;
+
+  constructor(state: DurableObjectState) {
+    this.state = state;
+    this.sessions = new Set();
+  }
+
+  async fetch(request: Request) {
+    const url = new URL(request.url);
+    
+    if (url.pathname === "/ws") {
+      const [client, server] = Object.values(new WebSocketPair());
+      const userId = url.searchParams.get("userId") || "unknown";
+
+      server.accept();
+      this.sessions.add(server);
+
+      server.addEventListener("message", (msg) => {
+        if (msg.data === "ping") server.send("pong");
+      });
+
+      server.addEventListener("close", () => this.sessions.delete(server));
+      server.addEventListener("error", () => this.sessions.delete(server));
+
+      return new Response(null, { status: 101, webSocket: client });
+    }
+
+    if (request.method === "POST" && url.pathname === "/broadcast") {
+      const msg = await request.text();
+      this.broadcast(msg);
+      return new Response("OK");
+    }
+
+    return new Response("Not Found", { status: 404 });
+  }
+
+  private broadcast(message: string) {
+    for (const ws of this.sessions) {
+      try {
+        ws.send(message);
+      } catch (e) {
+        this.sessions.delete(ws);
+      }
+    }
+  }
 }
 
 interface Notification {
@@ -80,7 +133,10 @@ function verifyToken(authHeader: string | null, jwtSecret: string): { userId: st
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
-    const payload = JSON.parse(atob(parts[1]));
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const json = atob(base64);
+    const payload = JSON.parse(json);
     return { userId: payload.sub || payload.userId, orgId: payload.orgId };
   } catch {
     return null;
@@ -98,6 +154,26 @@ export default {
     const path = url.pathname;
 
     try {
+      // =====================
+      // REALTIME WEBSOCKET API
+      // =====================
+      if (path === '/api/realtime' && request.headers.get('Upgrade') === 'websocket') {
+        const user = verifyToken(request.headers.get('Authorization') || url.searchParams.get('token'), env.JWT_SECRET);
+        if (!user) {
+          return new Response('Unauthorized', { status: 401 });
+        }
+
+        const id = env.ORGANIZATION_STATE.idFromName(user.orgId);
+        const obj = env.ORGANIZATION_STATE.get(id);
+
+        const wsUrl = new URL(request.url);
+        wsUrl.pathname = "/ws";
+        wsUrl.searchParams.set("userId", user.userId);
+        wsUrl.searchParams.set("orgId", user.orgId);
+
+        return obj.fetch(new Request(wsUrl.toString(), request));
+      }
+
       // =====================
       // HEALTH CHECK
       // =====================
@@ -445,26 +521,20 @@ export default {
         const startDate = url.searchParams.get('startDate') || new Date(new Date().setDate(1)).toISOString().split('T')[0];
         const endDate = url.searchParams.get('endDate') || new Date().toISOString().split('T')[0];
 
-        // Total revenue (paid appointments)
+        // Total revenue (paid appointments + general income transactions)
         const revenueSql = `
-          SELECT COALESCE(SUM(payment_amount), 0) as total
-          FROM appointments
-          WHERE organization_id IS NOT NULL
-            AND payment_status = 'paid'
-            AND date >= $1
-            AND date <= $2
+          SELECT 
+            (SELECT COALESCE(SUM(payment_amount), 0) FROM appointments WHERE payment_status = 'paid' AND date >= $1 AND date <= $2) +
+            (SELECT COALESCE(SUM(valor), 0) FROM transactions WHERE tipo IN ('receita', 'recebimento') AND status = 'concluido' AND created_at >= $1 AND created_at <= $2) as total
         `;
         const revenueResult = await queryNeon(revenueSql, [startDate, endDate], env.DATABASE_URL);
         const totalRevenue = parseFloat(revenueResult[0]?.total || '0');
 
-        // Pending revenue
+        // Pending revenue (pending appointments + pending income transactions)
         const pendingSql = `
-          SELECT COALESCE(SUM(payment_amount), 0) as total
-          FROM appointments
-          WHERE organization_id IS NOT NULL
-            AND payment_status = 'pending'
-            AND date >= $1
-            AND date <= $2
+          SELECT 
+            (SELECT COALESCE(SUM(payment_amount), 0) FROM appointments WHERE payment_status = 'pending' AND date >= $1 AND date <= $2) +
+            (SELECT COALESCE(SUM(valor), 0) FROM transactions WHERE tipo IN ('receita', 'recebimento') AND status = 'pendente' AND created_at >= $1 AND created_at <= $2) as total
         `;
         const pendingResult = await queryNeon(pendingSql, [startDate, endDate], env.DATABASE_URL);
         const pendingRevenue = parseFloat(pendingResult[0]?.total || '0');

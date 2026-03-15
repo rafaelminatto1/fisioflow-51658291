@@ -212,9 +212,9 @@ export class AppError extends Error {
 }
 
 /**
- * Supabase-specific error factory methods
+ * Database-specific error factory methods
  */
-export class SupabaseError extends AppError {
+export class DatabaseError extends AppError {
     constructor(
         message: string,
         code: string,
@@ -223,13 +223,13 @@ export class SupabaseError extends AppError {
         originalError?: unknown
     ) {
         super(message, code, statusCode, true, context, originalError);
-        this.name = 'SupabaseError';
+        this.name = 'DatabaseError';
     }
 
     /**
-     * Create from Supabase Postgres error
+     * Create from Postgres error
      */
-    static fromPostgresError(error: unknown): SupabaseError {
+    static fromPostgresError(error: unknown): DatabaseError {
         const code = (error as { code?: string })?.code || 'UNKNOWN_ERROR';
         const message = (error as { message?: string })?.message || 'Erro no banco de dados';
         const details = (error as { details?: string })?.details || undefined;
@@ -245,64 +245,64 @@ export class SupabaseError extends AppError {
         // Map Postgres error codes to AppError types
         switch (code) {
             case '23505': // UNIQUE_VIOLATION
-                return new SupabaseError('Registro já existe', 'UNIQUE_VIOLATION', 409, context);
+                return new DatabaseError('Registro já existe', 'UNIQUE_VIOLATION', 409, context);
             case '23503': // FOREIGN_KEY_VIOLATION
-                return new SupabaseError('Registro relacionado não encontrado', 'FOREIGN_KEY', 400, context);
+                return new DatabaseError('Registro relacionado não encontrado', 'FOREIGN_KEY', 400, context);
             case '23502': // NOT_NULL_VIOLATION
-                return new SupabaseError('Campo obrigatório não preenchido', 'REQUIRED_FIELD', 400, context);
+                return new DatabaseError('Campo obrigatório não preenchido', 'REQUIRED_FIELD', 400, context);
             case '23514': // CHECK_VIOLATION
-                return new SupabaseError('Validação falhou', 'CHECK_VIOLATION', 400, context);
+                return new DatabaseError('Validação falhou', 'CHECK_VIOLATION', 400, context);
             case '42501': // RLS_PERMISSION_DENIED
-                return new SupabaseError('Você não tem permissão para acessar este recurso', 'RLS_DENIED', 403, context);
+                return new DatabaseError('Você não tem permissão para acessar este recurso', 'RLS_DENIED', 403, context);
             case '22001': // STRING_DATA_RIGHT_TRUNCATION
-                return new SupabaseError('Dado muito longo para o campo', 'STRING_TOO_LONG', 400, context);
+                return new DatabaseError('Dado muito longo para o campo', 'STRING_TOO_LONG', 400, context);
             default:
-                return new SupabaseError(message, code, 500, context);
+                return new DatabaseError(message, code, 500, context);
         }
     }
 
     /**
-     * Create from Supabase Auth error
+     * Create from Auth error
      */
-    static fromAuthError(error: unknown): SupabaseError {
+    static fromAuthError(error: unknown): DatabaseError {
         const authError = error as { message?: string; status?: number };
         const message = authError.message || 'Erro de autenticação';
         const status = authError.status || 500;
 
         // Map common auth errors
         if (message.includes('Invalid login credentials')) {
-            return new SupabaseError('Credenciais inválidas', 'INVALID_CREDENTIALS', 401);
+            return new DatabaseError('Credenciais inválidas', 'INVALID_CREDENTIALS', 401);
         }
         if (message.includes('Email not confirmed')) {
-            return new SupabaseError('E-mail não confirmado', 'EMAIL_NOT_CONFIRMED', 401);
+            return new DatabaseError('E-mail não confirmado', 'EMAIL_NOT_CONFIRMED', 401);
         }
         if (message.includes('Invalid refresh token')) {
-            return new SupabaseError('Sessão inválida', 'INVALID_REFRESH_TOKEN', 401);
+            return new DatabaseError('Sessão inválida', 'INVALID_REFRESH_TOKEN', 401);
         }
         if (message.includes('User already registered')) {
-            return new SupabaseError('Usuário já cadastrado', 'USER_EXISTS', 409);
+            return new DatabaseError('Usuário já cadastrado', 'USER_EXISTS', 409);
         }
         if (message.includes('Session not found')) {
-            return new SupabaseError('Sessão expirada', 'SESSION_EXPIRED', 401);
+            return new DatabaseError('Sessão expirada', 'SESSION_EXPIRED', 401);
         }
 
-        return new SupabaseError(message, 'AUTH_ERROR', status);
+        return new DatabaseError(message, 'AUTH_ERROR', status);
     }
 
     /**
      * Create from network/connection error
      */
-    static fromNetworkError(error: Error): SupabaseError {
+    static fromNetworkError(error: Error): DatabaseError {
         const message = error.message.toLowerCase();
 
         if (message.includes('timeout') || message.includes('timed out')) {
-            return new SupabaseError('Operação expirou', 'TIMEOUT', 504, { originalMessage: error.message });
+            return new DatabaseError('Operação expirou', 'TIMEOUT', 504, { originalMessage: error.message });
         }
         if (message.includes('network') || message.includes('fetch') || message.includes('connection')) {
-            return new SupabaseError('Erro de conexão com o servidor', 'NETWORK_ERROR', 503, { originalMessage: error.message });
+            return new DatabaseError('Erro de conexão com o servidor', 'NETWORK_ERROR', 503, { originalMessage: error.message });
         }
 
-        return new SupabaseError('Erro de comunicação com o servidor', 'COMMUNICATION_ERROR', 503, { originalMessage: error.message });
+        return new DatabaseError('Erro de comunicação com o servidor', 'COMMUNICATION_ERROR', 503, { originalMessage: error.message });
     }
 }
 

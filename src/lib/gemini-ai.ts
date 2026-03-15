@@ -1,8 +1,8 @@
 /**
- * Firebase AI Logic Client SDK
+ * AI Logic Client SDK
  * 
  * Provides direct client-to-model access for non-clinical AI features.
- * Uses Firebase AI Logic proxy for secure API key management.
+ * Uses proxy for secure API key management.
  * 
  * SECURITY NOTE: Only use for non-PHI/non-clinical features.
  * Clinical analysis must remain server-side via Cloud Functions.

@@ -1,7 +1,7 @@
 
 /**
- * NOTE: This service uses Firebase Cloud Functions for appointment notifications.
- * For Firebase, you need to implement Firebase Cloud Functions to:
+ * NOTE: This service uses Cloudflare Workers for appointment notifications.
+ * You need to implement Workers to:
  * 1. Schedule notifications for appointments
  * 2. Send notifications via FCM or other channels
  * 3. Handle reschedule and cancellation notifications
@@ -15,7 +15,7 @@ import { whatsappApi } from '@/lib/api/workers-client';
 export class AppointmentNotificationService {
   /**
    * Schedule notification for an appointment
-   * NOTE: Requires Firebase Cloud Function implementation
+   * NOTE: Requires Cloudflare Worker implementation
    */
   static async scheduleNotification(
     appointmentId: string,
@@ -57,7 +57,7 @@ export class AppointmentNotificationService {
 
   /**
    * Notify about reschedule
-   * NOTE: Requires Firebase Cloud Function implementation
+   * NOTE: Requires Cloudflare Worker implementation
    */
   static async notifyReschedule(
     appointmentId: string,
@@ -98,7 +98,7 @@ export class AppointmentNotificationService {
 
   /**
    * Notify about cancellation
-   * NOTE: Requires Firebase Cloud Function implementation
+   * NOTE: Requires Cloudflare Worker implementation
    */
   static async notifyCancellation(
     appointmentId: string,

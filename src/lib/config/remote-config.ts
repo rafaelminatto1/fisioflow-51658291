@@ -1,5 +1,5 @@
 /**
- * Remote config sem Firebase.
+ * Remote config local.
  *
  * Fonte de verdade:
  * - overrides em localStorage (`remote-config:<key>`)

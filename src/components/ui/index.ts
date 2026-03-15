@@ -130,7 +130,7 @@ export * from './sidebar';
 export { Skeleton } from './skeleton';
 export { Slider } from './slider';
 export { OptimizedImage } from './OptimizedImage';
-export { OptimizedSupabaseImage } from './OptimizedSupabaseImage';
+
 export { Switch } from './switch';
 export { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption } from './table';
 export { Tabs, TabsList, TabsTrigger, TabsContent } from './tabs';

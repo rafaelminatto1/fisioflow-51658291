@@ -3,13 +3,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-
   ClipboardList,
   Activity,
   UserCheck,
   Plus,
   Check,
-  Info
+  Info,
+  Bone,
+  Trophy,
+  ShieldPlus
 } from 'lucide-react';
 import { useCreateStandardForm, useStandardFormExists, STANDARD_FORMS } from '@/hooks/useStandardForms';
 import { useEvaluationForms, useImportEvaluationForm, EvaluationFormFieldFormData } from '@/hooks/useEvaluationForms';
@@ -45,6 +47,12 @@ function StandardFormCard({ type, onCreate, onDuplicate }: StandardFormCardProps
         return <Activity className="h-8 w-8 text-green-500" />;
       case 'AVALIACAO_FUNCIONAL':
         return <UserCheck className="h-8 w-8 text-purple-500" />;
+      case 'FISIOTERAPIA_ORTOPEDICA':
+        return <Bone className="h-8 w-8 text-orange-500" />;
+      case 'FISIOTERAPIA_ESPORTIVA':
+        return <Trophy className="h-8 w-8 text-yellow-500" />;
+      case 'FISIOTERAPIA_POS_OPERATORIA':
+        return <ShieldPlus className="h-8 w-8 text-red-500" />;
       default:
         return <ClipboardList className="h-8 w-8" />;
     }
@@ -187,9 +195,7 @@ export function StandardFormsManager() {
 
   // Verificar quais fichas já existem
   const existingStandardForms = existingForms.filter(f =>
-    f.nome === STANDARD_FORMS.ANAMNESE.nome ||
-    f.nome === STANDARD_FORMS.AVALIACAO_POSTURAL.nome ||
-    f.nome === STANDARD_FORMS.AVALIACAO_FUNCIONAL.nome
+    Object.values(STANDARD_FORMS).some(sf => sf.nome === f.nome)
   );
 
   return (
