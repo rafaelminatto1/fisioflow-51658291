@@ -11,7 +11,7 @@ import { fisioLogger as logger } from '@/lib/errors/logger';
 let _loggedOfflineSyncStart = false;
 let _loggedOfflineSyncComplete = false;
 
-// const db = getFirebaseDb(); // Moved inside functions
+// const db = getDb(); // Moved inside functions
 
 // ============================================================================
 // TYPES & INTERFACES
@@ -507,7 +507,7 @@ class OfflineSyncService {
 
         for (const appt of appointments) {
           await apptStore.put(appt);
-          // Note: Firebase doesn't auto-join like Supabase, so patients would need separate query
+          // Note: The database does not auto-join, so patients would need separate query
           // For now, we just store the appointment data
         }
         await tx.done;

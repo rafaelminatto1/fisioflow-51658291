@@ -1,7 +1,7 @@
 /**
  * Personalized Treatment Optimization
  *
- * Uses Firebase AI Logic (gemini-2.5-pro) with Google Search grounding to:
+ * Uses Cloudflare AI / Gemini (gemini-2.5-pro) with Google Search grounding to:
  * - Optimize treatment plans based on patient data
  * - Research latest evidence (with grounding)
  * - Identify new techniques/modalities
@@ -354,7 +354,7 @@ export async function optimizeTreatmentPlan(
       confidenceScore,
     };
 
-    // Store optimization in Firestore
+    // Store optimization via Workers API
     await storeOptimization(patientId, optimization);
 
     return optimization;
@@ -503,7 +503,7 @@ interface TreatmentPlanInput {
 /**
  * Perform grounded research using Google Search
  * Note: This is a simplified implementation. In production, would use Vertex AI Search
- * or Firebase AI Logic with Google Search integration.
+ * or Google Search integration.
  */
 async function performGroundedResearch(
   condition: ConditionInput,

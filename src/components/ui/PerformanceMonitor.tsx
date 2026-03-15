@@ -139,7 +139,7 @@ export const PerformanceMonitor = ({
 
       // Enviar para analytics se disponível
       if (data.length > 0 && 'navigator' in navigator && 'sendBeacon' in navigator) {
-        // Aqui você pode integrar com Firebase Performance Monitoring
+        // Aqui você pode integrar com analytics do Cloudflare
         console.log('Performance metrics:', data);
       }
 

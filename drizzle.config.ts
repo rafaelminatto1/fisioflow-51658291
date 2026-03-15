@@ -7,4 +7,8 @@ export default defineConfig({
     dbCredentials: {
         url: process.env.DATABASE_URL!,
     },
+    // Otimizações para Neon/Remote DB
+    caching: true,
+    verbose: true,
+    strict: true,
 });

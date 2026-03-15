@@ -1,7 +1,7 @@
 /**
  * Hook para gerenciar configurações dinâmicas e Feature Flags
  *
- * Migrado para env/local overrides, sem Firebase Remote Config.
+ * Migrado para env/local overrides, sem Remote Config.
  */
 
 import { useEffect, useMemo, useState } from 'react';

@@ -22,11 +22,12 @@ export function FinancialAIAdvisor({ stats }: FinancialAIAdvisorProps) {
     try {
       const prompt = `
         Aja como um consultor financeiro Pro para clínicas. Analise estes dados:
+        Resumo Atual:
         - Receita: R$ ${stats.totalRevenue}
-        - Pendente (Inadimplência): R$ ${stats.pendingPayments}
+        - Pendente (Inadimplência): R$ ${(stats as any).pendingAmount || (stats as any).pendingPayments || 0}
         - Crescimento: ${stats.monthlyGrowth}%
-        - Ticket Médio: R$ ${stats.averageTicket}
-        
+        - Ticket Médio: R$ ${(stats as any).averageTicket || 0}
+
         Forneça 2 dicas estratégicas e curtas (máximo 20 palavras cada) para aumentar o lucro.
         Responda em português brasileiro.
       `;

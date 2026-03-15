@@ -44,14 +44,67 @@ function normalizeOptions(value: unknown): unknown[] | null {
   return null;
 }
 
+async function ensureTables(env: Env): Promise<void> {
+  const pool = await createPool(env);
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS evaluation_forms (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        organization_id UUID NOT NULL,
+        created_by TEXT,
+        nome TEXT NOT NULL,
+        descricao TEXT,
+        referencias TEXT,
+        tipo TEXT DEFAULT 'anamnese',
+        ativo BOOLEAN DEFAULT true,
+        is_favorite BOOLEAN DEFAULT false,
+        usage_count INTEGER DEFAULT 0,
+        last_used_at TIMESTAMP WITH TIME ZONE,
+        cover_image TEXT,
+        estimated_time INTEGER,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS evaluation_form_fields (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        form_id UUID NOT NULL REFERENCES evaluation_forms(id) ON DELETE CASCADE,
+        tipo_campo TEXT NOT NULL,
+        label TEXT NOT NULL,
+        placeholder TEXT,
+        opcoes JSONB,
+        ordem INTEGER DEFAULT 0,
+        obrigatorio BOOLEAN DEFAULT false,
+        grupo TEXT,
+        descricao TEXT,
+        minimo NUMERIC,
+        maximo NUMERIC,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+
+      CREATE TABLE IF NOT EXISTS patient_evaluation_responses (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        organization_id UUID NOT NULL,
+        patient_id UUID NOT NULL,
+        form_id UUID NOT NULL REFERENCES evaluation_forms(id),
+        appointment_id UUID,
+        responses JSONB NOT NULL DEFAULT '{}',
+        created_by TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+      );
+    `);
+  } finally {
+    await pool.end();
+  }
+}
+
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
+  await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { tipo, ativo, favorite } = c.req.query();
-
-  if (!(await hasTable(pool, 'evaluation_forms'))) {
-    return c.json({ data: [] });
-  }
 
   const conditions: string[] = ['organization_id = $1'];
   const params: unknown[] = [user.organizationId];
@@ -80,12 +133,9 @@ app.get('/', requireAuth, async (c) => {
 
 app.get('/:id', requireAuth, async (c) => {
   const user = c.get('user');
+  await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { id } = c.req.param();
-
-  if (!(await hasTable(pool, 'evaluation_forms'))) {
-    return c.json({ error: 'Formulários de avaliação não disponíveis' }, 404);
-  }
 
   const formResult = await pool.query(
     `SELECT * FROM evaluation_forms
@@ -98,27 +148,22 @@ app.get('/:id', requireAuth, async (c) => {
   }
 
   let fields: unknown[] = [];
-  if (await hasTable(pool, 'evaluation_form_fields')) {
-    const fieldsResult = await pool.query(
-      `SELECT * FROM evaluation_form_fields
-       WHERE form_id = $1
-       ORDER BY ordem ASC`,
-      [id],
-    );
-    fields = fieldsResult.rows;
-  }
+  const fieldsResult = await pool.query(
+    `SELECT * FROM evaluation_form_fields
+     WHERE form_id = $1
+     ORDER BY ordem ASC`,
+    [id],
+  );
+  fields = fieldsResult.rows;
 
   return c.json({ data: { ...formResult.rows[0], fields } });
 });
 
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
+  await ensureTables(c.env);
   const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
-
-  if (!(await hasTable(pool, 'evaluation_forms'))) {
-    return c.json({ error: 'Formulários de avaliação não disponíveis' }, 501);
-  }
 
   if (!body.nome) return c.json({ error: 'nome é obrigatório' }, 400);
 
@@ -148,13 +193,10 @@ app.post('/', requireAuth, async (c) => {
 
 app.put('/:id', requireAuth, async (c) => {
   const user = c.get('user');
+  await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
-
-  if (!(await hasTable(pool, 'evaluation_forms'))) {
-    return c.json({ error: 'Formulários de avaliação não disponíveis' }, 501);
-  }
 
   const sets: string[] = ['updated_at = NOW()'];
   const params: unknown[] = [];
@@ -213,12 +255,9 @@ app.put('/:id', requireAuth, async (c) => {
 
 app.delete('/:id', requireAuth, async (c) => {
   const user = c.get('user');
+  await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { id } = c.req.param();
-
-  if (!(await hasTable(pool, 'evaluation_forms'))) {
-    return c.json({ error: 'Formulários de avaliação não disponíveis' }, 501);
-  }
 
   const result = await pool.query(
     `UPDATE evaluation_forms
@@ -234,12 +273,9 @@ app.delete('/:id', requireAuth, async (c) => {
 
 app.post('/:id/duplicate', requireAuth, async (c) => {
   const user = c.get('user');
+  await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { id } = c.req.param();
-
-  if (!(await hasTable(pool, 'evaluation_forms'))) {
-    return c.json({ error: 'Formulários de avaliação não disponíveis' }, 501);
-  }
 
   const originalFormResult = await pool.query(
     `SELECT * FROM evaluation_forms
@@ -273,33 +309,31 @@ app.post('/:id/duplicate', requireAuth, async (c) => {
   );
   const duplicated = copiedResult.rows[0] as { id: string };
 
-  if (await hasTable(pool, 'evaluation_form_fields')) {
-    const fieldsResult = await pool.query(
-      `SELECT * FROM evaluation_form_fields WHERE form_id = $1 ORDER BY ordem ASC`,
-      [id],
-    );
+  const fieldsResult = await pool.query(
+    `SELECT * FROM evaluation_form_fields WHERE form_id = $1 ORDER BY ordem ASC`,
+    [id],
+  );
 
-    for (const field of fieldsResult.rows as Record<string, unknown>[]) {
-      await pool.query(
-        `INSERT INTO evaluation_form_fields
-           (form_id, tipo_campo, label, placeholder, opcoes, ordem, obrigatorio,
-            grupo, descricao, minimo, maximo, created_at, updated_at)
-         VALUES ($1,$2,$3,$4,$5::jsonb,$6,$7,$8,$9,$10,$11,NOW(),NOW())`,
-        [
-          duplicated.id,
-          field.tipo_campo ?? 'texto_curto',
-          field.label ?? '',
-          field.placeholder ?? null,
-          JSON.stringify(normalizeOptions(field.opcoes) ?? []),
-          field.ordem ?? 0,
-          field.obrigatorio ?? false,
-          field.grupo ?? null,
-          field.descricao ?? null,
-          field.minimo ?? null,
-          field.maximo ?? null,
-        ],
-      );
-    }
+  for (const field of fieldsResult.rows as Record<string, unknown>[]) {
+    await pool.query(
+      `INSERT INTO evaluation_form_fields
+         (form_id, tipo_campo, label, placeholder, opcoes, ordem, obrigatorio,
+          grupo, descricao, minimo, maximo, created_at, updated_at)
+       VALUES ($1,$2,$3,$4,$5::jsonb,$6,$7,$8,$9,$10,$11,NOW(),NOW())`,
+      [
+        duplicated.id,
+        field.tipo_campo ?? 'texto_curto',
+        field.label ?? '',
+        field.placeholder ?? null,
+        JSON.stringify(normalizeOptions(field.opcoes) ?? []),
+        field.ordem ?? 0,
+        field.obrigatorio ?? false,
+        field.grupo ?? null,
+        field.descricao ?? null,
+        field.minimo ?? null,
+        field.maximo ?? null,
+      ],
+    );
   }
 
   return c.json({ data: duplicated }, 201);
@@ -307,13 +341,10 @@ app.post('/:id/duplicate', requireAuth, async (c) => {
 
 app.post('/:id/fields', requireAuth, async (c) => {
   const user = c.get('user');
+  await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
-
-  if (!(await hasTable(pool, 'evaluation_forms')) || !(await hasTable(pool, 'evaluation_form_fields'))) {
-    return c.json({ error: 'Campos de formulário não disponíveis' }, 501);
-  }
 
   const formCheck = await pool.query(
     `SELECT id FROM evaluation_forms WHERE id = $1 AND organization_id = $2 LIMIT 1`,
@@ -347,13 +378,10 @@ app.post('/:id/fields', requireAuth, async (c) => {
 
 app.put('/fields/:fieldId', requireAuth, async (c) => {
   const user = c.get('user');
+  await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { fieldId } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
-
-  if (!(await hasTable(pool, 'evaluation_forms')) || !(await hasTable(pool, 'evaluation_form_fields'))) {
-    return c.json({ error: 'Campos de formulário não disponíveis' }, 501);
-  }
 
   const ownership = await pool.query(
     `
@@ -425,12 +453,9 @@ app.put('/fields/:fieldId', requireAuth, async (c) => {
 
 app.delete('/fields/:fieldId', requireAuth, async (c) => {
   const user = c.get('user');
+  await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { fieldId } = c.req.param();
-
-  if (!(await hasTable(pool, 'evaluation_forms')) || !(await hasTable(pool, 'evaluation_form_fields'))) {
-    return c.json({ error: 'Campos de formulário não disponíveis' }, 501);
-  }
 
   const result = await pool.query(
     `
@@ -449,13 +474,10 @@ app.delete('/fields/:fieldId', requireAuth, async (c) => {
 
 app.get('/:id/responses', requireAuth, async (c) => {
   const user = c.get('user');
+  await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   const patientId = c.req.query('patientId');
-
-  if (!(await hasTable(pool, 'patient_evaluation_responses'))) {
-    return c.json({ data: [] });
-  }
 
   const params: unknown[] = [id, user.organizationId];
   const conditions = ['form_id = $1', 'organization_id = $2'];
@@ -477,13 +499,10 @@ app.get('/:id/responses', requireAuth, async (c) => {
 
 app.post('/:id/responses', requireAuth, async (c) => {
   const user = c.get('user');
+  await ensureTables(c.env);
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
-
-  if (!(await hasTable(pool, 'patient_evaluation_responses'))) {
-    return c.json({ error: 'Respostas de avaliação não disponíveis' }, 501);
-  }
 
   const patientId = typeof body.patient_id === 'string' ? body.patient_id : null;
   if (!patientId) return c.json({ error: 'patient_id é obrigatório' }, 400);
