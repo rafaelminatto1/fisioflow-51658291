@@ -138,7 +138,6 @@ window.__perfMonitor.reportSummary()
 ### Integration with Services
 - **Sentry**: Performance monitoring and error tracking
 - **Google Analytics**: Custom events for metrics
-- **Firebase Analytics**: Business metrics
 
 ## Files Created
 

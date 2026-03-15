@@ -1,5 +1,5 @@
 /**
- * Exercise AI Assistant - Firebase AI Logic Implementation
+ * Exercise AI Assistant
  *
  * Uses Gemini 2.5 Flash-Lite for cost-efficient exercise suggestions
  * based on patient profile, SOAP notes, and pain map data.
@@ -273,7 +273,7 @@ Retorne APENAS JSON válido sem blocos de código markdown.`;
 /**
  * Exercise AI Assistant Class
  *
- * Provides AI-powered exercise recommendations using Firebase AI Logic
+ * Provides AI-powered exercise recommendations
  */
 export class ExerciseAIAssistant {
   private genAI: GoogleGenerativeAI;

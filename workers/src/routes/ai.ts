@@ -3,6 +3,7 @@ import { requireAuth, type AuthVariables } from '../lib/auth';
 import type { Env } from '../types/env';
 
 import { callGemini, transcribeAudioWithGemini } from '../lib/ai-gemini';
+import { logToAxiom } from '../lib/axiom';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -44,7 +45,23 @@ app.post('/service', async (c) => {
       Pergunta do profissional: ${message}
       Responda de forma técnica, concisa e baseada em evidências clínicas.`;
       
+      const start = performance.now();
       const response = await callGemini(c.env.GOOGLE_AI_API_KEY, prompt);
+      const duration = performance.now() - start;
+      
+      c.executionCtx.waitUntil(
+        logToAxiom(c.env, c.executionCtx, {
+          level: 'info',
+          type: 'ai_inference_latency',
+          message: 'Gemini inference completed',
+          metadata: {
+            action: 'clinicalChat',
+            durationMs: duration,
+            promptLength: prompt.length
+          }
+        })
+      );
+
       return c.json({ data: { response } });
     }
     case 'exerciseSuggestion': {
@@ -88,7 +105,22 @@ app.post('/transcribe-audio', async (c) => {
   if (!audioBase64) return c.json({ error: 'Nenhum dado de áudio enviado' }, 400);
 
   try {
+    const start = performance.now();
     const transcription = await transcribeAudioWithGemini(c.env.GOOGLE_AI_API_KEY, audioBase64, mimeType);
+    const duration = performance.now() - start;
+
+    c.executionCtx.waitUntil(
+      logToAxiom(c.env, c.executionCtx, {
+        level: 'info',
+        type: 'ai_inference_latency',
+        message: 'Audio transcription completed',
+        metadata: {
+          action: 'transcribe-audio',
+          durationMs: duration
+        }
+      })
+    );
+
     return c.json({ data: { transcription, confidence: 0.95 } });
   } catch (error: any) {
     return c.json({ error: 'Erro na transcrição via Gemini', details: error.message }, 500);
@@ -103,7 +135,23 @@ app.post('/transcribe-session', async (c) => {
   Relato: "${text}"
   Retorne em formato JSON: { subjective, objective, assessment, plan }`;
 
+  const start = performance.now();
   const aiResponse = await callGemini(c.env.GOOGLE_AI_API_KEY, prompt);
+  const duration = performance.now() - start;
+
+  c.executionCtx.waitUntil(
+    logToAxiom(c.env, c.executionCtx, {
+      level: 'info',
+      type: 'ai_inference_latency',
+      message: 'SOAP generation completed',
+      metadata: {
+        action: 'transcribe-session',
+        durationMs: duration,
+        promptLength: prompt.length
+      }
+    })
+  );
+
   try {
     const soapData = JSON.parse(aiResponse.replace(/```json|```/g, ''));
     return c.json({ data: { soapData } });

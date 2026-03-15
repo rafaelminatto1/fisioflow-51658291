@@ -60,8 +60,9 @@ export class AppointmentService {
         options: { limit?: number; dateFrom?: string; dateTo?: string } = {}
     ): Promise<AppointmentBase[]> {
         try {
-            // Default limit increased to 3000 to cover more history/future without breaking
-            const limit = options.limit || 3000;
+            // Default limit reduced to 500 for better performance.
+            // The agenda should use date filters to fetch only what's needed.
+            const limit = options.limit || 500;
 
             logger.info('Fetching appointments', {
                 organizationId,
@@ -274,7 +275,7 @@ export class AppointmentService {
                 patientName: newAppointment.patient_name || 'Desconhecido',
                 phone: newAppointment.patient_phone || '',
                 date: parseResponseDate(newAppointment.date || newAppointment.appointment_date),
-                time: newAppointment.start_time || newAppointment.appointment_time,
+                time: newAppointment.start_time || newAppointment.appointment_time || rawTime || '00:00',
                 duration: newAppointment.duration_minutes || newAppointment.duration || 60,
                 type: newAppointment.type as AppointmentType,
                 status: newAppointment.status as AppointmentStatus,

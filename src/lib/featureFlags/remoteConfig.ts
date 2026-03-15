@@ -1,5 +1,5 @@
 /**
- * Feature flags sem Firebase Remote Config.
+ * Feature flags sem remote config externo.
  */
 
 import { fisioLogger as logger } from '@/lib/errors/logger';

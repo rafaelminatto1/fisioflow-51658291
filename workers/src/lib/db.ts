@@ -1,40 +1,41 @@
 import { neon } from '@neondatabase/serverless';
 import { drizzle as drizzleHttp } from 'drizzle-orm/neon-http';
 import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres';
-import { Client } from 'pg';
+import { Client, Pool } from 'pg';
 import type { Env } from '../types/env';
 
 import * as schema from './worker-schema';
 
-export type Database = any; // ReturnType<typeof createDb> is now async
+let pool: Pool | null = null;
 
 export async function createDb(env: Env) {
-  const url = env.NEON_URL || env.HYPERDRIVE?.connectionString || process.env.DATABASE_URL;
+  const url = env.HYPERDRIVE?.connectionString || env.NEON_URL || process.env.DATABASE_URL;
   if (!url) throw new Error('DB URL missing');
 
-  // Se for uma URL do Hyperdrive (TCP), usamos o driver 'pg'
+  // Use pool for Hyperdrive (TCP) to keep connections warm
   if (url.startsWith('postgres://') || url.startsWith('postgresql://')) {
-    const client = new Client({ connectionString: url });
-    await client.connect();
-    return drizzlePg(client, { schema });
+    if (!pool) {
+      pool = new Pool({ 
+        connectionString: url,
+        max: 1, // Workers handle one request at a time, but Hyperdrive pools them at the edge
+      });
+    }
+    return drizzlePg(pool, { schema });
   }
 
   // Fallback para HTTP (Neon)
   return drizzleHttp(neon(url), { schema });
 }
 
-/**
- * Mock de Pool para compatibilidade total.
- * Usa o driver 'pg' nativo para Hyperdrive.
- */
 export async function createPool(env: Env) {
-  const url = env.NEON_URL || env.HYPERDRIVE?.connectionString || process.env.DATABASE_URL;
+  const url = env.HYPERDRIVE?.connectionString || env.NEON_URL || process.env.DATABASE_URL;
   if (!url) throw new Error('DB URL missing');
 
   if (url.startsWith('postgres://') || url.startsWith('postgresql://')) {
-    const client = new Client({ connectionString: url });
-    await client.connect();
-    return client; // Retorna o client diretamente que tem o método .query compatível
+    if (!pool) {
+      pool = new Pool({ connectionString: url, max: 1 });
+    }
+    return pool;
   }
 
   // Fallback para neon HTTP

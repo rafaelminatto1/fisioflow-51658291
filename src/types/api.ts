@@ -92,9 +92,9 @@ export class ApiException extends Error {
 }
 
 /**
- * Firebase specific types
+ * Auth specific types
  */
-export interface FirebaseError {
+export interface AuthError {
   code: string;
   message: string;
   name: string;

@@ -2,14 +2,14 @@
  * Storage compatibility bridge.
  *
  * Leituras/escritas novas usam R2. Este módulo mantém a API antiga sem
- * carregar Firebase Storage no bundle.
+ * carregar storage legado no bundle.
  */
 import { uploadToR2, deleteFromR2 } from '@/lib/storage/r2-storage';
 import { resolvePublicStorageUrl } from '@/lib/storage/public-url';
 
 type StorageRef = { fullPath: string };
 
-export const getFirebaseStorage = () => ({ provider: 'r2' } as const);
+export const getStorageProvider = () => ({ provider: 'r2' } as const);
 
 export const ref = (_storage: unknown, path: string): StorageRef => ({ fullPath: path });
 

@@ -102,7 +102,7 @@ export function generateOpenAPISpec(): OpenAPISpec {
       },
       {
         url: 'http://localhost:5001/fisioflow-51658291/us-central1',
-        description: 'Desenvolvimento Local (Firebase Functions)',
+        description: 'Desenvolvimento Local (Cloudflare Workers)',
       },
     ],
     paths: {

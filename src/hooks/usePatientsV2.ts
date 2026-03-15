@@ -59,7 +59,7 @@ export const useActivePatientsV2 = () => {
   const queryClient = useQueryClient();
   const lastUpdatedRef = useRef<string | null>(null);
 
-  // Poll the Workers API for freshness without depending on Firebase services
+  // Poll the Workers API for freshness without depending on legacy services
   useEffect(() => {
     if (!organizationId) return;
     let active = true;
