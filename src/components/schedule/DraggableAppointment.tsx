@@ -84,10 +84,10 @@ export const DraggableAppointment = memo(({
       transition: isDragging
         ? 'transform 75ms ease-out, opacity 150ms ease-out'
         : 'transform 150ms ease-out, opacity 150ms ease-out',
-      // During drag, the original card becomes semi-transparent ghost
-      opacity: isDragging ? 0.2 : 1,
-      // Scale down slightly during drag for visual feedback
-      scale: isDragging ? 0.98 : 1,
+      // During drag, the card follows the mouse
+      opacity: isDragging ? 0.9 : 1,
+      // Keep original scale for a cleaner look
+      scale: 1,
       cursor: isDragDisabled ? 'default' : 'grabbing',
       // Elevate during drag
       zIndex: isDragging ? 1000 : style.zIndex ?? 10,

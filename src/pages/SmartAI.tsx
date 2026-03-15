@@ -67,7 +67,7 @@ const SmartAI = () => {
     setLoading(true);
 
     try {
-      const WORKERS_BASE = import.meta.env.VITE_WORKERS_API_URL || 'https://fisioflow-api.rafalegollas.workers.dev';
+      const WORKERS_BASE = import.meta.env.VITE_WORKERS_API_URL || 'https://api-pro.moocafisio.com.br';
       const CHAT_URL = `${WORKERS_BASE}/api/ai/chat`;
 
       const response = await fetch(CHAT_URL, {

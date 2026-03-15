@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { useRealtime } from '@/contexts/RealtimeContext';
+import { useRealtime } from '@/hooks/useRealtimeContext';
 
 export interface Appointment {
   id: string;

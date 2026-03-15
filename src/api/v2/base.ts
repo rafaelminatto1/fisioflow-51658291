@@ -1,8 +1,6 @@
 import { getNeonAccessToken } from '@/lib/auth/neon-token';
 import { getWorkersApiUrl } from '@/lib/api/config';
 
-const BASE_URL = getWorkersApiUrl();
-
 type RequestError = Error & {
   status?: number;
   payload?: unknown;
@@ -18,7 +16,7 @@ export async function request<T>(
   options: RequestInit = {},
 ): Promise<T> {
   const authHeaders = await getAuthHeader();
-  const url = `${BASE_URL}${path}`;
+  const url = `${getWorkersApiUrl()}${path}`;
 
   const res = await fetch(url, {
     ...options,
@@ -59,6 +57,11 @@ export async function request<T>(
     throw error;
   }
 
+  const contentType = res.headers.get('Content-Type');
+  if (contentType?.includes('application/pdf')) {
+    return res.blob() as unknown as Promise<T>;
+  }
+
   return res.json() as Promise<T>;
 }
 
@@ -66,7 +69,7 @@ export async function requestPublic<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const url = `${BASE_URL}${path}`;
+  const url = `${getWorkersApiUrl()}${path}`;
 
   const res = await fetch(url, {
     ...options,

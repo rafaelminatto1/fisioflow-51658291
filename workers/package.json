@@ -13,6 +13,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.750.0",
     "@aws-sdk/s3-request-presigner": "^3.750.0",
+    "@neondatabase/serverless": "^1.0.2",
     "drizzle-orm": "^0.45.1",
     "hono": "^4.7.4",
     "inngest": "^3.52.3",
@@ -22,6 +23,7 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@cloudflare/puppeteer": "^1.0.6",
     "@cloudflare/workers-types": "^4.20260310.1",
     "@types/pg": "^8.11.10",
     "drizzle-kit": "^0.31.0",

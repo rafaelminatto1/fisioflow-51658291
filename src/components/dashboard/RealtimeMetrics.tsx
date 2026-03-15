@@ -4,7 +4,7 @@
 // Otimizado com React.memo e useMemo
 
 import { useMemo, memo } from 'react';
-import { useRealtime } from '@/contexts/RealtimeContext';
+import { useRealtime } from '@/hooks/useRealtimeContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Activity, Users, DollarSign, Calendar } from 'lucide-react';
 
