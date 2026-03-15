@@ -97,7 +97,7 @@ export function generateOpenAPISpec(): OpenAPISpec {
     },
     servers: [
       {
-        url: 'https://fisioflow-api.rafalegollas.workers.dev',
+        url: 'https://api-pro.moocafisio.com.br',
         description: 'Produção (Cloudflare Workers)',
       },
       {

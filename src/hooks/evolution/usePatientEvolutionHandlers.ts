@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useToast } from '@/hooks/use-toast';
 import { usePDFGenerator } from '@/hooks/usePDFGenerator';
+import { useExportPdf } from '@/hooks/useExportPdf';
 import { useAppointmentActions } from '@/hooks/useAppointmentActions';
 import { useGamification } from '@/hooks/useGamification';
 import { useAutoSaveSoapRecord } from '@/hooks/useSoapRecords';
@@ -41,6 +42,7 @@ export function usePatientEvolutionHandlers({
   const { generateEvolucao, downloadPDF } = usePDFGenerator();
   const { completeAppointment } = useAppointmentActions();
   const { awardXp } = useGamification(patientId || '');
+  const { exportPdf, isGenerating: isExportingPdf } = useExportPdf();
   const autoSaveMutation = useAutoSaveSoapRecord();
   const { saveVersionForRecord } = useEvolutionVersionHistory(currentSoapRecordId);
 
@@ -238,66 +240,50 @@ export function usePatientEvolutionHandlers({
     }
 
     try {
-      const evaluations = [
-        {
-          date: new Date(),
-          subjective: soapData.subjective || 'Não preenchido',
-          objective: soapData.objective || 'Não preenchido',
-          assessment: soapData.assessment || 'Não preenchido',
-          plan: soapData.plan || 'Não preenchido',
-        },
-        ...(previousEvolutions.slice(0, 5).map((ev: any) => ({
-          date: new Date(ev.created_at),
-          subjective: ev.subjective || '',
-          objective: ev.objective || '',
-          assessment: ev.assessment || '',
-          plan: ev.plan || '',
-        })))
-      ];
+      const htmlContent = `
+        <div style="padding: 20px; font-family: sans-serif;">
+          <h1 style="color: #2563eb; text-align: center; border-bottom: 2px solid #2563eb; padding-bottom: 10px;">Evolução Clínica de Fisioterapia</h1>
+          
+          <section style="margin-top: 20px;">
+            <h3 style="background: #f3f4f6; padding: 8px; border-radius: 4px; border-left: 4px solid #2563eb;">Dados do Paciente</h3>
+            <div style="display: grid; grid-template-cols: 1fr 1fr; gap: 10px;">
+              <p><strong>Nome:</strong> ${PatientHelpers.getName(patient)}</p>
+              <p><strong>CPF:</strong> ${patient.cpf || 'N/A'}</p>
+              <p><strong>Nascimento:</strong> ${patient.birth_date ? format(new Date(patient.birth_date), 'dd/MM/yyyy') : 'N/A'}</p>
+              <p><strong>Telefone:</strong> ${patient.phone || 'N/A'}</p>
+            </div>
+          </section>
 
-      const summary = `Paciente em tratamento fisioterapêutico desde ${patient.created_at ? format(new Date(patient.created_at), 'dd/MM/yyyy', { locale: ptBR }) : 'data não informada'}. ` +
-        `Foram realizadas ${previousEvolutions.length + 1} sessões de evolução. ` +
-        `Metas atuais: ${goals.filter((g: any) => g.status === 'em_andamento').map((g: any) => g.title).join(', ') || 'Nenhuma'}.`;
+          <section style="margin-top: 20px;">
+            <h3 style="background: #f3f4f6; padding: 8px; border-radius: 4px; border-left: 4px solid #2563eb;">Registro Atual (${format(new Date(), 'dd/MM/yyyy')})</h3>
+            <div style="margin-bottom: 15px; border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px;">
+              <p style="margin-bottom: 8px;"><strong>Subjetivo (S):</strong> ${soapData.subjective || 'Não informado'}</p>
+              <p style="margin-bottom: 8px;"><strong>Objetivo (O):</strong> ${soapData.objective || 'Não informado'}</p>
+              <p style="margin-bottom: 8px;"><strong>Avaliação (A):</strong> ${soapData.assessment || 'Não informado'}</p>
+              <p><strong>Plano (P):</strong> ${soapData.plan || 'Não informado'}</p>
+            </div>
+          </section>
 
-      const blob = await generateEvolucao(
-        {
-          name: PatientHelpers.getName(patient),
-          cpf: patient.cpf,
-          birthDate: patient.birth_date,
-          phone: patient.phone,
-          email: patient.email,
-          address: patient.address,
-        },
-        {
-          name: user.professional.name,
-          crf: user.professional.crf || 'CREFITO',
-          uf: user.professional.uf || 'SP',
-        },
-        {
-          name: user.clinic.name,
-          phone: user.clinic.phone || '',
-          email: user.clinic.email || '',
-          address: user.clinic.address || {
-            street: '',
-            number: '',
-            district: '',
-            city: user.clinic.city || 'São Paulo',
-            state: user.clinic.state || 'SP',
-            zipCode: '',
-          },
-        },
-        evaluations,
-        summary,
-        user.clinic.city || 'São Paulo'
-      );
+          <section style="margin-top: 20px;">
+            <h3 style="background: #f3f4f6; padding: 8px; border-radius: 4px; border-left: 4px solid #2563eb;">Histórico de Sessões</h3>
+            ${previousEvolutions.slice(0, 5).map((ev: any) => `
+              <div style="border-bottom: 1px solid #f3f4f6; padding: 10px 0;">
+                <p style="font-size: 12px; color: #666; font-weight: bold;">Sessão em ${format(new Date(ev.created_at), 'dd/MM/yyyy')}</p>
+                <p style="font-size: 14px; margin-top: 4px;">${ev.assessment || 'Sem descrição clínica.'}</p>
+              </div>
+            `).join('')}
+          </section>
 
-      if (blob) {
-        downloadPDF(blob, `evolucao-${PatientHelpers.getName(patient).replace(/\s+/g, '-')}-${Date.now()}.pdf`);
-        toast({
-          title: 'PDF gerado com sucesso!',
-          description: 'O relatório de evolução foi baixado.',
-        });
-      }
+          <div style="margin-top: 60px; text-align: center;">
+            <div style="width: 250px; border-top: 1px solid #000; margin: 0 auto;"></div>
+            <p style="margin-top: 5px;"><strong>${user.professional.name}</strong></p>
+            <p style="font-size: 12px; color: #666;">${user.professional.crf || 'CREFITO'} | ${user.clinic.name}</p>
+          </div>
+        </div>
+      `;
+
+      await exportPdf(htmlContent, `evolucao-${PatientHelpers.getName(patient).replace(/\s+/g, '-')}-${format(new Date(), 'yyyy-MM-dd')}`, 'Relatório de Evolução');
+      
     } catch (error) {
       logger.error('Failed to generate PDF', error, 'PatientEvolution');
       toast({
