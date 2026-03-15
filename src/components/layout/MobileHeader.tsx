@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { Menu } from 'lucide-react';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
+import { OnlineUsersIndicator } from './OnlineUsersIndicator';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -151,8 +152,9 @@ export function MobileHeader() {
           <OptimizedImage src={fisioflowLogo} alt="FisioFlow" width={80} className="h-7 w-auto" priority />
         </Link>
 
-        {/* Notificações */}
-        <div className="flex items-center">
+        {/* Notificações e Presença */}
+        <div className="flex items-center gap-1">
+          <OnlineUsersIndicator />
           <NotificationBell />
         </div>
       </div>

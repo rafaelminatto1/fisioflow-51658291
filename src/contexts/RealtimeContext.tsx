@@ -30,6 +30,7 @@ export interface Appointment {
 
 interface RealtimeContextType {
   appointments: Appointment[];
+  onlineUsers: Map<string, any>;
   metrics: DashboardMetrics;
   lastUpdate: number;
   isSubscribed: boolean;
@@ -58,6 +59,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const queryClient = useQueryClient();
   const organizationId = profile?.organization_id;
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [onlineUsers, setOnlineUsers] = useState<Map<string, any>>(new Map());
   const [metrics, setMetrics] = useState<DashboardMetrics>({
     totalAppointments: 0,
     confirmedAppointments: 0,
@@ -190,6 +192,20 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           window.clearTimeout(reconnectTimeoutRef.current);
           reconnectTimeoutRef.current = null;
         }
+
+        // Broadcast presence
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            type: 'PRESENCE_UPDATE',
+            payload: {
+              userId: profile?.uid,
+              name: profile?.full_name || 'Profissional',
+              role: profile?.role,
+              status: 'online'
+            }
+          }));
+        }
+
         loadInitialAppointments();
       };
 
@@ -204,6 +220,16 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             queryClient.invalidateQueries({ queryKey: ['appointments_v2'] });
           } else if (data.type === 'NOTIFICATION_RECEIVED') {
             queryClient.invalidateQueries({ queryKey: ['notifications'] });
+          } else if (data.type === 'PRESENCE_UPDATE') {
+            setOnlineUsers(prev => {
+              const next = new Map(prev);
+              if (data.payload.status === 'offline') {
+                next.delete(data.payload.userId);
+              } else {
+                next.set(data.payload.userId, data.payload);
+              }
+              return next;
+            });
           }
         } catch (e) {
           // Heartbeat or other non-json messages
@@ -296,6 +322,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const value: RealtimeContextType = {
     appointments,
+    onlineUsers,
     metrics,
     lastUpdate,
     isSubscribed,
@@ -309,5 +336,3 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     </RealtimeContext.Provider>
   );
 };
-
-export { useRealtime } from '@/hooks/useRealtimeContext';

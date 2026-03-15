@@ -3,6 +3,7 @@ import { requireAuth, type AuthVariables } from '../lib/auth';
 import type { Env } from '../types/env';
 
 import { callGemini, transcribeAudioWithGemini } from '../lib/ai-gemini';
+import { runAi, transcribeWithWhisper, summarizeClinicalNote } from '../lib/ai-native';
 import { logToAxiom } from '../lib/axiom';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
@@ -99,14 +100,29 @@ app.post('/fast-processing', async (c) => {
 
 app.post('/transcribe-audio', async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
-  const audioBase64 = safeText(body.audioData || body.audio);
-  const mimeType = safeText(body.mimeType) || 'audio/webm';
+  const audioBase64 = String(body.audioData || body.audio || '');
   
   if (!audioBase64) return c.json({ error: 'Nenhum dado de áudio enviado' }, 400);
 
   try {
     const start = performance.now();
-    const transcription = await transcribeAudioWithGemini(c.env.GOOGLE_AI_API_KEY, audioBase64, mimeType);
+    let transcription = '';
+    let provider = 'native-whisper';
+
+    // Tentar primeiro com Workers AI (Nativo) se o binding existir
+    if (c.env.AI) {
+      try {
+        transcription = await transcribeWithWhisper(c.env, audioBase64);
+      } catch (e) {
+        console.error('Whisper failed, falling back to Gemini', e);
+        provider = 'gemini-fallback';
+        transcription = await transcribeAudioWithGemini(c.env.GOOGLE_AI_API_KEY, audioBase64, String(body.mimeType || 'audio/webm'));
+      }
+    } else {
+      provider = 'gemini-direct';
+      transcription = await transcribeAudioWithGemini(c.env.GOOGLE_AI_API_KEY, audioBase64, String(body.mimeType || 'audio/webm'));
+    }
+
     const duration = performance.now() - start;
 
     c.executionCtx.waitUntil(
@@ -116,14 +132,15 @@ app.post('/transcribe-audio', async (c) => {
         message: 'Audio transcription completed',
         metadata: {
           action: 'transcribe-audio',
+          provider,
           durationMs: duration
         }
       })
     );
 
-    return c.json({ data: { transcription, confidence: 0.95 } });
+    return c.json({ data: { transcription, provider, confidence: 0.95 } });
   } catch (error: any) {
-    return c.json({ error: 'Erro na transcrição via Gemini', details: error.message }, 500);
+    return c.json({ error: 'Erro na transcrição', details: error.message }, 500);
   }
 });
 
@@ -285,10 +302,29 @@ app.post('/document/pdf', async (c) => {
     },
   });
 });
-
 app.post('/executive-summary', async (c) => {
   const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
   return c.json({ data: buildExecutiveSummary(body) });
+});
+
+/**
+ * Endpoints nativos de IA (Workers AI)
+ */
+app.post('/native/summarize', async (c) => {
+  const { text } = await c.req.json();
+  if (!text) return c.json({ error: 'Texto é obrigatório' }, 400);
+
+  const summary = await summarizeClinicalNote(c.env, text);
+  return c.json({ data: { summary } });
+});
+
+app.post('/native/translate', async (c) => {
+  const { text, target } = await c.req.json();
+  const response = await runAi(c.env, '@cf/meta/m2m100-1.2b', {
+    text,
+    target_lang: target || 'english'
+  });
+  return c.json({ data: { translated: response.translated_text } });
 });
 
 app.post('/movement-video', async (c) => {

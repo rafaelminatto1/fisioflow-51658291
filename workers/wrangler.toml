@@ -17,9 +17,6 @@ routes = [
 [[hyperdrive]]
 binding = "HYPERDRIVE"
 id = "12b9fefcfbc04074a63342a9212e1b4f"
-# Caching: Armazena resultados de queries por 60s (padrão) e serve stale por 30s se o banco estiver lento.
-# Isso reduz a latência drasticamente para consultas frequentes.
-caching = { max_age = 60, stale_while_revalidate = 30 }
 
 # ===== CLOUDFLARE R2 (Media Storage) =====
 # Crie com: wrangler r2 bucket create fisioflow-media
@@ -36,19 +33,36 @@ class_name = "OrganizationState"
 tag = "v1" # Initial migration for real-time state
 new_classes = ["OrganizationState"]
 
+# ===== AI & BROWSER RENDERING (Paid Plan) =====
+[ai]
+binding = "AI"
+
+[browser]
+binding = "BROWSER"
+
+# ===== QUEUES (Asynchronous Tasks) =====
+[[queues.producers]]
+queue = "fisioflow-background-tasks"
+binding = "BACKGROUND_QUEUE"
+
+[[queues.consumers]]
+queue = "fisioflow-background-tasks"
+max_batch_size = 10
+max_batch_timeout = 30
+
 # ===== VARIÁVEIS DE AMBIENTE =====
 [vars]
 ENVIRONMENT = "production"
 # Habilita transformações de imagem via URL no painel Cloudflare
 IMAGE_TRANSFORMATIONS = "enabled" 
 # CORS: domínio do frontend em Cloudflare Pages
-ALLOWED_ORIGINS = "https://minatto-fisio.pages.dev,https://fisioflow.pages.dev,https://moocafisio.com.br,https://www.moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173"
+ALLOWED_ORIGINS = "https://minatto-fisio.pages.dev,https://fisioflow.pages.dev,https://moocafisio.com.br,https://www.moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173,https://7d2bdf7d.fisioflow.pages.dev"
 GOOGLE_MAPS_API_KEY = ""
 # Neon Auth JWT verification (obrigatório para rotas protegidas)
 # Ajuste para os valores reais do seu tenant Neon Auth.
 NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
 NEON_AUTH_ISSUER = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
-NEON_AUTH_AUDIENCE = "fisioflow-api"
+NEON_AUTH_AUDIENCE = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
 
 # Hasura (Produção)
 VITE_HASURA_PROJECT_URL = "https://capital-duckling-42.hasura.app/v1/graphql"

@@ -1,22 +1,23 @@
 /**
  * Cliente HTTP para a API Cloudflare Workers (Hono + Neon)
  *
- * URL base: VITE_WORKERS_API_URL (prod: https://api.moocafisio.com.br)
+ * URL base: api-pro.moocafisio.com.br (prod)
  *
  * Inclui automaticamente o token JWT do Neon Auth.
- * 
- * ATENÇÃO: Este arquivo está sendo modularizado em src/api/v2/.
- * Use os novos módulos para novos desenvolvimentos.
  */
 import { getNeonAccessToken } from '@/lib/auth/neon-token';
 import { getWorkersApiUrl } from './config';
 
-// Re-export base request functions for internal use if needed
-const BASE_URL = getWorkersApiUrl();
-
 async function getAuthHeader(): Promise<Record<string, string>> {
-  const token = await getNeonAccessToken();
-  return { Authorization: `Bearer ${token}` };
+  try {
+    const token = await getNeonAccessToken();
+    if (token) {
+      return { 'Authorization': `Bearer ${token}` };
+    }
+  } catch (e) {
+    console.warn('[API Client] Could not retrieve auth token:', e);
+  }
+  return {};
 }
 
 export async function request<T>(
@@ -24,7 +25,7 @@ export async function request<T>(
   options: RequestInit = {},
 ): Promise<T> {
   const authHeaders = await getAuthHeader();
-  const url = `${BASE_URL}${path}`;
+  const url = `${getWorkersApiUrl()}${path}`;
 
   const res = await fetch(url, {
     ...options,
@@ -66,7 +67,7 @@ export async function requestPublic<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const url = `${BASE_URL}${path}`;
+  const url = `${getWorkersApiUrl()}${path}`;
 
   const res = await fetch(url, {
     ...options,

@@ -17,6 +17,12 @@ export const documentsApi = {
 
   delete: (id: string) =>
     request<{ ok: boolean; file_path?: string }>(`/api/documents/${id}`, { method: 'DELETE' }),
+
+  print: (data: { html: string; filename?: string; title?: string }) =>
+    request<Blob>('/api/documents/print', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 };
 
 export const documentTemplatesApi = {
