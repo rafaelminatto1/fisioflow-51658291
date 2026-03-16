@@ -44,8 +44,12 @@ const getStatusStyles = (status: string) => {
         em_andamento: { className: 'calendar-card-em_andamento', accent: 'bg-amber-600' },
         cancelado: { className: 'calendar-card-cancelado', accent: 'bg-red-600' },
         concluido: { className: 'calendar-card-concluido', accent: 'bg-slate-600' },
-        falta: { className: 'calendar-card-cancelado', accent: 'bg-red-700' },
+        falta: { className: 'calendar-card-falta', accent: 'bg-red-700' },
         avaliacao: { className: 'calendar-card-avaliacao', accent: 'bg-purple-600' },
+        aguardando_confirmacao: { className: 'calendar-card-aguardando_confirmacao', accent: 'bg-amber-500' },
+        em_espera: { className: 'calendar-card-em_espera', accent: 'bg-sky-500' },
+        atrasado: { className: 'calendar-card-atrasado', accent: 'bg-orange-500' },
+        reagendado: { className: 'calendar-card-reagendado', accent: 'bg-lime-600' },
         default: { className: 'calendar-card-agendado', accent: 'bg-slate-600' }
     };
     return styles[normalized] || styles.default;
@@ -146,16 +150,8 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
                 scale: isTouch ? 0.97 : 0.99,
                 transition: { duration: 0.1 }
             }}
-            draggable={draggable}
-            onDragStart={(e: React.DragEvent) => {
-                if (draggable && e && 'dataTransfer' in e) {
-                    const img = new Image();
-                    img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-                    e.dataTransfer.setDragImage(img, 0, 0);
-                    onOpenPopover(null);
-                    onDragStart(e, appointment);
-                }
-            }}
+            draggable={false}
+            onDragStart={undefined}
             onDragEnd={onDragEnd}
             onDragOver={(e: React.DragEvent) => {
                 if (onDragOver && !selectionMode) {

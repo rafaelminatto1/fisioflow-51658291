@@ -84,9 +84,10 @@ export const DraggableAppointment = memo(({
       transition: isDragging
         ? 'transform 75ms ease-out, opacity 150ms ease-out'
         : 'transform 150ms ease-out, opacity 150ms ease-out',
-      // During drag, the card follows the mouse
-      opacity: isDragging ? 0.9 : 1,
-      // Keep original scale for a cleaner look
+      // During drag, the card following the mouse is hidden
+      // The user only sees the destination preview (handled by CalendarWeekViewDndKit)
+      opacity: isDragging ? 0 : 1,
+      // Keep original scale
       scale: 1,
       cursor: isDragDisabled ? 'default' : 'grabbing',
       // Elevate during drag

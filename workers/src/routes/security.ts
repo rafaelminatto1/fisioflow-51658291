@@ -73,8 +73,8 @@ async function verifyTotpCode(secret: string, code: string): Promise<boolean> {
 
     const hmacKey = await crypto.subtle.importKey(
       'raw',
-      secretBytes,
-      { name: 'HMAC', hash: 'SHA-1' },
+      secretBytes as unknown as ArrayBuffer,
+      { name: 'HMAC', hash: { name: 'SHA-1' } } as HmacImportParams,
       false,
       ['sign'],
     );

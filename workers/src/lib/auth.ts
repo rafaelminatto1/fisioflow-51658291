@@ -75,7 +75,7 @@ export async function verifyToken(c: any, env: Env): Promise<AuthUser | null> {
       uid: userId,
       email: payload.email as string,
       organizationId: (payload as any).orgId || (payload as any).organizationId || DEFAULT_ORG_ID,
-      role: (payload as any).role || 'admin'
+      role: (payload as any).role || 'viewer'
     };
   } catch (e) {
     console.error('[Auth Error] JWT verification failed:', e instanceof Error ? e.message : String(e));

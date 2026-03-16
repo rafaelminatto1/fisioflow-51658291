@@ -3,6 +3,7 @@ import { Inngest } from 'inngest';
 import { serve } from 'inngest/hono';
 import type { Env } from '../types/env';
 import { WhatsAppService } from '../lib/whatsapp';
+import { createPool } from '../lib/db';
 
 /**
  * Cliente Inngest SDK
@@ -18,7 +19,7 @@ export const inngest = new Inngest({
 const appointmentReminder = inngest.createFunction(
   { id: 'send-appointment-reminder', name: 'Lembrete de Consulta' },
   { event: 'appointment.created' },
-  async ({ event, step, env }) => {
+  async ({ event, step, env }: any) => {
     const { date, startTime, appointmentId, phone, name } = event.data;
 
     // 1. Calcula o horário do lembrete (24h antes da consulta)
@@ -60,7 +61,7 @@ ${calendarUrl}`;
 const patientWelcome = inngest.createFunction(
   { id: 'patient-welcome', name: 'Boas-vindas Paciente' },
   { event: 'patient.created' },
-  async ({ event, step, env }) => {
+  async ({ event, step, env }: any) => {
     const { patientId, name, phone } = event.data;
 
     await step.run('send-welcome-whatsapp', async () => {
@@ -92,7 +93,7 @@ const patientWelcome = inngest.createFunction(
 const appointmentFeedback = inngest.createFunction(
   { id: 'appointment-feedback', name: 'Feedback Pós-Consulta' },
   { event: 'appointment.completed' },
-  async ({ event, step, env }) => {
+  async ({ event, step, env }: any) => {
     const { phone, name } = event.data;
 
     // Aguarda 2 horas após a consulta
@@ -114,7 +115,7 @@ const appointmentFeedback = inngest.createFunction(
 const exerciseReminder = inngest.createFunction(
   { id: 'exercise-reminder', name: 'Lembrete de Exercícios em Casa' },
   { event: 'appointment.completed' },
-  async ({ event, step, env }) => {
+  async ({ event, step, env }: any) => {
     const { phone, name } = event.data;
 
     // Aguarda 2 dias para perguntar sobre os exercícios
@@ -136,7 +137,7 @@ const exerciseReminder = inngest.createFunction(
 const birthdayGreeting = inngest.createFunction(
   { id: 'birthday-greeting', name: 'Parabéns Aniversariante' },
   { event: 'patient.birthday' },
-  async ({ event, step, env }) => {
+  async ({ event, step, env }: any) => {
     const { phone, name } = event.data;
 
     await step.run('send-birthday-whatsapp', async () => {
@@ -155,7 +156,7 @@ const birthdayGreeting = inngest.createFunction(
 const inactiveRecovery = inngest.createFunction(
   { id: 'inactive-recovery', name: 'Recuperação de Inativo' },
   { event: 'patient.inactive' },
-  async ({ event, step, env }) => {
+  async ({ event, step, env }: any) => {
     const { phone, name } = event.data;
 
     await step.run('send-recovery-whatsapp', async () => {
@@ -174,7 +175,7 @@ const inactiveRecovery = inngest.createFunction(
 const paymentConfirmation = inngest.createFunction(
   { id: 'payment-confirmation', name: 'Confirmação de Pagamento' },
   { event: 'payment.received' },
-  async ({ event, step, env }) => {
+  async ({ event, step, env }: any) => {
     const { phone, name } = event.data;
 
     await step.run('send-payment-whatsapp', async () => {
@@ -193,7 +194,7 @@ const paymentConfirmation = inngest.createFunction(
 const googleReviewRequest = inngest.createFunction(
   { id: 'google-review-request', name: 'Solicitar Avaliação Google' },
   { event: 'appointment.completed' },
-  async ({ event, step, env }) => {
+  async ({ event, step, env }: any) => {
     const { patientId, phone, name } = event.data;
 
     // 1. Verifica no banco se o paciente já completou 5 sessões
