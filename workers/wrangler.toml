@@ -66,7 +66,7 @@ NEON_AUTH_AUDIENCE = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws
 
 # Hasura (Produção)
 VITE_HASURA_PROJECT_URL = "https://capital-duckling-42.hasura.app/v1/graphql"
-VITE_HASURA_ADMIN_SECRET = "0phHoTnXL6XUIqvIHDiTi01XlvCmov2aYvoOC60hthgwDm6ZVZcIoSVG7mkZZLc1"
+# VITE_HASURA_ADMIN_SECRET deve ser setado via: wrangler secret put VITE_HASURA_ADMIN_SECRET
 
 # Axiom Logging (Produção)
 AXIOM_ORG_ID = "activity-dbyc"
@@ -93,7 +93,7 @@ AXIOM_ORG_ID = "activity-dbyc"
 AXIOM_DATASET = "fisioflow-logs-staging"
 
 # Inngest (Staging)
-INNGEST_EVENT_KEY = "9wvvKcSTUi2STGzvwEImNg_j1XUcKjUgP-o-1HfIt-j9eKulwyfV-B1J95OXTKSHoO3huyTgcZCI6b5AEMD-xw"
+# INNGEST_EVENT_KEY deve ser setado via: wrangler secret put INNGEST_EVENT_KEY --env staging
 
 [[env.staging.hyperdrive]]
 binding = "HYPERDRIVE"

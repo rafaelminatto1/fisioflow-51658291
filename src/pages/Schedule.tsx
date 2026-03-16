@@ -12,7 +12,6 @@ import { ViewType } from '@/utils/periodCalculations';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBulkActions } from '@/hooks/useBulkActions';
 import { fisioLogger as logger } from '@/lib/errors/logger';
-import { AlertTriangle } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { EmptyState } from '@/components/ui';
 import { CalendarSkeletonEnhanced } from '@/components/schedule/skeletons/CalendarSkeletonEnhanced';

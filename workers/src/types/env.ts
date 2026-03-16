@@ -54,4 +54,8 @@ export interface Env {
   // Inngest Configuration
   INNGEST_EVENT_KEY?: string;
   INNGEST_SIGNING_KEY?: string;
+
+  // WhatsApp Business API
+  WHATSAPP_PHONE_NUMBER_ID?: string;
+  WHATSAPP_ACCESS_TOKEN?: string;
 }

@@ -9,7 +9,7 @@ const app = new Hono<{ Bindings: Env }>();
  * Retorna todos os agendamentos futuros do paciente.
  */
 app.get('/feed/:patientId.ics', async (c) => {
-  const { patientId } = c.req.param();
+  const patientId = (c.req.param() as Record<string, string>)['patientId.ics']?.replace('.ics', '') ?? '';
   const db = await createPool(c.env);
 
   // Busca todos os agendamentos futuros deste paciente
