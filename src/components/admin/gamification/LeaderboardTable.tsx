@@ -94,10 +94,106 @@ export const LeaderboardTable: React.FC = () => {
     setFilters({ page: newPage });
   };
 
+  const podium = leaderboard.slice(0, 3);
+  const others = leaderboard.slice(3);
+
+  const getPodiumColor = (rank: number) => {
+    if (rank === 1) return 'from-yellow-400 to-yellow-600 shadow-yellow-500/20';
+    if (rank === 2) return 'from-slate-300 to-slate-500 shadow-slate-500/20';
+    if (rank === 3) return 'from-amber-600 to-amber-800 shadow-amber-800/20';
+    return 'from-primary/10 to-primary/20';
+  };
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in duration-500">
+      {/* Podium Section */}
+      {filters.page === 1 && leaderboard.length >= 3 && !isLoading && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 pb-2">
+          {/* 2nd Place */}
+          <div className="order-2 md:order-1 flex flex-col items-center justify-end h-full pt-8">
+            <div className="relative group cursor-pointer w-full" onClick={() => setSelectedPatient(podium[1].patient_id)}>
+              <div className={cn(
+                "absolute -top-12 left-1/2 -translate-x-1/2 flex flex-col items-center transition-transform group-hover:scale-110",
+              )}>
+                <div className="w-16 h-16 rounded-full border-4 border-slate-300 bg-slate-100 flex items-center justify-center shadow-lg overflow-hidden">
+                   <span className="text-xl font-black text-slate-500">{podium[1].patient_name.charAt(0)}</span>
+                </div>
+                <Badge className="mt-2 bg-slate-500 text-white border-none px-3">2º Lugar</Badge>
+              </div>
+              <div className={cn(
+                "h-32 w-full rounded-t-2xl bg-gradient-to-b flex flex-col items-center justify-center p-4 text-white text-center shadow-xl",
+                getPodiumColor(2)
+              )}>
+                <p className="font-bold text-lg leading-tight mt-4 truncate w-full px-2">{podium[1].patient_name}</p>
+                <div className="flex items-center gap-1 mt-1">
+                  <Star className="h-3 w-3 fill-white" />
+                  <span className="text-sm font-medium">{podium[1].total_xp.toLocaleString()} XP</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 1st Place */}
+          <div className="order-1 md:order-2 flex flex-col items-center justify-end h-full">
+            <div className="relative group cursor-pointer w-full" onClick={() => setSelectedPatient(podium[0].patient_id)}>
+              <div className={cn(
+                "absolute -top-16 left-1/2 -translate-x-1/2 flex flex-col items-center transition-transform group-hover:scale-110 z-10",
+              )}>
+                <div className="relative">
+                  <div className="w-24 h-24 rounded-full border-4 border-yellow-400 bg-yellow-50 flex items-center justify-center shadow-2xl overflow-hidden ring-4 ring-yellow-400/20">
+                     <span className="text-3xl font-black text-yellow-600">{podium[0].patient_name.charAt(0)}</span>
+                  </div>
+                  <div className="absolute -top-6 left-1/2 -translate-x-1/2">
+                    <Trophy className="h-10 w-10 text-yellow-500 drop-shadow-md animate-bounce" />
+                  </div>
+                </div>
+                <Badge className="mt-2 bg-yellow-500 text-white border-none px-4 py-1 text-sm font-bold shadow-lg shadow-yellow-500/40">CAMPEÃO</Badge>
+              </div>
+              <div className={cn(
+                "h-48 w-full rounded-t-2xl bg-gradient-to-b flex flex-col items-center justify-center p-4 text-white text-center shadow-2xl ring-1 ring-white/20",
+                getPodiumColor(1)
+              )}>
+                <p className="font-black text-xl leading-tight mt-12 truncate w-full px-2">{podium[0].patient_name}</p>
+                <div className="flex items-center gap-1.5 mt-2 bg-black/10 px-3 py-1 rounded-full">
+                  <Star className="h-4 w-4 fill-white" />
+                  <span className="text-base font-bold">{podium[0].total_xp.toLocaleString()} XP</span>
+                </div>
+                <div className="mt-2 flex items-center gap-1 opacity-90">
+                  <Flame className="h-3.5 w-3.5 fill-orange-400 text-orange-400" />
+                  <span className="text-xs font-bold">{podium[0].current_streak} dias de sequência</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 3rd Place */}
+          <div className="order-3 flex flex-col items-center justify-end h-full pt-12">
+            <div className="relative group cursor-pointer w-full" onClick={() => setSelectedPatient(podium[2].patient_id)}>
+              <div className={cn(
+                "absolute -top-10 left-1/2 -translate-x-1/2 flex flex-col items-center transition-transform group-hover:scale-110",
+              )}>
+                <div className="w-14 h-14 rounded-full border-4 border-amber-700 bg-amber-50 flex items-center justify-center shadow-lg overflow-hidden">
+                   <span className="text-lg font-black text-amber-800">{podium[2].patient_name.charAt(0)}</span>
+                </div>
+                <Badge className="mt-2 bg-amber-700 text-white border-none px-3">3º Lugar</Badge>
+              </div>
+              <div className={cn(
+                "h-24 w-full rounded-t-2xl bg-gradient-to-b flex flex-col items-center justify-center p-4 text-white text-center shadow-lg",
+                getPodiumColor(3)
+              )}>
+                <p className="font-bold text-base leading-tight mt-4 truncate w-full px-2">{podium[2].patient_name}</p>
+                <div className="flex items-center gap-1 mt-1">
+                  <Star className="h-3 w-3 fill-white" />
+                  <span className="text-xs font-medium">{podium[2].total_xp.toLocaleString()} XP</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Filters Header */}
-      <Card>
+      <Card className="border-none shadow-xl shadow-primary/5 bg-background/60 backdrop-blur-xl ring-1 ring-border/50 overflow-hidden">
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
