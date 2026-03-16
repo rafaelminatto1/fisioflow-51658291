@@ -101,12 +101,43 @@ export const useAppointmentActions = () => {
       }
       await AppointmentService.updateStatus(appointmentId, status);
     },
+    onMutate: async ({ appointmentId, status }) => {
+      // Cancel in-flight refetches to avoid overwriting our optimistic update
+      await queryClient.cancelQueries({ queryKey: ['appointments'] });
+
+      // Snapshot current cache for rollback
+      const previousData = queryClient.getQueriesData<any[]>({ queryKey: ['appointments'] });
+
+      // Apply optimistic status update to every appointments cache entry
+      queryClient.setQueriesData<any>(
+        { queryKey: ['appointments'] },
+        (old: any) => {
+          if (!old) return old;
+          const updateItem = (item: any) =>
+            item?.id === appointmentId ? { ...item, status } : item;
+          if (Array.isArray(old)) return old.map(updateItem);
+          if (Array.isArray(old?.data)) return { ...old, data: old.data.map(updateItem) };
+          return old;
+        },
+      );
+
+      return { previousData };
+    },
+    onError: (error: Error, _vars, context) => {
+      // Rollback to previous cache on API error
+      if (context?.previousData) {
+        context.previousData.forEach(([queryKey, data]: [any, any]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      ErrorHandler.handle(error, 'useAppointmentActions.updateStatus');
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
       toast.success('Status atualizado com sucesso');
     },
-    onError: (error: Error) => {
-      ErrorHandler.handle(error, 'useAppointmentActions.updateStatus');
+    onSettled: () => {
+      // Always refetch to sync with server
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
     },
   });
 

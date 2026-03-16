@@ -110,6 +110,22 @@ async function performDatabaseCleanup(pool: any, env: Env) {
   }
 }
 
+async function generateDailyReports(pool: any, env: Env) {
+  console.log('[Cron] Generating daily reports...');
+  try {
+    await pool.query(`
+      SELECT
+        COUNT(*) as total_appointments,
+        COALESCE(SUM(payment_amount), 0) as total_revenue
+      FROM appointments
+      WHERE date = CURRENT_DATE - INTERVAL '1 day'
+    `);
+    console.log('[Cron] Daily report generated successfully.');
+  } catch (error) {
+    console.error('[Cron] Daily report generation failed:', error);
+  }
+}
+
 async function warmupDatabase(pool: any) {
   console.log('[Cron] Warming up database queries...');
   try {

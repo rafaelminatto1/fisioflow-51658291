@@ -1031,6 +1031,67 @@ All colors MUST be HSL.
     @apply text-amber-950;
   }
 
+  /* Status extras */
+  .calendar-card-aguardando_confirmacao {
+    background: linear-gradient(180deg, hsl(45 96% 62%) 0%, hsl(45 96% 57%) 100%);
+    @apply text-amber-950;
+    @apply hover:brightness-105;
+  }
+
+  .calendar-card-aguardando_confirmacao .calendar-patient-name,
+  .calendar-card-aguardando_confirmacao .calendar-appointment-type,
+  .calendar-card-aguardando_confirmacao .calendar-appointment-footer {
+    @apply text-amber-950;
+  }
+
+  .calendar-card-em_espera {
+    background: linear-gradient(180deg, hsl(200 80% 72%) 0%, hsl(200 80% 67%) 100%);
+    @apply text-sky-950;
+    @apply hover:brightness-105;
+  }
+
+  .calendar-card-em_espera .calendar-patient-name,
+  .calendar-card-em_espera .calendar-appointment-type,
+  .calendar-card-em_espera .calendar-appointment-footer {
+    @apply text-sky-950;
+  }
+
+  .calendar-card-atrasado {
+    background: linear-gradient(180deg, hsl(25 95% 58%) 0%, hsl(25 95% 53%) 100%);
+    @apply text-orange-950;
+    @apply hover:brightness-105;
+  }
+
+  .calendar-card-atrasado .calendar-patient-name,
+  .calendar-card-atrasado .calendar-appointment-type,
+  .calendar-card-atrasado .calendar-appointment-footer {
+    @apply text-orange-950;
+  }
+
+  .calendar-card-reagendado {
+    background: linear-gradient(180deg, hsl(84 65% 52%) 0%, hsl(84 65% 47%) 100%);
+    @apply text-lime-950;
+    @apply hover:brightness-105;
+  }
+
+  .calendar-card-reagendado .calendar-patient-name,
+  .calendar-card-reagendado .calendar-appointment-type,
+  .calendar-card-reagendado .calendar-appointment-footer {
+    @apply text-lime-950;
+  }
+
+  .calendar-card-falta {
+    background: linear-gradient(180deg, hsl(0 80% 56%) 0%, hsl(0 80% 51%) 100%);
+    @apply text-red-50;
+    @apply hover:brightness-105;
+  }
+
+  .calendar-card-falta .calendar-patient-name,
+  .calendar-card-falta .calendar-appointment-type,
+  .calendar-card-falta .calendar-appointment-footer {
+    @apply text-red-50;
+  }
+
   /* Indicador de paciente com agendamento próximo (bolinha) */
   .calendar-appointment-card .nearby-appointment-indicator {
     @apply absolute -top-1 -right-1 w-4 h-4 rounded-full;

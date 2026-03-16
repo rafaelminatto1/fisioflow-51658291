@@ -16,7 +16,7 @@ app.get('/me', requireAuth, async (c) => {
     full_name: user.email?.split('@')[0] ?? 'Usuário',
     role: user.role ?? 'admin',
     organization_id: user.organizationId,
-    email_verified: user.emailVerified,
+    email_verified: false,
   };
 
   try {
