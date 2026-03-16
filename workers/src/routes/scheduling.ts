@@ -497,7 +497,7 @@ const addUtcYears = (date: Date, years: number) => {
 const toIsoDate = (date: Date) => date.toISOString().split('T')[0];
 
 const generateRecurringOccurrences = (row: Record<string, any>, limit = 24) => {
-  const series = mapRecurringSeriesRow(row);
+  const series = mapRecurringSeriesRow(row) as Record<string, any>;
   const appointmentDate = String(series.appointment_date ?? '').trim();
   const appointmentTime = String(series.appointment_time ?? '').trim();
 

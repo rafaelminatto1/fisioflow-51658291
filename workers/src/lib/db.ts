@@ -15,7 +15,7 @@ function getUrl(env: Env): string {
  * Cria uma instância do Drizzle ORM via Neon HTTP driver.
  * Neon HTTP é o driver recomendado para Cloudflare Workers.
  */
-export async function createDb(env: Env) {
+export function createDb(env: Env) {
   return drizzleHttp(neon(getUrl(env)), { schema });
 }
 
@@ -24,7 +24,7 @@ export async function createDb(env: Env) {
  * fullResults: true → retorna { rows, rowCount, fields } como pg.
  * Sem TCP, sem conexões persistentes — usa Neon HTTP.
  */
-export async function createPool(env: Env) {
+export function createPool(env: Env) {
   const sql = neon(getUrl(env), { fullResults: true });
   // Compatibilidade com rotas que chamam pool.end() — no-op
   (sql as any).end = async () => {};

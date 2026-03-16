@@ -325,7 +325,7 @@ app.post('/print', requireAuth, async (c) => {
 
     const pdf = await generatePdfFromHtml(c.env, fullHtml);
 
-    return new Response(pdf, {
+    return new Response(pdf as BodyInit, {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${filename || 'documento'}.pdf"`,
