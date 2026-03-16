@@ -50,6 +50,8 @@ export default function GoalProfileListPage() {
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [newProfile, setNewProfile] = useState({ id: '', name: '', description: '' });
 
+    const [showGuide, setShowGuide] = useState(false);
+
     const { toast } = useToast();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
@@ -61,6 +63,8 @@ export default function GoalProfileListPage() {
         staleTime: 1000 * 60 * 5, // 5 minutes
     });
 
+    // ... (rest of mutations)
+    
     // Mutation for creating profile
     const createProfileMutation = useMutation({
         mutationFn: (data: { id: string; name: string; description: string }) =>
@@ -414,8 +418,12 @@ export default function GoalProfileListPage() {
                             <p className="text-blue-100 opacity-90 leading-relaxed">
                                 Pacientes com metas bem definidas apresentam 40% mais engajamento no tratamento. Use nossos templates para garantir que cada plano de evolução seja específico, mensurável e baseado em evidência.
                             </p>
-                            <Button variant="outline" className="bg-transparent border-white text-white hover:bg-white hover:text-blue-600 rounded-xl h-11 px-6">
-                                Ler Guia de Melhores Práticas
+                            <Button 
+                                variant="outline" 
+                                className="bg-transparent border-white text-white hover:bg-white hover:text-blue-600 rounded-xl h-11 px-6 transition-all"
+                                onClick={() => setShowGuide(!showGuide)}
+                            >
+                                {showGuide ? 'Ocultar Guia' : 'Ler Guia de Melhores Práticas'}
                             </Button>
                         </div>
                         <div className="hidden lg:block p-6 bg-white/10 backdrop-blur-md rounded-2xl border border-white/20">
@@ -429,7 +437,7 @@ export default function GoalProfileListPage() {
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-full bg-amber-400/20 flex items-center justify-center">
-                                        <Badge className="bg-amber-400 text-slate-900 border-none">12</Badge>
+                                        <Badge className="bg-amber-400 text-slate-900 border-none">{profiles.filter(p => p.status === 'PUBLISHED').length}</Badge>
                                     </div>
                                     <p className="text-sm font-medium">Templates Ativos</p>
                                 </div>
@@ -440,7 +448,78 @@ export default function GoalProfileListPage() {
                     <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
                     <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2" />
                 </div>
+
+                {/* Guide Section (Collapsible) */}
+                {showGuide && (
+                    <div className="animate-in fade-in slide-in-from-top-4 duration-500">
+                        <Card className="border-none shadow-xl bg-white overflow-hidden">
+                            <CardHeader className="bg-slate-50/50 border-b border-slate-100">
+                                <CardTitle className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                                    <ShieldCheck className="w-6 h-6 text-emerald-500" />
+                                    Guia de Melhores Práticas: Metas SMART em Fisioterapia
+                                </CardTitle>
+                                <CardDescription className="text-base">
+                                    Aprenda a estruturar objetivos clínicos que transformam a adesão do paciente.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-8">
+                                <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+                                    <div className="space-y-3">
+                                        <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-blue-200">S</div>
+                                        <h4 className="font-bold text-slate-800">Específica</h4>
+                                        <p className="text-sm text-slate-500 leading-relaxed">
+                                            Evite "melhorar força". Use: "Aumentar flexão ativa de joelho para 120° visando independência em subir escadas".
+                                        </p>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <div className="w-12 h-12 rounded-2xl bg-blue-500 text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-blue-200">M</div>
+                                        <h4 className="font-bold text-slate-800">Mensurável</h4>
+                                        <p className="text-sm text-slate-500 leading-relaxed">
+                                            Utilize métricas objetivas como ADM, Força (kg), Escalas (EVA/PROM) ou indicadores de vídeo (valgo em graus).
+                                        </p>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <div className="w-12 h-12 rounded-2xl bg-blue-400 text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-blue-100">A</div>
+                                        <h4 className="font-bold text-slate-800">Alcançável</h4>
+                                        <p className="text-sm text-slate-500 leading-relaxed">
+                                            A meta deve desafiar o paciente mas ser realisticamente possível dentro do quadro clínico e biologia tecidual.
+                                        </p>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <div className="w-12 h-12 rounded-2xl bg-blue-300 text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-blue-50">R</div>
+                                        <h4 className="font-bold text-slate-800">Relevante</h4>
+                                        <p className="text-sm text-slate-500 leading-relaxed">
+                                            A meta deve importar para o paciente. Deve estar conectada ao desejo de retorno funcional ou esportivo.
+                                        </p>
+                                    </div>
+                                    <div className="space-y-3">
+                                        <div className="w-12 h-12 rounded-2xl bg-slate-800 text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-slate-200">T</div>
+                                        <h4 className="font-bold text-slate-800">Temporal</h4>
+                                        <p className="text-sm text-slate-500 leading-relaxed">
+                                            Toda meta precisa de um prazo. "Em 4 semanas", "Até a 12ª sessão". Isso cria senso de urgência e foco.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="mt-12 p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
+                                    <div className="flex items-start gap-4">
+                                        <div className="p-3 bg-white rounded-xl shadow-sm">
+                                            <Target className="w-6 h-6 text-emerald-600" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <h4 className="font-bold text-emerald-900 text-lg">Dica de Especialista</h4>
+                                            <p className="text-emerald-800 text-sm opacity-90 leading-relaxed">
+                                                Combine **PROMs** (Percepção do Paciente) com **Biometria de Vídeo** (Análise Objetiva). Quando o paciente vê a evolução nos números e na tela, a retenção e o valor percebido do seu tratamento aumentam drasticamente.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
             </div>
         </MainLayout>
     );
 }
+

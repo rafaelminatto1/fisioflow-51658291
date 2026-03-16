@@ -338,6 +338,68 @@ export const GamificationDashboard: React.FC = () => {
         </section>
       )}
 
+      {/* Actionable Insights Section */}
+      {!loading && (
+        <section aria-label="Ações sugeridas de engajamento" className="animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
+          <div className="flex items-center gap-2 mb-4">
+            <Zap className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+            <h3 className="text-lg font-bold">Ações Sugeridas de Engajamento</h3>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="border-none shadow-lg bg-gradient-to-br from-blue-500/10 to-indigo-500/10 hover:shadow-indigo-500/10 transition-all group cursor-pointer">
+              <CardContent className="p-5 flex items-start gap-4">
+                <div className="p-3 bg-blue-500 rounded-2xl text-white shadow-lg shadow-blue-500/20 group-hover:scale-110 transition-transform">
+                  <Flame className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm">Resgate de Sequência</h4>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                    {stats?.atRiskPatients || 0} pacientes estão prestes a perder sequências de +7 dias.
+                  </p>
+                  <Button variant="link" className="p-0 h-auto text-xs font-bold text-blue-600 mt-2" onClick={() => navigate('/admin/gamification?tab=ranking')}>
+                    Enviar lembrete via WhatsApp →
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-lg bg-gradient-to-br from-emerald-500/10 to-teal-500/10 hover:shadow-emerald-500/10 transition-all group cursor-pointer">
+              <CardContent className="p-5 flex items-start gap-4">
+                <div className="p-3 bg-emerald-500 rounded-2xl text-white shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform">
+                  <Award className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm">Novo Desafio Sugerido</h4>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                    Baixo engajamento nos finais de semana detectado.
+                  </p>
+                  <Button variant="link" className="p-0 h-auto text-xs font-bold text-emerald-600 mt-2" onClick={() => navigate('/admin/gamification?tab=challenges')}>
+                    Criar "Guerreiro de Final de Semana" →
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-none shadow-lg bg-gradient-to-br from-amber-500/10 to-orange-500/10 hover:shadow-amber-500/10 transition-all group cursor-pointer">
+              <CardContent className="p-5 flex items-start gap-4">
+                <div className="p-3 bg-amber-500 rounded-2xl text-white shadow-lg shadow-amber-500/20 group-hover:scale-110 transition-transform">
+                  <Star className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-sm">Premiação de Ranking</h4>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                    O mês está acabando. O TOP 3 merece um reconhecimento especial.
+                  </p>
+                  <Button variant="link" className="p-0 h-auto text-xs font-bold text-amber-600 mt-2" onClick={() => navigate('/admin/gamification?tab=ranking')}>
+                    Ver líderes do mês →
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+      )}
+
       {/* Alerts Section */}
       {!loading && (stats?.atRiskPatients || 0) > 0 && (
         <section aria-label="Alertas de pacientes em risco">

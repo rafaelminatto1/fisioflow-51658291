@@ -1,5 +1,4 @@
-import { FormEvent, useMemo, useState } from 'react';
-import { MainLayout } from '@/components/layout';
+import { useState, useMemo, FormEvent } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -45,6 +44,7 @@ import { format, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
 import { emailSchema } from '@/lib/validations/auth';
+import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 
 interface CreateInvitationFormState {
   email: string;
@@ -64,7 +64,7 @@ const ROLES: { value: AppRole; label: string }[] = [
   { value: 'paciente', label: 'Paciente' },
 ];
 
-export default function InvitationManagement() {
+export function InvitationsManager() {
   const {
     invitations,
     isLoading,
@@ -260,156 +260,137 @@ export default function InvitationManagement() {
     }
   };
 
-  return (
-    <MainLayout>
-      <div className="space-y-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Gerenciamento de Convites</h1>
-            <p className="text-muted-foreground">
-              Visualize e gerencie convites de usuários
-            </p>
-          </div>
-          <Button onClick={() => setCreateDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Convite
-          </Button>
-        </div>
+  if (isLoading) {
+    return <LoadingSkeleton />;
+  }
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Filtros</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por email..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Filtrar por status" />
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por email..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 max-w-md"
+          />
+        </div>
+        <div className="flex gap-2">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos os status</SelectItem>
-                  <SelectItem value="pending">Pendentes</SelectItem>
-                  <SelectItem value="used">Usados</SelectItem>
-                  <SelectItem value="expired">Expirados</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="pending">Pendentes</SelectItem>
+                    <SelectItem value="used">Usados</SelectItem>
+                    <SelectItem value="expired">Expirados</SelectItem>
                 </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Convites ({filteredInvitations.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Carregando convites...
-              </div>
-            ) : filteredInvitations.length === 0 ? (
-              <EmptyState
-                icon={Mail}
-                title="Nenhum convite encontrado"
-                description="Crie um novo convite ou ajuste os filtros para visualizar resultados."
-                action={{
-                  label: 'Criar convite',
-                  onClick: () => setCreateDialogOpen(true),
-                }}
-              />
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Função</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Criado em</TableHead>
-                    <TableHead>Expira em</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredInvitations.map((invitation) => {
-                    const status = getInvitationStatus(invitation);
-                    const roleInfo = ROLES.find((r) => r.value === invitation.role);
-
-                    return (
-                      <TableRow key={invitation.id}>
-                        <TableCell className="font-medium">{invitation.email}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{roleInfo?.label || invitation.role}</Badge>
-                        </TableCell>
-                        <TableCell>{getStatusBadge(status)}</TableCell>
-                        <TableCell>
-                          {format(new Date(invitation.created_at), 'dd/MM/yyyy HH:mm', {
-                            locale: ptBR,
-                          })}
-                        </TableCell>
-                        <TableCell>
-                          {format(new Date(invitation.expires_at), 'dd/MM/yyyy HH:mm', {
-                            locale: ptBR,
-                          })}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex gap-2 justify-end">
-                            {status === 'pending' && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => copyInviteLink(invitation.token)}
-                              >
-                                <Copy className="h-4 w-4 mr-2" />
-                                Copiar Link
-                              </Button>
-                            )}
-                            {status !== 'used' && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => openEditDialog(invitation)}
-                              >
-                                <Pencil className="h-4 w-4 mr-2" />
-                                Editar
-                              </Button>
-                            )}
-                            <Button
-                              variant={status === 'pending' ? 'destructive' : 'outline'}
-                              size="sm"
-                              onClick={() => setDeleteInvitationId(invitation.id)}
-                            >
-                              {status === 'pending' ? (
-                                <XCircle className="h-4 w-4 mr-2" />
-                              ) : (
-                                <Trash2 className="h-4 w-4 mr-2" />
-                              )}
-                              {status === 'pending' ? 'Revogar' : 'Excluir'}
-                            </Button>
-                            {status === 'used' && (
-                              <Button variant="ghost" size="sm" disabled>
-                                <CheckCircle className="h-4 w-4 mr-2" />
-                                Utilizado
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+            </Select>
+            <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Novo Convite
+            </Button>
+        </div>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Convites Enviados ({filteredInvitations.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {filteredInvitations.length === 0 ? (
+            <EmptyState
+              icon={Mail}
+              title="Nenhum convite encontrado"
+              description="Crie um novo convite ou ajuste os filtros para visualizar resultados."
+              action={{
+                label: 'Criar convite',
+                onClick: () => setCreateDialogOpen(true),
+              }}
+            />
+          ) : (
+            <div className="overflow-x-auto">
+                <Table>
+                    <TableHeader>
+                    <TableRow>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Função</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Criado em</TableHead>
+                        <TableHead>Expira em</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                    {filteredInvitations.map((invitation) => {
+                        const status = getInvitationStatus(invitation);
+                        const roleInfo = ROLES.find((r) => r.value === invitation.role);
+
+                        return (
+                        <TableRow key={invitation.id}>
+                            <TableCell className="font-medium">{invitation.email}</TableCell>
+                            <TableCell>
+                            <Badge variant="outline" className="capitalize">{roleInfo?.label || invitation.role}</Badge>
+                            </TableCell>
+                            <TableCell>{getStatusBadge(status)}</TableCell>
+                            <TableCell>
+                            {format(new Date(invitation.created_at), 'dd/MM/yy HH:mm', {
+                                locale: ptBR,
+                            })}
+                            </TableCell>
+                            <TableCell>
+                            {format(new Date(invitation.expires_at), 'dd/MM/yy HH:mm', {
+                                locale: ptBR,
+                            })}
+                            </TableCell>
+                            <TableCell className="text-right">
+                            <div className="flex gap-2 justify-end">
+                                {status === 'pending' && (
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => copyInviteLink(invitation.token)}
+                                    title="Copiar Link"
+                                >
+                                    <Copy className="h-4 w-4" />
+                                </Button>
+                                )}
+                                {status !== 'used' && (
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => openEditDialog(invitation)}
+                                    title="Editar"
+                                >
+                                    <Pencil className="h-4 w-4" />
+                                </Button>
+                                )}
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setDeleteInvitationId(invitation.id)}
+                                    className={status === 'pending' ? "text-destructive" : ""}
+                                    title={status === 'pending' ? 'Revogar' : 'Excluir'}
+                                >
+                                    {status === 'pending' ? (
+                                        <XCircle className="h-4 w-4" />
+                                    ) : (
+                                        <Trash2 className="h-4 w-4" />
+                                    )}
+                                </Button>
+                            </div>
+                            </TableCell>
+                        </TableRow>
+                        );
+                    })}
+                    </TableBody>
+                </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Dialog
         open={createDialogOpen}
@@ -569,6 +550,6 @@ export default function InvitationManagement() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </MainLayout>
+    </div>
   );
 }

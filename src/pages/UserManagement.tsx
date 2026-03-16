@@ -1,86 +1,44 @@
-/**
- * UserManagement - Gerenciamento de Usuários
- * 
- * @description Página de gerenciamento de usuários do sistema
- * Acesso restrito a administradores
- */
-
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { useOrganizationMembers } from '@/hooks/useOrganizationMembers';
-import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
+import { MainLayout } from '@/components/layout/MainLayout';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Users, Mail } from 'lucide-react';
+import { MembersManager } from '@/components/admin/MembersManager';
+import { InvitationsManager } from '@/components/admin/InvitationsManager';
 
 export default function UserManagement() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const { data: members, isLoading } = useOrganizationMembers();
-
-  const filteredMembers = members?.filter(member =>
-    member.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    member.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  if (isLoading) {
-    return <LoadingSkeleton />;
-  }
+  const [activeTab, setActiveTab] = useState('members');
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">Gerenciamento de Usuários</h1>
+    <MainLayout>
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-bold tracking-tight">Gerenciamento de Usuários</h1>
           <p className="text-muted-foreground">
-            Gerencie os usuários da sua organização
+            Gerencie os membros da sua organização e seus convites de acesso.
           </p>
         </div>
-        <Button>Convidar Usuário</Button>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="bg-muted/50 p-1">
+            <TabsTrigger value="members" className="flex items-center gap-2 px-6">
+              <Users className="h-4 w-4" />
+              Membros Ativos
+            </TabsTrigger>
+            <TabsTrigger value="invitations" className="flex items-center gap-2 px-6">
+              <Mail className="h-4 w-4" />
+              Convites Pendentes
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="members" className="space-y-4 outline-none">
+            <MembersManager onInviteClick={() => setActiveTab('invitations')} />
+          </TabsContent>
+
+          <TabsContent value="invitations" className="space-y-4 outline-none">
+            <InvitationsManager />
+          </TabsContent>
+        </Tabs>
       </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-4">
-            <Input
-              placeholder="Buscar por nome ou email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {filteredMembers?.map((member) => (
-              <div
-                key={member.id}
-                className="flex items-center justify-between p-4 border rounded-lg"
-              >
-                <div className="flex items-center gap-4">
-                  <div>
-                    <p className="font-medium">{member.name}</p>
-                    <p className="text-sm text-muted-foreground">{member.email}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant={member.role === 'admin' ? 'default' : 'secondary'}>
-                    {member.role === 'admin' ? 'Administrador' : 'Membro'}
-                  </Badge>
-                  <Button variant="outline" size="sm">
-                    Editar
-                  </Button>
-                </div>
-              </div>
-            ))}
-
-            {!filteredMembers?.length && (
-              <div className="text-center py-8 text-muted-foreground">
-                Nenhum usuário encontrado
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    </MainLayout>
   );
 }

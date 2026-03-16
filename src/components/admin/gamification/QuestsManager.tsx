@@ -24,6 +24,13 @@ const CATEGORIES = [
 ];
 const ICON_OPTIONS = ['Star', 'Target', 'Flame', 'Zap', 'Award', 'Activity', 'Droplets', 'Heart', 'Moon', 'Sun'];
 
+const QUEST_TEMPLATES = [
+  { title: 'Hidratação Consciente', description: 'Beber pelo menos 2L de água hoje para auxiliar na recuperação tecidual.', xp_reward: 50, points_reward: 10, category: 'daily', difficulty: 'easy', icon: 'Droplets' },
+  { title: 'Guerreiro do Home Care', description: 'Completar toda a série de exercícios prescritos para realizar em casa.', xp_reward: 100, points_reward: 25, category: 'daily', difficulty: 'medium', icon: 'Activity' },
+  { title: 'Diário de Evolução', description: 'Atualizar o mapa de dor e registrar suas sensações do dia.', xp_reward: 40, points_reward: 5, category: 'daily', difficulty: 'easy', icon: 'Pencil' },
+  { title: 'Pontualidade Britânica', description: 'Chegar para a sua sessão presencial com pelo menos 5 minutos de antecedência.', xp_reward: 80, points_reward: 20, category: 'special', difficulty: 'medium', icon: 'Zap' },
+];
+
 export default function QuestsManager() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -38,6 +45,14 @@ export default function QuestsManager() {
     queryFn: async () => (await gamificationApi.questDefinitions.list()).data ?? [],
   });
 
+  const handleApplyTemplate = (template: typeof QUEST_TEMPLATES[0]) => {
+    upsertQuest.mutate({
+      ...template,
+      is_active: true,
+      repeat_interval: template.category === 'daily' ? 'daily' : 'once',
+    });
+  };
+
   const filteredQuests = useMemo(() => quests.filter((quest) => {
     const matchesSearch = quest.title.toLowerCase().includes(searchTerm.toLowerCase()) || (quest.description || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || quest.category === categoryFilter;
@@ -50,17 +65,17 @@ export default function QuestsManager() {
   const upsertQuest = useMutation({
     mutationFn: async (values: Partial<QuestDefinition>) => {
       const payload = {
-        title: values.title,
+        title: values.title!,
         description: values.description || null,
         xp_reward: values.xp_reward || 0,
         points_reward: values.points_reward || 0,
-        icon: values.icon || null,
+        icon: values.icon || 'Target',
         category: values.category || 'daily',
         difficulty: values.difficulty || 'easy',
         is_active: values.is_active ?? true,
-        repeat_interval: values.repeat_interval || 'daily',
-        requirements: values.requirements || {},
-        code: values.code || null,
+        repeat_interval: (values as any).repeat_interval || 'daily',
+        requirements: (values as any).requirements || {},
+        code: (values as any).code || null,
       };
       if (editingQuest?.id) return (await gamificationApi.questDefinitions.update(editingQuest.id, payload)).data;
       return (await gamificationApi.questDefinitions.create(payload)).data;
@@ -100,21 +115,50 @@ export default function QuestsManager() {
       difficulty: formData.get('difficulty') as string,
       repeat_interval: formData.get('repeat_interval') as string,
       is_active: true,
-    });
+    } as any);
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <CardTitle className="flex items-center gap-2">Missões <Badge variant="secondary">{stats.total}</Badge></CardTitle>
-            <CardDescription>Gerencie as missões disponíveis na gamificação</CardDescription>
-          </div>
-          <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingQuest(null); }}>
-            <DialogTrigger asChild><Button className="gap-2"><Plus className="h-4 w-4" />Nova Missão</Button></DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>{editingQuest ? 'Editar Missão' : 'Nova Missão'}</DialogTitle></DialogHeader>
+    <div className="space-y-6">
+      {/* Templates Section */}
+      <section className="space-y-4">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+          <Zap className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+          Sugestões Rápidas (Templates Clínicos)
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {QUEST_TEMPLATES.map((template, idx) => (
+            <Card key={idx} className="group hover:border-primary/50 transition-all cursor-pointer border-dashed" onClick={() => handleApplyTemplate(template)}>
+              <CardContent className="p-4 flex flex-col h-full">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="p-2 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                    <Target className="h-4 w-4 text-primary" />
+                  </div>
+                  <Plus className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                </div>
+                <h4 className="font-bold text-sm group-hover:text-primary transition-colors">{template.title}</h4>
+                <p className="text-xs text-muted-foreground mt-1 line-clamp-2 flex-grow">{template.description}</p>
+                <div className="flex items-center gap-2 mt-3">
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">+{template.xp_reward} XP</Badge>
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 capitalize">{template.difficulty}</Badge>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-2xl">Gerenciar Missões <Badge className="ml-2 bg-primary/10 text-primary border-none">{stats.total}</Badge></CardTitle>
+              <CardDescription>Configure as tarefas diárias e desafios que motivam seus pacientes</CardDescription>
+            </div>
+            <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingQuest(null); }}>
+              <DialogTrigger asChild><Button className="gap-2 shadow-lg shadow-primary/20"><Plus className="h-4 w-4" />Nova Missão Customizada</Button></DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader><DialogTitle>{editingQuest ? 'Editar Missão' : 'Criar Nova Missão'}</DialogTitle></DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2"><Label htmlFor="title">Título</Label><Input id="title" name="title" required defaultValue={editingQuest?.title} /></div>
                 <div className="space-y-2"><Label htmlFor="description">Descrição</Label><Textarea id="description" name="description" defaultValue={editingQuest?.description || ''} /></div>
