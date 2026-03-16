@@ -24,6 +24,13 @@ const ACHIEVEMENT_CATEGORIES = [
 
 const ICON_OPTIONS = ['Award', 'Trophy', 'Medal', 'Star', 'Flame', 'Zap', 'Target', 'Crown', 'Gem', 'Sparkles'];
 
+const ACHIEVEMENT_TEMPLATES = [
+  { code: 'first_streak_7', title: 'Primeira Semana Imbatível', description: 'Completar 7 dias seguidos de atividades e exercícios prescritos.', xp_reward: 500, category: 'streak', icon: 'Flame' },
+  { code: 'mobility_master', title: 'Mestre da Mobilidade', description: 'Aumentar a ADM (Amplitude de Movimento) em pelo menos 15 graus em qualquer teste clínico.', xp_reward: 1000, category: 'milestone', icon: 'Target' },
+  { code: 'consistency_king', title: 'Rei da Consistência', description: 'Comparecer a todas as sessões agendadas no mês sem nenhuma falta ou desmarcar.', xp_reward: 1200, category: 'streak', icon: 'Crown' },
+  { code: 'pain_warrior', title: 'Guerreiro da Superação', description: 'Reduzir a escala de dor (EVA) em pelo menos 3 pontos em relação ao início do tratamento.', xp_reward: 1500, category: 'milestone', icon: 'Zap' },
+];
+
 export default function AchievementsManager() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -39,6 +46,10 @@ export default function AchievementsManager() {
       return (res.data ?? []) as Achievement[];
     },
   });
+
+  const handleApplyTemplate = (template: typeof ACHIEVEMENT_TEMPLATES[0]) => {
+    upsertAchievement.mutate(template);
+  };
 
   const filteredAchievements = useMemo(() => {
     return achievements.filter((achievement) => {
@@ -58,13 +69,13 @@ export default function AchievementsManager() {
   const upsertAchievement = useMutation({
     mutationFn: async (values: Partial<Achievement>) => {
       const payload = {
-        code: values.code,
-        title: values.title,
-        description: values.description,
+        code: values.code!,
+        title: values.title!,
+        description: values.description!,
         xp_reward: values.xp_reward || 0,
-        icon: values.icon || null,
+        icon: values.icon || 'Award',
         category: values.category || 'general',
-        requirements: values.requirements || {},
+        requirements: (values as any).requirements || {},
       };
       if (editingAchievement?.id) {
         const res = await gamificationApi.achievementDefinitions.update(editingAchievement.id, payload);
@@ -106,23 +117,52 @@ export default function AchievementsManager() {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              Conquistas & Medalhas
-              <Badge variant="secondary">{stats.total}</Badge>
-              <Badge variant="outline" className="text-yellow-600">{stats.totalXP} XP total</Badge>
-            </CardTitle>
-            <CardDescription>Gerencie as medalhas desbloqueáveis pelos pacientes</CardDescription>
-          </div>
-          <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingAchievement(null); }}>
-            <DialogTrigger asChild>
-              <Button className="gap-2"><Plus className="h-4 w-4" />Nova Conquista</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader><DialogTitle>{editingAchievement ? 'Editar Conquista' : 'Nova Conquista'}</DialogTitle></DialogHeader>
+    <div className="space-y-6">
+      {/* Templates Section */}
+      <section className="space-y-4">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+          Sugestões de Medalhas Clínicas
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {ACHIEVEMENT_TEMPLATES.map((template, idx) => (
+            <Card key={idx} className="group hover:border-yellow-500/50 transition-all cursor-pointer border-dashed" onClick={() => handleApplyTemplate(template)}>
+              <CardContent className="p-4 flex flex-col h-full">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="p-2 rounded-lg bg-yellow-500/10 group-hover:bg-yellow-500/20 transition-colors">
+                    <Award className="h-4 w-4 text-yellow-600" />
+                  </div>
+                  <Plus className="h-4 w-4 text-muted-foreground group-hover:text-yellow-600 transition-colors" />
+                </div>
+                <h4 className="font-bold text-sm group-hover:text-yellow-700 transition-colors">{template.title}</h4>
+                <p className="text-xs text-muted-foreground mt-1 line-clamp-2 flex-grow">{template.description}</p>
+                <div className="flex items-center gap-2 mt-3">
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-yellow-200 text-yellow-700">+{template.xp_reward} XP</Badge>
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 capitalize">{template.category}</Badge>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-2xl">
+                Conquistas & Medalhas
+                <Badge className="ml-2 bg-yellow-100 text-yellow-700 border-none">{stats.total}</Badge>
+                <Badge variant="outline" className="text-muted-foreground border-slate-200">{stats.totalXP} XP total</Badge>
+              </CardTitle>
+              <CardDescription>Gerencie as medalhas desbloqueáveis pelos pacientes</CardDescription>
+            </div>
+            <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingAchievement(null); }}>
+              <DialogTrigger asChild>
+                <Button className="gap-2 shadow-lg shadow-yellow-500/20 bg-yellow-600 hover:bg-yellow-700"><Plus className="h-4 w-4" />Nova Medalha Customizada</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle>{editingAchievement ? 'Editar Conquista' : 'Nova Conquista'}</DialogTitle></DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">

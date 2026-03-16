@@ -47,7 +47,6 @@ export const SecurityMonitoring = lazy(() => import('@/pages/SecurityMonitoring'
 export const AdminCRUD = lazy(() => import('@/pages/AdminCRUD'));
 export const UserManagement = lazy(() => import('@/pages/UserManagement'));
 export const OrganizationSettings = lazy(() => import('@/pages/OrganizationSettings'));
-export const InvitationManagement = lazy(() => import('@/pages/InvitationManagement'));
 
 // Configurações
 export const Settings = lazy(() => import('@/pages/Settings'));

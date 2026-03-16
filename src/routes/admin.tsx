@@ -10,7 +10,6 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 // Lazy loads - Admin
 const UserManagement = lazy(() => import(/* webpackChunkName: "admin-users" */ "@/pages/UserManagement"));
 const AuditLogs = lazy(() => import(/* webpackChunkName: "admin-audit" */ "@/pages/AuditLogs"));
-const InvitationManagement = lazy(() => import(/* webpackChunkName: "admin-invitations" */ "@/pages/InvitationManagement"));
 const SecurityMonitoring = lazy(() => import(/* webpackChunkName: "admin-security" */ "@/pages/SecurityMonitoring"));
 const SecuritySettings = lazy(() => import(/* webpackChunkName: "settings-security" */ "@/pages/SecuritySettings"));
 const AdminCRUD = lazy(() => import(/* webpackChunkName: "admin-crud" */ "@/pages/AdminCRUD"));
@@ -32,7 +31,7 @@ export const adminRoutes = (
     {/* Admin - Requires admin role */}
     <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin']}><UserManagement /></ProtectedRoute>} />
     <Route path="/admin/audit-logs" element={<ProtectedRoute allowedRoles={['admin']}><AuditLogs /></ProtectedRoute>} />
-    <Route path="/admin/invitations" element={<ProtectedRoute allowedRoles={['admin']}><InvitationManagement /></ProtectedRoute>} />
+    <Route path="/admin/invitations" element={<Navigate to="/admin/users" replace />} />
     <Route path="/admin/security" element={<ProtectedRoute allowedRoles={['admin']}><SecurityMonitoring /></ProtectedRoute>} />
     <Route path="/admin/crud" element={<ProtectedRoute allowedRoles={['admin', 'fisioterapeuta']}><AdminCRUD /></ProtectedRoute>} />
     <Route path="/admin/organization" element={<Navigate to="/settings?tab=organization" replace />} />

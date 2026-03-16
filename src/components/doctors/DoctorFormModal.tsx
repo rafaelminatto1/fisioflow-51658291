@@ -19,12 +19,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, User2, Phone, Mail, Building2, FileText, Stethoscope, MapPin, Hash, Briefcase } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import type { Doctor, DoctorFormData } from '@/types/doctor';
 import { useCreateDoctor, useUpdateDoctor } from '@/hooks/useDoctors';
+import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
     name: z.string().min(2, 'Nome é obrigatório'),
@@ -144,36 +145,58 @@ export function DoctorFormModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>
-                        {isEditing ? 'Editar Médico' : 'Cadastrar Novo Médico'}
-                    </DialogTitle>
-                    <DialogDescription>
-                        {isEditing
-                            ? 'Atualize as informações do médico'
-                            : 'Preencha os dados do médico. Apenas o nome é obrigatório.'}
-                    </DialogDescription>
+            <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto p-0 gap-0 overflow-hidden border-none shadow-2xl">
+                <DialogHeader className="p-6 pb-4 bg-gradient-to-br from-blue-600 to-blue-700 text-white dark:from-blue-900 dark:to-slate-900">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2.5 bg-white/20 rounded-xl backdrop-blur-sm ring-1 ring-white/30">
+                            <Stethoscope className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                            <DialogTitle className="text-xl font-bold tracking-tight text-white">
+                                {isEditing ? 'Editar Médico' : 'Cadastrar Novo Médico'}
+                            </DialogTitle>
+                            <DialogDescription className="text-blue-100/90 font-medium">
+                                {isEditing
+                                    ? 'Atualize as informações do médico'
+                                    : 'Gerencie sua rede de parceiros e indicações.'}
+                            </DialogDescription>
+                        </div>
+                    </div>
                 </DialogHeader>
 
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        {/* Basic Information */}
-                        <div className="space-y-4">
-                            <h3 className="text-sm font-medium text-muted-foreground">
-                                Informações Básicas
-                            </h3>
-                            <div className="grid grid-cols-2 gap-4">
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 space-y-8 bg-background">
+                        {/* Basic Information Section */}
+                        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                            <div className="flex items-center gap-2 pb-1 border-b border-border/50">
+                                <div className="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+                                    <User2 className="h-4 w-4" />
+                                </div>
+                                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Informações Básicas
+                                </h3>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-6 gap-5">
                                 <FormField
                                     control={form.control}
                                     name="name"
                                     render={({ field }) => (
-                                        <FormItem className="col-span-2">
-                                            <FormLabel>Nome Completo *</FormLabel>
+                                        <FormItem className="md:col-span-6">
+                                            <FormLabel className="text-xs font-bold uppercase text-muted-foreground/80 flex items-center gap-1.5">
+                                                Nome Completo <span className="text-destructive">*</span>
+                                            </FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Dr(a). Nome Completo" {...field} />
+                                                <div className="relative group">
+                                                    <User2 className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-blue-500" />
+                                                    <Input 
+                                                        placeholder="Dr(a). Nome Completo" 
+                                                        className="pl-10 h-11 border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm"
+                                                        {...field} 
+                                                    />
+                                                </div>
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-xs font-medium" />
                                         </FormItem>
                                     )}
                                 />
@@ -182,12 +205,19 @@ export function DoctorFormModal({
                                     control={form.control}
                                     name="specialty"
                                     render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Especialidade</FormLabel>
+                                        <FormItem className="md:col-span-3">
+                                            <FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">Especialidade</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Ex: Ortopedista" {...field} />
+                                                <div className="relative group">
+                                                    <Briefcase className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-blue-500" />
+                                                    <Input 
+                                                        placeholder="Ex: Ortopedista" 
+                                                        className="pl-10 h-11 border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm"
+                                                        {...field} 
+                                                    />
+                                                </div>
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-xs font-medium" />
                                         </FormItem>
                                     )}
                                 />
@@ -196,12 +226,19 @@ export function DoctorFormModal({
                                     control={form.control}
                                     name="crm"
                                     render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>CRM</FormLabel>
+                                        <FormItem className="md:col-span-2">
+                                            <FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">CRM</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="123456" {...field} />
+                                                <div className="relative group">
+                                                    <Hash className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-blue-500" />
+                                                    <Input 
+                                                        placeholder="123456" 
+                                                        className="pl-10 h-11 border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm"
+                                                        {...field} 
+                                                    />
+                                                </div>
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-xs font-medium" />
                                         </FormItem>
                                     )}
                                 />
@@ -210,34 +247,52 @@ export function DoctorFormModal({
                                     control={form.control}
                                     name="crm_state"
                                     render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Estado CRM</FormLabel>
+                                        <FormItem className="md:col-span-1">
+                                            <FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">UF</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="SP" maxLength={2} {...field} />
+                                                <Input 
+                                                    placeholder="SP" 
+                                                    maxLength={2} 
+                                                    className="h-11 text-center font-semibold border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all uppercase shadow-sm"
+                                                    {...field} 
+                                                />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-xs font-medium" />
                                         </FormItem>
                                     )}
                                 />
                             </div>
                         </div>
 
-                        {/* Contact Information */}
-                        <div className="space-y-4">
-                            <h3 className="text-sm font-medium text-muted-foreground">
-                                Contato
-                            </h3>
-                            <div className="grid grid-cols-2 gap-4">
+                        {/* Contact Information Section */}
+                        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300 delay-75">
+                            <div className="flex items-center gap-2 pb-1 border-b border-border/50">
+                                <div className="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+                                    <Phone className="h-4 w-4" />
+                                </div>
+                                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Contato Direto
+                                </h3>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <FormField
                                     control={form.control}
                                     name="phone"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Telefone</FormLabel>
+                                            <FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">WhatsApp / Telefone</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="(11) 99999-9999" {...field} />
+                                                <div className="relative group">
+                                                    <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-blue-500" />
+                                                    <Input 
+                                                        placeholder="(11) 99999-9999" 
+                                                        className="pl-10 h-11 border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm"
+                                                        {...field} 
+                                                    />
+                                                </div>
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-xs font-medium" />
                                         </FormItem>
                                     )}
                                 />
@@ -247,51 +302,54 @@ export function DoctorFormModal({
                                     name="email"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Email</FormLabel>
+                                            <FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">E-mail</FormLabel>
                                             <FormControl>
-                                                <Input
-                                                    type="email"
-                                                    placeholder="medico@exemplo.com"
-                                                    {...field}
-                                                />
+                                                <div className="relative group">
+                                                    <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-blue-500" />
+                                                    <Input
+                                                        type="email"
+                                                        placeholder="medico@exemplo.com"
+                                                        className="pl-10 h-11 border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm"
+                                                        {...field}
+                                                    />
+                                                </div>
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-xs font-medium" />
                                         </FormItem>
                                     )}
                                 />
                             </div>
                         </div>
 
-                        {/* Clinic Information */}
-                        <div className="space-y-4">
-                            <h3 className="text-sm font-medium text-muted-foreground">
-                                Clínica / Consultório
-                            </h3>
-                            <div className="grid grid-cols-2 gap-4">
+                        {/* Clinic Information Section */}
+                        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300 delay-150">
+                            <div className="flex items-center gap-2 pb-1 border-b border-border/50">
+                                <div className="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+                                    <Building2 className="h-4 w-4" />
+                                </div>
+                                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Vínculo com Clínica
+                                </h3>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <FormField
                                     control={form.control}
                                     name="clinic_name"
                                     render={({ field }) => (
-                                        <FormItem className="col-span-2">
-                                            <FormLabel>Nome da Clínica</FormLabel>
+                                        <FormItem className="md:col-span-1">
+                                            <FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">Nome da Clínica</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="Nome da clínica" {...field} />
+                                                <div className="relative group">
+                                                    <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-blue-500" />
+                                                    <Input 
+                                                        placeholder="Nome da instituição" 
+                                                        className="pl-10 h-11 border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm"
+                                                        {...field} 
+                                                    />
+                                                </div>
                                             </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
-
-                                <FormField
-                                    control={form.control}
-                                    name="clinic_address"
-                                    render={({ field }) => (
-                                        <FormItem className="col-span-2">
-                                            <FormLabel>Endereço da Clínica</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="Rua, número, bairro" {...field} />
-                                            </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-xs font-medium" />
                                         </FormItem>
                                     )}
                                 />
@@ -300,52 +358,98 @@ export function DoctorFormModal({
                                     control={form.control}
                                     name="clinic_phone"
                                     render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Telefone da Clínica</FormLabel>
+                                        <FormItem className="md:col-span-1">
+                                            <FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">Telefone Clínica</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="(11) 3333-3333" {...field} />
+                                                <div className="relative group">
+                                                    <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-blue-500" />
+                                                    <Input 
+                                                        placeholder="(11) 3333-3333" 
+                                                        className="pl-10 h-11 border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm"
+                                                        {...field} 
+                                                    />
+                                                </div>
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage className="text-xs font-medium" />
+                                        </FormItem>
+                                    )}
+                                />
+
+                                <FormField
+                                    control={form.control}
+                                    name="clinic_address"
+                                    render={({ field }) => (
+                                        <FormItem className="md:col-span-2">
+                                            <FormLabel className="text-xs font-bold uppercase text-muted-foreground/80">Endereço Profissional</FormLabel>
+                                            <FormControl>
+                                                <div className="relative group">
+                                                    <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground transition-colors group-focus-within:text-blue-500" />
+                                                    <Input 
+                                                        placeholder="Rua, número, bairro, cidade" 
+                                                        className="pl-10 h-11 border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all shadow-sm"
+                                                        {...field} 
+                                                    />
+                                                </div>
+                                            </FormControl>
+                                            <FormMessage className="text-xs font-medium" />
                                         </FormItem>
                                     )}
                                 />
                             </div>
                         </div>
 
-                        {/* Notes */}
-                        <FormField
-                            control={form.control}
-                            name="notes"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Observações</FormLabel>
-                                    <FormControl>
-                                        <Textarea
-                                            placeholder="Informações adicionais sobre o médico..."
-                                            className="min-h-[100px]"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormDescription>
-                                        Informações adicionais que podem ser úteis
-                                    </FormDescription>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                        {/* Notes Section */}
+                        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300 delay-200">
+                            <div className="flex items-center gap-2 pb-1 border-b border-border/50">
+                                <div className="p-1.5 bg-blue-50 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+                                    <FileText className="h-4 w-4" />
+                                </div>
+                                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                                    Observações Internas
+                                </h3>
+                            </div>
+                            
+                            <FormField
+                                control={form.control}
+                                name="notes"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormControl>
+                                            <Textarea
+                                                placeholder="Adicione informações que ajudem na identificação ou parceria com este médico..."
+                                                className="min-h-[100px] border-border/60 bg-muted/5 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 transition-all resize-none shadow-sm"
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormDescription className="text-[11px] font-medium text-muted-foreground italic flex items-center gap-1 mt-1.5">
+                                            <FileText className="h-3 w-3" /> Essas informações são visíveis apenas para sua equipe.
+                                        </FormDescription>
+                                        <FormMessage className="text-xs font-medium" />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
 
-                        <DialogFooter>
+                        <DialogFooter className="pt-4 border-t border-border/50 flex items-center gap-3">
                             <Button
                                 type="button"
-                                variant="outline"
+                                variant="ghost"
                                 onClick={() => onOpenChange(false)}
                                 disabled={isPending}
+                                className="font-semibold text-muted-foreground hover:bg-muted/50"
                             >
                                 Cancelar
                             </Button>
-                            <Button type="submit" disabled={isPending}>
-                                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                {isEditing ? 'Atualizar' : 'Cadastrar'}
+                            <Button 
+                                type="submit" 
+                                disabled={isPending}
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 shadow-md shadow-blue-500/20 transition-all hover:scale-[1.02] active:scale-95"
+                            >
+                                {isPending ? (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                    isEditing ? 'Salvar Alterações' : 'Cadastrar Médico'
+                                )}
                             </Button>
                         </DialogFooter>
                     </form>
