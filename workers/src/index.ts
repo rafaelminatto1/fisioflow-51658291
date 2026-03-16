@@ -82,8 +82,14 @@ const app = new Hono<{ Bindings: Env }>();
 
 // 1. MIDDLEWARE DE CORS GLOBAL (Executa antes de tudo)
 app.use('*', async (c, next) => {
-  const origin = c.req.header('Origin') || '*';
-  
+  const requestOrigin = c.req.header('Origin');
+  const allowedOrigins = (c.env as any).ALLOWED_ORIGINS
+    ? String((c.env as any).ALLOWED_ORIGINS).split(',').map((o: string) => o.trim())
+    : ['http://localhost:5173'];
+
+  const isAllowed = !requestOrigin || allowedOrigins.includes(requestOrigin);
+  const origin = isAllowed && requestOrigin ? requestOrigin : allowedOrigins[0];
+
   if (c.req.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
@@ -99,7 +105,6 @@ app.use('*', async (c, next) => {
 
   await next();
 
-  // Garante headers em respostas de sucesso
   c.res.headers.set('Access-Control-Allow-Origin', origin);
   c.res.headers.set('Access-Control-Allow-Credentials', 'true');
 });
@@ -211,8 +216,13 @@ app.get('/api/realtime', async (c) => {
 // ERROR HANDLER (BLINDADO COM CORS)
 app.onError((err, c) => {
   console.error('[CRITICAL WORKER ERROR]', err.message);
-  const origin = c.req.header('Origin') || '*';
-  
+  const requestOrigin = c.req.header('Origin');
+  const allowedOrigins = (c.env as any).ALLOWED_ORIGINS
+    ? String((c.env as any).ALLOWED_ORIGINS).split(',').map((o: string) => o.trim())
+    : ['http://localhost:5173'];
+  const isAllowed = !requestOrigin || allowedOrigins.includes(requestOrigin);
+  const origin = isAllowed && requestOrigin ? requestOrigin : allowedOrigins[0];
+
   return c.json({
     error: 'Internal Server Error',
     message: err.message,

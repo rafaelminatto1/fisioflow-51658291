@@ -30,9 +30,9 @@ export async function getResizedImage(
         width: options.width || 800,
         height: options.height || 600,
         fit: options.fit || 'cover',
-        format: 'auto', // Cloudflare escolhe WebP ou AVIF sozinho!
+        format: 'avif' as RequestInitCfPropertiesImage['format'],
         quality: options.quality || 75,
       },
-    },
+    } as RequestInitCfProperties,
   });
 }
