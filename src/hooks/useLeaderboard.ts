@@ -2,17 +2,17 @@
  * useLeaderboard - Migrated to Neon/Workers
  */
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { gamificationApi } from '@/lib/api/workers-client';
 import {
-
   LeaderboardEntry,
   LeaderboardFilters,
   EngagementData,
 } from '@/types/gamification';
 import { downloadCSV } from '@/utils/csvExport';
+import { subDays } from 'date-fns';
 
 
 // ============================================================================
@@ -49,7 +49,7 @@ export const useLeaderboard = (initialFilters?: Partial<LeaderboardFilters>): Us
   const _queryClient = useQueryClient();
   const [filters, setFiltersState] = useState<LeaderboardFilters>({ ...DEFAULT_FILTERS, ...initialFilters });
 
-  const setFilters = (newFilters: Partial<LeaderboardFilters>) => {
+  const setFilters = useCallback((newFilters: Partial<LeaderboardFilters>) => {
     setFiltersState(prev => {
       const updated = { ...prev, ...newFilters };
       // Reset to page 1 if filters changed (not just page change)
@@ -58,7 +58,7 @@ export const useLeaderboard = (initialFilters?: Partial<LeaderboardFilters>): Us
       }
       return updated;
     });
-  };
+  }, []);
 
   // -------------------------------------------------------------------------
   // Query
