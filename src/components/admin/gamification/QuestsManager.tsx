@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Loader2, Pencil, Plus, Search, Target, Trash2 } from 'lucide-react';
+import { Loader2, Pencil, Plus, Search, Target, Trash2, Zap, Droplets, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -45,23 +45,6 @@ export default function QuestsManager() {
     queryFn: async () => (await gamificationApi.questDefinitions.list()).data ?? [],
   });
 
-  const handleApplyTemplate = (template: typeof QUEST_TEMPLATES[0]) => {
-    upsertQuest.mutate({
-      ...template,
-      is_active: true,
-      repeat_interval: template.category === 'daily' ? 'daily' : 'once',
-    });
-  };
-
-  const filteredQuests = useMemo(() => quests.filter((quest) => {
-    const matchesSearch = quest.title.toLowerCase().includes(searchTerm.toLowerCase()) || (quest.description || '').toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || quest.category === categoryFilter;
-    const matchesStatus = statusFilter === 'all' || (statusFilter === 'active' && quest.is_active) || (statusFilter === 'inactive' && !quest.is_active);
-    return matchesSearch && matchesCategory && matchesStatus;
-  }), [quests, searchTerm, categoryFilter, statusFilter]);
-
-  const stats = useMemo(() => ({ total: quests.length, active: quests.filter((q) => q.is_active).length, inactive: quests.filter((q) => !q.is_active).length }), [quests]);
-
   const upsertQuest = useMutation({
     mutationFn: async (values: Partial<QuestDefinition>) => {
       const payload = {
@@ -88,6 +71,23 @@ export default function QuestsManager() {
     },
     onError: (error: Error) => toast({ title: 'Erro', description: `Falha ao salvar missão: ${error.message}`, variant: 'destructive' }),
   });
+
+  const handleApplyTemplate = (template: typeof QUEST_TEMPLATES[0]) => {
+    upsertQuest.mutate({
+      ...template,
+      is_active: true,
+      repeat_interval: template.category === 'daily' ? 'daily' : 'once',
+    } as any);
+  };
+
+  const filteredQuests = useMemo(() => quests.filter((quest) => {
+    const matchesSearch = quest.title.toLowerCase().includes(searchTerm.toLowerCase()) || (quest.description || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = categoryFilter === 'all' || quest.category === categoryFilter;
+    const matchesStatus = statusFilter === 'all' || (statusFilter === 'active' && quest.is_active) || (statusFilter === 'inactive' && !quest.is_active);
+    return matchesSearch && matchesCategory && matchesStatus;
+  }), [quests, searchTerm, categoryFilter, statusFilter]);
+
+  const stats = useMemo(() => ({ total: quests.length, active: quests.filter((q) => q.is_active).length, inactive: quests.filter((q) => !q.is_active).length }), [quests]);
 
   const toggleActive = useMutation({
     mutationFn: async ({ id, currentState }: { id: string; currentState: boolean }) => gamificationApi.questDefinitions.setActive(id, !currentState),
@@ -159,55 +159,56 @@ export default function QuestsManager() {
               <DialogTrigger asChild><Button className="gap-2 shadow-lg shadow-primary/20"><Plus className="h-4 w-4" />Nova Missão Customizada</Button></DialogTrigger>
               <DialogContent className="max-w-lg">
                 <DialogHeader><DialogTitle>{editingQuest ? 'Editar Missão' : 'Criar Nova Missão'}</DialogTitle></DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2"><Label htmlFor="title">Título</Label><Input id="title" name="title" required defaultValue={editingQuest?.title} /></div>
-                <div className="space-y-2"><Label htmlFor="description">Descrição</Label><Textarea id="description" name="description" defaultValue={editingQuest?.description || ''} /></div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2"><Label htmlFor="xp_reward">XP</Label><Input id="xp_reward" name="xp_reward" type="number" required defaultValue={editingQuest?.xp_reward || 0} /></div>
-                  <div className="space-y-2"><Label htmlFor="points_reward">Pontos</Label><Input id="points_reward" name="points_reward" type="number" required defaultValue={editingQuest?.points_reward || 0} /></div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2"><Label>Categoria</Label><Select name="category" defaultValue={editingQuest?.category || 'daily'}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{CATEGORIES.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent></Select></div>
-                  <div className="space-y-2"><Label>Ícone</Label><Select name="icon" defaultValue={editingQuest?.icon || 'Target'}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{ICON_OPTIONS.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select></div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2"><Label>Dificuldade</Label><Select name="difficulty" defaultValue={editingQuest?.difficulty || 'easy'}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="easy">Fácil</SelectItem><SelectItem value="medium">Médio</SelectItem><SelectItem value="hard">Difícil</SelectItem><SelectItem value="expert">Expert</SelectItem></SelectContent></Select></div>
-                  <div className="space-y-2"><Label>Repetição</Label><Select name="repeat_interval" defaultValue={editingQuest?.repeat_interval || 'daily'}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="once">Uma vez</SelectItem><SelectItem value="daily">Diária</SelectItem><SelectItem value="weekly">Semanal</SelectItem><SelectItem value="monthly">Mensal</SelectItem></SelectContent></Select></div>
-                </div>
-                <div className="flex justify-end gap-2"><Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button><Button type="submit" disabled={upsertQuest.isPending}>{upsertQuest.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Salvar</Button></div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
-        <div className="flex flex-wrap gap-3 pt-4">
-          <div className="relative flex-1 min-w-[240px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder="Buscar missões..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2"><Label htmlFor="title">Título</Label><Input id="title" name="title" required defaultValue={editingQuest?.title} /></div>
+                  <div className="space-y-2"><Label htmlFor="description">Descrição</Label><Textarea id="description" name="description" defaultValue={editingQuest?.description || ''} /></div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2"><Label htmlFor="xp_reward">XP</Label><Input id="xp_reward" name="xp_reward" type="number" required defaultValue={editingQuest?.xp_reward || 0} /></div>
+                    <div className="space-y-2"><Label htmlFor="points_reward">Pontos</Label><Input id="points_reward" name="points_reward" type="number" required defaultValue={editingQuest?.points_reward || 0} /></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2"><Label>Categoria</Label><Select name="category" defaultValue={editingQuest?.category || 'daily'}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{CATEGORIES.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent></Select></div>
+                    <div className="space-y-2"><Label>Ícone</Label><Select name="icon" defaultValue={editingQuest?.icon || 'Target'}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{ICON_OPTIONS.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2"><Label>Dificuldade</Label><Select name="difficulty" defaultValue={editingQuest?.difficulty || 'easy'}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="easy">Fácil</SelectItem><SelectItem value="medium">Médio</SelectItem><SelectItem value="hard">Difícil</SelectItem><SelectItem value="expert">Expert</SelectItem></SelectContent></Select></div>
+                    <div className="space-y-2"><Label>Repetição</Label><Select name="repeat_interval" defaultValue={editingQuest?.repeat_interval || 'daily'}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="once">Uma vez</SelectItem><SelectItem value="daily">Diária</SelectItem><SelectItem value="weekly">Semanal</SelectItem><SelectItem value="monthly">Mensal</SelectItem></SelectContent></Select></div>
+                  </div>
+                  <div className="flex justify-end gap-2"><Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancelar</Button><Button type="submit" disabled={upsertQuest.isPending}>{upsertQuest.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Salvar</Button></div>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}><SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todas categorias</SelectItem>{CATEGORIES.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent></Select>
-          <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos status</SelectItem><SelectItem value="active">Ativas</SelectItem><SelectItem value="inactive">Inativas</SelectItem></SelectContent></Select>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div> : (
-          <div className="space-y-3">
-            {filteredQuests.map((quest) => (
-              <div key={quest.id} className="border rounded-xl p-4 flex items-start justify-between gap-4">
-                <div className="space-y-1 min-w-0">
-                  <div className="flex items-center gap-2"><Target className="h-4 w-4 text-primary" /><p className="font-semibold truncate">{quest.title}</p></div>
-                  <p className="text-sm text-muted-foreground">{quest.description}</p>
-                  <div className="flex gap-2 flex-wrap"><Badge variant="outline">{quest.category}</Badge><Badge variant="outline">{quest.difficulty}</Badge><Badge variant="secondary">+{quest.xp_reward} XP</Badge>{quest.points_reward ? <Badge variant="secondary">+{quest.points_reward} pts</Badge> : null}</div>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <Switch checked={quest.is_active} onCheckedChange={() => toggleActive.mutate({ id: quest.id, currentState: quest.is_active })} />
-                  <Button size="icon" variant="ghost" onClick={() => { setEditingQuest(quest); setIsDialogOpen(true); }}><Pencil className="h-4 w-4" /></Button>
-                  <Button size="icon" variant="ghost" onClick={() => deleteQuest.mutate(quest.id)}><Trash2 className="h-4 w-4" /></Button>
-                </div>
-              </div>
-            ))}
+          <div className="flex flex-wrap gap-3 pt-4">
+            <div className="relative flex-1 min-w-[240px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input className="pl-9" placeholder="Buscar missões..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+            </div>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}><SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todas categorias</SelectItem>{CATEGORIES.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent></Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Todos status</SelectItem><SelectItem value="active">Ativas</SelectItem><SelectItem value="inactive">Inativas</SelectItem></SelectContent></Select>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? <div className="flex justify-center p-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div> : (
+            <div className="space-y-3">
+              {filteredQuests.map((quest) => (
+                <div key={quest.id} className="border rounded-xl p-4 flex items-start justify-between gap-4">
+                  <div className="space-y-1 min-w-0">
+                    <div className="flex items-center gap-2"><Target className="h-4 w-4 text-primary" /><p className="font-semibold truncate">{quest.title}</p></div>
+                    <p className="text-sm text-muted-foreground">{quest.description}</p>
+                    <div className="flex gap-2 flex-wrap"><Badge variant="outline">{quest.category}</Badge><Badge variant="outline">{quest.difficulty}</Badge><Badge variant="secondary">+{quest.xp_reward} XP</Badge>{quest.points_reward ? <Badge variant="secondary">+{quest.points_reward} pts</Badge> : null}</div>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <Switch checked={quest.is_active} onCheckedChange={() => toggleActive.mutate({ id: quest.id, currentState: quest.is_active })} />
+                    <Button size="icon" variant="ghost" onClick={() => { setEditingQuest(quest); setIsDialogOpen(true); }}><Pencil className="h-4 w-4" /></Button>
+                    <Button size="icon" variant="ghost" onClick={() => deleteQuest.mutate(quest.id)}><Trash2 className="h-4 w-4" /></Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

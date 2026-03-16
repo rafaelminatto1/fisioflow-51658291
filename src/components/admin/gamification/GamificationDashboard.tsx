@@ -4,9 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-
   Trophy, Flame, Star, Users, TrendingUp, AlertTriangle,
-  Award, Activity, Calendar
+  Award, Activity, Calendar, Zap
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, TooltipProps, AreaChart, Area } from 'recharts';
