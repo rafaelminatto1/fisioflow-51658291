@@ -9,7 +9,7 @@
 import { lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { RouteErrorBoundary } from '@/components/error-boundaries/RouteErrorBoundary';
+import { RouteErrorBoundary } from '@/components/error';
 import { MainLayout } from '@/components/layout/MainLayout';
 import Auth from './pages/Auth';
 import { WikiLayout, WikiDashboard } from '@/features/wiki';
@@ -99,7 +99,6 @@ const EventosAnalytics = lazy(() => import(/* webpackChunkName: "events-analytic
 // Admin & Security
 const UserManagement = lazy(() => import(/* webpackChunkName: "admin-users" */ "./pages/UserManagement"));
 const AuditLogs = lazy(() => import(/* webpackChunkName: "admin-audit" */ "./pages/AuditLogs"));
-const InvitationManagement = lazy(() => import(/* webpackChunkName: "admin-invitations" */ "./pages/InvitationManagement"));
 const SecurityMonitoring = lazy(() => import(/* webpackChunkName: "admin-security" */ "./pages/SecurityMonitoring"));
 const SecuritySettings = lazy(() => import(/* webpackChunkName: "settings-security" */ "./pages/SecuritySettings"));
 const AdminCRUD = lazy(() => import(/* webpackChunkName: "admin-crud" */ "./pages/AdminCRUD"));
@@ -254,7 +253,7 @@ export function AppRoutes() {
             <Route path="/admin" element={<Navigate to="/admin/analytics" replace />} />
             <Route path="/admin/users" element={<ProtectedRoute allowedRoles={['admin']}><UserManagement /></ProtectedRoute>} />
             <Route path="/admin/audit-logs" element={<ProtectedRoute allowedRoles={['admin']}><AuditLogs /></ProtectedRoute>} />
-            <Route path="/admin/invitations" element={<ProtectedRoute allowedRoles={['admin']}><InvitationManagement /></ProtectedRoute>} />
+            <Route path="/admin/invitations" element={<Navigate to="/admin/users" replace />} />
             <Route path="/admin/security" element={<ProtectedRoute allowedRoles={['admin']}><SecurityMonitoring /></ProtectedRoute>} />
             <Route path="/security-settings" element={<ProtectedRoute><SecuritySettings /></ProtectedRoute>} />
             <Route path="/security-monitoring" element={<ProtectedRoute><SecurityMonitoring /></ProtectedRoute>} />
