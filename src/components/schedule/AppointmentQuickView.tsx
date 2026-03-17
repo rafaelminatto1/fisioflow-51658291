@@ -250,7 +250,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {['agendado', 'confirmado', 'em_andamento', 'concluido', 'cancelado', 'falta', 'reagendado', 'aguardando_confirmacao', 'em_espera', 'avaliacao', 'atrasado'].map((val) => {
+                  {APPOINTMENT_STATUS_OPTIONS.map((val) => {
                     const cfg = getStatusConfig(val);
                     return (
                       <SelectItem key={val} value={val}>
