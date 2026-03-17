@@ -43,14 +43,20 @@ export function UpcomingAppointments() {
     .slice(0, 5);
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Confirmado':
+    const s = String(status || '').toLowerCase();
+    switch (s) {
+      case 'presenca_confirmada':
+      case 'atendido':
         return 'bg-primary/10 text-primary border-primary/20';
-      case 'Pendente':
-        return 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';
-      case 'Reagendado':
+      case 'agendado':
+      case 'avaliacao':
         return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
-      case 'Cancelado':
+      case 'remarcar':
+      case 'faltou_com_aviso':
+        return 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';
+      case 'cancelado':
+      case 'faltou':
+      case 'faltou_sem_aviso':
         return 'bg-destructive/10 text-destructive border-destructive/20';
       default:
         return 'bg-muted text-muted-foreground border-border';

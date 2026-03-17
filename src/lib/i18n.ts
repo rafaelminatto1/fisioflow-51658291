@@ -540,9 +540,7 @@ export function useTranslation(locale: SupportedLocale = 'pt-BR') {
     config: localeConfig,
     formatDate: (date: Date | string) => {
       const d = typeof date === 'string' ? new Date(date) : date;
-      return new Intl.DateTimeFormat(locale, {
-        ...localeConfig.dateFormat !== 'dd/MM/yyyy' ? { dateStyle: 'short' as const } : {},
-      }).format(d);
+      return new Intl.DateTimeFormat(locale, localeConfig.dateFormat !== 'dd/MM/yyyy' ? { dateStyle: 'short' as const } : {}).format(d);
     },
     formatTime: (date: Date | string) => {
       const d = typeof date === 'string' ? new Date(date) : date;
