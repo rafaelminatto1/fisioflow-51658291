@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 import {
   View,
@@ -24,6 +24,13 @@ import { usePatients } from '@/hooks/usePatients';
 import { authApi } from '@/lib/auth-api';
 import { config } from '@/lib/config';
 
+type MenuItem = {
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  label: string;
+  onPress: () => void;
+  emBreve?: boolean;
+};
+
 export default function ProfileScreen() {
   const colors = useColors();
   const { user, signOut } = useAuthStore();
@@ -31,7 +38,6 @@ export default function ProfileScreen() {
   const { light, medium, success, error } = useHaptics();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  // Buscar estatísticas reais
   const { data: stats } = useQuery({
     queryKey: ['professionalStats'],
     queryFn: () => getDashboardStats('current-professional'),
@@ -53,24 +59,21 @@ export default function ProfileScreen() {
     },
   });
 
-  const averageRating = (() => {
+  // Returns null when insufficient data — do not show misleading hardcoded value
+  const averageRating: number | null = (() => {
     const surveys: any[] = surveysData?.data ?? [];
-    if (surveys.length < 5) return 4.8;
+    if (surveys.length < 5) return null;
     const total = surveys.reduce((sum: number, s: any) => sum + (s.score ?? s.rating ?? 0), 0);
     return Math.round((total / surveys.length) * 10) / 10;
   })();
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     medium();
     Alert.alert(
       'Sair',
       'Deseja realmente sair da sua conta?',
       [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-          onPress: () => light(),
-        },
+        { text: 'Cancelar', style: 'cancel', onPress: () => light() },
         {
           text: 'Sair',
           style: 'destructive',
@@ -80,9 +83,9 @@ export default function ProfileScreen() {
               await signOut();
               success();
               router.replace('/(auth)/login');
-            } catch (err) {
+            } catch {
               error();
-              Alert.alert('Erro', 'Nao foi possivel sair. Tente novamente.');
+              Alert.alert('Erro', 'Não foi possível sair. Tente novamente.');
             } finally {
               setIsLoggingOut(false);
             }
@@ -90,72 +93,52 @@ export default function ProfileScreen() {
         },
       ]
     );
-  };
+  }, [medium, light, signOut, success, error]);
 
-  const menuItems = [
+  const menuItems: MenuItem[] = [
     {
-      icon: 'person-outline' as const,
+      icon: 'person-outline',
       label: 'Dados Pessoais',
-      onPress: () => {
-        medium();
-        router.push('/profile-edit' as any);
-      },
+      onPress: () => { medium(); router.push('/profile-edit' as any); },
     },
     {
-      icon: 'business-outline' as const,
-      label: 'Dados da Clinica',
-      onPress: () => {
-        medium();
-        router.push('/profile-edit' as any);
-      },
+      icon: 'business-outline',
+      label: 'Dados da Clínica',
+      onPress: () => { medium(); router.push('/profile-edit' as any); },
     },
     {
-      icon: 'clipboard-outline' as const,
+      icon: 'clipboard-outline',
       label: 'Protocolos de Tratamento',
-      onPress: () => {
-        medium();
-        router.push('/protocols' as any);
-      },
+      onPress: () => { medium(); router.push('/protocols' as any); },
     },
     {
-      icon: 'time-outline' as const,
-      label: 'Horarios de Atendimento',
-      onPress: () => {
-        light();
-        Alert.alert('Em breve', 'Funcionalidade em desenvolvimento');
-      },
+      icon: 'time-outline',
+      label: 'Horários de Atendimento',
+      onPress: () => { light(); Alert.alert('Em breve', 'Funcionalidade em desenvolvimento'); },
+      emBreve: true,
     },
     {
-      icon: 'notifications-outline' as const,
-      label: 'Notificacoes',
-      onPress: () => {
-        light();
-        Alert.alert('Em breve', 'Funcionalidade em desenvolvimento');
-      },
+      icon: 'notifications-outline',
+      label: 'Notificações',
+      onPress: () => { light(); Alert.alert('Em breve', 'Funcionalidade em desenvolvimento'); },
+      emBreve: true,
     },
     {
-      icon: 'lock-closed-outline' as const,
+      icon: 'lock-closed-outline',
       label: 'Alterar Senha',
-      onPress: () => {
-        medium();
-        router.push('/change-password' as any);
-      },
+      onPress: () => { medium(); router.push('/change-password' as any); },
     },
     {
-      icon: 'card-outline' as const,
+      icon: 'card-outline',
       label: 'Plano e Faturamento',
-      onPress: () => {
-        light();
-        Alert.alert('Em breve', 'Funcionalidade em desenvolvimento');
-      },
+      onPress: () => { light(); Alert.alert('Em breve', 'Funcionalidade em desenvolvimento'); },
+      emBreve: true,
     },
     {
-      icon: 'help-circle-outline' as const,
+      icon: 'help-circle-outline',
       label: 'Ajuda e Suporte',
-      onPress: () => {
-        light();
-        Alert.alert('Em breve', 'Funcionalidade em desenvolvimento');
-      },
+      onPress: () => { light(); Alert.alert('Em breve', 'Funcionalidade em desenvolvimento'); },
+      emBreve: true,
     },
   ];
 
@@ -165,10 +148,7 @@ export default function ProfileScreen() {
         {/* Profile Header */}
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() => {
-              medium();
-              router.push('/profile-edit' as any);
-            }}
+            onPress={() => { medium(); router.push('/profile-edit' as any); }}
             activeOpacity={0.8}
           >
             <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
@@ -205,22 +185,22 @@ export default function ProfileScreen() {
         {/* Stats */}
         <View style={styles.statsContainer}>
           <Card style={styles.statCard}>
-            <Text style={[styles.statValue, { color: colors.primary }]}>{stats?.completedAppointments || appointments.length || 0}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Consultas
+            <Text style={[styles.statValue, { color: colors.primary }]}>
+              {stats?.completedAppointments || appointments.length || 0}
             </Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Consultas</Text>
           </Card>
           <Card style={styles.statCard}>
-            <Text style={[styles.statValue, { color: colors.success }]}>{stats?.activePatients || patients.length || 0}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Pacientes
+            <Text style={[styles.statValue, { color: colors.success }]}>
+              {stats?.activePatients || patients.length || 0}
             </Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Pacientes</Text>
           </Card>
           <Card style={styles.statCard}>
-            <Text style={[styles.statValue, { color: colors.warning }]}>{averageRating}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Avaliacao
+            <Text style={[styles.statValue, { color: averageRating !== null ? colors.warning : colors.textMuted }]}>
+              {averageRating !== null ? averageRating : '—'}
             </Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Avaliação</Text>
           </Card>
         </View>
 
@@ -231,25 +211,25 @@ export default function ProfileScreen() {
               key={item.label}
               style={[
                 styles.menuItem,
-                index < menuItems.length - 1 && {
-                  borderBottomWidth: 1,
-                  borderBottomColor: colors.border,
-                },
+                index < menuItems.length - 1 && { borderBottomWidth: 1, borderBottomColor: colors.border },
               ]}
               onPress={item.onPress}
             >
               <View style={styles.menuItemLeft}>
                 <Ionicons name={item.icon} size={22} color={colors.textSecondary} />
-                <Text style={[styles.menuItemLabel, { color: colors.text }]}>
-                  {item.label}
-                </Text>
+                <Text style={[styles.menuItemLabel, { color: colors.text }]}>{item.label}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+              {item.emBreve ? (
+                <View style={[styles.emBreveBadge, { backgroundColor: colors.warning + '22' }]}>
+                  <Text style={[styles.emBreveText, { color: colors.warning }]}>Em breve</Text>
+                </View>
+              ) : (
+                <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+              )}
             </TouchableOpacity>
           ))}
         </Card>
 
-        {/* Logout Button */}
         <Button
           title="Sair da Conta"
           onPress={handleLogout}
@@ -259,7 +239,6 @@ export default function ProfileScreen() {
           textStyle={{ color: colors.error }}
         />
 
-        {/* Version */}
         <Text style={[styles.version, { color: colors.textMuted }]}>
           FisioFlow Pro v1.0.0
         </Text>
@@ -269,108 +248,38 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
+  container: { flex: 1 },
+  scrollContent: { padding: 16 },
+  header: { alignItems: 'center', marginBottom: 24 },
   avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
+    width: 96, height: 96, borderRadius: 48,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 12,
   },
-  avatarImage: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-  },
+  avatarImage: { width: 96, height: 96, borderRadius: 48 },
   editAvatarOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 30,
-    borderBottomLeftRadius: 48,
-    borderBottomRightRadius: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
+    position: 'absolute', bottom: 0, left: 0, right: 0, height: 30,
+    borderBottomLeftRadius: 48, borderBottomRightRadius: 48,
+    alignItems: 'center', justifyContent: 'center',
   },
-  avatarText: {
-    fontSize: 36,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  name: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  specialty: {
-    fontSize: 16,
-    marginBottom: 8,
-  },
-  crefitoBadge: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  crefitoText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  syncStatusContainer: {
-    marginTop: 12,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 24,
-  },
-  statCard: {
-    flex: 1,
-    alignItems: 'center',
-    padding: 16,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  statLabel: {
-    fontSize: 12,
-  },
-  menuCard: {
-    marginBottom: 24,
-  },
+  avatarText: { fontSize: 36, fontWeight: 'bold', color: '#FFFFFF' },
+  name: { fontSize: 24, fontWeight: 'bold', marginBottom: 4 },
+  specialty: { fontSize: 16, marginBottom: 8 },
+  crefitoBadge: { paddingHorizontal: 16, paddingVertical: 6, borderRadius: 20 },
+  crefitoText: { fontSize: 13, fontWeight: '600' },
+  syncStatusContainer: { marginTop: 12 },
+  statsContainer: { flexDirection: 'row', gap: 12, marginBottom: 24 },
+  statCard: { flex: 1, alignItems: 'center', padding: 16 },
+  statValue: { fontSize: 24, fontWeight: 'bold' },
+  statLabel: { fontSize: 12 },
+  menuCard: { marginBottom: 24 },
   menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: 16, paddingHorizontal: 16,
   },
-  menuItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  menuItemLabel: {
-    fontSize: 16,
-  },
-  logoutButton: {
-    marginBottom: 16,
-    borderColor: '#EF4444',
-  },
-  version: {
-    textAlign: 'center',
-    fontSize: 12,
-    marginBottom: 24,
-  },
+  menuItemLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  menuItemLabel: { fontSize: 16 },
+  emBreveBadge: { paddingHorizontal: 7, paddingVertical: 3, borderRadius: 6 },
+  emBreveText: { fontSize: 10, fontWeight: '700' },
+  logoutButton: { marginBottom: 16, borderColor: '#EF4444' },
+  version: { textAlign: 'center', fontSize: 12, marginBottom: 24 },
 });
