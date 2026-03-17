@@ -3,6 +3,7 @@
  */
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { addDays } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { appointmentsCacheService } from '@/lib/offline/AppointmentsCacheService';
 import { AppointmentService } from '@/services/appointmentService';
@@ -17,13 +18,6 @@ import {
   isNetworkError,
 } from './appointmentHelpers';
 import { getFromCacheWithMetadata, type AppointmentsQueryResult } from './useAppointmentsCache';
-
-// Necessário para addDays
-function addDays(date: Date, days: number): Date {
-  const result = new Date(date);
-  result.setDate(result.getDate() + days);
-  return result;
-}
 
 export const appointmentKeys = {
   all: ['appointments_v2'] as const,

@@ -19,6 +19,7 @@ export interface Env {
   DICOM_BASE_URL?: string;
   DICOM_AUTH_TOKEN?: string;
   DICOM_AUTH_HEADER?: string;
+  NEON_AUTH_URL?: string;
   NEON_AUTH_JWKS_URL?: string;
   NEON_AUTH_ISSUER?: string;
   NEON_AUTH_AUDIENCE?: string;

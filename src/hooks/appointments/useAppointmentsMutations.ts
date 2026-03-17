@@ -230,6 +230,7 @@ export function useDeleteAppointment() {
 export function useUpdateAppointmentStatus() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { profile } = useAuth();
 
   return useMutation({
     mutationFn: async ({
@@ -245,21 +246,52 @@ export function useUpdateAppointmentStatus() {
       await AppointmentService.updateStatus(appointmentId, status);
       return { id: appointmentId, status };
     },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
-      queryClient.refetchQueries({ queryKey: appointmentPeriodKeys.all });
+    onMutate: async ({ appointmentId, status }) => {
+      const organizationId = profile?.organization_id;
+
+      await queryClient.cancelQueries({ queryKey: appointmentKeys.list(organizationId) });
+      await queryClient.cancelQueries({ queryKey: appointmentPeriodKeys.all });
+
+      const previousData = queryClient.getQueryData<AppointmentsQueryResult>(
+        appointmentKeys.list(organizationId)
+      );
+      const previousPeriodQueries = queryClient.getQueriesData({ queryKey: appointmentPeriodKeys.all });
+
+      // Atualiza o cache principal imediatamente
       queryClient.setQueryData(
-        appointmentKeys.list(),
+        appointmentKeys.list(organizationId),
         (old: AppointmentsQueryResult | undefined) => ({
           ...old,
           data: (old?.data || []).map(apt =>
-            apt.id === variables.appointmentId ? { ...apt, status: variables.status } : apt
+            apt.id === appointmentId ? { ...apt, status } : apt
           ),
         })
       );
-      toast({ title: 'Status atualizado', description: 'Status do agendamento atualizado com sucesso' });
+
+      // Atualiza todas as queries de período (visão semanal/diária do calendário)
+      queryClient.setQueriesData(
+        { queryKey: appointmentPeriodKeys.all },
+        (old: AppointmentBase[] | undefined) =>
+          old?.map(apt => apt.id === appointmentId ? { ...apt, status } : apt)
+      );
+
+      return { previousData, previousPeriodQueries };
     },
-    onError: error => {
+    onSuccess: (_data, variables) => {
+      const organizationId = profile?.organization_id;
+      queryClient.invalidateQueries({ queryKey: appointmentKeys.list(organizationId), exact: false });
+      queryClient.invalidateQueries({ queryKey: filteredAppointmentKeys.all });
+      queryClient.refetchQueries({ queryKey: appointmentPeriodKeys.all, type: 'active' });
+      toast({ title: 'Status atualizado', description: `Status alterado para ${variables.status}` });
+    },
+    onError: (error, _variables, context) => {
+      const organizationId = profile?.organization_id;
+      if (context?.previousData) {
+        queryClient.setQueryData(appointmentKeys.list(organizationId), context.previousData);
+      }
+      context?.previousPeriodQueries?.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
       logger.error('Erro ao atualizar status', error, 'useAppointmentsMutations');
       toast({
         title: 'Erro',

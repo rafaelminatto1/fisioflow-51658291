@@ -4,15 +4,15 @@
  * O Worker valida JWTs do Neon Auth usando JWKS remoto.
  */
 import { createRemoteJWKSet, jwtVerify, decodeJwt } from 'jose';
-import type { MiddlewareHandler } from 'hono';
+import type { MiddlewareHandler, Context } from 'hono';
 import { getCookie } from 'hono/cookie';
 import type { Env } from '../types/env';
 
 const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
 
-let jwksCache: any = null;
+let jwksCache: ReturnType<typeof createRemoteJWKSet> | null = null;
 
-function getJwks(url: string) {
+function getJwks(url: string): ReturnType<typeof createRemoteJWKSet> {
   if (!jwksCache) jwksCache = createRemoteJWKSet(new URL(url));
   return jwksCache;
 }
@@ -30,7 +30,7 @@ export type AuthVariables = { user: AuthUser };
  * Extrai e verifica o token Neon Auth.
  * Aceita Header Authorization ou Cookies do Better Auth.
  */
-export async function verifyToken(c: any, env: Env): Promise<AuthUser | null> {
+export async function verifyToken<E extends { Bindings: Env }>(c: Context<E>, env: Env): Promise<AuthUser | null> {
   // 1. Tenta obter o token (header, query param para WebSocket, ou cookie)
   let token = c.req.header('Authorization')?.replace('Bearer ', '');
 
@@ -46,38 +46,7 @@ export async function verifyToken(c: any, env: Env): Promise<AuthUser | null> {
     return null;
   }
 
-  // 2. Tenta primeiro o token de desenvolvimento simples (base64: userId:timestamp)
-  try {
-    const decoded = Buffer.from(token, 'base64').toString('utf-8');
-    const [userId, timestamp] = decoded.split(':');
-    
-    if (userId && timestamp && !isNaN(Number(timestamp))) {
-      // Token de desenvolvimento válido - busca usuário no banco
-      const { createPool } = await import('./db');
-      const pool = await createPool(env);
-      const result = await pool.query(
-        `SELECT id, email, full_name as name, role, organization_id 
-         FROM profiles 
-         WHERE id = $1 
-         LIMIT 1`,
-        [userId]
-      );
-      
-      if (result.rows[0]) {
-        const user = result.rows[0];
-        return {
-          uid: user.id,
-          email: user.email,
-          organizationId: user.organization_id || DEFAULT_ORG_ID,
-          role: user.role || 'admin'
-        };
-      }
-    }
-  } catch (e) {
-    // Não é token de desenvolvimento, continua para JWT
-  }
-
-  // 3. Tenta validar como JWT do Neon Auth
+  // 2. Valida como JWT do Neon Auth
   const jwksUrl = env.NEON_AUTH_JWKS_URL;
   if (!jwksUrl) {
     console.error('[Auth] NEON_AUTH_JWKS_URL not configured');
@@ -92,10 +61,13 @@ export async function verifyToken(c: any, env: Env): Promise<AuthUser | null> {
     const decoded = decodeJwt(token);
     
     // Verifica a assinatura via JWKS real (Segurança total)
-    // Ignoramos AUDIENCE e ISSUER estritos para suportar múltiplos domínios (Web/Mobile/Custom)
-    const { payload } = await jwtVerify(token, jwks, {
-      clockTolerance: '10m' // Tolerância alta para evitar erros de sincronismo de relógio
-    });
+    const verifyOptions: Parameters<typeof jwtVerify>[2] = {
+      clockTolerance: '10m', // Tolerância para evitar erros de sincronismo de relógio
+    };
+    if (env.NEON_AUTH_ISSUER) {
+      verifyOptions.issuer = env.NEON_AUTH_ISSUER;
+    }
+    const { payload } = await jwtVerify(token, jwks, verifyOptions);
 
     const userId = (payload.sub as string) || (payload as any).userId || (payload as any).id;
     if (!userId) {

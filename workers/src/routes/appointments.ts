@@ -1,11 +1,12 @@
 import { Hono } from 'hono';
+import type { MiddlewareHandler } from 'hono';
 import type { Env } from '../types/env';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import { createPool } from '../lib/db';
+import { isUuid } from '../lib/validators';
 import { triggerInngestEvent } from '../lib/inngest-client';
 import { broadcastToOrg } from '../lib/realtime';
 import {
-  STATUS_MAP as _STATUS_MAP,
   normalizeStatus,
   calculateEndTime,
   sanitizeAppointmentRow,
@@ -164,7 +165,6 @@ app.post('/', requireAuth, async (c) => {
     const date        = body.date        || body.appointment_date;
     const startTime   = body.startTime   || body.start_time;
     const endTime     = body.endTime     || body.end_time;
-    const isUuid = (v: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
     const rawTherapist = body.therapistId || body.therapist_id || user.uid;
     const therapistId = isUuid(rawTherapist) ? rawTherapist : null;
     const notes       = body.notes ?? null;
@@ -248,12 +248,13 @@ app.get('/:id', requireAuth, async (c) => {
   }
 });
 
-const updateAppointmentHandler = async (c: any) => {
+const updateAppointmentHandler: MiddlewareHandler<{ Bindings: Env; Variables: AuthVariables }> = async (c) => {
   const user = c.get('user');
   const db = await createPool(c.env);
-  const { id } = c.req.param();
+  const id = c.req.param('id');
   try {
-    const body = (await c.req.json()) as any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const body = await c.req.json() as Record<string, any>;
     const currentResult = await db.query(
       `SELECT id, date, start_time, end_time, duration_minutes, status
        FROM appointments
@@ -281,7 +282,6 @@ const updateAppointmentHandler = async (c: any) => {
     const paymentAmount = body.payment_amount ?? body.paymentAmount;
     const ignoreCapacity = body.ignoreCapacity === true;
 
-    const isUuid = (v: any) => typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
     const parsedDuration = rawDuration !== undefined ? parseInt(String(rawDuration), 10) : undefined;
     const normalizedStatus = status !== undefined ? normalizeStatus(status) : String(current.status ?? 'scheduled');
 
@@ -396,8 +396,8 @@ const updateAppointmentHandler = async (c: any) => {
   }
 };
 
-app.patch('/:id', requireAuth, updateAppointmentHandler as any);
-app.put('/:id', requireAuth, updateAppointmentHandler as any);
+app.patch('/:id', requireAuth, updateAppointmentHandler);
+app.put('/:id', requireAuth, updateAppointmentHandler);
 
 app.post('/:id/cancel', requireAuth, async (c) => {
   const user = c.get('user');
