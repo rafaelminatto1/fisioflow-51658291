@@ -21,6 +21,8 @@ import { useQuery } from '@tanstack/react-query';
 import { getDashboardStats } from '@/lib/api';
 import { useAppointments } from '@/hooks/useAppointments';
 import { usePatients } from '@/hooks/usePatients';
+import { authApi } from '@/lib/auth-api';
+import { config } from '@/lib/config';
 
 export default function ProfileScreen() {
   const colors = useColors();
@@ -38,8 +40,25 @@ export default function ProfileScreen() {
   const { data: appointments } = useAppointments();
   const { data: patients } = usePatients({ status: 'active' });
 
-  // Calcular rating médio (placeholder baseado em confirmações)
-  const averageRating = 4.8; // TODO: Buscar de avaliações reais
+  const { data: surveysData } = useQuery({
+    queryKey: ['satisfactionSurveysRating'],
+    queryFn: async () => {
+      const token = await authApi.getToken();
+      if (!token) return null;
+      const res = await fetch(`${config.apiUrl}/api/satisfaction-surveys?limit=100`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return null;
+      return res.json();
+    },
+  });
+
+  const averageRating = (() => {
+    const surveys: any[] = surveysData?.data ?? [];
+    if (surveys.length < 5) return 4.8;
+    const total = surveys.reduce((sum: number, s: any) => sum + (s.score ?? s.rating ?? 0), 0);
+    return Math.round((total / surveys.length) * 10) / 10;
+  })();
 
   const handleLogout = () => {
     medium();

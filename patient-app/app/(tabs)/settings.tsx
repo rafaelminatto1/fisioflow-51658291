@@ -3,7 +3,7 @@
  * Complete settings and configuration screen
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 import {
   View,
@@ -14,6 +14,7 @@ import {
   Switch,
   Alert,
   Linking,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,6 +26,8 @@ import { Card, Button } from '@/components';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { exportAndSharePatientData } from '@/lib/dataExport';
 import { log } from '@/lib/logger';
+import { ExerciseReminders, type ExerciseReminderConfig } from '@/lib/exerciseReminders';
+import { requestNotificationPermissions } from '@/lib/notificationsSystem';
 
 interface SettingSection {
   title: string;
@@ -42,6 +45,8 @@ interface SettingItem {
   badge?: string;
 }
 
+const DAYS_OF_WEEK = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
 export default function SettingsScreen() {
   const colors = useColors();
   const { user, signOut } = useAuthStore();
@@ -56,9 +61,65 @@ export default function SettingsScreen() {
   });
   const [exporting, setExporting] = useState(false);
 
+  // Exercise Reminders config
+  const [remindersManager] = useState(() => new ExerciseReminders(user?.id));
+  const [remindersConfig, setRemindersConfig] = useState<ExerciseReminderConfig>({
+    enabled: false,
+    frequency: 'daily',
+    times: ['09:00', '18:00'],
+    daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
+  });
+  const [editingTime, setEditingTime] = useState<{ index: number; value: string } | null>(null);
+
   useEffect(() => {
     loadSettings();
+    remindersManager.initialize().then(() => {
+      setRemindersConfig(remindersManager.getConfig());
+    });
   }, []);
+
+  const handleToggleReminders = useCallback(async (enabled: boolean) => {
+    if (enabled) {
+      const perm = await requestNotificationPermissions();
+      if (!perm.granted) {
+        Alert.alert(
+          'Permissão Necessária',
+          'Ative as notificações nas configurações do dispositivo para receber lembretes.',
+          [
+            { text: 'Cancelar', style: 'cancel' },
+            { text: 'Abrir Configurações', onPress: () => Linking.openSettings() },
+          ]
+        );
+        return;
+      }
+    }
+    const updated = { ...remindersConfig, enabled };
+    setRemindersConfig(updated);
+    await remindersManager.updateConfig(updated);
+  }, [remindersConfig, remindersManager]);
+
+  const handleToggleDay = useCallback(async (day: number) => {
+    const days = remindersConfig.daysOfWeek ?? [0, 1, 2, 3, 4, 5, 6];
+    const newDays = days.includes(day) ? days.filter(d => d !== day) : [...days, day].sort();
+    const updated = { ...remindersConfig, daysOfWeek: newDays };
+    setRemindersConfig(updated);
+    await remindersManager.updateConfig(updated);
+  }, [remindersConfig, remindersManager]);
+
+  const handleSaveTime = useCallback(async () => {
+    if (!editingTime) return;
+    const timePattern = /^([01]\d|2[0-3]):([0-5]\d)$/;
+    if (!timePattern.test(editingTime.value)) {
+      Alert.alert('Horário Inválido', 'Use o formato HH:mm (ex: 09:00)');
+      return;
+    }
+    const newTimes = [...remindersConfig.times];
+    newTimes[editingTime.index] = editingTime.value;
+    const updated = { ...remindersConfig, times: newTimes };
+    setRemindersConfig(updated);
+    await remindersManager.updateConfig(updated);
+    setEditingTime(null);
+  }, [editingTime, remindersConfig, remindersManager]);
 
   const loadSettings = async () => {
     try {
@@ -332,6 +393,103 @@ export default function SettingsScreen() {
           </View>
         </Card>
 
+        {/* Exercise Reminders Config Section */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Lembretes de Exercícios</Text>
+          <Card style={styles.sectionCard} padding="none">
+            {/* Enable toggle */}
+            <View style={[styles.settingItem, { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
+              <View style={styles.settingLeft}>
+                <View style={[styles.settingIcon, { backgroundColor: colors.primary + '20' }]}>
+                  <Ionicons name="fitness" size={20} color={colors.primary} />
+                </View>
+                <View style={styles.settingContent}>
+                  <Text style={[styles.settingLabel, { color: colors.text }]}>Ativar Lembretes</Text>
+                  <Text style={[styles.settingDescription, { color: colors.textSecondary }]}>
+                    Receba notificações nos horários configurados
+                  </Text>
+                </View>
+              </View>
+              <Switch
+                value={remindersConfig.enabled}
+                onValueChange={handleToggleReminders}
+                trackColor={{ false: colors.border, true: colors.primary + '80' }}
+                thumbColor={remindersConfig.enabled ? colors.primary : colors.textMuted}
+              />
+            </View>
+
+            {/* Time slots */}
+            {remindersConfig.enabled && (
+              <>
+                <View style={[styles.settingItem, { borderBottomWidth: 1, borderBottomColor: colors.border, flexDirection: 'column', alignItems: 'flex-start' }]}>
+                  <Text style={[styles.settingLabel, { color: colors.text, marginBottom: 8 }]}>Horários</Text>
+                  <View style={styles.timesRow}>
+                    {remindersConfig.times.map((time, idx) => (
+                      editingTime?.index === idx ? (
+                        <View key={idx} style={styles.timeEditRow}>
+                          <TextInput
+                            style={[styles.timeInput, { color: colors.text, borderColor: colors.primary }]}
+                            value={editingTime.value}
+                            onChangeText={v => setEditingTime({ index: idx, value: v })}
+                            placeholder="HH:mm"
+                            placeholderTextColor={colors.textMuted}
+                            keyboardType="numeric"
+                            maxLength={5}
+                            autoFocus
+                          />
+                          <TouchableOpacity onPress={handleSaveTime} style={[styles.timeEditBtn, { backgroundColor: colors.primary }]}>
+                            <Ionicons name="checkmark" size={16} color="#FFF" />
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={() => setEditingTime(null)} style={[styles.timeEditBtn, { backgroundColor: colors.border }]}>
+                            <Ionicons name="close" size={16} color={colors.text} />
+                          </TouchableOpacity>
+                        </View>
+                      ) : (
+                        <TouchableOpacity
+                          key={idx}
+                          style={[styles.timeBadge, { backgroundColor: colors.primary + '20' }]}
+                          onPress={() => setEditingTime({ index: idx, value: time })}
+                        >
+                          <Ionicons name="time-outline" size={14} color={colors.primary} />
+                          <Text style={[styles.timeBadgeText, { color: colors.primary }]}>{time}</Text>
+                          <Ionicons name="pencil-outline" size={12} color={colors.primary} />
+                        </TouchableOpacity>
+                      )
+                    ))}
+                  </View>
+                </View>
+
+                {/* Days of week */}
+                <View style={[styles.settingItem, { flexDirection: 'column', alignItems: 'flex-start' }]}>
+                  <Text style={[styles.settingLabel, { color: colors.text, marginBottom: 8 }]}>Dias da Semana</Text>
+                  <View style={styles.daysRow}>
+                    {DAYS_OF_WEEK.map((label, day) => {
+                      const active = (remindersConfig.daysOfWeek ?? []).includes(day);
+                      return (
+                        <TouchableOpacity
+                          key={day}
+                          style={[
+                            styles.dayButton,
+                            {
+                              backgroundColor: active ? colors.primary : colors.border,
+                              borderColor: active ? colors.primary : colors.border,
+                            },
+                          ]}
+                          onPress={() => handleToggleDay(day)}
+                        >
+                          <Text style={[styles.dayButtonText, { color: active ? '#FFF' : colors.textSecondary }]}>
+                            {label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+              </>
+            )}
+          </Card>
+        </View>
+
         {/* Settings Sections */}
         {sections.map((section, sectionIndex) => (
           <View key={sectionIndex} style={styles.section}>
@@ -537,5 +695,57 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 12,
     marginTop: 8,
+  },
+  timesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  timeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    gap: 4,
+  },
+  timeBadgeText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  timeEditRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  timeInput: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    fontSize: 14,
+    width: 72,
+  },
+  timeEditBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  daysRow: {
+    flexDirection: 'row',
+    gap: 6,
+    flexWrap: 'wrap',
+  },
+  dayButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  dayButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

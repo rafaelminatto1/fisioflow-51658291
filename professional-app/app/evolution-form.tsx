@@ -51,44 +51,56 @@ export default function EvolutionFormScreen() {
   const [generatingSOAP, setGeneratingSOAP] = useState(false);
   const [generatedSuggestions, setGeneratedSuggestions] = useState<string[]>([]);
 
-  // Generate SOAP with AI
+  // Generate SOAP with AI — calls real Workers AI endpoint
   const handleGenerateWithAI = async () => {
     setGeneratingSOAP(true);
+    try {
+      const { authApi } = await import('@/lib/auth-api');
+      const { config } = await import('@/lib/config');
+      const token = await authApi.getToken();
+      if (!token) throw new Error('Sessão expirada');
 
-    // Simulate AI generation
-    setTimeout(() => {
-      if (mode === 'SOAP') {
-        const generatedSOAP = {
-          subjective: painLevel > 0 
-            ? `Paciente relata dor nível ${painLevel}/10 na região tratada. Refere ${painLevel > 5 ? 'dificuldade significativa' : 'algum desconforto'} em atividades funcionais, mas nota melhora em relação ao início.`
-            : 'Paciente relata ausência de dor no momento. Sente-se bem e motivado com o tratamento.',
-          objective: 'Realizada avaliação de amplitude de movimento e força muscular. Apresenta boa estabilidade articular e controle motor durante os exercícios propostos.',
-          assessment: `Evolução clínica ${painLevel > 5 ? 'dentro do esperado para o quadro álgico' : 'positiva e progressiva'}. Resposta satisfatória à conduta de hoje.`,
-          plan: `Manter exercícios de fortalecimento e mobilidade. Próxima sessão: progredir carga conforme tolerância e focar em treino funcional específico.`,
-        };
+      const res = await fetch(`${config.apiUrl}/api/ai/soap-suggestions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          patientId,
+          appointmentId,
+          painLevel,
+          mode,
+          context: mode === 'SOAP'
+            ? { subjective, objective, assessment, plan }
+            : { freeContent },
+        }),
+      });
 
-        setSubjective(generatedSOAP.subjective);
-        setObjective(generatedSOAP.objective);
-        setAssessment(generatedSOAP.assessment);
-        setPlan(generatedSOAP.plan);
-      } else {
-        setFreeContent(`Evolução do paciente ${patientName}. Nível de dor: ${painLevel}/10. Realizados exercícios de fortalecimento e mobilidade. Paciente apresenta boa resposta clínica e progressão satisfatória.`);
+      if (!res.ok) throw new Error('Erro ao gerar sugestões com IA');
+
+      const data = await res.json();
+
+      if (mode === 'SOAP' && data.soap) {
+        setSubjective(data.soap.subjective || subjective);
+        setObjective(data.soap.objective || objective);
+        setAssessment(data.soap.assessment || assessment);
+        setPlan(data.soap.plan || plan);
+      } else if (data.freeText) {
+        setFreeContent(data.freeText);
       }
 
-      setGeneratedSuggestions([
-        'Focar em exercícios de core',
-        'Avaliar retorno ao esporte',
-        'Orientar ergonomia no trabalho',
-      ]);
+      if (data.suggestions?.length) {
+        setGeneratedSuggestions(data.suggestions);
+      }
 
       success();
-      Alert.alert('Sucesso', 'Evolução gerada com IA!', [
-        {
-          text: 'OK',
-          onPress: () => setGeneratingSOAP(false),
-        },
-      ]);
-    }, 1500);
+      Alert.alert('Sucesso', 'Evolução gerada com IA!', [{ text: 'OK' }]);
+    } catch (err: any) {
+      Alert.alert('Erro', err.message || 'Não foi possível gerar com IA');
+    } finally {
+      setGeneratingSOAP(false);
+    }
   };
 
   const handleSave = async () => {
