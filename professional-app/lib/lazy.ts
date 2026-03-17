@@ -50,7 +50,7 @@ export function useLazyModule<T>(
 
     try {
       const result = await importer();
-      const module = 'default' in result ? result.default : result;
+      const module = ('default' in (result as any) ? (result as any).default : result) as T;
       moduleCache.set(moduleName, module);
       setState({ module, isLoading: false, error: null });
     } catch (error) {
@@ -82,7 +82,7 @@ export async function loadModules(
 
       try {
         const result = await importer();
-        const module = 'default' in result ? result.default : result;
+        const module = ('default' in result ? (result as any).default : result);
         moduleCache.set(name, module);
         results[name] = module;
       } catch (error) {
