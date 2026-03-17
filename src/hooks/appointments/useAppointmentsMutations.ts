@@ -243,8 +243,7 @@ export function useUpdateAppointmentStatus() {
       if (!appointmentId) throw new Error('ID do agendamento é obrigatório');
       if (!status) throw new Error('Status é obrigatório');
       await requireUserOrganizationId();
-      await AppointmentService.updateStatus(appointmentId, status);
-      return { id: appointmentId, status };
+      return await AppointmentService.updateStatus(appointmentId, status);
     },
     onMutate: async ({ appointmentId, status }) => {
       const organizationId = profile?.organization_id;
@@ -277,11 +276,34 @@ export function useUpdateAppointmentStatus() {
 
       return { previousData, previousPeriodQueries };
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: (updatedData, variables) => {
       const organizationId = profile?.organization_id;
+      const { appointmentId } = variables;
+
+      // Se tivermos os dados atualizados, injetamos no cache para evitar o "flicker" de refetch
+      if (updatedData) {
+        queryClient.setQueryData(
+          appointmentKeys.list(organizationId),
+          (old: AppointmentsQueryResult | undefined) => ({
+            ...old,
+            data: (old?.data || []).map(apt =>
+              apt.id === appointmentId ? { ...apt, ...updatedData } : apt
+            ),
+          })
+        );
+
+        queryClient.setQueriesData(
+          { queryKey: appointmentPeriodKeys.all },
+          (old: AppointmentBase[] | undefined) =>
+            old?.map(apt => apt.id === appointmentId ? { ...apt, ...updatedData } : apt)
+        );
+      }
+
       queryClient.invalidateQueries({ queryKey: appointmentKeys.list(organizationId), exact: false });
       queryClient.invalidateQueries({ queryKey: filteredAppointmentKeys.all });
-      queryClient.refetchQueries({ queryKey: appointmentPeriodKeys.all, type: 'active' });
+      // Apenas invalidamos, não forçamos refetch imediato 'active' que causaria flicker
+      queryClient.invalidateQueries({ queryKey: appointmentPeriodKeys.all });
+      
       toast({ title: 'Status atualizado', description: `Status alterado para ${variables.status}` });
     },
     onError: (error, _variables, context) => {

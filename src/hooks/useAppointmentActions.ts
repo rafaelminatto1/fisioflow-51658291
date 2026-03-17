@@ -97,12 +97,12 @@ export const useAppointmentActions = () => {
   const updateStatus = useMutation({
     mutationFn: async ({ appointmentId, status }: { appointmentId: string; status: string }) => {
       if (String(status).toLowerCase() === 'cancelado') {
-        await AppointmentService.cancelAppointment(appointmentId);
-        return;
+        return await AppointmentService.cancelAppointment(appointmentId);
       }
-      await AppointmentService.updateStatus(appointmentId, status);
+      return await AppointmentService.updateStatus(appointmentId, status);
     },
     onMutate: async ({ appointmentId, status }) => {
+      // Cancelar queries para evitar sobrescritas durante o update otimista
       await queryClient.cancelQueries({ queryKey: ['appointments'] });
       await queryClient.cancelQueries({ queryKey: appointmentPeriodKeys.all });
 
@@ -112,7 +112,7 @@ export const useAppointmentActions = () => {
       const updateItem = (item: any) =>
         item?.id === appointmentId ? { ...item, status } : item;
 
-      // Atualiza cache principal
+      // Atualiza cache principal otimisticamente
       queryClient.setQueriesData<any>(
         { queryKey: ['appointments'] },
         (old: any) => {
@@ -123,7 +123,7 @@ export const useAppointmentActions = () => {
         },
       );
 
-      // Atualiza queries de período (calendário semanal/diário)
+      // Atualiza queries de período otimisticamente (calendário)
       queryClient.setQueriesData<any>(
         { queryKey: appointmentPeriodKeys.all },
         (old: any) => {
@@ -137,6 +137,7 @@ export const useAppointmentActions = () => {
       return { previousData, previousPeriodData };
     },
     onError: (error: Error, _vars, context) => {
+      // Reverter em caso de erro
       if (context?.previousData) {
         context.previousData.forEach(([queryKey, data]: [any, any]) => {
           queryClient.setQueryData(queryKey, data);
@@ -149,12 +150,43 @@ export const useAppointmentActions = () => {
       }
       ErrorHandler.handle(error, 'useAppointmentActions.updateStatus');
     },
-    onSuccess: () => {
+    onSuccess: (updatedData, variables) => {
+      // Se tivermos os dados atualizados, injetamos no cache para evitar o "flicker" de refetch
+      const { appointmentId } = variables;
+      
+      if (updatedData) {
+        const updateWithFreshData = (item: any) => 
+          item?.id === appointmentId ? { ...item, ...updatedData } : item;
+
+        queryClient.setQueriesData<any>(
+          { queryKey: ['appointments'] },
+          (old: any) => {
+            if (!old) return old;
+            if (Array.isArray(old)) return old.map(updateWithFreshData);
+            if (Array.isArray(old?.data)) return { ...old, data: old.data.map(updateWithFreshData) };
+            return old;
+          },
+        );
+
+        queryClient.setQueriesData<any>(
+          { queryKey: appointmentPeriodKeys.all },
+          (old: any) => {
+            if (!old) return old;
+            if (Array.isArray(old)) return old.map(updateWithFreshData);
+            if (Array.isArray(old?.data)) return { ...old, data: old.data.map(updateWithFreshData) };
+            return old;
+          },
+        );
+      }
+
       toast.success('Status atualizado com sucesso');
     },
     onSettled: () => {
+      // Invalidamos para garantir consistência eventual, mas sem refetch imediato 'active'
+      // para evitar o problema de sobrescrever com dados antigos do servidor
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
-      queryClient.refetchQueries({ queryKey: appointmentPeriodKeys.all, type: 'active' });
+      // Apenas invalidamos, não forçamos refetch imediato
+      queryClient.invalidateQueries({ queryKey: appointmentPeriodKeys.all });
     },
   });
 

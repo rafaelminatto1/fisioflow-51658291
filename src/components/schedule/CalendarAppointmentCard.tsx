@@ -164,7 +164,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
             }}
             tabIndex={0}
             role="button"
-            aria-label={`${appointment.patientName} - ${normalizeTime(appointment.time)} - ${appointment.status}`}
+            aria-label={`${appointment.patientName} - ${normalizeTime(appointment.time)} - ${statusConfig.label}`}
         >
             {!isMobile && isHovered && !isDragging && !selectionMode && (
                 <div className="absolute top-1 right-1 flex items-center gap-1 z-50">
