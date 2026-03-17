@@ -40,9 +40,7 @@ export default function UnlockScreen() {
     // Check if biometric is available and get user ID
     const checkBiometric = async () => {
       try {
-        // In a real app, get userId from Firebase Auth or stored session
-        // For now, we'll use a placeholder
-        const currentUserId = 'current-user-id'; // TODO: Get from auth context
+        const currentUserId = useAuthStore.getState().user?.id ?? null;
         setUserId(currentUserId);
 
         const config = await biometricAuthService.getConfig(currentUserId);
@@ -156,12 +154,13 @@ export default function UnlockScreen() {
   /**
    * Handle logout
    */
-  const handleLogout = () => {
-    if (!userId) return;
-    
+  const handleLogout = async () => {
     clearSession();
-    // TODO: Call full logout with PHI cleanup
-    // await useAuthStore.getState().logout(userId);
+    try {
+      await useAuthStore.getState().signOut();
+    } catch {
+      // Ensure navigation even if signOut fails
+    }
     router.replace('/(auth)/login');
   };
 
