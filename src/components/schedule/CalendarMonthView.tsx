@@ -5,6 +5,7 @@ import { AlertTriangle, Clock3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Appointment } from '@/types/appointment';
 import { AppointmentQuickView } from './AppointmentQuickView';
+import { AppointmentContextMenu } from './AppointmentContextMenu';
 
 interface CalendarMonthViewProps {
     currentDate: Date;
@@ -13,6 +14,7 @@ interface CalendarMonthViewProps {
     onTimeSlotClick?: (date: Date, time: string) => void;
     onEditAppointment?: (appointment: Appointment) => void;
     onDeleteAppointment?: (appointment: Appointment) => void;
+    onStatusChange?: (id: string, status: string) => void;
     // Helpers
     getAppointmentsForDate: (date: Date) => Appointment[];
     getStatusColor: (status: string, isOverCapacity?: boolean) => string;
@@ -27,6 +29,7 @@ const CalendarMonthView = memo(({
     onTimeSlotClick,
     onEditAppointment,
     onDeleteAppointment,
+    onStatusChange,
     getAppointmentsForDate,
     getStatusColor,
     isOverCapacity,
@@ -127,54 +130,61 @@ const CalendarMonthView = memo(({
                                         aria-label={`${dayAppointments.length} agendamentos`}
                                     >
                                         {dayAppointments.slice(0, MAX_VISIBLE_APPOINTMENTS).map(apt => (
-                                            <AppointmentQuickView
+                                            <AppointmentContextMenu
                                                 key={apt.id}
                                                 appointment={apt}
-                                                open={openPopoverId === apt.id}
-                                                onOpenChange={(open) => setOpenPopoverId(open ? apt.id : null)}
-                                                onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
-                                                onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
+                                                onStatusChange={(status) => onStatusChange?.(apt.id, status)}
+                                                onEdit={() => onEditAppointment?.(apt)}
+                                                onDelete={() => onDeleteAppointment?.(apt)}
                                             >
-                                                <div
-                                                    className={cn(
-                                                        "appointment-card rounded-xl px-2 py-2 text-white cursor-pointer shadow-sm backdrop-blur-sm transition-all duration-200 group/card border",
-                                                        "hover:-translate-y-0.5 hover:shadow-md hover:z-10",
-                                                        getStatusColor(apt.status, isOverCapacity(apt)),
-                                                        isOverCapacity(apt) && "animate-pulse ring-1 ring-amber-400"
-                                                    )}
-                                                    title={`${apt.patientName} - ${apt.time}`}
-                                                    onPointerDownCapture={(e) => e.stopPropagation()}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setOpenPopoverId(apt.id);
-                                                    }}
-                                                    role="button"
-                                                    tabIndex={0}
-                                                    aria-label={`${apt.patientName} às ${apt.time} - ${apt.type || 'Agendamento'}`}
+                                                <AppointmentQuickView
+                                                    appointment={apt}
+                                                    open={openPopoverId === apt.id}
+                                                    onOpenChange={(open) => setOpenPopoverId(open ? apt.id : null)}
+                                                    onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
+                                                    onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
                                                 >
-                                                    <div className="flex flex-col gap-1 min-w-0">
-                                                        <div className="flex items-center justify-between gap-2">
-                                                            <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.08em] text-white/85">
-                                                                <Clock3 className="h-3 w-3 shrink-0" />
-                                                                {apt.time}
+                                                    <div
+                                                        className={cn(
+                                                            "appointment-card rounded-xl px-2 py-2 text-white cursor-pointer shadow-sm backdrop-blur-sm transition-all duration-200 group/card border",
+                                                            "hover:-translate-y-0.5 hover:shadow-md hover:z-10",
+                                                            getStatusColor(apt.status, isOverCapacity(apt)),
+                                                            isOverCapacity(apt) && "animate-pulse ring-1 ring-amber-400"
+                                                        )}
+                                                        title={`${apt.patientName} - ${apt.time}`}
+                                                        onPointerDownCapture={(e) => e.stopPropagation()}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setOpenPopoverId(apt.id);
+                                                        }}
+                                                        role="button"
+                                                        tabIndex={0}
+                                                        aria-label={`${apt.patientName} às ${apt.time} - ${apt.type || 'Agendamento'}`}
+                                                    >
+                                                        <div className="flex flex-col gap-1 min-w-0">
+                                                            <div className="flex items-center justify-between gap-2">
+                                                                <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.08em] text-white/85">
+                                                                    <Clock3 className="h-3 w-3 shrink-0" />
+                                                                    {apt.time}
+                                                                </span>
+                                                                {isOverCapacity(apt) && (
+                                                                    <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-200" aria-label="Excedente" />
+                                                                )}
+                                                            </div>
+
+                                                            <span className="line-clamp-2 text-[11px] md:text-xs font-semibold leading-tight text-white drop-shadow-sm">
+                                                                {apt.patientName}
                                                             </span>
-                                                            {isOverCapacity(apt) && (
-                                                                <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-amber-200" aria-label="Excedente" />
+
+                                                            {apt.type && (
+                                                                <span className="truncate text-[10px] text-white/75">
+                                                                    {apt.type}
+                                                                </span>
                                                             )}
                                                         </div>
-
-                                                        <span className="line-clamp-2 text-[11px] md:text-xs font-semibold leading-tight text-white drop-shadow-sm">
-                                                            {apt.patientName}
-                                                        </span>
-
-                                                        {apt.type && (
-                                                            <span className="truncate text-[10px] text-white/75">
-                                                                {apt.type}
-                                                            </span>
-                                                        )}
                                                     </div>
-                                                </div>
-                                            </AppointmentQuickView>
+                                                </AppointmentQuickView>
+                                            </AppointmentContextMenu>
                                         ))}
                                         {dayAppointments.length > MAX_VISIBLE_APPOINTMENTS && (
                                             <div className="more-appointments-indicator mt-auto rounded-lg border border-dashed border-primary/25 bg-primary/5 px-2 py-1 text-[11px] font-medium text-primary" role="status" aria-label={`${dayAppointments.length - MAX_VISIBLE_APPOINTMENTS} agendamentos adicionais`}>

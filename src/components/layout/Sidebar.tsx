@@ -144,7 +144,7 @@ const avaliacoesSubmenu = [
 
 const operacionaisSubmenu = [
   { icon: CalendarDays, label: 'Eventos', href: '/eventos' },
-  { icon: LayoutGrid, label: 'Tarefas', href: '/tarefas-v2' },
+  { icon: LayoutGrid, label: 'Boards', href: '/boards' },
   { icon: Package, label: 'Estoque e Vouchers', href: '/inventory' },
   { icon: Video, label: 'Telemedicina', href: '/telemedicine' },
   { icon: BookOpen, label: 'Wiki Clínica', href: '/wiki' },
@@ -204,7 +204,7 @@ export function Sidebar() {
   const isDashboardIaActive = location.pathname.startsWith('/smart-dashboard') || location.pathname.startsWith('/smart-ai') || location.pathname === '/analytics';
   const isGoogleAiActive = location.pathname.startsWith('/ai/');
   const isAdminActive = location.pathname.startsWith('/admin');
-  const isOperacionaisActive = location.pathname.startsWith('/eventos') || location.pathname === '/inventory' || location.pathname === '/telemedicine' || location.pathname === '/tarefas-v2' || location.pathname === '/waitlist' || location.pathname.startsWith('/wiki');
+  const isOperacionaisActive = location.pathname.startsWith('/eventos') || location.pathname === '/inventory' || location.pathname === '/telemedicine' || location.pathname === '/tarefas-v2' || location.pathname.startsWith('/boards') || location.pathname === '/waitlist' || location.pathname.startsWith('/wiki');
   const isMarketingActive = location.pathname.startsWith('/marketing');
   const isMaisActive = location.pathname === '/portal' || location.pathname === '/clinical-tests' || location.pathname === '/automation';
 
@@ -219,7 +219,7 @@ export function Sidebar() {
       preloadRoute(item.href);
 
       // 2. Prefetch de dados específicos baseado na rota
-      if (item.href === '/tarefas' || item.href === '/tarefas-v2') {
+      if (item.href === '/tarefas' || item.href === '/tarefas-v2' || item.href === '/boards') {
         queryClient.prefetchQuery({ queryKey: QueryKeys.tasks, queryFn: fetchTarefas });
       } else if (item.href === '/patients') {
         queryClient.prefetchQuery({ 
@@ -497,11 +497,10 @@ export function Sidebar() {
               location
             })}
 
-            {renderMenuItem({ 
-              icon: ClipboardList, 
-              label: 'Tarefas Premium', 
-              href: '/tarefas-v2',
-              preload: () => queryClient.prefetchQuery({ queryKey: QueryKeys.tasks, queryFn: fetchTarefas })
+            {renderMenuItem({
+              icon: ClipboardList,
+              label: 'Boards',
+              href: '/boards',
             }, collapsed, location)}
 
             {renderMenuItem({ icon: FileText, label: 'Cadastros', href: '/cadastros' }, collapsed, location)}

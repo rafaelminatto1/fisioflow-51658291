@@ -212,6 +212,24 @@ export function useScheduleHandlers(
     }
   }, [setSearchParams]);
 
+  const handleUpdateStatus = useCallback(async (appointmentId: string, newStatus: string) => {
+    try {
+      await AppointmentService.updateStatus(appointmentId, newStatus);
+      toast({
+        title: '✅ Status atualizado',
+        description: `Agendamento marcado como ${newStatus}.`,
+      });
+      refetchAppointments();
+    } catch (err) {
+      logger.error('Erro ao atualizar status', err, 'ScheduleHandlers');
+      toast({
+        title: '❌ Erro ao atualizar',
+        description: 'Não foi possível atualizar o status.',
+        variant: 'destructive'
+      });
+    }
+  }, [refetchAppointments]);
+
   return {
     modals: {
       selectedAppointment,
@@ -239,6 +257,7 @@ export function useScheduleHandlers(
       handleAppointmentReschedule,
       handleEditAppointment,
       handleDeleteAppointment,
+      handleUpdateStatus,
       handleAppointmentClick,
       handleScheduleFromWaitlist: handleScheduleFromWaitlistFn,
       handleCancelAllToday,

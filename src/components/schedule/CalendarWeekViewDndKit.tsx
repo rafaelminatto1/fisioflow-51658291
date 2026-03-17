@@ -43,6 +43,7 @@ interface CalendarWeekViewDndKitProps {
   onTimeSlotClick: (date: Date, time: string) => void;
   onEditAppointment?: (appointment: Appointment) => void;
   onDeleteAppointment?: (appointment: Appointment) => void;
+  onStatusChange?: (id: string, status: string) => void;
   onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string) => Promise<void>;
   checkTimeBlocked: (date: Date, time: string) => { blocked: boolean; reason?: string };
   isDayClosedForDate: (date: Date) => boolean;
@@ -117,6 +118,7 @@ export const CalendarWeekViewDndKit = memo(({
   onTimeSlotClick,
   onEditAppointment,
   onDeleteAppointment,
+  onStatusChange,
   onAppointmentReschedule,
   checkTimeBlocked,
   isDayClosedForDate,
@@ -743,6 +745,7 @@ export const CalendarWeekViewDndKit = memo(({
                       onDrop={() => { }}
                       onEditAppointment={onEditAppointment}
                       onDeleteAppointment={onDeleteAppointment}
+                      onStatusChange={onStatusChange}
                       onOpenPopover={setOpenPopoverId}
                       isPopoverOpen={openPopoverId === apt.id}
                       selectionMode={selectionMode}
