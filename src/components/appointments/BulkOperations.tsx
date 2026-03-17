@@ -178,19 +178,19 @@ export const BulkOperations: React.FC<BulkOperationsProps> = ({
               </button>
               <div className="absolute top-full right-0 mt-1 bg-background border rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all min-w-[180px]">
                 <div className="p-1">
-                  {(['confirmed', 'pending', 'completed', 'cancelled', 'no-show'] as Appointment['status'][]).map((status) => (
+                  {(['presenca_confirmada', 'agendado', 'atendido', 'cancelado', 'faltou', 'remarcar'] as Appointment['status'][]).map((status) => (
                     <button
                       key={status}
                       onClick={() => handleStatusChange(status)}
                       disabled={actionInProgress === 'status'}
                       className="w-full px-3 py-1.5 text-left rounded hover:bg-muted/50 transition-colors flex items-center gap-2 text-sm"
                     >
-                      <Check className="w-3 h-3" />
-                      {status === 'confirmed' && 'Confirmado'}
-                      {status === 'pending' && 'Pendente'}
-                      {status === 'completed' && 'Concluído'}
-                      {status === 'cancelled' && 'Cancelado'}
-                      {status === 'no-show' && 'Não compareceu'}
+                      {status === 'presenca_confirmada' && 'Confirmar Presença'}
+                      {status === 'agendado' && 'Agendado'}
+                      {status === 'atendido' && 'Atendido'}
+                      {status === 'cancelado' && 'Cancelado'}
+                      {status === 'faltou' && 'Faltou'}
+                      {status === 'remarcar' && 'Remarcar'}
                     </button>
                   ))}
                 </div>

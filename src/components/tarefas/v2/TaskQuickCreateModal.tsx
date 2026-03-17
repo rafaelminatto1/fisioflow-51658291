@@ -123,6 +123,8 @@ export function TaskQuickCreateModal({
         project_id: data.project_id,
         order_index: 0,
         tags: initialData?.tags || [],
+        board_id: initialData?.board_id,
+        column_id: initialData?.column_id,
       });
       onOpenChange(false);
       form.reset();

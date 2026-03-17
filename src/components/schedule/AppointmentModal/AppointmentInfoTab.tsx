@@ -119,10 +119,10 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
         onAutoSchedule={onAutoSchedule}
       />
 
-      <div className="rounded-[24px] border border-border/70 bg-gradient-to-b from-background to-muted/20 p-4 shadow-[0_18px_40px_-32px_rgba(15,23,42,0.35)] space-y-3">
+      <div className="rounded-xl border border-blue-100 bg-white p-4 shadow-sm space-y-3">
         <div className="space-y-1.5">
-          <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
-            <UserCog className="h-3.5 w-3.5 text-muted-foreground" />
+          <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5 text-blue-900">
+            <UserCog className="h-3.5 w-3.5 text-blue-500" />
             Fisioterapeuta
           </Label>
           <Select
@@ -130,12 +130,12 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
             onValueChange={(value) => setValue('therapist_id', value === THERAPIST_SELECT_NONE ? '' : value)}
             disabled={currentMode === 'view' || therapistsLoading}
           >
-            <SelectTrigger className="h-10 text-xs sm:text-sm rounded-2xl border-border/60">
+            <SelectTrigger className="h-10 text-xs sm:text-sm rounded-lg border-blue-100 bg-white hover:bg-blue-50/30 transition-colors">
               <SelectValue
                 placeholder={therapistsLoading ? 'Carregando...' : THERAPIST_PLACEHOLDER}
               />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-lg border-blue-100">
               <SelectItem value={THERAPIST_SELECT_NONE}>
                 {THERAPIST_PLACEHOLDER}
               </SelectItem>
@@ -149,8 +149,8 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
-            <Check className="h-3.5 w-3.5 text-muted-foreground" />
+          <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5 text-blue-900">
+            <Check className="h-3.5 w-3.5 text-blue-500" />
             Status
           </Label>
           <Select
@@ -158,10 +158,10 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
             onValueChange={(value) => setValue('status', value as AppointmentFormData['status'])}
             disabled={currentMode === 'view'}
           >
-            <SelectTrigger className="h-10 text-xs sm:text-sm rounded-2xl border-border/60">
+            <SelectTrigger className="h-10 text-xs sm:text-sm rounded-lg border-blue-100 bg-white hover:bg-blue-50/30 transition-colors">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-lg border-blue-100">
               {Object.entries(APPOINTMENT_STATUS_CONFIG).map(([key, config]) => (
                 <SelectItem key={key} value={key}>
                   <span className="flex items-center gap-2">
@@ -192,12 +192,12 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
             <Button
               type="button"
               variant="outline"
-              className="h-auto w-full items-start justify-between px-3 py-2.5 text-left"
+              className="h-auto w-full items-start justify-between px-3 py-2.5 text-left border-blue-100 bg-white hover:bg-blue-50/30 transition-all rounded-xl shadow-sm"
             >
               <span className="flex items-start gap-2">
-                <FileText className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
+                <FileText className="h-3.5 w-3.5 text-blue-500 mt-0.5" />
                 <span className="flex flex-col">
-                  <span className="text-xs sm:text-sm font-medium">Observações</span>
+                  <span className="text-xs sm:text-sm font-medium text-blue-900">Observações</span>
                   <span className="text-[10px] sm:text-xs text-muted-foreground">
                     {watchedNotes?.trim()
                       ? 'Clique para ver ou editar as observações.'
@@ -206,17 +206,17 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
                 </span>
               </span>
               {isNotesExpanded ? (
-                <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                <ChevronUp className="h-4 w-4 text-blue-400" />
               ) : (
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                <ChevronDown className="h-4 w-4 text-blue-400" />
               )}
             </Button>
           </CollapsibleTrigger>
 
           <CollapsibleContent>
-            <div className="space-y-2">
-              <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
-                <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+            <div className="mt-2 space-y-2 p-3 bg-blue-50/20 rounded-xl border border-blue-100/50">
+              <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5 text-blue-900">
+                <FileText className="h-3.5 w-3.5 text-blue-500" />
                 Observações
               </Label>
               <Textarea
@@ -224,7 +224,7 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
                 placeholder="Informações importantes sobre o atendimento..."
                 rows={2}
                 disabled={currentMode === 'view'}
-                className="resize-none text-sm min-h-[70px]"
+                className="resize-none text-sm min-h-[70px] border-blue-100 focus-visible:ring-blue-100 rounded-lg"
               />
             </div>
           </CollapsibleContent>
