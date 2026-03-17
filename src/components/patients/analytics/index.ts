@@ -13,5 +13,3 @@ export { PatientInsightsPanel } from './PatientInsightsPanel';
 export { AIAssistantPanel, AIAssistantMini } from './AIAssistantPanel';
 export { AITreatmentRecommendations, AITreatmentMini } from './AITreatmentRecommendations';
 
-// Error Handling
-export { AnalyticsErrorBoundary, withAnalyticsErrorBoundary } from './AnalyticsErrorBoundary';

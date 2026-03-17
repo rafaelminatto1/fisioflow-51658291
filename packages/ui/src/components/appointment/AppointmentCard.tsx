@@ -22,6 +22,8 @@ export interface AppointmentCardProps extends React.HTMLAttributes<HTMLDivElemen
     label?: string;
   };
   compact?: boolean;
+  /** If true, disables internal status styling (useful when custom className provides styling) */
+  disableStatusStyles?: boolean;
 }
 
 // Map internal status codes to visual styles if no config provided
@@ -41,6 +43,12 @@ const getStatusStyles = (status: string = 'default') => {
   return styles[normalized as keyof typeof styles] || styles.default;
 };
 
+// Check if className contains calendar-card-* classes (custom styling)
+const hasCustomStatusStyles = (className?: string): boolean => {
+  if (!className) return false;
+  return /calendar-card-/.test(className);
+};
+
 export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardProps>(
   ({ 
     patientName, 
@@ -55,12 +63,17 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
     onClick, 
     statusConfig,
     compact = false,
+    disableStatusStyles,
     className, 
     children,
     ...props 
   }, ref) => {
     
-    const statusStyle = getStatusStyles(status);
+    // Detect if custom calendar-card-* styles are being passed via className
+    const useCustomStyles = disableStatusStyles ?? hasCustomStatusStyles(className);
+    
+    // Only apply internal status styles if not using custom styles
+    const statusStyle = useCustomStyles ? '' : getStatusStyles(status);
     const StatusIcon = statusConfig?.icon || CheckCircle2;
 
     return (
@@ -71,7 +84,7 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
         className={cn(
           "relative overflow-hidden cursor-pointer flex flex-col justify-center",
           "transition-all duration-200",
-          // Status styles
+          // Status styles - only apply if not using custom styles
           statusStyle,
           // Dragging states
           isDragging && "opacity-50 scale-95 z-50 ring-2 ring-primary/40 shadow-2xl",
@@ -80,6 +93,7 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
           isSelected && "ring-2 ring-primary shadow-xl z-40",
           // Density
           compact ? "p-1" : "p-2 pl-3.5",
+          // Custom styles (calendar-card-*) should come last to override
           className
         )}
         {...(props as any)}

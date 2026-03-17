@@ -10,7 +10,10 @@
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": false,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "paths": {
+      "@fisioflow/db": ["../packages/db/src"]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]

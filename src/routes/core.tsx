@@ -6,7 +6,7 @@
 import { lazy } from 'react';
 import { Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { RouteErrorBoundary } from '@/components/error-boundaries/RouteErrorBoundary';
+import { RouteErrorBoundary } from '@/components/error';
 
 // Lazy loads - Core pages
 const Index = lazy(() => import(/* webpackChunkName: "dashboard" */ "@/pages/Index"));

@@ -863,18 +863,37 @@ app.delete('/:id', async (c) => {
   const user = c.get('user');
   const db = await createPool(c.env);
   const { id } = c.req.param();
+  const columns = await getTableColumns(db, 'patients');
 
   try {
-    const result = await db.query(
-      `
+    // Usa archived se disponível, senão usa is_active, senão faz hard delete
+    let sql: string;
+    if (columns.has('archived')) {
+      sql = `
+        UPDATE patients
+        SET archived = true, updated_at = NOW()
+        WHERE id = $1::uuid
+          AND organization_id = $2::uuid
+        RETURNING id
+      `;
+    } else if (columns.has('is_active')) {
+      sql = `
         UPDATE patients
         SET is_active = false, updated_at = NOW()
         WHERE id = $1::uuid
           AND organization_id = $2::uuid
         RETURNING id
-      `,
-      [id, user.organizationId],
-    );
+      `;
+    } else {
+      sql = `
+        DELETE FROM patients
+        WHERE id = $1::uuid
+          AND organization_id = $2::uuid
+        RETURNING id
+      `;
+    }
+
+    const result = await db.query(sql, [id, user.organizationId]);
 
     const row = result.rows[0] as DbRow | undefined;
     if (!row) return c.json({ error: 'Paciente não encontrado' }, 404);

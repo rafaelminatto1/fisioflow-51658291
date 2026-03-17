@@ -266,6 +266,37 @@ app.post('/treatment-sessions', requireAuth, async (c) => {
       values,
     );
     result = row;
+
+    // --- AUTOMATION: Create Medical Report Task ---
+    try {
+      // 1. Get patient name
+      const patientRes = await pool.query(`SELECT full_name FROM patients WHERE id = $1 LIMIT 1`, [patientId]);
+      const patientName = patientRes.rows[0]?.full_name || 'Desconhecido';
+      
+      // 2. Create Task in tarefas table
+      await pool.query(
+        `INSERT INTO tarefas (
+           organization_id, created_by, responsavel_id,
+           titulo, descricao, status, prioridade, tipo, data_vencimento, 
+           requires_acknowledgment, tags, checklists, attachments, task_references, dependencies, acknowledgments
+         )
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW() + INTERVAL '2 days', $9, '{}'::text[], '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb)`,
+        [
+          user.organizationId, 
+          user.uid, 
+          therapistId || user.uid, 
+          `Relatório Médico - ${patientName}`, 
+          'Gerar relatório médico detalhado baseado na última evolução clínica.', 
+          'A_FAZER', 
+          'ALTA', 
+          'TAREFA', 
+          true
+        ]
+      );
+    } catch (e) {
+      console.error('Error creating automated medical report task:', e);
+    }
+    // --- END AUTOMATION ---
   }
 
   return c.json({ data: mapTreatmentSession(result.rows[0]) });

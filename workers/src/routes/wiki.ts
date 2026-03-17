@@ -10,7 +10,7 @@ import { eq, and, ilike, isNull, sql } from 'drizzle-orm';
 import { createDb, createPool } from '../lib/db';
 import { requireAuth, verifyToken, type AuthVariables } from '../lib/auth';
 import type { Env } from '../types/env';
-import { wikiPages, wikiPageVersions } from '../../../src/server/db/schema/wiki';
+import { wikiPages, wikiPageVersions } from '@fisioflow/db';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 

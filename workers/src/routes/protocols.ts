@@ -14,7 +14,7 @@ import type { Env } from '../types/env';
 import {
   exerciseProtocols,
   protocolExercises,
-} from '../../../src/server/db/schema/protocols';
+} from '@fisioflow/db';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 

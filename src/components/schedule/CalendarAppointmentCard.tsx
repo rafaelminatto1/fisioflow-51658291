@@ -36,7 +36,9 @@ interface CalendarAppointmentCardProps {
     "data-appointment-popover-anchor"?: string;
 }
 
-const getStatusStyles = (status: string) => {
+// Dynamic status styles are now handled via useStatusConfig hook
+// This function provides fallback class names for legacy support
+const getStatusStylesFallback = (status: string) => {
     const normalized = normalizeStatus(status);
     const styles: Record<string, { className: string; accent: string }> = {
         confirmado: { className: 'calendar-card-confirmado', accent: 'bg-emerald-600' },
@@ -92,7 +94,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
     const isCompact = density === 'compact';
     const isOverbooked = isMarkedOverbooked(appointment.notes, appointment.isOverbooked);
     const normalizedStatus = normalizeStatus(appointment.status || 'agendado');
-    const statusStyles = isOverbooked ? overbookStyles : getStatusStyles(normalizedStatus);
+    const statusStyles = isOverbooked ? overbookStyles : getStatusStylesFallback(normalizedStatus);
     const sharedStatusConfig = getStatusConfig(normalizedStatus);
 
     const handleMouseEnter = () => setIsHovered(true);
@@ -126,6 +128,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
             isDropTarget={isDropTarget}
             isSelected={isSelected}
             compact={isCompact}
+            disableStatusStyles={true}
             statusConfig={{
                 color: undefined,
                 icon: sharedStatusConfig.icon

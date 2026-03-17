@@ -1,5 +1,5 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "fisioflow-web",
   "private": true,
   "workspaces": [
     ".",
@@ -72,10 +72,10 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "db:seed:e2e": "node scripts/seed-e2e-data.cjs",
-    "workers:dev": "pnpm --filter @fisioflow/workers dev",
-    "workers:deploy": "pnpm --filter @fisioflow/workers run deploy",
-    "workers:deploy:staging": "pnpm --filter @fisioflow/workers deploy:staging",
-    "workers:type-check": "pnpm --filter @fisioflow/workers type-check",
+    "workers:dev": "pnpm --filter @fisioflow/api dev",
+    "workers:deploy": "pnpm --filter @fisioflow/api run deploy",
+    "workers:deploy:staging": "pnpm --filter @fisioflow/api deploy:staging",
+    "workers:type-check": "pnpm --filter @fisioflow/api type-check",
     "deploy:web": "npm run build && wrangler deploy",
     "deploy:all": "npm run deploy:web && npm run workers:deploy",
     "patient:start": "pnpm --filter @fisioflow/patient-ios start",
