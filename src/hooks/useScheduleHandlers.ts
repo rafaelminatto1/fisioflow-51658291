@@ -8,6 +8,7 @@ import { isAppointmentConflictError, APPOINTMENT_CONFLICT_TITLE, APPOINTMENT_CON
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import type { Appointment } from '@/types/appointment';
 import { useRescheduleAppointment } from '@/hooks/useAppointments';
+import { ScheduleModalsState, ScheduleActions } from '@/types/schedule-hooks';
 
 const BUSINESS_HOURS = {
   start: 7,
@@ -33,7 +34,7 @@ export function useScheduleHandlers(
   currentDate: Date, 
   refetchAppointments: () => void, 
   isSelectionMode: boolean
-) {
+): { modals: ScheduleModalsState; actions: ScheduleActions } {
   const [, setSearchParams] = useSearchParams();
 
   // Modals state
