@@ -8,19 +8,9 @@ import { CheckCircle, Clock, AlertCircle, XCircle } from 'lucide-react';
 
 export const DEFAULT_STATUS_COLORS: Record<string, { color: string; bgColor: string; borderColor: string }> = {};
 
-// Helper para normalizar status do backend para os valores padrão do frontend
-// Backend usa: 'paciente_faltou', 'em_atendimento', etc. (functions/src/api/appointments.ts)
-export const normalizeStatus = (status: string): SessionStatus => {
-  const s = status.toLowerCase();
-  // Backend → Frontend mappings
-  if (s === 'paciente_faltou' || s === 'faltou') return 'falta';
-  if (s === 'em_atendimento') return 'em_andamento';
-  if (s === 'completed' || s === 'realizado' || s === 'atendido') return 'concluido';
-  if (s === 'confirmed') return 'confirmado';
-  if (s === 'scheduled') return 'agendado';
-  if (s === 'remarcado') return 'reagendado';
-  return s as SessionStatus;
-};
+// Fonte canônica de normalização de status — não duplicar aqui.
+// Mantido como re-export para retrocompatibilidade de imports existentes.
+export { normalizeStatus } from '@/components/schedule/shared/appointment-status';
 
 export const STATUS_CONFIG: Record<SessionStatus, StatusConfig> = {
   // Completed - Soft Gray/Neutral
