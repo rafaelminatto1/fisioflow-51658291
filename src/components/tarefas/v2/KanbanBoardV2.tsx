@@ -12,7 +12,8 @@ import {
   Users,
   Tag,
   X,
-  RefreshCw
+  RefreshCw,
+  ShieldAlert
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -48,8 +49,13 @@ import {
   TarefaTipo,
   PRIORIDADE_LABELS,
   TIPO_LABELS,
-  TaskFilter
+  TaskFilter as BaseTaskFilter
 } from '@/types/tarefas';
+import { useAuth } from '@/contexts/AuthContext';
+
+interface TaskFilter extends BaseTaskFilter {
+  pendingAcknowledgment?: boolean;
+}
 import {
   useTarefas,
   useUpdateTarefa,
@@ -82,6 +88,7 @@ export function KanbanBoardV2({
   onViewChange,
   tarefas: propTarefas
 }: KanbanBoardV2Props) {
+  const { user } = useAuth();
   const { data: hookTarefas, isLoading, refetch } = useTarefas();
   // Use prop tarefas if provided (for mock data), otherwise use hook data
   const tarefas = propTarefas !== undefined ? propTarefas : hookTarefas;
@@ -154,6 +161,12 @@ export function KanbanBoardV2({
       if (filters.is_overdue && t.data_vencimento) {
         const isOverdue = new Date(t.data_vencimento) < new Date() && t.status !== 'CONCLUIDO';
         if (!isOverdue) return false;
+      }
+
+      // Pending Acknowledgment filter (Super Premium)
+      if (filters.pendingAcknowledgment && user) {
+        const isPending = t.requires_acknowledgment && !t.acknowledgments?.some(a => a.user_id === user.uid && a.acknowledged_at);
+        if (!isPending) return false;
       }
 
       return true;
@@ -420,6 +433,18 @@ export function KanbanBoardV2({
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <Button
+              variant={filters.pendingAcknowledgment ? "secondary" : "outline"}
+              className={cn(
+                "gap-2 transition-all duration-300",
+                filters.pendingAcknowledgment && "bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-200"
+              )}
+              onClick={() => setFilters(f => ({ ...f, pendingAcknowledgment: !f.pendingAcknowledgment }))}
+            >
+              <ShieldAlert className={cn("h-4 w-4", filters.pendingAcknowledgment ? "text-orange-600" : "text-slate-400")} />
+              <span className="hidden md:inline">Aguardando Ciente</span>
+            </Button>
 
             {/* Assignee Filter */}
             {teamMembers && teamMembers.length > 0 && (
