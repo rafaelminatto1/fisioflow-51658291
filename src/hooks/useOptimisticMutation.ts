@@ -94,11 +94,9 @@ export function useOptimisticMutation<
 
     onMutate: async (variables) => {
       // Cancelar queries outbound para evitar sobrescrever update otimista
-      await Promise.all([
-        ...updateQueries.map((queryKey) =>
+      await Promise.all(updateQueries.map((queryKey) =>
           queryClient.cancelQueries({ queryKey })
-        ),
-      ]);
+        ));
 
       // Snapshot dos dados anteriores para rollback
       const context: TContext = {} as TContext;
@@ -145,11 +143,9 @@ export function useOptimisticMutation<
     onSuccess: async (data, variables, context) => {
       // Invalidar queries relacionadas para refrescar do servidor
       if (invalidateQueries.length > 0) {
-        await Promise.all([
-          ...invalidateQueries.map((queryKey) =>
+        await Promise.all(invalidateQueries.map((queryKey) =>
             queryClient.invalidateQueries({ queryKey })
-          ),
-        ]);
+          ));
       }
 
       // Mostrar toast de sucesso

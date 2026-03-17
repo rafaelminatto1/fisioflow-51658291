@@ -108,20 +108,26 @@ export const DayColumn = memo(({
             return 'calendar-card-fisioterapeuta';
         }
 
-        // Mapeamento de status para classes CSS
+        // Mapeamento de status para classes CSS (Sistema ZenFisio)
         const statusMap: Record<string, string> = {
             'agendado': 'calendar-card-agendado',
-            'confirmado': 'calendar-card-confirmado',
-            'realizado': 'calendar-card-realizado',
-            'concluido': 'calendar-card-concluido',
             'atendido': 'calendar-card-atendido',
-            'completado': 'calendar-card-completado',
-            'cancelado': 'calendar-card-cancelado',
             'avaliacao': 'calendar-card-avaliacao',
-            'avaliação': 'calendar-card-avaliação',
-            'emandamento': 'calendar-card-em_andamento',
-            'em_andamento': 'calendar-card-em_andamento',
-            'pendente': 'calendar-card-pendente',
+            'avaliação': 'calendar-card-avaliacao',
+            'cancelado': 'calendar-card-cancelado',
+            'faltou': 'calendar-card-faltou',
+            'faltoucomaviso': 'calendar-card-faltou_com_aviso',
+            'faltousemaviso': 'calendar-card-faltou_sem_aviso',
+            'naoatendido': 'calendar-card-nao_atendido',
+            'naoatendidosemcobranca': 'calendar-card-nao_atendido_sem_cobranca',
+            'presencaconfirmada': 'calendar-card-presenca_confirmada',
+            'remarcar': 'calendar-card-remarcar',
+            // Mapeamentos de legado para transição suave
+            'confirmado': 'calendar-card-presenca_confirmada',
+            'concluido': 'calendar-card-atendido',
+            'realizado': 'calendar-card-atendido',
+            'emandamento': 'calendar-card-atendido',
+            'falta': 'calendar-card-faltou',
         };
 
         return statusMap[normalizedStatus] || 'calendar-card-agendado';
@@ -398,7 +404,11 @@ const TimeSlot = memo(({
                         )}
                         onClick={(e) => {
                             const target = e.target as HTMLElement;
-                            if (target.closest('[data-week-appointment="true"]')) {
+                            if (
+                                target.closest('[data-week-appointment="true"]') ||
+                                target.closest('[role="dialog"]') ||
+                                target.closest('[role="alertdialog"]')
+                            ) {
                                 return;
                             }
                             if (!blocked) onTimeSlotClick(day, time);

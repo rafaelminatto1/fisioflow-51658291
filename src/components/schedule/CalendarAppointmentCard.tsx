@@ -1,6 +1,6 @@
 import React, { memo, useState, forwardRef } from 'react';
 import { Appointment } from '@/types/appointment';
-import { normalizeStatus } from './shared/appointment-status';
+import { normalizeStatus, getStatusColor } from './shared/appointment-status';
 import { cn } from '@/lib/utils';
 import { MoreVertical } from 'lucide-react';
 import { AppointmentQuickView } from './AppointmentQuickView';
@@ -105,9 +105,8 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
             isDropTarget={isDropTarget}
             isSelected={isSelected}
             compact={isCompact}
-            disableStatusStyles={true}
             statusConfig={{
-                color: undefined,
+                color: isOverbooked ? '#dc2626' : getStatusColor(normalizedStatus),
                 icon: statusConfig.icon
             }}
             data-appointment-popover-anchor={dataAnchor}

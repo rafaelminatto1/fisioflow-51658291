@@ -18,13 +18,17 @@ import { patients } from './patients';
 import { sessions } from './sessions';
 
 export const appointmentStatusEnum = pgEnum('appointment_status', [
-    'scheduled',    // Created, pending confirmation
-    'confirmed',    // Confirmed via WhatsApp or phone
-    'in_progress',  // Session started
-    'completed',    // Session finished
-    'cancelled',    // Cancelled by patient or clinic
-    'no_show',      // Patient didn't show up
-    'rescheduled'   // Moved to another time
+    'agendado',
+    'atendido',
+    'avaliacao',
+    'cancelado',
+    'faltou',
+    'faltou_com_aviso',
+    'faltou_sem_aviso',
+    'nao_atendido',
+    'nao_atendido_sem_cobranca',
+    'presenca_confirmada',
+    'remarcar'
 ]);
 
 export const appointmentTypeEnum = pgEnum('appointment_type', [

@@ -22,7 +22,7 @@ import { ptBR } from 'date-fns/locale';
 import { appointmentsApi, profileApi, type AppointmentRow } from '@/lib/api/workers-client';
 
 export type PeriodFilter = 'week' | 'month' | 'quarter' | 'year' | 'custom';
-export type StatusFilter = 'all' | 'concluido' | 'faltou' | 'cancelado';
+export type StatusFilter = 'all' | 'atendido' | 'faltou' | 'cancelado' | 'presenca_confirmada';
 
 interface AttendanceFilters {
   period: PeriodFilter;
@@ -104,27 +104,34 @@ const DAYS_OF_WEEK = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta
 function normalizeStatus(status: unknown): string {
   const raw = String(status ?? '').toLowerCase();
   const map: Record<string, string> = {
-    concluido: 'concluido',
-    completed: 'concluido',
-    realizado: 'concluido',
-    atendido: 'concluido',
+    atendido: 'atendido',
+    concluido: 'atendido',
+    completed: 'atendido',
+    realizado: 'atendido',
 
     faltou: 'faltou',
     falta: 'faltou',
     paciente_faltou: 'faltou',
     no_show: 'faltou',
+    faltou_com_aviso: 'faltou',
+    faltou_sem_aviso: 'faltou',
 
     cancelado: 'cancelado',
     cancelled: 'cancelado',
 
-    confirmado: 'confirmado',
-    confirmed: 'confirmado',
+    confirmado: 'presenca_confirmada',
+    confirmed: 'presenca_confirmada',
+    presenca_confirmada: 'presenca_confirmada',
 
     agendado: 'agendado',
     scheduled: 'agendado',
+    
+    remarcar: 'cancelado',
+    remarcado: 'cancelado',
+    reagendado: 'cancelado',
 
-    em_atendimento: 'em_atendimento',
-    in_progress: 'em_atendimento',
+    em_atendimento: 'atendido',
+    in_progress: 'atendido',
   };
   return map[raw] ?? 'agendado';
 }
@@ -225,7 +232,7 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
       );
 
       const total = appointments.length;
-      const attended = appointments.filter((a) => a.normalizedStatus === 'concluido').length;
+      const attended = appointments.filter((a) => a.normalizedStatus === 'atendido').length;
       const noShow = appointments.filter((a) => a.normalizedStatus === 'faltou').length;
       const cancelled = appointments.filter((a) => a.normalizedStatus === 'cancelado').length;
 
@@ -234,7 +241,7 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
       const noShowRate = total > 0 ? Math.round((noShow / total) * 100) : 0;
 
       const pieChartData = [
-        { name: 'Realizado', value: attended, color: 'hsl(142, 76%, 36%)' },
+        { name: 'Atendido', value: attended, color: 'hsl(142, 76%, 36%)' },
         { name: 'Faltou', value: noShow, color: 'hsl(0, 84%, 60%)' },
         { name: 'Cancelado', value: cancelled, color: 'hsl(45, 93%, 47%)' },
       ].filter((d) => d.value > 0);
@@ -248,7 +255,7 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
         const dayIndex = getDay(parseDate(apt.appointment_date));
         const dayData = dayOfWeekMap.get(dayIndex)!;
         dayData.total += 1;
-        if (apt.normalizedStatus === 'concluido') dayData.attended += 1;
+        if (apt.normalizedStatus === 'atendido') dayData.attended += 1;
         if (apt.normalizedStatus === 'faltou') dayData.noShow += 1;
         if (apt.normalizedStatus === 'cancelado') dayData.cancelled += 1;
       });
@@ -275,7 +282,7 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
         });
 
         const monthTotal = monthAppointments.length;
-        const monthAttended = monthAppointments.filter((a) => a.normalizedStatus === 'concluido').length;
+        const monthAttended = monthAppointments.filter((a) => a.normalizedStatus === 'atendido').length;
 
         monthlyEvolution.push({
           month: format(monthDate, 'MMM', { locale: ptBR }),
@@ -303,7 +310,7 @@ export const useAttendanceReport = (filters: AttendanceFilters = { period: 'mont
 
         const data = therapistStats.get(therapistId)!;
         data.total += 1;
-        if (apt.normalizedStatus === 'concluido') data.attended += 1;
+        if (apt.normalizedStatus === 'atendido') data.attended += 1;
         if (apt.normalizedStatus === 'faltou') data.noShow += 1;
         if (apt.normalizedStatus === 'cancelado') data.cancelled += 1;
       });

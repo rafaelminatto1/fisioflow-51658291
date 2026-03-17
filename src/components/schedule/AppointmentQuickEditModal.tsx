@@ -79,7 +79,7 @@ interface AppointmentQuickEditModalProps {
 
 // Status que permitem iniciar atendimento
 const STARTABLE_STATUSES: Set<AppointmentStatus> = new Set([
-  'confirmado',
+  'presenca_confirmada',
   'agendado',
   'avaliacao',
 ]);
@@ -142,7 +142,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
       if (!appointment?.date) return [];
       const appointmentDate = appointment.date.toISOString().split('T')[0];
       const responses = await Promise.all(
-        ['agendado', 'confirmado', 'em_andamento'].map((status) =>
+        ['agendado', 'presenca_confirmada', 'atendido'].map((status) =>
           appointmentsApi.list({
             dateFrom: appointmentDate,
             dateTo: appointmentDate,
@@ -288,7 +288,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
 
   const effectiveCancellationRules = useMemo(() => ({
     ...DEFAULT_CANCELLATION_RULES,
-    ...(cancellationRules || {}),
+    ...cancellationRules,
   }), [cancellationRules]);
 
   const appointmentDateTime = useMemo(() => {

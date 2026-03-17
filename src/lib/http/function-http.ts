@@ -299,7 +299,7 @@ async function callWorkersApi<TResponse>(descriptor: LegacyRouteDescriptor): Pro
     const retry = await fetch(endpoint, {
       ...init,
       headers: {
-        ...(init.headers ?? {}),
+        ...init.headers,
         Authorization: `Bearer ${refreshedToken}`,
       },
     });

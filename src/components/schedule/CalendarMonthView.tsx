@@ -87,7 +87,11 @@ const CalendarMonthView = memo(({
                                     )}
                                     onClick={(e) => {
                                         const target = e.target as HTMLElement;
-                                        if (target.closest('[data-week-appointment="true"]')) {
+                                        if (
+                                            target.closest('[data-week-appointment="true"]') ||
+                                            target.closest('[role="dialog"]') ||
+                                            target.closest('[role="alertdialog"]')
+                                        ) {
                                             return;
                                         }
                                         if (onTimeSlotClick) {

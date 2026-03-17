@@ -226,7 +226,7 @@ export async function fetchApi<T>(
   const headers = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`,
-    ...(fetchInit.headers || {}),
+    ...fetchInit.headers,
   };
 
   const body = data ? JSON.stringify(cleanRequestData(data)) : undefined;

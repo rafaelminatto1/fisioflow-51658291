@@ -155,7 +155,7 @@ test.describe('Agenda - CRUD Completo', () => {
   });
 
   test('deve permitir abrir filtros quando disponíveis', async ({ page }) => {
-    const filterButton = page.locator('button:has-text("Filtrar"), button:has([data-lucide=\"filter\"]), [aria-label*=\"filt\" i]').first();
+    const filterButton = page.locator('button:has-text("Filtrar"), button:has([data-lucide="filter"]), [aria-label*="filt" i]').first();
     if (await filterButton.isVisible({ timeout: 3000 }).catch(() => false)) {
       await filterButton.click();
       await expect(page.locator('body')).toBeVisible();
