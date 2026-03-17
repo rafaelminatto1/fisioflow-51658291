@@ -246,7 +246,8 @@ async function handleRealtimeWS(request: Request, env: any): Promise<Response> {
   const token = url.searchParams.get('token');
   if (!token) return new Response(JSON.stringify({ error: 'Token required' }), { status: 401 });
 
-  const authUser = await verifyToken({ req: { header: () => null, query: (k: string) => (k === 'token' ? token : null) } }, env);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const authUser = await verifyToken({ req: { header: () => undefined, query: (k: string) => (k === 'token' ? token : undefined) } } as any, env);
   if (!authUser) return new Response(JSON.stringify({ error: 'Invalid token' }), { status: 401 });
 
   const id = env.ORGANIZATION_STATE.idFromName(authUser.organizationId);
