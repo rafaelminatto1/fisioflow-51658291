@@ -18,7 +18,6 @@ import { parseUpdatesToAppointment } from '../appointmentOptimistic';
 import { appointmentKeys } from './useAppointmentsData';
 import { type AppointmentsQueryResult } from './useAppointmentsCache';
 import { appointmentPeriodKeys } from '../useAppointmentsByPeriod';
-import { filteredAppointmentKeys } from '../useFilteredAppointments';
 
 export function useCreateAppointment() {
   const queryClient = useQueryClient();
@@ -78,7 +77,7 @@ export function useCreateAppointment() {
       );
 
       await queryClient.invalidateQueries({ queryKey: appointmentPeriodKeys.all });
-      await queryClient.invalidateQueries({ queryKey: filteredAppointmentKeys.all });
+      await queryClient.invalidateQueries({ queryKey: appointmentPeriodKeys.all });
       queryClient.invalidateQueries({ queryKey: appointmentKeys.lists() });
 
       toast({ title: 'Sucesso', description: 'Agendamento criado com sucesso' });
@@ -300,7 +299,7 @@ export function useUpdateAppointmentStatus() {
       }
 
       queryClient.invalidateQueries({ queryKey: appointmentKeys.list(organizationId), exact: false });
-      queryClient.invalidateQueries({ queryKey: filteredAppointmentKeys.all });
+      queryClient.invalidateQueries({ queryKey: appointmentPeriodKeys.all });
       // Apenas invalidamos, não forçamos refetch imediato 'active' que causaria flicker
       queryClient.invalidateQueries({ queryKey: appointmentPeriodKeys.all });
       
