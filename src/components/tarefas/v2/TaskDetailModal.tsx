@@ -877,6 +877,71 @@ export function TaskDetailModal({
                       ))}
                     </div>
                   </TabsContent>
+
+                  <TabsContent value="audit" className="m-0 mt-4 px-6 pb-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Histórico de Responsabilidade</h4>
+                        <div className="flex items-center gap-2">
+                           <span className="text-[10px] font-bold text-slate-500">Requer Aceite:</span>
+                           <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => {
+                                const val = !form.getValues('requires_acknowledgment');
+                                form.setValue('requires_acknowledgment', val);
+                                handleAutoSave();
+                              }}
+                              className={cn(
+                                "h-6 px-2 rounded-lg text-[10px] font-black uppercase",
+                                form.watch('requires_acknowledgment') ? "bg-orange-500 text-white" : "bg-slate-100 text-slate-500"
+                              )}
+                           >
+                             {form.watch('requires_acknowledgment') ? 'ATIVADO' : 'DESATIVADO'}
+                           </Button>
+                        </div>
+                      </div>
+
+                      {tarefa?.acknowledgments && tarefa.acknowledgments.length > 0 ? (
+                        <div className="space-y-3">
+                          {tarefa.acknowledgments.map((ack, idx) => (
+                            <div key={idx} className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                              <div className="h-8 w-8 rounded-xl bg-white border border-slate-100 flex items-center justify-center">
+                                <User className="h-4 w-4 text-slate-400" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-bold text-slate-900">{ack.user_name}</span>
+                                  {ack.acknowledged_at && (
+                                    <span className="text-[9px] font-black text-green-600 bg-green-50 px-1.5 py-0.5 rounded-lg border border-green-100 uppercase">ACEITO</span>
+                                  )}
+                                </div>
+                                <div className="flex flex-col gap-1 mt-1">
+                                  {ack.read_at && (
+                                    <span className="text-[10px] text-slate-500 flex items-center gap-1">
+                                      <Eye className="h-3 w-3" /> Visualizado em {new Date(ack.read_at).toLocaleString()}
+                                    </span>
+                                  )}
+                                  {ack.acknowledged_at && (
+                                    <span className="text-[10px] text-slate-500 flex items-center gap-1 font-semibold">
+                                      <CheckCircle2 className="h-3 w-3 text-green-500" /> Aceito em {new Date(ack.acknowledged_at).toLocaleString()}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-12 px-6 text-center bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
+                          <ShieldAlert className="h-10 w-10 text-slate-300 mb-3" />
+                          <p className="text-xs font-bold text-slate-500 uppercase tracking-tight">Nenhuma confirmação registrada</p>
+                          <p className="text-[11px] text-slate-400 mt-1 max-w-[200px]">Ative o "Requer Aceite" para rastrear quem leu e confirmou esta tarefa.</p>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
                 </div>
               </ScrollArea>
             </form>
@@ -890,16 +955,33 @@ export function TaskDetailModal({
               Auto-save ativo
             </div>
             <div className="flex items-center gap-3">
-              {tarefa?.requires_acknowledgment && (
+              {tarefa?.requires_acknowledgment && !tarefa.acknowledgments?.find(a => a.user_id === user?.uid && a.acknowledged_at) && (
                 <Button
                   type="button"
                   variant="outline"
                   className="rounded-xl h-11 px-6 border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 hover:text-orange-800 font-bold tracking-wide shadow-sm"
-                  onClick={(e) => {
+                  onClick={async (e) => {
                     e.preventDefault();
+                    if (!tarefa || !user) return;
+                    
+                    const newAck = {
+                      user_id: user.uid,
+                      user_name: user.displayName || user.email || 'Usuário',
+                      read_at: new Date().toISOString(),
+                      acknowledged_at: new Date().toISOString()
+                    };
+                    
+                    const currentAcks = tarefa.acknowledgments || [];
+                    const updatedAcks = [...currentAcks.filter(a => a.user_id !== user.uid), newAck];
+                    
+                    updateTarefa.mutate({
+                      id: tarefa.id,
+                      updates: { acknowledgments: updatedAcks }
+                    });
+                    
                     toast.success("Ciente registrado com sucesso! A auditoria foi atualizada.");
-                    // TODO: Call backend update endpoint
                   }}
+                  disabled={updateTarefa.isPending}
                 >
                   <CheckCircle2 className="h-4 w-4 mr-2" />
                   Li e Entendi

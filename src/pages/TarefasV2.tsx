@@ -16,7 +16,10 @@ import {
   TrendingUp,
   Target,
   Zap,
-  Calendar
+  Calendar,
+  ShieldAlert,
+  Filter,
+  Users
 } from 'lucide-react';
 import { startOfWeek, endOfWeek, eachDayOfInterval, isWithinInterval, differenceInDays, addDays, subDays, startOfMonth, endOfMonth, isValid } from 'date-fns';
 
@@ -32,6 +35,14 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Select,
   SelectContent,
@@ -398,6 +409,11 @@ export default function TarefasV2() {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
+  const [filterPendingAck, setFilterPendingAck] = useState(false);
+  const [filterPriority, setFilterPriority] = useState<TarefaPrioridade[]>([]);
+  const [filterType, setFilterType] = useState<TarefaTipo[]>([]);
+  const [filterAssignee, setFilterAssignee] = useState<string[]>([]);
+  const { user } = useAuth();
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(['A_FAZER', 'EM_PROGRESSO', 'REVISAO']));
   const [timelineRange, setTimelineRange] = useState<'week' | 'month'>('week');
   const [isRefetching, setIsRefetching] = useState(false);
@@ -460,6 +476,11 @@ export default function TarefasV2() {
       }, 0) / completedTasks.length
       : 0;
 
+    const pendingAcknowledgments = effectiveTarefas.filter(t => 
+      t.requires_acknowledgment && 
+      (!user || !t.acknowledgments?.some(a => a.user_id === user.uid && a.acknowledged_at))
+    ).length;
+
     return {
       total: effectiveTarefas.length,
       by_status: byStatus,
@@ -469,22 +490,52 @@ export default function TarefasV2() {
       due_soon: dueSoon,
       completed_this_week: completedThisWeek,
       completion_rate: completionRate,
-      average_cycle_time: avgCycleTime
+      average_cycle_time: avgCycleTime,
+      pending_acknowledgments: pendingAcknowledgments
     };
-  }, [effectiveTarefas]);
+  }, [effectiveTarefas, user]);
 
   // Filtered tasks
   const filteredTarefas = useMemo(() => {
     if (!effectiveTarefas) return [];
-    if (!searchTerm) return effectiveTarefas;
+    
+    let result = effectiveTarefas;
 
-    const search = searchTerm.toLowerCase();
-    return effectiveTarefas.filter(t =>
-      t.titulo.toLowerCase().includes(search) ||
-      (t.descricao && t.descricao.toLowerCase().includes(search)) ||
-      (t.tags && t.tags.some(tag => tag.toLowerCase().includes(search)))
-    );
-  }, [effectiveTarefas, searchTerm]);
+    // Filter by search term
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      result = result.filter(t =>
+        t.titulo.toLowerCase().includes(search) ||
+        (t.descricao && t.descricao.toLowerCase().includes(search)) ||
+        (t.tags && t.tags.some(tag => tag.toLowerCase().includes(search)))
+      );
+    }
+
+    // Filter by pending acknowledgment (Super Premium Feature)
+    if (filterPendingAck && user) {
+      result = result.filter(t => 
+        t.requires_acknowledgment && 
+        !t.acknowledgments?.some(a => a.user_id === user.uid && a.acknowledged_at)
+      );
+    }
+
+    // Filter by Priority
+    if (filterPriority.length > 0) {
+      result = result.filter(t => filterPriority.includes(t.prioridade));
+    }
+
+    // Filter by Type
+    if (filterType.length > 0) {
+      result = result.filter(t => filterType.includes(t.tipo));
+    }
+
+    // Filter by Assignee
+    if (filterAssignee.length > 0) {
+      result = result.filter(t => t.responsavel_id && filterAssignee.includes(t.responsavel_id));
+    }
+
+    return result;
+  }, [effectiveTarefas, searchTerm, filterPendingAck, filterPriority, filterType, filterAssignee, user]);
 
   // Group tasks by status for table view
   const groupedTasks = useMemo(() => {
@@ -582,45 +633,39 @@ export default function TarefasV2() {
     <MainLayout>
       <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="flex flex-col gap-4 mb-6">
+        <div className="flex flex-col gap-6 mb-8">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center">
-                <LayoutGrid className="h-5 w-5 text-primary" />
+            <div className="flex items-center gap-4">
+              <div className="h-14 w-14 rounded-3xl bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center shadow-xl shadow-slate-900/20 rotate-3">
+                <ClipboardList className="h-7 w-7 text-white -rotate-3" />
               </div>
               <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-2xl font-bold">Tarefas V2</h1>
-                  {usingMockData && (
-                    <Badge variant="outline" className="text-xs">
-                      📊 Dados de Demonstração
-                    </Badge>
-                  )}
+                <div className="flex items-center gap-3">
+                  <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Tarefas Premium</h1>
+                  <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] px-2 py-0.5 uppercase tracking-widest">Enterprise</Badge>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  Gerenciamento avançado de tarefas
+                <p className="text-sm font-bold text-slate-400 uppercase tracking-[0.1em] mt-1">
+                  Controle de Responsabilidade e Fluxo de Trabalho
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              {usingMockData && (
-                <Badge variant="secondary" className="hidden md:inline-flex">
-                  <AlertCircle className="h-3 w-3 mr-1" />
-                  Modo Demo
-                </Badge>
-              )}
+            <div className="flex items-center gap-3">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="icon"
                 onClick={handleRefresh}
                 disabled={isRefetching}
+                className="h-12 w-12 rounded-2xl hover:bg-slate-100 transition-all active:scale-95"
               >
-                <RefreshCw className={cn('h-4 w-4', isRefetching && 'animate-spin')} />
+                <RefreshCw className={cn('h-5 w-5 text-slate-400', isRefetching && 'animate-spin')} />
               </Button>
-              <Button onClick={() => setQuickCreateOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Nova Tarefa
+              <Button 
+                onClick={() => setQuickCreateOpen(true)}
+                className="h-12 px-6 rounded-2xl bg-slate-900 text-white font-bold shadow-xl shadow-slate-900/20 hover:scale-[1.02] active:scale-95 transition-all gap-2"
+              >
+                <Plus className="h-5 w-5" />
+                Criar Nova Tarefa
               </Button>
             </div>
           </div>
@@ -682,6 +727,20 @@ export default function TarefasV2() {
                 </CardContent>
               </Card>
 
+              <Card className={cn(stats.pending_acknowledgments > 0 && 'border-orange-500/50 bg-orange-50/10')}>
+                <CardContent className="pt-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Aguardando Ciente</p>
+                      <p className={cn('text-2xl font-bold', stats.pending_acknowledgments > 0 ? 'text-orange-600' : 'text-muted-foreground')}>
+                        {stats.pending_acknowledgments}
+                      </p>
+                    </div>
+                    <ShieldAlert className={cn('h-8 w-8', stats.pending_acknowledgments > 0 ? 'text-orange-500/20' : 'text-muted-foreground/20')} />
+                  </div>
+                </CardContent>
+              </Card>
+
               <Card>
                 <CardContent className="pt-4">
                   <div className="flex items-center justify-between">
@@ -721,27 +780,131 @@ export default function TarefasV2() {
                   placeholder="Buscar tarefas..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 rounded-xl"
                 />
               </div>
+
+              <Button
+                variant={filterPendingAck ? "secondary" : "outline"}
+                size="sm"
+                onClick={() => setFilterPendingAck(!filterPendingAck)}
+                className={cn(
+                  "rounded-xl gap-2 h-10 px-4 transition-all duration-300",
+                  filterPendingAck ? "bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-200 shadow-sm" : "text-slate-500"
+                )}
+              >
+                <ShieldAlert className={cn("h-4 w-4", filterPendingAck ? "text-orange-600" : "text-slate-400")} />
+                <span className="text-xs font-bold uppercase tracking-tight">Aguardando Ciente</span>
+                {filterPendingAck && (
+                  <Badge variant="secondary" className="bg-orange-200 text-orange-800 ml-1 border-none px-1.5 h-4 min-w-[16px] flex items-center justify-center">
+                    {filteredTarefas.length}
+                  </Badge>
+                )}
+              </Button>
+
+              {/* Priority Filter */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="rounded-xl gap-2 h-10 px-4 text-slate-500">
+                    <Filter className="h-4 w-4" />
+                    <span className="text-xs font-bold uppercase tracking-tight">Prioridade</span>
+                    {filterPriority.length > 0 && (
+                      <Badge variant="secondary" className="ml-1 h-4 px-1">{filterPriority.length}</Badge>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="rounded-xl">
+                  <DropdownMenuLabel>Filtrar por Prioridade</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {(Object.keys(PRIORIDADE_LABELS) as TarefaPrioridade[]).map(p => (
+                    <DropdownMenuCheckboxItem
+                      key={p}
+                      checked={filterPriority.includes(p)}
+                      onCheckedChange={(checked) => {
+                        setFilterPriority(prev => checked ? [...prev, p] : prev.filter(x => x !== p));
+                      }}
+                    >
+                      {PRIORIDADE_LABELS[p]}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Type Filter */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="rounded-xl gap-2 h-10 px-4 text-slate-500">
+                    <Tag className="h-4 w-4" />
+                    <span className="text-xs font-bold uppercase tracking-tight">Tipo</span>
+                    {filterType.length > 0 && (
+                      <Badge variant="secondary" className="ml-1 h-4 px-1">{filterType.length}</Badge>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="rounded-xl">
+                  <DropdownMenuLabel>Filtrar por Tipo</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {(Object.keys(TIPO_LABELS) as TarefaTipo[]).map(t => (
+                    <DropdownMenuCheckboxItem
+                      key={t}
+                      checked={filterType.includes(t)}
+                      onCheckedChange={(checked) => {
+                        setFilterType(prev => checked ? [...prev, t] : prev.filter(x => x !== t));
+                      }}
+                    >
+                      {TIPO_LABELS[t]}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Assignee Filter */}
+              {teamMembers && teamMembers.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="rounded-xl gap-2 h-10 px-4 text-slate-500">
+                      <Users className="h-4 w-4" />
+                      <span className="text-xs font-bold uppercase tracking-tight">Membros</span>
+                      {filterAssignee.length > 0 && (
+                        <Badge variant="secondary" className="ml-1 h-4 px-1">{filterAssignee.length}</Badge>
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="rounded-xl max-h-[300px] overflow-y-auto">
+                    <DropdownMenuLabel>Filtrar por Membro</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {teamMembers.map(member => (
+                      <DropdownMenuCheckboxItem
+                        key={member.id}
+                        checked={filterAssignee.includes(member.id)}
+                        onCheckedChange={(checked) => {
+                          setFilterAssignee(prev => checked ? [...prev, member.id] : prev.filter(x => x !== member.id));
+                        }}
+                      >
+                        {member.full_name}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
 
             {/* View Toggle */}
             <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as ViewMode)}>
-              <TabsList>
-                <TabsTrigger value="kanban">
+              <TabsList className="bg-slate-100/50 p-1 h-11 rounded-xl">
+                <TabsTrigger value="kanban" className="rounded-lg h-9 data-[state=active]:bg-white data-[state=active]:shadow-sm">
                   <LayoutGrid className="h-4 w-4 mr-2" />
                   Kanban
                 </TabsTrigger>
-                <TabsTrigger value="table">
+                <TabsTrigger value="table" className="rounded-lg h-9 data-[state=active]:bg-white data-[state=active]:shadow-sm">
                   <LayoutList className="h-4 w-4 mr-2" />
                   Tabela
                 </TabsTrigger>
-                <TabsTrigger value="timeline">
+                <TabsTrigger value="timeline" className="rounded-lg h-9 data-[state=active]:bg-white data-[state=active]:shadow-sm">
                   <GanttChart className="h-4 w-4 mr-2" />
                   Timeline
                 </TabsTrigger>
-                <TabsTrigger value="insights">
+                <TabsTrigger value="insights" className="rounded-lg h-9 data-[state=active]:bg-white data-[state=active]:shadow-sm">
                   <BarChart3 className="h-4 w-4 mr-2" />
                   Insights
                 </TabsTrigger>
@@ -754,12 +917,12 @@ export default function TarefasV2() {
         <div className="flex-1 min-h-0">
           {/* Kanban View */}
           {viewMode === 'kanban' && (
-            <KanbanBoardV2 tarefas={effectiveTarefas} />
+            <KanbanBoardV2 tarefas={filteredTarefas} />
           )}
 
           {/* Table View */}
           {viewMode === 'table' && (
-            <Card>
+            <Card className="rounded-[2rem] border-none shadow-premium-sm overflow-hidden">
               {/* Table Header */}
               <div className="p-4 border-b">
                 <div className="flex items-center gap-2 mb-3">
