@@ -57,6 +57,7 @@ All colors MUST be HSL.
     --shadow-premium-sm: 0 2px 4px rgba(0, 0, 0, 0.02), 0 1px 2px rgba(0, 0, 0, 0.02);
     --shadow-premium-md: 0 12px 24px -10px rgba(0, 0, 0, 0.1), 0 4px 8px -4px rgba(0, 0, 0, 0.05);
     --shadow-premium-lg: 0 32px 64px -16px rgba(0, 0, 0, 0.12), 0 16px 32px -8px rgba(0, 0, 0, 0.08);
+    --shadow-premium-xl: 0 48px 96px -24px rgba(0, 0, 0, 0.15), 0 32px 64px -12px rgba(0, 0, 0, 0.1);
 
     /* Visual Layering Shadows */
     --shadow-inner-border: inset 0 0 0 1px rgba(0, 0, 0, 0.05), 0 4px 12px -2px rgba(0, 0, 0, 0.08);
@@ -365,9 +366,9 @@ All colors MUST be HSL.
     box-shadow: var(--shadow-premium-md);
   }
 
-  .shadow-premium-lg {
-    box-shadow: var(--shadow-premium-lg);
-  }
+  .shadow-premium-lg { box-shadow: var(--shadow-premium-lg); }
+  .shadow-premium-xl { box-shadow: var(--shadow-premium-xl); }
+
 
   .inner-border {
     box-shadow: var(--shadow-inner-border);

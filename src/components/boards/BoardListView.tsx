@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { BoardColumn } from '@/types/boards';
 import type { Tarefa } from '@/types/tarefas';
-import { PRIORIDADE_COLORS, type TarefaPrioridade } from '@/types/tarefas';
+import type { TarefaPrioridade } from '@/types/tarefas';
 
 interface BoardListViewProps {
   columns: BoardColumn[];
@@ -69,7 +69,12 @@ export function BoardListView({ columns, tarefas, onAddTask, onViewTask }: Board
                     className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/30 cursor-pointer transition-colors"
                     onClick={() => onViewTask(tarefa)}
                   >
-                    <Circle className={cn('h-3.5 w-3.5 flex-shrink-0', PRIORIDADE_COLORS[tarefa.prioridade as TarefaPrioridade] ?? 'text-muted-foreground')} />
+                    <Circle className={cn('h-3.5 w-3.5 flex-shrink-0 fill-current', {
+                      'text-green-500':  tarefa.prioridade === 'BAIXA',
+                      'text-blue-500':   tarefa.prioridade === 'MEDIA',
+                      'text-orange-500': tarefa.prioridade === 'ALTA',
+                      'text-red-500':    tarefa.prioridade === 'URGENTE',
+                    } as Record<string, boolean>)} />
                     <span className="flex-1 text-sm truncate">{tarefa.titulo}</span>
                     {tarefa.data_vencimento && (
                       <span className="text-xs text-muted-foreground flex-shrink-0">

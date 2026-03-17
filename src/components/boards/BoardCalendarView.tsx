@@ -49,16 +49,16 @@ export function BoardCalendarView({ tarefas, onViewTask }: BoardCalendarViewProp
           modifiers={modifiers}
           modifiersStyles={modifiersStyles}
           components={{
-            DayContent: ({ date }) => {
-              const dateKey = format(date, 'yyyy-MM-dd');
+            DayButton: ({ day, modifiers, ...props }) => {
+              const dateKey = format(day.date, 'yyyy-MM-dd');
               const count = dayTasksMap[dateKey]?.length ?? 0;
               return (
-                <div className="relative flex items-center justify-center w-full h-full">
-                  <span>{date.getDate()}</span>
+                <button {...props} className={cn(props.className, 'relative')}>
+                  <span>{day.date.getDate()}</span>
                   {count > 0 && (
-                    <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary" />
+                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary" />
                   )}
-                </div>
+                </button>
               );
             },
           }}

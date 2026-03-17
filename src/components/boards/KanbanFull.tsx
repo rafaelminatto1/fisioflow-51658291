@@ -99,7 +99,6 @@ export function KanbanFull({ boardId, columns, tarefas, teamMembers = [], isLoad
     // Update moved task column_id if changed
     if (sourceColId !== destColId) {
       await tarefasApi.update(draggableId, { column_id: destColId, order_index: destination.index });
-      queryClient.invalidateQueries({ queryKey: ['boards', boardId, 'tarefas'] });
     }
 
     // Update order indices
@@ -109,8 +108,11 @@ export function KanbanFull({ boardId, columns, tarefas, teamMembers = [], isLoad
       .filter(u => u.order_index !== tarefas.find(t => t.id === u.id)?.order_index);
 
     if (updates.length > 0) {
-      bulkUpdate.mutate(updates);
+      await bulkUpdate.mutateAsync(updates);
     }
+
+    // Sync the board-specific cache after all updates
+    queryClient.invalidateQueries({ queryKey: ['boards', boardId, 'tarefas'] });
   }, [grouped, sortedColumns, reorderColumns, tarefas, bulkUpdate, queryClient, boardId]);
 
   const handleAddTask = (columnId: string) => {
