@@ -1014,82 +1014,114 @@ All colors MUST be HSL.
     @apply text-white;
   }
 
-  /* 🟠 Laranja/Amarelo: Em andamento */
-  .calendar-card-em_andamento,
-  .calendar-card-pendente {
-    background: linear-gradient(180deg, hsl(43 96% 58%) 0%, hsl(43 96% 54%) 100%);
-    @apply text-amber-950;
-    @apply hover:brightness-105;
+  /* 🔵 Azul: Agendado (ZenFisio) */
+  .calendar-card-agendado {
+    background: linear-gradient(180deg, hsl(217 91% 64%) 0%, hsl(217 91% 60%) 100%);
+    @apply text-white;
+    @apply hover:brightness-110 shadow-lg shadow-blue-500/10;
   }
 
-  .calendar-card-em_andamento .calendar-patient-name,
-  .calendar-card-em_andamento .calendar-appointment-type,
-  .calendar-card-em_andamento .calendar-appointment-footer,
-  .calendar-card-pendente .calendar-patient-name,
-  .calendar-card-pendente .calendar-appointment-type,
-  .calendar-card-pendente .calendar-appointment-footer {
-    @apply text-amber-950;
+  /* 🟢 Verde: Atendido (ZenFisio) */
+  .calendar-card-atendido,
+  .calendar-card-concluido,
+  .calendar-card-realizado {
+    background: linear-gradient(180deg, hsl(158 64% 56%) 0%, hsl(158 64% 52%) 100%);
+    @apply text-white font-bold;
+    @apply hover:brightness-110 shadow-lg shadow-emerald-500/10;
   }
 
-  /* Status extras */
-  .calendar-card-aguardando_confirmacao {
-    background: linear-gradient(180deg, hsl(45 96% 62%) 0%, hsl(45 96% 57%) 100%);
-    @apply text-amber-950;
-    @apply hover:brightness-105;
+  /* 🟣 Roxo: Avaliação (ZenFisio) */
+  .calendar-card-avaliacao,
+  .calendar-card-avaliação {
+    background: linear-gradient(180deg, hsl(263 90% 70%) 0%, hsl(263 90% 66%) 100%);
+    @apply text-white;
+    @apply hover:brightness-110 shadow-lg shadow-violet-500/10;
   }
 
-  .calendar-card-aguardando_confirmacao .calendar-patient-name,
-  .calendar-card-aguardando_confirmacao .calendar-appointment-type,
-  .calendar-card-aguardando_confirmacao .calendar-appointment-footer {
-    @apply text-amber-950;
+  /* ⚫ Preto: Cancelado / Não atendido sem cobrança (ZenFisio) */
+  .calendar-card-cancelado,
+  .calendar-card-nao_atendido_sem_cobranca {
+    background: linear-gradient(180deg, hsl(222 47% 15%) 0%, hsl(222 47% 11%) 100%);
+    @apply text-slate-100;
+    @apply hover:brightness-125 shadow-lg shadow-slate-950/20;
   }
 
-  .calendar-card-em_espera {
-    background: linear-gradient(180deg, hsl(200 80% 72%) 0%, hsl(200 80% 67%) 100%);
-    @apply text-sky-950;
-    @apply hover:brightness-105;
-  }
-
-  .calendar-card-em_espera .calendar-patient-name,
-  .calendar-card-em_espera .calendar-appointment-type,
-  .calendar-card-em_espera .calendar-appointment-footer {
-    @apply text-sky-950;
-  }
-
-  .calendar-card-atrasado {
-    background: linear-gradient(180deg, hsl(25 95% 58%) 0%, hsl(25 95% 53%) 100%);
-    @apply text-orange-950;
-    @apply hover:brightness-105;
-  }
-
-  .calendar-card-atrasado .calendar-patient-name,
-  .calendar-card-atrasado .calendar-appointment-type,
-  .calendar-card-atrasado .calendar-appointment-footer {
-    @apply text-orange-950;
-  }
-
-  .calendar-card-reagendado {
-    background: linear-gradient(180deg, hsl(84 65% 52%) 0%, hsl(84 65% 47%) 100%);
-    @apply text-lime-950;
-    @apply hover:brightness-105;
-  }
-
-  .calendar-card-reagendado .calendar-patient-name,
-  .calendar-card-reagendado .calendar-appointment-type,
-  .calendar-card-reagendado .calendar-appointment-footer {
-    @apply text-lime-950;
-  }
-
+  /* 🔴 Vermelho: Faltou (ZenFisio) */
+  .calendar-card-faltou,
   .calendar-card-falta {
-    background: linear-gradient(180deg, hsl(0 80% 56%) 0%, hsl(0 80% 51%) 100%);
-    @apply text-red-50;
-    @apply hover:brightness-105;
+    background: linear-gradient(180deg, hsl(0 84% 64%) 0%, hsl(0 84% 60%) 100%);
+    @apply text-white;
+    @apply hover:brightness-110 shadow-lg shadow-red-500/10;
   }
 
-  .calendar-card-falta .calendar-patient-name,
-  .calendar-card-falta .calendar-appointment-type,
-  .calendar-card-falta .calendar-appointment-footer {
-    @apply text-red-50;
+  /* 💠 Teal: Faltou com aviso (ZenFisio) */
+  .calendar-card-faltou_com_aviso {
+    background: linear-gradient(180deg, hsl(173 58% 54%) 0%, hsl(173 58% 50%) 100%);
+    @apply text-white;
+    @apply hover:brightness-110 shadow-lg shadow-teal-500/10;
+  }
+
+  /* 🟠 Laranja: Faltou sem aviso (ZenFisio) */
+  .calendar-card-faltou_sem_aviso {
+    background: linear-gradient(180deg, hsl(25 95% 58%) 0%, hsl(25 95% 53%) 100%);
+    @apply text-white;
+    @apply hover:brightness-110 shadow-lg shadow-orange-500/10;
+  }
+
+  /* 🔘 Cinza: Não atendido (ZenFisio) */
+  .calendar-card-nao_atendido {
+    background: linear-gradient(180deg, hsl(215 14% 44%) 0%, hsl(215 14% 40%) 100%);
+    @apply text-white;
+    @apply hover:brightness-110 shadow-lg shadow-gray-500/10;
+  }
+
+  /* 🔵 Marinho: Presença confirmada (ZenFisio) */
+  .calendar-card-presenca_confirmada,
+  .calendar-card-confirmado {
+    background: linear-gradient(180deg, hsl(222 47% 35%) 0%, hsl(222 47% 31%) 100%);
+    @apply text-white font-bold;
+    @apply hover:brightness-110 shadow-lg shadow-blue-900/10;
+  }
+
+  /* 📁 Slate: Remarcar (ZenFisio) */
+  .calendar-card-remarcar,
+  .calendar-card-reagendado {
+    background: linear-gradient(180deg, hsl(215 16% 52%) 0%, hsl(215 16% 48%) 100%);
+    @apply text-white;
+    @apply hover:brightness-110 shadow-lg shadow-slate-500/10;
+  }
+
+  .calendar-card-agendado .calendar-patient-name,
+  .calendar-card-agendado .calendar-appointment-type,
+  .calendar-card-agendado .calendar-appointment-footer,
+  .calendar-card-atendido .calendar-patient-name,
+  .calendar-card-atendido .calendar-appointment-type,
+  .calendar-card-atendido .calendar-appointment-footer,
+  .calendar-card-avaliacao .calendar-patient-name,
+  .calendar-card-avaliacao .calendar-appointment-type,
+  .calendar-card-avaliacao .calendar-appointment-footer,
+  .calendar-card-cancelado .calendar-patient-name,
+  .calendar-card-cancelado .calendar-appointment-type,
+  .calendar-card-cancelado .calendar-appointment-footer,
+  .calendar-card-faltou .calendar-patient-name,
+  .calendar-card-faltou .calendar-appointment-type,
+  .calendar-card-faltou .calendar-appointment-footer,
+  .calendar-card-faltou_com_aviso .calendar-patient-name,
+  .calendar-card-faltou_com_aviso .calendar-appointment-type,
+  .calendar-card-faltou_com_aviso .calendar-appointment-footer,
+  .calendar-card-faltou_sem_aviso .calendar-patient-name,
+  .calendar-card-faltou_sem_aviso .calendar-appointment-type,
+  .calendar-card-faltou_sem_aviso .calendar-appointment-footer,
+  .calendar-card-nao_atendido .calendar-patient-name,
+  .calendar-card-nao_atendido .calendar-appointment-type,
+  .calendar-card-nao_atendido .calendar-appointment-footer,
+  .calendar-card-presenca_confirmada .calendar-patient-name,
+  .calendar-card-presenca_confirmada .calendar-appointment-type,
+  .calendar-card-presenca_confirmada .calendar-appointment-footer,
+  .calendar-card-remarcar .calendar-patient-name,
+  .calendar-card-remarcar .calendar-appointment-type,
+  .calendar-card-remarcar .calendar-appointment-footer {
+    @apply text-inherit;
   }
 
   /* Indicador de paciente com agendamento próximo (bolinha) */

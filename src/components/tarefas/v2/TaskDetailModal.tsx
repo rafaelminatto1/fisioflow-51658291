@@ -62,6 +62,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/ui/RichTextEditor';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -440,11 +441,12 @@ export function TaskDetailModal({
                         <FormItem>
                           <FormLabel className="font-bold text-xs text-slate-500 uppercase">Descrição e Contexto</FormLabel>
                           <FormControl>
-                            <Textarea
-                              placeholder="Descreva a tarefa..."
-                              className="rounded-xl border-slate-200 resize-none min-h-[120px] bg-slate-50/50"
-                              {...field}
+                            <RichTextEditor
+                              value={field.value ?? ''}
+                              onValueChange={(html) => { field.onChange(html); }}
+                              placeholder="Descreva a tarefa... Use / para comandos"
                               onBlur={handleAutoSave}
+                              className="min-h-[120px] rounded-xl border border-slate-200 bg-slate-50/50"
                             />
                           </FormControl>
                           <FormMessage />
