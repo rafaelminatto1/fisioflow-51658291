@@ -695,3 +695,94 @@ export async function markAsRead(participantId: string): Promise<{ success: bool
     method: 'POST'
   });
 }
+
+// ============================================================
+// TAREFAS API
+// ============================================================
+
+export type TarefaStatus = 'BACKLOG' | 'A_FAZER' | 'EM_PROGRESSO' | 'REVISAO' | 'CONCLUIDO' | 'ARQUIVADO';
+export type TarefaPrioridade = 'BAIXA' | 'MEDIA' | 'ALTA' | 'URGENTE';
+export type TarefaTipo = 'TAREFA' | 'BUG' | 'FEATURE' | 'MELHORIA' | 'DOCUMENTACAO' | 'REUNIAO';
+
+export interface ApiTarefaChecklistItem {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
+export interface ApiTarefaChecklist {
+  id: string;
+  title: string;
+  items: ApiTarefaChecklistItem[];
+}
+
+export interface ApiTarefa {
+  id: string;
+  organization_id: string;
+  titulo: string;
+  descricao?: string;
+  status: TarefaStatus;
+  prioridade: TarefaPrioridade;
+  tipo?: TarefaTipo;
+  responsavel_id?: string;
+  created_by?: string;
+  data_vencimento?: string;
+  hora_vencimento?: string;
+  start_date?: string;
+  completed_at?: string;
+  checklists?: ApiTarefaChecklist[];
+  attachments?: unknown[];
+  tags?: string[];
+  order_index?: number;
+  progress?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getTarefas(params?: {
+  status?: TarefaStatus;
+  prioridade?: TarefaPrioridade;
+  responsavel_id?: string;
+  limit?: number;
+}): Promise<ApiTarefa[]> {
+  const response = await fetchApi<ApiResponse<ApiTarefa[]>>('/api/tarefas', {
+    params: {
+      status: params?.status,
+      prioridade: params?.prioridade,
+      responsavel_id: params?.responsavel_id,
+      limit: params?.limit || 200,
+    },
+  });
+  return response.data || [];
+}
+
+export async function createTarefa(data: Partial<ApiTarefa>): Promise<ApiTarefa> {
+  const response = await fetchApi<ApiResponse<ApiTarefa>>('/api/tarefas', {
+    method: 'POST',
+    data,
+  });
+  if (response.error) throw new Error(response.error);
+  return response.data;
+}
+
+export async function updateTarefa(id: string, data: Partial<ApiTarefa>): Promise<ApiTarefa> {
+  const response = await fetchApi<ApiResponse<ApiTarefa>>(`/api/tarefas/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    data,
+  });
+  if (response.error) throw new Error(response.error);
+  return response.data;
+}
+
+export async function deleteTarefa(id: string): Promise<{ success: boolean }> {
+  return fetchApi<{ success: boolean }>(`/api/tarefas/${encodeURIComponent(id)}`, { method: 'DELETE' });
+}
+
+export async function bulkUpdateTarefas(
+  updates: { id: string; data: Partial<ApiTarefa> }[]
+): Promise<{ success: boolean }> {
+  return fetchApi<{ success: boolean }>('/api/tarefas/bulk', {
+    method: 'POST',
+    data: { updates },
+  });
+}
