@@ -873,3 +873,5 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
     </>
   );
 };
+
+export default AppointmentQuickEditModal;

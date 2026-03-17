@@ -497,3 +497,5 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
     </CustomModal>
   );
 };
+
+export default AppointmentModal;
