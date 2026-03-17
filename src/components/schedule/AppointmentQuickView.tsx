@@ -208,12 +208,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
       // Fechar o popover
       onOpenChange?.(false);
 
-      // Se houver interessados na lista de espera, mostrar notificação
-      if (hasWaitlistInterest) {
-        setTimeout(() => {
-          setShowWaitlistNotification(true);
-        }, 500);
-      }
+      // "Apenas registrar falta" - não abre nenhum modal adicional
     }
   };
 
@@ -713,52 +708,67 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
       {/* No-Show Confirmation Dialog */}
       <AlertDialog open={showNoShowConfirmDialog} onOpenChange={handleNoShowCancel}>
-        <AlertDialogContent className="max-w-md">
-          <AlertDialogHeader>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                <Calendar className="h-5 w-5 text-red-600 dark:text-red-400" />
+        <AlertDialogContent className="max-w-md p-0 overflow-hidden rounded-2xl">
+          {/* Header com fundo gradiente */}
+          <div className="bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-950/30 dark:to-red-900/20 p-6 pb-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-red-100 dark:bg-red-900/50 rounded-xl ring-1 ring-red-200 dark:ring-red-800">
+                <Calendar className="h-6 w-6 text-red-600 dark:text-red-400" />
               </div>
-              <div>
-                <AlertDialogTitle>Paciente Faltou?</AlertDialogTitle>
-                <p className="text-sm text-muted-foreground mt-0.5">
+              <div className="flex-1 min-w-0">
+                <AlertDialogTitle className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                  Registrar Falta
+                </AlertDialogTitle>
+                <p className="text-sm text-muted-foreground truncate mt-0.5">
                   {appointment.patientName}
                 </p>
               </div>
             </div>
-          </AlertDialogHeader>
+          </div>
 
           <AlertDialogDescription className="sr-only">
             Confirmação de falta - deseja reagendar o atendimento?
           </AlertDialogDescription>
 
-          <div className="py-4">
-            <p className="text-sm text-muted-foreground">
-              O status será alterado para <span className="font-semibold text-red-600 dark:text-red-400">Falta</span>. Deseja reagendar este atendimento?
-            </p>
+          {/* Conteúdo */}
+          <div className="px-6 py-5">
+            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                O status do agendamento será alterado para{' '}
+                <span className="inline-flex items-center gap-1.5 font-semibold text-red-600 dark:text-red-400">
+                  <span className="w-2 h-2 rounded-full bg-red-500" />
+                  Falta
+                </span>
+                .
+              </p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+                Deseja reagendar este atendimento para outra data?
+              </p>
+            </div>
           </div>
 
-          <AlertDialogFooter className="gap-2">
+          {/* Footer com botões */}
+          <div className="px-6 pb-6 flex flex-col gap-2 sm:flex-row sm:gap-3">
             <AlertDialogCancel
               onClick={handleNoShowCancel}
-              className="flex-1"
+              className="flex-1 h-11 rounded-xl font-semibold border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
               Cancelar
             </AlertDialogCancel>
             <Button
               variant="outline"
               onClick={handleNoShowConfirm}
-              className="flex-1"
+              className="flex-1 h-11 rounded-xl font-semibold border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50"
             >
               Apenas registrar falta
             </Button>
             <AlertDialogAction
               onClick={handleNoShowRechedule}
-              className="flex-1 bg-primary hover:bg-primary/90"
+              className="flex-1 h-11 rounded-xl font-semibold bg-primary hover:bg-primary/90"
             >
               Registrar e reagendar
             </AlertDialogAction>
-          </AlertDialogFooter>
+          </div>
         </AlertDialogContent>
       </AlertDialog>
 

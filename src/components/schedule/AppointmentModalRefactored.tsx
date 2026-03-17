@@ -2,10 +2,10 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, addDays, addWeeks, startOfDay, isBefore, isAfter } from 'date-fns';
 import {
 
-  User, FileText, Check, X, UserCog, ChevronDown, ChevronUp
+  User, FileText, Check, X, UserCog, ChevronDown, ChevronUp, Calendar, SlidersHorizontal
 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -57,9 +57,11 @@ import { useAvailableTimeSlots } from '@/hooks/useAvailableTimeSlots';
 import { useUsePackageSession } from '@/hooks/usePackages';
 import {
   type AppointmentBase,
-  type AppointmentFormData
+  type AppointmentFormData,
+  type RecurringConfig
 } from '@/types/appointment';
 import { appointmentFormSchema } from '@/lib/validations/agenda';
+import { STATUS_LABELS, STATUS_COLORS } from '@/constants/appointments';
 import { checkAppointmentConflict } from '@/utils/appointmentValidation';
 import { isAppointmentConflictError, getAppointmentConflictUserMessage } from '@/utils/appointmentErrors';
 import { cn } from '@/lib/utils';
@@ -132,7 +134,12 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [isRecurringCalendarOpen, setIsRecurringCalendarOpen] = useState(false);
+  const [recurringConfig, setRecurringConfig] = useState<RecurringConfig>({
+    days: [],
+    endType: 'sessions',
+    sessions: 10,
+    endDate: '',
+  });
   const [conflictCheck, setConflictCheck] = useState<{
     hasConflict: boolean;
     conflictingAppointment?: AppointmentBase;
@@ -349,6 +356,15 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
       setCurrentMode(appointment ? 'edit' : initialMode);
       setActiveTab('info');
       setIsNotesExpanded(Boolean(formData.notes?.trim()));
+      // Reset recurring config, pre-selecting the appointment's weekday
+      const apptDate = defaultDate || (appointment?.date ? new Date(appointment.date) : new Date());
+      const apptTime = defaultTime || (appointment?.time ? String(appointment.time).substring(0, 5) : '09:00');
+      setRecurringConfig({
+        days: [{ day: apptDate.getDay(), time: apptTime }],
+        endType: 'sessions',
+        sessions: 10,
+        endDate: '',
+      });
     } catch (err) {
       logger.error('Error resetting form', err, 'AppointmentModalRefactored');
       // Fail-safe reset
@@ -481,6 +497,29 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
     return conflictsMap;
   }, [watchedDate, watchedDuration, timeSlots, appointments, appointment?.id, getMinCapacityForInterval]);
 
+  const buildRecurringDates = useCallback((startDate: Date, config: RecurringConfig): { date: Date; time: string }[] => {
+    if (config.days.length === 0) return [];
+    const sorted = [...config.days].sort((a, b) => a.day - b.day);
+    const maxSessions = config.endType === 'sessions' ? config.sessions : 200;
+    const endDate = config.endType === 'date' && config.endDate ? parseISO(config.endDate) : null;
+    const results: { date: Date; time: string }[] = [];
+    const startDay = startDate.getDay();
+    let weekStart = startOfDay(addDays(startDate, -startDay));
+    let weeksChecked = 0;
+    while (results.length < maxSessions && weeksChecked < 200) {
+      for (const d of sorted) {
+        const date = addDays(weekStart, d.day);
+        if (isBefore(startOfDay(date), startOfDay(startDate))) continue;
+        if (endDate && isAfter(startOfDay(date), startOfDay(endDate))) return results;
+        results.push({ date, time: d.time });
+        if (results.length >= maxSessions) break;
+      }
+      weekStart = addWeeks(weekStart, 1);
+      weeksChecked++;
+    }
+    return results;
+  }, []);
+
   const persistAppointment = async (appointmentData: AppointmentFormData, ignoreCapacity: boolean = false) => {
     const endTime = new Date(new Date(`${appointmentData.appointment_date}T${appointmentData.appointment_time}`).getTime() + appointmentData.duration * 60000);
     const endTimeString = format(endTime, 'HH:mm');
@@ -509,6 +548,43 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
 
     let appointmentId = appointment?.id;
 
+    // === RECURRING: create multiple appointments ===
+    if (appointmentData.is_recurring && !appointmentId && recurringConfig.days.length > 0) {
+      const startDate = parseISO(appointmentData.appointment_date);
+      const occurrences = buildRecurringDates(startDate, recurringConfig);
+
+      if (occurrences.length === 0) {
+        toast.error('Nenhuma data gerada para a recorrência. Verifique os dias selecionados.');
+        return;
+      }
+
+      toast.loading(`Criando ${occurrences.length} agendamentos...`, { id: 'recurring-create' });
+      let created = 0;
+      let firstId: string | undefined;
+      for (const occ of occurrences) {
+        const occEndTime = new Date(new Date(`${format(occ.date, 'yyyy-MM-dd')}T${occ.time}`).getTime() + appointmentData.duration * 60000);
+        try {
+          const result = await createAppointmentAsync({
+            ...formattedData,
+            date: format(occ.date, 'yyyy-MM-dd'),
+            start_time: occ.time,
+            end_time: format(occEndTime, 'HH:mm'),
+            ignoreCapacity,
+          } as unknown as AppointmentFormData);
+          if (!firstId) firstId = (result as { id?: string })?.id;
+          created++;
+        } catch (err) {
+          logger.error('Erro ao criar agendamento recorrente', err, 'AppointmentModalRefactored');
+        }
+      }
+      toast.dismiss('recurring-create');
+      toast.success(`${created} de ${occurrences.length} agendamentos criados com sucesso!`);
+      scheduleOnlyRef.current = false;
+      onClose();
+      return;
+    }
+
+    // === SINGLE appointment ===
     if (appointmentId) {
       await updateAppointmentAsync({
         appointmentId: appointmentId,
@@ -726,14 +802,12 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
           <div className="px-5 sm:px-6 py-3 border-b shrink-0">
             <TabsList className="grid w-full grid-cols-2 h-10">
               <TabsTrigger value="info" className="flex items-center gap-2 text-xs sm:text-sm">
-                <User className="h-4 w-4" />
-                <span className="hidden xs:inline">Informações</span>
-                <span className="xs:hidden">Info</span>
+                <Calendar className="h-3.5 w-3.5" />
+                <span>Agendamento</span>
               </TabsTrigger>
               <TabsTrigger value="options" className="flex items-center gap-2 text-xs sm:text-sm">
-                <FileText className="h-4 w-4" />
-                <span className="hidden xs:inline">Opções</span>
-                <span className="xs:hidden">Opç.</span>
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                <span>Configurações</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -758,7 +832,9 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                   fallbackPatientName={
                     lastCreatedPatient?.id === watchedPatientId 
                       ? lastCreatedPatient.name 
-                      : normalizedAppointmentPatientName || undefined
+                      : (normalizedAppointmentPatientName && normalizedAppointmentPatientName.trim()) 
+                        ? normalizedAppointmentPatientName 
+                        : selectedPatientName || undefined
                   }
                   fallbackDescription={
                     lastCreatedPatient?.id === watchedPatientId ? 'Recém-cadastrado' : undefined
@@ -849,33 +925,61 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                   }}
                 />
 
-                <div className="space-y-2">
-                  <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
-                    <UserCog className="h-3.5 w-3.5 text-muted-foreground" />
-                    Fisioterapeuta
-                  </Label>
-                  <Select
-                    value={watch('therapist_id') || THERAPIST_SELECT_NONE}
-                    onValueChange={(value) => setValue('therapist_id', value === THERAPIST_SELECT_NONE ? '' : value)}
-                    disabled={currentMode === 'view' || therapistsLoading}
-                    aria-label={THERAPIST_PLACEHOLDER}
-                  >
-                    <SelectTrigger className="h-10 text-xs sm:text-sm" data-testid="therapist-select">
-                      <SelectValue
-                        placeholder={therapistsLoading ? 'Carregando...' : THERAPIST_PLACEHOLDER}
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={THERAPIST_SELECT_NONE}>
-                        {THERAPIST_PLACEHOLDER}
-                      </SelectItem>
-                      {therapists.map((t) => (
-                        <SelectItem key={t.id} value={t.id}>
-                          {formatTherapistLabel(t)}
+                <div className="rounded-[24px] border border-border/70 bg-gradient-to-b from-background to-muted/20 p-4 shadow-[0_18px_40px_-32px_rgba(15,23,42,0.35)] space-y-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+                      <UserCog className="h-3.5 w-3.5 text-muted-foreground" />
+                      Fisioterapeuta
+                    </Label>
+                    <Select
+                      value={watch('therapist_id') || THERAPIST_SELECT_NONE}
+                      onValueChange={(value) => setValue('therapist_id', value === THERAPIST_SELECT_NONE ? '' : value)}
+                      disabled={currentMode === 'view' || therapistsLoading}
+                      aria-label={THERAPIST_PLACEHOLDER}
+                    >
+                      <SelectTrigger className="h-10 text-xs sm:text-sm rounded-2xl border-border/60" data-testid="therapist-select">
+                        <SelectValue
+                          placeholder={therapistsLoading ? 'Carregando...' : THERAPIST_PLACEHOLDER}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={THERAPIST_SELECT_NONE}>
+                          {THERAPIST_PLACEHOLDER}
                         </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                        {therapists.map((t) => (
+                          <SelectItem key={t.id} value={t.id}>
+                            {formatTherapistLabel(t)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+                      <Check className="h-3.5 w-3.5 text-muted-foreground" />
+                      Status
+                    </Label>
+                    <Select
+                      value={watch('status') || 'agendado'}
+                      onValueChange={(value) => setValue('status', value as AppointmentFormData['status'])}
+                      disabled={currentMode === 'view'}
+                    >
+                      <SelectTrigger className="h-10 text-xs sm:text-sm rounded-2xl border-border/60">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(['agendado', 'confirmado', 'avaliacao', 'aguardando_confirmacao', 'em_andamento', 'concluido', 'cancelado', 'falta'] as const).map((s) => (
+                          <SelectItem key={s} value={s}>
+                            <span className="flex items-center gap-2">
+                              <span className={cn('h-2 w-2 rounded-full shrink-0', STATUS_COLORS[s] || 'bg-gray-400')} />
+                              {STATUS_LABELS[s] || s}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -941,8 +1045,8 @@ export const AppointmentModalRefactored: React.FC<AppointmentModalProps> = ({
                   currentMode={currentMode}
                   selectedEquipments={selectedEquipments}
                   setSelectedEquipments={setSelectedEquipments}
-                  _isRecurringCalendarOpen={isRecurringCalendarOpen}
-                  setIsRecurringCalendarOpen={setIsRecurringCalendarOpen}
+                  recurringConfig={recurringConfig}
+                  setRecurringConfig={setRecurringConfig}
                   reminders={reminders}
                   setReminders={setReminders}
                   onDuplicate={() => setDuplicateDialogOpen(true)}

@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import fisioflowLogo from '@/assets/logo.avif';
@@ -151,24 +151,11 @@ const operacionaisSubmenu = [
   { icon: Zap, label: 'Automação e APIs', href: '/automation' },
 ];
 
-const cadastrosSubmenu = [
-  { icon: FileText, label: 'Hub de Cadastros', href: '/cadastros' },
-];
-
-const financeiroSubmenu = [
-  { icon: DollarSign, label: 'Painel Financeiro', href: '/financial' },
-];
 
 const marketingSubmenu = [
   { icon: BarChart3, label: 'Marketing Hub', href: '/marketing/dashboard' },
   { icon: Link2, label: 'FisioLink (Bio)', href: '/marketing/fisiolink' },
   { icon: Users, label: 'Indicações', href: '/marketing/referral' },
-];
-
-const configuracoesSubmenu = [
-  { icon: Settings, label: 'Geral', href: '/settings' },
-  { icon: Calendar, label: 'Google Calendar', href: '/configuracoes/calendario' },
-  { icon: LinkIcon, label: 'Integrações Google', href: '/integrations' },
 ];
 
 const dashboardIaSubmenu = [
@@ -194,14 +181,6 @@ const adminSubmenu = [
   { icon: Trophy, label: 'Gamificação', href: '/admin/gamification' },
 ];
 
-const gamificacaoSubmenu = [
-  { icon: BarChart3, label: 'Dashboard', href: '/gamification' },
-  { icon: Trophy, label: 'Minhas Conquistas', href: '/gamification/achievements' },
-  { icon: Target, label: 'Missões Diárias', href: '/gamification/quests' },
-  { icon: Gift, label: 'Loja de Recompensas', href: '/gamification/shop' },
-  { icon: Flame, label: 'Ranking', href: '/gamification/leaderboard' },
-];
-
 const maisSubmenu = [
   { icon: UserCircle, label: 'Portal Paciente', href: '/portal' },
   { icon: FlaskConical, label: 'Testes Clínicos', href: '/clinical-tests' },
@@ -209,32 +188,23 @@ const maisSubmenu = [
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const [cadastrosOpen, setCadastrosOpen] = useState(false);
   const [avaliacoesOpen, setAvaliacoesOpen] = useState(false);
-  const [financeiroOpen, setFinanceiroOpen] = useState(false);
-  const [configuracoesOpen, setConfiguracoesOpen] = useState(false);
   const [dashboardIaOpen, setDashboardIaOpen] = useState(false);
   const [googleAiOpen, setGoogleAiOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [operacionaisOpen, setOperacionaisOpen] = useState(false);
-  const [gamificacaoOpen, setGamificacaoOpen] = useState(false);
   const [maisOpen, setMaisOpen] = useState(false);
   const [marketingOpen, setMarketingOpen] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   useNavPreload();
 
-  const isCadastrosActive = location.pathname.startsWith('/cadastros');
   const isAvaliacoesActive = location.pathname.startsWith('/dashboard/imagens');
-  const isFinanceiroActive = location.pathname.startsWith('/financeiro') || location.pathname === '/financial';
-  const isConfiguracoesActive = location.pathname.startsWith('/configuracoes') || location.pathname === '/settings';
   const isDashboardIaActive = location.pathname.startsWith('/smart-dashboard') || location.pathname.startsWith('/smart-ai') || location.pathname === '/analytics';
   const isGoogleAiActive = location.pathname.startsWith('/ai/');
   const isAdminActive = location.pathname.startsWith('/admin');
   const isOperacionaisActive = location.pathname.startsWith('/eventos') || location.pathname === '/inventory' || location.pathname === '/telemedicine' || location.pathname === '/tarefas-v2' || location.pathname === '/waitlist' || location.pathname.startsWith('/wiki');
-  const isGamificacaoActive = location.pathname.startsWith('/gamification');
   const isMarketingActive = location.pathname.startsWith('/marketing');
   const isMaisActive = location.pathname === '/portal' || location.pathname === '/clinical-tests' || location.pathname === '/automation';
 
@@ -527,16 +497,7 @@ export function Sidebar() {
               location
             })}
 
-            {renderSubmenu({
-              icon: FileText,
-              label: 'Cadastros',
-              items: cadastrosSubmenu,
-              isOpen: cadastrosOpen || isCadastrosActive,
-              onOpenChange: setCadastrosOpen,
-              isActive: isCadastrosActive,
-              collapsed,
-              location
-            })}
+            {renderMenuItem({ icon: FileText, label: 'Cadastros', href: '/cadastros' }, collapsed, location)}
 
             {renderSubmenu({
               icon: Star,
@@ -549,16 +510,7 @@ export function Sidebar() {
               location
             })}
 
-            {renderSubmenu({
-              icon: DollarSign,
-              label: 'Financeiro',
-              items: financeiroSubmenu,
-              isOpen: financeiroOpen || isFinanceiroActive,
-              onOpenChange: setFinanceiroOpen,
-              isActive: isFinanceiroActive,
-              collapsed,
-              location
-            })}
+            {renderMenuItem({ icon: DollarSign, label: 'Financeiro', href: '/financial' }, collapsed, location)}
           </div>
 
           <div className="space-y-1 pt-2">
