@@ -483,11 +483,11 @@ export class AppointmentService {
     /**
      * Update appointment status
      */
-    static async updateStatus(id: string, status: string): Promise<void> {
+    static async updateStatus(id: string, status: string): Promise<any> {
         try {
             const normalizedStatus = String(status || '').toLowerCase();
             if (normalizedStatus === 'cancelado' || normalizedStatus === 'cancelled') {
-                await appointmentsApi.cancel(id);
+                const result = await appointmentsApi.cancel(id);
                 // Log de auditoria: Cancelamento
                 try {
                     await auditApi.create({
@@ -497,9 +497,9 @@ export class AppointmentService {
                         metadata: { status: 'cancelled', timestamp: new Date().toISOString() }
                     });
                 } catch (e) { /* silent fail */ }
-                return;
+                return result;
             }
-            await appointmentsApi.update(id, { status });
+            const result = await appointmentsApi.update(id, { status });
             // Log de auditoria: Mudança de Status
             try {
                 await auditApi.create({
@@ -509,6 +509,7 @@ export class AppointmentService {
                     metadata: { status, timestamp: new Date().toISOString() }
                 });
             } catch (e) { /* silent fail */ }
+            return result.data;
         } catch (error) {
             throw AppError.from(error, 'AppointmentService.updateStatus');
         }
@@ -517,9 +518,9 @@ export class AppointmentService {
     /**
      * Cancel appointment with optional reason.
      */
-    static async cancelAppointment(id: string, reason?: string): Promise<void> {
+    static async cancelAppointment(id: string, reason?: string): Promise<any> {
         try {
-            await appointmentsApi.cancel(id, reason);
+            const result = await appointmentsApi.cancel(id, reason);
             // Log de auditoria: Cancelamento com motivo
             try {
                 await auditApi.create({
@@ -529,6 +530,7 @@ export class AppointmentService {
                     metadata: { status: 'cancelled', reason, timestamp: new Date().toISOString() }
                 });
             } catch (e) { /* silent fail */ }
+            return result;
         } catch (error) {
             throw AppError.from(error, 'AppointmentService.cancelAppointment');
         }
