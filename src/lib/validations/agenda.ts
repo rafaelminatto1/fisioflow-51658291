@@ -5,19 +5,16 @@ import { z } from 'zod';
 
 export const sessionStatusSchema = z.enum([
   'agendado',
-  'confirmado',
-  'em_andamento',
-  'concluido',
-  'cancelado',
-  'falta',
-  'faltou',
+  'atendido',
   'avaliacao',
-  'aguardando_confirmacao',
-  'em_espera',
-  'atrasado',
-  'remarcado',
-  'reagendado',
-  'atendido'
+  'cancelado',
+  'faltou',
+  'faltou_com_aviso',
+  'faltou_sem_aviso',
+  'nao_atendido',
+  'nao_atendido_sem_cobranca',
+  'presenca_confirmada',
+  'remarcar'
 ]);
 export const paymentStatusSchema = z.enum(['pending', 'paid', 'partial']);
 export const sessionTypeSchema = z.enum(['individual', 'group']);

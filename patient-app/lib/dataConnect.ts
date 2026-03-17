@@ -113,7 +113,7 @@ export async function completeExercise(
   try {
     await patientApi.completeExercise(variables.patientExerciseId, {
       completed: true,
-      ...(variables.feedback ?? {}),
+      ...variables.feedback,
     });
 
     return { success: true };

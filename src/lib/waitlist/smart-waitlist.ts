@@ -431,7 +431,7 @@ export function optimizeSlotAllocation(
 ): Map<string, TimeSlot> {
   const allocations = new Map<string, TimeSlot>();
   const remainingSlots = [...availableSlots];
-  const remainingEntries = [...waitlist.filter(e => e.status === 'waiting')];
+  const remainingEntries = waitlist.filter(e => e.status === 'waiting');
 
   // Sort entries by priority (urgent first)
   remainingEntries.sort((a, b) => {

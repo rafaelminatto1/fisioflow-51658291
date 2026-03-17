@@ -392,7 +392,7 @@ const TemplateEditor: React.FC<TemplateEditorProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave({
-      ...(template || {}),
+      ...template,
       name,
       description,
       category,

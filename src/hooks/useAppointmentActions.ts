@@ -9,11 +9,11 @@ export const useAppointmentActions = () => {
 
   const confirmAppointment = useMutation({
     mutationFn: async (appointmentId: string) => {
-      await AppointmentService.updateStatus(appointmentId, 'confirmado');
+      await AppointmentService.updateStatus(appointmentId, 'presenca_confirmada');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
-      toast.success('Agendamento confirmado com sucesso');
+      toast.success('Presença confirmada com sucesso');
     },
     onError: (error: Error) => {
       ErrorHandler.handle(error, 'useAppointmentActions.confirm');
@@ -69,12 +69,12 @@ export const useAppointmentActions = () => {
       return await AppointmentService.updateAppointment(appointmentId, {
         appointment_date: newDate,
         appointment_time: newTime,
-        status: 'reagendado'
+        status: 'remarcar'
       }, organizationId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
-      toast.success('Agendamento reagendado com sucesso');
+      toast.success('Agendamento remarcado com sucesso');
     },
     onError: (error: Error) => {
       ErrorHandler.handle(error, 'useAppointmentActions.reschedule');
@@ -83,11 +83,11 @@ export const useAppointmentActions = () => {
 
   const completeAppointment = useMutation({
     mutationFn: async (appointmentId: string) => {
-      await AppointmentService.updateStatus(appointmentId, 'concluido');
+      await AppointmentService.updateStatus(appointmentId, 'atendido');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
-      toast.success('Consulta marcada como concluída');
+      toast.success('Consulta marcada como atendida');
     },
     onError: (error: Error) => {
       ErrorHandler.handle(error, 'useAppointmentActions.complete');

@@ -282,11 +282,11 @@ export function StatusColorSettingsModal({ open, onOpenChange }: StatusColorSett
 
     // Group statuses by category
     const statusGroups = {
-        'Positivos': ['realizado', 'completed', 'concluido', 'atendido', 'confirmado', 'confirmed'],
-        'Agendados': ['agendado', 'scheduled', 'avaliacao'],
-        'Pendentes': ['aguardando_confirmacao', 'em_espera', 'em_andamento'],
-        'Negativos': ['cancelado', 'falta', 'faltou'],
-        'Outros': ['remarcado', 'reagendado', 'atrasado'],
+        'Positivos': ['atendido', 'presenca_confirmada'],
+        'Agendados': ['agendado', 'avaliacao', 'remarcar'],
+        'Faltas': ['faltou', 'faltou_com_aviso', 'faltou_sem_aviso'],
+        'Não Atendimento': ['nao_atendido', 'nao_atendido_sem_cobranca'],
+        'Negativos': ['cancelado'],
     };
 
     return (
