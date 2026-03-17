@@ -16,7 +16,9 @@
     "test:coverage": "jest --coverage",
     "test:e2e": "playwright test --config=playwright.config.ts",
     "test:e2e:headed": "playwright test --config=playwright.config.ts --headed",
-    "test:e2e:debug": "playwright test --config=playwright.config.ts --debug"
+    "test:e2e:debug": "playwright test --config=playwright.config.ts --debug",
+    "lint": "oxlint .",
+    "lint:fix": "oxlint . --fix"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
