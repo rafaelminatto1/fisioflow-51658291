@@ -10,10 +10,10 @@ import {
   AlertDialogTitle 
 } from '@/components/ui/alert-dialog';
 import { formatDateToBrazilian } from '@/utils/dateUtils';
+import AppointmentModalRefactored from '@/components/schedule/AppointmentModal/index';
 
 // Lazy load the modals - simplified by using default exports
 const AppointmentQuickEditModal = lazy(() => import('@/components/schedule/AppointmentQuickEditModal'));
-const AppointmentModalRefactored = lazy(() => import('@/components/schedule/AppointmentModal/index'));
 const WaitlistQuickAdd = lazy(() => import('@/components/schedule/WaitlistQuickAdd'));
 const KeyboardShortcuts = lazy(() => import('@/components/schedule/KeyboardShortcuts'));
 
@@ -25,14 +25,16 @@ interface ScheduleModalsProps {
 
 export const ScheduleModals: React.FC<ScheduleModalsProps> = ({ currentDate, modals, actions }) => {
   return (
-    <Suspense fallback={null}>
-      {/* Modals Layer - Lazy loaded for better performance */}
+    <>
+      {/* Modals Layer - AppointmentModal imported directly to avoid lazy loading issues */}
       {modals.quickEditAppointment && (
-        <AppointmentQuickEditModal
-          appointment={modals.quickEditAppointment}
-          open={!!modals.quickEditAppointment}
-          onOpenChange={(open) => !open && modals.setQuickEditAppointment(null)}
-        />
+        <Suspense fallback={null}>
+          <AppointmentQuickEditModal
+            appointment={modals.quickEditAppointment}
+            open={!!modals.quickEditAppointment}
+            onOpenChange={(open) => !open && modals.setQuickEditAppointment(null)}
+          />
+        </Suspense>
       )}
 
       {modals.isModalOpen && (
@@ -50,18 +52,22 @@ export const ScheduleModals: React.FC<ScheduleModalsProps> = ({ currentDate, mod
       )}
 
       {modals.waitlistQuickAdd && (
-        <WaitlistQuickAdd
-          open={!!modals.waitlistQuickAdd}
-          onOpenChange={(open) => !open && modals.setWaitlistQuickAdd(null)}
-          date={modals.waitlistQuickAdd.date}
-          time={modals.waitlistQuickAdd.time}
-        />
+        <Suspense fallback={null}>
+          <WaitlistQuickAdd
+            open={!!modals.waitlistQuickAdd}
+            onOpenChange={(open) => !open && modals.setWaitlistQuickAdd(null)}
+            date={modals.waitlistQuickAdd.date}
+            time={modals.waitlistQuickAdd.time}
+          />
+        </Suspense>
       )}
 
-      <KeyboardShortcuts
-        open={modals.showKeyboardShortcuts}
-        onOpenChange={modals.setShowKeyboardShortcuts}
-      />
+      <Suspense fallback={null}>
+        <KeyboardShortcuts
+          open={modals.showKeyboardShortcuts}
+          onOpenChange={modals.setShowKeyboardShortcuts}
+        />
+      </Suspense>
 
       <AlertDialog open={modals.showCancelAllTodayDialog} onOpenChange={modals.setShowCancelAllTodayDialog}>
         <AlertDialogContent>
@@ -87,6 +93,6 @@ export const ScheduleModals: React.FC<ScheduleModalsProps> = ({ currentDate, mod
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Suspense>
+    </>
   );
 };
