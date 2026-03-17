@@ -10,7 +10,7 @@ import {
   AlertDialogTitle 
 } from '@/components/ui/alert-dialog';
 import { formatDateToBrazilian } from '@/utils/dateUtils';
-import AppointmentModalRefactored from '@/components/schedule/AppointmentModal/index';
+import { AppointmentModalRefactored } from '@/components/schedule/AppointmentModalRefactored';
 
 // Lazy load the modals - simplified by using default exports
 const AppointmentQuickEditModal = lazy(() => import('@/components/schedule/AppointmentQuickEditModal'));
