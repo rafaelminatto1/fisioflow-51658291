@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { PatientHelpers } from '@/types';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { normalizeGoalRows } from '@/lib/clinical/goalNormalization';
 import { AppointmentService } from '@/services/appointmentService';
