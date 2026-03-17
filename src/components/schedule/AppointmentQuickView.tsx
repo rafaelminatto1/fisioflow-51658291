@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { Play, Edit, Trash2, Clock, X, Bell, Users, UserPlus, FileText, CheckCircle2, AlertCircle, Package, MessageCircle, Timer, NotepadText, CreditCard, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
-
   Popover,
   PopoverContent,
   PopoverAnchor,
-  PopoverTrigger,
 } from '@/components/ui/popover';
 import {
   Drawer,
@@ -16,7 +14,6 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerDescription,
-  DrawerTrigger,
 } from "@/components/ui/drawer";
 import {
   AlertDialog,
@@ -39,22 +36,13 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { useAppointmentActions } from '@/hooks/useAppointmentActions';
-import { useWaitlistMatch } from '@/hooks/useWaitlistMatch';
-import { usePatientPackages } from '@/hooks/usePackages';
 import { useTherapists, formatTherapistLabel, getTherapistById, THERAPIST_SELECT_NONE } from '@/hooks/useTherapists';
-import { useUpdateAppointment } from '@/hooks/useAppointments';
-import { prefetchRoute, RouteKeys } from '@/lib/routing/routePrefetch';
-import { useQueryClient } from '@tanstack/react-query';
-import { appointmentsApi } from '@/lib/api/workers-client';
 import { WaitlistNotification } from './WaitlistNotification';
 import { WaitlistQuickAdd } from './WaitlistQuickAdd';
 import { PaymentRegistrationModal } from './PaymentRegistrationModal';
-import { Appointment, AppointmentStatus } from "@/types/appointment";
-
-import { STATUS_CONFIG, normalizeStatus } from '@/lib/config/agenda';
+import { Appointment } from "@/types/appointment";
+import { useAppointmentQuickViewLogic } from './hooks/useAppointmentQuickViewLogic';
+import { getStatusConfig, APPOINTMENT_STATUS_OPTIONS } from './shared/appointment-status';
 
 interface AppointmentQuickViewProps {
   appointment: Appointment;
@@ -73,29 +61,39 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
   open,
   onOpenChange,
 }) => {
-
-
-  const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { updateStatus, isUpdatingStatus } = useAppointmentActions();
-  const { getInterestCount } = useWaitlistMatch();
-  const { data: patientPackages = [] } = usePatientPackages(appointment.patientId);
   const { therapists = [] } = useTherapists();
-  const { mutateAsync: updateAppointment } = useUpdateAppointment();
-  const queryClient = useQueryClient();
-  const [showWaitlistNotification, setShowWaitlistNotification] = useState(false);
-  const [showWaitlistQuickAdd, setShowWaitlistQuickAdd] = useState(false);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [showNoShowConfirmDialog, setShowNoShowConfirmDialog] = useState(false);
-  const [pendingStatus, setPendingStatus] = useState<string | null>(null);
-  // Local state for optimistic updates - syncs with appointment
-  const [localStatus, setLocalStatus] = useState(appointment.status);
-  const [localPaymentStatus, setLocalPaymentStatus] = useState(() =>
-    ((appointment.payment_status ?? 'pending') as string).toLowerCase()
-  );
-  const [localTherapistId, setLocalTherapistId] = useState(appointment.therapistId ?? '');
+  
+  const logic = useAppointmentQuickViewLogic({
+    appointment,
+    onEdit,
+    onOpenChange,
+  });
 
-  // Pacote vinculado a este agendamento (session_package_id = id do patient_packages)
+  const {
+    localStatus,
+    localPaymentStatus,
+    localTherapistId,
+    appointmentDate,
+    interestCount,
+    hasWaitlistInterest,
+    showWaitlistNotification, setShowWaitlistNotification,
+    showWaitlistQuickAdd, setShowWaitlistQuickAdd,
+    showPaymentModal, setShowPaymentModal,
+    showNoShowConfirmDialog, setShowNoShowConfirmDialog,
+    handleStartAttendance,
+    handleStatusChange,
+    handleNoShowConfirm,
+    handleNoShowReschedule,
+    handleTherapistChange,
+    handlePaymentStatusChange,
+    handlePaymentSuccess,
+    patientPackages,
+    isUpdatingStatus,
+  } = logic;
+
+  const statusConfig = getStatusConfig(localStatus);
+
   const linkedPackage = useMemo(() => {
     if (!appointment.session_package_id) return null;
     return patientPackages.find((p) => p.id === appointment.session_package_id) ?? null;
@@ -103,206 +101,17 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
   const sessionNumber = linkedPackage ? linkedPackage.sessions_used + 1 : null;
   const sessionTotal = linkedPackage ? linkedPackage.sessions_purchased : null;
-  const _paymentAmount = appointment.payment_amount != null ? Number(appointment.payment_amount) : null;
   const isPaid = localPaymentStatus === 'paid' || localPaymentStatus === 'pago';
   const isPackagePayment = Boolean(appointment.session_package_id) || appointment.payment_method === 'package';
 
-  // Sync local state when appointment prop changes
-  useEffect(() => {
-    setLocalStatus(normalizeStatus(appointment.status));
-    setLocalPaymentStatus(((appointment.payment_status ?? 'pending') as string).toLowerCase());
-    setLocalTherapistId(appointment.therapistId ?? '');
-  }, [appointment.status, appointment.payment_status, appointment.therapistId]);
-
-  const appointmentDate = useMemo((): Date => {
-    const d = appointment.date as Date | string | null | undefined;
-    if (d instanceof Date && !isNaN(d.getTime())) return d;
-    if (typeof d === 'string' && String(d).trim()) {
-      const parts = String(d).split('-').map(Number);
-      if (parts.length === 3) {
-        const [y, m, day] = parts;
-        const parsed = new Date(y, m - 1, day, 12, 0, 0);
-        if (Number.isFinite(parsed.getTime())) return parsed;
-      }
-    }
-    return new Date();
-  }, [appointment.date]);
-
-  const interestCount = getInterestCount(appointmentDate, appointment.time);
-  const hasWaitlistInterest = interestCount > 0;
-
-  const canStartAttendance = true;
-
-  const handleStartAttendance = () => {
-    if (localStatus === 'avaliacao') {
-      // Prefetch para página de avaliação
-      prefetchRoute(
-        () => import('../../pages/patients/NewEvaluationPage'),
-        'evaluation-new'
-      );
-
-      navigate(`/patients/${appointment.patientId}/evaluations/new?appointmentId=${appointment.id}`);
-      toast.success('Iniciando avaliação', {
-        description: `Avaliação de ${appointment.patientName}`,
-      });
-    } else {
-      // Prefetch do chunk da página de evolução (alto impacto)
-      prefetchRoute(
-        () => import('../../pages/PatientEvolution'),
-        RouteKeys.PATIENT_EVOLUTION
-      );
-
-      // Prefetch dos dados críticos (appointment e paciente)
-      queryClient.prefetchQuery({
-        queryKey: ['appointment', appointment.id],
-        queryFn: () => appointmentsApi.get(appointment.id),
-        staleTime: 1000 * 60 * 2, // 2 minutos
-      });
-
-      navigate(`/patient-evolution/${appointment.id}`, {
-        state: {
-          patientId: appointment.patientId,
-          patientName: appointment.patientName
-        }
-      });
-      toast.success('Iniciando atendimento', {
-        description: `Atendimento de ${appointment.patientName}`,
-      });
-    }
-    onOpenChange?.(false);
-  };
-
-  const handleStatusChange = (newStatus: string) => {
-    if (newStatus === appointment.status) return;
-
-    // Se for "falta", mostrar diálogo de confirmação para reagendar
-    if (newStatus === 'falta') {
-      setPendingStatus(newStatus);
-      setShowNoShowConfirmDialog(true);
-      return;
-    }
-
-    // Optimistic update - update local state immediately
-    setLocalStatus(newStatus as AppointmentStatus);
-    // Then call the API
-    updateStatus({ appointmentId: appointment.id, status: newStatus });
-
-    // Fechar o popover automaticamente após mudar o status
-    onOpenChange?.(false);
-
-    // If cancelling and there are interested patients, show notification
-    if ((newStatus === 'cancelado' || newStatus === 'falta') && hasWaitlistInterest) {
-      setTimeout(() => {
-        setShowWaitlistNotification(true);
-      }, 500);
-    }
-  };
-
-  const handleNoShowConfirm = () => {
-    if (pendingStatus) {
-      setLocalStatus(pendingStatus as AppointmentStatus);
-      updateStatus({ appointmentId: appointment.id, status: pendingStatus });
-      setShowNoShowConfirmDialog(false);
-      setPendingStatus(null);
-
-      // Fechar o popover
-      onOpenChange?.(false);
-
-      // "Apenas registrar falta" - não abre nenhum modal adicional
-    }
-  };
-
-  const handleNoShowRechedule = () => {
-    if (pendingStatus) {
-      setLocalStatus(pendingStatus as AppointmentStatus);
-      updateStatus({ appointmentId: appointment.id, status: pendingStatus });
-      setShowNoShowConfirmDialog(false);
-      setPendingStatus(null);
-
-      // Fechar o popover e abrir edição para reagendar
-      onOpenChange?.(false);
-      setTimeout(() => {
-        onEdit?.();
-      }, 100);
-    }
-  };
-
-  const handleNoShowCancel = () => {
-    setShowNoShowConfirmDialog(false);
-    setPendingStatus(null);
-  };
-
-  const handleEdit = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    onEdit?.();
-    onOpenChange?.(false);
-  };
-
-  const handleDelete = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    onDelete?.();
-    onOpenChange?.(false);
-  };
-
-  const handleOpenPatientProfile = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    navigate(`/patients/${appointment.patientId}`);
-    onOpenChange?.(false);
-  };
-
-  const handleTherapistChange = async (therapistId: string) => {
-    if (therapistId === localTherapistId) return;
-    setLocalTherapistId(therapistId);
-    try {
-      await updateAppointment({
-        appointmentId: appointment.id,
-        updates: { therapist_id: therapistId || null },
-      });
-    } catch {
-      setLocalTherapistId(appointment.therapistId ?? '');
-    }
-  };
-
-  const handlePaymentStatusChange = async (value: string) => {
-    const newStatus = value === 'paid' ? 'paid' : 'pending';
-
-    // If user is marking as paid, show the payment registration modal
-    if (newStatus === 'paid' && localPaymentStatus !== 'paid') {
-      setShowPaymentModal(true);
-      return;
-    }
-
-    if (newStatus === localPaymentStatus) return;
-    setLocalPaymentStatus(newStatus);
-    try {
-      await updateAppointment({
-        appointmentId: appointment.id,
-        updates: { payment_status: newStatus },
-      });
-    } catch {
-      setLocalPaymentStatus(((appointment.payment_status ?? 'pending') as string).toLowerCase());
-    }
-  };
-
-  const handlePaymentSuccess = () => {
-    setLocalPaymentStatus('paid');
-    // We could reload appointment data here if needed, but optimistic update handles UI
-  };
-
-  // Calculate end time
-  // Safety check for time - handle null, undefined, or empty string
   const time = appointment.time && appointment.time.trim() ? appointment.time : '00:00';
   const startHour = parseInt(time.split(':')[0] || '0');
   const startMinute = parseInt(time.split(':')[1] || '0');
   const endMinutes = startHour * 60 + startMinute + (appointment.duration || 60);
-  const endHour = Math.floor(endMinutes / 60);
-  const endMinute = endMinutes % 60;
-  const endTime = `${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}`;
+  const endTime = `${String(Math.floor(endMinutes / 60)).padStart(2, '0')}:${String(endMinutes % 60).padStart(2, '0')}`;
 
-  // Content component shared between Popover and Dialog
   const Content = (
     <div className="flex flex-col h-full min-w-0 max-w-full overflow-hidden">
-      {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30 relative overflow-hidden">
         <div className="flex items-center gap-2.5 relative z-10">
           <div className="p-2 bg-primary/10 rounded-lg ring-1 ring-primary/15">
@@ -331,7 +140,6 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
         )}
       </div>
 
-      {/* Waitlist Interest Alert */}
       {hasWaitlistInterest && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
@@ -356,15 +164,16 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
         </motion.div>
       )}
 
-      {/* Content */}
       <div className="p-4 space-y-4 flex-1 overflow-y-auto custom-scrollbar">
-        {/* Patient Block */}
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1 min-w-0 flex-1">
             <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 truncate leading-tight tracking-tight">
               <button
                 type="button"
-                onClick={(e) => handleOpenPatientProfile(e)}
+                onClick={() => {
+                  window.location.href = `/patients/${appointment.patientId}`;
+                  onOpenChange?.(false);
+                }}
                 className="block w-full truncate text-left hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-sm"
               >
                 {appointment.patientName}
@@ -395,9 +204,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
 
         <Separator className="bg-border/50" />
 
-        {/* Configuration Grid */}
         <div className="space-y-4">
-          {/* Fisioterapeuta */}
           <div className="space-y-1.5">
             <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
               <Users className="h-3 w-3" />
@@ -424,10 +231,9 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            {/* Status */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                <div className={cn("w-1.5 h-1.5 rounded-full", statusConfig.iconColor.replace('text-', 'bg-'))} />
                 Status
               </div>
               <Select
@@ -438,36 +244,27 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
                 <SelectTrigger className="h-9 w-full bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 text-sm">
                   <SelectValue>
                     <div className="flex items-center gap-1.5 truncate">
-                      <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: STATUS_CONFIG[localStatus as keyof typeof STATUS_CONFIG]?.color || '#94a3b8' }} />
-                      <span className="truncate text-xs">
-                        {STATUS_CONFIG[localStatus as keyof typeof STATUS_CONFIG]?.label ||
-                          localStatus.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) ||
-                          'Status'}
-                      </span>
+                      <div className={cn("w-2 h-2 rounded-full shrink-0", statusConfig.iconColor.replace('text-', 'bg-'))} />
+                      <span className="truncate text-xs">{statusConfig.label}</span>
                     </div>
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(STATUS_CONFIG)
-                    .filter(([key]) => [
-                      'agendado', 'confirmado', 'em_andamento',
-                      'concluido',
-                      'cancelado', 'falta',
-                      'reagendado', 'aguardando_confirmacao', 'em_espera', 'avaliacao', 'atrasado'
-                    ].includes(key))
-                    .map(([value, config]) => (
-                      <SelectItem key={value} value={value}>
+                  {['agendado', 'confirmado', 'em_andamento', 'concluido', 'cancelado', 'falta', 'reagendado', 'aguardando_confirmacao', 'em_espera', 'avaliacao', 'atrasado'].map((val) => {
+                    const cfg = getStatusConfig(val);
+                    return (
+                      <SelectItem key={val} value={val}>
                         <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: config.color }} />
-                          <span>{config.label}</span>
+                          <div className={cn("w-2 h-2 rounded-full", cfg.iconColor.replace('text-', 'bg-'))} />
+                          <span>{cfg.label}</span>
                         </div>
                       </SelectItem>
-                    ))}
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Pagamento */}
             <div className="space-y-1.5">
               <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
                 <CreditCard className="h-3 w-3" />
@@ -511,18 +308,10 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
                   <SelectItem value="pending">Pendente</SelectItem>
                 </SelectContent>
               </Select>
-              {isPackagePayment && (
-                <p className="mt-1 text-[10px] font-medium text-blue-700/80 dark:text-blue-300/80">
-                  {linkedPackage
-                    ? `${linkedPackage.package?.name ?? 'Pacote vinculado'} · ${linkedPackage.sessions_remaining ?? 0} sessoes restantes`
-                    : 'Sessao vinculada ao pacote do paciente'}
-                </p>
-              )}
             </div>
           </div>
         </div>
 
-        {/* Notes (if available) */}
         {appointment.notes && (
           <div className="space-y-2 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50 border-dashed">
             <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/60">
@@ -535,7 +324,6 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
           </div>
         )}
 
-        {/* Pacote: Sessão X de Y (quando vinculado) */}
         {linkedPackage != null && sessionNumber != null && sessionTotal != null && sessionTotal > 0 && (
           <div className="space-y-3 p-4 rounded-xl bg-blue-50/30 dark:bg-blue-900/10 border border-blue-100/50 dark:border-blue-900/30">
             <div className="flex items-center justify-between gap-2">
@@ -547,45 +335,32 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
                 Sessão {sessionNumber} / {sessionTotal}
               </span>
             </div>
-            <Progress
-              value={(sessionNumber / sessionTotal) * 100}
-              className="h-2 w-full bg-blue-100/50 dark:bg-blue-900/40"
-            />
+            <Progress value={(sessionNumber / sessionTotal) * 100} className="h-2 w-full bg-blue-100/50 dark:bg-blue-900/40" />
           </div>
         )}
       </div>
 
       <div className="p-3 bg-muted/30 border-t border-border space-y-2">
-        {/* Primary CTA */}
-        {canStartAttendance && (
-          <Button
-            onClick={handleStartAttendance}
-            className={cn(
-              "w-full h-12 rounded-xl font-black text-sm shadow-lg transition-all active:scale-[0.98] tracking-tight",
-              localStatus === 'avaliacao'
-                ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20"
-                : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20"
-            )}
-          >
-            <div className="flex items-center justify-center gap-2">
-              {localStatus === 'avaliacao' ? (
-                <FileText className="h-4 w-4" />
-              ) : (
-                <Play className="h-4 w-4 fill-current" />
-              )}
-              {localStatus === 'avaliacao' ? 'INICIAR AVALIAÇÃO' : 'INICIAR ATENDIMENTO'}
-            </div>
-          </Button>
-        )}
+        <Button
+          onClick={handleStartAttendance}
+          className={cn(
+            "w-full h-12 rounded-xl font-black text-sm shadow-lg transition-all active:scale-[0.98] tracking-tight",
+            localStatus === 'avaliacao' ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20" : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20"
+          )}
+        >
+          <div className="flex items-center justify-center gap-2">
+            {localStatus === 'avaliacao' ? <FileText className="h-4 w-4" /> : <Play className="h-4 w-4 fill-current" />}
+            {localStatus === 'avaliacao' ? 'INICIAR AVALIAÇÃO' : 'INICIAR ATENDIMENTO'}
+          </div>
+        </Button>
 
-        {/* Secondary actions */}
         <div className="flex items-center gap-2">
           {onEdit && (
             <Button
               variant="outline"
               size="sm"
               className="h-10 flex-1 rounded-xl font-bold text-xs gap-1.5 border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300 transition-all"
-              onClick={(e) => handleEdit(e)}
+              onClick={() => { onEdit(); onOpenChange?.(false); }}
             >
               <Edit className="h-3.5 w-3.5" />
               Editar
@@ -597,7 +372,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
               variant="ghost"
               size="icon"
               className="h-10 w-10 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all"
-              onClick={(e) => handleDelete(e)}
+              onClick={() => { onDelete(); onOpenChange?.(false); }}
               title="Excluir Agendamento"
             >
               <Trash2 className="h-4 w-4" />
@@ -610,53 +385,34 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             variant="ghost"
             size="sm"
             className="h-10 px-3 rounded-xl font-bold text-xs gap-1.5 text-slate-500 hover:bg-slate-100 transition-all"
-            onClick={() => {
-              setShowWaitlistQuickAdd(true);
-              onOpenChange?.(false);
-            }}
+            onClick={() => { setShowWaitlistQuickAdd(true); onOpenChange?.(false); }}
           >
             <UserPlus className="h-3.5 w-3.5" />
             Lista de Espera
           </Button>
         </div>
       </div>
-
     </div>
   );
 
   return (
     <>
       {isMobile ? (
-        // Mobile: use Drawer (Bottom Sheet)
         <Drawer open={open} onOpenChange={onOpenChange}>
-          <DrawerTrigger asChild>
-            {React.isValidElement(children) ? React.cloneElement(children as React.ReactElement<any>, {
-              'data-appointment-popover-anchor': appointment.id,
-              'aria-haspopup': 'dialog',
-              'aria-expanded': open,
-              'aria-label': `Ver detalhes do agendamento de ${appointment.patientName}`
-            }) : <span data-appointment-popover-anchor={appointment.id}>{children}</span>}
-          </DrawerTrigger>
           <DrawerContent className="max-h-[90vh]" data-week-appointment="true">
             <DrawerHeader className="text-left border-b pb-4 hidden">
               <DrawerTitle>Detalhes do Agendamento</DrawerTitle>
               <DrawerDescription>Visualizar e editar detalhes do agendamento</DrawerDescription>
             </DrawerHeader>
-            {/* Wrap Content in a div that handles the layout structure for Drawer */}
             <div className="pb-6 animate-in slide-in-from-bottom-4 duration-300">
               {Content}
             </div>
           </DrawerContent>
         </Drawer>
       ) : (
-        // Desktop: use Popover (side panel)
         <Popover open={open} onOpenChange={onOpenChange}>
           <PopoverAnchor asChild>
-            {React.isValidElement(children)
-              ? React.cloneElement(children as React.ReactElement<any>, {
-                'data-appointment-popover-anchor': appointment.id
-              })
-              : <div data-appointment-popover-anchor={appointment.id}>{children}</div>}
+            {React.isValidElement(children) ? React.cloneElement(children as React.ReactElement<any>, { 'data-appointment-popover-anchor': appointment.id }) : <div data-appointment-popover-anchor={appointment.id}>{children}</div>}
           </PopoverAnchor>
           <PopoverContent
             className="w-[340px] max-w-sm p-0 bg-card border border-border shadow-2xl z-50 rounded-2xl overflow-hidden"
@@ -670,10 +426,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             data-week-appointment="true"
             onInteractOutside={(e) => {
               const target = e.target as HTMLElement;
-              // Prevent closing when clicking the card itself (which initially opened the popover)
-              if (target.closest(`[data-appointment-popover-anchor="${appointment.id}"]`)) {
-                e.preventDefault();
-              }
+              if (target.closest(`[data-appointment-popover-anchor="${appointment.id}"]`)) e.preventDefault();
             }}
           >
             <AnimatePresence mode="wait">
@@ -682,10 +435,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
                 initial={{ opacity: 0, y: -4, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -4, scale: 0.98 }}
-                transition={{
-                  duration: 0.2,
-                  ease: [0.4, 0, 0.2, 1]
-                }}
+                transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
               >
                 {Content}
               </motion.div>
@@ -694,95 +444,38 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
         </Popover>
       )}
 
-      {/* Waitlist Notification Modal */}
-      <WaitlistNotification
-        open={showWaitlistNotification}
-        onOpenChange={setShowWaitlistNotification}
-        date={appointmentDate}
-        time={time}
-      />
-
-      {/* Waitlist Quick Add Modal */}
-      <WaitlistQuickAdd
-        open={showWaitlistQuickAdd}
-        onOpenChange={setShowWaitlistQuickAdd}
-        date={appointmentDate}
-        time={time}
-      />
-
-      {/* No-Show Confirmation Dialog */}
-      <AlertDialog open={showNoShowConfirmDialog} onOpenChange={handleNoShowCancel}>
+      <WaitlistNotification open={showWaitlistNotification} onOpenChange={setShowWaitlistNotification} date={appointmentDate} time={time} />
+      <WaitlistQuickAdd open={showWaitlistQuickAdd} onOpenChange={setShowWaitlistQuickAdd} date={appointmentDate} time={time} />
+      
+      <AlertDialog open={showNoShowConfirmDialog} onOpenChange={setShowNoShowConfirmDialog}>
         <AlertDialogContent className="max-w-md p-0 overflow-hidden rounded-2xl">
-          {/* Header com fundo gradiente */}
           <div className="bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-950/30 dark:to-red-900/20 p-6 pb-4">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-red-100 dark:bg-red-900/50 rounded-xl ring-1 ring-red-200 dark:ring-red-800">
                 <Calendar className="h-6 w-6 text-red-600 dark:text-red-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <AlertDialogTitle className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                  Registrar Falta
-                </AlertDialogTitle>
-                <p className="text-sm text-muted-foreground truncate mt-0.5">
-                  {appointment.patientName}
-                </p>
+                <AlertDialogTitle className="text-lg font-bold text-slate-900 dark:text-slate-100">Registrar Falta</AlertDialogTitle>
+                <p className="text-sm text-muted-foreground truncate mt-0.5">{appointment.patientName}</p>
               </div>
             </div>
           </div>
-
-          <AlertDialogDescription className="sr-only">
-            Confirmação de falta - deseja reagendar o atendimento?
-          </AlertDialogDescription>
-
-          {/* Conteúdo */}
+          <AlertDialogDescription className="sr-only">Confirmação de falta - deseja reagendar o atendimento?</AlertDialogDescription>
           <div className="px-6 py-5">
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
-              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                O status do agendamento será alterado para{' '}
-                <span className="inline-flex items-center gap-1.5 font-semibold text-red-600 dark:text-red-400">
-                  <span className="w-2 h-2 rounded-full bg-red-500" />
-                  Falta
-                </span>
-                .
-              </p>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-                Deseja reagendar este atendimento para outra data?
-              </p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">O status do agendamento será alterado para <span className="inline-flex items-center gap-1.5 font-semibold text-red-600 dark:text-red-400"><span className="w-2 h-2 rounded-full bg-red-500" />Falta</span>.</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">Deseja reagendar este atendimento para outra data?</p>
             </div>
           </div>
-
-          {/* Footer com botões */}
           <div className="px-6 pb-6 flex flex-col gap-2 sm:flex-row sm:gap-3">
-            <AlertDialogCancel
-              onClick={handleNoShowCancel}
-              className="flex-1 h-11 rounded-xl font-semibold border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
-              Cancelar
-            </AlertDialogCancel>
-            <Button
-              variant="outline"
-              onClick={handleNoShowConfirm}
-              className="flex-1 h-11 rounded-xl font-semibold border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50"
-            >
-              Apenas registrar falta
-            </Button>
-            <AlertDialogAction
-              onClick={handleNoShowRechedule}
-              className="flex-1 h-11 rounded-xl font-semibold bg-primary hover:bg-primary/90"
-            >
-              Registrar e reagendar
-            </AlertDialogAction>
+            <AlertDialogCancel className="flex-1 h-11 rounded-xl font-semibold border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800">Voltar</AlertDialogCancel>
+            <Button variant="outline" onClick={handleNoShowConfirm} className="flex-1 h-11 rounded-xl font-semibold border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50">Apenas registrar falta</Button>
+            <AlertDialogAction onClick={handleNoShowReschedule} className="flex-1 h-11 rounded-xl font-semibold bg-primary hover:bg-primary/90">Registrar e reagendar</AlertDialogAction>
           </div>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Payment Registration Modal */}
-      <PaymentRegistrationModal
-        open={showPaymentModal}
-        onOpenChange={setShowPaymentModal}
-        appointment={appointment}
-        onSuccess={handlePaymentSuccess}
-      />
+      
+      <PaymentRegistrationModal open={showPaymentModal} onOpenChange={setShowPaymentModal} appointment={appointment} onSuccess={handlePaymentSuccess} />
     </>
   );
 };
