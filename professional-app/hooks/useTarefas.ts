@@ -7,74 +7,107 @@ import {
   deleteTarefa,
   bulkUpdateTarefas,
   type ApiTarefa,
-  type TarefaStatus,
 } from '@/lib/api';
 
-export function useTarefas(filterStatus?: TarefaStatus) {
+const QUERY_KEY = ['tarefas'] as const;
+
+export function useTarefas() {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
-  const tarefas = useQuery({
-    queryKey: ['tarefas', user?.id],
+  const query = useQuery({
+    queryKey: QUERY_KEY,
     queryFn: () => {
-      if (!user?.id) return [];
+      if (!user?.id) return [] as ApiTarefa[];
       return getTarefas({ limit: 200 });
     },
     enabled: !!user,
     staleTime: 1000 * 60 * 5,
   });
 
+  // ── CREATE ──────────────────────────────────────────────────────────────
   const createMutation = useMutation({
     mutationFn: (data: Partial<ApiTarefa>) => createTarefa(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tarefas'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
   });
 
+  // ── UPDATE (com optimistic update) ─────────────────────────────────────
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<ApiTarefa> }) =>
       updateTarefa(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tarefas'] });
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: QUERY_KEY });
+      const previous = queryClient.getQueryData<ApiTarefa[]>(QUERY_KEY);
+      queryClient.setQueryData<ApiTarefa[]>(QUERY_KEY, (old) =>
+        old?.map((t) => (t.id === id ? { ...t, ...data } : t)) ?? []
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) {
+        queryClient.setQueryData(QUERY_KEY, ctx.previous);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
   });
 
+  // ── DELETE ──────────────────────────────────────────────────────────────
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteTarefa(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tarefas'] });
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: QUERY_KEY });
+      const previous = queryClient.getQueryData<ApiTarefa[]>(QUERY_KEY);
+      queryClient.setQueryData<ApiTarefa[]>(QUERY_KEY, (old) =>
+        old?.filter((t) => t.id !== id) ?? []
+      );
+      return { previous };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) {
+        queryClient.setQueryData(QUERY_KEY, ctx.previous);
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
   });
 
+  // ── BULK UPDATE ─────────────────────────────────────────────────────────
   const bulkUpdateMutation = useMutation({
     mutationFn: (updates: { id: string; data: Partial<ApiTarefa> }[]) =>
       bulkUpdateTarefas(updates),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tarefas'] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
   });
 
-  const allData = tarefas.data || [];
-  const filteredData = filterStatus
-    ? allData.filter((t) => t.status === filterStatus)
-    : allData;
-
   return {
-    data: filteredData,
-    allData,
-    isLoading: tarefas.isLoading,
-    error: tarefas.error,
-    refetch: tarefas.refetch,
+    data: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+
     create: createMutation.mutate,
     createAsync: createMutation.mutateAsync,
+    createError: createMutation.error,
+    isCreating: createMutation.isPending,
+
     update: updateMutation.mutate,
     updateAsync: updateMutation.mutateAsync,
+    updateError: updateMutation.error,
+    isUpdating: updateMutation.isPending,
+
     delete: deleteMutation.mutate,
     deleteAsync: deleteMutation.mutateAsync,
+    deleteError: deleteMutation.error,
+    isDeleting: deleteMutation.isPending,
+
     bulkUpdate: bulkUpdateMutation.mutate,
     bulkUpdateAsync: bulkUpdateMutation.mutateAsync,
-    isCreating: createMutation.isPending,
-    isUpdating: updateMutation.isPending,
-    isDeleting: deleteMutation.isPending,
+    isBulkUpdating: bulkUpdateMutation.isPending,
   };
 }
