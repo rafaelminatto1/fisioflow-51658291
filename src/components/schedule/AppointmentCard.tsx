@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import { memo } from 'react';
 import type { Appointment } from '@/types/appointment';
 import { CompactAppointmentCard } from './AppointmentCard/CompactAppointmentCard';
 import { ExpandedAppointmentCard } from './AppointmentCard/ExpandedAppointmentCard';
@@ -9,6 +9,8 @@ interface AppointmentCardProps {
   variant?: 'compact' | 'expanded';
   className?: string;
   'data-appointment-popover-anchor'?: string;
+  onStatusChange?: (status: string) => void;
+  onEdit?: () => void;
 }
 
 /**
@@ -36,32 +38,38 @@ function arePropsEqual(
 /**
  * AppointmentCard - Orchestrator for compact and expanded variants
  */
-export const AppointmentCard = memo(React.forwardRef<HTMLDivElement, AppointmentCardProps>(({
+export const AppointmentCard = memo(({
   appointment,
   onClick,
   variant = 'expanded',
   className,
-  'data-appointment-popover-anchor': dataAnchor
-}, ref) => {
+  'data-appointment-popover-anchor': dataAnchor,
+  onStatusChange,
+  onEdit,
+}: AppointmentCardProps) => {
   if (variant === 'compact') {
     return (
-      <CompactAppointmentCard 
+      <CompactAppointmentCard
         appointment={appointment}
         onClick={onClick}
         className={className}
         dataAnchor={dataAnchor}
+        onStatusChange={onStatusChange}
+        onEdit={onEdit}
       />
     );
   }
 
   return (
-    <ExpandedAppointmentCard 
+    <ExpandedAppointmentCard
       appointment={appointment}
       onClick={onClick}
       className={className}
       dataAnchor={dataAnchor}
+      onStatusChange={onStatusChange}
+      onEdit={onEdit}
     />
   );
-}), arePropsEqual);
+}, arePropsEqual);
 
 AppointmentCard.displayName = 'AppointmentCard';
