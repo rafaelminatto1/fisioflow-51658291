@@ -36,6 +36,10 @@ export interface AppointmentStatusConfig {
   icon: LucideIcon;
   /** Gradient for hover effects */
   gradient: string;
+  /** Calendar card class name */
+  calendarClassName: string;
+  /** Calendar card accent color */
+  calendarAccent: string;
   /** Background color */
   bg: string;
   /** Hover background */
@@ -62,6 +66,8 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     label: 'Confirmado',
     icon: CheckCircle,
     gradient: 'from-emerald-500/10 via-emerald-500/15 to-emerald-500/20',
+    calendarClassName: 'calendar-card-confirmado',
+    calendarAccent: 'bg-emerald-600',
     // Calendar styles
     border: 'border-emerald-500',
     bg: 'bg-emerald-100/90 dark:bg-emerald-500/20',
@@ -79,6 +85,8 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     label: 'Agendado',
     icon: Clock,
     gradient: 'from-blue-500/10 via-blue-500/15 to-blue-500/20',
+    calendarClassName: 'calendar-card-agendado',
+    calendarAccent: 'bg-sky-400',
     border: 'border-blue-500',
     bg: 'bg-blue-100/90 dark:bg-blue-500/20',
     hoverBg: 'hover:bg-blue-200/90 dark:hover:bg-blue-500/30',
@@ -95,6 +103,8 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     label: 'Avaliação',
     icon: FileText,
     gradient: 'from-violet-500/10 via-violet-500/15 to-violet-500/20',
+    calendarClassName: 'calendar-card-avaliacao',
+    calendarAccent: 'bg-purple-600',
     border: 'border-violet-500',
     bg: 'bg-violet-100/90 dark:bg-violet-500/20',
     hoverBg: 'hover:bg-violet-200/90 dark:hover:bg-violet-500/30',
@@ -111,6 +121,8 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     label: 'Aguardando',
     icon: Clock,
     gradient: 'from-amber-500/10 via-amber-500/15 to-amber-500/20',
+    calendarClassName: 'calendar-card-aguardando_confirmacao',
+    calendarAccent: 'bg-amber-500',
     border: 'border-amber-500',
     bg: 'bg-amber-100/90 dark:bg-amber-500/20',
     hoverBg: 'hover:bg-amber-200/90 dark:hover:bg-amber-500/30',
@@ -127,6 +139,8 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     label: 'Em Andamento',
     icon: Clock,
     gradient: 'from-yellow-500/10 via-yellow-500/15 to-yellow-500/20',
+    calendarClassName: 'calendar-card-em_andamento',
+    calendarAccent: 'bg-amber-600',
     border: 'border-amber-500',
     bg: 'bg-amber-100/90 dark:bg-amber-500/20',
     hoverBg: 'hover:bg-amber-200/90 dark:hover:bg-amber-500/30',
@@ -143,6 +157,8 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     label: 'Em Espera',
     icon: Clock,
     gradient: 'from-indigo-500/10 via-indigo-500/15 to-indigo-500/20',
+    calendarClassName: 'calendar-card-em_espera',
+    calendarAccent: 'bg-indigo-500',
     border: 'border-indigo-500',
     bg: 'bg-indigo-100/90 dark:bg-indigo-500/20',
     hoverBg: 'hover:bg-indigo-200/90 dark:hover:bg-indigo-500/30',
@@ -159,6 +175,8 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     label: 'Atrasado',
     icon: AlertCircle,
     gradient: 'from-orange-500/10 via-orange-500/15 to-orange-500/20',
+    calendarClassName: 'calendar-card-atrasado',
+    calendarAccent: 'bg-orange-500',
     border: 'border-orange-500',
     bg: 'bg-orange-100/90 dark:bg-orange-500/20',
     hoverBg: 'hover:bg-orange-200/90 dark:hover:bg-orange-500/30',
@@ -175,6 +193,8 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     label: 'Concluído',
     icon: CheckCircle,
     gradient: 'from-slate-500/10 via-slate-500/15 to-slate-500/20',
+    calendarClassName: 'calendar-card-concluido',
+    calendarAccent: 'bg-slate-600',
     border: 'border-indigo-500',
     bg: 'bg-indigo-100/90 dark:bg-indigo-500/20',
     hoverBg: 'hover:bg-indigo-200/90 dark:hover:bg-indigo-500/30',
@@ -191,6 +211,8 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     label: 'Realizado',
     icon: CheckCircle,
     gradient: 'from-slate-500/10 via-slate-500/15 to-slate-500/20',
+    calendarClassName: 'calendar-card-realizado',
+    calendarAccent: 'bg-slate-600',
     border: 'border-indigo-500',
     bg: 'bg-indigo-100/90 dark:bg-indigo-500/20',
     hoverBg: 'hover:bg-indigo-200/90 dark:hover:bg-indigo-500/30',
@@ -207,6 +229,8 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     label: 'Remarcado',
     icon: Clock,
     gradient: 'from-cyan-500/10 via-cyan-500/15 to-cyan-500/20',
+    calendarClassName: 'calendar-card-reagendado',
+    calendarAccent: 'bg-lime-600',
     border: 'border-cyan-500',
     bg: 'bg-cyan-100/90 dark:bg-cyan-500/20',
     hoverBg: 'hover:bg-cyan-200/90 dark:hover:bg-cyan-500/30',
@@ -223,6 +247,8 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     label: 'Cancelado',
     icon: XCircle,
     gradient: 'from-red-600/10 via-red-600/15 to-red-600/20',
+    calendarClassName: 'calendar-card-cancelado',
+    calendarAccent: 'bg-red-600',
     border: 'border-red-500',
     bg: 'bg-red-100/90 dark:bg-red-500/20',
     hoverBg: 'hover:bg-red-200/90 dark:hover:bg-red-500/30',
@@ -239,6 +265,8 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     label: 'Falta',
     icon: XCircle,
     gradient: 'from-red-600/10 via-red-600/15 to-red-600/20',
+    calendarClassName: 'calendar-card-falta',
+    calendarAccent: 'bg-red-700',
     border: 'border-red-500',
     bg: 'bg-red-100/90 dark:bg-red-500/20',
     hoverBg: 'hover:bg-red-200/90 dark:hover:bg-red-500/30',

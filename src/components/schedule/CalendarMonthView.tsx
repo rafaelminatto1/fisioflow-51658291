@@ -85,7 +85,11 @@ const CalendarMonthView = memo(({
                                         isToday(day) && "bg-primary/5 ring-1 ring-inset ring-primary/15 shadow-sm",
                                         isCurrentMonth && !isToday(day) && "hover:bg-primary/5 active:bg-primary/10"
                                     )}
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                        const target = e.target as HTMLElement;
+                                        if (target.closest('[data-week-appointment="true"]')) {
+                                            return;
+                                        }
                                         if (onTimeSlotClick) {
                                             onTimeSlotClick(day, '08:00');
                                         }
