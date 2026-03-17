@@ -36,32 +36,6 @@ interface CalendarAppointmentCardProps {
     "data-appointment-popover-anchor"?: string;
 }
 
-// Dynamic status styles are now handled via useStatusConfig hook
-// This function provides fallback class names for legacy support
-const getStatusStylesFallback = (status: string) => {
-    const normalized = normalizeStatus(status);
-    const styles: Record<string, { className: string; accent: string }> = {
-        confirmado: { className: 'calendar-card-confirmado', accent: 'bg-emerald-600' },
-        agendado: { className: 'calendar-card-agendado', accent: 'bg-sky-400' },
-        em_andamento: { className: 'calendar-card-em_andamento', accent: 'bg-amber-600' },
-        cancelado: { className: 'calendar-card-cancelado', accent: 'bg-red-600' },
-        concluido: { className: 'calendar-card-concluido', accent: 'bg-slate-600' },
-        falta: { className: 'calendar-card-falta', accent: 'bg-red-700' },
-        avaliacao: { className: 'calendar-card-avaliacao', accent: 'bg-purple-600' },
-        aguardando_confirmacao: { className: 'calendar-card-aguardando_confirmacao', accent: 'bg-amber-500' },
-        em_espera: { className: 'calendar-card-em_espera', accent: 'bg-sky-500' },
-        atrasado: { className: 'calendar-card-atrasado', accent: 'bg-orange-500' },
-        reagendado: { className: 'calendar-card-reagendado', accent: 'bg-lime-600' },
-        default: { className: 'calendar-card-agendado', accent: 'bg-slate-600' }
-    };
-    return styles[normalized] || styles.default;
-};
-
-const overbookStyles = {
-    className: 'calendar-card-cancelado ring-2 ring-red-600 ring-offset-2',
-    accent: 'bg-red-700',
-};
-
 const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointmentCardProps>(({
     appointment,
     style,
@@ -90,12 +64,15 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
     const reducedMotion = useReducedMotion();
     const [isHovered, setIsHovered] = useState(false);
 
-    const { getStatusConfig } = useStatusConfig();
+    const { getStatusConfig: getSharedStatusConfig } = useStatusConfig();
     const isCompact = density === 'compact';
     const isOverbooked = isMarkedOverbooked(appointment.notes, appointment.isOverbooked);
     const normalizedStatus = normalizeStatus(appointment.status || 'agendado');
-    const statusStyles = isOverbooked ? overbookStyles : getStatusStylesFallback(normalizedStatus);
-    const sharedStatusConfig = getStatusConfig(normalizedStatus);
+    const statusConfig = getSharedStatusConfig(normalizedStatus);
+    
+    // Use centralized calendar-specific styles
+    const calendarClassName = isOverbooked ? 'calendar-card-cancelado ring-2 ring-red-600 ring-offset-2' : statusConfig.calendarClassName;
+    const calendarAccent = isOverbooked ? 'bg-red-700' : statusConfig.calendarAccent;
 
     const handleMouseEnter = () => setIsHovered(true);
     const handleMouseLeave = () => setIsHovered(false);
@@ -131,7 +108,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
             disableStatusStyles={true}
             statusConfig={{
                 color: undefined,
-                icon: sharedStatusConfig.icon
+                icon: statusConfig.icon
             }}
             data-appointment-popover-anchor={dataAnchor}
             layout={!reducedMotion}
@@ -177,7 +154,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
             onClick={handleClick}
             className={cn(
                 "absolute", 
-                statusStyles.className,
+                calendarClassName,
                 draggable && "cursor-grab active:cursor-grabbing"
             )}
             style={{

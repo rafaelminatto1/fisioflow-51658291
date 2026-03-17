@@ -232,17 +232,20 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
     setPendingStatus(null);
   };
 
-  const handleEdit = () => {
+  const handleEdit = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     onEdit?.();
     onOpenChange?.(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     onDelete?.();
     onOpenChange?.(false);
   };
 
-  const handleOpenPatientProfile = () => {
+  const handleOpenPatientProfile = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
     navigate(`/patients/${appointment.patientId}`);
     onOpenChange?.(false);
   };
@@ -361,7 +364,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 truncate leading-tight tracking-tight">
               <button
                 type="button"
-                onClick={handleOpenPatientProfile}
+                onClick={(e) => handleOpenPatientProfile(e)}
                 className="block w-full truncate text-left hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-sm"
               >
                 {appointment.patientName}
@@ -558,17 +561,17 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
           <Button
             onClick={handleStartAttendance}
             className={cn(
-              "w-full h-11 rounded-xl font-extrabold text-sm shadow-md transition-all active:scale-[0.98]",
+              "w-full h-12 rounded-xl font-black text-sm shadow-lg transition-all active:scale-[0.98] tracking-tight",
               localStatus === 'avaliacao'
-                ? "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-blue-500/20"
-                : "bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-emerald-500/20"
+                ? "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20"
+                : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20"
             )}
           >
             <div className="flex items-center justify-center gap-2">
               {localStatus === 'avaliacao' ? (
-                <FileText className="h-4.5 w-4.5" />
+                <FileText className="h-4 w-4" />
               ) : (
-                <Play className="h-4.5 w-4.5 fill-current" />
+                <Play className="h-4 w-4 fill-current" />
               )}
               {localStatus === 'avaliacao' ? 'INICIAR AVALIAÇÃO' : 'INICIAR ATENDIMENTO'}
             </div>
@@ -576,13 +579,13 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
         )}
 
         {/* Secondary actions */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           {onEdit && (
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              className="h-9 flex-1 rounded-lg font-semibold text-xs gap-1.5 text-muted-foreground hover:text-foreground transition-all"
-              onClick={handleEdit}
+              className="h-10 flex-1 rounded-xl font-bold text-xs gap-1.5 border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100 hover:border-emerald-300 transition-all"
+              onClick={(e) => handleEdit(e)}
             >
               <Edit className="h-3.5 w-3.5" />
               Editar
@@ -592,27 +595,27 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
           {onDelete && (
             <Button
               variant="ghost"
-              size="sm"
-              className="h-9 rounded-lg text-muted-foreground/60 hover:text-destructive transition-all"
-              onClick={handleDelete}
+              size="icon"
+              className="h-10 w-10 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all"
+              onClick={(e) => handleDelete(e)}
               title="Excluir Agendamento"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className="h-4 w-4" />
             </Button>
           )}
 
-          <div className="h-4 w-px bg-border mx-0.5" />
+          <div className="h-6 w-px bg-slate-200 mx-0.5" />
 
           <Button
             variant="ghost"
             size="sm"
-            className="h-9 rounded-lg text-muted-foreground/60 hover:text-foreground text-[10px] font-semibold gap-1 transition-all"
+            className="h-10 px-3 rounded-xl font-bold text-xs gap-1.5 text-slate-500 hover:bg-slate-100 transition-all"
             onClick={() => {
               setShowWaitlistQuickAdd(true);
               onOpenChange?.(false);
             }}
           >
-            <UserPlus className="h-3 w-3" />
+            <UserPlus className="h-3.5 w-3.5" />
             Lista de Espera
           </Button>
         </div>
@@ -634,7 +637,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
               'aria-label': `Ver detalhes do agendamento de ${appointment.patientName}`
             }) : <span data-appointment-popover-anchor={appointment.id}>{children}</span>}
           </DrawerTrigger>
-          <DrawerContent className="max-h-[90vh]">
+          <DrawerContent className="max-h-[90vh]" data-week-appointment="true">
             <DrawerHeader className="text-left border-b pb-4 hidden">
               <DrawerTitle>Detalhes do Agendamento</DrawerTitle>
               <DrawerDescription>Visualizar e editar detalhes do agendamento</DrawerDescription>
@@ -664,6 +667,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
             role="dialog"
             aria-modal="false"
             aria-label={`Detalhes do agendamento de ${appointment.patientName}`}
+            data-week-appointment="true"
             onInteractOutside={(e) => {
               const target = e.target as HTMLElement;
               // Prevent closing when clicking the card itself (which initially opened the popover)
