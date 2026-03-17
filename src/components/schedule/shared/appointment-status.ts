@@ -244,6 +244,24 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     indicator: 'text-blue-900',
     allowedActions: ["complete", "miss", "cancel", "reschedule", "edit", "payment"],
   },
+  aguardando_confirmacao: {
+    borderColor: 'border-amber-500',
+    badgeBg: 'bg-amber-100 dark:bg-amber-500/20',
+    badgeText: 'text-amber-700 dark:text-amber-300',
+    iconColor: 'text-amber-600 dark:text-amber-400',
+    label: 'Aguardando',
+    icon: Clock,
+    gradient: 'from-amber-500/10 via-amber-500/15 to-amber-500/20',
+    calendarClassName: 'calendar-card-aguardando_confirmacao',
+    calendarAccent: 'bg-amber-500',
+    bg: 'bg-amber-100/90 dark:bg-amber-500/20',
+    hoverBg: 'hover:bg-amber-200/90 dark:hover:bg-amber-500/30',
+    text: 'text-amber-900 dark:text-amber-400',
+    subtext: 'text-amber-800/80 dark:text-amber-300/80',
+    accent: 'bg-amber-600',
+    indicator: 'text-amber-700',
+    allowedActions: ["confirm", "cancel", "reschedule", "edit"],
+  },
   remarcar: {
     borderColor: 'border-slate-400',
     badgeBg: 'bg-slate-100 dark:bg-slate-500/20',
@@ -285,9 +303,9 @@ export function normalizeStatus(status: string): string {
   if (s === 'nao_atendido') return 'nao_atendido';
   if (s === 'nao_atendido_sem_cobranca') return 'nao_atendido_sem_cobranca';
   if (s === 'presenca_confirmada') return 'presenca_confirmada';
+  if (s === 'aguardando_confirmacao' || s === 'aguardando') return 'aguardando_confirmacao';
   
   // Default fallbacks
-  if (s === 'aguardando_confirmacao') return 'agendado';
   if (s === 'em_espera' || s === 'atrasado') return 'agendado';
   
   // Já é um valor canônico ou desconhecido — tenta manter ou agendar
@@ -301,6 +319,7 @@ export const APPOINTMENT_STATUS_OPTIONS = [
   'agendado',
   'atendido',
   'avaliacao',
+  'aguardando_confirmacao',
   'faltou',
   'faltou_com_aviso',
   'faltou_sem_aviso',
@@ -335,6 +354,7 @@ export function getStatusColor(status: string): string {
     atendido: '#10b981',
     avaliacao: '#8b5cf6',
     cancelado: '#000000',
+    aguardando_confirmacao: '#f59e0b',
     faltou: '#ef4444',
     faltou_com_aviso: '#2dd4bf',
     faltou_sem_aviso: '#f97316',

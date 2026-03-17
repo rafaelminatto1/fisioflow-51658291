@@ -584,6 +584,23 @@ export class AppointmentService {
             return;
         }
 
+        // Status que não devem gerar cobrança/receita (Sistema ZenFisio)
+        const nonChargingStatuses = [
+            'cancelado',
+            'faltou',
+            'faltou_com_aviso',
+            'faltou_sem_aviso',
+            'nao_atendido',
+            'nao_atendido_sem_cobranca',
+            'remarcar'
+        ];
+
+        const status = (appointment.status || '').toLowerCase();
+        if (nonChargingStatuses.includes(status)) {
+            logger.info('Skipping financial sync: Status does not allow charging', { appointmentId: appointment.id, status }, 'AppointmentService');
+            return;
+        }
+
         if (appointment.payment_status !== 'paid' || !appointment.payment_amount || appointment.payment_amount <= 0) {
             return;
         }
