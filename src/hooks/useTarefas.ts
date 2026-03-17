@@ -81,6 +81,8 @@ export function useCreateTarefa() {
         order_index: tarefa.order_index || 0,
         project_id: tarefa.project_id,
         parent_id: tarefa.parent_id,
+        board_id: tarefa.board_id,
+        column_id: tarefa.column_id,
         checklists: tarefa.checklists || [],
         attachments: tarefa.attachments || [],
         references: tarefa.references || [],

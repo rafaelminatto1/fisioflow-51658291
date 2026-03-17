@@ -50,13 +50,14 @@ app.post('/', requireAuth, async (c) => {
 
     const result = await db.query(
       `INSERT INTO tarefas (organization_id, created_by, responsavel_id, project_id, parent_id,
-         titulo, descricao, status, prioridade, tipo, data_vencimento, start_date,
+         board_id, column_id, titulo, descricao, status, prioridade, tipo, data_vencimento, start_date,
          order_index, tags, checklists, attachments, task_references, dependencies, requires_acknowledgment, acknowledgments)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)
        RETURNING *, task_references as references`,
       [
         user.organizationId, user.uid, body.responsavel_id ?? null, body.project_id ?? null,
-        body.parent_id ?? null, body.titulo, body.descricao ?? null,
+        body.parent_id ?? null, body.board_id ?? null, body.column_id ?? null,
+        body.titulo, body.descricao ?? null,
         body.status ?? 'A_FAZER', body.prioridade ?? 'MEDIA', body.tipo ?? 'TAREFA',
         body.data_vencimento ?? null, body.start_date ?? null, body.order_index ?? 0,
         body.tags ?? [],                                                        // text[]  — array JS direto
@@ -90,7 +91,8 @@ app.patch('/:id', requireAuth, async (c) => {
 
     const allowed = ['titulo', 'descricao', 'status', 'prioridade', 'tipo', 'data_vencimento',
       'start_date', 'completed_at', 'order_index', 'tags', 'checklists', 'attachments',
-      'task_references', 'dependencies', 'responsavel_id', 'project_id', 'parent_id', 'requires_acknowledgment', 'acknowledgments'];
+      'task_references', 'dependencies', 'responsavel_id', 'project_id', 'parent_id',
+      'board_id', 'column_id', 'requires_acknowledgment', 'acknowledgments'];
 
     const sets: string[] = [];
     const params: unknown[] = [];

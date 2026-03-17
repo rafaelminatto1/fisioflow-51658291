@@ -63,9 +63,10 @@ export const AppointmentActions: React.FC<AppointmentActionsProps> = ({
     });
   };
 
-  const canStartAttendance = appointment.status === 'confirmado' || appointment.status === 'agendado';
-  const canConfirm = appointment.status === 'agendado';
-  const canCancel = appointment.status !== 'cancelado' && appointment.status !== 'concluido';
+  const status = String(appointment.status || '').toLowerCase();
+  const canStartAttendance = ['presenca_confirmada', 'agendado', 'avaliacao', 'confirmado'].includes(status);
+  const canConfirm = ['agendado', 'avaliacao'].includes(status);
+  const canCancel = !['cancelado', 'atendido', 'concluido', 'remarcar'].includes(status);
 
   return (
     <DropdownMenu>

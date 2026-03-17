@@ -57,9 +57,18 @@ const Reports = () => {
       },
       appointments: {
         total: data?.length || 0,
-        completed: data?.filter(a => a.status === 'concluido').length || 0,
-        cancelled: data?.filter(a => a.status === 'cancelado').length || 0,
-        noShow: data?.filter(a => a.status === 'falta').length || 0
+        completed: data?.filter(a => {
+          const s = (a.status || '').toLowerCase();
+          return ['atendido', 'concluido', 'realizado'].includes(s);
+        }).length || 0,
+        cancelled: data?.filter(a => {
+          const s = (a.status || '').toLowerCase();
+          return ['cancelado', 'remarcar', 'reagendado'].includes(s);
+        }).length || 0,
+        noShow: data?.filter(a => {
+          const s = (a.status || '').toLowerCase();
+          return ['faltou', 'falta', 'nao_atendido', 'no_show'].includes(s);
+        }).length || 0
       },
       financial: {
         revenue: finStats?.totalRevenue || 0,
