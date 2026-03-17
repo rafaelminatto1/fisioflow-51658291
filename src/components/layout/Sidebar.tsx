@@ -489,13 +489,20 @@ export function Sidebar() {
             {renderSubmenu({
               icon: LayoutGrid,
               label: 'Operacional',
-              items: operacionaisSubmenu,
+              items: operacionaisSubmenu.filter(item => item.href !== '/tarefas-v2'),
               isOpen: operacionaisOpen || isOperacionaisActive,
               onOpenChange: setOperacionaisOpen,
               isActive: isOperacionaisActive,
               collapsed,
               location
             })}
+
+            {renderMenuItem({ 
+              icon: ClipboardList, 
+              label: 'Tarefas Premium', 
+              href: '/tarefas-v2',
+              preload: () => queryClient.prefetchQuery({ queryKey: QueryKeys.tasks, queryFn: fetchTarefas })
+            }, collapsed, location)}
 
             {renderMenuItem({ icon: FileText, label: 'Cadastros', href: '/cadastros' }, collapsed, location)}
 

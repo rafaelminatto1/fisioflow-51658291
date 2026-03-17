@@ -66,6 +66,8 @@ import {
   THERAPIST_PLACEHOLDER,
 } from '@/hooks/useTherapists';
 
+import { APPOINTMENT_STATUS_CONFIG, getStatusConfig } from './shared/appointment-status';
+
 interface AppointmentQuickEditModalProps {
   appointment: Appointment | null;
   open: boolean;
@@ -73,23 +75,7 @@ interface AppointmentQuickEditModalProps {
   onDeleted?: () => void;
 }
 
-// Status labels e cores - movidos para fora do componente para evitar recriação
-const STATUS_CONFIG: Record<AppointmentStatus, { label: string; color: string }> = {
-  agendado: { label: 'Agendado', color: 'bg-blue-500' },
-  confirmado: { label: 'Confirmado', color: 'bg-emerald-500' },
-  em_andamento: { label: 'Em Andamento', color: 'bg-yellow-500' },
-  concluido: { label: 'Concluído', color: 'bg-slate-500' },
-  cancelado: { label: 'Cancelado', color: 'bg-red-500' },
-  falta: { label: 'Falta', color: 'bg-red-500' },
-  faltou: { label: 'Faltou', color: 'bg-red-500' },
-  aguardando_confirmacao: { label: 'Aguardando Confirmação', color: 'bg-amber-500' },
-  atrasado: { label: 'Atrasado', color: 'bg-rose-500' },
-  avaliacao: { label: 'Avaliação', color: 'bg-violet-500' },
-  em_espera: { label: 'Em Espera', color: 'bg-cyan-500' },
-  remarcado: { label: 'Remarcado', color: 'bg-indigo-500' },
-  reagendado: { label: 'Reagendado', color: 'bg-teal-500' },
-  atendido: { label: 'Atendido', color: 'bg-emerald-600' },
-};
+// Status labels e cores are now handled by APPOINTMENT_STATUS_CONFIG
 
 // Status que permitem iniciar atendimento
 const STARTABLE_STATUSES: Set<AppointmentStatus> = new Set([
@@ -495,7 +481,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                   </DialogDescription>
                 </div>
               </div>
-              <Badge className={cn("text-white text-xs shrink-0", statusConfig.color)}>
+              <Badge className={cn("text-white text-xs shrink-0", statusConfig.iconColor.replace('text-', 'bg-'))}>
                 {statusConfig.label}
               </Badge>
             </div>
@@ -648,10 +634,10 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(STATUS_CONFIG).map(([value, config]) => (
+                      {Object.entries(APPOINTMENT_STATUS_CONFIG).map(([value, config]) => (
                         <SelectItem key={value} value={value}>
                           <div className="flex items-center gap-2">
-                            <div className={cn("w-2 h-2 rounded-full", config.color)} />
+                            <div className={cn("w-2 h-2 rounded-full", config.iconColor.replace('text-', 'bg-'))} />
                             {config.label}
                           </div>
                         </SelectItem>
@@ -660,7 +646,7 @@ export const AppointmentQuickEditModal: React.FC<AppointmentQuickEditModalProps>
                   </Select>
                 ) : (
                   <div className="flex items-center gap-2 py-2">
-                    <div className={cn("w-2.5 h-2.5 rounded-full", statusConfig.color)} />
+                    <div className={cn("w-2.5 h-2.5 rounded-full", statusConfig.iconColor.replace('text-', 'bg-'))} />
                     <span className="text-sm font-medium">{statusConfig.label}</span>
                   </div>
                 )}

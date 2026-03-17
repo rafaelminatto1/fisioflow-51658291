@@ -1,19 +1,18 @@
 import { useState, useCallback, useMemo } from 'react';
-import { STATUS_CONFIG } from '@/lib/config/agenda';
-import type { StatusConfig, SessionStatus } from '@/types/agenda';
+import { APPOINTMENT_STATUS_CONFIG, type AppointmentStatusConfig } from '@/components/schedule/shared/appointment-status';
 import { getTextColorClass } from '@/utils/colorContrast';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 const STORAGE_KEY = 'fisioflow_status_config';
 
-export interface CustomStatusConfig {
+export interface CustomStatusConfig extends Partial<AppointmentStatusConfig> {
     id: string;
     label: string;
     color: string;
     bgColor: string;
     borderColor: string;
     allowedActions: string[];
-    isCustom: true;
+    isCustom?: boolean;
 }
 
 interface StoredStatusConfig {
@@ -44,32 +43,22 @@ const saveStoredConfig = (config: StoredStatusConfig) => {
 export function useStatusConfig() {
     const [storedConfig, setStoredConfig] = useState<StoredStatusConfig>(() => getStoredConfig());
 
-    // Merge default config with custom colors
     const statusConfig = useMemo(() => {
-        const merged: Record<string, StatusConfig> = {};
+        const merged: Record<string, any> = {};
 
-        // Start with default configs
-        Object.entries(STATUS_CONFIG).forEach(([key, value]) => {
+        // Use APPOINTMENT_STATUS_CONFIG as base
+        Object.entries(APPOINTMENT_STATUS_CONFIG).forEach(([key, value]) => {
             const customColor = storedConfig.customColors[key];
             if (customColor) {
-                // Use color contrast utility to determine optimal text color
                 const textColorClass = getTextColorClass(customColor.bgColor);
                 merged[key] = {
                     ...value,
-                    color: customColor.color,
-                    bgColor: customColor.bgColor,
+                    bg: customColor.bgColor,
                     borderColor: customColor.borderColor,
-                    twBg: `bg-[${customColor.bgColor}]`,
-                    twBorder: `border-[${customColor.borderColor}]`,
-                    twText: textColorClass,
+                    text: textColorClass,
                 };
             } else {
-                // Recalculate text color for default colors too (for consistency)
-                const textColorClass = getTextColorClass(value.bgColor);
-                merged[key] = {
-                    ...value,
-                    twText: textColorClass,
-                };
+                merged[key] = value;
             }
         });
 
@@ -77,70 +66,52 @@ export function useStatusConfig() {
         storedConfig.customStatuses.forEach((custom) => {
             const textColorClass = getTextColorClass(custom.bgColor);
             merged[custom.id] = {
-                label: custom.label,
-                color: custom.color,
-                bgColor: custom.bgColor,
-                borderColor: custom.borderColor,
-                twBg: `bg-[${custom.bgColor}]`,
-                twBorder: `border-[${custom.borderColor}]`,
-                twText: textColorClass,
-                allowedActions: custom.allowedActions,
+                ...APPOINTMENT_STATUS_CONFIG.agendado, // base for custom ones
+                ...custom,
+                text: textColorClass,
             };
         });
 
         return merged;
     }, [storedConfig]);
 
-    // Get status config for a specific status
-    const getStatusConfig = useCallback((status: string): StatusConfig => {
-        return statusConfig[status] || STATUS_CONFIG.agendado;
+    const getStatusConfig = useCallback((status: string): AppointmentStatusConfig => {
+        return statusConfig[status] || APPOINTMENT_STATUS_CONFIG.agendado;
     }, [statusConfig]);
 
-    // Update color for a status
     const updateStatusColor = useCallback((statusId: string, colors: { color: string; bgColor: string; borderColor: string }) => {
         setStoredConfig(prev => {
             const newConfig = {
                 ...prev,
-                customColors: {
-                    ...prev.customColors,
-                    [statusId]: colors,
-                },
+                customColors: { ...prev.customColors, [statusId]: colors },
             };
             saveStoredConfig(newConfig);
             return newConfig;
         });
     }, []);
 
-    // Create a new custom status
     const createStatus = useCallback((status: Omit<CustomStatusConfig, 'isCustom'>) => {
         setStoredConfig(prev => {
             const newConfig = {
                 ...prev,
-                customStatuses: [
-                    ...prev.customStatuses,
-                    { ...status, isCustom: true as const },
-                ],
+                customStatuses: [...prev.customStatuses, { ...status, isCustom: true }],
             };
             saveStoredConfig(newConfig);
             return newConfig;
         });
     }, []);
 
-    // Update a custom status
     const updateStatus = useCallback((statusId: string, updates: Partial<Omit<CustomStatusConfig, 'id' | 'isCustom'>>) => {
         setStoredConfig(prev => {
             const newConfig = {
                 ...prev,
-                customStatuses: prev.customStatuses.map(s =>
-                    s.id === statusId ? { ...s, ...updates } : s
-                ),
+                customStatuses: prev.customStatuses.map(s => s.id === statusId ? { ...s, ...updates } : s),
             };
             saveStoredConfig(newConfig);
             return newConfig;
         });
     }, []);
 
-    // Delete a custom status
     const deleteStatus = useCallback((statusId: string) => {
         setStoredConfig(prev => {
             const newConfig = {
@@ -152,42 +123,11 @@ export function useStatusConfig() {
         });
     }, []);
 
-    // Reset all customizations
     const resetToDefaults = useCallback(() => {
         const emptyConfig: StoredStatusConfig = { customColors: {}, customStatuses: [] };
         saveStoredConfig(emptyConfig);
         setStoredConfig(emptyConfig);
     }, []);
-
-    // Reset a single status color to default
-    const resetStatusColor = useCallback((statusId: string) => {
-        setStoredConfig(prev => {
-            const { [statusId]: _, ...restColors } = prev.customColors;
-            const newConfig = {
-                ...prev,
-                customColors: restColors,
-            };
-            saveStoredConfig(newConfig);
-            return newConfig;
-        });
-    }, []);
-
-    // Check if a status is custom
-    const isCustomStatus = useCallback((statusId: string): boolean => {
-        return storedConfig.customStatuses.some(s => s.id === statusId);
-    }, [storedConfig.customStatuses]);
-
-    // Check if a status has custom colors
-    const hasCustomColors = useCallback((statusId: string): boolean => {
-        return statusId in storedConfig.customColors;
-    }, [storedConfig.customColors]);
-
-    // Get all statuses (default + custom)
-    const allStatuses = useMemo(() => {
-        const defaultIds = Object.keys(STATUS_CONFIG) as SessionStatus[];
-        const customIds = storedConfig.customStatuses.map(s => s.id);
-        return [...defaultIds, ...customIds];
-    }, [storedConfig.customStatuses]);
 
     return {
         statusConfig,
@@ -197,10 +137,7 @@ export function useStatusConfig() {
         updateStatus,
         deleteStatus,
         resetToDefaults,
-        resetStatusColor,
-        isCustomStatus,
-        hasCustomColors,
-        allStatuses,
+        allStatuses: Object.keys(statusConfig),
         customStatuses: storedConfig.customStatuses,
     };
 }
