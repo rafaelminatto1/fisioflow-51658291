@@ -4,6 +4,7 @@ import { normalizeStatus, getStatusColor } from './shared/appointment-status';
 import { cn } from '@/lib/utils';
 import { MoreVertical } from 'lucide-react';
 import { AppointmentQuickView } from './AppointmentQuickView';
+import { AppointmentContextMenu } from './AppointmentContextMenu';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useIsTouch } from '@/hooks/use-touch';
 import { useStatusConfig } from '@/hooks/useStatusConfig';
@@ -22,6 +23,7 @@ interface CalendarAppointmentCardProps {
     onDragEnd: () => void;
     onEditAppointment?: (appointment: Appointment) => void;
     onDeleteAppointment?: (appointment: Appointment) => void;
+    onStatusChange?: (id: string, status: string) => void;
     onOpenPopover: (id: string | null) => void;
     isPopoverOpen: boolean;
     onDragOver?: (e: React.DragEvent) => void;
@@ -46,6 +48,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
     onDragEnd,
     onEditAppointment,
     onDeleteAppointment,
+    onStatusChange,
     onOpenPopover,
     isPopoverOpen,
     onDragOver,
@@ -93,92 +96,99 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
     const draggable = isDraggable && !selectionMode && !isTouch;
 
     const cardContent = (
-        <AppointmentCard
-            ref={ref}
-            patientName={appointment.patientName}
-            time={normalizeTime(appointment.time)}
-            endTime={calculateEndTime(normalizeTime(appointment.time), duration)}
-            type={appointment.type}
-            status={normalizedStatus}
-            isDragging={isDragging}
-            isSaving={isSaving}
-            isDropTarget={isDropTarget}
-            isSelected={isSelected}
-            compact={isCompact}
-            statusConfig={{
-                color: isOverbooked ? '#dc2626' : getStatusColor(normalizedStatus),
-                icon: statusConfig.icon
-            }}
-            data-appointment-popover-anchor={dataAnchor}
-            layout={!reducedMotion}
-            layoutId={isSaving ? `${appointment.id}-saving` : appointment.id}
-            transition={{
-                layout: reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 700, damping: 42 },
-                opacity: { duration: reducedMotion ? 0 : 0.15 },
-                scale: { duration: dragDuration },
-                boxShadow: { duration: 0.15 }
-            }}
-            initial={reducedMotion ? false : { opacity: 0, scale: 0.98, y: 2 }}
-            animate={{
-                opacity: isDragging && hideGhostWhenSiblings ? 0 : 1,
-                scale: reducedMotion ? 1 : (isDragging ? 0.98 : 1),
-                y: 0,
-                boxShadow: isDragging || isHovered ? "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)" : "0 1px 2px 0 rgba(0, 0, 0, 0.02)"
-            }}
-            whileTap={reducedMotion ? undefined : {
-                scale: isTouch ? 0.97 : 0.99,
-                transition: { duration: 0.1 }
-            }}
-            draggable={false}
-            onDragStart={undefined}
-            onDragEnd={onDragEnd}
-            onDragOver={(e: React.DragEvent) => {
-                if (onDragOver && !selectionMode) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    // @ts-ignore
-                    e.dataTransfer.dropEffect = 'move';
-                    onDragOver(e);
-                }
-            }}
-            onDrop={(e: React.DragEvent) => {
-                if (onDrop && !selectionMode) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    onDrop(e);
-                }
-            }}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
-            onClick={handleClick}
-            className={cn(
-                "absolute", 
-                calendarClassName,
-                draggable && "cursor-grab active:cursor-grabbing"
-            )}
-            style={{
-                ...style,
-                pointerEvents: isDragging && hideGhostWhenSiblings ? 'none' : undefined,
-                borderRadius: '12px'
-            }}
-            tabIndex={0}
-            role="button"
-            aria-label={`${appointment.patientName} - ${normalizeTime(appointment.time)} - ${statusConfig.label}`}
+        <AppointmentContextMenu
+            appointment={appointment}
+            onStatusChange={(status) => onStatusChange?.(appointment.id, status)}
+            onEdit={() => onEditAppointment?.(appointment)}
+            onDelete={() => onDeleteAppointment?.(appointment)}
         >
-            {!isMobile && isHovered && !isDragging && !selectionMode && (
-                <div className="absolute top-1 right-1 flex items-center gap-1 z-50">
-                    <button
-                        className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onEditAppointment?.(appointment);
-                        }}
-                    >
-                        <MoreVertical className="w-3.5 h-3.5 opacity-60" />
-                    </button>
-                </div>
-            )}
-        </AppointmentCard>
+            <AppointmentCard
+                ref={ref}
+                patientName={appointment.patientName}
+                time={normalizeTime(appointment.time)}
+                endTime={calculateEndTime(normalizeTime(appointment.time), duration)}
+                type={appointment.type}
+                status={normalizedStatus}
+                isDragging={isDragging}
+                isSaving={isSaving}
+                isDropTarget={isDropTarget}
+                isSelected={isSelected}
+                compact={isCompact}
+                statusConfig={{
+                    color: isOverbooked ? '#dc2626' : getStatusColor(normalizedStatus),
+                    icon: statusConfig.icon
+                }}
+                data-appointment-popover-anchor={dataAnchor}
+                layout={!reducedMotion}
+                layoutId={isSaving ? `${appointment.id}-saving` : appointment.id}
+                transition={{
+                    layout: reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 700, damping: 42 },
+                    opacity: { duration: reducedMotion ? 0 : 0.15 },
+                    scale: { duration: dragDuration },
+                    boxShadow: { duration: 0.15 }
+                }}
+                initial={reducedMotion ? false : { opacity: 0, scale: 0.98, y: 2 }}
+                animate={{
+                    opacity: isDragging && hideGhostWhenSiblings ? 0 : 1,
+                    scale: reducedMotion ? 1 : (isDragging ? 0.98 : 1),
+                    y: 0,
+                    boxShadow: isDragging || isHovered ? "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)" : "0 1px 2px 0 rgba(0, 0, 0, 0.02)"
+                }}
+                whileTap={reducedMotion ? undefined : {
+                    scale: isTouch ? 0.97 : 0.99,
+                    transition: { duration: 0.1 }
+                }}
+                draggable={false}
+                onDragStart={undefined}
+                onDragEnd={onDragEnd}
+                onDragOver={(e: React.DragEvent) => {
+                    if (onDragOver && !selectionMode) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        // @ts-ignore
+                        e.dataTransfer.dropEffect = 'move';
+                        onDragOver(e);
+                    }
+                }}
+                onDrop={(e: React.DragEvent) => {
+                    if (onDrop && !selectionMode) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        onDrop(e);
+                    }
+                }}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                onClick={handleClick}
+                className={cn(
+                    "absolute", 
+                    calendarClassName,
+                    draggable && "cursor-grab active:cursor-grabbing"
+                )}
+                style={{
+                    ...style,
+                    pointerEvents: isDragging && hideGhostWhenSiblings ? 'none' : undefined,
+                    borderRadius: '12px'
+                }}
+                tabIndex={0}
+                role="button"
+                aria-label={`${appointment.patientName} - ${normalizeTime(appointment.time)} - ${statusConfig.label}`}
+            >
+                {!isMobile && isHovered && !isDragging && !selectionMode && (
+                    <div className="absolute top-1 right-1 flex items-center gap-1 z-50">
+                        <button
+                            className="p-1 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onEditAppointment?.(appointment);
+                            }}
+                        >
+                            <MoreVertical className="w-3.5 h-3.5 opacity-60" />
+                        </button>
+                    </div>
+                )}
+            </AppointmentCard>
+        </AppointmentContextMenu>
     );
 
     if (selectionMode) return cardContent;
