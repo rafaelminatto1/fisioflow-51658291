@@ -1,6 +1,6 @@
-import React, { useMemo, useCallback } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { AlertCircle, MessageSquare, ExternalLink } from 'lucide-react';
+import { AlertCircle, Check, MessageSquare, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AppointmentCardTime } from './AppointmentCardTime';
 import { getStatusConfig } from '../shared';
@@ -32,44 +32,29 @@ export const ExpandedAppointmentCard: React.FC<ExpandedAppointmentCardProps> = (
   const isOverbooked = !!appointment.isOverbooked;
   const statusConfig = getStatusConfig(appointment.status);
 
-  const dateStr = useMemo(() => {
-    if (!appointment.date) return '';
-    if (appointment.date instanceof Date) return appointment.date.toISOString().split('T')[0];
-    return appointment.date;
-  }, [appointment.date]);
+  const dateStr = appointment.date instanceof Date
+    ? appointment.date.toISOString().split('T')[0]
+    : (appointment.date ?? '');
 
-  const ongoing = useMemo(() =>
-    isAppointmentOngoing(dateStr, appointment.time, appointment.duration || 60),
-    [dateStr, appointment.time, appointment.duration]
-  );
+  const ongoing = isAppointmentOngoing(dateStr, appointment.time, appointment.duration || 60);
+  const progress = getAppointmentProgress(dateStr, appointment.time, appointment.duration || 60);
+  const relativeTime = getRelativeTime(dateStr, appointment.time);
 
-  const progress = useMemo(() =>
-    getAppointmentProgress(dateStr, appointment.time, appointment.duration || 60),
-    [dateStr, appointment.time, appointment.duration]
-  );
-
-  const relativeTime = useMemo(() =>
-    getRelativeTime(dateStr, appointment.time),
-    [dateStr, appointment.time]
-  );
-
-  const handleWhatsApp = useCallback((e: React.MouseEvent) => {
+  const handleWhatsApp = (e: React.MouseEvent) => {
     e.stopPropagation();
     const phone = appointment.phone?.replace(/\D/g, '');
-    if (phone) {
-      window.open(`https://wa.me/55${phone}`, '_blank');
-    }
-  }, [appointment.phone]);
+    if (phone) window.open(`https://wa.me/55${phone}`, '_blank');
+  };
 
-  const handleQuickCheckIn = useCallback((e: React.MouseEvent) => {
+  const handleQuickCheckIn = (e: React.MouseEvent) => {
     e.stopPropagation();
     onStatusChange?.('atendido');
-  }, [onStatusChange]);
+  };
 
-  const handleEditClick = useCallback((e: React.MouseEvent) => {
+  const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onEdit?.();
-  }, [onEdit]);
+  };
 
   return (
     <motion.div
@@ -99,13 +84,13 @@ export const ExpandedAppointmentCard: React.FC<ExpandedAppointmentCardProps> = (
       {/* Dynamic Status Border */}
       <div className={cn(
         "absolute top-0 left-0 right-0 h-2 opacity-80",
-        isOverbooked ? "bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8)]" : statusConfig.borderColor.replace('border-', 'bg-')
+        isOverbooked ? "bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.8)]" : statusConfig.accent
       )} />
 
       {/* Decorative Glow */}
       <div className={cn(
         "absolute -right-20 -top-20 w-40 h-40 rounded-full blur-[100px] opacity-20 transition-opacity duration-500 group-hover:opacity-40",
-        isOverbooked ? "bg-red-500" : statusConfig.borderColor.replace('border-', 'bg-')
+        isOverbooked ? "bg-red-500" : statusConfig.accent
       )} />
 
       <div className="p-8 relative z-10">
@@ -147,7 +132,7 @@ export const ExpandedAppointmentCard: React.FC<ExpandedAppointmentCardProps> = (
             {appointment.patientName}
           </h3>
           <div className="flex items-center gap-2.5">
-            <div className={cn("w-3 h-3 rounded-full shadow-sm animate-pulse", statusConfig.iconColor.replace('text-', 'bg-'))} />
+            <div className={cn("w-3 h-3 rounded-full shadow-sm animate-pulse", statusConfig.accent)} />
             <p className="text-[12px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">
               {appointment.type} <span className="mx-1 opacity-30">•</span> {statusConfig.label}
             </p>
