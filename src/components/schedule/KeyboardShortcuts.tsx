@@ -151,4 +151,6 @@ export const KeyboardShortcuts = memo(({ open, onOpenChange }: KeyboardShortcuts
 
 KeyboardShortcuts.displayName = 'KeyboardShortcuts';
 
+export default KeyboardShortcuts;
+
 export type { KeyboardShortcutsProps, ShortcutItemProps };
