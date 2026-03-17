@@ -44,6 +44,7 @@ import { WaitlistQuickAdd } from '../WaitlistQuickAdd';
 import { AppointmentModalHeader } from './AppointmentModalHeader';
 import { AppointmentInfoTab } from './AppointmentInfoTab';
 import { AppointmentOptionsTab } from './AppointmentOptionsTab';
+import { AppointmentModalFooterActions } from './AppointmentModalFooterActions';
 import { useAppointmentModalState } from './hooks/useAppointmentModalState';
 import { useAppointmentForm } from './hooks/useAppointmentForm';
 
@@ -366,91 +367,22 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
         </Tabs>
       </FormProvider>
 
-      <CustomModalFooter isMobile={isMobile} className="items-stretch flex-col-reverse gap-3 bg-background sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex justify-center sm:justify-start w-full sm:w-auto">
-          {currentMode === 'edit' && appointment && (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleDelete}
-              className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 sm:w-auto"
-            >
-              <X className="w-4 h-4 mr-1" />
-              Excluir
-            </Button>
-          )}
-        </div>
-
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
-          {currentMode === 'view' && appointment && (
-            <Button
-              type="button"
-              variant="default"
-              onClick={() => setCurrentMode('edit')}
-              className="w-full sm:w-auto"
-            >
-              Editar
-            </Button>
-          )}
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-            disabled={isCreating || isUpdating}
-            className="w-full sm:w-auto"
-          >
-            {currentMode === 'view' ? 'Fechar' : 'Cancelar'}
-          </Button>
-
-          {currentMode !== 'view' && watchedStatus === 'avaliacao' && (
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isCreating || isUpdating}
-              className="w-full min-w-[100px] sm:w-auto"
-              onClick={() => {
-                scheduleOnlyRef.current = true;
-                handleSubmit((data) => handleSave(data, recurringConfig))();
-              }}
-            >
-              {(isCreating || isUpdating) ? (
-                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <>
-                  <Check className="w-4 h-4 mr-1" />
-                  Agendar
-                </>
-              )}
-            </Button>
-          )}
-          {currentMode !== 'view' && (
-            <Button
-              type="submit"
-              form="appointment-form"
-              disabled={isCreating || isUpdating}
-              onClick={() => { scheduleOnlyRef.current = false; }}
-              className={cn(
-                "w-full min-w-[100px] transition-all duration-200 sm:w-auto",
-                watchedStatus === 'avaliacao' && "bg-violet-600 hover:bg-violet-700 text-white",
-                (isCreating || isUpdating) && "opacity-80"
-              )}
-            >
-              {(isCreating || isUpdating) ? (
-                <span className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  {currentMode === 'edit' ? 'Salvando...' : 'Criando...'}
-                </span>
-              ) : (
-                <>
-                  <Check className="w-4 h-4 mr-1" />
-                  {watchedStatus === 'avaliacao' ? 'Iniciar Avaliação' : (currentMode === 'edit' ? 'Salvar' : 'Criar')}
-                </>
-              )}
-            </Button>
-          )}
-        </div>
-      </CustomModalFooter>
+      <AppointmentModalFooterActions
+        currentMode={currentMode}
+        isCreating={isCreating}
+        isUpdating={isUpdating}
+        watchedStatus={watchedStatus}
+        onClose={onClose}
+        onDelete={handleDelete}
+        onEdit={() => setCurrentMode('edit')}
+        onSave={() => { scheduleOnlyRef.current = false; }}
+        onScheduleOnly={() => {
+          scheduleOnlyRef.current = true;
+          handleSubmit((data) => handleSave(data, recurringConfig))();
+        }}
+        isMobile={isMobile}
+        hasAppointment={!!appointment}
+      />
 
       <QuickPatientModal
         open={quickPatientModalOpen}
