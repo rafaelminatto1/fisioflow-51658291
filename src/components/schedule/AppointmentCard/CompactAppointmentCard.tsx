@@ -1,6 +1,6 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { AlertCircle, Clock, MessageSquare, Check, MoreVertical, Edit2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { AlertCircle, Clock, MessageSquare, Check, Edit2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getStatusConfig } from '../shared';
 import type { Appointment } from '@/types/appointment';
@@ -63,7 +63,7 @@ export const CompactAppointmentCard: React.FC<CompactAppointmentCardProps> = ({
       {/* Accent Indicator */}
       <div className={cn(
         "absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300 group-hover:w-2 z-20",
-        isOverbooked ? "bg-red-600 shadow-[0_0_8px_rgba(220,38,38,0.5)]" : statusConfig.borderColor.replace('border-', 'bg-')
+        isOverbooked ? "bg-red-600 shadow-[0_0_8px_rgba(220,38,38,0.5)]" : statusConfig.accent
       )} />
 
       {/* Quick Actions Overlay (Padrão 2026) */}
