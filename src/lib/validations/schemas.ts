@@ -280,11 +280,16 @@ export type UpdatePatientData = z.infer<typeof updatePatientSchema>;
  */
 export const AppointmentStatusEnum = z.enum([
   'agendado',
-  'confirmado',
-  'em_andamento',
-  'concluido',
+  'atendido',
+  'avaliacao',
   'cancelado',
-  'falta',
+  'faltou',
+  'faltou_com_aviso',
+  'faltou_sem_aviso',
+  'nao_atendido',
+  'nao_atendido_sem_cobranca',
+  'presenca_confirmada',
+  'remarcar'
 ], {
   errorMap: () => ({ message: 'Status inválido' }),
 });

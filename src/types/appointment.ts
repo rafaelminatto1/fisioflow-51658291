@@ -61,6 +61,7 @@ export type AppointmentStatus =
   | 'nao_atendido'
   | 'nao_atendido_sem_cobranca'
   | 'presenca_confirmada'
+  | 'aguardando_confirmacao'
   | 'remarcar';
 
 export interface EnhancedAppointment extends AppointmentBase {

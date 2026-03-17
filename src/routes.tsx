@@ -86,6 +86,8 @@ const Vouchers = lazy(() => import(/* webpackChunkName: "vouchers" */ "./pages/V
 const Install = lazy(() => import(/* webpackChunkName: "install" */ "./pages/Install"));
 const Surveys = lazy(() => import(/* webpackChunkName: "surveys" */ "./pages/Surveys"));
 const TarefasV2 = lazy(() => import(/* webpackChunkName: "tasks-v2" */ "./pages/TarefasV2"));
+const BoardsHome = lazy(() => import(/* webpackChunkName: "boards-home" */ "./pages/BoardsHome"));
+const BoardDetail = lazy(() => import(/* webpackChunkName: "boards-detail" */ "./pages/BoardDetail"));
 const Projects = lazy(() => import(/* webpackChunkName: "projects" */ "./pages/Projects"));
 const ProjectDetails = lazy(() => import(/* webpackChunkName: "project-details" */ "./pages/ProjectDetails"));
 const Inventory = lazy(() => import(/* webpackChunkName: "inventory" */ "./pages/Inventory"));
@@ -304,8 +306,10 @@ export function AppRoutes() {
             <Route path="/pre-cadastro-admin" element={<ProtectedRoute allowedRoles={['admin']}><PreCadastroAdmin /></ProtectedRoute>} />
             <Route path="/telemedicine-room/:roomId" element={<ProtectedRoute><TelemedicineRoom /></ProtectedRoute>} />
 
-            <Route path="/tarefas" element={<Navigate to="/tarefas-v2" replace />} />
-            <Route path="/tarefas-v2" element={<ProtectedRoute><TarefasV2 /></ProtectedRoute>} />
+            <Route path="/tarefas" element={<Navigate to="/boards" replace />} />
+            <Route path="/tarefas-v2" element={<Navigate to="/boards" replace />} />
+            <Route path="/boards" element={<ProtectedRoute><BoardsHome /></ProtectedRoute>} />
+            <Route path="/boards/:boardId" element={<ProtectedRoute><BoardDetail /></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><AdvancedAnalytics /></ProtectedRoute>} />
             <Route path="/smart-dashboard" element={<ProtectedRoute><SmartDashboard /></ProtectedRoute>} />
             <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />

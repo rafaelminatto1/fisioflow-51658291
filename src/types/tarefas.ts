@@ -116,6 +116,8 @@ export interface Tarefa {
   organization_id?: string;
   project_id?: string;
   parent_id?: string;
+  board_id?: string;
+  column_id?: string;
   order_index: number;
 
   // People

@@ -41,12 +41,12 @@ import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 const premiumFieldBaseClass =
-    "w-full justify-between rounded-2xl border border-border/70 bg-gradient-to-b from-background via-background to-muted/30 px-3 text-left shadow-[0_1px_2px_rgba(15,23,42,0.06),0_18px_34px_-26px_rgba(15,23,42,0.35)] transition-[border-color,box-shadow,background-color,transform] hover:border-primary/25 hover:to-primary/[0.04] hover:shadow-[0_1px_2px_rgba(15,23,42,0.08),0_22px_36px_-28px_rgba(37,99,235,0.35)] focus:ring-4 focus:ring-primary/10 focus:border-primary/30 data-[state=open]:border-primary/30 data-[state=open]:to-primary/[0.05] data-[state=open]:shadow-[0_1px_2px_rgba(15,23,42,0.08),0_24px_40px_-28px_rgba(37,99,235,0.38)]";
+    "w-full justify-between rounded-xl border border-blue-100 bg-white px-3 text-left shadow-sm transition-all hover:border-blue-200 hover:bg-blue-50/30 focus:ring-2 focus:ring-blue-100 focus:border-blue-300 data-[state=open]:border-blue-300 data-[state=open]:bg-blue-50/50";
 
 const premiumFieldClass = `${premiumFieldBaseClass} h-11 text-xs sm:text-sm`;
 const premiumCompactFieldClass = `${premiumFieldBaseClass} h-9 text-xs`;
 const premiumSelectContentClass =
-    "rounded-[22px] border border-border/70 bg-background/95 p-1 shadow-[0_24px_80px_-28px_rgba(15,23,42,0.45)] backdrop-blur-xl";
+    "rounded-xl border border-blue-100 bg-white p-1 shadow-lg backdrop-blur-sm";
 
 export const PatientSelectionSection = ({
     patients,
@@ -439,6 +439,29 @@ export const PaymentTab = ({
     const resolvedPatientName = patientName?.trim() || 'Paciente selecionado acima';
 
     const isPaid = watchPaymentStatus !== 'pending';
+    const watchedStatus = watch('status');
+
+    // Regra: Se o status for alterado para Faltou/Cancelado, resetar pagamento (não cobramos)
+    useEffect(() => {
+        const nonChargingStatuses = [
+            'cancelado',
+            'faltou',
+            'faltou_com_aviso',
+            'faltou_sem_aviso',
+            'nao_atendido',
+            'nao_atendido_sem_cobranca',
+            'remarcar'
+        ];
+
+        if (watchedStatus && nonChargingStatuses.includes(watchedStatus.toLowerCase())) {
+            if (watchPaymentStatus !== 'pending') {
+                setValue('payment_status', 'pending');
+                setValue('payment_amount', 0);
+                setValue('payment_method', '');
+                setValue('session_package_id', null);
+            }
+        }
+    }, [watchedStatus, setValue, watchPaymentStatus]);
 
     useEffect(() => {
         if (watchPaymentStatus !== 'paid_package') return;
@@ -1065,18 +1088,18 @@ export const OptionsTab = ({
 
     return (
         <div className="mt-0 space-y-3 sm:space-y-4">
-            <div className="space-y-2 rounded-[24px] border border-border/70 bg-gradient-to-b from-background to-muted/20 p-4 shadow-[0_18px_40px_-32px_rgba(15,23,42,0.35)]">
+            <div className="space-y-2 rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                     <div>
-                        <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
-                            <Zap className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5 text-blue-900">
+                            <Zap className="h-3.5 w-3.5 text-blue-500" />
                             Equipamentos
                         </Label>
                         <p className="mt-1 text-[11px] text-muted-foreground">
                             Marque os recursos usados ou reservados para esta sessão.
                         </p>
                     </div>
-                    <Badge variant="outline" className="rounded-full border-primary/10 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
+                    <Badge variant="outline" className="rounded-full border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-600">
                         {selectedEquipments.length > 0 ? `${selectedEquipments.length} selecionados` : 'Opcional'}
                     </Badge>
                 </div>
@@ -1087,16 +1110,16 @@ export const OptionsTab = ({
                 />
             </div>
 
-            <div className="space-y-2 rounded-[24px] border border-blue-500/15 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.12),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.92))] p-4 shadow-[0_18px_40px_-32px_rgba(15,23,42,0.35)] dark:bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.18),transparent_34%),linear-gradient(180deg,rgba(15,23,42,0.96),rgba(15,23,42,0.92))]">
+            <div className="space-y-2 rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                         <div className="flex items-center gap-2">
                             <Repeat className="h-3.5 w-3.5 text-blue-600" />
-                            <Label htmlFor="is_recurring" className="text-xs sm:text-sm font-medium cursor-pointer">
+                            <Label htmlFor="is_recurring" className="text-xs sm:text-sm font-medium cursor-pointer text-blue-900">
                                 Agendamento Recorrente
                             </Label>
                             {isRecurring && (
-                                <Badge variant="outline" className="rounded-full border-blue-500/15 bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-300">
+                                <Badge variant="outline" className="rounded-full border-blue-100 bg-blue-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-700">
                                     {recurringConfig.days.length > 0
                                         ? recurringConfig.days.map(d => WEEKDAYS[d.day]?.label).join('+')
                                         : 'Semanal'}
@@ -1114,7 +1137,7 @@ export const OptionsTab = ({
                         checked={Boolean(isRecurring)}
                         onCheckedChange={(checked) => setValue('is_recurring', Boolean(checked))}
                         disabled={disabled}
-                        className="data-[state=checked]:bg-blue-500 data-[state=unchecked]:bg-slate-300/80"
+                        className="data-[state=checked]:bg-blue-600 data-[state=unchecked]:bg-slate-200"
                     />
                 </div>
 
@@ -1129,31 +1152,34 @@ export const OptionsTab = ({
                 )}
             </div>
 
-            <div className="space-y-2 rounded-[24px] border border-border/70 bg-gradient-to-b from-background to-muted/20 p-4 shadow-[0_18px_40px_-32px_rgba(15,23,42,0.35)]">
+            <div className="space-y-2 rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                     <div>
-                        <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
-                            <Bell className="h-3.5 w-3.5 text-primary" />
+                        <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5 text-blue-900">
+                            <Bell className="h-3.5 w-3.5 text-blue-500" />
                             Lembretes
                         </Label>
                         <p className="mt-1 text-[11px] text-muted-foreground">
                             Programe avisos rápidos para evitar faltas e atrasos.
                         </p>
                     </div>
-                    <Badge variant="outline" className="rounded-full border-primary/10 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
+                    <Badge variant="outline" className="rounded-full border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-600">
                         {reminders.length > 0 ? `${reminders.length} ativos` : 'Opcional'}
                     </Badge>
                 </div>
                 <AppointmentReminder
-                    reminders={reminders}
-                    onRemindersChange={setReminders}
                     disabled={disabled}
+                    reminders={reminders}
+                    setReminders={setReminders}
                 />
             </div>
 
-            <div className="space-y-2 rounded-[24px] border border-border/70 bg-gradient-to-b from-background to-muted/20 p-4 shadow-[0_18px_40px_-32px_rgba(15,23,42,0.35)]">
+            <div className="space-y-2 rounded-xl border border-blue-100 bg-white p-4 shadow-sm">
                 <div>
-                    <Label className="text-xs sm:text-sm font-medium">Sala</Label>
+                    <Label className="text-xs sm:text-sm font-medium flex items-center gap-1.5 text-blue-900">
+                        <Package className="h-3.5 w-3.5 text-blue-500" />
+                        Sala
+                    </Label>
                     <p className="mt-1 text-[11px] text-muted-foreground">
                         Defina onde o atendimento acontecerá.
                     </p>
@@ -1163,10 +1189,10 @@ export const OptionsTab = ({
                     onValueChange={(value) => setValue('room', value)}
                     disabled={disabled}
                 >
-                    <SelectTrigger className={cn(premiumFieldClass, "text-sm")}>
+                    <SelectTrigger className={cn(premiumFieldClass, "text-sm border-blue-100")}>
                         <SelectValue placeholder="Selecione a sala" />
                     </SelectTrigger>
-                    <SelectContent className={premiumSelectContentClass}>
+                    <SelectContent className="rounded-lg border-blue-100">
                         <SelectItem value="sala-1">🚪 Sala 01</SelectItem>
                         <SelectItem value="sala-2">🚪 Sala 02</SelectItem>
                         <SelectItem value="sala-3">🚪 Sala 03</SelectItem>
@@ -1176,17 +1202,15 @@ export const OptionsTab = ({
             </div>
 
             {currentMode === 'edit' && onDuplicate && (
-                <div className="pt-2 border-t">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        className="h-11 w-full rounded-2xl border border-border/70 bg-gradient-to-b from-background to-muted/20 text-xs shadow-[0_18px_34px_-28px_rgba(15,23,42,0.35)] transition-[transform,box-shadow,border-color,background-color] hover:-translate-y-px hover:border-primary/20 hover:bg-primary/[0.04] sm:text-sm"
-                        onClick={onDuplicate}
-                    >
-                        <Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
-                        Duplicar Agendamento
-                    </Button>
-                </div>
+                <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onDuplicate}
+                    className="w-full justify-start gap-2 h-11 rounded-xl border-blue-100 text-blue-700 hover:bg-blue-50 transition-colors shadow-sm"
+                >
+                    <Copy className="h-4 w-4" />
+                    <span>Duplicar Agendamento</span>
+                </Button>
             )}
         </div>
     );

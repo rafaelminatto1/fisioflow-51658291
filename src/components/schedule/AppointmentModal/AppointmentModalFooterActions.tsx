@@ -44,49 +44,50 @@ export const AppointmentModalFooterActions: React.FC<AppointmentModalFooterActio
             type="button"
             variant="ghost"
             onClick={onDelete}
-            className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 sm:w-auto"
+            className="w-full text-red-600 hover:text-red-700 hover:bg-red-50 sm:w-auto font-medium"
           >
-            <X className="w-4 h-4 mr-1" />
+            <Trash2 className="w-4 h-4 mr-2" />
             Excluir
           </Button>
         )}
       </div>
 
       <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onClose}
+          disabled={isLoading}
+          className="w-full sm:w-auto text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+        >
+          {currentMode === 'view' ? 'Fechar' : 'Cancelar'}
+        </Button>
+
         {currentMode === 'view' && hasAppointment && (
           <Button
             type="button"
             variant="default"
             onClick={onEdit}
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
           >
+            <Edit className="w-4 h-4 mr-2" />
             Editar
           </Button>
         )}
-
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onClose}
-          disabled={isLoading}
-          className="w-full sm:w-auto"
-        >
-          {currentMode === 'view' ? 'Fechar' : 'Cancelar'}
-        </Button>
 
         {currentMode !== 'view' && watchedStatus === 'avaliacao' && (
           <Button
             type="button"
             variant="outline"
             disabled={isLoading}
-            className="w-full min-w-[100px] sm:w-auto"
+            className="w-full min-w-[100px] sm:w-auto border-blue-100 text-blue-700 hover:bg-blue-50"
             onClick={onScheduleOnly}
           >
             {isLoading ? (
               <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
-                <Check className="w-4 h-4 mr-1" />
+                <Check className="w-4 h-4 mr-2" />
                 Agendar
               </>
             )}
@@ -100,8 +101,10 @@ export const AppointmentModalFooterActions: React.FC<AppointmentModalFooterActio
             disabled={isLoading}
             onClick={onSave}
             className={cn(
-              "w-full min-w-[100px] transition-all duration-200 sm:w-auto",
-              watchedStatus === 'avaliacao' && "bg-violet-600 hover:bg-violet-700 text-white",
+              "w-full min-w-[120px] transition-all duration-200 sm:w-auto shadow-sm",
+              watchedStatus === 'avaliacao' 
+                ? "bg-violet-600 hover:bg-violet-700 text-white" 
+                : "bg-blue-600 hover:bg-blue-700 text-white",
               isLoading && "opacity-80"
             )}
           >
@@ -111,10 +114,10 @@ export const AppointmentModalFooterActions: React.FC<AppointmentModalFooterActio
                 {currentMode === 'edit' ? 'Salvando...' : 'Criando...'}
               </span>
             ) : (
-              <>
-                <Check className="w-4 h-4 mr-1" />
-                {watchedStatus === 'avaliacao' ? 'Iniciar Avaliação' : (currentMode === 'edit' ? 'Salvar' : 'Criar')}
-              </>
+              <span className="flex items-center gap-2">
+                {watchedStatus === 'avaliacao' ? <Play className="w-4 h-4" /> : <Check className="w-4 h-4" />}
+                {watchedStatus === 'avaliacao' ? 'Iniciar Avaliação' : (currentMode === 'edit' ? 'Salvar Alterações' : 'Criar Agendamento')}
+              </span>
             )}
           </Button>
         )}
