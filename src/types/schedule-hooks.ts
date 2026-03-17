@@ -27,6 +27,7 @@ export interface ScheduleActions {
   handleAppointmentReschedule: (appointment: Appointment, newDate: Date, newTime: string, ignoreCapacity?: boolean) => Promise<void>;
   handleEditAppointment: (appointment: Appointment) => void;
   handleDeleteAppointment: (appointment: Appointment) => Promise<void>;
+  handleUpdateStatus: (appointmentId: string, newStatus: string) => Promise<void>;
   handleAppointmentClick: (appointment: Appointment) => void;
   handleScheduleFromWaitlist: (patientId: string, patientName: string) => void;
   handleCancelAllToday: () => Promise<void>;
