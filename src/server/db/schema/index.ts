@@ -31,3 +31,6 @@ export * from './gamification';
 
 // Evaluation Templates
 export * from './evaluation_templates';
+
+// Premium Task Management & Accountability
+export * from './tasks';

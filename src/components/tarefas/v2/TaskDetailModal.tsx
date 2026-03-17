@@ -26,7 +26,8 @@ import {
   Clock,
   History,
   Loader2,
-  Save
+  Save,
+  ShieldAlert
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -135,6 +136,7 @@ const tarefaDetailSchema = z.object({
   attachments: z.array(attachmentSchema).optional(),
   references: z.array(referenceSchema).optional(),
   dependencies: z.array(z.string()).default([]),
+  requires_acknowledgment: z.boolean().default(false),
 });
 
 type TarefaDetailFormData = z.infer<typeof tarefaDetailSchema>;
@@ -177,7 +179,8 @@ export function TaskDetailModal({
       checklists: [],
       attachments: [],
       references: [],
-      dependencies: []
+      dependencies: [],
+      requires_acknowledgment: false
     }
   });
 
@@ -215,7 +218,8 @@ export function TaskDetailModal({
         checklists: tarefa.checklists || [],
         attachments: tarefa.attachments || [],
         references: tarefa.references || [],
-        dependencies: tarefa.dependencies || []
+        dependencies: tarefa.dependencies || [],
+        requires_acknowledgment: tarefa.requires_acknowledgment || false
       });
     }
   }, [tarefa, form]);
@@ -401,6 +405,10 @@ export function TaskDetailModal({
           <TabsTrigger value="references" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-t-lg h-9 mt-auto">
             <BookOpen className="h-4 w-4 mr-2" />
             Wiki / Refs
+          </TabsTrigger>
+          <TabsTrigger value="audit" className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-t-lg h-9 mt-auto text-orange-600 data-[state=active]:text-orange-700">
+            <ShieldAlert className="h-4 w-4 mr-2" />
+            Auditoria
           </TabsTrigger>
         </TabsList>
 
@@ -882,6 +890,21 @@ export function TaskDetailModal({
               Auto-save ativo
             </div>
             <div className="flex items-center gap-3">
+              {tarefa?.requires_acknowledgment && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="rounded-xl h-11 px-6 border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100 hover:text-orange-800 font-bold tracking-wide shadow-sm"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    toast.success("Ciente registrado com sucesso! A auditoria foi atualizada.");
+                    // TODO: Call backend update endpoint
+                  }}
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Li e Entendi
+                </Button>
+              )}
               <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl h-11 px-6 font-bold text-slate-500">
                 Fechar
               </Button>

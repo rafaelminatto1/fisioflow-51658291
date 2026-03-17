@@ -57,7 +57,7 @@ export default function GoalProfileListPage() {
     const queryClient = useQueryClient();
 
     // Query for listing profiles
-    const { data: profiles = [], isLoading, error } = useQuery({
+    const { data: profiles = [], isLoading } = useQuery({
         queryKey: ['goalProfiles'],
         queryFn: goalsAdminService.listProfiles,
         staleTime: 1000 * 60 * 5, // 5 minutes
@@ -79,7 +79,7 @@ export default function GoalProfileListPage() {
             setNewProfile({ id: '', name: '', description: '' });
             navigate(`/admin/goals/${data.id}`);
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({
                 title: "Erro ao criar perfil",
                 description: error.message,
@@ -98,7 +98,7 @@ export default function GoalProfileListPage() {
                 description: "O perfil agora está disponível para uso clínico.",
             });
         },
-        onError: (error: any) => {
+        onError: (error: Error) => {
             toast({
                 title: "Erro ao publicar",
                 description: error.message,

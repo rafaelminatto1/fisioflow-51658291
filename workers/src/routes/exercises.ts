@@ -15,7 +15,7 @@ import {
   exercises,
   exerciseCategories,
   exerciseFavorites,
-} from '../../../src/server/db/schema/exercises';
+} from '@fisioflow/db';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
