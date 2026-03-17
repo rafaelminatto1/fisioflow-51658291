@@ -105,7 +105,8 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
     effectiveTherapistId,
   });
 
-  const { methods, handleSave, handleDelete, handleDuplicate, isCreating, isUpdating, reset, watch, setValue, handleSubmit } = form;
+  const { methods, handleSave, handleDelete, handleDuplicate, isCreating, isUpdating, getInitialFormData } = form;
+  const { watch, setValue, handleSubmit, reset } = methods;
 
   const watchedPatientId = watch('patient_id');
   const watchedDateStr = watch('appointment_date');
