@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { formatDateToBrazilian } from '@/utils/dateUtils';
 import { AppointmentModalRefactored } from '@/components/schedule/AppointmentModalRefactored';
+import { ScheduleModalsState, ScheduleActions } from '@/types/schedule-hooks';
 
 // Lazy load the modals - simplified by using default exports
 const AppointmentQuickEditModal = lazy(() => import('@/components/schedule/AppointmentQuickEditModal'));
@@ -19,8 +20,8 @@ const KeyboardShortcuts = lazy(() => import('@/components/schedule/KeyboardShort
 
 interface ScheduleModalsProps {
   currentDate: Date;
-  modals: any;
-  actions: any;
+  modals: ScheduleModalsState;
+  actions: ScheduleActions;
 }
 
 export const ScheduleModals: React.FC<ScheduleModalsProps> = ({ currentDate, modals, actions }) => {
