@@ -95,7 +95,6 @@ export const LeaderboardTable: React.FC = () => {
   };
 
   const podium = leaderboard.slice(0, 3);
-  const others = leaderboard.slice(3);
 
   const getPodiumColor = (rank: number) => {
     if (rank === 1) return 'from-yellow-400 to-yellow-600 shadow-yellow-500/20';

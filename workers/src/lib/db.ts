@@ -2,8 +2,6 @@ import { neon } from '@neondatabase/serverless';
 import { drizzle as drizzleHttp } from 'drizzle-orm/neon-http';
 import type { Env } from '../types/env';
 
-import * as schema from './worker-schema';
-
 function getUrl(env: Env): string {
   // Prioriza NEON_URL (direto ao Neon HTTP API) sobre Hyperdrive (TCP-only, não funciona com neon() HTTP)
   const url = env.NEON_URL || process.env.DATABASE_URL || env.HYPERDRIVE?.connectionString;
@@ -14,9 +12,10 @@ function getUrl(env: Env): string {
 /**
  * Cria uma instância do Drizzle ORM via Neon HTTP driver.
  * Neon HTTP é o driver recomendado para Cloudflare Workers.
+ * Rotas usam .select()/.insert()/.update() — sem relational queries, sem schema necessário.
  */
 export function createDb(env: Env) {
-  return drizzleHttp(neon(getUrl(env)), { schema });
+  return drizzleHttp(neon(getUrl(env)));
 }
 
 /**

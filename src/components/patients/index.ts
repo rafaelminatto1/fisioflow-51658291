@@ -12,7 +12,6 @@ export { PatientsPageHeader } from './PatientsPageHeader';
 
 // UI Components
 export { PatientStatsCard, PatientStatsCardSkeleton } from './PatientStatsCard';
-export { PatientErrorBoundary, PatientErrorFallback } from './PatientErrorBoundary';
 
 // Hooks
 export { usePatientFilters } from './usePatientFilters';
