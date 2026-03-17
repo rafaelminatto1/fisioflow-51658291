@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import { CartesianChart, Line, Area, Points } from 'victory-native';
+import { CartesianChart, Line, Area } from 'victory-native';
 import { useColors } from '@/hooks/useColorScheme';
 import type { Evolution } from '@/types';
 import { format } from 'date-fns';
@@ -17,12 +17,12 @@ export const PainProgressChart = ({ evolutions }: PainProgressChartProps) => {
   // Filter evolutions that have painLevel and sort them by date (oldest to newest)
   const chartData = evolutions
     .filter(ev => ev.painLevel !== undefined)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .sort((a, b) => new Date(a.date || '').getTime() - new Date(b.date || '').getTime())
     .slice(-7) // Last 7 sessions
     .map((ev, index) => ({
       x: index,
       y: ev.painLevel || 0,
-      label: format(new Date(ev.date), 'dd/MM'),
+      label: ev.date ? format(new Date(ev.date), 'dd/MM') : '',
     }));
 
   if (chartData.length < 2) {
@@ -86,12 +86,6 @@ export const PainProgressChart = ({ evolutions }: PainProgressChartProps) => {
                 animate={{ type: "timing", duration: 500 }}
               />
 
-              {/* Data points */}
-              <Points
-                points={points.y}
-                color={colors.primary}
-                radius={5}
-              />
             </>
           )}
         </CartesianChart>

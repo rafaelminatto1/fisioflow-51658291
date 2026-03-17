@@ -11,7 +11,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 // Tipo para o módulo de áudio (carregado sob demanda)
 type AudioModule = typeof import('expo-av').Audio;
-type SoundObject = import('expo-av').Sound;
+type SoundObject = any; // Fallback since expo-av/build/index typing is strict
 
 export function useAudioFeedback() {
   const soundRef = useRef<SoundObject | null>(null);

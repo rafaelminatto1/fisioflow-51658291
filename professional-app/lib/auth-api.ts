@@ -1,6 +1,11 @@
 import { config } from './config';
 import * as SecureStore from 'expo-secure-store';
 
+export interface AuthResponse {
+  user: any;
+  token: string;
+}
+
 const TOKEN_KEY = 'FISIOFLOW_AUTH_TOKEN';
 
 // Helper for fetch with timeout
