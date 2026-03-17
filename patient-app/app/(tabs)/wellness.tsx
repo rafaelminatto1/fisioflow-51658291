@@ -79,7 +79,7 @@ export default function WellnessScreen() {
       if (isIOS && healthKitAvailable) {
         await initializeHealthKit();
         if (!healthKitAuthorized) {
-          const granted = await requestHealthKitPermissions(['Steps', 'HeartRate', 'RestingHeartRate', 'DistanceWalkingRunning', 'SleepAnalysis']);
+          const granted = await requestHealthKitPermissions(['Steps', 'HeartRate', 'RestingHeartRate', 'Distance', 'SleepAnalysis']);
           if (!granted) {
             setPermissionDenied(true);
             setSyncing(false);
@@ -92,7 +92,11 @@ export default function WellnessScreen() {
           setHeartRate(data.heartRate ?? data.restingHeartRate ?? null);
           setCalories(data.activeEnergy ?? 0);
           setDistance(typeof data.distance === 'number' ? Math.round(data.distance) : null);
-          setSleepHours(typeof data.sleepHours === 'number' ? Math.round(data.sleepHours * 10) / 10 : null);
+          setSleepHours(
+            typeof data.sleep?.asleep === 'number'
+              ? Math.round(data.sleep.asleep * 10) / 10
+              : null
+          );
         }
       } else if (isAndroid && healthConnectAvailable) {
         await initializeHealthConnect();
@@ -102,7 +106,7 @@ export default function WellnessScreen() {
             setSyncing(false);
             return;
           }
-          const granted = await requestHealthConnectPermissions(['Steps', 'HeartRate', 'Distance', 'Sleep']);
+          const granted = await requestHealthConnectPermissions(['Steps', 'HeartRate', 'Distance', 'SleepSession']);
           if (!granted) {
             setPermissionDenied(true);
             setSyncing(false);
@@ -115,7 +119,11 @@ export default function WellnessScreen() {
           setHeartRate(data.heartRate ?? data.restingHeartRate ?? null);
           setCalories(data.activeCalories ?? 0);
           setDistance(typeof data.distance === 'number' ? Math.round(data.distance) : null);
-          setSleepHours(typeof data.sleepHours === 'number' ? Math.round(data.sleepHours * 10) / 10 : null);
+          setSleepHours(
+            typeof data.sleep?.duration === 'number'
+              ? Math.round(data.sleep.duration * 10) / 10
+              : null
+          );
         }
       } else {
         // Dados mockados para Expo Go ou outros
