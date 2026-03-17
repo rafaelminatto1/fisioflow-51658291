@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { CalendarIcon, Flag } from 'lucide-react';
+import { CalendarIcon, Flag, ShieldAlert } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -22,7 +22,9 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
+import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import {
   Popover,
@@ -57,6 +59,7 @@ const quickCreateSchema = z.object({
   tipo: z.enum(['TAREFA', 'BUG', 'FEATURE', 'MELHORIA', 'DOCUMENTACAO', 'REUNIAO'] as const),
   data_vencimento: z.date().optional().nullable(),
   project_id: z.string().optional().nullable(),
+  requires_acknowledgment: z.boolean().default(false),
 });
 
 type QuickCreateFormData = z.infer<typeof quickCreateSchema>;
@@ -89,6 +92,7 @@ export function TaskQuickCreateModal({
       tipo: (initialData?.tipo as TarefaTipo) || 'TAREFA',
       data_vencimento: initialData?.data_vencimento ? new Date(initialData.data_vencimento) : null,
       project_id: initialData?.project_id || defaultProjectId || null,
+      requires_acknowledgment: initialData?.requires_acknowledgment || false,
     }
   });
 
@@ -102,6 +106,7 @@ export function TaskQuickCreateModal({
         tipo: (initialData?.tipo as TarefaTipo) || 'TAREFA',
         data_vencimento: initialData?.data_vencimento ? new Date(initialData.data_vencimento) : null,
         project_id: initialData?.project_id || defaultProjectId || null,
+        requires_acknowledgment: initialData?.requires_acknowledgment || false,
       });
     }
   }, [open, defaultStatus, defaultProjectId, initialData, form]);
@@ -326,11 +331,35 @@ export function TaskQuickCreateModal({
               />
             )}
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <FormField
+              control={form.control}
+              name="requires_acknowledgment"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-2xl border border-slate-200 p-4 bg-slate-50/50 mt-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="flex items-center gap-2 text-sm">
+                      <ShieldAlert className="h-4 w-4 text-orange-500" />
+                      Requer Aceite Obrigatório
+                    </FormLabel>
+                    <FormDescription className="text-[10px] leading-tight">
+                      O funcionário deverá clicar em "Li e Entendi" para confirmar a tarefa.
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter className="mt-6">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl">
                 Cancelar
               </Button>
-              <Button type="submit" disabled={createTarefa.isPending}>
+              <Button type="submit" disabled={createTarefa.isPending} className="rounded-xl bg-slate-900 text-white">
                 {createTarefa.isPending ? 'Criando...' : 'Criar Tarefa'}
               </Button>
             </DialogFooter>

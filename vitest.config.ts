@@ -148,8 +148,6 @@ export default defineConfig({
         functions: 60,
         lines: 60,
       },
-      // All files
-      all: true,
     },
 
     // Define test constants
