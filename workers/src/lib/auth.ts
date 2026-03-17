@@ -45,7 +45,39 @@ export async function verifyToken(c: any, env: Env): Promise<AuthUser | null> {
     console.log('[Auth] No token found in headers or cookies');
     return null;
   }
-  
+
+  // 2. Tenta primeiro o token de desenvolvimento simples (base64: userId:timestamp)
+  try {
+    const decoded = Buffer.from(token, 'base64').toString('utf-8');
+    const [userId, timestamp] = decoded.split(':');
+    
+    if (userId && timestamp && !isNaN(Number(timestamp))) {
+      // Token de desenvolvimento válido - busca usuário no banco
+      const { createPool } = await import('./db');
+      const pool = await createPool(env);
+      const result = await pool.query(
+        `SELECT id, email, full_name as name, role, organization_id 
+         FROM profiles 
+         WHERE id = $1 
+         LIMIT 1`,
+        [userId]
+      );
+      
+      if (result.rows[0]) {
+        const user = result.rows[0];
+        return {
+          uid: user.id,
+          email: user.email,
+          organizationId: user.organization_id || DEFAULT_ORG_ID,
+          role: user.role || 'admin'
+        };
+      }
+    }
+  } catch (e) {
+    // Não é token de desenvolvimento, continua para JWT
+  }
+
+  // 3. Tenta validar como JWT do Neon Auth
   const jwksUrl = env.NEON_AUTH_JWKS_URL;
   if (!jwksUrl) {
     console.error('[Auth] NEON_AUTH_JWKS_URL not configured');

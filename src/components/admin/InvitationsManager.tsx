@@ -39,7 +39,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useInvitations, AppRole, Invitation } from '@/hooks/useInvitations';
-import { Search, XCircle, Copy, CheckCircle, Plus, Pencil, Loader2, Mail, Trash2 } from 'lucide-react';
+import { Search, XCircle, Copy, Plus, Pencil, Loader2, Mail, Trash2 } from 'lucide-react';
 import { format, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';

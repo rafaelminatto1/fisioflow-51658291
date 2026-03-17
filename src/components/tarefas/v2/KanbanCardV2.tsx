@@ -15,7 +15,8 @@ import {
   Eye,
   Copy,
   Archive,
-  Flag
+  Flag,
+  ShieldAlert
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -290,6 +291,18 @@ const KanbanCardContent = memo(function KanbanCardContent({
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>{referenceCount} referência(s)</TooltipContent>
+                </Tooltip>
+              )}
+
+              {tarefa.requires_acknowledgment && (
+                <Tooltip>
+                  <TooltipTrigger>
+                    <div className="flex items-center gap-0.5 text-[10px] text-orange-500 font-semibold bg-orange-500/10 px-1 py-0.5 rounded">
+                      <ShieldAlert className="h-3 w-3" />
+                      <span>Ciente Pendente</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>Requer aceite obrigatório.</TooltipContent>
                 </Tooltip>
               )}
 

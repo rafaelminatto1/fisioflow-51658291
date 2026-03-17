@@ -8,13 +8,11 @@
 // ==================== Error Handling ====================
 export {
   ErrorBoundary,
-  useErrorBoundary,
-  QueryErrorBoundary,
-  QueryErrorFallback,
+  GlobalErrorBoundary,
+  RouteErrorBoundary,
+  ComponentErrorBoundary,
   withErrorBoundary,
-  SmallErrorBoundary,
-  SmallErrorFallback,
-} from '@/components/error-handling';
+} from '@/components/error';
 
 // ==================== Loading States ====================
 export {
