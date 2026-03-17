@@ -4,18 +4,22 @@
  * @description
  * Centralized status styling and configuration for all appointment card variants.
  * This ensures consistency across schedule, calendar, and mobile views.
+ * Updated to match ZenFisio system.
  *
  * @module components/schedule/shared/appointment-status
  */
 
 import type { LucideIcon } from 'lucide-react';
 import {
-
   CheckCircle,
   Clock,
   AlertCircle,
   XCircle,
   FileText,
+  CalendarDays,
+  UserCheck,
+  Slash,
+  CalendarOff
 } from 'lucide-react';
 
 /**
@@ -57,29 +61,9 @@ export interface AppointmentStatusConfig {
 }
 
 /**
- * Comprehensive status configuration for all appointment states
+ * Comprehensive status configuration for all appointment states (ZenFisio System)
  */
 export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> = {
-  confirmado: {
-    borderColor: 'border-emerald-500',
-    badgeBg: 'bg-emerald-100 dark:bg-emerald-500/20',
-    badgeText: 'text-emerald-700 dark:text-emerald-300',
-    iconColor: 'text-emerald-600 dark:text-emerald-400',
-    label: 'Confirmado',
-    icon: CheckCircle,
-    gradient: 'from-emerald-500/10 via-emerald-500/15 to-emerald-500/20',
-    calendarClassName: 'calendar-card-confirmado',
-    calendarAccent: 'bg-emerald-600',
-    // Calendar styles
-    border: 'border-emerald-500',
-    bg: 'bg-emerald-100/90 dark:bg-emerald-500/20',
-    hoverBg: 'hover:bg-emerald-200/90 dark:hover:bg-emerald-500/30',
-    text: 'text-emerald-900 dark:text-emerald-400',
-    subtext: 'text-emerald-800/80 dark:text-emerald-300/80',
-    accent: 'bg-emerald-600',
-    indicator: 'text-emerald-700',
-    allowedActions: ["complete", "miss", "cancel", "reschedule", "edit", "payment"],
-  },
   agendado: {
     borderColor: 'border-blue-500',
     badgeBg: 'bg-blue-100 dark:bg-blue-500/20',
@@ -89,8 +73,7 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     icon: Clock,
     gradient: 'from-blue-500/10 via-blue-500/15 to-blue-500/20',
     calendarClassName: 'calendar-card-agendado',
-    calendarAccent: 'bg-sky-400',
-    border: 'border-blue-500',
+    calendarAccent: 'bg-blue-500',
     bg: 'bg-blue-100/90 dark:bg-blue-500/20',
     hoverBg: 'hover:bg-blue-200/90 dark:hover:bg-blue-500/30',
     text: 'text-blue-900 dark:text-blue-400',
@@ -98,6 +81,24 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     accent: 'bg-blue-600',
     indicator: 'text-blue-700',
     allowedActions: ["confirm", "cancel", "reschedule", "edit"],
+  },
+  atendido: {
+    borderColor: 'border-emerald-500',
+    badgeBg: 'bg-emerald-100 dark:bg-emerald-500/20',
+    badgeText: 'text-emerald-700 dark:text-emerald-300',
+    iconColor: 'text-emerald-600 dark:text-emerald-400',
+    label: 'Atendido',
+    icon: CheckCircle,
+    gradient: 'from-emerald-500/10 via-emerald-500/15 to-emerald-500/20',
+    calendarClassName: 'calendar-card-atendido',
+    calendarAccent: 'bg-emerald-600',
+    bg: 'bg-emerald-100/90 dark:bg-emerald-500/20',
+    hoverBg: 'hover:bg-emerald-200/90 dark:hover:bg-emerald-500/30',
+    text: 'text-emerald-900 dark:text-emerald-400',
+    subtext: 'text-emerald-800/80 dark:text-emerald-300/80',
+    accent: 'bg-emerald-600',
+    indicator: 'text-emerald-700',
+    allowedActions: ["view", "payment", "evolution"],
   },
   avaliacao: {
     borderColor: 'border-violet-500',
@@ -109,7 +110,6 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     gradient: 'from-violet-500/10 via-violet-500/15 to-violet-500/20',
     calendarClassName: 'calendar-card-avaliacao',
     calendarAccent: 'bg-purple-600',
-    border: 'border-violet-500',
     bg: 'bg-violet-100/90 dark:bg-violet-500/20',
     hoverBg: 'hover:bg-violet-200/90 dark:hover:bg-violet-500/30',
     text: 'text-violet-900 dark:text-violet-400',
@@ -118,169 +118,34 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     indicator: 'text-violet-700',
     allowedActions: ["confirm", "cancel", "reschedule", "edit"],
   },
-  aguardando_confirmacao: {
-    borderColor: 'border-amber-500',
-    badgeBg: 'bg-amber-100 dark:bg-amber-500/20',
-    badgeText: 'text-amber-700 dark:text-amber-300',
-    iconColor: 'text-amber-600 dark:text-amber-400',
-    label: 'Aguardando',
-    icon: Clock,
-    gradient: 'from-amber-500/10 via-amber-500/15 to-amber-500/20',
-    calendarClassName: 'calendar-card-aguardando_confirmacao',
-    calendarAccent: 'bg-amber-500',
-    border: 'border-amber-500',
-    bg: 'bg-amber-100/90 dark:bg-amber-500/20',
-    hoverBg: 'hover:bg-amber-200/90 dark:hover:bg-amber-500/30',
-    text: 'text-amber-900 dark:text-amber-400',
-    subtext: 'text-amber-800/80 dark:text-amber-300/80',
-    accent: 'bg-amber-600',
-    indicator: 'text-amber-700',
-    allowedActions: ["confirm", "cancel", "reschedule", "edit"],
-  },
-  em_andamento: {
-    borderColor: 'border-yellow-500',
-    badgeBg: 'bg-yellow-100 dark:bg-yellow-500/20',
-    badgeText: 'text-yellow-800 dark:text-yellow-300',
-    iconColor: 'text-yellow-700 dark:text-yellow-400',
-    label: 'Em Andamento',
-    icon: Clock,
-    gradient: 'from-yellow-500/10 via-yellow-500/15 to-yellow-500/20',
-    calendarClassName: 'calendar-card-em_andamento',
-    calendarAccent: 'bg-amber-600',
-    border: 'border-amber-500',
-    bg: 'bg-amber-100/90 dark:bg-amber-500/20',
-    hoverBg: 'hover:bg-amber-200/90 dark:hover:bg-amber-500/30',
-    text: 'text-amber-900 dark:text-amber-400',
-    subtext: 'text-amber-800/80 dark:text-amber-300/80',
-    accent: 'bg-amber-600',
-    indicator: 'text-amber-700',
-    allowedActions: ["complete", "cancel"],
-  },
-  em_espera: {
-    borderColor: 'border-indigo-500',
-    badgeBg: 'bg-indigo-100 dark:bg-indigo-500/20',
-    badgeText: 'text-indigo-700 dark:text-indigo-300',
-    iconColor: 'text-indigo-600 dark:text-indigo-400',
-    label: 'Em Espera',
-    icon: Clock,
-    gradient: 'from-indigo-500/10 via-indigo-500/15 to-indigo-500/20',
-    calendarClassName: 'calendar-card-em_espera',
-    calendarAccent: 'bg-indigo-500',
-    border: 'border-indigo-500',
-    bg: 'bg-indigo-100/90 dark:bg-indigo-500/20',
-    hoverBg: 'hover:bg-indigo-200/90 dark:hover:bg-indigo-500/30',
-    text: 'text-indigo-900 dark:text-indigo-400',
-    subtext: 'text-indigo-800/80 dark:text-indigo-300/80',
-    accent: 'bg-indigo-600',
-    indicator: 'text-indigo-700',
-    allowedActions: ["start", "cancel", "reschedule"],
-  },
-  atrasado: {
-    borderColor: 'border-orange-500',
-    badgeBg: 'bg-orange-100 dark:bg-orange-500/20',
-    badgeText: 'text-orange-700 dark:text-orange-300',
-    iconColor: 'text-orange-600 dark:text-orange-400',
-    label: 'Atrasado',
-    icon: AlertCircle,
-    gradient: 'from-orange-500/10 via-orange-500/15 to-orange-500/20',
-    calendarClassName: 'calendar-card-atrasado',
-    calendarAccent: 'bg-orange-500',
-    border: 'border-orange-500',
-    bg: 'bg-orange-100/90 dark:bg-orange-500/20',
-    hoverBg: 'hover:bg-orange-200/90 dark:hover:bg-orange-500/30',
-    text: 'text-orange-900 dark:text-orange-400',
-    subtext: 'text-orange-800/80 dark:text-orange-300/80',
-    accent: 'bg-orange-600',
-    indicator: 'text-orange-700',
-    allowedActions: ["start", "cancel", "reschedule"],
-  },
-  concluido: {
-    borderColor: 'border-slate-500',
-    badgeBg: 'bg-slate-100 dark:bg-slate-500/20',
-    badgeText: 'text-slate-700 dark:text-slate-300',
-    iconColor: 'text-slate-600 dark:text-slate-300',
-    label: 'Concluído',
-    icon: CheckCircle,
-    gradient: 'from-slate-500/10 via-slate-500/15 to-slate-500/20',
-    calendarClassName: 'calendar-card-concluido',
-    calendarAccent: 'bg-slate-600',
-    border: 'border-indigo-500',
-    bg: 'bg-indigo-100/90 dark:bg-indigo-500/20',
-    hoverBg: 'hover:bg-indigo-200/90 dark:hover:bg-indigo-500/30',
-    text: 'text-indigo-900 dark:text-indigo-400',
-    subtext: 'text-indigo-800/80 dark:text-indigo-300/80',
-    accent: 'bg-indigo-600',
-    indicator: 'text-indigo-700',
-    allowedActions: ["view", "payment", "evolution"],
-  },
-  realizado: {
-    borderColor: 'border-slate-500',
-    badgeBg: 'bg-slate-100 dark:bg-slate-500/20',
-    badgeText: 'text-slate-700 dark:text-slate-300',
-    iconColor: 'text-slate-600 dark:text-slate-300',
-    label: 'Realizado',
-    icon: CheckCircle,
-    gradient: 'from-slate-500/10 via-slate-500/15 to-slate-500/20',
-    calendarClassName: 'calendar-card-realizado',
-    calendarAccent: 'bg-slate-600',
-    border: 'border-indigo-500',
-    bg: 'bg-indigo-100/90 dark:bg-indigo-500/20',
-    hoverBg: 'hover:bg-indigo-200/90 dark:hover:bg-indigo-500/30',
-    text: 'text-indigo-900 dark:text-indigo-400',
-    subtext: 'text-indigo-800/80 dark:text-indigo-300/80',
-    accent: 'bg-indigo-600',
-    indicator: 'text-indigo-700',
-    allowedActions: ["view", "payment", "evolution"],
-  },
-  remarcado: {
-    borderColor: 'border-cyan-500',
-    badgeBg: 'bg-cyan-100 dark:bg-cyan-500/20',
-    badgeText: 'text-cyan-700 dark:text-cyan-300',
-    iconColor: 'text-cyan-600 dark:text-cyan-400',
-    label: 'Remarcado',
-    icon: Clock,
-    gradient: 'from-cyan-500/10 via-cyan-500/15 to-cyan-500/20',
-    calendarClassName: 'calendar-card-reagendado',
-    calendarAccent: 'bg-lime-600',
-    border: 'border-cyan-500',
-    bg: 'bg-cyan-100/90 dark:bg-cyan-500/20',
-    hoverBg: 'hover:bg-cyan-200/90 dark:hover:bg-cyan-500/30',
-    text: 'text-cyan-900 dark:text-cyan-400',
-    subtext: 'text-cyan-800/80 dark:text-cyan-300/80',
-    accent: 'bg-cyan-600',
-    indicator: 'text-cyan-700',
-    allowedActions: ["view"],
-  },
   cancelado: {
-    borderColor: 'border-red-600',
-    badgeBg: 'bg-red-100 dark:bg-red-500/20',
-    badgeText: 'text-red-700 dark:text-red-300',
-    iconColor: 'text-red-600 dark:text-red-400',
+    borderColor: 'border-slate-950',
+    badgeBg: 'bg-slate-200 dark:bg-slate-800',
+    badgeText: 'text-slate-900 dark:text-slate-100',
+    iconColor: 'text-slate-900 dark:text-slate-100',
     label: 'Cancelado',
     icon: XCircle,
-    gradient: 'from-red-600/10 via-red-600/15 to-red-600/20',
+    gradient: 'from-slate-900/10 via-slate-900/15 to-slate-900/20',
     calendarClassName: 'calendar-card-cancelado',
-    calendarAccent: 'bg-red-600',
-    border: 'border-red-500',
-    bg: 'bg-red-100/90 dark:bg-red-500/20',
-    hoverBg: 'hover:bg-red-200/90 dark:hover:bg-red-500/30',
-    text: 'text-red-900 dark:text-red-400',
-    subtext: 'text-red-800/80 dark:text-red-300/80',
-    accent: 'bg-red-600',
-    indicator: 'text-red-700',
+    calendarAccent: 'bg-slate-900',
+    bg: 'bg-slate-200/90 dark:bg-slate-800/80',
+    hoverBg: 'hover:bg-slate-300/90 dark:hover:bg-slate-700/80',
+    text: 'text-slate-900 dark:text-slate-100',
+    subtext: 'text-slate-800/80 dark:text-slate-300/80',
+    accent: 'bg-slate-950',
+    indicator: 'text-slate-900',
     allowedActions: ["view", "reschedule"],
   },
-  falta: {
-    borderColor: 'border-red-600',
+  faltou: {
+    borderColor: 'border-red-500',
     badgeBg: 'bg-red-100 dark:bg-red-500/20',
     badgeText: 'text-red-700 dark:text-red-300',
     iconColor: 'text-red-600 dark:text-red-400',
-    label: 'Falta',
-    icon: XCircle,
-    gradient: 'from-red-600/10 via-red-600/15 to-red-600/20',
-    calendarClassName: 'calendar-card-falta',
-    calendarAccent: 'bg-red-700',
-    border: 'border-red-500',
+    label: 'Faltou',
+    icon: AlertCircle,
+    gradient: 'from-red-500/10 via-red-500/15 to-red-500/20',
+    calendarClassName: 'calendar-card-faltou',
+    calendarAccent: 'bg-red-600',
     bg: 'bg-red-100/90 dark:bg-red-500/20',
     hoverBg: 'hover:bg-red-200/90 dark:hover:bg-red-500/30',
     text: 'text-red-900 dark:text-red-400',
@@ -289,25 +154,113 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     indicator: 'text-red-700',
     allowedActions: ["view", "reschedule", "payment"],
   },
-  // reagendado é o valor canônico no frontend; remarcado é alias para retrocompatibilidade
-  reagendado: {
-    borderColor: 'border-cyan-500',
-    badgeBg: 'bg-cyan-100 dark:bg-cyan-500/20',
-    badgeText: 'text-cyan-700 dark:text-cyan-300',
-    iconColor: 'text-cyan-600 dark:text-cyan-400',
-    label: 'Reagendado',
+  faltou_com_aviso: {
+    borderColor: 'border-teal-400',
+    badgeBg: 'bg-teal-100 dark:bg-teal-500/20',
+    badgeText: 'text-teal-700 dark:text-teal-300',
+    iconColor: 'text-teal-600 dark:text-teal-400',
+    label: 'Faltou (com aviso prévio)',
     icon: Clock,
-    gradient: 'from-cyan-500/10 via-cyan-500/15 to-cyan-500/20',
-    calendarClassName: 'calendar-card-reagendado',
-    calendarAccent: 'bg-lime-600',
-    border: 'border-cyan-500',
-    bg: 'bg-cyan-100/90 dark:bg-cyan-500/20',
-    hoverBg: 'hover:bg-cyan-200/90 dark:hover:bg-cyan-500/30',
-    text: 'text-cyan-900 dark:text-cyan-400',
-    subtext: 'text-cyan-800/80 dark:text-cyan-300/80',
-    accent: 'bg-cyan-600',
-    indicator: 'text-cyan-700',
-    allowedActions: ["view"],
+    gradient: 'from-teal-400/10 via-teal-400/15 to-teal-400/20',
+    calendarClassName: 'calendar-card-faltou_com_aviso',
+    calendarAccent: 'bg-teal-500',
+    bg: 'bg-teal-100/90 dark:bg-teal-500/20',
+    hoverBg: 'hover:bg-teal-200/90 dark:hover:bg-teal-500/30',
+    text: 'text-teal-900 dark:text-teal-400',
+    subtext: 'text-teal-800/80 dark:text-teal-300/80',
+    accent: 'bg-teal-600',
+    indicator: 'text-teal-700',
+    allowedActions: ["view", "reschedule"],
+  },
+  faltou_sem_aviso: {
+    borderColor: 'border-orange-500',
+    badgeBg: 'bg-orange-100 dark:bg-orange-500/20',
+    badgeText: 'text-orange-700 dark:text-orange-300',
+    iconColor: 'text-orange-600 dark:text-orange-400',
+    label: 'Faltou (sem aviso prévio)',
+    icon: AlertCircle,
+    gradient: 'from-orange-500/10 via-orange-500/15 to-orange-500/20',
+    calendarClassName: 'calendar-card-faltou_sem_aviso',
+    calendarAccent: 'bg-orange-600',
+    bg: 'bg-orange-100/90 dark:bg-orange-500/20',
+    hoverBg: 'hover:bg-orange-200/90 dark:hover:bg-orange-500/30',
+    text: 'text-orange-900 dark:text-orange-400',
+    subtext: 'text-orange-800/80 dark:text-orange-300/80',
+    accent: 'bg-orange-600',
+    indicator: 'text-orange-700',
+    allowedActions: ["view", "reschedule", "payment"],
+  },
+  nao_atendido: {
+    borderColor: 'border-gray-600',
+    badgeBg: 'bg-gray-100 dark:bg-gray-500/20',
+    badgeText: 'text-gray-700 dark:text-gray-300',
+    iconColor: 'text-gray-600 dark:text-gray-400',
+    label: 'Não atendido',
+    icon: Slash,
+    gradient: 'from-gray-600/10 via-gray-600/15 to-gray-600/20',
+    calendarClassName: 'calendar-card-nao_atendido',
+    calendarAccent: 'bg-gray-600',
+    bg: 'bg-gray-100/90 dark:bg-gray-500/20',
+    hoverBg: 'hover:bg-gray-200/90 dark:hover:bg-gray-500/30',
+    text: 'text-gray-900 dark:text-gray-400',
+    subtext: 'text-gray-800/80 dark:text-gray-300/80',
+    accent: 'bg-gray-600',
+    indicator: 'text-gray-700',
+    allowedActions: ["view", "reschedule"],
+  },
+  nao_atendido_sem_cobranca: {
+    borderColor: 'border-slate-950',
+    badgeBg: 'bg-slate-200 dark:bg-slate-800',
+    badgeText: 'text-slate-900 dark:text-slate-100',
+    iconColor: 'text-slate-900 dark:text-slate-100',
+    label: 'Não atendido (Sem cobrança)',
+    icon: Slash,
+    gradient: 'from-slate-900/10 via-slate-900/15 to-slate-900/20',
+    calendarClassName: 'calendar-card-nao_atendido_sem_cobranca',
+    calendarAccent: 'bg-slate-900',
+    bg: 'bg-slate-200/90 dark:bg-slate-800/80',
+    hoverBg: 'hover:bg-slate-300/90 dark:hover:bg-slate-700/80',
+    text: 'text-slate-900 dark:text-slate-100',
+    subtext: 'text-slate-800/80 dark:text-slate-300/80',
+    accent: 'bg-slate-950',
+    indicator: 'text-slate-900',
+    allowedActions: ["view", "reschedule"],
+  },
+  presenca_confirmada: {
+    borderColor: 'border-blue-900',
+    badgeBg: 'bg-blue-200 dark:bg-blue-900/40',
+    badgeText: 'text-blue-900 dark:text-blue-200',
+    iconColor: 'text-blue-800 dark:text-blue-300',
+    label: 'Presença confirmada',
+    icon: UserCheck,
+    gradient: 'from-blue-900/10 via-blue-900/15 to-blue-900/20',
+    calendarClassName: 'calendar-card-presenca_confirmada',
+    calendarAccent: 'bg-blue-900',
+    bg: 'bg-blue-200/90 dark:bg-blue-900/40',
+    hoverBg: 'hover:bg-blue-300/90 dark:hover:bg-blue-900/50',
+    text: 'text-blue-900 dark:text-blue-100',
+    subtext: 'text-blue-800/80 dark:text-blue-200/80',
+    accent: 'bg-blue-900',
+    indicator: 'text-blue-900',
+    allowedActions: ["complete", "miss", "cancel", "reschedule", "edit", "payment"],
+  },
+  remarcar: {
+    borderColor: 'border-slate-400',
+    badgeBg: 'bg-slate-100 dark:bg-slate-500/20',
+    badgeText: 'text-slate-700 dark:text-slate-300',
+    iconColor: 'text-slate-600 dark:text-slate-400',
+    label: 'Remarcar',
+    icon: CalendarOff,
+    gradient: 'from-slate-400/10 via-slate-400/15 to-slate-400/20',
+    calendarClassName: 'calendar-card-remarcar',
+    calendarAccent: 'bg-slate-400',
+    bg: 'bg-slate-100/90 dark:bg-slate-500/20',
+    hoverBg: 'hover:bg-slate-200/90 dark:hover:bg-slate-500/30',
+    text: 'text-slate-900 dark:text-slate-400',
+    subtext: 'text-slate-800/80 dark:text-slate-300/80',
+    accent: 'bg-slate-500',
+    indicator: 'text-slate-700',
+    allowedActions: ["reschedule", "cancel", "edit"],
   },
 };
 
@@ -318,34 +271,44 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
  */
 export function normalizeStatus(status: string): string {
   const s = (status ?? 'agendado').toLowerCase().trim();
-  // Backend EN → Frontend PT
-  if (s === 'confirmed') return 'confirmado';
-  if (s === 'scheduled') return 'agendado';
-  if (s === 'cancelled' || s === 'canceled') return 'cancelado';
-  if (s === 'no_show' || s === 'paciente_faltou' || s === 'faltou') return 'falta';
-  if (s === 'rescheduled' || s === 'remarcado') return 'reagendado';
-  if (s === 'in_progress' || s === 'em_atendimento') return 'em_andamento';
-  if (s === 'completed' || s === 'realizado' || s === 'atendido') return 'concluido';
-  // Já é um valor canônico PT — retorna direto
-  return s;
+  
+  // Mapeamento para o sistema ZenFisio
+  if (s === 'confirmed' || s === 'confirmado') return 'presenca_confirmada';
+  if (s === 'scheduled' || s === 'agendado') return 'agendado';
+  if (s === 'cancelled' || s === 'canceled' || s === 'cancelado') return 'cancelado';
+  if (s === 'no_show' || s === 'paciente_faltou' || s === 'faltou' || s === 'falta') return 'faltou';
+  if (s === 'rescheduled' || s === 'remarcado' || s === 'reagendado' || s === 'remarcar') return 'remarcar';
+  if (s === 'in_progress' || s === 'em_atendimento' || s === 'atendido' || s === 'concluido' || s === 'realizado') return 'atendido';
+  if (s === 'avaliacao' || s === 'evaluation') return 'avaliacao';
+  if (s === 'faltou_com_aviso') return 'faltou_com_aviso';
+  if (s === 'faltou_sem_aviso') return 'faltou_sem_aviso';
+  if (s === 'nao_atendido') return 'nao_atendido';
+  if (s === 'nao_atendido_sem_cobranca') return 'nao_atendido_sem_cobranca';
+  if (s === 'presenca_confirmada') return 'presenca_confirmada';
+  
+  // Default fallbacks
+  if (s === 'aguardando_confirmacao') return 'agendado';
+  if (s === 'em_espera' || s === 'atrasado') return 'agendado';
+  
+  // Já é um valor canônico ou desconhecido — tenta manter ou agendar
+  return APPOINTMENT_STATUS_CONFIG[s] ? s : 'agendado';
 }
 
 /**
  * Lista ordenada de status disponíveis para dropdowns e filtros.
- * Edite aqui para mudar quais opções aparecem nos seletores de status.
  */
 export const APPOINTMENT_STATUS_OPTIONS = [
-  'concluido',
-  'confirmado',
   'agendado',
+  'atendido',
   'avaliacao',
-  'aguardando_confirmacao',
-  'em_espera',
-  'cancelado',
-  'falta',
-  'reagendado',
-  'atrasado',
-  'em_andamento',
+  'faltou',
+  'faltou_com_aviso',
+  'faltou_sem_aviso',
+  'nao_atendido',
+  'nao_atendido_sem_cobranca',
+  'presenca_confirmada',
+  'remarcar',
+  'cancelado'
 ] as const;
 
 /**
@@ -355,30 +318,30 @@ export const APPOINTMENT_STATUS_OPTIONS = [
  * @returns Status configuration (defaults to 'agendado')
  */
 export function getStatusConfig(status: string): AppointmentStatusConfig {
-  return APPOINTMENT_STATUS_CONFIG[status] || APPOINTMENT_STATUS_CONFIG.agendado;
+  const normalized = normalizeStatus(status);
+  return APPOINTMENT_STATUS_CONFIG[normalized] || APPOINTMENT_STATUS_CONFIG.agendado;
 }
 
 /**
- * Get status color for React Native
- * Based on Activity Fisioterapia logo - Baby Blue palette
+ * Get status color for mobile/external use
  *
  * @param status - Appointment status
  * @returns Hex color code
  */
 export function getStatusColor(status: string): string {
+  const normalized = normalizeStatus(status);
   const colors: Record<string, string> = {
-    confirmado: '#10b981',
-    agendado: '#0284C7', // Primary Baby Blue
-    avaliacao: '#5EB3E6', // Logo Blue (notification color)
-    aguardando_confirmacao: '#f59e0b',
-    em_andamento: '#eab308',
-    em_espera: '#0284C7', // Primary Baby Blue
-    atrasado: '#f97316', // Accent Coral
-    concluido: '#6b7280',
-    realizado: '#0284C7', // Primary Baby Blue
-    remarcado: '#06b6d4',
-    cancelado: '#ef4444',
-    falta: '#ef4444',
+    agendado: '#3b82f6',
+    atendido: '#10b981',
+    avaliacao: '#8b5cf6',
+    cancelado: '#000000',
+    faltou: '#ef4444',
+    faltou_com_aviso: '#2dd4bf',
+    faltou_sem_aviso: '#f97316',
+    nao_atendido: '#4b5563',
+    nao_atendido_sem_cobranca: '#000000',
+    presenca_confirmada: '#1e3a8a',
+    remarcar: '#64748b',
   };
-  return colors[status] || colors.agendado;
+  return colors[normalized] || colors.agendado;
 }

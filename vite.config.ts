@@ -84,7 +84,7 @@ export default defineConfig(({ mode }) => {
       target: 'es2020',
       cssTarget: 'es2020',
       sourcemap: true,
-      rollupOptions: {
+      rolldownOptions: {
         output: {
           chunkFileNames: 'assets/js/[name]-[hash].js',
           entryFileNames: 'assets/js/[name]-[hash].js',

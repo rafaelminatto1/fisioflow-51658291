@@ -431,7 +431,7 @@ export const EvolutionDraggableGrid: React.FC<EvolutionDraggableGridProps> = ({
                 try {
                     await profileApi.updateMe({
                         preferences: {
-                            ...(profile?.preferences ?? {}),
+                            ...profile?.preferences,
                             evolution_layout: normalized,
                         },
                     });

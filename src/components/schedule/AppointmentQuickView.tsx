@@ -448,7 +448,7 @@ export const AppointmentQuickView: React.FC<AppointmentQuickViewProps> = ({
       <WaitlistQuickAdd open={showWaitlistQuickAdd} onOpenChange={setShowWaitlistQuickAdd} date={appointmentDate} time={time} />
       
       <AlertDialog open={showNoShowConfirmDialog} onOpenChange={setShowNoShowConfirmDialog}>
-        <AlertDialogContent className="max-w-md p-0 overflow-hidden rounded-2xl">
+        <AlertDialogContent className="max-w-md p-0 overflow-hidden rounded-2xl" data-week-appointment="true">
           <div className="bg-gradient-to-br from-red-50 to-red-100/50 dark:from-red-950/30 dark:to-red-900/20 p-6 pb-4">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-red-100 dark:bg-red-900/50 rounded-xl ring-1 ring-red-200 dark:ring-red-800">

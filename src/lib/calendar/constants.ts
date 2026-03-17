@@ -115,7 +115,7 @@ export const DRAG_PREVIEW_OFFSET_Y = 20;
  * Cores para diferentes status de agendamento
  */
 export const STATUS_COLORS = {
-  confirmado: {
+  presenca_confirmada: {
     bg: 'from-emerald-500 to-emerald-600',
     border: 'border-emerald-400',
     shadow: 'shadow-emerald-500/30',
@@ -125,7 +125,7 @@ export const STATUS_COLORS = {
     border: 'border-blue-400',
     shadow: 'shadow-blue-500/30',
   },
-  concluido: {
+  atendido: {
     bg: 'from-purple-500 to-purple-600',
     border: 'border-purple-400',
     shadow: 'shadow-purple-500/30',
@@ -135,35 +135,40 @@ export const STATUS_COLORS = {
     border: 'border-red-400',
     shadow: 'shadow-red-500/30',
   },
-  aguardando_confirmacao: {
-    bg: 'from-amber-500 to-amber-600',
-    border: 'border-amber-400',
-    shadow: 'shadow-amber-500/30',
-  },
-  em_andamento: {
-    bg: 'from-cyan-500 to-cyan-600',
-    border: 'border-cyan-400',
-    shadow: 'shadow-cyan-500/30',
-  },
-  remarcado: {
-    bg: 'from-orange-500 to-orange-600',
-    border: 'border-orange-400',
-    shadow: 'shadow-orange-500/30',
-  },
-  nao_compareceu: {
-    bg: 'from-rose-500 to-rose-600',
-    border: 'border-rose-400',
-    shadow: 'shadow-rose-500/30',
-  },
-  em_espera: {
+  avaliacao: {
     bg: 'from-indigo-500 to-indigo-600',
     border: 'border-indigo-400',
     shadow: 'shadow-indigo-500/30',
   },
-  atrasado: {
-    bg: 'from-yellow-500 to-yellow-600',
-    border: 'border-yellow-400',
-    shadow: 'shadow-yellow-500/30',
+  faltou: {
+    bg: 'from-rose-500 to-rose-600',
+    border: 'border-rose-400',
+    shadow: 'shadow-rose-500/30',
+  },
+  faltou_com_aviso: {
+    bg: 'from-amber-500 to-amber-600',
+    border: 'border-amber-400',
+    shadow: 'shadow-amber-500/30',
+  },
+  faltou_sem_aviso: {
+    bg: 'from-rose-700 to-rose-800',
+    border: 'border-rose-600',
+    shadow: 'shadow-rose-700/30',
+  },
+  nao_atendido: {
+    bg: 'from-slate-500 to-slate-600',
+    border: 'border-slate-400',
+    shadow: 'shadow-slate-500/30',
+  },
+  nao_atendido_sem_cobranca: {
+    bg: 'from-slate-400 to-slate-500',
+    border: 'border-slate-300',
+    shadow: 'shadow-slate-400/30',
+  },
+  remarcar: {
+    bg: 'from-orange-500 to-orange-600',
+    border: 'border-orange-400',
+    shadow: 'shadow-orange-500/30',
   },
   excedente: {
     bg: 'from-amber-600 to-orange-600',
