@@ -16,64 +16,29 @@ export interface AppointmentCardProps extends React.HTMLAttributes<HTMLDivElemen
   onClick?: (e: React.MouseEvent) => void;
   statusConfig?: {
     color?: string;
-    bgColor?: string;
-    borderColor?: string;
     icon?: React.ElementType;
-    label?: string;
   };
   compact?: boolean;
-  /** If true, disables internal status styling (useful when custom className provides styling) */
-  disableStatusStyles?: boolean;
 }
 
-// Map internal status codes to visual styles if no config provided
-const getStatusStyles = (status: string = 'default') => {
-  const normalized = status.toLowerCase();
-  
-  const styles = {
-    confirmado: 'bg-emerald-50/90 border-emerald-200 text-emerald-900',
-    agendado: 'bg-sky-50/90 border-sky-200 text-sky-900',
-    concluido: 'bg-purple-50/90 border-purple-200 text-purple-900',
-    cancelado: 'bg-red-50/90 border-red-200 text-red-900',
-    falta: 'bg-rose-50/90 border-rose-200 text-rose-900',
-    em_andamento: 'bg-cyan-50/90 border-cyan-200 text-cyan-900',
-    default: 'bg-slate-50/90 border-slate-200 text-slate-900'
-  };
-
-  return styles[normalized as keyof typeof styles] || styles.default;
-};
-
-// Check if className contains calendar-card-* classes (custom styling)
-const hasCustomStatusStyles = (className?: string): boolean => {
-  if (!className) return false;
-  return /calendar-card-/.test(className);
-};
-
 export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardProps>(
-  ({ 
-    patientName, 
-    time, 
-    endTime, 
-    type, 
-    status = 'agendado', 
-    isDragging, 
-    isSaving, 
-    isDropTarget, 
+  ({
+    patientName,
+    time,
+    endTime,
+    type,
+    status = 'agendado',
+    isDragging,
+    isSaving,
+    isDropTarget,
     isSelected,
-    onClick, 
+    onClick,
     statusConfig,
     compact = false,
-    disableStatusStyles,
-    className, 
+    className,
     children,
-    ...props 
+    ...props
   }, ref) => {
-    
-    // Detect if custom calendar-card-* styles are being passed via className
-    const useCustomStyles = disableStatusStyles ?? hasCustomStatusStyles(className);
-    
-    // Only apply internal status styles if not using custom styles
-    const statusStyle = useCustomStyles ? '' : getStatusStyles(status);
     const StatusIcon = statusConfig?.icon || CheckCircle2;
 
     return (
@@ -84,33 +49,19 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
         className={cn(
           "relative overflow-hidden cursor-pointer flex flex-col justify-center",
           "transition-all duration-200",
-          // Status styles - only apply if not using custom styles
-          statusStyle,
-          // Dragging states
           isDragging && "opacity-50 scale-95 z-50 ring-2 ring-primary/40 shadow-2xl",
           isSaving && "animate-pulse-twice ring-2 ring-amber-400/50 z-30",
           isDropTarget && "ring-2 ring-primary/60 shadow-2xl scale-105 z-25",
           isSelected && "ring-2 ring-primary shadow-xl z-40",
-          // Density
           compact ? "p-1" : "p-2 pl-3.5",
-          // Custom styles (calendar-card-*) should come last to override
           className
         )}
         {...(props as any)}
       >
-        {/* Status Border Strip */}
-        <div 
-          className={cn(
-            "absolute left-0 top-0 bottom-0 w-1 opacity-80",
-            statusConfig?.color ? '' : {
-              'bg-emerald-500': status === 'confirmado',
-              'bg-sky-500': status === 'agendado',
-              'bg-purple-500': status === 'concluido',
-              'bg-red-500': status === 'cancelado',
-              'bg-slate-500': status === 'default'
-            }[status] || 'bg-slate-500'
-          )}
-          style={statusConfig?.color ? { backgroundColor: statusConfig.color } : undefined}
+        {/* Status accent strip — color comes from statusConfig.color (hex) */}
+        <div
+          className="absolute left-0 top-0 bottom-0 w-1 opacity-80"
+          style={statusConfig?.color ? { backgroundColor: statusConfig.color } : { backgroundColor: '#94a3b8' }}
         />
 
         {/* Content */}
@@ -123,7 +74,7 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
               {time}
               {endTime && !compact && <span className="opacity-60 font-normal"> - {endTime}</span>}
             </span>
-            
+
             {!compact && (
               <div className="opacity-70">
                 <StatusIcon className="w-3 h-3" />
@@ -145,7 +96,6 @@ export const AppointmentCard = React.forwardRef<HTMLDivElement, AppointmentCardP
           )}
         </div>
 
-        {/* Hover/Extra Content */}
         {children}
       </MotionCard>
     );

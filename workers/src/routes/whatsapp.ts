@@ -284,7 +284,7 @@ app.post('/messages', requireAuth, async (c) => {
       body.status ?? 'sent',
       null,
       JSON.stringify({
-        ...(body.metadata ?? {}),
+        ...body.metadata,
         appointment_id: body.appointment_id ?? null,
         message_type: body.message_type,
       }),

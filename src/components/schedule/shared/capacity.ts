@@ -6,11 +6,12 @@ export const OVERBOOK_MARKER = '[EXCEDENTE]';
 
 export const NON_CAPACITY_STATUSES = new Set([
   'cancelado',
-  'falta',
   'faltou',
-  'remarcado',
-  'reagendado',
-  'paciente_faltou',
+  'faltou_com_aviso',
+  'faltou_sem_aviso',
+  'nao_atendido',
+  'nao_atendido_sem_cobranca',
+  'remarcar',
 ]);
 
 export function isCapacityCountedStatus(status: string | undefined | null): boolean {

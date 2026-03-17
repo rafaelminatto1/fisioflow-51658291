@@ -21,15 +21,16 @@ export type CalendarViewType = 'day' | 'week' | 'month';
  */
 export type AppointmentStatus =
   | 'agendado'
-  | 'confirmado'
-  | 'em_andamento'
-  | 'concluido'
+  | 'atendido'
+  | 'avaliacao'
   | 'cancelado'
-  | 'remarcado'
-  | 'nao_compareceu'
-  | 'aguardando_confirmacao'
-  | 'em_espera'
-  | 'atrasado';
+  | 'faltou'
+  | 'faltou_com_aviso'
+  | 'faltou_sem_aviso'
+  | 'nao_atendido'
+  | 'nao_atendido_sem_cobranca'
+  | 'presenca_confirmada'
+  | 'remarcar';
 
 /**
  * Tipo de um agendamento

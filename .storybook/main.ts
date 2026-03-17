@@ -18,7 +18,7 @@ const config: StorybookConfig = {
   viteFinal(config) {
     config.resolve = config.resolve ?? {};
     config.resolve.alias = {
-      ...(config.resolve.alias ?? {}),
+      ...config.resolve.alias,
       '@': path.resolve(dirname(fileURLToPath(import.meta.url)), '../src'),
     };
     return config;

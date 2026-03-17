@@ -504,8 +504,8 @@ export const SessionEvolutionContainer: React.FC<SessionEvolutionContainerProps>
       // Update appointment: mesma fonte em que foi carregado (API ou Firestore)
       if (appointmentId) {
         const notesPayload = JSON.stringify({ soap: soapData, soapRecordId: soapRecordId, exercises: sessionExercises });
-        const statusRealizado = 'Realizado'; // UI/agenda; API pode normalizar
-        await appointmentsApi.update(appointmentId, { status: statusRealizado, notes: notesPayload });
+        const statusAtendido = 'atendido'; // Sistema ZenFisio
+        await appointmentsApi.update(appointmentId, { status: statusAtendido, notes: notesPayload });
       }
 
       logger.info('Evolução salva com sucesso', { soapRecordId: soapRecordId, patientId }, 'SessionEvolutionContainer');
