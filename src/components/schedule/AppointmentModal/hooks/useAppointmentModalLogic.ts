@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useCallback, useRef } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { UseFormReturn } from 'react-hook-form';
 import { parseISO, format } from 'date-fns';
 import { toast } from 'sonner';
 import { SimpleCache } from '@/lib/utils';
@@ -19,6 +19,7 @@ interface UseAppointmentModalLogicProps {
   getInitialFormData: (apt: AppointmentBase | null | undefined, defaults: any) => AppointmentFormData;
   state: any; // The state from useAppointmentModalState
   persistAppointment: (data: AppointmentFormData, config: RecurringConfig, ignore: boolean) => Promise<void>;
+  methods: UseFormReturn<AppointmentFormData>;
 }
 
 const getAppointmentPatientName = (appointment?: any) =>
@@ -40,8 +41,9 @@ export const useAppointmentModalLogic = ({
   getInitialFormData,
   state,
   persistAppointment,
+  methods,
 }: UseAppointmentModalLogicProps) => {
-  const { watch, setValue, reset, handleSubmit } = useFormContext<AppointmentFormData>();
+  const { watch, setValue, reset } = methods;
   const {
     currentMode, setCurrentMode, setActiveTab, setIsNotesExpanded,
     setRecurringConfig, setCapacityDialogOpen, setPendingFormData,

@@ -122,13 +122,10 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
     getInitialFormData,
     state,
     persistAppointment,
+    methods,
   });
 
   const {
-    watchedPatientId,
-    watchedDateStr,
-    watchedTime,
-    watchedDuration,
     watchedDate,
     timeSlots,
     selectedPatientName,
@@ -139,10 +136,10 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
   const watchedStatus = watch('status');
 
   return (
-    <CustomModal open={isOpen} onOpenChange={(open) => !open && onClose()} isMobile={isMobile}>
-      <AppointmentModalHeader currentMode={currentMode} onClose={onClose} />
+    <FormProvider {...methods}>
+      <CustomModal open={isOpen} onOpenChange={(open) => !open && onClose()} isMobile={isMobile}>
+        <AppointmentModalHeader currentMode={currentMode} onClose={onClose} />
 
-      <FormProvider {...methods}>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
           <div className="px-5 sm:px-6 py-3 border-b shrink-0">
             <TabsList className="grid w-full grid-cols-2 h-10">
@@ -167,6 +164,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
             }} className="px-5 sm:px-6 py-4">
               <TabsContent value="info">
                 <AppointmentInfoTab
+                  methods={methods}
                   currentMode={currentMode}
                   patients={activePatients || []}
                   patientsLoading={patientsLoading}
@@ -207,79 +205,79 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
             </form>
           </div>
         </Tabs>
-      </FormProvider>
 
-      <AppointmentModalFooterActions
-        currentMode={currentMode}
-        isCreating={isCreating}
-        isUpdating={isUpdating}
-        watchedStatus={watchedStatus}
-        onClose={onClose}
-        onDelete={handleDelete}
-        onEdit={() => setCurrentMode('edit')}
-        onSave={() => { scheduleOnlyRef.current = false; }}
-        onScheduleOnly={() => {
-          scheduleOnlyRef.current = true;
-          handleSubmit((data) => handleSave(data, recurringConfig))();
-        }}
-        isMobile={isMobile}
-        hasAppointment={!!appointment}
-      />
-
-      <QuickPatientModal
-        open={quickPatientModalOpen}
-        onOpenChange={(open) => {
-          setQuickPatientModalOpen(open);
-          if (!open) setSuggestedPatientName('');
-        }}
-        onPatientCreated={(patientId, patientName) => {
-          setValue('patient_id', patientId);
-          setLastCreatedPatient({ id: patientId, name: patientName });
-          setQuickPatientModalOpen(false);
-          setSuggestedPatientName('');
-          queryClient.invalidateQueries({ queryKey: ['patients'] });
-        }}
-        suggestedName={suggestedPatientName}
-      />
-
-      <DuplicateAppointmentDialog
-        open={duplicateDialogOpen}
-        onOpenChange={setDuplicateDialogOpen}
-        appointment={appointment || null}
-        onDuplicate={handleDuplicate}
-      />
-
-      <CapacityExceededDialog
-        open={capacityDialogOpen}
-        onOpenChange={setCapacityDialogOpen}
-        currentCount={(conflictCheck?.totalConflictCount || 0) + 1}
-        maxCapacity={watchedDate && watchedTime ? getMinCapacityForInterval(watchedDate.getDay(), watchedTime, watchedDuration) : 1}
-        selectedTime={watchedTime || ''}
-        selectedDate={watchedDate || new Date()}
-        onAddToWaitlist={() => {
-          setCapacityDialogOpen(false);
-          setWaitlistQuickAddOpen(true);
-        }}
-        onChooseAnotherTime={() => {
-          setCapacityDialogOpen(false);
-          setActiveTab('info');
-        }}
-        onScheduleAnyway={handleScheduleAnyway}
-      />
-
-      {waitlistQuickAddOpen && pendingFormData && (
-        <WaitlistQuickAdd
-          open={waitlistQuickAddOpen}
-          onOpenChange={(open) => {
-            setWaitlistQuickAddOpen(open);
-            if (!open) setPendingFormData(null);
+        <AppointmentModalFooterActions
+          currentMode={currentMode}
+          isCreating={isCreating}
+          isUpdating={isUpdating}
+          watchedStatus={watchedStatus}
+          onClose={onClose}
+          onDelete={handleDelete}
+          onEdit={() => setCurrentMode('edit')}
+          onSave={() => { scheduleOnlyRef.current = false; }}
+          onScheduleOnly={() => {
+            scheduleOnlyRef.current = true;
+            handleSubmit((data) => handleSave(data, recurringConfig))();
           }}
-          date={pendingFormData.appointment_date ? parseISO(pendingFormData.appointment_date) : new Date()}
-          time={pendingFormData.appointment_time}
-          defaultPatientId={pendingFormData.patient_id}
+          isMobile={isMobile}
+          hasAppointment={!!appointment}
         />
-      )}
-    </CustomModal>
+
+        <QuickPatientModal
+          open={quickPatientModalOpen}
+          onOpenChange={(open) => {
+            setQuickPatientModalOpen(open);
+            if (!open) setSuggestedPatientName('');
+          }}
+          onSuccess={(patient) => {
+            setValue('patient_id', patient.id);
+            setLastCreatedPatient(patient);
+            setQuickPatientModalOpen(false);
+            setSuggestedPatientName('');
+            queryClient.invalidateQueries({ queryKey: ['patients'] });
+          }}
+          suggestedName={suggestedPatientName}
+        />
+
+        <DuplicateAppointmentDialog
+          open={duplicateDialogOpen}
+          onOpenChange={setDuplicateDialogOpen}
+          appointment={appointment || null}
+          onDuplicate={handleDuplicate}
+        />
+
+        <CapacityExceededDialog
+          open={capacityDialogOpen}
+          onOpenChange={setCapacityDialogOpen}
+          currentCount={(conflictCheck?.totalConflictCount || 0) + 1}
+          maxCapacity={watchedDate && watch('appointment_time') ? getMinCapacityForInterval(watchedDate.getDay(), watch('appointment_time'), watch('duration')) : 1}
+          selectedTime={watch('appointment_time') || ''}
+          selectedDate={watchedDate || new Date()}
+          onAddToWaitlist={() => {
+            setCapacityDialogOpen(false);
+            setWaitlistQuickAddOpen(true);
+          }}
+          onChooseAnotherTime={() => {
+            setCapacityDialogOpen(false);
+            setActiveTab('info');
+          }}
+          onScheduleAnyway={handleScheduleAnyway}
+        />
+
+        {waitlistQuickAddOpen && pendingFormData && (
+          <WaitlistQuickAdd
+            open={waitlistQuickAddOpen}
+            onOpenChange={(open) => {
+              setWaitlistQuickAddOpen(open);
+              if (!open) setPendingFormData(null);
+            }}
+            date={pendingFormData.appointment_date ? parseISO(pendingFormData.appointment_date) : new Date()}
+            time={pendingFormData.appointment_time}
+            defaultPatientId={pendingFormData.patient_id}
+          />
+        )}
+      </CustomModal>
+    </FormProvider>
   );
 };
 
