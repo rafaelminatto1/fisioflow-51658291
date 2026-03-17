@@ -43,11 +43,12 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="messages"
+        name="tarefas"
         options={{
-          title: 'Mensagens',
+          title: 'Tarefas',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="chatbubbles" size={size} color={color} />
+            <Ionicons name="checkmark-circle" size={size} color={color} />
           ),
         }}
       />

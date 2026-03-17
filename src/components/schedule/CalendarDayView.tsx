@@ -198,7 +198,13 @@ const CalendarDayView = memo(({
                                         dragState.isDragging && !blocked && !isDropTarget && "bg-primary/5",
                                         showPreview && "z-40"
                                     )}
-                                    onClick={() => !blocked && onTimeSlotClick(currentDate, time)}
+                                    onClick={(e) => {
+                                        const target = e.target as HTMLElement;
+                                        if (target.closest('[data-week-appointment="true"]')) {
+                                            return;
+                                        }
+                                        if (!blocked) onTimeSlotClick(currentDate, time);
+                                    }}
                                     onDragOver={(e) => !blocked && handleDragOver(e, currentDate, time)}
                                     onDragLeave={handleDragLeave}
                                     onDrop={(e) => !blocked && handleDrop(e, currentDate, time)}

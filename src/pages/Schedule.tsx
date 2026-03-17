@@ -4,7 +4,6 @@
 
 import { useEffect, lazy, Suspense } from 'react';
 import { CalendarViewType } from '@/components/schedule/CalendarView';
-import { KeyboardShortcuts } from '@/components/schedule/KeyboardShortcuts';
 import { BulkActionsBar } from '@/components/schedule/BulkActionsBar';
 import { usePrefetchAdjacentPeriods } from '@/hooks/usePrefetchAdjacentPeriods';
 import { useFilteredAppointments } from '@/hooks/useFilteredAppointments';
@@ -18,21 +17,12 @@ import { CalendarSkeletonEnhanced } from '@/components/schedule/skeletons/Calend
 import { toast } from '@/hooks/use-toast';
 import { useConnectionStatus } from '@/hooks/useConnectionStatus';
 import { formatDateToBrazilian } from '@/utils/dateUtils';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { useScheduleState } from '@/hooks/useScheduleState';
 import { useScheduleHandlers } from '@/hooks/useScheduleHandlers';
 import { useBirthdayNotification } from '@/hooks/useBirthdayNotification';
 import { usePatientReengagement } from '@/hooks/usePatientReengagement';
 import { Cake, Sparkles, MessageCircle, AlertTriangle } from 'lucide-react';
+import { ScheduleModals } from '@/components/schedule/ScheduleModals';
 
 // Kick off the CalendarView chunk download immediately at module evaluation
 // so it runs in parallel with Schedule's own execution (eliminates waterfall).
@@ -58,19 +48,6 @@ const lazyRetry = (importFn: () => Promise<any>, maxRetries = 3) => {
 
 const CalendarView = lazy(() =>
   lazyRetry(() => import('@/components/schedule/CalendarView')).then(mod => ({ default: mod.CalendarView }))
-);
-
-// Lazy load modals for better initial load performance
-const AppointmentModal = lazy(() =>
-  import('@/components/schedule/AppointmentModalRefactored').then(mod => ({ default: mod.AppointmentModalRefactored }))
-);
-
-const AppointmentQuickEditModal = lazy(() =>
-  import('@/components/schedule/AppointmentQuickEditModal').then(mod => ({ default: mod.AppointmentQuickEditModal }))
-);
-
-const WaitlistQuickAdd = lazy(() =>
-  import('@/components/schedule/WaitlistQuickAdd').then(mod => ({ default: mod.WaitlistQuickAdd }))
 );
 
 const KEYBOARD_SHORTCUTS = {
@@ -393,72 +370,12 @@ const Schedule = () => {
         />
 
         {/* Modals Layer - Lazy loaded for better performance */}
-        {modals.quickEditAppointment && (
-          <Suspense fallback={null}>
-            <AppointmentQuickEditModal
-              appointment={modals.quickEditAppointment}
-              open={!!modals.quickEditAppointment}
-              onOpenChange={(open) => !open && modals.setQuickEditAppointment(null)}
-            />
-          </Suspense>
-        )}
-
-        {modals.isModalOpen && (
-          <Suspense fallback={null}>
-            <AppointmentModal
-              isOpen={modals.isModalOpen}
-              onClose={() => {
-                actions.handleModalClose();
-              }}
-              appointment={modals.selectedAppointment}
-              defaultDate={modals.modalDefaultDate}
-              defaultTime={modals.modalDefaultTime}
-              defaultPatientId={modals.scheduleFromWaitlist?.patientId}
-              mode={modals.selectedAppointment ? 'edit' : 'create'}
-            />
-          </Suspense>
-        )}
-
-        {modals.waitlistQuickAdd && (
-          <Suspense fallback={null}>
-            <WaitlistQuickAdd
-              open={!!modals.waitlistQuickAdd}
-              onOpenChange={(open) => !open && modals.setWaitlistQuickAdd(null)}
-              date={modals.waitlistQuickAdd.date}
-              time={modals.waitlistQuickAdd.time}
-            />
-          </Suspense>
-        )}
-
-        <KeyboardShortcuts
-          open={modals.showKeyboardShortcuts}
-          onOpenChange={modals.setShowKeyboardShortcuts}
+        {/* Modals Layer - Centralized for better maintenance */}
+        <ScheduleModals 
+          currentDate={currentDate}
+          modals={modals}
+          actions={actions}
         />
-
-        <AlertDialog open={modals.showCancelAllTodayDialog} onOpenChange={modals.setShowCancelAllTodayDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Cancelar todos os agendamentos</AlertDialogTitle>
-              <AlertDialogDescription>
-                Deseja cancelar todos os agendamentos de <strong>{formatDateToBrazilian(currentDate)}</strong>?
-                Esta ação não pode ser desfeita.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={modals.isCancellingAllToday}>Voltar</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={(e) => {
-                  e.preventDefault();
-                  actions.handleCancelAllToday();
-                }}
-                disabled={modals.isCancellingAllToday}
-                className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
-              >
-                {modals.isCancellingAllToday ? 'Cancelando…' : 'Cancelar todos'}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
 
       </div>
     </MainLayout>
