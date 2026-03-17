@@ -3,7 +3,7 @@ import { FormProvider } from 'react-hook-form';
 import { useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import {
-  Calendar, SlidersHorizontal, Check, X
+  Calendar as CalendarIcon, SlidersHorizontal, Check, X
 } from 'lucide-react';
 import {
   Tabs, TabsContent, TabsList, TabsTrigger
@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 import {
   useTherapists,
 } from '@/hooks/useTherapists';
-import { debounce, SimpleCache } from '@/lib/utils';
+import { SimpleCache } from '@/lib/utils';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useOrganizations } from '@/hooks/useOrganizations';
@@ -86,8 +86,18 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
   const { getMinCapacityForInterval } = useScheduleCapacity();
 
   const state = useAppointmentModalState({ initialMode });
+  const {
+    currentMode, setCurrentMode, activeTab, setActiveTab,
+    isCalendarOpen, setIsCalendarOpen, recurringConfig, setRecurringConfig,
+    conflictCheck, setConflictCheck, quickPatientModalOpen, setQuickPatientModalOpen,
+    suggestedPatientName, setSuggestedPatientName, lastCreatedPatient, setLastCreatedPatient,
+    selectedEquipments, setSelectedEquipments, reminders, setReminders,
+    duplicateDialogOpen, setDuplicateDialogOpen, capacityDialogOpen, setCapacityDialogOpen,
+    pendingFormData, setPendingFormData, waitlistQuickAddOpen, setWaitlistQuickAddOpen,
+    isNotesExpanded, setIsNotesExpanded
+  } = state;
   
-  const watchedTherapistId = state.currentMode === 'view' ? appointment?.therapistId : ''; // Temporary, will be updated by watch
+  const watchedTherapistId = currentMode === 'view' ? appointment?.therapistId : ''; 
   const effectiveTherapistId = (watchedTherapistId && String(watchedTherapistId).trim()) || user?.uid || '';
 
   const form = useAppointmentForm({
@@ -97,15 +107,15 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
     defaultPatientId,
     onClose,
     onOpenCapacityDialog: (data, check) => {
-      state.setPendingFormData(data);
-      state.setConflictCheck(check);
-      state.setCapacityDialogOpen(true);
+      setPendingFormData(data);
+      setConflictCheck(check);
+      setCapacityDialogOpen(true);
     },
     appointments,
     effectiveTherapistId,
   });
 
-  const { methods, handleSave, handleDelete, handleDuplicate, isCreating, isUpdating, getInitialFormData } = form;
+  const { methods, handleSave, handleDelete, handleDuplicate, isCreating, isUpdating, getInitialFormData, persistAppointment, scheduleOnlyRef } = form;
   const { watch, setValue, handleSubmit, reset } = methods;
 
   const watchedPatientId = watch('patient_id');
@@ -145,7 +155,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
   const lastStatusPatientIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!appointment && isOpen && watchedPatientId && state.currentMode === 'create') {
+    if (!appointment && isOpen && watchedPatientId && currentMode === 'create') {
       if (lastStatusPatientIdRef.current === watchedPatientId) return;
       lastStatusPatientIdRef.current = watchedPatientId;
 
@@ -156,32 +166,32 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
         setValue('status', 'agendado');
       }
     }
-  }, [watchedPatientId, isOpen, appointment, state.currentMode, checkPatientHasPreviousSessions, setValue]);
+  }, [watchedPatientId, isOpen, appointment, currentMode, checkPatientHasPreviousSessions, setValue]);
 
   useEffect(() => {
     if (!isOpen) {
       lastStatusPatientIdRef.current = null;
       return;
     }
-    const formData = form.getInitialFormData(appointment, {
+    const formData = getInitialFormData(appointment, {
       date: defaultDate,
       time: defaultTime,
       patientId: defaultPatientId
     });
-    methods.reset(formData);
-    state.setCurrentMode(appointment ? 'edit' : initialMode);
-    state.setActiveTab('info');
-    state.setIsNotesExpanded(Boolean(formData.notes?.trim()));
+    reset(formData);
+    setCurrentMode(appointment ? 'edit' : initialMode);
+    setActiveTab('info');
+    setIsNotesExpanded(Boolean(formData.notes?.trim()));
     
     const apptDate = defaultDate || (appointment?.date ? new Date(appointment.date) : new Date());
     const apptTime = defaultTime || (appointment?.time ? String(appointment.time).substring(0, 5) : '09:00');
-    state.setRecurringConfig({
+    setRecurringConfig({
       days: [{ day: apptDate.getDay(), time: apptTime }],
       endType: 'sessions',
       sessions: 10,
       endDate: '',
     });
-  }, [appointment, isOpen, defaultDate, defaultTime, defaultPatientId, initialMode, methods, form, state]);
+  }, [appointment, isOpen, defaultDate, defaultTime, defaultPatientId, initialMode, reset, setCurrentMode, setActiveTab, setIsNotesExpanded, setRecurringConfig, getInitialFormData]);
 
   const watchedDate = useMemo(() => {
     if (!watchedDateStr) return null;
@@ -208,12 +218,12 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
   }, [slotInfo, isDayClosed, watchedTime]);
 
   const selectedPatientName = useMemo(() => {
-    if (state.lastCreatedPatient?.id === watchedPatientId) {
-      return state.lastCreatedPatient.name;
+    if (lastCreatedPatient?.id === watchedPatientId) {
+      return lastCreatedPatient.name;
     }
     const selectedPatient = activePatients?.find((patient) => patient.id === watchedPatientId);
     return selectedPatient?.full_name || selectedPatient?.name || getAppointmentPatientName(appointment) || '';
-  }, [activePatients, state.lastCreatedPatient, appointment, watchedPatientId]);
+  }, [activePatients, lastCreatedPatient, appointment, watchedPatientId]);
 
   const handleAutoSchedule = () => {
     if (!watchedDate) {
@@ -266,12 +276,12 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
   };
 
   const handleScheduleAnyway = async () => {
-    if (!state.pendingFormData) return;
+    if (!pendingFormData) return;
     try {
-      await form.persistAppointment(state.pendingFormData, state.recurringConfig, true);
+      await persistAppointment(pendingFormData, recurringConfig, true);
       toast.warning('Agendamento confirmado acima da capacidade configurada.');
-      state.setCapacityDialogOpen(false);
-      state.setPendingFormData(null);
+      setCapacityDialogOpen(false);
+      setPendingFormData(null);
     } catch (error: any) {
       toast.error('Erro ao confirmar agendamento.');
     }
@@ -279,14 +289,14 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 
   return (
     <CustomModal open={isOpen} onOpenChange={(open) => !open && onClose()} isMobile={isMobile}>
-      <AppointmentModalHeader currentMode={state.currentMode} onClose={onClose} />
+      <AppointmentModalHeader currentMode={currentMode} onClose={onClose} />
 
       <FormProvider {...methods}>
-        <Tabs value={state.activeTab} onValueChange={state.setActiveTab} className="flex flex-col flex-1 min-h-0">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
           <div className="px-5 sm:px-6 py-3 border-b shrink-0">
             <TabsList className="grid w-full grid-cols-2 h-10">
               <TabsTrigger value="info" className="flex items-center gap-2 text-xs sm:text-sm">
-                <Calendar className="h-3.5 w-3.5" />
+                <CalendarIcon className="h-3.5 w-3.5" />
                 <span>Agendamento</span>
               </TabsTrigger>
               <TabsTrigger value="options" className="flex items-center gap-2 text-xs sm:text-sm">
@@ -299,38 +309,38 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
           <div className="flex-1 min-h-0 overflow-y-auto">
             <form id="appointment-form" onSubmit={(e) => {
               e.preventDefault();
-              handleSubmit((data) => handleSave(data, state.recurringConfig), (errors) => {
+              handleSubmit((data) => handleSave(data, recurringConfig), (errors) => {
                 logger.error('Form validation errors', { errors }, 'AppointmentModal');
                 toast.error('Verifique os campos obrigatórios do formulário');
               })(e);
             }} className="px-5 sm:px-6 py-4">
               <TabsContent value="info">
                 <AppointmentInfoTab
-                  currentMode={state.currentMode}
+                  currentMode={currentMode}
                   patients={activePatients || []}
                   patientsLoading={patientsLoading}
                   defaultPatientId={defaultPatientId}
                   onQuickPatientCreate={(searchTerm) => {
-                    state.setSuggestedPatientName(searchTerm);
-                    state.setQuickPatientModalOpen(true);
+                    setSuggestedPatientName(searchTerm);
+                    setQuickPatientModalOpen(true);
                   }}
-                  lastCreatedPatient={state.lastCreatedPatient}
+                  lastCreatedPatient={lastCreatedPatient}
                   normalizedAppointmentPatientName={getAppointmentPatientName(appointment)}
                   selectedPatientName={selectedPatientName}
                   watchedPatientId={watchedPatientId}
                   timeSlots={timeSlots}
-                  isCalendarOpen={state.isCalendarOpen}
-                  setIsCalendarOpen={state.setIsCalendarOpen}
+                  isCalendarOpen={isCalendarOpen}
+                  setIsCalendarOpen={setIsCalendarOpen}
                   getMinCapacityForInterval={getMinCapacityForInterval}
-                  conflictCount={state.conflictCheck?.totalConflictCount || 0}
+                  conflictCount={conflictCheck?.totalConflictCount || 0}
                   watchedDateStr={watchedDateStr}
                   watchedTime={watchedTime}
                   watchedDuration={watchedDuration}
                   onAutoSchedule={handleAutoSchedule}
                   therapists={therapists}
                   therapistsLoading={therapistsLoading}
-                  isNotesExpanded={state.isNotesExpanded}
-                  setIsNotesExpanded={state.setIsNotesExpanded}
+                  isNotesExpanded={isNotesExpanded}
+                  setIsNotesExpanded={setIsNotesExpanded}
                   watchedNotes={watchedNotes}
                   watchPaymentStatus={watchPaymentStatus}
                   watchPaymentMethod={watchPaymentMethod}
@@ -340,15 +350,15 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 
               <TabsContent value="options">
                 <AppointmentOptionsTab
-                  currentMode={state.currentMode}
-                  disabled={state.currentMode === 'view'}
-                  selectedEquipments={state.selectedEquipments}
-                  setSelectedEquipments={state.setSelectedEquipments}
-                  recurringConfig={state.recurringConfig}
-                  setRecurringConfig={state.setRecurringConfig}
-                  reminders={state.reminders}
-                  setReminders={state.setReminders}
-                  onDuplicate={() => state.setDuplicateDialogOpen(true)}
+                  currentMode={currentMode}
+                  disabled={currentMode === 'view'}
+                  selectedEquipments={selectedEquipments}
+                  setSelectedEquipments={setSelectedEquipments}
+                  recurringConfig={recurringConfig}
+                  setRecurringConfig={setRecurringConfig}
+                  reminders={reminders}
+                  setReminders={setReminders}
+                  onDuplicate={() => setDuplicateDialogOpen(true)}
                 />
               </TabsContent>
             </form>
@@ -358,7 +368,7 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
 
       <CustomModalFooter isMobile={isMobile} className="items-stretch flex-col-reverse gap-3 bg-background sm:flex-row sm:items-center sm:justify-between">
         <div className="flex justify-center sm:justify-start w-full sm:w-auto">
-          {state.currentMode === 'edit' && appointment && (
+          {currentMode === 'edit' && appointment && (
             <Button
               type="button"
               variant="ghost"
@@ -372,11 +382,11 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
         </div>
 
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
-          {state.currentMode === 'view' && appointment && (
+          {currentMode === 'view' && appointment && (
             <Button
               type="button"
               variant="default"
-              onClick={() => state.setCurrentMode('edit')}
+              onClick={() => setCurrentMode('edit')}
               className="w-full sm:w-auto"
             >
               Editar
@@ -390,18 +400,18 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
             disabled={isCreating || isUpdating}
             className="w-full sm:w-auto"
           >
-            {state.currentMode === 'view' ? 'Fechar' : 'Cancelar'}
+            {currentMode === 'view' ? 'Fechar' : 'Cancelar'}
           </Button>
 
-          {state.currentMode !== 'view' && watchedStatus === 'avaliacao' && (
+          {currentMode !== 'view' && watchedStatus === 'avaliacao' && (
             <Button
               type="button"
               variant="outline"
               disabled={isCreating || isUpdating}
               className="w-full min-w-[100px] sm:w-auto"
               onClick={() => {
-                form.scheduleOnlyRef.current = true;
-                handleSubmit((data) => handleSave(data, state.recurringConfig))();
+                scheduleOnlyRef.current = true;
+                handleSubmit((data) => handleSave(data, recurringConfig))();
               }}
             >
               {(isCreating || isUpdating) ? (
@@ -414,12 +424,12 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
               )}
             </Button>
           )}
-          {state.currentMode !== 'view' && (
+          {currentMode !== 'view' && (
             <Button
               type="submit"
               form="appointment-form"
               disabled={isCreating || isUpdating}
-              onClick={() => { form.scheduleOnlyRef.current = false; }}
+              onClick={() => { scheduleOnlyRef.current = false; }}
               className={cn(
                 "w-full min-w-[100px] transition-all duration-200 sm:w-auto",
                 watchedStatus === 'avaliacao' && "bg-violet-600 hover:bg-violet-700 text-white",
@@ -429,12 +439,12 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
               {(isCreating || isUpdating) ? (
                 <span className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  {state.currentMode === 'edit' ? 'Salvando...' : 'Criando...'}
+                  {currentMode === 'edit' ? 'Salvando...' : 'Criando...'}
                 </span>
               ) : (
                 <>
                   <Check className="w-4 h-4 mr-1" />
-                  {watchedStatus === 'avaliacao' ? 'Iniciar Avaliação' : (state.currentMode === 'edit' ? 'Salvar' : 'Criar')}
+                  {watchedStatus === 'avaliacao' ? 'Iniciar Avaliação' : (currentMode === 'edit' ? 'Salvar' : 'Criar')}
                 </>
               )}
             </Button>
@@ -443,56 +453,56 @@ export const AppointmentModal: React.FC<AppointmentModalProps> = ({
       </CustomModalFooter>
 
       <QuickPatientModal
-        open={state.quickPatientModalOpen}
+        open={quickPatientModalOpen}
         onOpenChange={(open) => {
-          state.setQuickPatientModalOpen(open);
-          if (!open) state.setSuggestedPatientName('');
+          setQuickPatientModalOpen(open);
+          if (!open) setSuggestedPatientName('');
         }}
         onPatientCreated={(patientId, patientName) => {
           setValue('patient_id', patientId);
-          state.setLastCreatedPatient({ id: patientId, name: patientName });
-          state.setQuickPatientModalOpen(false);
-          state.setSuggestedPatientName('');
+          setLastCreatedPatient({ id: patientId, name: patientName });
+          setQuickPatientModalOpen(false);
+          setSuggestedPatientName('');
           queryClient.invalidateQueries({ queryKey: ['patients'] });
         }}
-        suggestedName={state.suggestedPatientName}
+        suggestedName={suggestedPatientName}
       />
 
       <DuplicateAppointmentDialog
-        open={state.duplicateDialogOpen}
-        onOpenChange={state.setDuplicateDialogOpen}
+        open={duplicateDialogOpen}
+        onOpenChange={setDuplicateDialogOpen}
         appointment={appointment || null}
         onDuplicate={handleDuplicate}
       />
 
       <CapacityExceededDialog
-        open={state.capacityDialogOpen}
-        onOpenChange={state.setCapacityDialogOpen}
-        currentCount={(state.conflictCheck?.totalConflictCount || 0) + 1}
+        open={capacityDialogOpen}
+        onOpenChange={setCapacityDialogOpen}
+        currentCount={(conflictCheck?.totalConflictCount || 0) + 1}
         maxCapacity={watchedDate && watchedTime ? getMinCapacityForInterval(watchedDate.getDay(), watchedTime, watchedDuration) : 1}
         selectedTime={watchedTime || ''}
         selectedDate={watchedDate || new Date()}
         onAddToWaitlist={() => {
-          state.setCapacityDialogOpen(false);
-          state.setWaitlistQuickAddOpen(true);
+          setCapacityDialogOpen(false);
+          setWaitlistQuickAddOpen(true);
         }}
         onChooseAnotherTime={() => {
-          state.setCapacityDialogOpen(false);
-          state.setActiveTab('info');
+          setCapacityDialogOpen(false);
+          setActiveTab('info');
         }}
         onScheduleAnyway={handleScheduleAnyway}
       />
 
-      {state.waitlistQuickAddOpen && state.pendingFormData && (
+      {waitlistQuickAddOpen && pendingFormData && (
         <WaitlistQuickAdd
-          open={state.waitlistQuickAddOpen}
+          open={waitlistQuickAddOpen}
           onOpenChange={(open) => {
-            state.setWaitlistQuickAddOpen(open);
-            if (!open) state.setPendingFormData(null);
+            setWaitlistQuickAddOpen(open);
+            if (!open) setPendingFormData(null);
           }}
-          date={state.pendingFormData.appointment_date ? parseISO(state.pendingFormData.appointment_date) : new Date()}
-          time={state.pendingFormData.appointment_time}
-          defaultPatientId={state.pendingFormData.patient_id}
+          date={pendingFormData.appointment_date ? parseISO(pendingFormData.appointment_date) : new Date()}
+          time={pendingFormData.appointment_time}
+          defaultPatientId={pendingFormData.patient_id}
         />
       )}
     </CustomModal>
