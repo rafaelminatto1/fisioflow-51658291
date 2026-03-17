@@ -1,10 +1,10 @@
 /**
  * Session Unlock Screen
- * 
+ *
  * Displayed when:
  * - App returns from background after 5 minutes (Requirement 5.4)
  * - Session is locked and requires re-authentication
- * 
+ *
  * Supports:
  * - Biometric authentication (Face ID/Touch ID)
  * - PIN fallback
@@ -23,13 +23,15 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuthStore, unlockSessionWithPIN } from '@/store/auth';
 import { biometricAuthService } from '@/lib/services/biometricAuthService';
+import { useColors } from '@/hooks/useColorScheme';
 
 const MAX_PIN_ATTEMPTS = 5;
 
 export default function UnlockScreen() {
   const router = useRouter();
+  const colors = useColors();
   const { unlockSession, clearSession, isLocked } = useAuthStore();
-  
+
   const [pin, setPin] = useState('');
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState(0);
@@ -37,41 +39,34 @@ export default function UnlockScreen() {
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if biometric is available and get user ID
     const checkBiometric = async () => {
       try {
         const currentUserId = useAuthStore.getState().user?.id ?? null;
         setUserId(currentUserId);
 
         const config = await biometricAuthService.getConfig(currentUserId);
-        const isEnabled = config.isEnabled;
-        setBiometricAvailable(isEnabled);
+        setBiometricAvailable(config.isEnabled);
 
-        // Auto-trigger biometric if available
-        if (isEnabled) {
-          handleBiometricAuth(currentUserId);
+        if (config.isEnabled) {
+          handleBiometricAuth(currentUserId as string);
         }
-      } catch (error) {
-        console.error('[UnlockScreen] Failed to check biometric:', error);
+      } catch {
+        // Silent — biometric unavailable, PIN fallback shown
       }
     };
 
     checkBiometric();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /**
-   * Handle biometric authentication
-   */
   const handleBiometricAuth = async (currentUserId: string) => {
     if (isAuthenticating) return;
 
     setIsAuthenticating(true);
     try {
       await unlockSession();
-      // Session unlocked, navigate back
       router.back();
-    } catch (error) {
-      console.error('[UnlockScreen] Biometric auth error:', error);
+    } catch {
       Alert.alert(
         'Erro',
         'Falha na autenticação biométrica. Por favor, use seu PIN.',
@@ -82,24 +77,15 @@ export default function UnlockScreen() {
     }
   };
 
-  /**
-   * Handle PIN input
-   */
   const handlePinInput = (digit: string) => {
     if (pin.length >= 6) return;
-
     const newPin = pin + digit;
     setPin(newPin);
-
-    // Auto-submit when 6 digits entered
     if (newPin.length === 6) {
       handlePinSubmit(newPin);
     }
   };
 
-  /**
-   * Handle PIN submission
-   */
   const handlePinSubmit = async (pinToVerify: string) => {
     if (!userId) {
       Alert.alert('Erro', 'Usuário não identificado. Por favor, faça login novamente.');
@@ -109,41 +95,32 @@ export default function UnlockScreen() {
 
     setIsAuthenticating(true);
     try {
-      const success = await unlockSessionWithPIN(pinToVerify);
-      
-      if (success) {
-        // PIN correct, session unlocked
+      const ok = await unlockSessionWithPIN(pinToVerify);
+
+      if (ok) {
         setPin('');
         setFailedAttempts(0);
         router.back();
       } else {
-        // PIN incorrect
-        const newFailedAttempts = failedAttempts + 1;
-        setFailedAttempts(newFailedAttempts);
+        const newFailed = failedAttempts + 1;
+        setFailedAttempts(newFailed);
         setPin('');
 
-        if (newFailedAttempts >= MAX_PIN_ATTEMPTS) {
-          // Max attempts reached, logout
+        if (newFailed >= MAX_PIN_ATTEMPTS) {
           Alert.alert(
             'Muitas Tentativas Falhas',
             'Você excedeu o número máximo de tentativas. Por favor, faça login novamente.',
-            [
-              {
-                text: 'OK',
-                onPress: handleLogout,
-              },
-            ]
+            [{ text: 'OK', onPress: handleLogout }]
           );
         } else {
           Alert.alert(
             'PIN Incorreto',
-            `Tentativa ${newFailedAttempts} de ${MAX_PIN_ATTEMPTS}. Por favor, tente novamente.`,
+            `Tentativa ${newFailed} de ${MAX_PIN_ATTEMPTS}. Por favor, tente novamente.`,
             [{ text: 'OK' }]
           );
         }
       }
-    } catch (error) {
-      console.error('[UnlockScreen] PIN verification error:', error);
+    } catch {
       Alert.alert('Erro', 'Falha ao verificar PIN. Por favor, tente novamente.');
       setPin('');
     } finally {
@@ -151,9 +128,6 @@ export default function UnlockScreen() {
     }
   };
 
-  /**
-   * Handle logout
-   */
   const handleLogout = async () => {
     clearSession();
     try {
@@ -164,16 +138,10 @@ export default function UnlockScreen() {
     router.replace('/(auth)/login');
   };
 
-  /**
-   * Handle backspace
-   */
   const handleBackspace = () => {
     setPin(pin.slice(0, -1));
   };
 
-  /**
-   * Retry biometric
-   */
   const handleRetryBiometric = () => {
     if (userId && biometricAvailable) {
       handleBiometricAuth(userId);
@@ -181,16 +149,15 @@ export default function UnlockScreen() {
   };
 
   if (!isLocked) {
-    // Session is not locked, shouldn't be here
     router.back();
     return null;
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Sessão Bloqueada</Text>
-        <Text style={styles.subtitle}>
+        <Text style={[styles.title, { color: colors.text }]}>Sessão Bloqueada</Text>
+        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           Autentique para continuar usando o aplicativo
         </Text>
       </View>
@@ -202,7 +169,8 @@ export default function UnlockScreen() {
             key={index}
             style={[
               styles.pinDot,
-              pin.length > index && styles.pinDotFilled,
+              { borderColor: colors.border },
+              pin.length > index && { backgroundColor: colors.primary, borderColor: colors.primary },
             ]}
           />
         ))}
@@ -211,13 +179,11 @@ export default function UnlockScreen() {
       {/* Biometric Button */}
       {biometricAvailable && (
         <TouchableOpacity
-          style={styles.biometricButton}
+          style={[styles.biometricButton, { backgroundColor: colors.primary }]}
           onPress={handleRetryBiometric}
           disabled={isAuthenticating}
         >
-          <Text style={styles.biometricButtonText}>
-            Usar Autenticação Biométrica
-          </Text>
+          <Text style={styles.biometricButtonText}>Usar Autenticação Biométrica</Text>
         </TouchableOpacity>
       )}
 
@@ -226,50 +192,52 @@ export default function UnlockScreen() {
         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((digit) => (
           <TouchableOpacity
             key={digit}
-            style={styles.keypadButton}
+            style={[styles.keypadButton, { backgroundColor: colors.surface }]}
             onPress={() => handlePinInput(digit.toString())}
             disabled={isAuthenticating}
           >
-            <Text style={styles.keypadButtonText}>{digit}</Text>
+            <Text style={[styles.keypadButtonText, { color: colors.text }]}>{digit}</Text>
           </TouchableOpacity>
         ))}
-        
+
         {/* Empty space */}
         <View style={styles.keypadButton} />
-        
+
         {/* Zero */}
         <TouchableOpacity
-          style={styles.keypadButton}
+          style={[styles.keypadButton, { backgroundColor: colors.surface }]}
           onPress={() => handlePinInput('0')}
           disabled={isAuthenticating}
         >
-          <Text style={styles.keypadButtonText}>0</Text>
+          <Text style={[styles.keypadButtonText, { color: colors.text }]}>0</Text>
         </TouchableOpacity>
-        
+
         {/* Backspace */}
         <TouchableOpacity
-          style={styles.keypadButton}
+          style={[styles.keypadButton, { backgroundColor: colors.surface }]}
           onPress={handleBackspace}
           disabled={isAuthenticating || pin.length === 0}
         >
-          <Text style={styles.keypadButtonText}>⌫</Text>
+          <Text style={[styles.keypadButtonText, { color: colors.text }]}>⌫</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Loading Indicator */}
+      {/* Loading Overlay */}
       {isAuthenticating && (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#0284C7" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       )}
 
-      {/* Logout Button */}
+      {/* Logout Link */}
       <TouchableOpacity
         style={styles.logoutButton}
         onPress={handleLogout}
         disabled={isAuthenticating}
       >
-        <Text style={styles.logoutButtonText}>Sair e Fazer Login Novamente</Text>
+        <Text style={[styles.logoutButtonText, { color: colors.error }]}>
+          Sair e Fazer Login Novamente
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -278,7 +246,6 @@ export default function UnlockScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAF9',
     padding: 24,
     justifyContent: 'center',
   },
@@ -289,12 +256,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1C1917',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#78716C',
     textAlign: 'center',
   },
   pinContainer: {
@@ -308,15 +273,9 @@ const styles = StyleSheet.create({
     height: 16,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: '#D6D3D1',
     backgroundColor: 'transparent',
   },
-  pinDotFilled: {
-    backgroundColor: '#0284C7',
-    borderColor: '#0284C7',
-  },
   biometricButton: {
-    backgroundColor: '#0284C7',
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
@@ -339,7 +298,6 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -351,7 +309,6 @@ const styles = StyleSheet.create({
   keypadButtonText: {
     fontSize: 28,
     fontWeight: '600',
-    color: '#1C1917',
   },
   loadingContainer: {
     position: 'absolute',
@@ -368,7 +325,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logoutButtonText: {
-    color: '#EF4444',
     fontSize: 16,
     fontWeight: '600',
   },

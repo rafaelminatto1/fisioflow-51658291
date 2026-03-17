@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -8,6 +8,20 @@ import { useAllFinancialRecords } from '@/hooks/usePatientFinancial';
 import { Card } from '@/components';
 import { format, subDays } from 'date-fns';
 import { useHaptics } from '@/hooks/useHaptics';
+
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  credit_card: 'Cartão de Crédito',
+  debit_card: 'Cartão de Débito',
+  pix: 'Pix',
+  cash: 'Dinheiro',
+  bank_transfer: 'Transferência',
+  insurance: 'Convênio',
+};
+
+function formatPaymentMethod(method?: string | null): string {
+  if (!method) return 'Outro';
+  return PAYMENT_METHOD_LABELS[method] ?? method;
+}
 
 export default function FinancialsScreen() {
   const colors = useColors();
@@ -36,17 +50,17 @@ export default function FinancialsScreen() {
   const totalRevenue = records?.reduce((acc, record) => acc + (record.payment_status === 'paid' ? record.final_value : 0), 0) || 0;
   const totalPending = records?.reduce((acc, record) => acc + (record.payment_status === 'pending' ? record.final_value : 0), 0) || 0;
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     light();
     await refetch();
-  };
+  }, [light, refetch]);
 
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     medium();
     router.push('/financial-form');
-  };
+  }, [medium]);
 
-  const handleEdit = (record: any) => {
+  const handleEdit = useCallback((record: any) => {
     medium();
     router.push({
       pathname: '/financial-form',
@@ -60,7 +74,7 @@ export default function FinancialsScreen() {
         status: record.payment_status,
       }
     });
-  };
+  }, [medium]);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -82,7 +96,7 @@ export default function FinancialsScreen() {
                 <Text style={[styles.summaryValue, {color: colors.success}]}>
                     R$ {totalRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </Text>
-                <Text style={styles.summaryLabel}>Receita (30d)</Text>
+                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Receita (30d)</Text>
             </Card>
             <Card style={styles.summaryCard}>
                 <View style={styles.iconContainer}>
@@ -91,7 +105,7 @@ export default function FinancialsScreen() {
                 <Text style={[styles.summaryValue, {color: colors.warning}]}>
                     R$ {totalPending.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </Text>
-                <Text style={styles.summaryLabel}>Pendente (30d)</Text>
+                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Pendente (30d)</Text>
             </Card>
         </View>
 
@@ -127,7 +141,7 @@ export default function FinancialsScreen() {
                         <View>
                             <Text style={[styles.patientName, { color: colors.text }]}>{record.patient_name}</Text>
                             <Text style={[styles.recordDate, { color: colors.textSecondary }]}>
-                                {format(new Date(record.session_date), 'dd/MM/yyyy')} • {record.payment_method === 'credit_card' ? 'Cartão' : record.payment_method || 'Outro'}
+                                {format(new Date(record.session_date), 'dd/MM/yyyy')} • {formatPaymentMethod(record.payment_method)}
                             </Text>
                         </View>
                         <View style={[
@@ -143,7 +157,7 @@ export default function FinancialsScreen() {
                         </View>
                     </View>
                     
-                    <View style={styles.cardFooter}>
+                    <View style={[styles.cardFooter, { borderTopColor: colors.border }]}>
                         <Text style={[styles.recordValue, { color: colors.text }]}>
                             R$ {record.final_value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                         </Text>
@@ -208,7 +222,6 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 12,
-    opacity: 0.7,
     marginTop: 4,
   },
   summaryValue: {
@@ -268,7 +281,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0', // Light border for internal separation
   },
   recordValue: {
     fontSize: 18,
