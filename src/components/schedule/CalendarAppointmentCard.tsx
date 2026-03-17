@@ -1,6 +1,6 @@
 import React, { memo, useState, forwardRef } from 'react';
 import { Appointment } from '@/types/appointment';
-import { normalizeStatus } from '@/lib/config/agenda';
+import { normalizeStatus } from './shared/appointment-status';
 import { cn } from '@/lib/utils';
 import { MoreVertical } from 'lucide-react';
 import { AppointmentQuickView } from './AppointmentQuickView';

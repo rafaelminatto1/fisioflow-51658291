@@ -23,7 +23,7 @@ import {
   DateTimeSection,
   PaymentTab
 } from '../AppointmentDialogSegments';
-import { STATUS_LABELS, STATUS_COLORS } from '@/constants/appointments';
+import { APPOINTMENT_STATUS_CONFIG } from '../shared/appointment-status';
 import { cn } from '@/lib/utils';
 import {
   formatTherapistLabel,
@@ -42,24 +42,16 @@ interface AppointmentInfoTabProps {
   lastCreatedPatient: { id: string; name: string } | null;
   normalizedAppointmentPatientName: string;
   selectedPatientName: string;
-  watchedPatientId: string;
   timeSlots: string[];
   isCalendarOpen: boolean;
   setIsCalendarOpen: (open: boolean) => void;
   getMinCapacityForInterval: (day: number, time: string, duration: number) => number;
   conflictCount: number;
-  watchedDateStr: string;
-  watchedTime: string;
-  watchedDuration: number;
   onAutoSchedule: () => void;
   therapists: any[];
   therapistsLoading: boolean;
   isNotesExpanded: boolean;
   setIsNotesExpanded: (expanded: boolean) => void;
-  watchedNotes: string;
-  watchPaymentStatus: string;
-  watchPaymentMethod: string;
-  watchPaymentAmount: number;
 }
 
 export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
@@ -71,26 +63,27 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
   lastCreatedPatient,
   normalizedAppointmentPatientName,
   selectedPatientName,
-  watchedPatientId,
   timeSlots,
   isCalendarOpen,
   setIsCalendarOpen,
   getMinCapacityForInterval,
   conflictCount,
-  watchedDateStr,
-  watchedTime,
-  watchedDuration,
   onAutoSchedule,
   therapists,
   therapistsLoading,
   isNotesExpanded,
   setIsNotesExpanded,
-  watchedNotes,
-  watchPaymentStatus,
-  watchPaymentMethod,
-  watchPaymentAmount,
 }) => {
   const { register, setValue, watch } = useFormContext<AppointmentFormData>();
+
+  const watchedPatientId = watch('patient_id');
+  const watchedDateStr = watch('appointment_date');
+  const watchedTime = watch('appointment_time');
+  const watchedDuration = watch('duration');
+  const watchedNotes = watch('notes');
+  const watchPaymentStatus = watch('payment_status');
+  const watchPaymentMethod = watch('payment_method');
+  const watchPaymentAmount = watch('payment_amount');
 
   return (
     <div className="mt-0 space-y-4 sm:space-y-4">
@@ -167,11 +160,11 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {(['agendado', 'confirmado', 'avaliacao', 'aguardando_confirmacao', 'em_andamento', 'concluido', 'cancelado', 'falta'] as const).map((s) => (
-                <SelectItem key={s} value={s}>
+              {Object.entries(APPOINTMENT_STATUS_CONFIG).map(([key, config]) => (
+                <SelectItem key={key} value={key}>
                   <span className="flex items-center gap-2">
-                    <span className={cn('h-2 w-2 rounded-full shrink-0', STATUS_COLORS[s] || 'bg-gray-400')} />
-                    {STATUS_LABELS[s] || s}
+                    <span className={cn('h-2 w-2 rounded-full shrink-0', config.iconColor.replace('text-', 'bg-'))} />
+                    {config.label}
                   </span>
                 </SelectItem>
               ))}

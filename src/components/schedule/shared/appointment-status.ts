@@ -52,6 +52,8 @@ export interface AppointmentStatusConfig {
   accent: string;
   /** Indicator color */
   indicator: string;
+  /** Allowed actions for this status */
+  allowedActions: string[];
 }
 
 /**
@@ -76,6 +78,7 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     subtext: 'text-emerald-800/80 dark:text-emerald-300/80',
     accent: 'bg-emerald-600',
     indicator: 'text-emerald-700',
+    allowedActions: ["complete", "miss", "cancel", "reschedule", "edit", "payment"],
   },
   agendado: {
     borderColor: 'border-blue-500',
@@ -94,6 +97,7 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     subtext: 'text-blue-800/80 dark:text-blue-300/80',
     accent: 'bg-blue-600',
     indicator: 'text-blue-700',
+    allowedActions: ["confirm", "cancel", "reschedule", "edit"],
   },
   avaliacao: {
     borderColor: 'border-violet-500',
@@ -112,6 +116,7 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     subtext: 'text-violet-800/80 dark:text-violet-300/80',
     accent: 'bg-violet-600',
     indicator: 'text-violet-700',
+    allowedActions: ["confirm", "cancel", "reschedule", "edit"],
   },
   aguardando_confirmacao: {
     borderColor: 'border-amber-500',
@@ -130,6 +135,7 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     subtext: 'text-amber-800/80 dark:text-amber-300/80',
     accent: 'bg-amber-600',
     indicator: 'text-amber-700',
+    allowedActions: ["confirm", "cancel", "reschedule", "edit"],
   },
   em_andamento: {
     borderColor: 'border-yellow-500',
@@ -148,6 +154,7 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     subtext: 'text-amber-800/80 dark:text-amber-300/80',
     accent: 'bg-amber-600',
     indicator: 'text-amber-700',
+    allowedActions: ["complete", "cancel"],
   },
   em_espera: {
     borderColor: 'border-indigo-500',
@@ -166,6 +173,7 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     subtext: 'text-indigo-800/80 dark:text-indigo-300/80',
     accent: 'bg-indigo-600',
     indicator: 'text-indigo-700',
+    allowedActions: ["start", "cancel", "reschedule"],
   },
   atrasado: {
     borderColor: 'border-orange-500',
@@ -184,6 +192,7 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     subtext: 'text-orange-800/80 dark:text-orange-300/80',
     accent: 'bg-orange-600',
     indicator: 'text-orange-700',
+    allowedActions: ["start", "cancel", "reschedule"],
   },
   concluido: {
     borderColor: 'border-slate-500',
@@ -202,6 +211,7 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     subtext: 'text-indigo-800/80 dark:text-indigo-300/80',
     accent: 'bg-indigo-600',
     indicator: 'text-indigo-700',
+    allowedActions: ["view", "payment", "evolution"],
   },
   realizado: {
     borderColor: 'border-slate-500',
@@ -220,6 +230,7 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     subtext: 'text-indigo-800/80 dark:text-indigo-300/80',
     accent: 'bg-indigo-600',
     indicator: 'text-indigo-700',
+    allowedActions: ["view", "payment", "evolution"],
   },
   remarcado: {
     borderColor: 'border-cyan-500',
@@ -238,6 +249,7 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     subtext: 'text-cyan-800/80 dark:text-cyan-300/80',
     accent: 'bg-cyan-600',
     indicator: 'text-cyan-700',
+    allowedActions: ["view"],
   },
   cancelado: {
     borderColor: 'border-red-600',
@@ -256,6 +268,7 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     subtext: 'text-red-800/80 dark:text-red-300/80',
     accent: 'bg-red-600',
     indicator: 'text-red-700',
+    allowedActions: ["view", "reschedule"],
   },
   falta: {
     borderColor: 'border-red-600',
@@ -274,8 +287,66 @@ export const APPOINTMENT_STATUS_CONFIG: Record<string, AppointmentStatusConfig> 
     subtext: 'text-red-800/80 dark:text-red-300/80',
     accent: 'bg-red-600',
     indicator: 'text-red-700',
+    allowedActions: ["view", "reschedule", "payment"],
+  },
+  // reagendado é o valor canônico no frontend; remarcado é alias para retrocompatibilidade
+  reagendado: {
+    borderColor: 'border-cyan-500',
+    badgeBg: 'bg-cyan-100 dark:bg-cyan-500/20',
+    badgeText: 'text-cyan-700 dark:text-cyan-300',
+    iconColor: 'text-cyan-600 dark:text-cyan-400',
+    label: 'Reagendado',
+    icon: Clock,
+    gradient: 'from-cyan-500/10 via-cyan-500/15 to-cyan-500/20',
+    calendarClassName: 'calendar-card-reagendado',
+    calendarAccent: 'bg-lime-600',
+    border: 'border-cyan-500',
+    bg: 'bg-cyan-100/90 dark:bg-cyan-500/20',
+    hoverBg: 'hover:bg-cyan-200/90 dark:hover:bg-cyan-500/30',
+    text: 'text-cyan-900 dark:text-cyan-400',
+    subtext: 'text-cyan-800/80 dark:text-cyan-300/80',
+    accent: 'bg-cyan-600',
+    indicator: 'text-cyan-700',
+    allowedActions: ["view"],
   },
 };
+
+/**
+ * Normaliza status vindo do backend (inglês/legado) para o valor canônico do frontend (PT-BR).
+ *
+ * FONTE ÚNICA: toda lógica de normalização de status deve viver aqui.
+ */
+export function normalizeStatus(status: string): string {
+  const s = (status ?? 'agendado').toLowerCase().trim();
+  // Backend EN → Frontend PT
+  if (s === 'confirmed') return 'confirmado';
+  if (s === 'scheduled') return 'agendado';
+  if (s === 'cancelled' || s === 'canceled') return 'cancelado';
+  if (s === 'no_show' || s === 'paciente_faltou' || s === 'faltou') return 'falta';
+  if (s === 'rescheduled' || s === 'remarcado') return 'reagendado';
+  if (s === 'in_progress' || s === 'em_atendimento') return 'em_andamento';
+  if (s === 'completed' || s === 'realizado' || s === 'atendido') return 'concluido';
+  // Já é um valor canônico PT — retorna direto
+  return s;
+}
+
+/**
+ * Lista ordenada de status disponíveis para dropdowns e filtros.
+ * Edite aqui para mudar quais opções aparecem nos seletores de status.
+ */
+export const APPOINTMENT_STATUS_OPTIONS = [
+  'concluido',
+  'confirmado',
+  'agendado',
+  'avaliacao',
+  'aguardando_confirmacao',
+  'em_espera',
+  'cancelado',
+  'falta',
+  'reagendado',
+  'atrasado',
+  'em_andamento',
+] as const;
 
 /**
  * Get status configuration for a given status
