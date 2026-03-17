@@ -6,6 +6,6 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "dependencies": {
-    "drizzle-orm": "workspace:*"
+    "drizzle-orm": "^0.45.1"
   }
 }
