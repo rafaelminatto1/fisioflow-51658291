@@ -10,7 +10,7 @@ import type { Patient, Evolution } from '@/types';
  */
 export async function generateEvolutionPDF(patient: Patient, evolutions: Evolution[]) {
   const sortedEvolutions = [...evolutions].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    (a, b) => new Date(b.date || '').getTime() - new Date(a.date || '').getTime()
   );
 
   const primaryColor = '#0EA5E9'; // Modern Sky Blue
@@ -187,7 +187,7 @@ export async function generateEvolutionPDF(patient: Patient, evolutions: Evoluti
             return `
               <div class="evolution-entry">
                 <div class="entry-header">
-                  <span class="entry-date">${format(new Date(ev.date), "dd/MM/yyyy • HH:mm")}</span>
+                  <span class="entry-date">${ev.date ? format(new Date(ev.date), "dd/MM/yyyy • HH:mm") : ''}</span>
                   ${ev.painLevel !== undefined ? `
                     <span class="pain-indicator ${painClass}">DOR: ${ev.painLevel}/10</span>
                   ` : ''}

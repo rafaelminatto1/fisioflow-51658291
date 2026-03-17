@@ -26,7 +26,8 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/auth';
-import { MessagingManager, Message, MESSAGING_UNAVAILABLE_REASON } from '@/lib/messaging';
+import { MessagingManager, Message } from '@/lib/messaging';
+const MESSAGING_UNAVAILABLE_REASON = 'O serviço de chat está em manutenção no momento.';
 import { format } from 'date-fns';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
@@ -63,7 +64,7 @@ export default function ChatScreen() {
 
     return () => {
       if (conversationId) {
-        manager.unsubscribeFromMessages(conversationId);
+        manager.stopPolling();
       }
     };
   }, [conversationId, chatAvailable, manager, professionalId, user?.id]);
@@ -90,12 +91,12 @@ export default function ChatScreen() {
         await manager.markConversationAsRead(convId);
 
         // Inscrever para novas mensagens
-        manager.subscribeToMessages(convId, {
-          onNewMessage: (message) => {
+        manager.setCallbacks({
+          onNewMessage: (message: Message) => {
             setMessages((prev) => [...prev, message]);
 
             // Feedback háptico para nova mensagem
-            if (message.senderId !== user?.id) {
+            if (message.sender_id !== user?.id) {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             }
 
@@ -103,13 +104,9 @@ export default function ChatScreen() {
             setTimeout(() => {
               flatListRef.current?.scrollToEnd({ animated: true });
             }, 100);
-          },
-          onMessageUpdated: (updatedMessage) => {
-            setMessages((prev) =>
-              prev.map((m) => (m.id === updatedMessage.id ? updatedMessage : m))
-            );
-          },
+          }
         });
+        manager.startPolling(convId);
       }
 
       setLoading(false);
@@ -208,14 +205,14 @@ export default function ChatScreen() {
   };
 
   const renderMessage = ({ item, index }: { item: Message; index: number }) => {
-    const isOwn = item.senderId === user?.id;
-    const showTime = index === 0 || messages[index - 1]?.senderId !== item.senderId;
+    const isOwn = item.sender_id === user?.id;
+    const showTime = index === 0 || messages[index - 1]?.sender_id !== item.sender_id;
 
-    const createdAt =
-      item.createdAt instanceof Date
-        ? item.createdAt
-        : item.createdAt
-          ? new Date(item.createdAt)
+    const timeString =
+      item.created_at instanceof Date
+        ? item.created_at
+        : item.created_at
+          ? new Date(item.created_at)
           : null;
 
     return (
@@ -243,10 +240,10 @@ export default function ChatScreen() {
           )}
 
           {/* Image attachment */}
-          {item.type === 'image' && item.attachmentUrl && (
+          {item.type === 'image' && item.attachment_url && (
             <>
               <Image
-                source={{ uri: item.attachmentUrl }}
+                source={{ uri: item.attachment_url }}
                 style={styles.attachmentImage}
                 resizeMode="cover"
               />
@@ -267,7 +264,7 @@ export default function ChatScreen() {
                 color={isOwn ? '#FFFFFF' : colors.primary}
               />
               <Text style={[styles.attachmentName, { color: isOwn ? '#FFFFFF' : colors.text }]}>
-                {item.attachmentName || 'Anexo'}
+                {item.attachment_name || 'Anexo'}
               </Text>
             </View>
           )}
@@ -276,7 +273,7 @@ export default function ChatScreen() {
           <View style={styles.messageMeta}>
             {showTime && (
               <Text style={[styles.messageTime, { color: isOwn ? 'rgba(255,255,255,0.7)' : colors.textMuted }]}>
-                {createdAt ? format(createdAt, 'HH:mm') : ''}
+                {timeString ? format(timeString, 'HH:mm') : ''}
               </Text>
             )}
             {isOwn && (
