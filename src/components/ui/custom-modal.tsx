@@ -87,7 +87,7 @@ export const CustomModal: React.FC<CustomModalProps> = ({
 
   const modalContentClass = isMobile
     ? "bg-background w-full rounded-t-2xl shadow-2xl flex flex-col h-[calc(100dvh-0.75rem)] max-h-[calc(100dvh-0.75rem)] min-h-0 overflow-hidden overscroll-contain"
-    : "bg-background rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden";
+    : "bg-background rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden";
 
   const modal = (
     <div
@@ -133,7 +133,7 @@ export const CustomModalHeader: React.FC<{
 }> = ({ className, children, onClose }) => {
   return (
     <div className={cn(
-      "flex items-center justify-between px-6 py-5 border-b shrink-0",
+      "flex items-center justify-between px-6 py-4 bg-blue-50/50 border-b shrink-0",
       className
     )}>
       {children}

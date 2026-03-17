@@ -72,6 +72,7 @@ import { fcmTokensRoutes } from './routes/fcmTokens';
 import { webhooksRoutes } from './routes/webhooks';
 import { patientPortalRoutes } from './routes/patientPortal';
 import { messagingRoutes } from './routes/messaging';
+import { boardsRoutes } from './routes/boards';
 import { verifyToken } from './lib/auth';
 import { getRawSql } from './lib/db';
 
@@ -195,6 +196,7 @@ app.route('/api/fcm-tokens', fcmTokensRoutes);
 app.route('/api/webhooks', webhooksRoutes);
 app.route('/api/patient-portal', patientPortalRoutes);
 app.route('/api/messaging', messagingRoutes);
+app.route('/api/boards', boardsRoutes);
 
 // REALTIME
 app.get('/api/realtime', async (c) => {

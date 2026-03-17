@@ -512,40 +512,28 @@ export const CalendarView = memo(({
     const s = status.toLowerCase();
     switch (s) {
       case 'presenca_confirmada':
-      case 'confirmado':
-      case 'confirmed':
-        return 'bg-gradient-to-br from-emerald-500 to-emerald-600 border-emerald-400 shadow-emerald-500/30';
+        return 'bg-gradient-to-br from-blue-900 to-blue-950 border-blue-800 shadow-blue-900/30';
       case 'agendado':
-      case 'scheduled':
         return 'bg-gradient-to-br from-blue-500 to-blue-600 border-blue-400 shadow-blue-500/30';
       case 'atendido':
-      case 'concluido':
-      case 'completed':
-      case 'em_andamento':
-      case 'in_progress':
-        return 'bg-gradient-to-br from-purple-500 to-purple-600 border-purple-400 shadow-purple-500/30';
-      case 'cancelado':
-      case 'cancelled':
-        return 'bg-gradient-to-br from-slate-900 to-slate-950 border-slate-800 shadow-slate-900/30';
+        return 'bg-gradient-to-br from-emerald-500 to-emerald-600 border-emerald-400 shadow-emerald-500/30';
       case 'avaliacao':
-      case 'evaluation':
         return 'bg-gradient-to-br from-violet-500 to-violet-600 border-violet-400 shadow-violet-500/30';
+      case 'cancelado':
+      case 'nao_atendido_sem_cobranca':
+        return 'bg-gradient-to-br from-slate-900 to-slate-950 border-slate-800 shadow-slate-900/30';
       case 'faltou':
-      case 'nao_compareceu':
-      case 'no_show':
-      case 'falta':
-        return 'bg-gradient-to-br from-rose-500 to-rose-600 border-rose-400 shadow-rose-500/30';
+        return 'bg-gradient-to-br from-red-500 to-red-600 border-red-400 shadow-red-500/30';
       case 'faltou_com_aviso':
         return 'bg-gradient-to-br from-teal-400 to-teal-500 border-teal-300 shadow-teal-400/30';
       case 'faltou_sem_aviso':
         return 'bg-gradient-to-br from-orange-500 to-orange-600 border-orange-400 shadow-orange-500/30';
+      case 'nao_atendido':
+        return 'bg-gradient-to-br from-gray-500 to-gray-600 border-gray-400 shadow-gray-500/30';
       case 'remarcar':
-      case 'remarcado':
-      case 'rescheduled':
-      case 'reagendado':
         return 'bg-gradient-to-br from-slate-400 to-slate-500 border-slate-300 shadow-slate-400/30';
       default:
-        return 'bg-gradient-to-br from-slate-500 to-slate-600 border-slate-400 shadow-slate-500/30';
+        return 'bg-gradient-to-br from-blue-500 to-blue-600 border-blue-400 shadow-blue-500/30';
     }
   }, []);
 

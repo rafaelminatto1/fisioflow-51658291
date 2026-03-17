@@ -32,6 +32,7 @@ interface AdvancedFiltersProps {
 
 const STATUS_OPTIONS = [
   { value: 'agendado', label: 'Agendado', color: 'bg-blue-500 hover:bg-blue-600' },
+  { value: 'aguardando_confirmacao', label: 'Aguardando', color: 'bg-amber-500 hover:bg-amber-600' },
   { value: 'presenca_confirmada', label: 'Presença Confirmada', color: 'bg-emerald-600 hover:bg-emerald-700' },
   { value: 'atendido', label: 'Atendido', color: 'bg-purple-500 hover:bg-purple-600' },
   { value: 'avaliacao', label: 'Avaliação', color: 'bg-violet-500 hover:bg-violet-600' },

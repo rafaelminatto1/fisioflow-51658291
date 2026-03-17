@@ -57,14 +57,23 @@ export function useQuickFilters({ appointments, onFilterChange }: UseQuickFilter
 
       case 'noShows':
         return appointments.filter(apt => {
-          const status = (apt.status || '').toLowerCase();
-          return status === 'nao_compareceu' || status === 'falta' || status === 'no_show' || status === 'no_show_confirmed';
+          const s = (apt.status || '').toLowerCase();
+          return [
+            'faltou', 
+            'faltou_com_aviso', 
+            'faltou_sem_aviso', 
+            'nao_atendido', 
+            'nao_atendido_sem_cobranca',
+            'falta', 
+            'no_show'
+          ].includes(s);
         });
 
       case 'pendingPayment':
         return appointments.filter(apt => {
           const paymentStatus = apt.paymentStatus || '';
-          return paymentStatus === 'pending' || paymentStatus === 'partial' || !paymentStatus && apt.status !== 'cancelado';
+          const s = (apt.status || '').toLowerCase();
+          return (paymentStatus === 'pending' || paymentStatus === 'partial' || (!paymentStatus && s !== 'cancelado')) && s !== 'cancelado';
         });
 
       default:
@@ -82,18 +91,35 @@ export function useQuickFilters({ appointments, onFilterChange }: UseQuickFilter
     }
 
     onFilterChange?.(filteredAppointments);
-  }, [onFilterChange]);
+  }, [onFilterChange, filteredAppointments]);
 
   // Calcular estatísticas do filtro atual
   const stats = useMemo(() => {
     return {
       count: filteredAppointments.length,
-      completed: filteredAppointments.filter(a => a.status === 'confirmado' || a.status === 'concluido').length,
-      pending: filteredAppointments.filter(a => a.status === 'aguardando_confirmacao' || a.status === 'awaiting').length,
-      cancelled: filteredAppointments.filter(a => a.status === 'cancelado' || a.status === 'cancelled').length,
+      completed: filteredAppointments.filter(a => {
+        const s = (a.status || '').toLowerCase();
+        return ['atendido', 'concluido', 'realizado', 'presenca_confirmada', 'confirmado'].includes(s);
+      }).length,
+      pending: filteredAppointments.filter(a => {
+        const s = (a.status || '').toLowerCase();
+        return ['agendado', 'avaliacao', 'aguardando_confirmacao', 'awaiting'].includes(s);
+      }).length,
+      cancelled: filteredAppointments.filter(a => {
+        const s = (a.status || '').toLowerCase();
+        return ['cancelado', 'cancelled', 'remarcar', 'reagendado'].includes(s);
+      }).length,
       noShows: filteredAppointments.filter(a => {
-        const status = (a.status || '').toLowerCase();
-        return status === 'nao_compareceu' || status === 'falta' || status === 'no_show' || status === 'no_show_confirmed';
+        const s = (a.status || '').toLowerCase();
+        return [
+          'faltou', 
+          'faltou_com_aviso', 
+          'faltou_sem_aviso', 
+          'nao_atendido', 
+          'nao_atendido_sem_cobranca',
+          'falta', 
+          'no_show'
+        ].includes(s);
       }).length,
     pendingPayment: filteredAppointments.filter(a => {
         const paymentStatus = a.paymentStatus || '';
@@ -101,7 +127,20 @@ export function useQuickFilters({ appointments, onFilterChange }: UseQuickFilter
       }).length,
     totalRevenue: filteredAppointments.reduce((sum, a) => {
         const amount = a.amount || 0;
-        return a.status !== 'cancelado' && a.status !== 'falta' ? sum + amount : sum;
+        const s = (a.status || '').toLowerCase();
+        // Não cobra em caso de cancelamento ou qualquer tipo de falta (ZenFisio)
+        const isNotCharged = [
+          'cancelado', 
+          'cancelled', 
+          'remarcar', 
+          'faltou', 
+          'faltou_com_aviso', 
+          'faltou_sem_aviso', 
+          'nao_atendido', 
+          'nao_atendido_sem_cobranca', 
+          'falta'
+        ].includes(s);
+        return !isNotCharged ? sum + amount : sum;
       }, 0),
     totalDuration: filteredAppointments.reduce((sum, a) => sum + (a.duration || 60), 0),
     avgDuration: filteredAppointments.length > 0

@@ -128,7 +128,10 @@ export function TherapistDashboard({ lastUpdate, profile, period = 'hoje' }: The
     const myPatients = uniquePatientsSet.size;
 
     const completedSessions = allAppointments.filter(
-      (apt) => apt.status === 'concluido' && apt.therapistId === profile.id
+      (apt) => {
+        const s = (apt.status || '').toLowerCase();
+        return (s === 'atendido' || s === 'concluido' || s === 'realizado') && apt.therapistId === profile.id;
+      }
     ).length;
 
     const lastAppointmentsByPatient = new Map<string, Date>();
@@ -302,18 +305,20 @@ export function TherapistDashboard({ lastUpdate, profile, period = 'hoje' }: The
                       variant="outline"
                       className={cn(
                         'text-[10px] uppercase tracking-[0.14em]',
-                        appointment.status === 'concluido'
+                        (appointment.status === 'atendido' || appointment.status === 'concluido')
                           ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600'
-                          : appointment.status === 'cancelado'
+                          : appointment.status === 'cancelado' || appointment.status === 'faltou'
                             ? 'border-red-500/20 bg-red-500/10 text-red-600'
                             : 'border-primary/20 bg-primary/10 text-primary'
                       )}
                     >
-                      {appointment.status === 'concluido'
-                        ? 'Concluído'
+                      {appointment.status === 'atendido' || appointment.status === 'concluido'
+                        ? 'Atendido'
                         : appointment.status === 'cancelado'
                           ? 'Cancelado'
-                          : 'Agendado'}
+                          : appointment.status === 'faltou'
+                            ? 'Faltou'
+                            : 'Agendado'}
                     </Badge>
                   </div>
                 ))}

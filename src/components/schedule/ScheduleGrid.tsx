@@ -20,7 +20,50 @@ const ScheduleGridComponent: React.FC<ScheduleGridProps> = ({
 }) => {
   // Memoized status mapping for better performance
   const getStatusConfig = useMemo(() => {
-    const statusMap = {
+    const statusMap: Record<string, { label: string, color: string, icon: any, bgColor: string }> = {
+      agendado: {
+        label: 'Agendado',
+        color: 'bg-blue-100 text-blue-800 border-blue-200',
+        icon: Clock,
+        bgColor: 'bg-blue-50'
+      },
+      presenca_confirmada: {
+        label: 'Confirmado',
+        color: 'bg-blue-100 text-blue-900 border-blue-200',
+        icon: CheckCircle,
+        bgColor: 'bg-blue-50'
+      },
+      atendido: {
+        label: 'Atendido',
+        color: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+        icon: CheckCircle,
+        bgColor: 'bg-emerald-50'
+      },
+      avaliacao: {
+        label: 'Avaliação',
+        color: 'bg-violet-100 text-violet-800 border-violet-200',
+        icon: FileText,
+        bgColor: 'bg-violet-50'
+      },
+      cancelado: {
+        label: 'Cancelado',
+        color: 'bg-slate-100 text-slate-800 border-slate-200',
+        icon: XCircle,
+        bgColor: 'bg-slate-50'
+      },
+      faltou: {
+        label: 'Faltou',
+        color: 'bg-red-100 text-red-800 border-red-200',
+        icon: AlertCircle,
+        bgColor: 'bg-red-50'
+      },
+      remarcar: {
+        label: 'Remarcar',
+        color: 'bg-slate-100 text-slate-700 border-slate-200',
+        icon: Clock,
+        bgColor: 'bg-slate-50'
+      },
+      // Legacy mapping
       scheduled: {
         label: 'Agendado',
         color: 'bg-blue-100 text-blue-800 border-blue-200',
@@ -39,12 +82,6 @@ const ScheduleGridComponent: React.FC<ScheduleGridProps> = ({
         icon: CheckCircle,
         bgColor: 'bg-purple-50'
       },
-      cancelled: {
-        label: 'Cancelado',
-        color: 'bg-red-100 text-red-800 border-red-200',
-        icon: XCircle,
-        bgColor: 'bg-red-50'
-      },
       'no-show': {
         label: 'Faltou',
         color: 'bg-orange-100 text-orange-800 border-orange-200',
@@ -52,7 +89,10 @@ const ScheduleGridComponent: React.FC<ScheduleGridProps> = ({
         bgColor: 'bg-orange-50'
       }
     };
-    return (status: string) => statusMap[status as keyof typeof statusMap] || statusMap.scheduled;
+    return (status: string) => {
+      const s = String(status || 'agendado').toLowerCase();
+      return statusMap[s] || statusMap.agendado;
+    };
   }, []);
 
   // Memoized time formatting

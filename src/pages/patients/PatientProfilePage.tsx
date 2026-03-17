@@ -84,53 +84,53 @@ const PersonalDataTab = ({ patient }: { patient: Patient }) => (
     <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-4">
-                <h3 className="font-semibold text-lg flex items-center gap-2">
-                    <Phone className="h-5 w-5 text-muted-foreground" />
-                    Contato
+                <h3 className="font-bold text-base flex items-center gap-2 text-slate-800">
+                    <Phone className="h-4 w-4 text-blue-500" />
+                    Contato e Emergência
                 </h3>
-                <div className="bg-card border rounded-lg p-4 space-y-3 shadow-sm">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-white border border-blue-100 rounded-xl p-5 space-y-4 shadow-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6">
                         <div>
-                            <span className="text-xs text-muted-foreground block">Telefone</span>
-                            <span className="font-medium">{patient.phone || '-'}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Telefone</span>
+                            <span className="font-semibold text-slate-700">{patient.phone || '-'}</span>
                         </div>
                         <div>
-                            <span className="text-xs text-muted-foreground block">Email</span>
-                            <span className="font-medium truncate block" title={patient.email}>{patient.email || '-'}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Email</span>
+                            <span className="font-semibold text-slate-700 truncate block" title={patient.email}>{patient.email || '-'}</span>
                         </div>
                         <div>
-                            <span className="text-xs text-muted-foreground block">Contato de Emergência</span>
-                            <span className="font-medium">{patient.emergency_contact || '-'}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Contato de Emergência</span>
+                            <span className="font-semibold text-slate-700">{patient.emergency_contact || '-'}</span>
                         </div>
                         <div>
-                            <span className="text-xs text-muted-foreground block">Tel. Emergência</span>
-                            <span className="font-medium">{patient.emergency_phone || '-'}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Tel. Emergência</span>
+                            <span className="font-semibold text-slate-700">{patient.emergency_phone || '-'}</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div className="space-y-4">
-                <h3 className="font-semibold text-lg flex items-center gap-2">
-                    <MapPin className="h-5 w-5 text-muted-foreground" />
-                    Endereço
+                <h3 className="font-bold text-base flex items-center gap-2 text-slate-800">
+                    <MapPin className="h-4 w-4 text-blue-500" />
+                    Endereço Residencial
                 </h3>
-                <div className="bg-card border rounded-lg p-4 space-y-3 shadow-sm">
-                    <div className="space-y-2">
+                <div className="bg-white border border-blue-100 rounded-xl p-5 space-y-4 shadow-sm">
+                    <div className="space-y-4">
                         <div>
-                            <span className="text-xs text-muted-foreground block">Logradouro</span>
-                            <span className="font-medium">{patient.address || '-'}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Logradouro</span>
+                            <span className="font-semibold text-slate-700">{patient.address || '-'}</span>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-6">
                             <div>
-                                <span className="text-xs text-muted-foreground block">Cidade/UF</span>
-                                <span className="font-medium">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Cidade/UF</span>
+                                <span className="font-semibold text-slate-700">
                                     {patient.city || '-'} {patient.state ? `/ ${patient.state}` : ''}
                                 </span>
                             </div>
                             <div>
-                                <span className="text-xs text-muted-foreground block">CEP</span>
-                                <span className="font-medium">{patient.zip_code || '-'}</span>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">CEP</span>
+                                <span className="font-semibold text-slate-700">{patient.zip_code || '-'}</span>
                             </div>
                         </div>
                     </div>
@@ -138,35 +138,35 @@ const PersonalDataTab = ({ patient }: { patient: Patient }) => (
             </div>
 
             <div className="space-y-4">
-                <h3 className="font-semibold text-lg flex items-center gap-2">
-                    <Activity className="h-5 w-5 text-muted-foreground" />
+                <h3 className="font-bold text-base flex items-center gap-2 text-slate-800">
+                    <Activity className="h-4 w-4 text-blue-500" />
                     Saúde e Convênio
                 </h3>
-                <div className="bg-card border rounded-lg p-4 space-y-3 shadow-sm">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-white border border-blue-100 rounded-xl p-5 space-y-4 shadow-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6">
                         <div>
-                            <span className="text-xs text-muted-foreground block">Convênio</span>
-                            <span className="font-medium">{patient.health_insurance || 'Particular'}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Convênio</span>
+                            <span className="font-semibold text-slate-700">{patient.health_insurance || 'Particular'}</span>
                         </div>
                         <div>
-                            <span className="text-xs text-muted-foreground block">Número da Carteirinha</span>
-                            <span className="font-medium">{patient.insurance_number || '-'}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Nº da Carteirinha</span>
+                            <span className="font-semibold text-slate-700">{patient.insurance_number || '-'}</span>
                         </div>
                         <div className="col-span-1 sm:col-span-2">
-                            <span className="text-xs text-muted-foreground block">CPF</span>
-                            <span className="font-medium">{patient.cpf || '-'}</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">CPF</span>
+                            <span className="font-semibold text-slate-700">{patient.cpf || '-'}</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div className="space-y-4">
-                <h3 className="font-semibold text-lg flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-muted-foreground" />
-                    Observações
+                <h3 className="font-bold text-base flex items-center gap-2 text-slate-800">
+                    <FileText className="h-4 w-4 text-blue-500" />
+                    Observações Internas
                 </h3>
-                <div className="bg-card border rounded-lg p-4 space-y-3 shadow-sm min-h-[120px]">
-                    <p className="text-sm whitespace-pre-wrap text-muted-foreground">
+                <div className="bg-white border border-blue-100 rounded-xl p-5 shadow-sm min-h-[125px]">
+                    <p className="text-sm leading-relaxed text-slate-600 italic">
                         {patient.observations || 'Nenhuma observação registrada.'}
                     </p>
                 </div>
@@ -280,93 +280,102 @@ const FinancialTab = ({ patientId, appointments }: { patientId: string, appointm
 
     return (
         <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="bg-gradient-to-br from-green-50 to-white border-green-200">
-                    <CardContent className="p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <div className="p-2 bg-green-500 rounded-lg">
-                                <DollarSign className="h-4 w-4 text-white" />
-                            </div>
-                            <span className="text-sm font-medium text-green-700">Total Pago</span>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <Card className="bg-white border-emerald-100 shadow-sm rounded-xl overflow-hidden">
+                    <CardContent className="p-5 flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+                            <DollarSign className="h-6 w-6 text-emerald-600" />
                         </div>
-                        <p className="text-2xl font-bold text-green-700">
-                            R$ {totalPaid.toFixed(2)}
-                        </p>
+                        <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Total Pago</span>
+                            <p className="text-2xl font-bold text-slate-900">
+                                R$ {totalPaid.toFixed(2)}
+                            </p>
+                        </div>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-amber-50 to-white border-amber-200">
-                    <CardContent className="p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <div className="p-2 bg-amber-500 rounded-lg">
-                                <CreditCard className="h-4 w-4 text-white" />
-                            </div>
-                            <span className="text-sm font-medium text-amber-700">Pendente</span>
+                <Card className="bg-white border-amber-100 shadow-sm rounded-xl overflow-hidden">
+                    <CardContent className="p-5 flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
+                            <CreditCard className="h-6 w-6 text-amber-600" />
                         </div>
-                        <p className="text-2xl font-bold text-amber-700">
-                            R$ {totalPending.toFixed(2)}
-                        </p>
+                        <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Pendente</span>
+                            <p className="text-2xl font-bold text-slate-900">
+                                R$ {totalPending.toFixed(2)}
+                            </p>
+                        </div>
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-blue-50 to-white border-blue-200">
-                    <CardContent className="p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <div className="p-2 bg-blue-500 rounded-lg">
-                                <CalendarIcon className="h-4 w-4 text-white" />
-                            </div>
-                            <span className="text-sm font-medium text-blue-700">Total Sessões</span>
+                <Card className="bg-white border-blue-100 shadow-sm rounded-xl overflow-hidden">
+                    <CardContent className="p-5 flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                            <CalendarIcon className="h-6 w-6 text-blue-600" />
                         </div>
-                        <p className="text-2xl font-bold text-blue-700">
-                            {transactions.length}
-                        </p>
+                        <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">Total Sessões</span>
+                            <p className="text-2xl font-bold text-slate-900">
+                                {transactions.length}
+                            </p>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-lg">Histórico de Pagamentos</CardTitle>
+            <Card className="bg-white border-blue-100 shadow-sm rounded-xl">
+                <CardHeader className="pb-3 border-b border-blue-50">
+                    <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <DollarSign className="w-4 h-4 text-blue-600" />
+                        Histórico de Pagamentos
+                    </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-4">
                     {transactions.length === 0 ? (
-                        <div className="text-center py-8 text-muted-foreground">
-                            <CreditCard className="h-10 w-10 mx-auto mb-2 opacity-50" />
-                            <p>Nenhuma transação registrada</p>
+                        <div className="text-center py-8">
+                            <CreditCard className="h-10 w-10 mx-auto mb-3 text-slate-200" />
+                            <p className="text-sm font-medium text-slate-500">Nenhuma transação registrada</p>
                         </div>
                     ) : (
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             {transactions.map((tx: any) => (
                                 <div
                                     key={tx.id}
-                                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                                    className="flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:border-blue-100 hover:bg-blue-50/10 transition-colors group"
                                 >
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-4">
                                         <div className={`
-                                            p-2 rounded-lg ${tx.payment_status === 'paid_single' || tx.payment_status === 'paid_package'
-                                                ? 'bg-green-100 text-green-600'
-                                                : 'bg-amber-100 text-amber-600'
+                                            h-10 w-10 rounded-lg flex items-center justify-center shrink-0 transition-colors
+                                            ${tx.payment_status === 'paid_single' || tx.payment_status === 'paid_package'
+                                                ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-100'
+                                                : 'bg-amber-50 text-amber-600 group-hover:bg-amber-100'
                                             }
                                         `}>
-                                            <CreditCard className="h-4 w-4" />
+                                            <CreditCard className="h-5 w-5" />
                                         </div>
                                         <div>
-                                            <p className="font-medium">
-                                                {format(parseResponseDate(tx.appointment_date), 'dd/MM/yyyy', { locale: ptBR })}
+                                            <p className="font-semibold text-sm text-slate-800">
+                                                {format(parseResponseDate(tx.appointment_date), "dd 'de' MMM, yyyy", { locale: ptBR })}
                                             </p>
-                                            <p className="text-xs text-muted-foreground">
+                                            <p className="text-xs text-slate-500 mt-0.5">
                                                 {tx.type} • {tx.payment_method || 'Pendente'}
                                                 {tx.installments > 1 && ` • ${tx.installments}x`}
                                             </p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="font-semibold">
+                                        <p className="font-bold text-slate-900">
                                             R$ {Number(tx.payment_amount || 0).toFixed(2)}
                                         </p>
                                         <Badge
-                                            variant={tx.payment_status === 'pending' ? 'secondary' : 'default'}
-                                            className="text-xs"
+                                            variant="outline"
+                                            className={cn(
+                                                "mt-1 px-2 py-0 text-[10px] font-bold uppercase tracking-wider",
+                                                tx.payment_status === 'paid_single' || tx.payment_status === 'paid_package'
+                                                    ? 'border-emerald-100 bg-emerald-50 text-emerald-700'
+                                                    : 'border-amber-100 bg-amber-50 text-amber-700'
+                                            )}
                                         >
                                             {tx.payment_status === 'paid_single' || tx.payment_status === 'paid_package'
                                                 ? 'Pago'
@@ -440,18 +449,21 @@ const DocumentsTab = ({ patientId, documents, isLoading }: { patientId: string, 
     };
 
     return (
-        <div className="space-y-4">
-            <Suspense fallback={<Skeleton className="h-20 w-full" />}>
+        <div className="space-y-6">
+            <Suspense fallback={<Skeleton className="h-20 w-full rounded-xl" />}>
                 <LazyDocumentScanner onScanComplete={(text) => alert('Texto extraído: ' + text.substring(0, 100) + '...')} />
             </Suspense>
 
-            <Card className="border-dashed border-2">
+            <Card className="border-2 border-dashed border-blue-200 bg-blue-50/10 hover:bg-blue-50/30 transition-colors rounded-xl shadow-sm">
                 <CardContent className="p-8">
                     <div className="flex flex-col items-center justify-center">
-                        <Files className="h-12 w-12 text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground mb-4">
+                        <div className="h-16 w-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                            <Files className="h-8 w-8 text-blue-600" />
+                        </div>
+                        <p className="text-slate-600 font-medium mb-1">
                             Arraste arquivos aqui ou clique para selecionar
                         </p>
+                        <p className="text-xs text-slate-400 mb-6">Suporta PDF, JPG, PNG e outros formatos comuns.</p>
                         <input
                             type="file"
                             onChange={handleFileSelect}
@@ -460,8 +472,8 @@ const DocumentsTab = ({ patientId, documents, isLoading }: { patientId: string, 
                             id="file-upload"
                         />
                         <Label htmlFor="file-upload">
-                            <Button variant="outline" disabled={uploading} asChild>
-                                <span className="cursor-pointer">
+                            <Button variant="outline" disabled={uploading} className="border-blue-200 text-blue-700 hover:bg-blue-50 cursor-pointer" asChild>
+                                <span>
                                     {uploading ? 'Enviando...' : 'Selecionar Arquivo'}
                                 </span>
                             </Button>
@@ -471,38 +483,48 @@ const DocumentsTab = ({ patientId, documents, isLoading }: { patientId: string, 
             </Card>
 
             {documents && documents.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-3">
                     {documents.map((doc: PatientDocument) => (
-                        <Card key={doc.id}>
-                            <CardContent className="p-4 flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-primary/10 rounded-lg">
-                                        <FileIcon className="h-6 w-6 text-primary" />
+                        <Card key={doc.id} className="bg-white border-blue-100 shadow-sm rounded-xl hover:shadow-md transition-shadow group">
+                            <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div className="flex items-center gap-4 w-full sm:w-auto overflow-hidden">
+                                    <div className="p-3 bg-blue-50 rounded-xl shrink-0 group-hover:bg-blue-100 transition-colors">
+                                        <FileIcon className="h-6 w-6 text-blue-600" />
                                     </div>
-                                    <div>
-                                        <p className="font-medium">{doc.file_name}</p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {formatFileSize(doc.file_size)} • {categoryLabels[doc.category]} • {new Date(doc.created_at).toLocaleDateString('pt-BR')}
+                                    <div className="min-w-0 flex-1">
+                                        <p className="font-bold text-sm text-slate-800 truncate" title={doc.file_name}>
+                                            {doc.file_name}
                                         </p>
+                                        <div className="flex flex-wrap items-center gap-2 mt-1">
+                                            <Badge variant="secondary" className="bg-slate-100 text-slate-600 hover:bg-slate-200 px-2 py-0 text-[10px]">
+                                                {categoryLabels[doc.category]}
+                                            </Badge>
+                                            <span className="text-[10px] text-slate-400 font-medium">
+                                                {formatFileSize(doc.file_size)} • {new Date(doc.created_at).toLocaleDateString('pt-BR')}
+                                            </span>
+                                        </div>
                                         {doc.description && (
-                                            <p className="text-xs text-muted-foreground mt-1">{doc.description}</p>
+                                            <p className="text-xs text-slate-500 mt-1 truncate" title={doc.description}>{doc.description}</p>
                                         )}
                                     </div>
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 w-full sm:w-auto justify-end">
                                     <Button
-                                        variant="ghost"
+                                        variant="outline"
                                         size="sm"
                                         onClick={() => downloadDocument.mutate(doc)}
+                                        className="border-slate-200 text-slate-600 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50"
                                     >
-                                        <Download className="h-4 w-4" />
+                                        <Download className="h-4 w-4 mr-2" />
+                                        Baixar
                                     </Button>
                                     <Button
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => deleteDocument.mutate(doc)}
+                                        className="text-slate-400 hover:text-rose-600 hover:bg-rose-50"
                                     >
-                                        <Trash className="h-4 w-4 text-destructive" />
+                                        <Trash className="h-4 w-4" />
                                     </Button>
                                 </div>
                             </CardContent>
@@ -510,10 +532,10 @@ const DocumentsTab = ({ patientId, documents, isLoading }: { patientId: string, 
                     ))}
                 </div>
             ) : (
-                <Card>
-                    <CardContent className="p-8 text-center">
-                        <Files className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                        <p className="text-muted-foreground">Nenhum arquivo anexado</p>
+                <Card className="bg-slate-50 border-dashed border-slate-200 shadow-none rounded-xl">
+                    <CardContent className="p-8 text-center flex flex-col items-center">
+                        <Files className="h-10 w-10 text-slate-300 mb-3" />
+                        <p className="text-slate-500 font-medium">Nenhum arquivo anexado</p>
                     </CardContent>
                 </Card>
             )}
@@ -770,32 +792,35 @@ export const PatientProfilePage = () => {
                     <span className="text-sm font-medium hover:text-primary cursor-pointer" onClick={() => navigate('/patients')}>Voltar para Pacientes</span>
                 </div>
 
-                <div className="bg-gradient-to-r from-card to-card/50 rounded-xl p-6 shadow-sm border space-y-6 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none" />
-
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-blue-100 space-y-6 relative overflow-hidden">
                     <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between relative z-10">
                         <div className="flex items-center gap-5">
                             <div className="relative">
-                                <Avatar className="h-24 w-24 border-4 border-background shadow-md">
+                                <Avatar className="h-20 w-20 border-2 border-blue-50 shadow-sm">
                                     <AvatarImage src={(patient as any).photo_url} className="object-cover" />
-                                    <AvatarFallback className="text-2xl bg-primary/10 text-primary font-bold">
+                                    <AvatarFallback className="text-xl bg-blue-50 text-blue-600 font-bold">
                                         {initials}
                                     </AvatarFallback>
                                 </Avatar>
-                                <div className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-background ${(patient as any).status === 'active' || (patient as any).status === 'Em Tratamento' ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white ${(patient as any).status === 'active' || (patient as any).status === 'Em Tratamento' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
                             </div>
 
                             <div className="space-y-1">
-                                <h1 className="text-3xl font-bold tracking-tight text-foreground">{patientName}</h1>
-                                <div className="flex flex-wrap items-center gap-3">
-                                    <Badge variant={(patient as any).status === 'Em Tratamento' || (patient as any).status === 'active' ? 'default' : 'secondary'} className="px-3 py-1">
+                                <h1 className="text-2xl font-bold tracking-tight text-slate-900">{patientName}</h1>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <Badge variant="outline" className={cn(
+                                        "px-2 py-0 text-[10px] font-bold uppercase tracking-wider",
+                                        ((patient as any).status === 'Em Tratamento' || (patient as any).status === 'active') 
+                                            ? "border-emerald-100 bg-emerald-50 text-emerald-700" 
+                                            : "border-slate-100 bg-slate-50 text-slate-600"
+                                    )}>
                                         {(patient as any).status || 'Status desconhecido'}
                                     </Badge>
                                     {(patient as any).birth_date && (
-                                        <span className="text-sm text-muted-foreground flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-md">
-                                            <CalendarIcon className="h-3.5 w-3.5" />
+                                        <span className="text-xs text-slate-500 flex items-center gap-1.5 bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
+                                            <CalendarIcon className="h-3 w-3 text-blue-500" />
                                             {format(new Date((patient as any).birth_date), 'dd/MM/yyyy')}
-                                            <span className="text-muted-foreground/50">|</span>
+                                            <span className="text-slate-300">|</span>
                                             {Math.floor((new Date().getTime() - new Date((patient as any).birth_date).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} anos
                                         </span>
                                     )}
@@ -804,87 +829,87 @@ export const PatientProfilePage = () => {
                         </div>
 
                         <div className="flex flex-wrap gap-2 w-full md:w-auto">
-                            <Button onClick={() => navigate(`/patient-evolution-report/${id}`)} variant="outline" className="flex-1 md:flex-none gap-2 border-primary/20 hover:bg-primary/5 hover:text-primary transition-colors">
+                            <Button onClick={() => navigate(`/patient-evolution-report/${id}`)} variant="outline" size="sm" className="flex-1 md:flex-none gap-2 border-blue-100 text-blue-700 hover:bg-blue-50 hover:text-blue-800 transition-colors shadow-sm font-medium">
                                 <FileText className="h-4 w-4" />
                                 Relatório
                             </Button>
-                            <Button onClick={() => setEditingPatient(true)} variant="outline" className="flex-1 md:flex-none gap-2 hover:bg-muted/80">
+                            <Button onClick={() => setEditingPatient(true)} variant="outline" size="sm" className="flex-1 md:flex-none gap-2 border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm font-medium">
                                 <Edit className="h-4 w-4" />
                                 Editar
                             </Button>
-                            <Button onClick={handleStartEvaluation} className="flex-1 md:flex-none gap-2 bg-primary shadow-sm hover:shadow-md transition-all">
+                            <Button onClick={handleStartEvaluation} size="sm" className="flex-1 md:flex-none gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all font-medium">
                                 <ClipboardList className="h-4 w-4" />
                                 Avaliar
                             </Button>
-                            <Button onClick={() => navigate('/agenda')} className="flex-1 md:flex-none gap-2 bg-primary/90 hover:bg-primary shadow-sm">
+                            <Button onClick={() => navigate('/agenda')} size="sm" className="flex-1 md:flex-none gap-2 bg-slate-900 hover:bg-slate-800 text-white shadow-sm font-medium">
                                 <CalendarIcon className="h-4 w-4" />
                                 Agendar
                             </Button>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t border-border/50">
-                        <div className="flex items-center gap-3 text-sm p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                            <div className="p-2.5 bg-primary/10 rounded-full text-primary shrink-0">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-blue-50">
+                        <div className="flex items-center gap-3 text-sm">
+                            <div className="p-2 bg-blue-50 rounded-lg text-blue-600 shrink-0">
                                 <Phone className="h-4 w-4" />
                             </div>
                             <div className="overflow-hidden">
-                                <p className="text-muted-foreground text-xs font-medium mb-0.5">Telefone</p>
-                                <p className="font-medium truncate">{(patient as any).phone || 'Não informado'}</p>
+                                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">Telefone</p>
+                                <p className="font-semibold text-slate-700 truncate">{(patient as any).phone || 'Não informado'}</p>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3 text-sm p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                            <div className="p-2.5 bg-primary/10 rounded-full text-primary shrink-0">
+                        <div className="flex items-center gap-3 text-sm">
+                            <div className="p-2 bg-blue-50 rounded-lg text-blue-600 shrink-0">
                                 <Mail className="h-4 w-4" />
                             </div>
                             <div className="overflow-hidden">
-                                <p className="text-muted-foreground text-xs font-medium mb-0.5">Email</p>
-                                <p className="font-medium truncate" title={(patient as any).email}>
+                                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">Email</p>
+                                <p className="font-semibold text-slate-700 truncate" title={(patient as any).email}>
                                     {(patient as any).email || 'Não informado'}
                                 </p>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-3 text-sm p-3 rounded-lg hover:bg-muted/50 transition-colors">
-                            <div className="p-2.5 bg-primary/10 rounded-full text-primary shrink-0">
+                        <div className="flex items-center gap-3 text-sm">
+                            <div className="p-2 bg-blue-50 rounded-lg text-blue-600 shrink-0">
                                 <MapPin className="h-4 w-4" />
                             </div>
                             <div className="overflow-hidden">
-                                <p className="text-muted-foreground text-xs font-medium mb-0.5">Localização</p>
-                                <p className="font-medium truncate">{(patient as any).city ? `${(patient as any).city}/${(patient as any).state || ''}` : 'Não informado'}</p>
+                                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">Localização</p>
+                                <p className="font-semibold text-slate-700 truncate">{(patient as any).city ? `${(patient as any).city}/${(patient as any).state || ''}` : 'Não informado'}</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabValue)} className="w-full">
-                    <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm pb-2 pt-2 -mx-4 px-4 border-b">
-                        <TabsList className="w-full justify-start h-auto p-1 bg-transparent overflow-x-auto flex-nowrap scrollbar-hide gap-2">
-                            <TabsTrigger value="overview" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-4 py-2 text-sm font-medium transition-all">
+                    <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-sm pb-1 pt-2 -mx-4 px-4 border-b border-blue-50">
+                        <TabsList className="w-full justify-start h-auto p-0 bg-transparent overflow-x-auto flex-nowrap scrollbar-hide gap-6">
+                            <TabsTrigger value="overview" className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all">
                                 Visão Geral
                             </TabsTrigger>
-                            <TabsTrigger value="analytics" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-4 py-2 text-sm font-medium gap-2 transition-all">
-                                <Brain className="h-3.5 w-3.5" />
+                            <TabsTrigger value="analytics" className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold gap-2 transition-all">
+                                <Brain className="h-4 w-4" />
                                 Analytics & IA
                             </TabsTrigger>
-                            <TabsTrigger value="personal" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-4 py-2 text-sm font-medium transition-all">
+                            <TabsTrigger value="personal" className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all">
                                 Dados Pessoais
                             </TabsTrigger>
-                            <TabsTrigger value="clinical" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-4 py-2 text-sm font-medium transition-all">
+                            <TabsTrigger value="clinical" className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all">
                                 Histórico Clínico
                             </TabsTrigger>
-                            <TabsTrigger value="activity-lab" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-4 py-2 text-sm font-medium transition-all gap-2">
-                                <Activity className="h-3.5 w-3.5" />
+                            <TabsTrigger value="activity-lab" className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all gap-2">
+                                <Activity className="h-4 w-4" />
                                 Biomecânica
                             </TabsTrigger>
-                            <TabsTrigger value="financial" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-4 py-2 text-sm font-medium transition-all">
+                            <TabsTrigger value="financial" className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all">
                                 Financeiro
                             </TabsTrigger>
-                            <TabsTrigger value="gamification" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-4 py-2 text-sm font-medium transition-all">
+                            <TabsTrigger value="gamification" className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all">
                                 Gamificação
                             </TabsTrigger>
-                            <TabsTrigger value="documents" className="data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-full px-4 py-2 text-sm font-medium transition-all">
+                            <TabsTrigger value="documents" className="data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 rounded-none bg-transparent border-b-2 border-transparent px-0 py-2 text-sm font-semibold transition-all">
                                 Arquivos
                             </TabsTrigger>
                         </TabsList>
