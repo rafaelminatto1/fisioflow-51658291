@@ -1,18 +1,16 @@
 /**
  * useFilteredAppointments Hook
  * 
- * Provides filtered appointment data with optimized caching strategy.
+ * Provides filtered appointment data with optimized performance.
  * 
  * Features:
- * - Separate cache for filtered results
+ * - Reactive filtering using useMemo for instant UI updates
  * - Debounced patient name search (300ms)
  * - Efficient filtering without blocking UI
- * - Cache restoration when filters are cleared
  * - Compatible with period-based loading
  */
 
 import { useMemo, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { AppointmentBase } from '@/types/appointment';
 import { PeriodQuery } from '@/utils/periodCalculations';
 import { useAppointmentsByPeriod } from './useAppointmentsByPeriod';
@@ -34,24 +32,6 @@ export interface AppointmentFilters {
 }
 
 /**
- * Query key factory for filtered appointment queries
- */
-export const filteredAppointmentKeys = {
-  all: ['appointments', 'filtered'] as const,
-  filtered: (periodQuery: PeriodQuery, filters: AppointmentFilters) => [
-    ...filteredAppointmentKeys.all,
-    periodQuery.viewType,
-    periodQuery.date.getTime(),
-    periodQuery.organizationId,
-    periodQuery.therapistId || 'none',
-    filters.status?.sort().join(',') || 'all',
-    filters.types?.sort().join(',') || 'all',
-    filters.therapists?.sort().join(',') || 'all',
-    filters.patientName || 'all',
-  ] as const,
-} as const;
-
-/**
  * Check if any filters are active
  */
 function hasActiveFilters(filters: AppointmentFilters): boolean {
@@ -70,11 +50,13 @@ function applyFilters(
   appointments: AppointmentBase[],
   filters: AppointmentFilters
 ): AppointmentBase[] {
+  if (!appointments || appointments.length === 0) return [];
+  
   return appointments.filter(apt => {
     // Filter by patient name (case-insensitive partial match)
     if (filters.patientName && filters.patientName.trim().length > 0) {
       const searchTerm = filters.patientName.toLowerCase().trim();
-      const patientName = apt.patientName.toLowerCase();
+      const patientName = (apt.patientName || '').toLowerCase();
       if (!patientName.includes(searchTerm)) {
         return false;
       }
@@ -116,31 +98,16 @@ export interface UseFilteredAppointmentsOptions {
 }
 
 /**
- * Hook to fetch and filter appointments with optimized caching
+ * Hook to fetch and filter appointments with optimized performance
  * 
  * This hook provides filtered appointment data with:
- * - Separate cache for filtered results
+ * - Instant updates via useMemo when base data changes
  * - Debounced patient name search
- * - Efficient filtering without blocking UI
- * - Cache restoration when filters are cleared
+ * - Support for period-based loading
  * 
  * @param periodQuery - Period query (view type, date, organization)
  * @param filters - Filter options (status, types, therapists, patientName)
  * @param options - Hook options
- * 
- * @example
- * // Basic usage with filters
- * const { data: appointments, isLoading } = useFilteredAppointments(
- *   { viewType: 'week', date: new Date(), organizationId: '123' },
- *   { status: ['agendado'], patientName: 'João' }
- * );
- * 
- * @example
- * // Without filters (returns all appointments from period)
- * const { data: appointments } = useFilteredAppointments(
- *   periodQuery,
- *   {}
- * );
  */
 export function useFilteredAppointments(
   periodQuery: PeriodQuery,
@@ -166,70 +133,44 @@ export function useFilteredAppointments(
   // Check if filters are active
   const filtersActive = hasActiveFilters(debouncedFilters);
 
-  // Log query details for debugging
-  useEffect(() => {
-    logger.info('useFilteredAppointments query', {
-      organizationId: periodQuery.organizationId,
-      viewType: periodQuery.viewType,
-      date: periodQuery.date.toISOString(),
-      filtersActive,
-      enabled
-    }, 'useFilteredAppointments');
-  }, [periodQuery.organizationId, periodQuery.viewType, periodQuery.date, filtersActive, enabled]);
-
   // Fetch base period data (always enabled to keep cache warm)
+  const appointmentsByPeriod = useAppointmentsByPeriod(periodQuery, {
+    enabled: enabled && !!periodQuery.organizationId,
+  });
+
   const {
     data: baseAppointments = [],
     isLoading: baseLoading,
     error: baseError,
     refetch: baseRefetch,
-  } = useAppointmentsByPeriod(periodQuery, {
-    enabled: enabled && !!periodQuery.organizationId,
-  });
+  } = appointmentsByPeriod;
 
+  // Filter appointments in memory for maximum responsiveness
+  // This is better than useQuery for filtering because it reacts instantly to 
+  // optimistic updates in the baseAppointments cache.
+  const filteredAppointments = useMemo(() => {
+    if (!filtersActive) return baseAppointments;
+    return applyFilters(baseAppointments, debouncedFilters);
+  }, [baseAppointments, debouncedFilters, filtersActive]);
 
-
-  // Use a separate query for filtered results
-  // This allows us to cache filtered results independently
-  const filteredQuery = useQuery({
-    queryKey: filteredAppointmentKeys.filtered(periodQuery, debouncedFilters),
-    queryFn: () => {
-      // Apply filters to base data
-      return applyFilters(baseAppointments, debouncedFilters);
-    },
-    enabled: enabled && filtersActive && baseAppointments.length > 0,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    // Keep previous data while refetching
-    placeholderData: (previousData) => previousData,
-  });
-
-  // If no filters are active, return base data directly
-  // This ensures cache restoration when filters are cleared
-  if (!filtersActive) {
-    return {
-      data: baseAppointments,
-      isLoading: baseLoading,
-      error: baseError,
-      refetch: baseRefetch,
-      isFiltered: false,
-      filterCount: 0,
-      totalCount: baseAppointments.length,
-    };
-  }
+  // Log query details for debugging
+  useEffect(() => {
+    if (filtersActive) {
+      logger.debug('Appointments filtered locally', {
+        originalCount: baseAppointments.length,
+        filteredCount: filteredAppointments.length,
+        filters: debouncedFilters
+      }, 'useFilteredAppointments');
+    }
+  }, [filtersActive, baseAppointments.length, filteredAppointments.length, debouncedFilters]);
 
   return {
-    data: filteredQuery.data || [],
-    isLoading: baseLoading || (filtersActive && filteredQuery.isLoading),
-    error: baseError || filteredQuery.error,
-    refetch: async () => {
-      await baseRefetch();
-      if (filtersActive) {
-        await filteredQuery.refetch();
-      }
-    },
-    isFiltered: true,
-    filterCount: filteredQuery.data?.length || 0,
+    data: filteredAppointments,
+    isLoading: baseLoading,
+    error: baseError,
+    refetch: baseRefetch,
+    isFiltered: filtersActive,
+    filterCount: filteredAppointments.length,
     totalCount: baseAppointments.length,
   };
 }
