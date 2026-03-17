@@ -342,6 +342,7 @@ const Schedule = () => {
                     onAppointmentReschedule={actions.handleAppointmentReschedule}
                     onEditAppointment={actions.handleEditAppointment}
                     onDeleteAppointment={actions.handleDeleteAppointment}
+                    onStatusChange={actions.handleUpdateStatus}
                     selectionMode={isSelectionMode}
                     selectedIds={selectedIds}
                     onToggleSelection={toggleSelection}
