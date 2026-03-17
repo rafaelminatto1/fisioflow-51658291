@@ -1,5 +1,5 @@
 import React from 'react';
-import { useFormContext } from 'react-hook-form';
+import { UseFormReturn } from 'react-hook-form';
 import {
   UserCog, Check, FileText, ChevronDown, ChevronUp
 } from 'lucide-react';
@@ -34,6 +34,7 @@ import { type Patient } from '@/types';
 import { type AppointmentFormData } from '@/types/appointment';
 
 interface AppointmentInfoTabProps {
+  methods: UseFormReturn<AppointmentFormData>;
   currentMode: 'create' | 'edit' | 'view';
   patients: Patient[];
   patientsLoading: boolean;
@@ -55,6 +56,7 @@ interface AppointmentInfoTabProps {
 }
 
 export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
+  methods,
   currentMode,
   patients,
   patientsLoading,
@@ -74,7 +76,7 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
   isNotesExpanded,
   setIsNotesExpanded,
 }) => {
-  const { register, setValue, watch } = useFormContext<AppointmentFormData>();
+  const { register, setValue, watch } = methods;
 
   const watchedPatientId = watch('patient_id');
   const watchedDateStr = watch('appointment_date');
