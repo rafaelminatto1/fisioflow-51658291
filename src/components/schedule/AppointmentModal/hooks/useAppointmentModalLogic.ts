@@ -61,7 +61,8 @@ export const useAppointmentModalLogic = ({
   const patientSessionsMap = useMemo(() => {
     const map = new Map<string, number>();
     appointments.forEach(apt => {
-      if (['concluido', 'atendido', 'em_andamento', 'completado'].includes(apt.status)) {
+      const s = (apt.status || '').toLowerCase();
+      if (['atendido', 'concluido', 'realizado', 'completado'].includes(s)) {
         map.set(apt.patientId, (map.get(apt.patientId) || 0) + 1);
       }
     });
@@ -158,9 +159,10 @@ export const useAppointmentModalLogic = ({
     }
     let preferredPeriod: 'morning' | 'afternoon' | 'evening' | null = null;
     if (watchedPatientId) {
-      const patientHistory = appointments.filter(a =>
-        a.patientId === watchedPatientId && a.status !== 'cancelado'
-      );
+      const patientHistory = appointments.filter(a => {
+        const s = (a.status || '').toLowerCase();
+        return a.patientId === watchedPatientId && !['cancelado', 'remarcar', 'canceled'].includes(s);
+      });
       if (patientHistory.length > 0) {
         let morning = 0, afternoon = 0, evening = 0;
         patientHistory.forEach(apt => {
