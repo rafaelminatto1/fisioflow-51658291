@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PatientCombobox } from '@/components/ui/patient-combobox';
 import { Calendar } from '@/components/ui/calendar';
@@ -18,12 +19,13 @@ import {
     Repeat,
     Bell,
     Copy,
-    Wand2
+    Wand2,
+    Clock
 } from 'lucide-react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, addDays, addWeeks, startOfDay, isBefore, isAfter } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { type AppointmentType, type AppointmentStatus, type AppointmentFormData } from '@/types/appointment';
+import { type AppointmentType, type AppointmentStatus, type AppointmentFormData, type RecurringConfig, type RecurringDayConfig } from '@/types/appointment';
 import { type Patient } from '@/types';
 import {
     APPOINTMENT_TYPES,
@@ -780,13 +782,227 @@ export const PaymentTab = ({
     );
 };
 
+const WEEKDAYS = [
+    { value: 0, label: 'Dom', short: 'D' },
+    { value: 1, label: 'Seg', short: 'S' },
+    { value: 2, label: 'Ter', short: 'T' },
+    { value: 3, label: 'Qua', short: 'Q' },
+    { value: 4, label: 'Qui', short: 'Q' },
+    { value: 5, label: 'Sex', short: 'S' },
+    { value: 6, label: 'Sáb', short: 'S' },
+];
+
+const WEEKDAY_NAMES = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
+
+function generateRecurringPreview(startDate: Date, config: RecurringConfig): { date: Date; time: string }[] {
+    if (config.days.length === 0) return [];
+    const sorted = [...config.days].sort((a, b) => a.day - b.day);
+    const maxSessions = config.endType === 'sessions' ? config.sessions : 60;
+    const endDate = config.endType === 'date' && config.endDate ? parseISO(config.endDate) : null;
+    const results: { date: Date; time: string }[] = [];
+    const startDay = startDate.getDay();
+    let weekStart = startOfDay(addDays(startDate, -startDay));
+    let weeksChecked = 0;
+    while (results.length < maxSessions && weeksChecked < 100) {
+        for (const d of sorted) {
+            const date = addDays(weekStart, d.day);
+            if (isBefore(startOfDay(date), startOfDay(startDate))) continue;
+            if (endDate && isAfter(startOfDay(date), startOfDay(endDate))) return results;
+            results.push({ date, time: d.time });
+            if (results.length >= maxSessions) break;
+        }
+        weekStart = addWeeks(weekStart, 1);
+        weeksChecked++;
+    }
+    return results;
+}
+
+function RecurringConfigPanel({
+    config,
+    onChange,
+    disabled,
+    appointmentDate,
+    appointmentTime,
+}: {
+    config: RecurringConfig;
+    onChange: (c: RecurringConfig) => void;
+    disabled: boolean;
+    appointmentDate: Date;
+    appointmentTime: string;
+}) {
+    const preview = useMemo(() => generateRecurringPreview(appointmentDate, config), [appointmentDate, config]);
+
+    const toggleDay = (day: number) => {
+        const exists = config.days.find(d => d.day === day);
+        if (exists) {
+            onChange({ ...config, days: config.days.filter(d => d.day !== day) });
+        } else {
+            const newDay: RecurringDayConfig = { day, time: appointmentTime || '09:00' };
+            const newDays = [...config.days, newDay].sort((a, b) => a.day - b.day);
+            onChange({ ...config, days: newDays });
+        }
+    };
+
+    const updateDayTime = (day: number, time: string) => {
+        onChange({
+            ...config,
+            days: config.days.map(d => d.day === day ? { ...d, time } : d),
+        });
+    };
+
+    const endDateObj = config.endDate ? (() => { try { return parseISO(config.endDate); } catch { return undefined; } })() : undefined;
+
+    return (
+        <div className="space-y-3 rounded-[20px] border border-blue-500/15 bg-background/80 p-3 shadow-[0_14px_24px_-22px_rgba(15,23,42,0.28)]">
+            {/* Dias da semana */}
+            <div className="space-y-1.5">
+                <Label className="text-[10px] sm:text-xs text-muted-foreground">Dias da semana</Label>
+                <div className="flex flex-wrap gap-1.5">
+                    {WEEKDAYS.map(wd => {
+                        const selected = config.days.some(d => d.day === wd.value);
+                        return (
+                            <button
+                                key={wd.value}
+                                type="button"
+                                disabled={disabled}
+                                onClick={() => toggleDay(wd.value)}
+                                className={cn(
+                                    'h-8 w-10 rounded-xl text-[11px] font-semibold border transition-all',
+                                    selected
+                                        ? 'bg-blue-500 text-white border-blue-500 shadow-[0_2px_8px_rgba(59,130,246,0.4)]'
+                                        : 'bg-background text-muted-foreground border-border/60 hover:border-blue-400/60 hover:text-blue-600'
+                                )}
+                            >
+                                {wd.label}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Horário por dia */}
+            {config.days.length > 0 && (
+                <div className="space-y-1.5">
+                    <Label className="text-[10px] sm:text-xs text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        Horário por dia
+                    </Label>
+                    <div className="space-y-1.5">
+                        {config.days.map(d => (
+                            <div key={d.day} className="flex items-center gap-2">
+                                <span className="text-xs text-foreground/80 w-28 shrink-0">{WEEKDAY_NAMES[d.day]}</span>
+                                <Input
+                                    type="time"
+                                    value={d.time}
+                                    onChange={e => updateDayTime(d.day, e.target.value)}
+                                    disabled={disabled}
+                                    className="h-7 w-28 text-xs rounded-xl border-border/60 focus:border-blue-400"
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Termina */}
+            <div className="space-y-1.5">
+                <Label className="text-[10px] sm:text-xs text-muted-foreground">Termina</Label>
+                <RadioGroup
+                    value={config.endType}
+                    onValueChange={v => onChange({ ...config, endType: v as 'sessions' | 'date' })}
+                    className="space-y-1.5"
+                    disabled={disabled}
+                >
+                    <div className="flex items-center gap-2">
+                        <RadioGroupItem value="sessions" id="end-sessions" />
+                        <Label htmlFor="end-sessions" className="text-xs cursor-pointer">Após</Label>
+                        <Input
+                            type="number"
+                            min={1}
+                            max={200}
+                            value={config.sessions}
+                            onChange={e => onChange({ ...config, sessions: Math.max(1, parseInt(e.target.value) || 1) })}
+                            disabled={disabled || config.endType !== 'sessions'}
+                            className="h-7 w-16 text-xs rounded-xl border-border/60 focus:border-blue-400"
+                        />
+                        <Label htmlFor="end-sessions" className="text-xs cursor-pointer text-muted-foreground">sessões</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <RadioGroupItem value="date" id="end-date" />
+                        <Label htmlFor="end-date" className="text-xs cursor-pointer">Até a data</Label>
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={disabled || config.endType !== 'date'}
+                                    className="h-7 text-xs rounded-xl border-border/60 px-2 gap-1"
+                                >
+                                    <CalendarIcon className="h-3 w-3" />
+                                    {endDateObj ? format(endDateObj, 'dd/MM/yyyy', { locale: ptBR }) : 'Selecionar'}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                    mode="single"
+                                    selected={endDateObj}
+                                    onSelect={date => onChange({ ...config, endDate: date ? format(date, 'yyyy-MM-dd') : '' })}
+                                    disabled={d => d < startOfDay(appointmentDate)}
+                                    initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                </RadioGroup>
+            </div>
+
+            {/* Preview */}
+            {preview.length > 0 && (
+                <div className="rounded-xl bg-blue-50/60 dark:bg-blue-950/40 border border-blue-200/40 dark:border-blue-800/40 p-2.5 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-blue-700/80 dark:text-blue-300/80">
+                            Preview
+                        </span>
+                        <Badge variant="outline" className="text-[10px] border-blue-400/30 text-blue-700 dark:text-blue-300 rounded-full px-2 py-0">
+                            {preview.length} sessão(ões)
+                        </Badge>
+                    </div>
+                    <div className="space-y-0.5 max-h-28 overflow-y-auto pr-1">
+                        {preview.slice(0, 10).map((item, i) => (
+                            <div key={i} className="flex items-center gap-2 text-[11px]">
+                                <span className="text-muted-foreground w-4 shrink-0">{i + 1}.</span>
+                                <span className="text-foreground/80">
+                                    {format(item.date, "EEE dd/MM", { locale: ptBR })}
+                                </span>
+                                <span className="text-blue-600 dark:text-blue-400 font-medium">{item.time}</span>
+                            </div>
+                        ))}
+                        {preview.length > 10 && (
+                            <div className="text-[10px] text-muted-foreground italic pl-6">
+                                + {preview.length - 10} mais
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {config.days.length === 0 && (
+                <p className="text-[11px] text-amber-600 dark:text-amber-400">
+                    Selecione ao menos um dia da semana para habilitar a recorrência.
+                </p>
+            )}
+        </div>
+    );
+}
+
 export const OptionsTab = ({
     disabled,
     currentMode,
     selectedEquipments,
     setSelectedEquipments,
-    _isRecurringCalendarOpen,
-    setIsRecurringCalendarOpen,
+    recurringConfig,
+    setRecurringConfig,
     reminders,
     setReminders,
     onDuplicate
@@ -795,17 +1011,21 @@ export const OptionsTab = ({
     currentMode: string,
     selectedEquipments: SelectedEquipment[],
     setSelectedEquipments: (equipments: SelectedEquipment[]) => void,
-    _isRecurringCalendarOpen: boolean,
-    setIsRecurringCalendarOpen: (open: boolean) => void,
+    recurringConfig: RecurringConfig,
+    setRecurringConfig: (config: RecurringConfig) => void,
     reminders: AppointmentReminderData[],
     setReminders: (reminders: AppointmentReminderData[]) => void,
     onDuplicate?: () => void
 }) => {
     const { watch, setValue, formState: { errors } } = useFormContext<AppointmentFormData>();
     const isRecurring = watch('is_recurring');
-    const recurringUntilStr = watch('recurring_until');
+    const appointmentDateStr = watch('appointment_date');
+    const appointmentTime = watch('appointment_time');
 
-    const recurringUntil = recurringUntilStr ? (typeof recurringUntilStr === 'string' ? parseISO(recurringUntilStr) : recurringUntilStr as Date) : null;
+    const appointmentDate = useMemo(() => {
+        if (!appointmentDateStr) return new Date();
+        try { return parseISO(appointmentDateStr); } catch { return new Date(); }
+    }, [appointmentDateStr]);
 
     return (
         <div className="mt-0 space-y-3 sm:space-y-4">
@@ -841,12 +1061,16 @@ export const OptionsTab = ({
                             </Label>
                             {isRecurring && (
                                 <Badge variant="outline" className="rounded-full border-blue-500/15 bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-300">
-                                    Semanal
+                                    {recurringConfig.days.length > 0
+                                        ? recurringConfig.days.map(d => WEEKDAYS[d.day]?.label).join('+')
+                                        : 'Semanal'}
                                 </Badge>
                             )}
                         </div>
                         <p className="mt-1 text-[11px] text-muted-foreground">
-                            Replique este horário automaticamente nas próximas semanas.
+                            {isRecurring && recurringConfig.days.length > 0
+                                ? `${recurringConfig.endType === 'sessions' ? recurringConfig.sessions + ' sessões' : 'até a data'} · ${recurringConfig.days.length} dia(s)/semana`
+                                : 'Crie múltiplas sessões de uma vez (ex: 10 sessões, seg + qua + sex).'}
                         </p>
                     </div>
                     <Switch
@@ -859,29 +1083,13 @@ export const OptionsTab = ({
                 </div>
 
                 {isRecurring && (
-                    <div className="space-y-2 rounded-[20px] border border-blue-500/15 bg-background/80 p-3 shadow-[0_14px_24px_-22px_rgba(15,23,42,0.28)]">
-                        <div className="flex items-center justify-between gap-2">
-                            <Label className="text-[10px] sm:text-xs text-muted-foreground">Repetir semanalmente até</Label>
-                            <span className="text-[10px] font-medium uppercase tracking-[0.14em] text-blue-700/80 dark:text-blue-300/80">
-                                Toda semana
-                            </span>
-                        </div>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className={cn(
-                                premiumFieldClass,
-                                "justify-start",
-                                !recurringUntil && "text-muted-foreground"
-                            )}
-                            disabled={disabled}
-                            onClick={() => setIsRecurringCalendarOpen(true)}
-                        >
-                            <CalendarIcon className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-primary/80" />
-                            {recurringUntil ? format(recurringUntil, 'dd/MM/yyyy', { locale: ptBR }) : "Selecione a data final"}
-                        </Button>
-                        {errors.recurring_until && <p className="text-xs text-destructive">{(errors.recurring_until as { message?: string })?.message}</p>}
-                    </div>
+                    <RecurringConfigPanel
+                        config={recurringConfig}
+                        onChange={setRecurringConfig}
+                        disabled={disabled}
+                        appointmentDate={appointmentDate}
+                        appointmentTime={appointmentTime || ''}
+                    />
                 )}
             </div>
 

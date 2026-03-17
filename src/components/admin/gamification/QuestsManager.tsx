@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Loader2, Pencil, Plus, Search, Target, Trash2, Zap, Droplets, Activity } from 'lucide-react';
+import { Loader2, Pencil, Plus, Search, Target, Trash2, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -56,9 +56,9 @@ export default function QuestsManager() {
         category: values.category || 'daily',
         difficulty: values.difficulty || 'easy',
         is_active: values.is_active ?? true,
-        repeat_interval: (values as any).repeat_interval || 'daily',
-        requirements: (values as any).requirements || {},
-        code: (values as any).code || null,
+        repeat_interval: (values as Partial<QuestDefinitionRow>).repeat_interval || 'daily',
+        requirements: (values as Partial<QuestDefinitionRow>).requirements || {},
+        code: (values as Partial<QuestDefinitionRow>).code || null,
       };
       if (editingQuest?.id) return (await gamificationApi.questDefinitions.update(editingQuest.id, payload)).data;
       return (await gamificationApi.questDefinitions.create(payload)).data;
@@ -77,7 +77,7 @@ export default function QuestsManager() {
       ...template,
       is_active: true,
       repeat_interval: template.category === 'daily' ? 'daily' : 'once',
-    } as any);
+    } as Partial<QuestDefinition>);
   };
 
   const filteredQuests = useMemo(() => quests.filter((quest) => {
@@ -115,7 +115,7 @@ export default function QuestsManager() {
       difficulty: formData.get('difficulty') as string,
       repeat_interval: formData.get('repeat_interval') as string,
       is_active: true,
-    } as any);
+    } as Partial<QuestDefinition>);
   };
 
   return (

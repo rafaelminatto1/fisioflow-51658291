@@ -25,7 +25,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import type { Doctor, DoctorFormData } from '@/types/doctor';
 import { useCreateDoctor, useUpdateDoctor } from '@/hooks/useDoctors';
-import { cn } from '@/lib/utils';
 
 const formSchema = z.object({
     name: z.string().min(2, 'Nome é obrigatório'),

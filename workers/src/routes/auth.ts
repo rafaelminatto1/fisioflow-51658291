@@ -13,11 +13,11 @@ app.post('/login', async (c) => {
   }
 
   try {
-    // Busca usuário pelo user_id (que armazena o email) na tabela profiles
+    // Busca usuário pelo email ou user_id na tabela profiles
     const result = await pool.query(
-      `SELECT id, user_id, full_name as name, role, organization_id 
+      `SELECT id, user_id, email, full_name as name, role, organization_id 
        FROM profiles 
-       WHERE user_id = $1 
+       WHERE email = $1 OR user_id = $1
        LIMIT 1`,
       [email]
     );
@@ -28,9 +28,9 @@ app.post('/login', async (c) => {
     if (!user) {
       // Cria um perfil temporário para permitir login de desenvolvimento
       const createResult = await pool.query(
-        `INSERT INTO profiles (id, user_id, full_name, role, organization_id, created_at, updated_at)
-         VALUES (gen_random_uuid(), $1, $2, 'admin', '00000000-0000-0000-0000-000000000001'::uuid, NOW(), NOW())
-         RETURNING id, user_id, full_name as name, role, organization_id`,
+        `INSERT INTO profiles (id, user_id, email, full_name, role, organization_id, created_at, updated_at)
+         VALUES (gen_random_uuid(), $1, $1, $2, 'admin', '00000000-0000-0000-0000-000000000001'::uuid, NOW(), NOW())
+         RETURNING id, user_id, email, full_name as name, role, organization_id`,
         [email, email.split('@')[0] || 'Usuário']
       );
       user = createResult.rows[0];

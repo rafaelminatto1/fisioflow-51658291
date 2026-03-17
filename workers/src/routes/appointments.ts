@@ -4,6 +4,14 @@ import { requireAuth, type AuthVariables } from '../lib/auth';
 import { createPool } from '../lib/db';
 import { triggerInngestEvent } from '../lib/inngest-client';
 import { broadcastToOrg } from '../lib/realtime';
+import {
+  STATUS_MAP as _STATUS_MAP,
+  normalizeStatus,
+  calculateEndTime,
+  sanitizeAppointmentRow,
+  isConflictError,
+  countsTowardCapacity,
+} from './appointmentHelpers';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -37,31 +45,11 @@ app.get('/', requireAuth, async (c) => {
     );
     
     const rows = (result.rows || result) as any[];
-    
-    // Real-time Sanitization: Ensure consistent time data
-    const sanitizedRows = rows.map(row => {
-      const startTime = row.start_time && row.start_time !== '' && row.start_time !== 'null' 
-        ? row.start_time.substring(0, 5) 
-        : '08:00';
-      
-      const duration = parseInt(row.duration_minutes) || 60;
-      
-      // Calculate end_time if missing or invalid
-      let endTime = row.end_time && row.end_time !== '' && row.end_time !== 'null'
-        ? row.end_time.substring(0, 5)
-        : calculateEndTime(startTime, duration);
+    const sanitizedRows = rows.map(sanitizeAppointmentRow);
 
-      return {
-        ...row,
-        start_time: startTime,
-        end_time: endTime,
-        duration_minutes: duration
-      };
-    });
-
-    // Aggressive Caching: 60s public, 5 minutes stale-while-revalidate
-    c.header('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
-    c.header('X-Performance-Level', 'High');
+    // Dados de agendamento são autenticados e mudam com frequência — não cachear no HTTP layer.
+    // A invalidação de cache é gerenciada pelo TanStack Query no cliente.
+    c.header('Cache-Control', 'no-store');
     
     return c.json({ data: sanitizedRows });
   } catch (error: any) {
@@ -70,51 +58,6 @@ app.get('/', requireAuth, async (c) => {
   }
 });
 
-const STATUS_MAP: Record<string, string> = {
-  agendado: 'scheduled',
-  confirmado: 'confirmed',
-  em_andamento: 'in_progress',
-  concluido: 'completed',
-  cancelado: 'cancelled',
-  avaliacao: 'scheduled',
-  atendido: 'completed',
-  falta: 'no_show',
-  faltou: 'no_show',
-  remarcado: 'rescheduled',
-  reagendado: 'rescheduled',
-  aguardando_confirmacao: 'scheduled',
-};
-
-const VALID_STATUSES = new Set([
-  'scheduled', 
-  'confirmed', 
-  'in_progress', 
-  'completed', 
-  'cancelled', 
-  'no_show', 
-  'rescheduled'
-]);
-
-function normalizeStatus(raw: string | undefined): string {
-  if (!raw) return 'scheduled';
-  const normalized = raw.toLowerCase().trim();
-  if (VALID_STATUSES.has(normalized)) return normalized;
-  return STATUS_MAP[normalized] ?? 'scheduled';
-}
-
-function calculateEndTime(startTime: string, durationMinutes: number): string {
-  const [hours, minutes] = startTime.split(':').map(Number);
-  const totalMinutes = (hours * 60) + minutes + durationMinutes;
-  const normalizedMinutes = ((totalMinutes % (24 * 60)) + (24 * 60)) % (24 * 60);
-  const endHours = Math.floor(normalizedMinutes / 60);
-  const endMinutes = normalizedMinutes % 60;
-
-  return `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
-}
-
-function countsTowardCapacity(status: string): boolean {
-  return !['cancelled', 'no_show', 'rescheduled'].includes(status);
-}
 
 async function getIntervalCapacity(
   db: ReturnType<typeof createPool>,
@@ -210,13 +153,6 @@ async function enforceCapacity(
   };
 }
 
-const isConflictError = (err: any) => 
-  err.code === '23P01' || // exclusion_violation
-  err.code === '23505' || // unique_violation
-  (err.message && (
-    err.message.includes('no_overlapping_therapist_appointments') ||
-    err.message.includes('duplicate key value violates unique constraint')
-  ));
 
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');

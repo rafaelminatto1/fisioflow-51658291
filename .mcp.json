@@ -1,5 +1,9 @@
 {
   "mcpServers": {
+    "fisioflow-api": {
+      "type": "http",
+      "url": "https://api-pro.moocafisio.com.br/api"
+    },
     "shadcn": {
       "command": "npx",
       "args": [

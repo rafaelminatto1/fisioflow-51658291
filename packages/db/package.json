@@ -1,0 +1,11 @@
+{
+  "name": "@fisioflow/db",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Shared Drizzle schema — single source of truth for frontend and workers",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "drizzle-orm": "workspace:*"
+  }
+}

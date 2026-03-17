@@ -39,7 +39,7 @@ import { EvolutionSummaryCard } from '@/components/evolution/EvolutionSummaryCar
 import { MetasCard } from '@/components/evolution/MetasCard';
 import { CardGrid } from '@/components/layout/ResponsiveGridLayout';
 import { EvolutionGridContainer } from '@/components/evolution/EvolutionResponsiveLayout';
-import { PatientEvolutionErrorBoundary } from '@/components/patients/PatientEvolutionErrorBoundary';
+import { ComponentErrorBoundary } from '@/components/error';
 import { ApplyTemplateModal } from '@/components/exercises/ApplyTemplateModal';
 import { EvolutionDebugInfo } from '@/components/evolution/EvolutionDebugInfo';
 
@@ -233,7 +233,7 @@ const PatientEvolution = () => {
   if (!state.appointment || !state.patient) return <MainLayout><div className="text-center p-10"><AlertTriangle className="mx-auto h-12 w-12 text-destructive" /><p>Dados não encontrados.</p><Button onClick={() => navigate('/agenda')} className="mt-4">Voltar</Button></div></MainLayout>;
 
   return (
-    <PatientEvolutionErrorBoundary appointmentId={state.appointmentId!} patientId={state.patientId!}>
+    <ComponentErrorBoundary componentName="PatientEvolution">
       <MainLayout maxWidth="full" compactPadding>
         <div className="space-y-5 animate-fade-in pb-8">
           <EvolutionHeader
@@ -263,7 +263,7 @@ const PatientEvolution = () => {
           <CommandPaletteComponent />
         </div>
       </MainLayout>
-    </PatientEvolutionErrorBoundary>
+    </ComponentErrorBoundary>
   );
 };
 

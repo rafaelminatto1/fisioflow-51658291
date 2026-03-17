@@ -1,5 +1,17 @@
 // Enhanced appointment types for comprehensive scheduling system
 
+export type RecurringDayConfig = {
+  day: number; // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sab
+  time: string; // 'HH:mm'
+};
+
+export type RecurringConfig = {
+  days: RecurringDayConfig[];
+  endType: 'sessions' | 'date';
+  sessions: number;
+  endDate: string; // 'YYYY-MM-DD'
+};
+
 export interface AppointmentBase {
   id: string;
   patientId: string;
