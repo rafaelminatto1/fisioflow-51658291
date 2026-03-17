@@ -4,7 +4,7 @@
 
 export { ScheduleGrid } from './ScheduleGrid';
 export { WeekNavigation } from './WeekNavigation';
-export { AppointmentModal } from './AppointmentModal';
+export { AppointmentModalRefactored as AppointmentModal } from './AppointmentModalRefactored';
 export { DailyAppointmentList } from './DailyAppointmentList';
 
 // View Components
