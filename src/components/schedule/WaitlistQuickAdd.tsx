@@ -208,3 +208,5 @@ export function WaitlistQuickAdd({ open, onOpenChange, date, time = '00:00', def
     </>
   );
 }
+
+export default WaitlistQuickAdd;
