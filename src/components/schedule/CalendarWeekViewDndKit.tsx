@@ -577,7 +577,11 @@ export const CalendarWeekViewDndKit = memo(({
     const target = event.target as HTMLElement | null;
     if (!target) return;
 
-    if (target.closest('[data-week-appointment="true"]')) {
+    if (
+      target.closest('[data-week-appointment="true"]') || 
+      target.closest('[role="dialog"]') || 
+      target.closest('[role="alertdialog"]')
+    ) {
       return;
     }
 

@@ -53,17 +53,26 @@ export interface DashboardMetrics {
 
 const isCompletedStatus = (status: unknown): boolean => {
   const s = String(status ?? '').toLowerCase();
-  return ['completed', 'concluido', 'realizado', 'atendido'].includes(s);
+  // ZenFisio: atendido é o status de conclusão
+  return ['atendido', 'completed', 'concluido', 'realizado'].includes(s);
 };
 
 const isCancelledStatus = (status: unknown): boolean => {
   const s = String(status ?? '').toLowerCase();
-  return ['cancelled', 'cancelado'].includes(s);
+  return ['cancelado', 'cancelled', 'remarcar'].includes(s);
 };
 
 const isNoShowStatus = (status: unknown): boolean => {
   const s = String(status ?? '').toLowerCase();
-  return ['no_show', 'falta', 'paciente_faltou', 'faltou'].includes(s);
+  return [
+    'faltou', 
+    'faltou_com_aviso', 
+    'faltou_sem_aviso', 
+    'nao_atendido', 
+    'nao_atendido_sem_cobranca',
+    'no_show', 
+    'falta'
+  ].includes(s);
 };
 
 const safeDay = (value: unknown): string => {

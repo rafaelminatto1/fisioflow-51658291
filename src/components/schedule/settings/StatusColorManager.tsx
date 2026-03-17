@@ -72,25 +72,25 @@ const COLOR_PALETTE = [
 const STATUS_CATEGORIES = {
     'Sucesso': {
         description: 'Estados positivos de conclusão',
-        statuses: ['concluido', 'confirmado', 'reagendado', 'atendido', 'completed', 'realizado'],
+        statuses: ['atendido', 'presenca_confirmada'],
         color: 'from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/30',
         iconColor: 'text-emerald-600'
     },
     'Agendamento': {
         description: 'Estados de agendamento e confirmação',
-        statuses: ['agendado', 'avaliacao', 'scheduled'],
+        statuses: ['agendado', 'avaliacao', 'remarcar'],
         color: 'from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30',
         iconColor: 'text-blue-600'
     },
-    'Pendente': {
-        description: 'Estados de espera e progresso',
-        statuses: ['aguardando_confirmacao', 'em_espera', 'em_andamento'],
+    'Faltas e Não Atendimento': {
+        description: 'Estados de falta ou impossibilidade de atendimento',
+        statuses: ['faltou', 'faltou_com_aviso', 'faltou_sem_aviso', 'nao_atendido', 'nao_atendido_sem_cobranca'],
         color: 'from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/30',
         iconColor: 'text-amber-600'
     },
-    'Problemas': {
-        description: 'Estados de cancelamento e falta',
-        statuses: ['cancelado', 'falta', 'atrasado', 'faltou'],
+    'Cancelamento': {
+        description: 'Estados de cancelamento',
+        statuses: ['cancelado'],
         color: 'from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/30',
         iconColor: 'text-red-600'
     },

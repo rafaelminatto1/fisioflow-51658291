@@ -48,17 +48,23 @@ import { exportAttendanceReport } from '@/lib/export/excelExport';
 import { useToast } from '@/hooks/use-toast';
 
 const getStatusBadge = (status: string) => {
-  switch (status) {
-    case 'concluido':
-      return <Badge className="bg-green-500/20 text-green-700 border-green-500/30">Realizado</Badge>;
+  const s = String(status || '').toLowerCase();
+  switch (s) {
+    case 'atendido':
+      return <Badge className="bg-green-500/20 text-green-700 border-green-500/30">Atendido</Badge>;
     case 'faltou':
+    case 'faltou_sem_aviso':
       return <Badge className="bg-red-500/20 text-red-700 border-red-500/30">Faltou</Badge>;
+    case 'faltou_com_aviso':
+      return <Badge className="bg-teal-500/20 text-teal-700 border-teal-500/30">Faltou (Aviso)</Badge>;
     case 'cancelado':
-      return <Badge className="bg-yellow-500/20 text-yellow-700 border-yellow-500/30">Cancelado</Badge>;
+      return <Badge className="bg-slate-500/20 text-slate-700 border-slate-500/30">Cancelado</Badge>;
     case 'agendado':
       return <Badge className="bg-blue-500/20 text-blue-700 border-blue-500/30">Agendado</Badge>;
-    case 'confirmado':
-      return <Badge className="bg-cyan-500/20 text-cyan-700 border-cyan-500/30">Confirmado</Badge>;
+    case 'presenca_confirmada':
+      return <Badge className="bg-blue-900/20 text-blue-900 border-blue-900/30">Confirmado</Badge>;
+    case 'remarcar':
+      return <Badge className="bg-yellow-500/20 text-yellow-700 border-yellow-500/30">Remarcar</Badge>;
     default:
       return <Badge variant="outline">{status}</Badge>;
   }
@@ -269,9 +275,10 @@ export default function AttendanceReport() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="concluido">Realizado</SelectItem>
+                    <SelectItem value="atendido">Atendido</SelectItem>
                     <SelectItem value="faltou">Faltou</SelectItem>
                     <SelectItem value="cancelado">Cancelado</SelectItem>
+                    <SelectItem value="presenca_confirmada">Confirmado</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

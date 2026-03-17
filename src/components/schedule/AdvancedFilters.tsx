@@ -32,11 +32,15 @@ interface AdvancedFiltersProps {
 
 const STATUS_OPTIONS = [
   { value: 'agendado', label: 'Agendado', color: 'bg-blue-500 hover:bg-blue-600' },
-  { value: 'confirmado', label: 'Confirmado', color: 'bg-emerald-500 hover:bg-emerald-600' },
-  { value: 'aguardando_confirmacao', label: 'Aguardando', color: 'bg-amber-500 hover:bg-amber-600' },
-  { value: 'em_andamento', label: 'Em Andamento', color: 'bg-cyan-500 hover:bg-cyan-600' },
-  { value: 'concluido', label: 'Concluído', color: 'bg-purple-500 hover:bg-purple-600' },
-  { value: 'cancelado', label: 'Cancelado', color: 'bg-red-500 hover:bg-red-600' },
+  { value: 'presenca_confirmada', label: 'Presença Confirmada', color: 'bg-emerald-600 hover:bg-emerald-700' },
+  { value: 'atendido', label: 'Atendido', color: 'bg-purple-500 hover:bg-purple-600' },
+  { value: 'avaliacao', label: 'Avaliação', color: 'bg-violet-500 hover:bg-violet-600' },
+  { value: 'faltou', label: 'Faltou', color: 'bg-rose-500 hover:bg-rose-600' },
+  { value: 'faltou_com_aviso', label: 'Faltou (com aviso)', color: 'bg-amber-500 hover:bg-amber-600' },
+  { value: 'faltou_sem_aviso', label: 'Faltou (sem aviso)', color: 'bg-rose-700 hover:bg-rose-800' },
+  { value: 'remarcar', label: 'Remarcar', color: 'bg-orange-500 hover:bg-orange-600' },
+  { value: 'nao_atendido', label: 'Não Atendido', color: 'bg-slate-500 hover:bg-slate-600' },
+  { value: 'cancelado', label: 'Cancelado', color: 'bg-slate-900 hover:bg-slate-950' },
 ];
 
 const TYPE_OPTIONS = [
