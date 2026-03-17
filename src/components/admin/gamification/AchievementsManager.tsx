@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Award, Loader2, Pencil, Plus, Search, Trash2, Star, Zap, Flame, Crown, Target } from 'lucide-react';
+import { Award, Loader2, Pencil, Plus, Search, Trash2, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -56,7 +56,7 @@ export default function AchievementsManager() {
         xp_reward: values.xp_reward || 0,
         icon: values.icon || 'Award',
         category: values.category || 'general',
-        requirements: (values as any).requirements || {},
+        requirements: (values as Partial<AchievementRow>).requirements || {},
       };
       if (editingAchievement?.id) {
         const res = await gamificationApi.achievementDefinitions.update(editingAchievement.id, payload);

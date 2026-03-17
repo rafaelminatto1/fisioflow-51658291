@@ -156,6 +156,19 @@ export interface Tarefa {
 
   // Progress (0-100)
   progress?: number;
+
+  // Accountability & "No Excuses" Mechanisms (Super Premium)
+  requires_acknowledgment?: boolean;
+  acknowledgments?: {
+    user_id: string;
+    user_name: string;
+    read_at?: string;
+    acknowledged_at?: string;
+  }[];
+  visibility?: {
+    roles: string[];
+    user_ids: string[];
+  };
 }
 
 export const STATUS_LABELS: Record<TarefaStatus, string> = {
