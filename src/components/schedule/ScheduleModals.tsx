@@ -11,19 +11,11 @@ import {
 } from '@/components/ui/alert-dialog';
 import { formatDateToBrazilian } from '@/utils/dateUtils';
 
-// Lazy load the modals
-const AppointmentQuickEditModal = lazy(() => 
-  import('@/components/schedule/AppointmentQuickEditModal').then(mod => ({ default: mod.AppointmentQuickEditModal }))
-);
-const AppointmentModalRefactored = lazy(() => 
-  import('@/components/schedule/AppointmentModal/index').then(mod => ({ default: mod.AppointmentModal }))
-);
-const WaitlistQuickAdd = lazy(() => 
-  import('@/components/schedule/WaitlistQuickAdd').then(mod => ({ default: mod.WaitlistQuickAdd }))
-);
-const KeyboardShortcuts = lazy(() => 
-  import('@/components/schedule/KeyboardShortcuts').then(mod => ({ default: mod.KeyboardShortcuts }))
-);
+// Lazy load the modals - simplified by using default exports
+const AppointmentQuickEditModal = lazy(() => import('@/components/schedule/AppointmentQuickEditModal'));
+const AppointmentModalRefactored = lazy(() => import('@/components/schedule/AppointmentModal/index'));
+const WaitlistQuickAdd = lazy(() => import('@/components/schedule/WaitlistQuickAdd'));
+const KeyboardShortcuts = lazy(() => import('@/components/schedule/KeyboardShortcuts'));
 
 interface ScheduleModalsProps {
   currentDate: Date;
