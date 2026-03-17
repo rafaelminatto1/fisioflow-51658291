@@ -107,7 +107,7 @@ function parseCommit(commitLine) {
   }
 
   // Parse conventional commit: type(scope)!: description
-  const conventionalRegex = /^(\w+)(?:\(([^)]+)\))?(?!:)(\!?):\s*(.+)$/;
+  const conventionalRegex = /^(\w+)(?:\(([^)]+)\))?(?!:)(!?):\s*(.+)$/;
   const match = message.match(conventionalRegex);
 
   if (!match) {

@@ -49,22 +49,19 @@ export type AppointmentType =
   | 'Dry Needling'
   | 'Liberação Miofascial';
 
-// Status conforme constraint do banco (em português)
+// Status conforme sistema ZenFisio (em português)
 export type AppointmentStatus =
   | 'agendado'
-  | 'confirmado'
-  | 'em_andamento'
-  | 'concluido'
-  | 'cancelado'
-  | 'falta'
-  | 'faltou'
+  | 'atendido'
   | 'avaliacao'
-  | 'aguardando_confirmacao'
-  | 'em_espera'
-  | 'atrasado'
-  | 'remarcado'
-  | 'reagendado'
-  | 'atendido';
+  | 'cancelado'
+  | 'faltou'
+  | 'faltou_com_aviso'
+  | 'faltou_sem_aviso'
+  | 'nao_atendido'
+  | 'nao_atendido_sem_cobranca'
+  | 'presenca_confirmada'
+  | 'remarcar';
 
 export interface EnhancedAppointment extends AppointmentBase {
   // Therapist assignment

@@ -97,7 +97,7 @@ export function WaitlistQuickAdd({ open, onOpenChange, date, time = '00:00', def
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md" data-week-appointment="true">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-primary" />

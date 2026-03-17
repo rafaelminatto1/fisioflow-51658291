@@ -186,14 +186,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' 
   const statusBadgeVariant = (
     status: string
   ): 'default' | 'secondary' | 'destructive' | 'outline' => {
-    switch (status) {
-      case 'confirmado':
+    const s = String(status || '').toLowerCase();
+    switch (s) {
+      case 'atendido':
+      case 'presenca_confirmada':
         return 'default';
-      case 'pendente':
+      case 'agendado':
+      case 'avaliacao':
         return 'secondary';
       case 'cancelado':
+      case 'faltou':
+      case 'faltou_sem_aviso':
         return 'destructive';
-      case 'concluido':
+      case 'faltou_com_aviso':
+      case 'remarcar':
         return 'outline';
       default:
         return 'default';
