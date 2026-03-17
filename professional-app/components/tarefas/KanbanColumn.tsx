@@ -1,26 +1,17 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { TarefaCard } from './TarefaCard';
 import type { ApiTarefa, TarefaStatus } from '@/lib/api';
 
-const COLUMN_LABELS: Record<TarefaStatus, string> = {
-  BACKLOG:      'Backlog',
-  A_FAZER:      'A Fazer',
-  EM_PROGRESSO: 'Em Progresso',
-  REVISAO:      'Revisão',
-  CONCLUIDO:    'Concluído',
-  ARQUIVADO:    'Arquivado',
-};
-
-const COLUMN_COLORS: Record<TarefaStatus, string> = {
-  BACKLOG:      '#94a3b8',
-  A_FAZER:      '#3b82f6',
-  EM_PROGRESSO: '#f59e0b',
-  REVISAO:      '#8b5cf6',
-  CONCLUIDO:    '#22c55e',
-  ARQUIVADO:    '#94a3b8',
+const COLUMN_META: Record<TarefaStatus, { label: string; accent: string }> = {
+  BACKLOG:      { label: 'Backlog',      accent: '#94a3b8' },
+  A_FAZER:      { label: 'A Fazer',      accent: '#3b82f6' },
+  EM_PROGRESSO: { label: 'Em Progresso', accent: '#f59e0b' },
+  REVISAO:      { label: 'Revisão',      accent: '#8b5cf6' },
+  CONCLUIDO:    { label: 'Concluído',    accent: '#22c55e' },
+  ARQUIVADO:    { label: 'Arquivado',    accent: '#94a3b8' },
 };
 
 interface Props {
@@ -30,27 +21,34 @@ interface Props {
 }
 
 export function KanbanColumn({ status, tarefas, onMoveCard }: Props) {
-  const label = COLUMN_LABELS[status];
-  const accentColor = COLUMN_COLORS[status];
+  const { label, accent } = COLUMN_META[status];
+
+  const renderItem = useCallback(
+    ({ item }: { item: ApiTarefa }) => (
+      <TarefaCard tarefa={item} onMoveCard={onMoveCard} />
+    ),
+    [onMoveCard]
+  );
 
   return (
     <View style={styles.column}>
-      <View style={[styles.header, { borderTopColor: accentColor }]}>
+      <View style={[styles.headerBar, { backgroundColor: accent }]} />
+      <View style={styles.header}>
         <Text style={styles.columnTitle}>{label}</Text>
-        <View style={[styles.countBadge, { backgroundColor: accentColor + '22' }]}>
-          <Text style={[styles.countText, { color: accentColor }]}>{tarefas.length}</Text>
+        <View style={[styles.countBadge, { backgroundColor: accent + '28' }]}>
+          <Text style={[styles.countText, { color: accent }]}>{tarefas.length}</Text>
         </View>
       </View>
 
       <FlatList
         data={tarefas}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TarefaCard tarefa={item} onMoveCard={onMoveCard} />
-        )}
+        renderItem={renderItem}
         scrollEnabled={false}
         ListEmptyComponent={
-          <Text style={styles.empty}>Sem tarefas</Text>
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>Sem tarefas</Text>
+          </View>
         }
       />
 
@@ -59,7 +57,7 @@ export function KanbanColumn({ status, tarefas, onMoveCard }: Props) {
         onPress={() => router.push(`/tarefa-form?status=${status}`)}
         activeOpacity={0.7}
       >
-        <Ionicons name="add" size={16} color="#6b7280" />
+        <Ionicons name="add" size={15} color="#6b7280" />
         <Text style={styles.addBtnText}>Adicionar</Text>
       </TouchableOpacity>
     </View>
@@ -72,43 +70,50 @@ const styles = StyleSheet.create({
     marginRight: 12,
     backgroundColor: '#f8fafc',
     borderRadius: 12,
-    padding: 12,
-    maxHeight: '100%',
+    overflow: 'hidden',
+  },
+  headerBar: {
+    height: 3,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 12,
-    borderTopWidth: 3,
-    paddingTop: 10,
-    borderRadius: 2,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   columnTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
     color: '#374151',
+    letterSpacing: 0.2,
   },
   countBadge: {
     borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 2,
+    minWidth: 24,
+    alignItems: 'center',
   },
   countText: {
     fontSize: 12,
     fontWeight: '700',
   },
-  empty: {
+  emptyContainer: {
+    paddingVertical: 24,
+    alignItems: 'center',
+  },
+  emptyText: {
     fontSize: 13,
     color: '#9ca3af',
-    textAlign: 'center',
-    marginVertical: 16,
   },
   addBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: 8,
+    marginHorizontal: 12,
+    marginBottom: 12,
+    marginTop: 4,
     paddingVertical: 8,
     paddingHorizontal: 4,
     borderRadius: 6,
@@ -118,7 +123,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   addBtnText: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#6b7280',
   },
 });

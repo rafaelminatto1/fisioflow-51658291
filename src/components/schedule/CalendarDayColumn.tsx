@@ -396,7 +396,13 @@ const TimeSlot = memo(({
                             !blocked && "hover:bg-primary/5 dark:hover:bg-primary/10",
                             isDropTarget && !blocked && "is-drop-target bg-primary/10 dark:bg-primary/20 ring-2 ring-inset ring-primary/40 dark:ring-primary/50 shadow-inner"
                         )}
-                        onClick={() => !blocked && onTimeSlotClick(day, time)}
+                        onClick={(e) => {
+                            const target = e.target as HTMLElement;
+                            if (target.closest('[data-week-appointment="true"]')) {
+                                return;
+                            }
+                            if (!blocked) onTimeSlotClick(day, time);
+                        }}
                         onKeyDown={handleKeyDown}
                         onDragOver={(e) => {
                             // Sempre chamar preventDefault para permitir arrastar por cima de slots bloqueados

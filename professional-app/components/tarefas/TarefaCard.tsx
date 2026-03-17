@@ -2,9 +2,10 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { TarefaPriorityBadge } from './TarefaPriorityBadge';
+import { formatDateShort, isOverdue } from '@/lib/tarefas';
 import type { ApiTarefa, TarefaStatus } from '@/lib/api';
 
-const COLUMN_OPTIONS: { label: string; status: TarefaStatus }[] = [
+const COLUMN_MOVE_OPTIONS: { label: string; status: TarefaStatus }[] = [
   { label: 'Backlog',      status: 'BACKLOG' },
   { label: 'A Fazer',      status: 'A_FAZER' },
   { label: 'Em Progresso', status: 'EM_PROGRESSO' },
@@ -12,25 +13,9 @@ const COLUMN_OPTIONS: { label: string; status: TarefaStatus }[] = [
   { label: 'Concluído',    status: 'CONCLUIDO' },
 ];
 
-interface Props {
-  tarefa: ApiTarefa;
-  onMoveCard?: (id: string, novoStatus: TarefaStatus) => void;
-}
-
-function isOverdue(dateStr?: string): boolean {
-  if (!dateStr) return false;
-  return new Date(dateStr) < new Date();
-}
-
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-}
-
 function checklistSummary(tarefa: ApiTarefa): { total: number; done: number } {
   if (!tarefa.checklists?.length) return { total: 0, done: 0 };
-  let total = 0;
-  let done = 0;
+  let total = 0, done = 0;
   for (const cl of tarefa.checklists) {
     for (const item of cl.items) {
       total++;
@@ -40,18 +25,25 @@ function checklistSummary(tarefa: ApiTarefa): { total: number; done: number } {
   return { total, done };
 }
 
+interface Props {
+  tarefa: ApiTarefa;
+  onMoveCard?: (id: string, novoStatus: TarefaStatus) => void;
+}
+
 export function TarefaCard({ tarefa, onMoveCard }: Props) {
   const overdue = isOverdue(tarefa.data_vencimento);
   const { total, done } = checklistSummary(tarefa);
-  const tags = tarefa.tags?.slice(0, 2) ?? [];
+  const tags = tarefa.tags ?? [];
+  const visibleTags = tags.slice(0, 2);
+  const hiddenTagsCount = tags.length - visibleTags.length;
   const progress = tarefa.progress ?? 0;
 
   function handleLongPress() {
     if (!onMoveCard) return;
-    const options = COLUMN_OPTIONS.filter((o) => o.status !== tarefa.status);
+    const options = COLUMN_MOVE_OPTIONS.filter((o) => o.status !== tarefa.status);
     Alert.alert(
-      'Mover para',
-      undefined,
+      'Mover para coluna',
+      `"${tarefa.titulo.slice(0, 40)}${tarefa.titulo.length > 40 ? '…' : ''}"`,
       [
         ...options.map((opt) => ({
           text: opt.label,
@@ -68,6 +60,7 @@ export function TarefaCard({ tarefa, onMoveCard }: Props) {
       activeOpacity={0.75}
       onPress={() => router.push(`/tarefa-detail?id=${tarefa.id}`)}
       onLongPress={handleLongPress}
+      delayLongPress={400}
     >
       <Text style={styles.titulo} numberOfLines={2}>
         {tarefa.titulo}
@@ -75,11 +68,11 @@ export function TarefaCard({ tarefa, onMoveCard }: Props) {
 
       <View style={styles.meta}>
         <TarefaPriorityBadge prioridade={tarefa.prioridade} showLabel={false} />
-        {tarefa.data_vencimento && (
+        {tarefa.data_vencimento ? (
           <Text style={[styles.date, overdue && styles.dateOverdue]}>
-            {formatDate(tarefa.data_vencimento)}
+            {overdue ? '⚠ ' : ''}{formatDateShort(tarefa.data_vencimento)}
           </Text>
-        )}
+        ) : null}
       </View>
 
       {progress > 0 && (
@@ -88,19 +81,24 @@ export function TarefaCard({ tarefa, onMoveCard }: Props) {
         </View>
       )}
 
-      {(total > 0 || tags.length > 0) && (
+      {(total > 0 || visibleTags.length > 0) && (
         <View style={styles.footer}>
           {total > 0 && (
-            <Text style={styles.checklist}>
+            <Text style={[styles.checklist, done === total && styles.checklistDone]}>
               ✓ {done}/{total}
             </Text>
           )}
           <View style={styles.tags}>
-            {tags.map((tag) => (
+            {visibleTags.map((tag) => (
               <View key={tag} style={styles.tag}>
                 <Text style={styles.tagText}>{tag}</Text>
               </View>
             ))}
+            {hiddenTagsCount > 0 && (
+              <View style={styles.tagMore}>
+                <Text style={styles.tagMoreText}>+{hiddenTagsCount}</Text>
+              </View>
+            )}
           </View>
         </View>
       )}
@@ -118,15 +116,16 @@ const styles = StyleSheet.create({
     borderColor: '#e5e7eb',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowOpacity: 0.06,
+    shadowRadius: 3,
+    elevation: 2,
   },
   titulo: {
     fontSize: 14,
     fontWeight: '600',
     color: '#111827',
     marginBottom: 8,
+    lineHeight: 20,
   },
   meta: {
     flexDirection: 'row',
@@ -140,7 +139,7 @@ const styles = StyleSheet.create({
   },
   dateOverdue: {
     color: '#dc2626',
-    fontWeight: '500',
+    fontWeight: '600',
   },
   progressBg: {
     height: 3,
@@ -157,12 +156,17 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     marginTop: 4,
+    flexWrap: 'wrap',
   },
   checklist: {
     fontSize: 11,
     color: '#6b7280',
+    fontVariant: ['tabular-nums'],
+  },
+  checklistDone: {
+    color: '#16a34a',
   },
   tags: {
     flexDirection: 'row',
@@ -179,5 +183,16 @@ const styles = StyleSheet.create({
   tagText: {
     fontSize: 10,
     color: '#64748b',
+  },
+  tagMore: {
+    backgroundColor: '#e2e8f0',
+    borderRadius: 999,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  tagMoreText: {
+    fontSize: 10,
+    color: '#475569',
+    fontWeight: '600',
   },
 });
