@@ -272,9 +272,22 @@ export const DayColumn = memo(({
                                     zIndex: hasOverlap ? 10 + stackIndex : undefined,
                                 } as React.CSSProperties}
                                 onPointerDownCapture={(e) => e.stopPropagation()}
+                                onClick={(e) => {
+                                    if (dragState.isDragging) return;
+                                    e.stopPropagation();
+                                    setOpenPopoverId(openPopoverId === apt.id ? null : apt.id);
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        setOpenPopoverId(openPopoverId === apt.id ? null : apt.id);
+                                    }
+                                }}
                                 role="button"
                                 tabIndex={0}
                                 aria-label={`${apt.patientName} às ${apt.time} - ${apt.type || 'Agendamento'}`}
+                                aria-expanded={openPopoverId === apt.id}
+                                aria-haspopup="dialog"
                             >
                                 <style dangerouslySetInnerHTML={{
                                     __html: `

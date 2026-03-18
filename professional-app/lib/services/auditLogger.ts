@@ -78,7 +78,7 @@ class AuditLogger {
         deviceInfo,
       };
 
-      await fetchApi('/api/audit/logs', {
+      await fetchApi('/api/audit-logs', {
         method: 'POST',
         data: fullEvent
       });
@@ -153,7 +153,7 @@ class AuditLogger {
 
   async query(options: { userId: string; limit?: number }) {
     try {
-      const data = await fetchApi<{ logs: any[] }>('/api/audit/logs', {
+      const data = await fetchApi<{ logs: any[] }>('/api/audit-logs', {
         params: {
           userId: options.userId,
           limit: options.limit || 50

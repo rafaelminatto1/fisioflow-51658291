@@ -37,15 +37,17 @@ interface AppointmentContextMenuProps {
   onMoveToToday?: () => void;
 }
 
-export const AppointmentContextMenu: React.FC<AppointmentContextMenuProps> = ({
+export const AppointmentContextMenu = ({
   children,
+  ref,
   appointment,
   onStatusChange,
   onEdit,
   onDelete,
   onDuplicate,
   onMoveToToday,
-}) => {
+  ...dataProps
+}: AppointmentContextMenuProps & { ref?: React.Ref<HTMLElement>; [key: `data-${string}`]: unknown }) => {
   const handleWhatsApp = () => {
     const phone = appointment.phone?.replace(/\D/g, '');
     if (phone) {
@@ -53,10 +55,15 @@ export const AppointmentContextMenu: React.FC<AppointmentContextMenuProps> = ({
     }
   };
 
+  const extraProps = { ...dataProps, ...(ref ? { ref } : {}) };
+  const trigger = Object.keys(extraProps).length > 0 && React.isValidElement(children)
+    ? React.cloneElement(children as React.ReactElement<Record<string, unknown>>, extraProps)
+    : children;
+
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        {children}
+        {trigger}
       </ContextMenuTrigger>
       <ContextMenuContent className="w-64 rounded-xl border-blue-100 shadow-2xl backdrop-blur-xl bg-white/90 dark:bg-slate-900/90">
         <div className="px-3 py-2 text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 mb-1">
