@@ -9,21 +9,14 @@ import { asyncResult, Result } from '@/lib/async';
 import { log } from '@/lib/logger';
 import { perf } from '@/lib/performance';
 import { registerPushToken, clearPushToken } from '@/lib/notificationsSystem';
-
-/** Tipo de usuário compatível com o sistema */
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: 'patient' | 'professional' | 'admin';
-  avatarUrl?: string;
-  [key: string]: any;
-}
+import { User } from '@/types/auth';
+import { PatientProfile } from '@/types/api';
+import { Mappers } from '@/lib/mappers';
 
 /**
  * Sign in with email and password
  */
-export async function signIn(email: string, password: string): Promise<Result<any>> {
+export async function signIn(email: string, password: string): Promise<Result<User>> {
   return asyncResult(async () => {
     perf.start(PerformanceMarkers.AUTH_LOGIN, { email });
 
@@ -40,7 +33,12 @@ export async function signIn(email: string, password: string): Promise<Result<an
       throw new Error(error.message);
     }
 
-    const user = data.user;
+    const neonUser = data.user;
+    const user = Mappers.user({
+      ...neonUser,
+      role: (neonUser as any).role || 'patient'
+    });
+
     perf.end(PerformanceMarkers.AUTH_LOGIN, true);
     log.info('AUTH', 'User signed in', { uid: user.id });
 
@@ -61,7 +59,7 @@ export interface SignUpData {
   phone?: string;
 }
 
-export async function signUp(data: SignUpData): Promise<Result<any>> {
+export async function signUp(data: SignUpData): Promise<Result<User>> {
   return asyncResult(async () => {
     perf.start(PerformanceMarkers.AUTH_REGISTER, { email: data.email });
 
@@ -79,8 +77,11 @@ export async function signUp(data: SignUpData): Promise<Result<any>> {
       throw new Error(error.message);
     }
 
-    const user = authData.user;
-    const uid = user.id;
+    const neonUser = authData.user;
+    const user = Mappers.user({
+      ...neonUser,
+      role: (neonUser as any).role || 'patient'
+    });
 
     await patientApi.bootstrapProfile({
       full_name: data.fullName.trim(),
@@ -90,10 +91,10 @@ export async function signUp(data: SignUpData): Promise<Result<any>> {
     });
     
     perf.end(PerformanceMarkers.AUTH_REGISTER, true);
-    log.info('AUTH', 'User signed up', { uid });
+    log.info('AUTH', 'User signed up', { uid: user.id });
 
     // Register push token
-    await registerPushToken(uid);
+    await registerPushToken(user.id);
 
     return user;
   }, 'signUp');
@@ -139,22 +140,27 @@ export async function resetPassword(email: string): Promise<Result<void>> {
 /**
  * Get current user
  */
-export async function getCurrentUser(): Promise<any | null> {
+export async function getCurrentUser(): Promise<User | null> {
   const session = await authClient.getSession();
-  return session?.data?.user || null;
+  const neonUser = session?.data?.user;
+  if (!neonUser) return null;
+  
+  return Mappers.user({
+    ...neonUser,
+    role: (neonUser as any).role || 'patient'
+  });
 }
 
 /**
  * Get user data (Profile)
- * In Neon stack, this should call our Worker API
  */
-export async function getUserData(uid: string): Promise<Result<any>> {
+export async function getUserData(uid: string): Promise<Result<PatientProfile>> {
   return asyncResult(async () => {
     perf.start('api_get_user');
     const profile = await patientApi.getProfile();
     perf.end('api_get_user', true);
 
-    if (!profile || (profile.user_id !== uid && profile.profile?.user_id !== uid)) {
+    if (!profile || profile.id !== uid) {
       throw new Error('User not found in portal profile');
     }
 
@@ -175,15 +181,15 @@ export interface UpdateProfileData {
 export async function updateProfileData(
   uid: string,
   data: UpdateProfileData
-): Promise<Result<void>> {
+): Promise<Result<PatientProfile>> {
   return asyncResult(async () => {
     const { error } = await authClient.updateUser({
       name: data.name,
-      // outros campos precisam estar no schema do Better Auth ou salvos via API
     });
 
     if (error) throw new Error(error.message);
-    await patientApi.updateProfile({
+    
+    const profile = await patientApi.updateProfile({
       name: data.name,
       phone: data.phone,
       birth_date:
@@ -192,9 +198,18 @@ export async function updateProfileData(
           : undefined,
       gender: data.gender,
     });
+    
     log.info('AUTH', 'Profile updated', { name: data.name });
+    return profile;
   }, 'updateProfileData');
 }
+
+// Performance markers
+const PerformanceMarkers = {
+  AUTH_LOGIN: 'auth_login',
+  AUTH_REGISTER: 'auth_register',
+  AUTH_LOGOUT: 'auth_logout',
+};
 
 // Performance markers
 const PerformanceMarkers = {

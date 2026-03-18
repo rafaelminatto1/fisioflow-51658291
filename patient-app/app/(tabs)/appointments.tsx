@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 import {
   View,
@@ -17,88 +17,28 @@ import { Card, SyncIndicator } from '@/components';
 import { Spacing } from '@/constants/spacing';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { patientApi } from '@/lib/api';
-import { log } from '@/lib/logger';
-
-interface Appointment {
-  id: string;
-  type: string;
-  professional_name: string;
-  date: any; // Firestore Timestamp
-  time: string;
-  status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled';
-  notes?: string;
-  professional_id?: string;
-}
-
-// Helper safely parses dates (Timestamp or String)
-const parseDate = (d: any): Date => {
-  if (!d) return new Date();
-  if (typeof d.toDate === 'function') return d.toDate();
-  if (d instanceof Date) return d;
-  if (typeof d === 'string' || typeof d === 'number') {
-    const parsed = new Date(d);
-    return isNaN(parsed.getTime()) ? new Date() : parsed;
-  }
-  return new Date();
-};
+import { useAppointments } from '@/hooks/useAppointments';
+import { Appointment } from '@/types/api';
 
 export default function AppointmentsScreen() {
   const colors = useColors();
   const { user } = useAuthStore();
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [selectedTab, setSelectedTab] = useState<'upcoming' | 'past'>('upcoming');
-  const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
-    if (!user?.id) {
-      setLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const appointmentsData = await patientApi.getAppointments();
-        if (!cancelled) {
-          setAppointments(
-            appointmentsData.map((appointment: any) => ({
-              ...appointment,
-              professional_name: appointment.professional_name || 'Fisioterapeuta',
-            })),
-          );
-        }
-      } catch (error) {
-        log.error('Error fetching appointments:', error);
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.id, refreshKey]);
+  const { data: appointments = [], isLoading, isRefetching, refetch } = useAppointments();
 
   const onRefresh = async () => {
-    setRefreshing(true);
-    setRefreshKey((prev) => prev + 1);
-    setTimeout(() => setRefreshing(false), 200);
+    await refetch();
   };
 
   const now = new Date();
+  
   const upcomingAppointments = appointments.filter(
-    a => parseDate(a.date) >= now && a.status !== 'cancelled' && a.status !== 'completed'
+    a => new Date(a.date) >= now && a.status !== 'cancelled' && a.status !== 'completed'
   );
+  
   const pastAppointments = appointments.filter(
-    a => parseDate(a.date) < now || a.status === 'completed' || a.status === 'cancelled'
+    a => new Date(a.date) < now || a.status === 'completed' || a.status === 'cancelled'
   );
 
   const getStatusColor = (status: Appointment['status']) => {
@@ -132,7 +72,7 @@ export default function AppointmentsScreen() {
   };
 
   const renderAppointment = (appointment: Appointment) => {
-    const appointmentDate = parseDate(appointment.date);
+    const appointmentDate = new Date(appointment.date);
     return (
       <Card key={appointment.id} style={styles.appointmentCard}>
         <View style={styles.appointmentHeader}>
@@ -147,7 +87,7 @@ export default function AppointmentsScreen() {
               style={[styles.appointmentProfessional, { color: colors.textSecondary }]}
               numberOfLines={1}
             >
-              {appointment.professional_name}
+              {appointment.professionalName}
             </Text>
           </View>
           <View
@@ -191,7 +131,7 @@ export default function AppointmentsScreen() {
     );
   };
 
-  if (loading) {
+  if (isLoading && !isRefetching) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
         <View style={styles.loadingContainer}>
@@ -250,7 +190,7 @@ export default function AppointmentsScreen() {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl refreshing={isRefetching} onRefresh={onRefresh} />
         }
       >
         {displayAppointments.length === 0 ? (
