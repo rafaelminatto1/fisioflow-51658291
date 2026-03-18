@@ -1,16 +1,17 @@
 import React, { Suspense, lazy } from 'react';
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
 } from '@/components/ui/alert-dialog';
 import { formatDateToBrazilian } from '@/utils/dateUtils';
 import { AppointmentModalRefactored } from '@/components/schedule/AppointmentModalRefactored';
+import { DuplicateAppointmentDialog } from '@/components/schedule/DuplicateAppointmentDialog';
 import { ScheduleModalsState, ScheduleActions } from '@/types/schedule-hooks';
 
 // Lazy load the modals - simplified by using default exports
@@ -69,6 +70,13 @@ export const ScheduleModals: React.FC<ScheduleModalsProps> = ({ currentDate, mod
           onOpenChange={modals.setShowKeyboardShortcuts}
         />
       </Suspense>
+
+      <DuplicateAppointmentDialog
+        open={modals.duplicateDialogOpen}
+        onOpenChange={modals.setDuplicateDialogOpen}
+        appointment={modals.selectedAppointment}
+        onDuplicate={() => modals.setDuplicateDialogOpen(false)}
+      />
 
       <AlertDialog open={modals.showCancelAllTodayDialog} onOpenChange={modals.setShowCancelAllTodayDialog}>
         <AlertDialogContent>
