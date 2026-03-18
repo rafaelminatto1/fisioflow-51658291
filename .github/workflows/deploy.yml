@@ -35,9 +35,9 @@ jobs:
           pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Run Migrations
-        run: pnpm db:migrate
+        run: pnpm db:safe-migrate
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_DIRECT_URL: ${{ secrets.DATABASE_DIRECT_URL }}
 
   # =====================================================================
   # DEPLOY WORKERS
