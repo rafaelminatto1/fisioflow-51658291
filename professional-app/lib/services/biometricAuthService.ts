@@ -2,8 +2,7 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 import { auditLogger } from './auditLogger';
-import { config } from '@/lib/config';
-import { authApi } from '@/lib/auth-api';
+import { fetchApi } from '@/lib/api';
 
 const BIOMETRIC_KEY = 'fisioflow_biometric_enabled';
 const PIN_KEY = 'fisioflow_fallback_pin';
@@ -25,26 +24,6 @@ class BiometricAuthService {
       BiometricAuthService.instance = new BiometricAuthService();
     }
     return BiometricAuthService.instance;
-  }
-
-  private async fetchApi(endpoint: string, method: string = 'GET', body?: any) {
-    const token = await authApi.getToken();
-    if (!token) throw new Error('Not authenticated');
-
-    const res = await fetch(`${config.apiUrl}${endpoint}`, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: body ? JSON.stringify(body) : undefined
-    });
-
-    if (!res.ok) {
-        throw new Error(`API Error: ${res.status}`);
-    }
-
-    return res.json();
   }
 
   /**
@@ -115,14 +94,17 @@ class BiometricAuthService {
       }
 
       // Save to API
-      await this.fetchApi('/api/settings/security', 'POST', {
-          userId,
-          device: {
-            id: deviceId,
-            platform: Platform.OS,
-            addedAt: new Date().toISOString()
-          },
-          biometricsEnabled: true
+      await fetchApi('/api/settings/security', {
+          method: 'POST',
+          data: {
+            userId,
+            device: {
+              id: deviceId,
+              platform: Platform.OS,
+              addedAt: new Date().toISOString()
+            },
+            biometricsEnabled: true
+          }
       }).catch(err => console.log('Failed to save biometric settings to server', err));
 
       // Audit log
@@ -152,8 +134,10 @@ class BiometricAuthService {
 
       // Remove from API
       if (deviceId) {
-          await this.fetchApi(`/api/settings/security/device/${deviceId}`, 'DELETE', { userId })
-            .catch(err => console.log('Failed to remove biometric device from server', err));
+          await fetchApi(`/api/settings/security/device/${deviceId}`, {
+              method: 'DELETE',
+              data: { userId }
+          }).catch(err => console.log('Failed to remove biometric device from server', err));
       }
 
       // Audit log

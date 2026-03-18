@@ -22,30 +22,17 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { uploadAvatar } from '@/lib/storage';
 import * as ImagePicker from 'expo-image-picker';
-import { config } from '@/lib/config';
-import { authApi } from '@/lib/auth-api';
+import { fetchApi } from '@/lib/api';
 
 const getProfessionalProfile = async (id: string) => {
-  const token = await authApi.getToken();
-  const res = await fetch(`${config.apiUrl}/api/users/${id}`, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  if (!res.ok) return null;
-  return res.json();
+  return fetchApi<any>(`/api/users/${id}`);
 };
 
 const updateProfessionalProfile = async (id: string, data: any) => {
-  const token = await authApi.getToken();
-  const res = await fetch(`${config.apiUrl}/api/users/${id}`, {
+  return fetchApi<any>(`/api/users/${id}`, {
     method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify(data)
+    data
   });
-  if (!res.ok) throw new Error('Failed to update profile');
-  return res.json();
 };
 
 interface FormData {

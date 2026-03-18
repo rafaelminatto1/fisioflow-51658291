@@ -16,28 +16,7 @@ import { useAuthStore } from '@/store/auth';
 import { Card, Button } from '@/components';
 import { NotificationCategory, NotificationPreference, NotificationPreferences } from '@/types/notifications';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { config } from '@/lib/config';
-import { authApi } from '@/lib/auth-api';
-
-const fetchApi = async (endpoint: string, method: string = 'GET', body?: any) => {
-  const token = await authApi.getToken();
-  if (!token) throw new Error('Not authenticated');
-
-  const res = await fetch(`${config.apiUrl}${endpoint}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: body ? JSON.stringify(body) : undefined
-  });
-
-  if (!res.ok) {
-    if (res.status === 404 && method === 'GET') return null;
-    throw new Error(`API Error: ${res.status}`);
-  }
-  return res.json();
-};
+import { fetchApi } from '@/lib/api';
 
 export default function NotificationPreferencesScreen() {
   const colors = useColors();
