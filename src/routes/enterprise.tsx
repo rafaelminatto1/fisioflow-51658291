@@ -45,8 +45,6 @@ const PhysiotherapyHub = lazy(() => import(/* webpackChunkName: "physiotherapy" 
 const Telemedicine = lazy(() => import(/* webpackChunkName: "telemedicine" */ "@/pages/Telemedicine"));
 const TelemedicineRoom = lazy(() => import(/* webpackChunkName: "telemedicine-room" */ "@/pages/TelemedicineRoom"));
 const ExerciseLibraryExpanded = lazy(() => import(/* webpackChunkName: "exercises-library" */ "@/pages/ExerciseLibraryExpanded"));
-const Biofeedback = lazy(() => import(/* webpackChunkName: "biofeedback" */ "@/pages/Biofeedback"));
-
 // CRM
 const CRMDashboard = lazy(() => import(/* webpackChunkName: "crm-dashboard" */ "@/pages/crm/CRMDashboard"));
 
@@ -112,7 +110,6 @@ export const enterpriseRoutes = (
     <Route path="/telemedicine" element={<ProtectedRoute><Telemedicine /></ProtectedRoute>} />
     <Route path="/telemedicine-room/:roomId" element={<ProtectedRoute><TelemedicineRoom /></ProtectedRoute>} />
     <Route path="/exercise-library" element={<ProtectedRoute><ExerciseLibraryExpanded /></ProtectedRoute>} />
-    <Route path="/biofeedback" element={<ProtectedRoute><Biofeedback /></ProtectedRoute>} />
     
     {/* CRM */}
     <Route path="/crm" element={<ProtectedRoute><CRMDashboard /></ProtectedRoute>} />

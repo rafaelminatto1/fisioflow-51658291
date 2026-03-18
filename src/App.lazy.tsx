@@ -25,8 +25,6 @@ export const EventosAnalytics = lazy(() => import('@/pages/EventosAnalytics'));
 export const Exercises = lazy(() => import('@/pages/Exercises'));
 export const ExerciseLibraryExpanded = lazy(() => import('@/pages/ExerciseLibraryExpanded'));
 export const PhysiotherapyHub = lazy(() => import('@/pages/PhysiotherapyHub'));
-export const Biofeedback = lazy(() => import('@/pages/Biofeedback'));
-
 // Financeiro
 export const Financial = lazy(() => import('@/pages/Financial'));
 export const Vouchers = lazy(() => import('@/pages/Vouchers'));

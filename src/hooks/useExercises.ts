@@ -22,7 +22,7 @@ const mapWorkerToAppExercise = (ex: WorkersExercise): Exercise => ({
   difficulty: ex.difficulty,
   video_url: ex.videoUrl || undefined,
   image_url: ex.imageUrl || undefined,
-  thumbnail_url: ex.imageUrl || undefined,
+  thumbnail_url: ex.thumbnailUrl || ex.imageUrl || undefined,
   description: ex.description || undefined,
   targetMuscles: ex.musclesPrimary,
   equipment: ex.equipment,

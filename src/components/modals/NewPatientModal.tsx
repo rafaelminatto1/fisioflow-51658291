@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -44,7 +45,6 @@ import { cleanCPF, cleanPhone, emailSchema, cpfSchema, phoneSchema, sanitizeStri
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { patientsApi } from '@/lib/api/workers-client';
 import { SmartDatePicker } from '@/components/ui/smart-date-picker';
-import { cn } from '@/lib/utils';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { PATHOLOGY_OPTIONS } from '@/lib/constants/pathologies';
 
@@ -69,7 +69,7 @@ const patientSchema = z.object({
   emergency_contact: z.string().max(200, 'Contato muito longo').optional(),
   emergency_contact_relationship: z.string().max(100, 'Parentesco muito longo').optional(),
   medical_history: z.string().max(5000, 'Histórico muito longo').optional(),
-  main_condition: z.string().min(1, 'Condição principal é obrigatória').max(500, 'Condição muito longa'),
+  main_condition: z.string().max(500, 'Condição muito longa').optional(),
   allergies: z.string().max(500, 'Alergias muito longas').optional(),
   medications: z.string().max(500, 'Medicamentos muito longos').optional(),
   weight_kg: z.union([z.number().positive().max(500, 'Peso inválido'), z.literal('')]).optional(),
