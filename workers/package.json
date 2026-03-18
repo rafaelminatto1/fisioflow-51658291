@@ -8,7 +8,7 @@
     "build": "wrangler deploy --dry-run",
     "deploy": "wrangler deploy",
     "deploy:staging": "wrangler deploy --env staging",
-    "lint": "oxlint",
+    "lint": "oxlint --quiet",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:unit": "vitest run",
