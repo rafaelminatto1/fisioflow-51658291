@@ -48,6 +48,7 @@ export function useScheduleHandlers(
   const [scheduleFromWaitlist, setScheduleFromWaitlist] = useState<{ patientId: string; patientName: string } | null>(null);
   const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
   
+  const [duplicateDialogOpen, setDuplicateDialogOpen] = useState(false);
   const [showCancelAllTodayDialog, setShowCancelAllTodayDialog] = useState(false);
   const [isCancellingAllToday, setIsCancellingAllToday] = useState(false);
   const [rescheduleSuccessMessage, setRescheduleSuccessMessage] = useState<string | null>(null);
@@ -249,6 +250,8 @@ export function useScheduleHandlers(
       scheduleFromWaitlist,
       showKeyboardShortcuts,
       setShowKeyboardShortcuts,
+      duplicateDialogOpen,
+      setDuplicateDialogOpen,
       showCancelAllTodayDialog,
       setShowCancelAllTodayDialog,
       isCancellingAllToday,
