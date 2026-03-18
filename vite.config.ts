@@ -46,7 +46,7 @@ function mockMobileModules() {
 export default defineConfig(({ mode }) => {
   const isProduction = mode === 'production';
   const buildTime = Date.now().toString();
-  const VERSION_SUFFIX = '-v2.4.5-react-core-fix';
+  const VERSION_SUFFIX = '-v2.5.0-vite8';
   const appVersion = (process.env.GIT_COMMIT_SHA || process.env.VITE_APP_VERSION || buildTime) + VERSION_SUFFIX;
 
   return {
@@ -116,15 +116,17 @@ export default defineConfig(({ mode }) => {
         'react',
         'react-dom',
         'framer-motion',
-        'lucide-react',
         'react-router-dom',
         '@tanstack/react-query',
         '@dnd-kit/core',
         '@dnd-kit/sortable',
         '@dnd-kit/utilities',
-        'fuse.js',
         'date-fns',
-        'date-fns/locale'
+      ],
+      // Módulos IIFE/UMD: não pré-bundlar (side-effect imports no código-fonte)
+      exclude: [
+        '@mediapipe/drawing_utils',
+        '@mediapipe/pose',
       ],
     },
     server: {
