@@ -61,7 +61,7 @@ ENVIRONMENT = "production"
 # Habilita transformações de imagem via URL no painel Cloudflare
 IMAGE_TRANSFORMATIONS = "enabled" 
 # CORS: domínio do frontend em Cloudflare Pages
-ALLOWED_ORIGINS = "https://minatto-fisio.pages.dev,https://fisioflow.pages.dev,https://moocafisio.com.br,https://www.moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173,https://7d2bdf7d.fisioflow.pages.dev,https://fisioflow-web.rafalegollas.workers.dev"
+ALLOWED_ORIGINS = "https://minatto-fisio.pages.dev,https://fisioflow.pages.dev,https://moocafisio.com.br,https://www.moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173,https://7d2bdf7d.fisioflow.pages.dev,https://fisioflow-web.rafalegollas.workers.dev,https://fisioflow-api.rafalegollas.workers.dev"
 GOOGLE_MAPS_API_KEY = ""
 # Neon Auth JWT verification (obrigatório para rotas protegidas)
 # Ajuste para os valores reais do seu tenant Neon Auth.
@@ -81,6 +81,10 @@ AXIOM_DATASET = "fisioflow-logs"
 
 # Inngest (Produção)
 # INNGEST_EVENT_KEY e INNGEST_SIGNING_KEY devem ser setados via wrangler secret
+
+# ===== AMBIENTE DE PRODUCAO =====
+[env.production]
+name = "fisioflow-api"
 
 # ===== AMBIENTE DE STAGING =====
 [env.staging]

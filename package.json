@@ -31,7 +31,7 @@
     "build:prod": "NODE_OPTIONS='--max-old-space-size=4096' vite build",
     "build:dev": "vite build --mode development",
     "build:analyze": "NODE_OPTIONS='--max-old-space-size=4096' ANALYZE=true vite build",
-    "lint": "oxlint",
+    "lint": "oxlint --quiet",
     "lint:fix": "oxlint --fix",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
