@@ -3,6 +3,12 @@
   "version": "0.0.0",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
+  "scripts": {
+    "build": "echo \"no build\"",
+    "lint": "oxlint",
+    "type-check": "tsc --noEmit",
+    "test:unit": "echo \"no unit tests\""
+  },
   "dependencies": {
     "zod": "^3.25.76",
     "date-fns": "^3.6.0"

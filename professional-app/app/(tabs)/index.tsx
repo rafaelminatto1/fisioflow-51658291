@@ -19,9 +19,14 @@ export default function DashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   // Use new hook for stats
-  const { data: stats, refetch: refetchStats, isLoading: isLoadingStats } = useDashboardStats();
-  const { data: appointments, refetch: refetchAppointments, isLoading: isLoadingAppointments } = useAppointments();
-  const { data: recentPatients, isLoading: isLoadingPatients } = usePatients({ limit: 5 }); // Fetch 5 most recent patients
+  const { data: stats, refetch: refetchStats, isLoading: isLoadingStats, error: statsError } = useDashboardStats();
+  const { data: appointments, refetch: refetchAppointments, isLoading: isLoadingAppointments, error: appointmentsError } = useAppointments();
+  const { data: recentPatients, isLoading: isLoadingPatients, error: patientsError } = usePatients({ limit: 5 }); // Fetch 5 most recent patients
+
+  // Log any errors for debugging
+  if (statsError) console.error('[Dashboard] Stats error:', statsError);
+  if (appointmentsError) console.error('[Dashboard] Appointments error:', appointmentsError);
+  if (patientsError) console.error('[Dashboard] Patients error:', patientsError);
 
   const onRefresh = async () => {
     setRefreshing(true);
