@@ -21,8 +21,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { getMedicalDisclaimerContent } from '@/constants/legalContent';
 import { LEGAL_VERSIONS } from '@/constants/legalVersions';
-import { authApi } from '@/lib/auth-api';
-import { config } from '@/lib/config';
+import { fetchApi } from '@/lib/api';
 import type { MedicalDisclaimerAcknowledgment } from '@/types/legal';
 
 interface MedicalDisclaimerModalProps {
@@ -74,8 +73,6 @@ export default function MedicalDisclaimerModal({
         return;
       }
 
-      const token = await authApi.getToken();
-
       // Prepare acknowledgment data
       const acknowledgmentData: Omit<MedicalDisclaimerAcknowledgment, 'id'> = {
         userId: user.id,
@@ -84,18 +81,14 @@ export default function MedicalDisclaimerModal({
         version: LEGAL_VERSIONS.MEDICAL_DISCLAIMER,
       };
 
-      await fetch(`${config.apiUrl}/api/consents/accept`, {
+      await fetchApi('/api/consents/accept', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
+        data: {
            userId: user.id,
            type: `medical_disclaimer_${context}`,
            version: LEGAL_VERSIONS.MEDICAL_DISCLAIMER,
            acknowledgedAt: acknowledgmentData.acknowledgedAt.toISOString(),
-        })
+        }
       });
 
       console.log(`Medical disclaimer acknowledged for context: ${context}`);

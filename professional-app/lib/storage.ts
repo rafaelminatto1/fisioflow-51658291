@@ -1,5 +1,6 @@
-import { config } from '@/lib/config';
+import { fetchApi } from '@/lib/api';
 import { authApi } from '@/lib/auth-api';
+import { config } from '@/lib/config';
 
 /**
  * Upload de um arquivo para o Cloudflare R2 (via API)
@@ -96,19 +97,10 @@ export async function uploadPatientAttachment(
  */
 export async function deleteFile(path: string): Promise<void> {
   try {
-    const token = await authApi.getToken();
-    if (!token) throw new Error('Not authenticated');
-
-    const res = await fetch(`${config.apiUrl}/api/storage/delete`, {
+    await fetchApi('/api/storage/delete', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ path })
+        data: { path }
     });
-
-    if (!res.ok) throw new Error('Failed to delete file');
   } catch (error) {
     console.error('Error deleting file:', error);
     throw new Error('Não foi possível deletar o arquivo');
@@ -134,17 +126,9 @@ export async function deleteEvolutionPhoto(
  */
 export async function getFileUrl(path: string): Promise<string> {
   try {
-    const token = await authApi.getToken();
-    if (!token) throw new Error('Not authenticated');
-
-    const res = await fetch(`${config.apiUrl}/api/storage/url?path=${encodeURIComponent(path)}`, {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
+    const data = await fetchApi<any>('/api/storage/url', {
+        params: { path }
     });
-
-    if (!res.ok) throw new Error('Failed to get url');
-    const data = await res.json();
     return data.url;
   } catch (error) {
     console.error('Error getting file URL:', error);

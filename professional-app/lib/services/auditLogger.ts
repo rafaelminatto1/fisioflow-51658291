@@ -1,5 +1,4 @@
-import { config } from '@/lib/config';
-import { authApi } from '@/lib/auth-api';
+import { fetchApi } from '@/lib/api';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 
@@ -72,7 +71,6 @@ class AuditLogger {
   async logEvent(event: Omit<AuditEvent, 'timestamp' | 'deviceInfo'>): Promise<void> {
     try {
       const deviceInfo = await this.getDeviceInfo();
-      const token = await authApi.getToken();
       
       const fullEvent: AuditEvent = {
         ...event,
@@ -80,18 +78,9 @@ class AuditLogger {
         deviceInfo,
       };
 
-      if (!token) {
-        console.log('[AuditLogger] No token, skipping log (might be pre-login):', fullEvent.action);
-        return;
-      }
-
-      await fetch(`${config.apiUrl}/api/audit/logs`, {
+      await fetchApi('/api/audit/logs', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(fullEvent)
+        data: fullEvent
       });
     } catch (error) {
       console.error('[AuditLogger] Error logging event:', error);
@@ -164,14 +153,12 @@ class AuditLogger {
 
   async query(options: { userId: string; limit?: number }) {
     try {
-      const token = await authApi.getToken();
-      if (!token) throw new Error('Not authenticated');
-      
-      const res = await fetch(`${config.apiUrl}/api/audit/logs?userId=${options.userId}&limit=${options.limit || 50}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const data = await fetchApi<{ logs: any[] }>('/api/audit/logs', {
+        params: {
+          userId: options.userId,
+          limit: options.limit || 50
+        }
       });
-      if (!res.ok) return [];
-      const data = await res.json();
       return data.logs || [];
     } catch {
       return [];
