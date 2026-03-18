@@ -15,11 +15,7 @@ export {
   useArray,
   useCounter,
 } from './useHooks';
-export {
-  usePatientExercisesPostgres,
-  usePatientExerciseStats,
-  useExerciseHistory,
-  type PatientExercise,
-  type UsePatientExercisesResult,
-  type UsePatientExercisesOptions,
-} from './useDataConnect';
+export { useExercises, useCompleteExercise, useExerciseStats } from './useExercises';
+export { useAppointments, useConfirmAppointment, useCancelAppointment } from './useAppointments';
+export { useProgress } from './useProgress';
+export { useGamification } from './useGamification';

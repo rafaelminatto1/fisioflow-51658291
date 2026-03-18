@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { createPool } from '../lib/db';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import type { Env } from '../types/env';
+import { sendTestEmail } from '../lib/email';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -170,27 +171,32 @@ app.post('/test-email', requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
-  const recipient = String(body.to ?? '').trim();
+  const recipient = String(body.to ?? body.email ?? '').trim();
   if (!recipient) return c.json({ error: 'to é obrigatório' }, 400);
 
-  const result = await pool.query(
+  try {
+    await sendTestEmail(c.env, recipient);
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500);
+  }
+
+  await pool.query(
     `
       INSERT INTO communication_logs (
         organization_id, type, recipient, subject, body, status, sent_at, metadata, created_by, created_at, updated_at
       ) VALUES ($1, 'email', $2, $3, $4, 'enviado', NOW(), $5, $6, NOW(), NOW())
-      RETURNING *
     `,
     [
       user.organizationId,
       recipient,
-      String(body.subject ?? 'Email de teste'),
-      String(body.body ?? 'Teste de integração de email'),
-      JSON.stringify({ is_test: true, template_type: body.type ?? null }),
+      'Email de teste — FisioFlow',
+      'Email de teste enviado com sucesso via Resend',
+      JSON.stringify({ is_test: true }),
       user.uid,
     ],
   );
 
-  return c.json({ data: result.rows[0] }, 201);
+  return c.json({ success: true, message: `Email de teste enviado para ${recipient}` });
 });
 
 export { app as communicationsRoutes };

@@ -2,14 +2,15 @@ import { patientApi } from '@/lib/api';
 import { asyncResult, Result } from '@/lib/async';
 import { log } from '@/lib/logger';
 import { perf } from '@/lib/performance';
+import { PatientProfile, Therapist, PatientStats } from '@/types/api';
 
-export async function getUserById(userId: string): Promise<Result<any | null>> {
+export async function getUserById(userId: string): Promise<Result<PatientProfile | null>> {
   return asyncResult(async () => {
     perf.start('api_get_user');
     const profile = await patientApi.getProfile();
     perf.end('api_get_user', true);
 
-    if (!profile || (profile.user_id !== userId && profile.profile?.user_id !== userId)) {
+    if (!profile || profile.id !== userId) {
       return null;
     }
 
@@ -17,7 +18,7 @@ export async function getUserById(userId: string): Promise<Result<any | null>> {
   }, 'getUserById');
 }
 
-export async function getProfessionalByInviteCode(inviteCode: string): Promise<Result<any | null>> {
+export async function getProfessionalByInviteCode(inviteCode: string): Promise<Result<Therapist | null>> {
   return asyncResult(async () => {
     perf.start('api_get_professional_by_code');
     const professionals = await patientApi.getTherapists(inviteCode);
@@ -26,20 +27,13 @@ export async function getProfessionalByInviteCode(inviteCode: string): Promise<R
   }, 'getProfessionalByInviteCode');
 }
 
-export async function getUserStats(_userId: string): Promise<Result<any>> {
+export async function getUserStats(_userId: string): Promise<Result<PatientStats>> {
   return asyncResult(async () => {
     perf.start('api_get_user_stats');
     const stats = await patientApi.getStats();
     perf.end('api_get_user_stats', true);
 
-    return {
-      totalAppointments: stats.totalAppointments,
-      totalExercises: stats.totalExercises,
-      completedExercises: stats.totalExercises,
-      exerciseCompletionRate: stats.totalExercises > 0 ? 1 : 0,
-      totalEvolutions: 0,
-      totalMonths: stats.totalMonths,
-    };
+    return stats;
   }, 'getUserStats');
 }
 

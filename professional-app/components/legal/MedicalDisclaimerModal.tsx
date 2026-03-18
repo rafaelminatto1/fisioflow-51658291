@@ -22,6 +22,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { getMedicalDisclaimerContent } from '@/constants/legalContent';
 import { LEGAL_VERSIONS } from '@/constants/legalVersions';
 import { fetchApi } from '@/lib/api';
+import { authApi } from '@/lib/auth-api';
 import type { MedicalDisclaimerAcknowledgment } from '@/types/legal';
 
 interface MedicalDisclaimerModalProps {

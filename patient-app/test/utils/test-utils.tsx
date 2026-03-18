@@ -132,49 +132,6 @@ export const TestData = {
 };
 
 /**
- * Mock Firebase data
- */
-export const MockFirebase = {
-  // Mock user document
-  userDoc: (overrides = {}) => ({
-    id: 'test-user-123',
-    name: 'Test User',
-    email: 'test@example.com',
-    phone: '(11) 98765-4321',
-    role: 'patient',
-    professional_id: 'prof-123',
-    professional_name: 'Dr. Test',
-    created_at: { seconds: 1640995200, nanoseconds: 0 },
-    updated_at: { seconds: 1640995200, nanoseconds: 0 },
-    ...overrides,
-  }),
-
-  // Mock exercise plan
-  exercisePlanDoc: (overrides = {}) => ({
-    id: 'plan-1',
-    name: 'Plano Teste',
-    status: 'active',
-    exercises: [
-      TestData.exercise(),
-      TestData.exercise({ id: 'ex-2', name: 'Exercicio 2' }),
-    ],
-    created_at: { seconds: 1640995200, nanoseconds: 0 },
-    ...overrides,
-  }),
-
-  // Mock appointment
-  appointmentDoc: (overrides = {}) => ({
-    id: 'apt-1',
-    type: 'Avaliação',
-    date: { seconds: 1640995200, nanoseconds: 0 },
-    time: '10:00',
-    status: 'scheduled',
-    professional_name: 'Dr. Test',
-    ...overrides,
-  }),
-};
-
-/**
  * Mock async operations
  */
 export const MockAsync = {

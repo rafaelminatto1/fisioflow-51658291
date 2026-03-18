@@ -4,17 +4,8 @@ import { registerPushToken, clearPushToken, removeNotificationListeners } from '
 import { getOfflineManager, initializeOfflineManager } from '@/lib/offlineManager';
 import Constants from 'expo-constants';
 import { log } from '@/lib/logger';
-
-// Interface do usuário compatível com o Neon
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: 'patient' | 'professional' | 'admin';
-  clinicId?: string;
-  avatarUrl?: string;
-  createdAt?: string | Date;
-}
+import { User, UserRole } from '@/types/auth';
+import { Mappers } from './mappers';
 
 interface AuthState {
   user: User | null;
@@ -57,14 +48,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       const neonUser = data.user;
       
-      // No Neon Auth, os metadados como 'role' podem vir no profile ou no user
-      const user: User = {
-        id: neonUser.id,
-        email: neonUser.email,
-        name: neonUser.name || 'Usuário',
-        role: (neonUser as any).role || 'patient',
-        avatarUrl: neonUser.image || undefined,
-      };
+      // Centralizar mapeamento e garantir role correta
+      const user = Mappers.user({
+        ...neonUser,
+        role: (neonUser as any).role || 'patient'
+      });
+
+      if (user.role !== 'patient' && user.role !== 'admin') {
+        await authClient.signOut();
+        throw new Error('Acesso restrito a pacientes.');
+      }
 
       set({
         user,
@@ -136,13 +129,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const neonUser = session?.data?.user;
       
       if (neonUser) {
-        const user: User = {
-          id: neonUser.id,
-          email: neonUser.email,
-          name: neonUser.name || 'Usuário',
-          role: (neonUser as any).role || 'patient',
-          avatarUrl: neonUser.image || undefined,
-        };
+        const user = Mappers.user({
+          ...neonUser,
+          role: (neonUser as any).role || 'patient'
+        });
 
         set({
           user,
@@ -170,3 +160,5 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     return unsubscribe;
   },
 }));
+
+export type { User };

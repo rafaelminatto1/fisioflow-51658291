@@ -6,153 +6,17 @@
  */
 
 import { config } from './config';
-import { authApi } from './auth-api';
+import { getToken } from './token-storage';
+import {
+  ApiPatient,
+  ApiAppointment,
+  ApiExercise,
+  ApiEvolution,
+  ApiDashboardStats,
+  ApiResponse
+} from '@/types/api';
 
-// ============================================================
-// TYPES
-// ============================================================
-
-export interface ApiPatient {
-  id: string;
-  name: string;
-  full_name?: string;
-  email?: string | null;
-  phone?: string | null;
-  cpf?: string | null;
-  birth_date?: string;
-  gender?: string;
-  main_condition?: string;
-  observations?: string;
-  status: string;
-  progress?: number;
-  incomplete_registration?: boolean;
-  is_active?: boolean;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface ApiAppointment {
-  id: string;
-  patientId?: string; // Client side or camelCase API
-  patient_id?: string; // snake_case API
-  patient_name?: string;
-  therapistId?: string; // Client side or camelCase API
-  therapist_id?: string; // snake_case API
-  date: string;
-  startTime?: string; // Client side or camelCase API
-  start_time?: string; // snake_case API
-  endTime?: string; // Client side or camelCase API
-  end_time?: string; // snake_case API
-  status: string;
-  type?: string;
-  notes?: string;
-  session_type?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface ApiExercise {
-  id: string;
-  name: string;
-  description?: string;
-  instructions?: string[];
-  category?: string;
-  difficulty?: string;
-  videoUrl?: string;
-  imageUrl?: string;
-  sets?: number;
-  reps?: number;
-  duration?: number;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface ApiEvolution {
-    id: string;
-    patient_id: string;
-    therapist_id: string;
-    appointment_id?: string;
-    date: string;
-    subjective?: string;
-    objective?: string;
-    assessment?: string;
-    plan?: string;
-    pain_level?: number;
-    attachments?: string[];
-    created_at: string;
-    updated_at: string;
-}
-
-export interface ApiDashboardStats {
-    activePatients: number;
-    todayAppointments: number;
-    pendingAppointments: number;
-    completedAppointments: number;
-}
-
-export interface ApiPartnership {
-  id: string;
-  organization_id: string;
-  name: string;
-  cnpj?: string;
-  contact_person?: string;
-  contact_phone?: string;
-  contact_email?: string;
-  address?: string;
-  discount_type: 'percentage' | 'fixed';
-  discount_value: number;
-  allows_barter: boolean;
-  barter_description?: string;
-  barter_sessions_limit?: number;
-  notes?: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface ApiFinancialRecord {
-  id: string;
-  organization_id: string;
-  patient_id: string;
-  appointment_id?: string;
-  session_date: string;
-  session_value: number;
-  discount_value: number;
-  discount_type?: 'percentage' | 'fixed' | 'partnership';
-  partnership_id?: string;
-  partnership?: {
-    name: string;
-    discount_type: 'percentage' | 'fixed';
-    discount_value: number;
-  };
-  final_value: number;
-  payment_method?: 'cash' | 'credit_card' | 'debit_card' | 'pix' | 'transfer' | 'barter' | 'other';
-  payment_status: 'pending' | 'paid' | 'partial' | 'cancelled' | 'refunded';
-  paid_amount: number;
-  paid_date?: string;
-  notes?: string;
-  is_barter: boolean;
-  barter_notes?: string;
-  created_by?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface ApiFinancialSummary {
-  total_sessions: number;
-  paid_sessions: number;
-  pending_sessions: number;
-  total_value: number;
-  total_paid: number;
-  total_pending: number;
-  average_session_value: number;
-}
-
-interface ApiResponse<T> {
-  data: T;
-  error?: string;
-  total?: number;
-}
+export * from '@/types/api';
 
 class ApiError extends Error {
   constructor(
@@ -170,16 +34,9 @@ class ApiError extends Error {
 // ============================================================
 
 async function getAuthToken(): Promise<string> {
-  const token = await authApi.getToken();
+  const token = await getToken();
   if (!token) {
     throw new Error('User not authenticated');
-  }
-  if (typeof token !== 'string') {
-    console.error('[API] Invalid token type:', typeof token);
-    throw new Error('Invalid authentication token');
-  }
-  if (token.length < 10) {
-    console.error('[API] Token suspiciously short:', token.length);
   }
   return token;
 }
@@ -188,9 +45,6 @@ async function getAuthToken(): Promise<string> {
 // FETCH HELPERS
 // ============================================================
 
-/**
- * Clean request data by removing undefined values
- */
 function cleanRequestData(data: Record<string, any>): Record<string, any> {
   const cleaned: Record<string, any> = {};
   for (const [key, value] of Object.entries(data)) {
@@ -205,25 +59,23 @@ interface FetchOptions extends RequestInit {
   data?: any;
   params?: Record<string, string | number | boolean | undefined>;
   timeout?: number;
+  skipAuth?: boolean;
 }
 
 export async function fetchApi<T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<T> {
-  const token = await getAuthToken();
+  const token = options.skipAuth ? null : await getAuthToken();
   const { data, params, timeout = 10000, ...fetchInit } = options;
 
   let baseUrl = config.apiUrl;
-  // Robust joining: ensure no double slashes or missing slashes
-  // and handle potential double /api
   if (baseUrl.endsWith('/') && endpoint.startsWith('/')) {
     baseUrl = baseUrl.slice(0, -1);
   } else if (!baseUrl.endsWith('/') && !endpoint.startsWith('/')) {
     baseUrl = baseUrl + '/';
   }
   
-  // Handle double /api if apiUrl ends with /api and endpoint starts with /api
   if (baseUrl.endsWith('/api') && endpoint.startsWith('/api')) {
     baseUrl = baseUrl.slice(0, -4);
   }
@@ -244,18 +96,19 @@ export async function fetchApi<T>(
   }
 
   const method = fetchInit.method || (data ? 'POST' : 'GET');
-  const headers = {
+  const headers: HeadersInit = {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token.trim()}`,
-    ...fetchInit.headers,
   };
 
-  const body = data ? JSON.stringify(cleanRequestData(data)) : undefined;
+  if (token) {
+    (headers as any)['Authorization'] = `Bearer ${token.trim()}`;
+  }
 
-  console.log(`[API] ${method} ${url}`);
-  console.log(`[API] Authorization: Bearer ${token.substring(0, 10)}... (length: ${token.length})`);
-  console.log(`[API] Request params:`, params);
-  console.log(`[API] Request data:`, data ? JSON.stringify(data).substring(0, 200) : 'none');
+  if (fetchInit.headers) {
+    Object.assign(headers, fetchInit.headers);
+  }
+
+  const body = data ? JSON.stringify(cleanRequestData(data)) : undefined;
 
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
@@ -272,32 +125,21 @@ export async function fetchApi<T>(
 
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}`;
-      const responseClone = response.clone();
-      
       try {
-        const errorJson = await responseClone.json();
+        const errorJson = await response.json();
         errorMessage = errorJson.error || errorJson.message || errorMessage;
-      } catch (jsonError) {
-        try {
-          const errorText = await response.text();
-          if (errorText) errorMessage = errorText;
-        } catch (textError) {
-          console.warn('[API] Could not parse error response:', jsonError, textError);
-        }
+      } catch {
+        // Silently fail json parse
       }
-
       throw new ApiError(endpoint, response.status, errorMessage);
     }
 
-    const responseData = await response.json();
-    console.log(`[API] Response from ${endpoint}:`, JSON.stringify(responseData).substring(0, 500));
-    return responseData as Promise<T>;
+    return await response.json() as T;
   } catch (error: any) {
     clearTimeout(id);
     if (error.name === 'AbortError') {
       throw new Error('Tempo de conexão esgotado (timeout)');
     }
-    console.error(`[API] ${method} ${endpoint}:`, error);
     throw error;
   }
 }
@@ -336,13 +178,10 @@ export async function getPatients(
   return response.data || [];
 }
 
-export async function getPatientById(id: string): Promise<ApiPatient | null> {
-  try {
-    const response = await fetchApi<ApiResponse<ApiPatient>>(`/api/patients/${encodeURIComponent(id)}`);
-    return response.data || null;
-  } catch {
-    return null;
-  }
+export async function getPatientById(id: string): Promise<ApiPatient> {
+  const response = await fetchApi<ApiResponse<ApiPatient>>(`/api/patients/${encodeURIComponent(id)}`);
+  if (!response.data) throw new Error('Paciente não encontrado');
+  return response.data;
 }
 
 export async function createPatient(data: Partial<ApiPatient>): Promise<ApiPatient> {
@@ -396,37 +235,16 @@ export async function getAppointments(
   return response.data || [];
 }
 
-export async function getAppointmentById(id: string): Promise<ApiAppointment | null> {
-  try {
-    const response = await fetchApi<ApiResponse<ApiAppointment>>(`/api/appointments/${encodeURIComponent(id)}`);
-    return response.data || null;
-  } catch {
-    return null;
-  }
+export async function getAppointmentById(id: string): Promise<ApiAppointment> {
+  const response = await fetchApi<ApiResponse<ApiAppointment>>(`/api/appointments/${encodeURIComponent(id)}`);
+  if (!response.data) throw new Error('Agendamento não encontrado');
+  return response.data;
 }
 
-export async function createAppointment(data: {
-  patientId: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  therapistId?: string;
-  organizationId?: string;
-  type?: string;
-  notes?: string;
-}): Promise<ApiAppointment> {
-  const payload = {
-      patientId: data.patientId,
-      date: data.date,
-      startTime: data.startTime,
-      endTime: data.endTime,
-      therapistId: data.therapistId,
-      organizationId: data.organizationId,
-      notes: data.notes,
-  };
+export async function createAppointment(data: Partial<ApiAppointment>): Promise<ApiAppointment> {
   const response = await fetchApi<ApiResponse<ApiAppointment>>('/api/appointments', {
       method: 'POST',
-      data: payload
+      data
   });
   if (response.error) throw new Error(response.error);
   return response.data;
@@ -469,37 +287,6 @@ export async function getExercises(
   return response.data || [];
 }
 
-export async function getExerciseById(id: string): Promise<ApiExercise | null> {
-  try {
-    const response = await fetchApi<ApiResponse<ApiExercise>>(`/api/exercises/${encodeURIComponent(id)}`);
-    return response.data || null;
-  } catch {
-    return null;
-  }
-}
-
-export async function createExercise(data: Partial<ApiExercise>): Promise<ApiExercise> {
-  const response = await fetchApi<ApiResponse<ApiExercise>>('/api/exercises', {
-      method: 'POST',
-      data
-  });
-  if (response.error) throw new Error(response.error);
-  return response.data;
-}
-
-export async function updateExercise(id: string, data: Partial<ApiExercise>): Promise<ApiExercise> {
-  const response = await fetchApi<ApiResponse<ApiExercise>>(`/api/exercises/${encodeURIComponent(id)}`, {
-      method: 'PUT',
-      data
-  });
-  if (response.error) throw new Error(response.error);
-  return response.data;
-}
-
-export async function deleteExercise(id: string): Promise<{ success: boolean }> {
-  return fetchApi<{ success: boolean }>(`/api/exercises/${encodeURIComponent(id)}`, { method: 'DELETE' });
-}
-
 // ============================================================
 // EVOLUTIONS API
 // ============================================================
@@ -511,304 +298,30 @@ export async function getEvolutions(patientId: string): Promise<ApiEvolution[]> 
     return response.data || [];
 }
 
-export async function getEvolutionById(id: string): Promise<ApiEvolution | null> {
-    try {
-        const response = await fetchApi<ApiResponse<ApiEvolution>>(`/api/evolution/${encodeURIComponent(id)}`);
-        return response.data || null;
-    } catch {
-        return null;
-    }
-}
-
-export async function createEvolution(data: Partial<ApiEvolution>): Promise<ApiEvolution> {
-    const response = await fetchApi<ApiResponse<ApiEvolution>>('/api/evolution', {
-        method: 'POST',
-        data
-    });
-    if (response.error) throw new Error(response.error);
-    return response.data;
-}
-
-export async function updateEvolution(id: string, data: Partial<ApiEvolution>): Promise<ApiEvolution> {
-    const response = await fetchApi<ApiResponse<ApiEvolution>>(`/api/evolution/${encodeURIComponent(id)}`, {
-        method: 'PUT',
-        data
-    });
-    if (response.error) throw new Error(response.error);
-    return response.data;
-}
-
-export async function deleteEvolution(id: string): Promise<{ success: boolean }> {
-    return fetchApi<{ success: boolean }>(`/api/evolution/${encodeURIComponent(id)}`, { method: 'DELETE' });
-}
-
-// ============================================================
-// PARTNERSHIPS API
-// ============================================================
-
-export async function getPartnerships(options?: {
-  activeOnly?: boolean;
-  limit?: number;
-}): Promise<ApiPartnership[]> {
-  const response = await fetchApi<ApiResponse<ApiPartnership[]>>('/api/partnerships', {
-      params: { 
-          activeOnly: options?.activeOnly,
-          limit: options?.limit || 100 
-      }
-  });
-  return response.data || [];
-}
-
-export async function getPartnershipById(id: string): Promise<ApiPartnership | null> {
-  try {
-    const response = await fetchApi<ApiResponse<ApiPartnership>>(`/api/partnerships/${encodeURIComponent(id)}`);
-    return response.data || null;
-  } catch {
-    return null;
-  }
-}
-
-export async function createPartnership(data: Partial<ApiPartnership>): Promise<ApiPartnership> {
-  const response = await fetchApi<ApiResponse<ApiPartnership>>('/api/partnerships', {
-      method: 'POST',
-      data
-  });
-  if (response.error) throw new Error(response.error);
-  return response.data;
-}
-
-export async function updatePartnership(id: string, data: Partial<ApiPartnership>): Promise<ApiPartnership> {
-  const response = await fetchApi<ApiResponse<ApiPartnership>>(`/api/partnerships/${encodeURIComponent(id)}`, {
-      method: 'PUT',
-      data
-  });
-  if (response.error) throw new Error(response.error);
-  return response.data;
-}
-
-export async function deletePartnership(id: string): Promise<{ success: boolean }> {
-  return fetchApi<{ success: boolean }>(`/api/partnerships/${encodeURIComponent(id)}`, { method: 'DELETE' });
-}
-
-// ============================================================
-// PATIENT FINANCIAL RECORDS API
-// ============================================================
-
-export async function getAllFinancialRecords(
-  options?: { startDate?: string; endDate?: string; limit?: number }
-): Promise<(ApiFinancialRecord & { patient_name: string })[]> {
-  const response = await fetchApi<ApiResponse<(ApiFinancialRecord & { patient_name: string })[]>>('/api/financial/transacoes', {
-      params: { 
-          startDate: options?.startDate,
-          endDate: options?.endDate,
-          limit: options?.limit || 100 
-      }
-  });
-  return response.data || [];
-}
-
-export async function getPatientFinancialRecords(
-  patientId: string,
-  options?: { status?: string; limit?: number }
-): Promise<ApiFinancialRecord[]> {
-  const response = await fetchApi<ApiResponse<ApiFinancialRecord[]>>(`/api/financial/transacoes/patient/${encodeURIComponent(patientId)}`, {
-      params: { 
-          status: options?.status,
-          limit: options?.limit || 100 
-      }
-  });
-  return response.data || [];
-}
-
-export async function getPatientFinancialSummary(patientId: string): Promise<ApiFinancialSummary | null> {
-  try {
-    const response = await fetchApi<ApiResponse<ApiFinancialSummary>>(`/api/financial/summary/patient/${encodeURIComponent(patientId)}`);
-    return response.data || null;
-  } catch {
-    return null;
-  }
-}
-
-export async function createFinancialRecord(data: any): Promise<ApiFinancialRecord> {
-  const response = await fetchApi<ApiResponse<ApiFinancialRecord>>('/api/financial/transacoes', {
-      method: 'POST',
-      data
-  });
-  if (response.error) throw new Error(response.error);
-  return response.data;
-}
-
-export async function updateFinancialRecord(
-  recordId: string,
-  data: Partial<ApiFinancialRecord>
-): Promise<ApiFinancialRecord> {
-  const response = await fetchApi<ApiResponse<ApiFinancialRecord>>(`/api/financial/transacoes/${encodeURIComponent(recordId)}`, {
-      method: 'PUT',
-      data
-  });
-  if (response.error) throw new Error(response.error);
-  return response.data;
-}
-
-export async function deleteFinancialRecord(recordId: string): Promise<{ success: boolean }> {
-  return fetchApi<{ success: boolean }>(`/api/financial/transacoes/${encodeURIComponent(recordId)}`, { method: 'DELETE' });
-}
-
-export async function markFinancialRecordAsPaid(
-  recordId: string,
-  paymentMethod: string,
-  paidDate?: string
-): Promise<ApiFinancialRecord> {
-  const response = await fetchApi<ApiResponse<ApiFinancialRecord>>(`/api/financial/transacoes/${encodeURIComponent(recordId)}/pay`, {
-      method: 'POST',
-      data: {
-        payment_method: paymentMethod,
-        paid_date: paidDate,
-      }
-  });
-  if (response.error) throw new Error(response.error);
-  return response.data;
-}
-// ============================================================
-// MESSAGING API
-// ============================================================
-
-export interface ApiConversation {
-  id: string;
-  participantId: string;
-  participantName: string;
-  participantType: 'patient' | 'professional';
-  lastMessage?: string;
-  lastMessageAt?: string;
-  unreadCount: number;
-}
-
-export interface ApiMessage {
-  id: string;
-  senderId: string;
-  receiverId: string;
-  content: string;
-  type: 'text' | 'image' | 'video' | 'file';
-  createdAt: string;
-  readAt?: string;
-}
-
-export async function getConversations(): Promise<ApiConversation[]> {
-  const response = await fetchApi<ApiResponse<ApiConversation[]>>('/api/messaging/conversations');
-  return response.data || [];
-}
-
-export async function getConversationMessages(participantId: string): Promise<ApiMessage[]> {
-  const response = await fetchApi<ApiResponse<ApiMessage[]>>(`/api/messaging/conversations/${encodeURIComponent(participantId)}/messages`);
-  return response.data || [];
-}
-
-export async function sendMessage(participantId: string, content: string, type: string = 'text'): Promise<ApiMessage> {
-  const response = await fetchApi<ApiResponse<ApiMessage>>('/api/messaging/messages', {
-    method: 'POST',
-    data: {
-      receiverId: participantId,
-      content,
-      type
-    }
-  });
-  if (response.error) throw new Error(response.error);
-  return response.data;
-}
-
-export async function markAsRead(participantId: string): Promise<{ success: boolean }> {
-  return fetchApi<{ success: boolean }>(`/api/messaging/conversations/${encodeURIComponent(participantId)}/read`, {
-    method: 'POST'
-  });
-}
-
 // ============================================================
 // TAREFAS API
 // ============================================================
 
-export type TarefaStatus = 'BACKLOG' | 'A_FAZER' | 'EM_PROGRESSO' | 'REVISAO' | 'CONCLUIDO' | 'ARQUIVADO';
-export type TarefaPrioridade = 'BAIXA' | 'MEDIA' | 'ALTA' | 'URGENTE';
-export type TarefaTipo = 'TAREFA' | 'BUG' | 'FEATURE' | 'MELHORIA' | 'DOCUMENTACAO' | 'REUNIAO';
-
-export interface ApiTarefaChecklistItem {
-  id: string;
-  text: string;
-  completed: boolean;
-}
-
-export interface ApiTarefaChecklist {
-  id: string;
-  title: string;
-  items: ApiTarefaChecklistItem[];
-}
-
-export interface ApiTarefa {
-  id: string;
-  organization_id: string;
-  titulo: string;
-  descricao?: string;
-  status: TarefaStatus;
-  prioridade: TarefaPrioridade;
-  tipo?: TarefaTipo;
-  responsavel_id?: string;
-  created_by?: string;
-  data_vencimento?: string;
-  hora_vencimento?: string;
-  start_date?: string;
-  completed_at?: string;
-  checklists?: ApiTarefaChecklist[];
-  attachments?: unknown[];
-  tags?: string[];
-  order_index?: number;
-  progress?: number;
-  created_at: string;
-  updated_at: string;
-}
-
-export async function getTarefas(params?: {
-  status?: TarefaStatus;
-  prioridade?: TarefaPrioridade;
-  responsavel_id?: string;
-  limit?: number;
-}): Promise<ApiTarefa[]> {
-  const response = await fetchApi<ApiResponse<ApiTarefa[]>>('/api/tarefas', {
-    params: {
-      status: params?.status,
-      prioridade: params?.prioridade,
-      responsavel_id: params?.responsavel_id,
-      limit: params?.limit || 200,
-    },
+export async function getTarefas(params?: any): Promise<any[]> {
+  const response = await fetchApi<ApiResponse<any[]>>('/api/tarefas', {
+    params,
   });
   return response.data || [];
 }
 
-export async function createTarefa(data: Partial<ApiTarefa>): Promise<ApiTarefa> {
-  const response = await fetchApi<ApiResponse<ApiTarefa>>('/api/tarefas', {
+// ============================================================
+// MESSAGING API
+// ============================================================
+
+export async function getConversations(): Promise<any[]> {
+  const response = await fetchApi<ApiResponse<any[]>>('/api/messaging/conversations');
+  return response.data || [];
+}
+
+export async function sendMessage(participantId: string, content: string): Promise<any> {
+  const response = await fetchApi<ApiResponse<any>>('/api/messaging/messages', {
     method: 'POST',
-    data,
+    data: { receiverId: participantId, content }
   });
-  if (response.error) throw new Error(response.error);
   return response.data;
-}
-
-export async function updateTarefa(id: string, data: Partial<ApiTarefa>): Promise<ApiTarefa> {
-  const response = await fetchApi<ApiResponse<ApiTarefa>>(`/api/tarefas/${encodeURIComponent(id)}`, {
-    method: 'PATCH',
-    data,
-  });
-  if (response.error) throw new Error(response.error);
-  return response.data;
-}
-
-export async function deleteTarefa(id: string): Promise<{ success: boolean }> {
-  return fetchApi<{ success: boolean }>(`/api/tarefas/${encodeURIComponent(id)}`, { method: 'DELETE' });
-}
-
-export async function bulkUpdateTarefas(
-  updates: { id: string; data: Partial<ApiTarefa> }[]
-): Promise<{ success: boolean }> {
-  return fetchApi<{ success: boolean }>('/api/tarefas/bulk', {
-    method: 'POST',
-    data: { updates },
-  });
 }

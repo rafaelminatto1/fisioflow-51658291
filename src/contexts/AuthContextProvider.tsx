@@ -5,6 +5,7 @@ import { auditApi } from '@/lib/api/workers-client';
 import { getNeonAccessToken, invalidateNeonTokenCache } from '@/lib/auth/neon-token';
 import { getNeonAuthUrl } from '@/lib/config/neon';
 import { AuthContextType, AuthContext, AuthError, AuthUser } from './AuthContext';
+import { identifyUser as posthogIdentify } from '@/lib/analytics/posthog';
 import { Profile, RegisterFormData, UserRole } from '@/types/auth';
 import { useQueryClient } from '@tanstack/react-query';
 import { AppointmentService } from '@/services/appointmentService';
@@ -154,7 +155,8 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
       if (data?.user) {
         await loadUserAndProfile(adaptNeonUser(data.user));
-        
+        posthogIdentify(data.user.id, data.user.email, data.user.name);
+
         // Log de sucesso de login
         try {
           await auditApi.create({

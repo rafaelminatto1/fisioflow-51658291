@@ -1,20 +1,6 @@
-// User types
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: 'patient' | 'professional' | 'admin';
-  clinicId?: string;
-  avatarUrl?: string;
-  specialty?: string;
-  crefito?: string;
-  phone?: string;
-  clinicName?: string;
-  clinicAddress?: string;
-  clinicPhone?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+import { User, UserRole } from './auth';
+
+export * from './auth';
 
 // Patient types
 export interface Patient {
@@ -33,7 +19,7 @@ export interface Patient {
   progress?: number;
   startDate?: Date;
   lastVisit?: Date;
-  organization_id?: string;
+  organizationId?: string;
   createdAt: Date | string;
   updatedAt: Date | string;
 }

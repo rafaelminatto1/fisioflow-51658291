@@ -26,7 +26,7 @@ function mapApiPatient(apiPatient: ApiPatient): Patient {
     status: (apiPatient.is_active !== false) ? 'active' : 'inactive',
     progress: apiPatient.progress,
     lastVisit: undefined,
-    organization_id: undefined,
+    organizationId: undefined,
     createdAt: apiPatient.created_at || new Date(),
     updatedAt: apiPatient.updated_at || new Date(),
   };
@@ -34,8 +34,6 @@ function mapApiPatient(apiPatient: ApiPatient): Patient {
 
 // Reverse map app status to API status
 function mapToApiStatus(status: Patient['status']): string {
-  // When creating/updating, if status is 'active', we set it to 'Em_Tratamento' as default
-  // This might need to be 'Inicial' depending on business logic, but preserving existing behavior for now
   return status === 'active' ? 'Em_Tratamento' : status;
 }
 
@@ -43,32 +41,19 @@ export function usePatients(options?: UsePatientsOptions) {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
-  console.log('[usePatients] user:', user?.id, 'organizationId:', user?.organizationId, 'options:', options);
-
   const patients = useQuery({
     queryKey: ['patients', user?.id, options],
     queryFn: async () => {
-      if (!user?.id) {
-        console.log('[usePatients] No user, returning empty array');
-        return [];
-      }
+      if (!user?.id) return [];
 
-      console.log('[usePatients] Fetching patients for org:', user.organizationId);
       try {
         const data = await getPatients(user.organizationId, {
-          // If status is 'active', we want ALL active patients (backend defaults to is_active=true)
-          // So we pass undefined. Only pass specific status if it's NOT 'active' (e.g. 'inactive' - though backend might not support it yet, or specific enums)
-          // If options.status is 'Em_Tratamento', we pass that.
           status: options?.status === 'active' ? undefined : options?.status,
           search: options?.search,
           limit: options?.limit || 100,
         });
-        console.log('[usePatients] Raw API response:', data?.length, 'patients');
-        const mapped = data.map(mapApiPatient);
-        console.log('[usePatients] Mapped patients:', mapped.length);
-        return mapped;
+        return data.map(mapApiPatient);
       } catch (error) {
-        console.error('[usePatients] Error:', error);
         throw error;
       }
     },

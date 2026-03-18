@@ -1,31 +1,31 @@
 import { fetchApi } from './api';
 import * as SecureStore from 'expo-secure-store';
+import { getToken, setToken, clearToken } from './token-storage';
 
 export interface AuthResponse {
   user: any;
   token: string;
 }
 
-const TOKEN_KEY = 'FISIOFLOW_AUTH_TOKEN';
-
 export const authApi = {
   async login(email: string, password: string): Promise<AuthResponse> {
     const data = await fetchApi<AuthResponse>('/api/auth/login', {
       method: 'POST',
       data: { email, password },
+      skipAuth: true,
     });
 
     console.log(`[Auth] Token recebido: ${data.token ? data.token.substring(0, 10) + '...' : 'null/undefined'} (length: ${data.token?.length})`);
     if (!data.token) {
       throw new Error('Token não recebido do servidor');
     }
-    await SecureStore.setItemAsync(TOKEN_KEY, data.token);
+    await setToken(data.token);
     return data;
   },
 
   async logout(): Promise<void> {
     try {
-      const token = await this.getToken();
+      const token = await getToken();
       if (token) {
         // Rota de logout opcional - backend pode não implementar
         await fetchApi('/api/auth/logout', {
@@ -34,17 +34,12 @@ export const authApi = {
         }).catch(() => {});
       }
     } finally {
-      await SecureStore.deleteItemAsync(TOKEN_KEY);
+      await clearToken();
     }
   },
 
   async getToken(): Promise<string | null> {
-    try {
-      return await SecureStore.getItemAsync(TOKEN_KEY);
-    } catch (error) {
-      console.error('Error reading token:', error);
-      return null;
-    }
+    return getToken();
   },
 
   async getMe(): Promise<AuthResponse['user']> {
@@ -56,7 +51,7 @@ export const authApi = {
       return data.user || data;
     } catch (err: any) {
       if (err.status === 401) {
-        await SecureStore.deleteItemAsync(TOKEN_KEY);
+        await clearToken();
       }
       throw new Error('Falha ao validar sessão');
     }
@@ -66,6 +61,7 @@ export const authApi = {
     await fetchApi('/api/auth/reset-password', {
       method: 'POST',
       data: { email },
+      skipAuth: true,
     });
   },
 
@@ -73,6 +69,6 @@ export const authApi = {
     await fetchApi('/api/auth/update-password', {
       method: 'POST',
       data: { newPassword },
-    });
+    })
   }
 };
