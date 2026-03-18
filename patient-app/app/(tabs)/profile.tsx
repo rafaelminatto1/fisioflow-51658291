@@ -10,7 +10,6 @@ import {
   Image,
   Switch,
   ActivityIndicator,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,20 +19,10 @@ import { useAuthStore } from '@/store/auth';
 import { Card, Button } from '@/components';
 import { Spacing } from '@/constants/spacing';
 import { usePatientNotifications } from '@/lib/notificationsSystem';
-import { patientApi } from '@/lib/api';
 import { APP_VERSION } from '@/lib/constants';
 import * as Notifications from 'expo-notifications';
+import { useExerciseStats } from '@/hooks/useExercises';
 import { log } from '@/lib/logger';
-
-const SCREEN_PADDING = Spacing.screen;
-const CARD_GAP = Spacing.gap;
-const HALF_CARD_WIDTH = (Dimensions.get('window').width - SCREEN_PADDING * 2 - CARD_GAP) / 2;
-
-interface UserStats {
-  totalAppointments: number;
-  totalExercises: number;
-  totalMonths: number;
-}
 
 export default function ProfileScreen() {
   const colors = useColors();
@@ -41,17 +30,13 @@ export default function ProfileScreen() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [loadingNotifications, setLoadingNotifications] = useState(true);
-  const [stats, setStats] = useState<UserStats>({
-    totalAppointments: 0,
-    totalExercises: 0,
-    totalMonths: 0,
-  });
-  const [loadingStats, setLoadingStats] = useState(true);
+
+  const { data: stats, isLoading: loadingStats } = useExerciseStats();
+  const { requestPermission } = usePatientNotifications();
 
   // Check notification permission status on mount
   useEffect(() => {
     checkNotificationStatus();
-    fetchUserStats();
   }, [user?.id]);
 
   const checkNotificationStatus = async () => {
@@ -64,24 +49,6 @@ export default function ProfileScreen() {
       setLoadingNotifications(false);
     }
   };
-
-  const fetchUserStats = async () => {
-    if (!user?.id) {
-      setLoadingStats(false);
-      return;
-    }
-
-    try {
-      const portalStats = await patientApi.getStats();
-      setStats(portalStats);
-    } catch (error) {
-      log.error('Error fetching user stats:', error);
-    } finally {
-      setLoadingStats(false);
-    }
-  };
-
-  const { permission, loading, requestPermission } = usePatientNotifications();
 
   const handleLogout = () => {
     Alert.alert(
@@ -98,7 +65,7 @@ export default function ProfileScreen() {
               await signOut();
               router.replace('/(auth)/login');
             } catch (error) {
-              Alert.alert('Erro', 'Nao foi possivel sair. Tente novamente.');
+              Alert.alert('Erro', 'Não foi possível sair. Tente novamente.');
             } finally {
               setIsLoggingOut(false);
             }
@@ -202,7 +169,7 @@ export default function ProfileScreen() {
               <ActivityIndicator size="small" color={colors.primary} />
             ) : (
               <Text style={[styles.statValue, { color: colors.primary }]}>
-                {stats.totalAppointments}
+                {stats?.totalAppointments || 0}
               </Text>
             )}
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
@@ -214,7 +181,7 @@ export default function ProfileScreen() {
               <ActivityIndicator size="small" color={colors.success} />
             ) : (
               <Text style={[styles.statValue, { color: colors.success }]}>
-                {stats.totalExercises}
+                {stats?.totalExercises || 0}
               </Text>
             )}
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
@@ -226,7 +193,7 @@ export default function ProfileScreen() {
               <ActivityIndicator size="small" color={colors.warning} />
             ) : (
               <Text style={[styles.statValue, { color: colors.warning }]}>
-                {stats.totalMonths}
+                {stats?.totalMonths || 0}
               </Text>
             )}
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>

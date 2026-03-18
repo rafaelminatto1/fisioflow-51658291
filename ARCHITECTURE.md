@@ -1,6 +1,13 @@
 # 🏗️ FisioFlow - System Architecture (v4.0.0 - 2026)
 
-Documentação técnica atualizada para a stack de borda (Edge Computing) e banco de dados serverless.
+## ⚠️ Alerta de Segurança e Migração
+
+O projeto está em transição final para a arquitetura v4.0.0.
+
+*   **API Legada (DEPRECATED)**: `cloudflare-worker/fisioflow-api.ts`. Esta API **não** deve ser utilizada em produção, pois possui vulnerabilidades na verificação de tokens JWT e não utiliza o Drizzle ORM.
+*   **API Atual (CANÔNICA)**: `workers/src/index.ts`. Esta é a API oficial baseada em Hono, com verificação robusta via JWKS (`jose`) e integração total com Drizzle ORM.
+
+Todas as aplicações (Patient e Professional) devem apontar para os domínios `api-paciente.moocafisio.com.br` e `api-pro.moocafisio.com.br` respectivamente, que são servidos pela nova API.
 
 ## 🚀 Tecnologias Principais
 

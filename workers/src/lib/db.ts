@@ -1,5 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 import { drizzle as drizzleHttp } from 'drizzle-orm/neon-http';
+import * as schema from '@fisioflow/db';
 import type { Env } from '../types/env';
 
 function getUrl(env: Env): string {
@@ -12,10 +13,9 @@ function getUrl(env: Env): string {
 /**
  * Cria uma instância do Drizzle ORM via Neon HTTP driver.
  * Neon HTTP é o driver recomendado para Cloudflare Workers.
- * Rotas usam .select()/.insert()/.update() — sem relational queries, sem schema necessário.
  */
 export function createDb(env: Env) {
-  return drizzleHttp(neon(getUrl(env)));
+  return drizzleHttp(neon(getUrl(env)), { schema });
 }
 
 /**

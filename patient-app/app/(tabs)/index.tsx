@@ -26,36 +26,15 @@ import { useAuthStore } from '@/store/auth';
 import { useGamification } from '@/hooks/useGamification';
 import { Card, NotificationPermissionModal, SyncIndicator, LinearProgress } from '@/components';
 import { Spacing } from '@/constants/spacing';
-import { patientApi } from '@/lib/api';
 import * as Notifications from 'expo-notifications';
-import { log } from '@/lib/logger';
+import { useExercises } from '@/hooks/useExercises';
+import { useAppointments } from '@/hooks/useAppointments';
+import { Appointment, ExerciseAssignment } from '@/types/api';
 
 const SCREEN_PADDING = Spacing.screen;
 const CARD_GAP = Spacing.gap;
 const HALF_CARD_WIDTH = (Dimensions.get('window').width - SCREEN_PADDING * 2 - CARD_GAP) / 2;
 const FULL_CARD_WIDTH = Dimensions.get('window').width - SCREEN_PADDING * 2;
-
-interface TodayExercise {
-  id: string;
-  name: string;
-  sets: number;
-  reps: number;
-  completed: boolean;
-}
-
-interface TodayPlan {
-  id: string;
-  name: string;
-  exercises: TodayExercise[];
-}
-
-interface Appointment {
-  id: string;
-  date: any;
-  time: string;
-  type: string;
-  professional_name: string;
-}
 
 interface QuickAction {
   id: string;
@@ -72,27 +51,13 @@ const quickActions: QuickAction[] = [
   { id: '4', label: 'Perfil', icon: 'person-outline', route: '/(tabs)/profile', color: '#059669' },
 ];
 
-// Helper safely parses dates
-const parseDate = (d: any): Date => {
-  if (!d) return new Date();
-  if (typeof d.toDate === 'function') return d.toDate();
-  if (d instanceof Date) return d;
-  if (typeof d === 'string' || typeof d === 'number') {
-    const parsed = new Date(d);
-    return isNaN(parsed.getTime()) ? new Date() : parsed;
-  }
-  return new Date();
-};
-
 export default function DashboardScreen() {
   const colors = useColors();
   const { user } = useAuthStore();
-  const { currentLevel, currentXp, xpPerLevel, progressPercentage } = useGamification(user?.id);
+  const { currentLevel, currentXp, xpPerLevel, progressPercentage, isLoading: gamificationLoading } = useGamification();
+  const { data: exercises = [], isLoading: exercisesLoading } = useExercises();
+  const { data: upcomingAppointments = [], isLoading: appointmentsLoading } = useAppointments(true);
 
-  const [todayPlan, setTodayPlan] = useState<TodayPlan | null>(null);
-  const [nextAppointment, setNextAppointment] = useState<Appointment | null>(null);
-  const [streak, setStreak] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
 
   useEffect(() => {
@@ -116,71 +81,6 @@ export default function DashboardScreen() {
     setShowNotificationPrompt(false);
   };
 
-  useEffect(() => {
-    if (!user?.id) {
-      setLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const [exercises, appointments] = await Promise.all([
-          patientApi.getExercises(),
-          patientApi.getAppointments(true),
-        ]);
-
-        if (cancelled) return;
-
-        if (exercises.length > 0) {
-          setTodayPlan({
-            id: exercises[0]?.plan?.id || 'current-plan',
-            name: exercises[0]?.plan?.name || 'Meus Exercícios',
-            exercises: exercises.map((exercise: any) => ({
-              id: exercise.id,
-              name: exercise.exercise?.name || 'Exercício',
-              sets: exercise.sets || 3,
-              reps: exercise.reps || 10,
-              completed: exercise.completed || false,
-            })),
-          });
-        } else {
-          setTodayPlan(null);
-        }
-
-        const next = appointments[0];
-        setNextAppointment(
-          next
-            ? {
-                id: next.id,
-                date: next.date,
-                time: next.time,
-                type: next.type || 'Fisioterapia',
-                professional_name: next.professional_name || 'Fisioterapeuta',
-              }
-            : null,
-        );
-      } catch (error) {
-        log.error('HOME', 'Error loading dashboard data', error);
-        if (!cancelled) {
-          setTodayPlan(null);
-          setNextAppointment(null);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user?.id]);
-
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Bom dia';
@@ -193,17 +93,19 @@ export default function DashboardScreen() {
     return today.charAt(0).toUpperCase() + today.slice(1);
   };
 
-  const completedCount = todayPlan?.exercises.filter(e => e.completed).length || 0;
-  const totalCount = todayPlan?.exercises.length || 0;
+  const nextAppointment = upcomingAppointments[0];
+  const completedCount = exercises.filter(e => e.completed).length;
+  const totalCount = exercises.length;
   const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
   const xpRemaining = Math.max(xpPerLevel - currentXp, 0);
+  const streak = 0; // Temporário - viria do perfil gamificado se implementado na API
 
   const getNextAppointmentLabel = () => {
     if (!nextAppointment) return null;
 
-    const apptDate: Date = parseDate(nextAppointment.date);
+    const apptDate = new Date(nextAppointment.date);
+    if (isNaN(apptDate.getTime())) return null;
 
-    if (!apptDate || isNaN(apptDate.getTime())) return null;
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -216,6 +118,8 @@ export default function DashboardScreen() {
 
     return format(apptDate, "dd 'de' MMMM 'às' HH:mm", { locale: ptBR });
   };
+
+  const isLoading = gamificationLoading || exercisesLoading || appointmentsLoading;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
@@ -274,7 +178,7 @@ export default function DashboardScreen() {
           </Text>
         </View>
 
-        {loading ? (
+        {isLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={colors.primary} />
           </View>
@@ -307,7 +211,7 @@ export default function DashboardScreen() {
             </View>
 
             {/* Today's Exercises */}
-            {todayPlan && (
+            {exercises.length > 0 ? (
               <Card style={styles.sectionCard}>
                 <View style={styles.sectionHeader}>
                   <View style={styles.sectionHeaderLeft}>
@@ -322,7 +226,7 @@ export default function DashboardScreen() {
                         style={[styles.sectionSubtitle, { color: colors.textSecondary }]}
                         numberOfLines={1}
                       >
-                        {todayPlan.name}
+                        Plano Atual
                       </Text>
                     </View>
                   </View>
@@ -335,7 +239,7 @@ export default function DashboardScreen() {
                 </View>
 
                 <View style={styles.exercisesList}>
-                  {todayPlan.exercises.slice(0, 3).map((exercise, index) => (
+                  {exercises.slice(0, 3).map((exercise, index) => (
                     <View
                       key={exercise.id}
                       style={[
@@ -369,7 +273,7 @@ export default function DashboardScreen() {
                           ]}
                           numberOfLines={1}
                         >
-                          {exercise.name}
+                          {exercise.exercise?.name || 'Exercício'}
                         </Text>
                         <Text style={[styles.exerciseMeta, { color: colors.textSecondary }]}>
                           {exercise.sets} séries × {exercise.reps} reps
@@ -384,13 +288,13 @@ export default function DashboardScreen() {
                     </View>
                   ))}
 
-                  {todayPlan.exercises.length > 3 && (
+                  {exercises.length > 3 && (
                     <TouchableOpacity
                       style={styles.seeMoreButton}
                       onPress={() => router.push('/(tabs)/exercises')}
                     >
                       <Text style={[styles.seeMoreText, { color: colors.primary }]}>
-                        Ver todos {todayPlan.exercises.length} exercícios
+                        Ver todos {exercises.length} exercícios
                       </Text>
                       <Ionicons name="chevron-forward" size={16} color={colors.primary} />
                     </TouchableOpacity>
@@ -409,9 +313,7 @@ export default function DashboardScreen() {
                   )}
                 </View>
               </Card>
-            )}
-
-            {!todayPlan && (
+            ) : (
               <Card style={styles.emptyCard}>
                 <Text style={[styles.emptyTitle, { color: colors.text }]}>Sem exercícios hoje</Text>
                 <Text style={[styles.emptySubtitle, { color: colors.textSecondary }]}>
@@ -421,7 +323,7 @@ export default function DashboardScreen() {
             )}
 
             {/* Next Appointment Card */}
-            {nextAppointment && (
+            {nextAppointment ? (
               <Card style={styles.appointmentCard}>
                 <View style={styles.appointmentHeader}>
                   <View style={[styles.appointmentIcon, { backgroundColor: colors.info + '20' }]}>
@@ -438,13 +340,12 @@ export default function DashboardScreen() {
                       style={[styles.appointmentDetails, { color: colors.textSecondary }]}
                       numberOfLines={1}
                     >
-                      {nextAppointment.type} com {nextAppointment.professional_name}
+                      {nextAppointment.type} com {nextAppointment.professionalName}
                     </Text>
                   </View>
                 </View>
               </Card>
-            )}
-            {!nextAppointment && (
+            ) : (
               <Card style={styles.appointmentCard}>
                 <View style={styles.appointmentHeader}>
                   <View style={[styles.appointmentIcon, { backgroundColor: colors.surfaceHover }]}>

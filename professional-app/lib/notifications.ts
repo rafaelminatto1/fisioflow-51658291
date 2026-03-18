@@ -278,6 +278,10 @@ export async function sendTestNotification(): Promise<void> {
   });
 }
 
+import { fetchApi } from './api';
+
+// ... (existing code)
+
 // ============================================
 // CLOUD MESSAGING (Neon & Cloudflare)
 // ============================================
@@ -286,18 +290,20 @@ export async function sendPushNotification(
   targetToken: string,
   notification: PushNotificationData
 ): Promise<void> {
-  // This typically calls the Cloudflare Worker API to handle the push notification
+  // This calls the Cloudflare Worker API to handle the push notification
   console.log('Sending push notification:', notification);
 
-  // Example implementation:
-  // await fetch('https://api-pro.moocafisio.com.br/api/notifications/send', {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({
-  //     token: targetToken,
-  //     notification,
-  //   }),
-  // });
+  try {
+    await fetchApi('/api/notifications/send-push', {
+      method: 'POST',
+      data: {
+        token: targetToken,
+        notification,
+      },
+    });
+  } catch (error) {
+    console.error('Failed to send push notification:', error);
+  }
 }
 
 export async function sendAppointmentNotificationToPatient(

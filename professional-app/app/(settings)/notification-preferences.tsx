@@ -39,7 +39,10 @@ export default function NotificationPreferencesScreen() {
     if (!user?.id) return;
     setIsLoading(true);
     try {
-      const data = await fetchApi(`/api/settings/notifications/${user.id}`);
+      const data = await fetchApi<any>(`/api/settings/notifications/${user.id}`).catch(err => {
+        if (err.status === 404) return null;
+        throw err;
+      });
       
       if (data) {
         setPreferences(data);
@@ -77,9 +80,12 @@ export default function NotificationPreferencesScreen() {
     if (!user?.id || !preferences) return;
     setIsSaving(true);
     try {
-      await fetchApi(`/api/settings/notifications/${user.id}`, 'PUT', {
-        ...preferences,
-        updatedAt: new Date().toISOString(),
+      await fetchApi(`/api/settings/notifications/${user.id}`, {
+        method: 'PUT',
+        data: {
+          ...preferences,
+          updatedAt: new Date().toISOString(),
+        }
       });
       Alert.alert('Sucesso', 'Suas preferências foram salvas.');
     } catch (error) {
