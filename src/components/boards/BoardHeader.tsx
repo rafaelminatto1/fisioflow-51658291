@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Star, MoreHorizontal, Layout, List, Calendar,
-  Pencil, Archive, Table2, BookOpen,
+  Pencil, Archive,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,7 @@ import {
 import { cn } from '@/lib/utils';
 import type { Board } from '@/types/boards';
 
-export type BoardView = 'kanban' | 'list' | 'calendar' | 'table' | 'notebook';
+export type BoardView = 'kanban' | 'list' | 'calendar';
 
 interface BoardHeaderProps {
   board: Board;

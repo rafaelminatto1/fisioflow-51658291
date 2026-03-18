@@ -23,6 +23,7 @@ interface CalendarAppointmentCardProps {
     onDragEnd: () => void;
     onEditAppointment?: (appointment: Appointment) => void;
     onDeleteAppointment?: (appointment: Appointment) => void;
+    onDuplicateAppointment?: (appointment: Appointment) => void;
     onStatusChange?: (id: string, status: string) => void;
     onOpenPopover: (id: string | null) => void;
     isPopoverOpen: boolean;
@@ -48,6 +49,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
     onDragEnd,
     onEditAppointment,
     onDeleteAppointment,
+    onDuplicateAppointment,
     onStatusChange,
     onOpenPopover,
     isPopoverOpen,
@@ -74,7 +76,7 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
     const statusConfig = getSharedStatusConfig(normalizedStatus);
     
     // Use centralized calendar-specific styles
-    const calendarClassName = isOverbooked ? 'calendar-card-cancelado ring-2 ring-red-600 ring-offset-2' : statusConfig.calendarClassName;
+    const calendarClassName = isOverbooked ? 'calendar-card-excedente' : statusConfig.calendarClassName;
     const calendarAccent = isOverbooked ? 'bg-red-700' : statusConfig.calendarAccent;
 
     const handleMouseEnter = () => setIsHovered(true);
@@ -95,12 +97,20 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
     const duration = appointment.duration || 60;
     const draggable = isDraggable && !selectionMode && !isTouch;
 
+    const handleMoveToToday = () => {
+        if (onAppointmentReschedule) {
+            onAppointmentReschedule(appointment, new Date(), appointment.time);
+        }
+    };
+
     const cardContent = (
         <AppointmentContextMenu
             appointment={appointment}
             onStatusChange={(status) => onStatusChange?.(appointment.id, status)}
             onEdit={() => onEditAppointment?.(appointment)}
             onDelete={() => onDeleteAppointment?.(appointment)}
+            onDuplicate={() => onDuplicateAppointment?.(appointment)}
+            onMoveToToday={handleMoveToToday}
         >
             <AppointmentCard
                 ref={ref}

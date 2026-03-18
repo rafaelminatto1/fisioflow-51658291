@@ -2,6 +2,8 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+import * as Sentry from '@sentry/react-native';
+
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
@@ -24,7 +26,9 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
-    // TODO: Log to Crashlytics (Task 48.2)
+    
+    // Log to Sentry
+    Sentry.captureException(error, { extra: { errorInfo } });
   }
 
   private handleReset = () => {

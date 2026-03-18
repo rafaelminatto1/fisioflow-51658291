@@ -1,29 +1,41 @@
 import { useState } from 'react';
-import { Plus, RefreshCw, Star, Layout } from 'lucide-react';
+import { Plus, RefreshCw, Star, Layout, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { BoardCard } from '@/components/boards/BoardCard';
 import { BoardsEmptyState } from '@/components/boards/BoardsEmptyState';
 import { CreateBoardModal } from '@/components/boards/CreateBoardModal';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useBoards, useCreateBoard, useUpdateBoard, useDeleteBoard } from '@/hooks/useBoards';
 
 export default function BoardsHome() {
   const [createOpen, setCreateOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
   const { data: boards, isLoading, refetch } = useBoards();
   const createBoard = useCreateBoard();
   const updateBoard = useUpdateBoard();
   const deleteBoard = useDeleteBoard();
 
-  const starredBoards = boards?.filter(b => b.is_starred) ?? [];
   const allBoards = boards ?? [];
+  const filtered = search
+    ? allBoards.filter(b => b.name.toLowerCase().includes(search.toLowerCase()))
+    : allBoards;
+  const starredBoards = filtered.filter(b => b.is_starred);
 
   const handleStar = (id: string, starred: boolean) => {
     updateBoard.mutate({ id, is_starred: starred });
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Arquivar este board? As tarefas serão preservadas.')) {
-      deleteBoard.mutate(id);
+  const handleDelete = (id: string) => setDeletingId(id);
+
+  const handleDeleteConfirm = () => {
+    if (deletingId) {
+      deleteBoard.mutate(deletingId, { onSuccess: () => setDeletingId(null) });
     }
   };
 
@@ -63,6 +75,15 @@ export default function BoardsHome() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar boards..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="pl-9 h-9 w-48 text-sm"
+            />
+          </div>
           <Button variant="outline" size="icon" onClick={() => refetch()} title="Atualizar">
             <RefreshCw className="h-4 w-4" />
           </Button>
@@ -95,21 +116,26 @@ export default function BoardsHome() {
           {/* All boards */}
           <section className="space-y-3">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-              Todos os Boards
+              {search ? `Resultados (${filtered.length})` : 'Todos os Boards'}
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {allBoards.map(board => (
-                <BoardCard key={board.id} board={board} onStar={handleStar} onDelete={handleDelete} />
-              ))}
-              {/* Create new board tile */}
-              <button
-                onClick={() => setCreateOpen(true)}
-                className="h-[100px] rounded-xl border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-colors"
-              >
-                <Plus className="h-6 w-6" />
-                <span className="text-xs font-medium">Novo Board</span>
-              </button>
-            </div>
+            {filtered.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4">Nenhum board encontrado para "{search}".</p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {filtered.map(board => (
+                  <BoardCard key={board.id} board={board} onStar={handleStar} onDelete={handleDelete} />
+                ))}
+                {!search && (
+                  <button
+                    onClick={() => setCreateOpen(true)}
+                    className="h-[100px] rounded-xl border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary/50 hover:text-primary hover:bg-primary/5 transition-colors"
+                  >
+                    <Plus className="h-6 w-6" />
+                    <span className="text-xs font-medium">Novo Board</span>
+                  </button>
+                )}
+              </div>
+            )}
           </section>
         </>
       )}
@@ -120,6 +146,24 @@ export default function BoardsHome() {
         onSubmit={handleCreate}
         isLoading={createBoard.isPending}
       />
+
+      {/* Delete confirm */}
+      <AlertDialog open={!!deletingId} onOpenChange={() => setDeletingId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Arquivar board?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O board será arquivado. As tarefas serão preservadas e podem ser recuperadas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} disabled={deleteBoard.isPending}>
+              Arquivar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

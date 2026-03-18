@@ -10,7 +10,16 @@ import { useAuthStore } from '@/store/auth';
 import { useColors, useColorScheme } from '@/hooks/useColorScheme';
 import * as SplashScreen from 'expo-splash-screen';
 import { registerForPushNotificationsAsync } from '@/lib/notifications';
+import * as Sentry from '@sentry/react-native';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+
+// Initialize Sentry
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN || 'https://placeholder@sentry.io/placeholder',
+  debug: __DEV__,
+  enableNative: !__DEV__,
+  tracesSampleRate: 1.0,
+});
 
 SplashScreen.preventAutoHideAsync();
 

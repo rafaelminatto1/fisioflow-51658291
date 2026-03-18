@@ -1182,9 +1182,21 @@ All colors MUST be HSL.
     @apply opacity-50 scale-95 shadow-sm;
   }
 
+  /* 🚨 Conflito/Excedente (Padrão 2026) */
+  .calendar-card-excedente {
+    background: linear-gradient(135deg, hsl(0 84% 60%) 0%, hsl(350 89% 50%) 100%) !important;
+    @apply text-white border-red-400 shadow-2xl shadow-red-500/40 ring-2 ring-red-500 ring-offset-2;
+    animation: danger-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes danger-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.95; transform: scale(0.995); }
+  }
+
   /* Card com excesso de capacidade */
   .calendar-appointment-card.over-capacity {
-    @apply ring-2 ring-yellow-300 ring-offset-2;
+    @apply ring-4 ring-red-500/30 ring-offset-2 shadow-2xl;
   }
 
   /* Wrapper do card para positioning - respeitando grid */

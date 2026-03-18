@@ -340,4 +340,104 @@ app.get('/pending-confirmations', requireAuth, async (c) => {
   return c.json({ data: rows });
 });
 
+// ===== WEBHOOK (entrada de mensagens do Meta) =====
+
+// GET /api/whatsapp/webhook — validação do token pelo Meta
+app.get('/webhook', async (c) => {
+  const mode = c.req.query('hub.mode');
+  const token = c.req.query('hub.verify_token');
+  const challenge = c.req.query('hub.challenge');
+
+  const verifyToken = (c.env as any).WHATSAPP_VERIFY_TOKEN ?? 'fisioflow_webhook_token';
+
+  if (mode === 'subscribe' && token === verifyToken) {
+    return new Response(challenge, { status: 200 });
+  }
+  return c.json({ error: 'Token de verificação inválido' }, 403);
+});
+
+type IntentType = 'schedule' | 'cancel' | 'reschedule' | 'question' | 'other';
+
+interface ParsedIntent {
+  type: IntentType;
+  entities: Record<string, unknown>;
+}
+
+function classifyIntentLocal(text: string): ParsedIntent {
+  const lower = text.toLowerCase();
+  if (/agendar|marcar|consulta|horário|disponível/.test(lower)) return { type: 'schedule', entities: {} };
+  if (/cancelar|desmarcar/.test(lower)) return { type: 'cancel', entities: {} };
+  if (/remarcar|reagendar|mudar horário/.test(lower)) return { type: 'reschedule', entities: {} };
+  if (/\?|como|quando|onde|qual|dúvida|informação/.test(lower)) return { type: 'question', entities: {} };
+  return { type: 'other', entities: {} };
+}
+
+async function sendWhatsAppReply(env: any, to: string, text: string): Promise<void> {
+  const phoneId = env.WHATSAPP_PHONE_NUMBER_ID;
+  const token = env.WHATSAPP_ACCESS_TOKEN;
+  if (!phoneId || !token) return;
+
+  await fetch(`https://graph.facebook.com/v19.0/${phoneId}/messages`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      to,
+      type: 'text',
+      text: { body: text },
+    }),
+  });
+}
+
+// POST /api/whatsapp/webhook — receber mensagens do Meta
+app.post('/webhook', async (c) => {
+  const body = (await c.req.json().catch(() => ({}))) as Record<string, unknown>;
+
+  // Confirmar recebimento ao Meta
+  c.executionCtx?.waitUntil(processWhatsAppWebhook(body, c.env));
+
+  return c.json({ status: 'ok' });
+});
+
+async function processWhatsAppWebhook(body: Record<string, unknown>, env: any): Promise<void> {
+  try {
+    const entry = (body.entry as any[])?.[0];
+    const changes = entry?.changes?.[0];
+    const value = changes?.value;
+    const messages = value?.messages as any[];
+
+    if (!messages?.length) return;
+
+    const msg = messages[0];
+    const from: string = msg.from ?? '';
+    const text: string = msg.text?.body ?? '';
+
+    if (!from || !text) return;
+
+    const intent = classifyIntentLocal(text);
+
+    let reply = '';
+    switch (intent.type) {
+      case 'schedule':
+        reply = 'Olá! Gostaria de agendar uma consulta? Por favor, informe seu nome completo e preferência de horário (manhã/tarde) para verificarmos disponibilidade.';
+        break;
+      case 'cancel':
+        reply = 'Entendido! Para cancelar sua consulta, preciso do seu CPF ou data do agendamento. Pode informar?';
+        break;
+      case 'reschedule':
+        reply = 'Claro! Para remarcar, preciso do seu CPF e da nova data/horário desejado. Pode informar?';
+        break;
+      case 'question':
+        reply = 'Olá! Em que posso ajudar? Posso informar sobre agendamentos, horários e serviços da clínica.';
+        break;
+      default:
+        reply = 'Olá! Sou o assistente da clínica. Posso ajudar com agendamentos, cancelamentos ou informações. Como posso ajudar?';
+    }
+
+    await sendWhatsAppReply(env, from, reply);
+  } catch (err) {
+    console.error('[WhatsApp Webhook] Erro ao processar mensagem:', err);
+  }
+}
+
 export { app as whatsappRoutes };
