@@ -85,11 +85,11 @@ export default defineConfig(({ mode }) => {
       cssTarget: 'es2020',
       sourcemap: true,
       // rolldownOptions: API nativa do Rolldown (Vite 8)
-      // manualChunks do rollupOptions não funciona corretamente com Rolldown
-      // (código vai para o chunk mas exports não são re-exportados → AnimatePresence is not defined)
+      // advancedChunks é deprecated — usar codeSplitting.groups (API nova)
+      // manualChunks do rollupOptions não funciona com Rolldown (exports não re-exportados)
       rolldownOptions: {
         output: {
-          advancedChunks: {
+          codeSplitting: {
             groups: [
               {
                 name: 'react-vendor',

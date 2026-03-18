@@ -1,22 +1,7 @@
 import { create } from 'zustand';
-import { authApi, AuthResponse } from '@/lib/auth-api';
+import { authApi } from '@/lib/auth-api';
 import { auditLogger } from '@/lib/services/auditLogger';
-
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: 'patient' | 'professional' | 'admin' | 'fisioterapeuta';
-  clinicId?: string;
-  organizationId?: string;
-  avatarUrl?: string;
-  specialty?: string;
-  crefito?: string;
-  phone?: string;
-  clinicName?: string;
-  clinicAddress?: string;
-  clinicPhone?: string;
-}
+import { User, UserRole } from '@/types/auth';
 
 interface AuthState {
   user: User | null;
@@ -34,9 +19,10 @@ interface AuthState {
   clearSession: () => void;
 }
 
-export const unlockSessionWithPIN = async (pin: string) => {
-  // Global helper or state action
-  return true;
+const AUTHORIZED_ROLES: UserRole[] = ['professional', 'fisioterapeuta', 'admin'];
+
+const isAuthorized = (role: string): boolean => {
+  return AUTHORIZED_ROLES.includes(role as UserRole);
 };
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -47,14 +33,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isLocked: false,
 
   signIn: async (email: string, password: string) => {
-    console.log('[Auth] Tentando fazer login com:', email);
     set({ isLoading: true, error: null });
     try {
       const response = await authApi.login(email, password);
-      console.log('[Auth] Login bem-sucedido. UID:', response.user.id);
 
-      const userRole = response.user.role;
-      if (userRole !== 'professional' && userRole !== 'fisioterapeuta' && userRole !== 'admin') {
+      if (!isAuthorized(response.user.role)) {
         await authApi.logout();
         throw new Error('Acesso restrito a profissionais');
       }
@@ -63,17 +46,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         id: response.user.id,
         email: response.user.email || '',
         name: response.user.name || 'Profissional',
-        role: userRole as any,
+        role: response.user.role as UserRole,
         clinicId: response.user.clinicId,
         organizationId: response.user.organizationId || 'org-default',
         avatarUrl: response.user.avatarUrl,
         specialty: response.user.specialty,
         crefito: response.user.crefito,
       };
-
-      console.log('[Auth] Login completo. Usuario:', user);
       
-      // Log audit event
       await auditLogger.logLogin(user.id);
 
       set({
@@ -82,7 +62,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isLoading: false,
       });
     } catch (error: any) {
-      console.error('[Auth] Erro no login:', error);
       set({ error: error.message || 'Erro ao fazer login', isLoading: false });
       throw error;
     }
@@ -130,8 +109,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const userData = await authApi.getMe();
       
-      const userRole = userData.role;
-      if (userRole !== 'professional' && userRole !== 'fisioterapeuta' && userRole !== 'admin') {
+      if (!isAuthorized(userData.role)) {
         await authApi.logout();
         set({
           user: null,
@@ -145,7 +123,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         id: userData.id,
         email: userData.email || '',
         name: userData.name || 'Profissional',
-        role: userRole as any,
+        role: userData.role as UserRole,
         clinicId: userData.clinicId,
         organizationId: userData.organizationId || 'org-default',
         avatarUrl: userData.avatarUrl,
@@ -159,7 +137,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isLoading: false,
       });
     } catch (error) {
-      // Falha ao recuperar sessão, limpa tudo
       set({
         user: null,
         isAuthenticated: false,
