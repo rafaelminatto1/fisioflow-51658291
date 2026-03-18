@@ -84,32 +84,31 @@ export default defineConfig(({ mode }) => {
       target: 'es2020',
       cssTarget: 'es2020',
       sourcemap: true,
-      rollupOptions: {
+      // rolldownOptions: API nativa do Rolldown (Vite 8)
+      // manualChunks do rollupOptions não funciona corretamente com Rolldown
+      // (código vai para o chunk mas exports não são re-exportados → AnimatePresence is not defined)
+      rolldownOptions: {
         output: {
-          manualChunks: (id) => {
-            if (id.includes('node_modules')) {
-              const parts = id.split('node_modules/');
-              const lastPart = parts[parts.length - 1];
-              const packageName = lastPart.startsWith('@')
-                ? lastPart.split('/').slice(0, 2).join('/')
-                : lastPart.split('/')[0];
-
-              // React core + framer-motion MUST be in the same chunk
-              // to avoid "AnimatePresence is not defined" runtime errors
-              if (packageName === 'react' ||
-                  packageName === 'react-dom' ||
-                  packageName === 'scheduler' ||
-                  packageName === 'react-router' ||
-                  packageName === 'react-router-dom' ||
-                  packageName === 'framer-motion') {
-                return 'react-vendor';
-              }
-
-              if (packageName.includes('jspdf')) return 'pdf-generator';
-              if (packageName.includes('react-konva') || packageName.includes('konva')) return 'canvas-vendor';
-            }
-          }
-        }
+          advancedChunks: {
+            groups: [
+              {
+                name: 'react-vendor',
+                test: /[\\/]node_modules[\\/](react|react-dom|scheduler|react-router|react-router-dom|framer-motion)[\\/]/,
+                priority: 20,
+              },
+              {
+                name: 'pdf-generator',
+                test: /[\\/]node_modules[\\/](jspdf|html2canvas)[\\/]/,
+                priority: 10,
+              },
+              {
+                name: 'canvas-vendor',
+                test: /[\\/]node_modules[\\/](react-konva|konva)[\\/]/,
+                priority: 10,
+              },
+            ],
+          },
+        },
       }
     },
     optimizeDeps: {
