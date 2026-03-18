@@ -432,9 +432,3 @@ export function ExercisePlayer({ prescription, patientId, onComplete, onExit }: 
     );
 }
 
-// Import icons needed
-import { ArrowRight, FileText, Dumbbell } from 'lucide-react';
-
-
-// Import icons needed
-import { ArrowRight, FileText, Dumbbell } from 'lucide-react';

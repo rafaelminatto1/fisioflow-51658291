@@ -2,7 +2,8 @@
 // Type definitions for @mediapipe/pose (UMD module)
 
 import React, { useEffect, useRef, useState } from 'react';
-import { drawConnectors, drawLandmarks } from '@mediapipe/drawing_utils';
+import '@mediapipe/drawing_utils';
+const { drawConnectors, drawLandmarks } = globalThis as any;
 import { calculateAngle, POSE_LANDMARKS } from '@/utils/geometry';
 import { useToast } from '@/components/ui/use-toast';
 import { Card } from '@/components/ui/card';

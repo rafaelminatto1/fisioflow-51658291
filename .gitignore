@@ -222,3 +222,4 @@ functions/.env*claude-skills/repo
 
 *storybook.log
 storybook-static
+.sentryclirc

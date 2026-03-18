@@ -153,7 +153,7 @@ export { PasswordInput } from './password-input';
 export { NameInput } from './name-input';
 export { DateInputBR } from './date-input-br';
 export { DatePicker } from './date-picker';
-export { DateRangePicker } from './date-range-picker';
+export { DatePickerWithRange as DateRangePicker } from './date-range-picker';
 export { InputOTP } from './input-otp';
 
 // Comboboxes
@@ -175,4 +175,5 @@ export { SmartTextarea } from './SmartTextarea';
 export { PremiumThemeToggle } from './PremiumThemeToggle';
 export { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog';
 export { AppLoadingSkeleton } from './AppLoadingSkeleton';
-export { NetworkStatus, OfflineIndicator } from './network-status';
+export { NetworkStatus } from './network-status';
+export { OfflineIndicator } from './OfflineIndicator';
