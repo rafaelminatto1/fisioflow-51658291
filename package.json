@@ -312,6 +312,7 @@
     "@capgo/capacitor-native-biometric": "^8.3.1",
     "@chromatic-com/storybook": "^5.0.1",
     "@eslint/js": "^9.32.0",
+    "@fisioflow/db": "workspace:^",
     "@playwright/test": "^1.58.2",
     "@sentry/vite-plugin": "^5.1.1",
     "@storybook/addon-a11y": "^10.2.19",

@@ -73,6 +73,9 @@ import { webhooksRoutes } from './routes/webhooks';
 import { patientPortalRoutes } from './routes/patientPortal';
 import { messagingRoutes } from './routes/messaging';
 import { boardsRoutes } from './routes/boards';
+import { standardizedTestsRoutes } from './routes/standardizedTests';
+import { commissionsRoutes } from './routes/commissions';
+import { nfseRoutes } from './routes/nfse';
 import { verifyToken } from './lib/auth';
 import { getRawSql } from './lib/db';
 
@@ -197,6 +200,9 @@ app.route('/api/webhooks', webhooksRoutes);
 app.route('/api/patient-portal', patientPortalRoutes);
 app.route('/api/messaging', messagingRoutes);
 app.route('/api/boards', boardsRoutes);
+app.route('/api/standardized-tests', standardizedTestsRoutes);
+app.route('/api/commissions', commissionsRoutes);
+app.route('/api/nfse', nfseRoutes);
 
 // REALTIME
 app.get('/api/realtime', async (c) => {

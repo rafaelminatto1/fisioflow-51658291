@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { boardsApi } from '@/lib/api/workers-client';
 import type { Board, BoardColumn } from '@/types/boards';
+import type { Tarefa } from '@/types/tarefas';
 
 export function useBoardColumns(boardId: string | undefined) {
   return useQuery({
@@ -124,7 +125,7 @@ export function useBoardTarefas(boardId: string | undefined) {
     queryKey: ['boards', boardId, 'tarefas'],
     queryFn: async () => {
       const result = await boardsApi.listTarefas(boardId!);
-      return (result.data ?? []) as unknown as Record<string, unknown>[];
+      return (result.data ?? []) as unknown as Tarefa[];
     },
     enabled: !!boardId,
     staleTime: 1000 * 60 * 2,

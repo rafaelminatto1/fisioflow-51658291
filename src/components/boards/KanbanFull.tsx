@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, Suspense } from 'react';
 import { DragDropContext, Droppable, DropResult } from '@hello-pangea/dnd';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Columns } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
@@ -45,6 +45,7 @@ export function KanbanFull({ boardId, columns, tarefas, teamMembers = [], isLoad
   const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
 
   // Tarefas grouped by column_id, filtered by search
+  // Orphaned tasks (null/undefined column_id) are assigned to the first column
   const grouped = useMemo(() => {
     const filtered = search
       ? tarefas.filter(t =>
@@ -53,13 +54,14 @@ export function KanbanFull({ boardId, columns, tarefas, teamMembers = [], isLoad
       )
       : tarefas;
 
+    const firstColId = sortedColumns[0]?.id;
     return columns.reduce((acc, col) => {
       acc[col.id] = filtered
-        .filter(t => t.column_id === col.id)
+        .filter(t => t.column_id === col.id || (!t.column_id && col.id === firstColId))
         .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
       return acc;
     }, {} as Record<string, Tarefa[]>);
-  }, [tarefas, columns, search]);
+  }, [tarefas, columns, sortedColumns, search]);
 
   // Sort columns by order_index
   const sortedColumns = useMemo(
@@ -173,11 +175,22 @@ export function KanbanFull({ boardId, columns, tarefas, teamMembers = [], isLoad
             className="pl-9 h-8 text-sm"
           />
         </div>
-        <Button size="sm" onClick={() => handleAddTask(sortedColumns[0]?.id ?? '')}>
+        <Button size="sm" onClick={() => handleAddTask(sortedColumns[0]?.id ?? '')} disabled={sortedColumns.length === 0}>
           <Plus className="h-4 w-4 mr-1.5" />
           Nova Tarefa
         </Button>
       </div>
+
+      {/* Empty state — no columns yet */}
+      {sortedColumns.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+          <Columns className="h-12 w-12 text-muted-foreground/40" />
+          <div>
+            <p className="font-semibold text-muted-foreground">Nenhuma coluna criada</p>
+            <p className="text-sm text-muted-foreground/70 mt-1">Use o botão abaixo para adicionar sua primeira coluna.</p>
+          </div>
+        </div>
+      )}
 
       {/* Kanban board */}
       <DragDropContext onDragEnd={handleDragEnd}>

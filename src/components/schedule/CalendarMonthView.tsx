@@ -14,6 +14,7 @@ interface CalendarMonthViewProps {
     onTimeSlotClick?: (date: Date, time: string) => void;
     onEditAppointment?: (appointment: Appointment) => void;
     onDeleteAppointment?: (appointment: Appointment) => void;
+    onDuplicateAppointment?: (appointment: Appointment) => void;
     onStatusChange?: (id: string, status: string) => void;
     // Helpers
     getAppointmentsForDate: (date: Date) => Appointment[];
@@ -29,6 +30,7 @@ const CalendarMonthView = memo(({
     onTimeSlotClick,
     onEditAppointment,
     onDeleteAppointment,
+    onDuplicateAppointment,
     onStatusChange,
     getAppointmentsForDate,
     getStatusColor,
@@ -136,6 +138,8 @@ const CalendarMonthView = memo(({
                                                 onStatusChange={(status) => onStatusChange?.(apt.id, status)}
                                                 onEdit={() => onEditAppointment?.(apt)}
                                                 onDelete={() => onDeleteAppointment?.(apt)}
+                                                onDuplicate={() => onDuplicateAppointment?.(apt)}
+                                                onMoveToToday={() => {/* Optionally implement move to today from month view */}}
                                             >
                                                 <AppointmentQuickView
                                                     appointment={apt}

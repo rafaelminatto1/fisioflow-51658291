@@ -60,13 +60,16 @@ export function useUpdateBoard() {
       const result = await boardsApi.update(id, data);
       return result.data as unknown as Board;
     },
-    onSuccess: (board) => {
+    onSuccess: (board, variables) => {
       queryClient.setQueryData(BOARDS_QUERY_KEY, (old: Board[] | undefined) =>
         old ? old.map(b => b.id === board.id ? { ...b, ...board } : b) : old
       );
       queryClient.setQueryData(['boards', board.id], (old: Board | undefined) =>
         old ? { ...old, ...board } : board
       );
+      if ('name' in variables) {
+        toast.success('Board renomeado.');
+      }
     },
     onError: (error: Error) => {
       toast.error('Erro ao atualizar board: ' + error.message);
