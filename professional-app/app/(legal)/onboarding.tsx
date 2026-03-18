@@ -19,7 +19,7 @@ import Constants from 'expo-constants';
 import { LEGAL_VERSIONS } from '@/constants/legalVersions';
 import MedicalDisclaimerModal from '@/components/legal/MedicalDisclaimerModal';
 import { authApi } from '@/lib/auth-api';
-import { config } from '@/lib/config';
+import { fetchApi } from '@/lib/api';
 
 type OnboardingStep = 'welcome' | 'privacy' | 'terms' | 'disclaimer' | 'biometric' | 'complete';
 
@@ -30,23 +30,6 @@ interface OnboardingState {
   disclaimerAccepted: boolean;
   biometricSetup: boolean;
 }
-
-const fetchApi = async (endpoint: string, method: string = 'GET', body?: any) => {
-  const token = await authApi.getToken();
-  if (!token) throw new Error('Not authenticated');
-
-  const res = await fetch(`${config.apiUrl}${endpoint}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: body ? JSON.stringify(body) : undefined
-  });
-
-  if (!res.ok) throw new Error(`API Error: ${res.status}`);
-  return res.json();
-};
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -70,7 +53,7 @@ export default function OnboardingScreen() {
       const currentUser = await authApi.getMe();
       setUser(currentUser);
       
-      const res = await fetchApi(`/api/users/${currentUser.id}`);
+      const res = await fetchApi<any>(`/api/users/${currentUser.id}`);
       if (res.data?.onboardingComplete) {
         router.replace('/(tabs)');
       }
@@ -90,24 +73,30 @@ export default function OnboardingScreen() {
 
   const storeAcceptance = async (type: string, version: string) => {
     if (!user) throw new Error('No authenticated user');
-    await fetchApi('/api/consents/accept', 'POST', {
-      userId: user.id,
-      type,
-      version,
-      deviceInfo: getDeviceInfo()
+    await fetchApi('/api/consents/accept', {
+      method: 'POST',
+      data: {
+        userId: user.id,
+        type,
+        version,
+        deviceInfo: getDeviceInfo()
+      }
     });
   };
 
   const completeOnboarding = async () => {
     if (!user) throw new Error('No authenticated user');
 
-    await fetchApi(`/api/users/${user.id}`, 'PUT', {
-      onboardingComplete: true,
-      onboardingCompletedAt: new Date().toISOString(),
-      privacyPolicyVersion: LEGAL_VERSIONS.PRIVACY_POLICY,
-      termsOfServiceVersion: LEGAL_VERSIONS.TERMS_OF_SERVICE,
-      medicalDisclaimerVersion: LEGAL_VERSIONS.MEDICAL_DISCLAIMER,
-      deviceInfo: getDeviceInfo(),
+    await fetchApi(`/api/users/${user.id}`, {
+      method: 'PUT',
+      data: {
+        onboardingComplete: true,
+        onboardingCompletedAt: new Date().toISOString(),
+        privacyPolicyVersion: LEGAL_VERSIONS.PRIVACY_POLICY,
+        termsOfServiceVersion: LEGAL_VERSIONS.TERMS_OF_SERVICE,
+        medicalDisclaimerVersion: LEGAL_VERSIONS.MEDICAL_DISCLAIMER,
+        deviceInfo: getDeviceInfo(),
+      }
     });
   };
 

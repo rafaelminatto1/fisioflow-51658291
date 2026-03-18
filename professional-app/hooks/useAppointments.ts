@@ -119,10 +119,15 @@ export function useAppointments(options?: UseAppointmentsOptions) {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
+  console.log('[useAppointments] user:', user?.id, 'organizationId:', user?.organizationId, 'options:', options);
+
   const appointments = useQuery({
     queryKey: ['appointments_v2', user?.id, options],
-    queryFn: () => {
-      if (!user?.id) return [];
+    queryFn: async () => {
+      if (!user?.id) {
+        console.log('[useAppointments] No user, returning empty array');
+        return [];
+      }
 
       const dateFrom = options?.startDate ? formatDateForAPI(options.startDate) : undefined;
       const dateTo = options?.endDate ? formatDateForAPI(options.endDate) : undefined;
@@ -131,14 +136,24 @@ export function useAppointments(options?: UseAppointmentsOptions) {
       // If passing undefined, it fetches all statuses
       const statusParam = options?.status ? mapToApiStatus(options.status as any) : undefined;
 
-      return getAppointments(user.organizationId, {
-        dateFrom,
-        dateTo,
-        therapistId: user.id,
-        status: statusParam,
-        patientId: options?.patientId,
-        limit: options?.limit || 100,
-      }).then(data => data.map(mapApiAppointment));
+      console.log('[useAppointments] Fetching appointments for org:', user.organizationId, 'therapistId:', user.id);
+      try {
+        const data = await getAppointments(user.organizationId, {
+          dateFrom,
+          dateTo,
+          therapistId: user.id,
+          status: statusParam,
+          patientId: options?.patientId,
+          limit: options?.limit || 100,
+        });
+        console.log('[useAppointments] Raw API response:', data?.length, 'appointments');
+        const mapped = data.map(mapApiAppointment);
+        console.log('[useAppointments] Mapped appointments:', mapped.length);
+        return mapped;
+      } catch (error) {
+        console.error('[useAppointments] Error:', error);
+        throw error;
+      }
     },
     enabled: !!user,
     staleTime: 1000 * 60 * 5, // 5 minutes

@@ -16,8 +16,7 @@ import { useColors } from '@/hooks/useColorScheme';
 import { useAuthStore } from '@/store/auth';
 import { Button, Card } from '@/components';
 import { useHaptics } from '@/hooks/useHaptics';
-import { authApi } from '@/lib/auth-api';
-import { config } from '@/lib/config';
+import { fetchApi } from '@/lib/api';
 
 export default function ChangePasswordScreen() {
   const colors = useColors();
@@ -74,24 +73,13 @@ export default function ChangePasswordScreen() {
 
     setIsLoading(true);
     try {
-      // Call Neon Auth API to change password
-      const token = await authApi.getToken();
-      const response = await fetch(`${config.apiUrl}/api/auth/change-password`, {
+      await fetchApi('/api/auth/change-password', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
+        data: {
           currentPassword,
           newPassword
-        })
+        }
       });
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.message || 'Erro ao alterar senha');
-      }
 
       success();
       Alert.alert(

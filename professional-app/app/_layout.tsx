@@ -14,12 +14,17 @@ import * as Sentry from '@sentry/react-native';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 // Initialize Sentry
-Sentry.init({
-  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN || 'https://placeholder@sentry.io/placeholder',
-  debug: __DEV__,
-  enableNative: !__DEV__,
-  tracesSampleRate: 1.0,
-});
+const sentryDsn = process.env.EXPO_PUBLIC_SENTRY_DSN;
+if (sentryDsn && sentryDsn.startsWith('https://')) {
+  Sentry.init({
+    dsn: sentryDsn,
+    debug: __DEV__,
+    enableNative: !__DEV__,
+    tracesSampleRate: 1.0,
+  });
+} else if (__DEV__) {
+  console.log('Sentry disabled: valid DSN not found in environment');
+}
 
 SplashScreen.preventAutoHideAsync();
 

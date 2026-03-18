@@ -4,63 +4,40 @@ import { config } from '@/lib/config';
 
 export interface FinancialMetrics {
   totalRevenue: number;
-  pendingRevenue: number;
-  paidRevenue: number;
-  sessionsCount: number;
-  patientsCount: number;
-  newPatientsThisMonth: number;
-  revenueByDay: Array<{ date: string; total: string | number }>;
-}
+  import { useQuery } from '@tanstack/react-query';
+  import { fetchApi } from '@/lib/api';
 
-export interface UseFinancialMetricsOptions {
-  startDate?: string;
-  endDate?: string;
-  enabled?: boolean;
-}
-
-const API_URL = config.apiUrl;
-
-async function fetchApi(endpoint: string) {
-  const token = await authApi.getToken();
-  if (!token) throw new Error('Not authenticated');
-
-  const res = await fetch(`${API_URL}${endpoint}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    }
-  });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: 'Request failed' }));
-    throw new Error(error.message || `API Error: ${res.status}`);
+  export interface FinancialMetrics {
+  ...
+    revenueByDay: Array<{ date: string; total: string | number }>;
   }
-  return res.json();
-}
 
-/**
- * Hook to fetch financial metrics for reports
- */
-export function useFinancialMetrics(options?: UseFinancialMetricsOptions) {
-  const { startDate, endDate, enabled = true } = options || {};
+  export interface UseFinancialMetricsOptions {
+    startDate?: string;
+    endDate?: string;
+    enabled?: boolean;
+  }
 
-  // Default to current month if not provided
-  const start = startDate || new Date(new Date().setDate(1)).toISOString().split('T')[0];
-  const end = endDate || new Date().toISOString().split('T')[0];
+  /**
+   * Hook to fetch financial metrics for reports
+   */
+  export function useFinancialMetrics(options?: UseFinancialMetricsOptions) {
+    const { startDate, endDate, enabled = true } = options || {};
 
-  const params = new URLSearchParams();
-  params.set('startDate', start);
-  params.set('endDate', end);
+    // Default to current month if not provided
+    const start = startDate || new Date(new Date().setDate(1)).toISOString().split('T')[0];
+    const end = endDate || new Date().toISOString().split('T')[0];
 
-  return useQuery<FinancialMetrics>({
-    queryKey: ['financial-metrics', start, end],
-    queryFn: () => fetchApi(`/api/financial-metrics?${params.toString()}`),
-    enabled,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchOnWindowFocus: true,
-  });
-}
+    return useQuery<FinancialMetrics>({
+      queryKey: ['financial-metrics', start, end],
+      queryFn: () => fetchApi('/api/financial-metrics', {
+          params: { startDate: start, endDate: end }
+      }),
+      enabled,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: true,
+    });
+  }
 
 /**
  * Hook to get formatted revenue data for charts

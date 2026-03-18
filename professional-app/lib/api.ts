@@ -174,6 +174,13 @@ async function getAuthToken(): Promise<string> {
   if (!token) {
     throw new Error('User not authenticated');
   }
+  if (typeof token !== 'string') {
+    console.error('[API] Invalid token type:', typeof token);
+    throw new Error('Invalid authentication token');
+  }
+  if (token.length < 10) {
+    console.error('[API] Token suspiciously short:', token.length);
+  }
   return token;
 }
 
@@ -207,7 +214,21 @@ export async function fetchApi<T>(
   const token = await getAuthToken();
   const { data, params, timeout = 10000, ...fetchInit } = options;
 
-  let url = `${config.apiUrl}${endpoint}`;
+  let baseUrl = config.apiUrl;
+  // Robust joining: ensure no double slashes or missing slashes
+  // and handle potential double /api
+  if (baseUrl.endsWith('/') && endpoint.startsWith('/')) {
+    baseUrl = baseUrl.slice(0, -1);
+  } else if (!baseUrl.endsWith('/') && !endpoint.startsWith('/')) {
+    baseUrl = baseUrl + '/';
+  }
+  
+  // Handle double /api if apiUrl ends with /api and endpoint starts with /api
+  if (baseUrl.endsWith('/api') && endpoint.startsWith('/api')) {
+    baseUrl = baseUrl.slice(0, -4);
+  }
+
+  let url = `${baseUrl}${endpoint}`;
   
   if (params) {
     const searchParams = new URLSearchParams();
@@ -225,13 +246,16 @@ export async function fetchApi<T>(
   const method = fetchInit.method || (data ? 'POST' : 'GET');
   const headers = {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`,
+    'Authorization': `Bearer ${token.trim()}`,
     ...fetchInit.headers,
   };
 
   const body = data ? JSON.stringify(cleanRequestData(data)) : undefined;
 
   console.log(`[API] ${method} ${url}`);
+  console.log(`[API] Authorization: Bearer ${token.substring(0, 10)}... (length: ${token.length})`);
+  console.log(`[API] Request params:`, params);
+  console.log(`[API] Request data:`, data ? JSON.stringify(data).substring(0, 200) : 'none');
 
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
@@ -265,7 +289,9 @@ export async function fetchApi<T>(
       throw new ApiError(endpoint, response.status, errorMessage);
     }
 
-    return response.json() as Promise<T>;
+    const responseData = await response.json();
+    console.log(`[API] Response from ${endpoint}:`, JSON.stringify(responseData).substring(0, 500));
+    return responseData as Promise<T>;
   } catch (error: any) {
     clearTimeout(id);
     if (error.name === 'AbortError') {

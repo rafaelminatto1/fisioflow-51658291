@@ -4,10 +4,8 @@
  * Integra com Expo Push API para enviar notificações push reais
  */
 
-import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
-import { authApi } from '@/lib/auth-api';
-import { config } from '@/lib/config';
+import { fetchApi } from '@/lib/api';
 import { fisioLogger } from '@/lib/errors/logger';
 
 // ============================================
@@ -134,15 +132,9 @@ class PushNotificationService {
     type?: string;
   }): Promise<void> {
     try {
-      const token = await authApi.getToken();
-      
-      const response = await fetch(`${config.apiUrl}/api/notifications/send`, {
+      await fetchApi('/api/notifications/send', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
+        data: {
           userId,
           notification: {
             title: notification.title,
@@ -150,12 +142,8 @@ class PushNotificationService {
             data: notification.data,
             type: notification.type || 'info',
           }
-        })
+        }
       });
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
 
       fisioLogger.info('Notification sent to user', { userId, type: notification.type }, 'PushNotificationService');
     } catch (error) {
@@ -174,15 +162,9 @@ class PushNotificationService {
     type?: string;
   }): Promise<void> {
     try {
-      const token = await authApi.getToken();
-      
-      const response = await fetch(`${config.apiUrl}/api/notifications/send-batch`, {
+      await fetchApi('/api/notifications/send-batch', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
+        data: {
           userIds,
           notification: {
             title: notification.title,
@@ -190,12 +172,8 @@ class PushNotificationService {
             data: notification.data,
             type: notification.type || 'info',
           }
-        })
+        }
       });
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
 
       fisioLogger.info('Notification sent to users', { count: userIds.length, type: notification.type }, 'PushNotificationService');
     } catch (error) {
@@ -299,19 +277,13 @@ class PushNotificationService {
    */
   async registerPushToken(token: string, deviceName?: string): Promise<void> {
     try {
-      const authToken = await authApi.getToken();
-      
-      await fetch(`${config.apiUrl}/api/push-tokens`, {
+      await fetchApi('/api/push-tokens', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${authToken}`
-        },
-        body: JSON.stringify({
+        data: {
           expo_push_token: token,
           device_name: deviceName || Platform.OS,
           device_type: Platform.OS,
-        })
+        }
       });
 
       fisioLogger.info('Push token registered', { token: token.substring(0, 20) + '...' }, 'PushNotificationService');
