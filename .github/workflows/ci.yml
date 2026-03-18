@@ -227,9 +227,17 @@ jobs:
           pnpm-version: ${{ env.PNPM_VERSION }}
 
       - name: Run Migrations
-        run: pnpm db:push
+        run: pnpm db:safe-migrate
         env:
-          DATABASE_URL: ${{ steps.create-branch.outputs.db_url_with_pooler }}
+          DATABASE_DIRECT_URL: ${{ steps.create-branch.outputs.db_url }}
+
+      - name: Schema Diff
+        uses: neondatabase/schema-diff-action@v6.0.4
+        with:
+          base_branch: production
+          compare_branch: preview/pr-${{ github.event.number }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          project_id: ${{ vars.NEON_PROJECT_ID }}
 
   # =====================================================================
   # LIGHTHOUSE CI
