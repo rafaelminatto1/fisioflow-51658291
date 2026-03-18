@@ -131,80 +131,82 @@ export const DateTimeSection = ({
     const exceedsCapacity = conflictCount >= maxCapacity;
 
     return (
-        <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-2">
-                    <Label id="date-label" className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
-                        <CalendarIcon className="h-3.5 w-3.5 text-primary" />
-                        Data *
-                    </Label>
-                    <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                        <PopoverTrigger asChild>
+        <div className="space-y-3">
+            {/* Data — linha própria para não truncar */}
+            <div className="space-y-2">
+                <Label id="date-label" className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
+                    <CalendarIcon className="h-3.5 w-3.5 text-primary" />
+                    Data *
+                </Label>
+                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                    <PopoverTrigger asChild>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className={cn(
+                                premiumFieldClass,
+                                "w-full justify-start font-normal",
+                                !watchedDate && "text-muted-foreground",
+                                errors.appointment_date && "border-destructive text-destructive shadow-[0_0_0_4px_hsl(var(--destructive)/0.08)]"
+                            )}
+                            disabled={disabled}
+                            aria-labelledby="date-label"
+                            aria-required="true"
+                            aria-invalid={!!errors.appointment_date}
+                            aria-describedby={errors.appointment_date ? "date-error" : undefined}
+                        >
+                            <CalendarIcon className="mr-2 h-4 w-4 shrink-0 text-primary/80" />
+                            <span className="truncate">
+                                {watchedDate ? format(watchedDate, "dd 'de' MMMM", { locale: ptBR }) : "Selecionar data"}
+                            </span>
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto rounded-[22px] border border-border/70 bg-background/95 p-0 shadow-[0_24px_80px_-28px_rgba(15,23,42,0.45)] backdrop-blur-xl" align="start">
+                        <div className="p-3 border-b border-border/50 flex items-center gap-2">
                             <Button
-                                type="button"
-                                variant="outline"
-                                className={cn(
-                                    premiumFieldClass,
-                                    "w-full justify-start font-normal",
-                                    !watchedDate && "text-muted-foreground",
-                                    errors.appointment_date && "border-destructive text-destructive shadow-[0_0_0_4px_hsl(var(--destructive)/0.08)]"
-                                )}
-                                disabled={disabled}
-                                aria-labelledby="date-label"
-                                aria-required="true"
-                                aria-invalid={!!errors.appointment_date}
-                                aria-describedby={errors.appointment_date ? "date-error" : undefined}
-                            >
-                                <CalendarIcon className="mr-2 h-4 w-4 shrink-0 text-primary/80" />
-                                <span className="truncate">
-                                    {watchedDate ? format(watchedDate, "dd 'de' MMMM", { locale: ptBR }) : "Selecionar data"}
-                                </span>
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto rounded-[22px] border border-border/70 bg-background/95 p-0 shadow-[0_24px_80px_-28px_rgba(15,23,42,0.45)] backdrop-blur-xl" align="start">
-                            <div className="p-3 border-b border-border/50 flex items-center gap-2">
-                                <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    className="h-7 text-[10px] font-bold uppercase tracking-wider hover:bg-primary/10 hover:text-primary"
-                                    onClick={() => {
-                                        setValue('appointment_date', format(new Date(), 'yyyy-MM-dd'));
-                                        setIsCalendarOpen(false);
-                                    }}
-                                >
-                                    Hoje
-                                </Button>
-                                <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    className="h-7 text-[10px] font-bold uppercase tracking-wider hover:bg-primary/10 hover:text-primary"
-                                    onClick={() => {
-                                        setValue('appointment_date', format(addDays(new Date(), 1), 'yyyy-MM-dd'));
-                                        setIsCalendarOpen(false);
-                                    }}
-                                >
-                                    Amanhã
-                                </Button>
-                            </div>
-                            <Calendar
-                                mode="single"
-                                selected={watchedDate || undefined}
-                                onSelect={(date) => {
-                                    if (date) {
-                                        setValue('appointment_date', format(date, 'yyyy-MM-dd'));
-                                    }
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-[10px] font-bold uppercase tracking-wider hover:bg-primary/10 hover:text-primary"
+                                onClick={() => {
+                                    setValue('appointment_date', format(new Date(), 'yyyy-MM-dd'));
                                     setIsCalendarOpen(false);
                                 }}
-                                locale={ptBR}
-                                initialFocus
-                            />
-                        </PopoverContent>
-                    </Popover>
-                    {errors.appointment_date && (
-                        <p id="date-error" className="text-xs text-destructive font-medium">{(errors.appointment_date as { message?: string })?.message}</p>
-                    )}
-                </div>
+                            >
+                                Hoje
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-[10px] font-bold uppercase tracking-wider hover:bg-primary/10 hover:text-primary"
+                                onClick={() => {
+                                    setValue('appointment_date', format(addDays(new Date(), 1), 'yyyy-MM-dd'));
+                                    setIsCalendarOpen(false);
+                                }}
+                            >
+                                Amanhã
+                            </Button>
+                        </div>
+                        <Calendar
+                            mode="single"
+                            selected={watchedDate || undefined}
+                            onSelect={(date) => {
+                                if (date) {
+                                    setValue('appointment_date', format(date, 'yyyy-MM-dd'));
+                                }
+                                setIsCalendarOpen(false);
+                            }}
+                            locale={ptBR}
+                            initialFocus
+                        />
+                    </PopoverContent>
+                </Popover>
+                {errors.appointment_date && (
+                    <p id="date-error" className="text-xs text-destructive font-medium">{(errors.appointment_date as { message?: string })?.message}</p>
+                )}
+            </div>
 
+            {/* Horário + Duração — dois campos lado a lado */}
+            <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2 relative">
                     <div className="flex items-center justify-between">
                         <Label id="time-label" className="text-xs sm:text-sm font-medium flex items-center gap-1.5">
@@ -310,38 +312,6 @@ export const DateTimeSection = ({
                     )}>
                         {conflictCount}/{maxCapacity}
                     </Badge>
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">|</span>
-                        <span id="status-inline-label" className="text-xs font-medium text-muted-foreground whitespace-nowrap">
-                            Status *
-                        </span>
-                        <Select
-                            value={watch('status')}
-                            onValueChange={(value) => setValue('status', value as AppointmentStatus)}
-                            disabled={disabled}
-                        >
-                            <SelectTrigger
-                                className={cn(
-                                    premiumCompactFieldClass,
-                                    "w-[170px] bg-background/80"
-                                )}
-                                aria-labelledby="status-inline-label"
-                                aria-required="true"
-                            >
-                                <SelectValue placeholder="Selecione o status" />
-                            </SelectTrigger>
-                            <SelectContent className={premiumSelectContentClass}>
-                                {APPOINTMENT_STATUSES.map((status) => (
-                                    <SelectItem key={status} value={status}>
-                                        <div className="flex items-center gap-2">
-                                            <div className={cn("w-2 h-2 rounded-full", STATUS_COLORS[status])} />
-                                            {STATUS_LABELS[status]}
-                                        </div>
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
                 </div>
             )}
         </div>

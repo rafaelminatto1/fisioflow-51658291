@@ -10,6 +10,7 @@ export interface Exercise {
   categoryId: string;
   difficulty: 'iniciante' | 'intermediario' | 'avancado';
   imageUrl: string | null;
+  thumbnailUrl: string | null;
   videoUrl: string | null;
   musclesPrimary: string[];
   bodyParts: string[];
