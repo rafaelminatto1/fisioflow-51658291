@@ -67,6 +67,10 @@ export async function fetchApi<T>(
   options: FetchOptions = {}
 ): Promise<T> {
   const token = options.skipAuth ? null : await getAuthToken();
+
+  if (token && !options.skipAuth) {
+    console.log(`[fetchApi] Calling ${endpoint} with token: ${token.substring(0, 15)}... (length: ${token.length})`);
+  }
   const { data, params, timeout = 10000, ...fetchInit } = options;
 
   let baseUrl = config.apiUrl;
@@ -81,7 +85,11 @@ export async function fetchApi<T>(
   }
 
   let url = `${baseUrl}${endpoint}`;
-  
+
+  console.log(`[fetchApi] Base URL: ${baseUrl}`);
+  console.log(`[fetchApi] Endpoint: ${endpoint}`);
+  console.log(`[fetchApi] Final URL: ${url}`);
+
   if (params) {
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
@@ -96,12 +104,12 @@ export async function fetchApi<T>(
   }
 
   const method = fetchInit.method || (data ? 'POST' : 'GET');
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   };
 
   if (token) {
-    (headers as any)['Authorization'] = `Bearer ${token.trim()}`;
+    headers['Authorization'] = `Bearer ${token.trim()}`;
   }
 
   if (fetchInit.headers) {
@@ -114,6 +122,9 @@ export async function fetchApi<T>(
   const id = setTimeout(() => controller.abort(), timeout);
 
   try {
+    console.log(`[fetchApi] Request URL: ${url}`);
+    console.log(`[fetchApi] Headers:`, headers);
+
     const response = await fetch(url, {
       ...fetchInit,
       method,
@@ -123,13 +134,27 @@ export async function fetchApi<T>(
     });
     clearTimeout(id);
 
+    console.log(`[fetchApi] Response status: ${response.status} ${response.statusText}`);
+
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}`;
+      let errorDetails = '';
       try {
-        const errorJson = await response.json();
-        errorMessage = errorJson.error || errorJson.message || errorMessage;
-      } catch {
-        // Silently fail json parse
+        const errorText = await response.text();
+        console.error(`[fetchApi] Error response body:`, errorText);
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorDetails = JSON.stringify(errorJson);
+          errorMessage = errorJson.error || errorJson.message || errorMessage;
+        } catch {
+          errorMessage = errorText || errorMessage;
+        }
+      } catch (e) {
+        console.error('[fetchApi] Failed to parse error response:', e);
+      }
+      console.error(`[fetchApi] Request failed to ${endpoint}: ${errorMessage}`);
+      if (errorDetails) {
+        console.error(`[fetchApi] Error details: ${errorDetails}`);
       }
       throw new ApiError(endpoint, response.status, errorMessage);
     }

@@ -20,11 +20,24 @@ export function LoadingOverlay({ visible, message, size = 'large' }: LoadingOver
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        <ActivityIndicator size={size} color={colors.primary} />
+    <View 
+      style={styles.container}
+      accessibilityViewIsModal={true}
+      accessibilityLabel="Carregando"
+    >
+      <View style={[styles.content, { backgroundColor: colors.background }]}>
+        <ActivityIndicator 
+          size={size} 
+          color={colors.primary}
+          accessibilityLabel="Carregando"
+        />
         {message && (
-          <Text style={[styles.message, { color: colors.text }]}>{message}</Text>
+          <Text 
+            style={[styles.message, { color: colors.text }]}
+            accessibilityLiveRegion="polite"
+          >
+            {message}
+          </Text>
         )}
       </View>
     </View>
@@ -44,7 +57,6 @@ const styles = StyleSheet.create({
     zIndex: 9999,
   },
   content: {
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 24,
     alignItems: 'center',

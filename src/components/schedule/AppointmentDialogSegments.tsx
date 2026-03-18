@@ -166,7 +166,7 @@ export const DateTimeSection = ({
                                 <Button 
                                     variant="ghost" 
                                     size="sm" 
-                                    className="h-7 text-[10px] font-bold uppercase tracking-wider hover:bg-primary/10 hover:text-primary"
+                                    className="h-7 text-xs font-semibold uppercase tracking-wide hover:bg-primary/10 hover:text-primary"
                                     onClick={() => {
                                         setValue('appointment_date', format(new Date(), 'yyyy-MM-dd'));
                                         setIsCalendarOpen(false);
@@ -177,7 +177,7 @@ export const DateTimeSection = ({
                                 <Button 
                                     variant="ghost" 
                                     size="sm" 
-                                    className="h-7 text-[10px] font-bold uppercase tracking-wider hover:bg-primary/10 hover:text-primary"
+                                    className="h-7 text-xs font-semibold uppercase tracking-wide hover:bg-primary/10 hover:text-primary"
                                     onClick={() => {
                                         setValue('appointment_date', format(addDays(new Date(), 1), 'yyyy-MM-dd'));
                                         setIsCalendarOpen(false);
@@ -530,13 +530,13 @@ export const PaymentTab = ({
             <div className="flex items-center justify-between gap-3 rounded-[24px] border border-border/70 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.10),transparent_35%),linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.92))] p-4 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.4)] dark:bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.18),transparent_35%),linear-gradient(180deg,rgba(15,23,42,0.96),rgba(15,23,42,0.92))]">
                 <div className="min-w-0">
                     <div className="mb-1 flex items-center gap-2">
-                        <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-700 dark:text-blue-300">
+                        <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-xs font-semibold uppercase tracking-wider text-blue-700 dark:text-blue-300">
                             Financeiro
                         </span>
                         <Badge
                             variant="outline"
                             className={cn(
-                                "h-6 rounded-full border px-2.5 text-[10px] font-semibold uppercase tracking-[0.14em]",
+                                "h-6 rounded-full border px-2.5 text-xs font-semibold uppercase tracking-wide",
                                 isPaid
                                     ? "border-blue-500/20 bg-blue-500/10 text-blue-700 dark:text-blue-300"
                                     : "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300"
@@ -579,12 +579,12 @@ export const PaymentTab = ({
                                 watchPaymentStatus === 'paid_single' && "border-primary/25 bg-gradient-to-b from-primary/[0.08] to-background shadow-[0_22px_40px_-30px_rgba(37,99,235,0.38)]"
                             )}>
                                 <RadioGroupItem value="paid_single" id="paid_single" className="sr-only" />
-                                <span className="mb-2 rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-700 dark:text-blue-300">
+                                <span className="mb-2 rounded-full bg-blue-500/10 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300">
                                     Imediato
                                 </span>
                                 <span className="text-2xl">💵</span>
                                 <span className="mt-1 font-semibold text-sm">Avulso</span>
-                                <span className="mt-1 text-[11px] text-muted-foreground">
+                                <span className="mt-1 text-xs text-muted-foreground">
                                     Cobrança direta da sessão atual
                                 </span>
                             </Label>
@@ -594,12 +594,12 @@ export const PaymentTab = ({
                                 !patientId && "cursor-not-allowed opacity-60 saturate-75"
                             )}>
                                 <RadioGroupItem value="paid_package" id="paid_package" className="sr-only" disabled={!patientId} />
-                                <span className="mb-2 rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-blue-700 dark:text-blue-300">
+                                <span className="mb-2 rounded-full bg-blue-500/10 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300">
                                     Fidelizado
                                 </span>
                                 <span className="text-2xl">📦</span>
                                 <span className="mt-1 font-semibold text-sm">Pagou pacote</span>
-                                <span className="mt-1 text-[11px] text-muted-foreground">
+                                <span className="mt-1 text-xs text-muted-foreground">
                                     {patientId ? 'Consome saldo ja contratado' : 'Escolha o paciente acima para liberar'}
                                 </span>
                             </Label>
@@ -615,14 +615,14 @@ export const PaymentTab = ({
                                             <Package className="h-3.5 w-3.5 text-blue-600" />
                                             Pacote vinculado ao paciente
                                         </Label>
-                                        <p className="mt-1 text-[11px] text-muted-foreground">
+                                        <p className="mt-1 text-xs text-muted-foreground">
                                             O sistema usa automaticamente o paciente escolhido no campo acima. Nao precisa selecionar de novo.
                                         </p>
                                     </div>
                                     {patientId && (
                                         <Badge
                                             variant="outline"
-                                            className="rounded-full border-blue-500/15 bg-blue-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-300"
+                                            className="rounded-full border-blue-500/15 bg-blue-500/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300"
                                         >
                                             Vinculado
                                         </Badge>
@@ -634,11 +634,11 @@ export const PaymentTab = ({
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0">
                                                 <p className="text-sm font-semibold text-foreground truncate">{resolvedPatientName}</p>
-                                                <p className="mt-1 text-[11px] text-muted-foreground">
+                                                <p className="mt-1 text-xs text-muted-foreground">
                                                     Este agendamento sera marcado como pago via pacote e o saldo ficara contabilizado no perfil do paciente.
                                                 </p>
                                             </div>
-                                            <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-700 dark:text-blue-300">
+                                            <span className="rounded-full bg-blue-500/10 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-300">
                                                 Perfil atualizado
                                             </span>
                                         </div>
@@ -652,7 +652,7 @@ export const PaymentTab = ({
                                 {patientId && (
                                     <div className="mt-3 space-y-3">
                                         <div className="flex items-center justify-between gap-3">
-                                            <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                                            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                                                 Saldo do paciente
                                             </span>
                                             {isLoadingPackages && (
@@ -710,13 +710,13 @@ export const PaymentTab = ({
                                                                 <p className="text-sm font-semibold truncate">
                                                                     {resolvedPackage.package?.name ?? 'Pacote ativo'}
                                                                 </p>
-                                                                <p className="mt-1 text-[11px] text-blue-700/80 dark:text-blue-200/80">
+                                                                <p className="mt-1 text-xs text-blue-700/80 dark:text-blue-200/80">
                                                                     {activePackages.length === 1
                                                                         ? 'O pacote ativo foi vinculado automaticamente a este agendamento.'
                                                                         : 'Selecione qual pacote deve ser debitado neste agendamento.'}
                                                                 </p>
                                                             </div>
-                                                            <span className="rounded-full bg-background/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-blue-700 shadow-sm dark:bg-blue-950/40 dark:text-blue-200">
+                                                            <span className="rounded-full bg-background/80 px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-blue-700 shadow-sm dark:bg-blue-950/40 dark:text-blue-200">
                                                                 {resolvedPackage.sessions_remaining} restantes
                                                             </span>
                                                         </div>
@@ -726,7 +726,7 @@ export const PaymentTab = ({
                                                 {resolvedPackage && (resolvedPackage.sessions_remaining || 0) <= 1 && (
                                                     <div className="flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-amber-700">
                                                         <AlertTriangle className="h-3.5 w-3.5" />
-                                                        <span className="text-[10px] sm:text-xs font-medium">
+                                                        <span className="text-xs font-medium">
                                                             Ultima sessao deste pacote. Vale oferecer renovacao ao paciente.
                                                         </span>
                                                     </div>
@@ -754,7 +754,7 @@ export const PaymentTab = ({
                             {watchPaymentStatus === 'paid_package' ? 'Valor de Referência por Sessão (R$)' : 'Valor da Sessão (R$)'}
                         </Label>
                         <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary shadow-sm">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold text-primary shadow-sm">
                                 R$
                             </span>
                             <input
@@ -766,7 +766,7 @@ export const PaymentTab = ({
                                 disabled={disabled}
                             />
                         </div>
-                         <p className="rounded-2xl bg-muted/40 px-3 py-2 text-[10px] sm:text-xs text-muted-foreground">
+                         <p className="rounded-2xl bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
                             {watchPaymentStatus === 'paid_package'
                                 ? 'O pacote fica contabilizado no perfil do paciente. Este valor funciona como referencia interna por sessao.'
                                 : 'Referencia rapida: pacote R$ 170/sessao, avulso R$ 180/sessao.'}
