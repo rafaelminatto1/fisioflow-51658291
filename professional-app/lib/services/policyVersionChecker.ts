@@ -1,5 +1,4 @@
-import { config } from '@/lib/config';
-import { authApi } from '@/lib/auth-api';
+import { fetchApi } from '@/lib/api';
 import { LEGAL_VERSIONS } from '@/constants/legalVersions';
 import { fisioLogger } from '../errors/logger';
 
@@ -22,16 +21,10 @@ class PolicyVersionChecker {
 
   async checkPolicyStatus(): Promise<PolicyStatus> {
     try {
-      const user = await authApi.getMe();
+      const user = await fetchApi<any>('/api/profile/me');
       if (!user) return { needsUpdate: false, missingPolicies: [] };
 
-      const token = await authApi.getToken();
-      const res = await fetch(`${config.apiUrl}/api/users/${user.id}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (!res.ok) throw new Error('Falha ao checar políticas');
-      const userData = await res.json();
+      const userData = await fetchApi<any>(`/api/users/${user.id}`);
 
       const missingPolicies: string[] = [];
       let needsUpdate = false;

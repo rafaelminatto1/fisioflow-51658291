@@ -18,6 +18,12 @@
       "default": "./src/components/*"
     }
   },
+  "scripts": {
+    "build": "echo \"no build\"",
+    "lint": "oxlint",
+    "type-check": "tsc --noEmit",
+    "test:unit": "echo \"no unit tests\""
+  },
   "dependencies": {
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

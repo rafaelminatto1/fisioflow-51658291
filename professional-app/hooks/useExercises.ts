@@ -124,30 +124,17 @@ export function useExerciseDelete() {
   };
 }
 
-import { authApi } from '@/lib/auth-api';
-import { config } from '@/lib/config';
+import { fetchApi } from '@/lib/api';
 
 const assignExerciseToPatient = async (professionalId: string, patientId: string, assignment: any) => {
-  const token = await authApi.getToken();
-  const res = await fetch(`${config.apiUrl}/api/patients/${patientId}/exercises`, {
+  return fetchApi<any>(`/api/patients/${patientId}/exercises`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({ ...assignment, professionalId })
+    data: { ...assignment, professionalId }
   });
-  if (!res.ok) throw new Error('Failed to assign exercise');
-  return res.json();
 };
 
 const getPatientExerciseAssignments = async (patientId: string) => {
-  const token = await authApi.getToken();
-  const res = await fetch(`${config.apiUrl}/api/patients/${patientId}/exercises`, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  if (!res.ok) return [];
-  return res.json();
+  return fetchApi<any[]>(`/api/patients/${patientId}/exercises`);
 };
 
 export function usePatientExerciseAssignments() {

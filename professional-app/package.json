@@ -6,13 +6,15 @@
     "start": "expo start",
     "ios": "expo run:ios",
     "android": "expo run:android",
+    "build": "tsc --noEmit",
     "build:dev": "eas build --profile development --platform ios",
     "build:preview": "eas build --profile preview --platform ios",
     "build:prod": "eas build --profile production --platform ios",
     "submit": "eas submit --platform ios",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",
-    "typecheck": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test:unit": "echo \"no unit tests\""
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

@@ -64,9 +64,9 @@ app.post('/login', async (c) => {
     }
 
     const token: string | null =
+      neonRes.headers.get('set-auth-jwt') ||
       neonData.token ||
       neonData.access_token ||
-      neonRes.headers.get('set-auth-jwt') ||
       null;
 
     if (!token) {
@@ -127,7 +127,7 @@ app.post('/signup', async (c) => {
       );
     }
 
-    const token = neonData.token || neonData.access_token || neonRes.headers.get('set-auth-jwt');
+    const token = neonRes.headers.get('set-auth-jwt') || neonData.token || neonData.access_token;
     return c.json({ token, user: neonData.user || { email, name }, message: 'Conta criada com sucesso' });
   } catch (error: any) {
     console.error('[Auth] Signup proxy error:', error.message);
