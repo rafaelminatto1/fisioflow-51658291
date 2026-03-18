@@ -13,6 +13,8 @@ export interface ScheduleModalsState {
   scheduleFromWaitlist: { patientId: string; patientName: string } | null;
   showKeyboardShortcuts: boolean;
   setShowKeyboardShortcuts: (show: boolean) => void;
+  duplicateDialogOpen: boolean;
+  setDuplicateDialogOpen: (open: boolean) => void;
   showCancelAllTodayDialog: boolean;
   setShowCancelAllTodayDialog: (show: boolean) => void;
   isCancellingAllToday: boolean;
