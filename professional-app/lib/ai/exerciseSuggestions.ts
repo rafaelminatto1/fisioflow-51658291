@@ -8,8 +8,7 @@
  * - Protocolos recomendados
  */
 
-import { config } from '@/lib/config';
-import { authApi } from '@/lib/auth-api';
+import { fetchApi } from '@/lib/api';
 
 export interface PatientCondition {
   id: string;
@@ -53,23 +52,10 @@ export async function generateExerciseSuggestions(
   context: SuggestionContext
 ): Promise<ExerciseRecommendation[]> {
   try {
-    const token = await authApi.getToken();
-    
-    const response = await fetch(`${config.apiUrl}/api/ai/exercise-suggestions`, {
+    return await fetchApi<ExerciseRecommendation[]>('/api/ai/exercise-suggestions', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(context)
+      data: context
     });
-
-    if (!response.ok) {
-      // Fallback para sugestões locais
-      return generateLocalSuggestions(context);
-    }
-
-    return await response.json();
   } catch (error) {
     console.error('Error generating suggestions:', error);
     return generateLocalSuggestions(context);

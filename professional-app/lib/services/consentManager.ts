@@ -1,7 +1,6 @@
 import { Consent, ConsentHistory, ConsentType, ConsentCategory } from '@/types/consent';
 import { CONSENT_TYPES } from '@/constants/consentTypes';
-import { config } from '@/lib/config';
-import { authApi } from '@/lib/auth-api';
+import { fetchApi } from '@/lib/api';
 
 export class ConsentManager {
   private static instance: ConsentManager;
@@ -13,26 +12,6 @@ export class ConsentManager {
       ConsentManager.instance = new ConsentManager();
     }
     return ConsentManager.instance;
-  }
-
-  private async fetchApi(endpoint: string, method: string = 'GET', body?: any) {
-    const token = await authApi.getToken();
-    if (!token) throw new Error('Not authenticated');
-
-    const res = await fetch(`${config.apiUrl}${endpoint}`, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: body ? JSON.stringify(body) : undefined
-    });
-
-    if (!res.ok) {
-        throw new Error(`API Error: ${res.status}`);
-    }
-
-    return res.json();
   }
 
   /**
@@ -63,7 +42,10 @@ export class ConsentManager {
         action: 'granted'
     };
 
-    const response = await this.fetchApi('/api/consents/grant', 'POST', payload);
+    const response = await fetchApi<any>('/api/consents/grant', {
+        method: 'POST',
+        data: payload
+    });
     return response.data;
   }
 
@@ -80,10 +62,13 @@ export class ConsentManager {
       throw new Error('Cannot withdraw required consent');
     }
 
-    await this.fetchApi('/api/consents/withdraw', 'POST', {
-        userId,
-        consentType,
-        reason
+    await fetchApi('/api/consents/withdraw', {
+        method: 'POST',
+        data: {
+            userId,
+            consentType,
+            reason
+        }
     });
   }
 
@@ -92,7 +77,9 @@ export class ConsentManager {
    */
   async hasConsent(userId: string, consentType: string): Promise<boolean> {
      try {
-         const response = await this.fetchApi(`/api/consents/check?userId=${userId}&consentType=${consentType}`);
+         const response = await fetchApi<any>('/api/consents/check', {
+             params: { userId, consentType }
+         });
          return response.data?.status === 'granted';
      } catch {
          return false;
@@ -104,7 +91,7 @@ export class ConsentManager {
    */
   async getUserConsents(userId: string): Promise<Consent[]> {
     try {
-        const response = await this.fetchApi(`/api/consents/user/${userId}`);
+        const response = await fetchApi<any>(`/api/consents/user/${userId}`);
         return response.data || [];
     } catch {
         return [];
@@ -116,10 +103,9 @@ export class ConsentManager {
    */
   async getConsentHistory(userId: string, consentType?: string): Promise<ConsentHistory[]> {
     try {
-        const url = consentType 
-            ? `/api/consents/history/${userId}?consentType=${consentType}`
-            : `/api/consents/history/${userId}`;
-        const response = await this.fetchApi(url);
+        const response = await fetchApi<any>(`/api/consents/history/${userId}`, {
+            params: { consentType }
+        });
         return response.data || [];
     } catch {
         return [];
@@ -131,7 +117,9 @@ export class ConsentManager {
    */
   async needsRenewal(userId: string, consentType: string, currentVersion: string): Promise<boolean> {
       try {
-          const response = await this.fetchApi(`/api/consents/check-renewal?userId=${userId}&consentType=${consentType}&version=${currentVersion}`);
+          const response = await fetchApi<any>('/api/consents/check-renewal', {
+              params: { userId, consentType, version: currentVersion }
+          });
           return response.data?.needsRenewal || false;
       } catch {
           return true;

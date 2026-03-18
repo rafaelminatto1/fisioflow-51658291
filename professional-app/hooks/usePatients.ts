@@ -43,19 +43,34 @@ export function usePatients(options?: UsePatientsOptions) {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
 
+  console.log('[usePatients] user:', user?.id, 'organizationId:', user?.organizationId, 'options:', options);
+
   const patients = useQuery({
     queryKey: ['patients', user?.id, options],
-    queryFn: () => {
-      if (!user?.id) return [];
+    queryFn: async () => {
+      if (!user?.id) {
+        console.log('[usePatients] No user, returning empty array');
+        return [];
+      }
 
-      return getPatients(user.organizationId, {
-        // If status is 'active', we want ALL active patients (backend defaults to is_active=true)
-        // So we pass undefined. Only pass specific status if it's NOT 'active' (e.g. 'inactive' - though backend might not support it yet, or specific enums)
-        // If options.status is 'Em_Tratamento', we pass that.
-        status: options?.status === 'active' ? undefined : options?.status,
-        search: options?.search,
-        limit: options?.limit || 100,
-      }).then(data => data.map(mapApiPatient));
+      console.log('[usePatients] Fetching patients for org:', user.organizationId);
+      try {
+        const data = await getPatients(user.organizationId, {
+          // If status is 'active', we want ALL active patients (backend defaults to is_active=true)
+          // So we pass undefined. Only pass specific status if it's NOT 'active' (e.g. 'inactive' - though backend might not support it yet, or specific enums)
+          // If options.status is 'Em_Tratamento', we pass that.
+          status: options?.status === 'active' ? undefined : options?.status,
+          search: options?.search,
+          limit: options?.limit || 100,
+        });
+        console.log('[usePatients] Raw API response:', data?.length, 'patients');
+        const mapped = data.map(mapApiPatient);
+        console.log('[usePatients] Mapped patients:', mapped.length);
+        return mapped;
+      } catch (error) {
+        console.error('[usePatients] Error:', error);
+        throw error;
+      }
     },
     enabled: !!user,
     staleTime: 1000 * 60 * 5, // 5 minutes

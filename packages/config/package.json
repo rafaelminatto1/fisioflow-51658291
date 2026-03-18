@@ -6,6 +6,9 @@
   "license": "MIT",
   "private": true,
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "build": "echo \"no build\"",
+    "lint": "oxlint",
+    "type-check": "tsc --noEmit",
+    "test:unit": "echo \"no unit tests\""
   }
 }

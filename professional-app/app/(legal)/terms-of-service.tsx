@@ -13,8 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { TERMS_OF_SERVICE_CONTENT } from '@/constants/legalContent';
 import { LEGAL_VERSIONS } from '@/constants/legalVersions';
-import { authApi } from '@/lib/auth-api';
-import { config } from '@/lib/config';
+import { fetchApi } from '@/lib/api';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 
@@ -75,29 +74,16 @@ export default function TermsOfServiceScreen() {
    */
   const storeAcceptance = async () => {
     try {
-      const user = await authApi.getMe();
-      if (!user) {
-        console.error('No authenticated user');
-        return;
-      }
-
-      const token = await authApi.getToken();
-
       const acceptanceData = {
-        userId: user.id,
         type: 'terms_of_service',
         version: LEGAL_VERSIONS.TERMS_OF_SERVICE,
         acceptedAt: new Date().toISOString(),
         deviceInfo: getDeviceInfo(),
       };
 
-      await fetch(`${config.apiUrl}/api/consents/accept`, {
+      await fetchApi('/api/consents/accept', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(acceptanceData)
+        data: acceptanceData
       });
       console.log('Terms of service acceptance stored successfully');
     } catch (error) {

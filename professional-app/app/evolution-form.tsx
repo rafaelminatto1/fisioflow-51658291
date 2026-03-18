@@ -20,6 +20,7 @@ import { PhotoUpload } from '@/components/evolution/PhotoUpload';
 import { FillingStyleToggle, FillingMode } from '@/components/evolution/FillingStyleToggle';
 import { NotionForm } from '@/components/evolution/NotionForm';
 import { TiptapForm } from '@/components/evolution/TiptapForm';
+import { fetchApi } from '@/lib/api';
 
 export default function EvolutionFormScreen() {
   const colors = useColors();
@@ -55,18 +56,9 @@ export default function EvolutionFormScreen() {
   const handleGenerateWithAI = async () => {
     setGeneratingSOAP(true);
     try {
-      const { authApi } = await import('@/lib/auth-api');
-      const { config } = await import('@/lib/config');
-      const token = await authApi.getToken();
-      if (!token) throw new Error('Sessão expirada');
-
-      const res = await fetch(`${config.apiUrl}/api/ai/soap-suggestions`, {
+      const data = await fetchApi<any>('/api/ai/soap-suggestions', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+        data: {
           patientId,
           appointmentId,
           painLevel,
@@ -74,12 +66,8 @@ export default function EvolutionFormScreen() {
           context: mode === 'SOAP'
             ? { subjective, objective, assessment, plan }
             : { freeContent },
-        }),
+        },
       });
-
-      if (!res.ok) throw new Error('Erro ao gerar sugestões com IA');
-
-      const data = await res.json();
 
       if (mode === 'SOAP' && data.soap) {
         setSubjective(data.soap.subjective || subjective);

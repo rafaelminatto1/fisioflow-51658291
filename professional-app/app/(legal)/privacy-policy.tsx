@@ -13,8 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { PRIVACY_POLICY_CONTENT } from '@/constants/legalContent';
 import { LEGAL_VERSIONS } from '@/constants/legalVersions';
-import { authApi } from '@/lib/auth-api';
-import { config } from '@/lib/config';
+import { fetchApi } from '@/lib/api';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 
@@ -75,29 +74,16 @@ export default function PrivacyPolicyScreen() {
    */
   const storeAcceptance = async () => {
     try {
-      const user = await authApi.getMe();
-      if (!user) {
-        console.error('No authenticated user');
-        return;
-      }
-
-      const token = await authApi.getToken();
-      
       const acceptanceData = {
-        userId: user.id,
         type: 'privacy_policy',
         version: LEGAL_VERSIONS.PRIVACY_POLICY,
         acceptedAt: new Date().toISOString(),
         deviceInfo: getDeviceInfo(),
       };
 
-      await fetch(`${config.apiUrl}/api/consents/accept`, {
+      await fetchApi('/api/consents/accept', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(acceptanceData)
+        data: acceptanceData
       });
       console.log('Privacy policy acceptance stored successfully');
     } catch (error) {

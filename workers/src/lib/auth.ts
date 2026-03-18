@@ -83,6 +83,28 @@ export async function verifyToken<E extends { Bindings: Env }>(c: Context<E>, en
     };
   } catch (e) {
     console.error('[Auth Error] JWT verification failed:', e instanceof Error ? e.message : String(e));
+    // Fallback: validate as session token via Neon Auth /get-session
+    if (env.NEON_AUTH_URL) {
+      try {
+        const sessionRes = await fetch(`${env.NEON_AUTH_URL}/get-session`, {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (sessionRes.ok) {
+          const sessionData = await sessionRes.json() as any;
+          const userId = sessionData.user?.id || sessionData.session?.userId;
+          if (userId) {
+            return {
+              uid: userId,
+              email: sessionData.user?.email,
+              organizationId: sessionData.user?.organizationId || DEFAULT_ORG_ID,
+              role: sessionData.user?.role || 'viewer',
+            };
+          }
+        }
+      } catch (sessionErr) {
+        console.error('[Auth Error] Session fallback failed:', sessionErr instanceof Error ? sessionErr.message : String(sessionErr));
+      }
+    }
     return null;
   }
 }
