@@ -41,6 +41,9 @@ export const Mappers = {
       weight: data.weight,
       height: data.height,
       activityLevel: data.activity_level,
+      birthDate: data.birth_date && typeof data.birth_date !== 'string' 
+        ? data.birth_date.toISOString().slice(0, 10)
+        : data.birth_date,
     };
   },
 
@@ -78,7 +81,13 @@ export const Mappers = {
     return {
       id: data.id,
       exerciseId: data.exercise_id,
-      exercise: data.exercise ? this.exercise(data.exercise) : undefined,
+      exercise: data.exercise ? this.exercise(data.exercise) : {
+        id: '',
+        name: 'Exercício',
+        description: '',
+        sets: 1,
+        reps: 1,
+      },
       sets: data.sets,
       reps: data.reps,
       holdTime: data.hold_time,

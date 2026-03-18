@@ -210,10 +210,3 @@ const PerformanceMarkers = {
   AUTH_REGISTER: 'auth_register',
   AUTH_LOGOUT: 'auth_logout',
 };
-
-// Performance markers
-const PerformanceMarkers = {
-  AUTH_LOGIN: 'auth_login',
-  AUTH_REGISTER: 'auth_register',
-  AUTH_LOGOUT: 'auth_logout',
-};

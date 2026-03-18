@@ -148,6 +148,8 @@ export function Input({
           secureTextEntry={actualSecureTextEntry}
           value={mask ? maskedValue : undefined}
           onChangeText={handleChangeText}
+          accessibilityLabel={label}
+          accessibilityHint={error ? 'Campo com erro' : undefined}
           {...props}
         />
         {isPassword && (

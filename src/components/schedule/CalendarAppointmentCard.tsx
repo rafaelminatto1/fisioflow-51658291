@@ -203,20 +203,20 @@ const CalendarAppointmentCardBase = forwardRef<HTMLDivElement, CalendarAppointme
 
     if (selectionMode) return cardContent;
 
-    return (
-        <AppointmentQuickView
-            appointment={appointment}
-            open={isPopoverOpen}
-            onOpenChange={(open) => {
-                if (isDragging && open) return;
-                onOpenPopover(open ? appointment.id : null);
-            }}
-            onEdit={onEditAppointment ? () => onEditAppointment(appointment) : undefined}
-            onDelete={onDeleteAppointment ? () => onDeleteAppointment(appointment) : undefined}
-        >
-            {cardContent}
-        </AppointmentQuickView>
-    );
+        return (
+            <AppointmentQuickView
+                appointment={appointment}
+                open={isPopoverOpen}
+                onOpenChange={(open) => {
+                    if (isDragging && open) return;
+                    onOpenPopover(open ? appointment.id : null);
+                }}
+                onEdit={onEditAppointment ? () => onEditAppointment(appointment) : undefined}
+                onDelete={onDeleteAppointment ? () => onDeleteAppointment(appointment) : undefined}
+            >
+                {cardContent}
+            </AppointmentQuickView>
+        );
 });
 
 function appointmentCardAreEqual(prev: CalendarAppointmentCardProps, next: CalendarAppointmentCardProps) {

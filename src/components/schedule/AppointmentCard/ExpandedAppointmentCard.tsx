@@ -19,7 +19,7 @@ interface ExpandedAppointmentCardProps {
   dataAnchor?: string;
   onStatusChange?: (status: string) => void;
   onEdit?: () => void;
-}
+} & React.HTMLAttributes<HTMLDivElement>
 
 export const ExpandedAppointmentCard: React.FC<ExpandedAppointmentCardProps> = ({
   appointment,
@@ -27,7 +27,8 @@ export const ExpandedAppointmentCard: React.FC<ExpandedAppointmentCardProps> = (
   className,
   dataAnchor,
   onStatusChange,
-  onEdit
+  onEdit,
+  ...rest
 }) => {
   const isOverbooked = !!appointment.isOverbooked;
   const statusConfig = getStatusConfig(appointment.status);
@@ -80,6 +81,7 @@ export const ExpandedAppointmentCard: React.FC<ExpandedAppointmentCardProps> = (
         className
       )}
       data-appointment-popover-anchor={dataAnchor}
+      {...rest}
     >
       {/* Dynamic Status Border */}
       <div className={cn(

@@ -47,16 +47,33 @@ const queryClient = new QueryClient({
       staleTime: 1000 * 60 * 5, // 5 minutes
       gcTime: 1000 * 60 * 60 * 24, // 24 hours (increased for persistence)
       retry: (failureCount, error) => {
-        // Não retry para erros 4xx (client errors)
+        // Não retry para erros 4xx (client errors), exceto 408 (timeout) e 429 (rate limit)
         if (error && typeof error === 'object' && 'status' in error) {
           const status = (error as { status: number }).status;
-          if (status >= 400 && status < 409) {
+          
+          // Nunca retryar erros de cliente (exceto timeout e rate limit)
+          if (status >= 400 && status < 500 && status !== 408 && status !== 429) {
+            return false;
+          }
+          
+          // Limitar retries para 500 erros para evitar sobrecarregar endpoint falhando
+          if (status >= 500 && failureCount >= 2) {
+            return false;
+          }
+          
+          // Para erros de serviço (502, 503, 504) permitir mais tentativas
+          if ((status === 502 || status === 503 || status === 504) && failureCount >= 4) {
             return false;
           }
         }
         return failureCount < 3;
       },
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Backoff exponencial
+      retryDelay: (attemptIndex) => {
+        // Backoff exponencial com jitter: min(1000 * 2^attempt + jitter aleatório, 30000ms)
+        const baseDelay = Math.min(1000 * 2 ** attemptIndex, 30000);
+        const jitter = Math.random() * 1000; // ±0-1000ms jitter para evitar thundering herd
+        return baseDelay + jitter;
+      },
       refetchOnWindowFocus: true,
       refetchOnReconnect: true,
       networkMode: 'offlineFirst',

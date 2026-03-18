@@ -7,21 +7,22 @@ import type { Appointment } from '@/types/appointment';
 import { Button } from '@/components/ui/button';
 
 interface CompactAppointmentCardProps {
-  appointment: Appointment;
-  onClick?: () => void;
-  className?: string;
-  dataAnchor?: string;
-  onStatusChange?: (status: string) => void;
-  onEdit?: () => void;
-}
+   appointment: Appointment;
+   onClick?: () => void;
+   className?: string;
+   dataAnchor?: string;
+   onStatusChange?: (status: string) => void;
+   onEdit?: () => void;
+} & React.HTMLAttributes<HTMLDivElement>
 
 export const CompactAppointmentCard: React.FC<CompactAppointmentCardProps> = ({
-  appointment,
-  onClick,
-  className,
-  dataAnchor,
-  onStatusChange,
-  onEdit
+   appointment,
+   onClick,
+   className,
+   dataAnchor,
+   onStatusChange,
+   onEdit,
+   ...rest
 }) => {
   const isOverbooked = !!appointment.isOverbooked;
   const statusConfig = getStatusConfig(appointment.status);
@@ -59,6 +60,7 @@ export const CompactAppointmentCard: React.FC<CompactAppointmentCardProps> = ({
         className
       )}
       data-appointment-popover-anchor={dataAnchor}
+      {...rest}
     >
       {/* Accent Indicator */}
       <div className={cn(
