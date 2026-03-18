@@ -84,29 +84,27 @@ export default defineConfig(({ mode }) => {
       target: 'es2020',
       cssTarget: 'es2020',
       sourcemap: true,
-      rolldownOptions: {
+      rollupOptions: {
         output: {
-          chunkFileNames: 'assets/js/[name]-[hash].js',
-          entryFileNames: 'assets/js/[name]-[hash].js',
-          assetFileNames: 'assets/[ext]/[name]-[hash].[ext]',
           manualChunks: (id) => {
             if (id.includes('node_modules')) {
               const parts = id.split('node_modules/');
               const lastPart = parts[parts.length - 1];
-              const packageName = lastPart.startsWith('@') 
-                ? lastPart.split('/').slice(0, 2).join('/') 
+              const packageName = lastPart.startsWith('@')
+                ? lastPart.split('/').slice(0, 2).join('/')
                 : lastPart.split('/')[0];
 
-              // React core and its common ecosystem MUST be in the same chunk
-              // to avoid "Cannot read properties of undefined (reading 'forwardRef')" errors
-              if (packageName === 'react' || 
-                  packageName === 'react-dom' || 
+              // React core + framer-motion MUST be in the same chunk
+              // to avoid "AnimatePresence is not defined" runtime errors
+              if (packageName === 'react' ||
+                  packageName === 'react-dom' ||
                   packageName === 'scheduler' ||
                   packageName === 'react-router' ||
-                  packageName === 'react-router-dom') {
-                return 'react-lib';
+                  packageName === 'react-router-dom' ||
+                  packageName === 'framer-motion') {
+                return 'react-vendor';
               }
-              
+
               if (packageName.includes('jspdf')) return 'pdf-generator';
               if (packageName.includes('react-konva') || packageName.includes('konva')) return 'canvas-vendor';
             }
