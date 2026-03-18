@@ -26,6 +26,7 @@ interface CalendarDayViewProps {
     onTimeSlotClick: (date: Date, time: string) => void;
     onEditAppointment?: (appointment: Appointment) => void;
     onDeleteAppointment?: (appointment: Appointment) => void;
+    onDuplicateAppointment?: (appointment: Appointment) => void;
     onStatusChange?: (id: string, status: string) => void;
     // Drag and drop
     onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string) => Promise<void>;
@@ -62,6 +63,7 @@ const CalendarDayView = memo(({
     onTimeSlotClick,
     onEditAppointment,
     onDeleteAppointment,
+    onDuplicateAppointment,
     onStatusChange,
     onAppointmentReschedule,
     dragState,
@@ -304,6 +306,7 @@ const CalendarDayView = memo(({
                                 }}
                                 onEditAppointment={onEditAppointment}
                                 onDeleteAppointment={onDeleteAppointment}
+                                onDuplicateAppointment={onDuplicateAppointment}
                                 onStatusChange={onStatusChange}
                                 onOpenPopover={setOpenPopoverId}
                                 isPopoverOpen={openPopoverId === apt.id}

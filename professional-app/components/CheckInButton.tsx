@@ -37,7 +37,6 @@ export function CheckInButton({
 
   // Verificar se já fez check-in para este agendamento
   useEffect(() => {
-    // TODO: Buscar check-ins existentes do Firestore
     // Por enquanto, usamos o estado local lastCheckIn
     if (lastCheckIn?.appointmentId === appointmentId) {
       setStatus({

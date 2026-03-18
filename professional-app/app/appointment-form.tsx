@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   ScrollView,
   Alert,
   TouchableOpacity,
-  Modal,
   ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
@@ -17,20 +16,17 @@ import { useColors } from '@/hooks/useColorScheme';
 import { useAppointments, getAppointmentByIdHook } from '@/hooks/useAppointments';
 import { usePatients } from '@/hooks/usePatients';
 import { useHaptics } from '@/hooks/useHaptics';
-import { useCreateFinancialRecord } from '@/hooks/usePatientFinancial';
 import type { AppointmentStatus } from '@/types';
 import { format } from 'date-fns';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { PatientAutocomplete } from '@/components/appointment/PatientAutocomplete';
+import { OptionSelector } from '@/components/appointment/OptionSelector';
 
 const APPOINTMENT_TYPES = [
-  'Avaliação Inicial',
-  'Fisioterapia',
-  'Osteopatia',
-  'Pilates',
-  'Reabilitação',
-  'Drenagem Linfática',
-  'Massagem',
-  ' RPG',
-  'Outro',
+  'Avaliação Inicial', 'Fisioterapia', 'Osteopatia', 'Pilates', 
+  'Reabilitação', 'Drenagem Linfática', 'Massagem', 'RPG', 'Outro'
 ];
 
 const DURATIONS = [30, 45, 60, 90, 120];
@@ -44,12 +40,25 @@ const STATUS_OPTIONS: { label: string; value: AppointmentStatus }[] = [
   { label: 'Faltou', value: 'no_show' },
 ];
 
+const appointmentSchema = z.object({
+  patientId: z.string().min(1, 'Selecione um paciente'),
+  patientName: z.string(),
+  date: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/, 'Data inválida (DD/MM/AAAA)'),
+  time: z.string().regex(/^\d{2}:\d{2}$/, 'Horário inválido (HH:MM)'),
+  type: z.string().min(1, 'Selecione o tipo'),
+  duration: z.number().positive(),
+  status: z.enum(['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show']),
+  notes: z.string().optional(),
+});
+
+type AppointmentFormData = z.infer<typeof appointmentSchema>;
+
 export default function AppointmentFormScreen() {
   const colors = useColors();
   const router = useRouter();
   const params = useLocalSearchParams();
   const appointmentId = params.id as string | undefined;
-
+  const { medium, success, error: hapticError } = useHaptics();
 
   const { 
     createAsync, 
@@ -59,25 +68,24 @@ export default function AppointmentFormScreen() {
     isUpdating, 
     isDeleting 
   } = useAppointments();
-  const { data: patients = [] } = usePatients({ status: 'active' });
-  const { medium, success, error: hapticError } = useHaptics();
-  const createFinancialMutation = useCreateFinancialRecord();
 
   const [isLoadingData, setIsLoadingData] = useState(!!appointmentId);
-  const [selectedPatient, setSelectedPatient] = useState<string>(params.patientId as string || '');
-  const [patientSearch, setPatientSearch] = useState(params.patientName as string || '');
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [date, setDate] = useState(params.date as string || '');
-  const [time, setTime] = useState(params.time as string || '');
-  const [type, setType] = useState('Fisioterapia');
-  const [duration, setDuration] = useState(60);
-  const [status, setStatus] = useState<AppointmentStatus>('scheduled');
-  const [notes, setNotes] = useState('');
 
-  const [showTypeModal, setShowTypeModal] = useState(false);
-  const [showDurationModal, setShowDurationModal] = useState(false);
-  const [showStatusModal, setShowStatusModal] = useState(false);
+  const { control, handleSubmit, setValue, reset, watch, formState: { errors } } = useForm<AppointmentFormData>({
+    resolver: zodResolver(appointmentSchema),
+    defaultValues: {
+      patientId: params.patientId as string || '',
+      patientName: params.patientName as string || '',
+      date: params.date as string || format(new Date(), 'dd/MM/yyyy'),
+      time: params.time as string || format(new Date(), 'HH:mm'),
+      type: 'Fisioterapia',
+      duration: 60,
+      status: 'scheduled',
+      notes: '',
+    }
+  });
 
+  const selectedPatientId = watch('patientId');
   const isEditing = !!appointmentId;
 
   useEffect(() => {
@@ -86,27 +94,21 @@ export default function AppointmentFormScreen() {
     }
   }, [appointmentId]);
 
-  useEffect(() => {
-    if (selectedPatient && patients.length > 0) {
-      const patient = patients.find(p => p.id === selectedPatient);
-      if (patient) {
-        setPatientSearch(patient.name);
-      }
-    }
-  }, [selectedPatient, patients]);
-
   const loadAppointmentData = async () => {
     try {
       const data = await getAppointmentByIdHook(appointmentId!);
       if (data) {
-        setSelectedPatient(data.patientId);
         const appointmentDate = new Date(data.date);
-        setDate(format(appointmentDate, 'dd/MM/yyyy'));
-        setTime(data.time || format(appointmentDate, 'HH:mm'));
-        setType(data.type);
-        setDuration(data.duration);
-        setStatus(data.status);
-        setNotes(data.notes || '');
+        reset({
+          patientId: data.patientId,
+          patientName: data.patientName,
+          date: format(appointmentDate, 'dd/MM/yyyy'),
+          time: data.time || format(appointmentDate, 'HH:mm'),
+          type: data.type,
+          duration: data.duration,
+          status: data.status as any,
+          notes: data.notes || '',
+        });
       }
     } catch (err) {
       Alert.alert('Erro', 'Não foi possível carregar os dados do agendamento.');
@@ -115,38 +117,11 @@ export default function AppointmentFormScreen() {
     }
   };
 
-  const selectedPatientData = patients?.find((p) => p.id === selectedPatient);
-  const selectedStatusData = STATUS_OPTIONS.find((s) => s.value === status);
-
-  const filteredPatients = patients.filter(p => 
-    p.name.toLowerCase().includes(patientSearch.toLowerCase())
-  ).slice(0, 5);
-
-  const validateForm = () => {
-    if (!selectedPatient) {
-      Alert.alert('Erro', 'Selecione o paciente');
-      return false;
-    }
-    if (!date) {
-      Alert.alert('Erro', 'Digite a data da consulta');
-      return false;
-    }
-    if (!time) {
-      Alert.alert('Erro', 'Digite o horário da consulta');
-      return false;
-    }
-    return true;
-  };
-
-  const handleSave = async () => {
+  const onSave = async (formData: AppointmentFormData) => {
     medium();
-
-    if (!validateForm()) return;
-
     try {
-      // Parse date and time to create Date object
-      const [day, month, year] = date.split('/');
-      const [hour, minute] = time.split(':');
+      const [day, month, year] = formData.date.split('/');
+      const [hour, minute] = formData.time.split(':');
 
       const appointmentDate = new Date(
         parseInt(year),
@@ -157,23 +132,16 @@ export default function AppointmentFormScreen() {
       );
 
       const appointmentData = {
-        patientId: selectedPatient,
-        patientName: selectedPatientData?.name || '',
-        professionalId: '', // Will be set in the create function
-        type,
+        ...formData,
         date: appointmentDate,
-        time,
-        duration,
-        status,
-        notes: notes.trim() || undefined,
+        professionalId: '', // Set by hook
       };
 
       if (isEditing && appointmentId) {
         await updateAsync({ id: appointmentId, data: appointmentData });
         success();
 
-        // Se marcou como concluído, perguntar se quer criar registro financeiro
-        if (status === 'completed') {
+        if (formData.status === 'completed') {
           Alert.alert(
             'Consulta Concluída',
             'Deseja criar um registro financeiro para este atendimento agora?',
@@ -182,7 +150,7 @@ export default function AppointmentFormScreen() {
               {
                 text: 'Sim, Criar',
                 onPress: () => {
-                  router.replace(`/patient/${selectedPatient}?tab=financial&autoCreate=true&date=${year}-${month}-${day}`);
+                  router.replace(`/patient/${formData.patientId}?tab=financial&autoCreate=true&date=${year}-${month}-${day}`);
                 }
               }
             ]
@@ -199,8 +167,7 @@ export default function AppointmentFormScreen() {
       }
     } catch (err: any) {
       hapticError();
-      const errorMessage = err?.message || 'Não foi possível salvar o agendamento.';
-      Alert.alert('Erro', errorMessage);
+      Alert.alert('Erro', err?.message || 'Não foi possível salvar.');
     }
   };
 
@@ -218,11 +185,10 @@ export default function AppointmentFormScreen() {
             try {
               await deleteAsync(appointmentId!);
               success();
-              Alert.alert('Sucesso', 'Agendamento excluído com sucesso');
               router.back();
             } catch (err) {
               hapticError();
-              Alert.alert('Erro', 'Não foi possível excluir o agendamento.');
+              Alert.alert('Erro', 'Não foi possível excluir.');
             }
           },
         },
@@ -242,7 +208,7 @@ export default function AppointmentFormScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
       <Stack.Screen options={{ headerShown: false }} />
-      {/* Header */}
+      
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
@@ -253,174 +219,137 @@ export default function AppointmentFormScreen() {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView 
-        style={styles.content} 
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {/* Patient Selection */}
-        <Text style={[styles.label, { color: colors.textSecondary }]} accessibilityLabel="Campo obrigatório: Nome do Paciente">Paciente *</Text>
-        <Input
-          placeholder="Digite o nome do paciente..."
-          value={patientSearch}
-          accessibilityLabel="Nome do paciente"
-          accessibilityHint="Digite o nome para buscar sugestões de pacientes ativos"
-          onChangeText={(text) => {
-            setPatientSearch(text);
-            setShowSuggestions(true);
-            if (selectedPatientData && text !== selectedPatientData.name) {
-              setSelectedPatient('');
-            }
-          }}
-          onFocus={() => setShowSuggestions(true)}
-          leftIcon="person-outline"
-          rightIcon={patientSearch.length > 0 && !isEditing ? "close-circle" : undefined}
-          onRightIconPress={() => {
-            setPatientSearch('');
-            setSelectedPatient('');
-            setShowSuggestions(true);
-          }}
-          editable={!isEditing}
-          containerStyle={{ marginBottom: showSuggestions && !isEditing && patientSearch.length > 0 ? 0 : 16 }}
-        />
+      <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
         
-        {showSuggestions && !isEditing && patientSearch.length > 0 && (
-          <View 
-            style={[styles.suggestionsContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}
-            accessibilityRole="menu"
-            accessibilityLabel="Sugestões de pacientes"
-          >
-            {filteredPatients.length > 0 ? (
-              filteredPatients.map((patient) => (
-                <TouchableOpacity
-                  key={patient.id}
-                  style={[styles.suggestionItem, { borderBottomColor: colors.border }]}
-                  accessibilityRole="menuitem"
-                  accessibilityLabel={`Selecionar ${patient.name}`}
-                  onPress={() => {
-                    medium();
-                    setSelectedPatient(patient.id);
-                    setPatientSearch(patient.name);
-                    setShowSuggestions(false);
-                  }}
-                >
-                  <View>
-                    <Text style={[styles.modalItemText, { color: colors.text }]}>{patient.name}</Text>
-                    <Text style={[styles.modalItemSub, { color: colors.textSecondary }]}>
-                      {patient.condition || 'Sem condição'}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))
-            ) : (
-              <View style={styles.suggestionItem}>
-                <Text style={{ color: colors.textMuted }}>Nenhum paciente encontrado</Text>
-              </View>
-            )}
-          </View>
-        )}
+        {/* Patient Selection */}
+        <Text style={[styles.label, { color: colors.textSecondary }]}>Paciente *</Text>
+        <Controller
+          control={control}
+          name="patientId"
+          render={({ field: { value, onChange } }) => (
+            <PatientAutocomplete
+              value={watch('patientName')}
+              onSelect={(p) => {
+                onChange(p.id);
+                setValue('patientName', p.name);
+              }}
+              disabled={isEditing}
+            />
+          )}
+        />
+        {errors.patientId && <Text style={styles.errorText}>{errors.patientId.message}</Text>}
 
-        {/* Date and Time */}
         <View style={styles.row}>
           <View style={styles.col}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>Data *</Text>
-            <Input
-              placeholder="DD/MM/AAAA"
-              value={date}
-              onChangeText={setDate}
-              keyboardType="numeric"
-              maxLength={10}
-              leftIcon="calendar-outline"
+            <Controller
+              control={control}
+              name="date"
+              render={({ field: { value, onChange } }) => (
+                <Input
+                  placeholder="DD/MM/AAAA"
+                  value={value}
+                  onChangeText={onChange}
+                  keyboardType="numeric"
+                  maxLength={10}
+                  leftIcon="calendar-outline"
+                />
+              )}
             />
+            {errors.date && <Text style={styles.errorText}>{errors.date.message}</Text>}
           </View>
           <View style={styles.col}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>Horário *</Text>
-            <Input
-              placeholder="HH:MM"
-              value={time}
-              onChangeText={setTime}
-              keyboardType="numeric"
-              maxLength={5}
-              leftIcon="time-outline"
+            <Controller
+              control={control}
+              name="time"
+              render={({ field: { value, onChange } }) => (
+                <Input
+                  placeholder="HH:MM"
+                  value={value}
+                  onChangeText={onChange}
+                  keyboardType="numeric"
+                  maxLength={5}
+                  leftIcon="time-outline"
+                />
+              )}
+            />
+            {errors.time && <Text style={styles.errorText}>{errors.time.message}</Text>}
+          </View>
+        </View>
+
+        {/* Type Selector */}
+        <Controller
+          control={control}
+          name="type"
+          render={({ field: { value, onChange } }) => (
+            <OptionSelector
+              label="Tipo de Atendimento"
+              value={value}
+              options={APPOINTMENT_TYPES.map(t => ({ label: t, value: t }))}
+              onSelect={onChange}
+            />
+          )}
+        />
+
+        <View style={styles.row}>
+          <View style={styles.col}>
+            <Controller
+              control={control}
+              name="duration"
+              render={({ field: { value, onChange } }) => (
+                <OptionSelector
+                  label="Duração"
+                  value={value}
+                  options={DURATIONS.map(d => ({ label: `${d} min`, value: d }))}
+                  onSelect={onChange}
+                />
+              )}
+            />
+          </View>
+          <View style={styles.col}>
+            <Controller
+              control={control}
+              name="status"
+              render={({ field: { value, onChange } }) => (
+                <OptionSelector
+                  label="Status"
+                  value={value}
+                  options={STATUS_OPTIONS}
+                  onSelect={onChange}
+                />
+              )}
             />
           </View>
         </View>
 
-        {/* Type Selection */}
-        <Text style={[styles.label, { color: colors.textSecondary }]}>Tipo de Atendimento</Text>
-        <TouchableOpacity
-          style={[styles.selector, { backgroundColor: colors.surface, borderColor: colors.border }]}
-          onPress={() => {
-            medium();
-            setShowTypeModal(true);
-          }}
-        >
-          <Text style={[styles.selectorText, { color: colors.text }]}>{type}</Text>
-          <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
-        </TouchableOpacity>
-
-        <View style={styles.row}>
-          <View style={styles.col}>
-            {/* Duration Selection */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Duração</Text>
-            <TouchableOpacity
-              style={[styles.selector, { backgroundColor: colors.surface, borderColor: colors.border }]}
-              onPress={() => {
-                medium();
-                setShowDurationModal(true);
-              }}
-            >
-              <Text style={[styles.selectorText, { color: colors.text }]}>{duration} min</Text>
-              <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.col}>
-            {/* Status Selection */}
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Status</Text>
-            <TouchableOpacity
-              style={[styles.selector, { backgroundColor: colors.surface, borderColor: colors.border }]}
-              onPress={() => {
-                medium();
-                setShowStatusModal(true);
-              }}
-            >
-              <Text style={[styles.selectorText, { color: colors.text }]}>{selectedStatusData?.label}</Text>
-              <Ionicons name="chevron-down" size={20} color={colors.textSecondary} />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Notes */}
         <Text style={[styles.label, { color: colors.textSecondary }]}>Observações</Text>
-        <View style={[styles.notesContainer, { backgroundColor: colors.surface }]}>
-          <Input
-            placeholder="Observações sobre o atendimento..."
-            value={notes}
-            onChangeText={setNotes}
-            multiline
-            numberOfLines={3}
-            style={{ minHeight: 80 }}
-          />
-        </View>
+        <Controller
+          control={control}
+          name="notes"
+          render={({ field: { value, onChange } }) => (
+            <Input
+              placeholder="Observações sobre o atendimento..."
+              value={value}
+              onChangeText={onChange}
+              multiline
+              numberOfLines={3}
+              style={{ minHeight: 80 }}
+            />
+          )}
+        />
 
-        {/* Save Button */}
         <Button
           title={isEditing ? 'Salvar Alterações' : 'Agendar'}
-          onPress={handleSave}
+          onPress={handleSubmit(onSave)}
           loading={isCreating || isUpdating}
           style={styles.saveButton}
         />
 
-        {/* Start Appointment Button - Only show when editing and not completed */}
-        {isEditing && status !== 'completed' && status !== 'cancelled' && (
+        {isEditing && watch('status') !== 'completed' && (
           <Button
             title="Iniciar Atendimento"
-            onPress={() => {
-              medium();
-              // Navigate to evolution form page
-              router.push(`/evolution-form?patientId=${selectedPatient}&patientName=${selectedPatientData?.name || 'Paciente'}&appointmentId=${appointmentId}` as any);
-            }}
+            onPress={() => router.push(`/evolution-form?patientId=${selectedPatientId}&appointmentId=${appointmentId}` as any)}
             variant="secondary"
             style={[styles.startButton, { backgroundColor: colors.success }] as any}
             leftIcon="play-circle-outline"
@@ -440,125 +369,12 @@ export default function AppointmentFormScreen() {
 
         <View style={{ height: 32 }} />
       </ScrollView>
-
-      {/* Type Selection Modal */}
-      <Modal
-        visible={showTypeModal}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setShowTypeModal(false)}
-      >
-        <SafeAreaView style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>Tipo de Atendimento</Text>
-              <TouchableOpacity onPress={() => setShowTypeModal(false)}>
-                <Ionicons name="close" size={24} color={colors.text} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.modalList}>
-              {APPOINTMENT_TYPES.map((appointmentType) => (
-                <TouchableOpacity
-                  key={appointmentType}
-                  style={[styles.modalItem, { borderBottomColor: colors.border, backgroundColor: type === appointmentType ? colors.primaryLight : 'transparent' }]}
-                  onPress={() => {
-                    medium();
-                    setType(appointmentType);
-                    setShowTypeModal(false);
-                  }}
-                >
-                  <Text style={[styles.modalItemText, { color: colors.text }]}>{appointmentType}</Text>
-                  {type === appointmentType && (
-                    <Ionicons name="checkmark" size={20} color={colors.primary} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        </SafeAreaView>
-      </Modal>
-
-      {/* Duration Selection Modal */}
-      <Modal
-        visible={showDurationModal}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setShowDurationModal(false)}
-      >
-        <SafeAreaView style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>Duração</Text>
-              <TouchableOpacity onPress={() => setShowDurationModal(false)}>
-                <Ionicons name="close" size={24} color={colors.text} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.modalList}>
-              {DURATIONS.map((dur) => (
-                <TouchableOpacity
-                  key={dur}
-                  style={[styles.modalItem, styles.durationItem, { borderBottomColor: colors.border, backgroundColor: duration === dur ? colors.primaryLight : 'transparent' }]}
-                  onPress={() => {
-                    medium();
-                    setDuration(dur);
-                    setShowDurationModal(false);
-                  }}
-                >
-                  <Text style={[styles.durationText, { color: colors.text }]}>{dur} minutos</Text>
-                  {duration === dur && (
-                    <Ionicons name="checkmark" size={20} color={colors.primary} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        </SafeAreaView>
-      </Modal>
-
-      {/* Status Selection Modal */}
-      <Modal
-        visible={showStatusModal}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setShowStatusModal(false)}
-      >
-        <SafeAreaView style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
-            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>Status do Agendamento</Text>
-              <TouchableOpacity onPress={() => setShowStatusModal(false)}>
-                <Ionicons name="close" size={24} color={colors.text} />
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.modalList}>
-              {STATUS_OPTIONS.map((s) => (
-                <TouchableOpacity
-                  key={s.value}
-                  style={[styles.modalItem, { borderBottomColor: colors.border, backgroundColor: status === s.value ? colors.primaryLight : 'transparent' }]}
-                  onPress={() => {
-                    medium();
-                    setStatus(s.value);
-                    setShowStatusModal(false);
-                  }}
-                >
-                  <Text style={[styles.modalItemText, { color: colors.text }]}>{s.label}</Text>
-                  {status === s.value && (
-                    <Ionicons name="checkmark" size={20} color={colors.primary} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        </SafeAreaView>
-      </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -567,116 +383,14 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomWidth: 1,
   },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  content: {
-    flex: 1,
-    padding: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 6,
-  },
-  selector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    marginBottom: 16,
-  },
-  selectorText: {
-    fontSize: 16,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  col: {
-    flex: 1,
-  },
-  notesContainer: {
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 16,
-  },
-  saveButton: {
-    marginTop: 8,
-  },
-  startButton: {
-    marginTop: 12,
-  },
-  deleteButton: {
-    marginTop: 12,
-    borderWidth: 1,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: 20,
-    maxHeight: '70%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  modalList: {
-    paddingVertical: 8,
-  },
-  modalItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-  },
-  modalItemText: {
-    fontSize: 16,
-  },
-  modalItemSub: {
-    fontSize: 14,
-    marginTop: 2,
-  },
-  durationItem: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-  },
-  durationText: {
-    fontSize: 18,
-    fontWeight: '500',
-  },
-  suggestionsContainer: {
-    marginTop: -16,
-    marginBottom: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    overflow: 'hidden',
-    zIndex: 1000,
-    elevation: 5,
-  },
-  suggestionItem: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-  },
+  title: { fontSize: 18, fontWeight: '600' },
+  content: { flex: 1, padding: 16 },
+  label: { fontSize: 14, fontWeight: '500', marginBottom: 6 },
+  row: { flexDirection: 'row', gap: 12 },
+  col: { flex: 1 },
+  saveButton: { marginTop: 8 },
+  startButton: { marginTop: 12 },
+  deleteButton: { marginTop: 12, borderWidth: 1 },
+  errorText: { color: '#ef4444', fontSize: 12, marginTop: -12, marginBottom: 12 },
 });
+

@@ -6,6 +6,7 @@
 import { Component, ReactNode } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Sentry from '@sentry/react-native';
 import { useColors } from '@/hooks/useColorScheme';
 import { log } from '@/lib/logger';
 
@@ -31,7 +32,9 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: any) {
     log.error('ErrorBoundary caught an error:', error, errorInfo);
-    // Could log to error reporting service here (e.g., Sentry, Crashlytics)
+    
+    // Log to Sentry
+    Sentry.captureException(error, { extra: { errorInfo } });
   }
 
   handleReset = () => {

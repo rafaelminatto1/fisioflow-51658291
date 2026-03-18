@@ -18,6 +18,7 @@
     "../packages/ui/src/**/*.tsx"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "e2e/legacy-mobile-tests"
   ]
 }

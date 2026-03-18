@@ -19,7 +19,9 @@ import {
   AlertCircle,
   CalendarOff,
   UserCheck,
-  Slash
+  Slash,
+  Copy,
+  ArrowRight
 } from 'lucide-react';
 import { APPOINTMENT_STATUS_CONFIG, APPOINTMENT_STATUS_OPTIONS } from './shared/appointment-status';
 import { cn } from '@/lib/utils';
@@ -31,6 +33,8 @@ interface AppointmentContextMenuProps {
   onStatusChange: (status: string) => void;
   onEdit: () => void;
   onDelete: () => void;
+  onDuplicate?: () => void;
+  onMoveToToday?: () => void;
 }
 
 export const AppointmentContextMenu: React.FC<AppointmentContextMenuProps> = ({
@@ -39,6 +43,8 @@ export const AppointmentContextMenu: React.FC<AppointmentContextMenuProps> = ({
   onStatusChange,
   onEdit,
   onDelete,
+  onDuplicate,
+  onMoveToToday,
 }) => {
   const handleWhatsApp = () => {
     const phone = appointment.phone?.replace(/\D/g, '');
@@ -60,6 +66,16 @@ export const AppointmentContextMenu: React.FC<AppointmentContextMenuProps> = ({
         <ContextMenuItem onClick={onEdit} className="gap-2 focus:bg-blue-50 dark:focus:bg-blue-900/20">
           <Edit2 className="w-4 h-4 text-blue-500" />
           <span>Editar Agendamento</span>
+        </ContextMenuItem>
+
+        <ContextMenuItem onClick={onDuplicate} className="gap-2 focus:bg-slate-50 dark:focus:bg-slate-800">
+          <Copy className="w-4 h-4 text-slate-500" />
+          <span>Duplicar Agendamento</span>
+        </ContextMenuItem>
+
+        <ContextMenuItem onClick={onMoveToToday} className="gap-2 focus:bg-slate-50 dark:focus:bg-slate-800">
+          <ArrowRight className="w-4 h-4 text-slate-500" />
+          <span>Mover para Hoje</span>
         </ContextMenuItem>
 
         <ContextMenuItem onClick={handleWhatsApp} className="gap-2 focus:bg-emerald-50 dark:focus:bg-emerald-900/20">

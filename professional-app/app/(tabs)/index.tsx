@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useState, useCallback, useMemo } from 'react';
+import { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -23,12 +23,12 @@ export default function DashboardScreen() {
   const { data: appointments, refetch: refetchAppointments, isLoading: isLoadingAppointments } = useAppointments();
   const { data: recentPatients, isLoading: isLoadingPatients } = usePatients({ limit: 5 }); // Fetch 5 most recent patients
 
-  const onRefresh = useCallback(async () => {
+  const onRefresh = async () => {
     setRefreshing(true);
     light();
     await Promise.all([refetchStats(), refetchAppointments()]);
     setRefreshing(false);
-  }, [refetchStats, refetchAppointments, light]);
+  };
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -37,31 +37,27 @@ export default function DashboardScreen() {
     return 'Boa noite';
   };
 
-  const statCards = useMemo(() => {
-    return [
-      { label: 'Pacientes Ativos', value: stats?.activePatients ?? '...', icon: 'people', color: colors.primary },
-      { label: 'Consultas Hoje', value: stats?.todayAppointments ?? '...', icon: 'calendar', color: colors.success },
-      { label: 'Aguardando Conf.', value: stats?.pendingAppointments ?? '...', icon: 'time', color: colors.warning },
-      { label: 'Concluídas Hoje', value: stats?.completedAppointments ?? '...', icon: 'checkmark-circle', color: colors.info },
-    ];
-  }, [stats, colors]);
+  const statCards = [
+    { label: 'Pacientes Ativos', value: stats?.activePatients ?? '...', icon: 'people', color: colors.primary },
+    { label: 'Consultas Hoje', value: stats?.todayAppointments ?? '...', icon: 'calendar', color: colors.success },
+    { label: 'Aguardando Conf.', value: stats?.pendingAppointments ?? '...', icon: 'time', color: colors.warning },
+    { label: 'Concluídas Hoje', value: stats?.completedAppointments ?? '...', icon: 'checkmark-circle', color: colors.info },
+  ];
 
   // Filter next 5 upcoming appointments in the next 24 hours
-  const upcomingAppointments = useMemo(() => {
-    const now = new Date();
-    const in24Hours = addHours(now, 24);
-    return appointments
-      .filter(apt => {
-        const aptDate = apt.date instanceof Date ? apt.date : new Date(apt.date);
-        return isBefore(aptDate, in24Hours) && isBefore(now, aptDate);
-      })
-      .sort((a, b) => {
-        const dateA = a.date instanceof Date ? a.date : new Date(a.date);
-        const dateB = b.date instanceof Date ? b.date : new Date(b.date);
-        return dateA.getTime() - dateB.getTime();
-      })
-      .slice(0, 5);
-  }, [appointments]);
+  const now = new Date();
+  const in24Hours = addHours(now, 24);
+  const upcomingAppointments = appointments
+    .filter(apt => {
+      const aptDate = apt.date instanceof Date ? apt.date : new Date(apt.date);
+      return isBefore(aptDate, in24Hours) && isBefore(now, aptDate);
+    })
+    .sort((a, b) => {
+      const dateA = a.date instanceof Date ? a.date : new Date(a.date);
+      const dateB = b.date instanceof Date ? b.date : new Date(b.date);
+      return dateA.getTime() - dateB.getTime();
+    })
+    .slice(0, 5);
 
   const isLoading = isLoadingStats || isLoadingAppointments || isLoadingPatients;
 

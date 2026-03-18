@@ -27,6 +27,7 @@
  */
 
 import { useState, useMemo, useEffect, useCallback, useRef, memo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { format, startOfWeek, addDays, addWeeks, addMonths, subDays, subWeeks, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Plus, CheckSquare, Settings as SettingsIcon, Sparkles, Search, X } from 'lucide-react';
@@ -71,6 +72,7 @@ interface CalendarViewProps {
   onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string, ignoreCapacity?: boolean) => Promise<void>;
   onEditAppointment?: (appointment: Appointment) => void;
   onDeleteAppointment?: (appointment: Appointment) => void;
+  onDuplicateAppointment?: (appointment: Appointment) => void;
   onStatusChange?: (id: string, status: string) => void;
   // Selection props
   selectionMode?: boolean;
@@ -134,6 +136,7 @@ export const CalendarView = memo(({
   onAppointmentReschedule,
   onEditAppointment,
   onDeleteAppointment,
+  onDuplicateAppointment,
   onStatusChange,
   selectionMode = false,
   selectedIds = new Set(),
@@ -923,94 +926,123 @@ export const CalendarView = memo(({
 
           <div
             ref={calendarGridRef}
-            className="flex-1 relative outline-none min-h-0"
+            className="flex-1 relative outline-none min-h-0 overflow-hidden"
             id="calendar-grid"
             role="tabpanel"
             tabIndex={-1}
             aria-label={`Visualização ${viewType === 'day' ? 'diária' : viewType === 'week' ? 'semanal' : 'mensal'} do calendário`}
           >
-            {viewType === 'day' && (
-              <div key="day-view" className="h-full animate-in fade-in duration-300 slide-in-from-bottom-2">
-                <CalendarDayView
-                  currentDate={currentDate}
-                  currentTime={currentTime}
-                  currentTimePosition={currentTimePosition}
-                  getAppointmentsForDate={getAppointmentsForDate}
-                  savingAppointmentId={dragStateNative.savingAppointmentId}
-                  timeSlots={memoizedTimeSlots}
-                  isDayClosed={isDayClosed}
-                  onTimeSlotClick={onTimeSlotClick}
-                  onEditAppointment={onEditAppointment}
-                  onDeleteAppointment={onDeleteAppointment}
-                  onStatusChange={onStatusChange}
-                  onAppointmentReschedule={onAppointmentReschedule}
-                  dragState={dragStateNative}
-                  dropTarget={dropTargetNative}
-                  targetAppointments={targetAppointments}
-                  handleDragStart={handleDragStartNative}
-                  handleDragEnd={handleDragEndNative}
-                  handleDragOver={handleDragOverNative}
-                  handleDragLeave={handleDragLeaveNative}
-                  handleDrop={handleDropNative}
-                  isTimeBlocked={isTimeBlocked}
-                  getBlockReason={getBlockReason}
-                  _getStatusColor={getStatusColor}
-                  isOverCapacity={isOverCapacity}
-                  openPopoverId={openPopoverId}
-                  setOpenPopoverId={setOpenPopoverId}
-                  selectionMode={selectionMode}
-                  selectedIds={selectedIds}
-                  onToggleSelection={onToggleSelection}
-                />
-              </div>
-            )}
+            <AnimatePresence mode="wait">
+              {viewType === 'day' && (
+                <motion.div 
+                  key="day-view"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-full"
+                >
+                  <CalendarDayView
+                    currentDate={currentDate}
+                    currentTime={currentTime}
+                    currentTimePosition={currentTimePosition}
+                    getAppointmentsForDate={getAppointmentsForDate}
+                    savingAppointmentId={dragStateNative.savingAppointmentId}
+                    timeSlots={memoizedTimeSlots}
+                    isDayClosed={isDayClosed}
+                    onTimeSlotClick={onTimeSlotClick}
+                    onEditAppointment={onEditAppointment}
+                    onDeleteAppointment={onDeleteAppointment}
+                    onDuplicateAppointment={onDuplicateAppointment}
+                    onStatusChange={onStatusChange}
 
-            {viewType === 'week' && (
-              <div key="week-view" className="h-full animate-in fade-in duration-300 slide-in-from-bottom-2">
-                <CalendarWeekViewDndKit
-                  currentDate={currentDate}
-                  appointments={displayAppointments}
-                  savingAppointmentId={dragState.savingAppointmentId}
-                  timeSlots={weekTimeSlots}
-                  onTimeSlotClick={onTimeSlotClick}
-                  onEditAppointment={onEditAppointment}
-                  onDeleteAppointment={onDeleteAppointment}
-                  onStatusChange={onStatusChange}
-                  onAppointmentReschedule={onAppointmentReschedule}
-                  checkTimeBlocked={checkTimeBlocked}
-                  isDayClosedForDate={isDayClosedForDate}
-                  openPopoverId={openPopoverId}
-                  setOpenPopoverId={setOpenPopoverId}
-                  dragState={dragState}
-                  dropTarget={dropTarget}
-                  handleDragStart={handleDragStartDndKit}
-                  handleDragOver={handleDragOverDndKit}
-                  handleDragEnd={handleDragEndDndKit}
-                  selectionMode={selectionMode}
-                  selectedIds={selectedIds}
-                  onToggleSelection={onToggleSelection}
-                />
-              </div>
-            )}
+                    onAppointmentReschedule={onAppointmentReschedule}
+                    dragState={dragStateNative}
+                    dropTarget={dropTargetNative}
+                    targetAppointments={targetAppointments}
+                    handleDragStart={handleDragStartNative}
+                    handleDragEnd={handleDragEndNative}
+                    handleDragOver={handleDragOverNative}
+                    handleDragLeave={handleDragLeaveNative}
+                    handleDrop={handleDropNative}
+                    isTimeBlocked={isTimeBlocked}
+                    getBlockReason={getBlockReason}
+                    _getStatusColor={getStatusColor}
+                    isOverCapacity={isOverCapacity}
+                    openPopoverId={openPopoverId}
+                    setOpenPopoverId={setOpenPopoverId}
+                    selectionMode={selectionMode}
+                    selectedIds={selectedIds}
+                    onToggleSelection={onToggleSelection}
+                  />
+                </motion.div>
+              )}
 
-            {viewType === 'month' && (
-              <div key="month-view" className="h-full animate-in fade-in duration-300 slide-in-from-bottom-2">
-                <CalendarMonthView
-                  currentDate={currentDate}
-                  appointments={displayAppointments}
-                  onDateChange={onDateChange}
-                  onTimeSlotClick={onTimeSlotClick}
-                  onEditAppointment={onEditAppointment}
-                  onDeleteAppointment={onDeleteAppointment}
-                  onStatusChange={onStatusChange}
-                  getAppointmentsForDate={getAppointmentsForDate}
-                  getStatusColor={getStatusColor}
-                  isOverCapacity={isOverCapacity}
-                  openPopoverId={openPopoverId}
-                  setOpenPopoverId={setOpenPopoverId}
-                />
-              </div>
-            )}
+              {viewType === 'week' && (
+                <motion.div 
+                  key="week-view"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-full"
+                >
+                  <CalendarWeekViewDndKit
+                    currentDate={currentDate}
+                    appointments={displayAppointments}
+                    savingAppointmentId={dragState.savingAppointmentId}
+                    timeSlots={weekTimeSlots}
+                    onTimeSlotClick={onTimeSlotClick}
+                    onEditAppointment={onEditAppointment}
+                    onDeleteAppointment={onDeleteAppointment}
+                    onDuplicateAppointment={onDuplicateAppointment}
+                    onStatusChange={onStatusChange}
+
+                    onAppointmentReschedule={onAppointmentReschedule}
+                    checkTimeBlocked={checkTimeBlocked}
+                    isDayClosedForDate={isDayClosedForDate}
+                    openPopoverId={openPopoverId}
+                    setOpenPopoverId={setOpenPopoverId}
+                    dragState={dragState}
+                    dropTarget={dropTarget}
+                    handleDragStart={handleDragStartDndKit}
+                    handleDragOver={handleDragOverDndKit}
+                    handleDragEnd={handleDragEndDndKit}
+                    selectionMode={selectionMode}
+                    selectedIds={selectedIds}
+                    onToggleSelection={onToggleSelection}
+                  />
+                </motion.div>
+              )}
+
+              {viewType === 'month' && (
+                <motion.div 
+                  key="month-view"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ duration: 0.2 }}
+                  className="h-full"
+                >
+                  <CalendarMonthView
+                    currentDate={currentDate}
+                    appointments={displayAppointments}
+                    onDateChange={onDateChange}
+                    onTimeSlotClick={onTimeSlotClick}
+                    onEditAppointment={onEditAppointment}
+                    onDeleteAppointment={onDeleteAppointment}
+                    onDuplicateAppointment={onDuplicateAppointment}
+                    onStatusChange={onStatusChange}
+
+                    getAppointmentsForDate={getAppointmentsForDate}
+                    getStatusColor={getStatusColor}
+                    isOverCapacity={isOverCapacity}
+                    openPopoverId={openPopoverId}
+                    setOpenPopoverId={setOpenPopoverId}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </CardContent>
       </Card>
