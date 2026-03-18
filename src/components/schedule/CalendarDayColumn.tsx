@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { Appointment } from '@/types/appointment';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AppointmentQuickView } from './AppointmentQuickView';
+import { AppointmentContextMenu } from './AppointmentContextMenu';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { getOverlapStackPosition } from '@/lib/calendar';
 
@@ -18,6 +19,8 @@ interface DayColumnProps {
     onTimeSlotClick: (date: Date, time: string) => void;
     onEditAppointment?: (appointment: Appointment) => void;
     onDeleteAppointment?: (appointment: Appointment) => void;
+    onDuplicateAppointment?: (appointment: Appointment) => void;
+    onStatusChange?: (id: string, status: string) => void;
     dragState: { appointment: Appointment | null; isDragging: boolean };
     dropTarget: { date: Date; time: string } | null;
     handleDragStart: (e: React.DragEvent, appointment: Appointment) => void;
@@ -41,6 +44,8 @@ export const DayColumn = memo(({
     onTimeSlotClick,
     onEditAppointment,
     onDeleteAppointment,
+    onDuplicateAppointment,
+    onStatusChange,
     dragState,
     dropTarget,
     handleDragStart,
@@ -100,7 +105,8 @@ export const DayColumn = memo(({
     }, [allAppointments, appointments]);
 
     // Função para obter a classe CSS baseada no status
-    const getStatusClass = (status: string, therapistId?: string | null): string => {
+    const getStatusClass = (status: string, therapistId?: string | null, isOver?: boolean): string => {
+        if (isOver) return 'calendar-card-excedente';
         const normalizedStatus = status?.toLowerCase().replace(/[^a-zà-ú0-9]/g, '') || '';
 
         // Se tiver fisioterapeuta específico, usa a classe roxa
@@ -279,18 +285,30 @@ export const DayColumn = memo(({
                     }
                   }
                 `}} />
-                                <AppointmentQuickView
+                                <AppointmentContextMenu
                                     appointment={apt}
-                                    open={openPopoverId === apt.id}
-                                    onOpenChange={(open) => setOpenPopoverId(open ? apt.id : null)}
-                                    onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
-                                    onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
+                                    onStatusChange={(status) => onStatusChange?.(apt.id, status)}
+                                    onEdit={() => onEditAppointment?.(apt)}
+                                    onDelete={() => onDeleteAppointment?.(apt)}
+                                    onDuplicate={() => onDuplicateAppointment?.(apt)}
+                                    onMoveToToday={() => {
+                                        if (onAppointmentReschedule) {
+                                            onAppointmentReschedule(apt, new Date(), apt.time);
+                                        }
+                                    }}
                                 >
-                                    <div className={cn(
-                                        "calendar-appointment-card",
-                                        getStatusClass(apt.status, apt.therapistId),
-                                        isOverCapacity(apt) && "over-capacity"
-                                    )}>
+                                    <AppointmentQuickView
+                                        appointment={apt}
+                                        open={openPopoverId === apt.id}
+                                        onOpenChange={(open) => setOpenPopoverId(open ? apt.id : null)}
+                                        onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
+                                        onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
+                                    >
+                                        <div className={cn(
+                                            "calendar-appointment-card",
+                                            getStatusClass(apt.status, apt.therapistId, isOverCapacity(apt)),
+                                            isOverCapacity(apt) && "over-capacity"
+                                        )}>
                                         {/* Indicador de agendamento próximo (bolinha amarela) */}
                                         {hasNearbyAppointment[apt.id]?.hasNearby && (
                                             <TooltipProvider>

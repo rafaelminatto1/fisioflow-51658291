@@ -27,6 +27,9 @@ import {
   Sparkles,
   Paperclip,
   ScanLine,
+  Mic,
+  MicOff,
+  RadioTower,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -42,6 +45,7 @@ import { OfflineStatusIndicator } from '@/hooks/useOfflineSync';
 import { useGlobalShortcuts } from '@/hooks/useGlobalShortcuts';
 import { generatePatientSummary } from '@/lib/genkit/patient-summary';
 import { toast } from 'sonner';
+import { useVoiceScribe } from '@/hooks/useVoiceScribe';
 import { useNavigate } from 'react-router-dom';
 
 interface NotionEvolutionPanelProps {
@@ -85,6 +89,45 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
 }) => {
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+
+  // Voice Scribe
+  const voiceScribe = useVoiceScribe();
+
+  const handleVoiceToggle = useCallback(async () => {
+    if (voiceScribe.voiceState === 'idle') {
+      await voiceScribe.startRecording();
+    } else if (voiceScribe.voiceState === 'recording') {
+      const soap = await voiceScribe.stopAndTranscribe();
+      if (soap) {
+        const populated: string[] = [];
+        if (soap.subjective) populated.push('Subjetivo');
+        if (soap.objective || soap.assessment || soap.plan) populated.push('Evolução');
+
+        onChange({
+          ...data,
+          ...(soap.subjective ? { patientReport: soap.subjective } : {}),
+          ...(soap.objective || soap.assessment || soap.plan
+            ? {
+                evolutionText: [
+                  soap.objective && `<p><strong>Objetivo:</strong> ${soap.objective}</p>`,
+                  soap.assessment && `<p><strong>Avaliação:</strong> ${soap.assessment}</p>`,
+                  soap.plan && `<p><strong>Plano:</strong> ${soap.plan}</p>`,
+                ]
+                  .filter(Boolean)
+                  .join(''),
+              }
+            : {}),
+        });
+
+        if (populated.length) {
+          toast.success(`Voice Scribe preencheu: ${populated.join(', ')}`);
+        }
+        voiceScribe.reset();
+      }
+    } else if (voiceScribe.voiceState === 'error') {
+      voiceScribe.reset();
+    }
+  }, [voiceScribe, onChange, data]);
   const [aiSummary, setAiSummary] = useState<any>(null);
   const navigate = useNavigate();
   const [localSaveStatus, setLocalSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -416,6 +459,32 @@ const NotionEvolutionPanel: React.FC<NotionEvolutionPanelProps> = ({
             customTemplates={customTemplates}
             disabled={disabled}
           />
+          {/* Voice Scribe */}
+          <Button
+            variant={voiceScribe.voiceState === 'recording' ? 'destructive' : 'ghost'}
+            size="sm"
+            onClick={handleVoiceToggle}
+            disabled={voiceScribe.voiceState === 'transcribing' || disabled}
+            className={`gap-2 ${voiceScribe.voiceState === 'recording' ? '' : 'text-primary hover:bg-primary/5'}`}
+            title={
+              voiceScribe.voiceState === 'idle' ? 'Iniciar Voice Scribe (SOAP por voz)' :
+              voiceScribe.voiceState === 'recording' ? 'Parar e transcrever' :
+              voiceScribe.voiceState === 'transcribing' ? 'Transcrevendo...' :
+              voiceScribe.voiceState === 'error' ? `Erro: ${voiceScribe.error}` : 'Pronto'
+            }
+          >
+            {voiceScribe.voiceState === 'transcribing' ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : voiceScribe.voiceState === 'recording' ? (
+              <RadioTower className="h-4 w-4 animate-pulse" />
+            ) : (
+              <Mic className="h-4 w-4" />
+            )}
+            <span className="hidden sm:inline">
+              {voiceScribe.voiceState === 'recording' ? 'Parar' : voiceScribe.voiceState === 'transcribing' ? 'Transcrevendo' : 'Voz'}
+            </span>
+          </Button>
+
           <Button
             variant="ghost"
             size="sm"

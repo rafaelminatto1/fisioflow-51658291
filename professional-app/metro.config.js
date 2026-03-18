@@ -73,9 +73,8 @@ const blocklistPaths = [
 config.resolver.blockList = [
   ...blocklistPaths.map(p => new RegExp(`^${path.join(projectRoot, p).replace(/\\/g, '/')}/.*`)),
   /.*\.cache.*/,
-  // Git e Firebase
+  // Git
   /\.git\/.*/,
-  /\.firebase\/.*/,
   // Documentação e scripts de desenvolvimento
   /.*\.md$/,
   /\.*claude\/.*/,
@@ -92,8 +91,6 @@ config.resolver.blockList = [
   /node_modules\/@playwright\/.*/,
   /node_modules\/puppeteer\/.*/,
   /node_modules\/.*\/node_modules/,
-  // Arquivos temporários do Firebase que causam erro de watch
-  /node_modules\/@firebase\/.*_tmp_.*/,
 ];
 
 // 7. Porta do Servidor

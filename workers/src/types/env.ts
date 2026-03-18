@@ -59,4 +59,10 @@ export interface Env {
   // WhatsApp Business API
   WHATSAPP_PHONE_NUMBER_ID?: string;
   WHATSAPP_ACCESS_TOKEN?: string;
+  WHATSAPP_VERIFY_TOKEN?: string;
+
+  // LiveKit Telehealth
+  LIVEKIT_API_KEY?: string;
+  LIVEKIT_API_SECRET?: string;
+  LIVEKIT_URL?: string;
 }
