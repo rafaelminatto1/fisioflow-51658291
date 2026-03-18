@@ -51,6 +51,7 @@ const LazyAvaliacaoTab = lazy(() => import('@/components/evolution/tabs/Avaliaca
 const LazyTratamentoTab = lazy(() => import('@/components/evolution/tabs/TratamentoTab').then(m => ({ default: m.TratamentoTab })));
 const LazyHistoricoTab = lazy(() => import('@/components/evolution/tabs/HistoricoTab').then(m => ({ default: m.HistoricoTab })));
 const LazyAssistenteTab = lazy(() => import('@/components/evolution/tabs/AssistenteTab').then(m => ({ default: m.AssistenteTab })));
+const LazyPROMsDashboard = lazy(() => import('@/components/clinical/PROMs/PROMsDashboard').then(m => ({ default: m.PROMsDashboard })));
 
 // Lazy editors
 const LazyNotionEvolutionPanel = lazy(() => import('@/components/evolution/v2/NotionEvolutionPanel').then(m => ({ default: m.NotionEvolutionPanel })));
@@ -70,6 +71,7 @@ const TABS_CONFIG = [
   { value: 'tratamento', label: 'Tratamento', shortLabel: 'Trat', icon: 'Activity', description: 'Exercícios + Metas' },
   { value: 'historico', label: 'Histórico', shortLabel: 'Hist', icon: 'Clock', description: 'Timeline + Relatórios' },
   { value: 'assistente', label: 'Assistente', shortLabel: 'IA', icon: 'Sparkles', description: 'IA + WhatsApp' },
+  { value: 'escalas', label: 'Escalas', shortLabel: 'PROMs', icon: 'ClipboardList', description: 'PROMs + Desfechos' },
 ] as any;
 
 const PatientEvolution = () => {
@@ -255,6 +257,15 @@ const PatientEvolution = () => {
             <TabsContent value="tratamento"><Suspense fallback={<LoadingSkeleton />}><LazyTratamentoTab sessionExercises={state.sessionExercises} onExercisesChange={state.setSessionExercises} patientId={state.patientId!} /></Suspense></TabsContent>
             <TabsContent value="historico"><Suspense fallback={<LoadingSkeleton />}><LazyHistoricoTab patientId={state.patientId!} previousEvolutions={state.previousEvolutions} onCopyEvolution={handlers.handleCopyPreviousEvolution} /></Suspense></TabsContent>
             <TabsContent value="assistente"><Suspense fallback={<LoadingSkeleton />}><LazyAssistenteTab patientId={state.patientId!} patientName={PatientHelpers.getName(state.patient)} onApplyToSoap={(f, c) => { state.setSoapData((prev: any) => ({ ...prev, [f]: prev[f] + c })); state.setActiveTab('evolucao'); }} /></Suspense></TabsContent>
+            <TabsContent value="escalas">
+              <Suspense fallback={<LoadingSkeleton />}>
+                {state.patientId && (
+                  <div className="p-4">
+                    <LazyPROMsDashboard patientId={state.patientId} sessionId={state.appointmentId ?? undefined} />
+                  </div>
+                )}
+              </Suspense>
+            </TabsContent>
           </Tabs>
 
           <FloatingActionBar onSave={handlers.handleSave} onComplete={handlers.handleCompleteSession} onExportPDF={handlers.handleExportPDF} isSaving={handlers.isSaving} />
