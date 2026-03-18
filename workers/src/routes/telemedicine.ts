@@ -258,4 +258,115 @@ app.put('/rooms/:id', requireAuth, async (c) => {
   }
 });
 
+// ===== LIVEKIT TOKEN GENERATION =====
+
+/**
+ * POST /api/telemedicine/livekit-token
+ * Gera tokens JWT para profissional e paciente entrarem na sala LiveKit.
+ *
+ * Body: { room_id: string, identity: string, role: 'therapist' | 'patient', display_name?: string }
+ *
+ * Nota: requer LIVEKIT_API_KEY e LIVEKIT_API_SECRET configurados via `wrangler secret put`.
+ * SDK: livekit-server-sdk (não disponível no Workers Edge runtime) — geramos JWT manualmente.
+ */
+async function generateLiveKitToken(
+  apiKey: string,
+  apiSecret: string,
+  opts: {
+    roomName: string;
+    identity: string;
+    name?: string;
+    canPublish: boolean;
+    canSubscribe: boolean;
+    isAdmin?: boolean;
+    ttl?: number;
+  },
+): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const ttl = opts.ttl ?? 3600; // 1 hora por padrão
+
+  const videoGrant = {
+    roomJoin: true,
+    room: opts.roomName,
+    canPublish: opts.canPublish,
+    canSubscribe: opts.canSubscribe,
+    ...(opts.isAdmin ? { roomAdmin: true } : {}),
+  };
+
+  const payload = {
+    iss: apiKey,
+    sub: opts.identity,
+    name: opts.name ?? opts.identity,
+    iat: now,
+    nbf: now,
+    exp: now + ttl,
+    video: videoGrant,
+  };
+
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const encode = (obj: object) =>
+    btoa(JSON.stringify(obj)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+
+  const signingInput = `${encode(header)}.${encode(payload)}`;
+
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(apiSecret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+
+  const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(signingInput));
+  const sig = btoa(String.fromCharCode(...new Uint8Array(signature)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+
+  return `${signingInput}.${sig}`;
+}
+
+app.post('/livekit-token', requireAuth, async (c) => {
+  const user = c.get('user');
+  const body = (await c.req.json().catch(() => ({}))) as {
+    room_id?: string;
+    identity?: string;
+    role?: 'therapist' | 'patient';
+    display_name?: string;
+  };
+
+  const apiKey = (c.env as any).LIVEKIT_API_KEY;
+  const apiSecret = (c.env as any).LIVEKIT_API_SECRET;
+  const livekitUrl = (c.env as any).LIVEKIT_URL ?? 'wss://your-livekit-url.livekit.cloud';
+
+  if (!apiKey || !apiSecret) {
+    return c.json({ error: 'LiveKit não configurado. Defina LIVEKIT_API_KEY e LIVEKIT_API_SECRET via wrangler secret put.' }, 503);
+  }
+
+  const roomName = body.room_id ?? `fisioflow-${user.organizationId}-${Date.now()}`;
+  const identity = body.identity ?? user.uid;
+  const role = body.role ?? 'therapist';
+  const displayName = body.display_name ?? identity;
+
+  const token = await generateLiveKitToken(apiKey, apiSecret, {
+    roomName,
+    identity,
+    name: displayName,
+    canPublish: true,
+    canSubscribe: true,
+    isAdmin: role === 'therapist',
+    ttl: 7200, // 2 horas
+  });
+
+  return c.json({
+    data: {
+      token,
+      room_name: roomName,
+      livekit_url: livekitUrl,
+      identity,
+      role,
+    },
+  });
+});
+
 export { app as telemedicineRoutes };
