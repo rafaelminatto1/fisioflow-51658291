@@ -200,11 +200,11 @@ jobs:
           retention-days: 7
 
   # =====================================================================
-  # NEON DB PREVIEW (Only on PR)
+  # NEON DB PREVIEW (Only on PR) - DISABLED TEMPORARILY DUE TO GITHUB ACTIONS API ISSUES
   # =====================================================================
   neon-preview:
     name: Neon DB Preview
-    if: github.event_name == 'pull_request'
+    if: false && github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
