@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { authApi } from '@/lib/auth-api';
-import { config } from '@/lib/config';
+import { fetchApi } from '@/lib/api';
 
 export interface Notification {
   id: string;
@@ -20,42 +19,18 @@ export interface NotificationsResponse {
   total: number;
 }
 
-const API_URL = config.apiUrl;
-
-async function fetchApi(endpoint: string, method: string = 'GET', body?: any) {
-  const token = await authApi.getToken();
-  if (!token) throw new Error('Not authenticated');
-
-  const res = await fetch(`${API_URL}${endpoint}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: body ? JSON.stringify(body) : undefined
-  });
-
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ message: 'Request failed' }));
-    throw new Error(error.message || `API Error: ${res.status}`);
-  }
-  return res.json();
-}
-
 /**
  * Hook to fetch user notifications
  */
 export function useNotifications(options?: { unreadOnly?: boolean; limit?: number }) {
-  const params = new URLSearchParams();
-  if (options?.unreadOnly) params.set('unread', 'true');
-  if (options?.limit) params.set('limit', String(options.limit));
-
-  const queryString = params.toString();
-  const endpoint = `/api/notifications${queryString ? `?${queryString}` : ''}`;
-
   return useQuery<NotificationsResponse>({
     queryKey: ['notifications', options],
-    queryFn: () => fetchApi(endpoint),
+    queryFn: () => fetchApi('/api/notifications', {
+        params: {
+            unread: options?.unreadOnly ? 'true' : undefined,
+            limit: options?.limit ? String(options.limit) : undefined,
+        }
+    }),
     staleTime: 1000 * 30, // 30 seconds
     refetchInterval: 1000 * 60, // Refetch every minute
   });
@@ -77,14 +52,14 @@ export function useNotificationMutations() {
 
   const markAsRead = useMutation({
     mutationFn: (notificationId: string) => 
-      fetchApi(`/api/notifications/${notificationId}/read`, 'PUT'),
+      fetchApi(`/api/notifications/${notificationId}/read`, { method: 'PUT' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },
   });
 
   const markAllAsRead = useMutation({
-    mutationFn: () => fetchApi('/api/notifications/read-all', 'PUT'),
+    mutationFn: () => fetchApi('/api/notifications/read-all', { method: 'PUT' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },
@@ -92,7 +67,7 @@ export function useNotificationMutations() {
 
   const deleteNotification = useMutation({
     mutationFn: (notificationId: string) => 
-      fetchApi(`/api/notifications/${notificationId}`, 'DELETE'),
+      fetchApi(`/api/notifications/${notificationId}`, { method: 'DELETE' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },
@@ -100,7 +75,7 @@ export function useNotificationMutations() {
 
   const createNotification = useMutation({
     mutationFn: (data: Partial<Notification>) => 
-      fetchApi('/api/notifications', 'POST', data),
+      fetchApi('/api/notifications', { method: 'POST', data }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
     },

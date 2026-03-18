@@ -21,8 +21,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getDashboardStats } from '@/lib/api';
 import { useAppointments } from '@/hooks/useAppointments';
 import { usePatients } from '@/hooks/usePatients';
-import { authApi } from '@/lib/auth-api';
-import { config } from '@/lib/config';
+import { fetchApi } from '@/lib/api';
 
 type MenuItem = {
   icon: React.ComponentProps<typeof Ionicons>['name'];
@@ -49,13 +48,13 @@ export default function ProfileScreen() {
   const { data: surveysData } = useQuery({
     queryKey: ['satisfactionSurveysRating'],
     queryFn: async () => {
-      const token = await authApi.getToken();
-      if (!token) return null;
-      const res = await fetch(`${config.apiUrl}/api/satisfaction-surveys?limit=100`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) return null;
-      return res.json();
+      try {
+        return await fetchApi<any>('/api/satisfaction-surveys', {
+          params: { limit: 100 }
+        });
+      } catch (err) {
+        return null;
+      }
     },
   });
 
