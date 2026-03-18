@@ -667,7 +667,7 @@ app.get('/', async (c) => {
       .limit(limit)
       .offset(offset);
 
-    // Maintain backward compatibility by normalizing to the old response format
+    // Maintain backward compatibility by normalizing to old response format
     // Although db.select() already returns objects, normalizePatientRow handles
     // complex JSON fields and nested structures if they were stored as strings
     return c.json({
@@ -676,6 +676,11 @@ app.get('/', async (c) => {
       page: Math.floor(offset / limit) + 1,
       perPage: limit,
     });
+  } catch (error) {
+    console.error('[Patients/List] Error:', error);
+    return c.json({ data: [], total: 0, error: error instanceof Error ? error.message : 'Erro ao listar pacientes' }, 500);
+  }
+});
   } catch (error) {
     console.error('[Patients/List] Error:', error);
     return c.json({ data: [], total: 0, error: error instanceof Error ? error.message : 'Erro ao listar pacientes' }, 500);
