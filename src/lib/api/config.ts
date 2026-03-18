@@ -14,7 +14,7 @@ export const getWorkersApiUrl = (): string => {
     
     // Se estiver no domínio moocafisio, usar o subdomínio api-pro
     // IMPORTANTE: SEMPRE usar api-pro em produção para evitar CORS
-    return 'https://api-pro.moocafisio.com.br';
+    return 'https://fisioflow-api.rafalegollas.workers.dev';
   }
 
   // 1b. Se estivermos em um domínio de deployment (workers.dev ou pages.dev), usar a API correspondente
@@ -37,5 +37,5 @@ export const getWorkersApiUrl = (): string => {
   const envUrl = import.meta.env.VITE_WORKERS_API_URL;
   
   // 3. Fallback final se nada estiver definido
-  return (envUrl || 'https://api-pro.moocafisio.com.br').replace(/\/$/, '');
+  return (envUrl || 'https://fisioflow-api.rafalegollas.workers.dev').replace(/\/$/, '');
 };
