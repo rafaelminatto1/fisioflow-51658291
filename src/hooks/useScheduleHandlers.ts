@@ -212,6 +212,11 @@ export function useScheduleHandlers(
     }
   }, [setSearchParams]);
 
+  const handleDuplicateAppointment = useCallback((appointment: Appointment) => {
+    setSelectedAppointment(appointment);
+    setDuplicateDialogOpen(true);
+  }, [setSelectedAppointment, setDuplicateDialogOpen]);
+
   const handleUpdateStatus = useCallback(async (appointmentId: string, newStatus: string) => {
     try {
       await AppointmentService.updateStatus(appointmentId, newStatus);
@@ -257,6 +262,7 @@ export function useScheduleHandlers(
       handleAppointmentReschedule,
       handleEditAppointment,
       handleDeleteAppointment,
+      handleDuplicateAppointment,
       handleUpdateStatus,
       handleAppointmentClick,
       handleScheduleFromWaitlist: handleScheduleFromWaitlistFn,

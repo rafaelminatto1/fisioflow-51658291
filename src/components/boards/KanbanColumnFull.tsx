@@ -73,8 +73,8 @@ export const KanbanColumnFull = memo(function KanbanColumnFull({
 
   const handleWipSave = () => {
     const val = wipInput.trim();
-    const num = val === '' ? null : parseInt(val, 10);
-    if (val !== '' && (isNaN(num!) || num! < 1)) return;
+    const num = val === '' ? null : Number(val);
+    if (val !== '' && (!Number.isInteger(num) || num! < 1)) return;
     onUpdateColumnWip(column.id, num);
     setWipEditOpen(false);
   };

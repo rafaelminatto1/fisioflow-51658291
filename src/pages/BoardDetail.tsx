@@ -1,12 +1,16 @@
 import { useState, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoadingSkeleton } from '@/components/ui/loading-skeleton';
 import { BoardHeader, type BoardView } from '@/components/boards/BoardHeader';
 import { KanbanFull } from '@/components/boards/KanbanFull';
 import { BoardListView } from '@/components/boards/BoardListView';
 import { BoardCalendarView } from '@/components/boards/BoardCalendarView';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useBoard, useUpdateBoard, useDeleteBoard } from '@/hooks/useBoards';
 import { useBoardTarefas } from '@/hooks/useBoardColumns';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
@@ -19,6 +23,7 @@ export default function BoardDetail() {
   const [view, setView] = useState<BoardView>('kanban');
   const [selectedTarefa, setSelectedTarefa] = useState<Tarefa | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
 
   const { data: board, isLoading, error, refetch } = useBoard(boardId);
   const { data: tarefasRaw, refetch: refetchTarefas } = useBoardTarefas(boardId);
@@ -26,7 +31,7 @@ export default function BoardDetail() {
   const updateBoard = useUpdateBoard();
   const deleteBoard = useDeleteBoard();
 
-  const tarefas = (tarefasRaw ?? []) as unknown as Tarefa[];
+  const tarefas = tarefasRaw ?? [];
 
   if (isLoading) {
     return (
@@ -61,12 +66,12 @@ export default function BoardDetail() {
     updateBoard.mutate({ id: board.id, is_starred: !board.is_starred });
   };
 
-  const handleArchive = () => {
-    if (confirm('Arquivar este board?')) {
-      deleteBoard.mutate(board.id, {
-        onSuccess: () => navigate('/boards'),
-      });
-    }
+  const handleArchive = () => setArchiveConfirmOpen(true);
+
+  const handleArchiveConfirm = () => {
+    deleteBoard.mutate(board.id, {
+      onSuccess: () => navigate('/boards'),
+    });
   };
 
   const handleViewTask = (tarefa: Tarefa) => {
@@ -74,8 +79,7 @@ export default function BoardDetail() {
     setDetailOpen(true);
   };
 
-  const handleAddTaskInList = (columnId: string) => {
-    // Redirect to kanban and open add task
+  const handleAddTaskInList = (_columnId: string) => {
     setView('kanban');
   };
 
@@ -127,6 +131,24 @@ export default function BoardDetail() {
           teamMembers={teamMembers ?? []}
         />
       </Suspense>
+
+      {/* Archive confirm */}
+      <AlertDialog open={archiveConfirmOpen} onOpenChange={setArchiveConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Arquivar board "{board?.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O board será arquivado. As tarefas serão preservadas e podem ser recuperadas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleArchiveConfirm}>
+              Arquivar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

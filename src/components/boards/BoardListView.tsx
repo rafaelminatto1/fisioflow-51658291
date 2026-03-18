@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Plus, Circle } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Circle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -35,6 +36,7 @@ export function BoardListView({ columns, tarefas, onAddTask, onViewTask }: Board
           .filter(t => t.column_id === col.id)
           .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
         const isCollapsed = collapsed.has(col.id);
+        const isOverWip = !!col.wip_limit && colTasks.length > col.wip_limit;
 
         return (
           <div key={col.id} className="rounded-xl overflow-hidden border border-border/50">
@@ -49,7 +51,20 @@ export function BoardListView({ columns, tarefas, onAddTask, onViewTask }: Board
                 : <ChevronDown className="h-4 w-4 text-muted-foreground" />
               }
               <span className="font-semibold text-sm">{col.name}</span>
-              <Badge variant="secondary" className="text-xs ml-1">{colTasks.length}</Badge>
+              <Badge
+                variant="secondary"
+                className={cn('text-xs ml-1', isOverWip && 'bg-red-500/20 text-red-700')}
+              >
+                {colTasks.length}{col.wip_limit ? `/${col.wip_limit}` : ''}
+              </Badge>
+              {isOverWip && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <AlertCircle className="h-3.5 w-3.5 text-red-500" />
+                  </TooltipTrigger>
+                  <TooltipContent>Limite WIP excedido!</TooltipContent>
+                </Tooltip>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
