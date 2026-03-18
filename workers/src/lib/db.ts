@@ -36,3 +36,26 @@ export function createPool(env: Env) {
 export function getRawSql(env: Env) {
   return neon(getUrl(env));
 }
+
+/**
+ * Retorna um pool com pré-configuração de RLS para organização específica.
+ * Define current_setting('app.org_id') antes de cada query para compatibilidade com RLS.
+ */
+export function createPoolForOrg(env: Env, organizationId: string) {
+  const sql = neon(getUrl(env), { fullResults: true });
+  
+  // Wrapper que executa SET LOCAL antes de cada query
+  const queryWithRls = async (queryText: string, params: any[] = []) => {
+    try {
+      // Executa SET LOCAL antes da query para RLS
+      await sql`SELECT set_config('app.org_id', ${organizationId}::text, true)`;
+      return await sql.query(queryText, params);
+    } catch (error) {
+      console.error('[DB Error with RLS]:', error);
+      throw error;
+    }
+  };
+  
+  (queryWithRls as any).end = async () => {};
+  return queryWithRls as typeof sql & { end: () => Promise<void> };
+}
