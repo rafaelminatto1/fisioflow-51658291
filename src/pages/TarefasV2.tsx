@@ -28,6 +28,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -64,7 +65,7 @@ import {
 } from '@/types/tarefas';
 import { useTarefas, useDeleteTarefa } from '@/hooks/useTarefas';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
-import { cn, safeFormat } from '@/lib/utils';
+import { safeFormat } from '@/lib/utils';
 // Recharts imports removed - moved to TaskInsights
 
 const TaskInsights = lazy(() => import('@/components/tarefas/v2/TaskInsights'));

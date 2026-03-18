@@ -757,11 +757,11 @@ app.get('/:id/stats', async (c) => {
     `
       SELECT
         COUNT(*) FILTER (
-          WHERE COALESCE(status, 'scheduled') IN ('completed', 'Realizado', 'Concluído')
+          WHERE status = 'completed'
         )::int AS total_sessions,
         COUNT(*) FILTER (
           WHERE date >= CURRENT_DATE
-            AND COALESCE(status, 'scheduled') NOT IN ('cancelled', 'Cancelado', 'completed', 'Realizado')
+            AND (status NOT IN ('cancelled', 'completed') OR status IS NULL)
         )::int AS upcoming_appointments,
         MAX(date) FILTER (WHERE date <= CURRENT_DATE) AS last_visit
       FROM appointments

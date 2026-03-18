@@ -42,7 +42,6 @@ const PhysiotherapyHub = lazy(() => import(/* webpackChunkName: "physiotherapy" 
 const Telemedicine = lazy(() => import(/* webpackChunkName: "telemedicine" */ "./pages/Telemedicine"));
 const TelemedicineRoom = lazy(() => import(/* webpackChunkName: "telemedicine-room" */ "./pages/TelemedicineRoom"));
 const ExerciseLibraryExpanded = lazy(() => import(/* webpackChunkName: "exercises-library" */ "./pages/ExerciseLibraryExpanded"));
-const Biofeedback = lazy(() => import(/* webpackChunkName: "biofeedback" */ "./pages/Biofeedback"));
 const PatientEvolution = lazy(() => import(/* webpackChunkName: "patient-evolution" */ "./pages/PatientEvolution"));
 const PatientEvolutionReport = lazy(() => import(/* webpackChunkName: "patient-evolution-report" */ "./pages/PatientEvolutionReport"));
 const SessionEvolutionPage = lazy(() => import(/* webpackChunkName: "session-evolution" */ "./pages/SessionEvolutionPage"));
@@ -236,7 +235,6 @@ export function AppRoutes() {
             <Route path="/physiotherapy" element={<ProtectedRoute><PhysiotherapyHub /></ProtectedRoute>} />
             <Route path="/telemedicine" element={<ProtectedRoute><Telemedicine /></ProtectedRoute>} />
             <Route path="/exercise-library" element={<ProtectedRoute><ExerciseLibraryExpanded /></ProtectedRoute>} />
-            <Route path="/biofeedback" element={<ProtectedRoute><Biofeedback /></ProtectedRoute>} />
             <Route path="/patient-evolution/:appointmentId" element={<ProtectedRoute><PatientEvolution /></ProtectedRoute>} />
             <Route path="/patient-evolution-report/:patientId" element={<ProtectedRoute><PatientEvolutionReport /></ProtectedRoute>} />
             <Route path="/session-evolution/:appointmentId" element={<ProtectedRoute><SessionEvolutionPage /></ProtectedRoute>} />

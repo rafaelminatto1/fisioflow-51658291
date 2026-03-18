@@ -116,7 +116,7 @@ export const PatientFormSchema = z.object({
 
   // Informações Médicas
   medical_history: z.string().max(5000, 'Histórico muito longo').optional().nullable(),
-  main_condition: z.string().min(1, 'Condição principal é obrigatória').max(500, 'Condição muito longa'),
+  main_condition: z.string().max(500, 'Condição muito longa').optional().nullable(),
   allergies: z.string().max(500, 'Alergias muito longas').optional().nullable(),
   medications: z.string().max(500, 'Medicamentos muito longos').optional().nullable(),
   weight_kg: z.preprocess(

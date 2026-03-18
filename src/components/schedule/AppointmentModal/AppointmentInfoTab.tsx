@@ -91,8 +91,8 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
     <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
       {/* Bloco 1: Paciente (Bento High-End) */}
       <div className="md:col-span-12 lg:col-span-7 rounded-2xl border border-blue-100 bg-white/50 backdrop-blur-sm p-5 shadow-premium-sm hover:shadow-premium-md transition-all duration-300">
-        <h4 className="font-serif text-lg text-blue-900 mb-4 flex items-center gap-2">
-          <span className="w-1.5 h-6 bg-blue-500 rounded-full" />
+        <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <span className="w-1.5 h-5 bg-blue-500 rounded-full" />
           Informações do Paciente
         </h4>
         <PatientSelectionSection
@@ -115,8 +115,8 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 
       {/* Bloco 2: Data e Hora */}
       <div className="md:col-span-6 lg:col-span-5 rounded-2xl border border-blue-100 bg-white/50 backdrop-blur-sm p-5 shadow-premium-sm hover:shadow-premium-md transition-all duration-300">
-        <h4 className="font-serif text-lg text-blue-900 mb-4 flex items-center gap-2">
-          <span className="w-1.5 h-6 bg-emerald-500 rounded-full" />
+        <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <span className="w-1.5 h-5 bg-emerald-500 rounded-full" />
           Horário da Sessão
         </h4>
         <DateTimeSection
@@ -135,8 +135,8 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 
       {/* Bloco 3: Profissional e Status */}
       <div className="md:col-span-6 lg:col-span-5 rounded-2xl border border-blue-100 bg-white/50 backdrop-blur-sm p-5 shadow-premium-sm hover:shadow-premium-md transition-all duration-300 space-y-4">
-        <h4 className="font-serif text-lg text-blue-900 mb-4 flex items-center gap-2">
-          <span className="w-1.5 h-6 bg-violet-500 rounded-full" />
+        <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <span className="w-1.5 h-5 bg-violet-500 rounded-full" />
           Atendimento
         </h4>
         <div className="space-y-4">
@@ -192,8 +192,8 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
 
       {/* Bloco 4: Financeiro */}
       <div className="md:col-span-12 lg:col-span-7 rounded-2xl border border-blue-100 bg-white/50 backdrop-blur-sm p-5 shadow-premium-sm hover:shadow-premium-md transition-all duration-300">
-        <h4 className="font-serif text-lg text-blue-900 mb-4 flex items-center gap-2">
-          <span className="w-1.5 h-6 bg-emerald-600 rounded-full" />
+        <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <span className="w-1.5 h-5 bg-emerald-600 rounded-full" />
           Financeiro
         </h4>
         <PaymentTab
@@ -212,7 +212,7 @@ export const AppointmentInfoTab: React.FC<AppointmentInfoTabProps> = ({
           <div className="space-y-4">
             <CollapsibleTrigger asChild>
               <div className="flex items-center justify-between cursor-pointer group">
-                <h4 className="font-serif text-lg text-blue-900 flex items-center gap-2">
+                <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                   <span className="w-1.5 h-6 bg-amber-400 rounded-full" />
                   Observações e Notas
                 </h4>
