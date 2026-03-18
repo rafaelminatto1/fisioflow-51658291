@@ -53,7 +53,7 @@ export function BoardCalendarView({ tarefas, onViewTask }: BoardCalendarViewProp
               const dateKey = format(day.date, 'yyyy-MM-dd');
               const count = dayTasksMap[dateKey]?.length ?? 0;
               return (
-                <button {...props} className={cn(props.className, 'relative')}>
+                <button {...props} className={cn('relative', props.className)}>
                   <span>{day.date.getDate()}</span>
                   {count > 0 && (
                     <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary" />
