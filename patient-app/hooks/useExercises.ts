@@ -27,19 +27,16 @@ export function useExercises(options: UseExercisesOptions = {}) {
       if (!includeExpired) {
         const now = new Date();
         exercises = exercises.filter((exercise) => {
-          if (!exercise.completedAt && !exercise.id) return true; // fallback
           if (!exercise.completedAt) return true;
-          // In a real app we might check a validUntil field if it existed in the API
-          return true; 
+          const completedDate = new Date(exercise.completedAt);
+          const daysSinceCompletion = (now.getTime() - completedDate.getTime()) / (1000 * 60 * 60 * 24);
+          return daysSinceCompletion <= 30;
         });
       }
 
-      // Sort by latest (we can use ID or a date field if available)
-      // For now, let's keep the API order or sort if we have dates
-      
       return limit ? exercises.slice(0, limit) : exercises;
     },
-    staleTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 1000 * 60 * 10,
   });
 }
 

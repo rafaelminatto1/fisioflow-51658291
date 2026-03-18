@@ -262,7 +262,7 @@ export const RecurringAppointmentModal: React.FC<RecurringAppointmentModalProps>
 
           {/* Configuração de Recorrência */}
           <div className="space-y-4 border rounded-lg p-4 bg-slate-50 dark:bg-slate-900">
-            <h3 className="font-semibold flex items-center gap-2">
+            <h3 className="text-base font-semibold flex items-center gap-2">
               <Repeat className="w-4 h-4" />
               Configuração de Recorrência
             </h3>
@@ -391,7 +391,7 @@ export const RecurringAppointmentModal: React.FC<RecurringAppointmentModalProps>
 
           {/* Configuração do Appointment */}
           <div className="space-y-4 border rounded-lg p-4 bg-slate-50 dark:bg-slate-900">
-            <h3 className="font-semibold flex items-center gap-2">
+            <h3 className="text-base font-semibold flex items-center gap-2">
               <Clock className="w-4 h-4" />
               Configuração do Agendamento
             </h3>
@@ -498,7 +498,7 @@ export const RecurringAppointmentModal: React.FC<RecurringAppointmentModalProps>
           {/* Preview */}
           <div className="space-y-2 border rounded-lg p-4 bg-blue-50 dark:bg-blue-950">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold flex items-center gap-2">
+              <h3 className="text-base font-semibold flex items-center gap-2">
                 <Info className="w-4 h-4" />
                 Preview das Ocorrências
               </h3>
@@ -516,7 +516,7 @@ export const RecurringAppointmentModal: React.FC<RecurringAppointmentModalProps>
                 </div>
               ))}
               {previewDates.length > 10 && (
-                <div className="text-sm text-muted-foreground italic">
+                <div className="text-xs text-muted-foreground italic">
                   ... e mais {previewDates.length - 10} ocorrências
                 </div>
               )}

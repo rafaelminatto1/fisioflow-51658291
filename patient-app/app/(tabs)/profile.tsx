@@ -23,6 +23,9 @@ import { APP_VERSION } from '@/lib/constants';
 import * as Notifications from 'expo-notifications';
 import { useExerciseStats } from '@/hooks/useExercises';
 import { log } from '@/lib/logger';
+import { Dimensions } from 'react-native';
+
+const HALF_CARD_WIDTH = (Dimensions.get('window').width - Spacing.screen * 2 - Spacing.gap) / 2;
 
 export default function ProfileScreen() {
   const colors = useColors();

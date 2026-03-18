@@ -19,3 +19,4 @@ export { useExercises, useCompleteExercise, useExerciseStats } from './useExerci
 export { useAppointments, useConfirmAppointment, useCancelAppointment } from './useAppointments';
 export { useProgress } from './useProgress';
 export { useGamification } from './useGamification';
+export { useFormattedDate } from './useFormattedDate';

@@ -11,7 +11,7 @@ interface AppointmentCardProps {
   'data-appointment-popover-anchor'?: string;
   onStatusChange?: (status: string) => void;
   onEdit?: () => void;
-}
+} & React.HTMLAttributes<HTMLDivElement>
 
 /**
  * Memo comparison function for AppointmentCard

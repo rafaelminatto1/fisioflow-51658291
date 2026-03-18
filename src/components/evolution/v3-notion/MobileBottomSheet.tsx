@@ -21,7 +21,7 @@ import { GripVertical } from 'lucide-react';
 
 interface MobileSheetContextValue {
   isMobile: boolean;
-  openSheet: (id: string, title: string, description?: string, content: React.ReactNode) => void;
+  openSheet: (id: string, title: string, content: React.ReactNode, description?: string) => void;
   closeSheet: () => void;
   currentSheet: { id: string; title: string; description?: string; content: React.ReactNode } | null;
 }
@@ -46,8 +46,8 @@ export const MobileSheetProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const openSheet = useCallback((
     id: string,
     title: string,
-    description?: string,
-    content: React.ReactNode
+    content: React.ReactNode,
+    description?: string
   ) => {
     setCurrentSheet({ id, title, description, content });
   }, []);
@@ -156,7 +156,7 @@ export const MobileSheetWrapper: React.FC<MobileSheetWrapperProps> = ({
   const { isMobile, openSheet, closeSheet } = useMobileSheet();
 
   const handleOpenSheet = useCallback(() => {
-    openSheet(id, title, description, children({ isMobile: true, openSheet: () => {}, closeSheet }));
+    openSheet(id, title, children({ isMobile: true, openSheet: () => {}, closeSheet }), description);
   }, [id, title, description, children, openSheet]);
 
   return (

@@ -52,25 +52,76 @@ app.post('/login', async (c) => {
   }
 
   try {
+    console.log('[Auth Backend] Tentando login no Neon Auth:', email);
     const neonRes = await forwardToNeonAuth(neonAuthUrl, '/sign-in/email', 'POST', { email, password });
+
+    console.log('[Auth Backend] Status Neon Auth:', neonRes.status);
+    console.log('[Auth Backend] Headers da resposta Neon Auth:');
+
+    // Logar todos os headers relevantes
+    const headerNames = [
+      'set-auth-jwt',
+      'set-cookie',
+      'authorization',
+      'x-auth-token',
+      'auth-token',
+      'token',
+    ];
+
+    headerNames.forEach(name => {
+      const value = neonRes.headers.get(name);
+      if (value) {
+        console.log(`[Auth Backend]   ${name}: ${value.substring(0, 50)}... (len: ${value.length})`);
+      }
+    });
+
     const neonData = await neonRes.json() as Record<string, any>;
+    console.log('[Auth Backend] Response body completo:', JSON.stringify(neonData, null, 2));
 
     if (!neonRes.ok) {
       const status = neonRes.status === 401 ? 401 : neonRes.status === 400 ? 400 : 500;
+      console.error('[Auth Backend] Erro no login do Neon Auth:', neonRes.status, neonData);
       return c.json(
         { error: neonData.message || neonData.error || 'Credenciais inválidas' },
         status
       );
     }
 
-    const token: string | null =
-      neonRes.headers.get('set-auth-jwt') ||
-      neonData.token ||
-      neonData.access_token ||
-      null;
+    console.log('[Auth Backend] Login bem-sucedido! Extraindo token...');
+
+    // Extrair token do cookie __Secure-neon-auth.session_token
+    const setCookieHeader = neonRes.headers.get('set-cookie');
+    let tokenFromCookie: string | null = null;
+
+    if (setCookieHeader) {
+      const cookieMatch = setCookieHeader.match(/__Secure-neon-auth\.session_token=([^;]+)/);
+      if (cookieMatch && cookieMatch[1]) {
+        tokenFromCookie = decodeURIComponent(cookieMatch[1]);
+      }
+    }
+
+    const tokenFromHeader = neonRes.headers.get('set-auth-jwt');
+    const tokenFromBody = neonData.token || neonData.access_token;
+
+    console.log('[Auth Backend] Token do cookie __Secure-neon-auth.session_token:', tokenFromCookie ? `${tokenFromCookie.substring(0, 20)}... (len: ${tokenFromCookie.length})` : 'null');
+    console.log('[Auth Backend] Token do header set-auth-jwt:', tokenFromHeader ? `${tokenFromHeader.substring(0, 20)}... (len: ${tokenFromHeader.length})` : 'null');
+    console.log('[Auth Backend] Token do body:', tokenFromBody ? `${tokenFromBody.substring(0, 20)}... (len: ${tokenFromBody.length})` : 'null');
+    console.log('[Auth Backend] Campos disponíveis no body:', Object.keys(neonData));
+
+    // Prioridade: Cookie (JWT) > Header > Body
+    const token: string | null = tokenFromCookie || tokenFromHeader || tokenFromBody || null;
 
     if (!token) {
+      console.error('[Auth Backend] Nenhum token encontrado!');
       return c.json({ error: 'Token não recebido do servidor de autenticação' }, 500);
+    }
+
+    console.log('[Auth Backend] Token final selecionado:', `${token.substring(0, 30)}... (len: ${token.length})`);
+    console.log('[Auth Backend] Token é JWT?', token.includes('.') ? 'SIM' : 'NÃO');
+
+    if (token.includes('.')) {
+      const parts = token.split('.');
+      console.log('[Auth Backend] Estrutura do token:', parts.map((part, i) => `Parte ${i + 1}: ${part.substring(0, 20)}... (len: ${part.length})`).join(' | '));
     }
 
     const userId = extractSubFromJwt(token);

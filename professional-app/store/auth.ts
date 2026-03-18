@@ -108,7 +108,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true });
     try {
       const userData = await authApi.getMe();
-      
+
       if (!isAuthorized(userData.role)) {
         await authApi.logout();
         set({
@@ -136,7 +136,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         isAuthenticated: true,
         isLoading: false,
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.log('[Auth] Sessão inválida ou expirada, usuário precisa fazer login novamente');
       set({
         user: null,
         isAuthenticated: false,

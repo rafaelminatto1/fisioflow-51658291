@@ -681,11 +681,6 @@ app.get('/', async (c) => {
     return c.json({ data: [], total: 0, error: error instanceof Error ? error.message : 'Erro ao listar pacientes' }, 500);
   }
 });
-  } catch (error) {
-    console.error('[Patients/List] Error:', error);
-    return c.json({ data: [], total: 0, error: error instanceof Error ? error.message : 'Erro ao listar pacientes' }, 500);
-  }
-});
 
 app.get('/last-updated', async (c) => {
   const user = c.get('user');

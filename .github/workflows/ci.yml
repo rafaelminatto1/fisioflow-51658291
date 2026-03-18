@@ -231,13 +231,16 @@ jobs:
         env:
           DATABASE_DIRECT_URL: ${{ steps.create-branch.outputs.db_url }}
 
-      - name: Schema Diff
-        uses: neondatabase/schema-diff-action@v6.0.4
+      - name: Comment on PR
+        uses: actions/github-script@v7
         with:
-          base_branch: production
-          compare_branch: preview/pr-${{ github.event.number }}
-          api_key: ${{ secrets.NEON_API_KEY }}
-          project_id: ${{ vars.NEON_PROJECT_ID }}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '✅ Preview database branch created: `preview/pr-${{ github.event.number }}`\n\nDatabase URL available for testing.'
+            })
 
   # =====================================================================
   # LIGHTHOUSE CI
