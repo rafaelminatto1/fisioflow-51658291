@@ -265,6 +265,7 @@
     "next-themes": "^0.3.0",
     "openai": "^6.16.0",
     "pg": "^8.13.1",
+    "posthog-js": "^1.361.1",
     "qrcode": "^1.5.4",
     "qrcode.react": "^4.2.0",
     "react": "19.1.0",

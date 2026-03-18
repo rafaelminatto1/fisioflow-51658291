@@ -4,8 +4,8 @@
  */
 
 export const config = {
-  // Use Cloud Functions APIs or Firestore directly
-  useCloudFunctions: true, // Forcing true as we migrate to standard APIs
+  // API mode configuration
+  useCloudFunctions: true, // Using Cloudflare Worker APIs
   
   // Cloudflare Worker API Configuration
   apiUrl: (function() {

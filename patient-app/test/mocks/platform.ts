@@ -25,36 +25,6 @@ export function getMockAuthUser() {
 }
 
 /**
- * Mock data store records
- */
-const mockDataStore: Map<string, any> = new Map();
-
-export function setMockDocument(collection: string, id: string, data: any) {
-  mockDataStore.set(`${collection}/${id}`, data);
-}
-
-export function getMockDocument(collection: string, id: string): any {
-  return mockDataStore.get(`${collection}/${id}`);
-}
-
-export function clearMockDataStore() {
-  mockDataStore.clear();
-}
-
-/**
- * Mock query results
- */
-const mockQueryResults: Map<string, any[]> = new Map();
-
-export function setMockQueryResults(collection: string, results: any[]) {
-  mockQueryResults.set(collection, results);
-}
-
-export function getMockQueryResults(collection: string): any[] {
-  return mockQueryResults.get(collection) || [];
-}
-
-/**
  * Mock User Data
  */
 const mockUsers: Map<string, any> = new Map();
@@ -124,31 +94,6 @@ export function createMockUser(overrides = {}) {
 }
 
 /**
- * Helper to create a mock document snapshot
- */
-export function createMockDocSnapshot<T>(data: T | null, id: string = 'doc-123') {
-  return {
-    id,
-    exists: data !== null,
-    data: () => data,
-  };
-}
-
-/**
- * Helper to create a mock query snapshot
- */
-export function createMockQuerySnapshot<T>(docs: T[]) {
-  return {
-    docs: docs.map((data, i) => createMockDocSnapshot(data, `doc-${i}`)),
-    empty: docs.length === 0,
-    size: docs.length,
-    forEach: (callback: (doc: any) => void) => {
-      docs.forEach((data, i) => callback(createMockDocSnapshot(data, `doc-${i}`)));
-    },
-  };
-}
-
-/**
  * Helper to simulate network delay
  */
 export async function mockNetworkDelay<T>(data: T, delay: number = 100): Promise<T> {
@@ -168,12 +113,10 @@ export async function mockNetworkError(message: string = 'Network error'): Promi
  * Reset all mocks
  */
 export function resetAllMocks() {
-  clearMockDataStore();
   clearMockUsers();
   mockExercisePlans.clear();
   mockAppointments.clear();
   mockEvolutions.clear();
-  mockQueryResults.clear();
   setMockAuthUser(null);
   setMockAuthError(null);
 }
