@@ -245,6 +245,9 @@ import { handleScheduled } from './cron';
 import { handleQueue } from './queue';
 export { OrganizationState } from './lib/realtime';
 
+// Hono RPC — exporta o tipo da app para type-safe client no frontend
+export type AppType = typeof app;
+
 /**
  * WebSocket upgrades precisam ser tratados ANTES do middleware Hono para que os
  * headers do middleware (CORS, secureHeaders) não corrompam a resposta 101.
