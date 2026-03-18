@@ -103,7 +103,7 @@ const auth = {
     await logoutButton.first().click();
 
     // Esperar redirecionamento para login
-    await page.waitForURL(/\(auth)/, { timeout: 5000 });
+    await page.waitForURL(/\(auth\)/, { timeout: 5000 });
 
     console.log('✅ Logout realizado');
   },

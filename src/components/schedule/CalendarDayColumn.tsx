@@ -364,9 +364,10 @@ export const DayColumn = memo(({
                                         )}
                                     </div>
                                 </AppointmentQuickView>
-                            </div>
-                        );
-                    });
+                            </AppointmentContextMenu>
+                        </div>
+                    );
+                });
                 })()}
             </div>
         </div>

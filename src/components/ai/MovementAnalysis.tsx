@@ -296,7 +296,6 @@ export function MovementAnalysis({
         message: language === 'pt-BR' ? 'Processando resultados...' : 'Processing results...',
       });
 
-      const data = result.data as MovementAnalysisResult;
       setAnalysisResult(data);
       
       if (onAnalysisComplete) {

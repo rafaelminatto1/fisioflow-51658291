@@ -3,6 +3,9 @@ import { logger } from 'hono/logger';
 import { secureHeaders } from 'hono/secure-headers';
 import { cors } from 'hono/cors';
 import type { Env } from './types/env';
+import type { CustomVariables } from './middleware/requestId';
+import { errorHandler } from './middleware/errorHandler';
+import { requestIdMiddleware } from './middleware/requestId';
 import { exercisesRoutes } from './routes/exercises';
 import { protocolsRoutes } from './routes/protocols';
 import { wikiRoutes } from './routes/wiki';
@@ -82,7 +85,7 @@ import { getRawSql } from './lib/db';
 import { perf } from './lib/perf';
 import { logToAxiom } from './lib/axiom';
 
-const app = new Hono<{ Bindings: Env }>();
+const app = new Hono<{ Bindings: Env; Variables: CustomVariables }>();
 
 // 1. MIDDLEWARE DE CORS GLOBAL (Executa antes de tudo)
 app.use('*', async (c, next) => {
@@ -95,16 +98,12 @@ app.use('*', async (c, next) => {
   const origin = isAllowed && requestOrigin ? requestOrigin : allowedOrigins[0];
 
   if (c.req.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        'Access-Control-Allow-Origin': origin,
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS, PATCH',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With, Accept, Cookie',
-        'Access-Control-Allow-Credentials': 'true',
-        'Access-Control-Max-Age': '86400',
-      },
-    });
+    c.header('Access-Control-Allow-Origin', origin);
+    c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Cookie');
+    c.header('Access-Control-Allow-Credentials', 'true');
+    c.header('Access-Control-Max-Age', '86400');
+    return c.body(null, 204);
   }
 
   await next();
@@ -115,6 +114,7 @@ app.use('*', async (c, next) => {
 
 app.use('*', logger());
 app.use('*', secureHeaders());
+app.use('*', requestIdMiddleware);
 
 // ===== HEALTH & DB DIAGNOSTIC =====
 app.get('/api/health', (c) => c.json({ status: 'ok', time: new Date().toISOString() }));
@@ -222,24 +222,7 @@ app.get('/api/realtime', async (c) => {
 });
 
 // ERROR HANDLER (BLINDADO COM CORS)
-app.onError((err, c) => {
-  console.error('[CRITICAL WORKER ERROR]', err.message);
-  const requestOrigin = c.req.header('Origin');
-  const allowedOrigins = (c.env as any).ALLOWED_ORIGINS
-    ? String((c.env as any).ALLOWED_ORIGINS).split(',').map((o: string) => o.trim())
-    : ['http://localhost:5173'];
-  const isAllowed = !requestOrigin || allowedOrigins.includes(requestOrigin);
-  const origin = isAllowed && requestOrigin ? requestOrigin : allowedOrigins[0];
-
-  return c.json({
-    error: 'Internal Server Error',
-    message: err.message,
-    details: err.stack,
-  }, 500, {
-    'Access-Control-Allow-Origin': origin,
-    'Access-Control-Allow-Credentials': 'true',
-  });
-});
+app.onError(errorHandler);
 
 import { handleScheduled } from './cron';
 import { handleQueue } from './queue';

@@ -7,6 +7,7 @@ import { createRemoteJWKSet, jwtVerify, decodeJwt } from 'jose';
 import type { MiddlewareHandler, Context } from 'hono';
 import { getCookie } from 'hono/cookie';
 import type { Env } from '../types/env';
+import { createPool } from './db';
 
 const DEFAULT_ORG_ID = '00000000-0000-0000-0000-000000000001';
 
@@ -54,6 +55,37 @@ export async function verifyToken<E extends { Bindings: Env }>(c: Context<E>, en
   }
 
   try {
+    // Verificação temporária para tokens simples (32 caracteres)
+    if (token.length < 50) {
+      console.log('[Auth] Token simples detectado, usando fallback de validação');
+      // Para tokens simples, fazer uma chamada ao /get-session para validar
+      if (env.NEON_AUTH_URL) {
+        try {
+          const sessionRes = await fetch(`${env.NEON_AUTH_URL}/get-session`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (sessionRes.ok) {
+            const sessionData = await sessionRes.json() as any;
+            const userId = sessionData.user?.id || sessionData.session?.userId;
+            if (userId) {
+              console.log('[Auth] Sessão validada via /get-session');
+              return {
+                uid: userId,
+                email: sessionData.user?.email,
+                organizationId: sessionData.user?.organizationId || DEFAULT_ORG_ID,
+                role: sessionData.user?.role || 'viewer'
+              };
+            }
+          }
+        } catch (e) {
+          console.error('[Auth] Erro na validação de sessão:', e);
+        }
+      }
+      // Se não conseguiu validar, retornar null
+      console.error('[Auth] Token simples não pode ser validado');
+      return null;
+    }
+
     const jwks = getJwks(jwksUrl);
     
     // Validação Robusta:
