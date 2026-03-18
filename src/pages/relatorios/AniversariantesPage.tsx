@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -11,6 +12,9 @@ import { Cake, Gift, Phone, Mail, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { patientsApi, type PatientRow } from '@/lib/api/workers-client';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface Aniversariante {
   id: string;

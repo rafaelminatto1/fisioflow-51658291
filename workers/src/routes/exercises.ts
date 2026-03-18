@@ -74,6 +74,7 @@ app.get('/', async (c) => {
         categoryId: exercises.categoryId,
         difficulty: exercises.difficulty,
         imageUrl: exercises.imageUrl,
+        thumbnailUrl: exercises.thumbnailUrl,
         videoUrl: exercises.videoUrl,
         musclesPrimary: exercises.musclesPrimary,
         bodyParts: exercises.bodyParts,
