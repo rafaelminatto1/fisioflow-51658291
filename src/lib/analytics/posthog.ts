@@ -15,12 +15,10 @@ export const initPostHog = () => {
 };
 
 export const identifyUser = (userId: string, email?: string, name?: string) => {
-  if (posthog.isFeatureEnabled('capture-events')) {
-    posthog.identify(userId, {
-      email,
-      name,
-    });
-  }
+  posthog.identify(userId, {
+    email,
+    name,
+  });
 };
 
 export const captureEvent = (eventName: string, properties?: Record<string, unknown>) => {

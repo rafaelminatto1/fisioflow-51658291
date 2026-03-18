@@ -4,6 +4,9 @@ compatibility_date = "2026-03-17"
 compatibility_flags = ["nodejs_compat"]
 workers_dev = true
 
+[placement]
+mode = "smart"
+
 # ===== ROTAS (SUBDOMINIOS CUSTOMIZADOS) =====
 routes = [
   { pattern = "api-pro.moocafisio.com.br", custom_domain = true },
@@ -49,6 +52,8 @@ binding = "BACKGROUND_QUEUE"
 queue = "fisioflow-background-tasks"
 max_batch_size = 10
 max_batch_timeout = 30
+max_retries = 3
+dead_letter_queue = "fisioflow-tasks-dlq"
 
 # ===== VARIÁVEIS DE AMBIENTE =====
 [vars]

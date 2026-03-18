@@ -1,4 +1,5 @@
 import { fetchApi } from '@/lib/api';
+import { authApi } from '@/lib/auth-api';
 import { fisioLogger } from '../errors/logger';
 import { auditLogger } from './auditLogger';
 import { DataDeletionRequest } from '@/types/dataDeletion';
