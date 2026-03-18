@@ -591,99 +591,66 @@ app.use('*', requireAuth);
 
 app.get('/', async (c) => {
   const user = c.get('user');
-  const db = createDb(c.env);
+  const db = await createPool(c.env);
 
   const search = trimmedString(c.req.query('search'));
   const requestedStatus = trimmedString(c.req.query('status'));
-  const createdFrom = trimmedString(c.req.query('createdFrom'));
-  const createdTo = trimmedString(c.req.query('createdTo'));
   const sortBy = trimmedString(c.req.query('sortBy'));
-  const incompleteRegistrationQuery = c.req.query('incompleteRegistration');
-
   const limit = Math.min(500, Math.max(1, Number.parseInt(c.req.query('limit') ?? '100', 10) || 100));
   const offset = Math.max(0, Number.parseInt(c.req.query('offset') ?? '0', 10) || 0);
 
   try {
-    const filters = [eq(patients.organizationId, user.organizationId)];
+    const params: any[] = [user.organizationId];
+    let where = `WHERE organization_id = $1::uuid`;
+    let idx = 2;
 
     const normalizedStatus = requestedStatus?.toLowerCase();
     if (normalizedStatus) {
       if (['active', 'ativo'].includes(normalizedStatus)) {
-        filters.push(eq(patients.isActive, true));
+        where += ` AND is_active = true`;
       } else if (['inactive', 'inativo'].includes(normalizedStatus)) {
-        filters.push(eq(patients.isActive, false));
-      } else {
-        filters.push(eq(patients.status, normalizePatientStatus(requestedStatus)));
+        where += ` AND is_active = false`;
       }
     } else {
-      filters.push(eq(patients.isActive, true));
+      where += ` AND is_active = true`;
     }
 
     if (search) {
       const searchPattern = `%${search}%`;
-      filters.push(
-        or(
-          ilike(patients.fullName, searchPattern),
-          ilike(patients.email, searchPattern),
-          ilike(patients.cpf, searchPattern),
-          ilike(patients.phone, searchPattern),
-        ) as any
-      );
+      params.push(searchPattern);
+      where += ` AND (full_name ILIKE $${idx} OR email ILIKE $${idx} OR cpf ILIKE $${idx} OR phone ILIKE $${idx})`;
+      idx++;
     }
 
-    if (incompleteRegistrationQuery !== undefined) {
-      filters.push(eq(patients.incompleteRegistration, Boolean(nullableBoolean(incompleteRegistrationQuery))));
-    }
+    // Count total
+    const totalResult = await db.query(`SELECT COUNT(*) as count FROM patients ${where}`, params);
+    const total = Number(totalResult.rows[0]?.count ?? 0);
 
-    if (createdFrom) {
-      filters.push(sql`${patients.createdAt} >= ${createdFrom}::timestamptz`);
-    }
+    // Order by
+    let orderBy = 'full_name ASC, created_at DESC';
+    if (sortBy === 'created_at_asc') orderBy = 'created_at ASC, full_name ASC';
+    if (sortBy === 'created_at_desc') orderBy = 'created_at DESC, full_name ASC';
 
-    if (createdTo) {
-      filters.push(sql`${patients.createdAt} < (${createdTo}::date + interval '1 day')`);
-    }
+    // Data query
+    const finalParams = [...params, limit, offset];
+    const dataResult = await db.query(
+      `SELECT * FROM patients ${where} ORDER BY ${orderBy} LIMIT $${idx} OFFSET $${idx + 1}`,
+      finalParams
+    );
 
-    const where = and(...filters);
-
-    const [totalResult] = await db.select({ count: count() }).from(patients).where(where);
-    const total = totalResult.count;
-
-    let orderBy;
-    switch (sortBy) {
-      case 'created_at_asc':
-        orderBy = [asc(patients.createdAt), asc(patients.fullName)];
-        break;
-      case 'created_at_desc':
-        orderBy = [desc(patients.createdAt), asc(patients.fullName)];
-        break;
-      case 'name_asc':
-      default:
-        orderBy = [asc(patients.fullName), desc(patients.createdAt)];
-    }
-
-    const data = await db.select().from(patients)
-      .where(where)
-      .orderBy(...orderBy)
-      .limit(limit)
-      .offset(offset);
-
-    // Maintain backward compatibility by normalizing to old response format
-    // Although db.select() already returns objects, normalizePatientRow handles
-    // complex JSON fields and nested structures if they were stored as strings
     return c.json({
-      data: data.map((row) => normalizePatientRow(row as any)),
+      data: dataResult.rows.map((row) => normalizePatientRow(row as DbRow)),
       total,
       page: Math.floor(offset / limit) + 1,
       perPage: limit,
     });
   } catch (error) {
     console.error('[Patients/List] Error:', error);
-    return c.json({ data: [], total: 0, error: error instanceof Error ? error.message : 'Erro ao listar pacientes' }, 500);
-  }
-});
-  } catch (error) {
-    console.error('[Patients/List] Error:', error);
-    return c.json({ data: [], total: 0, error: error instanceof Error ? error.message : 'Erro ao listar pacientes' }, 500);
+    return c.json({ 
+      data: [], 
+      total: 0, 
+      error: error instanceof Error ? error.message : 'Erro ao listar pacientes' 
+    }, 500);
   }
 });
 
@@ -779,7 +746,7 @@ app.post('/', async (c) => {
 
 app.get('/:id/stats', async (c) => {
   const user = c.get('user');
-  const db = await createPool(c.env);
+  const db = await createPool(c.env, 15000); // 15s timeout for complex stats query
   const { id } = c.req.param();
 
   if (!(await hasTable(db, 'appointments'))) {

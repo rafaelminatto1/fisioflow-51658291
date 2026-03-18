@@ -11,7 +11,7 @@
     "build:preview": "eas build --profile preview --platform ios",
     "build:prod": "eas build --profile production --platform ios",
     "submit": "eas submit --platform ios",
-    "lint": "oxlint .",
+    "lint": "oxlint . --quiet",
     "lint:fix": "oxlint . --fix",
     "type-check": "tsc --noEmit",
     "test:unit": "echo \"no unit tests\""
