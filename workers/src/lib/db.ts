@@ -2,6 +2,7 @@ import { neon } from '@neondatabase/serverless';
 import { drizzle as drizzleHttp } from 'drizzle-orm/neon-http';
 import * as schema from '@fisioflow/db';
 import type { Env } from '../types/env';
+import { wrapQueryWithTimeout, DEFAULT_TIMEOUTS } from './dbWrapper';
 
 function getUrl(env: Env): string {
   // Prioriza NEON_URL (direto ao Neon HTTP API) sobre Hyperdrive (TCP-only, não funciona com neon() HTTP)
@@ -22,12 +23,17 @@ export function createDb(env: Env) {
  * Retorna um objeto compatível com pg.Pool.query({ rows }).
  * fullResults: true → retorna { rows, rowCount, fields } como pg.
  * Sem TCP, sem conexões persistentes — usa Neon HTTP.
+ * Inclui timeout padrão de 10s para queries.
  */
-export function createPool(env: Env) {
+export function createPool(env: Env, defaultTimeout: number = DEFAULT_TIMEOUTS.query) {
   const sql = neon(getUrl(env), { fullResults: true });
+  
+  const wrappedQuery = wrapQueryWithTimeout(sql.query.bind(sql), defaultTimeout);
+  const wrappedSql = Object.assign(sql, { query: wrappedQuery });
+  
   // Compatibilidade com rotas que chamam pool.end() — no-op
-  (sql as any).end = async () => {};
-  return sql as typeof sql & { end: () => Promise<void> };
+  (wrappedSql as any).end = async () => {};
+  return wrappedSql as typeof wrappedSql & { end: () => Promise<void> };
 }
 
 /**
@@ -40,8 +46,9 @@ export function getRawSql(env: Env) {
 /**
  * Retorna um pool com pré-configuração de RLS para organização específica.
  * Define current_setting('app.org_id') antes de cada query para compatibilidade com RLS.
+ * Inclui timeout padrão de 10s para queries.
  */
-export function createPoolForOrg(env: Env, organizationId: string) {
+export function createPoolForOrg(env: Env, organizationId: string, defaultTimeout: number = DEFAULT_TIMEOUTS.query) {
   const sql = neon(getUrl(env), { fullResults: true });
   
   // Wrapper que executa SET LOCAL antes de cada query
@@ -49,7 +56,14 @@ export function createPoolForOrg(env: Env, organizationId: string) {
     try {
       // Executa SET LOCAL antes da query para RLS
       await sql`SELECT set_config('app.org_id', ${organizationId}::text, true)`;
-      return await sql.query(queryText, params);
+      
+      // Apply timeout to the main query
+      const wrappedQuery = wrapQueryWithTimeout(
+        (qt: string, p: any[]) => sql.query(qt, p),
+        defaultTimeout
+      );
+      
+      return await wrappedQuery(queryText, params);
     } catch (error) {
       console.error('[DB Error with RLS]:', error);
       throw error;
@@ -57,5 +71,6 @@ export function createPoolForOrg(env: Env, organizationId: string) {
   };
   
   (queryWithRls as any).end = async () => {};
-  return queryWithRls as typeof sql & { end: () => Promise<void> };
+  (queryWithRls as any).query = queryWithRls;
+  return queryWithRls as any;
 }

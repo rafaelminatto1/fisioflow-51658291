@@ -20,7 +20,7 @@
     "test:e2e": "playwright test --config=playwright.config.ts",
     "test:e2e:headed": "playwright test --config=playwright.config.ts --headed",
     "test:e2e:debug": "playwright test --config=playwright.config.ts --debug",
-    "lint": "oxlint .",
+    "lint": "oxlint . --quiet",
     "lint:fix": "oxlint . --fix"
   },
   "dependencies": {
