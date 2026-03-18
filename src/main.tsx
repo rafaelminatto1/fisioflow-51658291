@@ -8,11 +8,13 @@ import { initSentry } from '@/lib/sentry/config';
 import { initAppCheck } from '@/lib/app-check';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { initializeRemoteConfig } from '@/lib/remote-config-manager';
+import { initPostHog } from '@/lib/analytics/posthog';
 
 // Inicialização paralela de serviços não-bloqueantes
 const initServices = async () => {
   try {
     initSentry();
+    initPostHog();
     initAppCheck();
     
     // Serviços que podem falhar sem quebrar a app (Remote Config, Analytics, etc)

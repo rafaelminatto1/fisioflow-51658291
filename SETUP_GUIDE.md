@@ -1,365 +1,162 @@
-# FisioFlow - Guia de Configuração e Deploy
+# FisioFlow - Guia de Configuração e Deploy (Neon + Cloudflare)
 
 ## Visão Geral
 
-O FisioFlow utiliza **Google Firebase** e **Google Cloud Platform** como infraestrutura principal.
+O FisioFlow utiliza **Neon** (Banco de Dados e Autenticação) e **Cloudflare** (Workers e R2) como infraestrutura principal.
 
 ### Stack de Serviços
 
-| Serviço | Uso | Substitui |
-|---------|-----|-----------|
-| Firebase Authentication | Autenticação de usuários | Supabase Auth |
-| Firebase Firestore | Banco de dados principal | Supabase PostgreSQL |
-| Firebase Realtime Database | Cache distribuído | Cloudflare KV |
-| Firebase Storage | Armazenamento de arquivos | Cloudflare Blob |
-| Firebase Remote Config | Feature flags dinâmicos | Cloudflare Edge Config |
-| Firebase Cloud Functions | Funções serverless | Cloudflare Edge Functions |
-| Firebase Hosting | Hospedagem web | Cloudflare Hosting |
-| Google Analytics 4 | Analytics | Cloudflare Analytics |
-| Google Cloud Vertex AI | IA e ML | OpenAI API |
+| Serviço | Uso | Tecnologia |
+|---------|-----|------------|
+| Neon Auth | Autenticação de usuários | Better Auth + Neon |
+| Neon PostgreSQL | Banco de dados principal | PostgreSQL Serverless |
+| Cloudflare R2 | Armazenamento de arquivos | S3-Compatible Storage |
+| Cloudflare Workers | Funções serverless e API | Edge Computing |
+| Cloudflare Pages | Hospedagem frontend | Static Hosting |
+| Cloudflare Analytics | Monitoramento e tráfego | Web Analytics |
+| OpenAI/Gemini API | IA e ML | LLM Integrations |
 
 ---
 
 ## Pré-requisitos
 
-1. **Node.js** 22+ instalado
+1. **Node.js** 20+ instalado
 2. **pnpm** como package manager
-3. Conta **Google Cloud** com projeto Firebase criado
-4. **Firebase CLI** instalado:
+3. Conta no **Neon.tech**
+4. Conta na **Cloudflare**
+5. **Wrangler CLI** instalado:
    ```bash
-   npm install -g firebase-tools
-   firebase login
+   npm install -g wrangler
+   wrangler login
    ```
 
 ---
 
-## 1. Configuração do Firebase
+## 1. Configuração do Neon
 
-### 1.1 Criar Projeto Firebase
+### 1.1 Criar Projeto no Neon
 
-1. Acesse: https://console.firebase.google.com/
-2. Clique em "Adicionar projeto"
-3. Siga o assistente de configuração
+1. Acesse: https://console.neon.tech/
+2. Crie um novo projeto chamado `fisioflow`
+3. Copie a `DATABASE_URL` (Connection String)
 
-### 1.2 Configurar Serviços Firebase
+### 1.2 Configurar Neon Auth
 
-#### Authentication
-- Ativar **Email/Password**
-- Ativar **Google** (opcional)
-- Configurar domínios autorizados
-
-#### Firestore Database
-- Criar banco de dados em **Produção**
-- Região: `southamerica-east1` (São Paulo) ou mais próxima
-
-#### Storage
-- Ativar **Cloud Storage for Firebase**
-- Região: mesma do Firestore
-- Configurar regras de segurança
-
-#### Remote Config
-- Criar parâmetros de feature flags
-- Verificar arquivo `src/lib/firebase/remote-config.ts` para referência
-
-#### Cloud Functions
-- Ativar **Cloud Functions** na região desejada
-- Upgrade para plano **Blaze** (paga por uso) para funções
-
-### 1.3 Obter Credenciais
-
-No Firebase Console > Project Settings > General:
-
-```bash
-# Adicione ao seu .env
-VITE_FIREBASE_API_KEY=AIzaSy...
-VITE_FIREBASE_AUTH_DOMAIN=projeto-id.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=projeto-id
-VITE_FIREBASE_STORAGE_BUCKET=projeto-id.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
-VITE_FIREBASE_APP_ID=1:123456789:web:abc123
-VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
-```
+1. No console do Neon, ative o **Neon Auth** (em Preview/Beta).
+2. Configure o provedor de autenticação e obtenha as chaves necessárias.
+3. Adicione a URL do endpoint de autenticação ao seu `.env`.
 
 ---
 
-## 2. Configuração do Google Analytics
+## 2. Configuração do Cloudflare
 
-### 2.1 Criar Propriedade GA4
+### 2.1 Cloudflare R2 (Storage)
 
-1. Acesse: https://analytics.google.com/
-2. Crie uma conta GA4
-3. Adicione a propriedade ao seu projeto Firebase
+1. No dashboard da Cloudflare, acesse **R2**.
+2. Crie um bucket chamado `fisioflow-media`.
+3. Configure as credenciais de acesso (Access Key e Secret Key) para uso local, se necessário.
 
-### 2.2 Configurar Measurement ID
+### 2.2 Cloudflare Workers (API)
 
-Adicione ao `.env`:
-```bash
-VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX
-```
-
----
-
-## 3. Configuração de Integrações
-
-### 3.1 Inngest (Background Jobs)
-
-1. Acesse: https://app.inngest.com/
-2. Crie um novo app
-3. Configure as variáveis de ambiente:
-   ```bash
-   INNGEST_KEY=your-inngest-key
-   INNGEST_EVENT_KEY=your-event-key
-   INNGEST_SIGNING_KEY=your-signing-key
-   ```
-
-### 3.2 Evolution API (WhatsApp)
-
-#### Docker Local:
-```bash
-docker run -d \
-  --name evolution-api \
-  --restart always \
-  -p 8443:8443 \
-  -e SERVER_PORT=8443 \
-  evolutionapi/evolution-api:latest
-```
-
-#### Configure no .env:
-```bash
-WHATSAPP_API_URL=http://localhost:8443
-WHATSAPP_API_KEY=your-api-key
-WHATSAPP_VERIFY_TOKEN=your-verify-token
-```
-
-### 3.3 Resend (Email)
+A API principal reside em `cloudflare-worker/` (ou `workers/` dependendo da versão).
 
 ```bash
-RESEND_API_KEY=re_xxxxxxxxxxxxx
-```
-
-
-
-## 4. Deploy no Firebase
-
-### 4.1 Build do Projeto
-
-```bash
+cd cloudflare-worker
 # Instalar dependências
 pnpm install
-
-# Build de produção
-pnpm build:prod
-```
-
-### 4.2 Deploy
-
-```bash
-# Deploy Hosting + Functions
-firebase deploy
-
-# Deploy apenas Hosting
-firebase deploy --only hosting
-
-# Deploy apenas Functions
-firebase deploy --only functions
-
-# Deploy Firestore rules
-firebase deploy --only firestore:rules
-```
-
-### 4.3 Configurar Firebase Hosting
-
-O arquivo `firebase.json` já está configurado. Verifique:
-
-```json
-{
-  "hosting": {
-    "public": "dist",
-    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      },
-      {
-        "source": "/api/**",
-        "function": "api"
-      }
-    ],
-    "headers": [
-      {
-        "source": "**/*.@(jpg|jpeg|png|gif|webp|svg)",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "max-age=31536000"
-          }
-        ]
-      }
-    ]
-  }
-}
+# Deploy para staging/produção
+wrangler deploy
 ```
 
 ---
 
-## 5. Deploy de Cloud Functions
+## 3. Configuração de Variáveis de Ambiente
 
-### 5.1 Configurar Functions
+Crie um arquivo `.env` na raiz e nos apps:
 
-As functions estão em `/functions`:
+```env
+# Database
+DATABASE_URL=postgresql://user:pass@ep-project.sa-east-1.aws.neon.tech/neondb?sslmode=require
 
-```bash
-# Build das functions
-cd functions
-pnpm build
-cd ..
+# Auth
+VITE_NEON_AUTH_URL=https://your-auth-endpoint.neonauth.aws.neon.tech
 
-# Deploy
-firebase deploy --only functions
+# Cloudflare
+CLOUDFLARE_ACCOUNT_ID=your-account-id
+R2_BUCKET_NAME=fisioflow-media
 ```
 
-### 5.2 Variáveis de Ambiente das Functions
+---
 
-Configure via Firebase Console ou CLI:
+## 4. Banco de Dados e Migrações
+
+O FisioFlow utiliza **Drizzle ORM**.
 
 ```bash
-firebase functions:config:set \
-  openai.api_key="sk-..." \
-  resend.api_key="re_..." \
-  whatsapp.api_url="https://..."
+# Gerar arquivos de migração
+npm run db:generate
+
+# Aplicar migrações ao banco de dados (push direto para dev)
+npm run db:push
+
+# Rodar migrações em produção
+npm run db:migrate
+```
+
+---
+
+## 5. Deploy
+
+### 5.1 Frontend (Cloudflare Pages)
+
+```bash
+# Build do projeto
+pnpm build:prod
+
+# Deploy via Wrangler ou integração direta com GitHub
+wrangler pages deploy dist
+```
+
+### 5.2 Backend (Cloudflare Workers)
+
+```bash
+# Deploy da API
+pnpm workers:deploy
 ```
 
 ---
 
 ## 6. Monitoramento e Logging
 
-### 6.1 Firebase Crashlytics
-
-```bash
-pnpm add @sentry/react
-```
-
-### 6.2 Cloud Logging
-
-Logs automáticos do Cloud Functions são visíveis no:
-- Firebase Console > Functions > Logs
-- Google Cloud Console > Logging
+- **Sentry**: Para rastreamento de erros no frontend e backend.
+- **Cloudflare Observability**: Logs em tempo real dos Workers.
+- **Neon Console**: Monitoramento de queries e performance do banco.
 
 ---
 
-## 7. CI/CD
+## 7. CI/CD (GitHub Actions)
 
-### 7.1 GitHub Actions
-
-Crie `.github/workflows/deploy-firebase.yml`:
-
-```yaml
-name: Deploy to Firebase
-
-on:
-  push:
-    branches: [main]
-
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '22'
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 9
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Build
-        run: pnpm build:prod
-        env:
-          VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
-          VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          # ... outras variáveis
-
-      - name: Deploy to Firebase
-        uses: w9jds/firebase-action@master
-        with:
-          args: deploy --only hosting,functions
-        env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-```
-
-### 7.2 Secrets do GitHub
-
-Configure no GitHub Repository > Settings > Secrets:
-- `FIREBASE_TOKEN` (obtenha com `firebase login:ci`)
-- `FIREBASE_API_KEY`
-- `FIREBASE_PROJECT_ID`
-- etc.
+O deploy é automatizado via GitHub Actions. Verifique `.github/workflows/` para detalhes sobre o fluxo de build e deploy para Cloudflare.
 
 ---
 
 ## 8. Comandos Úteis
 
 ```bash
-# Emular localmente (útil para desenvolvimento)
-firebase emulators:start
+# Iniciar ambiente de desenvolvimento
+npm run dev
 
-# Testar functions localmente
-firebase functions:shell
+# Studio do Drizzle para visualizar dados
+npm run db:studio
 
-# Ver logs em tempo real
-firebase functions:log
-
-# Limpar cache local
-pnpm clean:all
-
-# Ver status do deployment
-firebase deploy --only hosting --dry-run
+# Limpar caches e reinstalar dependências
+npm run clean:all
 ```
 
 ---
 
-## 9. Troubleshooting
+## 9. Suporte
 
-### Erro de CORS
-- Configure regras de CORS no Cloud Functions
-- Verifique `firebase.json` headers
-
-### Functions timeout
-- Aumente timeout em `firebase.json`:
-  ```json
-    "functions": [
-      {
-        "source": "functions",
-        "codebase": "default",
-        "ignore": [
-          "**/node_modules/**",
-          "**/.ts",
-          "**/map"
-        ],
-        "predeploy": [
-          "pnpm --filter ./functions build"
-        ]
-      }
-    ]
-  ```
-
-### Problemas de build
-- Limpe `.vite` cache
-- Delete `node_modules` e reinstale
-
----
-
-## 10. Suporte
-
-- **Firebase Documentation**: https://firebase.google.com/docs
-- **Firebase Support**: https://firebase.google.com/support
-- **Google Cloud Documentation**: https://cloud.google.com/docs
-- **Stack Overflow**: Use tags `firebase` e `google-cloud-platform`
+- **Neon Docs**: https://neon.tech/docs
+- **Cloudflare Developers**: https://developers.cloudflare.com/
+- **Drizzle ORM**: https://orm.drizzle.team/

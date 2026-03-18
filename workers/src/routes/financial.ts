@@ -8,7 +8,9 @@
  * GET/POST/PUT/DELETE /api/financial/pagamentos
  */
 import { Hono } from 'hono';
-import { createPool } from '../lib/db';
+import { eq, and, gte, lte, desc } from 'drizzle-orm';
+import { transacoes, appointments } from '@fisioflow/db';
+import { createDb, createPool } from '../lib/db';
 import { requireAuth, type AuthVariables } from '../lib/auth';
 import type { Env } from '../types/env';
 
@@ -26,24 +28,28 @@ async function hasTable(
 
 app.get('/transacoes', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPool(c.env);
+  const db = createDb(c.env);
   const { tipo, status, dateFrom, dateTo, limit = '50', offset = '0' } = c.req.query();
 
-  const conditions: string[] = ['organization_id = $1'];
-  const params: unknown[] = [user.organizationId];
+  try {
+    const filters = [eq(transacoes.organizationId, user.organizationId)];
 
-  if (tipo) { params.push(tipo); conditions.push(`tipo = $${params.length}`); }
-  if (status) { params.push(status); conditions.push(`status = $${params.length}`); }
-  if (dateFrom) { params.push(dateFrom); conditions.push(`created_at >= $${params.length}`); }
-  if (dateTo) { params.push(dateTo); conditions.push(`created_at <= $${params.length}`); }
+    if (tipo) filters.push(eq(transacoes.tipo, tipo));
+    if (status) filters.push(eq(transacoes.status, status));
+    if (dateFrom) filters.push(gte(transacoes.createdAt, new Date(dateFrom)));
+    if (dateTo) filters.push(lte(transacoes.createdAt, new Date(dateTo)));
 
-  params.push(Number(limit), Number(offset));
-  const result = await pool.query(
-    `SELECT * FROM transacoes WHERE ${conditions.join(' AND ')}
-     ORDER BY created_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`,
-    params,
-  );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+    const result = await db.select().from(transacoes)
+      .where(and(...filters))
+      .orderBy(desc(transacoes.createdAt))
+      .limit(Number(limit))
+      .offset(Number(offset));
+
+    return c.json({ data: result });
+  } catch (e) {
+    console.error('[Financial/Transactions] Drizzle error:', e);
+    return c.json({ data: [] });
+  }
 });
 
 app.post('/transacoes', requireAuth, async (c) => {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 import {
   View,
@@ -17,140 +17,51 @@ import { useAuthStore } from '@/store/auth';
 import { Card, VideoModal, SyncIndicator, ExerciseFeedbackModal, ExerciseFeedback } from '@/components';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { Spacing } from '@/constants/spacing';
-import { patientApi } from '@/lib/api';
-import { usePatientExercisesPostgres } from '@/hooks';
 import { GamificationService } from '@/services/GamificationService';
+import { useExercises, useCompleteExercise } from '@/hooks/useExercises';
+import { ExerciseAssignment } from '@/types/api';
 import { log } from '@/lib/logger';
-
-interface Exercise {
-  id: string;
-  name: string;
-  description?: string;
-  sets: number;
-  reps: number;
-  hold_time?: number;
-  rest_time?: number;
-  completed: boolean;
-  completed_at?: Date;
-  video_url?: string;
-  image_url?: string;
-}
-
-interface ExercisePlan {
-  id: string;
-  name: string;
-  description?: string;
-  exercises: Exercise[];
-  start_date: Date;
-  end_date?: Date;
-  created_at: Date;
-}
 
 export default function ExercisesScreen() {
   const colors = useColors();
   const { user } = useAuthStore();
-  const [exercisePlan, setExercisePlan] = useState<ExercisePlan | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [completingExercise, setCompletingExercise] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<{ uri: string; title: string; description?: string } | null>(null);
-  const [feedbackExercise, setFeedbackExercise] = useState<Exercise | null>(null);
+  const [feedbackExercise, setFeedbackExercise] = useState<ExerciseAssignment | null>(null);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const {isOnline, queueOperation} = useOfflineSync();
+  const { isOnline, queueOperation } = useOfflineSync();
 
-  // --- DATA CONNECT IMPLEMENTATION ---
-  const {
-    data: exercisesPostgres,
-    isLoading: loadingPostgres,
-    refetch: refetchExercises,
-  } = usePatientExercisesPostgres(user?.id);
-
-  useEffect(() => {
-    if (!user?.id) {
-      setLoading(false);
-      return;
-    }
-
-    // Se temos dados do Postgres, usamos eles para montar o plano "virtual"
-    if (exercisesPostgres && exercisesPostgres.length > 0) {
-      setExercisePlan({
-        id: exercisesPostgres[0]?.plan?.id || 'portal-plan',
-        name: exercisesPostgres[0]?.plan?.name || 'Plano Atual',
-        description: exercisesPostgres[0]?.plan?.description || 'Seus exercícios prescritos mais recentes.',
-        exercises: exercisesPostgres.map((ex: any) => ({
-          id: ex.id,
-          name: ex.exercise?.name || 'Exercício',
-          description: ex.notes || ex.exercise?.description,
-          sets: ex.sets,
-          reps: ex.reps,
-          completed: ex.completed,
-          video_url: ex.exercise?.videoUrl,
-          image_url: ex.exercise?.imageUrl,
-          // Adaptação de campos
-          hold_time: 0,
-          rest_time: 0
-        })),
-        start_date: new Date(),
-        created_at: new Date()
-      });
-      setLoading(false);
-    } else if (!loadingPostgres) {
-        // Fallback para Firestore apenas se Postgres estiver vazio e carregamento terminou
-        // (Mantendo lógica antiga como backup silencioso ou removendo se quiser full migration)
-        setLoading(false); 
-    }
-  }, [user?.id, exercisesPostgres, loadingPostgres]);
-
-  /* FIRESTORE LOGIC REPLACED/DISABLED FOR READING
-  useEffect(() => {
-    // ... (código antigo comentado)
-  }, [user?.id]);
-  */
+  const { data: exercises = [], isLoading, isRefetching, refetch } = useExercises();
+  const completeMutation = useCompleteExercise();
 
   const onRefresh = async () => {
-    setRefreshing(true);
-    refetchExercises();
-    setRefreshing(false);
+    await refetch();
   };
 
-  const toggleExercise = async (exercise: Exercise) => {
-    if (!exercisePlan || !user?.id) return;
+  const toggleExercise = async (assignment: ExerciseAssignment) => {
+    if (!user?.id) return;
 
     // If completing (not uncompleting), show feedback modal first
-    if (!exercise.completed) {
-      setFeedbackExercise(exercise);
+    if (!assignment.completed) {
+      setFeedbackExercise(assignment);
       setShowFeedbackModal(true);
       return;
     }
 
-    setCompletingExercise(exercise.id);
-
     try {
-      const newCompletedState = !exercise.completed;
-
-      // Update local state immediately for responsiveness
-      const updatedExercises = exercisePlan.exercises.map((ex: Exercise) =>
-        ex.id === exercise.id
-          ? { ...ex, completed: newCompletedState, completed_at: newCompletedState ? new Date() : undefined }
-          : ex
-      );
-
-      setExercisePlan({
-        ...exercisePlan,
-        exercises: updatedExercises,
-      });
+      const newCompletedState = !assignment.completed;
 
       if (isOnline) {
-        await patientApi.completeExercise(exercise.id, {
-          completed: newCompletedState,
+        await completeMutation.mutateAsync({
+          assignmentId: assignment.id,
+          data: { completed: newCompletedState },
         });
 
         if (newCompletedState) {
-          await GamificationService.awardExerciseCompletion(user.id, exercise.id);
+          await GamificationService.awardExerciseCompletion(user.id, assignment.id);
         }
       } else {
         await queueOperation('complete_exercise', {
-          assignmentId: exercise.id,
+          assignmentId: assignment.id,
           completed: newCompletedState,
         });
 
@@ -161,34 +72,21 @@ export default function ExercisesScreen() {
       }
     } catch (error) {
       log.error('Error toggling exercise:', error);
-      Alert.alert('Erro', 'Nao foi possível atualizar o exercício.');
-    } finally {
-      setCompletingExercise(null);
+      Alert.alert('Erro', 'Não foi possível atualizar o exercício.');
     }
   };
 
   const handleFeedbackSubmit = async (feedback: ExerciseFeedback) => {
-    if (!feedbackExercise || !exercisePlan || !user?.id) return;
-
-    setCompletingExercise(feedbackExercise.id);
+    if (!feedbackExercise || !user?.id) return;
 
     try {
-      // Update local state
-      const updatedExercises = exercisePlan.exercises.map((ex: Exercise) =>
-        ex.id === feedbackExercise!.id
-          ? { ...ex, completed: true, completed_at: new Date() }
-          : ex
-      );
-
-      setExercisePlan({
-        ...exercisePlan,
-        exercises: updatedExercises,
-      });
-
       if (isOnline) {
-        await patientApi.completeExercise(feedbackExercise.id, {
-          completed: true,
-          ...feedback,
+        await completeMutation.mutateAsync({
+          assignmentId: feedbackExercise.id,
+          data: {
+            completed: true,
+            ...feedback,
+          },
         });
 
         await GamificationService.awardExerciseCompletion(user.id, feedbackExercise.id);
@@ -202,27 +100,32 @@ export default function ExercisesScreen() {
           assignmentId: feedbackExercise.id,
           ...feedback,
         });
+
+        Alert.alert(
+          'Salvo Localmente',
+          'As alterações serão sincronizadas quando você reconectar.'
+        );
       }
     } catch (error) {
       log.error('Error submitting feedback:', error);
-      Alert.alert('Erro', 'Nao foi possível salvar o feedback.');
+      Alert.alert('Erro', 'Não foi possível salvar o feedback.');
     } finally {
-      setCompletingExercise(null);
       setFeedbackExercise(null);
+      setShowFeedbackModal(false);
     }
   };
 
-  const openVideo = (exercise: Exercise) => {
-    if (exercise.video_url) {
+  const openVideo = (assignment: ExerciseAssignment) => {
+    if (assignment.exercise?.videoUrl) {
       setSelectedVideo({
-        uri: exercise.video_url,
-        title: exercise.name,
-        description: exercise.description,
+        uri: assignment.exercise.videoUrl,
+        title: assignment.exercise.name,
+        description: assignment.exercise.description,
       });
     }
   };
 
-  if (loading) {
+  if (isLoading && !isRefetching) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
         <View style={styles.loadingContainer}>
@@ -235,13 +138,13 @@ export default function ExercisesScreen() {
     );
   }
 
-  if (!exercisePlan) {
+  if (exercises.length === 0) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={isRefetching} onRefresh={onRefresh} />
           }
         >
           <View style={styles.emptyState}>
@@ -258,7 +161,6 @@ export default function ExercisesScreen() {
     );
   }
 
-  const exercises = exercisePlan.exercises || [];
   const completedCount = exercises.filter(e => e.completed).length;
   const totalCount = exercises.length;
   const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
@@ -271,24 +173,9 @@ export default function ExercisesScreen() {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl refreshing={isRefetching} onRefresh={onRefresh} />
         }
       >
-        {/* Plan Info Card */}
-        <Card style={styles.planInfoCard}>
-          <Text style={[styles.planName, { color: colors.text }]} numberOfLines={1}>
-            {exercisePlan.name}
-          </Text>
-          {exercisePlan.description && (
-            <Text
-              style={[styles.planDescription, { color: colors.textSecondary }]}
-              numberOfLines={2}
-            >
-              {exercisePlan.description}
-            </Text>
-          )}
-        </Card>
-
         {/* Progress Card */}
         <Card style={styles.progressCard}>
           <View style={styles.progressHeader}>
@@ -319,18 +206,18 @@ export default function ExercisesScreen() {
           Meus Exercícios
         </Text>
 
-        {exercises.map((exercise, index) => (
+        {exercises.map((assignment, index) => (
           <TouchableOpacity
-            key={exercise.id}
-            onPress={() => toggleExercise(exercise)}
+            key={assignment.id}
+            onPress={() => toggleExercise(assignment)}
             activeOpacity={0.7}
-            disabled={completingExercise === exercise.id}
+            disabled={completeMutation.isPending && completeMutation.variables?.assignmentId === assignment.id}
           >
             <Card
               style={[
                 styles.exerciseCard,
                 { borderColor: colors.border },
-                exercise.completed && { opacity: 0.7 },
+                assignment.completed && { opacity: 0.7 },
               ]}
             >
               <View style={styles.exerciseHeader}>
@@ -338,16 +225,16 @@ export default function ExercisesScreen() {
                   style={[
                     styles.checkbox,
                     {
-                      backgroundColor: exercise.completed
+                      backgroundColor: assignment.completed
                         ? colors.success
                         : 'transparent',
-                      borderColor: exercise.completed
+                      borderColor: assignment.completed
                         ? colors.success
                         : colors.border,
                     },
                   ]}
                 >
-                  {exercise.completed && (
+                  {assignment.completed && (
                     <Ionicons name="checkmark" size={16} color="#FFFFFF" />
                   )}
                 </View>
@@ -362,41 +249,41 @@ export default function ExercisesScreen() {
                       style={[
                         styles.exerciseName,
                         { color: colors.text },
-                        exercise.completed && styles.completedText,
+                        assignment.completed && styles.completedText,
                       ]}
                       numberOfLines={1}
                     >
-                      {exercise.name}
+                      {assignment.exercise?.name || 'Exercício'}
                     </Text>
                     <Text style={[styles.exerciseSets, { color: colors.textSecondary }]}>
-                      {exercise.sets} séries × {exercise.reps} reps
-                      {exercise.hold_time && ` • ${exercise.hold_time}s descenso`}
-                      {exercise.rest_time && ` • ${exercise.rest_time}s descanso`}
+                      {assignment.sets} séries × {assignment.reps} reps
+                      {assignment.holdTime ? ` • ${assignment.holdTime}s descenso` : ''}
+                      {assignment.restTime ? ` • ${assignment.restTime}s descanso` : ''}
                     </Text>
                   </View>
                 </View>
-                {completingExercise === exercise.id ? (
+                {completeMutation.isPending && completeMutation.variables?.assignmentId === assignment.id ? (
                   <ActivityIndicator size="small" color={colors.primary} />
                 ) : (
                   <Ionicons
-                    name={exercise.completed ? "checkmark-circle" : "ellipse-outline"}
+                    name={assignment.completed ? "checkmark-circle" : "ellipse-outline"}
                     size={24}
-                    color={exercise.completed ? colors.success : colors.textMuted}
+                    color={assignment.completed ? colors.success : colors.textMuted}
                   />
                 )}
               </View>
-              {exercise.description && (
+              {assignment.notes && (
                 <Text
                   style={[styles.exerciseDescription, { color: colors.textSecondary }]}
                   numberOfLines={2}
                 >
-                  {exercise.description}
+                  {assignment.notes}
                 </Text>
               )}
-              {exercise.video_url && (
+              {assignment.exercise?.videoUrl && (
                 <TouchableOpacity
                   style={[styles.videoIndicator, { backgroundColor: colors.surface }]}
-                  onPress={() => openVideo(exercise)}
+                  onPress={() => openVideo(assignment)}
                   activeOpacity={0.7}
                 >
                   <Ionicons name="play-circle" size={16} color={colors.primary} />
@@ -429,7 +316,7 @@ export default function ExercisesScreen() {
           setFeedbackExercise(null);
         }}
         onSubmit={handleFeedbackSubmit}
-        exerciseName={feedbackExercise?.name || ''}
+        exerciseName={feedbackExercise?.exercise?.name || ''}
       />
     </SafeAreaView>
   );

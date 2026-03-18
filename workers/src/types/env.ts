@@ -65,4 +65,8 @@ export interface Env {
   LIVEKIT_API_KEY?: string;
   LIVEKIT_API_SECRET?: string;
   LIVEKIT_URL?: string;
+
+  // Resend (Email)
+  RESEND_API_KEY?: string;
+  RESEND_FROM_EMAIL?: string; // ex: "FisioFlow <noreply@moocafisio.com.br>"
 }

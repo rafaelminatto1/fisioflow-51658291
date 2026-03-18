@@ -1,13 +1,14 @@
 import { Hono } from 'hono';
+import { eq, and, inArray } from 'drizzle-orm';
 import type { Env } from '../types/env';
 import { requireAuth, type AuthVariables } from '../lib/auth';
-import { createPool } from '../lib/db';
+import { createDb } from '../lib/db';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 app.get('/me', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPool(c.env);
+  const db = createDb(c.env);
   
   const fallbackProfile = {
     id: user.uid,
@@ -20,26 +21,48 @@ app.get('/me', requireAuth, async (c) => {
   };
 
   try {
-    const result = await pool.query(
-      `SELECT id, user_id, email, full_name, role, organization_id FROM profiles WHERE user_id = $1 LIMIT 1`,
-      [user.uid]
-    );
-    return c.json({ data: result.rows[0] || fallbackProfile });
+    const profile = await db.query.profiles.findFirst({
+      where: (profiles, { eq }) => eq(profiles.userId, user.uid)
+    });
+
+    if (!profile) return c.json({ data: fallbackProfile });
+
+    return c.json({ 
+      data: {
+        id: profile.id,
+        user_id: profile.userId,
+        email: profile.email,
+        full_name: profile.fullName,
+        role: profile.role,
+        organization_id: profile.organizationId
+      }
+    });
   } catch (error) {
+    console.error('[Profile/Me] Drizzle error:', error);
     return c.json({ data: fallbackProfile });
   }
 });
 
 app.get('/therapists', requireAuth, async (c) => {
   const user = c.get('user');
-  const pool = await createPool(c.env);
+  const db = createDb(c.env);
   try {
-    const result = await pool.query(
-      `SELECT id, full_name as name FROM profiles WHERE organization_id = $1 AND role IN ('admin', 'fisioterapeuta')`,
-      [user.organizationId]
-    );
-    return c.json({ data: result.rows });
+    const therapists = await db.query.profiles.findMany({
+      where: (profiles, { and, eq, inArray }) => and(
+        eq(profiles.organizationId, user.organizationId),
+        inArray(profiles.role, ['admin', 'fisioterapeuta'])
+      ),
+      columns: {
+        id: true,
+        fullName: true
+      }
+    });
+
+    return c.json({ 
+      data: therapists.map(t => ({ id: t.id, name: t.fullName })) 
+    });
   } catch (error) {
+    console.error('[Profile/Therapists] Drizzle error:', error);
     return c.json({ data: [] });
   }
 });

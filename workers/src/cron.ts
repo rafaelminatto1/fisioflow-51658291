@@ -1,7 +1,7 @@
 import { Env } from './types/env';
 import { createPool } from './lib/db';
-
 import { triggerInngestEvent } from './lib/inngest-client';
+import { sendAppointmentReminderEmail } from './lib/email';
 
 /**
  * Cloudflare Worker Cron Trigger Handler
@@ -78,10 +78,39 @@ async function processInactivePatients(db: any, env: Env, ctx: ExecutionContext)
   }
 }
 
-async function sendAppointmentReminders(pool: any, env: Env, ctx: ExecutionContext) {
-  // Já gerenciado via eventos Inngest no momento da criação, 
-  // mas aqui serviria como um fallback de segurança.
-  console.log('[Cron] Syncing daily reminders...');
+async function sendAppointmentReminders(pool: any, env: Env, _ctx: ExecutionContext) {
+  console.log('[Cron] Sending appointment reminder emails...');
+  const result = await pool.query(`
+    SELECT
+      a.id,
+      a.start_time::text AS time,
+      TO_CHAR(a.date, 'DD/MM/YYYY') AS formatted_date,
+      p.full_name AS patient_name,
+      p.email AS patient_email,
+      prof.full_name AS therapist_name
+    FROM appointments a
+    JOIN patients p ON p.id = a.patient_id
+    LEFT JOIN profiles prof ON prof.user_id = a.therapist_id
+    WHERE a.date = CURRENT_DATE + INTERVAL '1 day'
+      AND a.status NOT IN ('cancelled', 'no_show')
+      AND p.email IS NOT NULL
+  `);
+
+  let sent = 0;
+  for (const row of result.rows) {
+    try {
+      await sendAppointmentReminderEmail(env, row.patient_email, {
+        patientName: row.patient_name,
+        date: row.formatted_date,
+        time: row.time?.substring(0, 5) ?? '',
+        therapistName: row.therapist_name,
+      });
+      sent++;
+    } catch (err) {
+      console.error(`[Cron] Failed to send reminder to ${row.patient_email}:`, err);
+    }
+  }
+  console.log(`[Cron] Sent ${sent}/${result.rows.length} appointment reminders.`);
 }
 
 async function performDatabaseCleanup(pool: any, env: Env) {
