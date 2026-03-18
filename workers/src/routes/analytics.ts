@@ -56,11 +56,11 @@ app.get('/dashboard', requireAuth, async (c) => {
     ),
     pool.query(
       `SELECT
-         COUNT(*) FILTER (WHERE status IN ('confirmed','completed','atendido','realizado'))::int AS total_completed,
+         COUNT(*) FILTER (WHERE status = 'completed')::int AS total_completed,
          COUNT(*) FILTER (WHERE status IN ('scheduled','confirmed'))::int AS upcoming,
          COUNT(*) AS total,
-         COUNT(*) FILTER (WHERE status IN ('no_show','faltou'))::int AS no_show,
-         COUNT(*) FILTER (WHERE status IN ('confirmed','atendido'))::int AS confirmed
+         COUNT(*) FILTER (WHERE status = 'no_show')::int AS no_show,
+         COUNT(*) FILTER (WHERE status = 'confirmed')::int AS confirmed
        FROM appointments
        WHERE organization_id = $1
          AND start_time BETWEEN $2::timestamp AND $3::timestamp`,
