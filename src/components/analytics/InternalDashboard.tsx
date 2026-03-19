@@ -11,10 +11,9 @@ import {
   type PatientRow,
 } from '@/lib/api/workers-client';
 import { Users, UserMinus, UserPlus, TrendingUp, Clock, CreditCard } from 'lucide-react';
-import { format, subDays, subMonths, startOfDay, startOfWeek, startOfMonth } from 'date-fns';
+import { format, subDays, subMonths, startOfDay, startOfWeek, startOfMonth, eachMonthOfInterval, differenceInMonths, eachDayOfInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
-
   Table,
   TableBody,
   TableCell,
@@ -25,6 +24,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 import { PatientHelpers } from '@/types';
+import { useAnalyticsFilters } from '@/contexts/AnalyticsFiltersContext';
 
 const listPatients = async () => {
   const items: PatientRow[] = [];
@@ -42,13 +42,19 @@ const listPatients = async () => {
   return items;
 };
 
-const listAppointments = async (dateFrom?: string) => {
+const listAppointments = async (dateFrom?: string, dateTo?: string, therapistId?: string) => {
   const items: AppointmentRow[] = [];
   let offset = 0;
   const limit = 1000;
 
   while (offset < 10000) {
-    const response = await appointmentsApi.list({ dateFrom, limit, offset });
+    const response = await appointmentsApi.list({ 
+      dateFrom, 
+      dateTo, 
+      limit, 
+      offset,
+      therapistId: therapistId === 'all' ? undefined : therapistId 
+    });
     const chunk = response?.data ?? [];
     items.push(...chunk);
     if (chunk.length < limit) break;
@@ -59,12 +65,17 @@ const listAppointments = async (dateFrom?: string) => {
 };
 
 function InternalDashboardComponent() {
-  // Pacientes ativos (com consulta nos últimos 30 dias)
+  const { filters } = useAnalyticsFilters();
+  const { dateRange, professionalId } = filters;
+
+  // Pacientes ativos (com consulta no período selecionado)
   const { data: activePatients, isLoading: loadingActive } = useQuery({
-    queryKey: ["active-patients-dashboard"],
+    queryKey: ["active-patients-dashboard", dateRange, professionalId],
+    enabled: !!dateRange?.from && !!dateRange?.to,
     queryFn: async () => {
-      const thirtyDaysAgo = subDays(new Date(), 30);
-      const snapshot = await listAppointments(format(thirtyDaysAgo, 'yyyy-MM-dd'));
+      const from = format(dateRange!.from!, 'yyyy-MM-dd');
+      const to = format(dateRange!.to!, 'yyyy-MM-dd');
+      const snapshot = await listAppointments(from, to, professionalId);
       const patientIds = new Set(
         snapshot
           .map((appointment) => appointment.patient_id)
@@ -75,15 +86,15 @@ function InternalDashboardComponent() {
     },
   });
 
-  // Pacientes inativos (sem consulta há mais de 30 dias)
+  // Pacientes inativos (sem consulta há mais de 30 dias - mantemos 30 como padrão de inatividade, mas filtramos por profissional)
   const { data: inactivePatients, isLoading: loadingInactive } = useQuery({
-    queryKey: ["inactive-patients-list"],
+    queryKey: ["inactive-patients-list", professionalId],
     queryFn: async () => {
       const thirtyDaysAgo = subDays(new Date(), 30);
 
       const [allPatients, recentAppointments] = await Promise.all([
         listPatients(),
-        listAppointments(format(thirtyDaysAgo, 'yyyy-MM-dd')),
+        listAppointments(format(thirtyDaysAgo, 'yyyy-MM-dd'), undefined, professionalId),
       ]);
 
       const activePatientIds = new Set(
@@ -93,7 +104,7 @@ function InternalDashboardComponent() {
       // Filtrar inativos
       const inactive = allPatients.filter(p => !activePatientIds.has(p.id));
 
-      const allAppointments = await listAppointments();
+      const allAppointments = await listAppointments(undefined, undefined, professionalId);
       const lastAppointmentMap = new Map<string, string>();
       allAppointments.forEach((appointment) => {
         if (!appointment.patient_id || !appointment.date) return;
@@ -141,38 +152,55 @@ function InternalDashboardComponent() {
 
   // Novos pacientes por período
   const { data: newPatientsData } = useQuery({
-    queryKey: ["new-patients-by-period"],
+    queryKey: ["new-patients-by-period", dateRange],
+    enabled: !!dateRange?.from && !!dateRange?.to,
     queryFn: async () => {
-      const now = new Date();
-      const todayStart = startOfDay(now);
-      const weekStart = startOfWeek(now, { locale: ptBR });
-      const monthStart = startOfMonth(now);
+      const from = dateRange!.from!;
+      const to = dateRange!.to!;
+      
       const patients = await listPatients();
 
-      const todayCount = patients.filter((patient) => new Date(patient.created_at) >= todayStart).length;
-      const weekCount = patients.filter((patient) => new Date(patient.created_at) >= weekStart).length;
-      const monthCount = patients.filter((patient) => new Date(patient.created_at) >= monthStart).length;
+      const periodCount = patients.filter((patient) => {
+        const createdAt = new Date(patient.created_at);
+        return createdAt >= from && createdAt <= to;
+      }).length;
 
-      // Últimos 6 meses para gráfico
-      const sixMonthsData = Array.from({ length: 6 }, (_, i) => {
-        const monthDate = subMonths(now, 5 - i);
-        const start = startOfMonth(monthDate);
-        const end = startOfMonth(subMonths(monthDate, -1));
+      // Dinâmico: Diário se < 2 meses, Mensal se >= 2 meses
+      const monthsDiff = differenceInMonths(to, from);
+      let chartData;
 
-        return {
-          month: format(monthDate, "MMM", { locale: ptBR }),
-          count: patients.filter((patient) => {
-            const createdAt = new Date(patient.created_at);
-            return createdAt >= start && createdAt < end;
-          }).length,
-        };
-      });
+      if (monthsDiff >= 2) {
+        const intervalMonths = eachMonthOfInterval({ start: from, end: to });
+        chartData = intervalMonths.map((month) => {
+          const start = startOfMonth(month);
+          const end = startOfMonth(subMonths(month, -1));
+          return {
+            label: format(month, "MMM/yy", { locale: ptBR }),
+            count: patients.filter((p) => {
+              const created = new Date(p.created_at);
+              return created >= start && created < end;
+            }).length,
+          };
+        });
+      } else {
+        const intervalDays = eachDayOfInterval({ start: from, end: to });
+        // Agrupar por dia para não ficar poluído, mas mostrar alguns pontos
+        chartData = intervalDays.filter((_, i) => intervalDays.length <= 15 || i % 2 === 0).map((day) => {
+          const dStart = startOfDay(day);
+          const dEnd = startOfDay(subDays(day, -1));
+          return {
+            label: format(day, "dd/MM", { locale: ptBR }),
+            count: patients.filter((p) => {
+              const created = new Date(p.created_at);
+              return created >= dStart && created < dEnd;
+            }).length,
+          };
+        });
+      }
 
       return {
-        today: todayCount,
-        thisWeek: weekCount,
-        thisMonth: monthCount,
-        byMonth: sixMonthsData,
+        periodTotal: periodCount,
+        chartData,
       };
     },
   });
@@ -220,7 +248,7 @@ function InternalDashboardComponent() {
             <div className="text-3xl font-bold text-green-600 tracking-tight">
               {loadingActive ? "..." : activePatients}
             </div>
-            <p className="text-xs text-muted-foreground mt-1 font-medium">Consulta nos últimos 30 dias</p>
+            <p className="text-xs text-muted-foreground mt-1 font-medium">Consulta no período selecionado</p>
           </CardContent>
         </Card>
 
@@ -267,28 +295,20 @@ function InternalDashboardComponent() {
           <CardHeader className="border-b border-gray-100/50 dark:border-gray-800/50 pb-4">
             <CardTitle className="flex items-center gap-2 text-lg">
               <UserPlus className="h-5 w-5 text-primary" />
-              Crescimento de Pacientes
+              Novos Pacientes no Período
             </CardTitle>
-            <CardDescription>Acompanhamento de novos cadastros</CardDescription>
+            <CardDescription>Acompanhamento de novos cadastros no intervalo selecionado</CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              <div className="text-center p-4 rounded-2xl bg-primary/5 border border-primary/10">
-                <div className="text-3xl font-bold text-primary">{newPatientsData?.today || 0}</div>
-                <p className="text-xs font-semibold text-primary/70 mt-1 uppercase tracking-wider">Hoje</p>
-              </div>
-              <div className="text-center p-4 rounded-2xl bg-blue-500/5 border border-blue-500/10">
-                <div className="text-3xl font-bold text-blue-600">{newPatientsData?.thisWeek || 0}</div>
-                <p className="text-xs font-semibold text-blue-600/70 mt-1 uppercase tracking-wider">Esta Semana</p>
-              </div>
-              <div className="text-center p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10">
-                <div className="text-3xl font-bold text-indigo-600">{newPatientsData?.thisMonth || 0}</div>
-                <p className="text-xs font-semibold text-indigo-600/70 mt-1 uppercase tracking-wider">Este Mês</p>
+            <div className="flex justify-center mb-8">
+              <div className="text-center p-6 rounded-2xl bg-primary/5 border border-primary/10 min-w-[200px]">
+                <div className="text-4xl font-bold text-primary">{newPatientsData?.periodTotal || 0}</div>
+                <p className="text-xs font-semibold text-primary/70 mt-1 uppercase tracking-wider">Total Novos</p>
               </div>
             </div>
             <div className="h-[250px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={newPatientsData?.byMonth || []}>
+                <LineChart data={newPatientsData?.chartData || []}>
                   <defs>
                     <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.1} />
@@ -297,7 +317,7 @@ function InternalDashboardComponent() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                   <XAxis
-                    dataKey="month"
+                    dataKey="label"
                     axisLine={false}
                     tickLine={false}
                     tick={{ fill: '#64748B', fontSize: 12 }}
@@ -335,7 +355,7 @@ function InternalDashboardComponent() {
             <CardDescription>Pacotes ativos de sessões pré-pagas</CardDescription>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[280px]">
+            <ScrollArea className="h-[310px]">
               {loadingSessions ? (
                 <p className="text-muted-foreground">Carregando...</p>
               ) : patientsWithSessions?.length === 0 ? (
@@ -399,7 +419,7 @@ function InternalDashboardComponent() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {inactivePatients?.list?.map((patient: { id: string; phone?: string; lastAppointment?: string }) => (
+                  {inactivePatients?.list?.map((patient: any) => (
                     <TableRow key={patient.id}>
                       <TableCell className="font-medium">{PatientHelpers.getName(patient)}</TableCell>
                       <TableCell>{patient.phone || "-"}</TableCell>

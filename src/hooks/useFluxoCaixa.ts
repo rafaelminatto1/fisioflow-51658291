@@ -4,10 +4,11 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { financialApi, type Transacao } from '@/lib/api/workers-client';
+import { formatDateToLocalISO, parseResponseDateOrNull } from '@/utils/dateUtils';
 
 export interface MovimentacaoCaixa {
   id: string;
-  data: string;
+  data: string | null;
   tipo: 'entrada' | 'saida';
   valor: number;
   descricao: string;
@@ -26,16 +27,33 @@ export interface FluxoCaixaResumo {
 
 function normalizeMovimentacao(row: Transacao): MovimentacaoCaixa {
   const metadata = (row.metadata ?? {}) as Record<string, unknown>;
+  const record = row as Record<string, unknown>;
+  const rawDateCandidates = [
+    record.created_at,
+    record.createdAt,
+    record.data_vencimento,
+    record.dataVencimento,
+    record.updated_at,
+    record.updatedAt,
+  ];
+  const data =
+    rawDateCandidates
+      .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+      .map((value) => parseResponseDateOrNull(value))
+      .find((value): value is Date => value instanceof Date) ?? null;
+  const createdAt =
+    rawDateCandidates.find((value): value is string => typeof value === 'string' && value.trim().length > 0) ?? '';
+
   return {
     id: row.id,
-    data: String(row.created_at).slice(0, 10),
+    data: data ? formatDateToLocalISO(data) : null,
     tipo: row.tipo as 'entrada' | 'saida',
     valor: Number(row.valor),
     descricao: row.descricao ?? '',
     categoria: row.categoria ?? null,
     forma_pagamento:
       typeof metadata.forma_pagamento === 'string' ? metadata.forma_pagamento : null,
-    created_at: row.created_at,
+    created_at: createdAt,
   };
 }
 
@@ -62,6 +80,7 @@ export function useFluxoCaixaResumo() {
       const grouped = new Map<string, FluxoCaixaResumo>();
 
       movimentacoes.forEach((mov) => {
+        if (!mov.data) return;
         const mes = mov.data.slice(0, 7);
         const current = grouped.get(mes) ?? { id: mes, mes, entradas: 0, saidas: 0, saldo: 0 };
         if (mov.tipo === 'entrada') current.entradas += Number(mov.valor);

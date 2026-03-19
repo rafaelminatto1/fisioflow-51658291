@@ -7,19 +7,34 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line } from 'recharts';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { formatDateToLocalISO } from '@/utils/dateUtils';
+
+function formatMonthLabel(monthKey: string): string {
+  const match = /^(\d{4})-(\d{2})$/.exec(monthKey.trim());
+  if (!match) return monthKey || 'Sem data';
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
+    return monthKey;
+  }
+
+  const monthDate = new Date(year, month - 1, 1);
+  return Number.isNaN(monthDate.getTime())
+    ? monthKey
+    : format(monthDate, 'MMM/yy', { locale: ptBR });
+}
 
 export function FluxoCaixaContent() {
-  const [dataCaixa, setDataCaixa] = useState(new Date().toISOString().split('T')[0]);
+  const [dataCaixa, setDataCaixa] = useState(() => formatDateToLocalISO(new Date()));
   const [periodoView, setPeriodoView] = useState<'mensal' | 'diario'>('mensal');
 
   const { data: fluxoMensal = [] } = useFluxoCaixaResumo();
   const { data: caixaDiario } = useCaixaDiario(dataCaixa);
 
   const chartData = fluxoMensal.map(f => {
-    const [y, m] = f.mes.split('-');
-    const mesLabel = format(new Date(Number(y), Number(m) - 1, 1), 'MMM/yy', { locale: ptBR });
     return {
-      mes: mesLabel,
+      mes: formatMonthLabel(f.mes),
       entradas: Number(f.entradas),
       saidas: Number(f.saidas),
       saldo: Number(f.saldo),
