@@ -15,12 +15,16 @@ export function FluxoCaixaContent() {
   const { data: fluxoMensal = [] } = useFluxoCaixaResumo();
   const { data: caixaDiario } = useCaixaDiario(dataCaixa);
 
-  const chartData = fluxoMensal.map(f => ({
-    mes: format(new Date(f.mes), 'MMM/yy', { locale: ptBR }),
-    entradas: Number(f.entradas),
-    saidas: Number(f.saidas),
-    saldo: Number(f.saldo),
-  })).reverse();
+  const chartData = fluxoMensal.map(f => {
+    const [y, m] = f.mes.split('-');
+    const mesLabel = format(new Date(Number(y), Number(m) - 1, 1), 'MMM/yy', { locale: ptBR });
+    return {
+      mes: mesLabel,
+      entradas: Number(f.entradas),
+      saidas: Number(f.saidas),
+      saldo: Number(f.saldo),
+    };
+  }).reverse();
 
   // Calcular saldo acumulado
   let saldoAcumulado = 0;
