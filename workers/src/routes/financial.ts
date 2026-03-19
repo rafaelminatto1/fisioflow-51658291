@@ -129,20 +129,27 @@ app.delete('/transacoes/:id', requireAuth, async (c) => {
 app.get('/contas', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
-  const { tipo, status, dateFrom, dateTo, limit = '50', offset = '0' } = c.req.query();
-
-  const conditions: string[] = ['organization_id = $1'];
+  const { tipo, status, dateFrom, dateTo, limit = '50', offset = '0', patientId } = c.req.query();
+ 
+  const conditions: string[] = ['cf.organization_id = $1'];
   const params: unknown[] = [user.organizationId];
-
-  if (tipo) { params.push(tipo); conditions.push(`tipo = $${params.length}`); }
-  if (status) { params.push(status); conditions.push(`status = $${params.length}`); }
-  if (dateFrom) { params.push(dateFrom); conditions.push(`COALESCE(data_vencimento, created_at::date) >= $${params.length}`); }
-  if (dateTo) { params.push(dateTo); conditions.push(`COALESCE(data_vencimento, created_at::date) <= $${params.length}`); }
-
+ 
+  if (tipo) { params.push(tipo); conditions.push(`cf.tipo = $${params.length}`); }
+  if (status) { params.push(status); conditions.push(`cf.status = $${params.length}`); }
+  if (dateFrom) { params.push(dateFrom); conditions.push(`COALESCE(cf.data_vencimento, cf.created_at::date) >= $${params.length}`); }
+  if (dateTo) { params.push(dateTo); conditions.push(`COALESCE(cf.data_vencimento, cf.created_at::date) <= $${params.length}`); }
+  if (patientId) { params.push(patientId); conditions.push(`cf.patient_id = $${params.length}`); }
+ 
   params.push(Number(limit), Number(offset));
   const result = await pool.query(
-    `SELECT * FROM contas_financeiras WHERE ${conditions.join(' AND ')}
-     ORDER BY data_vencimento ASC NULLS LAST, created_at DESC LIMIT $${params.length - 1} OFFSET $${params.length}`,
+    `SELECT 
+       cf.*,
+       p.full_name as patient_name
+     FROM contas_financeiras cf
+     LEFT JOIN patients p ON p.id = cf.patient_id
+     WHERE ${conditions.join(' AND ')}
+     ORDER BY cf.data_vencimento ASC NULLS LAST, cf.created_at DESC 
+     LIMIT $${params.length - 1} OFFSET $${params.length}`,
     params,
   );
   try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
@@ -152,15 +159,15 @@ app.post('/contas', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
-
+ 
   if (!body.tipo) return c.json({ error: 'tipo é obrigatório' }, 400);
   if (body.valor == null) return c.json({ error: 'valor é obrigatório' }, 400);
-
+ 
   const result = await pool.query(
     `INSERT INTO contas_financeiras
        (organization_id, tipo, valor, status, descricao, data_vencimento,
-        pago_em, patient_id, appointment_id, observacoes, created_at, updated_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW(),NOW())
+        pago_em, patient_id, appointment_id, categoria, forma_pagamento, observacoes, created_at, updated_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,NOW(),NOW())
      RETURNING *`,
     [
       user.organizationId,
@@ -172,6 +179,8 @@ app.post('/contas', requireAuth, async (c) => {
       body.pago_em ?? null,
       body.patient_id ?? null,
       body.appointment_id ?? null,
+      body.categoria ?? null,
+      body.forma_pagamento ?? null,
       body.observacoes ?? null,
     ],
   );
@@ -183,17 +192,19 @@ app.put('/contas/:id', requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const { id } = c.req.param();
   const body = (await c.req.json()) as Record<string, unknown>;
-
+ 
   const sets: string[] = ['updated_at = NOW()'];
   const params: unknown[] = [];
-
+ 
   if (body.status !== undefined) { params.push(body.status); sets.push(`status = $${params.length}`); }
   if (body.valor !== undefined) { params.push(Number(body.valor)); sets.push(`valor = $${params.length}`); }
   if (body.descricao !== undefined) { params.push(body.descricao); sets.push(`descricao = $${params.length}`); }
   if (body.data_vencimento !== undefined) { params.push(body.data_vencimento); sets.push(`data_vencimento = $${params.length}`); }
   if (body.pago_em !== undefined) { params.push(body.pago_em); sets.push(`pago_em = $${params.length}`); }
   if (body.observacoes !== undefined) { params.push(body.observacoes); sets.push(`observacoes = $${params.length}`); }
-
+  if (body.forma_pagamento !== undefined) { params.push(body.forma_pagamento); sets.push(`forma_pagamento = $${params.length}`); }
+  if (body.categoria !== undefined) { params.push(body.categoria); sets.push(`categoria = $${params.length}`); }
+ 
   params.push(id, user.organizationId);
   const result = await pool.query(
     `UPDATE contas_financeiras SET ${sets.join(', ')}
