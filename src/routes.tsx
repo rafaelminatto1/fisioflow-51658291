@@ -306,8 +306,8 @@ export function AppRoutes() {
 
             <Route path="/tarefas" element={<Navigate to="/boards" replace />} />
             <Route path="/tarefas-v2" element={<Navigate to="/boards" replace />} />
-            <Route path="/boards" element={<ProtectedRoute><BoardsHome /></ProtectedRoute>} />
-            <Route path="/boards/:boardId" element={<ProtectedRoute><BoardDetail /></ProtectedRoute>} />
+            <Route path="/boards" element={<ProtectedRoute><MainLayout><BoardsHome /></MainLayout></ProtectedRoute>} />
+            <Route path="/boards/:boardId" element={<ProtectedRoute><MainLayout><BoardDetail /></MainLayout></ProtectedRoute>} />
             <Route path="/analytics" element={<ProtectedRoute><AdvancedAnalytics /></ProtectedRoute>} />
             <Route path="/smart-dashboard" element={<ProtectedRoute><SmartDashboard /></ProtectedRoute>} />
             <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
