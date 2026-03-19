@@ -7,6 +7,9 @@ import {
   Alert,
   TouchableOpacity,
   ActivityIndicator,
+  Platform,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,6 +19,7 @@ import { useColors } from '@/hooks/useColorScheme';
 import { useAppointments, getAppointmentByIdHook } from '@/hooks/useAppointments';
 import { usePatients } from '@/hooks/usePatients';
 import { useHaptics } from '@/hooks/useHaptics';
+import { useCreateFinancialRecord, usePatientFinancialRecords, useMarkAsPaid } from '@/hooks/usePatientFinancial';
 import type { AppointmentStatus } from '@/types';
 import { format } from 'date-fns';
 import { useForm, Controller } from 'react-hook-form';
@@ -23,6 +27,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { PatientAutocomplete } from '@/components/appointment/PatientAutocomplete';
 import { OptionSelector } from '@/components/appointment/OptionSelector';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const APPOINTMENT_TYPES = [
   'Avaliação Inicial', 'Fisioterapia', 'Osteopatia', 'Pilates', 
@@ -60,6 +65,13 @@ export default function AppointmentFormScreen() {
   const appointmentId = params.id as string | undefined;
   const { medium, success, error: hapticError } = useHaptics();
 
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [sessionValue, setSessionValue] = useState('');
+  const [isPaid, setIsPaid] = useState(false);
+  const [financialRecordId, setFinancialRecordId] = useState<string | null>(null);
+
   const { 
     createAsync, 
     updateAsync, 
@@ -68,6 +80,9 @@ export default function AppointmentFormScreen() {
     isUpdating, 
     isDeleting 
   } = useAppointments();
+
+  const createFinancialMutation = useCreateFinancialRecord();
+  const markAsPaidMutation = useMarkAsPaid();
 
   const [isLoadingData, setIsLoadingData] = useState(!!appointmentId);
 
@@ -196,6 +211,97 @@ export default function AppointmentFormScreen() {
     );
   };
 
+  const parseDateString = (dateStr: string) => {
+    if (!dateStr) return new Date();
+    const parts = dateStr.split('/');
+    if (parts.length === 3) {
+      const [day, month, year] = parts;
+      const parsed = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      if (!isNaN(parsed.getTime())) return parsed;
+    }
+    return new Date();
+  };
+
+  const parseTimeString = (timeStr: string) => {
+    if (!timeStr) return new Date();
+    const parts = timeStr.split(':');
+    const d = new Date();
+    if (parts.length >= 2) {
+      const [hour, minute] = parts;
+      d.setHours(parseInt(hour, 10));
+      d.setMinutes(parseInt(minute, 10));
+    }
+    return d;
+  };
+
+  const PAYMENT_METHODS = [
+    { label: 'Pix', value: 'pix' },
+    { label: 'Dinheiro', value: 'cash' },
+    { label: 'Cartão de Crédito', value: 'credit_card' },
+    { label: 'Cartão de Débito', value: 'debit_card' },
+    { label: 'Transferência', value: 'transfer' },
+  ];
+
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('pix');
+
+  const formatCurrency = (value: string) => {
+    const numericValue = value.replace(/\D/g, '');
+    const floatValue = parseFloat(numericValue) / 100;
+    return floatValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
+
+  const handleAmountChange = (text: string) => {
+    const rawText = text.replace(/\D/g, '');
+    setSessionValue(rawText);
+  };
+
+  const getDisplayAmount = () => {
+    if (!sessionValue) return '';
+    const val = parseFloat(sessionValue) / 100;
+    return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
+
+  const handlePayment = async () => {
+    if (!sessionValue || parseFloat(sessionValue) <= 0) {
+      Alert.alert('Erro', 'Informe o valor da sessão.');
+      return;
+    }
+
+    medium();
+    try {
+      const [day, month, year] = watch('date').split('/');
+      const sessionDate = `${year}-${month}-${day}`;
+      const finalAmount = parseFloat(sessionValue) / 100;
+
+      // Create financial record
+      const record = await createFinancialMutation.mutateAsync({
+        patient_id: selectedPatientId,
+        session_date: sessionDate,
+        session_value: finalAmount,
+        payment_method: selectedPaymentMethod,
+        notes: `Sessão de ${watch('type')} - ${watch('time')}`,
+      });
+
+      // Mark as paid
+      if (record?.id) {
+        await markAsPaidMutation.mutateAsync({
+          recordId: record.id,
+          paymentMethod: selectedPaymentMethod,
+        });
+      }
+
+      setIsPaid(true);
+      setFinancialRecordId(record?.id || null);
+      setShowPaymentModal(false);
+      success();
+      Alert.alert('Sucesso', 'Pagamento registrado com sucesso!');
+    } catch (err) {
+      hapticError();
+      console.error(err);
+      Alert.alert('Erro', 'Não foi possível registrar o pagamento.');
+    }
+  };
+
   if (isLoadingData) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
@@ -206,17 +312,17 @@ export default function AppointmentFormScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['left', 'right']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top', 'left', 'right', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
       
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: colors.text }]}>
           {isEditing ? 'Editar Agendamento' : 'Novo Agendamento'}
         </Text>
-        <View style={{ width: 24 }} />
+        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
@@ -246,14 +352,36 @@ export default function AppointmentFormScreen() {
               control={control}
               name="date"
               render={({ field: { value, onChange } }) => (
-                <Input
-                  placeholder="DD/MM/AAAA"
-                  value={value}
-                  onChangeText={onChange}
-                  keyboardType="numeric"
-                  maxLength={10}
-                  leftIcon="calendar-outline"
-                />
+                <View>
+                  <TouchableOpacity
+                    style={[styles.pickerButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
+                    onPress={() => setShowDatePicker(true)}
+                  >
+                    <Ionicons name="calendar-outline" size={20} color={colors.textSecondary} />
+                    <Text style={[styles.pickerText, { color: colors.text }]}>{value || 'DD/MM/AAAA'}</Text>
+                  </TouchableOpacity>
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={parseDateString(value)}
+                      mode="date"
+                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                      onChange={(_e, date) => {
+                        if (Platform.OS !== 'ios') setShowDatePicker(false);
+                        if (date) {
+                          onChange(format(date, 'dd/MM/yyyy'));
+                        }
+                      }}
+                    />
+                  )}
+                  {Platform.OS === 'ios' && showDatePicker && (
+                    <Button 
+                      title="Confirmar Data" 
+                      onPress={() => setShowDatePicker(false)} 
+                      style={styles.confirmPickerButton} 
+                      variant="secondary" 
+                    />
+                  )}
+                </View>
               )}
             />
             {errors.date && <Text style={styles.errorText}>{errors.date.message}</Text>}
@@ -264,14 +392,37 @@ export default function AppointmentFormScreen() {
               control={control}
               name="time"
               render={({ field: { value, onChange } }) => (
-                <Input
-                  placeholder="HH:MM"
-                  value={value}
-                  onChangeText={onChange}
-                  keyboardType="numeric"
-                  maxLength={5}
-                  leftIcon="time-outline"
-                />
+                <View>
+                  <TouchableOpacity
+                    style={[styles.pickerButton, { borderColor: colors.border, backgroundColor: colors.surface }]}
+                    onPress={() => setShowTimePicker(true)}
+                  >
+                    <Ionicons name="time-outline" size={20} color={colors.textSecondary} />
+                    <Text style={[styles.pickerText, { color: colors.text }]}>{value || 'HH:MM'}</Text>
+                  </TouchableOpacity>
+                  {showTimePicker && (
+                    <DateTimePicker
+                      value={parseTimeString(value)}
+                      mode="time"
+                      is24Hour={true}
+                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                      onChange={(_e, date) => {
+                        if (Platform.OS !== 'ios') setShowTimePicker(false);
+                        if (date) {
+                          onChange(format(date, 'HH:mm'));
+                        }
+                      }}
+                    />
+                  )}
+                  {Platform.OS === 'ios' && showTimePicker && (
+                    <Button 
+                      title="Confirmar Horário" 
+                      onPress={() => setShowTimePicker(false)} 
+                      style={styles.confirmPickerButton} 
+                      variant="secondary" 
+                    />
+                  )}
+                </View>
               )}
             />
             {errors.time && <Text style={styles.errorText}>{errors.time.message}</Text>}
@@ -339,6 +490,53 @@ export default function AppointmentFormScreen() {
           )}
         />
 
+        {/* Payment Section - Only for editing */}
+        {isEditing && (
+          <View style={[styles.paymentSection, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+            <View style={styles.paymentHeader}>
+              <Ionicons name="card-outline" size={24} color={colors.primary} />
+              <Text style={[styles.paymentTitle, { color: colors.text }]}>Pagamento</Text>
+            </View>
+            
+            <View style={styles.paymentStatusRow}>
+              <View style={styles.paymentInfo}>
+                <Text style={[styles.paymentLabel, { color: colors.textSecondary }]}>Status</Text>
+                <View style={[styles.statusBadge, { 
+                  backgroundColor: isPaid ? colors.success + '20' : colors.warning + '20',
+                }]}>
+                  <Ionicons 
+                    name={isPaid ? 'checkmark-circle' : 'time-outline'} 
+                    size={16} 
+                    color={isPaid ? colors.success : colors.warning} 
+                  />
+                  <Text style={[styles.statusText, { color: isPaid ? colors.success : colors.warning }]}>
+                    {isPaid ? 'Pago' : 'Pendente'}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {!isPaid && (
+              <TouchableOpacity
+                style={[styles.payButton, { backgroundColor: colors.success }]}
+                onPress={() => setShowPaymentModal(true)}
+              >
+                <Ionicons name="checkmark-circle" size={20} color="#fff" />
+                <Text style={styles.payButtonText}>Registrar Pagamento</Text>
+              </TouchableOpacity>
+            )}
+
+            {isPaid && (
+              <View style={[styles.paidInfo, { backgroundColor: colors.success + '10' }]}>
+                <Ionicons name="checkmark-done-circle" size={20} color={colors.success} />
+                <Text style={[styles.paidText, { color: colors.success }]}>
+                  Pagamento registrado
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+
         <Button
           title={isEditing ? 'Salvar Alterações' : 'Agendar'}
           onPress={handleSubmit(onSave)}
@@ -369,6 +567,91 @@ export default function AppointmentFormScreen() {
 
         <View style={{ height: 32 }} />
       </ScrollView>
+
+      {/* Payment Modal */}
+      <Modal
+        visible={showPaymentModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowPaymentModal(false)}
+      >
+        <SafeAreaView style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Registrar Pagamento</Text>
+              <TouchableOpacity onPress={() => setShowPaymentModal(false)}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody} keyboardShouldPersistTaps="handled">
+              {/* Valor */}
+              <Text style={[styles.label, { color: colors.textSecondary }]}>Valor da Sessão *</Text>
+              <TextInput
+                style={[styles.valueInput, { borderColor: colors.border, backgroundColor: colors.surface, color: colors.text }]}
+                value={getDisplayAmount()}
+                onChangeText={handleAmountChange}
+                placeholder="R$ 0,00"
+                placeholderTextColor={colors.textMuted}
+                keyboardType="numeric"
+              />
+
+              {/* Payment Method */}
+              <Text style={[styles.label, { color: colors.textSecondary, marginTop: 16 }]}>Forma de Pagamento</Text>
+              <View style={styles.paymentMethodsGrid}>
+                {PAYMENT_METHODS.map((method) => (
+                  <TouchableOpacity
+                    key={method.value}
+                    style={[
+                      styles.paymentMethodButton,
+                      { borderColor: colors.border },
+                      selectedPaymentMethod === method.value && { 
+                        backgroundColor: colors.primary + '20', 
+                        borderColor: colors.primary 
+                      }
+                    ]}
+                    onPress={() => setSelectedPaymentMethod(method.value)}
+                  >
+                    <Ionicons
+                      name={
+                        method.value === 'pix' ? 'qr-code-outline' :
+                        method.value === 'cash' ? 'cash-outline' :
+                        method.value === 'credit_card' ? 'card-outline' :
+                        method.value === 'debit_card' ? 'card-outline' :
+                        'swap-horizontal-outline'
+                      }
+                      size={24}
+                      color={selectedPaymentMethod === method.value ? colors.primary : colors.textSecondary}
+                    />
+                    <Text style={[
+                      styles.paymentMethodText,
+                      { color: selectedPaymentMethod === method.value ? colors.primary : colors.textSecondary }
+                    ]}>
+                      {method.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {/* Confirm Button */}
+              <TouchableOpacity
+                style={[styles.confirmPaymentButton, { backgroundColor: colors.success }]}
+                onPress={handlePayment}
+                disabled={createFinancialMutation.isPending || markAsPaidMutation.isPending}
+              >
+                {(createFinancialMutation.isPending || markAsPaidMutation.isPending) ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons name="checkmark-circle" size={24} color="#fff" />
+                    <Text style={styles.confirmPaymentText}>Confirmar Pagamento</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -383,14 +666,170 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomWidth: 1,
   },
+  backButton: {
+    padding: 8,
+    marginLeft: -8,
+  },
   title: { fontSize: 18, fontWeight: '600' },
   content: { flex: 1, padding: 16 },
   label: { fontSize: 14, fontWeight: '500', marginBottom: 6 },
   row: { flexDirection: 'row', gap: 12 },
   col: { flex: 1 },
+  pickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 52,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    marginBottom: 16,
+  },
+  pickerText: {
+    marginLeft: 8,
+    fontSize: 15,
+  },
+  confirmPickerButton: {
+    marginTop: -8,
+    marginBottom: 16,
+  },
   saveButton: { marginTop: 8 },
   startButton: { marginTop: 12 },
   deleteButton: { marginTop: 12, borderWidth: 1 },
   errorText: { color: '#ef4444', fontSize: 12, marginTop: -12, marginBottom: 12 },
+  // Payment Section Styles
+  paymentSection: {
+    marginTop: 16,
+    marginBottom: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 16,
+  },
+  paymentHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 16,
+  },
+  paymentTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  paymentStatusRow: {
+    marginBottom: 16,
+  },
+  paymentInfo: {
+    gap: 6,
+  },
+  paymentLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+  },
+  statusText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  payButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  payButtonText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  paidInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  paidText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  modalBody: {
+    padding: 20,
+  },
+  valueInput: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 20,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  paymentMethodsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 8,
+  },
+  paymentMethodButton: {
+    width: '31%',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  paymentMethodText: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 6,
+    textAlign: 'center',
+  },
+  confirmPaymentButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    marginTop: 24,
+    paddingVertical: 16,
+    borderRadius: 12,
+  },
+  confirmPaymentText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
 

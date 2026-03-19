@@ -57,7 +57,11 @@
     "allowJs": true,
     "noUnusedLocals": false,
     "strictNullChecks": true,
-    "strict": true
-  },
-  "extends": "expo/tsconfig.base"
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true
+  }
 }

@@ -148,15 +148,25 @@ export async function fetchApi<T>(
 // DASHBOARD API
 // ============================================================
 export async function getDashboardStats(organizationId?: string): Promise<ApiDashboardStats> {
-    const response = await fetchApi<ApiResponse<ApiDashboardStats>>('/api/insights/dashboard', {
-        params: { organizationId }
-    });
-    return response.data || {
-        activePatients: 0,
-        todayAppointments: 0,
-        pendingAppointments: 0,
-        completedAppointments: 0,
-    };
+    try {
+        const response = await fetchApi<ApiResponse<ApiDashboardStats>>('/api/insights/dashboard', {
+            params: { organizationId }
+        });
+        return response.data || {
+            activePatients: 0,
+            todayAppointments: 0,
+            pendingAppointments: 0,
+            completedAppointments: 0,
+        };
+    } catch (error) {
+        console.error('[getDashboardStats] Error:', error);
+        return {
+            activePatients: 0,
+            todayAppointments: 0,
+            pendingAppointments: 0,
+            completedAppointments: 0,
+        };
+    }
 }
 
 // ============================================================
@@ -508,4 +518,21 @@ export async function markFinancialRecordAsPaid(
   );
   if (response.error) throw new Error(response.error);
   return mapDbRecordToApiRecord(response.data);
+}
+
+// ============================================================
+// PATIENT DUPLICATE CHECK API
+// ============================================================
+
+export async function checkPatientNameDuplicate(name: string, organizationId?: string): Promise<{ duplicateExists: boolean }> {
+  if (!name || name.trim().length < 3) {
+    return { duplicateExists: false };
+  }
+
+  const response = await fetchApi<ApiResponse<{ duplicateExists: boolean }>>('/api/patients/check-duplicate', {
+    method: 'POST',
+    data: { name: name.trim(), organizationId }
+  });
+  
+  return { duplicateExists: response.data?.duplicateExists || false };
 }

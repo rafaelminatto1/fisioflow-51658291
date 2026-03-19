@@ -66,3 +66,5 @@ export function DatePickerWithRange({
     </div>
   );
 }
+
+export { DatePickerWithRange as DateRangePicker };

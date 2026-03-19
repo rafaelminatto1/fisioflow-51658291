@@ -1,7 +1,8 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
-import { patientsApi, type PatientRow } from '@/lib/api/workers-client';
+import { patientsApi, appointmentsApi, type PatientRow, type AppointmentRow } from '@/lib/api/workers-client';
 import { ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
+import { useAnalyticsFilters } from '@/contexts/AnalyticsFiltersContext';
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
 
@@ -28,13 +29,50 @@ const listAllPatients = async () => {
   return all;
 };
 
+const listAppointments = async (therapistId?: string) => {
+  const items: AppointmentRow[] = [];
+  let offset = 0;
+  const limit = 1000;
+
+  while (offset < 10000) {
+    const response = await appointmentsApi.list({ 
+      limit, 
+      offset,
+      therapistId: therapistId === 'all' ? undefined : therapistId 
+    });
+    const chunk = response?.data ?? [];
+    items.push(...chunk);
+    if (chunk.length < limit) break;
+    offset += limit;
+  }
+
+  return items;
+};
+
 export function PatientAnalytics() {
-  const { data: statusData } = useQuery({
-    queryKey: ['patient-status-analytics'],
+  const { filters } = useAnalyticsFilters();
+  const { professionalId } = filters;
+
+  const { data: statusData, isLoading: loadingStatus } = useQuery({
+    queryKey: ['patient-status-analytics', professionalId],
     queryFn: async () => {
-      const patients = await listAllPatients();
-      const activeCount = patients.filter((patient) => patient.status === 'ativo' || patient.is_active === true).length;
-      const inactiveCount = patients.length - activeCount;
+      const [allPatients, therapistAppointments] = await Promise.all([
+        listAllPatients(),
+        professionalId !== 'all' ? listAppointments(professionalId) : Promise.resolve(null)
+      ]);
+
+      let activeCount = 0;
+      let inactiveCount = 0;
+
+      if (professionalId === 'all') {
+        activeCount = allPatients.filter((patient) => patient.status === 'ativo' || patient.is_active === true).length;
+        inactiveCount = allPatients.length - activeCount;
+      } else {
+        const patientIdsForTherapist = new Set(therapistAppointments?.map(a => a.patient_id).filter(Boolean));
+        const patientsForTherapist = allPatients.filter(p => patientIdsForTherapist.has(p.id));
+        activeCount = patientsForTherapist.filter((patient) => patient.status === 'ativo' || patient.is_active === true).length;
+        inactiveCount = patientsForTherapist.length - activeCount;
+      }
 
       return [
         { name: 'Ativos', value: activeCount },
@@ -43,10 +81,20 @@ export function PatientAnalytics() {
     },
   });
 
-  const { data: ageData } = useQuery({
-    queryKey: ['patient-age-analytics'],
+  const { data: ageData, isLoading: loadingAge } = useQuery({
+    queryKey: ['patient-age-analytics', professionalId],
     queryFn: async () => {
-      const patients = await listAllPatients();
+      const [allPatients, therapistAppointments] = await Promise.all([
+        listAllPatients(),
+        professionalId !== 'all' ? listAppointments(professionalId) : Promise.resolve(null)
+      ]);
+
+      let patientsToAnalyze = allPatients;
+      if (professionalId !== 'all') {
+        const patientIdsForTherapist = new Set(therapistAppointments?.map(a => a.patient_id).filter(Boolean));
+        patientsToAnalyze = allPatients.filter(p => patientIdsForTherapist.has(p.id));
+      }
+
       const ageRanges = {
         '0-17': 0,
         '18-30': 0,
@@ -55,7 +103,7 @@ export function PatientAnalytics() {
         '70+': 0,
       };
 
-      patients.forEach((patient) => {
+      patientsToAnalyze.forEach((patient) => {
         const age = getPatientAge(patient.birth_date);
         if (age == null) return;
         if (age < 18) ageRanges['0-17'] += 1;
@@ -75,30 +123,36 @@ export function PatientAnalytics() {
         <Card className="border-none shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
           <CardHeader>
             <CardTitle>Distribuição por Status</CardTitle>
-            <CardDescription>Status atual de todos os pacientes</CardDescription>
+            <CardDescription>
+              {professionalId === 'all' ? 'Status de todos os pacientes' : 'Status dos pacientes do profissional'}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={statusData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={100}
-                    paddingAngle={5}
-                    dataKey="value"
-                  >
-                    {statusData?.map((_, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px -2px rgba(0,0,0,0.05)' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+              {loadingStatus ? (
+                <div className="flex items-center justify-center h-full text-muted-foreground">Carregando...</div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={statusData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={100}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {statusData?.map((_, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px -2px rgba(0,0,0,0.05)' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
             </div>
             <div className="flex justify-center gap-4 mt-4">
               {statusData?.map((entry, index) => (
@@ -114,37 +168,41 @@ export function PatientAnalytics() {
         <Card className="border-none shadow-sm ring-1 ring-gray-200/50 dark:ring-gray-800/50">
           <CardHeader>
             <CardTitle>Distribuição por Faixa Etária</CardTitle>
-            <CardDescription>Perfil de idade dos seus pacientes</CardDescription>
+            <CardDescription>Perfil de idade dos pacientes analisados</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={ageData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                  <XAxis
-                    dataKey="faixa"
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#64748B', fontSize: 12 }}
-                    dy={10}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: '#64748B', fontSize: 12 }}
-                  />
-                  <Tooltip
-                    cursor={{ fill: 'rgba(var(--primary-rgb), 0.05)' }}
-                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px -2px rgba(0,0,0,0.05)' }}
-                  />
-                  <Bar
-                    dataKey="total"
-                    fill="hsl(var(--primary))"
-                    radius={[4, 4, 0, 0]}
-                    barSize={40}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+              {loadingAge ? (
+                <div className="flex items-center justify-center h-full text-muted-foreground">Carregando...</div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={ageData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                    <XAxis
+                      dataKey="faixa"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#64748B', fontSize: 12 }}
+                      dy={10}
+                    />
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#64748B', fontSize: 12 }}
+                    />
+                    <Tooltip
+                      cursor={{ fill: 'rgba(var(--primary-rgb), 0.05)' }}
+                      contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px -2px rgba(0,0,0,0.05)' }}
+                    />
+                    <Bar
+                      dataKey="total"
+                      fill="hsl(var(--primary))"
+                      radius={[4, 4, 0, 0]}
+                      barSize={40}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </CardContent>
         </Card>

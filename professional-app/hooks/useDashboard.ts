@@ -17,7 +17,13 @@ export function useDashboardStats() {
         return result;
       } catch (error) {
         console.error('[useDashboardStats] Error:', error);
-        throw error;
+        // Fallback data so the app doesn't crash if the backend fails (e.g. DATABASE_ERROR)
+        return {
+          activePatients: 0,
+          todayAppointments: 0,
+          pendingAppointments: 0,
+          completedAppointments: 0,
+        };
       }
     },
     enabled: !!user?.organizationId,

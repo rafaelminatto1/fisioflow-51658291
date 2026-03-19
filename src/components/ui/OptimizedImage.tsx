@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, ImgHTMLAttributes, useMemo } from 'react';
 import { cn } from '@/lib/utils';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 interface OptimizedImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src'> {
   src: string;
@@ -29,38 +30,6 @@ const aspectRatioClasses = {
   '3:2': 'aspect-[3/2]',
   'auto': '',
 };
-
-const HOST_FAILURE_STORAGE_KEY = 'optimized-image-host-failures';
-const hostFailureCache = new Set<string>();
-
-(function initHostFailureCache() {
-  if (typeof window === 'undefined') return;
-  try {
-    const saved = localStorage.getItem(HOST_FAILURE_STORAGE_KEY);
-    if (!saved) return;
-    const parsed: string[] = JSON.parse(saved);
-    parsed.filter(Boolean).forEach(host => hostFailureCache.add(host));
-  } catch {}
-})();
-
-function persistHostFailure(host: string) {
-  hostFailureCache.add(host);
-  if (typeof window === 'undefined') return;
-  try {
-    const serialized = JSON.stringify(Array.from(hostFailureCache));
-    localStorage.setItem(HOST_FAILURE_STORAGE_KEY, serialized);
-  } catch {}
-}
-
-function extractHost(src: string): string | null {
-  try {
-    const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
-    const url = new URL(src, base);
-    return url.origin;
-  } catch {
-    return null;
-  }
-}
 
 /**
  * Helper para gerar URL de otimização do Cloudflare via Worker
@@ -110,21 +79,26 @@ export function OptimizedImage({
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
-  const srcHost = extractHost(src);
 
   const optimizedSrc = useMemo(() => {
-    if (hasError) return fallback;
     return getOptimizedUrl(src, { width, quality });
-  }, [src, hasError, fallback, width, quality]);
+  }, [src, width, quality]);
 
-  const srcInvalid = !isValidImageSrc(src) || (srcHost ? hostFailureCache.has(srcHost) : false);
-  const effectiveSrc = srcInvalid || hasError ? fallback : optimizedSrc;
-  const skipLoad = srcInvalid;
+  const srcInvalid = !isValidImageSrc(src);
+  const initialSrc = srcInvalid ? fallback : optimizedSrc;
+  const [currentSrc, setCurrentSrc] = useState(initialSrc);
+  const effectiveSrc = hasError ? fallback : currentSrc;
 
   useEffect(() => {
     setIsLoaded(false);
     setHasError(false);
-  }, [src, srcInvalid]);
+    setCurrentSrc(initialSrc);
+  }, [initialSrc, src]);
+
+  useEffect(() => {
+    if (!srcInvalid) return;
+    logger.warn('Imagem ignorada por src inválido; usando fallback', { src, alt }, 'OptimizedImage');
+  }, [alt, src, srcInvalid]);
 
   useEffect(() => {
     if (!preloadHints || !effectiveSrc || srcInvalid) return;
@@ -148,7 +122,9 @@ export function OptimizedImage({
         document.head.removeChild(preconnectLink);
         document.head.removeChild(dnsLink);
       };
-    } catch {}
+    } catch {
+      return undefined;
+    }
   }, [preloadHints, effectiveSrc, srcInvalid]);
 
   const handleLoad = () => {
@@ -157,18 +133,37 @@ export function OptimizedImage({
   };
 
   const handleError = () => {
+    if (!srcInvalid && currentSrc === optimizedSrc && optimizedSrc !== src) {
+      logger.warn('Falha ao carregar imagem otimizada; tentando URL original', {
+        src,
+        optimizedSrc,
+        alt,
+      }, 'OptimizedImage');
+      setIsLoaded(false);
+      setCurrentSrc(src);
+      return;
+    }
+
+    if (currentSrc !== fallback) {
+      logger.warn('Falha ao carregar imagem original; usando fallback', {
+        src,
+        currentSrc,
+        fallback,
+        alt,
+      }, 'OptimizedImage');
+      setIsLoaded(false);
+      setCurrentSrc(fallback);
+      return;
+    }
+
     setHasError(true);
-    if (srcHost) persistHostFailure(srcHost);
+    logger.warn('Falha definitiva ao carregar imagem', {
+      src,
+      fallback,
+      alt,
+    }, 'OptimizedImage');
     onError?.();
   };
-
-  if (skipLoad) {
-    return (
-      <div className={cn('relative overflow-hidden bg-muted', aspectRatioClasses[aspectRatio], className)}>
-        <img ref={imgRef} src={fallback} alt={alt} loading="lazy" decoding="async" className="h-full w-full object-cover" {...props} />
-      </div>
-    );
-  }
 
   return (
     <div className={cn('relative overflow-hidden bg-muted', aspectRatioClasses[aspectRatio], className)}>

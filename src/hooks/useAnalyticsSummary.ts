@@ -4,12 +4,13 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { startOfMonth, subMonths, endOfMonth } from 'date-fns';
+import { startOfMonth, subMonths, endOfMonth, differenceInDays, subDays } from 'date-fns';
 import { formatDateToLocalISO } from '@/utils/dateUtils';
 import { queryConfigs } from '@/lib/queryConfig';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { useAuth } from '@/contexts/AuthContext';
 import { appointmentsApi, type AppointmentRow } from '@/lib/api/workers-client';
+import { useAnalyticsFilters } from '@/contexts/AnalyticsFiltersContext';
 
 interface AnalyticsSummary {
   totalAppointments: number;
@@ -23,23 +24,27 @@ interface AnalyticsSummary {
 
 export function useAnalyticsSummary() {
   const { organizationId } = useAuth();
+  const { filters } = useAnalyticsFilters();
+  const { dateRange, professionalId } = filters;
 
   const { data: summary, isLoading, error } = useQuery({
-    queryKey: ['analytics-summary', organizationId],
-    enabled: !!organizationId,
+    queryKey: ['analytics-summary', organizationId, dateRange, professionalId],
+    enabled: !!organizationId && !!dateRange?.from && !!dateRange?.to,
     queryFn: async () => {
-      if (!organizationId) return defaultSummary;
+      if (!organizationId || !dateRange?.from || !dateRange?.to) return defaultSummary;
 
-      const now = new Date();
-      const currentMonthStart = startOfMonth(now);
-      const currentMonthEnd = endOfMonth(now);
-      const lastMonthStart = startOfMonth(subMonths(now, 1));
-      const lastMonthEnd = endOfMonth(subMonths(now, 1));
+      const currentFrom = dateRange.from;
+      const currentTo = dateRange.to;
+      
+      // Calcular período anterior com a mesma duração
+      const durationDays = differenceInDays(currentTo, currentFrom) + 1;
+      const lastFrom = subDays(currentFrom, durationDays);
+      const lastTo = subDays(currentTo, durationDays);
 
       try {
         const [currentApts, lastApts] = await Promise.all([
-          fetchAppointmentsForRange(currentMonthStart, currentMonthEnd),
-          fetchAppointmentsForRange(lastMonthStart, lastMonthEnd),
+          fetchAppointmentsForRange(currentFrom, currentTo, professionalId),
+          fetchAppointmentsForRange(lastFrom, lastTo, professionalId),
         ]);
 
         return calculateStats(currentApts, lastApts);
@@ -102,10 +107,11 @@ function calculateStats(currentAppointments: AppointmentRow[], lastAppointments:
   };
 }
 
-const fetchAppointmentsForRange = async (start: Date, end: Date) => {
+const fetchAppointmentsForRange = async (start: Date, end: Date, therapistId?: string) => {
   const res = await appointmentsApi.list({
     dateFrom: formatDateToLocalISO(start),
     dateTo: formatDateToLocalISO(end),
+    therapistId: therapistId === 'all' ? undefined : therapistId,
     limit: 3000,
   });
   return (res?.data ?? []) as AppointmentRow[];
