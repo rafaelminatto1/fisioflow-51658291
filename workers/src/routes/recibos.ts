@@ -5,6 +5,11 @@ import type { Env } from '../types/env';
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
+async function hasTable(pool: ReturnType<typeof createPool>, tableName: string): Promise<boolean> {
+  const result = await pool.query(`SELECT to_regclass($1)::text AS table_name`, [`public.${tableName}`]);
+  return Boolean(result.rows[0]?.table_name);
+}
+
 app.get('/', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
@@ -12,27 +17,49 @@ app.get('/', requireAuth, async (c) => {
   const limitNum = Math.min(500, Math.max(1, Number(limit) || 100));
   const offsetNum = Math.max(0, Number(offset) || 0);
 
-  const result = await pool.query(
-    `SELECT * FROM recibos WHERE organization_id = $1 ORDER BY numero_recibo DESC LIMIT $2 OFFSET $3`,
-    [user.organizationId, limitNum, offsetNum],
-  );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try {
+    if (!(await hasTable(pool, 'recibos'))) {
+      return c.json({ data: [] });
+    }
+
+    const result = await pool.query(
+      `SELECT * FROM recibos WHERE organization_id = $1 ORDER BY numero_recibo DESC LIMIT $2 OFFSET $3`,
+      [user.organizationId, limitNum, offsetNum],
+    );
+    return c.json({ data: result.rows || result });
+  } catch (error) {
+    console.error('[Recibos] Failed to list receipts:', error);
+    return c.json({ data: [] });
+  }
 });
 
 app.get('/last-number', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
-  const result = await pool.query(
-    'SELECT MAX(numero_recibo)::bigint AS last_number FROM recibos WHERE organization_id = $1',
-    [user.organizationId],
-  );
-  return c.json({ data: { last_number: result.rows[0]?.last_number ?? 0 } });
+  try {
+    if (!(await hasTable(pool, 'recibos'))) {
+      return c.json({ data: { last_number: 0 } });
+    }
+
+    const result = await pool.query(
+      'SELECT MAX(numero_recibo)::bigint AS last_number FROM recibos WHERE organization_id = $1',
+      [user.organizationId],
+    );
+    return c.json({ data: { last_number: result.rows[0]?.last_number ?? 0 } });
+  } catch (error) {
+    console.error('[Recibos] Failed to fetch last number:', error);
+    return c.json({ data: { last_number: 0 } });
+  }
 });
 
 app.post('/', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
+
+  if (!(await hasTable(pool, 'recibos'))) {
+    return c.json({ error: 'Tabela recibos indisponível' }, 501);
+  }
 
   const lastNumberRes = await pool.query(
     'SELECT MAX(numero_recibo)::bigint AS last_number FROM recibos WHERE organization_id = $1',

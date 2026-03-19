@@ -90,12 +90,11 @@ export async function verifyToken<E extends { Bindings: Env }>(c: Context<E>, en
       // Fallback B: Consulta direta ao banco de dados (mais robusto)
       try {
         const pool = createPool(env);
-        // Better Auth mantem sessoes na tabela "session"
-        // Tentamos buscar a sessao e o perfil associado
         const res = await (pool as any).query(`
-          SELECT s."userId", p.email, p.role, p.organization_id 
-          FROM session s
-          LEFT JOIN profiles p ON s."userId" = p.user_id
+          SELECT s."userId", u.email, u.role, p.organization_id 
+          FROM neon_auth.session s
+          JOIN neon_auth."user" u ON s."userId" = u.id
+          LEFT JOIN public.profiles p ON s."userId"::text = p.user_id
           WHERE s.token = $1 AND s."expiresAt" > now()
           LIMIT 1
         `, [token]);
@@ -121,12 +120,10 @@ export async function verifyToken<E extends { Bindings: Env }>(c: Context<E>, en
     const jwks = getJwks(jwksUrl);
     
     // Validacao Robusta:
-    // Decodifica primeiro para logar debug se necessario
     const decoded = decodeJwt(token);
     
-    // Verifica a assinatura via JWKS real (Seguranca total)
     const verifyOptions: Parameters<typeof jwtVerify>[2] = {
-      clockTolerance: '10m', // Tolerancia para evitar erros de sincronismo de relogio
+      clockTolerance: '10m',
     };
     if (env.NEON_AUTH_ISSUER) {
       verifyOptions.issuer = env.NEON_AUTH_ISSUER;
@@ -148,7 +145,6 @@ export async function verifyToken<E extends { Bindings: Env }>(c: Context<E>, en
   } catch (e) {
     console.error('[Auth Error] JWT verification failed:', e instanceof Error ? e.message : String(e));
     
-    // Fallback Final: verifica sessao se o JWT falhar
     if (env.NEON_AUTH_URL) {
       try {
         const sessionRes = await fetch(`${env.NEON_AUTH_URL}/get-session`, {
@@ -180,7 +176,6 @@ export async function verifyToken<E extends { Bindings: Env }>(c: Context<E>, en
 export const requireAuth: MiddlewareHandler<{ Bindings: Env; Variables: { user: AuthUser } }> = async (c, next) => {
   const user = await verifyToken(c, c.env);
   if (!user) {
-    // Retorna 401 com detalhes do erro para o frontend
     return c.json({ 
       error: 'Nao autorizado', 
       code: 'UNAUTHORIZED',

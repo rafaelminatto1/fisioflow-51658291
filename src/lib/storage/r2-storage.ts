@@ -1,11 +1,14 @@
 import { getNeonAccessToken } from '@/lib/auth/neon-token';
 import { getWorkersApiUrl } from '@/lib/api/config';
+import { normalizePublicStorageUrl } from './public-url';
 
 const API_URL = getWorkersApiUrl();
 
 export interface R2UploadResult {
     url: string;
+    publicUrl: string;
     path: string;
+    key: string;
     name: string;
     size: number;
     contentType: string;
@@ -49,7 +52,7 @@ export async function uploadToR2(
         try {
             const errorData = await res.json();
             errorMsg = errorData.error || errorMsg;
-        } catch (e) {
+        } catch (_e) {
             // ignora
         }
         throw new Error(errorMsg);
@@ -57,6 +60,7 @@ export async function uploadToR2(
 
     const result = await res.json();
     const { uploadUrl, publicUrl, key } = result.data;
+    const normalizedPublicUrl = normalizePublicStorageUrl(publicUrl);
 
     // 2. Faz o upload direto pro servidor de armazenamento (R2) usando XMLHttpRequest para ter progresso
     return new Promise((resolve, reject) => {
@@ -72,8 +76,10 @@ export async function uploadToR2(
         xhr.onload = () => {
             if (xhr.status >= 200 && xhr.status < 300) {
                 resolve({
-                    url: publicUrl,
+                    url: normalizedPublicUrl,
+                    publicUrl: normalizedPublicUrl,
                     path: key,
+                    key,
                     name: file.name,
                     size: file.size,
                     contentType: file.type || 'application/octet-stream',
@@ -115,7 +121,7 @@ export async function deleteFromR2(key: string): Promise<void> {
         try {
             const errorData = await res.json();
             errorMsg = errorData.error || errorMsg;
-        } catch (e) {
+        } catch (_e) {
             // ignora
         }
         throw new Error(errorMsg);
