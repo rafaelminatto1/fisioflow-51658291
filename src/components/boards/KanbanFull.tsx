@@ -44,6 +44,12 @@ export function KanbanFull({ boardId, columns, tarefas, teamMembers = [], isLoad
   const [defaultColumnId, setDefaultColumnId] = useState<string>('');
   const [deleteTaskId, setDeleteTaskId] = useState<string | null>(null);
 
+  // Sort columns by order_index
+  const sortedColumns = useMemo(
+    () => [...columns].sort((a, b) => a.order_index - b.order_index),
+    [columns]
+  );
+
   // Tarefas grouped by column_id, filtered by search
   // Orphaned tasks (null/undefined column_id) are assigned to the first column
   const grouped = useMemo(() => {
@@ -62,12 +68,6 @@ export function KanbanFull({ boardId, columns, tarefas, teamMembers = [], isLoad
       return acc;
     }, {} as Record<string, Tarefa[]>);
   }, [tarefas, columns, sortedColumns, search]);
-
-  // Sort columns by order_index
-  const sortedColumns = useMemo(
-    () => [...columns].sort((a, b) => a.order_index - b.order_index),
-    [columns]
-  );
 
   const handleDragEnd = useCallback(async (result: DropResult) => {
     const { source, destination, draggableId, type } = result;

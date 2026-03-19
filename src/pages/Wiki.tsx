@@ -119,6 +119,7 @@ export default function WikiPage() {
     knowledgeGroupsFiltered,
     filteredKnowledge,
     auditItems,
+    auditProfiles,
     semanticScoreMap,
     kbFilters,
     setKbFilters,
