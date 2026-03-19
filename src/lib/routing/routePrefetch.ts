@@ -203,7 +203,6 @@ export const ChunkNames = {
   telemedicine: 'Telemedicine',
   'telemedicine-room': 'Telemedicine room',
   'exercises-library': 'Exercise library',
-  biofeedback: 'Biofeedback',
   'patient-evolution': 'Patient evolution',
   'patient-evolution-report': 'Evolution report',
   'session-evolution': 'Session evolution',
