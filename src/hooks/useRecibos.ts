@@ -10,9 +10,15 @@ export function useRecibos() {
   return useQuery({
     queryKey: ['recibos'],
     queryFn: async () => {
-      const res = await recibosApi.list();
-      return res?.data ?? [];
+      try {
+        const res = await recibosApi.list();
+        return res?.data ?? [];
+      } catch (error) {
+        console.error('[useRecibos] Failed to load receipts:', error);
+        return [];
+      }
     },
+    retry: false,
   });
 }
 

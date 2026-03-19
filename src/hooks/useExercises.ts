@@ -1,10 +1,11 @@
-
-
 // Re-export specific hook type
 
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { exerciseService, type ExerciseFilters } from '@/services/exercises';
 import { exercisesApi } from '@/api/v2/exercises';
+import { useAuth } from '@/contexts/AuthContext';
+import { normalizePublicStorageUrl } from '@/lib/storage/public-url';
 import type { Exercise as WorkersExercise } from '@/types/workers';
 import type { Exercise } from '@/types';
 import { toast } from 'sonner';
@@ -21,8 +22,8 @@ const mapWorkerToAppExercise = (ex: WorkersExercise): Exercise => ({
   category: ex.categoryId, // Idealmente aqui buscaríamos o nome da categoria se necessário
   difficulty: ex.difficulty,
   video_url: ex.videoUrl || undefined,
-  image_url: ex.imageUrl || undefined,
-  thumbnail_url: ex.thumbnailUrl || ex.imageUrl || undefined,
+  image_url: normalizePublicStorageUrl(ex.imageUrl) || undefined,
+  thumbnail_url: normalizePublicStorageUrl(ex.thumbnailUrl || ex.imageUrl) || undefined,
   description: ex.description || undefined,
   targetMuscles: ex.musclesPrimary,
   equipment: ex.equipment,
@@ -37,20 +38,49 @@ export const useWorkersExercises = (filters?: {
   page?: number;
   limit?: number;
 }) => {
-  const queryClient = useQueryClient();
+  const { initialized, loading: authLoading, user } = useAuth();
+  const authReady = initialized && !authLoading && !!user;
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['workers-exercises', filters],
     queryFn: () => exercisesApi.list(filters),
     staleTime: 1000 * 60 * 5,
+    enabled: authReady,
   });
 
   const exercises = (data?.data ?? []).map(mapWorkerToAppExercise);
 
+  useEffect(() => {
+    if (!authReady) return;
+
+    if (error) {
+      logger.warn(
+        'Falha ao carregar biblioteca de exercícios',
+        {
+          filters,
+          error: error instanceof Error ? error.message : String(error),
+        },
+        'useWorkersExercises',
+      );
+      return;
+    }
+
+    if (!isLoading && data && exercises.length === 0) {
+      logger.warn(
+        'Biblioteca de exercícios retornou vazia',
+        {
+          filters,
+          meta: data.meta,
+        },
+        'useWorkersExercises',
+      );
+    }
+  }, [authReady, data, error, exercises.length, filters, isLoading]);
+
   return {
     exercises,
     meta: data?.meta,
-    loading: isLoading,
+    loading: !authReady || isLoading,
     error,
     refetch,
   };
@@ -67,7 +97,7 @@ export const useExercises = (filters?: ExerciseFilters) => {
     limit: 500,
   };
 
-  const { exercises, loading, error } = useWorkersExercises(workersFilters);
+  const { exercises, meta, loading, error, refetch } = useWorkersExercises(workersFilters);
 
   const createMutation = useMutation({
     mutationFn: (data: Omit<Exercise, 'id'>) => exercisesApi.create(data as any),
@@ -121,8 +151,10 @@ export const useExercises = (filters?: ExerciseFilters) => {
 
   return {
     exercises,
+    meta,
     loading,
     error,
+    refetch,
     createExercise: createMutation.mutate,
     updateExercise: updateMutation.mutate,
     deleteExercise: deleteMutation.mutate,

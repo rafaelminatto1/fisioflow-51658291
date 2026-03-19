@@ -22,7 +22,7 @@ config.resolver.nodeModulesPaths = [
   path.resolve(monorepoRoot, 'node_modules'),
 ];
 
-// 2. Extensões de Arquivo (Preservar defaults do Expo e adicionar nativas)
+// 2. Extensões de Arquivo (Preservar defaults do Expo e adicionar nativas e ESM)
 const defaultSourceExts = config.resolver.sourceExts;
 config.resolver.sourceExts = [
   'native.ts',
@@ -30,6 +30,7 @@ config.resolver.sourceExts = [
   'native.js',
   'native.jsx',
   ...defaultSourceExts,
+  'mjs',  // Adicionar suporte para módulos ESM (date-fns)
 ];
 
 // 3. Configuração de Plataforma e Resolvers
@@ -49,6 +50,7 @@ config.transformer.minifierConfig = {
 try {
   config.resolver.alias = {
     'framer-motion': require.resolve('./stubs/framer-motion'),
+    '@radix-ui/react-slot': require.resolve('./stubs/radix-slot'),
     ...config.resolver.alias,
   };
 } catch (e) {
@@ -68,6 +70,8 @@ const blocklistPaths = [
   'scripts',
   // 'stubs' removido - necessário para o alias do framer-motion
   'claude-skills',
+  // Backend Cloudflare Workers - não deve ser incluído no bundle mobile
+  'src',
 ];
 
 config.resolver.blockList = [
@@ -90,7 +94,7 @@ config.resolver.blockList = [
   /node_modules\/@sentry\/vite-plugin\/.*/,
   /node_modules\/@playwright\/.*/,
   /node_modules\/puppeteer\/.*/,
-  /node_modules\/.*\/node_modules/,
+  // NOTA: Removido /node_modules\/.*\/node_modules/ pois estava bloqueando resolução correta
 ];
 
 // 7. Porta do Servidor

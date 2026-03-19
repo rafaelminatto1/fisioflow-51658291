@@ -197,7 +197,7 @@ export default function ProtocolsScreen() {
                   <View style={styles.metaItem}>
                     <Ionicons name="fitness-outline" size={16} color={colors.primary} />
                     <Text style={[styles.metaText, { color: colors.textSecondary }]}>
-                      {protocol.exercises.length} exercícios
+                      {protocol.exercises?.length || 0} exercícios
                     </Text>
                   </View>
                 </View>
