@@ -50,7 +50,8 @@ export function isValidImageUrl(url: string | null | undefined): boolean {
     trimmed.startsWith('http://') ||
     trimmed.startsWith('https://') ||
     trimmed.startsWith('data:') ||
-    trimmed.startsWith('blob:')
+    trimmed.startsWith('blob:') ||
+    trimmed.startsWith('/')
   );
 }
 
