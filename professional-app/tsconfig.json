@@ -4,21 +4,22 @@
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"],
-      "@mobile/*": ["./*"],
-      "@fisioflow/ui": ["../packages/ui/src/index.ts"]
-    }
+      "@/*": ["./*"]
+    },
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "jsx": "react-native"
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts",
-    "../packages/ui/src/**/*.ts",
-    "../packages/ui/src/**/*.tsx"
+    "index.ts"
   ],
   "exclude": [
     "node_modules",
-    "e2e/legacy-mobile-tests"
+    "babel.config.js",
+    "metro.config.js"
   ]
 }

@@ -9,6 +9,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTarefas } from '@/hooks/useTarefas';
@@ -110,7 +111,7 @@ export default function TarefasScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <View style={styles.headerLeft}>
@@ -230,7 +231,7 @@ export default function TarefasScreen() {
           <KanbanBoard tarefas={data} onMoveCard={handleMoveCard} />
         )
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 

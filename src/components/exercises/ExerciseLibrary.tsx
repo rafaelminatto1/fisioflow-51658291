@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -42,6 +42,7 @@ import { OptimizedImage } from '@/components/ui/OptimizedImage';
 import { getBestImageUrl } from '@/lib/imageUtils';
 
 import { useDebounce } from '@/hooks/performance/useDebounce';
+import { fisioLogger as logger } from '@/lib/errors/logger';
 
 
 interface ExerciseLibraryProps {
@@ -429,7 +430,7 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMod
   const [showCreateTemplateModal, setShowCreateTemplateModal] = useState(false);
   const [showMergeModal, setShowMergeModal] = useState(false);
 
-  const { exercises, loading, deleteExercise, mergeExercises, isDeleting, isMerging } = useExercises();
+  const { exercises, loading, deleteExercise, mergeExercises, isDeleting } = useExercises();
   const { isFavorite, toggleFavorite } = useExerciseFavorites();
 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -505,6 +506,28 @@ export function ExerciseLibrary({ onSelectExercise, onEditExercise, selectionMod
         return true;
       });
   }, [exercises, debouncedSearchTerm, activeFilter, isFavorite, advancedFilters]);
+
+  useEffect(() => {
+    if (loading) return;
+
+    if (exercises.length === 0) {
+      logger.warn('Nenhum exercício disponível para renderizar na biblioteca', {
+        searchTerm: debouncedSearchTerm,
+        activeFilter,
+        advancedFilters,
+      }, 'ExerciseLibrary');
+      return;
+    }
+
+    if (filteredExercises.length === 0) {
+      logger.warn('Filtros ativos ocultaram todos os exercícios da biblioteca', {
+        totalExercises: exercises.length,
+        searchTerm: debouncedSearchTerm,
+        activeFilter,
+        advancedFilters,
+      }, 'ExerciseLibrary');
+    }
+  }, [activeFilter, advancedFilters, debouncedSearchTerm, exercises.length, filteredExercises.length, loading]);
 
   const handleDelete = async () => {
     if (deleteId) {

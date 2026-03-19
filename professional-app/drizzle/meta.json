@@ -1,0 +1,8 @@
+{
+  "format": "d1",
+  "tables": {},
+  "dialect": "postgresql",
+  "id": "professional-db-id",
+  "schema": "drizzle/schema.ts",
+  "migrations": "drizzle"
+}

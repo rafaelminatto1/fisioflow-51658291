@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, lazy, Suspense, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import {
   Activity, Sparkles
 } from 'lucide-react';
 import { ComponentErrorBoundary } from '@/components/error/ComponentErrorBoundary';
+import { ExerciseLibrary } from '@/components/exercises/ExerciseLibrary';
 import { useExercises, type Exercise } from '@/hooks/useExercises';
 import { useExerciseFavorites } from '@/hooks/useExerciseFavorites';
 import { useExerciseProtocols } from '@/hooks/useExerciseProtocols';
@@ -20,7 +21,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 
 // Lazy load heavy components for better performance
-const ExerciseLibrary = lazy(() => import('@/components/exercises/ExerciseLibrary').then(m => ({ default: m.ExerciseLibrary })));
 const TemplateManager = lazy(() => import('@/components/exercises/TemplateManager').then(m => ({ default: m.TemplateManager })));
 const ProtocolsManager = lazy(() => import('@/components/exercises/ProtocolsManager').then(m => ({ default: m.ProtocolsManager })));
 const ExerciseVideoLibrary = lazy(() => import('@/components/exercises/ExerciseVideoLibrary').then(m => ({ default: m.ExerciseVideoLibrary })));
@@ -37,7 +37,7 @@ const TabFallback = () => (
 
 export default function Exercises() {
   const { exercises, loading: loadingExercises, createExercise, updateExercise, isCreating, isUpdating } = useExercises();
-  const { favorites } = useExerciseFavorites();
+  useExerciseFavorites();
   const { protocols, loading: loadingProtocols } = useExerciseProtocols();
   const { templates, loading: loadingTemplates } = useExerciseTemplates();
 
@@ -68,13 +68,7 @@ export default function Exercises() {
   const [showVideoUpload, setShowVideoUpload] = useState(false);
 
   // Filter exercises based on search and active tab
-  const tabExercises = useMemo(() => {
-    if (activeTab === 'videos') {
-      return exercises.filter(ex => !!ex.video_url);
-    }
-    return exercises;
-  }, [exercises, activeTab]);
-// Memoized computed values to prevent unnecessary recalculations
+  // Memoized computed values to prevent unnecessary recalculations
   const exercisesWithoutVideo = useMemo(() =>
     exercises.filter(ex => !ex.video_url),
     [exercises]
@@ -383,9 +377,7 @@ export default function Exercises() {
 
             <TabsContent value="library" className="m-0 p-3 sm:p-4 md:p-6">
               <ComponentErrorBoundary componentName="ExerciseLibrary">
-                <Suspense fallback={<TabFallback />}>
-                  <ExerciseLibrary onEditExercise={handleEditExercise} />
-                </Suspense>
+                <ExerciseLibrary onEditExercise={handleEditExercise} />
               </ComponentErrorBoundary>
             </TabsContent>
 
