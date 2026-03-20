@@ -1,325 +1,415 @@
-
 // Type definitions for @mediapipe/pose (UMD module)
 
-import React, { useEffect, useRef, useState } from 'react';
-import '@mediapipe/drawing_utils';
+import React, { useEffect, useRef, useState } from "react";
+import "@mediapipe/drawing_utils";
 const { drawConnectors, drawLandmarks } = globalThis as any;
-import { calculateAngle, POSE_LANDMARKS } from '@/utils/geometry';
-import { useToast } from '@/components/ui/use-toast';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Play, Pause, Camera, Upload } from 'lucide-react';
-import { fisioLogger as logger } from '@/lib/errors/logger';
+import { calculateAngle, POSE_LANDMARKS } from "@/utils/geometry";
+import { useToast } from "@/components/ui/use-toast";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Play, Pause, Camera, Upload } from "lucide-react";
+import { fisioLogger as logger } from "@/lib/errors/logger";
 
 interface PoseOptions {
-    locateFile?: (file: string) => string;
+	locateFile?: (file: string) => string;
 }
 
 interface PoseConfig {
-    modelComplexity?: number;
-    smoothLandmarks?: boolean;
-    enableSegmentation?: boolean;
-    smoothSegmentation?: boolean;
-    minDetectionConfidence?: number;
-    minTrackingConfidence?: number;
+	modelComplexity?: number;
+	smoothLandmarks?: boolean;
+	enableSegmentation?: boolean;
+	smoothSegmentation?: boolean;
+	minDetectionConfidence?: number;
+	minTrackingConfidence?: number;
 }
 
 interface PoseLandmark {
-    x: number;
-    y: number;
-    z?: number;
-    visibility?: number;
+	x: number;
+	y: number;
+	z?: number;
+	visibility?: number;
 }
 
 interface Results {
-    poseLandmarks?: PoseLandmark[];
-    poseWorldLandmarks?: PoseLandmark[];
-    image: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement;
+	poseLandmarks?: PoseLandmark[];
+	poseWorldLandmarks?: PoseLandmark[];
+	image: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement;
 }
 
 interface PoseInstance {
-    setOptions(options: PoseConfig): void;
-    onResults(callback: (results: Results) => void): void;
-    send(input: { image: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement }): Promise<void>;
-    initialize(): Promise<void>;
-    close(): void;
+	setOptions(options: PoseConfig): void;
+	onResults(callback: (results: Results) => void): void;
+	send(input: {
+		image: HTMLImageElement | HTMLVideoElement | HTMLCanvasElement;
+	}): Promise<void>;
+	initialize(): Promise<void>;
+	close(): void;
 }
 
 interface PoseConstructor {
-    new(options: PoseOptions): PoseInstance;
+	new (options: PoseOptions): PoseInstance;
 }
 
 // POSE_CONNECTIONS needs to be defined locally since it may not export properly
 const POSE_CONNECTIONS: [number, number][] = [
-    [0, 1], [1, 2], [2, 3], [3, 7], [0, 4], [4, 5], [5, 6], [6, 8],
-    [9, 10], [11, 12], [11, 13], [13, 15], [15, 17], [15, 19], [15, 21],
-    [17, 19], [12, 14], [14, 16], [16, 18], [16, 20], [16, 22], [18, 20],
-    [11, 23], [12, 24], [23, 24], [23, 25], [24, 26], [25, 27], [26, 28],
-    [27, 29], [28, 30], [29, 31], [30, 32], [27, 31], [28, 32]
+	[0, 1],
+	[1, 2],
+	[2, 3],
+	[3, 7],
+	[0, 4],
+	[4, 5],
+	[5, 6],
+	[6, 8],
+	[9, 10],
+	[11, 12],
+	[11, 13],
+	[13, 15],
+	[15, 17],
+	[15, 19],
+	[15, 21],
+	[17, 19],
+	[12, 14],
+	[14, 16],
+	[16, 18],
+	[16, 20],
+	[16, 22],
+	[18, 20],
+	[11, 23],
+	[12, 24],
+	[23, 24],
+	[23, 25],
+	[24, 26],
+	[25, 27],
+	[26, 28],
+	[27, 29],
+	[28, 30],
+	[29, 31],
+	[30, 32],
+	[27, 31],
+	[28, 32],
 ];
 
 interface PoseAnalyzerProps {
-    videoSrc?: string; // URL object or null for webcam
-    onAnalysisUpdate?: (data: { torsoAngle: number; isBadPosture: boolean }) => void;
+	videoSrc?: string; // URL object or null for webcam
+	onAnalysisUpdate?: (data: {
+		torsoAngle: number;
+		isBadPosture: boolean;
+	}) => void;
 }
 
-const PoseAnalyzer: React.FC<PoseAnalyzerProps> = ({ videoSrc, onAnalysisUpdate: _onAnalysisUpdate }) => {
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const poseRef = useRef<PoseInstance | null>(null);
-    const requestRef = useRef<number>();
-    const [isProcessing, setIsProcessing] = useState(false);
-    const [cameraActive, setCameraActive] = useState(false);
-    const { toast } = useToast();
+const PoseAnalyzer: React.FC<PoseAnalyzerProps> = ({
+	videoSrc,
+	onAnalysisUpdate: _onAnalysisUpdate,
+}) => {
+	const videoRef = useRef<HTMLVideoElement>(null);
+	const canvasRef = useRef<HTMLCanvasElement>(null);
+	const poseRef = useRef<PoseInstance | null>(null);
+	const requestRef = useRef<number>();
+	const [isProcessing, setIsProcessing] = useState(false);
+	const [cameraActive, setCameraActive] = useState(false);
+	const { toast } = useToast();
 
-    const analyzePosture = React.useCallback((worldLandmarks: { x: number; y: number; z: number }[], ctx: CanvasRenderingContext2D, width: number, height: number, normalizedLandmarks: { x: number; y: number }[]) => {
-        // 1. Tech Neck: Ear - Shoulder alignment
-        // const leftEar = worldLandmarks[POSE_LANDMARKS.LEFT_EAR];
-        const leftShoulder = worldLandmarks[POSE_LANDMARKS.LEFT_SHOULDER];
+	const analyzePosture = React.useCallback(
+		(
+			worldLandmarks: { x: number; y: number; z: number }[],
+			ctx: CanvasRenderingContext2D,
+			width: number,
+			height: number,
+			normalizedLandmarks: { x: number; y: number }[],
+		) => {
+			// 1. Tech Neck: Ear - Shoulder alignment
+			// const leftEar = worldLandmarks[POSE_LANDMARKS.LEFT_EAR];
+			const leftShoulder = worldLandmarks[POSE_LANDMARKS.LEFT_SHOULDER];
 
-        // Draw specialized analysis lines
-        const nLeftEar = normalizedLandmarks[POSE_LANDMARKS.LEFT_EAR];
-        const nLeftShoulder = normalizedLandmarks[POSE_LANDMARKS.LEFT_SHOULDER];
+			// Draw specialized analysis lines
+			const nLeftEar = normalizedLandmarks[POSE_LANDMARKS.LEFT_EAR];
+			const nLeftShoulder = normalizedLandmarks[POSE_LANDMARKS.LEFT_SHOULDER];
 
-        ctx.strokeStyle = '#FFFF00';
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.moveTo(nLeftEar.x * width, nLeftEar.y * height);
-        ctx.lineTo(nLeftShoulder.x * width, nLeftShoulder.y * height);
-        ctx.stroke();
+			ctx.strokeStyle = "#FFFF00";
+			ctx.lineWidth = 4;
+			ctx.beginPath();
+			ctx.moveTo(nLeftEar.x * width, nLeftEar.y * height);
+			ctx.lineTo(nLeftShoulder.x * width, nLeftShoulder.y * height);
+			ctx.stroke();
 
-        // Torso Alignment
-        const leftHip = worldLandmarks[POSE_LANDMARKS.LEFT_HIP];
-        const verticalPoint = { x: leftHip.x, y: leftHip.y - 0.5, z: leftHip.z };
-        const torsoAngle = calculateAngle(leftShoulder, leftHip, verticalPoint);
-        const isBadPosture = torsoAngle > 20;
+			// Torso Alignment
+			const leftHip = worldLandmarks[POSE_LANDMARKS.LEFT_HIP];
+			const verticalPoint = { x: leftHip.x, y: leftHip.y - 0.5, z: leftHip.z };
+			const torsoAngle = calculateAngle(leftShoulder, leftHip, verticalPoint);
+			const isBadPosture = torsoAngle > 20;
 
-        ctx.fillStyle = isBadPosture ? 'red' : 'green';
-        ctx.font = '24px Arial';
-        ctx.fillText(`Tronco: ${torsoAngle.toFixed(1)}°`, 20, 50);
+			ctx.fillStyle = isBadPosture ? "red" : "green";
+			ctx.font = "24px Arial";
+			ctx.fillText(`Tronco: ${torsoAngle.toFixed(1)}°`, 20, 50);
 
-        if (isBadPosture) {
-            ctx.strokeStyle = 'red';
-            ctx.beginPath();
-            ctx.moveTo(normalizedLandmarks[POSE_LANDMARKS.LEFT_SHOULDER].x * width, normalizedLandmarks[POSE_LANDMARKS.LEFT_SHOULDER].y * height);
-            ctx.lineTo(normalizedLandmarks[POSE_LANDMARKS.LEFT_HIP].x * width, normalizedLandmarks[POSE_LANDMARKS.LEFT_HIP].y * height);
-            ctx.stroke();
-        }
-    }, []);
+			if (isBadPosture) {
+				ctx.strokeStyle = "red";
+				ctx.beginPath();
+				ctx.moveTo(
+					normalizedLandmarks[POSE_LANDMARKS.LEFT_SHOULDER].x * width,
+					normalizedLandmarks[POSE_LANDMARKS.LEFT_SHOULDER].y * height,
+				);
+				ctx.lineTo(
+					normalizedLandmarks[POSE_LANDMARKS.LEFT_HIP].x * width,
+					normalizedLandmarks[POSE_LANDMARKS.LEFT_HIP].y * height,
+				);
+				ctx.stroke();
+			}
+		},
+		[],
+	);
 
-    const onResults = React.useCallback((results: Results) => {
-        if (!canvasRef.current || !videoRef.current) return;
+	const onResults = React.useCallback(
+		(results: Results) => {
+			if (!canvasRef.current || !videoRef.current) return;
 
-        const canvasCtx = canvasRef.current.getContext('2d');
-        if (!canvasCtx) return;
+			const canvasCtx = canvasRef.current.getContext("2d");
+			if (!canvasCtx) return;
 
-        const videoWidth = videoRef.current.videoWidth;
-        const videoHeight = videoRef.current.videoHeight;
-        canvasRef.current.width = videoWidth;
-        canvasRef.current.height = videoHeight;
+			const videoWidth = videoRef.current.videoWidth;
+			const videoHeight = videoRef.current.videoHeight;
+			canvasRef.current.width = videoWidth;
+			canvasRef.current.height = videoHeight;
 
-        canvasCtx.save();
-        canvasCtx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-        canvasCtx.drawImage(results.image, 0, 0, canvasRef.current.width, canvasRef.current.height);
+			canvasCtx.save();
+			canvasCtx.clearRect(
+				0,
+				0,
+				canvasRef.current.width,
+				canvasRef.current.height,
+			);
+			canvasCtx.drawImage(
+				results.image,
+				0,
+				0,
+				canvasRef.current.width,
+				canvasRef.current.height,
+			);
 
-        if (results.poseLandmarks) {
-            drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, { color: '#00FF00', lineWidth: 4 });
-            drawLandmarks(canvasCtx, results.poseLandmarks, { color: '#FF0000', lineWidth: 2 });
+			if (results.poseLandmarks) {
+				drawConnectors(canvasCtx, results.poseLandmarks, POSE_CONNECTIONS, {
+					color: "#00FF00",
+					lineWidth: 4,
+				});
+				drawLandmarks(canvasCtx, results.poseLandmarks, {
+					color: "#FF0000",
+					lineWidth: 2,
+				});
 
-            if (results.poseWorldLandmarks) {
-                const completeLandmarks = results.poseWorldLandmarks.map(l => ({
-                    x: l.x,
-                    y: l.y,
-                    z: l.z ?? 0 // Ensure z is defined
-                }));
-                analyzePosture(completeLandmarks, canvasCtx, videoWidth, videoHeight, results.poseLandmarks);
-            }
-        }
-        canvasCtx.restore();
-    }, [analyzePosture]);
+				if (results.poseWorldLandmarks) {
+					const completeLandmarks = results.poseWorldLandmarks.map((l) => ({
+						x: l.x,
+						y: l.y,
+						z: l.z ?? 0, // Ensure z is defined
+					}));
+					analyzePosture(
+						completeLandmarks,
+						canvasCtx,
+						videoWidth,
+						videoHeight,
+						results.poseLandmarks,
+					);
+				}
+			}
+			canvasCtx.restore();
+		},
+		[analyzePosture],
+	);
 
+	useEffect(() => {
+		// Capture ref for cleanup
+		const videoElement = videoRef.current;
+		let poseInstance: PoseInstance | null = null;
 
+		// Async IIFE to handle dynamic import
+		(async () => {
+			// Dynamically import the @mediapipe/pose module
+			await import("@mediapipe/pose");
 
-    useEffect(() => {
-        // Capture ref for cleanup
-        const videoElement = videoRef.current;
-        let poseInstance: PoseInstance | null = null;
+			// The module attaches Pose to the global window object
+			const PoseClass = (window as Window & { Pose?: PoseConstructor }).Pose;
 
-        // Async IIFE to handle dynamic import
-        (async () => {
-            // Dynamically import the @mediapipe/pose module
-            await import('@mediapipe/pose');
+			if (!PoseClass) {
+				logger.error(
+					"MediaPipe Pose not found on window object",
+					undefined,
+					"PoseAnalyzer",
+				);
+				return;
+			}
 
-            // The module attaches Pose to the global window object
-            const PoseClass = (window as Window & { Pose?: PoseConstructor }).Pose;
+			// 1. Initialize Pose
+			const pose = new PoseClass({
+				locateFile: (file) => {
+					return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+				},
+			});
 
-            if (!PoseClass) {
-                logger.error('MediaPipe Pose not found on window object', undefined, 'PoseAnalyzer');
-                return;
-            }
+			pose.setOptions({
+				modelComplexity: 2,
+				smoothLandmarks: true,
+				enableSegmentation: false,
+				smoothSegmentation: false,
+				minDetectionConfidence: 0.5,
+				minTrackingConfidence: 0.5,
+			});
 
-            // 1. Initialize Pose
-            const pose = new PoseClass({
-                locateFile: (file) => {
-                    return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
-                },
-            });
+			pose.onResults(onResults);
+			poseRef.current = pose;
+			poseInstance = pose;
+		})();
 
-            pose.setOptions({
-                modelComplexity: 2,
-                smoothLandmarks: true,
-                enableSegmentation: false,
-                smoothSegmentation: false,
-                minDetectionConfidence: 0.5,
-                minTrackingConfidence: 0.5,
-            });
+		return () => {
+			cancelAnimationFrame(requestRef.current!);
+			if (poseInstance) {
+				poseInstance.close();
+			}
 
-            pose.onResults(onResults);
-            poseRef.current = pose;
-            poseInstance = pose;
-        })();
+			// Use captured ref
+			if (videoElement && videoElement.srcObject) {
+				const tracks = (videoElement.srcObject as MediaStream).getTracks();
+				tracks.forEach((track) => track.stop());
+			}
+		};
+	}, [onResults]);
 
-        return () => {
-            cancelAnimationFrame(requestRef.current!);
-            if (poseInstance) {
-                poseInstance.close();
-            }
+	// 2. Handle Video Source Changes
+	useEffect(() => {
+		if (videoSrc && videoRef.current) {
+			videoRef.current.src = videoSrc;
+			videoRef.current.load();
+			setCameraActive(false);
+		} else if (!videoSrc) {
+			// Optional: Auto-start webcam or wait for user
+		}
+	}, [videoSrc]);
 
-            // Use captured ref
-            if (videoElement && videoElement.srcObject) {
-                const tracks = (videoElement.srcObject as MediaStream).getTracks();
-                tracks.forEach(track => track.stop());
-            }
-        };
-    }, [onResults]);
+	const startCamera = async () => {
+		if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+			try {
+				const stream = await navigator.mediaDevices.getUserMedia({
+					video: true,
+				});
+				if (videoRef.current) {
+					videoRef.current.srcObject = stream;
+					videoRef.current.onloadedmetadata = () => {
+						videoRef.current?.play();
+						startProcessing();
+					};
+					setCameraActive(true);
+				}
+			} catch {
+				toast({
+					title: "Erro na Câmera",
+					description: "Não foi possível acessar a câmera.",
+					variant: "destructive",
+				});
+			}
+		}
+	};
 
-    // 2. Handle Video Source Changes
-    useEffect(() => {
-        if (videoSrc && videoRef.current) {
-            videoRef.current.src = videoSrc;
-            videoRef.current.load();
-            setCameraActive(false);
-        } else if (!videoSrc) {
-            // Optional: Auto-start webcam or wait for user
-        }
-    }, [videoSrc]);
+	const startProcessing = () => {
+		setIsProcessing(true);
+		processFrame();
+	};
 
-    const startCamera = async () => {
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                if (videoRef.current) {
-                    videoRef.current.srcObject = stream;
-                    videoRef.current.onloadedmetadata = () => {
-                        videoRef.current?.play();
-                        startProcessing();
-                    };
-                    setCameraActive(true);
-                }
-            } catch {
-                toast({
-                    title: "Erro na Câmera",
-                    description: "Não foi possível acessar a câmera.",
-                    variant: "destructive"
-                });
-            }
-        }
-    };
+	const stopProcessing = () => {
+		setIsProcessing(false);
+		if (requestRef.current) {
+			cancelAnimationFrame(requestRef.current);
+		}
+	};
 
-    const startProcessing = () => {
-        setIsProcessing(true);
-        processFrame();
-    };
+	const processFrame = async () => {
+		if (!videoRef.current || !poseRef.current || !canvasRef.current) return;
 
-    const stopProcessing = () => {
-        setIsProcessing(false);
-        if (requestRef.current) {
-            cancelAnimationFrame(requestRef.current);
-        }
-    };
+		if (videoRef.current.paused || videoRef.current.ended) {
+			// If video ended, stop loop
+			if (videoRef.current.ended) setIsProcessing(false);
+			return;
+		}
 
-    const processFrame = async () => {
-        if (!videoRef.current || !poseRef.current || !canvasRef.current) return;
+		await poseRef.current.send({ image: videoRef.current });
 
-        if (videoRef.current.paused || videoRef.current.ended) {
-            // If video ended, stop loop
-            if (videoRef.current.ended) setIsProcessing(false);
-            return;
-        }
+		if (isProcessing) {
+			// Check again to continue loop
+			requestRef.current = requestAnimationFrame(processFrame);
+		}
+	};
 
-        await poseRef.current.send({ image: videoRef.current });
+	// Handling file upload for quick test if not provided via props
+	const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (file) {
+			const url = URL.createObjectURL(file);
+			if (videoRef.current) {
+				videoRef.current.src = url;
+				setCameraActive(false);
+			}
+		}
+	};
 
-        if (isProcessing) { // Check again to continue loop
-            requestRef.current = requestAnimationFrame(processFrame);
-        }
-    };
+	return (
+		<Card className="p-4 flex flex-col items-center gap-4 w-full h-full bg-slate-900 border-slate-800">
+			<div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden shrink-0">
+				<video
+					ref={videoRef}
+					className="absolute inset-0 w-full h-full object-contain opacity-0" // Hide video, show canvas
+					playsInline
+					muted
+					onPlay={() => startProcessing()}
+				/>
+				<canvas
+					ref={canvasRef}
+					className="absolute inset-0 w-full h-full object-contain"
+				/>
+			</div>
 
+			<div className="flex gap-2 w-full justify-center">
+				{!videoSrc && (
+					<>
+						<Button
+							onClick={startCamera}
+							variant={cameraActive ? "default" : "secondary"}
+						>
+							<Camera className="w-4 h-4 mr-2" />
+							Webcam
+						</Button>
+						<div className="relative">
+							<Button variant="outline">
+								<Upload className="w-4 h-4 mr-2" />
+								Carregar Vídeo
+							</Button>
+							<input
+								type="file"
+								accept="video/*"
+								className="absolute inset-0 opacity-0 cursor-pointer"
+								onChange={handleFileUpload}
+							/>
+						</div>
+					</>
+				)}
 
-
-    // Handling file upload for quick test if not provided via props
-    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            const url = URL.createObjectURL(file);
-            if (videoRef.current) {
-                videoRef.current.src = url;
-                setCameraActive(false);
-            }
-        }
-    };
-
-    return (
-        <Card className="p-4 flex flex-col items-center gap-4 w-full h-full bg-slate-900 border-slate-800">
-            <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden shrink-0">
-                <video
-                    ref={videoRef}
-                    className="absolute inset-0 w-full h-full object-contain opacity-0" // Hide video, show canvas
-                    playsInline
-                    muted
-                    onPlay={() => startProcessing()}
-                />
-                <canvas
-                    ref={canvasRef}
-                    className="absolute inset-0 w-full h-full object-contain"
-                />
-            </div>
-
-            <div className="flex gap-2 w-full justify-center">
-                {!videoSrc && (
-                    <>
-                        <Button onClick={startCamera} variant={cameraActive ? "default" : "secondary"}>
-                            <Camera className="w-4 h-4 mr-2" />
-                            Webcam
-                        </Button>
-                        <div className="relative">
-                            <Button variant="outline">
-                                <Upload className="w-4 h-4 mr-2" />
-                                Carregar Vídeo
-                            </Button>
-                            <input
-                                type="file"
-                                accept="video/*"
-                                className="absolute inset-0 opacity-0 cursor-pointer"
-                                onChange={handleFileUpload}
-                            />
-                        </div>
-                    </>
-                )}
-
-                <Button onClick={() => {
-                    if (videoRef.current?.paused) {
-                        videoRef.current.play();
-                        startProcessing();
-                    } else {
-                        videoRef.current?.pause();
-                        stopProcessing();
-                    }
-                }}>
-                    {isProcessing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                </Button>
-            </div>
-        </Card>
-    );
+				<Button
+					onClick={() => {
+						if (videoRef.current?.paused) {
+							videoRef.current.play();
+							startProcessing();
+						} else {
+							videoRef.current?.pause();
+							stopProcessing();
+						}
+					}}
+				>
+					{isProcessing ? (
+						<Pause className="w-4 h-4" />
+					) : (
+						<Play className="w-4 h-4" />
+					)}
+				</Button>
+			</div>
+		</Card>
+	);
 };
 
 export default PoseAnalyzer;

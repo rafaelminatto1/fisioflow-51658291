@@ -5,7 +5,6 @@
  * evitando re-renders e recalculos desnecessários
  */
 
-
 /**
  * Hook que mantém o valor anterior de um estado ou prop
  * Útil para comparações e detecção de mudanças
@@ -17,16 +16,16 @@
  * }
  */
 
-import { useMemo, useRef, useCallback, useEffect, useState } from 'react';
+import { useMemo, useRef, useCallback, useEffect, useState } from "react";
 
 export function usePrevious<T>(value: T): T | undefined {
-  const ref = useRef<T>();
+	const ref = useRef<T>();
 
-  useEffect(() => {
-    ref.current = value;
-  }, [value]);
+	useEffect(() => {
+		ref.current = value;
+	}, [value]);
 
-  return ref.current;
+	return ref.current;
 }
 
 /**
@@ -36,21 +35,22 @@ export function usePrevious<T>(value: T): T | undefined {
  * const [value, didChange] = useTrackedMemo(() => computeExpensive(a, b), [a, b]);
  */
 export function useTrackedMemo<T>(
-  factory: () => T,
-  deps: unknown[]
+	factory: () => T,
+	deps: unknown[],
 ): [T, boolean] {
-  const prevDepsRef = useRef<unknown[]>();
-  const valueRef = useRef<T>();
+	const prevDepsRef = useRef<unknown[]>();
+	const valueRef = useRef<T>();
 
-  const depsChanged = !prevDepsRef.current ||
-    deps.some((dep, i) => !Object.is(dep, prevDepsRef.current![i]));
+	const depsChanged =
+		!prevDepsRef.current ||
+		deps.some((dep, i) => !Object.is(dep, prevDepsRef.current![i]));
 
-  if (depsChanged) {
-    valueRef.current = factory();
-    prevDepsRef.current = deps;
-  }
+	if (depsChanged) {
+		valueRef.current = factory();
+		prevDepsRef.current = deps;
+	}
 
-  return [valueRef.current, depsChanged];
+	return [valueRef.current, depsChanged];
 }
 
 /**
@@ -61,29 +61,30 @@ export function useTrackedMemo<T>(
  * const cachedData = useMemoWithTTL(() => fetchUserData(), [userId], 60000); // 1 minuto
  */
 export function useMemoWithTTL<T>(
-  factory: () => T,
-  deps: unknown[],
-  ttl: number // em ms
+	factory: () => T,
+	deps: unknown[],
+	ttl: number, // em ms
 ): T {
-  const [value, setValue] = useState<T>(factory);
-  const lastUpdateRef = useRef<number>(Date.now());
-  const lastDepsRef = useRef<unknown[]>(deps);
+	const [value, setValue] = useState<T>(factory);
+	const lastUpdateRef = useRef<number>(Date.now());
+	const lastDepsRef = useRef<unknown[]>(deps);
 
-  const depsChanged = !lastDepsRef.current ||
-    deps.some((dep, i) => !Object.is(dep, lastDepsRef.current![i]));
+	const depsChanged =
+		!lastDepsRef.current ||
+		deps.some((dep, i) => !Object.is(dep, lastDepsRef.current![i]));
 
-  useEffect(() => {
-    const now = Date.now();
+	useEffect(() => {
+		const now = Date.now();
 
-    // Atualizar se deps mudou ou TTL expirou
-    if (depsChanged || now - lastUpdateRef.current > ttl) {
-      setValue(factory());
-      lastUpdateRef.current = now;
-      lastDepsRef.current = deps;
-    }
-  }, [deps, depsChanged, factory, ttl]);
+		// Atualizar se deps mudou ou TTL expirou
+		if (depsChanged || now - lastUpdateRef.current > ttl) {
+			setValue(factory());
+			lastUpdateRef.current = now;
+			lastDepsRef.current = deps;
+		}
+	}, [deps, depsChanged, factory, ttl]);
 
-  return value;
+	return value;
 }
 
 /**
@@ -93,18 +94,18 @@ export function useMemoWithTTL<T>(
  * @example
  * const { callback, invalidate } = useInvalidableCallback(() => fetchData());
  */
-export function useInvalidableCallback<T extends (...args: unknown[]) => unknown>(
-  callback: T
-): { callback: T; invalidate: () => void; version: number } {
-  const [version, setVersion] = useState(0);
+export function useInvalidableCallback<
+	T extends (...args: unknown[]) => unknown,
+>(callback: T): { callback: T; invalidate: () => void; version: number } {
+	const [version, setVersion] = useState(0);
 
-  const memoizedCallback = useCallback(callback, [callback, version]);
+	const memoizedCallback = useCallback(callback, [callback, version]);
 
-  const invalidate = useCallback(() => {
-    setVersion(v => v + 1);
-  }, []);
+	const invalidate = useCallback(() => {
+		setVersion((v) => v + 1);
+	}, []);
 
-  return { callback: memoizedCallback as T, invalidate, version };
+	return { callback: memoizedCallback as T, invalidate, version };
 }
 
 /**
@@ -119,13 +120,16 @@ export function useInvalidableCallback<T extends (...args: unknown[]) => unknown
  * ], [[a, b], [c, d], [e, f]]);
  */
 export function useMultiMemo<T>(
-  factories: (() => T)[],
-  depsArrays: unknown[][]
+	factories: (() => T)[],
+	depsArrays: unknown[][],
 ): T[] {
-  const flatDeps = useMemo(() => depsArrays.flat(), [depsArrays]);
+	const flatDeps = useMemo(() => depsArrays.flat(), [depsArrays]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  return useMemo(() => factories.map(factory => factory()), [factories, flatDeps]);
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	return useMemo(
+		() => factories.map((factory) => factory()),
+		[factories, flatDeps],
+	);
 }
 
 /**
@@ -139,13 +143,13 @@ export function useMultiMemo<T>(
  * });
  */
 export function usePersistentMemo<T>(factory: () => T): T {
-  const ref = useRef<T>();
+	const ref = useRef<T>();
 
-  if (!ref.current) {
-    ref.current = factory();
-  }
+	if (!ref.current) {
+		ref.current = factory();
+	}
 
-  return ref.current;
+	return ref.current;
 }
 
 /**
@@ -156,27 +160,27 @@ export function usePersistentMemo<T>(factory: () => T): T {
  * const throttledScroll = useThrottledValue(scrollY, 100);
  */
 export function useThrottledValue<T>(value: T, interval: number = 100): T {
-  const [throttledValue, setThrottledValue] = useState(value);
-  const lastUpdatedRef = useRef<number>(Date.now());
+	const [throttledValue, setThrottledValue] = useState(value);
+	const lastUpdatedRef = useRef<number>(Date.now());
 
-  useEffect(() => {
-    const now = Date.now();
-    const timeSinceLastUpdate = now - lastUpdatedRef.current;
+	useEffect(() => {
+		const now = Date.now();
+		const timeSinceLastUpdate = now - lastUpdatedRef.current;
 
-    if (timeSinceLastUpdate >= interval) {
-      setThrottledValue(value);
-      lastUpdatedRef.current = now;
-    } else {
-      const timeoutId = setTimeout(() => {
-        setThrottledValue(value);
-        lastUpdatedRef.current = Date.now();
-      }, interval - timeSinceLastUpdate);
+		if (timeSinceLastUpdate >= interval) {
+			setThrottledValue(value);
+			lastUpdatedRef.current = now;
+		} else {
+			const timeoutId = setTimeout(() => {
+				setThrottledValue(value);
+				lastUpdatedRef.current = Date.now();
+			}, interval - timeSinceLastUpdate);
 
-      return () => clearTimeout(timeoutId);
-    }
-  }, [value, interval]);
+			return () => clearTimeout(timeoutId);
+		}
+	}, [value, interval]);
 
-  return throttledValue;
+	return throttledValue;
 }
 
 /**
@@ -190,38 +194,38 @@ export function useThrottledValue<T>(value: T, interval: number = 100): T {
  * );
  */
 export function usePromiseMemo<T>(
-  promiseFactory: () => Promise<T>,
-  deps: unknown[]
+	promiseFactory: () => Promise<T>,
+	deps: unknown[],
 ): { data: T | undefined; loading: boolean; error: Error | undefined } {
-  const [state, setState] = useState<{
-    data: T | undefined;
-    loading: boolean;
-    error: Error | undefined;
-  }>({ data: undefined, loading: true, error: undefined });
+	const [state, setState] = useState<{
+		data: T | undefined;
+		loading: boolean;
+		error: Error | undefined;
+	}>({ data: undefined, loading: true, error: undefined });
 
-  useEffect(() => {
-    let cancelled = false;
+	useEffect(() => {
+		let cancelled = false;
 
-    setState({ data: undefined, loading: true, error: undefined });
+		setState({ data: undefined, loading: true, error: undefined });
 
-    promiseFactory()
-      .then(data => {
-        if (!cancelled) {
-          setState({ data, loading: false, error: undefined });
-        }
-      })
-      .catch(error => {
-        if (!cancelled) {
-          setState({ data: undefined, loading: false, error });
-        }
-      });
+		promiseFactory()
+			.then((data) => {
+				if (!cancelled) {
+					setState({ data, loading: false, error: undefined });
+				}
+			})
+			.catch((error) => {
+				if (!cancelled) {
+					setState({ data: undefined, loading: false, error });
+				}
+			});
 
-    return () => {
-      cancelled = true;
-    };
-  }, [promiseFactory, deps]);
+		return () => {
+			cancelled = true;
+		};
+	}, [promiseFactory, deps]);
 
-  return state;
+	return state;
 }
 
 /**
@@ -235,19 +239,22 @@ export function usePromiseMemo<T>(
  * }), [complexFilter, complexSort]);
  */
 export function useDeepMemo<T>(factory: () => T, deps: unknown[]): T {
-  const depsRef = useRef<unknown[]>();
-  const valueRef = useRef<T>();
+	const depsRef = useRef<unknown[]>();
+	const valueRef = useRef<T>();
 
-  const depsAreEqual = depsRef.current &&
-    deps.length === depsRef.current.length &&
-    deps.every((dep, i) => JSON.stringify(dep) === JSON.stringify(depsRef.current![i]));
+	const depsAreEqual =
+		depsRef.current &&
+		deps.length === depsRef.current.length &&
+		deps.every(
+			(dep, i) => JSON.stringify(dep) === JSON.stringify(depsRef.current![i]),
+		);
 
-  if (!depsAreEqual) {
-    valueRef.current = factory();
-    depsRef.current = deps;
-  }
+	if (!depsAreEqual) {
+		valueRef.current = factory();
+		depsRef.current = deps;
+	}
 
-  return valueRef.current as T;
+	return valueRef.current as T;
 }
 
 /**
@@ -261,8 +268,11 @@ export function useDeepMemo<T>(factory: () => T, deps: unknown[]): T {
  * );
  */
 export function useConditionalMemo<T>(
-  factory: () => T,
-  shouldRender: boolean
+	factory: () => T,
+	shouldRender: boolean,
 ): T | null {
-  return useMemo(() => (shouldRender ? factory() : null), [shouldRender, factory]);
+	return useMemo(
+		() => (shouldRender ? factory() : null),
+		[shouldRender, factory],
+	);
 }

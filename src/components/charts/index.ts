@@ -4,4 +4,4 @@
  * Exporta componentes de gráficos com lazy loading
  */
 
-export * from './LazyCharts';
+export * from "./LazyCharts";

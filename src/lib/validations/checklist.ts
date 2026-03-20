@@ -1,27 +1,29 @@
-
 // Schema para criar item de checklist
 
-import { z } from 'zod';
+import { z } from "zod";
 
 export const checklistItemCreateSchema = z.object({
-  evento_id: z.string().uuid(),
-  titulo: z.string().min(2, 'Título deve ter pelo menos 2 caracteres'),
-  tipo: z.enum(['levar', 'alugar', 'comprar']),
-  quantidade: z.number().int().positive().default(1),
-  custo_unitario: z.number().nonnegative().default(0),
+	evento_id: z.string().uuid(),
+	titulo: z.string().min(2, "Título deve ter pelo menos 2 caracteres"),
+	tipo: z.enum(["levar", "alugar", "comprar"]),
+	quantidade: z.number().int().positive().default(1),
+	custo_unitario: z.number().nonnegative().default(0),
 });
 
 // Schema para atualizar item de checklist (evento_id não pode ser alterado)
-export const checklistItemUpdateSchema = checklistItemCreateSchema.omit({ evento_id: true }).partial().extend({
-  status: z.enum(['ABERTO', 'OK']).optional(),
-});
+export const checklistItemUpdateSchema = checklistItemCreateSchema
+	.omit({ evento_id: true })
+	.partial()
+	.extend({
+		status: z.enum(["ABERTO", "OK"]).optional(),
+	});
 
 // Schema completo do item de checklist
 export const checklistItemSchema = checklistItemCreateSchema.extend({
-  id: z.string().uuid(),
-  status: z.enum(['ABERTO', 'OK']),
-  created_at: z.string(),
-  updated_at: z.string(),
+	id: z.string().uuid(),
+	status: z.enum(["ABERTO", "OK"]),
+	created_at: z.string(),
+	updated_at: z.string(),
 });
 
 export type ChecklistItemCreate = z.infer<typeof checklistItemCreateSchema>;

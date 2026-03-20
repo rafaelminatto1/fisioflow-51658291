@@ -93,7 +93,7 @@ app.post('/service', async (c) => {
       Responda de forma técnica, concisa e baseada em evidências clínicas.`;
       
       const start = performance.now();
-      const response = await callGemini(c.env.GOOGLE_AI_API_KEY, prompt);
+      const response = await callGemini(c.env.GOOGLE_AI_API_KEY, prompt, 'gemini-1.5-flash', c.env.FISIOFLOW_AI_GATEWAY_URL);
       const duration = performance.now() - start;
       
       c.executionCtx.waitUntil(
@@ -117,7 +117,7 @@ app.post('/service', async (c) => {
       Para cada exercício, forneça o nome, a justificativa clínica e a área alvo. 
       Retorne em formato JSON: { exercises: [{ name, rationale, targetArea }] }`;
       
-      const aiResponse = await callGemini(c.env.GOOGLE_AI_API_KEY, prompt);
+      const aiResponse = await callGemini(c.env.GOOGLE_AI_API_KEY, prompt, 'gemini-1.5-flash', c.env.FISIOFLOW_AI_GATEWAY_URL);
       try {
         const parsed = JSON.parse(aiResponse.replace(/```json|```/g, ''));
         return c.json({ data: { success: true, data: parsed } });
@@ -140,7 +140,7 @@ app.post('/fast-processing', async (c) => {
     ? `Corrija a gramática e melhore a clareza técnica deste registro de fisioterapia, mantendo o tom profissional: "${text}". Retorne apenas o texto corrigido.`
     : `Resuma este registro clínico de forma concisa: "${text}". Retorne apenas o resumo.`;
 
-  const result = await callGemini(c.env.GOOGLE_AI_API_KEY, prompt);
+  const result = await callGemini(c.env.GOOGLE_AI_API_KEY, prompt, 'gemini-1.5-flash', c.env.FISIOFLOW_AI_GATEWAY_URL);
   return c.json({ data: { result } });
 });
 
@@ -162,11 +162,11 @@ app.post('/transcribe-audio', async (c) => {
       } catch (e) {
         console.error('Whisper failed, falling back to Gemini', e);
         provider = 'gemini-fallback';
-        transcription = await transcribeAudioWithGemini(c.env.GOOGLE_AI_API_KEY, audioBase64, String(body.mimeType || 'audio/webm'));
+        transcription = await transcribeAudioWithGemini(c.env.GOOGLE_AI_API_KEY, audioBase64, String(body.mimeType || 'audio/webm'), c.env.FISIOFLOW_AI_GATEWAY_URL);
       }
     } else {
       provider = 'gemini-direct';
-      transcription = await transcribeAudioWithGemini(c.env.GOOGLE_AI_API_KEY, audioBase64, String(body.mimeType || 'audio/webm'));
+      transcription = await transcribeAudioWithGemini(c.env.GOOGLE_AI_API_KEY, audioBase64, String(body.mimeType || 'audio/webm'), c.env.FISIOFLOW_AI_GATEWAY_URL);
     }
 
     const duration = performance.now() - start;

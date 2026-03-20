@@ -3,7 +3,7 @@
  */
 
 // Async utilities
-export * from './async';
+export * from "./async";
 
 // Performance utilities
-export * from './performance';
+export * from "./performance";
