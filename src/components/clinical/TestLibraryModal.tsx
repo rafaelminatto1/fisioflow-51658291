@@ -243,12 +243,24 @@ export function TestLibraryModal({ open, onOpenChange, onAddTest, patientId }: T
                 onClick={() => setSelectedTest(test)}
                 onMouseEnter={() => setFocusedIndex(index)}
             >
-                {/* Icon */}
+                {/* Image or Icon */}
                 <div className={cn(
-                    "flex items-center justify-center w-10 h-10 rounded-lg shrink-0",
+                    "relative flex items-center justify-center w-14 h-14 rounded-lg shrink-0 overflow-hidden border border-slate-100 shadow-sm",
                     getCategoryColor(test.category)
                 )}>
-                    <CategoryIcon className="h-5 w-5" />
+                    {hasImage ? (
+                        <div className="absolute inset-0 w-full h-full">
+                            <img
+                                src={test.image_url || test.media_urls?.[0]}
+                                alt={test.name}
+                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                loading="lazy"
+                            />
+                            <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                    ) : (
+                        <CategoryIcon className="h-6 w-6" />
+                    )}
                 </div>
 
                 {/* Content */}
@@ -582,11 +594,11 @@ export function TestLibraryModal({ open, onOpenChange, onAddTest, patientId }: T
                                 <div className="p-4 space-y-4">
                                     {/* Image */}
                                     {(selectedTest.image_url || selectedTest.media_urls?.[0]) && (
-                                        <div className="rounded-lg overflow-hidden border border-slate-200 bg-white">
+                                        <div className="rounded-xl overflow-hidden border border-slate-200 bg-white shadow-sm">
                                             <img
                                                 src={selectedTest.image_url || selectedTest.media_urls?.[0]}
                                                 alt={selectedTest.name}
-                                                className="w-full h-48 object-contain bg-slate-50"
+                                                className="w-full h-56 object-cover bg-slate-50"
                                             />
                                         </div>
                                     )}
