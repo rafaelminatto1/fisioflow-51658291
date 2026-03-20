@@ -1,407 +1,442 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { MagicTextarea } from '@/components/ai/MagicTextarea';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { MagicTextarea } from "@/components/ai/MagicTextarea";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
-
-  User,
-  Eye,
-  Brain,
-  ClipboardList,
-  Save,
-  Loader2,
-  CheckCircle2,
-  Sparkles,
-  Mic,
-  MicOff,
-} from 'lucide-react';
-import { ConductReplication } from './ConductReplication';
-import { SOAPAssistant } from '@/components/ai/SOAPAssistant';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+	User,
+	Eye,
+	Brain,
+	ClipboardList,
+	Save,
+	Loader2,
+	CheckCircle2,
+	Sparkles,
+	Mic,
+	MicOff,
+} from "lucide-react";
+import { ConductReplication } from "./ConductReplication";
+import { SOAPAssistant } from "@/components/ai/SOAPAssistant";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface SOAPData {
-  subjective: string;
-  objective: string;
-  assessment: string;
-  plan: string;
+	subjective: string;
+	objective: string;
+	assessment: string;
+	plan: string;
 }
 
 interface SOAPFieldProps {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder: string;
-  description: string;
-  isActive: boolean;
-  onFocus: () => void;
-  disabled?: boolean;
+	value: string;
+	onChange: (value: string) => void;
+	placeholder: string;
+	description: string;
+	isActive: boolean;
+	onFocus: () => void;
+	disabled?: boolean;
 }
 
-const SOAPField = React.memo(({
-  value,
-  onChange,
-  placeholder,
-  description,
-  isActive,
-  onFocus,
-  disabled
-}: SOAPFieldProps) => {
-  const [localValue, setLocalValue] = useState(value);
-  const lastSentValue = useRef(value);
-  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
+const SOAPField = React.memo(
+	({
+		value,
+		onChange,
+		placeholder,
+		description,
+		isActive,
+		onFocus,
+		disabled,
+	}: SOAPFieldProps) => {
+		const [localValue, setLocalValue] = useState(value);
+		const lastSentValue = useRef(value);
+		const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    // Sincroniza apenas quando o valor externo mudar de forma não programática
-    // (não via digitação do usuário que é tratada pelo debounce)
-    if (value !== localValue && value !== lastSentValue.current && !debounceTimer.current) {
-      setLocalValue(value || '');
-      lastSentValue.current = value || '';
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+		useEffect(() => {
+			// Sincroniza apenas quando o valor externo mudar de forma não programática
+			// (não via digitação do usuário que é tratada pelo debounce)
+			if (
+				value !== localValue &&
+				value !== lastSentValue.current &&
+				!debounceTimer.current
+			) {
+				setLocalValue(value || "");
+				lastSentValue.current = value || "";
+			}
+			// eslint-disable-next-line react-hooks/exhaustive-deps
+		}, [value]);
 
-  useEffect(() => {
-    return () => {
-      if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    };
-  }, []);
+		useEffect(() => {
+			return () => {
+				if (debounceTimer.current) clearTimeout(debounceTimer.current);
+			};
+		}, []);
 
-  const handleChange = useCallback((val: string) => {
-    setLocalValue(val);
+		const handleChange = useCallback(
+			(val: string) => {
+				setLocalValue(val);
 
-    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+				if (debounceTimer.current) clearTimeout(debounceTimer.current);
 
-    debounceTimer.current = setTimeout(() => {
-      lastSentValue.current = val;
-      onChange(val);
-    }, 1000); // Aumentado para 1000ms para melhor performance ao digitar
-  }, [onChange]);
+				debounceTimer.current = setTimeout(() => {
+					lastSentValue.current = val;
+					onChange(val);
+				}, 1000); // Aumentado para 1000ms para melhor performance ao digitar
+			},
+			[onChange],
+		);
 
-  return (
-    <>
-      <MagicTextarea
-        placeholder={placeholder}
-        value={localValue}
-        onValueChange={handleChange}
-        onFocus={onFocus}
-        disabled={disabled}
-        rows={isActive ? 5 : 3}
-        className={isActive ? 'min-h-[120px]' : ''}
-      />
-      <p className="text-xs text-muted-foreground mt-1">{description}</p>
-    </>
-  );
-});
+		return (
+			<>
+				<MagicTextarea
+					placeholder={placeholder}
+					value={localValue}
+					onValueChange={handleChange}
+					onFocus={onFocus}
+					disabled={disabled}
+					rows={isActive ? 5 : 3}
+					className={isActive ? "min-h-[120px]" : ""}
+				/>
+				<p className="text-xs text-muted-foreground mt-1">{description}</p>
+			</>
+		);
+	},
+);
 
-SOAPField.displayName = 'SOAPField';
+SOAPField.displayName = "SOAPField";
 
 interface SOAPFormPanelProps {
-  patientId: string;
-  data: SOAPData;
-  onChange: (data: SOAPData) => void;
-  onSave?: () => void;
-  isSaving?: boolean;
-  disabled?: boolean;
-  showReplication?: boolean;
-  autoSaveEnabled?: boolean;
-  lastSaved?: Date | null;
+	patientId: string;
+	data: SOAPData;
+	onChange: (data: SOAPData) => void;
+	onSave?: () => void;
+	isSaving?: boolean;
+	disabled?: boolean;
+	showReplication?: boolean;
+	autoSaveEnabled?: boolean;
+	lastSaved?: Date | null;
 }
 
 const SOAP_SECTIONS = [
-  {
-    key: 'subjective' as const,
-    label: 'Subjetivo',
-    icon: User,
-    placeholder: 'Queixas do paciente, como se sente, o que relata...',
-    description: 'Relato do paciente sobre sintomas e sensações',
-    color: 'text-blue-500',
-    bgColor: 'bg-blue-500/5',
-  },
-  {
-    key: 'objective' as const,
-    label: 'Objetivo',
-    icon: Eye,
-    placeholder: 'Achados clínicos, exame físico, medições...',
-    description: 'Dados mensuráveis e observáveis pelo profissional',
-    color: 'text-green-500',
-    bgColor: 'bg-green-500/5',
-  },
-  {
-    key: 'assessment' as const,
-    label: 'Avaliação',
-    icon: Brain,
-    placeholder: 'Análise clínica, diagnóstico funcional, progresso...',
-    description: 'Interpretação dos dados subjetivos e objetivos',
-    color: 'text-purple-500',
-    bgColor: 'bg-purple-500/5',
-  },
-  {
-    key: 'plan' as const,
-    label: 'Plano',
-    icon: ClipboardList,
-    placeholder: 'Conduta, exercícios, orientações, próximos passos...',
-    description: 'Intervenções planejadas e orientações',
-    color: 'text-amber-500',
-    bgColor: 'bg-amber-500/5',
-  },
+	{
+		key: "subjective" as const,
+		label: "Subjetivo",
+		icon: User,
+		placeholder: "Queixas do paciente, como se sente, o que relata...",
+		description: "Relato do paciente sobre sintomas e sensações",
+		color: "text-blue-500",
+		bgColor: "bg-blue-500/5",
+	},
+	{
+		key: "objective" as const,
+		label: "Objetivo",
+		icon: Eye,
+		placeholder: "Achados clínicos, exame físico, medições...",
+		description: "Dados mensuráveis e observáveis pelo profissional",
+		color: "text-green-500",
+		bgColor: "bg-green-500/5",
+	},
+	{
+		key: "assessment" as const,
+		label: "Avaliação",
+		icon: Brain,
+		placeholder: "Análise clínica, diagnóstico funcional, progresso...",
+		description: "Interpretação dos dados subjetivos e objetivos",
+		color: "text-purple-500",
+		bgColor: "bg-purple-500/5",
+	},
+	{
+		key: "plan" as const,
+		label: "Plano",
+		icon: ClipboardList,
+		placeholder: "Conduta, exercícios, orientações, próximos passos...",
+		description: "Intervenções planejadas e orientações",
+		color: "text-amber-500",
+		bgColor: "bg-amber-500/5",
+	},
 ];
 
-const SpeechToSOAPButton = ({ onTranscription, disabled }: { onTranscription: (text: string) => void, disabled?: boolean }) => {
-  const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<any>(null);
+const SpeechToSOAPButton = ({
+	onTranscription,
+	disabled,
+}: {
+	onTranscription: (text: string) => void;
+	disabled?: boolean;
+}) => {
+	const [isListening, setIsListening] = useState(false);
+	const recognitionRef = useRef<any>(null);
 
-  const startListening = useCallback(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    
-    if (!SpeechRecognition) {
-      toast.error("Seu navegador não suporta reconhecimento de voz.");
-      return;
-    }
+	const startListening = useCallback(() => {
+		const SpeechRecognition =
+			(window as any).SpeechRecognition ||
+			(window as any).webkitSpeechRecognition;
 
-    try {
-      const recognition = new SpeechRecognition();
-      recognition.lang = 'pt-BR';
-      recognition.continuous = false;
-      recognition.interimResults = false;
+		if (!SpeechRecognition) {
+			toast.error("Seu navegador não suporta reconhecimento de voz.");
+			return;
+		}
 
-      recognition.onstart = () => setIsListening(true);
-      recognition.onend = () => setIsListening(false);
-      recognition.onerror = (event: any) => {
-        console.error('Speech recognition error', event.error);
-        setIsListening(false);
-        toast.error(`Erro na transcrição: ${event.error}`);
-      };
+		try {
+			const recognition = new SpeechRecognition();
+			recognition.lang = "pt-BR";
+			recognition.continuous = false;
+			recognition.interimResults = false;
 
-      recognition.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        if (transcript) {
-          onTranscription(transcript);
-        }
-      };
+			recognition.onstart = () => setIsListening(true);
+			recognition.onend = () => setIsListening(false);
+			recognition.onerror = (event: any) => {
+				console.error("Speech recognition error", event.error);
+				setIsListening(false);
+				toast.error(`Erro na transcrição: ${event.error}`);
+			};
 
-      recognition.start();
-      recognitionRef.current = recognition;
-    } catch (error) {
-      console.error('Failed to start speech recognition', error);
-      setIsListening(false);
-    }
-  }, [onTranscription]);
+			recognition.onresult = (event: any) => {
+				const transcript = event.results[0][0].transcript;
+				if (transcript) {
+					onTranscription(transcript);
+				}
+			};
 
-  const stopListening = useCallback(() => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-    }
-    setIsListening(false);
-  }, []);
+			recognition.start();
+			recognitionRef.current = recognition;
+		} catch (error) {
+			console.error("Failed to start speech recognition", error);
+			setIsListening(false);
+		}
+	}, [onTranscription]);
 
-  return (
-    <Button
-      variant="ghost"
-      size="icon"
-      className={cn(
-        "h-7 w-7 rounded-full transition-all",
-        isListening && "bg-red-500/10 text-red-500 animate-pulse hover:bg-red-500/20"
-      )}
-      onClick={(e) => {
-        e.stopPropagation();
-        if (isListening) {
-          stopListening();
-        } else {
-          startListening();
-        }
-      }}
-      disabled={disabled}
-      title={isListening ? "Parar gravação" : "Gravar voz para este campo"}
-      aria-label={isListening ? "Parar gravação de voz" : "Gravar voz"}
-    >
-      {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-    </Button>
-  );
+	const stopListening = useCallback(() => {
+		if (recognitionRef.current) {
+			recognitionRef.current.stop();
+		}
+		setIsListening(false);
+	}, []);
+
+	return (
+		<Button
+			variant="ghost"
+			size="icon"
+			className={cn(
+				"h-7 w-7 rounded-full transition-all",
+				isListening &&
+					"bg-red-500/10 text-red-500 animate-pulse hover:bg-red-500/20",
+			)}
+			onClick={(e) => {
+				e.stopPropagation();
+				if (isListening) {
+					stopListening();
+				} else {
+					startListening();
+				}
+			}}
+			disabled={disabled}
+			title={isListening ? "Parar gravação" : "Gravar voz para este campo"}
+			aria-label={isListening ? "Parar gravação de voz" : "Gravar voz"}
+		>
+			{isListening ? (
+				<MicOff className="h-4 w-4" />
+			) : (
+				<Mic className="h-4 w-4" />
+			)}
+		</Button>
+	);
 };
 
 export const SOAPFormPanel: React.FC<SOAPFormPanelProps> = ({
-  patientId,
-  data,
-  onChange,
-  onSave,
-  isSaving = false,
-  disabled = false,
-  showReplication = true,
-  autoSaveEnabled = false,
-  lastSaved,
+	patientId,
+	data,
+	onChange,
+	onSave,
+	isSaving = false,
+	disabled = false,
+	showReplication = true,
+	autoSaveEnabled = false,
+	lastSaved,
 }) => {
-  const [activeSection, setActiveSection] = useState<string | null>(null);
-  const [showSOAPAssistant, setShowSOAPAssistant] = useState(false);
+	const [activeSection, setActiveSection] = useState<string | null>(null);
+	const [showSOAPAssistant, setShowSOAPAssistant] = useState(false);
 
-  const handleFieldChange = useCallback((key: keyof SOAPData, value: string) => {
-    onChange({ ...data, [key]: value });
-  }, [data, onChange]);
+	const handleFieldChange = useCallback(
+		(key: keyof SOAPData, value: string) => {
+			onChange({ ...data, [key]: value });
+		},
+		[data, onChange],
+	);
 
-  const handleSelectConduct = (conductText: string) => {
-    handleFieldChange('plan', conductText);
-  };
+	const handleSelectConduct = (conductText: string) => {
+		handleFieldChange("plan", conductText);
+	};
 
-  const getCompletionStatus = () => {
-    const filled = SOAP_SECTIONS.filter(s => data[s.key]?.trim().length > 0).length;
-    return {
-      filled,
-      total: SOAP_SECTIONS.length,
-      percentage: Math.round((filled / SOAP_SECTIONS.length) * 100),
-    };
-  };
+	const getCompletionStatus = () => {
+		const filled = SOAP_SECTIONS.filter(
+			(s) => data[s.key]?.trim().length > 0,
+		).length;
+		return {
+			filled,
+			total: SOAP_SECTIONS.length,
+			percentage: Math.round((filled / SOAP_SECTIONS.length) * 100),
+		};
+	};
 
-  const completion = getCompletionStatus();
+	const completion = getCompletionStatus();
 
-  return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <ClipboardList className="h-5 w-5 text-primary" />
-            Registro SOAP
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            {autoSaveEnabled && lastSaved && (
-              <Badge variant="outline" className="text-xs">
-                <CheckCircle2 className="h-3 w-3 mr-1 text-green-500" />
-                Salvo {lastSaved.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-              </Badge>
-            )}
-            <Badge
-              variant={completion.percentage === 100 ? 'default' : 'secondary'}
-              className="text-xs"
-            >
-              {completion.filled}/{completion.total} campos
-            </Badge>
-          </div>
-        </div>
+	return (
+		<Card className="h-full flex flex-col">
+			<CardHeader className="pb-3">
+				<div className="flex items-center justify-between">
+					<CardTitle className="flex items-center gap-2 text-lg">
+						<ClipboardList className="h-5 w-5 text-primary" />
+						Registro SOAP
+					</CardTitle>
+					<div className="flex items-center gap-2">
+						{autoSaveEnabled && lastSaved && (
+							<Badge variant="outline" className="text-xs">
+								<CheckCircle2 className="h-3 w-3 mr-1 text-green-500" />
+								Salvo{" "}
+								{lastSaved.toLocaleTimeString("pt-BR", {
+									hour: "2-digit",
+									minute: "2-digit",
+								})}
+							</Badge>
+						)}
+						<Badge
+							variant={completion.percentage === 100 ? "default" : "secondary"}
+							className="text-xs"
+						>
+							{completion.filled}/{completion.total} campos
+						</Badge>
+					</div>
+				</div>
 
-        {/* Progress bar */}
-        <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mt-2">
-          <div
-            className="h-full bg-primary transition-all duration-300"
-            style={{ width: `${completion.percentage}%` }}
-          />
-        </div>
-      </CardHeader>
+				{/* Progress bar */}
+				<div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mt-2">
+					<div
+						className="h-full bg-primary transition-all duration-300"
+						style={{ width: `${completion.percentage}%` }}
+					/>
+				</div>
+			</CardHeader>
 
-      <CardContent className="flex-1 overflow-y-auto space-y-4">
-        {SOAP_SECTIONS.map((section) => {
-          const Icon = section.icon;
-          const isActive = activeSection === section.key;
-          const hasContent = data[section.key]?.trim().length > 0;
+			<CardContent className="flex-1 overflow-y-auto space-y-4">
+				{SOAP_SECTIONS.map((section) => {
+					const Icon = section.icon;
+					const isActive = activeSection === section.key;
+					const hasContent = data[section.key]?.trim().length > 0;
 
-          return (
-            <div
-              key={section.key}
-              className={cn(
-                'rounded-lg border transition-all',
-                isActive && 'ring-2 ring-primary/20',
-                section.bgColor
-              )}
-            >
-              <div
-                className="flex items-center gap-2 p-3 cursor-pointer group"
-                onClick={() => setActiveSection(isActive ? null : section.key)}
-              >
-                <Icon className={cn('h-4 w-4', section.color)} />
-                <span className="font-medium text-sm">{section.label}</span>
-                
-                <div className="ml-auto flex items-center gap-2">
-                  <SpeechToSOAPButton 
-                    disabled={disabled}
-                    onTranscription={(text) => {
-                      const current = data[section.key];
-                      const updated = current ? `${current} ${text}` : text;
-                      handleFieldChange(section.key, updated);
-                      toast.success(`Transcrito em ${section.label}`);
-                    }} 
-                  />
-                  {hasContent && (
-                    <CheckCircle2 className="h-3 w-3 text-green-500" />
-                  )}
-                </div>
-              </div>
-              <div className="px-3 pb-3">
-                <SOAPField
-                  value={data[section.key]}
-                  onChange={(val) => handleFieldChange(section.key, val)}
-                  placeholder={section.placeholder}
-                  description={section.description}
-                  isActive={isActive}
-                  onFocus={() => setActiveSection(section.key)}
-                  disabled={disabled}
-                />
-              </div>
-            </div>
-          );
-        })}
+					return (
+						<div
+							key={section.key}
+							className={cn(
+								"rounded-lg border transition-all",
+								isActive && "ring-2 ring-primary/20",
+								section.bgColor,
+							)}
+						>
+							<div
+								className="flex items-center gap-2 p-3 cursor-pointer group"
+								onClick={() => setActiveSection(isActive ? null : section.key)}
+							>
+								<Icon className={cn("h-4 w-4", section.color)} />
+								<span className="font-medium text-sm">{section.label}</span>
 
-        <Separator />
+								<div className="ml-auto flex items-center gap-2">
+									<SpeechToSOAPButton
+										disabled={disabled}
+										onTranscription={(text) => {
+											const current = data[section.key];
+											const updated = current ? `${current} ${text}` : text;
+											handleFieldChange(section.key, updated);
+											toast.success(`Transcrito em ${section.label}`);
+										}}
+									/>
+									{hasContent && (
+										<CheckCircle2 className="h-3 w-3 text-green-500" />
+									)}
+								</div>
+							</div>
+							<div className="px-3 pb-3">
+								<SOAPField
+									value={data[section.key]}
+									onChange={(val) => handleFieldChange(section.key, val)}
+									placeholder={section.placeholder}
+									description={section.description}
+									isActive={isActive}
+									onFocus={() => setActiveSection(section.key)}
+									disabled={disabled}
+								/>
+							</div>
+						</div>
+					);
+				})}
 
-        {/* Actions */}
-        <div className="flex items-center gap-2 pt-2">
-          {/* SOAP Assistant Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowSOAPAssistant(true)}
-            className="gap-1.5 border-purple-500/30 text-purple-600 hover:bg-purple-500/10"
-          >
-            <Sparkles className="h-4 w-4" />
-            <span className="hidden sm:inline">Assistente SOAP</span>
-          </Button>
+				<Separator />
 
-          {showReplication && (
-            <ConductReplication
-              patientId={patientId}
-              onSelectConduct={handleSelectConduct}
-            />
-          )}
+				{/* Actions */}
+				<div className="flex items-center gap-2 pt-2">
+					{/* SOAP Assistant Button */}
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={() => setShowSOAPAssistant(true)}
+						className="gap-1.5 border-purple-500/30 text-purple-600 hover:bg-purple-500/10"
+					>
+						<Sparkles className="h-4 w-4" />
+						<span className="hidden sm:inline">Assistente SOAP</span>
+					</Button>
 
-          <div className="flex-1" />
+					{showReplication && (
+						<ConductReplication
+							patientId={patientId}
+							onSelectConduct={handleSelectConduct}
+						/>
+					)}
 
-          {onSave && (
-            <Button onClick={onSave} disabled={disabled || isSaving}>
-              {isSaving ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Salvando...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  Salvar Evolução
-                </>
-              )}
-            </Button>
-          )}
-        </div>
-      </CardContent>
+					<div className="flex-1" />
 
-      {/* SOAP Assistant Dialog */}
-      <Dialog open={showSOAPAssistant} onOpenChange={setShowSOAPAssistant}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-purple-600" />
-              Assistente SOAP - IA
-            </DialogTitle>
-          </DialogHeader>
-          <SOAPAssistant
-            patientId={patientId}
-            currentSOAP={data}
-            onSOAPGenerated={(soapData) => {
-              onChange({ ...data, ...soapData });
-              setShowSOAPAssistant(false);
-            }}
-            onCancel={() => setShowSOAPAssistant(false)}
-          />
-        </DialogContent>
-      </Dialog>
-    </Card>
-  );
+					{onSave && (
+						<Button onClick={onSave} disabled={disabled || isSaving}>
+							{isSaving ? (
+								<>
+									<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+									Salvando...
+								</>
+							) : (
+								<>
+									<Save className="h-4 w-4 mr-2" />
+									Salvar Evolução
+								</>
+							)}
+						</Button>
+					)}
+				</div>
+			</CardContent>
+
+			{/* SOAP Assistant Dialog */}
+			<Dialog open={showSOAPAssistant} onOpenChange={setShowSOAPAssistant}>
+				<DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+					<DialogHeader>
+						<DialogTitle className="flex items-center gap-2">
+							<Sparkles className="h-5 w-5 text-purple-600" />
+							Assistente SOAP - IA
+						</DialogTitle>
+					</DialogHeader>
+					<SOAPAssistant
+						patientId={patientId}
+						currentSOAP={data}
+						onSOAPGenerated={(soapData) => {
+							onChange({ ...data, ...soapData });
+							setShowSOAPAssistant(false);
+						}}
+						onCancel={() => setShowSOAPAssistant(false)}
+					/>
+				</DialogContent>
+			</Dialog>
+		</Card>
+	);
 };

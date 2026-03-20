@@ -1,500 +1,627 @@
-import React, { memo, useMemo } from 'react';
-import { format, isToday, isSameDay, differenceInDays, parseISO } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Clock, Ban, AlertTriangle, GripVertical } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Appointment } from '@/types/appointment';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { AppointmentQuickView } from './AppointmentQuickView';
-import { AppointmentContextMenu } from './AppointmentContextMenu';
-import { fisioLogger as logger } from '@/lib/errors/logger';
-import { getOverlapStackPosition } from '@/lib/calendar';
+import React, { memo, useMemo } from "react";
+import {
+	format,
+	isToday,
+	isSameDay,
+	differenceInDays,
+	parseISO,
+} from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Clock, Ban, AlertTriangle, GripVertical } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Appointment } from "@/types/appointment";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { AppointmentQuickView } from "./AppointmentQuickView";
+import { AppointmentContextMenu } from "./AppointmentContextMenu";
+import { fisioLogger as logger } from "@/lib/errors/logger";
+import { getOverlapStackPosition } from "@/lib/calendar";
 
 interface DayColumnProps {
-    day: Date;
-    timeSlots: string[];
-    appointments: Appointment[];
-    allAppointments?: Appointment[]; // Todos os agendamentos para verificar próximos
-    isDayClosed: boolean;
-    onTimeSlotClick: (date: Date, time: string) => void;
-    onEditAppointment?: (appointment: Appointment) => void;
-    onDeleteAppointment?: (appointment: Appointment) => void;
-    onDuplicateAppointment?: (appointment: Appointment) => void;
-    onStatusChange?: (id: string, status: string) => void;
-    dragState: { appointment: Appointment | null; isDragging: boolean };
-    dropTarget: { date: Date; time: string } | null;
-    handleDragStart: (e: React.DragEvent, appointment: Appointment) => void;
-    handleDragEnd: () => void;
-    handleDragOver: (e: React.DragEvent, date: Date, time: string) => void;
-    handleDragLeave: () => void;
-    handleDrop: (e: React.DragEvent, date: Date, time: string) => void;
-    checkTimeBlocked: (date: Date, time: string) => { blocked: boolean; reason?: string };
-    isOverCapacity: (apt: Appointment) => boolean;
-    openPopoverId: string | null;
-    setOpenPopoverId: (id: string | null) => void;
-    onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string) => Promise<void>;
+	day: Date;
+	timeSlots: string[];
+	appointments: Appointment[];
+	allAppointments?: Appointment[]; // Todos os agendamentos para verificar próximos
+	isDayClosed: boolean;
+	onTimeSlotClick: (date: Date, time: string) => void;
+	onEditAppointment?: (appointment: Appointment) => void;
+	onDeleteAppointment?: (appointment: Appointment) => void;
+	onDuplicateAppointment?: (appointment: Appointment) => void;
+	onStatusChange?: (id: string, status: string) => void;
+	dragState: { appointment: Appointment | null; isDragging: boolean };
+	dropTarget: { date: Date; time: string } | null;
+	handleDragStart: (e: React.DragEvent, appointment: Appointment) => void;
+	handleDragEnd: () => void;
+	handleDragOver: (e: React.DragEvent, date: Date, time: string) => void;
+	handleDragLeave: () => void;
+	handleDrop: (e: React.DragEvent, date: Date, time: string) => void;
+	checkTimeBlocked: (
+		date: Date,
+		time: string,
+	) => { blocked: boolean; reason?: string };
+	isOverCapacity: (apt: Appointment) => boolean;
+	openPopoverId: string | null;
+	setOpenPopoverId: (id: string | null) => void;
+	onAppointmentReschedule?: (
+		appointment: Appointment,
+		newDate: Date,
+		newTime: string,
+	) => Promise<void>;
 }
 
-export const DayColumn = memo(({
-    day,
-    timeSlots,
-    appointments,
-    allAppointments,
-    isDayClosed,
-    onTimeSlotClick,
-    onEditAppointment,
-    onDeleteAppointment,
-    onDuplicateAppointment,
-    onStatusChange,
-    dragState,
-    dropTarget,
-    handleDragStart,
-    handleDragEnd,
-    handleDragOver,
-    handleDragLeave,
-    handleDrop,
-    checkTimeBlocked,
-    isOverCapacity,
-    openPopoverId,
-    setOpenPopoverId,
-    onAppointmentReschedule
-}: DayColumnProps) => {
-    const isTodayDate = isToday(day);
-    const isDraggable = !!onAppointmentReschedule;
+export const DayColumn = memo(
+	({
+		day,
+		timeSlots,
+		appointments,
+		allAppointments,
+		isDayClosed,
+		onTimeSlotClick,
+		onEditAppointment,
+		onDeleteAppointment,
+		onDuplicateAppointment,
+		onStatusChange,
+		dragState,
+		dropTarget,
+		handleDragStart,
+		handleDragEnd,
+		handleDragOver,
+		handleDragLeave,
+		handleDrop,
+		checkTimeBlocked,
+		isOverCapacity,
+		openPopoverId,
+		setOpenPopoverId,
+		onAppointmentReschedule,
+	}: DayColumnProps) => {
+		const isTodayDate = isToday(day);
+		const isDraggable = !!onAppointmentReschedule;
 
-    // Função para verificar se o paciente tem agendamento próximo (1 dia de diferença)
-    const hasNearbyAppointment = useMemo(() => {
-        if (!allAppointments || allAppointments.length === 0) return {};
-        const nearbyMap: Record<string, {
-            hasNearby: boolean;
-            nearbyDates: string[];
-        }> = {};
+		// Função para verificar se o paciente tem agendamento próximo (1 dia de diferença)
+		const hasNearbyAppointment = useMemo(() => {
+			if (!allAppointments || allAppointments.length === 0) return {};
+			const nearbyMap: Record<
+				string,
+				{
+					hasNearby: boolean;
+					nearbyDates: string[];
+				}
+			> = {};
 
-        appointments.forEach(apt => {
-            if (!apt.patientId || !apt.date) return;
+			appointments.forEach((apt) => {
+				if (!apt.patientId || !apt.date) return;
 
-            const aptDate = typeof apt.date === 'string' ? parseISO(apt.date) : apt.date;
+				const aptDate =
+					typeof apt.date === "string" ? parseISO(apt.date) : apt.date;
 
-            // Buscar agendamentos do mesmo paciente em dias próximos (diferença de 1 dia)
-            const nearby = allAppointments
-                .filter(a =>
-                    a.patientId === apt.patientId &&
-                    a.id !== apt.id &&
-                    a.date &&
-                    !['cancelado', 'cancelada'].includes(a.status?.toLowerCase() || '')
-                )
-                .map(a => {
-                    const aDate = typeof a.date === 'string' ? parseISO(a.date) : a.date;
-                    const diff = Math.abs(differenceInDays(aptDate, aDate));
-                    return { appointment: a, diff, date: aDate };
-                })
-                .filter(({ diff }) => diff === 1) // Apenas diferença de exatamente 1 dia
-                .map(({ date }) => ({
-                    date: format(date, 'dd/MM')
-                }));
+				// Buscar agendamentos do mesmo paciente em dias próximos (diferença de 1 dia)
+				const nearby = allAppointments
+					.filter(
+						(a) =>
+							a.patientId === apt.patientId &&
+							a.id !== apt.id &&
+							a.date &&
+							!["cancelado", "cancelada"].includes(
+								a.status?.toLowerCase() || "",
+							),
+					)
+					.map((a) => {
+						const aDate =
+							typeof a.date === "string" ? parseISO(a.date) : a.date;
+						const diff = Math.abs(differenceInDays(aptDate, aDate));
+						return { appointment: a, diff, date: aDate };
+					})
+					.filter(({ diff }) => diff === 1) // Apenas diferença de exatamente 1 dia
+					.map(({ date }) => ({
+						date: format(date, "dd/MM"),
+					}));
 
-            if (nearby.length > 0) {
-                nearbyMap[apt.id] = {
-                    hasNearby: true,
-                    nearbyDates: nearby.map(n => n.date)
-                };
-            }
-        });
+				if (nearby.length > 0) {
+					nearbyMap[apt.id] = {
+						hasNearby: true,
+						nearbyDates: nearby.map((n) => n.date),
+					};
+				}
+			});
 
-        return nearbyMap;
-    }, [allAppointments, appointments]);
+			return nearbyMap;
+		}, [allAppointments, appointments]);
 
-    // Função para obter a classe CSS baseada no status
-    const getStatusClass = (status: string, therapistId?: string | null, isOver?: boolean): string => {
-        if (isOver) return 'calendar-card-excedente';
-        const normalizedStatus = status?.toLowerCase().replace(/[^a-zà-ú0-9]/g, '') || '';
+		// Função para obter a classe CSS baseada no status
+		const getStatusClass = (
+			status: string,
+			therapistId?: string | null,
+			isOver?: boolean,
+		): string => {
+			if (isOver) return "calendar-card-excedente";
+			const normalizedStatus =
+				status?.toLowerCase().replace(/[^a-zà-ú0-9]/g, "") || "";
 
-        // Se tiver fisioterapeuta específico, usa a classe roxa
-        if (therapistId) {
-            return 'calendar-card-fisioterapeuta';
-        }
+			// Se tiver fisioterapeuta específico, usa a classe roxa
+			if (therapistId) {
+				return "calendar-card-fisioterapeuta";
+			}
 
-        // Mapeamento de status para classes CSS (Sistema ZenFisio)
-        const statusMap: Record<string, string> = {
-            'agendado': 'calendar-card-agendado',
-            'atendido': 'calendar-card-atendido',
-            'avaliacao': 'calendar-card-avaliacao',
-            'avaliação': 'calendar-card-avaliacao',
-            'cancelado': 'calendar-card-cancelado',
-            'faltou': 'calendar-card-faltou',
-            'faltoucomaviso': 'calendar-card-faltou_com_aviso',
-            'faltousemaviso': 'calendar-card-faltou_sem_aviso',
-            'naoatendido': 'calendar-card-nao_atendido',
-            'naoatendidosemcobranca': 'calendar-card-nao_atendido_sem_cobranca',
-            'presencaconfirmada': 'calendar-card-presenca_confirmada',
-            'remarcar': 'calendar-card-remarcar',
-            // Mapeamentos de legado para transição suave
-            'confirmado': 'calendar-card-presenca_confirmada',
-            'concluido': 'calendar-card-atendido',
-            'realizado': 'calendar-card-atendido',
-            'emandamento': 'calendar-card-atendido',
-            'falta': 'calendar-card-faltou',
-        };
+			// Mapeamento de status para classes CSS (Sistema ZenFisio)
+			const statusMap: Record<string, string> = {
+				agendado: "calendar-card-agendado",
+				atendido: "calendar-card-atendido",
+				avaliacao: "calendar-card-avaliacao",
+				avaliação: "calendar-card-avaliacao",
+				cancelado: "calendar-card-cancelado",
+				faltou: "calendar-card-faltou",
+				faltoucomaviso: "calendar-card-faltou_com_aviso",
+				faltousemaviso: "calendar-card-faltou_sem_aviso",
+				naoatendido: "calendar-card-nao_atendido",
+				naoatendidosemcobranca: "calendar-card-nao_atendido_sem_cobranca",
+				presencaconfirmada: "calendar-card-presenca_confirmada",
+				remarcar: "calendar-card-remarcar",
+				// Mapeamentos de legado para transição suave
+				confirmado: "calendar-card-presenca_confirmada",
+				concluido: "calendar-card-atendido",
+				realizado: "calendar-card-atendido",
+				emandamento: "calendar-card-atendido",
+				falta: "calendar-card-faltou",
+			};
 
-        return statusMap[normalizedStatus] || 'calendar-card-agendado';
-    };
+			return statusMap[normalizedStatus] || "calendar-card-agendado";
+		};
 
+		return (
+			<div
+				className="w-full h-full calendar-column-divider last:border-r-0 relative group flex-shrink-0"
+				role="column"
+				aria-label={`Coluna do dia ${format(day, "dd/MM/yyyy")}`}
+			>
+				<div className={cn("calendar-day-header", isTodayDate ? "today" : "")}>
+					<div className="font-extrabold uppercase tracking-wider text-[11px] sm:text-xs lg:text-sm opacity-90">
+						{format(day, "EEE", { locale: ptBR })}
+					</div>
+					<div
+						className={cn(
+							"day-number text-xl sm:text-2xl lg:text-3xl font-black mt-1 sm:mt-1.5 relative inline-flex items-center justify-center leading-none",
+							isTodayDate && "drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]",
+						)}
+					>
+						{format(day, "d")}
+						{isTodayDate && (
+							<>
+								<span className="sr-only"> (Hoje)</span>
+								<span
+									className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full animate-pulse shadow-lg"
+									aria-hidden="true"
+								/>
+							</>
+						)}
+					</div>
+				</div>
 
+				{/* Time slots interativos */}
+				<div
+					className="relative w-full"
+					role="grid"
+					aria-label={`Slots de horário para ${format(day, "dd/MM")}`}
+				>
+					{isDayClosed ? (
+						<div
+							className="h-full flex items-center justify-center text-muted-foreground text-xs p-4 min-h-[500px]"
+							role="status"
+							aria-label="Dia fechado"
+						>
+							<div className="flex flex-col items-center gap-2">
+								<Ban className="h-4 w-4" aria-hidden="true" />
+								<span>Fechado</span>
+							</div>
+						</div>
+					) : (
+						timeSlots.map((time) => {
+							const isDropTarget =
+								dropTarget &&
+								isSameDay(dropTarget.date, day) &&
+								dropTarget.time === time;
+							const { blocked, reason } = checkTimeBlocked(day, time);
 
-    return (
-        <div
-            className="w-full h-full calendar-column-divider last:border-r-0 relative group flex-shrink-0"
-            role="column"
-            aria-label={`Coluna do dia ${format(day, 'dd/MM/yyyy')}`}
-        >
-            <div className={cn(
-                "calendar-day-header",
-                isTodayDate
-                    ? "today"
-                    : ""
-            )}>
-                <div className="font-extrabold uppercase tracking-wider text-[11px] sm:text-xs lg:text-sm opacity-90">
-                    {format(day, 'EEE', { locale: ptBR })}
-                </div>
-                <div className={cn(
-                    "day-number text-xl sm:text-2xl lg:text-3xl font-black mt-1 sm:mt-1.5 relative inline-flex items-center justify-center leading-none",
-                    isTodayDate && "drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]"
-                )}>
-                    {format(day, 'd')}
-                    {isTodayDate && (
-                        <>
-                            <span className="sr-only"> (Hoje)</span>
-                            <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-white rounded-full animate-pulse shadow-lg" aria-hidden="true" />
-                        </>
-                    )}
-                </div>
-            </div>
+							return (
+								<TimeSlot
+									key={time}
+									time={time}
+									day={day}
+									blocked={blocked}
+									reason={reason}
+									isDropTarget={isDropTarget || false}
+									onTimeSlotClick={onTimeSlotClick}
+									onDragOver={handleDragOver}
+									onDragLeave={handleDragLeave}
+									onDrop={handleDrop}
+								/>
+							);
+						})
+					)}
 
-            {/* Time slots interativos */}
-            <div className="relative w-full" role="grid" aria-label={`Slots de horário para ${format(day, 'dd/MM')}`}>
-                {isDayClosed ? (
-                    <div className="h-full flex items-center justify-center text-muted-foreground text-xs p-4 min-h-[500px]" role="status" aria-label="Dia fechado">
-                        <div className="flex flex-col items-center gap-2">
-                            <Ban className="h-4 w-4" aria-hidden="true" />
-                            <span>Fechado</span>
-                        </div>
-                    </div>
-                ) : (
-                    timeSlots.map((time) => {
-                        const isDropTarget = dropTarget && isSameDay(dropTarget.date, day) && dropTarget.time === time;
-                        const { blocked, reason } = checkTimeBlocked(day, time);
+					{/* Appointments overlay - with stacking support for overlapping appointments (by time range) */}
+					{(() => {
+						return appointments.map((apt) => {
+							// Safety check for time - handle null, undefined, or empty string
+							const time = apt.time && apt.time.trim() ? apt.time : "00:00";
+							const [hours, minutes] = time.split(":").map(Number);
+							const slotIndex = timeSlots.findIndex((slot) => {
+								const [slotHour, slotMin] = slot.split(":").map(Number);
+								return slotHour === hours && slotMin === minutes;
+							});
 
-                        return (
-                            <TimeSlot
-                                key={time}
-                                time={time}
-                                day={day}
-                                blocked={blocked}
-                                reason={reason}
-                                isDropTarget={isDropTarget || false}
-                                onTimeSlotClick={onTimeSlotClick}
-                                onDragOver={handleDragOver}
-                                onDragLeave={handleDragLeave}
-                                onDrop={handleDrop}
-                            />
-                        );
-                    })
-                )}
+							// Log se o agendamento não pôde ser posicionado porque o horário não existe nos slots
+							if (slotIndex === -1 && !isDayClosed) {
+								logger.warn(
+									`Agendamento não renderizado: horário não encontrado nos timeSlots`,
+									{
+										aptId: apt.id,
+										aptTime: time,
+										patientName: apt.patientName,
+										day: format(day, "yyyy-MM-dd"),
+										availableSlots: timeSlots.slice(0, 5).join(", "),
+									},
+									"CalendarDayColumn",
+								);
+								return null;
+							}
 
-                {/* Appointments overlay - with stacking support for overlapping appointments (by time range) */}
-                {(() => {
-                    return appointments.map(apt => {
-                        // Safety check for time - handle null, undefined, or empty string
-                        const time = apt.time && apt.time.trim() ? apt.time : '00:00';
-                        const [hours, minutes] = time.split(':').map(Number);
-                        const slotIndex = timeSlots.findIndex(slot => {
-                            const [slotHour, slotMin] = slot.split(':').map(Number);
-                            return slotHour === hours && slotMin === minutes;
-                        });
+							// Layout lateral: appointments que se sobrepõem no tempo (ex.: 08:30 e 09:00) dividem a largura
+							const { index: stackIndex, count: stackCount } =
+								getOverlapStackPosition(appointments, apt);
+							const hasOverlap = stackCount > 1;
+							const widthPercent = hasOverlap ? 100 / stackCount - 2 : 100; // ~1% margem entre cards
+							const leftPercent = hasOverlap
+								? stackIndex * (100 / stackCount) + 1
+								: 0;
 
-                        // Log se o agendamento não pôde ser posicionado porque o horário não existe nos slots
-                        if (slotIndex === -1 && !isDayClosed) {
-                            logger.warn(`Agendamento não renderizado: horário não encontrado nos timeSlots`, {
-                                aptId: apt.id,
-                                aptTime: time,
-                                patientName: apt.patientName,
-                                day: format(day, 'yyyy-MM-dd'),
-                                availableSlots: timeSlots.slice(0, 5).join(', ')
-                            }, 'CalendarDayColumn');
-                            return null;
-                        }
+							// Altura e posição baseada na duração: 48px/slot mobile, 60px/slot desktop (cada slot = 30min)
+							const duration = apt.duration || 60;
+							const slots = duration / 30;
+							const heightMobile = slots * 48; // h-12 = 48px (reduzido de 64px)
+							const heightDesktop = slots * 60; // sm:h-15 = 60px (reduzido de 80px)
+							const topMobile = slotIndex >= 0 ? slotIndex * 48 : 0;
+							const topDesktop = slotIndex >= 0 ? slotIndex * 60 : 0;
 
-                        // Layout lateral: appointments que se sobrepõem no tempo (ex.: 08:30 e 09:00) dividem a largura
-                        const { index: stackIndex, count: stackCount } = getOverlapStackPosition(appointments, apt);
-                        const hasOverlap = stackCount > 1;
-                        const widthPercent = hasOverlap ? (100 / stackCount) - 2 : 100; // ~1% margem entre cards
-                        const leftPercent = hasOverlap ? (stackIndex * (100 / stackCount)) + 1 : 0;
-
-                        // Altura e posição baseada na duração: 48px/slot mobile, 60px/slot desktop (cada slot = 30min)
-                        const duration = apt.duration || 60;
-                        const slots = duration / 30;
-                        const heightMobile = slots * 48; // h-12 = 48px (reduzido de 64px)
-                        const heightDesktop = slots * 60; // sm:h-15 = 60px (reduzido de 80px)
-                        const topMobile = slotIndex >= 0 ? slotIndex * 48 : 0;
-                        const topDesktop = slotIndex >= 0 ? slotIndex * 60 : 0;
-
-                        return (
-                            // Wrapper de posicionamento
-                            <div
-                                key={apt.id}
-                                draggable={isDraggable}
-                                onDragStart={(e) => handleDragStart(e, apt)}
-                                onDragEnd={handleDragEnd}
-                                onDragOver={(e) => {
-                                    if (apt.date && apt.time) {
-                                        const aptDate = typeof apt.date === 'string' ? parseISO(apt.date) : apt.date;
-                                        handleDragOver(e, aptDate, apt.time);
-                                    }
-                                }}
-                                onDrop={(e) => {
-                                    if (apt.date && apt.time) {
-                                        const aptDate = typeof apt.date === 'string' ? parseISO(apt.date) : apt.date;
-                                        handleDrop(e, aptDate, apt.time);
-                                    }
-                                }}
-                                className={cn(
-                                    "appointment-card absolute [transition:left_100ms_ease-out,width_100ms_ease-out,opacity_100ms_ease-out,transform_100ms_ease-out] group/card z-10",
-                                    dragState.isDragging && dragState.appointment?.id === apt.id && "opacity-40 scale-95 ring-2 ring-dashed ring-primary/60 backdrop-blur-[1px] dragging-ghost",
-                                    "hover:z-20 card-hover" // Garantir que o hover fique por cima
-                                )}
-                                style={{
-                                    top: `${topMobile}px`,
-                                    height: `${heightMobile}px`,
-                                    left: hasOverlap ? `${leftPercent}%` : '4px',
-                                    width: hasOverlap ? `${widthPercent}%` : 'calc(100% - 8px)',
-                                    ['--top-desktop' as string]: `${topDesktop}px`,
-                                    ['--height-desktop' as string]: `${heightDesktop}px`,
-                                    zIndex: hasOverlap ? 10 + stackIndex : undefined,
-                                } as React.CSSProperties}
-                                onPointerDownCapture={(e) => e.stopPropagation()}
-                                onClick={(e) => {
-                                    if (dragState.isDragging) return;
-                                    e.stopPropagation();
-                                    setOpenPopoverId(openPopoverId === apt.id ? null : apt.id);
-                                }}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
-                                        e.preventDefault();
-                                        setOpenPopoverId(openPopoverId === apt.id ? null : apt.id);
-                                    }
-                                }}
-                                role="button"
-                                tabIndex={0}
-                                aria-label={`${apt.patientName} às ${apt.time} - ${apt.type || 'Agendamento'}`}
-                                aria-expanded={openPopoverId === apt.id}
-                                aria-haspopup="dialog"
-                            >
-                                <style dangerouslySetInnerHTML={{
-                                    __html: `
+							return (
+								// Wrapper de posicionamento
+								<div
+									key={apt.id}
+									draggable={isDraggable}
+									onDragStart={(e) => handleDragStart(e, apt)}
+									onDragEnd={handleDragEnd}
+									onDragOver={(e) => {
+										if (apt.date && apt.time) {
+											const aptDate =
+												typeof apt.date === "string"
+													? parseISO(apt.date)
+													: apt.date;
+											handleDragOver(e, aptDate, apt.time);
+										}
+									}}
+									onDrop={(e) => {
+										if (apt.date && apt.time) {
+											const aptDate =
+												typeof apt.date === "string"
+													? parseISO(apt.date)
+													: apt.date;
+											handleDrop(e, aptDate, apt.time);
+										}
+									}}
+									className={cn(
+										"appointment-card absolute [transition:left_100ms_ease-out,width_100ms_ease-out,opacity_100ms_ease-out,transform_100ms_ease-out] group/card z-10",
+										dragState.isDragging &&
+											dragState.appointment?.id === apt.id &&
+											"opacity-40 scale-95 ring-2 ring-dashed ring-primary/60 backdrop-blur-[1px] dragging-ghost",
+										"hover:z-20 card-hover", // Garantir que o hover fique por cima
+									)}
+									style={
+										{
+											top: `${topMobile}px`,
+											height: `${heightMobile}px`,
+											left: hasOverlap ? `${leftPercent}%` : "4px",
+											width: hasOverlap
+												? `${widthPercent}%`
+												: "calc(100% - 8px)",
+											["--top-desktop" as string]: `${topDesktop}px`,
+											["--height-desktop" as string]: `${heightDesktop}px`,
+											zIndex: hasOverlap ? 10 + stackIndex : undefined,
+										} as React.CSSProperties
+									}
+									onPointerDownCapture={(e) => e.stopPropagation()}
+									onClick={(e) => {
+										if (dragState.isDragging) return;
+										e.stopPropagation();
+										setOpenPopoverId(openPopoverId === apt.id ? null : apt.id);
+									}}
+									onKeyDown={(e) => {
+										if (e.key === "Enter" || e.key === " ") {
+											e.preventDefault();
+											setOpenPopoverId(
+												openPopoverId === apt.id ? null : apt.id,
+											);
+										}
+									}}
+									role="button"
+									tabIndex={0}
+									aria-label={`${apt.patientName} às ${apt.time} - ${apt.type || "Agendamento"}`}
+									aria-expanded={openPopoverId === apt.id}
+									aria-haspopup="dialog"
+								>
+									<style
+										dangerouslySetInnerHTML={{
+											__html: `
                   @media (min-width: 640px) {
                     [style*="--top-desktop"][style*="--height-desktop"] {
                       top: var(--top-desktop) !important;
                       height: var(--height-desktop) !important;
                     }
                   }
-                `}} />
-                                <AppointmentContextMenu
-                                    appointment={apt}
-                                    onStatusChange={(status) => onStatusChange?.(apt.id, status)}
-                                    onEdit={() => onEditAppointment?.(apt)}
-                                    onDelete={() => onDeleteAppointment?.(apt)}
-                                    onDuplicate={() => onDuplicateAppointment?.(apt)}
-                                    onMoveToToday={() => {
-                                        if (onAppointmentReschedule) {
-                                            onAppointmentReschedule(apt, new Date(), apt.time);
-                                        }
-                                    }}
-                                >
-                                    <AppointmentQuickView
-                                        appointment={apt}
-                                        open={openPopoverId === apt.id}
-                                        onOpenChange={(open) => setOpenPopoverId(open ? apt.id : null)}
-                                        onEdit={onEditAppointment ? () => onEditAppointment(apt) : undefined}
-                                        onDelete={onDeleteAppointment ? () => onDeleteAppointment(apt) : undefined}
-                                    >
-                                        <div className={cn(
-                                            "calendar-appointment-card",
-                                            getStatusClass(apt.status, apt.therapistId, isOverCapacity(apt)),
-                                            isOverCapacity(apt) && "over-capacity"
-                                        )}>
-                                        {/* Indicador de agendamento próximo (bolinha amarela) */}
-                                        {hasNearbyAppointment[apt.id]?.hasNearby && (
-                                            <TooltipProvider>
-                                                <Tooltip>
-                                                    <TooltipTrigger asChild>
-                                                        <span className="nearby-appointment-indicator" aria-hidden="true" />
-                                                    </TooltipTrigger>
-                                                    <TooltipContent>
-                                                        <p className="text-xs">
-                                                            Paciente tem agendamento próximo em: {hasNearbyAppointment[apt.id]?.nearbyDates.join(', ')}
-                                                        </p>
-                                                    </TooltipContent>
-                                                </Tooltip>
-                                            </TooltipProvider>
-                                        )}
+                `,
+										}}
+									/>
+									<AppointmentContextMenu
+										appointment={apt}
+										onStatusChange={(status) =>
+											onStatusChange?.(apt.id, status)
+										}
+										onEdit={() => onEditAppointment?.(apt)}
+										onDelete={() => onDeleteAppointment?.(apt)}
+										onDuplicate={() => onDuplicateAppointment?.(apt)}
+										onMoveToToday={() => {
+											if (onAppointmentReschedule) {
+												onAppointmentReschedule(apt, new Date(), apt.time);
+											}
+										}}
+									>
+										<AppointmentQuickView
+											appointment={apt}
+											open={openPopoverId === apt.id}
+											onOpenChange={(open) =>
+												setOpenPopoverId(open ? apt.id : null)
+											}
+											onEdit={
+												onEditAppointment
+													? () => onEditAppointment(apt)
+													: undefined
+											}
+											onDelete={
+												onDeleteAppointment
+													? () => onDeleteAppointment(apt)
+													: undefined
+											}
+										>
+											<div
+												className={cn(
+													"calendar-appointment-card",
+													getStatusClass(
+														apt.status,
+														apt.therapistId,
+														isOverCapacity(apt),
+													),
+													isOverCapacity(apt) && "over-capacity",
+												)}
+											>
+												{/* Indicador de agendamento próximo (bolinha amarela) */}
+												{hasNearbyAppointment[apt.id]?.hasNearby && (
+													<TooltipProvider>
+														<Tooltip>
+															<TooltipTrigger asChild>
+																<span
+																	className="nearby-appointment-indicator"
+																	aria-hidden="true"
+																/>
+															</TooltipTrigger>
+															<TooltipContent>
+																<p className="text-xs">
+																	Paciente tem agendamento próximo em:{" "}
+																	{hasNearbyAppointment[
+																		apt.id
+																	]?.nearbyDates.join(", ")}
+																</p>
+															</TooltipContent>
+														</Tooltip>
+													</TooltipProvider>
+												)}
 
-                                        {/* Content */}
-                                        <div className="calendar-appointment-card-content">
-                                            <div className="min-w-0">
-                                                {/* Patient Name */}
-                                                <div className="calendar-patient-name" title={apt.patientName}>
-                                                    {isOverCapacity(apt) && (
-                                                        <AlertTriangle className="h-3 w-3 inline mr-1 flex-shrink-0" aria-label="Excedente" />
-                                                    )}
-                                                    <span className="truncate">{apt.patientName}</span>
-                                                </div>
+												{/* Content */}
+												<div className="calendar-appointment-card-content">
+													<div className="min-w-0">
+														{/* Patient Name */}
+														<div
+															className="calendar-patient-name"
+															title={apt.patientName}
+														>
+															{isOverCapacity(apt) && (
+																<AlertTriangle
+																	className="h-3 w-3 inline mr-1 flex-shrink-0"
+																	aria-label="Excedente"
+																/>
+															)}
+															<span className="truncate">
+																{apt.patientName}
+															</span>
+														</div>
 
-                                                {/* Service Type */}
-                                                <div className="calendar-appointment-type" title={apt.type}>
-                                                    <span className="truncate">{apt.type || 'Consulta'}</span>
-                                                </div>
-                                            </div>
+														{/* Service Type */}
+														<div
+															className="calendar-appointment-type"
+															title={apt.type}
+														>
+															<span className="truncate">
+																{apt.type || "Consulta"}
+															</span>
+														</div>
+													</div>
 
-                                            {/* Footer: Time & Room */}
-                                            <div className="calendar-appointment-footer">
-                                                <div className="flex items-center gap-1">
-                                                    <Clock className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
-                                                    <span>{apt.time}</span>
-                                                </div>
-                                                {apt.room && (
-                                                    <span className="truncate" aria-label={`Sala ${apt.room}`}>
-                                                        {apt.room}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
+													{/* Footer: Time & Room */}
+													<div className="calendar-appointment-footer">
+														<div className="flex items-center gap-1">
+															<Clock
+																className="h-3 w-3 flex-shrink-0"
+																aria-hidden="true"
+															/>
+															<span>{apt.time}</span>
+														</div>
+														{apt.room && (
+															<span
+																className="truncate"
+																aria-label={`Sala ${apt.room}`}
+															>
+																{apt.room}
+															</span>
+														)}
+													</div>
+												</div>
 
-                                        {/* Drag handle */}
-                                        {isDraggable && (
-                                            <div className="absolute top-1.5 right-1.5 opacity-0 group-hover/card:opacity-40 transition-opacity" aria-hidden="true">
-                                                <GripVertical className="h-3 w-3 hidden sm:block" />
-                                            </div>
-                                        )}
-                                    </div>
-                                </AppointmentQuickView>
-                            </AppointmentContextMenu>
-                        </div>
-                    );
-                });
-                })()}
-            </div>
-        </div>
-    );
-});
+												{/* Drag handle */}
+												{isDraggable && (
+													<div
+														className="absolute top-1.5 right-1.5 opacity-0 group-hover/card:opacity-40 transition-opacity"
+														aria-hidden="true"
+													>
+														<GripVertical className="h-3 w-3 hidden sm:block" />
+													</div>
+												)}
+											</div>
+										</AppointmentQuickView>
+									</AppointmentContextMenu>
+								</div>
+							);
+						});
+					})()}
+				</div>
+			</div>
+		);
+	},
+);
 
-DayColumn.displayName = 'DayColumn';
+DayColumn.displayName = "DayColumn";
 
 interface TimeSlotProps {
-    time: string;
-    day: Date;
-    blocked: boolean;
-    reason?: string;
-    isDropTarget: boolean;
-    onTimeSlotClick: (date: Date, time: string) => void;
-    onDragOver: (e: React.DragEvent, date: Date, time: string) => void;
-    onDragLeave: () => void;
-    onDrop: (e: React.DragEvent, date: Date, time: string) => void;
+	time: string;
+	day: Date;
+	blocked: boolean;
+	reason?: string;
+	isDropTarget: boolean;
+	onTimeSlotClick: (date: Date, time: string) => void;
+	onDragOver: (e: React.DragEvent, date: Date, time: string) => void;
+	onDragLeave: () => void;
+	onDrop: (e: React.DragEvent, date: Date, time: string) => void;
 }
 
-const TimeSlot = memo(({
-    time,
-    day,
-    blocked,
-    reason,
-    isDropTarget,
-    onTimeSlotClick,
-    onDragOver,
-    onDragLeave,
-    onDrop
-}: TimeSlotProps) => {
-    const dayString = format(day, 'dd/MM/yyyy');
+const TimeSlot = memo(
+	({
+		time,
+		day,
+		blocked,
+		reason,
+		isDropTarget,
+		onTimeSlotClick,
+		onDragOver,
+		onDragLeave,
+		onDrop,
+	}: TimeSlotProps) => {
+		const dayString = format(day, "dd/MM/yyyy");
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (blocked) return;
-        if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            onTimeSlotClick(day, time);
-        }
-    };
+		const handleKeyDown = (e: React.KeyboardEvent) => {
+			if (blocked) return;
+			if (e.key === "Enter" || e.key === " ") {
+				e.preventDefault();
+				onTimeSlotClick(day, time);
+			}
+		};
 
-    return (
-        <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <div
-                        className={cn(
-                            "calendar-time-slot cursor-pointer group/slot relative",
-                            "transition-[background-color,box-shadow] duration-200 ease-out",
-                            blocked && "bg-red-50/60 dark:bg-red-950/30 cursor-not-allowed ring-2 ring-inset ring-red-400/30",
-                            !blocked && "hover:bg-primary/5 dark:hover:bg-primary/10",
-                            isDropTarget && !blocked && "is-drop-target bg-primary/10 dark:bg-primary/20 ring-2 ring-inset ring-primary/40 dark:ring-primary/50 shadow-inner"
-                        )}
-                        onClick={(e) => {
-                            const target = e.target as HTMLElement;
-                            if (
-                                target.closest('[data-week-appointment="true"]') ||
-                                target.closest('[role="dialog"]') ||
-                                target.closest('[role="alertdialog"]')
-                            ) {
-                                return;
-                            }
-                            if (!blocked) onTimeSlotClick(day, time);
-                        }}
-                        onKeyDown={handleKeyDown}
-                        onDragOver={(e) => {
-                            // Sempre chamar preventDefault para permitir arrastar por cima de slots bloqueados
-                            e.preventDefault();
-                            if (!blocked) onDragOver(e, day, time);
-                        }}
-                        onDragLeave={onDragLeave}
-                        onDrop={(e) => !blocked && onDrop(e, day, time)}
-                        role="button"
-                        tabIndex={blocked ? -1 : 0}
-                        aria-label={
-                            blocked
-                                ? `Horário ${time} bloqueado${reason ? ': ' + reason : ''}`
-                                : isDropTarget
-                                    ? `Solte para reagendar em ${dayString} às ${time}`
-                                    : `Criar agendamento para ${dayString} às ${time}`
-                        }
-                        aria-dropeffect={!blocked ? 'move' : 'none'}
-                    >
-                        {blocked ? (
-                            <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-destructive/80 dark:text-destructive font-medium" aria-hidden="true">
-                                <Ban className="h-4 w-4 shrink-0" />
-                                <span className="text-[10px] uppercase tracking-wide">Bloqueado</span>
-                            </span>
-                        ) : (
-                            <span className={cn(
-                                "absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-medium pointer-events-none transition-opacity duration-200",
-                                isDropTarget ? "opacity-100 text-primary" : "opacity-0 group-hover/slot:opacity-100 text-muted-foreground group-hover/slot:text-primary"
-                            )} aria-hidden="true">
-                                {isDropTarget ? (
-                                    <span className="flex flex-col items-center gap-1">
-                                        <span className="font-semibold">Solte aqui</span>
-                                    </span>
-                                ) : (
-                                    <span className="bg-primary/90 text-primary-foreground px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg shadow-md">
-                                        + Novo
-                                    </span>
-                                )}
-                            </span>
-                        )}
-                    </div>
-                </TooltipTrigger>
-                {blocked && reason && (
-                    <TooltipContent>
-                        <p>{reason}</p>
-                    </TooltipContent>
-                )}
-            </Tooltip>
-        </TooltipProvider>
-    );
-});
+		return (
+			<TooltipProvider>
+				<Tooltip>
+					<TooltipTrigger asChild>
+						<div
+							className={cn(
+								"calendar-time-slot cursor-pointer group/slot relative",
+								"transition-[background-color,box-shadow] duration-200 ease-out",
+								blocked &&
+									"bg-red-50/60 dark:bg-red-950/30 cursor-not-allowed ring-2 ring-inset ring-red-400/30",
+								!blocked && "hover:bg-primary/5 dark:hover:bg-primary/10",
+								isDropTarget &&
+									!blocked &&
+									"is-drop-target bg-primary/10 dark:bg-primary/20 ring-2 ring-inset ring-primary/40 dark:ring-primary/50 shadow-inner",
+							)}
+							onClick={(e) => {
+								const target = e.target as HTMLElement;
+								if (
+									target.closest('[data-week-appointment="true"]') ||
+									target.closest('[role="dialog"]') ||
+									target.closest('[role="alertdialog"]')
+								) {
+									return;
+								}
+								if (!blocked) onTimeSlotClick(day, time);
+							}}
+							onKeyDown={handleKeyDown}
+							onDragOver={(e) => {
+								// Sempre chamar preventDefault para permitir arrastar por cima de slots bloqueados
+								e.preventDefault();
+								if (!blocked) onDragOver(e, day, time);
+							}}
+							onDragLeave={onDragLeave}
+							onDrop={(e) => !blocked && onDrop(e, day, time)}
+							role="button"
+							tabIndex={blocked ? -1 : 0}
+							aria-label={
+								blocked
+									? `Horário ${time} bloqueado${reason ? ": " + reason : ""}`
+									: isDropTarget
+										? `Solte para reagendar em ${dayString} às ${time}`
+										: `Criar agendamento para ${dayString} às ${time}`
+							}
+							aria-dropeffect={!blocked ? "move" : "none"}
+						>
+							{blocked ? (
+								<span
+									className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-destructive/80 dark:text-destructive font-medium"
+									aria-hidden="true"
+								>
+									<Ban className="h-4 w-4 shrink-0" />
+									<span className="text-[10px] uppercase tracking-wide">
+										Bloqueado
+									</span>
+								</span>
+							) : (
+								<span
+									className={cn(
+										"absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-medium pointer-events-none transition-opacity duration-200",
+										isDropTarget
+											? "opacity-100 text-primary"
+											: "opacity-0 group-hover/slot:opacity-100 text-muted-foreground group-hover/slot:text-primary",
+									)}
+									aria-hidden="true"
+								>
+									{isDropTarget ? (
+										<span className="flex flex-col items-center gap-1">
+											<span className="font-semibold">Solte aqui</span>
+										</span>
+									) : (
+										<span className="bg-primary/90 text-primary-foreground px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg shadow-md">
+											+ Novo
+										</span>
+									)}
+								</span>
+							)}
+						</div>
+					</TooltipTrigger>
+					{blocked && reason && (
+						<TooltipContent>
+							<p>{reason}</p>
+						</TooltipContent>
+					)}
+				</Tooltip>
+			</TooltipProvider>
+		);
+	},
+);
 
-TimeSlot.displayName = 'TimeSlot';
+TimeSlot.displayName = "TimeSlot";

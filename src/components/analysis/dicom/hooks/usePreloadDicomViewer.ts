@@ -1,4 +1,3 @@
-
 /**
  * Hook para pré-carregar o DicomViewer
  * Use quando o usuário provavelmente vai abrir o visualizador
@@ -8,18 +7,18 @@
  * <button onMouseEnter={preloadDicomViewer}>Ver DICOM</button>
  */
 
-import { useState } from 'react';
+import { useState } from "react";
 
 export function usePreloadDicomViewer() {
-  const [isLoaded, setIsLoaded] = useState(false);
+	const [isLoaded, setIsLoaded] = useState(false);
 
-  const preload = () => {
-    if (!isLoaded) {
-      setIsLoaded(true);
-      // Inicia o lazy loading
-      import('../DicomViewerInner');
-    }
-  };
+	const preload = () => {
+		if (!isLoaded) {
+			setIsLoaded(true);
+			// Inicia o lazy loading
+			import("../DicomViewerInner");
+		}
+	};
 
-  return { preload, isLoaded };
+	return { preload, isLoaded };
 }

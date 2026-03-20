@@ -3,16 +3,16 @@
  * Garante que o conteúdo não fique atrás do notch ou do indicador home
  */
 
-import { ReactNode } from 'react';
-import { cn } from '@/lib/utils';
+import { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 export interface SafeAreaProps {
-  children: ReactNode;
-  className?: string;
-  top?: boolean;
-  bottom?: boolean;
-  left?: boolean;
-  right?: boolean;
+	children: ReactNode;
+	className?: string;
+	top?: boolean;
+	bottom?: boolean;
+	left?: boolean;
+	right?: boolean;
 }
 
 /**
@@ -25,25 +25,25 @@ export interface SafeAreaProps {
  * @param right - Adicionar padding direito (para notch em landscape)
  */
 export function SafeArea({
-  children,
-  className = '',
-  top = true,
-  bottom = true,
-  left = false,
-  right = false,
+	children,
+	className = "",
+	top = true,
+	bottom = true,
+	left = false,
+	right = false,
 }: SafeAreaProps) {
-  const safeAreaStyles: React.CSSProperties = {
-    paddingTop: top ? 'env(safe-area-inset-top)' : undefined,
-    paddingBottom: bottom ? 'env(safe-area-inset-bottom)' : undefined,
-    paddingLeft: left ? 'env(safe-area-inset-left)' : undefined,
-    paddingRight: right ? 'env(safe-area-inset-right)' : undefined,
-  };
+	const safeAreaStyles: React.CSSProperties = {
+		paddingTop: top ? "env(safe-area-inset-top)" : undefined,
+		paddingBottom: bottom ? "env(safe-area-inset-bottom)" : undefined,
+		paddingLeft: left ? "env(safe-area-inset-left)" : undefined,
+		paddingRight: right ? "env(safe-area-inset-right)" : undefined,
+	};
 
-  return (
-    <div className={cn('safe-area', className)} style={safeAreaStyles}>
-      {children}
-    </div>
-  );
+	return (
+		<div className={cn("safe-area", className)} style={safeAreaStyles}>
+			{children}
+		</div>
+	);
 }
 
 /**
@@ -51,57 +51,55 @@ export function SafeArea({
  * Use para envolver o conteúdo principal da página
  */
 export function SafeAreaView({
-  children,
-  className = '',
+	children,
+	className = "",
 }: {
-  children: ReactNode;
-  className?: string;
+	children: ReactNode;
+	className?: string;
 }) {
-  return (
-    <SafeArea className={cn('min-h-screen bg-gray-50', className)}>
-      {children}
-    </SafeArea>
-  );
+	return (
+		<SafeArea className={cn("min-h-screen bg-gray-50", className)}>
+			{children}
+		</SafeArea>
+	);
 }
 
 /**
  * Header com safe area superior
  */
 export function SafeAreaHeader({
-  children,
-  className = '',
+	children,
+	className = "",
 }: {
-  children: ReactNode;
-  className?: string;
+	children: ReactNode;
+	className?: string;
 }) {
-  return (
-    <header className={cn('bg-white border-b border-gray-200', className)}>
-      <SafeArea top bottom={false} left={false} right={false}>
-        <div className="flex items-center justify-between h-14 px-4">
-          {children}
-        </div>
-      </SafeArea>
-    </header>
-  );
+	return (
+		<header className={cn("bg-white border-b border-gray-200", className)}>
+			<SafeArea top bottom={false} left={false} right={false}>
+				<div className="flex items-center justify-between h-14 px-4">
+					{children}
+				</div>
+			</SafeArea>
+		</header>
+	);
 }
 
 /**
  * Footer com safe area inferior
  */
 export function SafeAreaFooter({
-  children,
-  className = '',
+	children,
+	className = "",
 }: {
-  children: ReactNode;
-  className?: string;
+	children: ReactNode;
+	className?: string;
 }) {
-  return (
-    <footer className={cn('bg-white border-t border-gray-200', className)}>
-      <SafeArea top={false} bottom left={false} right={false}>
-        <div className="p-4">
-          {children}
-        </div>
-      </SafeArea>
-    </footer>
-  );
+	return (
+		<footer className={cn("bg-white border-t border-gray-200", className)}>
+			<SafeArea top={false} bottom left={false} right={false}>
+				<div className="p-4">{children}</div>
+			</SafeArea>
+		</footer>
+	);
 }

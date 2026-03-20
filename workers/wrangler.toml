@@ -27,10 +27,26 @@ id = "12b9fefcfbc04074a63342a9212e1b4f"
 binding = "MEDIA_BUCKET"
 bucket_name = "fisioflow-media"
 
-# ===== DURABLE OBJECTS (Realtime State) =====
+# ===== KV NAMESPACES (Global Cache) =====
+[[kv_namespaces]]
+binding = "FISIOFLOW_CONFIG"
+id = "4284b33fa7ed40b6bc9c59b6041c03ed"
+
+# ===== VECTORIZE (Base de Conhecimento RAG) =====
+# Apenas a declaração - criar via dashboard ou token com permissão
+# [[vectorize]]
+# binding = "CLINICAL_KNOWLEDGE"
+# index_name = "clinical-knowledge"
+
+# ===== DURABLE OBJECTS (Realtime State & Agents) =====
 [[durable_objects.bindings]]
 name = "ORGANIZATION_STATE"
 class_name = "OrganizationState"
+
+# [[durable_objects.bindings]]
+# name = "PATIENT_AGENT"
+# class_name = "PatientAgent"
+
 
 [[migrations]]
 tag = "v1" # Initial migration for real-time state
@@ -80,6 +96,10 @@ AXIOM_ORG_ID = "activity-dbyc"
 AXIOM_DATASET = "fisioflow-logs"
 # AXIOM_TOKEN deve ser setado via 'wrangler secret put AXIOM_TOKEN'
 
+# Cloudflare AI Gateway
+# Troque <ACCOUNT_ID> e <GATEWAY_NAME> pelos seus dados no painel da Cloudflare (AI > AI Gateway)
+FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway"
+
 # Inngest (Produção)
 # INNGEST_EVENT_KEY e INNGEST_SIGNING_KEY devem ser setados via wrangler secret
 
@@ -91,7 +111,7 @@ name = "fisioflow-api"
 ENVIRONMENT = "production"
 IMAGE_TRANSFORMATIONS = "enabled"
 R2_PUBLIC_URL = "https://media.moocafisio.com.br"
-ALLOWED_ORIGINS = "https://minatto-fisio.pages.dev,https://fisioflow.pages.dev,https://moocafisio.com.br,https://www.moocafisio.com.br,https://minatto.moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173,https://7d2bdf7d.fisioflow.pages.dev,https://fisioflow-web.rafalegollas.workers.dev,https://fisioflow-api.rafalegollas.workers.dev"
+ALLOWED_ORIGINS = "https://minatto-fisio.pages.dev,https://fisioflow.pages.dev,https://moocafisio.com.br,https://www.moocafisio.com.br,https://minatto-moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173,https://7d2bdf7d.fisioflow.pages.dev,https://fisioflow-web.rafalegollas.workers.dev,https://fisioflow-api.rafalegollas.workers.dev"
 GOOGLE_MAPS_API_KEY = ""
 NEON_AUTH_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth"
 NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
@@ -100,6 +120,11 @@ NEON_AUTH_AUDIENCE = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws
 VITE_HASURA_PROJECT_URL = "https://capital-duckling-42.hasura.app/v1/graphql"
 AXIOM_ORG_ID = "activity-dbyc"
 AXIOM_DATASET = "fisioflow-logs"
+FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway"
+
+[[env.production.kv_namespaces]]
+binding = "FISIOFLOW_CONFIG"
+id = "4284b33fa7ed40b6bc9c59b6041c03ed"
 
 [[env.production.hyperdrive]]
 binding = "HYPERDRIVE"
@@ -138,16 +163,17 @@ name = "fisioflow-api-staging"
 [env.staging.vars]
 ENVIRONMENT = "staging"
 IMAGE_TRANSFORMATIONS = "enabled"
-R2_PUBLIC_URL = "https://media.moocafisio.com.br"
+R2_PUBLIC_URL = "https://pub-7d7f6b6af4684fb3a18be682c4b610d9.r2.dev"
 ALLOWED_ORIGINS = "https://fisioflow-staging.pages.dev,http://localhost:5173"
 GOOGLE_MAPS_API_KEY = ""
-NEON_AUTH_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth"
-NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
-NEON_AUTH_ISSUER = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
-NEON_AUTH_AUDIENCE = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
+NEON_AUTH_URL = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech/neondb/auth"
+NEON_AUTH_JWKS_URL = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
+NEON_AUTH_ISSUER = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech"
+NEON_AUTH_AUDIENCE = "https://ep-withered-glade-acrv7il7.neonauth.sa-east-1.aws.neon.tech"
+FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1ece28ab74bcd398fb/fisioflow-gateway-staging"
 
 # Hasura (Staging)
-VITE_HASURA_PROJECT_URL = "https://capital-duckling-42.hasura.app/v1/graphql" # Mude para staging se desejar
+VITE_HASURA_PROJECT_URL = ""
 
 # Axiom (Staging)
 AXIOM_ORG_ID = "activity-dbyc"
@@ -155,6 +181,10 @@ AXIOM_DATASET = "fisioflow-logs-staging"
 
 # Inngest (Staging)
 # INNGEST_EVENT_KEY deve ser setado via: wrangler secret put INNGEST_EVENT_KEY --env staging
+
+[[env.staging.kv_namespaces]]
+binding = "FISIOFLOW_CONFIG"
+id = "0efd6e0e5f144b25a32ff31f70946a94"
 
 [[env.staging.hyperdrive]]
 binding = "HYPERDRIVE"

@@ -5,73 +5,72 @@
  * to verify if Statsig was causing production issues.
  */
 
-
 // ============================================================================
 // TYPES
 // ============================================================================
 
-import * as React from 'react';
-import { fisioLogger as logger } from '@/lib/errors/logger';
+import * as React from "react";
+import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export type FeatureFlagName =
-  // Dashboard
-  | 'new_dashboard'
-  | 'dashboard_analytics_v2'
-  // AI Features
-  | 'ai_transcription'
-  | 'ai_chatbot'
-  | 'ai_exercise_suggestions'
-  | 'ai_clinsight_insights'
-  // Clinical Features
-  | 'digital_prescription'
-  | 'pain_map_v2'
-  | 'soap_records_v2'
-  | 'exercise_library_v2'
-  // Analytics
-  | 'advanced_analytics'
-  | 'patient_reports_v2'
-  | 'performance_metrics'
-  // Integration
-  | 'whatsapp_notifications'
-  | 'google_calendar_sync'
-  | 'email_reminders'
-  // System
-  | 'maintenance_mode'
-  | 'beta_features'
-  | 'dark_mode';
+	// Dashboard
+	| "new_dashboard"
+	| "dashboard_analytics_v2"
+	// AI Features
+	| "ai_transcription"
+	| "ai_chatbot"
+	| "ai_exercise_suggestions"
+	| "ai_clinsight_insights"
+	// Clinical Features
+	| "digital_prescription"
+	| "pain_map_v2"
+	| "soap_records_v2"
+	| "exercise_library_v2"
+	// Analytics
+	| "advanced_analytics"
+	| "patient_reports_v2"
+	| "performance_metrics"
+	// Integration
+	| "whatsapp_notifications"
+	| "google_calendar_sync"
+	| "email_reminders"
+	// System
+	| "maintenance_mode"
+	| "beta_features"
+	| "dark_mode";
 
 export type DynamicConfigName =
-  | 'ai_models_config'
-  | 'appointment_settings'
-  | 'notification_preferences'
-  | 'ui_configuration'
-  | 'experiment_allocation';
+	| "ai_models_config"
+	| "appointment_settings"
+	| "notification_preferences"
+	| "ui_configuration"
+	| "experiment_allocation";
 
 export interface FeatureFlagConfig {
-  enabled: boolean;
-  rolloutPercentage?: number;
-  rules?: Array<{
-    id: string;
-    name: string;
-    conditions: Record<string, unknown>[];
-    return_value: boolean;
-  }>;
+	enabled: boolean;
+	rolloutPercentage?: number;
+	rules?: Array<{
+		id: string;
+		name: string;
+		conditions: Record<string, unknown>[];
+		return_value: boolean;
+	}>;
 }
 
 export interface DynamicConfigValue {
-  [key: string]: unknown;
+	[key: string]: unknown;
 }
 
 export interface ExperimentConfig {
-  experimentName: string;
-  parameterName: string;
+	experimentName: string;
+	parameterName: string;
 }
 
 // Dummy types for compatibility
 export type StatsigUser = {
-  userID?: string;
-  email?: string;
-  [key: string]: unknown;
+	userID?: string;
+	email?: string;
+	[key: string]: unknown;
 };
 
 export type StatsigOptions = Record<string, unknown>;
@@ -83,16 +82,20 @@ export type StatsigOptions = Record<string, unknown>;
 let isInitialized = false;
 
 export async function initStatsig(
-  _sdkKey?: string,
-  _user?: StatsigUser
+	_sdkKey?: string,
+	_user?: StatsigUser,
 ): Promise<boolean> {
-  logger.info('[FeatureFlags] Using static defaults (Statsig removed)', undefined, 'statsig');
-  isInitialized = true;
-  return true;
+	logger.info(
+		"[FeatureFlags] Using static defaults (Statsig removed)",
+		undefined,
+		"statsig",
+	);
+	isInitialized = true;
+	return true;
 }
 
 export function shutdownStatsig(): void {
-  isInitialized = false;
+	isInitialized = false;
 }
 
 // ============================================================================
@@ -100,31 +103,31 @@ export function shutdownStatsig(): void {
 // ============================================================================
 
 export function isFeatureEnabled(
-  flagName: FeatureFlagName,
-  _user?: StatsigUser,
-  _options?: StatsigOptions
+	flagName: FeatureFlagName,
+	_user?: StatsigUser,
+	_options?: StatsigOptions,
 ): boolean {
-  return getDefaultFlagValue(flagName);
+	return getDefaultFlagValue(flagName);
 }
 
 export function getFeatureFlagMetadata(
-  flagName: FeatureFlagName,
-  _user?: StatsigUser
+	flagName: FeatureFlagName,
+	_user?: StatsigUser,
 ): { enabled: boolean; metadata?: Record<string, unknown> } {
-  return {
-    enabled: getDefaultFlagValue(flagName),
-  };
+	return {
+		enabled: getDefaultFlagValue(flagName),
+	};
 }
 
 export function getMultipleFeatureFlags(
-  flagNames: FeatureFlagName[],
-  user?: StatsigUser
+	flagNames: FeatureFlagName[],
+	user?: StatsigUser,
 ): Record<FeatureFlagName, boolean> {
-  const result: Partial<Record<FeatureFlagName, boolean>> = {};
-  for (const flagName of flagNames) {
-    result[flagName] = isFeatureEnabled(flagName, user);
-  }
-  return result as Record<FeatureFlagName, boolean>;
+	const result: Partial<Record<FeatureFlagName, boolean>> = {};
+	for (const flagName of flagNames) {
+		result[flagName] = isFeatureEnabled(flagName, user);
+	}
+	return result as Record<FeatureFlagName, boolean>;
 }
 
 // ============================================================================
@@ -132,23 +135,23 @@ export function getMultipleFeatureFlags(
 // ============================================================================
 
 export function getDynamicConfig<T = DynamicConfigValue>(
-  configName: DynamicConfigName,
-  _user?: StatsigUser
+	configName: DynamicConfigName,
+	_user?: StatsigUser,
 ): T | null {
-  return getDefaultConfigValue<T>(configName);
+	return getDefaultConfigValue<T>(configName);
 }
 
 export function getConfigValue<T = unknown>(
-  configName: DynamicConfigName,
-  key: string,
-  defaultValue?: T,
-  user?: StatsigUser
+	configName: DynamicConfigName,
+	key: string,
+	defaultValue?: T,
+	user?: StatsigUser,
 ): T | undefined {
-  const config = getDynamicConfig<Record<string, T>>(configName, user);
-  if (config && key in config) {
-    return config[key];
-  }
-  return defaultValue;
+	const config = getDynamicConfig<Record<string, T>>(configName, user);
+	if (config && key in config) {
+		return config[key];
+	}
+	return defaultValue;
 }
 
 // ============================================================================
@@ -156,17 +159,17 @@ export function getConfigValue<T = unknown>(
 // ============================================================================
 
 export function getExperiment<T = string>(
-  _experimentName: string,
-  _user?: StatsigUser
+	_experimentName: string,
+	_user?: StatsigUser,
 ): { value: T; name: string } | null {
-  return null;
+	return null;
 }
 
 export function logExperimentExposure(
-  _experimentName: string,
-  _user?: StatsigUser
+	_experimentName: string,
+	_user?: StatsigUser,
 ): void {
-  // No-op
+	// No-op
 }
 
 // ============================================================================
@@ -174,33 +177,37 @@ export function logExperimentExposure(
 // ============================================================================
 
 export function logEvent(
-  _eventName: string,
-  _value?: number,
-  _metadata?: Record<string, string | number | boolean | null>
+	_eventName: string,
+	_value?: number,
+	_metadata?: Record<string, string | number | boolean | null>,
 ): void {
-  // Silent no-op
+	// Silent no-op
 }
 
 export const Analytics = {
-  appointmentCreated: (_appointmentId: string, _therapistId: string) => { },
-  appointmentCompleted: (_appointmentId: string, _therapistId: string, _duration: number) => { },
-  patientCreated: (_patientId: string, _therapistId: string) => { },
-  aiAnalysisGenerated: (_type: string, _tokensUsed: number) => { },
-  aiChatMessage: (_messageLength: number) => { },
-  featureUsed: (_featureName: string) => { },
-  exercisePrescribed: (_exerciseId: string, _patientId: string) => { },
-  reportGenerated: (_reportType: string, _therapistId: string) => { },
-  pageViewed: (_pageName: string) => { },
+	appointmentCreated: (_appointmentId: string, _therapistId: string) => {},
+	appointmentCompleted: (
+		_appointmentId: string,
+		_therapistId: string,
+		_duration: number,
+	) => {},
+	patientCreated: (_patientId: string, _therapistId: string) => {},
+	aiAnalysisGenerated: (_type: string, _tokensUsed: number) => {},
+	aiChatMessage: (_messageLength: number) => {},
+	featureUsed: (_featureName: string) => {},
+	exercisePrescribed: (_exerciseId: string, _patientId: string) => {},
+	reportGenerated: (_reportType: string, _therapistId: string) => {},
+	pageViewed: (_pageName: string) => {},
 };
 
 // ============================================================================
 // USER MANAGEMENT
 // ============================================================================
 
-export function updateUser(_user: StatsigUser): void { }
+export function updateUser(_user: StatsigUser): void {}
 
 export function logUserOut(): void {
-  isInitialized = false;
+	isInitialized = false;
 }
 
 // ============================================================================
@@ -208,71 +215,71 @@ export function logUserOut(): void {
 // ============================================================================
 
 function getDefaultFlagValue(flagName: FeatureFlagName): boolean {
-  const defaults: Record<FeatureFlagName, boolean> = {
-    // Dashboard
-    new_dashboard: false,
-    dashboard_analytics_v2: true,
+	const defaults: Record<FeatureFlagName, boolean> = {
+		// Dashboard
+		new_dashboard: false,
+		dashboard_analytics_v2: true,
 
-    // AI Features - enabled by default for FisioFlow
-    ai_transcription: true,
-    ai_chatbot: true,
-    ai_exercise_suggestions: true,
-    ai_clinsight_insights: true,
+		// AI Features - enabled by default for FisioFlow
+		ai_transcription: true,
+		ai_chatbot: true,
+		ai_exercise_suggestions: true,
+		ai_clinsight_insights: true,
 
-    // Clinical Features
-    digital_prescription: true,
-    pain_map_v2: false,
-    soap_records_v2: false,
-    exercise_library_v2: false,
+		// Clinical Features
+		digital_prescription: true,
+		pain_map_v2: false,
+		soap_records_v2: false,
+		exercise_library_v2: false,
 
-    // Analytics
-    advanced_analytics: true,
-    patient_reports_v2: false,
-    performance_metrics: true,
+		// Analytics
+		advanced_analytics: true,
+		patient_reports_v2: false,
+		performance_metrics: true,
 
-    // Integration
-    whatsapp_notifications: true,
-    google_calendar_sync: true,
-    email_reminders: true,
+		// Integration
+		whatsapp_notifications: true,
+		google_calendar_sync: true,
+		email_reminders: true,
 
-    // System
-    maintenance_mode: false,
-    beta_features: false,
-    dark_mode: true,
-  };
+		// System
+		maintenance_mode: false,
+		beta_features: false,
+		dark_mode: true,
+	};
 
-  return defaults[flagName] ?? false;
+	return defaults[flagName] ?? false;
 }
 
 function getDefaultConfigValue<T>(configName: DynamicConfigName): T | null {
-  const defaults: Record<DynamicConfigName, unknown> = {
-    ai_models_config: {
-      clinical_analysis: { provider: 'google', model: 'gemini-2.0-flash-exp' },
-      chat: { provider: 'google', model: 'gemini-2.0-flash-exp' },
-      transcription: { provider: 'openai', model: 'whisper-1' },
-    },
-    appointment_settings: {
-      defaultDuration: 60,
-      bufferTime: 15,
-      maxPerDay: 20,
-    },
-    notification_preferences: {
-      remindersEnabled: true,
-      reminderHoursBefore: [24, 2],
-      channels: ['email', 'whatsapp'],
-    },
-    ui_configuration: {
-      theme: 'system',
-      compactMode: false,
-      sidebarCollapsed: false,
-    },
-    experiment_allocation: {
-      ai_suggestions_ab_test: 'control',
-      dashboard_layout: 'classic',
-    },
-  };
+	const defaults: Record<DynamicConfigName, unknown> = {
+		ai_models_config: {
+			clinical_analysis: { provider: "google", model: "gemini-2.0-flash-exp" },
+			chat: { provider: "google", model: "gemini-2.0-flash-exp" },
+			transcription: { provider: "openai", model: "whisper-1" },
+		},
+		appointment_settings: {
+			defaultDuration: 60,
+			bufferTime: 15,
+			maxPerDay: 20,
+		},
+		notification_preferences: {
+			remindersEnabled: true,
+			reminderHoursBefore: [24, 2],
+			channels: ["email", "whatsapp"],
+		},
+		ui_configuration: {
+			theme: "system",
+			compactMode: false,
+			sidebarCollapsed: false,
+		},
+		experiment_allocation: {
+			ai_suggestions_ab_test: "control",
+			dashboard_layout: "classic",
+		},
+	};
 
-  return (defaults[configName] ?? null) as T | null;
+	return (defaults[configName] ?? null) as T | null;
 }
 
 // ============================================================================
@@ -280,24 +287,30 @@ function getDefaultConfigValue<T>(configName: DynamicConfigName): T | null {
 // ============================================================================
 
 export function createFeatureFlagHook(flagName: FeatureFlagName) {
-  return function useFeatureFlag(
-    _user?: StatsigUser,
-    _options?: StatsigOptions
-  ): { enabled: boolean; isLoading: boolean; error: Error | null } {
-    const [enabled] = React.useState(() => getDefaultFlagValue(flagName));
-    const [isLoading] = React.useState(false);
-    return { enabled, isLoading, error: null };
-  };
+	return function useFeatureFlag(
+		_user?: StatsigUser,
+		_options?: StatsigOptions,
+	): { enabled: boolean; isLoading: boolean; error: Error | null } {
+		const [enabled] = React.useState(() => getDefaultFlagValue(flagName));
+		const [isLoading] = React.useState(false);
+		return { enabled, isLoading, error: null };
+	};
 }
 
-export function createDynamicConfigHook<T = DynamicConfigValue>(configName: DynamicConfigName) {
-  return function useDynamicConfig(
-    _user?: StatsigUser
-  ): { config: T | null; isLoading: boolean; error: Error | null } {
-    const [config] = React.useState<T | null>(() => getDefaultConfigValue<T>(configName));
-    const [isLoading] = React.useState(false);
-    return { config, isLoading, error: null };
-  };
+export function createDynamicConfigHook<T = DynamicConfigValue>(
+	configName: DynamicConfigName,
+) {
+	return function useDynamicConfig(_user?: StatsigUser): {
+		config: T | null;
+		isLoading: boolean;
+		error: Error | null;
+	} {
+		const [config] = React.useState<T | null>(() =>
+			getDefaultConfigValue<T>(configName),
+		);
+		const [isLoading] = React.useState(false);
+		return { config, isLoading, error: null };
+	};
 }
 
 // ============================================================================
@@ -305,30 +318,30 @@ export function createDynamicConfigHook<T = DynamicConfigValue>(configName: Dyna
 // ============================================================================
 
 export const StatsigService = {
-  init: initStatsig,
-  shutdown: shutdownStatsig,
-  isFeatureEnabled,
-  getFeatureFlagMetadata,
-  getMultipleFeatureFlags,
-  getDynamicConfig,
-  getConfigValue,
-  getExperiment,
-  logExperimentExposure,
-  logEvent,
-  Analytics,
-  updateUser,
-  logUserOut,
-  createFeatureFlagHook,
-  createDynamicConfigHook,
-  isInitialized: () => isInitialized,
+	init: initStatsig,
+	shutdown: shutdownStatsig,
+	isFeatureEnabled,
+	getFeatureFlagMetadata,
+	getMultipleFeatureFlags,
+	getDynamicConfig,
+	getConfigValue,
+	getExperiment,
+	logExperimentExposure,
+	logEvent,
+	Analytics,
+	updateUser,
+	logUserOut,
+	createFeatureFlagHook,
+	createDynamicConfigHook,
+	isInitialized: () => isInitialized,
 };
 
 // Named dummy export to match previous import * as Statsig usage
 export const Statsig = {
-  checkGate: () => false,
-  getConfig: () => null,
-  getExperiment: () => null,
-  logEvent: () => { },
-  updateUser: () => { },
-  shutdown: () => { },
+	checkGate: () => false,
+	getConfig: () => null,
+	getExperiment: () => null,
+	logEvent: () => {},
+	updateUser: () => {},
+	shutdown: () => {},
 };

@@ -10,300 +10,351 @@
  * @version 2.0.0 - Performance Optimization
  */
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo, useCallback, useRef, useEffect } from 'react';
-import { startOfDay, endOfDay, addDays, subDays, format } from 'date-fns';
-import { appointmentsApi, type AppointmentRow } from '@/lib/api/workers-client';
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useCallback, useRef, useEffect } from "react";
+import { startOfDay, endOfDay, addDays, subDays, format } from "date-fns";
+import { appointmentsApi, type AppointmentRow } from "@/lib/api/workers-client";
 
 // Tipos
-export type ScheduleView = 'day' | 'week' | 'month' | 'list';
-export type AppointmentStatus = 'agendado' | 'confirmado' | 'em_atendimento' | 'concluido' | 'cancelado' | 'nao_compareceu';
+export type ScheduleView = "day" | "week" | "month" | "list";
+export type AppointmentStatus =
+	| "agendado"
+	| "confirmado"
+	| "em_atendimento"
+	| "concluido"
+	| "cancelado"
+	| "nao_compareceu";
 
 export interface Appointment {
-  id: string;
-  patient_id: string;
-  patient_name?: string;
-  therapist_id?: string;
-  appointment_date: string;
-  appointment_time?: string;
-  status: AppointmentStatus;
-  type?: string;
-  notes?: string;
-  [key: string]: unknown;
+	id: string;
+	patient_id: string;
+	patient_name?: string;
+	therapist_id?: string;
+	appointment_date: string;
+	appointment_time?: string;
+	status: AppointmentStatus;
+	type?: string;
+	notes?: string;
+	[key: string]: unknown;
 }
 
 export interface ScheduleFilterOptions {
-  therapistId?: string;
-  status?: AppointmentStatus[];
-  type?: string[];
-  searchQuery?: string;
+	therapistId?: string;
+	status?: AppointmentStatus[];
+	type?: string[];
+	searchQuery?: string;
 }
 
 // Cache configuration
 export const SCHEDULE_CACHE_CONFIG = {
-  // Dados do dia atual - mudam frequentemente
-  TODAY: {
-    staleTime: 1000 * 60 * 1,      // 1 minuto
-    gcTime: 1000 * 60 * 5,         // 5 minutos
-  },
-  // Dados de outros dias - mudam menos
-  DAY: {
-    staleTime: 1000 * 60 * 5,      // 5 minutos
-    gcTime: 1000 * 60 * 15,        // 15 minutos
-  },
-  // Dados da semana
-  WEEK: {
-    staleTime: 1000 * 60 * 10,     // 10 minutos
-    gcTime: 1000 * 60 * 30,        // 30 minutos
-  },
-  // Dados do mês
-  MONTH: {
-    staleTime: 1000 * 60 * 15,     // 15 minutos
-    gcTime: 1000 * 60 * 45,        // 45 minutos
-  },
-  // Lista completa
-  LIST: {
-    staleTime: 1000 * 60 * 2,      // 2 minutos
-    gcTime: 1000 * 60 * 10,        // 10 minutos
-  },
+	// Dados do dia atual - mudam frequentemente
+	TODAY: {
+		staleTime: 1000 * 60 * 1, // 1 minuto
+		gcTime: 1000 * 60 * 5, // 5 minutos
+	},
+	// Dados de outros dias - mudam menos
+	DAY: {
+		staleTime: 1000 * 60 * 5, // 5 minutos
+		gcTime: 1000 * 60 * 15, // 15 minutos
+	},
+	// Dados da semana
+	WEEK: {
+		staleTime: 1000 * 60 * 10, // 10 minutos
+		gcTime: 1000 * 60 * 30, // 30 minutos
+	},
+	// Dados do mês
+	MONTH: {
+		staleTime: 1000 * 60 * 15, // 15 minutos
+		gcTime: 1000 * 60 * 45, // 45 minutos
+	},
+	// Lista completa
+	LIST: {
+		staleTime: 1000 * 60 * 2, // 2 minutos
+		gcTime: 1000 * 60 * 10, // 10 minutos
+	},
 } as const;
 
 // Query keys factory
 export const scheduleKeys = {
-  all: ['schedule'] as const,
-  lists: () => [...scheduleKeys.all, 'list'] as const,
-  list: (filters: ScheduleFilterOptions & { view: ScheduleView; date?: string }) =>
-    [...scheduleKeys.lists(), filters] as const,
-  day: (date: string) => [...scheduleKeys.all, 'day', date] as const,
-  week: (startDate: string, endDate: string) =>
-    [...scheduleKeys.all, 'week', startDate, endDate] as const,
-  month: (month: string) => [...scheduleKeys.all, 'month', month] as const,
-  appointment: (id: string) => [...scheduleKeys.all, 'appointment', id] as const,
+	all: ["schedule"] as const,
+	lists: () => [...scheduleKeys.all, "list"] as const,
+	list: (
+		filters: ScheduleFilterOptions & { view: ScheduleView; date?: string },
+	) => [...scheduleKeys.lists(), filters] as const,
+	day: (date: string) => [...scheduleKeys.all, "day", date] as const,
+	week: (startDate: string, endDate: string) =>
+		[...scheduleKeys.all, "week", startDate, endDate] as const,
+	month: (month: string) => [...scheduleKeys.all, "month", month] as const,
+	appointment: (id: string) =>
+		[...scheduleKeys.all, "appointment", id] as const,
 } as const;
 
 /**
  * Hook para buscar agendamentos de um dia específico
  */
-function useDayAppointments(date: Date, options?: ScheduleFilterOptions, enabled = true) {
-  const dateStr = format(date, 'yyyy-MM-dd');
-  const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
+function useDayAppointments(
+	date: Date,
+	options?: ScheduleFilterOptions,
+	enabled = true,
+) {
+	const dateStr = format(date, "yyyy-MM-dd");
+	const isToday = dateStr === format(new Date(), "yyyy-MM-dd");
 
-  return useQuery({
-    queryKey: scheduleKeys.day(dateStr),
-    queryFn: () => fetchAppointments({ dateFrom: dateStr, dateTo: dateStr }),
-    enabled,
-    staleTime: isToday ? SCHEDULE_CACHE_CONFIG.TODAY.staleTime : SCHEDULE_CACHE_CONFIG.DAY.staleTime,
-    gcTime: isToday ? SCHEDULE_CACHE_CONFIG.TODAY.gcTime : SCHEDULE_CACHE_CONFIG.DAY.gcTime,
-  });
+	return useQuery({
+		queryKey: scheduleKeys.day(dateStr),
+		queryFn: () => fetchAppointments({ dateFrom: dateStr, dateTo: dateStr }),
+		enabled,
+		staleTime: isToday
+			? SCHEDULE_CACHE_CONFIG.TODAY.staleTime
+			: SCHEDULE_CACHE_CONFIG.DAY.staleTime,
+		gcTime: isToday
+			? SCHEDULE_CACHE_CONFIG.TODAY.gcTime
+			: SCHEDULE_CACHE_CONFIG.DAY.gcTime,
+	});
 }
 
 /**
  * Hook para buscar agendamentos de uma semana
  */
 function useWeekAppointments(startDate: Date, endDate: Date, enabled = true) {
-  const startStr = format(startDate, 'yyyy-MM-dd');
-  const endStr = format(endDate, 'yyyy-MM-dd');
+	const startStr = format(startDate, "yyyy-MM-dd");
+	const endStr = format(endDate, "yyyy-MM-dd");
 
-  return useQuery({
-    queryKey: scheduleKeys.week(startStr, endStr),
-    queryFn: () => fetchAppointments({ dateFrom: startStr, dateTo: endStr }),
-    enabled,
-    staleTime: SCHEDULE_CACHE_CONFIG.WEEK.staleTime,
-    gcTime: SCHEDULE_CACHE_CONFIG.WEEK.gcTime,
-  });
+	return useQuery({
+		queryKey: scheduleKeys.week(startStr, endStr),
+		queryFn: () => fetchAppointments({ dateFrom: startStr, dateTo: endStr }),
+		enabled,
+		staleTime: SCHEDULE_CACHE_CONFIG.WEEK.staleTime,
+		gcTime: SCHEDULE_CACHE_CONFIG.WEEK.gcTime,
+	});
 }
 
 /**
  * Hook para buscar agendamentos de um mês
  */
 function useMonthAppointments(month: string, enabled = true) {
-  return useQuery({
-    queryKey: scheduleKeys.month(month),
-    queryFn: () => fetchAppointments({ dateFrom: `${month}-01`, dateTo: `${month}-31` }),
-    enabled,
-    staleTime: SCHEDULE_CACHE_CONFIG.MONTH.staleTime,
-    gcTime: SCHEDULE_CACHE_CONFIG.MONTH.gcTime,
-  });
+	return useQuery({
+		queryKey: scheduleKeys.month(month),
+		queryFn: () =>
+			fetchAppointments({ dateFrom: `${month}-01`, dateTo: `${month}-31` }),
+		enabled,
+		staleTime: SCHEDULE_CACHE_CONFIG.MONTH.staleTime,
+		gcTime: SCHEDULE_CACHE_CONFIG.MONTH.gcTime,
+	});
 }
 
 /**
  * Hook principal para agenda otimizada
  */
 const mapAppointmentRow = (row: AppointmentRow): Appointment => ({
-  id: row.id,
-  patient_id: row.patient_id ?? '',
-  patient_name: row.patient_name,
-  therapist_id: row.therapist_id,
-  appointment_date: row.date,
-  appointment_time: row.start_time,
-  status: row.status as AppointmentStatus,
-  type: row.session_type,
-  notes: row.notes,
-  ...row,
+	id: row.id,
+	patient_id: row.patient_id ?? "",
+	patient_name: row.patient_name,
+	therapist_id: row.therapist_id,
+	appointment_date: row.date,
+	appointment_time: row.start_time,
+	status: row.status as AppointmentStatus,
+	type: row.session_type,
+	notes: row.notes,
+	...row,
 });
 
 const sortAndMapAppointments = (rows: AppointmentRow[]) =>
-  rows
-    .slice()
-    .sort((a, b) => {
-      if (a.date !== b.date) return a.date.localeCompare(b.date);
-      return (a.start_time ?? '').localeCompare(b.start_time ?? '');
-    })
-    .map(mapAppointmentRow);
+	rows
+		.slice()
+		.sort((a, b) => {
+			if (a.date !== b.date) return a.date.localeCompare(b.date);
+			return (a.start_time ?? "").localeCompare(b.start_time ?? "");
+		})
+		.map(mapAppointmentRow);
 
-const fetchAppointments = async (params: { dateFrom?: string; dateTo?: string; limit?: number }) => {
-  const response = await appointmentsApi.list(params);
-  const rows = (response?.data ?? []) as AppointmentRow[];
-  return sortAndMapAppointments(rows);
+const fetchAppointments = async (params: {
+	dateFrom?: string;
+	dateTo?: string;
+	limit?: number;
+}) => {
+	const response = await appointmentsApi.list(params);
+	const rows = (response?.data ?? []) as AppointmentRow[];
+	return sortAndMapAppointments(rows);
 };
 
 export function useScheduleOptimized(options: {
-  view: ScheduleView;
-  date: Date;
-  filters?: ScheduleFilterOptions;
-  prefetchAdjacent?: boolean;
+	view: ScheduleView;
+	date: Date;
+	filters?: ScheduleFilterOptions;
+	prefetchAdjacent?: boolean;
 }) {
-  const { view, date, filters, prefetchAdjacent = true } = options;
-  const queryClient = useQueryClient();
-  const prefetchedDatesRef = useRef<Set<string>>(new Set());
+	const { view, date, filters, prefetchAdjacent = true } = options;
+	const queryClient = useQueryClient();
+	const prefetchedDatesRef = useRef<Set<string>>(new Set());
 
-  // Buscar apenas o que a view ativa precisa — elimina queries desnecessárias
-  const dayQuery = useDayAppointments(date, filters, view === 'day' || view === 'list');
-  const weekQuery = useWeekAppointments(
-    startOfDay(date),
-    endOfDay(addDays(date, 6)),
-    view === 'week'
-  );
-  const monthQuery = useMonthAppointments(format(date, 'yyyy-MM'), view === 'month');
+	// Buscar apenas o que a view ativa precisa — elimina queries desnecessárias
+	const dayQuery = useDayAppointments(
+		date,
+		filters,
+		view === "day" || view === "list",
+	);
+	const weekQuery = useWeekAppointments(
+		startOfDay(date),
+		endOfDay(addDays(date, 6)),
+		view === "week",
+	);
+	const monthQuery = useMonthAppointments(
+		format(date, "yyyy-MM"),
+		view === "month",
+	);
 
-  // Selecionar query ativa baseado na view
-  const activeQuery = useMemo(() => {
-    switch (view) {
-      case 'day':
-        return dayQuery;
-      case 'week':
-        return weekQuery;
-      case 'month':
-        return monthQuery;
-      default:
-        return dayQuery;
-    }
-  }, [view, dayQuery, weekQuery, monthQuery]);
+	// Selecionar query ativa baseado na view
+	const activeQuery = useMemo(() => {
+		switch (view) {
+			case "day":
+				return dayQuery;
+			case "week":
+				return weekQuery;
+			case "month":
+				return monthQuery;
+			default:
+				return dayQuery;
+		}
+	}, [view, dayQuery, weekQuery, monthQuery]);
 
-  // Prefetch de dias adjacentes (background)
-  useEffect(() => {
-    if (!prefetchAdjacent || view !== 'day') return;
+	// Prefetch de dias adjacentes (background)
+	useEffect(() => {
+		if (!prefetchAdjacent || view !== "day") return;
 
-    const previousDay = format(subDays(date, 1), 'yyyy-MM-dd');
-    const nextDay = format(addDays(date, 1), 'yyyy-MM-dd');
+		const previousDay = format(subDays(date, 1), "yyyy-MM-dd");
+		const nextDay = format(addDays(date, 1), "yyyy-MM-dd");
 
-    const datesToPrefetch = [previousDay, nextDay].filter(
-      d => !prefetchedDatesRef.current.has(d)
-    );
+		const datesToPrefetch = [previousDay, nextDay].filter(
+			(d) => !prefetchedDatesRef.current.has(d),
+		);
 
-    if (datesToPrefetch.length === 0) return;
+		if (datesToPrefetch.length === 0) return;
 
-    datesToPrefetch.forEach(d => {
-      prefetchedDatesRef.current.add(d);
-      // Prefetch em background
-      queryClient.prefetchQuery({
-        queryKey: scheduleKeys.day(d),
-        staleTime: SCHEDULE_CACHE_CONFIG.DAY.staleTime,
-      });
-    });
-  }, [date, view, prefetchAdjacent, queryClient]);
+		datesToPrefetch.forEach((d) => {
+			prefetchedDatesRef.current.add(d);
+			// Prefetch em background
+			queryClient.prefetchQuery({
+				queryKey: scheduleKeys.day(d),
+				staleTime: SCHEDULE_CACHE_CONFIG.DAY.staleTime,
+			});
+		});
+	}, [date, view, prefetchAdjacent, queryClient]);
 
-  // Aplicar filtros localmente (otimizado com useMemo)
-  const filteredAppointments = useMemo(() => {
-    let appointments = activeQuery.data || [];
+	// Aplicar filtros localmente (otimizado com useMemo)
+	const filteredAppointments = useMemo(() => {
+		let appointments = activeQuery.data || [];
 
-    if (filters?.therapistId) {
-      appointments = appointments.filter(a => a.therapist_id === filters.therapistId);
-    }
+		if (filters?.therapistId) {
+			appointments = appointments.filter(
+				(a) => a.therapist_id === filters.therapistId,
+			);
+		}
 
-    if (filters?.status && filters.status.length > 0) {
-      appointments = appointments.filter(a => filters.status!.includes(a.status));
-    }
+		if (filters?.status && filters.status.length > 0) {
+			appointments = appointments.filter((a) =>
+				filters.status!.includes(a.status),
+			);
+		}
 
-    if (filters?.type && filters.type.length > 0) {
-      const typeFilter = filters.type as string[];
-      appointments = appointments.filter(a => typeFilter.includes(a.type as string));
-    }
+		if (filters?.type && filters.type.length > 0) {
+			const typeFilter = filters.type as string[];
+			appointments = appointments.filter((a) =>
+				typeFilter.includes(a.type as string),
+			);
+		}
 
-    if (filters?.searchQuery) {
-      const query = filters.searchQuery.toLowerCase();
-      appointments = appointments.filter(a =>
-        a.patient_name?.toLowerCase().includes(query) ||
-        a.notes?.toLowerCase().includes(query)
-      );
-    }
+		if (filters?.searchQuery) {
+			const query = filters.searchQuery.toLowerCase();
+			appointments = appointments.filter(
+				(a) =>
+					a.patient_name?.toLowerCase().includes(query) ||
+					a.notes?.toLowerCase().includes(query),
+			);
+		}
 
-    return appointments;
-  }, [activeQuery.data, filters]);
+		return appointments;
+	}, [activeQuery.data, filters]);
 
+	// Estatísticas do dia (memoizadas)
+	const stats = useMemo(() => {
+		const appointments = activeQuery.data || [];
+		const today = format(new Date(), "yyyy-MM-dd");
+		const todayAppointments = appointments.filter(
+			(a) => a.appointment_date === today,
+		);
 
-  // Estatísticas do dia (memoizadas)
-  const stats = useMemo(() => {
-    const appointments = activeQuery.data || [];
-    const today = format(new Date(), 'yyyy-MM-dd');
-    const todayAppointments = appointments.filter(a => a.appointment_date === today);
+		return {
+			total: appointments.length,
+			today: todayAppointments.length,
+			confirmed: todayAppointments.filter((a) => a.status === "confirmado")
+				.length,
+			pending: todayAppointments.filter((a) => a.status === "agendado").length,
+			completed: todayAppointments.filter((a) => a.status === "concluido")
+				.length,
+			cancelled: todayAppointments.filter((a) => a.status === "cancelado")
+				.length,
+		};
+	}, [activeQuery.data]);
 
-    return {
-      total: appointments.length,
-      today: todayAppointments.length,
-      confirmed: todayAppointments.filter(a => a.status === 'confirmado').length,
-      pending: todayAppointments.filter(a => a.status === 'agendado').length,
-      completed: todayAppointments.filter(a => a.status === 'concluido').length,
-      cancelled: todayAppointments.filter(a => a.status === 'cancelado').length,
-    };
-  }, [activeQuery.data]);
+	// Callbacks estáveis
+	const refetch = useCallback(() => {
+		activeQuery.refetch();
+	}, [activeQuery]);
 
-  // Callbacks estáveis
-  const refetch = useCallback(() => {
-    activeQuery.refetch();
-  }, [activeQuery]);
+	const prefetchDate = useCallback(
+		(date: Date) => {
+			const dateStr = format(date, "yyyy-MM-dd");
+			queryClient.prefetchQuery({
+				queryKey: scheduleKeys.day(dateStr),
+				staleTime: SCHEDULE_CACHE_CONFIG.DAY.staleTime,
+			});
+		},
+		[queryClient],
+	);
 
-  const prefetchDate = useCallback((date: Date) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    queryClient.prefetchQuery({
-      queryKey: scheduleKeys.day(dateStr),
-      staleTime: SCHEDULE_CACHE_CONFIG.DAY.staleTime,
-    });
-  }, [queryClient]);
-
-  return {
-    appointments: filteredAppointments,
-    allAppointments: activeQuery.data || [],
-    isLoading: activeQuery.isLoading,
-    error: activeQuery.error,
-    stats,
-    refetch,
-    prefetchDate,
-    queryKeys: scheduleKeys,
-  };
+	return {
+		appointments: filteredAppointments,
+		allAppointments: activeQuery.data || [],
+		isLoading: activeQuery.isLoading,
+		error: activeQuery.error,
+		stats,
+		refetch,
+		prefetchDate,
+		queryKeys: scheduleKeys,
+	};
 }
 
 /**
  * Hook para virtualização de lista longa de agendamentos
  */
 export function useVirtualizedSchedule(options: {
-  date: Date;
-  limit?: number;
+	date: Date;
+	limit?: number;
 }) {
-  const { date, limit: limitCount = 50 } = options;
+	const { date, limit: limitCount = 50 } = options;
 
-  const query = useQuery({
-    queryKey: ['schedule', 'virtualized', format(date, 'yyyy-MM-dd'), limitCount],
-    queryFn: () => fetchAppointments({ dateFrom: format(date, 'yyyy-MM-dd'), limit: limitCount }),
-    staleTime: SCHEDULE_CACHE_CONFIG.LIST.staleTime,
-    gcTime: SCHEDULE_CACHE_CONFIG.LIST.gcTime,
-  });
+	const query = useQuery({
+		queryKey: [
+			"schedule",
+			"virtualized",
+			format(date, "yyyy-MM-dd"),
+			limitCount,
+		],
+		queryFn: () =>
+			fetchAppointments({
+				dateFrom: format(date, "yyyy-MM-dd"),
+				limit: limitCount,
+			}),
+		staleTime: SCHEDULE_CACHE_CONFIG.LIST.staleTime,
+		gcTime: SCHEDULE_CACHE_CONFIG.LIST.gcTime,
+	});
 
-  return {
-    appointments: query.data || [],
-    isLoading: query.isLoading,
-    error: query.error,
-    hasMore: (query.data?.length || 0) >= limitCount,
-    refetch: query.refetch,
-  };
+	return {
+		appointments: query.data || [],
+		isLoading: query.isLoading,
+		error: query.error,
+		hasMore: (query.data?.length || 0) >= limitCount,
+		refetch: query.refetch,
+	};
 }

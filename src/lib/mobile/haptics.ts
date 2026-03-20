@@ -1,4 +1,3 @@
-
 /**
  * Serviço para feedback tátil (vibrações hápticas)
  * Funciona apenas em dispositivos nativos (iOS/Android)
@@ -8,12 +7,12 @@
  * Verifica se haptics está disponível
  */
 
-import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
-import { Capacitor } from '@capacitor/core';
-import { fisioLogger as logger } from '@/lib/errors/logger';
+import { Haptics, ImpactStyle, NotificationType } from "@capacitor/haptics";
+import { Capacitor } from "@capacitor/core";
+import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export function isHapticsAvailable(): boolean {
-  return Capacitor.isNativePlatform();
+	return Capacitor.isNativePlatform();
 }
 
 /**
@@ -21,13 +20,13 @@ export function isHapticsAvailable(): boolean {
  * Use para: feedback sutil de toque
  */
 export async function hapticLight(): Promise<void> {
-  if (!isHapticsAvailable()) return;
+	if (!isHapticsAvailable()) return;
 
-  try {
-    await Haptics.impact({ style: ImpactStyle.Light });
-  } catch (error) {
-    logger.error('Erro no haptic light', error, 'haptics');
-  }
+	try {
+		await Haptics.impact({ style: ImpactStyle.Light });
+	} catch (error) {
+		logger.error("Erro no haptic light", error, "haptics");
+	}
 }
 
 /**
@@ -35,13 +34,13 @@ export async function hapticLight(): Promise<void> {
  * Use para: confirmação de ações comuns
  */
 export async function hapticMedium(): Promise<void> {
-  if (!isHapticsAvailable()) return;
+	if (!isHapticsAvailable()) return;
 
-  try {
-    await Haptics.impact({ style: ImpactStyle.Medium });
-  } catch (error) {
-    logger.error('Erro no haptic medium', error, 'haptics');
-  }
+	try {
+		await Haptics.impact({ style: ImpactStyle.Medium });
+	} catch (error) {
+		logger.error("Erro no haptic medium", error, "haptics");
+	}
 }
 
 /**
@@ -49,13 +48,13 @@ export async function hapticMedium(): Promise<void> {
  * Use para: confirmações importantes, avisos
  */
 export async function hapticHeavy(): Promise<void> {
-  if (!isHapticsAvailable()) return;
+	if (!isHapticsAvailable()) return;
 
-  try {
-    await Haptics.impact({ style: ImpactStyle.Heavy });
-  } catch (error) {
-    logger.error('Erro no haptic heavy', error, 'haptics');
-  }
+	try {
+		await Haptics.impact({ style: ImpactStyle.Heavy });
+	} catch (error) {
+		logger.error("Erro no haptic heavy", error, "haptics");
+	}
 }
 
 /**
@@ -63,13 +62,13 @@ export async function hapticHeavy(): Promise<void> {
  * Use para: operações completadas com sucesso
  */
 export async function hapticSuccess(): Promise<void> {
-  if (!isHapticsAvailable()) return;
+	if (!isHapticsAvailable()) return;
 
-  try {
-    await Haptics.notification({ type: NotificationType.Success });
-  } catch (error) {
-    logger.error('Erro no haptic success', error, 'haptics');
-  }
+	try {
+		await Haptics.notification({ type: NotificationType.Success });
+	} catch (error) {
+		logger.error("Erro no haptic success", error, "haptics");
+	}
 }
 
 /**
@@ -77,13 +76,13 @@ export async function hapticSuccess(): Promise<void> {
  * Use para: alertas, avisos moderados
  */
 export async function hapticWarning(): Promise<void> {
-  if (!isHapticsAvailable()) return;
+	if (!isHapticsAvailable()) return;
 
-  try {
-    await Haptics.notification({ type: NotificationType.Warning });
-  } catch (error) {
-    logger.error('Erro no haptic warning', error, 'haptics');
-  }
+	try {
+		await Haptics.notification({ type: NotificationType.Warning });
+	} catch (error) {
+		logger.error("Erro no haptic warning", error, "haptics");
+	}
 }
 
 /**
@@ -91,13 +90,13 @@ export async function hapticWarning(): Promise<void> {
  * Use para: falhas, erros de validação
  */
 export async function hapticError(): Promise<void> {
-  if (!isHapticsAvailable()) return;
+	if (!isHapticsAvailable()) return;
 
-  try {
-    await Haptics.notification({ type: NotificationType.Error });
-  } catch (error) {
-    logger.error('Erro no haptic error', error, 'haptics');
-  }
+	try {
+		await Haptics.notification({ type: NotificationType.Error });
+	} catch (error) {
+		logger.error("Erro no haptic error", error, "haptics");
+	}
 }
 
 /**
@@ -105,14 +104,14 @@ export async function hapticError(): Promise<void> {
  * Use para: scroll em listas, seleção de opções
  */
 export async function hapticSelection(): Promise<void> {
-  if (!isHapticsAvailable()) return;
+	if (!isHapticsAvailable()) return;
 
-  try {
-    await Haptics.selectionStart();
-    await Haptics.selectionEnd();
-  } catch (error) {
-    logger.error('Erro no haptic selection', error, 'haptics');
-  }
+	try {
+		await Haptics.selectionStart();
+		await Haptics.selectionEnd();
+	} catch (error) {
+		logger.error("Erro no haptic selection", error, "haptics");
+	}
 }
 
 /**
@@ -120,25 +119,25 @@ export async function hapticSelection(): Promise<void> {
  * Use para: feedback tátil customizado
  */
 export async function hapticVibrate(duration: number): Promise<void> {
-  if (!isHapticsAvailable()) return;
+	if (!isHapticsAvailable()) return;
 
-  try {
-    await Haptics.vibrate({ duration });
-  } catch (error) {
-    logger.error('Erro no haptic vibrate', error, 'haptics');
-  }
+	try {
+		await Haptics.vibrate({ duration });
+	} catch (error) {
+		logger.error("Erro no haptic vibrate", error, "haptics");
+	}
 }
 
 /**
  * Hook para usar haptics em componentes
  */
 export const hapticFeedback = {
-  light: hapticLight,
-  medium: hapticMedium,
-  heavy: hapticHeavy,
-  success: hapticSuccess,
-  warning: hapticWarning,
-  error: hapticError,
-  selection: hapticSelection,
-  vibrate: hapticVibrate,
+	light: hapticLight,
+	medium: hapticMedium,
+	heavy: hapticHeavy,
+	success: hapticSuccess,
+	warning: hapticWarning,
+	error: hapticError,
+	selection: hapticSelection,
+	vibrate: hapticVibrate,
 };

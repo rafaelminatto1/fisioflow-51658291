@@ -7,7 +7,6 @@
  * @module components/performance/utils
  */
 
-
 /**
  * Custom hook that returns a memoized callback with debounce
  * Useful for search inputs, scroll handlers, etc.
@@ -24,24 +23,27 @@
  * ```
  */
 
-import { useCallback, useRef, useEffect } from 'react';
-import { fisioLogger as logger } from '@/lib/errors/logger';
+import { useCallback, useRef, useEffect } from "react";
+import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
-  fn: T,
-  delay: number
+	fn: T,
+	delay: number,
 ): T {
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+	const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
-  return useCallback((...args: Parameters<T>) => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
+	return useCallback(
+		(...args: Parameters<T>) => {
+			if (timeoutRef.current) {
+				clearTimeout(timeoutRef.current);
+			}
 
-    timeoutRef.current = setTimeout(() => {
-      fn(...args);
-    }, delay);
-  }, [fn, delay]) as T;
+			timeoutRef.current = setTimeout(() => {
+				fn(...args);
+			}, delay);
+		},
+		[fn, delay],
+	) as T;
 }
 
 /**
@@ -59,14 +61,14 @@ export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
  * ```
  */
 export function useDeferredValue<T>(value: T): T {
-  const [deferred, setDeferred] = useState(value);
+	const [deferred, setDeferred] = useState(value);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setDeferred(value), 0);
-    return () => clearTimeout(timer);
-  }, [value]);
+	useEffect(() => {
+		const timer = setTimeout(() => setDeferred(value), 0);
+		return () => clearTimeout(timer);
+	}, [value]);
 
-  return deferred;
+	return deferred;
 }
 
 /**
@@ -85,16 +87,20 @@ export function useDeferredValue<T>(value: T): T {
  * ```
  */
 export function useRenderCount(name: string): number {
-  const renderCount = useRef(0);
-  renderCount.current += 1;
+	const renderCount = useRef(0);
+	renderCount.current += 1;
 
-  useEffect(() => {
-    if (import.meta.env.DEV) {
-      logger.debug(`[Perf] ${name} rendered ${renderCount.current} times`, undefined, 'useRenderCount');
-    }
-  });
+	useEffect(() => {
+		if (import.meta.env.DEV) {
+			logger.debug(
+				`[Perf] ${name} rendered ${renderCount.current} times`,
+				undefined,
+				"useRenderCount",
+			);
+		}
+	});
 
-  return renderCount.current;
+	return renderCount.current;
 }
 
 /**
@@ -115,22 +121,26 @@ export function useRenderCount(name: string): number {
  * ```
  */
 export function useRenderPerf(name: string) {
-  const startTimeRef = useRef<number>();
+	const startTimeRef = useRef<number>();
 
-  const start = useCallback(() => {
-    if (import.meta.env.DEV) {
-      startTimeRef.current = performance.now();
-    }
-  }, []);
+	const start = useCallback(() => {
+		if (import.meta.env.DEV) {
+			startTimeRef.current = performance.now();
+		}
+	}, []);
 
-  const end = useCallback(() => {
-    if (import.meta.env.DEV && startTimeRef.current) {
-      const duration = performance.now() - startTimeRef.current;
-      logger.debug(`[Perf] ${name} rendered in ${duration.toFixed(2)}ms`, undefined, 'useRenderTime');
-    }
-  }, [name]);
+	const end = useCallback(() => {
+		if (import.meta.env.DEV && startTimeRef.current) {
+			const duration = performance.now() - startTimeRef.current;
+			logger.debug(
+				`[Perf] ${name} rendered in ${duration.toFixed(2)}ms`,
+				undefined,
+				"useRenderTime",
+			);
+		}
+	}, [name]);
 
-  return { start, end };
+	return { start, end };
 }
 
 /**
@@ -152,29 +162,29 @@ export function useRenderPerf(name: string) {
  * ```
  */
 export function useLazyLoad(threshold = 0.1) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
+	const ref = useRef<HTMLDivElement>(null);
+	const [isVisible, setIsVisible] = useState(false);
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold }
-    );
+	useEffect(() => {
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting) {
+					setIsVisible(true);
+					observer.disconnect();
+				}
+			},
+			{ threshold },
+		);
 
-    const current = ref.current;
-    if (current) {
-      observer.observe(current);
-    }
+		const current = ref.current;
+		if (current) {
+			observer.observe(current);
+		}
 
-    return () => observer.disconnect();
-  }, [threshold]);
+		return () => observer.disconnect();
+	}, [threshold]);
 
-  return { ref, isVisible };
+	return { ref, isVisible };
 }
 
 /**
@@ -196,19 +206,22 @@ export function useLazyLoad(threshold = 0.1) {
  * ```
  */
 export function useCustomMemo<T>(
-  factory: () => T,
-  deps: unknown[],
-  isEqual: (prev: T, next: T) => boolean
+	factory: () => T,
+	deps: unknown[],
+	isEqual: (prev: T, next: T) => boolean,
 ): T {
-  const ref = useRef<{ value: T; deps: unknown[] }>({ value: factory() as T, deps });
+	const ref = useRef<{ value: T; deps: unknown[] }>({
+		value: factory() as T,
+		deps,
+	});
 
-  // Only recompute if deps changed
-  if (!isEqual(ref.current.deps, deps)) {
-    ref.current.value = factory();
-    ref.current.deps = deps;
-  }
+	// Only recompute if deps changed
+	if (!isEqual(ref.current.deps, deps)) {
+		ref.current.value = factory();
+		ref.current.deps = deps;
+	}
 
-  return ref.current.value;
+	return ref.current.value;
 }
 
 /**
@@ -216,25 +229,25 @@ export function useCustomMemo<T>(
  * Logs render performance for the wrapped component
  */
 export function withPerformanceMonitoring<P extends object>(
-  Component: React.ComponentType<P>,
-  componentName?: string
+	Component: React.ComponentType<P>,
+	componentName?: string,
 ): React.ComponentType<P> {
-  const WrappedComponent = (props: P) => {
-    const _renders = useRenderCount(componentName || Component.name);
-    const perf = useRenderPerf(componentName || Component.name);
+	const WrappedComponent = (props: P) => {
+		const _renders = useRenderCount(componentName || Component.name);
+		const perf = useRenderPerf(componentName || Component.name);
 
-    perf.start();
+		perf.start();
 
-    React.useEffect(() => {
-      perf.end();
-    });
+		React.useEffect(() => {
+			perf.end();
+		});
 
-    return <Component {...props} />;
-  };
+		return <Component {...props} />;
+	};
 
-  WrappedComponent.displayName = `withPerformanceMonitoring(${
-    componentName || Component.name
-  })`;
+	WrappedComponent.displayName = `withPerformanceMonitoring(${
+		componentName || Component.name
+	})`;
 
-  return WrappedComponent;
+	return WrappedComponent;
 }

@@ -7,61 +7,61 @@
 
 // ==================== Error Handling ====================
 export {
-  ErrorBoundary,
-  GlobalErrorBoundary,
-  RouteErrorBoundary,
-  ComponentErrorBoundary,
-  withErrorBoundary,
-} from '@/components/error';
+	ErrorBoundary,
+	GlobalErrorBoundary,
+	RouteErrorBoundary,
+	ComponentErrorBoundary,
+	withErrorBoundary,
+} from "@/components/error";
 
 // ==================== Loading States ====================
 export {
-  LoadingSpinner,
-  LoadingScreen,
-  LoadingCard,
-  LoadingTable,
-  LoadingButton,
-  WithLoading,
-  LoadingAvatar,
-  LoadingList,
-  LoadingChart,
-  LoadingStats,
-  LoadingOverlay,
-  PulseLoader,
-  LoadingBar,
-  LoadingForm,
-} from '@/components/loading/LoadingStates';
+	LoadingSpinner,
+	LoadingScreen,
+	LoadingCard,
+	LoadingTable,
+	LoadingButton,
+	WithLoading,
+	LoadingAvatar,
+	LoadingList,
+	LoadingChart,
+	LoadingStats,
+	LoadingOverlay,
+	PulseLoader,
+	LoadingBar,
+	LoadingForm,
+} from "@/components/loading/LoadingStates";
 
 // ==================== Hooks ====================
 export {
-  useOptimisticMutation,
-  useCreateMutation,
-  useUpdateMutation,
-  useDeleteMutation,
-} from '@/hooks/useOptimisticMutation';
+	useOptimisticMutation,
+	useCreateMutation,
+	useUpdateMutation,
+	useDeleteMutation,
+} from "@/hooks/useOptimisticMutation";
 
-export { QueryKeys } from '@/hooks/queryKeys';
+export { QueryKeys } from "@/hooks/queryKeys";
 
 export {
-  STANDARD_FORMS,
-  useCreateStandardForm,
-  useStandardFormExists,
-} from '@/hooks/useStandardForms';
+	STANDARD_FORMS,
+	useCreateStandardForm,
+	useStandardFormExists,
+} from "@/hooks/useStandardForms";
 
 // ==================== i18n ====================
 export {
-  useTranslation,
-  useBrowserLocale,
-  translations,
-  locales,
-  type SupportedLocale,
-  type LocaleConfig,
-  type TranslationKey,
-} from '@/lib/i18n';
+	useTranslation,
+	useBrowserLocale,
+	translations,
+	locales,
+	type SupportedLocale,
+	type LocaleConfig,
+	type TranslationKey,
+} from "@/lib/i18n";
 
 // ==================== Componentes Clínicos ====================
-export { StandardFormsManager } from '@/components/clinical/StandardFormsManager';
+export { StandardFormsManager } from "@/components/clinical/StandardFormsManager";
 
 // ==================== Páginas de Relatórios ====================
-export { default as RelatorioConvenioPage } from '@/pages/relatorios/RelatorioConvenioPage';
-export { default as RelatorioMedicoPage } from '@/pages/relatorios/RelatorioMedicoPage';
+export { default as RelatorioConvenioPage } from "@/pages/relatorios/RelatorioConvenioPage";
+export { default as RelatorioMedicoPage } from "@/pages/relatorios/RelatorioMedicoPage";

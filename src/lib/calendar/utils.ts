@@ -3,15 +3,14 @@
  * @module calendar/utils
  */
 import {
-
-  format,
-  parseISO,
-  startOfDay,
-  isSameDay,
-  addMinutes,
-  isValid
-} from 'date-fns';
-import { BUSINESS_HOURS, DEFAULT_LIST_HEIGHT, SLOT_HEIGHT } from './constants';
+	format,
+	parseISO,
+	startOfDay,
+	isSameDay,
+	addMinutes,
+	isValid,
+} from "date-fns";
+import { BUSINESS_HOURS, DEFAULT_LIST_HEIGHT, SLOT_HEIGHT } from "./constants";
 
 // =====================================================================
 // NORMALIZAÇÃO E PARSING
@@ -23,8 +22,8 @@ import { BUSINESS_HOURS, DEFAULT_LIST_HEIGHT, SLOT_HEIGHT } from './constants';
  * @returns Tempo normalizado no formato HH:MM
  */
 export function normalizeTime(time: string | null | undefined): string {
-  if (!time || !time.trim()) return '00:00';
-  return time.substring(0, 5);
+	if (!time || !time.trim()) return "00:00";
+	return time.substring(0, 5);
 }
 
 /**
@@ -32,15 +31,17 @@ export function normalizeTime(time: string | null | undefined): string {
  * @param date - Data como string ISO ou objeto Date
  * @returns Objeto Date ou null se inválido
  */
-export function parseAppointmentDate(date: string | Date | null | undefined): Date | null {
-  if (!date) return null;
+export function parseAppointmentDate(
+	date: string | Date | null | undefined,
+): Date | null {
+	if (!date) return null;
 
-  try {
-    const parsed = typeof date === 'string' ? parseISO(date) : date;
-    return isValid(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
+	try {
+		const parsed = typeof date === "string" ? parseISO(date) : date;
+		return isValid(parsed) ? parsed : null;
+	} catch {
+		return null;
+	}
 }
 
 /**
@@ -50,15 +51,15 @@ export function parseAppointmentDate(date: string | Date | null | undefined): Da
  * @returns Data normalizada (meio-dia para evitar edge cases)
  */
 export function normalizeDate(date: Date | string): Date {
-  const d = typeof date === 'string' ? new Date(date) : date;
+	const d = typeof date === "string" ? new Date(date) : date;
 
-  // Se a data veio como string ISO (ex: "2026-01-08"), interpretar como local
-  if (typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
-    const [year, month, day] = date.split('-').map(Number);
-    return new Date(year, month - 1, day, 12, 0, 0);
-  }
+	// Se a data veio como string ISO (ex: "2026-01-08"), interpretar como local
+	if (typeof date === "string" && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+		const [year, month, day] = date.split("-").map(Number);
+		return new Date(year, month - 1, day, 12, 0, 0);
+	}
 
-  return startOfDay(d);
+	return startOfDay(d);
 }
 
 /**
@@ -68,8 +69,12 @@ export function normalizeDate(date: Date | string): Date {
  * @param day - Dia
  * @returns Data local criada
  */
-export function createLocalDate(year: number, month: number, day: number): Date {
-  return new Date(year, month, day, 12, 0, 0);
+export function createLocalDate(
+	year: number,
+	month: number,
+	day: number,
+): Date {
+	return new Date(year, month, day, 12, 0, 0);
 }
 
 // =====================================================================
@@ -83,19 +88,23 @@ export function createLocalDate(year: number, month: number, day: number): Date 
  * @param duration - Duração em minutos
  * @returns Horário de fim no formato HH:MM
  */
-export function calculateEndTime(date: string | Date, time: string, duration: number): string {
-  const aptDate = parseAppointmentDate(date);
-  if (!aptDate) return time;
+export function calculateEndTime(
+	date: string | Date,
+	time: string,
+	duration: number,
+): string {
+	const aptDate = parseAppointmentDate(date);
+	if (!aptDate) return time;
 
-  const [hours, minutes] = time.split(':').map(Number);
-  const startDate = new Date(aptDate);
-  startDate.setHours(hours, minutes, 0, 0);
+	const [hours, minutes] = time.split(":").map(Number);
+	const startDate = new Date(aptDate);
+	startDate.setHours(hours, minutes, 0, 0);
 
-  const endDate = addMinutes(startDate, duration);
-  const endHours = String(endDate.getHours()).padStart(2, '0');
-  const endMinutes = String(endDate.getMinutes()).padStart(2, '0');
+	const endDate = addMinutes(startDate, duration);
+	const endHours = String(endDate.getHours()).padStart(2, "0");
+	const endMinutes = String(endDate.getMinutes()).padStart(2, "0");
 
-  return `${endHours}:${endMinutes}`;
+	return `${endHours}:${endMinutes}`;
 }
 
 /**
@@ -104,18 +113,21 @@ export function calculateEndTime(date: string | Date, time: string, duration: nu
  * @param slotDuration - Duração do slot em minutos (padrão: 30)
  * @returns Horário arredondado no formato HH:MM
  */
-export function roundToNextSlot(date: Date, slotDuration: number = BUSINESS_HOURS.DEFAULT_SLOT_DURATION): string {
-  const minutes = date.getMinutes();
-  const roundedMinutes = minutes < slotDuration ? slotDuration : 0;
-  let hour = minutes < slotDuration ? date.getHours() : date.getHours() + 1;
+export function roundToNextSlot(
+	date: Date,
+	slotDuration: number = BUSINESS_HOURS.DEFAULT_SLOT_DURATION,
+): string {
+	const minutes = date.getMinutes();
+	const roundedMinutes = minutes < slotDuration ? slotDuration : 0;
+	let hour = minutes < slotDuration ? date.getHours() : date.getHours() + 1;
 
-  if (hour >= BUSINESS_HOURS.END) {
-    hour = BUSINESS_HOURS.START;
-  } else if (hour < BUSINESS_HOURS.START) {
-    hour = BUSINESS_HOURS.START;
-  }
+	if (hour >= BUSINESS_HOURS.END) {
+		hour = BUSINESS_HOURS.START;
+	} else if (hour < BUSINESS_HOURS.START) {
+		hour = BUSINESS_HOURS.START;
+	}
 
-  return `${String(hour).padStart(2, '0')}:${String(roundedMinutes).padStart(2, '0')}`;
+	return `${String(hour).padStart(2, "0")}:${String(roundedMinutes).padStart(2, "0")}`;
 }
 
 /**
@@ -124,14 +136,17 @@ export function roundToNextSlot(date: Date, slotDuration: number = BUSINESS_HOUR
  * @param endTime - Horário de fim (HH:MM)
  * @returns Diferença em minutos
  */
-export function getTimeDifferenceInMinutes(startTime: string, endTime: string): number {
-  const [startHours, startMinutes] = startTime.split(':').map(Number);
-  const [endHours, endMinutes] = endTime.split(':').map(Number);
+export function getTimeDifferenceInMinutes(
+	startTime: string,
+	endTime: string,
+): number {
+	const [startHours, startMinutes] = startTime.split(":").map(Number);
+	const [endHours, endMinutes] = endTime.split(":").map(Number);
 
-  const startTotalMinutes = startHours * 60 + startMinutes;
-  const endTotalMinutes = endHours * 60 + endMinutes;
+	const startTotalMinutes = startHours * 60 + startMinutes;
+	const endTotalMinutes = endHours * 60 + endMinutes;
 
-  return endTotalMinutes - startTotalMinutes;
+	return endTotalMinutes - startTotalMinutes;
 }
 
 /**
@@ -140,13 +155,13 @@ export function getTimeDifferenceInMinutes(startTime: string, endTime: string): 
  * @returns True se estiver dentro do horário comercial
  */
 export function isWithinBusinessHours(time: string): boolean {
-  const [hours, minutes] = time.split(':').map(Number);
-  const totalMinutes = hours * 60 + minutes;
+	const [hours, minutes] = time.split(":").map(Number);
+	const totalMinutes = hours * 60 + minutes;
 
-  const startMinutes = BUSINESS_HOURS.START * 60;
-  const endMinutes = BUSINESS_HOURS.END * 60;
+	const startMinutes = BUSINESS_HOURS.START * 60;
+	const endMinutes = BUSINESS_HOURS.END * 60;
 
-  return totalMinutes >= startMinutes && totalMinutes < endMinutes;
+	return totalMinutes >= startMinutes && totalMinutes < endMinutes;
 }
 
 // =====================================================================
@@ -159,9 +174,11 @@ export function isWithinBusinessHours(time: string): boolean {
  * @returns Posição em pixels a partir do topo
  */
 export function calculateTimePosition(time: string): number {
-  const [hours, minutes] = time.split(':').map(Number);
-  const totalMinutesFromStart = (hours - BUSINESS_HOURS.START) * 60 + minutes;
-  return (totalMinutesFromStart / BUSINESS_HOURS.DEFAULT_SLOT_DURATION) * SLOT_HEIGHT;
+	const [hours, minutes] = time.split(":").map(Number);
+	const totalMinutesFromStart = (hours - BUSINESS_HOURS.START) * 60 + minutes;
+	return (
+		(totalMinutesFromStart / BUSINESS_HOURS.DEFAULT_SLOT_DURATION) * SLOT_HEIGHT
+	);
 }
 
 /**
@@ -170,7 +187,7 @@ export function calculateTimePosition(time: string): number {
  * @returns Altura em pixels
  */
 export function calculateAppointmentHeight(duration: number): number {
-  return (duration / BUSINESS_HOURS.DEFAULT_SLOT_DURATION) * SLOT_HEIGHT;
+	return (duration / BUSINESS_HOURS.DEFAULT_SLOT_DURATION) * SLOT_HEIGHT;
 }
 
 /**
@@ -180,7 +197,7 @@ export function calculateAppointmentHeight(duration: number): number {
  * @returns Índice ou -1 se não encontrado
  */
 export function findTimeSlotIndex(time: string, timeSlots: string[]): number {
-  return timeSlots.findIndex(t => t === time);
+	return timeSlots.findIndex((t) => t === time);
 }
 
 // =====================================================================
@@ -193,7 +210,7 @@ export function findTimeSlotIndex(time: string, timeSlots: string[]): number {
  * @returns True se o formato for válido
  */
 export function isValidTimeFormat(time: string): boolean {
-  return /^([01]\d|2[0-3]):([0-5]\d)$/.test(time);
+	return /^([01]\d|2[0-3]):([0-5]\d)$/.test(time);
 }
 
 /**
@@ -205,17 +222,17 @@ export function isValidTimeFormat(time: string): boolean {
  * @returns True se representarem o mesmo momento
  */
 export function isSameDateTime(
-  date1: Date | string,
-  time1: string,
-  date2: Date | string,
-  time2: string
+	date1: Date | string,
+	time1: string,
+	date2: Date | string,
+	time2: string,
 ): boolean {
-  const d1 = parseAppointmentDate(date1);
-  const d2 = parseAppointmentDate(date2);
+	const d1 = parseAppointmentDate(date1);
+	const d2 = parseAppointmentDate(date2);
 
-  if (!d1 || !d2) return false;
+	if (!d1 || !d2) return false;
 
-  return isSameDay(d1, d2) && time1 === time2;
+	return isSameDay(d1, d2) && time1 === time2;
 }
 
 // =====================================================================
@@ -228,10 +245,13 @@ export function isSameDateTime(
  * @param formatString - String de formatação do date-fns
  * @returns Data formatada
  */
-export function formatDatePT(date: Date | string, formatString: string = "dd/MM/yyyy"): string {
-  const d = parseAppointmentDate(date);
-  if (!d) return '';
-  return format(d, formatString);
+export function formatDatePT(
+	date: Date | string,
+	formatString: string = "dd/MM/yyyy",
+): string {
+	const d = parseAppointmentDate(date);
+	if (!d) return "";
+	return format(d, formatString);
 }
 
 /**
@@ -240,7 +260,7 @@ export function formatDatePT(date: Date | string, formatString: string = "dd/MM/
  * @returns Horário formatado (ex: "14:30")
  */
 export function formatTime(time: string): string {
-  return normalizeTime(time);
+	return normalizeTime(time);
 }
 
 /**
@@ -250,9 +270,13 @@ export function formatTime(time: string): string {
  * @param duration - Duração em minutos
  * @returns Intervalo formatado (ex: "14:00 - 15:00")
  */
-export function formatTimeRange(date: Date | string, startTime: string, duration: number): string {
-  const endTime = calculateEndTime(date, startTime, duration);
-  return `${formatTime(startTime)} - ${formatTime(endTime)}`;
+export function formatTimeRange(
+	date: Date | string,
+	startTime: string,
+	duration: number,
+): string {
+	const endTime = calculateEndTime(date, startTime, duration);
+	return `${formatTime(startTime)} - ${formatTime(endTime)}`;
 }
 
 // =====================================================================
@@ -265,11 +289,11 @@ export function formatTimeRange(date: Date | string, startTime: string, duration
  * @returns Objeto com altura e número de linhas
  */
 export function calculateGridDimensions(timeSlots: string[]) {
-  return {
-    height: timeSlots.length * SLOT_HEIGHT,
-    rows: timeSlots.length,
-    slotHeight: SLOT_HEIGHT,
-  };
+	return {
+		height: timeSlots.length * SLOT_HEIGHT,
+		rows: timeSlots.length,
+		slotHeight: SLOT_HEIGHT,
+	};
 }
 
 /**
@@ -279,10 +303,10 @@ export function calculateGridDimensions(timeSlots: string[]) {
  * @returns Altura visível em pixels
  */
 export function calculateVisibleHeight(
-  containerHeight: number = DEFAULT_LIST_HEIGHT,
-  headerHeight: number = 60
+	containerHeight: number = DEFAULT_LIST_HEIGHT,
+	headerHeight: number = 60,
 ): number {
-  return Math.max(containerHeight - headerHeight, MIN_LIST_HEIGHT);
+	return Math.max(containerHeight - headerHeight, MIN_LIST_HEIGHT);
 }
 
 /**
@@ -291,7 +315,7 @@ export function calculateVisibleHeight(
  * @returns Número de slots visíveis
  */
 export function calculateVisibleSlots(height: number): number {
-  return Math.ceil(height / SLOT_HEIGHT) + 2; // +2 para buffer
+	return Math.ceil(height / SLOT_HEIGHT) + 2; // +2 para buffer
 }
 
 // =====================================================================
@@ -299,23 +323,23 @@ export function calculateVisibleSlots(height: number): number {
 // =====================================================================
 
 export const calendarUtils = {
-  normalizeTime,
-  parseAppointmentDate,
-  normalizeDate,
-  createLocalDate,
-  calculateEndTime,
-  roundToNextSlot,
-  getTimeDifferenceInMinutes,
-  isWithinBusinessHours,
-  calculateTimePosition,
-  calculateAppointmentHeight,
-  findTimeSlotIndex,
-  isValidTimeFormat,
-  isSameDateTime,
-  formatDatePT,
-  formatTime,
-  formatTimeRange,
-  calculateGridDimensions,
-  calculateVisibleHeight,
-  calculateVisibleSlots,
+	normalizeTime,
+	parseAppointmentDate,
+	normalizeDate,
+	createLocalDate,
+	calculateEndTime,
+	roundToNextSlot,
+	getTimeDifferenceInMinutes,
+	isWithinBusinessHours,
+	calculateTimePosition,
+	calculateAppointmentHeight,
+	findTimeSlotIndex,
+	isValidTimeFormat,
+	isSameDateTime,
+	formatDatePT,
+	formatTime,
+	formatTimeRange,
+	calculateGridDimensions,
+	calculateVisibleHeight,
+	calculateVisibleSlots,
 };

@@ -1,4 +1,3 @@
- 
 /**
  * ComponentErrorBoundary - Error Boundary para componentes individuais
  *
@@ -14,25 +13,27 @@
  * </ComponentErrorBoundary>
  */
 
-import { Component, ReactNode } from 'react';
-import { AlertCircle, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { fisioLogger as logger } from '@/lib/errors/logger';
+import { Component, ReactNode } from "react";
+import { AlertCircle, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export interface ComponentErrorBoundaryProps {
-  children: ReactNode;
-  /** Componente de fallback em caso de erro */
-  fallback?: ReactNode | ((error: Error, errorInfo: React.ErrorInfo) => ReactNode);
-  /** Callback chamado quando ocorre um erro */
-  onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
-  /** Nome do componente para logging */
-  componentName?: string;
+	children: ReactNode;
+	/** Componente de fallback em caso de erro */
+	fallback?:
+		| ReactNode
+		| ((error: Error, errorInfo: React.ErrorInfo) => ReactNode);
+	/** Callback chamado quando ocorre um erro */
+	onError?: (error: Error, errorInfo: React.ErrorInfo) => void;
+	/** Nome do componente para logging */
+	componentName?: string;
 }
 
 interface ComponentErrorBoundaryState {
-  hasError: boolean;
-  error: Error | null;
+	hasError: boolean;
+	error: Error | null;
 }
 
 /**
@@ -40,108 +41,108 @@ interface ComponentErrorBoundaryState {
  * Implementa reset de estado e logging estruturado
  */
 export class ComponentErrorBoundary extends Component<
-  ComponentErrorBoundaryProps,
-  ComponentErrorBoundaryState
+	ComponentErrorBoundaryProps,
+	ComponentErrorBoundaryState
 > {
-  constructor(props: ComponentErrorBoundaryProps) {
-    super(props);
-    this.state = {
-      hasError: false,
-      error: null,
-    };
-  }
+	constructor(props: ComponentErrorBoundaryProps) {
+		super(props);
+		this.state = {
+			hasError: false,
+			error: null,
+		};
+	}
 
-  static getDerivedStateFromError(error: Error): ComponentErrorBoundaryState {
-    return {
-      hasError: true,
-      error,
-    };
-  }
+	static getDerivedStateFromError(error: Error): ComponentErrorBoundaryState {
+		return {
+			hasError: true,
+			error,
+		};
+	}
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-    const { onError, componentName } = this.props;
+	componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+		const { onError, componentName } = this.props;
 
-    // Log estruturado do erro
-    logger.error(
-      `Component error${componentName ? ` in ${componentName}` : ''}`,
-      {
-        error: error.message,
-        stack: error.stack,
-        componentStack: errorInfo.componentStack,
-      },
-      componentName || 'ComponentErrorBoundary'
-    );
+		// Log estruturado do erro
+		logger.error(
+			`Component error${componentName ? ` in ${componentName}` : ""}`,
+			{
+				error: error.message,
+				stack: error.stack,
+				componentStack: errorInfo.componentStack,
+			},
+			componentName || "ComponentErrorBoundary",
+		);
 
-    // Callback customizado se fornecido
-    if (onError) {
-      onError(error, errorInfo);
-    }
-  }
+		// Callback customizado se fornecido
+		if (onError) {
+			onError(error, errorInfo);
+		}
+	}
 
-  /**
-   * Reset do estado para tentar recuperar
-   */
-  handleReset = (): void => {
-    this.setState({
-      hasError: false,
-      error: null,
-    });
-  };
+	/**
+	 * Reset do estado para tentar recuperar
+	 */
+	handleReset = (): void => {
+		this.setState({
+			hasError: false,
+			error: null,
+		});
+	};
 
-  render(): ReactNode {
-    const { children, fallback, componentName } = this.props;
-    const { hasError, error } = this.state;
+	render(): ReactNode {
+		const { children, fallback, componentName } = this.props;
+		const { hasError, error } = this.state;
 
-    if (!hasError) {
-      return children;
-    }
+		if (!hasError) {
+			return children;
+		}
 
-    // Fallback customizado
-    if (fallback) {
-      if (typeof fallback === 'function') {
-        return fallback(error!, {
-          componentStack: '',
-        } as React.ErrorInfo);
-      }
-      return fallback;
-    }
+		// Fallback customizado
+		if (fallback) {
+			if (typeof fallback === "function") {
+				return fallback(error!, {
+					componentStack: "",
+				} as React.ErrorInfo);
+			}
+			return fallback;
+		}
 
-    // Fallback padrão
-    return (
-      <Card className="border-destructive">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-destructive">
-            <AlertCircle className="h-5 w-5" />
-            Erro no Componente{componentName ? ` ${componentName}` : ''}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Ocorreu um erro ao renderizar este componente. Tente recarregar.
-          </p>
-          {error && (
-            <details className="mb-4">
-              <summary className="text-xs cursor-pointer text-muted-foreground">
-                Detalhes do erro
-              </summary>
-              <pre className="mt-2 text-xs bg-muted p-2 rounded overflow-auto max-h-32">
-                {error.message}
-              </pre>
-            </details>
-          )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={this.handleReset}
-            className="gap-2"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Tentar Novamente
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
+		// Fallback padrão
+		return (
+			<Card className="border-destructive">
+				<CardHeader>
+					<CardTitle className="flex items-center gap-2 text-destructive">
+						<AlertCircle className="h-5 w-5" />
+						Erro no Componente{componentName ? ` ${componentName}` : ""}
+					</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<p className="text-sm text-muted-foreground mb-4">
+						Ocorreu um erro ao renderizar este componente. Tente recarregar.
+					</p>
+					{error && (
+						<details className="mb-4">
+							<summary className="text-xs cursor-pointer text-muted-foreground">
+								Detalhes do erro
+							</summary>
+							<pre className="mt-2 text-xs bg-muted p-2 rounded overflow-auto max-h-32">
+								{error.message}
+							</pre>
+						</details>
+					)}
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={this.handleReset}
+						className="gap-2"
+					>
+						<RefreshCw className="h-4 w-4" />
+						Tentar Novamente
+					</Button>
+				</CardContent>
+			</Card>
+		);
+	}
 }
 
 /**
@@ -156,73 +157,81 @@ export class ComponentErrorBoundary extends Component<
 /**
  * Fallback padrão para componentes pesados
  */
-export function HeavyComponentFallback({ message = "Carregando componente..." }: { message?: string }) {
-  return (
-    <Card>
-      <CardContent className="flex items-center justify-center py-12">
-        <div className="text-center space-y-3">
-          <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground mx-auto" />
-          <p className="text-sm text-muted-foreground">{message}</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
+export function HeavyComponentFallback({
+	message = "Carregando componente...",
+}: {
+	message?: string;
+}) {
+	return (
+		<Card>
+			<CardContent className="flex items-center justify-center py-12">
+				<div className="text-center space-y-3">
+					<RefreshCw className="h-8 w-8 animate-spin text-muted-foreground mx-auto" />
+					<p className="text-sm text-muted-foreground">{message}</p>
+				</div>
+			</CardContent>
+		</Card>
+	);
 }
 
 /**
  * Fallback para componentes de PDF
  */
 export function PDFComponentFallback() {
-  return (
-    <Card className="border-orange-200 bg-orange-50/50">
-      <CardContent className="flex items-center justify-center py-12">
-        <div className="text-center space-y-3">
-          <AlertCircle className="h-8 w-8 text-orange-600 mx-auto" />
-          <p className="text-sm text-orange-900">
-            Não foi possível carregar o visualizador de PDF.
-          </p>
-          <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
-            Tentar Novamente
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
+	return (
+		<Card className="border-orange-200 bg-orange-50/50">
+			<CardContent className="flex items-center justify-center py-12">
+				<div className="text-center space-y-3">
+					<AlertCircle className="h-8 w-8 text-orange-600 mx-auto" />
+					<p className="text-sm text-orange-900">
+						Não foi possível carregar o visualizador de PDF.
+					</p>
+					<Button
+						variant="outline"
+						size="sm"
+						onClick={() => window.location.reload()}
+					>
+						Tentar Novamente
+					</Button>
+				</div>
+			</CardContent>
+		</Card>
+	);
 }
 
 /**
  * Fallback para componentes de visão computacional
  */
 export function ComputerVisionFallback() {
-  return (
-    <Card className="border-blue-200 bg-blue-50/50">
-      <CardContent className="flex items-center justify-center py-12">
-        <div className="text-center space-y-3">
-          <AlertCircle className="h-8 w-8 text-blue-600 mx-auto" />
-          <p className="text-sm text-blue-900">
-            O componente de visão computacional está carregando...
-          </p>
-          <p className="text-xs text-blue-700">
-            Isso pode levar alguns segundos na primeira vez.
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  );
+	return (
+		<Card className="border-blue-200 bg-blue-50/50">
+			<CardContent className="flex items-center justify-center py-12">
+				<div className="text-center space-y-3">
+					<AlertCircle className="h-8 w-8 text-blue-600 mx-auto" />
+					<p className="text-sm text-blue-900">
+						O componente de visão computacional está carregando...
+					</p>
+					<p className="text-xs text-blue-700">
+						Isso pode levar alguns segundos na primeira vez.
+					</p>
+				</div>
+			</CardContent>
+		</Card>
+	);
 }
 
 /**
  * Fallback para componentes de gráficos
  */
 export function ChartFallback() {
-  return (
-    <Card>
-      <CardContent className="flex items-center justify-center py-12">
-        <div className="text-center space-y-3">
-          <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground mx-auto" />
-          <p className="text-sm text-muted-foreground">Carregando gráfico...</p>
-        </div>
-      </CardContent>
-    </Card>
-  );
+	return (
+		<Card>
+			<CardContent className="flex items-center justify-center py-12">
+				<div className="text-center space-y-3">
+					<RefreshCw className="h-8 w-8 animate-spin text-muted-foreground mx-auto" />
+					<p className="text-sm text-muted-foreground">Carregando gráfico...</p>
+				</div>
+			</CardContent>
+		</Card>
+	);
 }
