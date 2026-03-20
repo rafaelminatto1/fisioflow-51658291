@@ -24,6 +24,9 @@ export const gamificationApi = {
       body: JSON.stringify(data),
     }),
 
+  getProfile: (patientId: string) =>
+    request<{ data: GamificationProfileRow }>(`/api/gamification/profile/${encodeURIComponent(patientId)}`),
+
   getQuests: (patientId: string) =>
     request<{ data: DailyQuestRow }>(`/api/gamification/quests/${encodeURIComponent(patientId)}`),
 

@@ -6,6 +6,22 @@ import { determineOutcomeCategory, getAgeGroup, hashPatientId, roundTo } from '.
 
 const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
+type PaymentTrendRow = {
+  day: string | Date | null;
+  sum: number | string | null;
+};
+
+type FinancialPaymentRow = {
+  valor: number | string | null;
+  forma_pagamento: string | null;
+  status: string | null;
+};
+
+type PainRegionRow = {
+  name: string | null;
+  value: number | string | null;
+};
+
 const hasTable = async (pool: ReturnType<typeof createPool>, tableName: string) => {
   const result = await pool.query(
     `
@@ -45,7 +61,7 @@ app.get('/dashboard', requireAuth, async (c) => {
        WHERE organization_id = $1 AND is_active = true`,
       [user.organizationId],
     ),
-    Promise.resolve({ rows: [] }),
+    { rows: [] as PaymentTrendRow[] },
     pool.query(
       `SELECT
          COUNT(*) FILTER (WHERE status = 'completed')::int AS total_completed,
@@ -78,7 +94,12 @@ app.get('/dashboard', requireAuth, async (c) => {
 
   const activePatients = Number(activePatientsRes.rows[0]?.total ?? 0);
   const payments = paymentsRes.rows.map((row) => ({
-    date: (row.day as Date).toISOString().split('T')[0],
+    date:
+      row.day instanceof Date
+        ? row.day.toISOString().split('T')[0]
+        : row.day
+          ? new Date(row.day).toISOString().split('T')[0]
+          : startDate,
     amount: Number(row.sum ?? 0),
   }));
   const revenueChart = [];
@@ -112,7 +133,7 @@ app.get('/dashboard', requireAuth, async (c) => {
 
   let topPainRegions: Array<{ name: string; value: number }> = [];
   try {
-    const painRegionsRes = Promise.resolve({ rows: [] });
+    const painRegionsRes = { rows: [] as PainRegionRow[] };
     topPainRegions = painRegionsRes.rows.map((row) => ({
       name: String(row.name),
       value: Number(row.value ?? 0),
@@ -149,7 +170,7 @@ app.get('/financial', requireAuth, async (c) => {
   const startDate = parseDate(c.req.query('startDate')) ?? new Date().toISOString().split('T')[0];
   const endDate = parseDate(c.req.query('endDate')) ?? startDate;
 
-  const paymentsRes = Promise.resolve({ rows: [] });
+  const paymentsRes = { rows: [] as FinancialPaymentRow[] };
 
   const sessionsRes = await pool.query(
     `SELECT therapist_id, status, started_at
@@ -593,6 +614,95 @@ app.post('/patient-lifecycle-events', requireAuth, async (c) => {
   );
 
   return c.json({ data: insertRes.rows[0] });
+});
+
+app.get('/patient-outcome-measures/:patientId', requireAuth, async (c) => {
+  const { patientId } = c.req.param();
+  const user = c.get('user');
+  const pool = await createPool(c.env);
+  const measureType = c.req.query('measureType');
+  const limitValue = Number(c.req.query('limit') ?? 0);
+
+  if (!(await hasTable(pool, 'patient_outcome_measures'))) {
+    return c.json({ data: [] });
+  }
+
+  const params: Array<string | number> = [user.organizationId, patientId];
+  const conditions = ['organization_id = $1', 'patient_id = $2'];
+
+  if (measureType) {
+    params.push(measureType);
+    conditions.push(`measure_type = $${params.length}`);
+  }
+
+  let limitClause = '';
+  if (limitValue > 0) {
+    params.push(Math.min(limitValue, 200));
+    limitClause = `LIMIT $${params.length}`;
+  }
+
+  const rows = await pool.query(
+    `
+      SELECT *
+      FROM patient_outcome_measures
+      WHERE ${conditions.join(' AND ')}
+      ORDER BY measurement_date DESC, created_at DESC
+      ${limitClause}
+    `,
+    params,
+  );
+
+  return c.json({ data: rows.rows });
+});
+
+app.post('/patient-outcome-measures', requireAuth, async (c) => {
+  const user = c.get('user');
+  const pool = await createPool(c.env);
+  const body = (await c.req.json()) as Record<string, unknown>;
+
+  if (!(await hasTable(pool, 'patient_outcome_measures'))) {
+    return c.json({ error: 'Schema de medidas de resultado indisponível' }, 501);
+  }
+
+  const patientId = asString(body.patient_id);
+  const measureType = asString(body.measure_type);
+  const measureName = asString(body.measure_name);
+
+  if (!patientId) return c.json({ error: 'patient_id é obrigatório' }, 400);
+  if (!measureType) return c.json({ error: 'measure_type é obrigatório' }, 400);
+  if (!measureName) return c.json({ error: 'measure_name é obrigatório' }, 400);
+  if (asNumber(body.score) == null) return c.json({ error: 'score é obrigatório' }, 400);
+
+  const measurementDate = parseDate(asString(body.measurement_date)) ?? new Date().toISOString().split('T')[0];
+
+  const insertRes = await pool.query(
+    `
+      INSERT INTO patient_outcome_measures (
+        organization_id, patient_id, measure_type, measure_name, score, normalized_score,
+        min_score, max_score, measurement_date, body_part, context, notes, recorded_by,
+        created_at, updated_at
+      ) VALUES (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,NOW(),NOW()
+      ) RETURNING *
+    `,
+    [
+      user.organizationId,
+      patientId,
+      measureType,
+      measureName,
+      asNumber(body.score),
+      asNumber(body.normalized_score),
+      asNumber(body.min_score),
+      asNumber(body.max_score),
+      measurementDate,
+      asString(body.body_part) ?? null,
+      asString(body.context) ?? null,
+      asString(body.notes) ?? null,
+      user.uid,
+    ],
+  );
+
+  return c.json({ data: insertRes.rows[0] }, 201);
 });
 
 const mapTechniques = (value: unknown) => {

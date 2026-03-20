@@ -159,7 +159,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' 
       (agendamentosData ?? [])
         .filter((item) => item.status !== 'cancelado')
         .sort((a, b) =>
-          String(a.appointment_time ?? a.time ?? '').localeCompare(String(b.appointment_time ?? b.time ?? ''))
+          String(a.appointment_time ?? a.time ?? '').localeCompare(
+            String(b.appointment_time ?? b.time ?? '')
+          )
         )
         .slice(0, 6)
         .map((item) => ({
@@ -179,7 +181,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' 
   }, [metrics?.receitaMensal]);
 
   const maxAtendimentos = useMemo(
-    () => Math.max(...(metrics?.receitaPorFisioterapeuta?.map((item) => item.atendimentos) || [1]), 1),
+    () =>
+      Math.max(
+        ...(metrics?.receitaPorFisioterapeuta?.map((item) => item.atendimentos) || [1]),
+        1
+      ),
     [metrics?.receitaPorFisioterapeuta]
   );
 
@@ -208,40 +214,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' 
 
   const growthBadge =
     metrics?.crescimentoMensal != null
-      ? `${metrics.crescimentoMensal >= 0 ? '+' : '-'}${Math.abs(metrics.crescimentoMensal)}%`
+      ? `${metrics.crescimentoMensal >= 0 ? '+' : ''}${metrics.crescimentoMensal}%`
       : undefined;
 
   return (
-    <div className="space-y-6 pb-8">
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)]">
-        <AIInsightsWidget metrics={metrics} />
+    <div className="space-y-5 pb-8">
 
-        <Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl">
-          <CardHeader className="border-b border-border/60 pb-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/75">
-                  Sinais operacionais
-                </p>
-                <CardTitle className="mt-1 text-lg font-semibold">Eventos e ritmo da operação</CardTitle>
-              </div>
-              <Badge variant="outline" className="border-primary/15 bg-primary/5 text-primary">
-                {metrics?.periodLabel ?? 'Hoje'}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent className="p-5">
-            <LazyWidget height={168}>
-              <EventosStatsWidget />
-            </LazyWidget>
-          </CardContent>
-        </Card>
-      </div>
-
+      {/* ── 1. KPI Summary Cards ── */}
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" data-testid="stats-cards">
           {[1, 2, 3, 4].map((index) => (
-            <Skeleton key={index} className="h-40 rounded-[1.75rem]" />
+            <Skeleton key={index} className="h-36 rounded-[1.75rem]" />
           ))}
         </div>
       ) : (
@@ -282,137 +265,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' 
         </section>
       )}
 
-      <section aria-label="Gráficos e desempenho">
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl">
-            <CardHeader className="border-b border-border/60 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <TrendingUp className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/75">
-                    Tendência
-                  </p>
-                  <CardTitle className="mt-1 text-lg font-semibold">Tendência semanal</CardTitle>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-5">
-              <div className="h-[240px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  {!metrics?.tendenciaSemanal || metrics.tendenciaSemanal.length === 0 ? (
-                    <EmptyStateEnhanced
-                      icon={TrendingUp}
-                      title="Sem dados semanais"
-                      description="Aguardando os primeiros agendamentos."
-                      className="py-10"
-                    />
-                  ) : (
-                    <BarChart data={metrics.tendenciaSemanal} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="adminPrimaryGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.9} />
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.18} />
-                        </linearGradient>
-                        <linearGradient id="adminSuccessGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.9} />
-                          <stop offset="95%" stopColor="hsl(var(--success))" stopOpacity={0.18} />
-                        </linearGradient>
-                      </defs>
-                      <XAxis
-                        dataKey="dia"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 700 }}
-                        dy={10}
-                      />
-                      <YAxis
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 700 }}
-                        width={36}
-                      />
-                      <Tooltip content={<CustomChartTooltip />} cursor={{ fill: 'hsl(var(--primary) / 0.08)' }} />
-                      <Bar dataKey="agendamentos" name="Agendamentos" radius={[8, 8, 0, 0]} fill="url(#adminPrimaryGradient)" barSize={18} />
-                      <Bar dataKey="concluidos" name="Concluídos" radius={[8, 8, 0, 0]} fill="url(#adminSuccessGradient)" barSize={18} />
-                    </BarChart>
-                  )}
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl">
-            <CardHeader className="border-b border-border/60 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600">
-                  <UserCheck className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-600/80">
-                    Profissionais
-                  </p>
-                  <CardTitle className="mt-1 text-lg font-semibold">Ranking de desempenho</CardTitle>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-5">
-              {(metrics?.receitaPorFisioterapeuta?.length || 0) === 0 ? (
-                <EmptyStateEnhanced
-                  icon={UserCheck}
-                  title="Nenhum atendimento"
-                  description="Dados de desempenho em breve."
-                  className="py-10"
-                />
-              ) : (
-                <div className="space-y-4">
-                  {metrics?.receitaPorFisioterapeuta.map((fisio, index) => (
-                    <div
-                      key={fisio.id}
-                      className="rounded-2xl border border-border/60 bg-background px-4 py-3 shadow-sm"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex min-w-0 items-center gap-3">
-                          <span
-                            className={cn(
-                              'flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl text-[11px] font-bold',
-                              index === 0
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-muted text-muted-foreground'
-                            )}
-                          >
-                            {index + 1}
-                          </span>
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-foreground">{fisio.nome}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {fisio.atendimentos} atendimentos
-                            </p>
-                          </div>
-                        </div>
-                        <span className="text-sm font-semibold text-emerald-600">
-                          R$ {fisio.receita.toLocaleString('pt-BR')}
-                        </span>
-                      </div>
-
-                      <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted/70">
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400"
-                          style={{ width: `${(fisio.atendimentos / maxAtendimentos) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
+      {/* ── 2. Agenda + Atalhos ── */}
       <section aria-label="Agenda e atalhos">
-        <div className="grid gap-6 lg:grid-cols-7">
+        <div className="grid gap-5 lg:grid-cols-7">
           <Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl lg:col-span-4">
             <CardHeader className="border-b border-border/60 pb-4">
               <div className="flex items-center justify-between gap-3">
@@ -463,17 +318,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' 
                       className="flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-background px-4 py-3 shadow-sm transition-colors hover:border-primary/20"
                     >
                       <div className="flex min-w-0 items-center gap-3">
-                        <div className="rounded-xl bg-primary/10 px-3 py-2 text-xs font-bold text-primary">
+                        <div className="rounded-xl bg-primary/10 px-3 py-2 text-xs font-bold text-primary shrink-0">
                           {agendamento.horario}
                         </div>
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-foreground">{agendamento.paciente}</p>
+                          <p className="truncate text-sm font-semibold text-foreground">
+                            {agendamento.paciente}
+                          </p>
                           <p className="text-xs text-muted-foreground">Atendimento clínico</p>
                         </div>
                       </div>
                       <Badge
                         variant={statusBadgeVariant(agendamento.status)}
-                        className="text-[10px] uppercase tracking-[0.14em]"
+                        className="text-[10px] uppercase tracking-[0.14em] shrink-0"
                       >
                         {agendamento.status}
                       </Badge>
@@ -498,9 +355,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' 
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-2">
+            <CardContent className="grid gap-3 p-5 sm:grid-cols-2">
               <Button
-                className="h-24 flex-col items-start justify-between rounded-2xl px-4 py-4 text-left"
+                className="h-20 flex-col items-start justify-between rounded-2xl px-4 py-4 text-left"
                 onClick={() => navigate('/pacientes')}
               >
                 <Users className="h-5 w-5" />
@@ -508,7 +365,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' 
               </Button>
               <Button
                 variant="outline"
-                className="h-24 flex-col items-start justify-between rounded-2xl border-border/60 bg-background"
+                className="h-20 flex-col items-start justify-between rounded-2xl border-border/60 bg-background px-4 py-4 text-left"
                 onClick={() => navigate('/agenda')}
               >
                 <Calendar className="h-5 w-5 text-primary" />
@@ -516,7 +373,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' 
               </Button>
               <Button
                 variant="outline"
-                className="h-24 flex-col items-start justify-between rounded-2xl border-border/60 bg-background"
+                className="h-20 flex-col items-start justify-between rounded-2xl border-border/60 bg-background px-4 py-4 text-left"
                 onClick={() => navigate('/eventos')}
               >
                 <CalendarDays className="h-5 w-5 text-primary" />
@@ -524,12 +381,203 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ period = 'hoje' 
               </Button>
               <Button
                 variant="outline"
-                className="h-24 flex-col items-start justify-between rounded-2xl border-border/60 bg-background"
+                className="h-20 flex-col items-start justify-between rounded-2xl border-border/60 bg-background px-4 py-4 text-left"
                 onClick={() => navigate('/financeiro')}
               >
                 <DollarSign className="h-5 w-5 text-primary" />
                 <span className="text-sm font-semibold">Financeiro</span>
               </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* ── 3. Charts ── */}
+      <section aria-label="Gráficos e desempenho">
+        <div className="grid gap-5 lg:grid-cols-2">
+          <Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl">
+            <CardHeader className="border-b border-border/60 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                  <TrendingUp className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/75">
+                    Tendência
+                  </p>
+                  <CardTitle className="mt-1 text-lg font-semibold">Tendência semanal</CardTitle>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-5">
+              <div className="h-[220px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  {!metrics?.tendenciaSemanal || metrics.tendenciaSemanal.length === 0 ? (
+                    <EmptyStateEnhanced
+                      icon={TrendingUp}
+                      title="Sem dados semanais"
+                      description="Aguardando os primeiros agendamentos."
+                      className="py-10"
+                    />
+                  ) : (
+                    <BarChart
+                      data={metrics.tendenciaSemanal}
+                      margin={{ top: 8, right: 8, left: -20, bottom: 0 }}
+                    >
+                      <defs>
+                        <linearGradient id="adminPrimaryGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.9} />
+                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.18} />
+                        </linearGradient>
+                        <linearGradient id="adminSuccessGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="hsl(var(--success))" stopOpacity={0.9} />
+                          <stop offset="95%" stopColor="hsl(var(--success))" stopOpacity={0.18} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis
+                        dataKey="dia"
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{
+                          fill: 'hsl(var(--muted-foreground))',
+                          fontSize: 10,
+                          fontWeight: 700,
+                        }}
+                        dy={10}
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{
+                          fill: 'hsl(var(--muted-foreground))',
+                          fontSize: 10,
+                          fontWeight: 700,
+                        }}
+                        width={36}
+                      />
+                      <Tooltip
+                        content={<CustomChartTooltip />}
+                        cursor={{ fill: 'hsl(var(--primary) / 0.08)' }}
+                      />
+                      <Bar
+                        dataKey="agendamentos"
+                        name="Agendamentos"
+                        radius={[8, 8, 0, 0]}
+                        fill="url(#adminPrimaryGradient)"
+                        barSize={18}
+                      />
+                      <Bar
+                        dataKey="concluidos"
+                        name="Concluídos"
+                        radius={[8, 8, 0, 0]}
+                        fill="url(#adminSuccessGradient)"
+                        barSize={18}
+                      />
+                    </BarChart>
+                  )}
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl">
+            <CardHeader className="border-b border-border/60 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600">
+                  <UserCheck className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-emerald-600/80">
+                    Profissionais
+                  </p>
+                  <CardTitle className="mt-1 text-lg font-semibold">
+                    Ranking de desempenho
+                  </CardTitle>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-5">
+              {(metrics?.receitaPorFisioterapeuta?.length || 0) === 0 ? (
+                <EmptyStateEnhanced
+                  icon={UserCheck}
+                  title="Nenhum atendimento"
+                  description="Dados de desempenho em breve."
+                  className="py-10"
+                />
+              ) : (
+                <div className="space-y-3">
+                  {metrics?.receitaPorFisioterapeuta.map((fisio, index) => (
+                    <div
+                      key={fisio.id}
+                      className="rounded-2xl border border-border/60 bg-background px-4 py-3 shadow-sm"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <span
+                            className={cn(
+                              'flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl text-[11px] font-bold',
+                              index === 0
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-muted text-muted-foreground'
+                            )}
+                          >
+                            {index + 1}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-foreground">
+                              {fisio.nome}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {fisio.atendimentos} atendimentos
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-sm font-semibold text-emerald-600 shrink-0">
+                          R$ {fisio.receita.toLocaleString('pt-BR')}
+                        </span>
+                      </div>
+                      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted/70">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-700"
+                          style={{
+                            width: `${(fisio.atendimentos / maxAtendimentos) * 100}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* ── 4. AI Insights + Eventos ── */}
+      <section>
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)]">
+          <AIInsightsWidget metrics={metrics} />
+
+          <Card className="rounded-[2rem] border-border/60 bg-background/80 shadow-sm backdrop-blur-xl">
+            <CardHeader className="border-b border-border/60 pb-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary/75">
+                    Sinais operacionais
+                  </p>
+                  <CardTitle className="mt-1 text-lg font-semibold">
+                    Eventos e ritmo da operação
+                  </CardTitle>
+                </div>
+                <Badge variant="outline" className="border-primary/15 bg-primary/5 text-primary shrink-0">
+                  {metrics?.periodLabel ?? 'Hoje'}
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="p-5">
+              <LazyWidget height={168}>
+                <EventosStatsWidget />
+              </LazyWidget>
             </CardContent>
           </Card>
         </div>
