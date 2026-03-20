@@ -9,23 +9,25 @@ import {
   Calendar, BarChart3, CheckCircle,
   MessageSquare, Sparkles,
   LayoutDashboard, Save, RotateCcw, Stethoscope, FileText,
-  Wand2
+  Wand2, Target, Zap, ArrowUpRight, Activity, Thermometer,
+  MoreHorizontal, Plus, Send, ClipboardList
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useMedicalReturnsUpcoming } from '@/hooks/useMedicalReturnsUpcoming';
-import { useAppointmentPredictions, useRevenueForecasts, useStaffPerformance, useInventory } from '@/hooks/useInnovations';
+import { useAppointmentPredictions, useRevenueForecasts, useStaffPerformance, useInventory, usePatientSelfAssessments } from '@/hooks/useInnovations';
 import { useDashboardMetrics } from '@/hooks/useDashboardMetrics';
 import { useEventos } from '@/hooks/useEventos';
 import { useNotifications } from '@/hooks/useNotifications';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, BarChart, Bar } from 'recharts';
 import { fisioLogger as logger } from '@/lib/errors/logger';
 import { GridItem } from '@/components/ui/DraggableGrid';
 import { Layout } from 'react-grid-layout';
 import { GridWidget } from '@/components/ui/GridWidget';
 import { toast } from 'sonner';
 import { generatePatientSummary } from '@/lib/genkit/patient-summary';
+import { cn } from '@/lib/utils';
 
 const DraggableGrid = lazy(() => import('@/components/ui/DraggableGrid').then(module => ({ default: module.DraggableGrid })));
 
@@ -47,15 +49,23 @@ export default function SmartDashboard() {
   const [genkitSummary, setGenkitSummary] = useState<any>(null);
   const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
+  // Data Hooks
+  const { data: metrics, isLoading: isLoadingMetrics } = useDashboardMetrics();
+  const { data: predictions = [] } = useAppointmentPredictions();
+  const { data: medicalReturnsUpcoming = [] } = useMedicalReturnsUpcoming(14);
+  const { data: forecasts = [] } = useRevenueForecasts();
+  const { data: staffPerformance = [] } = useStaffPerformance();
+  const { data: selfAssessments = [] } = usePatientSelfAssessments();
+  const { notifications } = useNotifications(5);
+  const navigate = useNavigate();
+
   // Load layout from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem('dashboard_layout_v1');
+    const saved = localStorage.getItem('dashboard_layout_v2');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          setSavedLayout(parsed);
-        }
+        if (Array.isArray(parsed)) setSavedLayout(parsed);
       } catch (e) {
         logger.warn('Failed to parse saved layout', e, 'SmartDashboard');
       }
@@ -63,557 +73,523 @@ export default function SmartDashboard() {
   }, []);
 
   const handleSaveLayout = (layout: Layout[]) => {
-    localStorage.setItem('dashboard_layout_v1', JSON.stringify(layout));
+    localStorage.setItem('dashboard_layout_v2', JSON.stringify(layout));
     setSavedLayout(layout);
     setIsEditable(false);
     toast.success('Layout salvo com sucesso!');
   };
 
   const handleResetLayout = () => {
-    localStorage.removeItem('dashboard_layout_v1');
+    localStorage.removeItem('dashboard_layout_v2');
     setSavedLayout([]);
-    window.location.reload(); // Simple way to reset state
+    window.location.reload();
   };
 
   const handleGenerateSummary = async () => {
     setIsGeneratingSummary(true);
     try {
+        const latestAssessment = selfAssessments[0];
         const mockData = {
-            patientName: "João Silva",
-            condition: "Pós-operatório LCA",
-            history: [
-                { date: "2024-02-10", subjective: "Dor moderada (5/10)", objective: "Edema ++, Flexão 90º" },
-                { date: "2024-02-17", subjective: "Dor leve (2/10)", objective: "Edema +, Flexão 110º", exercises: ["Agachamento leve"] }
-            ],
-            goals: ["Voltar a correr em 3 meses"]
+            patientName: latestAssessment?.patient_name || "João Silva",
+            condition: "Acompanhamento Fisioterapêutico",
+            history: selfAssessments.slice(0, 3).map(a => ({
+                date: format(new Date(a.created_at), 'yyyy-MM-dd'),
+                subjective: `Dor: ${a.pain_level}/10, Humor: ${a.mood_score}/5`,
+                objective: `Mobilidade: ${a.mobility_score}/5, Sono: ${a.sleep_quality}/5`
+            })),
+            goals: ["Redução da dor crônica", "Melhora da amplitude de movimento"]
         };
         const summary = await generatePatientSummary(mockData);
         setGenkitSummary(summary);
-        toast.success("Resumo gerado com IA!");
+        toast.success("Insights gerados com sucesso!");
     } catch (error) {
-        console.error(error);
-        toast.error("Erro ao gerar resumo.");
+        logger.error(error as Error, 'SmartDashboard');
+        toast.error("Erro ao gerar insights.");
     } finally {
         setIsGeneratingSummary(false);
     }
   };
 
-  // Data Hooks
-  const { data: metrics, isLoading: isLoadingMetrics } = useDashboardMetrics();
-  const { data: predictions = [] } = usePredictionData(); // Assuming hook exists or reusing predictions logic
-  const { data: medicalReturnsUpcoming = [] } = useMedicalReturnsUpcoming(14);
-  const navigate = useNavigate();
-  const { data: forecasts = [] } = useRevenueForecasts();
-  const { data: _staffPerformance = [] } = useStaffPerformance();
-  const { data: inventory = [] } = useInventory();
-  const { data: eventos = [] } = useEventos();
-  const { notifications } = useNotifications(5);
+  // Process data for charts
+  const assessmentData = useMemo(() => {
+    return selfAssessments
+      .slice(0, 20)
+      .reverse()
+      .map(a => ({
+        date: format(new Date(a.created_at), 'dd/MM'),
+        pain: a.pain_level,
+        mobility: a.mobility_score * 2, // scale to 10
+        adherence: a.adherence_score * 2
+      }));
+  }, [selfAssessments]);
 
-  // Calculate Event Stats (unchanged)
-  const eventStats = {
-    total: eventos.length,
-    active: eventos.filter(e => e.status === 'AGENDADO' || e.status === 'EM_ANDAMENTO').length,
-    completed: eventos.filter(e => e.status === 'CONCLUIDO').length,
-    revenue: eventos.reduce((acc, curr) => acc + (curr.valor_padrao_prestador || 0), 0),
-    participants: 40, 
-    completionRate: eventos.length > 0
-      ? Math.round((eventos.filter(e => e.status === 'CONCLUIDO').length / eventos.length) * 100)
-      : 0,
-    margin: 0,
-    avgParticipants: 0,
-  };
+  const revenueChartData = useMemo(() => {
+    return forecasts.slice(-15).map(f => ({
+      date: format(new Date(f.forecast_date), 'dd/MM'),
+      previsao: f.predicted_revenue,
+      real: f.actual_revenue || 0,
+    }));
+  }, [forecasts]);
 
-  // High-risk appointments (no-show probability > 30%)
-  const highRiskAppointments = predictions.filter(p => p.no_show_probability > 0.3);
+  const performanceData = useMemo(() => {
+    return staffPerformance.map(s => ({
+      name: s.therapist_name?.split(' ')[0] || 'Terap.',
+      total: s.total_appointments,
+      rebook: Math.round((s.rebook_rate || 0) * 100)
+    }));
+  }, [staffPerformance]);
 
-  // Low stock items
-  const _lowStockItems = inventory.filter(i => i.current_quantity <= i.minimum_quantity);
-
-  // Revenue forecast data
-  const revenueChartData = forecasts.slice(-30).map(f => ({
-    date: format(new Date(f.forecast_date), 'dd/MM'),
-    previsao: f.predicted_revenue,
-    real: f.actual_revenue || 0,
-  }));
-
-  // Helper for predictions (mock if hook missing)
-  function usePredictionData() {
-      // Return existing hook or mock
-      const { data } = useAppointmentPredictions();
-      return { data: data || [] };
-  }
-
-  // Determine displayed values based on View Mode
-  const _getDisplayValue = (type: 'appointments' | 'completed' | 'new_patients' | 'revenue') => {
-    // ... (logic unchanged)
-    return 0;
-  };
-
-  // Refined Stats Logic
   const statsCards = [
     {
       id: 'stat-appointments',
       icon: Calendar,
-      label: viewMode === 'today' ? 'Agendamentos Hoje' : viewMode === 'week' ? 'Agendamentos Semana' : 'Agendamentos Mês',
-      value: viewMode === 'today' ? metrics?.agendamentosHoje || 0
-        : viewMode === 'week' ? metrics?.agendamentosSemana || 0
-          : (metrics?.agendamentosHoje || 0) * 22, // Placeholder for month total
-      subLabel: viewMode === 'today' ? 'agendados para hoje' : 'neste período',
-      gradient: 'from-emerald-500 to-teal-500',
-      bgGradient: 'from-emerald-500/15 to-teal-500/10',
-      borderColor: 'border-emerald-500/30',
+      label: 'Agendamentos',
+      value: viewMode === 'today' ? metrics?.agendamentosHoje || 0 : metrics?.agendamentosSemana || 0,
+      subLabel: 'vs. período anterior',
+      trend: '+12%',
+      gradient: 'from-blue-600 to-indigo-600',
+      bgGradient: 'from-blue-500/10 to-indigo-500/5',
+      borderColor: 'border-blue-500/20',
     },
     {
       id: 'stat-revenue',
       icon: DollarSign,
-      label: 'Receita do Mês', // Always Month for now as it's the stable metric
-      value: `R$ ${metrics?.receitaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) || '0,00'}`,
-      subLabel: `${metrics?.crescimentoMensal || 0}% vs. mês anterior`,
-      gradient: 'from-blue-500 to-indigo-500',
-      bgGradient: 'from-blue-500/15 to-indigo-500/10',
-      borderColor: 'border-blue-500/30',
+      label: 'Faturamento',
+      value: `R$ ${metrics?.receitaMensal.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || '0'}`,
+      subLabel: `${metrics?.crescimentoMensal || 0}% cresc.`,
+      trend: metrics?.crescimentoMensal && metrics.crescimentoMensal > 0 ? `+${metrics.crescimentoMensal}%` : `${metrics?.crescimentoMensal || 0}%`,
+      gradient: 'from-emerald-600 to-teal-600',
+      bgGradient: 'from-emerald-500/10 to-teal-500/5',
+      borderColor: 'border-emerald-500/20',
     },
     {
       id: 'stat-patients',
       icon: Users,
       label: 'Pacientes Ativos',
       value: metrics?.pacientesAtivos || 0,
-      subLabel: `${metrics?.pacientesNovos || 0}% vs. mês anterior`, // Using new patients as growth proxy?
-      gradient: 'from-teal-500 to-emerald-500',
-      bgGradient: 'from-teal-500/15 to-emerald-500/10',
-      borderColor: 'border-teal-500/30',
+      subLabel: 'em tratamento',
+      trend: '+5',
+      gradient: 'from-violet-600 to-purple-600',
+      bgGradient: 'from-violet-500/10 to-purple-500/5',
+      borderColor: 'border-violet-500/20',
     },
     {
-      id: 'stat-occupancy',
-      icon: TrendingUp,
-      label: 'Taxa de Ocupação',
-      value: `${metrics?.taxaOcupacao || 0}%`,
-      subLabel: 'Capacidade utilizada',
-      gradient: 'from-cyan-500 to-sky-500',
-      bgGradient: 'from-cyan-500/15 to-sky-500/10',
-      borderColor: 'border-cyan-500/30',
+      id: 'stat-nps',
+      icon: Target,
+      label: 'Retenção Média',
+      value: `${Math.round((staffPerformance[0]?.rebook_rate || 0.85) * 100)}%`,
+      subLabel: 'Taxa de re-agend.',
+      trend: '+2%',
+      gradient: 'from-orange-600 to-amber-600',
+      bgGradient: 'from-orange-500/10 to-amber-500/5',
+      borderColor: 'border-orange-500/20',
     },
   ];
 
-  /* ==========================================================================================
-   * GRID ITEMS DEFINITION
-   * ========================================================================================== */
   const gridItems: GridItem[] = useMemo(() => [
-    // 1. STAT CARDS
+    // 1. QUICK STATS
     ...statsCards.map((stat, i) => ({
       id: stat.id,
       content: (
-        <GridWidget isDraggable={isEditable} className="h-full" data-testid={stat.id} variant="glass">
-          <div className={`h-full relative overflow-hidden bg-gradient-to-br ${stat.bgGradient} ${stat.borderColor} transition-all duration-300 group rounded-xl border-0`}>
+        <GridWidget isDraggable={isEditable} className="h-full" variant="glass">
+          <div className={cn(
+            "h-full relative overflow-hidden bg-gradient-to-br transition-all duration-500 group rounded-2xl border border-white/20 dark:border-white/5",
+            stat.bgGradient
+          )}>
             <CardContent className="p-4 h-full flex flex-col justify-between">
-              <div className="flex items-center justify-between mb-2">
-                <div className={`h-9 w-9 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-md`}>
-                  <stat.icon className="h-4.5 w-4.5 text-white" />
+              <div className="flex items-center justify-between mb-1">
+                <div className={cn("h-10 w-10 rounded-2xl bg-gradient-to-br flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300", stat.gradient)}>
+                  <stat.icon className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-xs font-medium text-muted-foreground">{stat.label}</span>
+                <div className="flex flex-col items-end">
+                  <Badge variant="outline" className="bg-white/10 border-white/20 text-[10px] py-0 px-1.5 font-bold text-foreground">
+                    <ArrowUpRight className="h-2.5 w-2.5 mr-0.5" /> {stat.trend}
+                  </Badge>
+                </div>
               </div>
               <div>
-                <p className="text-2xl font-bold tracking-tight">{stat.value}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{stat.subLabel}</p>
+                <p className="text-xs font-semibold text-muted-foreground/80 uppercase tracking-wider">{stat.label}</p>
+                <p className="text-2xl font-black tracking-tighter mt-1">{stat.value}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1 font-medium">
+                  {stat.subLabel}
+                </p>
               </div>
             </CardContent>
-            {isEditable && (
-              <div className="absolute top-2 right-2 bg-background/50 p-1 rounded-md drag-handle cursor-move opacity-0 group-hover:opacity-100 transition-opacity">
-                <LayoutDashboard className="h-4 w-4 text-foreground" />
-              </div>
-            )}
           </div>
         </GridWidget>
       ),
       defaultLayout: { w: 3, h: 3, x: (i * 3) % 12, y: 0, minW: 3, minH: 3 }
     })),
 
-    // 2. REVENUE CHART (Large)
+    // 2. RECOVERY TRENDS
+    {
+      id: 'chart-recovery',
+      content: (
+        <GridWidget 
+          title="Evolução de Recuperação" 
+          icon={<Activity className="h-4 w-4 text-primary" />} 
+          isDraggable={isEditable} 
+          variant="glass"
+          headerActions={<Badge variant="secondary" className="text-[10px] bg-primary/5">Real-time Data</Badge>}
+        >
+          <div className="h-full p-2">
+            {assessmentData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={assessmentData}>
+                  <defs>
+                    <linearGradient id="colorPain" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorMobility" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted/30" vertical={false} />
+                  <XAxis dataKey="date" className="text-[10px]" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                  <YAxis className="text-[10px]" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} domain={[0, 10]} />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                    itemStyle={{ fontSize: '11px', fontWeight: 'bold' }}
+                  />
+                  <Area type="monotone" dataKey="pain" stroke="#ef4444" strokeWidth={3} fill="url(#colorPain)" name="Nível de Dor" />
+                  <Area type="monotone" dataKey="mobility" stroke="#10b981" strokeWidth={3} fill="url(#colorMobility)" name="Mobilidade" />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-center p-4">
+                <Thermometer className="h-8 w-8 text-muted-foreground/30 mb-2" />
+                <p className="text-xs text-muted-foreground">Aguardando avaliações dos pacientes para gerar tendências de recuperação.</p>
+              </div>
+            )}
+          </div>
+        </GridWidget>
+      ),
+      defaultLayout: { w: 6, h: 6, x: 0, y: 3, minW: 4, minH: 4 }
+    },
+
+    // 3. REVENUE FORECAST
     {
       id: 'chart-revenue',
       content: (
-        <GridWidget title="Previsão de Receita" icon={<DollarSign className="h-4 w-4" />} isDraggable={isEditable} variant="glass">
+        <GridWidget title="Projeção Financeira" icon={<DollarSign className="h-4 w-4" />} isDraggable={isEditable} variant="glass">
           <div className="h-full p-2">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={revenueChartData}>
                 <defs>
                   <linearGradient id="colorPrevisao" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3} />
+                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.2} />
                     <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
                   </linearGradient>
-                  <linearGradient id="colorReal" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
-                  </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted/50" vertical={false} />
-                <XAxis dataKey="date" className="text-xs" tick={{ fontSize: 11 }} />
-                <YAxis className="text-xs" tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(value: number) => `R$ ${value.toLocaleString('pt-BR')}`} />
-                <Area type="monotone" dataKey="previsao" stroke="#3B82F6" strokeWidth={2} fill="url(#colorPrevisao)" name="Previsão" />
-                <Area type="monotone" dataKey="real" stroke="#10B981" strokeWidth={2} fill="url(#colorReal)" name="Real" />
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted/30" vertical={false} />
+                <XAxis dataKey="date" className="text-[10px]" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                <YAxis className="text-[10px]" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                <Tooltip />
+                <Area type="stepAfter" dataKey="previsao" stroke="#3B82F6" strokeWidth={2} fill="url(#colorPrevisao)" name="Previsão" />
+                <Area type="monotone" dataKey="real" stroke="#10B981" strokeWidth={2} fill="none" name="Real" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </GridWidget>
       ),
-      defaultLayout: { w: 8, h: 6, x: 0, y: 3, minW: 4, minH: 4 }
+      defaultLayout: { w: 6, h: 6, x: 6, y: 3, minW: 4, minH: 4 }
     },
 
-    // 3. AI INSIGHTS
+    // 4. AI INSIGHTS
     {
       id: 'ai-insights',
       content: (
         <GridWidget 
-            title="Insights da IA" 
-            icon={<Sparkles className="h-4 w-4 text-primary" />} 
+            title="Insights Preditivos" 
+            icon={<Sparkles className="h-4 w-4 text-amber-500" />} 
             isDraggable={isEditable}
             variant="glass"
             headerActions={
-                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleGenerateSummary} disabled={isGeneratingSummary}>
-                    <Wand2 className={`h-3 w-3 ${isGeneratingSummary ? 'animate-spin' : ''}`} />
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full hover:bg-primary/10" onClick={handleGenerateSummary} disabled={isGeneratingSummary}>
+                    <Wand2 className={cn("h-3.5 w-3.5", isGeneratingSummary && "animate-spin text-primary")} />
                 </Button>
             }
         >
           <ScrollArea className="h-full pr-4">
-            <div className="space-y-3 pb-2">
+            <div className="space-y-4 pb-4">
               {genkitSummary ? (
-                  <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 animate-in fade-in slide-in-from-bottom-2">
-                      <div className="flex items-start gap-2">
-                          <Brain className="h-4 w-4 text-primary mt-0.5" />
-                          <div>
-                              <p className="text-sm font-semibold text-primary">Resumo Genkit</p>
-                              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  <div className="p-3.5 rounded-2xl bg-gradient-to-br from-primary/10 to-transparent border border-primary/20 animate-in fade-in zoom-in-95 duration-500">
+                      <div className="flex items-start gap-3">
+                          <div className="h-8 w-8 rounded-xl bg-primary/20 flex items-center justify-center shrink-0">
+                            <Brain className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="min-w-0">
+                              <p className="text-sm font-bold text-primary tracking-tight">Análise Genkit AI</p>
+                              <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed font-medium">
                                   {genkitSummary.summary}
                               </p>
                               {genkitSummary.clinicalAdvice && (
-                                  <div className="mt-2 pt-2 border-t border-primary/10">
-                                      <p className="text-xs font-medium text-primary/80">Conselho Clínico:</p>
-                                      <p className="text-xs text-muted-foreground">{genkitSummary.clinicalAdvice}</p>
+                                  <div className="mt-3 p-2.5 rounded-xl bg-white/50 dark:bg-black/20 border border-primary/10">
+                                      <p className="text-[10px] font-bold text-primary/80 uppercase tracking-widest mb-1">Recomendação:</p>
+                                      <p className="text-[11px] text-muted-foreground leading-snug">{genkitSummary.clinicalAdvice}</p>
                                   </div>
                               )}
                           </div>
                       </div>
                   </div>
               ) : (
-                <div className="p-3 rounded-lg bg-muted/30 border border-border/50 text-center">
-                    <p className="text-xs text-muted-foreground">Clique na varinha mágica para gerar um resumo de teste com IA.</p>
+                <div className="p-4 rounded-2xl bg-muted/20 border border-dashed border-border/50 text-center group cursor-pointer hover:border-primary/30 transition-colors" onClick={handleGenerateSummary}>
+                    <Zap className="h-5 w-5 text-muted-foreground/40 mx-auto mb-2 group-hover:text-primary/50 transition-colors" />
+                    <p className="text-xs font-semibold text-muted-foreground/60">Gerar análise preditiva baseada nos dados atuais dos pacientes.</p>
                 </div>
               )}
 
-              {highRiskAppointments.length > 0 && (
-                <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                  <div className="flex items-start gap-2">
-                    <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">Risco de Faltas</p>
-                      <p className="text-xs text-muted-foreground">
-                        {highRiskAppointments.length} agendamentos com alto risco de falta hoje/amanhã.
-                      </p>
+              <div className="space-y-2">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Risco de Abandono (No-Show)</p>
+                {predictions.filter(p => p.no_show_probability > 0.4).length > 0 ? (
+                  predictions.filter(p => p.no_show_probability > 0.4).slice(0, 3).map((p, i) => (
+                    <div key={i} className="flex items-center justify-between p-2.5 rounded-xl bg-amber-500/5 border border-amber-500/10 hover:bg-amber-500/10 transition-colors">
+                      <div className="flex items-center gap-2.5">
+                        <div className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+                        <span className="text-xs font-bold text-foreground">Paciente #{p.patient_id.slice(0, 4)}</span>
+                      </div>
+                      <Badge variant="outline" className="text-[10px] font-bold bg-amber-500/10 text-amber-700 border-amber-500/20">
+                        {Math.round(p.no_show_probability * 100)}% Risco
+                      </Badge>
                     </div>
+                  ))
+                ) : (
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
+                    <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                    <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400">Nenhum risco crítico detectado</span>
                   </div>
-                </div>
-              )}
-              <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                <div className="flex items-start gap-2">
-                  <MessageSquare className="h-4 w-4 text-blue-600 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-semibold text-blue-700 dark:text-blue-400">Engajamento</p>
-                    <p className="text-xs text-muted-foreground">
-                      Dica: Enviar lembretes automáticos aumenta comparecimento em até 25%.
-                    </p>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </ScrollArea>
         </GridWidget>
       ),
-      defaultLayout: { w: 4, h: 6, x: 8, y: 3, minW: 3, minH: 4 }
+      defaultLayout: { w: 4, h: 8, x: 0, y: 9, minW: 3, minH: 4 }
     },
 
-    // 4. STATS EVENTS (Eventos) - Real Data
+    // 5. THERAPIST PERFORMANCE
     {
-      id: 'stats-events',
+      id: 'staff-performance',
       content: (
-        <GridWidget title="Estatísticas de Eventos" icon={<Calendar className="h-4 w-4" />} isDraggable={isEditable} variant="glass">
-          <div className="grid h-full grid-cols-2 gap-2 md:gap-3 lg:grid-cols-4" data-testid="stats-events-grid">
-            <div className="rounded-lg border border-border/50 p-2 text-center" data-testid="stats-events-total">
-              <p className="text-xs text-muted-foreground">Total</p>
-              <p className="text-xl font-bold">{eventStats.total}</p>
-              <p className="text-[10px] text-muted-foreground">{eventStats.active} ativos</p>
-            </div>
-            <div className="rounded-lg border border-border/50 p-2 text-center" data-testid="stats-events-completion">
-              <p className="text-xs text-muted-foreground">Conclusão</p>
-              <p className="text-xl font-bold">{eventStats.completionRate}%</p>
-              <p className="text-[10px] text-muted-foreground">{eventStats.completed} concluídos</p>
-            </div>
-            <div className="rounded-lg border border-border/50 p-2 text-center" data-testid="stats-events-revenue">
-              <p className="text-xs text-muted-foreground">Receita Estimada</p>
-              <p className="text-xl font-bold text-emerald-600">
-                {eventStats.revenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-              </p>
-              <p className="text-[10px] text-muted-foreground">Potencial</p>
-            </div>
-            <div className="rounded-lg border border-border/50 p-2 text-center" data-testid="stats-events-participants">
-              <p className="text-xs text-muted-foreground">Partic.</p>
-              <p className="text-xl font-bold">{eventStats.participants}</p>
-              <p className="text-[10px] font-semibold text-emerald-600">
-                Est. 12/evento
-              </p>
+        <GridWidget title="Performance da Equipe" icon={<Users className="h-4 w-4" />} isDraggable={isEditable} variant="glass">
+          <div className="h-full p-2 flex flex-col">
+            <ResponsiveContainer width="100%" height="60%">
+              <BarChart data={performanceData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted/30" vertical={false} />
+                <XAxis dataKey="name" className="text-[10px]" tickLine={false} axisLine={false} />
+                <YAxis className="text-[10px]" tickLine={false} axisLine={false} hide />
+                <Tooltip />
+                <Bar dataKey="rebook" fill="#6366f1" radius={[4, 4, 0, 0]} name="Re-agendamento %" />
+              </BarChart>
+            </ResponsiveContainer>
+            <div className="mt-2 space-y-2 overflow-y-auto pr-1">
+              {staffPerformance.slice(0, 3).map((s, i) => (
+                <div key={i} className="flex items-center justify-between text-[11px] p-1.5 rounded-lg hover:bg-muted/30">
+                  <span className="font-bold text-muted-foreground">{s.therapist_name?.split(' ')[0]}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-foreground font-medium">{s.total_appointments} atend.</span>
+                    <span className={cn("font-black", (s.rebook_rate || 0) > 0.8 ? "text-emerald-500" : "text-amber-500")}>
+                      {Math.round((s.rebook_rate || 0) * 100)}%
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </GridWidget>
       ),
-      defaultLayout: { w: 8, h: 4, x: 0, y: 9, minW: 4, minH: 3 }
+      defaultLayout: { w: 4, h: 8, x: 4, y: 9, minW: 3, minH: 4 }
     },
 
-    // 5. RETORNOS MÉDICOS PRÓXIMOS (preparar relatório médico)
+    // 6. QUICK ACTIONS
     {
-      id: 'medical-returns',
+      id: 'quick-actions',
       content: (
-        <GridWidget title="Retornos médicos próximos" icon={<Stethoscope className="h-4 w-4" />} isDraggable={isEditable} variant="glass">
-          <ScrollArea className="h-full">
-            <div className="space-y-2 p-2">
-              {medicalReturnsUpcoming.length > 0 ? (
-                medicalReturnsUpcoming.slice(0, 8).map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between gap-2 p-2 rounded-lg border border-border/50 hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium truncate">{item.full_name || item.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Retorno: {format(new Date(item.medical_return_date), 'dd/MM/yyyy', { locale: ptBR })}
-                        {item.referring_doctor_name && ` · ${item.referring_doctor_name}`}
-                      </p>
-                      {(item.medical_report_done || item.medical_report_sent) && (
-                        <div className="flex gap-1 mt-1">
-                          {item.medical_report_done && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Relatório feito</span>
-                          )}
-                          {item.medical_report_sent && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">Enviado</span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="shrink-0 h-8"
-                      onClick={() => navigate('/relatorios/medico', { state: { patientId: item.id } })}
-                    >
-                      <FileText className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-4 text-muted-foreground text-sm">
-                  Nenhum retorno médico nos próximos 14 dias
+        <GridWidget title="Ações Rápidas" icon={<Zap className="h-4 w-4 text-primary" />} isDraggable={isEditable} variant="glass">
+          <div className="grid grid-cols-2 gap-2 p-2 h-full">
+            {[
+              { label: 'Relatório Médico', icon: FileText, color: 'bg-blue-500', path: '/relatorios/medico' },
+              { label: 'Novo Agend.', icon: Plus, color: 'bg-emerald-500', path: '/agendamentos' },
+              { label: 'Avaliação', icon: ClipboardList, color: 'bg-violet-500', path: '/pacientes' },
+              { label: 'Enviar Whats', icon: Send, color: 'bg-teal-500', path: '/marketing' }
+            ].map((action, i) => (
+              <button
+                key={i}
+                onClick={() => navigate(action.path)}
+                className="flex flex-col items-center justify-center p-3 rounded-2xl border border-border/50 bg-muted/10 hover:bg-primary/5 hover:border-primary/20 transition-all group"
+              >
+                <div className={cn("h-8 w-8 rounded-xl flex items-center justify-center mb-2 shadow-sm group-hover:scale-110 transition-transform text-white", action.color)}>
+                  <action.icon className="h-4 w-4" />
                 </div>
-              )}
-            </div>
-          </ScrollArea>
+                <span className="text-[10px] font-bold text-muted-foreground group-hover:text-primary transition-colors">{action.label}</span>
+              </button>
+            ))}
+          </div>
         </GridWidget>
       ),
-      defaultLayout: { w: 4, h: 6, x: 0, y: 13, minW: 3, minH: 4 }
+      defaultLayout: { w: 4, h: 4, x: 8, y: 9, minW: 3, minH: 3 }
     },
 
-    // 6. ACTIVITY FEED (Atividades em Tempo Real)
+    // 7. REAL-TIME ACTIVITY
     {
       id: 'activity-feed',
       content: (
-        <GridWidget title="Atividades em Tempo Real" icon={<CheckCircle className="h-4 w-4" />} isDraggable={isEditable} variant="glass">
+        <GridWidget title="Feed de Atividades" icon={<Activity className="h-4 w-4" />} isDraggable={isEditable} variant="glass">
           <ScrollArea className="h-full">
-            <div className="space-y-4 p-2">
+            <div className="space-y-3 p-3">
               {notifications.length > 0 ? (
                 notifications.map((notif) => (
-                  <div key={notif.id} className="flex gap-3">
-                    <div className={`h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 ${notif.type === 'success' || notif.type === 'payment' ? 'bg-green-100 text-green-600' :
+                  <div key={notif.id} className="flex gap-3 group animate-in slide-in-from-right-2 duration-300">
+                    <div className={cn(
+                      "h-8 w-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-transform group-hover:rotate-12",
+                      notif.type === 'success' ? 'bg-emerald-100 text-emerald-600' :
                       notif.type === 'warning' ? 'bg-amber-100 text-amber-600' :
-                        notif.type === 'error' ? 'bg-red-100 text-red-600' :
-                          'bg-blue-100 text-blue-600'
-                      }`}>
+                      notif.type === 'error' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'
+                    )}>
                       {notif.type === 'payment' ? <DollarSign className="h-4 w-4" /> :
                         notif.type === 'appointment' ? <Calendar className="h-4 w-4" /> :
                           <CheckCircle className="h-4 w-4" />}
                     </div>
-                    <div>
-                      <p className="text-sm font-medium">{notif.title}</p>
-                      <p className="text-xs text-muted-foreground">{notif.message}</p>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-bold text-foreground truncate">{notif.title}</p>
+                      <p className="text-[10px] text-muted-foreground line-clamp-2 leading-snug">{notif.message}</p>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center py-4 text-muted-foreground text-sm">
-                  Nenhuma atividade recente
+                <div className="text-center py-8 text-muted-foreground/40 italic text-xs">
+                  Aguardando novas atividades...
                 </div>
               )}
             </div>
           </ScrollArea>
         </GridWidget>
       ),
-      defaultLayout: { w: 4, h: 8, x: 8, y: 9, minW: 3, minH: 4 }
+      defaultLayout: { w: 4, h: 4, x: 8, y: 13, minW: 3, minH: 3 }
     }
-  ], [statsCards, revenueChartData, highRiskAppointments, isEditable, eventStats, medicalReturnsUpcoming, notifications, navigate, genkitSummary, isGeneratingSummary]);
-
-  /* ==========================================================================================
-   * RENDER
-   * ========================================================================================== */
-  const ViewButton = ({ mode, label }: { mode: ViewMode, label: string }) => (
-    <Button
-      variant={viewMode === mode ? "default" : "outline"}
-      onClick={() => setViewMode(mode)}
-      className={`rounded-full px-6 transition-all ${viewMode === mode ? 'shadow-md' : 'border-transparent bg-secondary/50 hover:bg-secondary'}`}
-      size="sm"
-    >
-      {label}
-    </Button>
-  );
+  ], [statsCards, revenueChartData, assessmentData, performanceData, predictions, isEditable, notifications, navigate, genkitSummary, isGeneratingSummary, staffPerformance]);
 
   return (
     <MainLayout maxWidth="7xl">
-      <div className="space-y-8 pb-20 px-4 md:px-8" data-testid="smart-dashboard-page">
-        {/* Header - Enhanced Design */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-          <div className="flex items-center gap-6">
-            <div className="relative hidden md:block">
-              <div className="h-16 w-16 rounded-2xl bg-slate-900 flex items-center justify-center shadow-2xl">
-                <Brain className="h-8 w-8 text-white" />
+      <div className="space-y-6 pb-20 px-4 md:px-8" data-testid="smart-dashboard-page">
+        {/* Modern Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 pt-4">
+          <div className="flex items-center gap-5">
+            <div className="relative">
+              <div className="h-14 w-14 rounded-2xl bg-slate-900 dark:bg-white/10 flex items-center justify-center shadow-2xl ring-1 ring-white/20">
+                <Brain className="h-7 w-7 text-white" />
               </div>
-              <div className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-emerald-500 flex items-center justify-center ring-4 ring-background">
-                <Sparkles className="h-3.5 w-3.5 text-white" />
+              <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-emerald-500 flex items-center justify-center ring-4 ring-background animate-pulse">
+                <Sparkles className="h-3 w-3 text-white" />
               </div>
             </div>
             <div>
-              <p className="text-sm font-semibold text-muted-foreground/60 uppercase tracking-widest mb-1">
-                Analytics Hub
-              </p>
-              <h1 className="text-3xl lg:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
-                Dashboard Inteligente
+              <div className="flex items-center gap-2 mb-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.2em]">
+                  Inteligência Clínica Ativa
+                </p>
+              </div>
+              <h1 className="text-2xl md:text-3xl font-black tracking-tighter text-slate-900 dark:text-white flex items-center gap-3">
+                Smart Dashboard
+                <Badge variant="outline" className="text-[10px] font-black uppercase bg-primary/5 text-primary border-primary/20 tracking-widest px-2 py-0">v2.0 Beta</Badge>
               </h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:flex items-center bg-secondary/30 p-1 rounded-full border border-border/50">
-              <Button
-                variant={viewMode === 'today' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('today')}
-                className="rounded-full px-4 text-xs h-8"
-              >
-                Hoje
-              </Button>
-              <Button
-                variant={viewMode === 'week' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('week')}
-                className="rounded-full px-4 text-xs h-8"
-              >
-                Esta Semana
-              </Button>
-              <Button
-                variant={viewMode === 'month' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('month')}
-                className="rounded-full px-4 text-xs h-8"
-              >
-                Este Mês
-              </Button>
-              <Button
-                variant={viewMode === 'custom' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('custom')}
-                className="rounded-full px-4 text-xs h-8"
-              >
-                Custom
-              </Button>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center bg-secondary/30 p-1 rounded-2xl border border-border/50 shadow-inner">
+              {['today', 'week', 'month'].map((mode) => (
+                <Button
+                  key={mode}
+                  variant={viewMode === mode ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode(mode as ViewMode)}
+                  className={cn(
+                    "rounded-xl px-4 text-[10px] font-black uppercase tracking-widest h-8 transition-all duration-300",
+                    viewMode === mode && "shadow-lg scale-105"
+                  )}
+                >
+                  {mode === 'today' ? 'Hoje' : mode === 'week' ? 'Semana' : 'Mês'}
+                </Button>
+              ))}
             </div>
+            <Button variant="outline" size="icon" className="h-10 w-10 rounded-2xl bg-background/50 border-border/50 hover:bg-primary/5 hover:border-primary/20">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
-        {/* Mobile View Selector */}
-        <div className="sm:hidden flex gap-2 overflow-x-auto pb-2 scrollbar-none">
-          <ViewButton mode="today" label="Hoje" />
-          <ViewButton mode="week" label="Esta Semana" />
-          <ViewButton mode="month" label="Este Mês" />
-        </div>
-
-        {/* Sem dados - quando métricas carregadas mas todas zeradas */}
-        {!isLoadingMetrics && metrics && (metrics.agendamentosHoje ?? 0) === 0 && (metrics.receitaMensal ?? 0) === 0 && (metrics.pacientesAtivos ?? 0) === 0 && (
-          <div className="bg-muted/50 border border-border rounded-xl p-4 flex items-center gap-4">
-            <BarChart3 className="h-10 w-10 text-muted-foreground shrink-0" />
-            <div>
-              <h3 className="font-semibold text-foreground">Sem dados no período</h3>
-              <p className="text-sm text-muted-foreground">
-                Cadastre agendamentos, pacientes e receitas para ver o dashboard completo.
+        {/* Dynamic Alerts Section */}
+        {medicalReturnsUpcoming.length > 0 && (
+          <div className="bg-gradient-to-r from-blue-600/10 via-primary/5 to-transparent border-l-4 border-l-primary rounded-r-2xl p-4 flex items-center gap-5 group cursor-pointer hover:bg-primary/10 transition-all duration-300" onClick={() => navigate('/relatorios/medico')}>
+            <div className="h-10 w-10 rounded-xl bg-primary/20 flex items-center justify-center text-primary shrink-0 group-hover:scale-110 transition-transform">
+              <Stethoscope className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-black text-sm text-foreground flex items-center gap-2">
+                Preparar Relatórios Médicos
+                <Badge className="bg-primary text-white text-[10px] px-1.5 py-0 border-0">{medicalReturnsUpcoming.length}</Badge>
+              </h3>
+              <p className="text-xs text-muted-foreground font-medium truncate">
+                {medicalReturnsUpcoming.length} pacientes possuem retornos médicos agendados para os próximos 14 dias. 
+                <span className="text-primary ml-1 font-bold underline-offset-4 hover:underline">Gerar documentação agora</span>
               </p>
             </div>
+            <ArrowUpRight className="h-5 w-5 text-muted-foreground/30 group-hover:text-primary transition-colors mr-2" />
           </div>
         )}
 
-        {/* Warning Banner */}
-        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-start gap-4">
-          <div className="bg-amber-100 dark:bg-amber-900/30 p-2 rounded-full">
-            <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-500" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-amber-900 dark:text-amber-500 flex items-center gap-2">
-              Cadastros Pendentes <Badge variant="outline" className="bg-amber-500/20 text-amber-700 border-0">7</Badge>
-            </h3>
-            <p className="text-sm text-amber-800/80 dark:text-amber-400">
-              Resolva pendências para liberar o acesso total
-            </p>
-          </div>
-          <Button variant="ghost" size="icon" className="ml-auto text-amber-600">
-            <RotateCcw className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-xl font-bold">Dashboard Personalizado</h2>
-            <p className="text-sm text-muted-foreground">Configure seus widgets favoritos</p>
+        {/* Dashboard Control Bar */}
+        <div className="flex items-center justify-between bg-background/40 backdrop-blur-md p-3 rounded-2xl border border-border/50 shadow-sm sticky top-4 z-40">
+          <div className="flex items-center gap-3">
+             <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <LayoutDashboard className="h-4 w-4 text-primary" />
+             </div>
+             <div>
+                <h2 className="text-sm font-black tracking-tight">Personalização</h2>
+                <p className="text-[10px] text-muted-foreground font-medium">Layout Dinâmico</p>
+             </div>
           </div>
 
           <div className="flex gap-2">
             {isEditable ? (
               <>
-                <Button variant="outline" onClick={() => setIsEditable(false)} size="sm">
+                <Button variant="ghost" onClick={() => setIsEditable(false)} size="sm" className="text-[10px] font-black uppercase tracking-widest rounded-xl px-4 h-9">
                   Cancelar
                 </Button>
-                <Button onClick={() => handleSaveLayout(savedLayout)} size="sm" className="gap-2">
-                  <Save className="h-4 w-4" />
-                  Salvar
-                </Button>
-                <Button variant="ghost" size="icon" onClick={handleResetLayout} title="Resetar Layout">
-                  <RotateCcw className="h-4 w-4" />
+                <Button onClick={() => handleSaveLayout(savedLayout)} size="sm" className="text-[10px] font-black uppercase tracking-widest gap-2 rounded-xl px-5 h-9 shadow-lg shadow-primary/20">
+                  <Save className="h-3.5 w-3.5" />
+                  Salvar Layout
                 </Button>
               </>
             ) : (
-              <Button variant="outline" onClick={() => setIsEditable(true)} size="sm" className="gap-2">
-                <LayoutDashboard className="h-4 w-4" />
-                Personalizar
+              <Button variant="outline" onClick={() => setIsEditable(true)} size="sm" className="text-[10px] font-black uppercase tracking-widest gap-2 rounded-xl px-4 h-9 border-border/50 hover:border-primary/30 transition-all">
+                <LayoutDashboard className="h-3.5 w-3.5" />
+                Editar Grid
               </Button>
             )}
           </div>
         </div>
 
         {/* DRAGGABLE GRID */}
-        <Suspense fallback={<div className="h-96 w-full flex items-center justify-center text-muted-foreground">Carregando Dashboard...</div>}>
+        <Suspense fallback={
+          <div className="h-96 w-full flex flex-col items-center justify-center gap-4 bg-muted/5 rounded-3xl border border-dashed border-border/40">
+            <div className="h-12 w-12 rounded-2xl bg-muted/10 border border-border/50 animate-pulse" />
+            <p className="text-sm font-black text-muted-foreground/50 uppercase tracking-[0.2em] animate-pulse">Orquestrando Widgets...</p>
+          </div>
+        }>
           <DraggableGrid
             items={gridItems}
             onLayoutChange={(layout) => {
-              if (isEditable) {
-                setSavedLayout(layout);
-              }
+              if (isEditable) setSavedLayout(layout);
             }}
             layouts={savedLayout.length > 0 ? { xl: savedLayout, lg: savedLayout, md: savedLayout } : undefined}
             isEditable={isEditable}
             cols={SMART_DASHBOARD_GRID_COLS}
-            rowHeight={76}
+            rowHeight={70}
           />
         </Suspense>
       </div>

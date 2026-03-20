@@ -43,6 +43,83 @@ async function hasTable(
   return Boolean(result.rows[0]?.table_name);
 }
 
+function normalizeJsonArray(value: unknown): unknown[] {
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+function normalizeTextArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item)).filter(Boolean);
+  }
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed.map((item) => String(item)).filter(Boolean) : [];
+    } catch {
+      return value.trim() ? [value.trim()] : [];
+    }
+  }
+  return [];
+}
+
+function normalizeStandardizedTestRow(row: Record<string, unknown>) {
+  const scaleName = String(
+    row.scale_name ?? row.test_type ?? row.test_name ?? 'CUSTOM',
+  ).toUpperCase();
+  const testName = String(row.test_name ?? row.scale_name ?? 'Teste padronizado');
+  const testType = String(row.test_type ?? scaleName).toLowerCase();
+  const responsesSource = row.responses ?? row.answers ?? {};
+  const responses =
+    responsesSource && typeof responsesSource === 'object' && !Array.isArray(responsesSource)
+      ? responsesSource
+      : {};
+
+  return {
+    ...row,
+    scale_name: scaleName,
+    test_name: testName,
+    test_type: testType,
+    responses,
+    answers: responses,
+    applied_at: String(row.applied_at ?? row.created_at ?? new Date().toISOString()),
+    applied_by: row.applied_by ?? row.created_by ?? null,
+    max_score: Number(row.max_score ?? 0),
+    notes: row.notes ?? null,
+  };
+}
+
+function normalizeEvolutionTemplateRow(row: Record<string, unknown>) {
+  const nome = String(row.nome ?? row.name ?? '');
+  const descricao = row.descricao ?? row.description ?? null;
+  const conteudo = String(row.conteudo ?? row.content ?? '');
+  const camposPadrao = normalizeJsonArray(row.campos_padrao ?? row.blocks);
+  const tags = normalizeTextArray(row.tags);
+
+  return {
+    ...row,
+    nome,
+    name: String(row.name ?? nome),
+    tipo: String(row.tipo ?? 'fisioterapia'),
+    descricao,
+    description: row.description ?? descricao,
+    conteudo,
+    content: String(row.content ?? conteudo),
+    campos_padrao: camposPadrao,
+    blocks: normalizeJsonArray(row.blocks ?? camposPadrao),
+    tags,
+    ativo: row.ativo !== false,
+  };
+}
+
 app.get('/insights', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);
@@ -451,7 +528,25 @@ app.get('/standardized-tests', requireAuth, async (c) => {
 
   const result = await pool.query(
     `
-      SELECT *
+      SELECT
+        id,
+        organization_id,
+        patient_id,
+        test_type,
+        test_name,
+        scale_name,
+        score,
+        max_score,
+        interpretation,
+        COALESCE(responses, answers, '{}'::jsonb) AS responses,
+        COALESCE(answers, responses, '{}'::jsonb) AS answers,
+        COALESCE(applied_at, created_at) AS applied_at,
+        COALESCE(applied_by, created_by) AS applied_by,
+        session_id,
+        notes,
+        created_by,
+        created_at,
+        updated_at
       FROM standardized_test_results
       WHERE organization_id = $1 AND patient_id = $2
       ORDER BY created_at DESC
@@ -459,7 +554,11 @@ app.get('/standardized-tests', requireAuth, async (c) => {
     [user.organizationId, patientId],
   );
 
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try {
+    return c.json({ data: (result.rows || []).map((row) => normalizeStandardizedTestRow(row as Record<string, unknown>)) });
+  } catch (e) {
+    return c.json({ data: [] });
+  }
 });
 
 app.post('/standardized-tests', requireAuth, async (c) => {
@@ -474,27 +573,34 @@ app.post('/standardized-tests', requireAuth, async (c) => {
   const result = await pool.query(
     `
       INSERT INTO standardized_test_results (
-        organization_id, patient_id, test_type, test_name, score, max_score,
-        interpretation, answers, created_by, created_at, updated_at
+        organization_id, patient_id, test_type, test_name, scale_name, score, max_score,
+        interpretation, answers, responses, applied_at, applied_by, session_id, notes,
+        created_by, created_at, updated_at
       ) VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8::jsonb,$9,NOW(),NOW()
+        $1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11,$12,$13,$14,$15,NOW(),NOW()
       )
       RETURNING *
     `,
     [
       user.organizationId,
       body.patient_id,
-      body.test_type,
-      body.test_name,
+      String(body.test_type ?? body.scale_name ?? body.test_name ?? 'custom').toLowerCase(),
+      String(body.test_name ?? body.scale_name ?? 'Teste padronizado'),
+      String(body.scale_name ?? body.test_type ?? body.test_name ?? 'CUSTOM').toUpperCase(),
       Number(body.score ?? 0),
       Number(body.max_score ?? 0),
       body.interpretation ?? null,
-      JSON.stringify(body.answers ?? {}),
+      JSON.stringify(body.answers ?? body.responses ?? {}),
+      JSON.stringify(body.responses ?? body.answers ?? {}),
+      body.applied_at ?? new Date().toISOString(),
+      user.uid,
+      body.session_id ?? null,
+      body.notes ?? null,
       user.uid,
     ],
   );
 
-  return c.json({ data: result.rows[0] }, 201);
+  return c.json({ data: normalizeStandardizedTestRow(result.rows[0] as Record<string, unknown>) }, 201);
 });
 
 app.get('/pain-maps', requireAuth, async (c) => {
@@ -637,10 +743,19 @@ app.get('/evolution-templates', requireAuth, async (c) => {
   if (ativo !== undefined) { params.push(ativo === 'true'); conditions.push(`ativo = $${params.length}`); }
 
   const result = await pool.query(
-    `SELECT * FROM evolution_templates WHERE ${conditions.join(' AND ')} ORDER BY name ASC`,
+    `
+      SELECT *
+      FROM evolution_templates
+      WHERE ${conditions.join(' AND ')}
+      ORDER BY COALESCE(NULLIF(nome, ''), NULLIF(name, ''), 'Template') ASC
+    `,
     params,
   );
-  try { return c.json({ data: result.rows || result }); } catch(e) { return c.json({ data: [] }); }
+  try {
+    return c.json({ data: (result.rows || []).map((row) => normalizeEvolutionTemplateRow(row as Record<string, unknown>)) });
+  } catch (e) {
+    return c.json({ data: [] });
+  }
 });
 
 app.get('/evolution-templates/:id', requireAuth, async (c) => {
@@ -653,7 +768,7 @@ app.get('/evolution-templates/:id', requireAuth, async (c) => {
     [id, user.organizationId],
   );
   if (!result.rows.length) return c.json({ error: 'Template não encontrado' }, 404);
-  return c.json({ data: result.rows[0] });
+  return c.json({ data: normalizeEvolutionTemplateRow(result.rows[0] as Record<string, unknown>) });
 });
 
 app.post('/evolution-templates', requireAuth, async (c) => {
@@ -661,24 +776,38 @@ app.post('/evolution-templates', requireAuth, async (c) => {
   const pool = await createPool(c.env);
   const body = (await c.req.json()) as Record<string, unknown>;
 
-  if (!body.name) return c.json({ error: 'name é obrigatório' }, 400);
+  const nome = String(body.nome ?? body.name ?? '').trim();
+  if (!nome) return c.json({ error: 'nome é obrigatório' }, 400);
+
+  const tipo = String(body.tipo ?? 'fisioterapia');
+  const descricao = body.descricao ?? body.description ?? null;
+  const conteudo = String(body.conteudo ?? body.content ?? '');
+  const camposPadrao = normalizeJsonArray(body.campos_padrao ?? body.blocks);
+  const tags = normalizeTextArray(body.tags);
 
   const result = await pool.query(
     `INSERT INTO evolution_templates
-       (organization_id, name, description, blocks, tags, ativo, created_by, created_at, updated_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,NOW(),NOW())
+       (organization_id, nome, name, tipo, descricao, description, conteudo, content,
+        campos_padrao, blocks, tags, ativo, created_by, created_at, updated_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,$10::jsonb,$11,$12,$13,NOW(),NOW())
      RETURNING *`,
     [
       user.organizationId,
-      String(body.name),
-      body.description ?? null,
-      body.blocks ? JSON.stringify(body.blocks) : '[]',
-      body.tags ?? [],
+      nome,
+      String(body.name ?? nome),
+      tipo,
+      descricao,
+      body.description ?? descricao,
+      conteudo,
+      String(body.content ?? conteudo),
+      JSON.stringify(camposPadrao),
+      JSON.stringify(normalizeJsonArray(body.blocks ?? camposPadrao)),
+      tags,
       body.ativo !== false,
       user.uid,
     ],
   );
-  return c.json({ data: result.rows[0] }, 201);
+  return c.json({ data: normalizeEvolutionTemplateRow(result.rows[0] as Record<string, unknown>) }, 201);
 });
 
 app.put('/evolution-templates/:id', requireAuth, async (c) => {
@@ -690,10 +819,42 @@ app.put('/evolution-templates/:id', requireAuth, async (c) => {
   const sets: string[] = ['updated_at = NOW()'];
   const params: unknown[] = [];
 
-  if (body.name !== undefined) { params.push(body.name); sets.push(`name = $${params.length}`); }
-  if (body.description !== undefined) { params.push(body.description); sets.push(`description = $${params.length}`); }
-  if (body.blocks !== undefined) { params.push(JSON.stringify(body.blocks)); sets.push(`blocks = $${params.length}`); }
-  if (body.tags !== undefined) { params.push(body.tags); sets.push(`tags = $${params.length}`); }
+  if (body.nome !== undefined || body.name !== undefined) {
+    const nome = String(body.nome ?? body.name ?? '');
+    params.push(nome);
+    sets.push(`nome = $${params.length}`);
+    params.push(String(body.name ?? nome));
+    sets.push(`name = $${params.length}`);
+  }
+  if (body.tipo !== undefined) {
+    params.push(String(body.tipo));
+    sets.push(`tipo = $${params.length}`);
+  }
+  if (body.descricao !== undefined || body.description !== undefined) {
+    const descricao = body.descricao ?? body.description ?? null;
+    params.push(descricao);
+    sets.push(`descricao = $${params.length}`);
+    params.push(body.description ?? descricao);
+    sets.push(`description = $${params.length}`);
+  }
+  if (body.conteudo !== undefined || body.content !== undefined) {
+    const conteudo = String(body.conteudo ?? body.content ?? '');
+    params.push(conteudo);
+    sets.push(`conteudo = $${params.length}`);
+    params.push(String(body.content ?? conteudo));
+    sets.push(`content = $${params.length}`);
+  }
+  if (body.campos_padrao !== undefined || body.blocks !== undefined) {
+    const camposPadrao = normalizeJsonArray(body.campos_padrao ?? body.blocks);
+    params.push(JSON.stringify(camposPadrao));
+    sets.push(`campos_padrao = $${params.length}::jsonb`);
+    params.push(JSON.stringify(normalizeJsonArray(body.blocks ?? camposPadrao)));
+    sets.push(`blocks = $${params.length}::jsonb`);
+  }
+  if (body.tags !== undefined) {
+    params.push(normalizeTextArray(body.tags));
+    sets.push(`tags = $${params.length}`);
+  }
   if (body.ativo !== undefined) { params.push(body.ativo); sets.push(`ativo = $${params.length}`); }
 
   params.push(id, user.organizationId);
@@ -704,7 +865,7 @@ app.put('/evolution-templates/:id', requireAuth, async (c) => {
     params,
   );
   if (!result.rows.length) return c.json({ error: 'Template não encontrado' }, 404);
-  return c.json({ data: result.rows[0] });
+  return c.json({ data: normalizeEvolutionTemplateRow(result.rows[0] as Record<string, unknown>) });
 });
 
 app.delete('/evolution-templates/:id', requireAuth, async (c) => {

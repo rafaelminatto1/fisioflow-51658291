@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 
 const menuItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
+  { icon: LayoutDashboard, label: 'Dashboard', href: '/smart-dashboard' },
   { icon: Users, label: 'Pacientes', href: '/patients' },
   { icon: Calendar, label: 'Agenda', href: '/agenda' },
   { icon: Activity, label: 'Exercícios', href: '/exercises' },
