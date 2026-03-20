@@ -1,56 +1,59 @@
-
 /**
  * Hook para manter a agenda atualizada consultando o último `updated_at` das consultas.
  */
 
-import { useEffect, useRef } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
-import { appointmentsApi } from '@/lib/api/workers-client';
-import { fisioLogger as logger } from '@/lib/errors/logger';
+import { useEffect, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { appointmentsApi } from "@/lib/api/workers-client";
+import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export const useRealtimeAppointments = (enabled = true) => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const lastTimestampRef = useRef<string | null>(null);
-  const initialRunRef = useRef(true);
+	const { user } = useAuth();
+	const { toast } = useToast();
+	const queryClient = useQueryClient();
+	const lastTimestampRef = useRef<string | null>(null);
+	const initialRunRef = useRef(true);
 
-  useEffect(() => {
-    if (!enabled || !user) return;
+	useEffect(() => {
+		if (!enabled || !user) return;
 
-    let active = true;
+		let active = true;
 
-    const poll = async () => {
-      try {
-        const res = await appointmentsApi.lastUpdated();
-        if (!active) return;
-        const next = res?.data?.last_updated_at ?? null;
+		const poll = async () => {
+			try {
+				const res = await appointmentsApi.lastUpdated();
+				if (!active) return;
+				const next = res?.data?.last_updated_at ?? null;
 
-        if (next && next !== lastTimestampRef.current) {
-          lastTimestampRef.current = next;
-          queryClient.invalidateQueries({ queryKey: ['appointments_v2'] });
-          if (!initialRunRef.current) {
-            toast({
-              title: 'Agenda atualizada',
-              description: 'Novos dados sincronizados em tempo real.',
-              duration: 2000,
-            });
-          }
-        }
-      } catch (error) {
-        logger.debug('Erro no poll de agenda Realtime', error, 'useRealtimeAppointments');
-      } finally {
-        initialRunRef.current = false;
-      }
-    };
+				if (next && next !== lastTimestampRef.current) {
+					lastTimestampRef.current = next;
+					queryClient.invalidateQueries({ queryKey: ["appointments_v2"] });
+					if (!initialRunRef.current) {
+						toast({
+							title: "Agenda atualizada",
+							description: "Novos dados sincronizados em tempo real.",
+							duration: 2000,
+						});
+					}
+				}
+			} catch (error) {
+				logger.debug(
+					"Erro no poll de agenda Realtime",
+					error,
+					"useRealtimeAppointments",
+				);
+			} finally {
+				initialRunRef.current = false;
+			}
+		};
 
-    void poll();
-    const interval = window.setInterval(() => void poll(), 15000);
-    return () => {
-      active = false;
-      window.clearInterval(interval);
-    };
-  }, [enabled, user, queryClient, toast]);
+		void poll();
+		const interval = window.setInterval(() => void poll(), 15000);
+		return () => {
+			active = false;
+			window.clearInterval(interval);
+		};
+	}, [enabled, user, queryClient, toast]);
 };

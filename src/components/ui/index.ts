@@ -1,47 +1,52 @@
-export { Accordion } from './accordion';
-export { AlertDialog } from './alert-dialog';
-export { Alert } from './alert';
-export { EmptyState } from './empty-state';
-export { LoadingSkeleton } from './loading-skeleton';
-export { ResponsiveTable } from './responsive-table';
-export { AspectRatio } from './aspect-ratio';
-export { Avatar, AvatarImage, AvatarFallback } from './avatar';
-export { Badge } from './badge';
-export { badgeVariants } from '@/lib/ui-variants';
-export * from './breadcrumb';
-export { PageBreadcrumbs } from './page-breadcrumbs';
+export { Accordion } from "./accordion";
+export { AlertDialog } from "./alert-dialog";
+export { Alert } from "./alert";
+export { EmptyState } from "./empty-state";
+export { LoadingSkeleton } from "./loading-skeleton";
+export { ResponsiveTable } from "./responsive-table";
+export { AspectRatio } from "./aspect-ratio";
+export { Avatar, AvatarImage, AvatarFallback } from "./avatar";
+export { Badge } from "./badge";
+export { badgeVariants } from "@/lib/ui-variants";
+export * from "./breadcrumb";
+export { PageBreadcrumbs } from "./page-breadcrumbs";
 
 // ============================================================================
 // Theme System (Fase 4: UX/UI Enhancements)
 // ============================================================================
 
-export { ThemeProvider, useTheme, ThemeControls, ThemeSettings } from './theme/ThemeProvider';
+export {
+	ThemeProvider,
+	useTheme,
+	ThemeControls,
+	ThemeSettings,
+} from "./theme/ThemeProvider";
 export type {
-  ThemePreferences,
-  ColorScheme,
-  FontSize,
-  AnimationSpeed,
-  ThemeContextValue
-} from './theme/ThemeProvider';
+	ThemePreferences,
+	ColorScheme,
+	FontSize,
+	AnimationSpeed,
+	ThemeContextValue,
+} from "./theme/ThemeProvider";
 
 // ============================================================================
 // Accessibility Components (Fase 4: UX/UI Enhancements)
 // ============================================================================
 
 export {
-  SkipLinks,
-  LiveRegion,
-  Announcement,
-  SrOnly,
-  FocusTrap
-} from './accessibility/SkipLinks';
+	SkipLinks,
+	LiveRegion,
+	Announcement,
+	SrOnly,
+	FocusTrap,
+} from "./accessibility/SkipLinks";
 export type {
-  SkipLink,
-  LiveRegionProps,
-  AnnouncementProps,
-  SrOnlyProps,
-  FocusTrapProps
-} from './accessibility/SkipLinks';
+	SkipLink,
+	LiveRegionProps,
+	AnnouncementProps,
+	SrOnlyProps,
+	FocusTrapProps,
+} from "./accessibility/SkipLinks";
 
 // ============================================================================
 // Responsive Components (Fase 4: UX/UI Enhancements)
@@ -82,98 +87,125 @@ export type {
 // Rich Text Editor
 // ============================================================================
 
-export { RichTextEditor } from './RichTextEditor';
-export { RichTextToolbar } from './RichTextToolbar';
+export { RichTextEditor } from "./RichTextEditor";
+export { RichTextToolbar } from "./RichTextToolbar";
 
 // ============================================================================
 // Performance Monitor
 // ============================================================================
 
-export { PerformanceMonitor } from './PerformanceMonitor';
+export { PerformanceMonitor } from "./PerformanceMonitor";
 
 // ============================================================================
 // Empty State
 // ============================================================================
 
-export { EmptyStateEnhanced } from './EmptyStateEnhanced';
-export type { EmptyStateVariant } from './EmptyStateEnhanced';
-export { Button } from './button';
-export { buttonVariants } from '@/lib/ui-variants';
-export { Calendar } from './calendar';
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from './card';
-export * from './carousel';
-export * from './chart';
-export { Checkbox } from './checkbox';
-export * from './collapsible';
-export { Command } from './command';
-export { ContextMenu } from './context-menu';
-export { Dialog, DialogPortal, DialogOverlay, DialogTrigger, DialogClose, DialogContent, DialogHeader, DialogFooter, DialogTitle, DialogDescription } from './dialog';
-export * from './drawer';
-export * from './dropdown-menu';
-export { FileUpload } from './file-upload';
-export * from './form';
-export { HoverCard } from './hover-card';
-export { Input } from './input';
-export { Label } from './label';
-export { Menubar } from './menubar';
-export { NavigationMenu } from './navigation-menu';
-export { Pagination } from './pagination';
-export { Popover } from './popover';
-export { Progress } from './progress';
-export { RadioGroup } from './radio-group';
-export * from './resizable';
-export { ScrollArea } from './scroll-area';
-export { Select } from './select';
-export { Separator } from './separator';
-export { Sheet } from './sheet';
-export * from './sidebar';
-export { Skeleton } from './skeleton';
-export { Slider } from './slider';
-export { OptimizedImage } from './OptimizedImage';
+export { EmptyStateEnhanced } from "./EmptyStateEnhanced";
+export type { EmptyStateVariant } from "./EmptyStateEnhanced";
+export { Button } from "./button";
+export { buttonVariants } from "@/lib/ui-variants";
+export { Calendar } from "./calendar";
+export {
+	Card,
+	CardHeader,
+	CardFooter,
+	CardTitle,
+	CardDescription,
+	CardContent,
+} from "./card";
+export * from "./carousel";
+export * from "./chart";
+export { Checkbox } from "./checkbox";
+export * from "./collapsible";
+export { Command } from "./command";
+export { ContextMenu } from "./context-menu";
+export {
+	Dialog,
+	DialogPortal,
+	DialogOverlay,
+	DialogTrigger,
+	DialogClose,
+	DialogContent,
+	DialogHeader,
+	DialogFooter,
+	DialogTitle,
+	DialogDescription,
+} from "./dialog";
+export * from "./drawer";
+export * from "./dropdown-menu";
+export { FileUpload } from "./file-upload";
+export * from "./form";
+export { HoverCard } from "./hover-card";
+export { Input } from "./input";
+export { Label } from "./label";
+export { Menubar } from "./menubar";
+export { NavigationMenu } from "./navigation-menu";
+export { Pagination } from "./pagination";
+export { Popover } from "./popover";
+export { Progress } from "./progress";
+export { RadioGroup } from "./radio-group";
+export * from "./resizable";
+export { ScrollArea } from "./scroll-area";
+export { Select } from "./select";
+export { Separator } from "./separator";
+export { Sheet } from "./sheet";
+export * from "./sidebar";
+export { Skeleton } from "./skeleton";
+export { Slider } from "./slider";
+export { OptimizedImage } from "./OptimizedImage";
 
-export { Switch } from './switch';
-export { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption } from './table';
-export { Tabs, TabsList, TabsTrigger, TabsContent } from './tabs';
-export { Textarea } from './textarea';
-export * from './toggle-group';
-export * from './toggle';
-export { Tooltip } from './tooltip';
-export { SmartDatePicker } from './smart-date-picker';
-export { toast, useToast } from './use-toast';
-export { Toaster } from './toaster';
+export { Switch } from "./switch";
+export {
+	Table,
+	TableHeader,
+	TableBody,
+	TableFooter,
+	TableHead,
+	TableRow,
+	TableCell,
+	TableCaption,
+} from "./table";
+export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs";
+export { Textarea } from "./textarea";
+export * from "./toggle-group";
+export * from "./toggle";
+export { Tooltip } from "./tooltip";
+export { SmartDatePicker } from "./smart-date-picker";
+export { toast, useToast } from "./use-toast";
+export { Toaster } from "./toaster";
 
 // ============================================================================
 // Additional Components
 // ============================================================================
 
 // Form inputs
-export { CPFInput } from './cpf-input';
-export { PhoneInput } from './phone-input';
-export { PasswordInput } from './password-input';
-export { NameInput } from './name-input';
-export { DateInputBR } from './date-input-br';
-export { DatePicker } from './date-picker';
-export { DatePickerWithRange as DateRangePicker } from './date-range-picker';
-export { InputOTP } from './input-otp';
+export { CPFInput } from "./cpf-input";
+export { PhoneInput } from "./phone-input";
+export { PasswordInput } from "./password-input";
+export { NameInput } from "./name-input";
+export { DateInputBR } from "./date-input-br";
+export { DatePicker } from "./date-picker";
+export { DatePickerWithRange as DateRangePicker } from "./date-range-picker";
+export { InputOTP } from "./input-otp";
 
 // Comboboxes
-export { PatientCombobox } from './patient-combobox';
-export { ClinicalTestCombobox } from './clinical-test-combobox';
-export { ContratadoCombobox } from './contratado-combobox';
+export { PatientCombobox } from "./patient-combobox";
+export { ClinicalTestCombobox } from "./clinical-test-combobox";
+export { ContratadoCombobox } from "./contratado-combobox";
 
 // Misc
-export { CommandPalette } from './CommandPalette';
-export { CustomModal } from './custom-modal';
-export { DraggableGrid } from './DraggableGrid';
-export { GridWidget } from './GridWidget';
-export { TabletResponsiveGrid } from './TabletResponsiveGrid';
-export { VirtualList } from './virtual-list';
-export { VirtualizedList } from './virtualized-list';
-export { LazyRenderList } from './lazy-render-list';
-export { MultiSelect } from './multi-select';
-export { SmartTextarea } from './SmartTextarea';
-export { PremiumThemeToggle } from './PremiumThemeToggle';
-export { KeyboardShortcutsDialog } from './KeyboardShortcutsDialog';
-export { AppLoadingSkeleton } from './AppLoadingSkeleton';
-export { NetworkStatus } from './network-status';
-export { OfflineIndicator } from './OfflineIndicator';
+export { CommandPalette } from "./CommandPalette";
+export { CustomModal } from "./custom-modal";
+export { DraggableGrid } from "./DraggableGrid";
+export { GridWidget } from "./GridWidget";
+export { TabletResponsiveGrid } from "./TabletResponsiveGrid";
+export { VirtualList } from "./virtual-list";
+export { VirtualizedList } from "./virtualized-list";
+export { LazyRenderList } from "./lazy-render-list";
+export { MultiSelect } from "./multi-select";
+export { SmartTextarea } from "./SmartTextarea";
+export { PremiumThemeToggle } from "./PremiumThemeToggle";
+export { KeyboardShortcutsDialog } from "./KeyboardShortcutsDialog";
+export { AppLoadingSkeleton } from "./AppLoadingSkeleton";
+export { NetworkStatus } from "./network-status";
+export { OfflineIndicator } from "./OfflineIndicator";

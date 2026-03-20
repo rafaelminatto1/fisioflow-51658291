@@ -5,11 +5,13 @@
  */
 
 // Main Dashboard Components
-export { PatientAnalyticsDashboard } from './PatientAnalyticsDashboard';
-export { PatientLifecycleChart } from './PatientLifecycleChart';
-export { PatientInsightsPanel } from './PatientInsightsPanel';
+export { PatientAnalyticsDashboard } from "./PatientAnalyticsDashboard";
+export { PatientLifecycleChart } from "./PatientLifecycleChart";
+export { PatientInsightsPanel } from "./PatientInsightsPanel";
 
 // AI Components
-export { AIAssistantPanel, AIAssistantMini } from './AIAssistantPanel';
-export { AITreatmentRecommendations, AITreatmentMini } from './AITreatmentRecommendations';
-
+export { AIAssistantPanel, AIAssistantMini } from "./AIAssistantPanel";
+export {
+	AITreatmentRecommendations,
+	AITreatmentMini,
+} from "./AITreatmentRecommendations";

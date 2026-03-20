@@ -4,7 +4,6 @@
  * @module calendar/cardHeightCalculator
  */
 
-
 /**
  * Calculate the minimum height required for a card based on its content
  * This ensures cards fit their content without excessive whitespace
@@ -17,64 +16,64 @@
  * @returns Height in pixels
  */
 
-import { CARD_SIZE_CONFIGS } from '@/lib/config/agenda';
-import type { CardSize } from '@/types/agenda';
+import { CARD_SIZE_CONFIGS } from "@/lib/config/agenda";
+import type { CardSize } from "@/types/agenda";
 
 export function calculateContentBasedCardHeight(
-  cardSize: CardSize,
-  showAvatar: boolean,
-  showType: boolean,
-  isTiny: boolean,
-  heightScale?: number
+	cardSize: CardSize,
+	showAvatar: boolean,
+	showType: boolean,
+	isTiny: boolean,
+	heightScale?: number,
 ): number {
-  const config = CARD_SIZE_CONFIGS[cardSize];
+	const config = CARD_SIZE_CONFIGS[cardSize];
 
-  // Tiny cards (< 30min) have minimal height
-  if (isTiny) {
-    let baseHeight = Math.max(20, Math.round(config.nameFontSize * 1.5));
-    if (heightScale !== undefined) {
-      const scaleMultiplier = 0.5 + (heightScale / 10) * 1.5; // 0.5x to 2.0x
-      baseHeight = Math.round(baseHeight * scaleMultiplier);
-    }
-    return Math.max(baseHeight, 20);
-  }
+	// Tiny cards (< 30min) have minimal height
+	if (isTiny) {
+		let baseHeight = Math.max(20, Math.round(config.nameFontSize * 1.5));
+		if (heightScale !== undefined) {
+			const scaleMultiplier = 0.5 + (heightScale / 10) * 1.5; // 0.5x to 2.0x
+			baseHeight = Math.round(baseHeight * scaleMultiplier);
+		}
+		return Math.max(baseHeight, 20);
+	}
 
-  // Base measurements (in pixels)
-  const basePadding = 8; // padding outside
-  const headerHeight = Math.max(config.timeFontSize + 8, 18); // time + status icon row
-  const lineHeight = Math.max(config.nameFontSize * 1.4, 16); // line height for text
-  const verticalGap = 2; // small gap between elements
+	// Base measurements (in pixels)
+	const basePadding = 8; // padding outside
+	const headerHeight = Math.max(config.timeFontSize + 8, 18); // time + status icon row
+	const lineHeight = Math.max(config.nameFontSize * 1.4, 16); // line height for text
+	const verticalGap = 2; // small gap between elements
 
-  let totalHeight = basePadding * 2; // top and bottom padding
-  totalHeight += headerHeight; // time and status icon row
-  totalHeight += verticalGap;
+	let totalHeight = basePadding * 2; // top and bottom padding
+	totalHeight += headerHeight; // time and status icon row
+	totalHeight += verticalGap;
 
-  // Add avatar space if shown (avatar height or name line height, whichever is larger)
-  if (showAvatar) {
-    const avatarHeight = config.avatarSize;
-    const nameLineHeight = lineHeight;
-    totalHeight += Math.max(avatarHeight, nameLineHeight);
-  } else {
-    // Just the name line
-    totalHeight += lineHeight;
-  }
+	// Add avatar space if shown (avatar height or name line height, whichever is larger)
+	if (showAvatar) {
+		const avatarHeight = config.avatarSize;
+		const nameLineHeight = lineHeight;
+		totalHeight += Math.max(avatarHeight, nameLineHeight);
+	} else {
+		// Just the name line
+		totalHeight += lineHeight;
+	}
 
-  // Add type line if shown
-  if (showType) {
-    totalHeight += verticalGap;
-    totalHeight += Math.max(config.typeFontSize * 1.3, 14);
-  }
+	// Add type line if shown
+	if (showType) {
+		totalHeight += verticalGap;
+		totalHeight += Math.max(config.typeFontSize * 1.3, 14);
+	}
 
-  // Add some bottom padding for visual comfort
-  totalHeight += 4;
+	// Add some bottom padding for visual comfort
+	totalHeight += 4;
 
-  // Apply height scale multiplier if provided (0-10 scale)
-  if (heightScale !== undefined) {
-    const scaleMultiplier = 0.5 + (heightScale / 10) * 1.5; // 0.5x to 2.0x
-    totalHeight = Math.round(totalHeight * scaleMultiplier);
-  }
+	// Apply height scale multiplier if provided (0-10 scale)
+	if (heightScale !== undefined) {
+		const scaleMultiplier = 0.5 + (heightScale / 10) * 1.5; // 0.5x to 2.0x
+		totalHeight = Math.round(totalHeight * scaleMultiplier);
+	}
 
-  return Math.max(totalHeight, 32); // Minimum 32px height
+	return Math.max(totalHeight, 32); // Minimum 32px height
 }
 
 /**
@@ -86,15 +85,17 @@ export function calculateContentBasedCardHeight(
  * @returns Slot height in pixels
  */
 export function calculateSlotHeightFromCardSize(
-  cardSize: CardSize,
-  heightScale?: number
+	cardSize: CardSize,
+	heightScale?: number,
 ): number {
-  // Direct slot height calculation: 30px to 120px based on heightScale (0-10)
-  const MIN_SLOT_HEIGHT = 30;
-  const MAX_SLOT_HEIGHT = 120;
+	// Direct slot height calculation: 30px to 120px based on heightScale (0-10)
+	const MIN_SLOT_HEIGHT = 30;
+	const MAX_SLOT_HEIGHT = 120;
 
-  const scale = heightScale ?? 3;
-  return Math.round(MIN_SLOT_HEIGHT + (scale / 10) * (MAX_SLOT_HEIGHT - MIN_SLOT_HEIGHT));
+	const scale = heightScale ?? 3;
+	return Math.round(
+		MIN_SLOT_HEIGHT + (scale / 10) * (MAX_SLOT_HEIGHT - MIN_SLOT_HEIGHT),
+	);
 }
 
 /**
@@ -108,29 +109,29 @@ export function calculateSlotHeightFromCardSize(
  * @returns Height in pixels
  */
 export function calculateAppointmentCardHeight(
-  cardSize: CardSize,
-  duration: number,
-  heightScale?: number
+	cardSize: CardSize,
+	duration: number,
+	heightScale?: number,
 ): number {
-  const config = CARD_SIZE_CONFIGS[cardSize];
-  const isTiny = duration < 30;
+	const config = CARD_SIZE_CONFIGS[cardSize];
+	const isTiny = duration < 30;
 
-  // For cards spanning multiple slots, we need to multiply by slot count
-  // But the base height should still be content-based
-  const slotHeight = calculateSlotHeightFromCardSize(cardSize, heightScale);
-  const slotCount = Math.max(1, Math.ceil(duration / 30));
+	// For cards spanning multiple slots, we need to multiply by slot count
+	// But the base height should still be content-based
+	const slotHeight = calculateSlotHeightFromCardSize(cardSize, heightScale);
+	const slotCount = Math.max(1, Math.ceil(duration / 30));
 
-  // Use content height for single slot or tiny cards
-  // For multi-slot, use slot height * slot count
-  if (slotCount === 1 || isTiny) {
-    return calculateContentBasedCardHeight(
-      cardSize,
-      config.showAvatar,
-      config.showType,
-      isTiny,
-      heightScale
-    );
-  }
+	// Use content height for single slot or tiny cards
+	// For multi-slot, use slot height * slot count
+	if (slotCount === 1 || isTiny) {
+		return calculateContentBasedCardHeight(
+			cardSize,
+			config.showAvatar,
+			config.showType,
+			isTiny,
+			heightScale,
+		);
+	}
 
-  return slotHeight * slotCount;
+	return slotHeight * slotCount;
 }

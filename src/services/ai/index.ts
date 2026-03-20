@@ -5,21 +5,21 @@
  */
 
 // Marketing AI Template Service
-export * from './marketingAITemplateService';
+export * from "./marketingAITemplateService";
 
 // Gemini Vision Service
-export * from './geminiVisionService';
+export * from "./geminiVisionService";
 
 // AI runtime service
-export * from '@/integrations/neon/ai';
+export * from "@/integrations/neon/ai";
 
 export type {
-  GenerateReviewTemplateInput,
-  GenerateBirthdayTemplateInput,
-  GenerateRecallTemplateInput,
-  GenerateFisiolinkTemplateInput,
-  GeneratedTemplateResponse,
-  GenerateSOAPTemplateInput,
-  SOAPTemplateResponse,
-  GenerateMythVsTruthInput,
-} from './marketingAITemplateService';
+	GenerateReviewTemplateInput,
+	GenerateBirthdayTemplateInput,
+	GenerateRecallTemplateInput,
+	GenerateFisiolinkTemplateInput,
+	GeneratedTemplateResponse,
+	GenerateSOAPTemplateInput,
+	SOAPTemplateResponse,
+	GenerateMythVsTruthInput,
+} from "./marketingAITemplateService";

@@ -8,99 +8,97 @@
  * - Cleanup automático
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from "react";
 
 interface ThrottleOptions {
-  delay: number;
-  leading?: boolean; // Executa na primeira chamada
-  trailing?: boolean; // Executa na última chamada após delay
+	delay: number;
+	leading?: boolean; // Executa na primeira chamada
+	trailing?: boolean; // Executa na última chamada após delay
 }
 
 /**
  * useThrottle - Throttle de valor
  */
 export const useThrottle = <T>(value: T, delay: number): T => {
-  const [throttledValue, setThrottledValue] = useState(value);
-  const lastRan = useRef(Date.now());
+	const [throttledValue, setThrottledValue] = useState(value);
+	const lastRan = useRef(Date.now());
 
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setThrottledValue(value);
-    }, delay);
+	useEffect(() => {
+		const handler = setTimeout(() => {
+			setThrottledValue(value);
+		}, delay);
 
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
+		return () => {
+			clearTimeout(handler);
+		};
+	}, [value, delay]);
 
-  return throttledValue;
+	return throttledValue;
 };
 
 /**
  * useThrottleFn - Throttle de função
  */
 export const useThrottleFn = <T extends (...args: any[]) => any>(
-  fn: T,
-  options: ThrottleOptions
+	fn: T,
+	options: ThrottleOptions,
 ): T => {
-  const { delay, leading = true, trailing = true } = options;
+	const { delay, leading = true, trailing = true } = options;
 
-  const lastExecuted = useRef<number>(0);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const argsRef = useRef<any[]>();
+	const lastExecuted = useRef<number>(0);
+	const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const argsRef = useRef<any[]>();
 
-  // Cleanup
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
+	// Cleanup
+	useEffect(() => {
+		return () => {
+			if (timeoutRef.current) {
+				clearTimeout(timeoutRef.current);
+			}
+		};
+	}, []);
 
-  return useCallback(
-    (...args: Parameters<T>) => {
-      const now = Date.now();
-      const timeSinceLastExec = now - lastExecuted.current;
-      argsRef.current = args;
+	return useCallback(
+		(...args: Parameters<T>) => {
+			const now = Date.now();
+			const timeSinceLastExec = now - lastExecuted.current;
+			argsRef.current = args;
 
-      // Executar imediatamente se leading e não executou recentemente
-      if (leading && timeSinceLastExec >= delay) {
-        lastExecuted.current = now;
-        fn(...args);
-        return;
-      }
+			// Executar imediatamente se leading e não executou recentemente
+			if (leading && timeSinceLastExec >= delay) {
+				lastExecuted.current = now;
+				fn(...args);
+				return;
+			}
 
-      // Cancelar timeout anterior
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+			// Cancelar timeout anterior
+			if (timeoutRef.current) {
+				clearTimeout(timeoutRef.current);
+			}
 
-      // Agendar execução (trailing)
-      if (trailing) {
-        timeoutRef.current = setTimeout(() => {
-          if (argsRef.current) {
-            fn(...argsRef.current);
-          }
-          lastExecuted.current = Date.now();
-          timeoutRef.current = null;
-        }, delay - timeSinceLastExec);
-      }
-    },
-    [fn, delay, leading, trailing]
-  ) as T;
+			// Agendar execução (trailing)
+			if (trailing) {
+				timeoutRef.current = setTimeout(() => {
+					if (argsRef.current) {
+						fn(...argsRef.current);
+					}
+					lastExecuted.current = Date.now();
+					timeoutRef.current = null;
+				}, delay - timeSinceLastExec);
+			}
+		},
+		[fn, delay, leading, trailing],
+	) as T;
 };
-
-
 
 /**
  * useThrottleCallback - Versão simplificada de throttle de callback
  */
 export const useThrottleCallback = <T extends (...args: any[]) => any>(
-  callback: T,
-  delay: number
+	callback: T,
+	delay: number,
 ): T => {
-  return useThrottleFn(callback, { delay, leading: true, trailing: true });
+	return useThrottleFn(callback, { delay, leading: true, trailing: true });
 };
 
 // ============================================================================
@@ -111,70 +109,75 @@ export const useThrottleCallback = <T extends (...args: any[]) => any>(
  * throttle - Função throttle standalone
  */
 export const throttle = <T extends (...args: any[]) => any>(
-  fn: T,
-  delay: number,
-  options: { leading?: boolean; trailing?: boolean } = {}
+	fn: T,
+	delay: number,
+	options: { leading?: boolean; trailing?: boolean } = {},
 ): T => {
-  const { leading = true, trailing = true } = options;
-  let lastExecuted = 0;
-  let timeoutRef: ReturnType<typeof setTimeout> | null = null;
-  let lastArgs: Parameters<T> | null = null;
+	const { leading = true, trailing = true } = options;
+	let lastExecuted = 0;
+	let timeoutRef: ReturnType<typeof setTimeout> | null = null;
+	let lastArgs: Parameters<T> | null = null;
 
-  return ((...args: Parameters<T>) => {
-    const now = Date.now();
-    lastArgs = args;
+	return ((...args: Parameters<T>) => {
+		const now = Date.now();
+		lastArgs = args;
 
-    if (leading && now - lastExecuted >= delay) {
-      lastExecuted = now;
-      return fn(...args);
-    }
+		if (leading && now - lastExecuted >= delay) {
+			lastExecuted = now;
+			return fn(...args);
+		}
 
-    if (timeoutRef) {
-      clearTimeout(timeoutRef);
-    }
+		if (timeoutRef) {
+			clearTimeout(timeoutRef);
+		}
 
-    if (trailing) {
-      timeoutRef = setTimeout(() => {
-        if (lastArgs) {
-          fn(...lastArgs);
-        }
-        lastExecuted = Date.now();
-        timeoutRef = null;
-      }, delay - (now - lastExecuted));
-    }
-  }) as T;
+		if (trailing) {
+			timeoutRef = setTimeout(
+				() => {
+					if (lastArgs) {
+						fn(...lastArgs);
+					}
+					lastExecuted = Date.now();
+					timeoutRef = null;
+				},
+				delay - (now - lastExecuted),
+			);
+		}
+	}) as T;
 };
 
 /**
  * requestAnimationFrameThrottle - Throttle usando rAF para animações
  */
-export const requestAnimationFrameThrottle = <T extends (...args: any[]) => any>(
-  fn: T
+export const requestAnimationFrameThrottle = <
+	T extends (...args: any[]) => any,
+>(
+	fn: T,
 ): T => {
-  let lastArgs: Parameters<T> | null = null;
-  let rafId: number | null = null;
+	let lastArgs: Parameters<T> | null = null;
+	let rafId: number | null = null;
 
-  return ((...args: Parameters<T>) => {
-    lastArgs = args;
+	return ((...args: Parameters<T>) => {
+		lastArgs = args;
 
-    if (rafId === null) {
-      rafId = requestAnimationFrame(() => {
-        if (lastArgs) {
-          fn(...lastArgs);
-        }
-        rafId = null;
-      });
-    }
-  }) as T;
+		if (rafId === null) {
+			rafId = requestAnimationFrame(() => {
+				if (lastArgs) {
+					fn(...lastArgs);
+				}
+				rafId = null;
+			});
+		}
+	}) as T;
 };
 
 /**
  * useRAFThrottle - Hook para throttle com requestAnimationFrame
  */
 export const useRAFThrottle = <T extends (...args: any[]) => any>(
-  callback: T
+	callback: T,
 ): T => {
-  return requestAnimationFrameThrottle(callback);
+	return requestAnimationFrameThrottle(callback);
 };
 
 // ============================================================================

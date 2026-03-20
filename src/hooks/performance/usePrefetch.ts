@@ -1,4 +1,3 @@
-
 /**
  * Hook para prefetching inteligente de dados
  * Carrega dados antecipadamente baseado em padrões de uso
@@ -16,57 +15,57 @@
  * Útil para links e botões que levam a outras páginas
  */
 
-import { useQueryClient } from '@tanstack/react-query';
-import React, { useEffect, useCallback } from 'react';
-import { QueryKeys } from '@/hooks/queryKeys';
-import { PatientService } from '@/services/patientService';
-import { soapRecordService } from '@/services/soapRecordService'; // Presumindo que exista
+import { useQueryClient } from "@tanstack/react-query";
+import React, { useEffect, useCallback } from "react";
+import { QueryKeys } from "@/hooks/queryKeys";
+import { PatientService } from "@/services/patientService";
+import { soapRecordService } from "@/services/soapRecordService"; // Presumindo que exista
 
 export function usePrefetchOnHover<T>(
-  queryKey: unknown[],
-  queryFn: () => Promise<T>,
-  enabled: boolean = true
+	queryKey: unknown[],
+	queryFn: () => Promise<T>,
+	enabled: boolean = true,
 ) {
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 
-  const prefetch = useCallback(() => {
-    if (!enabled) return;
-    // Prefetch em background com staleTime longo
-    queryClient.prefetchQuery({
-      queryKey,
-      queryFn,
-      staleTime: 1000 * 60 * 5, // 5 minutos
-    });
-  }, [enabled, queryClient, queryKey, queryFn]);
+	const prefetch = useCallback(() => {
+		if (!enabled) return;
+		// Prefetch em background com staleTime longo
+		queryClient.prefetchQuery({
+			queryKey,
+			queryFn,
+			staleTime: 1000 * 60 * 5, // 5 minutos
+		});
+	}, [enabled, queryClient, queryKey, queryFn]);
 
-  return { prefetch };
+	return { prefetch };
 }
 
 /**
  * Hook para prefetch individual de paciente ao passar o mouse
  */
 export function usePrefetchPatientOnHover(patientId: string | undefined) {
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 
-  const prefetch = useCallback(() => {
-    if (!patientId) return;
+	const prefetch = useCallback(() => {
+		if (!patientId) return;
 
-    // Prefetch dos dados básicos
-    queryClient.prefetchQuery({
-      queryKey: QueryKeys.patient(patientId),
-      queryFn: () => PatientService.getPatientById(patientId),
-      staleTime: 1000 * 60 * 5,
-    });
+		// Prefetch dos dados básicos
+		queryClient.prefetchQuery({
+			queryKey: QueryKeys.patient(patientId),
+			queryFn: () => PatientService.getPatientById(patientId),
+			staleTime: 1000 * 60 * 5,
+		});
 
-    // Prefetch de evoluções (muito provável que o usuário queira ver)
-    queryClient.prefetchQuery({
-      queryKey: QueryKeys.soapRecords(patientId),
-      queryFn: () => PatientService.getPatientEvolutions(patientId),
-      staleTime: 1000 * 60 * 2,
-    });
-  }, [patientId, queryClient]);
+		// Prefetch de evoluções (muito provável que o usuário queira ver)
+		queryClient.prefetchQuery({
+			queryKey: QueryKeys.soapRecords(patientId),
+			queryFn: () => PatientService.getPatientEvolutions(patientId),
+			staleTime: 1000 * 60 * 2,
+		});
+	}, [patientId, queryClient]);
 
-  return { prefetch };
+	return { prefetch };
 }
 
 /**
@@ -74,27 +73,27 @@ export function usePrefetchPatientOnHover(patientId: string | undefined) {
  * Carrega dados que provavelmente serão necessários em seguida
  */
 export function usePrefetchRelated<T>(
-  queryKey: string[],
-  queryFn: () => Promise<T>,
-  trigger: boolean,
-  enabled: boolean = true
+	queryKey: string[],
+	queryFn: () => Promise<T>,
+	trigger: boolean,
+	enabled: boolean = true,
 ) {
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (!trigger || !enabled) return;
+	useEffect(() => {
+		if (!trigger || !enabled) return;
 
-    // Pequeno delay para não priorizar sobre dados críticos
-    const timer = setTimeout(() => {
-      queryClient.prefetchQuery({
-        queryKey,
-        queryFn,
-        staleTime: 1000 * 60 * 2, // 2 minutos para dados relacionados
-      });
-    }, 100);
+		// Pequeno delay para não priorizar sobre dados críticos
+		const timer = setTimeout(() => {
+			queryClient.prefetchQuery({
+				queryKey,
+				queryFn,
+				staleTime: 1000 * 60 * 2, // 2 minutos para dados relacionados
+			});
+		}, 100);
 
-    return () => clearTimeout(timer);
-  }, [trigger, enabled, queryClient, queryKey, queryFn]);
+		return () => clearTimeout(timer);
+	}, [trigger, enabled, queryClient, queryKey, queryFn]);
 }
 
 /**
@@ -102,29 +101,29 @@ export function usePrefetchRelated<T>(
  * Útil para carregar todos os dados necessários para uma página
  */
 export function usePrefetchMultiple<T>(
-  queries: Array<{
-    queryKey: string[];
-    queryFn: () => Promise<T>;
-  }>,
-  enabled: boolean = true
+	queries: Array<{
+		queryKey: string[];
+		queryFn: () => Promise<T>;
+	}>,
+	enabled: boolean = true,
 ) {
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (!enabled) return;
+	useEffect(() => {
+		if (!enabled) return;
 
-    const timer = setTimeout(() => {
-      queries.forEach(({ queryKey, queryFn }) => {
-        queryClient.prefetchQuery({
-          queryKey,
-          queryFn,
-          staleTime: 1000 * 60 * 3, // 3 minutos
-        });
-      });
-    }, 200);
+		const timer = setTimeout(() => {
+			queries.forEach(({ queryKey, queryFn }) => {
+				queryClient.prefetchQuery({
+					queryKey,
+					queryFn,
+					staleTime: 1000 * 60 * 3, // 3 minutos
+				});
+			});
+		}, 200);
 
-    return () => clearTimeout(timer);
-  }, [queries, enabled, queryClient]);
+		return () => clearTimeout(timer);
+	}, [queries, enabled, queryClient]);
 }
 
 /**
@@ -132,22 +131,22 @@ export function usePrefetchMultiple<T>(
  * Carrega dados quando o usuário está "próximo" de precisar deles
  */
 export function usePrefetchOnProximity<T>(
-  queryKey: string[],
-  queryFn: () => Promise<T>,
-  proximity: number = 0.7, // 70% de scroll ou similar
-  enabled: boolean = true
+	queryKey: string[],
+	queryFn: () => Promise<T>,
+	proximity: number = 0.7, // 70% de scroll ou similar
+	enabled: boolean = true,
 ) {
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (!enabled || proximity < 0.7) return;
+	useEffect(() => {
+		if (!enabled || proximity < 0.7) return;
 
-    queryClient.prefetchQuery({
-      queryKey,
-      queryFn,
-      staleTime: 1000 * 60 * 5,
-    });
-  }, [proximity, enabled, queryClient, queryKey, queryFn]);
+		queryClient.prefetchQuery({
+			queryKey,
+			queryFn,
+			staleTime: 1000 * 60 * 5,
+		});
+	}, [proximity, enabled, queryClient, queryKey, queryFn]);
 }
 
 /**
@@ -155,43 +154,47 @@ export function usePrefetchOnProximity<T>(
  * Específico para o fluxo de pacientes do FisioFlow
  */
 export function usePrefetchPatientData(
-  patientId: string | undefined,
-  enabled: boolean = true
+	patientId: string | undefined,
+	enabled: boolean = true,
 ) {
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (!patientId || !enabled) return;
+	useEffect(() => {
+		if (!patientId || !enabled) return;
 
-    // Prefetch dados relacionados ao paciente em paralelo
-    const prefetchData = async () => {
-      // Prefetch evoluções do paciente
-      queryClient.prefetchQuery({
-        queryKey: ['patient-evolutions', patientId],
-        queryFn: async () => {
-          const { data } = await fetch(`/api/patients/${patientId}/evolutions`).then(r => r.json());
-          return data;
-        },
-        staleTime: 1000 * 60 * 2,
-      });
+		// Prefetch dados relacionados ao paciente em paralelo
+		const prefetchData = async () => {
+			// Prefetch evoluções do paciente
+			queryClient.prefetchQuery({
+				queryKey: ["patient-evolutions", patientId],
+				queryFn: async () => {
+					const { data } = await fetch(
+						`/api/patients/${patientId}/evolutions`,
+					).then((r) => r.json());
+					return data;
+				},
+				staleTime: 1000 * 60 * 2,
+			});
 
-      // Prefetch mapas de dor
-      queryClient.prefetchQuery({
-        queryKey: ['pain-maps', patientId],
-        queryFn: async () => {
-          const { data } = await fetch(`/api/patients/${patientId}/pain-maps`).then(r => r.json());
-          return data;
-        },
-        staleTime: 1000 * 60 * 5,
-      });
+			// Prefetch mapas de dor
+			queryClient.prefetchQuery({
+				queryKey: ["pain-maps", patientId],
+				queryFn: async () => {
+					const { data } = await fetch(
+						`/api/patients/${patientId}/pain-maps`,
+					).then((r) => r.json());
+					return data;
+				},
+				staleTime: 1000 * 60 * 5,
+			});
 
-      // Prefetch estatísticas was removed as the endpoint does not exist and stats are calculated locally.
-    };
+			// Prefetch estatísticas was removed as the endpoint does not exist and stats are calculated locally.
+		};
 
-    // Delay pequeno para não interferir com navegação
-    const timer = setTimeout(prefetchData, 300);
-    return () => clearTimeout(timer);
-  }, [patientId, enabled, queryClient]);
+		// Delay pequeno para não interferir com navegação
+		const timer = setTimeout(prefetchData, 300);
+		return () => clearTimeout(timer);
+	}, [patientId, enabled, queryClient]);
 }
 
 /**
@@ -199,24 +202,26 @@ export function usePrefetchPatientData(
  * Carrega agendamentos quando o usuário está na dashboard
  */
 export function usePrefetchUpcomingAppointments(enabled: boolean = true) {
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (!enabled) return;
+	useEffect(() => {
+		if (!enabled) return;
 
-    const timer = setTimeout(() => {
-      queryClient.prefetchQuery({
-        queryKey: ['appointments', 'upcoming'],
-        queryFn: async () => {
-          const { data } = await fetch('/api/appointments/upcoming').then(r => r.json());
-          return data;
-        },
-        staleTime: 1000 * 60 * 1, // 1 minuto - agendamentos mudam frequentemente
-      });
-    }, 500);
+		const timer = setTimeout(() => {
+			queryClient.prefetchQuery({
+				queryKey: ["appointments", "upcoming"],
+				queryFn: async () => {
+					const { data } = await fetch("/api/appointments/upcoming").then((r) =>
+						r.json(),
+					);
+					return data;
+				},
+				staleTime: 1000 * 60 * 1, // 1 minuto - agendamentos mudam frequentemente
+			});
+		}, 500);
 
-    return () => clearTimeout(timer);
-  }, [enabled, queryClient]);
+		return () => clearTimeout(timer);
+	}, [enabled, queryClient]);
 }
 
 /**
@@ -224,24 +229,26 @@ export function usePrefetchUpcomingAppointments(enabled: boolean = true) {
  * Carrega templates quando o usuário está em páginas de evolução
  */
 export function usePrefetchEvolutionTemplates(enabled: boolean = true) {
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (!enabled) return;
+	useEffect(() => {
+		if (!enabled) return;
 
-    const timer = setTimeout(() => {
-      queryClient.prefetchQuery({
-        queryKey: ['evolution-templates'],
-        queryFn: async () => {
-          const { data } = await fetch('/api/evolution-templates').then(r => r.json());
-          return data;
-        },
-        staleTime: 1000 * 60 * 15, // 15 minutos - templates mudam pouco
-      });
-    }, 200);
+		const timer = setTimeout(() => {
+			queryClient.prefetchQuery({
+				queryKey: ["evolution-templates"],
+				queryFn: async () => {
+					const { data } = await fetch("/api/evolution-templates").then((r) =>
+						r.json(),
+					);
+					return data;
+				},
+				staleTime: 1000 * 60 * 15, // 15 minutos - templates mudam pouco
+			});
+		}, 200);
 
-    return () => clearTimeout(timer);
-  }, [enabled, queryClient]);
+		return () => clearTimeout(timer);
+	}, [enabled, queryClient]);
 }
 
 /**
@@ -249,23 +256,23 @@ export function usePrefetchEvolutionTemplates(enabled: boolean = true) {
  * Use envolvendo links ou botões
  */
 export function PrefetchOnHover({
-  children,
-  queryKey,
-  queryFn,
-  enabled = true,
+	children,
+	queryKey,
+	queryFn,
+	enabled = true,
 }: {
-  children: React.ReactElement;
-  queryKey: string[];
-  queryFn: () => Promise<unknown>;
-  enabled?: boolean;
+	children: React.ReactElement;
+	queryKey: string[];
+	queryFn: () => Promise<unknown>;
+	enabled?: boolean;
 }) {
-  const { prefetch } = usePrefetchOnHover(queryKey, queryFn, enabled);
+	const { prefetch } = usePrefetchOnHover(queryKey, queryFn, enabled);
 
-  return React.cloneElement(children, {
-    ...children.props,
-    onMouseEnter: (e: React.MouseEvent) => {
-      prefetch();
-      children.props.onMouseEnter?.(e);
-    },
-  });
+	return React.cloneElement(children, {
+		...children.props,
+		onMouseEnter: (e: React.MouseEvent) => {
+			prefetch();
+			children.props.onMouseEnter?.(e);
+		},
+	});
 }

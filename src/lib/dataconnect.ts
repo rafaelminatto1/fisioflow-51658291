@@ -4,4 +4,4 @@
  * O app agora consome Neon/Workers diretamente.
  */
 
-export const dc = () => ({ provider: 'workers' as const });
+export const dc = () => ({ provider: "workers" as const });

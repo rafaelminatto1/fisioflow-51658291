@@ -7,31 +7,31 @@
 
 // Hook principal de dados otimizados
 export {
-  useEvolutionDataOptimized,
-  useEvolutionData,
-  useEvolutionPrefetch,
-  evolutionKeys,
-  EVOLUTION_CACHE_CONFIG,
-  type EvolutionDataOptions,
-  type EvolutionTab,
-} from './useEvolutionDataOptimized';
+	useEvolutionDataOptimized,
+	useEvolutionData,
+	useEvolutionPrefetch,
+	evolutionKeys,
+	EVOLUTION_CACHE_CONFIG,
+	type EvolutionDataOptions,
+	type EvolutionTab,
+} from "./useEvolutionDataOptimized";
 
 // Hook de dados deferidos (legado - manter para compatibilidade)
 export {
-  useEvolutionDeferredData,
-  type DeferredDataOptions,
-} from './useEvolutionDeferredData';
+	useEvolutionDeferredData,
+	type DeferredDataOptions,
+} from "./useEvolutionDeferredData";
 
 // Hook de atalhos de teclado
 export {
-  useEvolutionShortcuts,
-  type ShortcutHandlers,
-} from './useEvolutionShortcuts';
+	useEvolutionShortcuts,
+	type ShortcutHandlers,
+} from "./useEvolutionShortcuts";
 
 // Re-exportar tipos comuns
 export type {
-  Surgery,
-  MedicalReturn,
-  PatientGoal,
-  Pathology,
-} from '@/types/evolution';
+	Surgery,
+	MedicalReturn,
+	PatientGoal,
+	Pathology,
+} from "@/types/evolution";

@@ -1,1 +1,1 @@
-export { PerformanceIndicator } from './PerformanceDashboard';
+export { PerformanceIndicator } from "./PerformanceDashboard";

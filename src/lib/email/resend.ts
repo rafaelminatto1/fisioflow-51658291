@@ -5,20 +5,20 @@
  * Supports templates, attachments, and batch sending
  */
 
-import { Resend } from 'resend';
-import { logger } from '../errors/logger.js';
+import { Resend } from "resend";
+import { logger } from "../errors/logger.js";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Type for Resend email send options
 interface ResendEmailOptions {
-  from: string;
-  to: string | string[];
-  subject: string;
-  html?: string;
-  text?: string;
-  replyTo?: string;
-  tags?: Array<{ name: string; value: string }>;
+	from: string;
+	to: string | string[];
+	subject: string;
+	html?: string;
+	text?: string;
+	replyTo?: string;
+	tags?: Array<{ name: string; value: string }>;
 }
 
 // ============================================================================
@@ -26,25 +26,25 @@ interface ResendEmailOptions {
 // ============================================================================
 
 export const EmailTemplates = {
-  // Appointment Templates
-  APPOINTMENT_CONFIRMATION: 'appointment-confirmation',
-  APPOINTMENT_REMINDER: 'appointment-reminder',
-  APPOINTMENT_CANCELLED: 'appointment-cancelled',
-  APPOINTMENT_RESCHEDULED: 'appointment-rescheduled',
+	// Appointment Templates
+	APPOINTMENT_CONFIRMATION: "appointment-confirmation",
+	APPOINTMENT_REMINDER: "appointment-reminder",
+	APPOINTMENT_CANCELLED: "appointment-cancelled",
+	APPOINTMENT_RESCHEDULED: "appointment-rescheduled",
 
-  // Patient Templates
-  PATIENT_WELCOME: 'patient-welcome',
-  BIRTHDAY_GREETING: 'birthday-greeting',
-  TREATMENT_PLAN_UPDATE: 'treatment-plan-update',
+	// Patient Templates
+	PATIENT_WELCOME: "patient-welcome",
+	BIRTHDAY_GREETING: "birthday-greeting",
+	TREATMENT_PLAN_UPDATE: "treatment-plan-update",
 
-  // Report Templates
-  DAILY_REPORT: 'daily-report',
-  WEEKLY_SUMMARY: 'weekly-summary',
-  MONTHLY_PROGRESS: 'monthly-progress',
+	// Report Templates
+	DAILY_REPORT: "daily-report",
+	WEEKLY_SUMMARY: "weekly-summary",
+	MONTHLY_PROGRESS: "monthly-progress",
 
-  // System Templates
-  PASSWORD_RESET: 'password-reset',
-  EMAIL_VERIFICATION: 'email-verification',
+	// System Templates
+	PASSWORD_RESET: "password-reset",
+	EMAIL_VERIFICATION: "email-verification",
 } as const;
 
 // ============================================================================
@@ -52,34 +52,34 @@ export const EmailTemplates = {
 // ============================================================================
 
 export interface AppointmentEmailData {
-  patientName: string;
-  therapistName: string;
-  date: string;
-  time: string;
-  location?: string;
-  onlineMeetingUrl?: string;
-  organizationName: string;
+	patientName: string;
+	therapistName: string;
+	date: string;
+	time: string;
+	location?: string;
+	onlineMeetingUrl?: string;
+	organizationName: string;
 }
 
 export interface BirthdayEmailData {
-  patientName: string;
-  organizationName: string;
-  therapistName?: string;
+	patientName: string;
+	organizationName: string;
+	therapistName?: string;
 }
 
 export interface DailyReportData {
-  therapistName: string;
-  organizationName: string;
-  date: string;
-  totalSessions: number;
-  completedSessions: number;
-  cancelledSessions: number;
-  newPatients: number;
+	therapistName: string;
+	organizationName: string;
+	date: string;
+	totalSessions: number;
+	completedSessions: number;
+	cancelledSessions: number;
+	newPatients: number;
 }
 
 export interface PasswordResetData {
-  resetLink: string;
-  expiresAt: string;
+	resetLink: string;
+	expiresAt: string;
 }
 
 // ============================================================================
@@ -89,8 +89,10 @@ export interface PasswordResetData {
 /**
  * Render appointment confirmation email
  */
-export function renderAppointmentConfirmation(data: AppointmentEmailData): string {
-  return `
+export function renderAppointmentConfirmation(
+	data: AppointmentEmailData,
+): string {
+	return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -110,8 +112,8 @@ export function renderAppointmentConfirmation(data: AppointmentEmailData): strin
       <p style="margin: 0 0 10px 0;"><strong>📅 Data:</strong> ${data.date}</p>
       <p style="margin: 0 0 10px 0;"><strong>⏰ Horário:</strong> ${data.time}</p>
       <p style="margin: 0 0 10px 0;"><strong>👨‍⚕️ Fisioterapeuta:</strong> ${data.therapistName}</p>
-      ${data.location ? `<p style="margin: 0 0 10px 0;"><strong>📍 Local:</strong> ${data.location}</p>` : ''}
-      ${data.onlineMeetingUrl ? `<p style="margin: 0;"><strong>💻 Link da reunião:</strong> <a href="${data.onlineMeetingUrl}" style="color: #667eea;">Acessar</a></p>` : ''}
+      ${data.location ? `<p style="margin: 0 0 10px 0;"><strong>📍 Local:</strong> ${data.location}</p>` : ""}
+      ${data.onlineMeetingUrl ? `<p style="margin: 0;"><strong>💻 Link da reunião:</strong> <a href="${data.onlineMeetingUrl}" style="color: #667eea;">Acessar</a></p>` : ""}
     </div>
 
     <p style="font-size: 14px; color: #666; margin-bottom: 10px;">Por favor, chegue com 15 minutos de antecedência.</p>
@@ -130,7 +132,7 @@ export function renderAppointmentConfirmation(data: AppointmentEmailData): strin
  * Render appointment reminder email
  */
 export function renderAppointmentReminder(data: AppointmentEmailData): string {
-  return `
+	return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -167,7 +169,7 @@ export function renderAppointmentReminder(data: AppointmentEmailData): string {
  * Render birthday greeting email
  */
 export function renderBirthdayGreeting(data: BirthdayEmailData): string {
-  return `
+	return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -189,7 +191,7 @@ export function renderBirthdayGreeting(data: BirthdayEmailData): string {
 
     <p style="font-size: 16px; margin-bottom: 20px;">Que este novo ano traga muita saúde, felicidade e realizações!</p>
 
-    ${data.therapistName ? `<p style="font-size: 14px; color: #666;">Com carinho,<br><strong>${data.therapistName}</strong> e toda a equipe.</p>` : ''}
+    ${data.therapistName ? `<p style="font-size: 14px; color: #666;">Com carinho,<br><strong>${data.therapistName}</strong> e toda a equipe.</p>` : ""}
 
     <div style="text-align: center; margin-top: 30px;">
       <p style="font-size: 14px; color: #999;">${data.organizationName}</p>
@@ -204,7 +206,7 @@ export function renderBirthdayGreeting(data: BirthdayEmailData): string {
  * Render daily report email for therapists
  */
 export function renderDailyReport(data: DailyReportData): string {
-  return `
+	return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -256,7 +258,7 @@ export function renderDailyReport(data: DailyReportData): string {
  * Render password reset email
  */
 export function renderPasswordReset(data: PasswordResetData): string {
-  return `
+	return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -286,8 +288,11 @@ export function renderPasswordReset(data: PasswordResetData): string {
 /**
  * Render reactivation email
  */
-export function renderReactivationEmail(data: { patientName: string; organizationName: string }): string {
-  return `
+export function renderReactivationEmail(data: {
+	patientName: string;
+	organizationName: string;
+}): string {
+	return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -324,140 +329,169 @@ export function renderReactivationEmail(data: { patientName: string; organizatio
 // ============================================================================
 
 export interface SendEmailOptions {
-  to: string;
-  subject: string;
-  html?: string;
-  text?: string;
-  from?: string;
-  replyTo?: string;
-  tags?: Record<string, string>;
+	to: string;
+	subject: string;
+	html?: string;
+	text?: string;
+	from?: string;
+	replyTo?: string;
+	tags?: Record<string, string>;
 }
 
 /**
  * Send a transactional email
  */
-export async function sendEmail(options: SendEmailOptions): Promise<{ success: boolean; messageId?: string; error?: string }> {
-  try {
-    const from = options.from || 'FisioFlow <noreply@fisioflow.com>';
+export async function sendEmail(
+	options: SendEmailOptions,
+): Promise<{ success: boolean; messageId?: string; error?: string }> {
+	try {
+		const from = options.from || "FisioFlow <noreply@fisioflow.com>";
 
-    // Resend email options - structure not fully typed
-    const emailOptions: Record<string, unknown> = {
-      from,
-      to: options.to,
-      subject: options.subject,
-    };
+		// Resend email options - structure not fully typed
+		const emailOptions: Record<string, unknown> = {
+			from,
+			to: options.to,
+			subject: options.subject,
+		};
 
-    if (options.html) emailOptions.html = options.html;
-    if (options.text) emailOptions.text = options.text;
-    if (options.replyTo) emailOptions.replyTo = options.replyTo;
+		if (options.html) emailOptions.html = options.html;
+		if (options.text) emailOptions.text = options.text;
+		if (options.replyTo) emailOptions.replyTo = options.replyTo;
 
-    // Add tags for tracking in Resend
-    if (options.tags) {
-      emailOptions.tags = Object.entries(options.tags).map(([key, value]) => ({ name: key, value }));
-    }
+		// Add tags for tracking in Resend
+		if (options.tags) {
+			emailOptions.tags = Object.entries(options.tags).map(([key, value]) => ({
+				name: key,
+				value,
+			}));
+		}
 
-    const { data, error } = await resend.emails.send(emailOptions as ResendEmailOptions);
+		const { data, error } = await resend.emails.send(
+			emailOptions as ResendEmailOptions,
+		);
 
-    if (error) {
-      logger.error('Resend error:', error, 'resend.ts');
-      return { success: false, error: error.message };
-    }
+		if (error) {
+			logger.error("Resend error:", error, "resend.ts");
+			return { success: false, error: error.message };
+		}
 
-    return { success: true, messageId: data?.id };
-  } catch (error) {
-    logger.error('Email sending error:', error, 'resend.ts');
-    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
-  }
+		return { success: true, messageId: data?.id };
+	} catch (error) {
+		logger.error("Email sending error:", error, "resend.ts");
+		return {
+			success: false,
+			error: error instanceof Error ? error.message : "Unknown error",
+		};
+	}
 }
 
 /**
  * Send appointment confirmation email
  */
-export async function sendAppointmentConfirmation(to: string, data: AppointmentEmailData, organizationName?: string) {
-  return sendEmail({
-    to,
-    subject: 'Consulta Confirmada ✅',
-    html: renderAppointmentConfirmation(data),
-    tags: {
-      type: 'appointment-confirmation',
-      organization: organizationName || data.organizationName,
-    },
-  });
+export async function sendAppointmentConfirmation(
+	to: string,
+	data: AppointmentEmailData,
+	organizationName?: string,
+) {
+	return sendEmail({
+		to,
+		subject: "Consulta Confirmada ✅",
+		html: renderAppointmentConfirmation(data),
+		tags: {
+			type: "appointment-confirmation",
+			organization: organizationName || data.organizationName,
+		},
+	});
 }
 
 /**
  * Send appointment reminder email
  */
-export async function sendAppointmentReminder(to: string, data: AppointmentEmailData, organizationName?: string) {
-  return sendEmail({
-    to,
-    subject: 'Lembrete de Consulta 🔔',
-    html: renderAppointmentReminder(data),
-    tags: {
-      type: 'appointment-reminder',
-      organization: organizationName || data.organizationName,
-    },
-  });
+export async function sendAppointmentReminder(
+	to: string,
+	data: AppointmentEmailData,
+	organizationName?: string,
+) {
+	return sendEmail({
+		to,
+		subject: "Lembrete de Consulta 🔔",
+		html: renderAppointmentReminder(data),
+		tags: {
+			type: "appointment-reminder",
+			organization: organizationName || data.organizationName,
+		},
+	});
 }
 
 /**
  * Send birthday greeting email
  */
-export async function sendBirthdayGreeting(to: string, data: BirthdayEmailData, organizationName?: string) {
-  return sendEmail({
-    to,
-    subject: 'Feliz Aniversário! 🎉',
-    html: renderBirthdayGreeting(data),
-    tags: {
-      type: 'birthday-greeting',
-      organization: organizationName || data.organizationName,
-    },
-  });
+export async function sendBirthdayGreeting(
+	to: string,
+	data: BirthdayEmailData,
+	organizationName?: string,
+) {
+	return sendEmail({
+		to,
+		subject: "Feliz Aniversário! 🎉",
+		html: renderBirthdayGreeting(data),
+		tags: {
+			type: "birthday-greeting",
+			organization: organizationName || data.organizationName,
+		},
+	});
 }
 
 /**
  * Send daily report email
  */
-export async function sendDailyReport(to: string, data: DailyReportData, organizationName?: string) {
-  return sendEmail({
-    to,
-    subject: `Relatório Diário - ${data.date} 📊`,
-    html: renderDailyReport(data),
-    tags: {
-      type: 'daily-report',
-      organization: organizationName || data.organizationName,
-      date: data.date,
-    },
-  });
+export async function sendDailyReport(
+	to: string,
+	data: DailyReportData,
+	organizationName?: string,
+) {
+	return sendEmail({
+		to,
+		subject: `Relatório Diário - ${data.date} 📊`,
+		html: renderDailyReport(data),
+		tags: {
+			type: "daily-report",
+			organization: organizationName || data.organizationName,
+			date: data.date,
+		},
+	});
 }
 
 /**
  * Send password reset email
  */
 export async function sendPasswordReset(to: string, data: PasswordResetData) {
-  return sendEmail({
-    to,
-    subject: 'Redefinir Senha 🔐',
-    html: renderPasswordReset(data),
-    tags: {
-      type: 'password-reset',
-    },
-  });
+	return sendEmail({
+		to,
+		subject: "Redefinir Senha 🔐",
+		html: renderPasswordReset(data),
+		tags: {
+			type: "password-reset",
+		},
+	});
 }
 
 /**
  * Send reactivation email
  */
-export async function sendReactivationEmail(to: string, data: { patientName: string; organizationName: string }) {
-  return sendEmail({
-    to,
-    subject: `Sentimos sua falta! 👋`,
-    html: renderReactivationEmail(data),
-    tags: {
-      type: 'reactivation',
-      organization: data.organizationName,
-    },
-  });
+export async function sendReactivationEmail(
+	to: string,
+	data: { patientName: string; organizationName: string },
+) {
+	return sendEmail({
+		to,
+		subject: `Sentimos sua falta! 👋`,
+		html: renderReactivationEmail(data),
+		tags: {
+			type: "reactivation",
+			organization: data.organizationName,
+		},
+	});
 }
 
 // ============================================================================
@@ -465,20 +499,20 @@ export async function sendReactivationEmail(to: string, data: { patientName: str
 // ============================================================================
 
 export const ResendService = {
-  sendEmail,
-  sendAppointmentConfirmation,
-  sendAppointmentReminder,
-  sendBirthdayGreeting,
-  sendDailyReport,
-  sendPasswordReset,
-  sendReactivationEmail,
-  templates: EmailTemplates,
-  renderers: {
-    renderAppointmentConfirmation,
-    renderAppointmentReminder,
-    renderBirthdayGreeting,
-    renderDailyReport,
-    renderPasswordReset,
-    renderReactivationEmail
-  },
+	sendEmail,
+	sendAppointmentConfirmation,
+	sendAppointmentReminder,
+	sendBirthdayGreeting,
+	sendDailyReport,
+	sendPasswordReset,
+	sendReactivationEmail,
+	templates: EmailTemplates,
+	renderers: {
+		renderAppointmentConfirmation,
+		renderAppointmentReminder,
+		renderBirthdayGreeting,
+		renderDailyReport,
+		renderPasswordReset,
+		renderReactivationEmail,
+	},
 };

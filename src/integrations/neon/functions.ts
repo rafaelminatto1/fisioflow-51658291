@@ -1,1 +1,1 @@
-export * from '@/lib/http/function-http';
+export * from "@/lib/http/function-http";
