@@ -14,6 +14,7 @@ interface ClinicalTest {
     reference?: string;
     sensitivity_specificity?: string;
     tags?: string[];
+    image_url?: string;
     media_urls?: string[];
     description?: string;
     fields_definition?: unknown[];
@@ -96,9 +97,18 @@ export function ClinicalTestsGrid({
                         className="bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col overflow-hidden group h-full relative"
                     >
                         <div className="h-40 bg-slate-50 relative overflow-hidden shrink-0 border-b border-slate-50">
-                            <div className="absolute inset-0 flex items-center justify-center text-slate-300 bg-slate-50/50 group-hover:scale-105 transition-transform duration-500">
-                                <ImageIcon className="h-12 w-12 opacity-30" />
-                            </div>
+                            { (test.image_url || test.media_urls?.[0]) ? (
+                                <img
+                                    src={test.image_url || test.media_urls?.[0]}
+                                    alt={test.name}
+                                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                    loading="lazy"
+                                />
+                            ) : (
+                                <div className="absolute inset-0 flex items-center justify-center text-slate-300 bg-slate-50/50 group-hover:scale-105 transition-transform duration-500">
+                                    <ImageIcon className="h-12 w-12 opacity-30" />
+                                </div>
+                            )}
                             <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border backdrop-blur-sm ${badgeClass}`}>
                                 {test.category || 'Geral'}
                             </div>

@@ -64,7 +64,7 @@ export const appointments = pgTable('appointments', {
     durationMinutes: integer('duration_minutes').default(60).notNull(), // 30, 60, 90
 
     // Status & Type
-    status: appointmentStatusEnum('status').default('scheduled').notNull(),
+    status: appointmentStatusEnum('status').default('agendado').notNull(),
     type: appointmentTypeEnum('type').default('session').notNull(),
 
     // Group Appointments - RF02.2

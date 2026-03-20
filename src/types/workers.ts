@@ -244,6 +244,7 @@ export interface CommunicationStatsRecord {
     email: number;
     whatsapp: number;
     sms: number;
+    push: number;
   };
 }
 
@@ -580,6 +581,29 @@ export interface PrecadastroToken {
   updated_at?: string;
 }
 
+export interface EvolutionMeasurementRecord {
+  id: string;
+  patient_id: string;
+  evolution_id: string;
+  name: string;
+  value: number;
+  unit?: string | null;
+  side?: 'left' | 'right' | 'bilateral' | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TreatmentSessionRecord {
+  id: string;
+  patient_id: string;
+  therapist_id: string;
+  date: string;
+  status: string;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Precadastro {
   id: string;
   token_id: string;
@@ -598,6 +622,52 @@ export interface Precadastro {
   convenio?: string;
   queixa_principal?: string;
   token_nome?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string;
+  type: string;
+  read: boolean;
+  data?: Record<string, any>;
+  created_at: string;
+}
+
+export interface GamificationNotification extends Notification {
+  points?: number;
+  badge_id?: string;
+  level_up?: boolean;
+}
+
+export interface NotificationPreferences {
+  user_id: string;
+  email: boolean;
+  push: boolean;
+  whatsapp: boolean;
+  marketing: boolean;
+}
+
+export interface ClinicalTestTemplateRecord {
+  id: string;
+  organization_id?: string | null;
+  name: string;
+  name_en?: string | null;
+  category: string;
+  target_joint: string | null;
+  type: 'special_test' | 'functional_test';
+  purpose: string | null;
+  instructions: string | null;
+  execution?: string | null;
+  positive_criteria: string | null;
+  positive_sign?: string | null;
+  fields_definition: any[];
+  tags: string[];
+  image_url?: string | null;
+  media_urls?: string[] | null;
   created_at: string;
   updated_at: string;
 }
@@ -883,4 +953,388 @@ export interface ExercisePlanItemRow {
   notes: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface GoalProfileRow {
+  id: string;
+  organization_id: string;
+  name: string;
+  description: string | null;
+  category_id: string | null;
+  is_global: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FeriadoRow {
+  id: string;
+  organization_id: string;
+  date: string;
+  name: string;
+  type: string;
+}
+
+export interface AutomationLogEntry {
+  id: string;
+  organization_id: string;
+  automation_id: string;
+  event_type: string;
+  status: string;
+  created_at: string;
+}
+
+export interface PushSubscription {
+  id: string;
+  user_id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  created_at: string;
+}
+
+export interface WhatsAppMessage {
+  id: string;
+  organization_id: string;
+  phone_number: string;
+  message_content: string;
+  status: string;
+  created_at: string;
+}
+
+export interface PendingConfirmation {
+  id: string;
+  phone_number: string;
+  last_message: string;
+  created_at: string;
+}
+
+export interface WhatsAppTemplateRecord {
+  id: string;
+  organization_id: string;
+  name: string;
+  content: string;
+  status: string;
+}
+
+export interface WhatsAppWebhookLog {
+  id: string;
+  payload: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface Lead {
+  id: string;
+  organization_id: string;
+  name: string;
+  status: string;
+}
+
+export interface LeadHistorico {
+  id: string;
+  lead_id: string;
+  notes: string;
+  created_at: string;
+}
+
+export interface CrmTarefa {
+  id: string;
+  lead_id: string;
+  title: string;
+  status: string;
+}
+
+export interface CrmCampanha {
+  id: string;
+  name: string;
+  status: string;
+}
+
+export interface PainMap {
+  id: string;
+  patient_id: string;
+  created_at: string;
+}
+
+export interface PainMapPoint {
+  id: string;
+  pain_map_id: string;
+  x: number;
+  y: number;
+}
+
+export interface EvolutionTemplate {
+  id: string;
+  name: string;
+  content: string;
+}
+
+export interface ConductLibraryRecord {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export interface ExercisePrescription {
+  id: string;
+  patient_id: string;
+  status: string;
+}
+
+export interface PrescribedExercise {
+  id: string;
+  exercise_id: string;
+  sets: number;
+  reps: number;
+}
+
+export interface StandardizedTestResultRow {
+  id: string;
+  test_name: string;
+  score: number;
+}
+
+export interface EvaluationFormRow {
+  id: string;
+  name: string;
+}
+
+export interface EvaluationFormFieldRow {
+  id: string;
+  form_id: string;
+  label: string;
+}
+
+export interface AssetAnnotationVersionRecord {
+  id: string;
+  asset_id: string;
+  version: number;
+}
+
+export interface Evento {
+  id: string;
+  name: string;
+}
+
+export interface EventoTemplateRow {
+  id: string;
+  name: string;
+}
+
+export interface TelemedicineRoomRecord {
+  id: string;
+  room_name: string;
+}
+
+export interface SessionAttachment {
+  id: string;
+  session_id: string;
+  file_url: string;
+}
+
+export interface SessionTemplate {
+  id: string;
+  name: string;
+}
+
+export interface DoctorRecord {
+  id: string;
+  name: string;
+}
+
+// ─── Gamification Row types (DB-layer) ───────────────────────────────────────
+
+export interface GamificationProfileRow {
+  id: string;
+  patient_id: string;
+  organization_id?: string;
+  current_xp: number;
+  level: number;
+  current_streak: number;
+  longest_streak: number;
+  total_points: number;
+  last_activity_date: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DailyQuestRow {
+  id: string;
+  patient_id: string;
+  quest_id?: string;
+  date: string;
+  quests_data?: unknown[];
+  completed?: boolean;
+  completed_at?: string | null;
+  completed_count?: number;
+  xp_awarded?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AchievementRow {
+  id: string;
+  code?: string;
+  title: string;
+  description: string | null;
+  xp_reward: number;
+  icon?: string | null;
+  category?: string;
+  requirements?: unknown;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface AchievementLogRow {
+  id: string;
+  patient_id: string;
+  achievement_id: string;
+  xp_reward: number;
+  unlocked_at: string;
+}
+
+export interface XpTransactionRow {
+  id: string;
+  patient_id: string;
+  amount: number;
+  reason: string;
+  description?: string | null;
+  created_at: string;
+  created_by?: string | null;
+}
+
+export interface GamificationLeaderboardRow {
+  patient_id: string;
+  patient_name?: string;
+  full_name?: string | null;
+  email?: string | null;
+  avatar_url?: string | null;
+  level: number;
+  total_points: number;
+  current_streak?: number;
+  longest_streak?: number;
+  achievements_count?: number;
+  last_activity_date?: string | null;
+  rank?: number;
+}
+
+export interface ShopItemRow {
+  id: string;
+  code?: string;
+  name: string;
+  description: string | null;
+  cost?: number;
+  price?: number;
+  type?: string;
+  item_type?: string;
+  icon?: string | null;
+  metadata?: Record<string, unknown>;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface UserInventoryRow {
+  id: string;
+  user_id?: string;
+  patient_id?: string;
+  item_id: string;
+  quantity: number;
+  is_equipped?: boolean;
+  equipped?: boolean;
+  acquired_at?: string;
+  item_name?: string | null;
+  item_code?: string;
+  item_description?: string | null;
+  item_cost?: number | null;
+  item_type?: string | null;
+  item_icon?: string | null;
+}
+
+export interface GamificationSettingRow {
+  id?: string;
+  key: string;
+  value: unknown;
+  description?: string | null;
+  updated_at?: string;
+}
+
+export interface GamificationStats {
+  totalPatients?: number;
+  total_players?: number;
+  active_players?: number;
+  totalXpAwarded: number;
+  total_xp_awarded?: number;
+  averageLevel: number;
+  avg_level?: number;
+  averageStreak?: number;
+  activeLast30Days?: number;
+  activeLast7Days?: number;
+  achievementsUnlocked: number;
+  engagementRate?: number;
+  atRiskPatients?: number;
+  top_players?: GamificationLeaderboardRow[];
+}
+
+export interface AtRiskPatient {
+  patient_id: string;
+  patient_name?: string;
+  full_name?: string | null;
+  email?: string | null;
+  level: number;
+  lastActivity?: string;
+  last_activity_date?: string | null;
+  daysInactive?: number;
+  days_inactive?: number;
+}
+
+export interface PopularAchievement {
+  id?: string;
+  achievement_id?: string;
+  title: string | null;
+  unlockedCount?: number;
+  unlock_count?: number;
+  totalPatients?: number;
+  unlockRate?: number;
+}
+
+export interface QuestDefinitionRow {
+  id: string;
+  title: string;
+  description?: string | null;
+  category?: string;
+  quest_type?: string;
+  xp_reward: number;
+  icon?: string | null;
+  target?: Record<string, unknown> | null;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface WeeklyChallengeRow {
+  id: string;
+  title: string;
+  description?: string | null;
+  target?: Record<string, unknown> | null;
+  xp_reward: number;
+  point_reward?: number;
+  challenge_type?: string;
+  start_date: string;
+  end_date: string;
+  is_active?: boolean;
+  patient_progress?: PatientChallengeRow | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface PatientChallengeRow {
+  id?: string;
+  patient_id?: string;
+  challenge_id: string;
+  progress: number;
+  completed: boolean;
+  completed_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
 }

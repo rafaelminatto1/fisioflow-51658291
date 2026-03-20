@@ -206,13 +206,13 @@ export const sessionTemplatesApi = {
   list: () =>
     request<{ data: SessionTemplate[] }>('/api/sessions/templates'),
 
-  create: (data: Pick<SessionTemplate, 'name' | 'description' | 'subjective' | 'objective' | 'assessment' | 'plan' | 'is_global'>) =>
+  create: (data: Partial<SessionTemplate>) =>
     request<{ data: SessionTemplate }>('/api/sessions/templates', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  update: (id: string, data: Partial<Pick<SessionTemplate, 'name' | 'description' | 'subjective' | 'objective' | 'assessment' | 'plan' | 'is_global'>>) =>
+  update: (id: string, data: Partial<SessionTemplate>) =>
     request<{ data: SessionTemplate }>(`/api/sessions/templates/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -1014,7 +1014,7 @@ export const dicomApi = {
       ),
     ),
   config: () => request<{ data: Record<string, unknown> }>('/api/dicom/config'),
-  getWadoUrl: () => `${BASE_URL}/api/dicom/wado`,
+  getWadoUrl: () => `${getWorkersApiUrl()}/api/dicom/wado`,
 };
 
 export const documentSignaturesApi = {
@@ -1453,7 +1453,6 @@ export const boardsApi = {
     }),
 };
 
-// Re-export specific types if needed, though they are mostly in @/types/workers
 export type {
   PatientLifecycleEvent,
   PatientOutcomeMeasure,
@@ -1464,6 +1463,25 @@ export type {
   PatientGoalTracking,
   ClinicalBenchmark,
 } from '@/types/patientAnalytics';
+
+export type {
+  ClinicalTestTemplateRecord,
+  PatientChallengeRow,
+  WeeklyChallengeRow,
+  GamificationProfileRow,
+  DailyQuestRow,
+  AchievementRow,
+  AchievementLogRow,
+  XpTransactionRow,
+  GamificationLeaderboardRow,
+  ShopItemRow,
+  UserInventoryRow,
+  GamificationSettingRow,
+  GamificationStats,
+  AtRiskPatient,
+  PopularAchievement,
+  QuestDefinitionRow,
+} from '@/types/workers';
 
 
 export const commissionsApi = {
