@@ -62,7 +62,7 @@ ENVIRONMENT = "production"
 IMAGE_TRANSFORMATIONS = "enabled" 
 R2_PUBLIC_URL = "https://media.moocafisio.com.br"
 # CORS: domínio do frontend em Cloudflare Pages
-ALLOWED_ORIGINS = "https://minatto-fisio.pages.dev,https://fisioflow.pages.dev,https://moocafisio.com.br,https://www.moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173,https://7d2bdf7d.fisioflow.pages.dev,https://fisioflow-web.rafalegollas.workers.dev,https://fisioflow-api.rafalegollas.workers.dev"
+ALLOWED_ORIGINS = "https://minatto-fisio.pages.dev,https://fisioflow.pages.dev,https://moocafisio.com.br,https://www.moocafisio.com.br,https://minatto.moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173,https://7d2bdf7d.fisioflow.pages.dev,https://fisioflow-web.rafalegollas.workers.dev,https://fisioflow-api.rafalegollas.workers.dev"
 GOOGLE_MAPS_API_KEY = ""
 # Neon Auth JWT verification (obrigatório para rotas protegidas)
 # Ajuste para os valores reais do seu tenant Neon Auth.
@@ -87,15 +87,64 @@ AXIOM_DATASET = "fisioflow-logs"
 [env.production]
 name = "fisioflow-api"
 
+[env.production.vars]
+ENVIRONMENT = "production"
+IMAGE_TRANSFORMATIONS = "enabled"
+R2_PUBLIC_URL = "https://media.moocafisio.com.br"
+ALLOWED_ORIGINS = "https://minatto-fisio.pages.dev,https://fisioflow.pages.dev,https://moocafisio.com.br,https://www.moocafisio.com.br,https://minatto.moocafisio.com.br,https://media.moocafisio.com.br,http://localhost:5173,https://7d2bdf7d.fisioflow.pages.dev,https://fisioflow-web.rafalegollas.workers.dev,https://fisioflow-api.rafalegollas.workers.dev"
+GOOGLE_MAPS_API_KEY = ""
+NEON_AUTH_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth"
+NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
+NEON_AUTH_ISSUER = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
+NEON_AUTH_AUDIENCE = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
+VITE_HASURA_PROJECT_URL = "https://capital-duckling-42.hasura.app/v1/graphql"
+AXIOM_ORG_ID = "activity-dbyc"
+AXIOM_DATASET = "fisioflow-logs"
+
+[[env.production.hyperdrive]]
+binding = "HYPERDRIVE"
+id = "12b9fefcfbc04074a63342a9212e1b4f"
+
+[[env.production.r2_buckets]]
+binding = "MEDIA_BUCKET"
+bucket_name = "fisioflow-media"
+
+[env.production.durable_objects]
+bindings = [
+  { name = "ORGANIZATION_STATE", class_name = "OrganizationState" }
+]
+
+[env.production.ai]
+binding = "AI"
+
+[env.production.browser]
+binding = "BROWSER"
+
+[[env.production.queues.producers]]
+queue = "fisioflow-background-tasks"
+binding = "BACKGROUND_QUEUE"
+
+[[env.production.queues.consumers]]
+queue = "fisioflow-background-tasks"
+max_batch_size = 10
+max_batch_timeout = 30
+max_retries = 3
+dead_letter_queue = "fisioflow-tasks-dlq"
+
 # ===== AMBIENTE DE STAGING =====
 [env.staging]
 name = "fisioflow-api-staging"
 
 [env.staging.vars]
 ENVIRONMENT = "staging"
+IMAGE_TRANSFORMATIONS = "enabled"
 R2_PUBLIC_URL = "https://media.moocafisio.com.br"
 ALLOWED_ORIGINS = "https://fisioflow-staging.pages.dev,http://localhost:5173"
+GOOGLE_MAPS_API_KEY = ""
+NEON_AUTH_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth"
 NEON_AUTH_JWKS_URL = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech/neondb/auth/.well-known/jwks.json"
+NEON_AUTH_ISSUER = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
+NEON_AUTH_AUDIENCE = "https://ep-wandering-bonus-acj4zwvo.neonauth.sa-east-1.aws.neon.tech"
 
 # Hasura (Staging)
 VITE_HASURA_PROJECT_URL = "https://capital-duckling-42.hasura.app/v1/graphql" # Mude para staging se desejar
@@ -109,12 +158,33 @@ AXIOM_DATASET = "fisioflow-logs-staging"
 
 [[env.staging.hyperdrive]]
 binding = "HYPERDRIVE"
-id = "DEVE_SER_CRIADO_NO_DASHBOARD" # wrangler hyperdrive create fisioflow-neon-staging
-caching = { max_age = 30 }
+id = "37189eb42d314a0a8fd0e169a2b27ad1"
 
 [[env.staging.r2_buckets]]
 binding = "MEDIA_BUCKET"
 bucket_name = "fisioflow-media-staging"
+
+[env.staging.durable_objects]
+bindings = [
+  { name = "ORGANIZATION_STATE", class_name = "OrganizationState" }
+]
+
+[env.staging.ai]
+binding = "AI"
+
+[env.staging.browser]
+binding = "BROWSER"
+
+[[env.staging.queues.producers]]
+queue = "fisioflow-background-tasks-staging"
+binding = "BACKGROUND_QUEUE"
+
+[[env.staging.queues.consumers]]
+queue = "fisioflow-background-tasks-staging"
+max_batch_size = 10
+max_batch_timeout = 30
+max_retries = 3
+dead_letter_queue = "fisioflow-tasks-dlq-staging"
 
 # ===== CRON TRIGGERS =====
 [triggers]
