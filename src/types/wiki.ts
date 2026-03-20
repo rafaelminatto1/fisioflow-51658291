@@ -3,201 +3,204 @@
  * Sistema de documentação colaborativa estilo Notion
  */
 
-
 /**
  * Página da Wiki
  */
 
 type TimestampLikeLike =
-  | string
-  | Date
-  | {
-      toDate?: () => Date;
-    };
+	| string
+	| Date
+	| {
+			toDate?: () => Date;
+	  };
 
 export interface WikiPage {
-  id: string;
-  slug: string;
-  title: string;
-  template_id?: string;
-  triage_order?: number;
-  content: string;
-  html_content?: string;
-  parent_id?: string;
-  organization_id: string;
-  created_by: string;
-  updated_by: string;
-  tags: string[];
-  category?: string;
-  is_published: boolean;
-  is_pinned?: boolean;             // Novo: Páginas fixadas no topo
-  view_count: number;
-  attachments: WikiAttachment[];
-  icon?: string;
-  cover_image?: string;
-  created_at: TimestampLike;
-  updated_at: TimestampLike;
-  version: number;
-  deleted_at?: TimestampLike;
+	id: string;
+	slug: string;
+	title: string;
+	template_id?: string;
+	triage_order?: number;
+	content: string;
+	html_content?: string;
+	parent_id?: string;
+	organization_id: string;
+	created_by: string;
+	updated_by: string;
+	tags: string[];
+	category?: string;
+	is_published: boolean;
+	is_pinned?: boolean; // Novo: Páginas fixadas no topo
+	view_count: number;
+	attachments: WikiAttachment[];
+	icon?: string;
+	cover_image?: string;
+	created_at: TimestampLike;
+	updated_at: TimestampLike;
+	version: number;
+	deleted_at?: TimestampLike;
 }
 
 /**
  * Histórico de versões de uma página
  */
 export interface WikiPageVersion {
-  id: string;
-  page_id: string;
-  content: string;
-  title: string;                   // Título naquela versão
-  template_id?: string;            // Template associado a esta versão
-  html_content?: string;           // Estrutura serializada de blocos (quando disponível)
-  organization_id?: string;
-  created_by: string;
-  created_at: TimestampLike;
-  version: number;
-  comment?: string;                // Mensagem de commit ("Correção de ortografia")
-  changes?: VersionChange[];       // Diff summary
+	id: string;
+	page_id: string;
+	content: string;
+	title: string; // Título naquela versão
+	template_id?: string; // Template associado a esta versão
+	html_content?: string; // Estrutura serializada de blocos (quando disponível)
+	organization_id?: string;
+	created_by: string;
+	created_at: TimestampLike;
+	version: number;
+	comment?: string; // Mensagem de commit ("Correção de ortografia")
+	changes?: VersionChange[]; // Diff summary
 }
 
 /**
  * Mudança em uma versão
  */
 export interface VersionChange {
-  type: 'added' | 'modified' | 'deleted';
-  section?: string;                // Seção alterada (opcional)
-  lines?: number;                  // Quantidade de linhas alteradas
+	type: "added" | "modified" | "deleted";
+	section?: string; // Seção alterada (opcional)
+	lines?: number; // Quantidade de linhas alteradas
 }
 
 /**
  * Comentário em uma página wiki
  */
 export interface WikiComment {
-  id: string;
-  page_id: string;
-  parent_comment_id?: string;      // Para respostas aninhadas
-  content: string;
-  created_by: string;
-  organization_id?: string;
-  block_id?: string;               // Comentário inline associado a um bloco
-  selection_text?: string;         // Trecho textual comentado
-  selection_start?: number;        // Offset opcional no conteúdo original
-  selection_end?: number;          // Offset opcional no conteúdo original
-  created_at: TimestampLike;
-  updated_at?: TimestampLike;
-  deleted_at?: TimestampLike;
-  resolved?: boolean;
+	id: string;
+	page_id: string;
+	parent_comment_id?: string; // Para respostas aninhadas
+	content: string;
+	created_by: string;
+	organization_id?: string;
+	block_id?: string; // Comentário inline associado a um bloco
+	selection_text?: string; // Trecho textual comentado
+	selection_start?: number; // Offset opcional no conteúdo original
+	selection_end?: number; // Offset opcional no conteúdo original
+	created_at: TimestampLike;
+	updated_at?: TimestampLike;
+	deleted_at?: TimestampLike;
+	resolved?: boolean;
 }
 
 /**
  * Attachment em uma página wiki
  */
 export interface WikiAttachment {
-  id: string;
-  name: string;
-  type: 'image' | 'video' | 'document' | 'link';
-  url: string;
-  size_bytes?: number;
-  uploaded_by: string;
-  uploaded_at: TimestampLike;
+	id: string;
+	name: string;
+	type: "image" | "video" | "document" | "link";
+	url: string;
+	size_bytes?: number;
+	uploaded_by: string;
+	uploaded_at: TimestampLike;
 }
 
 /**
  * Categoria/Folder de páginas wiki
  */
 export interface WikiCategory {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  icon?: string;
-  color?: string;                  // Hex color
-  organization_id: string;
-  parent_id?: string;              // Subcategorias
-  order_index: number;
-  created_at: TimestampLike;
+	id: string;
+	name: string;
+	slug: string;
+	description?: string;
+	icon?: string;
+	color?: string; // Hex color
+	organization_id: string;
+	parent_id?: string; // Subcategorias
+	order_index: number;
+	created_at: TimestampLike;
 }
 
 /**
  * Template de página wiki
  */
 export interface WikiTemplate {
-  id: string;
-  name: string;
-  description?: string;
-  content: string;                 // Markdown com placeholders {{variable}}
-  category?: string;
-  organization_id?: string;        // null = template global
-  icon?: string;
-  variables: TemplateVariable[];
-  created_by: string;
-  created_at: TimestampLike;
+	id: string;
+	name: string;
+	description?: string;
+	content: string; // Markdown com placeholders {{variable}}
+	category?: string;
+	organization_id?: string; // null = template global
+	icon?: string;
+	variables: TemplateVariable[];
+	created_by: string;
+	created_at: TimestampLike;
 }
 
 /**
  * Variável de template
  */
 export interface TemplateVariable {
-  name: string;                    // {{patient_name}}
-  label: string;                   // "Nome do Paciente"
-  type: 'text' | 'textarea' | 'date' | 'select';
-  options?: string[];              // Para type='select'
-  default?: string;
-  required: boolean;
+	name: string; // {{patient_name}}
+	label: string; // "Nome do Paciente"
+	type: "text" | "textarea" | "date" | "select";
+	options?: string[]; // Para type='select'
+	default?: string;
+	required: boolean;
 }
 
 /**
  * Resultado de busca wiki
  */
 export interface WikiSearchResult {
-  page: WikiPage;
-  snippet: string;                 // Trecho com highlight
-  relevance_score: number;
-  matched_terms: string[];
+	page: WikiPage;
+	snippet: string; // Trecho com highlight
+	relevance_score: number;
+	matched_terms: string[];
 }
 
 /**
  * Párvore de páginas para sidebar
  */
 export interface WikiPageTree {
-  page: WikiPage;
-  children: WikiPageTree[];
-  level: number;
+	page: WikiPage;
+	children: WikiPageTree[];
+	level: number;
 }
 
 /**
  * Permissões de wiki
  */
 export interface WikiPermissions {
-  can_read: boolean;
-  can_write: boolean;
-  can_delete: boolean;
-  can_comment: boolean;
-  can_manage: boolean;
+	can_read: boolean;
+	can_write: boolean;
+	can_delete: boolean;
+	can_comment: boolean;
+	can_manage: boolean;
 }
 
 /**
  * Estatísticas de uso da wiki
  */
 export interface WikiStats {
-  total_pages: number;
-  total_views: number;
-  most_viewed: WikiPage[];
-  recent_edits: WikiPage[];
-  categories_count: number;
+	total_pages: number;
+	total_views: number;
+	most_viewed: WikiPage[];
+	recent_edits: WikiPage[];
+	categories_count: number;
 }
 
 export interface WikiTriageEvent {
-  id: string;
-  organization_id: string;
-  page_id: string;
-  page_title?: string;
-  template_id?: string;
-  from_status: 'backlog' | 'in-progress' | 'done';
-  to_status: 'backlog' | 'in-progress' | 'done';
-  previous_order?: number;
-  next_order?: number;
-  changed_by: string;
-  source: 'drag' | 'quick-action' | 'automation-checklist' | 'automation-blocked';
-  reason?: string;
-  created_at: TimestampLike;
+	id: string;
+	organization_id: string;
+	page_id: string;
+	page_title?: string;
+	template_id?: string;
+	from_status: "backlog" | "in-progress" | "done";
+	to_status: "backlog" | "in-progress" | "done";
+	previous_order?: number;
+	next_order?: number;
+	changed_by: string;
+	source:
+		| "drag"
+		| "quick-action"
+		| "automation-checklist"
+		| "automation-blocked";
+	reason?: string;
+	created_at: TimestampLike;
 }

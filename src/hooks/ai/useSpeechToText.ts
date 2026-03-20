@@ -1,111 +1,119 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from "react";
 
 interface UseSpeechToTextProps {
-  onTranscript?: (text: string) => void;
-  language?: string;
+	onTranscript?: (text: string) => void;
+	language?: string;
 }
 
-export function useSpeechToText({ onTranscript, language = 'pt-BR' }: UseSpeechToTextProps = {}) {
-  const [isListening, setIsListening] = useState(false);
-  const [transcript, setTranscript] = useState('');
-  const [interimTranscript, setInterimTranscript] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  
-  const recognitionRef = useRef<any>(null);
+export function useSpeechToText({
+	onTranscript,
+	language = "pt-BR",
+}: UseSpeechToTextProps = {}) {
+	const [isListening, setIsListening] = useState(false);
+	const [transcript, setTranscript] = useState("");
+	const [interimTranscript, setInterimTranscript] = useState("");
+	const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Check browser support
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      setError('Speech recognition not supported in this browser.');
-      return;
-    }
+	const recognitionRef = useRef<any>(null);
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = language;
+	useEffect(() => {
+		// Check browser support
+		if (
+			!("webkitSpeechRecognition" in window) &&
+			!("SpeechRecognition" in window)
+		) {
+			setError("Speech recognition not supported in this browser.");
+			return;
+		}
 
-    recognition.onstart = () => {
-      setIsListening(true);
-      setError(null);
-    };
+		const SpeechRecognition =
+			(window as any).SpeechRecognition ||
+			(window as any).webkitSpeechRecognition;
+		const recognition = new SpeechRecognition();
 
-    recognition.onresult = (event: any) => {
-      let finalTranscript = '';
-      let interim = '';
+		recognition.continuous = true;
+		recognition.interimResults = true;
+		recognition.lang = language;
 
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
-        } else {
-          interim += event.results[i][0].transcript;
-        }
-      }
+		recognition.onstart = () => {
+			setIsListening(true);
+			setError(null);
+		};
 
-      if (finalTranscript) {
-        setTranscript(prev => {
-          const newText = prev ? `${prev} ${finalTranscript}` : finalTranscript;
-          if (onTranscript) onTranscript(newText);
-          return newText;
-        });
-      }
-      setInterimTranscript(interim);
-    };
+		recognition.onresult = (event: any) => {
+			let finalTranscript = "";
+			let interim = "";
 
-    recognition.onerror = (event: any) => {
-      console.error('Speech recognition error', event.error);
-      setError(`Error: ${event.error}`);
-      setIsListening(false);
-    };
+			for (let i = event.resultIndex; i < event.results.length; ++i) {
+				if (event.results[i].isFinal) {
+					finalTranscript += event.results[i][0].transcript;
+				} else {
+					interim += event.results[i][0].transcript;
+				}
+			}
 
-    recognition.onend = () => {
-      setIsListening(false);
-    };
+			if (finalTranscript) {
+				setTranscript((prev) => {
+					const newText = prev ? `${prev} ${finalTranscript}` : finalTranscript;
+					if (onTranscript) onTranscript(newText);
+					return newText;
+				});
+			}
+			setInterimTranscript(interim);
+		};
 
-    recognitionRef.current = recognition;
+		recognition.onerror = (event: any) => {
+			console.error("Speech recognition error", event.error);
+			setError(`Error: ${event.error}`);
+			setIsListening(false);
+		};
 
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    };
-  }, [language, onTranscript]);
+		recognition.onend = () => {
+			setIsListening(false);
+		};
 
-  const startListening = useCallback(() => {
-    if (recognitionRef.current && !isListening) {
-      try {
-        recognitionRef.current.start();
-        setTranscript(''); // Clear previous transcript on new start? Or keep? Let's clear.
-      } catch (e) {
-        console.error("Failed to start recognition", e);
-      }
-    }
-  }, [isListening]);
+		recognitionRef.current = recognition;
 
-  const stopListening = useCallback(() => {
-    if (recognitionRef.current && isListening) {
-      recognitionRef.current.stop();
-    }
-  }, [isListening]);
+		return () => {
+			if (recognitionRef.current) {
+				recognitionRef.current.stop();
+			}
+		};
+	}, [language, onTranscript]);
 
-  const toggleListening = useCallback(() => {
-    if (isListening) {
-      stopListening();
-    } else {
-      startListening();
-    }
-  }, [isListening, startListening, stopListening]);
+	const startListening = useCallback(() => {
+		if (recognitionRef.current && !isListening) {
+			try {
+				recognitionRef.current.start();
+				setTranscript(""); // Clear previous transcript on new start? Or keep? Let's clear.
+			} catch (e) {
+				console.error("Failed to start recognition", e);
+			}
+		}
+	}, [isListening]);
 
-  return {
-    isListening,
-    transcript,
-    interimTranscript,
-    startListening,
-    stopListening,
-    toggleListening,
-    error,
-    isSupported: !error
-  };
+	const stopListening = useCallback(() => {
+		if (recognitionRef.current && isListening) {
+			recognitionRef.current.stop();
+		}
+	}, [isListening]);
+
+	const toggleListening = useCallback(() => {
+		if (isListening) {
+			stopListening();
+		} else {
+			startListening();
+		}
+	}, [isListening, startListening, stopListening]);
+
+	return {
+		isListening,
+		transcript,
+		interimTranscript,
+		startListening,
+		stopListening,
+		toggleListening,
+		error,
+		isSupported: !error,
+	};
 }

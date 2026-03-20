@@ -1,6 +1,7 @@
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react-swc';
+// Utilizando o plugin oficial que no Vite 8 tira vantagem do parser OXC nativo (eliminando o aviso do esbuild/SWC)
+import react from '@vitejs/plugin-react';
 import path from 'path';
 
 function htmlPlugin(appVersion: string, buildTime: string): any {
@@ -84,9 +85,7 @@ export default defineConfig(({ mode }) => {
       target: 'es2020',
       cssTarget: 'es2020',
       sourcemap: true,
-      // rolldownOptions: API nativa do Rolldown (Vite 8)
-      // advancedChunks é deprecated — usar codeSplitting.groups (API nova)
-      // manualChunks do rollupOptions não funciona com Rolldown (exports não re-exportados)
+      // Rolldown nativo do Vite 8 com code splitting agressivo para reduzir LCP
       rolldownOptions: {
         output: {
           codeSplitting: {
@@ -94,18 +93,33 @@ export default defineConfig(({ mode }) => {
               {
                 name: 'react-vendor',
                 test: /[\\/]node_modules[\\/](react|react-dom|scheduler|react-router|react-router-dom|framer-motion)[\\/]/,
-                priority: 20,
+                priority: 30,
               },
               {
                 name: 'pdf-generator',
-                test: /[\\/]node_modules[\\/](jspdf|html2canvas)[\\/]/,
-                priority: 10,
+                test: /[\\/]node_modules[\\/](jspdf|html2canvas|@react-pdf)[\\/]/,
+                priority: 25,
+              },
+              {
+                name: 'excel-vendor',
+                test: /[\\/]node_modules[\\/]exceljs[\\/]/,
+                priority: 25,
+              },
+              {
+                name: 'dicom-vendor',
+                test: /[\\/]node_modules[\\/](@cornerstonejs|dicom-parser)[\\/]/,
+                priority: 25,
               },
               {
                 name: 'canvas-vendor',
                 test: /[\\/]node_modules[\\/](react-konva|konva)[\\/]/,
-                priority: 10,
+                priority: 20,
               },
+              {
+                name: 'ui-vendor',
+                test: /[\\/]node_modules[\\/](@radix-ui|lucide-react|date-fns)[\\/]/,
+                priority: 15,
+              }
             ],
           },
         },

@@ -1,65 +1,92 @@
-import React, { memo, useMemo, useState, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
-import { format, startOfWeek, addDays, isSameDay, parseISO, startOfDay } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { Appointment } from '@/types/appointment';
-import { generateTimeSlots } from '@/lib/config/agenda';
-import { cn } from '@/lib/utils';
-import { formatDateToLocalISO, parseResponseDate } from '@/utils/dateUtils';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { CalendarAppointmentCard } from './CalendarAppointmentCard';
-import { DroppableTimeSlot } from './DroppableTimeSlot';
-import { DraggableAppointment } from './DraggableAppointment';
-import { CalendarDragOverlay } from './DragOverlay';
-import { VirtualizedCalendarGrid } from './virtualized/VirtualizedCalendarGrid';
-import { useCardSize } from '@/hooks/useCardSize';
-import { calculateSlotHeightFromCardSize } from '@/lib/calendar/cardHeightCalculator';
-import { getOverlapStackPosition } from '@/lib/calendar';
-import { buildDragPreviewAppointments, isSameAppointmentSlot } from '@/lib/calendar/dragPreview';
+import React, {
+	memo,
+	useMemo,
+	useState,
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useRef,
+} from "react";
 import {
-
-  DndContext,
-  DragEndEvent,
-  DragOverEvent,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  closestCorners,
-  DragStartEvent
-} from '@dnd-kit/core';
-import { useIsMobile } from '@/hooks/use-mobile.tsx';
-import { useIsTouch } from '@/hooks/use-touch.tsx';
-import { useRenderTracking } from '@/hooks/useRenderTracking';
+	format,
+	startOfWeek,
+	addDays,
+	isSameDay,
+	parseISO,
+	startOfDay,
+} from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Appointment } from "@/types/appointment";
+import { generateTimeSlots } from "@/lib/config/agenda";
+import { cn } from "@/lib/utils";
+import { formatDateToLocalISO, parseResponseDate } from "@/utils/dateUtils";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { CalendarAppointmentCard } from "./CalendarAppointmentCard";
+import { DroppableTimeSlot } from "./DroppableTimeSlot";
+import { DraggableAppointment } from "./DraggableAppointment";
+import { CalendarDragOverlay } from "./DragOverlay";
+import { VirtualizedCalendarGrid } from "./virtualized/VirtualizedCalendarGrid";
+import { useCardSize } from "@/hooks/useCardSize";
+import { calculateSlotHeightFromCardSize } from "@/lib/calendar/cardHeightCalculator";
+import { getOverlapStackPosition } from "@/lib/calendar";
+import {
+	buildDragPreviewAppointments,
+	isSameAppointmentSlot,
+} from "@/lib/calendar/dragPreview";
+import {
+	DndContext,
+	DragEndEvent,
+	DragOverEvent,
+	PointerSensor,
+	TouchSensor,
+	useSensor,
+	useSensors,
+	closestCorners,
+	DragStartEvent,
+} from "@dnd-kit/core";
+import { useIsMobile } from "@/hooks/use-mobile.tsx";
+import { useIsTouch } from "@/hooks/use-touch.tsx";
+import { useRenderTracking } from "@/hooks/useRenderTracking";
 
 // =====================================================================
 // TYPES
 // =====================================================================
 
 interface CalendarWeekViewDndKitProps {
-  currentDate: Date;
-  appointments: Appointment[];
-  savingAppointmentId: string | null;
-  timeSlots?: string[];
-  onTimeSlotClick: (date: Date, time: string) => void;
-  onEditAppointment?: (appointment: Appointment) => void;
-  onDeleteAppointment?: (appointment: Appointment) => void;
-  onDuplicateAppointment?: (appointment: Appointment) => void;
-  onStatusChange?: (id: string, status: string) => void;
-  onAppointmentReschedule?: (appointment: Appointment, newDate: Date, newTime: string) => Promise<void>;
-  checkTimeBlocked: (date: Date, time: string) => { blocked: boolean; reason?: string };
-  isDayClosedForDate: (date: Date) => boolean;
-  openPopoverId: string | null;
-  setOpenPopoverId: (id: string | null) => void;
-  // Drag state from hook
-  dragState: { appointment: Appointment | null; isDragging: boolean };
-  dropTarget: { date: Date; time: string } | null;
-  handleDragStart: (appointment: Appointment) => void;
-  handleDragOver: (date: Date, time: string) => void;
-  handleDragEnd: (appointment: Appointment | null, droppableId: string | null) => void;
-  // Selection props
-  selectionMode?: boolean;
-  selectedIds?: Set<string>;
-  onToggleSelection?: (id: string) => void;
+	currentDate: Date;
+	appointments: Appointment[];
+	savingAppointmentId: string | null;
+	timeSlots?: string[];
+	onTimeSlotClick: (date: Date, time: string) => void;
+	onEditAppointment?: (appointment: Appointment) => void;
+	onDeleteAppointment?: (appointment: Appointment) => void;
+	onDuplicateAppointment?: (appointment: Appointment) => void;
+	onStatusChange?: (id: string, status: string) => void;
+	onAppointmentReschedule?: (
+		appointment: Appointment,
+		newDate: Date,
+		newTime: string,
+	) => Promise<void>;
+	checkTimeBlocked: (
+		date: Date,
+		time: string,
+	) => { blocked: boolean; reason?: string };
+	isDayClosedForDate: (date: Date) => boolean;
+	openPopoverId: string | null;
+	setOpenPopoverId: (id: string | null) => void;
+	// Drag state from hook
+	dragState: { appointment: Appointment | null; isDragging: boolean };
+	dropTarget: { date: Date; time: string } | null;
+	handleDragStart: (appointment: Appointment) => void;
+	handleDragOver: (date: Date, time: string) => void;
+	handleDragEnd: (
+		appointment: Appointment | null,
+		droppableId: string | null,
+	) => void;
+	// Selection props
+	selectionMode?: boolean;
+	selectedIds?: Set<string>;
+	onToggleSelection?: (id: string) => void;
 }
 
 // =====================================================================
@@ -85,800 +112,921 @@ const _OVERLAP_LAYOUT_GAP_PX = 1;
 // =====================================================================
 
 const normalizeTime = (time: string | null | undefined): string => {
-  if (!time || !time.trim()) return '00:00';
-  return time.substring(0, 5);
+	if (!time || !time.trim()) return "00:00";
+	return time.substring(0, 5);
 };
 
-const parseAppointmentDate = (date: string | Date | null | undefined): Date | null => {
-  if (!date) return null;
-  return typeof date === 'string' ? parseISO(date) : date;
+const parseAppointmentDate = (
+	date: string | Date | null | undefined,
+): Date | null => {
+	if (!date) return null;
+	return typeof date === "string" ? parseISO(date) : date;
 };
 
-const parseSlotDroppableId = (slotId: string | null): { date: Date; time: string } | null => {
-  if (!slotId) return null;
+const parseSlotDroppableId = (
+	slotId: string | null,
+): { date: Date; time: string } | null => {
+	if (!slotId) return null;
 
-  const match = slotId.match(SLOT_ID_REGEX);
-  if (!match) return null;
+	const match = slotId.match(SLOT_ID_REGEX);
+	if (!match) return null;
 
-  const [, dateStr, timeStr] = match;
-  return {
-    date: parseResponseDate(dateStr),
-    time: timeStr,
-  };
+	const [, dateStr, timeStr] = match;
+	return {
+		date: parseResponseDate(dateStr),
+		time: timeStr,
+	};
 };
 
 // =====================================================================
 // MAIN COMPONENT
 // =====================================================================
 
-export const CalendarWeekViewDndKit = memo(({
-  currentDate,
-  appointments,
-  savingAppointmentId,
-  timeSlots: timeSlotsProp,
-  onTimeSlotClick,
-  onEditAppointment,
-  onDeleteAppointment,
-  onDuplicateAppointment,
-  onStatusChange,
-  onAppointmentReschedule,
-  checkTimeBlocked,
-  isDayClosedForDate,
-  openPopoverId,
-  setOpenPopoverId,
-  dragState,
-  dropTarget: _dropTarget,
-  handleDragStart: handleDragStartHook,
-  handleDragOver: handleDragOverHook,
-  handleDragEnd: handleDragEndHook,
-  selectionMode = false,
-  selectedIds = new Set(),
-  onToggleSelection
-}: CalendarWeekViewDndKitProps) => {
-  useRenderTracking('CalendarWeekViewDndKit', { appointmentsCount: appointments?.length });
-
-  // Get card size configuration from user preferences
-  const { cardSize, heightScale } = useCardSize();
-  const _preferredSlotHeight = calculateSlotHeightFromCardSize(cardSize, heightScale);
-
-  const isMobile = useIsMobile();
-  const isTouch = useIsTouch();
-
-  // Enhanced sensor configuration for both mouse and touch
-  const sensors = useSensors(
-    // PointerSensor for unified mouse/touch handling
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        // Distance threshold before drag starts (prevents accidental drags during clicks)
-        distance: isTouch ? 8 : 5,
-      },
-    }),
-    // TouchSensor as fallback for better touch support
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 250, // ms before drag starts on touch
-        tolerance: 8, // px of movement allowed during delay
-      },
-    })
-  );
-
-  // Local state for tracking active drag
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [draggedAppointment, setDraggedAppointment] = useState<Appointment | null>(null);
-  const [currentOverId, setCurrentOverId] = useState<string | null>(null);
-
-  // Week days and time slots
-  const weekDays = useMemo(() => {
-    const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-    return Array.from({ length: 6 }, (_, i) => addDays(weekStart, i));
-  }, [currentDate]);
-
-  const timeSlots = useMemo(() => {
-    if (timeSlotsProp && timeSlotsProp.length > 0) {
-      return timeSlotsProp;
-    }
-    return generateTimeSlots(currentDate);
-  }, [timeSlotsProp, currentDate]);
-
-  const derivedStartHour = useMemo(() => {
-    if (!timeSlots.length) return 7;
-    const [h] = timeSlots[0].split(':').map(Number);
-    return Number.isFinite(h) ? h : 7;
-  }, [timeSlots]);
-
-  const derivedEndHour = useMemo(() => {
-    if (!timeSlots.length) return 21;
-    const [h] = timeSlots[timeSlots.length - 1].split(':').map(Number);
-    return Number.isFinite(h) ? h + 1 : 21;
-  }, [timeSlots]);
-  const weekContainerRef = useRef<HTMLDivElement | null>(null);
-  const weekScrollRef = useRef<HTMLDivElement | null>(null);
-  const weekHeaderRef = useRef<HTMLDivElement | null>(null);
-  const [fitSlotHeight, setFitSlotHeight] = useState<number>(() => {
-    // Synchronous estimate before ResizeObserver fires, avoids invisible→visible flash.
-    if (typeof window === 'undefined') return MIN_WEEK_SLOT_HEIGHT;
-    const savedScale = localStorage.getItem('agenda_card_height_multiplier');
-    const scale = savedScale ? Math.min(10, Math.max(0, parseInt(savedScale, 10) || 3)) : 3;
-    const preferred = Math.round(30 + (scale / 10) * 90); // mirrors calculateSlotHeightFromCardSize
-    // Schedule page container = viewport - MainLayout chrome (128px) - header (48px) - adjustment (3px)
-    const estimated = Math.floor((window.innerHeight - 128 - 48 - 3) / 28);
-    return Math.max(MIN_WEEK_SLOT_HEIGHT, Math.min(preferred, estimated > 0 ? estimated : preferred));
-  });
-  const [containerHeight, setContainerHeight] = useState<number>(600);
-  const [isSlotHeightMeasured, setIsSlotHeightMeasured] = useState(false);
-
-  // Force fit all weekly slots (07:00-21:00) in visible height while respecting user compactness preference.
-  const slotHeight = useMemo(() => {
-    return Math.max(MIN_WEEK_SLOT_HEIGHT, fitSlotHeight);
-  }, [fitSlotHeight]);
-
-  // Keep a stable ref to the current slot count so ResizeObserver callbacks always
-  // use the latest value without causing the whole useLayoutEffect to re-run every
-  // time businessHours loads and changes the number of visible time slots.
-  // Re-running the effect after initial measurement causes a visible layout jump.
-  const timeSlotsLengthRef = useRef(timeSlots.length);
-  timeSlotsLengthRef.current = timeSlots.length;
-
-  useLayoutEffect(() => {
-    let hasCompletedInitialMeasurement = false;
-    let retryRafId: number | undefined;
-    let revealTimerId: number | undefined;
-    let measurementFallbackId: number | undefined;
-
-    const scheduleInitialReveal = () => {
-      if (hasCompletedInitialMeasurement || typeof window === 'undefined') return;
-
-      if (revealTimerId !== undefined) {
-        window.clearTimeout(revealTimerId);
-      }
-
-      // Reveal only after measurements stop changing for a short window.
-      revealTimerId = window.setTimeout(() => {
-        if (hasCompletedInitialMeasurement) return;
-        hasCompletedInitialMeasurement = true;
-        if (measurementFallbackId !== undefined) {
-          window.clearTimeout(measurementFallbackId);
-          measurementFallbackId = undefined;
-        }
-        setIsSlotHeightMeasured(true);
-      }, INITIAL_MEASUREMENT_SETTLE_MS);
-    };
-
-    // updateSlotHeight(forceUpdateFit):
-    // - forceUpdateFit=true  → recalculates fitSlotHeight (used during initial measurement and window resize)
-    // - forceUpdateFit=false → only updates containerHeight (used by ResizeObserver after initial measurement
-    //   to avoid the feedback loop where page-load layout settling inflates slot height)
-    const updateSlotHeight = (forceUpdateFit = false) => {
-      const cHeight = weekContainerRef.current?.clientHeight ?? 0;
-      const headerHeight = weekHeaderRef.current?.clientHeight ?? 0;
-      const slotCount = timeSlotsLengthRef.current;
-
-      if (cHeight <= 0 || slotCount === 0) return false;
-
-      const nextContainerHeight = cHeight - headerHeight;
-      setContainerHeight(nextContainerHeight);
-
-      // Only recalculate fitSlotHeight during the initial measurement phase or on explicit
-      // window resize. After the initial measurement, ResizeObserver callbacks caused by
-      // page-layout settling (async businessHours loading, etc.) must NOT change slot height.
-      if (!hasCompletedInitialMeasurement || forceUpdateFit) {
-        const availableGridHeight = cHeight - headerHeight - GRID_HEIGHT_ADJUSTMENT + WEEK_GRID_HEIGHT_BOOST;
-        if (availableGridHeight <= 0) return false;
-        const nextFittedHeight = Math.floor(availableGridHeight / slotCount);
-        setFitSlotHeight(prevHeight => prevHeight === nextFittedHeight ? prevHeight : nextFittedHeight);
-      }
-
-      if (!hasCompletedInitialMeasurement) {
-        scheduleInitialReveal();
-      }
-      return true;
-    };
-
-    let attemptCount = 0;
-    const tryInitialMeasure = () => {
-      const measured = updateSlotHeight(false);
-      if (measured || typeof window === 'undefined' || attemptCount >= INITIAL_MEASUREMENT_MAX_RETRIES) return;
-      attemptCount += 1;
-      retryRafId = window.requestAnimationFrame(tryInitialMeasure);
-    };
-
-    tryInitialMeasure();
-
-    measurementFallbackId = typeof window !== 'undefined'
-      ? window.setTimeout(() => {
-        if (hasCompletedInitialMeasurement) return;
-        hasCompletedInitialMeasurement = true;
-        setIsSlotHeightMeasured(true);
-      }, INITIAL_MEASUREMENT_MAX_WAIT_MS)
-      : undefined;
-
-    // Window resize = explicit user action → recalculate slot height
-    const handleWindowResize = () => updateSlotHeight(true);
-    if (typeof window !== 'undefined') {
-      window.addEventListener('resize', handleWindowResize);
-    }
-
-    // ResizeObserver fires when the container resizes due to page-load layout changes.
-    // After initial measurement, we pass forceUpdateFit=false to keep fitSlotHeight stable.
-    let observer: ResizeObserver | null = null;
-    if (typeof ResizeObserver !== 'undefined') {
-      observer = new ResizeObserver(() => updateSlotHeight(false));
-      if (weekContainerRef.current) observer.observe(weekContainerRef.current);
-      if (weekScrollRef.current) observer.observe(weekScrollRef.current);
-      if (weekHeaderRef.current) observer.observe(weekHeaderRef.current);
-    }
-
-    return () => {
-      if (typeof window !== 'undefined' && retryRafId !== undefined) {
-        window.cancelAnimationFrame(retryRafId);
-      }
-      if (typeof window !== 'undefined' && revealTimerId !== undefined) {
-        window.clearTimeout(revealTimerId);
-      }
-      if (typeof window !== 'undefined' && measurementFallbackId !== undefined) {
-        window.clearTimeout(measurementFallbackId);
-      }
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('resize', handleWindowResize);
-      }
-      observer?.disconnect();
-    };
-  }, []); // Run once on mount only — slot count changes are handled via timeSlotsLengthRef
-
-  // Current time indicator
-  const [currentTimePosition, setCurrentTimePosition] = useState<number | null>(null);
-
-  useEffect(() => {
-    const updatePosition = () => {
-      const now = new Date();
-      const currentHour = now.getHours();
-      const currentMinute = now.getMinutes();
-
-      if (currentHour < derivedStartHour || currentHour > derivedEndHour) {
-        setCurrentTimePosition(null);
-        return;
-      }
-
-      const totalMinutesFromStart = (currentHour - derivedStartHour) * 60 + currentMinute;
-      const position = (totalMinutesFromStart / SLOT_DURATION_MINUTES) * slotHeight;
-      setCurrentTimePosition(position);
-    };
-
-    updatePosition();
-    const interval = setInterval(updatePosition, 60000);
-    return () => clearInterval(interval);
-  }, [slotHeight, derivedStartHour, derivedEndHour]);
-
-  // Filter appointments for this week
-  const weekAppointments = useMemo(() => {
-    const start = startOfDay(weekDays[0]);
-    const end = startOfDay(addDays(weekDays[5], 1));
-
-    return (appointments || []).filter((apt): apt is Appointment => {
-      if (apt == null || typeof (apt as Appointment).id !== 'string') return false;
-      const aptDate = parseAppointmentDate(apt.date);
-      return !!(aptDate && aptDate >= start && aptDate < end);
-    });
-  }, [appointments, weekDays]);
-
-  const hoveredSlotTarget = useMemo(() => {
-    return parseSlotDroppableId(currentOverId);
-  }, [currentOverId]);
-
-  const previewTarget = useMemo(() => {
-    if (!dragState.isDragging || !draggedAppointment || !hoveredSlotTarget) {
-      return null;
-    }
-
-    if (isSameAppointmentSlot(draggedAppointment, hoveredSlotTarget)) {
-      return null;
-    }
-
-    return hoveredSlotTarget;
-  }, [dragState.isDragging, draggedAppointment, hoveredSlotTarget]);
-
-  const previewWeekAppointments = useMemo(() => {
-    return buildDragPreviewAppointments(weekAppointments, draggedAppointment, previewTarget);
-  }, [weekAppointments, draggedAppointment, previewTarget]);
-
-  // Group appointments by day index
-  const appointmentsByDayIndex = useMemo(() => {
-    const map = new Map<number, Appointment[]>();
-    weekDays.forEach((day, dayIndex) => {
-      const dayApts = previewWeekAppointments.filter((apt) => {
-        const d = parseAppointmentDate(apt.date);
-        return d && isSameDay(d, day);
-      });
-      map.set(dayIndex, dayApts);
-    });
-    return map;
-  }, [previewWeekAppointments, weekDays]);
-
-  // Group appointments by time and day for virtualization - Optimized single-pass
-  const appointmentsByTimeAndDay = useMemo(() => {
-    const map = new Map<string, Map<number, Appointment[]>>();
-    
-    // Create day index map for faster lookup
-    const dayToIdx = new Map();
-    weekDays.forEach((d, i) => dayToIdx.set(formatDateToLocalISO(d), i));
-
-    previewWeekAppointments.forEach(apt => {
-      const time = normalizeTime(apt.time);
-      const aptDate = parseAppointmentDate(apt.date);
-      if (!aptDate) return;
-      
-      const dateKey = formatDateToLocalISO(aptDate);
-      const dayIndex = dayToIdx.get(dateKey);
-      if (dayIndex === undefined) return;
-
-      if (!map.has(time)) map.set(time, new Map());
-      const dayMap = map.get(time)!;
-      if (!dayMap.has(dayIndex)) dayMap.set(dayIndex, []);
-      dayMap.get(dayIndex)!.push(apt);
-    });
-    return map;
-  }, [previewWeekAppointments, weekDays]);
-
-  // Blocked time cache
-  const blockedStatusCache = useMemo(() => {
-    const cache = new Map<string, { blocked: boolean; reason?: string }>();
-
-    weekDays.forEach(day => {
-      timeSlots.forEach(time => {
-        const dayIndex = weekDays.indexOf(day);
-        const uniqueKey = `${dayIndex}-${time}`;
-        cache.set(uniqueKey, checkTimeBlocked(day, time));
-      });
-    });
-
-    return cache;
-  }, [weekDays, timeSlots, checkTimeBlocked]);
-
-  // Memoize isDayClosed status
-  const dayClosedStatus = useMemo(() => {
-    return weekDays.map(day => isDayClosedForDate(day));
-  }, [weekDays, isDayClosedForDate]);
-
-  // Get appointments for a specific slot (for preview)
-  const getAppointmentsForSlot = useCallback((date: Date, time: string): Appointment[] => {
-    const dayIndex = weekDays.findIndex(d => isSameDay(d, date));
-    if (dayIndex === -1) return [];
-
-    const dayAppointments = appointmentsByDayIndex.get(dayIndex) ?? [];
-    const normalizedTime = time.substring(0, 5);
-
-    // Find appointments that overlap with this time slot
-    return dayAppointments.filter(apt => {
-      const aptTime = apt.time?.substring(0, 5) || '00:00';
-      return aptTime === normalizedTime;
-    });
-  }, [weekDays, appointmentsByDayIndex]);
-
-  // Calculate position and width for overlapping appointments
-  const getAppointmentStyle = useCallback((apt: Appointment) => {
-    const aptDate = parseAppointmentDate(apt.date);
-    if (!aptDate) return null;
-
-    const dayIndex = weekDays.findIndex(d => isSameDay(d, aptDate));
-    if (dayIndex === -1) return null;
-
-    const time = normalizeTime(apt.time);
-    const [hours, minutes] = time.split(':').map(Number);
-    const aptMinutesTotal = hours * 60 + minutes;
-
-    let startRowIndex = -1;
-    let offsetMinutes = 0;
-
-    for (let i = 0; i < timeSlots.length; i++) {
-      const [slotHour, slotMin] = timeSlots[i].split(':').map(Number);
-      const slotMinutesTotal = slotHour * 60 + slotMin;
-
-      const nextSlot = timeSlots[i + 1];
-      let slotDuration = 30;
-      if (nextSlot) {
-        const [nextHour, nextMin] = nextSlot.split(':').map(Number);
-        slotDuration = (nextHour * 60 + nextMin) - slotMinutesTotal;
-      }
-
-      if (aptMinutesTotal >= slotMinutesTotal && aptMinutesTotal < slotMinutesTotal + slotDuration) {
-        startRowIndex = i;
-        offsetMinutes = aptMinutesTotal - slotMinutesTotal;
-        break;
-      }
-    }
-
-    if (startRowIndex === -1 && timeSlots.length > 0) {
-      const lastSlot = timeSlots[timeSlots.length - 1];
-      const [lastHour, lastMin] = lastSlot.split(':').map(Number);
-      const lastMinutesTotal = lastHour * 60 + lastMin;
-      if (aptMinutesTotal >= lastMinutesTotal) {
-        startRowIndex = timeSlots.length - 1;
-        offsetMinutes = aptMinutesTotal - lastMinutesTotal;
-      } else {
-        return null;
-      }
-    }
-
-    const duration = Math.max(SLOT_DURATION_MINUTES, apt.duration || 60);
-    const slotCount = Math.max(1, Math.ceil(duration / SLOT_DURATION_MINUTES));
-    const heightInPixels = Math.max(MIN_WEEK_SLOT_HEIGHT - 1, (slotHeight * slotCount) - 2);
-
-    const dayAppointments = appointmentsByDayIndex.get(dayIndex) ?? [];
-    // Recalculate overlap using the simulated day layout so the destination column
-    // shows the same split the user will get after dropping.
-    const { index, count } = getOverlapStackPosition(dayAppointments, apt);
-
-    // Margem lateral para garantir que o grid seja clicável
-    const innerWidthPercent = 94;
-    const cardWidthPercent = innerWidthPercent / count;
-    const leftPercent = (index * cardWidthPercent) + 3;
-    const offsetPx = (offsetMinutes / 30) * slotHeight;
-
-    return {
-      gridColumn: `${dayIndex + 2} / span 1`,
-      gridRow: `${startRowIndex + 1}`,
-      height: `${heightInPixels}px`,
-      width: `${cardWidthPercent}%`,
-      left: `${leftPercent}%`,
-      marginTop: `${offsetPx}px`,
-      zIndex: 10 + index
-    };
-  }, [weekDays, timeSlots, appointmentsByDayIndex, slotHeight]);
-
-  // @dnd-kit event handlers
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    const { active } = event;
-    const appointment = weekAppointments.find(a => a.id === active.id);
-    if (appointment) {
-      setActiveId(active.id as string);
-      setDraggedAppointment(appointment);
-      handleDragStartHook(appointment);
-    }
-  }, [weekAppointments, handleDragStartHook]);
-
-  const handleDragOver = useCallback((event: DragOverEvent) => {
-    const { over } = event;
-    if (!over) {
-      setCurrentOverId(null);
-      return;
-    }
-
-    // Update current over ID for DroppableTimeSlot feedback
-    const overId = over.id as string;
-    if (currentOverId !== overId) {
-      setCurrentOverId(overId);
-    }
-
-    // Parse droppable ID: "slot-YYYY-MM-DD-HH:mm"
-    const match = overId.match(/slot-(\d{4}-\d{2}-\d{2})-(\d{2}:\d{2})/);
-    if (match) {
-      const [, dateStr, timeStr] = match;
-      handleDragOverHook(parseResponseDate(dateStr), timeStr);
-    }
-  }, [currentOverId, handleDragOverHook]);
-
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event;
-    setActiveId(null);
-    setDraggedAppointment(null);
-    setCurrentOverId(null);
-
-    const appointment = weekAppointments.find(a => a.id === active.id);
-    const droppableId = over?.id as string || null;
-
-    handleDragEndHook(appointment || null, droppableId);
-  }, [weekAppointments, handleDragEndHook]);
-
-  const isDraggable = !!onAppointmentReschedule && !selectionMode;
-  const isDraggingThis = useCallback((aptId: string) =>
-    activeId === aptId || (dragState.isDragging && dragState.appointment?.id === aptId),
-    [activeId, dragState]
-  );
-
-  const handleBlankGridClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    if (dragState.isDragging) return;
-
-    const target = event.target as HTMLElement | null;
-    if (!target) return;
-
-    if (
-      target.closest('[data-week-appointment="true"]') || 
-      target.closest('[role="dialog"]') || 
-      target.closest('[role="alertdialog"]')
-    ) {
-      return;
-    }
-
-    const scrollElement = weekScrollRef.current;
-    if (!scrollElement) return;
-
-    const rect = scrollElement.getBoundingClientRect();
-    const relativeX = event.clientX - rect.left;
-    const relativeY = event.clientY - rect.top + scrollElement.scrollTop;
-
-    if (relativeX < WEEK_TIME_COLUMN_WIDTH_PX || relativeY < 0) {
-      return;
-    }
-
-    const dayColumnWidth = (scrollElement.clientWidth - WEEK_TIME_COLUMN_WIDTH_PX) / weekDays.length;
-    if (dayColumnWidth <= 0) return;
-
-    const dayIndex = Math.floor((relativeX - WEEK_TIME_COLUMN_WIDTH_PX) / dayColumnWidth);
-    const rowIndex = Math.floor(relativeY / slotHeight);
-
-    if (dayIndex < 0 || dayIndex >= weekDays.length || rowIndex < 0 || rowIndex >= timeSlots.length) {
-      return;
-    }
-
-    const day = weekDays[dayIndex];
-    const time = timeSlots[rowIndex];
-    if (!day || !time) return;
-    if (isDayClosedForDate(day)) return;
-
-    const { blocked } = checkTimeBlocked(day, time);
-    if (blocked) return;
-
-    onTimeSlotClick(day, time);
-  }, [
-    dragState.isDragging,
-    weekDays,
-    slotHeight,
-    timeSlots,
-    isDayClosedForDate,
-    checkTimeBlocked,
-    onTimeSlotClick
-  ]);
-
-  // Render function for virtualization
-  const renderSlot = useCallback((time: string, _rowIndex: number) => {
-    const isHour = time.endsWith(':00');
-    const dayAppointmentsMap = appointmentsByTimeAndDay.get(time);
-
-    return (
-      <div
-        className="grid grid-cols-[60px_repeat(6,1fr)] relative"
-        style={{ height: slotHeight }}
-      >
-        {/* Time Label */}
-        <div
-          className={cn(
-            "border-r border-slate-100 dark:border-slate-800 text-[10px] font-medium flex justify-end pr-2 pt-0.5 sticky left-0 z-30 bg-white dark:bg-slate-950",
-            isHour ? "text-slate-900 dark:text-slate-200" : "text-gray-500 dark:text-slate-600 hidden"
-          )}
-        >
-          {isHour ? time : ''}
-        </div>
-
-        {/* Day Columns (Droppable Slots) */}
-        {weekDays.map((day, colIndex) => {
-          const isClosed = dayClosedStatus[colIndex];
-          const key = `${colIndex}-${time}`;
-          const { blocked } = blockedStatusCache.get(key) || { blocked: false };
-
-          const isDropTarget = hoveredSlotTarget && isSameDay(hoveredSlotTarget.date, day) && hoveredSlotTarget.time === time;
-          const isDraggingOver = currentOverId === `slot-${formatDateToLocalISO(day)}-${time}`;
-
-          const slotAppointments = !previewTarget && (isDropTarget || isDraggingOver)
-            ? getAppointmentsForSlot(day, time).filter(a => a.id !== draggedAppointment?.id)
-            : [];
-
-          const appointmentsInThisCell = dayAppointmentsMap?.get(colIndex) || [];
-
-          return (
-            <DroppableTimeSlot
-              key={`${colIndex}`}
-              day={day}
-              time={time}
-              rowIndex={0} // Use 0 because the row is a single-row grid
-              colIndex={colIndex}
-              isClosed={isClosed}
-              isBlocked={blocked}
-              isDropTarget={!!isDropTarget}
-              isDraggingOver={isDraggingOver}
-              targetAppointments={slotAppointments}
-              draggedAppointment={previewTarget ? null : draggedAppointment}
-              slotHeight={slotHeight}
-            >
-              {/* Appointments starting in this cell */}
-              {appointmentsInThisCell.map(apt => {
-                const style = getAppointmentStyle(apt);
-                if (!style) return null;
-
-                const isPreviewDraggedAppointment = !!previewTarget && draggedAppointment?.id === apt.id;
-                const isDraggingThisOne = isDraggingThis(apt.id);
-                // Já que removemos o DragOverlay, não escondemos mais o original.
-                // O DraggableAppointment agora cuida do visual do arraste.
-                const hideGhostWhenDragging = false;
-
-                // Adjust style for relative positioning in DroppableTimeSlot
-                const cellStyle: React.CSSProperties = {
-                  position: 'absolute',
-                  top: style.marginTop,
-                  height: style.height,
-                  left: style.left,
-                  width: style.width,
-                  zIndex: 10 + (style.zIndex as number || 0),
-                };
-
-                if (isPreviewDraggedAppointment) {
-                  return (
-                    <CalendarAppointmentCard
-                      key={apt.id}
-                      appointment={apt}
-                      style={{ ...cellStyle, pointerEvents: 'none' }}
-                      isDraggable={false}
-                      isDragging={false}
-                      isSaving={false}
-                      isDropTarget={!!isDropTarget || isDraggingOver}
-                      hideGhostWhenSiblings={false}
-                      onDragStart={() => { }}
-                      onDragEnd={() => { }}
-                      onDragOver={() => { }}
-                      onDrop={() => { }}
-                      onOpenPopover={() => { }}
-                      isPopoverOpen={false}
-                      dragHandleOnly={false}
-                      density="compact"
-                    />
-                  );
-                }
-
-                return (
-                  <DraggableAppointment
-                    key={apt.id}
-                    id={apt.id}
-                    style={cellStyle}
-                    isDragging={isDraggingThisOne}
-                    isDragDisabled={!isDraggable || isMobile || selectionMode}
-                    dragData={{ appointment: apt }}
-                    isPopoverOpen={openPopoverId === apt.id}
-                  >
-                    <CalendarAppointmentCard
-                      appointment={apt}
-                      style={{ ...cellStyle, width: '100%', left: '0', top: '0' }}
-                      isDraggable={false}
-                      isDragging={isDraggingThisOne}
-                      isSaving={apt.id === savingAppointmentId}
-                      isDropTarget={!!isDropTarget}
-                      hideGhostWhenSiblings={hideGhostWhenDragging}
-                      onDragStart={() => { }}
-                      onDragEnd={() => { }}
-                      onDragOver={() => { }}
-                      onDrop={() => { }}
-                      onEditAppointment={onEditAppointment}
-                      onDeleteAppointment={onDeleteAppointment}
-                      onDuplicateAppointment={onDuplicateAppointment}
-                      onStatusChange={onStatusChange}
-                      onOpenPopover={setOpenPopoverId}
-                      isPopoverOpen={openPopoverId === apt.id}
-                      selectionMode={selectionMode}
-                      isSelected={selectedIds?.has(apt.id)}
-                      onToggleSelection={onToggleSelection}
-                      dragHandleOnly={false}
-                      density="compact"
-                    />
-                  </DraggableAppointment>
-                );
-              })}
-            </DroppableTimeSlot>
-          );
-        })
-        }
-      </div >
-    );
-  }, [
-    slotHeight,
-    appointmentsByTimeAndDay,
-    weekDays,
-    dayClosedStatus,
-    blockedStatusCache,
-    hoveredSlotTarget,
-    currentOverId,
-    getAppointmentsForSlot,
-    draggedAppointment,
-    previewTarget,
-    getAppointmentStyle,
-    isDraggingThis,
-    isDraggable,
-    isMobile,
-    selectionMode,
-    openPopoverId,
-    savingAppointmentId,
-    onEditAppointment,
-    onDeleteAppointment,
-    setOpenPopoverId,
-    selectedIds,
-    onToggleSelection
-  ]);
-
-  return (
-    <TooltipProvider>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragEnd={handleDragEnd}
-      >
-        <div
-          ref={weekContainerRef}
-          className={cn(
-            "flex flex-col bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-slate-900 dark:text-slate-100 font-display h-full relative overflow-hidden",
-            !isSlotHeightMeasured && "opacity-0 pointer-events-none"
-          )}
-          aria-busy={!isSlotHeightMeasured}
-        >
-          {/* Header Row - Fixed at top */}
-          <div ref={weekHeaderRef} className="grid grid-cols-[60px_repeat(6,1fr)] bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 z-40 shadow-sm min-w-[600px]">
-            {/* Time icon */}
-            <div className="h-12 border-r border-slate-200 dark:border-slate-800 flex items-center justify-center bg-white dark:bg-slate-950">
-              <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700/50">
-                <span className="text-[10px] font-bold">GMT-3</span>
-              </div>
-            </div>
-
-            {/* Days Headers */}
-            {weekDays.map((day, i) => {
-              const isTodayDate = isSameDay(day, new Date());
-              return (
-                <div key={i} className={cn(
-                  "h-12 flex flex-col items-center justify-center border-r border-slate-100 dark:border-slate-800/50 relative group transition-colors",
-                  isTodayDate ? "bg-blue-50/50 dark:bg-blue-900/10" : "hover:bg-slate-50 dark:hover:bg-slate-900/40"
-                )}>
-                  {isTodayDate && (
-                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-500" />
-                  )}
-                  <span className={cn(
-                    "text-[9px] font-medium uppercase tracking-wider mb-0.5",
-                    isTodayDate ? "text-blue-600 dark:text-blue-400" : "text-slate-600 dark:text-gray-500"
-                  )}>
-                    {format(day, 'EEE', { locale: ptBR }).replace('.', '')}
-                  </span>
-                  <div className={cn(
-                    "text-base font-bold w-7 h-7 rounded-full flex items-center justify-center transition-all",
-                    isTodayDate
-                      ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                      : "text-slate-700 dark:text-slate-300 group-hover:bg-slate-200 dark:group-hover:bg-slate-700"
-                  )}>
-                    {format(day, 'd')}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Virtualized Grid */}
-          <div className="flex-1 relative bg-white dark:bg-slate-950" id="calendar-grid-dndkit" data-calendar-drop-zone>
-            <VirtualizedCalendarGrid
-              containerRef={weekScrollRef}
-              timeSlots={timeSlots}
-              slotHeight={slotHeight}
-              containerHeight={containerHeight}
-              className="custom-scrollbar"
-              renderSlot={renderSlot}
-              onClick={handleBlankGridClick}
-              overscan={10} // Higher overscan for appointments spanning multiple slots
-            >
-              {/* Current Time Indicator Line */}
-              {currentTimePosition !== null && (
-                <div
-                  className="absolute z-50 pointer-events-none flex items-center w-full"
-                  style={{
-                    top: `${currentTimePosition}px`,
-                    left: '60px',
-                    right: 0
-                  }}
-                >
-                  <div className="w-2 h-2 rounded-full bg-red-500 -ml-1 flex-shrink-0"></div>
-                  <div className="h-px bg-red-500 flex-1 shadow-sm"></div>
-                </div>
-              )}
-            </VirtualizedCalendarGrid>
-          </div>
-        </div>
-      </DndContext>
-    </TooltipProvider>
-  );
-});
-
-CalendarWeekViewDndKit.displayName = 'CalendarWeekViewDndKit';
+export const CalendarWeekViewDndKit = memo(
+	({
+		currentDate,
+		appointments,
+		savingAppointmentId,
+		timeSlots: timeSlotsProp,
+		onTimeSlotClick,
+		onEditAppointment,
+		onDeleteAppointment,
+		onDuplicateAppointment,
+		onStatusChange,
+		onAppointmentReschedule,
+		checkTimeBlocked,
+		isDayClosedForDate,
+		openPopoverId,
+		setOpenPopoverId,
+		dragState,
+		dropTarget: _dropTarget,
+		handleDragStart: handleDragStartHook,
+		handleDragOver: handleDragOverHook,
+		handleDragEnd: handleDragEndHook,
+		selectionMode = false,
+		selectedIds = new Set(),
+		onToggleSelection,
+	}: CalendarWeekViewDndKitProps) => {
+		useRenderTracking("CalendarWeekViewDndKit", {
+			appointmentsCount: appointments?.length,
+		});
+
+		// Get card size configuration from user preferences
+		const { cardSize, heightScale } = useCardSize();
+		const _preferredSlotHeight = calculateSlotHeightFromCardSize(
+			cardSize,
+			heightScale,
+		);
+
+		const isMobile = useIsMobile();
+		const isTouch = useIsTouch();
+
+		// Enhanced sensor configuration for both mouse and touch
+		const sensors = useSensors(
+			// PointerSensor for unified mouse/touch handling
+			useSensor(PointerSensor, {
+				activationConstraint: {
+					// Distance threshold before drag starts (prevents accidental drags during clicks)
+					distance: isTouch ? 8 : 5,
+				},
+			}),
+			// TouchSensor as fallback for better touch support
+			useSensor(TouchSensor, {
+				activationConstraint: {
+					delay: 250, // ms before drag starts on touch
+					tolerance: 8, // px of movement allowed during delay
+				},
+			}),
+		);
+
+		// Local state for tracking active drag
+		const [activeId, setActiveId] = useState<string | null>(null);
+		const [draggedAppointment, setDraggedAppointment] =
+			useState<Appointment | null>(null);
+		const [currentOverId, setCurrentOverId] = useState<string | null>(null);
+
+		// Week days and time slots
+		const weekDays = useMemo(() => {
+			const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+			return Array.from({ length: 6 }, (_, i) => addDays(weekStart, i));
+		}, [currentDate]);
+
+		const timeSlots = useMemo(() => {
+			if (timeSlotsProp && timeSlotsProp.length > 0) {
+				return timeSlotsProp;
+			}
+			return generateTimeSlots(currentDate);
+		}, [timeSlotsProp, currentDate]);
+
+		const derivedStartHour = useMemo(() => {
+			if (!timeSlots.length) return 7;
+			const [h] = timeSlots[0].split(":").map(Number);
+			return Number.isFinite(h) ? h : 7;
+		}, [timeSlots]);
+
+		const derivedEndHour = useMemo(() => {
+			if (!timeSlots.length) return 21;
+			const [h] = timeSlots[timeSlots.length - 1].split(":").map(Number);
+			return Number.isFinite(h) ? h + 1 : 21;
+		}, [timeSlots]);
+		const weekContainerRef = useRef<HTMLDivElement | null>(null);
+		const weekScrollRef = useRef<HTMLDivElement | null>(null);
+		const weekHeaderRef = useRef<HTMLDivElement | null>(null);
+		const [fitSlotHeight, setFitSlotHeight] = useState<number>(() => {
+			// Synchronous estimate before ResizeObserver fires, avoids invisible→visible flash.
+			if (typeof window === "undefined") return MIN_WEEK_SLOT_HEIGHT;
+			const savedScale = localStorage.getItem("agenda_card_height_multiplier");
+			const scale = savedScale
+				? Math.min(10, Math.max(0, parseInt(savedScale, 10) || 3))
+				: 3;
+			const preferred = Math.round(30 + (scale / 10) * 90); // mirrors calculateSlotHeightFromCardSize
+			// Schedule page container = viewport - MainLayout chrome (128px) - header (48px) - adjustment (3px)
+			const estimated = Math.floor((window.innerHeight - 128 - 48 - 3) / 28);
+			return Math.max(
+				MIN_WEEK_SLOT_HEIGHT,
+				Math.min(preferred, estimated > 0 ? estimated : preferred),
+			);
+		});
+		const [containerHeight, setContainerHeight] = useState<number>(600);
+		const [isSlotHeightMeasured, setIsSlotHeightMeasured] = useState(false);
+
+		// Force fit all weekly slots (07:00-21:00) in visible height while respecting user compactness preference.
+		const slotHeight = useMemo(() => {
+			return Math.max(MIN_WEEK_SLOT_HEIGHT, fitSlotHeight);
+		}, [fitSlotHeight]);
+
+		// Keep a stable ref to the current slot count so ResizeObserver callbacks always
+		// use the latest value without causing the whole useLayoutEffect to re-run every
+		// time businessHours loads and changes the number of visible time slots.
+		// Re-running the effect after initial measurement causes a visible layout jump.
+		const timeSlotsLengthRef = useRef(timeSlots.length);
+		timeSlotsLengthRef.current = timeSlots.length;
+
+		useLayoutEffect(() => {
+			let hasCompletedInitialMeasurement = false;
+			let retryRafId: number | undefined;
+			let revealTimerId: number | undefined;
+			let measurementFallbackId: number | undefined;
+
+			const scheduleInitialReveal = () => {
+				if (hasCompletedInitialMeasurement || typeof window === "undefined")
+					return;
+
+				if (revealTimerId !== undefined) {
+					window.clearTimeout(revealTimerId);
+				}
+
+				// Reveal only after measurements stop changing for a short window.
+				revealTimerId = window.setTimeout(() => {
+					if (hasCompletedInitialMeasurement) return;
+					hasCompletedInitialMeasurement = true;
+					if (measurementFallbackId !== undefined) {
+						window.clearTimeout(measurementFallbackId);
+						measurementFallbackId = undefined;
+					}
+					setIsSlotHeightMeasured(true);
+				}, INITIAL_MEASUREMENT_SETTLE_MS);
+			};
+
+			// updateSlotHeight(forceUpdateFit):
+			// - forceUpdateFit=true  → recalculates fitSlotHeight (used during initial measurement and window resize)
+			// - forceUpdateFit=false → only updates containerHeight (used by ResizeObserver after initial measurement
+			//   to avoid the feedback loop where page-load layout settling inflates slot height)
+			const updateSlotHeight = (forceUpdateFit = false) => {
+				const cHeight = weekContainerRef.current?.clientHeight ?? 0;
+				const headerHeight = weekHeaderRef.current?.clientHeight ?? 0;
+				const slotCount = timeSlotsLengthRef.current;
+
+				if (cHeight <= 0 || slotCount === 0) return false;
+
+				const nextContainerHeight = cHeight - headerHeight;
+				setContainerHeight(nextContainerHeight);
+
+				// Only recalculate fitSlotHeight during the initial measurement phase or on explicit
+				// window resize. After the initial measurement, ResizeObserver callbacks caused by
+				// page-layout settling (async businessHours loading, etc.) must NOT change slot height.
+				if (!hasCompletedInitialMeasurement || forceUpdateFit) {
+					const availableGridHeight =
+						cHeight -
+						headerHeight -
+						GRID_HEIGHT_ADJUSTMENT +
+						WEEK_GRID_HEIGHT_BOOST;
+					if (availableGridHeight <= 0) return false;
+					const nextFittedHeight = Math.floor(availableGridHeight / slotCount);
+					setFitSlotHeight((prevHeight) =>
+						prevHeight === nextFittedHeight ? prevHeight : nextFittedHeight,
+					);
+				}
+
+				if (!hasCompletedInitialMeasurement) {
+					scheduleInitialReveal();
+				}
+				return true;
+			};
+
+			let attemptCount = 0;
+			const tryInitialMeasure = () => {
+				const measured = updateSlotHeight(false);
+				if (
+					measured ||
+					typeof window === "undefined" ||
+					attemptCount >= INITIAL_MEASUREMENT_MAX_RETRIES
+				)
+					return;
+				attemptCount += 1;
+				retryRafId = window.requestAnimationFrame(tryInitialMeasure);
+			};
+
+			tryInitialMeasure();
+
+			measurementFallbackId =
+				typeof window !== "undefined"
+					? window.setTimeout(() => {
+							if (hasCompletedInitialMeasurement) return;
+							hasCompletedInitialMeasurement = true;
+							setIsSlotHeightMeasured(true);
+						}, INITIAL_MEASUREMENT_MAX_WAIT_MS)
+					: undefined;
+
+			// Window resize = explicit user action → recalculate slot height
+			const handleWindowResize = () => updateSlotHeight(true);
+			if (typeof window !== "undefined") {
+				window.addEventListener("resize", handleWindowResize);
+			}
+
+			// ResizeObserver fires when the container resizes due to page-load layout changes.
+			// After initial measurement, we pass forceUpdateFit=false to keep fitSlotHeight stable.
+			let observer: ResizeObserver | null = null;
+			if (typeof ResizeObserver !== "undefined") {
+				observer = new ResizeObserver(() => updateSlotHeight(false));
+				if (weekContainerRef.current)
+					observer.observe(weekContainerRef.current);
+				if (weekScrollRef.current) observer.observe(weekScrollRef.current);
+				if (weekHeaderRef.current) observer.observe(weekHeaderRef.current);
+			}
+
+			return () => {
+				if (typeof window !== "undefined" && retryRafId !== undefined) {
+					window.cancelAnimationFrame(retryRafId);
+				}
+				if (typeof window !== "undefined" && revealTimerId !== undefined) {
+					window.clearTimeout(revealTimerId);
+				}
+				if (
+					typeof window !== "undefined" &&
+					measurementFallbackId !== undefined
+				) {
+					window.clearTimeout(measurementFallbackId);
+				}
+				if (typeof window !== "undefined") {
+					window.removeEventListener("resize", handleWindowResize);
+				}
+				observer?.disconnect();
+			};
+		}, []); // Run once on mount only — slot count changes are handled via timeSlotsLengthRef
+
+		// Current time indicator
+		const [currentTimePosition, setCurrentTimePosition] = useState<
+			number | null
+		>(null);
+
+		useEffect(() => {
+			const updatePosition = () => {
+				const now = new Date();
+				const currentHour = now.getHours();
+				const currentMinute = now.getMinutes();
+
+				if (currentHour < derivedStartHour || currentHour > derivedEndHour) {
+					setCurrentTimePosition(null);
+					return;
+				}
+
+				const totalMinutesFromStart =
+					(currentHour - derivedStartHour) * 60 + currentMinute;
+				const position =
+					(totalMinutesFromStart / SLOT_DURATION_MINUTES) * slotHeight;
+				setCurrentTimePosition(position);
+			};
+
+			updatePosition();
+			const interval = setInterval(updatePosition, 60000);
+			return () => clearInterval(interval);
+		}, [slotHeight, derivedStartHour, derivedEndHour]);
+
+		// Filter appointments for this week
+		const weekAppointments = useMemo(() => {
+			const start = startOfDay(weekDays[0]);
+			const end = startOfDay(addDays(weekDays[5], 1));
+
+			return (appointments || []).filter((apt): apt is Appointment => {
+				if (apt == null || typeof (apt as Appointment).id !== "string")
+					return false;
+				const aptDate = parseAppointmentDate(apt.date);
+				return !!(aptDate && aptDate >= start && aptDate < end);
+			});
+		}, [appointments, weekDays]);
+
+		const hoveredSlotTarget = useMemo(() => {
+			return parseSlotDroppableId(currentOverId);
+		}, [currentOverId]);
+
+		const previewTarget = useMemo(() => {
+			if (!dragState.isDragging || !draggedAppointment || !hoveredSlotTarget) {
+				return null;
+			}
+
+			if (isSameAppointmentSlot(draggedAppointment, hoveredSlotTarget)) {
+				return null;
+			}
+
+			return hoveredSlotTarget;
+		}, [dragState.isDragging, draggedAppointment, hoveredSlotTarget]);
+
+		const previewWeekAppointments = useMemo(() => {
+			return buildDragPreviewAppointments(
+				weekAppointments,
+				draggedAppointment,
+				previewTarget,
+			);
+		}, [weekAppointments, draggedAppointment, previewTarget]);
+
+		// Group appointments by day index
+		const appointmentsByDayIndex = useMemo(() => {
+			const map = new Map<number, Appointment[]>();
+			weekDays.forEach((day, dayIndex) => {
+				const dayApts = previewWeekAppointments.filter((apt) => {
+					const d = parseAppointmentDate(apt.date);
+					return d && isSameDay(d, day);
+				});
+				map.set(dayIndex, dayApts);
+			});
+			return map;
+		}, [previewWeekAppointments, weekDays]);
+
+		// Group appointments by time and day for virtualization - Optimized single-pass
+		const appointmentsByTimeAndDay = useMemo(() => {
+			const map = new Map<string, Map<number, Appointment[]>>();
+
+			// Create day index map for faster lookup
+			const dayToIdx = new Map();
+			weekDays.forEach((d, i) => dayToIdx.set(formatDateToLocalISO(d), i));
+
+			previewWeekAppointments.forEach((apt) => {
+				const time = normalizeTime(apt.time);
+				const aptDate = parseAppointmentDate(apt.date);
+				if (!aptDate) return;
+
+				const dateKey = formatDateToLocalISO(aptDate);
+				const dayIndex = dayToIdx.get(dateKey);
+				if (dayIndex === undefined) return;
+
+				if (!map.has(time)) map.set(time, new Map());
+				const dayMap = map.get(time)!;
+				if (!dayMap.has(dayIndex)) dayMap.set(dayIndex, []);
+				dayMap.get(dayIndex)!.push(apt);
+			});
+			return map;
+		}, [previewWeekAppointments, weekDays]);
+
+		// Blocked time cache
+		const blockedStatusCache = useMemo(() => {
+			const cache = new Map<string, { blocked: boolean; reason?: string }>();
+
+			weekDays.forEach((day) => {
+				timeSlots.forEach((time) => {
+					const dayIndex = weekDays.indexOf(day);
+					const uniqueKey = `${dayIndex}-${time}`;
+					cache.set(uniqueKey, checkTimeBlocked(day, time));
+				});
+			});
+
+			return cache;
+		}, [weekDays, timeSlots, checkTimeBlocked]);
+
+		// Memoize isDayClosed status
+		const dayClosedStatus = useMemo(() => {
+			return weekDays.map((day) => isDayClosedForDate(day));
+		}, [weekDays, isDayClosedForDate]);
+
+		// Get appointments for a specific slot (for preview)
+		const getAppointmentsForSlot = useCallback(
+			(date: Date, time: string): Appointment[] => {
+				const dayIndex = weekDays.findIndex((d) => isSameDay(d, date));
+				if (dayIndex === -1) return [];
+
+				const dayAppointments = appointmentsByDayIndex.get(dayIndex) ?? [];
+				const normalizedTime = time.substring(0, 5);
+
+				// Find appointments that overlap with this time slot
+				return dayAppointments.filter((apt) => {
+					const aptTime = apt.time?.substring(0, 5) || "00:00";
+					return aptTime === normalizedTime;
+				});
+			},
+			[weekDays, appointmentsByDayIndex],
+		);
+
+		// Calculate position and width for overlapping appointments
+		const getAppointmentStyle = useCallback(
+			(apt: Appointment) => {
+				const aptDate = parseAppointmentDate(apt.date);
+				if (!aptDate) return null;
+
+				const dayIndex = weekDays.findIndex((d) => isSameDay(d, aptDate));
+				if (dayIndex === -1) return null;
+
+				const time = normalizeTime(apt.time);
+				const [hours, minutes] = time.split(":").map(Number);
+				const aptMinutesTotal = hours * 60 + minutes;
+
+				let startRowIndex = -1;
+				let offsetMinutes = 0;
+
+				for (let i = 0; i < timeSlots.length; i++) {
+					const [slotHour, slotMin] = timeSlots[i].split(":").map(Number);
+					const slotMinutesTotal = slotHour * 60 + slotMin;
+
+					const nextSlot = timeSlots[i + 1];
+					let slotDuration = 30;
+					if (nextSlot) {
+						const [nextHour, nextMin] = nextSlot.split(":").map(Number);
+						slotDuration = nextHour * 60 + nextMin - slotMinutesTotal;
+					}
+
+					if (
+						aptMinutesTotal >= slotMinutesTotal &&
+						aptMinutesTotal < slotMinutesTotal + slotDuration
+					) {
+						startRowIndex = i;
+						offsetMinutes = aptMinutesTotal - slotMinutesTotal;
+						break;
+					}
+				}
+
+				if (startRowIndex === -1 && timeSlots.length > 0) {
+					const lastSlot = timeSlots[timeSlots.length - 1];
+					const [lastHour, lastMin] = lastSlot.split(":").map(Number);
+					const lastMinutesTotal = lastHour * 60 + lastMin;
+					if (aptMinutesTotal >= lastMinutesTotal) {
+						startRowIndex = timeSlots.length - 1;
+						offsetMinutes = aptMinutesTotal - lastMinutesTotal;
+					} else {
+						return null;
+					}
+				}
+
+				const duration = Math.max(SLOT_DURATION_MINUTES, apt.duration || 60);
+				const slotCount = Math.max(
+					1,
+					Math.ceil(duration / SLOT_DURATION_MINUTES),
+				);
+				const heightInPixels = Math.max(
+					MIN_WEEK_SLOT_HEIGHT - 1,
+					slotHeight * slotCount - 2,
+				);
+
+				const dayAppointments = appointmentsByDayIndex.get(dayIndex) ?? [];
+				// Recalculate overlap using the simulated day layout so the destination column
+				// shows the same split the user will get after dropping.
+				const { index, count } = getOverlapStackPosition(dayAppointments, apt);
+
+				// Margem lateral para garantir que o grid seja clicável
+				const innerWidthPercent = 94;
+				const cardWidthPercent = innerWidthPercent / count;
+				const leftPercent = index * cardWidthPercent + 3;
+				const offsetPx = (offsetMinutes / 30) * slotHeight;
+
+				return {
+					gridColumn: `${dayIndex + 2} / span 1`,
+					gridRow: `${startRowIndex + 1}`,
+					height: `${heightInPixels}px`,
+					width: `${cardWidthPercent}%`,
+					left: `${leftPercent}%`,
+					marginTop: `${offsetPx}px`,
+					zIndex: 10 + index,
+				};
+			},
+			[weekDays, timeSlots, appointmentsByDayIndex, slotHeight],
+		);
+
+		// @dnd-kit event handlers
+		const handleDragStart = useCallback(
+			(event: DragStartEvent) => {
+				const { active } = event;
+				const appointment = weekAppointments.find((a) => a.id === active.id);
+				if (appointment) {
+					setActiveId(active.id as string);
+					setDraggedAppointment(appointment);
+					handleDragStartHook(appointment);
+				}
+			},
+			[weekAppointments, handleDragStartHook],
+		);
+
+		const handleDragOver = useCallback(
+			(event: DragOverEvent) => {
+				const { over } = event;
+				if (!over) {
+					setCurrentOverId(null);
+					return;
+				}
+
+				// Update current over ID for DroppableTimeSlot feedback
+				const overId = over.id as string;
+				if (currentOverId !== overId) {
+					setCurrentOverId(overId);
+				}
+
+				// Parse droppable ID: "slot-YYYY-MM-DD-HH:mm"
+				const match = overId.match(/slot-(\d{4}-\d{2}-\d{2})-(\d{2}:\d{2})/);
+				if (match) {
+					const [, dateStr, timeStr] = match;
+					handleDragOverHook(parseResponseDate(dateStr), timeStr);
+				}
+			},
+			[currentOverId, handleDragOverHook],
+		);
+
+		const handleDragEnd = useCallback(
+			(event: DragEndEvent) => {
+				const { active, over } = event;
+				setActiveId(null);
+				setDraggedAppointment(null);
+				setCurrentOverId(null);
+
+				const appointment = weekAppointments.find((a) => a.id === active.id);
+				const droppableId = (over?.id as string) || null;
+
+				handleDragEndHook(appointment || null, droppableId);
+			},
+			[weekAppointments, handleDragEndHook],
+		);
+
+		const isDraggable = !!onAppointmentReschedule && !selectionMode;
+		const isDraggingThis = useCallback(
+			(aptId: string) =>
+				activeId === aptId ||
+				(dragState.isDragging && dragState.appointment?.id === aptId),
+			[activeId, dragState],
+		);
+
+		const handleBlankGridClick = useCallback(
+			(event: React.MouseEvent<HTMLDivElement>) => {
+				if (dragState.isDragging) return;
+
+				const target = event.target as HTMLElement | null;
+				if (!target) return;
+
+				if (
+					target.closest('[data-week-appointment="true"]') ||
+					target.closest('[role="dialog"]') ||
+					target.closest('[role="alertdialog"]')
+				) {
+					return;
+				}
+
+				const scrollElement = weekScrollRef.current;
+				if (!scrollElement) return;
+
+				const rect = scrollElement.getBoundingClientRect();
+				const relativeX = event.clientX - rect.left;
+				const relativeY = event.clientY - rect.top + scrollElement.scrollTop;
+
+				if (relativeX < WEEK_TIME_COLUMN_WIDTH_PX || relativeY < 0) {
+					return;
+				}
+
+				const dayColumnWidth =
+					(scrollElement.clientWidth - WEEK_TIME_COLUMN_WIDTH_PX) /
+					weekDays.length;
+				if (dayColumnWidth <= 0) return;
+
+				const dayIndex = Math.floor(
+					(relativeX - WEEK_TIME_COLUMN_WIDTH_PX) / dayColumnWidth,
+				);
+				const rowIndex = Math.floor(relativeY / slotHeight);
+
+				if (
+					dayIndex < 0 ||
+					dayIndex >= weekDays.length ||
+					rowIndex < 0 ||
+					rowIndex >= timeSlots.length
+				) {
+					return;
+				}
+
+				const day = weekDays[dayIndex];
+				const time = timeSlots[rowIndex];
+				if (!day || !time) return;
+				if (isDayClosedForDate(day)) return;
+
+				const { blocked } = checkTimeBlocked(day, time);
+				if (blocked) return;
+
+				onTimeSlotClick(day, time);
+			},
+			[
+				dragState.isDragging,
+				weekDays,
+				slotHeight,
+				timeSlots,
+				isDayClosedForDate,
+				checkTimeBlocked,
+				onTimeSlotClick,
+			],
+		);
+
+		// Render function for virtualization
+		const renderSlot = useCallback(
+			(time: string, _rowIndex: number) => {
+				const isHour = time.endsWith(":00");
+				const dayAppointmentsMap = appointmentsByTimeAndDay.get(time);
+
+				return (
+					<div
+						className="grid grid-cols-[60px_repeat(6,1fr)] relative"
+						style={{ height: slotHeight }}
+					>
+						{/* Time Label */}
+						<div
+							className={cn(
+								"border-r border-slate-100 dark:border-slate-800 text-[10px] font-medium flex justify-end pr-2 pt-0.5 sticky left-0 z-30 bg-white dark:bg-slate-950",
+								isHour
+									? "text-slate-900 dark:text-slate-200"
+									: "text-gray-500 dark:text-slate-600 hidden",
+							)}
+						>
+							{isHour ? time : ""}
+						</div>
+
+						{/* Day Columns (Droppable Slots) */}
+						{weekDays.map((day, colIndex) => {
+							const isClosed = dayClosedStatus[colIndex];
+							const key = `${colIndex}-${time}`;
+							const { blocked } = blockedStatusCache.get(key) || {
+								blocked: false,
+							};
+
+							const isDropTarget =
+								hoveredSlotTarget &&
+								isSameDay(hoveredSlotTarget.date, day) &&
+								hoveredSlotTarget.time === time;
+							const isDraggingOver =
+								currentOverId === `slot-${formatDateToLocalISO(day)}-${time}`;
+
+							const slotAppointments =
+								!previewTarget && (isDropTarget || isDraggingOver)
+									? getAppointmentsForSlot(day, time).filter(
+											(a) => a.id !== draggedAppointment?.id,
+										)
+									: [];
+
+							const appointmentsInThisCell =
+								dayAppointmentsMap?.get(colIndex) || [];
+
+							return (
+								<DroppableTimeSlot
+									key={`${colIndex}`}
+									day={day}
+									time={time}
+									rowIndex={0} // Use 0 because the row is a single-row grid
+									colIndex={colIndex}
+									isClosed={isClosed}
+									isBlocked={blocked}
+									isDropTarget={!!isDropTarget}
+									isDraggingOver={isDraggingOver}
+									targetAppointments={slotAppointments}
+									draggedAppointment={previewTarget ? null : draggedAppointment}
+									slotHeight={slotHeight}
+								>
+									{/* Appointments starting in this cell */}
+									{appointmentsInThisCell.map((apt) => {
+										const style = getAppointmentStyle(apt);
+										if (!style) return null;
+
+										const isPreviewDraggedAppointment =
+											!!previewTarget && draggedAppointment?.id === apt.id;
+										const isDraggingThisOne = isDraggingThis(apt.id);
+										// Já que removemos o DragOverlay, não escondemos mais o original.
+										// O DraggableAppointment agora cuida do visual do arraste.
+										const hideGhostWhenDragging = false;
+
+										// Adjust style for relative positioning in DroppableTimeSlot
+										const cellStyle: React.CSSProperties = {
+											position: "absolute",
+											top: style.marginTop,
+											height: style.height,
+											left: style.left,
+											width: style.width,
+											zIndex: 10 + ((style.zIndex as number) || 0),
+										};
+
+										if (isPreviewDraggedAppointment) {
+											return (
+												<CalendarAppointmentCard
+													key={apt.id}
+													appointment={apt}
+													style={{ ...cellStyle, pointerEvents: "none" }}
+													isDraggable={false}
+													isDragging={false}
+													isSaving={false}
+													isDropTarget={!!isDropTarget || isDraggingOver}
+													hideGhostWhenSiblings={false}
+													onDragStart={() => {}}
+													onDragEnd={() => {}}
+													onDragOver={() => {}}
+													onDrop={() => {}}
+													onOpenPopover={() => {}}
+													isPopoverOpen={false}
+													dragHandleOnly={false}
+													density="compact"
+												/>
+											);
+										}
+
+										return (
+											<DraggableAppointment
+												key={apt.id}
+												id={apt.id}
+												style={cellStyle}
+												isDragging={isDraggingThisOne}
+												isDragDisabled={
+													!isDraggable || isMobile || selectionMode
+												}
+												dragData={{ appointment: apt }}
+												isPopoverOpen={openPopoverId === apt.id}
+											>
+												<CalendarAppointmentCard
+													appointment={apt}
+													style={{
+														...cellStyle,
+														width: "100%",
+														left: "0",
+														top: "0",
+													}}
+													isDraggable={false}
+													isDragging={isDraggingThisOne}
+													isSaving={apt.id === savingAppointmentId}
+													isDropTarget={!!isDropTarget}
+													hideGhostWhenSiblings={hideGhostWhenDragging}
+													onDragStart={() => {}}
+													onDragEnd={() => {}}
+													onDragOver={() => {}}
+													onDrop={() => {}}
+													onEditAppointment={onEditAppointment}
+													onDeleteAppointment={onDeleteAppointment}
+													onDuplicateAppointment={onDuplicateAppointment}
+													onStatusChange={onStatusChange}
+													onOpenPopover={setOpenPopoverId}
+													isPopoverOpen={openPopoverId === apt.id}
+													selectionMode={selectionMode}
+													isSelected={selectedIds?.has(apt.id)}
+													onToggleSelection={onToggleSelection}
+													dragHandleOnly={false}
+													density="compact"
+												/>
+											</DraggableAppointment>
+										);
+									})}
+								</DroppableTimeSlot>
+							);
+						})}
+					</div>
+				);
+			},
+			[
+				slotHeight,
+				appointmentsByTimeAndDay,
+				weekDays,
+				dayClosedStatus,
+				blockedStatusCache,
+				hoveredSlotTarget,
+				currentOverId,
+				getAppointmentsForSlot,
+				draggedAppointment,
+				previewTarget,
+				getAppointmentStyle,
+				isDraggingThis,
+				isDraggable,
+				isMobile,
+				selectionMode,
+				openPopoverId,
+				savingAppointmentId,
+				onEditAppointment,
+				onDeleteAppointment,
+				setOpenPopoverId,
+				selectedIds,
+				onToggleSelection,
+			],
+		);
+
+		return (
+			<TooltipProvider>
+				<DndContext
+					sensors={sensors}
+					collisionDetection={closestCorners}
+					onDragStart={handleDragStart}
+					onDragOver={handleDragOver}
+					onDragEnd={handleDragEnd}
+				>
+					<div
+						ref={weekContainerRef}
+						className={cn(
+							"flex flex-col bg-white dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm text-slate-900 dark:text-slate-100 font-display h-full relative overflow-hidden",
+							!isSlotHeightMeasured && "opacity-0 pointer-events-none",
+						)}
+						aria-busy={!isSlotHeightMeasured}
+					>
+						{/* Header Row - Fixed at top */}
+						<div
+							ref={weekHeaderRef}
+							className="grid grid-cols-[60px_repeat(6,1fr)] bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 z-40 shadow-sm min-w-[600px]"
+						>
+							{/* Time icon */}
+							<div className="h-12 border-r border-slate-200 dark:border-slate-800 flex items-center justify-center bg-white dark:bg-slate-950">
+								<div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200/50 dark:border-slate-700/50">
+									<span className="text-[10px] font-bold">GMT-3</span>
+								</div>
+							</div>
+
+							{/* Days Headers */}
+							{weekDays.map((day, i) => {
+								const isTodayDate = isSameDay(day, new Date());
+								return (
+									<div
+										key={i}
+										className={cn(
+											"h-12 flex flex-col items-center justify-center border-r border-slate-100 dark:border-slate-800/50 relative group transition-colors",
+											isTodayDate
+												? "bg-blue-50/50 dark:bg-blue-900/10"
+												: "hover:bg-slate-50 dark:hover:bg-slate-900/40",
+										)}
+									>
+										{isTodayDate && (
+											<div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-500" />
+										)}
+										<span
+											className={cn(
+												"text-[9px] font-medium uppercase tracking-wider mb-0.5",
+												isTodayDate
+													? "text-blue-600 dark:text-blue-400"
+													: "text-slate-600 dark:text-gray-500",
+											)}
+										>
+											{format(day, "EEE", { locale: ptBR }).replace(".", "")}
+										</span>
+										<div
+											className={cn(
+												"text-base font-bold w-7 h-7 rounded-full flex items-center justify-center transition-all",
+												isTodayDate
+													? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+													: "text-slate-700 dark:text-slate-300 group-hover:bg-slate-200 dark:group-hover:bg-slate-700",
+											)}
+										>
+											{format(day, "d")}
+										</div>
+									</div>
+								);
+							})}
+						</div>
+
+						{/* Virtualized Grid */}
+						<div
+							className="flex-1 relative bg-white dark:bg-slate-950"
+							id="calendar-grid-dndkit"
+							data-calendar-drop-zone
+						>
+							<VirtualizedCalendarGrid
+								containerRef={weekScrollRef}
+								timeSlots={timeSlots}
+								slotHeight={slotHeight}
+								containerHeight={containerHeight}
+								className="custom-scrollbar"
+								renderSlot={renderSlot}
+								onClick={handleBlankGridClick}
+								overscan={10} // Higher overscan for appointments spanning multiple slots
+							>
+								{/* Current Time Indicator Line */}
+								{currentTimePosition !== null && (
+									<div
+										className="absolute z-50 pointer-events-none flex items-center w-full"
+										style={{
+											top: `${currentTimePosition}px`,
+											left: "60px",
+											right: 0,
+										}}
+									>
+										<div className="w-2 h-2 rounded-full bg-red-500 -ml-1 flex-shrink-0"></div>
+										<div className="h-px bg-red-500 flex-1 shadow-sm"></div>
+									</div>
+								)}
+							</VirtualizedCalendarGrid>
+						</div>
+					</div>
+				</DndContext>
+			</TooltipProvider>
+		);
+	},
+);
+
+CalendarWeekViewDndKit.displayName = "CalendarWeekViewDndKit";

@@ -4,35 +4,37 @@
  */
 
 export async function fetchGraphQL(query: string, variables = {}) {
-  const endpoint = import.meta.env.VITE_HASURA_PROJECT_URL;
-  const adminSecret = import.meta.env.VITE_HASURA_ADMIN_SECRET;
+	const endpoint = import.meta.env.VITE_HASURA_PROJECT_URL;
+	const adminSecret = import.meta.env.VITE_HASURA_ADMIN_SECRET;
 
-  if (!endpoint) {
-    console.error('[GraphQL] Endpoint não configurado (VITE_HASURA_PROJECT_URL)');
-    return { data: null, errors: [{ message: 'Endpoint missing' }] };
-  }
+	if (!endpoint) {
+		console.error(
+			"[GraphQL] Endpoint não configurado (VITE_HASURA_PROJECT_URL)",
+		);
+		return { data: null, errors: [{ message: "Endpoint missing" }] };
+	}
 
-  try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-hasura-admin-secret': adminSecret || '',
-      },
-      body: JSON.stringify({ query, variables }),
-    });
+	try {
+		const response = await fetch(endpoint, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				"x-hasura-admin-secret": adminSecret || "",
+			},
+			body: JSON.stringify({ query, variables }),
+		});
 
-    const result = await response.json();
-    
-    if (result.errors) {
-      console.warn('[GraphQL Errors]', result.errors);
-    }
-    
-    return result;
-  } catch (error) {
-    console.error('[GraphQL Fetch Error]', error);
-    return { data: null, errors: [{ message: 'Network error' }] };
-  }
+		const result = await response.json();
+
+		if (result.errors) {
+			console.warn("[GraphQL Errors]", result.errors);
+		}
+
+		return result;
+	} catch (error) {
+		console.error("[GraphQL Fetch Error]", error);
+		return { data: null, errors: [{ message: "Network error" }] };
+	}
 }
 
 /**
@@ -40,8 +42,8 @@ export async function fetchGraphQL(query: string, variables = {}) {
  */
 
 export const QUERIES = {
-  // Busca lista simplificada de pacientes
-  GET_PATIENTS_SUMMARY: `
+	// Busca lista simplificada de pacientes
+	GET_PATIENTS_SUMMARY: `
     query GetPatients {
       patients(order_by: { name: asc }) {
         id
@@ -52,8 +54,8 @@ export const QUERIES = {
     }
   `,
 
-  // Busca agendamentos do dia
-  GET_TODAY_APPOINTMENTS: `
+	// Busca agendamentos do dia
+	GET_TODAY_APPOINTMENTS: `
     query GetTodayAppointments($date: date!) {
       appointments(where: { date: { _eq: $date } }) {
         id
@@ -67,8 +69,8 @@ export const QUERIES = {
     }
   `,
 
-  // Busca estatísticas rápidas da clínica
-  GET_CLINIC_STATS: `
+	// Busca estatísticas rápidas da clínica
+	GET_CLINIC_STATS: `
     query GetClinicStats {
       patients_aggregate {
         aggregate {
@@ -81,5 +83,5 @@ export const QUERIES = {
         }
       }
     }
-  `
+  `,
 };

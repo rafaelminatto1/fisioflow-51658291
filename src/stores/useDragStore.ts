@@ -3,39 +3,42 @@
  * @module stores/useDragStore
  */
 
-
 // =====================================================================
 // STORE STATE
 // =====================================================================
 
-import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import { DragState, DropTarget, DraggedAppointment } from '@/lib/calendar/types';
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+import {
+	DragState,
+	DropTarget,
+	DraggedAppointment,
+} from "@/lib/calendar/types";
 
 interface DragStore extends DragState {
-  /** Alvo de drop atual */
-  dropTarget: DropTarget | null;
+	/** Alvo de drop atual */
+	dropTarget: DropTarget | null;
 
-  /** Define o estado de drag */
-  setDragState: (state: DragState) => void;
+	/** Define o estado de drag */
+	setDragState: (state: DragState) => void;
 
-  /** Define o appointment sendo arrastado */
-  setDraggedAppointment: (appointment: DraggedAppointment | null) => void;
+	/** Define o appointment sendo arrastado */
+	setDraggedAppointment: (appointment: DraggedAppointment | null) => void;
 
-  /** Inicia o drag */
-  startDrag: (appointment: DraggedAppointment) => void;
+	/** Inicia o drag */
+	startDrag: (appointment: DraggedAppointment) => void;
 
-  /** Finaliza o drag */
-  endDrag: () => void;
+	/** Finaliza o drag */
+	endDrag: () => void;
 
-  /** Define o alvo de drop */
-  setDropTarget: (target: DropTarget | null) => void;
+	/** Define o alvo de drop */
+	setDropTarget: (target: DropTarget | null) => void;
 
-  /** Limpa o alvo de drop */
-  clearDropTarget: () => void;
+	/** Limpa o alvo de drop */
+	clearDropTarget: () => void;
 
-  /** Reseta todo o estado */
-  reset: () => void;
+	/** Reseta todo o estado */
+	reset: () => void;
 }
 
 // =====================================================================
@@ -43,8 +46,8 @@ interface DragStore extends DragState {
 // =====================================================================
 
 const initialState: DragState = {
-  appointment: null,
-  isDragging: false,
+	appointment: null,
+	isDragging: false,
 };
 
 // =====================================================================
@@ -52,46 +55,46 @@ const initialState: DragState = {
 // =====================================================================
 
 export const useDragStore = create<DragStore>()(
-  devtools(
-    (set) => ({
-      // State inicial
-      ...initialState,
-      dropTarget: null,
+	devtools(
+		(set) => ({
+			// State inicial
+			...initialState,
+			dropTarget: null,
 
-      // Actions
-      setDragState: (state) => set({ ...state }),
+			// Actions
+			setDragState: (state) => set({ ...state }),
 
-      setDraggedAppointment: (appointment) =>
-        set({
-          appointment,
-          isDragging: appointment !== null,
-        }),
+			setDraggedAppointment: (appointment) =>
+				set({
+					appointment,
+					isDragging: appointment !== null,
+				}),
 
-      startDrag: (appointment) =>
-        set({
-          appointment,
-          isDragging: true,
-        }),
+			startDrag: (appointment) =>
+				set({
+					appointment,
+					isDragging: true,
+				}),
 
-      endDrag: () =>
-        set({
-          appointment: null,
-          isDragging: false,
-          dropTarget: null,
-        }),
+			endDrag: () =>
+				set({
+					appointment: null,
+					isDragging: false,
+					dropTarget: null,
+				}),
 
-      setDropTarget: (target) => set({ dropTarget: target }),
+			setDropTarget: (target) => set({ dropTarget: target }),
 
-      clearDropTarget: () => set({ dropTarget: null }),
+			clearDropTarget: () => set({ dropTarget: null }),
 
-      reset: () =>
-        set({
-          ...initialState,
-          dropTarget: null,
-        }),
-    }),
-    { name: 'DragStore' }
-  )
+			reset: () =>
+				set({
+					...initialState,
+					dropTarget: null,
+				}),
+		}),
+		{ name: "DragStore" },
+	),
 );
 
 // =====================================================================
@@ -117,7 +120,7 @@ export const selectDropTarget = (state: DragStore) => state.dropTarget;
  * Selector para verificar se pode fazer drop
  */
 export const selectCanDrop = (state: DragStore) =>
-  state.isDragging && state.dropTarget !== null;
+	state.isDragging && state.dropTarget !== null;
 
 // =====================================================================
 // EXPORTS
