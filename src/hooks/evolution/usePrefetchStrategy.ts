@@ -13,39 +13,42 @@
  * @version 1.0.0
  */
 
-import { useEffect, useRef, useCallback } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { startTransition } from 'react';
-import { EVOLUTION_CACHE_CONFIG, type EvolutionTab } from './useEvolutionDataOptimized';
+import { useEffect, useRef, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { startTransition } from "react";
 import {
-  prefetchEvolutionMeasurements,
-  prefetchPatientGoals,
-  prefetchPatientMedicalReturns,
-  prefetchPatientPathologies,
-  prefetchPatientSurgeries,
-  prefetchRequiredMeasurements,
-  prefetchSoapRecords,
-} from './prefetchFetchers';
+	EVOLUTION_CACHE_CONFIG,
+	type EvolutionTab,
+} from "./useEvolutionDataOptimized";
+import {
+	prefetchEvolutionMeasurements,
+	prefetchPatientGoals,
+	prefetchPatientMedicalReturns,
+	prefetchPatientPathologies,
+	prefetchPatientSurgeries,
+	prefetchRequiredMeasurements,
+	prefetchSoapRecords,
+} from "./prefetchFetchers";
 
 interface PrefetchStrategyOptions {
-  patientId: string;
-  activeTab: EvolutionTab;
-  activePathologies?: Array<{ pathology_name: string }>;
-  enabled?: boolean;
-  delay?: number; // Delay in milliseconds before prefetching (default: 2000ms)
+	patientId: string;
+	activeTab: EvolutionTab;
+	activePathologies?: Array<{ pathology_name: string }>;
+	enabled?: boolean;
+	delay?: number; // Delay in milliseconds before prefetching (default: 2000ms)
 }
 
 interface NetworkInformation extends EventTarget {
-  effectiveType?: '4g' | '3g' | '2g' | 'slow-2g';
-  downlink?: number;
-  rtt?: number;
-  saveData?: boolean;
+	effectiveType?: "4g" | "3g" | "2g" | "slow-2g";
+	downlink?: number;
+	rtt?: number;
+	saveData?: boolean;
 }
 
 interface NavigatorWithConnection extends Navigator {
-  connection?: NetworkInformation;
-  mozConnection?: NetworkInformation;
-  webkitConnection?: NetworkInformation;
+	connection?: NetworkInformation;
+	mozConnection?: NetworkInformation;
+	webkitConnection?: NetworkInformation;
 }
 
 /**
@@ -53,59 +56,75 @@ interface NavigatorWithConnection extends Navigator {
  * Requirements: 11.4 - Network-aware prefetching
  */
 function isSlowConnection(): boolean {
-  const nav = navigator as NavigatorWithConnection;
-  const connection = nav.connection || nav.mozConnection || nav.webkitConnection;
+	const nav = navigator as NavigatorWithConnection;
+	const connection =
+		nav.connection || nav.mozConnection || nav.webkitConnection;
 
-  if (!connection) {
-    // Se não temos informação de rede, assumimos conexão boa
-    return false;
-  }
+	if (!connection) {
+		// Se não temos informação de rede, assumimos conexão boa
+		return false;
+	}
 
-  // Evitar prefetch em conexões lentas ou com saveData ativo
-  if (connection.saveData) {
-    return true;
-  }
+	// Evitar prefetch em conexões lentas ou com saveData ativo
+	if (connection.saveData) {
+		return true;
+	}
 
-  const slowTypes = ['2g', 'slow-2g'];
-  if (connection.effectiveType && slowTypes.includes(connection.effectiveType)) {
-    return true;
-  }
+	const slowTypes = ["2g", "slow-2g"];
+	if (
+		connection.effectiveType &&
+		slowTypes.includes(connection.effectiveType)
+	) {
+		return true;
+	}
 
-  // RTT > 400ms ou downlink < 0.5 Mbps = conexão lenta
-  if (connection.rtt && connection.rtt > 400) {
-    return true;
-  }
+	// RTT > 400ms ou downlink < 0.5 Mbps = conexão lenta
+	if (connection.rtt && connection.rtt > 400) {
+		return true;
+	}
 
-  if (connection.downlink && connection.downlink < 0.5) {
-    return true;
-  }
+	if (connection.downlink && connection.downlink < 0.5) {
+		return true;
+	}
 
-  return false;
+	return false;
 }
 
 /**
  * Determina a próxima aba na sequência
  */
 function getNextTab(currentTab: EvolutionTab): EvolutionTab | null {
-  const tabs: EvolutionTab[] = ['evolucao', 'avaliacao', 'tratamento', 'historico', 'assistente'];
-  const currentIdx = tabs.indexOf(currentTab);
+	const tabs: EvolutionTab[] = [
+		"evolucao",
+		"avaliacao",
+		"tratamento",
+		"historico",
+		"assistente",
+	];
+	const currentIdx = tabs.indexOf(currentTab);
 
-  if (currentIdx === -1 || currentIdx === tabs.length - 1) {
-    return null; // Última aba, não há próxima
-  }
+	if (currentIdx === -1 || currentIdx === tabs.length - 1) {
+		return null; // Última aba, não há próxima
+	}
 
-  return tabs[currentIdx + 1];
+	return tabs[currentIdx + 1];
 }
 
 /**
  * Mapeamento de abas para os dados que elas precisam
  */
 const TAB_DATA_MAP: Record<EvolutionTab, string[]> = {
-  evolucao: ['goals', 'pathologies', 'measurements', 'required-measurements', 'soap-records'],
-  avaliacao: ['measurements', 'required-measurements'],
-  tratamento: ['goals', 'pathologies'],
-  historico: ['soap-records', 'surgeries', 'medical-returns', 'measurements'],
-  assistente: ['goals', 'pathologies'],
+	evolucao: [
+		"goals",
+		"pathologies",
+		"measurements",
+		"required-measurements",
+		"soap-records",
+	],
+	avaliacao: ["measurements", "required-measurements"],
+	tratamento: ["goals", "pathologies"],
+	historico: ["soap-records", "surgeries", "medical-returns", "measurements"],
+	assistente: ["goals", "pathologies"],
 };
 
 /**
@@ -122,165 +141,200 @@ const TAB_DATA_MAP: Record<EvolutionTab, string[]> = {
  * Requirements: 11.1, 11.2, 11.3, 11.4, 11.5
  */
 export function usePrefetchStrategy(options: PrefetchStrategyOptions) {
-  const {
-    patientId,
-    activeTab,
-    activePathologies = [],
-    enabled = true,
-    delay = 2000, // 2 seconds default delay
-  } = options;
+	const {
+		patientId,
+		activeTab,
+		activePathologies = [],
+		enabled = true,
+		delay = 2000, // 2 seconds default delay
+	} = options;
 
-  const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 
-  // Tracking de prefetch para deduplicação
-  const prefetchedTabsRef = useRef<Set<EvolutionTab>>(new Set());
-  const prefetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastActiveTabRef = useRef<EvolutionTab>(activeTab);
+	// Tracking de prefetch para deduplicação
+	const prefetchedTabsRef = useRef<Set<EvolutionTab>>(new Set());
+	const prefetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const lastActiveTabRef = useRef<EvolutionTab>(activeTab);
 
-  /**
-   * Executa o prefetch dos dados de uma aba específica
-   * Requirements: 11.1, 11.5
-   */
-  const executePrefetch = useCallback((targetTab: EvolutionTab) => {
-    if (!patientId) return;
+	/**
+	 * Executa o prefetch dos dados de uma aba específica
+	 * Requirements: 11.1, 11.5
+	 */
+	const executePrefetch = useCallback(
+		(targetTab: EvolutionTab) => {
+			if (!patientId) return;
 
-    // Requirement 11.5: Prefetch deduplication
-    if (prefetchedTabsRef.current.has(targetTab)) {
-      if (import.meta.env.DEV) {
-        console.log(`[Prefetch] Skipping ${targetTab} - already prefetched`);
-      }
-      return;
-    }
+			// Requirement 11.5: Prefetch deduplication
+			if (prefetchedTabsRef.current.has(targetTab)) {
+				if (import.meta.env.DEV) {
+					console.log(`[Prefetch] Skipping ${targetTab} - already prefetched`);
+				}
+				return;
+			}
 
-    // Requirement 11.4: Network-aware prefetching
-    if (isSlowConnection()) {
-      if (import.meta.env.DEV) {
-        console.log('[Prefetch] Skipping - slow connection detected');
-      }
-      return;
-    }
+			// Requirement 11.4: Network-aware prefetching
+			if (isSlowConnection()) {
+				if (import.meta.env.DEV) {
+					console.log("[Prefetch] Skipping - slow connection detected");
+				}
+				return;
+			}
 
-    // Marcar como prefetched
-    prefetchedTabsRef.current.add(targetTab);
+			// Marcar como prefetched
+			prefetchedTabsRef.current.add(targetTab);
 
-    const dataToPrefetch = TAB_DATA_MAP[targetTab] || [];
+			const dataToPrefetch = TAB_DATA_MAP[targetTab] || [];
 
-    if (import.meta.env.DEV) {
-      console.log(`[Prefetch] Starting prefetch for tab: ${targetTab}`, dataToPrefetch);
-    }
+			if (import.meta.env.DEV) {
+				console.log(
+					`[Prefetch] Starting prefetch for tab: ${targetTab}`,
+					dataToPrefetch,
+				);
+			}
 
-    // Requirement 11.1: Non-blocking prefetch with low priority
-    startTransition(() => {
-      dataToPrefetch.forEach(dataType => {
-        try {
-          switch (dataType) {
-            case 'goals':
-              prefetchPatientGoals(queryClient, patientId, EVOLUTION_CACHE_CONFIG.GOALS.staleTime);
-              break;
+			// Requirement 11.1: Non-blocking prefetch with low priority
+			startTransition(() => {
+				dataToPrefetch.forEach((dataType) => {
+					try {
+						switch (dataType) {
+							case "goals":
+								prefetchPatientGoals(
+									queryClient,
+									patientId,
+									EVOLUTION_CACHE_CONFIG.GOALS.staleTime,
+								);
+								break;
 
-            case 'pathologies':
-              prefetchPatientPathologies(queryClient, patientId, EVOLUTION_CACHE_CONFIG.PATHOLOGIES.staleTime);
-              break;
+							case "pathologies":
+								prefetchPatientPathologies(
+									queryClient,
+									patientId,
+									EVOLUTION_CACHE_CONFIG.PATHOLOGIES.staleTime,
+								);
+								break;
 
-            case 'measurements':
-              prefetchEvolutionMeasurements(queryClient, patientId, 50, EVOLUTION_CACHE_CONFIG.MEASUREMENTS.staleTime);
-              break;
+							case "measurements":
+								prefetchEvolutionMeasurements(
+									queryClient,
+									patientId,
+									50,
+									EVOLUTION_CACHE_CONFIG.MEASUREMENTS.staleTime,
+								);
+								break;
 
-            case 'required-measurements':
-              if (activePathologies.length > 0) {
-                prefetchRequiredMeasurements(
-                  queryClient,
-                  activePathologies.map((p) => p.pathology_name),
-                  EVOLUTION_CACHE_CONFIG.REQUIRED_MEASUREMENTS.staleTime
-                );
-              }
-              break;
+							case "required-measurements":
+								if (activePathologies.length > 0) {
+									prefetchRequiredMeasurements(
+										queryClient,
+										activePathologies.map((p) => p.pathology_name),
+										EVOLUTION_CACHE_CONFIG.REQUIRED_MEASUREMENTS.staleTime,
+									);
+								}
+								break;
 
-            case 'surgeries':
-              prefetchPatientSurgeries(queryClient, patientId, EVOLUTION_CACHE_CONFIG.SURGERIES.staleTime);
-              break;
+							case "surgeries":
+								prefetchPatientSurgeries(
+									queryClient,
+									patientId,
+									EVOLUTION_CACHE_CONFIG.SURGERIES.staleTime,
+								);
+								break;
 
-            case 'medical-returns':
-              prefetchPatientMedicalReturns(queryClient, patientId, EVOLUTION_CACHE_CONFIG.MEDICAL_RETURNS.staleTime);
-              break;
+							case "medical-returns":
+								prefetchPatientMedicalReturns(
+									queryClient,
+									patientId,
+									EVOLUTION_CACHE_CONFIG.MEDICAL_RETURNS.staleTime,
+								);
+								break;
 
-            case 'soap-records':
-              prefetchSoapRecords(queryClient, patientId, 50, EVOLUTION_CACHE_CONFIG.SOAP_RECORDS.staleTime);
-              break;
-          }
-        } catch (error) {
-          if (import.meta.env.DEV) {
-            console.error(`[Prefetch] Error prefetching ${dataType}:`, error);
-          }
-        }
-      });
-    });
-  }, [patientId, activePathologies, queryClient]);
+							case "soap-records":
+								prefetchSoapRecords(
+									queryClient,
+									patientId,
+									50,
+									EVOLUTION_CACHE_CONFIG.SOAP_RECORDS.staleTime,
+								);
+								break;
+						}
+					} catch (error) {
+						if (import.meta.env.DEV) {
+							console.error(`[Prefetch] Error prefetching ${dataType}:`, error);
+						}
+					}
+				});
+			});
+		},
+		[patientId, activePathologies, queryClient],
+	);
 
-  /**
-   * Effect principal: gerencia o prefetch com delay
-   * Requirements: 11.1 (2-second delay), 11.3 (prefetch on tab change)
-   */
-  useEffect(() => {
-    if (!enabled || !patientId) return;
+	/**
+	 * Effect principal: gerencia o prefetch com delay
+	 * Requirements: 11.1 (2-second delay), 11.3 (prefetch on tab change)
+	 */
+	useEffect(() => {
+		if (!enabled || !patientId) return;
 
-    // Limpar timeout anterior se aba mudou
-    if (prefetchTimeoutRef.current) {
-      clearTimeout(prefetchTimeoutRef.current);
-      prefetchTimeoutRef.current = null;
-    }
+		// Limpar timeout anterior se aba mudou
+		if (prefetchTimeoutRef.current) {
+			clearTimeout(prefetchTimeoutRef.current);
+			prefetchTimeoutRef.current = null;
+		}
 
-    // Se a aba mudou, resetar o tracking de prefetch
-    if (lastActiveTabRef.current !== activeTab) {
-      lastActiveTabRef.current = activeTab;
-      // Não resetamos prefetchedTabsRef para manter deduplicação global
-    }
+		// Se a aba mudou, resetar o tracking de prefetch
+		if (lastActiveTabRef.current !== activeTab) {
+			lastActiveTabRef.current = activeTab;
+			// Não resetamos prefetchedTabsRef para manter deduplicação global
+		}
 
-    // Determinar próxima aba
-    const nextTab = getNextTab(activeTab);
-    if (!nextTab) {
-      if (import.meta.env.DEV) {
-        console.log('[Prefetch] No next tab to prefetch');
-      }
-      return;
-    }
+		// Determinar próxima aba
+		const nextTab = getNextTab(activeTab);
+		if (!nextTab) {
+			if (import.meta.env.DEV) {
+				console.log("[Prefetch] No next tab to prefetch");
+			}
+			return;
+		}
 
-    // Requirement 11.1: 2-second delay before prefetching
-    prefetchTimeoutRef.current = setTimeout(() => {
-      executePrefetch(nextTab);
-    }, delay);
+		// Requirement 11.1: 2-second delay before prefetching
+		prefetchTimeoutRef.current = setTimeout(() => {
+			executePrefetch(nextTab);
+		}, delay);
 
-    // Cleanup
-    return () => {
-      if (prefetchTimeoutRef.current) {
-        clearTimeout(prefetchTimeoutRef.current);
-        prefetchTimeoutRef.current = null;
-      }
-    };
-  }, [enabled, patientId, activeTab, delay, executePrefetch]);
+		// Cleanup
+		return () => {
+			if (prefetchTimeoutRef.current) {
+				clearTimeout(prefetchTimeoutRef.current);
+				prefetchTimeoutRef.current = null;
+			}
+		};
+	}, [enabled, patientId, activeTab, delay, executePrefetch]);
 
-  /**
-   * Método para resetar o tracking de prefetch
-   * Útil quando o usuário navega para outro paciente
-   */
-  const resetPrefetchTracking = useCallback(() => {
-    prefetchedTabsRef.current.clear();
-    if (import.meta.env.DEV) {
-      console.log('[Prefetch] Tracking reset');
-    }
-  }, []);
+	/**
+	 * Método para resetar o tracking de prefetch
+	 * Útil quando o usuário navega para outro paciente
+	 */
+	const resetPrefetchTracking = useCallback(() => {
+		prefetchedTabsRef.current.clear();
+		if (import.meta.env.DEV) {
+			console.log("[Prefetch] Tracking reset");
+		}
+	}, []);
 
-  /**
-   * Método para prefetch manual de uma aba específica
-   * Útil para casos especiais onde queremos forçar prefetch
-   */
-  const prefetchTab = useCallback((targetTab: EvolutionTab) => {
-    executePrefetch(targetTab);
-  }, [executePrefetch]);
+	/**
+	 * Método para prefetch manual de uma aba específica
+	 * Útil para casos especiais onde queremos forçar prefetch
+	 */
+	const prefetchTab = useCallback(
+		(targetTab: EvolutionTab) => {
+			executePrefetch(targetTab);
+		},
+		[executePrefetch],
+	);
 
-  return {
-    resetPrefetchTracking,
-    prefetchTab,
-    isPrefetched: (tab: EvolutionTab) => prefetchedTabsRef.current.has(tab),
-  };
+	return {
+		resetPrefetchTracking,
+		prefetchTab,
+		isPrefetched: (tab: EvolutionTab) => prefetchedTabsRef.current.has(tab),
+	};
 }

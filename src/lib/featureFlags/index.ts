@@ -32,75 +32,73 @@
 // ============================================================================
 
 export {
-  initializeRemoteConfig,
-  getRemoteConfigManager,
-  useRemoteConfig,
-  getFeatureFlags,
-  isFeatureEnabled,
-  getMultipleFeatures,
-  getUserFeatures,
-  isMaintenanceMode,
-  getABTestVariant,
-  refreshRemoteConfig,
-  RemoteConfigService,
-  type FeatureFlagName,
-  type FeatureFlagConfig,
-  REMOTE_CONFIG_KEYS,
-  REMOTE_CONFIG_DEFAULTS,
-} from '@/lib/remote-config-manager';
+	initializeRemoteConfig,
+	getRemoteConfigManager,
+	useRemoteConfig,
+	getFeatureFlags,
+	isFeatureEnabled,
+	getMultipleFeatures,
+	getUserFeatures,
+	isMaintenanceMode,
+	getABTestVariant,
+	refreshRemoteConfig,
+	RemoteConfigService,
+	type FeatureFlagName,
+	type FeatureFlagConfig,
+	REMOTE_CONFIG_KEYS,
+	REMOTE_CONFIG_DEFAULTS,
+} from "@/lib/remote-config-manager";
 
 // ============================================================================
 // STATSIG (Optional - Secondary)
 // ============================================================================
 
 export {
-  FeatureFlagProvider,
-  useFeatureFlag,
-  useMultipleFeatureFlags,
-  useDynamicConfig,
-  useConfigValue,
-  useExperiment,
-  useAnalytics,
-  useAIFeatures,
-  useClinicalFeatures,
-  useIntegrationFeatures,
-  useSystemStatus,
-  withFeatureFlag,
-  FeatureFlag,
-} from './hooks';
+	FeatureFlagProvider,
+	useFeatureFlag,
+	useMultipleFeatureFlags,
+	useDynamicConfig,
+	useConfigValue,
+	useExperiment,
+	useAnalytics,
+	useAIFeatures,
+	useClinicalFeatures,
+	useIntegrationFeatures,
+	useSystemStatus,
+	withFeatureFlag,
+	FeatureFlag,
+} from "./hooks";
 
 export {
-  StatsigService,
-  isFeatureEnabled as isStatsigFeatureEnabled,
-  getFeatureFlagMetadata,
-  getMultipleFeatureFlags,
-  getDynamicConfig,
-  getConfigValue,
-  getExperiment,
-  logExperimentExposure,
-  logEvent,
-  updateUser,
-  logUserOut,
-  createFeatureFlagHook,
-  createDynamicConfigHook,
-} from './statsig';
+	StatsigService,
+	isFeatureEnabled as isStatsigFeatureEnabled,
+	getFeatureFlagMetadata,
+	getMultipleFeatureFlags,
+	getDynamicConfig,
+	getConfigValue,
+	getExperiment,
+	logExperimentExposure,
+	logEvent,
+	updateUser,
+	logUserOut,
+	createFeatureFlagHook,
+	createDynamicConfigHook,
+} from "./statsig";
 
 export type {
-  FeatureFlagName as StatsigFeatureFlagName,
-  DynamicConfigName,
-  FeatureFlagConfig as StatsigFeatureFlagConfig,
-  DynamicConfigValue,
-  ExperimentConfig,
-} from './statsig';
+	FeatureFlagName as StatsigFeatureFlagName,
+	DynamicConfigName,
+	FeatureFlagConfig as StatsigFeatureFlagConfig,
+	DynamicConfigValue,
+	ExperimentConfig,
+} from "./statsig";
 
 // ============================================================================
 // FALLBACKS: Edge Config & Env Variables (Legacy)
 // ============================================================================
 
 export {
-  getFeatureFlagsFromEnv as getFeatureFlagsFromEnvFallback,
-  isFeatureEnabledFromEnv,
-  showFeature as showFeatureFromEnv,
-} from './envFlags';
-
-
+	getFeatureFlagsFromEnv as getFeatureFlagsFromEnvFallback,
+	isFeatureEnabledFromEnv,
+	showFeature as showFeatureFromEnv,
+} from "./envFlags";

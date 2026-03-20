@@ -1,495 +1,581 @@
 // Core data types for the FisioFlow application
 
 // Google AI Suite
-export * from './activityLab';
+export * from "./activityLab";
 
 // Re-export agenda types (includes schedule configuration types)
-export * from './agenda';
-export type { EnhancedAppointment } from './appointment';
+export * from "./agenda";
+export type { EnhancedAppointment } from "./appointment";
 
 // Common type definitions (replaces `any` usages)
 // Note: PaymentStatus and UserRole are also exported from agenda.ts with different values
 // We're using the common.ts versions as the canonical types
 export type {
-  ErrorHandler,
-  AsyncErrorHandler,
-  IconComponent,
-  LucideIconType,
-  ValueChangeHandler,
-  AsyncValueChangeHandler,
-  ChangeEventHandler,
-  AsyncFunction,
-  PromiseResult,
-  TimerId,
-  EntityId,
-  UserId,
-  PatientId,
-  AppointmentId,
-  OrganizationId,
-  ExerciseId,
-  SessionId,
-  TreatmentId,
-  UserRole,
-  QueryParams,
-  PaginationParams,
-  PaginatedMeta,
-  SelectionState,
-  SortDirection,
-  FilterOperator,
-  Filter,
-  DateRange,
-  FileUpload,
-  ServiceResult,
-  Dictionary,
-  ErrorMap,
-} from './common';
+	ErrorHandler,
+	AsyncErrorHandler,
+	IconComponent,
+	LucideIconType,
+	ValueChangeHandler,
+	AsyncValueChangeHandler,
+	ChangeEventHandler,
+	AsyncFunction,
+	PromiseResult,
+	TimerId,
+	EntityId,
+	UserId,
+	PatientId,
+	AppointmentId,
+	OrganizationId,
+	ExerciseId,
+	SessionId,
+	TreatmentId,
+	UserRole,
+	QueryParams,
+	PaginationParams,
+	PaginatedMeta,
+	SelectionState,
+	SortDirection,
+	FilterOperator,
+	Filter,
+	DateRange,
+	FileUpload,
+	ServiceResult,
+	Dictionary,
+	ErrorMap,
+} from "./common";
 
-export { getErrorMessage, asError, type UnknownError } from './error';
+export { getErrorMessage, asError, type UnknownError } from "./error";
 
 // API type definitions
-export * from './api';
+export * from "./api";
 
 // Component type definitions
-export * from './components';
+export * from "./components";
 
 // Unified Appointment type that consolidates both camelCase and snake_case
 // This provides compatibility between database schema (snake_case) and app code (camelCase)
 export interface AppointmentUnified {
-  // Primary fields
-  id: string;
+	// Primary fields
+	id: string;
 
-  // Patient fields - both naming conventions supported
-  patientId?: string;
-  patient_id?: string;
-  patientName?: string;
-  patient?: {
-    id: string;
-    name: string;
-    full_name?: string; // Database field
-    phone?: string;
-    email?: string;
-  };
+	// Patient fields - both naming conventions supported
+	patientId?: string;
+	patient_id?: string;
+	patientName?: string;
+	patient?: {
+		id: string;
+		name: string;
+		full_name?: string; // Database field
+		phone?: string;
+		email?: string;
+	};
 
-  // Therapist fields
-  therapistId?: string;
-  therapist_id?: string;
-  therapist?: {
-    id: string;
-    name: string;
-    email?: string;
-  };
+	// Therapist fields
+	therapistId?: string;
+	therapist_id?: string;
+	therapist?: {
+		id: string;
+		name: string;
+		email?: string;
+	};
 
-  // Date/Time fields - both naming conventions supported
-  date?: string; // Legacy format
-  appointment_date?: string; // Database format
-  time?: string; // Legacy format
-  appointment_time?: string; // Database format
-  start_time?: string; // New agenda format
-  end_time?: string; // New agenda format
-  duration?: number;
+	// Date/Time fields - both naming conventions supported
+	date?: string; // Legacy format
+	appointment_date?: string; // Database format
+	time?: string; // Legacy format
+	appointment_time?: string; // Database format
+	start_time?: string; // New agenda format
+	end_time?: string; // New agenda format
+	duration?: number;
 
-  // Status fields
-  status?: AppointmentStatus;
-  payment_status?: 'pending' | 'paid' | 'partial';
-  session_type?: 'individual' | 'group';
+	// Status fields
+	status?: AppointmentStatus;
+	payment_status?: "pending" | "paid" | "partial";
+	session_type?: "individual" | "group";
 
-  // Notes and metadata
-  notes?: string;
-  phone?: string;
+	// Notes and metadata
+	notes?: string;
+	phone?: string;
 
-  // Timestamps
-  createdAt?: string;
-  created_at?: string;
-  updatedAt?: string;
-  updated_at?: string;
+	// Timestamps
+	createdAt?: string;
+	created_at?: string;
+	updatedAt?: string;
+	updated_at?: string;
 
-  // Type for appointments
-  type?: 'Consulta Inicial' | 'Fisioterapia' | 'Reavaliação' | 'Consulta de Retorno';
+	// Type for appointments
+	type?:
+		| "Consulta Inicial"
+		| "Fisioterapia"
+		| "Reavaliação"
+		| "Consulta de Retorno";
 }
 
 export type AppointmentStatus =
-  | 'scheduled'
-  | 'confirmed'
-  | 'completed'
-  | 'missed'
-  | 'cancelled'
-  | 'rescheduled'
-  | 'Confirmado'
-  | 'Pendente'
-  | 'Reagendado'
-  | 'Cancelado'
-  | 'Realizado'
-  | 'no_show'
-  | 'in_progress';
+	| "scheduled"
+	| "confirmed"
+	| "completed"
+	| "missed"
+	| "cancelled"
+	| "rescheduled"
+	| "Confirmado"
+	| "Pendente"
+	| "Reagendado"
+	| "Cancelado"
+	| "Realizado"
+	| "no_show"
+	| "in_progress";
 
 export interface Patient {
-  id: string;
-  name: string;
-  full_name?: string; // Added for compatibility
-  email?: string;
-  phone?: string;
-  cpf?: string;
-  rg?: string;
-  birthDate: string;
-  birth_date?: string; // Database compatibility
-  gender: 'masculino' | 'feminino' | 'outro' | string;
-  address?: string;
-  city?: string;
-  state?: string;
-  zip_code?: string;
+	id: string;
+	name: string;
+	full_name?: string; // Added for compatibility
+	email?: string;
+	phone?: string;
+	cpf?: string;
+	rg?: string;
+	birthDate: string;
+	birth_date?: string; // Database compatibility
+	gender: "masculino" | "feminino" | "outro" | string;
+	address?: string;
+	city?: string;
+	state?: string;
+	zip_code?: string;
 
-  // Contact & Emergency
-  emergencyContact?: string;
-  emergency_contact?: string; // Database compatibility
-  emergencyContactRelationship?: string;
-  emergency_phone?: string;
+	// Contact & Emergency
+	emergencyContact?: string;
+	emergency_contact?: string; // Database compatibility
+	emergencyContactRelationship?: string;
+	emergency_phone?: string;
 
-  // Clinical
-  medicalHistory?: string;
-  mainCondition: string;
-  status: 'Em Tratamento' | 'Recuperação' | 'Inicial' | 'Concluído' | string;
-  progress: number;
-  observations?: string;
+	// Clinical
+	medicalHistory?: string;
+	mainCondition: string;
+	status: "Em Tratamento" | "Recuperação" | "Inicial" | "Concluído" | string;
+	progress: number;
+	observations?: string;
 
-  // Insurance
-  insurancePlan?: string;
-  health_insurance?: string; // Database compatibility
-  insuranceNumber?: string;
-  insurance_number?: string; // Database compatibility
-  insuranceValidity?: string;
+	// Insurance
+	insurancePlan?: string;
+	health_insurance?: string; // Database compatibility
+	insuranceNumber?: string;
+	insurance_number?: string; // Database compatibility
+	insuranceValidity?: string;
 
-  // Demographics
-  maritalStatus?: string;
-  profession?: string;
-  educationLevel?: string;
+	// Demographics
+	maritalStatus?: string;
+	profession?: string;
+	educationLevel?: string;
 
-  // Medical Details
-  bloodType?: string;
-  allergies?: string;
-  medications?: string;
-  weight?: number;
-  height?: number;
+	// Medical Details
+	bloodType?: string;
+	allergies?: string;
+	medications?: string;
+	weight?: number;
+	height?: number;
 
-  photo_url?: string;
+	photo_url?: string;
 
-  incomplete_registration?: boolean;
+	incomplete_registration?: boolean;
 
-  // Retorno médico / médico assistente (vinculado ao paciente)
-  referring_doctor_name?: string;
-  referringDoctorName?: string; // Alias
-  referring_doctor_phone?: string;
-  referringDoctorPhone?: string; // Alias
-  medical_return_date?: string; // ISO date - data prevista do retorno ao médico
-  medicalReturnDate?: string;
-  medical_return_period?: 'manha' | 'tarde' | 'noite';
-  medical_report_done?: boolean; // relatório médico já foi feito
-  medicalReportDone?: boolean;
-  medical_report_sent?: boolean; // relatório já foi enviado ao médico
-  medicalReportSent?: boolean;
+	// Retorno médico / médico assistente (vinculado ao paciente)
+	referring_doctor_name?: string;
+	referringDoctorName?: string; // Alias
+	referring_doctor_phone?: string;
+	referringDoctorPhone?: string; // Alias
+	medical_return_date?: string; // ISO date - data prevista do retorno ao médico
+	medicalReturnDate?: string;
+	medical_return_period?: "manha" | "tarde" | "noite";
+	medical_report_done?: boolean; // relatório médico já foi feito
+	medicalReportDone?: boolean;
+	medical_report_sent?: boolean; // relatório já foi enviado ao médico
+	medicalReportSent?: boolean;
 
-  createdAt: string;
-  created_at?: string; // Database compatibility
-  updatedAt: string;
-  updated_at?: string; // Database compatibility
+	createdAt: string;
+	created_at?: string; // Database compatibility
+	updatedAt: string;
+	updated_at?: string; // Database compatibility
 }
 
 export interface PatientDocument {
-  id: string;
-  patientId: string;
-  name: string;
-  type: 'identity' | 'medical_exam' | 'insurance' | 'consent' | 'prescription' | 'other';
-  fileUrl: string;
-  fileSize?: number;
-  mimeType?: string;
-  uploadedBy?: string;
-  createdAt: Date;
-  updatedAt: Date;
+	id: string;
+	patientId: string;
+	name: string;
+	type:
+		| "identity"
+		| "medical_exam"
+		| "insurance"
+		| "consent"
+		| "prescription"
+		| "other";
+	fileUrl: string;
+	fileSize?: number;
+	mimeType?: string;
+	uploadedBy?: string;
+	createdAt: Date;
+	updatedAt: Date;
 }
 
 export interface PatientConsent {
-  id: string;
-  patientId: string;
-  consentType: 'data_processing' | 'image_usage' | 'treatment_terms' | 'communication';
-  granted: boolean;
-  grantedAt?: Date;
-  grantedBy?: string;
-  ipAddress?: string;
-  userAgent?: string;
-  createdAt: Date;
+	id: string;
+	patientId: string;
+	consentType:
+		| "data_processing"
+		| "image_usage"
+		| "treatment_terms"
+		| "communication";
+	granted: boolean;
+	grantedAt?: Date;
+	grantedBy?: string;
+	ipAddress?: string;
+	userAgent?: string;
+	createdAt: Date;
 }
 
 export interface SOAPRecord {
-  id: string;
-  patientId: string;
-  appointmentId?: string;
-  sessionNumber: number;
-  subjective?: string; // Queixa do paciente
-  objective?: {
-    inspection?: string;
-    palpation?: string;
-    movement_tests?: Record<string, string>;
-    special_tests?: Record<string, boolean>;
-    posture_analysis?: string;
-  }; // Exame físico estruturado (JSON)
-  assessment?: string; // Avaliação/Diagnóstico
-  plan?: {
-    short_term_goals?: string[];
-    long_term_goals?: string[];
-    interventions?: string[];
-    frequency?: string;
-    duration?: string;
-    home_exercises?: string[];
-  }; // Plano de tratamento (JSON)
-  vitalSigns?: {
-    blood_pressure?: string;
-    heart_rate?: number;
-    temperature?: number;
-    respiratory_rate?: number;
-    oxygen_saturation?: number;
-  }; // Sinais vitais (JSON)
-  functionalTests?: {
-    range_of_motion?: Record<string, number>;
-    muscle_strength?: Record<string, number>;
-    balance_tests?: Record<string, string>;
-    functional_scales?: Record<string, number>;
-  }; // Testes funcionais (JSON)
-  createdBy: string;
-  createdAt: Date;
-  updatedAt: Date;
-  signedAt?: Date;
-  signatureHash?: string;
+	id: string;
+	patientId: string;
+	appointmentId?: string;
+	sessionNumber: number;
+	subjective?: string; // Queixa do paciente
+	objective?: {
+		inspection?: string;
+		palpation?: string;
+		movement_tests?: Record<string, string>;
+		special_tests?: Record<string, boolean>;
+		posture_analysis?: string;
+	}; // Exame físico estruturado (JSON)
+	assessment?: string; // Avaliação/Diagnóstico
+	plan?: {
+		short_term_goals?: string[];
+		long_term_goals?: string[];
+		interventions?: string[];
+		frequency?: string;
+		duration?: string;
+		home_exercises?: string[];
+	}; // Plano de tratamento (JSON)
+	vitalSigns?: {
+		blood_pressure?: string;
+		heart_rate?: number;
+		temperature?: number;
+		respiratory_rate?: number;
+		oxygen_saturation?: number;
+	}; // Sinais vitais (JSON)
+	functionalTests?: {
+		range_of_motion?: Record<string, number>;
+		muscle_strength?: Record<string, number>;
+		balance_tests?: Record<string, string>;
+		functional_scales?: Record<string, number>;
+	}; // Testes funcionais (JSON)
+	createdBy: string;
+	createdAt: Date;
+	updatedAt: Date;
+	signedAt?: Date;
+	signatureHash?: string;
 }
 
 export interface Appointment {
-  id: string;
-  patientId: string;
-  patientName: string;
-  date: string;
-  time: string;
-  duration: number;
-  type: 'Consulta Inicial' | 'Fisioterapia' | 'Reavaliação' | 'Consulta de Retorno';
-  status: 'Confirmado' | 'Pendente' | 'Reagendado' | 'Cancelado' | 'Realizado';
-  notes?: string;
-  phone?: string;
-  createdAt: string;
-  updatedAt: string;
+	id: string;
+	patientId: string;
+	patientName: string;
+	date: string;
+	time: string;
+	duration: number;
+	type:
+		| "Consulta Inicial"
+		| "Fisioterapia"
+		| "Reavaliação"
+		| "Consulta de Retorno";
+	status: "Confirmado" | "Pendente" | "Reagendado" | "Cancelado" | "Realizado";
+	notes?: string;
+	phone?: string;
+	createdAt: string;
+	updatedAt: string;
 }
 
 export interface Exercise {
-  id: string;
-  name: string;
-  category?: string;
-  difficulty?: string;
-  video_url?: string;
-  image_url?: string;
-  thumbnail_url?: string;
-  description?: string;
-  instructions?: string;
-  sets?: number;
-  repetitions?: number;
-  duration?: number;
-  targetMuscles?: string[];
-  equipment?: string[];
-  indicated_pathologies?: string[];
-  contraindicated_pathologies?: string[];
-  body_parts?: string[];
-  created_at?: string;
-  updated_at?: string;
+	id: string;
+	name: string;
+	category?: string;
+	difficulty?: string;
+	video_url?: string;
+	image_url?: string;
+	thumbnail_url?: string;
+	description?: string;
+	instructions?: string;
+	sets?: number;
+	repetitions?: number;
+	duration?: number;
+	targetMuscles?: string[];
+	equipment?: string[];
+	indicated_pathologies?: string[];
+	contraindicated_pathologies?: string[];
+	body_parts?: string[];
+	created_at?: string;
+	updated_at?: string;
 }
 
 export interface ExercisePlan {
-  id: string;
-  name: string;
-  description: string;
-  patientId: string;
-  exercises: ExercisePlanItem[];
-  status: 'Ativo' | 'Inativo' | 'Concluído';
-  createdAt: Date;
-  updatedAt: Date;
+	id: string;
+	name: string;
+	description: string;
+	patientId: string;
+	exercises: ExercisePlanItem[];
+	status: "Ativo" | "Inativo" | "Concluído";
+	createdAt: Date;
+	updatedAt: Date;
 }
 
 export interface ExercisePlanItem {
-  exerciseId: string;
-  sets: number;
-  reps: number;
-  restTime: number;
-  notes?: string;
+	exerciseId: string;
+	sets: number;
+	reps: number;
+	restTime: number;
+	notes?: string;
 }
 
 // Medical Record types
 export interface MedicalRecord {
-  id: string;
-  patientId: string;
-  type: 'Anamnese' | 'Evolução' | 'Avaliação' | 'Exame' | 'Receituário';
-  title: string;
-  content: string;
-  attachments?: MedicalAttachment[];
-  createdAt: Date;
-  updatedAt: Date;
-  createdBy: string; // professional ID/name
+	id: string;
+	patientId: string;
+	type: "Anamnese" | "Evolução" | "Avaliação" | "Exame" | "Receituário";
+	title: string;
+	content: string;
+	attachments?: MedicalAttachment[];
+	createdAt: Date;
+	updatedAt: Date;
+	createdBy: string; // professional ID/name
 }
 
 export interface MedicalAttachment {
-  id: string;
-  name: string;
-  type: 'image' | 'pdf' | 'document';
-  url: string;
-  size: number;
-  uploadedAt: Date;
+	id: string;
+	name: string;
+	type: "image" | "pdf" | "document";
+	url: string;
+	size: number;
+	uploadedAt: Date;
 }
 
 export interface TreatmentSession {
-  id: string;
-  patientId: string;
-  appointmentId: string;
-  exercisePlanId?: string;
-  observations: string;
-  painLevel: number; // 0-10 scale
-  evolutionNotes: string;
-  exercisesPerformed: SessionExercise[];
-  nextSessionGoals?: string;
-  createdAt: Date;
-  updatedAt: Date;
+	id: string;
+	patientId: string;
+	appointmentId: string;
+	exercisePlanId?: string;
+	observations: string;
+	painLevel: number; // 0-10 scale
+	evolutionNotes: string;
+	exercisesPerformed: SessionExercise[];
+	nextSessionGoals?: string;
+	createdAt: Date;
+	updatedAt: Date;
 }
 
 export interface SessionExercise {
-  exerciseId: string;
-  exerciseName: string;
-  setsCompleted: number;
-  repsCompleted: number;
-  observations?: string;
-  difficulty: 'fácil' | 'adequado' | 'difícil';
+	exerciseId: string;
+	exerciseName: string;
+	setsCompleted: number;
+	repsCompleted: number;
+	observations?: string;
+	difficulty: "fácil" | "adequado" | "difícil";
 }
 
 export interface Notification {
-  id: string;
-  patientId?: string;
-  type: 'lembrete_consulta' | 'confirmacao_agendamento' | 'cancelamento' | 'exercicio_pendente';
-  title: string;
-  message: string;
-  status: 'pendente' | 'enviado' | 'lido' | 'falhou';
-  scheduledFor?: Date;
-  sentAt?: Date;
-  method: 'email' | 'sms' | 'whatsapp' | 'push';
-  createdAt: Date;
+	id: string;
+	patientId?: string;
+	type:
+		| "lembrete_consulta"
+		| "confirmacao_agendamento"
+		| "cancelamento"
+		| "exercicio_pendente";
+	title: string;
+	message: string;
+	status: "pendente" | "enviado" | "lido" | "falhou";
+	scheduledFor?: Date;
+	sentAt?: Date;
+	method: "email" | "sms" | "whatsapp" | "push";
+	createdAt: Date;
 }
 
 // Enhanced ExercisePlan with smart features
 export interface SmartExercisePlan {
-  id: string;
-  name: string;
-  description: string;
-  patientId: string;
-  condition: string;
-  objectives: string[];
-  exercises: SmartExercisePlanItem[];
-  progressionRules: ProgressionRule[];
-  status: 'Ativo' | 'Inativo' | 'Concluído';
-  createdAt: Date;
-  updatedAt: Date;
-  lastProgressionDate?: Date;
+	id: string;
+	name: string;
+	description: string;
+	patientId: string;
+	condition: string;
+	objectives: string[];
+	exercises: SmartExercisePlanItem[];
+	progressionRules: ProgressionRule[];
+	status: "Ativo" | "Inativo" | "Concluído";
+	createdAt: Date;
+	updatedAt: Date;
+	lastProgressionDate?: Date;
 }
 
 export interface SmartExercisePlanItem {
-  exerciseId: string;
-  currentSets: number;
-  currentReps: number;
-  currentWeight?: number;
-  restTime: number;
-  progressionLevel: number; // 1-10
-  notes?: string;
-  videoUrl?: string;
-  adaptations?: string[];
+	exerciseId: string;
+	currentSets: number;
+	currentReps: number;
+	currentWeight?: number;
+	restTime: number;
+	progressionLevel: number; // 1-10
+	notes?: string;
+	videoUrl?: string;
+	adaptations?: string[];
 }
 
 export interface ProgressionRule {
-  id: string;
-  triggerCondition: 'sessions_completed' | 'pain_reduction' | 'performance_improvement';
-  triggerValue: number;
-  action: 'increase_reps' | 'increase_sets' | 'increase_weight' | 'advance_exercise';
-  actionValue: number;
-  description: string;
+	id: string;
+	triggerCondition:
+		| "sessions_completed"
+		| "pain_reduction"
+		| "performance_improvement";
+	triggerValue: number;
+	action:
+		| "increase_reps"
+		| "increase_sets"
+		| "increase_weight"
+		| "advance_exercise";
+	actionValue: number;
+	description: string;
 }
 
 export interface PatientProgress {
-  id: string;
-  patientId: string;
-  date: Date;
-  painLevel: number;
-  functionalScore: number; // 0-100
-  exerciseCompliance: number; // percentage
-  notes: string;
-  measurements?: BodyMeasurement[];
-  createdAt: Date;
+	id: string;
+	patientId: string;
+	date: Date;
+	painLevel: number;
+	functionalScore: number; // 0-100
+	exerciseCompliance: number; // percentage
+	notes: string;
+	measurements?: BodyMeasurement[];
+	createdAt: Date;
 }
 
 export interface BodyMeasurement {
-  location: string;
-  value: number;
-  unit: 'cm' | 'kg' | 'degrees' | 'score';
-  notes?: string;
+	location: string;
+	value: number;
+	unit: "cm" | "kg" | "degrees" | "score";
+	notes?: string;
 }
 
 // Form data types (for react-hook-form)
-export type PatientFormData = Omit<Patient, 'id' | 'status' | 'progress' | 'createdAt' | 'updatedAt'>;
-export type AppointmentFormData = Omit<Appointment, 'id' | 'patientName' | 'phone' | 'createdAt' | 'updatedAt'>;
-export type ExerciseFormData = Omit<Exercise, 'id' | 'createdAt' | 'updatedAt'>;
-export type MedicalRecordFormData = Omit<MedicalRecord, 'id' | 'createdAt' | 'updatedAt'>;
-export type TreatmentSessionFormData = Omit<TreatmentSession, 'id' | 'createdAt' | 'updatedAt'>;
-export type SmartExercisePlanFormData = Omit<SmartExercisePlan, 'id' | 'createdAt' | 'updatedAt' | 'lastProgressionDate'>;
+export type PatientFormData = Omit<
+	Patient,
+	"id" | "status" | "progress" | "createdAt" | "updatedAt"
+>;
+export type AppointmentFormData = Omit<
+	Appointment,
+	"id" | "patientName" | "phone" | "createdAt" | "updatedAt"
+>;
+export type ExerciseFormData = Omit<Exercise, "id" | "createdAt" | "updatedAt">;
+export type MedicalRecordFormData = Omit<
+	MedicalRecord,
+	"id" | "createdAt" | "updatedAt"
+>;
+export type TreatmentSessionFormData = Omit<
+	TreatmentSession,
+	"id" | "createdAt" | "updatedAt"
+>;
+export type SmartExercisePlanFormData = Omit<
+	SmartExercisePlan,
+	"id" | "createdAt" | "updatedAt" | "lastProgressionDate"
+>;
 
 // Helper functions for type-safe data access
 export const PatientHelpers = {
-  getName(patient: Patient | { name?: string; full_name?: string } | null | undefined): string {
-    if (!patient) return 'Paciente';
-    return patient.full_name || patient.name || 'Paciente';
-  },
+	getName(
+		patient: Patient | { name?: string; full_name?: string } | null | undefined,
+	): string {
+		if (!patient) return "Paciente";
+		return patient.full_name || patient.name || "Paciente";
+	},
 
-  getPhone(patient: Patient | { phone?: string } | null | undefined): string | undefined {
-    return patient?.phone;
-  },
+	getPhone(
+		patient: Patient | { phone?: string } | null | undefined,
+	): string | undefined {
+		return patient?.phone;
+	},
 
-  getId(patient: Patient | { id: string } | null | undefined): string {
-    if (!patient) return '';
-    return patient.id;
-  },
+	getId(patient: Patient | { id: string } | null | undefined): string {
+		if (!patient) return "";
+		return patient.id;
+	},
 
-  getInitials(patient: Patient | { name?: string; full_name?: string } | null | undefined): string {
-    const name = this.getName(patient);
-    const parts = name.split(' ');
-    if (parts.length >= 2) {
-      return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
-  }
+	getInitials(
+		patient: Patient | { name?: string; full_name?: string } | null | undefined,
+	): string {
+		const name = this.getName(patient);
+		const parts = name.split(" ");
+		if (parts.length >= 2) {
+			return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+		}
+		return name.substring(0, 2).toUpperCase();
+	},
 };
 
 // Error handling utility exports moved to top for better visibility and to avoid circular deps
 
 // Appointment utility functions
-export function getPatientName(appointment: AppointmentUnified | { patient?: { name?: string; full_name?: string }; patientName?: string } | null | undefined): string {
-  if (!appointment) return 'Paciente';
-  return appointment.patientName || appointment.patient?.full_name || appointment.patient?.name || 'Paciente';
+export function getPatientName(
+	appointment:
+		| AppointmentUnified
+		| { patient?: { name?: string; full_name?: string }; patientName?: string }
+		| null
+		| undefined,
+): string {
+	if (!appointment) return "Paciente";
+	return (
+		appointment.patientName ||
+		appointment.patient?.full_name ||
+		appointment.patient?.name ||
+		"Paciente"
+	);
 }
 
-export function getPatientId(appointment: AppointmentUnified | { patientId?: string; patient_id?: string } | null | undefined): string {
-  if (!appointment) return '';
-  return appointment.patientId || appointment.patient_id || '';
+export function getPatientId(
+	appointment:
+		| AppointmentUnified
+		| { patientId?: string; patient_id?: string }
+		| null
+		| undefined,
+): string {
+	if (!appointment) return "";
+	return appointment.patientId || appointment.patient_id || "";
 }
 
-export function getDate(appointment: AppointmentUnified | { date?: string; appointment_date?: string } | null | undefined): string {
-  if (!appointment) return '';
-  return appointment.appointment_date || appointment.date || '';
+export function getDate(
+	appointment:
+		| AppointmentUnified
+		| { date?: string; appointment_date?: string }
+		| null
+		| undefined,
+): string {
+	if (!appointment) return "";
+	return appointment.appointment_date || appointment.date || "";
 }
 
-export function getTime(appointment: AppointmentUnified | { time?: string; appointment_time?: string; start_time?: string } | null | undefined): string {
-  if (!appointment) return '';
-  return appointment.appointment_time || appointment.start_time || appointment.time || '';
+export function getTime(
+	appointment:
+		| AppointmentUnified
+		| { time?: string; appointment_time?: string; start_time?: string }
+		| null
+		| undefined,
+): string {
+	if (!appointment) return "";
+	return (
+		appointment.appointment_time ||
+		appointment.start_time ||
+		appointment.time ||
+		""
+	);
 }
 
-export function getStatus(appointment: AppointmentUnified | { status?: string } | null | undefined): string {
-  if (!appointment) return 'scheduled';
-  return appointment.status || 'scheduled';
+export function getStatus(
+	appointment: AppointmentUnified | { status?: string } | null | undefined,
+): string {
+	if (!appointment) return "scheduled";
+	return appointment.status || "scheduled";
 }
 
 // ============================================================================
@@ -497,83 +583,95 @@ export function getStatus(appointment: AppointmentUnified | { status?: string } 
 // ============================================================================
 
 // Time Tracking - Sistema completo de tracking de tempo faturável
-export * from './timetracking';
+export * from "./timetracking";
 
 // Wiki/Knowledge Base - Documentação colaborativa estilo Notion
-export * from './wiki';
-export * from './knowledge-base';
+export * from "./wiki";
+export * from "./knowledge-base";
 
 // Automation - Sistema de automações visuais (monday.com/Make style)
-export * from './automation';
+export * from "./automation";
 
 // Integrations - Integrações com serviços terceiros
-export * from './integrations';
+export * from "./integrations";
 
 // Gantt Chart - Visualização timeline/Gantt avançada
-export * from './gantt';
+export * from "./gantt";
 
 // ============================================================================
 // PARTNERSHIP & FINANCIAL TYPES - Sistema de Parcerias e Financeiro
 // ============================================================================
 
-export type PartnershipDiscountType = 'percentage' | 'fixed';
-export type PaymentMethod = 'cash' | 'credit_card' | 'debit_card' | 'pix' | 'transfer' | 'barter' | 'other';
-export type PaymentStatus = 'pending' | 'paid' | 'partial' | 'cancelled' | 'refunded';
+export type PartnershipDiscountType = "percentage" | "fixed";
+export type PaymentMethod =
+	| "cash"
+	| "credit_card"
+	| "debit_card"
+	| "pix"
+	| "transfer"
+	| "barter"
+	| "other";
+export type PaymentStatus =
+	| "pending"
+	| "paid"
+	| "partial"
+	| "cancelled"
+	| "refunded";
 
 export interface Partnership {
-  id: string;
-  organization_id: string;
-  name: string;
-  cnpj?: string;
-  contact_person?: string;
-  contact_phone?: string;
-  contact_email?: string;
-  address?: string;
-  discount_type: PartnershipDiscountType;
-  discount_value: number;
-  allows_barter: boolean;
-  barter_description?: string;
-  barter_sessions_limit?: number;
-  notes?: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
+	id: string;
+	organization_id: string;
+	name: string;
+	cnpj?: string;
+	contact_person?: string;
+	contact_phone?: string;
+	contact_email?: string;
+	address?: string;
+	discount_type: PartnershipDiscountType;
+	discount_value: number;
+	allows_barter: boolean;
+	barter_description?: string;
+	barter_sessions_limit?: number;
+	notes?: string;
+	is_active: boolean;
+	created_at: string;
+	updated_at: string;
 }
 
 export interface PatientFinancialRecord {
-  id: string;
-  organization_id: string;
-  patient_id: string;
-  appointment_id?: string;
-  session_date: string;
-  session_value: number;
-  discount_value: number;
-  discount_type?: 'percentage' | 'fixed' | 'partnership';
-  partnership_id?: string;
-  partnership?: {
-    name: string;
-    discount_type: PartnershipDiscountType;
-    discount_value: number;
-  };
-  final_value: number;
-  payment_method?: PaymentMethod;
-  payment_status: PaymentStatus;
-  paid_amount: number;
-  paid_date?: string;
-  notes?: string;
-  is_barter: boolean;
-  barter_notes?: string;
-  created_by?: string;
-  created_at: string;
-  updated_at: string;
+	id: string;
+	organization_id: string;
+	patient_id: string;
+	appointment_id?: string;
+	session_date: string;
+	session_value: number;
+	discount_value: number;
+	discount_type?: "percentage" | "fixed" | "partnership";
+	partnership_id?: string;
+	partnership?: {
+		name: string;
+		discount_type: PartnershipDiscountType;
+		discount_value: number;
+	};
+	final_value: number;
+	payment_method?: PaymentMethod;
+	payment_status: PaymentStatus;
+	paid_amount: number;
+	paid_date?: string;
+	notes?: string;
+	is_barter: boolean;
+	barter_notes?: string;
+	created_by?: string;
+	created_at: string;
+	updated_at: string;
 }
 
 export interface PatientFinancialSummary {
-  total_sessions: number;
-  paid_sessions: number;
-  pending_sessions: number;
-  total_value: number;
-  total_paid: number;
-  total_pending: number;
-  average_session_value: number;
+	total_sessions: number;
+	paid_sessions: number;
+	pending_sessions: number;
+	total_value: number;
+	total_paid: number;
+	total_pending: number;
+	average_session_value: number;
 }

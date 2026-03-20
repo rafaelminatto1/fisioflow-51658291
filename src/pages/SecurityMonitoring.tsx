@@ -1,12 +1,12 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function SecurityMonitoring() {
-  const navigate = useNavigate();
+	const navigate = useNavigate();
 
-  useEffect(() => {
-    navigate('/admin/audit-logs?tab=security', { replace: true });
-  }, [navigate]);
+	useEffect(() => {
+		navigate("/admin/audit-logs?tab=security", { replace: true });
+	}, [navigate]);
 
-  return null;
+	return null;
 }

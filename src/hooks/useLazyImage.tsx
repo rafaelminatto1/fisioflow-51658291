@@ -8,99 +8,99 @@
  * - Support for src, srcSet, and lazy loading
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from "react";
 
 interface UseLazyImageOptions {
-  src: string;
-  alt?: string;
-  threshold?: number;
-  rootMargin?: string;
-  className?: string;
-  placeholder?: string;
-  onLoad?: () => void;
-  onError?: () => void;
+	src: string;
+	alt?: string;
+	threshold?: number;
+	rootMargin?: string;
+	className?: string;
+	placeholder?: string;
+	onLoad?: () => void;
+	onError?: () => void;
 }
 
 export const useLazyImage = ({
-  src,
-  alt = '',
-  threshold = 0.1,
-  rootMargin = '50px',
-  className = '',
-  placeholder,
-  onLoad,
-  onError,
+	src,
+	alt = "",
+	threshold = 0.1,
+	rootMargin = "50px",
+	className = "",
+	placeholder,
+	onLoad,
+	onError,
 }: UseLazyImageOptions) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [isError, setIsError] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
-  const observerRef = useRef<IntersectionObserver | null>(null);
+	const [isVisible, setIsVisible] = useState(false);
+	const [isLoaded, setIsLoaded] = useState(false);
+	const [isError, setIsError] = useState(false);
+	const imgRef = useRef<HTMLImageElement>(null);
+	const observerRef = useRef<IntersectionObserver | null>(null);
 
-  useEffect(() => {
-    // Create intersection observer
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          // Unobserve after visible
-          if (imgRef.current) {
-            observer.unobserve(imgRef.current);
-          }
-        }
-      },
-      {
-        threshold,
-        rootMargin,
-      }
-    );
+	useEffect(() => {
+		// Create intersection observer
+		const observer = new IntersectionObserver(
+			([entry]) => {
+				if (entry.isIntersecting) {
+					setIsVisible(true);
+					// Unobserve after visible
+					if (imgRef.current) {
+						observer.unobserve(imgRef.current);
+					}
+				}
+			},
+			{
+				threshold,
+				rootMargin,
+			},
+		);
 
-    observerRef.current = observer;
+		observerRef.current = observer;
 
-    // Observe the image element
-    if (imgRef.current) {
-      observer.observe(imgRef.current);
-    }
+		// Observe the image element
+		if (imgRef.current) {
+			observer.observe(imgRef.current);
+		}
 
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, [threshold, rootMargin]);
+		return () => {
+			if (observerRef.current) {
+				observerRef.current.disconnect();
+			}
+		};
+	}, [threshold, rootMargin]);
 
-  const handleLoad = () => {
-    setIsLoaded(true);
-    onLoad?.();
-  };
+	const handleLoad = () => {
+		setIsLoaded(true);
+		onLoad?.();
+	};
 
-  const handleError = () => {
-    setIsError(true);
-    onError?.();
-  };
+	const handleError = () => {
+		setIsError(true);
+		onError?.();
+	};
 
-  // Reset state when src changes
-  useEffect(() => {
-    setIsVisible(false);
-    setIsLoaded(false);
-    setIsError(false);
-  }, [src]);
+	// Reset state when src changes
+	useEffect(() => {
+		setIsVisible(false);
+		setIsLoaded(false);
+		setIsError(false);
+	}, [src]);
 
-  return {
-    imgRef,
-    isVisible,
-    isLoaded,
-    isError,
-    imageProps: {
-      src: isVisible ? src : placeholder || '',
-      alt,
-      className,
-      onLoad: handleLoad,
-      onError: handleError,
-      loading: 'lazy' as const,
-      style: {} as React.CSSProperties,
-    },
-  };
+	return {
+		imgRef,
+		isVisible,
+		isLoaded,
+		isError,
+		imageProps: {
+			src: isVisible ? src : placeholder || "",
+			alt,
+			className,
+			onLoad: handleLoad,
+			onError: handleError,
+			loading: "lazy" as const,
+			style: {} as React.CSSProperties,
+		},
+	};
 };
 
 // Blur-up placeholder style for lazy loaded images
@@ -112,25 +112,28 @@ export const LAZY_IMAGE_PLACEHOLDER_STYLE = `
 
 // Component wrapper for lazy images
 interface LazyImageProps extends UseLazyImageOptions {
-  width?: number;
-  height?: number;
+	width?: number;
+	height?: number;
 }
 
 export const LazyImage: React.FC<LazyImageProps> = ({ alt, ...props }) => {
-  const { imgRef, isVisible, isLoaded, isError, imageProps } = useLazyImage({ alt, ...props });
+	const { imgRef, isVisible, isLoaded, isError, imageProps } = useLazyImage({
+		alt,
+		...props,
+	});
 
-  return (
-    <img
-      ref={imgRef}
-      {...imageProps}
-      alt={imageProps.alt}
-      style={{
-        ...imageProps.style,
-        width: props.width,
-        height: props.height,
-        // Blur placeholder while loading
-        ...(!isLoaded && !isError ? (LAZY_IMAGE_PLACEHOLDER_STYLE as any) : {}),
-      }}
-    />
-  );
+	return (
+		<img
+			ref={imgRef}
+			{...imageProps}
+			alt={imageProps.alt}
+			style={{
+				...imageProps.style,
+				width: props.width,
+				height: props.height,
+				// Blur placeholder while loading
+				...(!isLoaded && !isError ? (LAZY_IMAGE_PLACEHOLDER_STYLE as any) : {}),
+			}}
+		/>
+	);
 };

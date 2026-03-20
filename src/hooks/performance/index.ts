@@ -6,102 +6,110 @@
 
 // Lazy loading de bibliotecas pesadas
 export {
-  useLazyLibrary,
-  useCornerstone,
-  useMediaPipePose,
-  useMediaPipeVision,
-  useKonva,
-  useReactPDF,
-  useJsPDF,
-  useXLSX,
-  useExcelJS,
-} from './useLazyLibrary';
+	useLazyLibrary,
+	useCornerstone,
+	useMediaPipePose,
+	useMediaPipeVision,
+	useKonva,
+	useReactPDF,
+	useJsPDF,
+	useXLSX,
+	useExcelJS,
+} from "./useLazyLibrary";
 
 // Debounce - adia execução até parar de receber eventos
-export { useDebounce, useDebouncedCallback, useDebounceWithPending } from './useDebounce';
+export {
+	useDebounce,
+	useDebouncedCallback,
+	useDebounceWithPending,
+} from "./useDebounce";
 
 // Throttle - limita frequência de execução
-export { useThrottle, useThrottledCallback, useScrollThrottle, useResizeThrottle } from './useThrottle';
+export {
+	useThrottle,
+	useThrottledCallback,
+	useScrollThrottle,
+	useResizeThrottle,
+} from "./useThrottle";
 
 // Virtualização de listas
-export { useVirtualizedList, useLazyList } from './useVirtualizedList';
+export { useVirtualizedList, useLazyList } from "./useVirtualizedList";
 
 // Otimização de listas e paginação
-export { useOptimizedList, usePagination } from './useOptimizedList';
+export { useOptimizedList, usePagination } from "./useOptimizedList";
 
 // Intersection Observer para lazy loading
 export {
-  useIntersectionObserver,
-  useLazyRender,
-  useInfiniteScroll,
-  useAnimateOnScroll
-} from './useIntersectionObserver';
+	useIntersectionObserver,
+	useLazyRender,
+	useInfiniteScroll,
+	useAnimateOnScroll,
+} from "./useIntersectionObserver";
 
 // Memoização avançada
 export {
-  usePrevious,
-  useTrackedMemo,
-  useMemoWithTTL,
-  useInvalidableCallback,
-  useMultiMemo,
-  usePersistentMemo,
-  useThrottledValue,
-  usePromiseMemo,
-  useDeepMemo,
-  useConditionalMemo,
-} from './useMemoAdvanced';
+	usePrevious,
+	useTrackedMemo,
+	useMemoWithTTL,
+	useInvalidableCallback,
+	useMultiMemo,
+	usePersistentMemo,
+	useThrottledValue,
+	usePromiseMemo,
+	useDeepMemo,
+	useConditionalMemo,
+} from "./useMemoAdvanced";
 
 // React Query otimizado
 export {
-  QueryConfig,
-  useStableQuery,
-  useStaticQuery,
-  useOptimizedQuery,
-  useFrequentQuery,
-  useBatchRefetch,
-  useOptimizedMutation,
-  usePrefetch,
-  useOptimisticCache,
-  useInfiniteScrollOptimized,
-  createQueryKeys,
-  QueryKeys,
-} from './useReactQueryOptimized';
+	QueryConfig,
+	useStableQuery,
+	useStaticQuery,
+	useOptimizedQuery,
+	useFrequentQuery,
+	useBatchRefetch,
+	useOptimizedMutation,
+	usePrefetch,
+	useOptimisticCache,
+	useInfiniteScrollOptimized,
+	createQueryKeys,
+	QueryKeys,
+} from "./useReactQueryOptimized";
 
 // Prefetching - carrega dados antecipadamente
-export { 
-  usePrefetchOnHover, 
-  usePrefetchRelated, 
-  usePrefetchMultiple, 
-  usePrefetchOnProximity, 
-  usePrefetchPatientOnHover,
-  usePrefetchUpcomingAppointments, 
-  usePrefetchEvolutionTemplates,
-  PrefetchOnHover 
-} from './usePrefetch';
-
+export {
+	usePrefetchOnHover,
+	usePrefetchRelated,
+	usePrefetchMultiple,
+	usePrefetchOnProximity,
+	usePrefetchPatientOnHover,
+	usePrefetchUpcomingAppointments,
+	usePrefetchEvolutionTemplates,
+	PrefetchOnHover,
+} from "./usePrefetch";
 
 // Queries com cancelamento automático
 export {
-  useCancellableQuery,
-  useDebouncedQuery,
-  useLazyQuery,
-} from './useCancellableQuery';
+	useCancellableQuery,
+	useDebouncedQuery,
+	useLazyQuery,
+} from "./useCancellableQuery";
 
 // Deduplicação de queries
 export {
-  useDeduplicatedQuery,
-  useDeduplicatedPrefetch,
-  useBatchDeduplicatedQuery,
-  useInvalidateDeduplicatedCache,
-  useDeduplicationStats,
-} from './useQueryDeduplication';
+	useDeduplicatedQuery,
+	useDeduplicatedPrefetch,
+	useBatchDeduplicatedQuery,
+	useInvalidateDeduplicatedCache,
+	useDeduplicationStats,
+} from "./useQueryDeduplication";
 
 // Optimistic mutations
 export {
-  useOptimisticMutation,
-  useCreateMutation,
-  useUpdateMutation,
-  useDeleteMutation,
-  type OptimisticMutationContext,
-  type OptimisticMutationOptions,
-} from '../useOptimisticMutation';
+	useOptimisticMutation,
+	useCreateMutation,
+	useUpdateMutation,
+	useDeleteMutation,
+	type OptimisticMutationContext,
+	type OptimisticMutationOptions,
+} from "../useOptimisticMutation";

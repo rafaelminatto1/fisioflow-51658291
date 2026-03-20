@@ -1,18 +1,19 @@
 /**
  * AI Logic Client SDK
- * 
+ *
  * Provides direct client-to-model access for non-clinical AI features.
  * Uses proxy for secure API key management.
- * 
+ *
  * SECURITY NOTE: Only use for non-PHI/non-clinical features.
  * Clinical analysis must remain server-side via Cloud Functions.
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const apiKey = import.meta.env.VITE_GOOGLE_GENERATIVE_AI_API_KEY
-    || import.meta.env.GOOGLE_GENERATIVE_AI_API_KEY
-    || "";
+const apiKey =
+	import.meta.env.VITE_GOOGLE_GENERATIVE_AI_API_KEY ||
+	import.meta.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+	"";
 const genAI = new GoogleGenerativeAI(apiKey);
 
 // ============================================================================
@@ -24,7 +25,7 @@ const genAI = new GoogleGenerativeAI(apiKey);
  * Use for: autocomplete, text formatting, general suggestions
  */
 export const flashModel = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
+	model: "gemini-2.5-flash",
 });
 
 /**
@@ -32,7 +33,7 @@ export const flashModel = genAI.getGenerativeModel({
  * Use for: complex analysis that doesn't involve PHI
  */
 export const proModel = genAI.getGenerativeModel({
-    model: "gemini-2.5-pro",
+	model: "gemini-2.5-pro",
 });
 
 // ============================================================================
@@ -44,36 +45,34 @@ export const proModel = genAI.getGenerativeModel({
  * Examples: exercise descriptions, general wellness tips
  */
 export async function generateQuickSuggestion(
-    prompt: string,
-    options?: {
-        temperature?: number;
-        maxTokens?: number;
-    }
+	prompt: string,
+	options?: {
+		temperature?: number;
+		maxTokens?: number;
+	},
 ): Promise<string> {
-    const result = await flashModel.generateContent({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-            temperature: options?.temperature ?? 0.7,
-            maxOutputTokens: options?.maxTokens ?? 500,
-        },
-    });
+	const result = await flashModel.generateContent({
+		contents: [{ role: "user", parts: [{ text: prompt }] }],
+		generationConfig: {
+			temperature: options?.temperature ?? 0.7,
+			maxOutputTokens: options?.maxTokens ?? 500,
+		},
+	});
 
-    const response = result.response;
-    return response.text();
+	const response = result.response;
+	return response.text();
 }
 
 /**
  * Generate structured exercise descriptions
  * Use for: expanding exercise names into full descriptions
  */
-export async function expandExerciseDescription(
-    exerciseName: string
-): Promise<{
-    description: string;
-    benefits: string[];
-    precautions: string[];
+export async function expandExerciseDescription(exerciseName: string): Promise<{
+	description: string;
+	benefits: string[];
+	precautions: string[];
 }> {
-    const prompt = `Como especialista em fisioterapia, forneça uma descrição detalhada do exercício "${exerciseName}".
+	const prompt = `Como especialista em fisioterapia, forneça uma descrição detalhada do exercício "${exerciseName}".
 
 Retorne um JSON com:
 - description: descrição clara e concisa
@@ -87,28 +86,28 @@ Formato JSON:
   "precautions": ["...", "..."]
 }`;
 
-    const result = await flashModel.generateContent({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 800,
-            responseMimeType: "application/json",
-        },
-    });
+	const result = await flashModel.generateContent({
+		contents: [{ role: "user", parts: [{ text: prompt }] }],
+		generationConfig: {
+			temperature: 0.3,
+			maxOutputTokens: 800,
+			responseMimeType: "application/json",
+		},
+	});
 
-    const response = result.response;
-    const text = response.text();
+	const response = result.response;
+	const text = response.text();
 
-    try {
-        return JSON.parse(text);
-    } catch {
-        // Fallback if JSON parsing fails
-        return {
-            description: text,
-            benefits: [],
-            precautions: [],
-        };
-    }
+	try {
+		return JSON.parse(text);
+	} catch {
+		// Fallback if JSON parsing fails
+		return {
+			description: text,
+			benefits: [],
+			precautions: [],
+		};
+	}
 }
 
 /**
@@ -116,33 +115,33 @@ Formato JSON:
  * Use for: home care suggestions, general health tips
  */
 export async function generateWellnessTips(
-    topic: string,
-    count: number = 5
+	topic: string,
+	count: number = 5,
 ): Promise<string[]> {
-    const prompt = `Gere ${count} dicas de bem-estar sobre: ${topic}.
+	const prompt = `Gere ${count} dicas de bem-estar sobre: ${topic}.
 
 Retorne um JSON array de strings com dicas práticas e acionáveis.
 
 Formato: ["dica 1", "dica 2", ...]`;
 
-    const result = await flashModel.generateContent({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-            temperature: 0.8,
-            maxOutputTokens: 600,
-            responseMimeType: "application/json",
-        },
-    });
+	const result = await flashModel.generateContent({
+		contents: [{ role: "user", parts: [{ text: prompt }] }],
+		generationConfig: {
+			temperature: 0.8,
+			maxOutputTokens: 600,
+			responseMimeType: "application/json",
+		},
+	});
 
-    const response = result.response;
-    const text = response.text();
+	const response = result.response;
+	const text = response.text();
 
-    try {
-        return JSON.parse(text);
-    } catch {
-        // Fallback
-        return [text];
-    }
+	try {
+		return JSON.parse(text);
+	} catch {
+		// Fallback
+		return [text];
+	}
 }
 
 /**
@@ -150,31 +149,31 @@ Formato: ["dica 1", "dica 2", ...]`;
  * Use for: cleaning up user input, formatting notes
  */
 export async function formatText(
-    text: string,
-    style: "professional" | "casual" | "medical" = "professional"
+	text: string,
+	style: "professional" | "casual" | "medical" = "professional",
 ): Promise<string> {
-    const stylePrompts = {
-        professional: "Reformule o texto de forma profissional e clara",
-        casual: "Reformule o texto de forma amigável e acessível",
-        medical: "Reformule o texto usando terminologia médica apropriada",
-    };
+	const stylePrompts = {
+		professional: "Reformule o texto de forma profissional e clara",
+		casual: "Reformule o texto de forma amigável e acessível",
+		medical: "Reformule o texto usando terminologia médica apropriada",
+	};
 
-    const prompt = `${stylePrompts[style]}:
+	const prompt = `${stylePrompts[style]}:
 
 "${text}"
 
 Retorne apenas o texto reformulado, sem explicações adicionais.`;
 
-    const result = await flashModel.generateContent({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-            temperature: 0.5,
-            maxOutputTokens: 500,
-        },
-    });
+	const result = await flashModel.generateContent({
+		contents: [{ role: "user", parts: [{ text: prompt }] }],
+		generationConfig: {
+			temperature: 0.5,
+			maxOutputTokens: 500,
+		},
+	});
 
-    const response = result.response;
-    return response.text();
+	const response = result.response;
+	return response.text();
 }
 
 /**
@@ -182,11 +181,11 @@ Retorne apenas o texto reformulado, sem explicações adicionais.`;
  * Use for: form field autocomplete, search suggestions
  */
 export async function getAutocompleteSuggestions(
-    partial: string,
-    context: string,
-    maxSuggestions: number = 5
+	partial: string,
+	context: string,
+	maxSuggestions: number = 5,
 ): Promise<string[]> {
-    const prompt = `Complete a seguinte entrada no contexto de ${context}:
+	const prompt = `Complete a seguinte entrada no contexto de ${context}:
 
 Entrada parcial: "${partial}"
 
@@ -194,23 +193,23 @@ Retorne ${maxSuggestions} sugestões de completamento como um JSON array.
 
 Formato: ["sugestão 1", "sugestão 2", ...]`;
 
-    const result = await flashModel.generateContent({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-            temperature: 0.6,
-            maxOutputTokens: 300,
-            responseMimeType: "application/json",
-        },
-    });
+	const result = await flashModel.generateContent({
+		contents: [{ role: "user", parts: [{ text: prompt }] }],
+		generationConfig: {
+			temperature: 0.6,
+			maxOutputTokens: 300,
+			responseMimeType: "application/json",
+		},
+	});
 
-    const response = result.response;
-    const text = response.text();
+	const response = result.response;
+	const text = response.text();
 
-    try {
-        return JSON.parse(text);
-    } catch {
-        return [];
-    }
+	try {
+		return JSON.parse(text);
+	} catch {
+		return [];
+	}
 }
 
 // ============================================================================
@@ -222,24 +221,24 @@ Formato: ["sugestão 1", "sugestão 2", ...]`;
  * Use for: chat interfaces, live text generation
  */
 export async function* streamGeneration(
-    prompt: string,
-    options?: {
-        temperature?: number;
-        maxTokens?: number;
-    }
+	prompt: string,
+	options?: {
+		temperature?: number;
+		maxTokens?: number;
+	},
 ): AsyncGenerator<string, void, unknown> {
-    const result = await flashModel.generateContentStream({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-            temperature: options?.temperature ?? 0.7,
-            maxOutputTokens: options?.maxTokens ?? 1000,
-        },
-    });
+	const result = await flashModel.generateContentStream({
+		contents: [{ role: "user", parts: [{ text: prompt }] }],
+		generationConfig: {
+			temperature: options?.temperature ?? 0.7,
+			maxOutputTokens: options?.maxTokens ?? 1000,
+		},
+	});
 
-    for await (const chunk of result.stream) {
-        const text = chunk.text();
-        if (text) {
-            yield text;
-        }
-    }
+	for await (const chunk of result.stream) {
+		const text = chunk.text();
+		if (text) {
+			yield text;
+		}
+	}
 }
