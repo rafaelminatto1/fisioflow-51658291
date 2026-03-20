@@ -1,4 +1,3 @@
-
 /**
  * Hook personalizado para queries com cancelamento automático
  * Cancela requests anteriores quando um novo é iniciado
@@ -11,49 +10,49 @@
  * );
  */
 
-import { useQuery, UseQueryOptions } from '@tanstack/react-query';
-import { useRef, useCallback } from 'react';
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
+import { useRef, useCallback } from "react";
 
 export function useCancellableQuery<T>(
-  queryKey: string[],
-  queryFn: () => Promise<T>,
-  options?: Omit<UseQueryOptions<T>, 'queryKey' | 'queryFn'>
+	queryKey: string[],
+	queryFn: () => Promise<T>,
+	options?: Omit<UseQueryOptions<T>, "queryKey" | "queryFn">,
 ) {
-  const abortControllerRef = useRef<AbortController | null>(null);
+	const abortControllerRef = useRef<AbortController | null>(null);
 
-  const cancellableQueryFn = useCallback(() => {
-    // Cancelar request anterior se existir
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
+	const cancellableQueryFn = useCallback(() => {
+		// Cancelar request anterior se existir
+		if (abortControllerRef.current) {
+			abortControllerRef.current.abort();
+		}
 
-    // Criar novo AbortController
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
+		// Criar novo AbortController
+		const controller = new AbortController();
+		abortControllerRef.current = controller;
 
-    // Executar query com signal de abort
-    return queryFn();
+		// Executar query com signal de abort
+		return queryFn();
 
-    // Nota: Se a query_fn não suportar AbortSignal,
-    // o cancelamento será silencioso, mas o cleanup ainda acontecerá
-  }, [queryFn]);
+		// Nota: Se a query_fn não suportar AbortSignal,
+		// o cancelamento será silencioso, mas o cleanup ainda acontecerá
+	}, [queryFn]);
 
-  const result = useQuery({
-    queryKey,
-    queryFn: cancellableQueryFn,
-    ...options,
-  });
+	const result = useQuery({
+		queryKey,
+		queryFn: cancellableQueryFn,
+		...options,
+	});
 
-  // Cleanup no unmount
-  useCallback(() => {
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, []);
+	// Cleanup no unmount
+	useCallback(() => {
+		return () => {
+			if (abortControllerRef.current) {
+				abortControllerRef.current.abort();
+			}
+		};
+	}, []);
 
-  return result;
+	return result;
 }
 
 /**
@@ -69,66 +68,66 @@ export function useCancellableQuery<T>(
  * );
  */
 export function useDebouncedQuery<T>(
-  queryKey: string[],
-  queryFn: (signal?: AbortSignal) => Promise<T>,
-  debounceMs: number = 300,
-  options?: Omit<UseQueryOptions<T>, 'queryKey' | 'queryFn'>
+	queryKey: string[],
+	queryFn: (signal?: AbortSignal) => Promise<T>,
+	debounceMs: number = 300,
+	options?: Omit<UseQueryOptions<T>, "queryKey" | "queryFn">,
 ) {
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const debouncedQueryKey = useRef<string[]>(queryKey);
+	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const abortControllerRef = useRef<AbortController | null>(null);
+	const debouncedQueryKey = useRef<string[]>(queryKey);
 
-  const debouncedQueryFn = useCallback(() => {
-    return new Promise<T>((resolve, reject) => {
-      // Limpar timeout anterior
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
+	const debouncedQueryFn = useCallback(() => {
+		return new Promise<T>((resolve, reject) => {
+			// Limpar timeout anterior
+			if (timeoutRef.current) {
+				clearTimeout(timeoutRef.current);
+			}
 
-      // Cancelar request anterior
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
+			// Cancelar request anterior
+			if (abortControllerRef.current) {
+				abortControllerRef.current.abort();
+			}
 
-      // Criar novo AbortController
-      const controller = new AbortController();
-      abortControllerRef.current = controller;
+			// Criar novo AbortController
+			const controller = new AbortController();
+			abortControllerRef.current = controller;
 
-      // Configurar novo timeout
-      timeoutRef.current = setTimeout(async () => {
-        try {
-          const result = await queryFn(controller.signal);
-          resolve(result);
-        } catch (error) {
-          // Ignorar erros de abort
-          if (error instanceof Error && error.name === 'AbortError') {
-            return;
-          }
-          reject(error);
-        }
-      }, debounceMs);
-    });
-  }, [queryFn, debounceMs]);
+			// Configurar novo timeout
+			timeoutRef.current = setTimeout(async () => {
+				try {
+					const result = await queryFn(controller.signal);
+					resolve(result);
+				} catch (error) {
+					// Ignorar erros de abort
+					if (error instanceof Error && error.name === "AbortError") {
+						return;
+					}
+					reject(error);
+				}
+			}, debounceMs);
+		});
+	}, [queryFn, debounceMs]);
 
-  const result = useQuery({
-    queryKey: [...debouncedQueryKey.current, 'debounced'],
-    queryFn: debouncedQueryFn,
-    ...options,
-  });
+	const result = useQuery({
+		queryKey: [...debouncedQueryKey.current, "debounced"],
+		queryFn: debouncedQueryFn,
+		...options,
+	});
 
-  // Cleanup
-  useCallback(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, []);
+	// Cleanup
+	useCallback(() => {
+		return () => {
+			if (timeoutRef.current) {
+				clearTimeout(timeoutRef.current);
+			}
+			if (abortControllerRef.current) {
+				abortControllerRef.current.abort();
+			}
+		};
+	}, []);
 
-  return result;
+	return result;
 }
 
 /**
@@ -143,49 +142,49 @@ export function useDebouncedQuery<T>(
  * );
  */
 export function useLazyQuery<T>(
-  queryKey: string[],
-  queryFn: () => Promise<T>,
-  delayMs: number = 500,
-  options?: Omit<UseQueryOptions<T>, 'queryKey' | 'queryFn'>
+	queryKey: string[],
+	queryFn: () => Promise<T>,
+	delayMs: number = 500,
+	options?: Omit<UseQueryOptions<T>, "queryKey" | "queryFn">,
 ) {
-  const [shouldFetch, setShouldFetch] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const [shouldFetch, setShouldFetch] = useState(false);
+	const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const scheduleFetch = useCallback(() => {
-    // Cancelar timeout anterior
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
+	const scheduleFetch = useCallback(() => {
+		// Cancelar timeout anterior
+		if (timeoutRef.current) {
+			clearTimeout(timeoutRef.current);
+		}
 
-    // Reset shouldFetch
-    setShouldFetch(false);
+		// Reset shouldFetch
+		setShouldFetch(false);
 
-    // Agendar novo fetch
-    timeoutRef.current = setTimeout(() => {
-      setShouldFetch(true);
-    }, delayMs);
-  }, [delayMs]);
+		// Agendar novo fetch
+		timeoutRef.current = setTimeout(() => {
+			setShouldFetch(true);
+		}, delayMs);
+	}, [delayMs]);
 
-  const result = useQuery({
-    queryKey,
-    queryFn,
-    enabled: shouldFetch,
-    ...options,
-  });
+	const result = useQuery({
+		queryKey,
+		queryFn,
+		enabled: shouldFetch,
+		...options,
+	});
 
-  // Cleanup
-  useCallback(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
+	// Cleanup
+	useCallback(() => {
+		return () => {
+			if (timeoutRef.current) {
+				clearTimeout(timeoutRef.current);
+			}
+		};
+	}, []);
 
-  return {
-    ...result,
-    scheduleFetch,
-  };
+	return {
+		...result,
+		scheduleFetch,
+	};
 }
 
-import { useState } from 'react';
+import { useState } from "react";

@@ -22,14 +22,14 @@
  * ```
  */
 export function getInitials(name: string, maxLength: number = 2): string {
-  if (!name) return '??';
-  return name
-    .trim()
-    .split(/\s+/)
-    .map((n) => n[0])
-    .slice(0, maxLength)
-    .join('')
-    .toUpperCase();
+	if (!name) return "??";
+	return name
+		.trim()
+		.split(/\s+/)
+		.map((n) => n[0])
+		.slice(0, maxLength)
+		.join("")
+		.toUpperCase();
 }
 
 /**
@@ -47,8 +47,8 @@ export function getInitials(name: string, maxLength: number = 2): string {
  * ```
  */
 export function normalizeTime(time: string | null | undefined): string {
-  if (!time || !time.trim()) return '00:00';
-  return time.substring(0, 5);
+	if (!time || !time.trim()) return "00:00";
+	return time.substring(0, 5);
 }
 
 /**
@@ -65,14 +65,17 @@ export function normalizeTime(time: string | null | undefined): string {
  * calculateEndTime('23:30', 45) // '00:15'
  * ```
  */
-export function calculateEndTime(startTime: string, durationMinutes: number): string {
-  const [hours, minutes] = startTime.split(':').map(Number);
-  const totalMinutes = hours * 60 + minutes + durationMinutes;
+export function calculateEndTime(
+	startTime: string,
+	durationMinutes: number,
+): string {
+	const [hours, minutes] = startTime.split(":").map(Number);
+	const totalMinutes = hours * 60 + minutes + durationMinutes;
 
-  const endHours = Math.floor(totalMinutes / 60) % 24;
-  const endMinutes = totalMinutes % 60;
+	const endHours = Math.floor(totalMinutes / 60) % 24;
+	const endMinutes = totalMinutes % 60;
 
-  return `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+	return `${String(endHours).padStart(2, "0")}:${String(endMinutes).padStart(2, "0")}`;
 }
 
 /**
@@ -89,12 +92,12 @@ export function calculateEndTime(startTime: string, durationMinutes: number): st
  * ```
  */
 export function formatDuration(minutes: number): string {
-  if (minutes >= 60) {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
-  }
-  return `${minutes}min`;
+	if (minutes >= 60) {
+		const hours = Math.floor(minutes / 60);
+		const mins = minutes % 60;
+		return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+	}
+	return `${minutes}min`;
 }
 
 /**
@@ -105,8 +108,8 @@ export function formatDuration(minutes: number): string {
  * @returns True if appointment is in the past
  */
 export function isPastAppointment(date: string, time: string): boolean {
-  const appointmentDateTime = new Date(`${date}T${time}`);
-  return appointmentDateTime < new Date();
+	const appointmentDateTime = new Date(`${date}T${time}`);
+	return appointmentDateTime < new Date();
 }
 
 /**
@@ -116,8 +119,8 @@ export function isPastAppointment(date: string, time: string): boolean {
  * @returns True if appointment is today
  */
 export function isToday(date: string): boolean {
-  const today = new Date().toISOString().split('T')[0];
-  return date === today;
+	const today = new Date().toISOString().split("T")[0];
+	return date === today;
 }
 
 /**
@@ -127,71 +130,82 @@ export function isToday(date: string): boolean {
  * @returns Formatted type label
  */
 export function formatAppointmentType(type: string): string {
-  const typeLabels: Record<string, string> = {
-    avaliacao: 'Avaliação',
-    consulta: 'Consulta',
-    sessao: 'Sessão',
-    retorno: 'Retorno',
-    'primeira-consulta': 'Primeira Consulta',
-  };
-  return typeLabels[type.toLowerCase()] || type || 'Particular';
+	const typeLabels: Record<string, string> = {
+		avaliacao: "Avaliação",
+		consulta: "Consulta",
+		sessao: "Sessão",
+		retorno: "Retorno",
+		"primeira-consulta": "Primeira Consulta",
+	};
+	return typeLabels[type.toLowerCase()] || type || "Particular";
 }
 /**
  * Get relative time from now
- * 
+ *
  * @param date - Date in YYYY-MM-DD format
  * @param time - Time in HH:MM format
  * @returns Relative time string (e.g., 'daqui a 15 min', 'há 10 min')
  */
 export function getRelativeTime(date: string, time: string): string {
-  if (!date || !time) return '';
+	if (!date || !time) return "";
 
-  const appointmentTime = new Date(`${date}T${time}:00`);
-  const now = new Date();
-  const diffInMs = appointmentTime.getTime() - now.getTime();
-  const diffInMinutes = Math.round(diffInMs / (1000 * 60));
+	const appointmentTime = new Date(`${date}T${time}:00`);
+	const now = new Date();
+	const diffInMs = appointmentTime.getTime() - now.getTime();
+	const diffInMinutes = Math.round(diffInMs / (1000 * 60));
 
-  if (Math.abs(diffInMinutes) < 1) return 'agora';
+	if (Math.abs(diffInMinutes) < 1) return "agora";
 
-  if (diffInMinutes > 0) {
-    if (diffInMinutes >= 60) {
-      const hours = Math.floor(diffInMinutes / 60);
-      return `daqui a ${hours}h`;
-    }
-    return `daqui a ${diffInMinutes} min`;
-  } else {
-    const absMinutes = Math.abs(diffInMinutes);
-    if (absMinutes >= 60) {
-      const hours = Math.floor(absMinutes / 60);
-      return `há ${hours}h`;
-    }
-    return `há ${absMinutes} min atrás`;
-  }
+	if (diffInMinutes > 0) {
+		if (diffInMinutes >= 60) {
+			const hours = Math.floor(diffInMinutes / 60);
+			return `daqui a ${hours}h`;
+		}
+		return `daqui a ${diffInMinutes} min`;
+	} else {
+		const absMinutes = Math.abs(diffInMinutes);
+		if (absMinutes >= 60) {
+			const hours = Math.floor(absMinutes / 60);
+			return `há ${hours}h`;
+		}
+		return `há ${absMinutes} min atrás`;
+	}
 }
 
 /**
  * Check if an appointment is currently ongoing
  */
-export function isAppointmentOngoing(date: string, time: string, duration: number): boolean {
-  if (!date || !time || !duration) return false;
+export function isAppointmentOngoing(
+	date: string,
+	time: string,
+	duration: number,
+): boolean {
+	if (!date || !time || !duration) return false;
 
-  const startTime = new Date(`${date}T${time}:00`);
-  const endTime = new Date(startTime.getTime() + duration * 60000);
-  const now = new Date();
+	const startTime = new Date(`${date}T${time}:00`);
+	const endTime = new Date(startTime.getTime() + duration * 60000);
+	const now = new Date();
 
-  return now >= startTime && now <= endTime;
+	return now >= startTime && now <= endTime;
 }
 
 /**
  * Get appointment progress percentage
  */
-export function getAppointmentProgress(date: string, time: string, duration: number): number {
-  if (!date || !time || !duration) return 0;
+export function getAppointmentProgress(
+	date: string,
+	time: string,
+	duration: number,
+): number {
+	if (!date || !time || !duration) return 0;
 
-  const startTime = new Date(`${date}T${time}:00`);
-  const now = new Date();
-  const elapsedMinutes = (now.getTime() - startTime.getTime()) / 60000;
+	const startTime = new Date(`${date}T${time}:00`);
+	const now = new Date();
+	const elapsedMinutes = (now.getTime() - startTime.getTime()) / 60000;
 
-  const progress = Math.min(Math.max((elapsedMinutes / duration) * 100, 0), 100);
-  return Math.round(progress);
+	const progress = Math.min(
+		Math.max((elapsedMinutes / duration) * 100, 0),
+		100,
+	);
+	return Math.round(progress);
 }

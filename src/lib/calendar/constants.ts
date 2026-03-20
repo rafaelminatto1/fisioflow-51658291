@@ -11,14 +11,14 @@
  * Horário comercial padrão
  */
 export const BUSINESS_HOURS = {
-  /** Horário de início (7:00) */
-  START: 7,
-  /** Horário de fim (21:00) */
-  END: 21,
-  /** Duração padrão de cada slot em minutos */
-  DEFAULT_SLOT_DURATION: 30,
-  /** Arredondamento para próximo slot em minutos */
-  DEFAULT_ROUND: 30,
+	/** Horário de início (7:00) */
+	START: 7,
+	/** Horário de fim (21:00) */
+	END: 21,
+	/** Duração padrão de cada slot em minutos */
+	DEFAULT_SLOT_DURATION: 30,
+	/** Arredondamento para próximo slot em minutos */
+	DEFAULT_ROUND: 30,
 } as const;
 
 /**
@@ -44,53 +44,53 @@ export const DEFAULT_LIST_HEIGHT = 600;
  * Tipos de visualização disponíveis
  */
 export const VIEW_TYPES = {
-  DAY: 'day',
-  WEEK: 'week',
-  MONTH: 'month',
+	DAY: "day",
+	WEEK: "week",
+	MONTH: "month",
 } as const;
 
 /**
  * Nomes dos dias da semana em português
  */
 export const WEEKDAY_NAMES = [
-  'Domingo',
-  'Segunda',
-  'Terça',
-  'Quarta',
-  'Quinta',
-  'Sexta',
-  'Sábado',
+	"Domingo",
+	"Segunda",
+	"Terça",
+	"Quarta",
+	"Quinta",
+	"Sexta",
+	"Sábado",
 ] as const;
 
 /**
  * Nomes curtos dos dias da semana
  */
 export const WEEKDAY_NAMES_SHORT = [
-  'Dom',
-  'Seg',
-  'Ter',
-  'Qua',
-  'Qui',
-  'Sex',
-  'Sáb',
+	"Dom",
+	"Seg",
+	"Ter",
+	"Qua",
+	"Qui",
+	"Sex",
+	"Sáb",
 ] as const;
 
 /**
  * Nomes dos meses em português
  */
 export const MONTH_NAMES = [
-  'Janeiro',
-  'Fevereiro',
-  'Março',
-  'Abril',
-  'Maio',
-  'Junho',
-  'Julho',
-  'Agosto',
-  'Setembro',
-  'Outubro',
-  'Novembro',
-  'Dezembro',
+	"Janeiro",
+	"Fevereiro",
+	"Março",
+	"Abril",
+	"Maio",
+	"Junho",
+	"Julho",
+	"Agosto",
+	"Setembro",
+	"Outubro",
+	"Novembro",
+	"Dezembro",
 ] as const;
 
 // =====================================================================
@@ -115,67 +115,67 @@ export const DRAG_PREVIEW_OFFSET_Y = 20;
  * Cores para diferentes status de agendamento
  */
 export const STATUS_COLORS = {
-  presenca_confirmada: {
-    bg: 'from-emerald-500 to-emerald-600',
-    border: 'border-emerald-400',
-    shadow: 'shadow-emerald-500/30',
-  },
-  agendado: {
-    bg: 'from-blue-500 to-blue-600',
-    border: 'border-blue-400',
-    shadow: 'shadow-blue-500/30',
-  },
-  atendido: {
-    bg: 'from-purple-500 to-purple-600',
-    border: 'border-purple-400',
-    shadow: 'shadow-purple-500/30',
-  },
-  cancelado: {
-    bg: 'from-red-500 to-red-600',
-    border: 'border-red-400',
-    shadow: 'shadow-red-500/30',
-  },
-  avaliacao: {
-    bg: 'from-indigo-500 to-indigo-600',
-    border: 'border-indigo-400',
-    shadow: 'shadow-indigo-500/30',
-  },
-  faltou: {
-    bg: 'from-rose-500 to-rose-600',
-    border: 'border-rose-400',
-    shadow: 'shadow-rose-500/30',
-  },
-  faltou_com_aviso: {
-    bg: 'from-amber-500 to-amber-600',
-    border: 'border-amber-400',
-    shadow: 'shadow-amber-500/30',
-  },
-  faltou_sem_aviso: {
-    bg: 'from-rose-700 to-rose-800',
-    border: 'border-rose-600',
-    shadow: 'shadow-rose-700/30',
-  },
-  nao_atendido: {
-    bg: 'from-slate-500 to-slate-600',
-    border: 'border-slate-400',
-    shadow: 'shadow-slate-500/30',
-  },
-  nao_atendido_sem_cobranca: {
-    bg: 'from-slate-400 to-slate-500',
-    border: 'border-slate-300',
-    shadow: 'shadow-slate-400/30',
-  },
-  remarcar: {
-    bg: 'from-orange-500 to-orange-600',
-    border: 'border-orange-400',
-    shadow: 'shadow-orange-500/30',
-  },
-  excedente: {
-    bg: 'from-amber-600 to-orange-600',
-    border: 'border-amber-400',
-    shadow: 'shadow-amber-500/40',
-    ring: 'ring-2 ring-amber-400/50 ring-offset-1',
-  },
+	presenca_confirmada: {
+		bg: "from-emerald-500 to-emerald-600",
+		border: "border-emerald-400",
+		shadow: "shadow-emerald-500/30",
+	},
+	agendado: {
+		bg: "from-blue-500 to-blue-600",
+		border: "border-blue-400",
+		shadow: "shadow-blue-500/30",
+	},
+	atendido: {
+		bg: "from-purple-500 to-purple-600",
+		border: "border-purple-400",
+		shadow: "shadow-purple-500/30",
+	},
+	cancelado: {
+		bg: "from-red-500 to-red-600",
+		border: "border-red-400",
+		shadow: "shadow-red-500/30",
+	},
+	avaliacao: {
+		bg: "from-indigo-500 to-indigo-600",
+		border: "border-indigo-400",
+		shadow: "shadow-indigo-500/30",
+	},
+	faltou: {
+		bg: "from-rose-500 to-rose-600",
+		border: "border-rose-400",
+		shadow: "shadow-rose-500/30",
+	},
+	faltou_com_aviso: {
+		bg: "from-amber-500 to-amber-600",
+		border: "border-amber-400",
+		shadow: "shadow-amber-500/30",
+	},
+	faltou_sem_aviso: {
+		bg: "from-rose-700 to-rose-800",
+		border: "border-rose-600",
+		shadow: "shadow-rose-700/30",
+	},
+	nao_atendido: {
+		bg: "from-slate-500 to-slate-600",
+		border: "border-slate-400",
+		shadow: "shadow-slate-500/30",
+	},
+	nao_atendido_sem_cobranca: {
+		bg: "from-slate-400 to-slate-500",
+		border: "border-slate-300",
+		shadow: "shadow-slate-400/30",
+	},
+	remarcar: {
+		bg: "from-orange-500 to-orange-600",
+		border: "border-orange-400",
+		shadow: "shadow-orange-500/30",
+	},
+	excedente: {
+		bg: "from-amber-600 to-orange-600",
+		border: "border-amber-400",
+		shadow: "shadow-amber-500/40",
+		ring: "ring-2 ring-amber-400/50 ring-offset-1",
+	},
 } as const;
 
 // =====================================================================
@@ -186,19 +186,19 @@ export const STATUS_COLORS = {
  * Atalhos de teclado padrão
  */
 export const KEYBOARD_SHORTCUTS = {
-  NEW_APPOINTMENT: 'n',
-  SEARCH: 'f',
-  DAY_VIEW: 'd',
-  WEEK_VIEW: 'w',
-  MONTH_VIEW: 'm',
-  TODAY: 't',
-  HELP: '/',
-  HELP_ALT: '?',
-  SELECTION_MODE: 'a',
-  SAVE: 's',
-  ZOOM_IN: '+',
-  ZOOM_OUT: '-',
-  SELECT_ALL: 'Ctrl+A',
+	NEW_APPOINTMENT: "n",
+	SEARCH: "f",
+	DAY_VIEW: "d",
+	WEEK_VIEW: "w",
+	MONTH_VIEW: "m",
+	TODAY: "t",
+	HELP: "/",
+	HELP_ALT: "?",
+	SELECTION_MODE: "a",
+	SAVE: "s",
+	ZOOM_IN: "+",
+	ZOOM_OUT: "-",
+	SELECT_ALL: "Ctrl+A",
 } as const;
 
 // =====================================================================

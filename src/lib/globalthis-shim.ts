@@ -3,14 +3,14 @@
  * Resolve erro: "default" is not exported by "globalthis"
  */
 const g =
-  typeof globalThis !== 'undefined'
-    ? globalThis
-    : typeof window !== 'undefined'
-      ? window
-      : typeof self !== 'undefined'
-        ? self
-        : (Function('return this') as () => typeof globalThis)();
+	typeof globalThis !== "undefined"
+		? globalThis
+		: typeof window !== "undefined"
+			? window
+			: typeof self !== "undefined"
+				? self
+				: (Function("return this") as () => typeof globalThis)();
 
 export default function getGlobalThis(): typeof globalThis {
-  return g;
+	return g;
 }

@@ -1,55 +1,68 @@
-
 // Import the legacy ResponsiveReactGridLayout to support the old API with draggableHandle
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - Using internal module
 
-import React, { useState, useEffect, memo, useCallback, useRef } from 'react';
-import { Layout } from 'react-grid-layout';
-import 'react-grid-layout/css/styles.css';
-import { cn } from '@/lib/utils';
-import { ResponsiveReactGridLayout as Responsive } from 'react-grid-layout/dist/legacy';
+import React, { useState, useEffect, memo, useCallback, useRef } from "react";
+import { Layout } from "react-grid-layout";
+import "react-grid-layout/css/styles.css";
+import { cn } from "@/lib/utils";
+import { ResponsiveReactGridLayout as Responsive } from "react-grid-layout/dist/legacy";
 
 export interface GridItem {
-    id: string;
-    content: React.ReactNode;
-    defaultLayout: {
-        w: number; // width in grid columns
-        h: number; // height in grid rows
-        x: number; // horizontal position
-        y: number; // vertical position
-        minW?: number;
-        minH?: number;
-    };
+	id: string;
+	content: React.ReactNode;
+	defaultLayout: {
+		w: number; // width in grid columns
+		h: number; // height in grid rows
+		x: number; // horizontal position
+		y: number; // vertical position
+		minW?: number;
+		minH?: number;
+	};
 }
 
 interface DraggableGridProps {
-    items: GridItem[];
-    onLayoutChange?: (layout: Layout[]) => void;
-    className?: string;
-    rowHeight?: number;
-    cols?: { xl?: number; lg: number; md: number; sm: number; xs: number; xxs: number };
-    isEditable?: boolean;
-    layouts?: ReactGridLayout.Layouts;
+	items: GridItem[];
+	onLayoutChange?: (layout: Layout[]) => void;
+	className?: string;
+	rowHeight?: number;
+	cols?: {
+		xl?: number;
+		lg: number;
+		md: number;
+		sm: number;
+		xs: number;
+		xxs: number;
+	};
+	isEditable?: boolean;
+	layouts?: ReactGridLayout.Layouts;
 }
 
 // Configuration constants for the responsive grid layout
 // Optimized for: Mobile, iPad (10.5", 11", 12.9"), Notebooks, Desktop
 const GRID_CONFIG = {
-    // Mobile-first column configuration:
-    // - xxs (0-480px): 1 column for small phones - single column stack
-    // - xs (480-600px): 2 columns for large phones
-    // - sm (600-768px): 4 columns for small tablets (iPad Mini portrait)
-    // - md (768-1024px): 6 columns for tablets (iPad 10.5", 11" portrait) and small notebooks
-    // - lg (1024-1280px): 8 columns for large tablets (iPad 12.9" portrait) and standard notebooks
-    // - xl (1280px+): 12 columns for desktops and large notebooks
-    cols: { xl: 12, lg: 8, md: 6, sm: 4, xs: 2, xxs: 1 } as const,
-    breakpoints: { xl: 1280, lg: 1024, md: 768, sm: 600, xs: 480, xxs: 0 } as const,
-    margin: [12, 10] as const, // [horizontal, vertical] margin between items
-    rowHeight: 46, // default height of each grid row in pixels
-    compactType: 'vertical' as const,
-    containerPadding: [0, 0] as const,
-    transitionDuration: 150, // ms - smooth transitions
-    dragThreshold: 0, // pixels - instant drag response
+	// Mobile-first column configuration:
+	// - xxs (0-480px): 1 column for small phones - single column stack
+	// - xs (480-600px): 2 columns for large phones
+	// - sm (600-768px): 4 columns for small tablets (iPad Mini portrait)
+	// - md (768-1024px): 6 columns for tablets (iPad 10.5", 11" portrait) and small notebooks
+	// - lg (1024-1280px): 8 columns for large tablets (iPad 12.9" portrait) and standard notebooks
+	// - xl (1280px+): 12 columns for desktops and large notebooks
+	cols: { xl: 12, lg: 8, md: 6, sm: 4, xs: 2, xxs: 1 } as const,
+	breakpoints: {
+		xl: 1280,
+		lg: 1024,
+		md: 768,
+		sm: 600,
+		xs: 480,
+		xxs: 0,
+	} as const,
+	margin: [12, 10] as const, // [horizontal, vertical] margin between items
+	rowHeight: 46, // default height of each grid row in pixels
+	compactType: "vertical" as const,
+	containerPadding: [0, 0] as const,
+	transitionDuration: 150, // ms - smooth transitions
+	dragThreshold: 0, // pixels - instant drag response
 } as const;
 
 /**
@@ -57,46 +70,46 @@ const GRID_CONFIG = {
  * This ensures the responsive grid calculates item sizes correctly
  */
 const useContainerWidth = () => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    // Use window.innerWidth as initial estimate for mobile-friendly default
-    const [width, setWidth] = useState(() => {
-        if (typeof window !== 'undefined') {
-            return window.innerWidth;
-        }
-        return 1280;
-    });
+	const containerRef = useRef<HTMLDivElement>(null);
+	// Use window.innerWidth as initial estimate for mobile-friendly default
+	const [width, setWidth] = useState(() => {
+		if (typeof window !== "undefined") {
+			return window.innerWidth;
+		}
+		return 1280;
+	});
 
-    useEffect(() => {
-        const element = containerRef.current;
-        if (!element) return;
+	useEffect(() => {
+		const element = containerRef.current;
+		if (!element) return;
 
-        // Immediate measurement to get accurate width ASAP
-        const measureWidth = () => {
-            if (element.offsetWidth > 0) {
-                setWidth(element.offsetWidth);
-            }
-        };
+		// Immediate measurement to get accurate width ASAP
+		const measureWidth = () => {
+			if (element.offsetWidth > 0) {
+				setWidth(element.offsetWidth);
+			}
+		};
 
-        // Measure immediately
-        measureWidth();
+		// Measure immediately
+		measureWidth();
 
-        // Also measure on next frame to catch layout updates
-        requestAnimationFrame(measureWidth);
+		// Also measure on next frame to catch layout updates
+		requestAnimationFrame(measureWidth);
 
-        const resizeObserver = new ResizeObserver((entries) => {
-            for (const entry of entries) {
-                if (entry.contentRect.width > 0) {
-                    setWidth(entry.contentRect.width);
-                }
-            }
-        });
+		const resizeObserver = new ResizeObserver((entries) => {
+			for (const entry of entries) {
+				if (entry.contentRect.width > 0) {
+					setWidth(entry.contentRect.width);
+				}
+			}
+		});
 
-        resizeObserver.observe(element);
+		resizeObserver.observe(element);
 
-        return () => resizeObserver.disconnect();
-    }, []);
+		return () => resizeObserver.disconnect();
+	}, []);
 
-    return { containerRef, width };
+	return { containerRef, width };
 };
 
 /**
@@ -115,115 +128,119 @@ const useContainerWidth = () => {
  * />
  */
 export const DraggableGrid = memo(function DraggableGrid({
-    items,
-    onLayoutChange,
-    className,
-    rowHeight = GRID_CONFIG.rowHeight,
-    cols = GRID_CONFIG.cols,
-    isEditable = false,
-    layouts,
+	items,
+	onLayoutChange,
+	className,
+	rowHeight = GRID_CONFIG.rowHeight,
+	cols = GRID_CONFIG.cols,
+	isEditable = false,
+	layouts,
 }: DraggableGridProps) {
-    const [isMounted, setIsMounted] = useState(false);
-    const { containerRef, width } = useContainerWidth();
-    const dragCounterRef = useRef(0);
-    const effectiveWidth = containerRef.current?.getBoundingClientRect().width ?? width;
+	const [isMounted, setIsMounted] = useState(false);
+	const { containerRef, width } = useContainerWidth();
+	const dragCounterRef = useRef(0);
+	const effectiveWidth =
+		containerRef.current?.getBoundingClientRect().width ?? width;
 
-    // Wait for mount to ensure container dimensions are measured
-    useEffect(() => {
-        setIsMounted(true);
-    }, []);
+	// Wait for mount to ensure container dimensions are measured
+	useEffect(() => {
+		setIsMounted(true);
+	}, []);
 
-    const handleLayoutChange = useCallback((currentLayout: Layout[]) => {
-        if (onLayoutChange) {
-            onLayoutChange(currentLayout);
-        }
-    }, [onLayoutChange]);
+	const handleLayoutChange = useCallback(
+		(currentLayout: Layout[]) => {
+			if (onLayoutChange) {
+				onLayoutChange(currentLayout);
+			}
+		},
+		[onLayoutChange],
+	);
 
-    const handleDragStart = useCallback(() => {
-        dragCounterRef.current += 1;
-        document.body.style.cursor = 'grabbing';
-        document.body.style.userSelect = 'none';
-    }, []);
+	const handleDragStart = useCallback(() => {
+		dragCounterRef.current += 1;
+		document.body.style.cursor = "grabbing";
+		document.body.style.userSelect = "none";
+	}, []);
 
-    const handleDragEnd = useCallback(() => {
-        dragCounterRef.current -= 1;
-        if (dragCounterRef.current <= 0) {
-            dragCounterRef.current = 0;
-            document.body.style.cursor = '';
-            document.body.style.userSelect = '';
-        }
-    }, []);
+	const handleDragEnd = useCallback(() => {
+		dragCounterRef.current -= 1;
+		if (dragCounterRef.current <= 0) {
+			dragCounterRef.current = 0;
+			document.body.style.cursor = "";
+			document.body.style.userSelect = "";
+		}
+	}, []);
 
-    // Attach drag event listeners to body for better UX
-    useEffect(() => {
-        if (isEditable) {
-            document.addEventListener('dragend', handleDragEnd);
-            return () => {
-                document.removeEventListener('dragend', handleDragEnd);
-            };
-        }
-    }, [isEditable, handleDragEnd]);
+	// Attach drag event listeners to body for better UX
+	useEffect(() => {
+		if (isEditable) {
+			document.addEventListener("dragend", handleDragEnd);
+			return () => {
+				document.removeEventListener("dragend", handleDragEnd);
+			};
+		}
+	}, [isEditable, handleDragEnd]);
 
-    // Don't render until mounted to prevent layout shifts
-    if (!isMounted) {
-        return null;
-    }
+	// Don't render until mounted to prevent layout shifts
+	if (!isMounted) {
+		return null;
+	}
 
-    return (
-        <div
-            ref={containerRef}
-            className={cn("w-full max-w-full", className)}
-            style={{ position: 'relative', overflow: 'visible' }}
-        >
-            <Responsive
-                className={cn("layout", isEditable && "editable")}
-                breakpoints={GRID_CONFIG.breakpoints}
-                cols={cols}
-                rowHeight={rowHeight}
-                width={Math.max(1, effectiveWidth)}
-                measureBeforeMount={true}
-                draggableHandle=".drag-handle"
-                isDraggable={isEditable}
-                isResizable={isEditable}
-                onLayoutChange={handleLayoutChange}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-                margin={GRID_CONFIG.margin}
-                containerPadding={GRID_CONFIG.containerPadding}
-                useCSSTransforms={true}
-                compactType={GRID_CONFIG.compactType}
-                preventCollision={false} // Allow compacting to prevent overlaps
-                // Enhanced UX: Smooth animations
-                transformScale={1}
-                transitionDuration={GRID_CONFIG.transitionDuration}
-                // Bounding box for dragging
-                boundingBox={[]} // No bounds - allow free movement
-                // Allow items to be dragged more freely
-                autoSize={true}
-                layouts={layouts}
-                resizeHandles={['se']} // Standard bottom-right resize handle
-            >
-                {items.map((item) => (
-                    <div
-                        key={item.id}
-                        data-grid={{
-                            i: item.id,
-                            w: item.defaultLayout.w,
-                            h: item.defaultLayout.h,
-                            x: item.defaultLayout.x,
-                            y: item.defaultLayout.y,
-                            // Note: minW/minH are intentionally omitted here to allow
-                            // responsive layouts (passed via 'layouts' prop) to take full control
-                            // on smaller breakpoints without being constrained by desktop minimums.
-                        }}
-                        style={{ overflow: 'visible' }}
-                    >
-                        {item.content}
-                    </div>
-                ))}
-            </Responsive>
-        </div>
-    );
+	return (
+		<div
+			ref={containerRef}
+			className={cn("w-full max-w-full", className)}
+			style={{ position: "relative", overflow: "visible" }}
+		>
+			<Responsive
+				className={cn("layout", isEditable && "editable")}
+				breakpoints={GRID_CONFIG.breakpoints}
+				cols={cols}
+				rowHeight={rowHeight}
+				width={Math.max(1, effectiveWidth)}
+				measureBeforeMount={true}
+				draggableHandle=".drag-handle"
+				isDraggable={isEditable}
+				isResizable={isEditable}
+				onLayoutChange={handleLayoutChange}
+				onDragStart={handleDragStart}
+				onDragEnd={handleDragEnd}
+				margin={GRID_CONFIG.margin}
+				containerPadding={GRID_CONFIG.containerPadding}
+				useCSSTransforms={true}
+				compactType={GRID_CONFIG.compactType}
+				preventCollision={false} // Allow compacting to prevent overlaps
+				// Enhanced UX: Smooth animations
+				transformScale={1}
+				transitionDuration={GRID_CONFIG.transitionDuration}
+				// Bounding box for dragging
+				boundingBox={[]} // No bounds - allow free movement
+				// Allow items to be dragged more freely
+				autoSize={true}
+				layouts={layouts}
+				resizeHandles={["se"]} // Standard bottom-right resize handle
+			>
+				{items.map((item) => (
+					<div
+						key={item.id}
+						data-grid={{
+							i: item.id,
+							w: item.defaultLayout.w,
+							h: item.defaultLayout.h,
+							x: item.defaultLayout.x,
+							y: item.defaultLayout.y,
+							// Note: minW/minH are intentionally omitted here to allow
+							// responsive layouts (passed via 'layouts' prop) to take full control
+							// on smaller breakpoints without being constrained by desktop minimums.
+						}}
+						style={{ overflow: "visible" }}
+					>
+						{item.content}
+					</div>
+				))}
+			</Responsive>
+		</div>
+	);
 });
 
-DraggableGrid.displayName = 'DraggableGrid';
+DraggableGrid.displayName = "DraggableGrid";

@@ -2,7 +2,6 @@
  * Utilitários para formatação de inputs (CPF, telefone, etc)
  */
 
-
 /**
  * Formata CPF com máscara: 000.000.000-00
  * @param value - Valor a ser formatado (aceita string, null ou undefined)
@@ -13,22 +12,22 @@
  * formatCPF('') // ''
  */
 
-import { cleanCPF, cleanPhone } from '@/lib/validations';
+import { cleanCPF, cleanPhone } from "@/lib/validations";
 
 export const formatCPF = (value: string | null | undefined): string => {
-  if (!value || typeof value !== 'string') return '';
+	if (!value || typeof value !== "string") return "";
 
-  const cleaned = cleanCPF(value);
+	const cleaned = cleanCPF(value);
 
-  if (cleaned.length <= 3) {
-    return cleaned;
-  } else if (cleaned.length <= 6) {
-    return `${cleaned.slice(0, 3)}.${cleaned.slice(3)}`;
-  } else if (cleaned.length <= 9) {
-    return `${cleaned.slice(0, 3)}.${cleaned.slice(3, 6)}.${cleaned.slice(6)}`;
-  } else {
-    return `${cleaned.slice(0, 3)}.${cleaned.slice(3, 6)}.${cleaned.slice(6, 9)}-${cleaned.slice(9, 11)}`;
-  }
+	if (cleaned.length <= 3) {
+		return cleaned;
+	} else if (cleaned.length <= 6) {
+		return `${cleaned.slice(0, 3)}.${cleaned.slice(3)}`;
+	} else if (cleaned.length <= 9) {
+		return `${cleaned.slice(0, 3)}.${cleaned.slice(3, 6)}.${cleaned.slice(6)}`;
+	} else {
+		return `${cleaned.slice(0, 3)}.${cleaned.slice(3, 6)}.${cleaned.slice(6, 9)}-${cleaned.slice(9, 11)}`;
+	}
 };
 
 /**
@@ -41,21 +40,21 @@ export const formatCPF = (value: string | null | undefined): string => {
  * formatPhoneInput('') // ''
  */
 export const formatPhoneInput = (value: string | null | undefined): string => {
-  if (!value || typeof value !== 'string') return '';
+	if (!value || typeof value !== "string") return "";
 
-  const cleaned = cleanPhone(value);
+	const cleaned = cleanPhone(value);
 
-  if (cleaned.length <= 2) {
-    return cleaned.length > 0 ? `(${cleaned}` : '';
-  } else if (cleaned.length <= 7) {
-    return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2)}`;
-  } else if (cleaned.length <= 10) {
-    // Telefone fixo: (00) 0000-0000
-    return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 6)}-${cleaned.slice(6)}`;
-  } else {
-    // Celular: (00) 00000-0000
-    return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7, 11)}`;
-  }
+	if (cleaned.length <= 2) {
+		return cleaned.length > 0 ? `(${cleaned}` : "";
+	} else if (cleaned.length <= 7) {
+		return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2)}`;
+	} else if (cleaned.length <= 10) {
+		// Telefone fixo: (00) 0000-0000
+		return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 6)}-${cleaned.slice(6)}`;
+	} else {
+		// Celular: (00) 00000-0000
+		return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7, 11)}`;
+	}
 };
 
 /**
@@ -68,14 +67,14 @@ export const formatPhoneInput = (value: string | null | undefined): string => {
  * formatCEP('') // ''
  */
 export const formatCEP = (value: string | null | undefined): string => {
-  if (!value || typeof value !== 'string') return '';
+	if (!value || typeof value !== "string") return "";
 
-  // Remove tudo que não é dígito
-  const cleaned = value.replace(/\D/g, '');
+	// Remove tudo que não é dígito
+	const cleaned = value.replace(/\D/g, "");
 
-  if (cleaned.length <= 5) {
-    return cleaned;
-  } else {
-    return `${cleaned.slice(0, 5)}-${cleaned.slice(5, 8)}`;
-  }
+	if (cleaned.length <= 5) {
+		return cleaned;
+	} else {
+		return `${cleaned.slice(0, 5)}-${cleaned.slice(5, 8)}`;
+	}
 };

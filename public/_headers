@@ -1,2 +1,15 @@
+# Cloudflare Pages / Edge Headers Configuration
+# https://developers.cloudflare.com/pages/configuration/headers/
+
+# Força cache agressivo e imutável para arquivos com hash no nome (Vite default behavior).
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+  X-Content-Type-Options: nosniff
+
+# Headers de segurança para a raiz (index.html)
+/*
+  Cache-Control: public, max-age=0, must-revalidate
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin

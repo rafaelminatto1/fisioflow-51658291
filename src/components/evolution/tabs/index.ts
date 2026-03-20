@@ -7,8 +7,8 @@
  * @version 1.0.0
  */
 
-export { EvolucaoTab } from './EvolucaoTab';
-export { AvaliacaoTab } from './AvaliacaoTab';
-export { TratamentoTab } from './TratamentoTab';
-export { HistoricoTab } from './HistoricoTab';
-export { AssistenteTab } from './AssistenteTab';
+export { EvolucaoTab } from "./EvolucaoTab";
+export { AvaliacaoTab } from "./AvaliacaoTab";
+export { TratamentoTab } from "./TratamentoTab";
+export { HistoricoTab } from "./HistoricoTab";
+export { AssistenteTab } from "./AssistenteTab";

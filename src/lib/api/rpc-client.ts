@@ -16,27 +16,27 @@
  * Use rpc-client para novas rotas que precisem de tipagem end-to-end.
  */
 
-import { hc } from 'hono/client';
-import { getNeonAccessToken } from '@/lib/auth/neon-token';
-import { getWorkersApiUrl } from './config';
+import { hc } from "hono/client";
+import { getNeonAccessToken } from "@/lib/auth/neon-token";
+import { getWorkersApiUrl } from "./config";
 
 // Importação de tipo — sem impacto no bundle de runtime
-import type { AppType } from '../../../../workers/src/index';
+import type { AppType } from "../../../../workers/src/index";
 
 function getBaseUrl(): string {
-  return getWorkersApiUrl();
+	return getWorkersApiUrl();
 }
 
 async function getHeaders(): Promise<Record<string, string>> {
-  try {
-    const token = await getNeonAccessToken();
-    if (token) {
-      return { Authorization: `Bearer ${token}` };
-    }
-  } catch {
-    // sem token — rotas públicas funcionam sem auth
-  }
-  return {};
+	try {
+		const token = await getNeonAccessToken();
+		if (token) {
+			return { Authorization: `Bearer ${token}` };
+		}
+	} catch {
+		// sem token — rotas públicas funcionam sem auth
+	}
+	return {};
 }
 
 /**
@@ -44,17 +44,17 @@ async function getHeaders(): Promise<Record<string, string>> {
  * Os headers de auth são injetados via fetch override.
  */
 export const rpc = hc<AppType>(getBaseUrl(), {
-  fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
-    const authHeaders = await getHeaders();
-    return fetch(input, {
-      ...init,
-      headers: {
-        'Content-Type': 'application/json',
-        ...authHeaders,
-        ...(init?.headers ?? {}),
-      },
-    });
-  },
+	fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+		const authHeaders = await getHeaders();
+		return fetch(input, {
+			...init,
+			headers: {
+				"Content-Type": "application/json",
+				...authHeaders,
+				...(init?.headers ?? {}),
+			},
+		});
+	},
 });
 
 export type { AppType };

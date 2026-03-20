@@ -6,26 +6,26 @@
 
 // Reputation system
 export {
-  LEVEL_TITLES,
-  ACHIEVEMENT_TITLES,
-  getLevelTitle,
-  getAchievementTitles,
-  calculatePatientReputation,
-  getRankGradient,
-  getRankBorderColor,
-  getRankLabel,
-  getNextLevelTitle,
-  getProgressToNextTitle
-} from './reputation';
+	LEVEL_TITLES,
+	ACHIEVEMENT_TITLES,
+	getLevelTitle,
+	getAchievementTitles,
+	calculatePatientReputation,
+	getRankGradient,
+	getRankBorderColor,
+	getRankLabel,
+	getNextLevelTitle,
+	getProgressToNextTitle,
+} from "./reputation";
 
 // Quest generator
-export { generateSmartQuests } from './quest-generator';
+export { generateSmartQuests } from "./quest-generator";
 
 // Types
 export type {
-  LevelTitle,
-  AchievementTitle,
-  PatientReputation
-} from './reputation';
+	LevelTitle,
+	AchievementTitle,
+	PatientReputation,
+} from "./reputation";
 
-export type { GeneratedQuest } from './quest-generator';
+export type { GeneratedQuest } from "./quest-generator";

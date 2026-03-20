@@ -6,34 +6,34 @@
  */
 
 // Patients & Medical Records (RF01.2)
-export * from './patients';
+export * from "./patients";
 
 // Core / Legacy
-export * from './organizations';
+export * from "./organizations";
 
 // Appointments & Calendar (RF02)
-export * from './appointments';
+export * from "./appointments";
 
 // Sessions & SOAP (RF01.3, RF01.4)
-export * from './sessions';
+export * from "./sessions";
 
 // Exercises, Categories & Favorites
-export * from './exercises';
+export * from "./exercises";
 
 // Treatment Protocols
-export * from './protocols';
+export * from "./protocols";
 
 // Wiki / Knowledge Base
-export * from './wiki';
+export * from "./wiki";
 
 // Gamification & Engagement
-export * from './gamification';
+export * from "./gamification";
 
 // Evaluation Templates
-export * from './evaluation_templates';
+export * from "./evaluation_templates";
 
 // Premium Task Management & Accountability
-export * from './tasks';
+export * from "./tasks";
 
 // Financial & Billing
-export * from './financial';
+export * from "./financial";

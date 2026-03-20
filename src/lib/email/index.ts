@@ -2,4 +2,4 @@
  * Email Module - Main Export
  */
 
-export * from './resend.js';
+export * from "./resend.js";

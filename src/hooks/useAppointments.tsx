@@ -5,16 +5,16 @@
  */
 
 export {
-  appointmentKeys,
-  useAppointments,
-  useCreateAppointment,
-  useUpdateAppointment,
-  useDeleteAppointment,
-  useUpdateAppointmentStatus,
-  useRescheduleAppointment,
-  useAppointmentsFiltered,
-  useUpdatePaymentStatus,
-  useAppointmentsData,
-} from './appointments/useAppointments';
+	appointmentKeys,
+	useAppointments,
+	useCreateAppointment,
+	useUpdateAppointment,
+	useDeleteAppointment,
+	useUpdateAppointmentStatus,
+	useRescheduleAppointment,
+	useAppointmentsFiltered,
+	useUpdatePaymentStatus,
+	useAppointmentsData,
+} from "./appointments/useAppointments";
 
-export type { AppointmentsQueryResult } from './appointments/useAppointmentsCache';
+export type { AppointmentsQueryResult } from "./appointments/useAppointmentsCache";
