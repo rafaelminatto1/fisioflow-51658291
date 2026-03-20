@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   CustomModal,
   CustomModalHeader,
@@ -17,6 +18,7 @@ import {
     Trash2,
     Download,
     CalendarCheck,
+    ZoomIn,
 } from 'lucide-react';
 import { generateClinicalTestPdf } from '@/utils/generateClinicalTestPdf';
 import { toast } from 'sonner';
@@ -36,6 +38,7 @@ interface ClinicalTest {
     reference?: string;
     sensitivity_specificity?: string;
     tags?: string[];
+    image_url?: string;
     media_urls?: string[];
     description?: string;
     fields_definition?: unknown[];
@@ -68,7 +71,31 @@ export function ClinicalTestDetailsModal({
     onAddToProtocol
 }: ClinicalTestDetailsModalProps) {
     const isMobile = useIsMobile();
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (!previewImage) return;
+
+        const handlePreviewEscape = (event: KeyboardEvent) => {
+            if (event.key !== 'Escape') return;
+            event.stopImmediatePropagation();
+            setPreviewImage(null);
+        };
+
+        document.addEventListener('keydown', handlePreviewEscape);
+        return () => document.removeEventListener('keydown', handlePreviewEscape);
+    }, [previewImage]);
+
+    useEffect(() => {
+        if (!isOpen || !test) {
+            setPreviewImage(null);
+        }
+    }, [isOpen, test]);
+
     if (!test) return null;
+
+    const primaryImage = test.image_url || test.media_urls?.[0] || null;
+    const galleryImages = test.media_urls?.slice(1, 3) ?? [];
 
     const handleDownloadPDF = () => {
         try {
@@ -85,7 +112,7 @@ export function ClinicalTestDetailsModal({
             open={isOpen} 
             onOpenChange={(open) => !open && onClose()}
             isMobile={isMobile}
-            contentClassName="max-w-4xl"
+            contentClassName="max-w-5xl max-h-[92vh]"
         >
             <CustomModalHeader onClose={onClose}>
                 <div className="flex flex-col gap-1">
@@ -132,18 +159,27 @@ export function ClinicalTestDetailsModal({
             </CustomModalHeader>
 
             <CustomModalBody className="p-0 sm:p-0">
-                <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="p-6 grid grid-cols-1 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] gap-8 lg:gap-10">
                     {/* Left Column: Media */}
                     <div className="space-y-4">
-                        {(test.image_url || test.media_urls?.[0]) ? (
-                            <div className="w-full aspect-video rounded-2xl overflow-hidden shadow-sm border border-slate-100 relative bg-slate-50 group">
+                        {primaryImage ? (
+                            <button
+                                type="button"
+                                onClick={() => setPreviewImage(primaryImage)}
+                                className="w-full aspect-video rounded-2xl overflow-hidden shadow-sm border border-slate-100 relative bg-slate-50 group cursor-zoom-in text-left"
+                                aria-label={`Ampliar imagem do teste ${test.name}`}
+                            >
                                 <img
-                                    src={test.image_url || test.media_urls?.[0]}
+                                    src={primaryImage}
                                     alt={`Execução: ${test.name}`}
-                                    className="w-full h-full object-contain"
+                                    className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-[1.02]"
                                 />
-                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors pointer-events-none" />
-                            </div>
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
+                                <div className="absolute right-3 bottom-3 inline-flex items-center gap-2 rounded-full bg-slate-900/80 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 pointer-events-none">
+                                    <ZoomIn className="h-3.5 w-3.5" />
+                                    Clique para ampliar
+                                </div>
+                            </button>
                         ) : (
                             <div className="w-full aspect-video rounded-2xl overflow-hidden shadow-sm border border-slate-200 relative bg-slate-900 group cursor-pointer">
                                 <div className="absolute inset-0 flex flex-col items-center justify-center text-white/90 bg-slate-900/50 backdrop-blur-[1px] group-hover:bg-slate-900/40 transition-all">
@@ -152,12 +188,26 @@ export function ClinicalTestDetailsModal({
                                 </div>
                             </div>
                         )}
-                        {test.media_urls && test.media_urls.length > 1 ? (
+                        {galleryImages.length > 0 ? (
                             <div className="grid grid-cols-2 gap-3">
-                                {test.media_urls.slice(1, 3).map((url, i) => (
-                                    <div key={i} className="aspect-square rounded-xl overflow-hidden border border-slate-100 bg-slate-50 shadow-sm">
-                                        <img src={url} alt={`${test.name} - mídia ${i + 2}`} className="w-full h-full object-cover" />
-                                    </div>
+                                {galleryImages.map((url, i) => (
+                                    <button
+                                        key={i}
+                                        type="button"
+                                        onClick={() => setPreviewImage(url)}
+                                        className="aspect-square rounded-xl overflow-hidden border border-slate-100 bg-slate-50 shadow-sm group relative cursor-zoom-in"
+                                        aria-label={`Ampliar imagem ${i + 2} do teste ${test.name}`}
+                                    >
+                                        <img
+                                            src={url}
+                                            alt={`${test.name} - mídia ${i + 2}`}
+                                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                        />
+                                        <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/10 transition-colors" />
+                                        <div className="absolute right-2 bottom-2 rounded-full bg-white/90 p-1.5 text-slate-700 opacity-0 shadow transition-opacity group-hover:opacity-100">
+                                            <ZoomIn className="h-3.5 w-3.5" />
+                                        </div>
+                                    </button>
                                 ))}
                             </div>
                         ) : (
@@ -227,6 +277,46 @@ export function ClinicalTestDetailsModal({
                     Adicionar ao Protocolo
                 </Button>
             </CustomModalFooter>
+
+            {previewImage && (
+                <div
+                    className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-md"
+                    onClick={() => setPreviewImage(null)}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label={`Imagem ampliada de ${test.name}`}
+                >
+                    <button
+                        type="button"
+                        onClick={() => setPreviewImage(null)}
+                        className="absolute right-4 top-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+                        aria-label="Fechar imagem ampliada"
+                    >
+                        <X className="h-5 w-5" />
+                    </button>
+
+                    <div
+                        className="flex max-h-[94vh] w-full max-w-6xl flex-col gap-3"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <div className="px-1">
+                            <p className="text-sm font-semibold text-white">Imagem do exercício</p>
+                            <p className="text-sm text-slate-300">{test.name}</p>
+                        </div>
+
+                        <div className="flex items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 p-3 sm:p-5 shadow-2xl">
+                            <img
+                                src={previewImage}
+                                alt={`Imagem ampliada de ${test.name}`}
+                                className={cn(
+                                    "max-w-full rounded-xl object-contain",
+                                    isMobile ? "max-h-[70dvh]" : "max-h-[82vh]"
+                                )}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
         </CustomModal>
     );
 }

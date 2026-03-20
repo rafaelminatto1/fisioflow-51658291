@@ -197,7 +197,7 @@ export const clinicalTestsApi = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
-  update: (id: string, data: Partial<ClinicalTestTemplateRecord>) =>
+  update: (id: string, data: Partial<ClinicalTestTemplateRecord> & { image_url?: string | null }) =>
     request<{ data: ClinicalTestTemplateRecord }>(`/api/clinical/test-templates/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),

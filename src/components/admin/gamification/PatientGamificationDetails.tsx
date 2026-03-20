@@ -41,11 +41,12 @@ export const PatientGamificationDetails: React.FC<PatientGamificationDetailsProp
     enabled: !!patientId && open,
   });
 
-  const { data: transactions } = useQuery<XpTransaction[]>({
+  const { data: transactions } = useQuery({
     queryKey: ['gamification-transactions', patientId],
     queryFn: async () => (await gamificationApi.getTransactions(patientId)).data ?? [],
     enabled: !!patientId && open && activeTab === 'history',
   });
+
 
   const { data: achievements } = useQuery<AchievementLogEntry[]>({
     queryKey: ['gamification-achievements', patientId],

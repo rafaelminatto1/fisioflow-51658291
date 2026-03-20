@@ -90,9 +90,18 @@ const app = new Hono<{ Bindings: Env; Variables: CustomVariables }>();
 // 1. MIDDLEWARE DE CORS GLOBAL (Executa antes de tudo)
 app.use('*', async (c, next) => {
   const requestOrigin = c.req.header('Origin');
+  
+  // Lista robusta de origens permitidas (fallback para produção se a env falhar)
+  const defaultOrigins = [
+    'https://moocafisio.com.br',
+    'https://www.moocafisio.com.br',
+    'https://fisioflow.pages.dev',
+    'http://localhost:5173'
+  ];
+
   const allowedOrigins = (c.env as any).ALLOWED_ORIGINS
     ? String((c.env as any).ALLOWED_ORIGINS).split(',').map((o: string) => o.trim())
-    : ['http://localhost:5173'];
+    : defaultOrigins;
 
   const isAllowed = !requestOrigin || allowedOrigins.includes(requestOrigin);
   const origin = isAllowed && requestOrigin ? requestOrigin : allowedOrigins[0];
@@ -100,7 +109,7 @@ app.use('*', async (c, next) => {
   if (c.req.method === 'OPTIONS') {
     c.header('Access-Control-Allow-Origin', origin);
     c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-    c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Cookie');
+    c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Cookie, X-Neon-Auth-Token');
     c.header('Access-Control-Allow-Credentials', 'true');
     c.header('Access-Control-Max-Age', '86400');
     return c.body(null, 204);

@@ -127,7 +127,7 @@ const GamificationMiniProfile = ({ collapsed }: { collapsed: boolean }) => {
 const menuItems = [
   // NÚCLEO DO NEGÓCIO - Usado diariamente
   { icon: Calendar, label: 'Agenda', href: '/agenda' },
-  { icon: LayoutDashboard, label: 'Dashboard', href: '/dashboard' },
+  { icon: LayoutDashboard, label: 'Dashboard', href: '/smart-dashboard' },
   { icon: Users, label: 'Pacientes', href: '/patients' },
 
   // CLÍNICA DIÁRIA - Fluxo principal de atendimento
@@ -140,6 +140,7 @@ const avaliacoesSubmenu = [
   { icon: ScanFace, label: 'Avaliação Postural', href: '/dashboard/imagens?mode=clinical_posture' },
   { icon: ImageIcon, label: 'Avaliação de Imagem', href: '/dashboard/imagens' },
   { icon: Footprints, label: 'Avaliação de Marcha', href: '/dashboard/imagens?mode=dynamic_demo' },
+  { icon: FlaskConical, label: 'Testes Clínicos', href: '/clinical-tests' },
 ];
 
 const operacionaisSubmenu = [
@@ -159,7 +160,7 @@ const marketingSubmenu = [
 ];
 
 const dashboardIaSubmenu = [
-  { icon: Sparkles, label: 'Dashboard IA', href: '/smart-dashboard' },
+  { icon: LayoutDashboard, label: 'Dashboard Legado', href: '/dashboard' },
   { icon: Brain, label: 'Planos IA', href: '/smart-ai' },
   { icon: BarChart3, label: 'Analytics Avançado', href: '/analytics' },
 ];
@@ -183,7 +184,6 @@ const adminSubmenu = [
 
 const maisSubmenu = [
   { icon: UserCircle, label: 'Portal Paciente', href: '/portal' },
-  { icon: FlaskConical, label: 'Testes Clínicos', href: '/clinical-tests' },
 ];
 
 export function Sidebar() {
@@ -200,13 +200,13 @@ export function Sidebar() {
   const queryClient = useQueryClient();
   useNavPreload();
 
-  const isAvaliacoesActive = location.pathname.startsWith('/dashboard/imagens');
+  const isAvaliacoesActive = location.pathname.startsWith('/dashboard/imagens') || location.pathname === '/clinical-tests';
   const isDashboardIaActive = location.pathname.startsWith('/smart-dashboard') || location.pathname.startsWith('/smart-ai') || location.pathname === '/analytics';
   const isGoogleAiActive = location.pathname.startsWith('/ai/');
   const isAdminActive = location.pathname.startsWith('/admin');
   const isOperacionaisActive = location.pathname.startsWith('/eventos') || location.pathname === '/inventory' || location.pathname === '/telemedicine' || location.pathname === '/tarefas-v2' || location.pathname.startsWith('/boards') || location.pathname === '/waitlist' || location.pathname.startsWith('/wiki');
   const isMarketingActive = location.pathname.startsWith('/marketing');
-  const isMaisActive = location.pathname === '/portal' || location.pathname === '/clinical-tests' || location.pathname === '/automation';
+  const isMaisActive = location.pathname === '/portal' || location.pathname === '/automation';
 
   const { preloadRoute } = useNavPreload();
 
