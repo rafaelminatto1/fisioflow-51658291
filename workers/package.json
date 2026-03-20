@@ -5,8 +5,8 @@
   "description": "FisioFlow Cloudflare Workers API — Hono + Neon (Hyperdrive) + Drizzle",
   "scripts": {
     "dev": "sh dev.sh",
-    "build": "wrangler deploy --dry-run",
-    "deploy": "wrangler deploy",
+    "build": "wrangler deploy --dry-run --env production",
+    "deploy": "wrangler deploy --env production",
     "deploy:staging": "wrangler deploy --env staging",
     "lint": "oxlint --quiet",
     "type-check": "tsc --noEmit",
