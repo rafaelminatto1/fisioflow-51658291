@@ -1,13 +1,13 @@
-export { CalendarSync } from './CalendarSync';
-export { TelehealthIntegration } from './TelehealthIntegration';
+export { CalendarSync } from "./CalendarSync";
+export { TelehealthIntegration } from "./TelehealthIntegration";
 export type {
-  CalendarProvider,
-  CalendarSyncConfig,
-  SyncEvent,
-  SyncConflict,
-} from './CalendarSync';
+	CalendarProvider,
+	CalendarSyncConfig,
+	SyncEvent,
+	SyncConflict,
+} from "./CalendarSync";
 export type {
-  TelehealthProvider,
-  MeetingConfig,
-  MeetingRoom,
-} from './TelehealthIntegration';
+	TelehealthProvider,
+	MeetingConfig,
+	MeetingRoom,
+} from "./TelehealthIntegration";

@@ -6,25 +6,25 @@
  */
 
 // Global (app-level, Sentry + full-page fallback)
-export { GlobalErrorBoundary, withErrorBoundary } from './GlobalErrorBoundary';
+export { GlobalErrorBoundary, withErrorBoundary } from "./GlobalErrorBoundary";
 
 // Route-level (wraps React Router routes, logs URL context)
-export { RouteErrorBoundary } from './RouteErrorBoundary';
+export { RouteErrorBoundary } from "./RouteErrorBoundary";
 
 // Component-level (inline widgets, suppressable)
 export {
-  ComponentErrorBoundary,
-  HeavyComponentFallback,
-  PDFComponentFallback,
-  ComputerVisionFallback,
-  ChartFallback,
-} from './ComponentErrorBoundary';
-export type { ComponentErrorBoundaryProps } from './ComponentErrorBoundary';
+	ComponentErrorBoundary,
+	HeavyComponentFallback,
+	PDFComponentFallback,
+	ComputerVisionFallback,
+	ChartFallback,
+} from "./ComponentErrorBoundary";
+export type { ComponentErrorBoundaryProps } from "./ComponentErrorBoundary";
 
 // App-level with Vite preload handler (used in App.tsx)
-export { ErrorBoundary, ErrorBoundaryWithViteHandler } from './ErrorBoundary';
+export { ErrorBoundary, ErrorBoundaryWithViteHandler } from "./ErrorBoundary";
 
 // Utility components
-export { CustomNotification } from './CustomNotification';
-export { GlobalNotifications } from './GlobalNotifications';
-export { ErrorPageLayout } from './ErrorPageLayout';
+export { CustomNotification } from "./CustomNotification";
+export { GlobalNotifications } from "./GlobalNotifications";
+export { ErrorPageLayout } from "./ErrorPageLayout";

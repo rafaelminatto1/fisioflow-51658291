@@ -1,4 +1,3 @@
- 
 /**
  * SkipLink - Componente de acessibilidade para navegação por teclado
  *
@@ -7,34 +6,34 @@
  */
 
 interface SkipLinkProps {
-  /** ID do elemento principal para onde o link deve pular */
-  mainContentId?: string;
-  /** Texto customizado para o link */
-  label?: string;
+	/** ID do elemento principal para onde o link deve pular */
+	mainContentId?: string;
+	/** Texto customizado para o link */
+	label?: string;
 }
 
 export function SkipLink({
-  mainContentId = 'main-content',
-  label = 'Pular para o conteúdo principal'
+	mainContentId = "main-content",
+	label = "Pular para o conteúdo principal",
 }: SkipLinkProps) {
-  // Garantir que o elemento principal existe
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    const target = document.getElementById(mainContentId);
-    if (target) {
-      target.focus();
-      target.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+	// Garantir que o elemento principal existe
+	const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+		e.preventDefault();
+		const target = document.getElementById(mainContentId);
+		if (target) {
+			target.focus();
+			target.scrollIntoView({ behavior: "smooth" });
+		}
+	};
 
-  return (
-    <a
-      href={`#${mainContentId}`}
-      onClick={handleClick}
-      className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-      aria-label={label}
-    >
-      {label}
-    </a>
-  );
+	return (
+		<a
+			href={`#${mainContentId}`}
+			onClick={handleClick}
+			className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+			aria-label={label}
+		>
+			{label}
+		</a>
+	);
 }

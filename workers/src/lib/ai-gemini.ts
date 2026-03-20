@@ -1,5 +1,10 @@
-export async function callGemini(apiKey: string, prompt: string, model: string = 'gemini-1.5-flash') {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+export async function callGemini(apiKey: string, prompt: string, model: string = 'gemini-1.5-flash', gatewayUrl?: string) {
+  // Se houver um Gateway da Cloudflare configurado, roteia por ele para aproveitar cache e logs (economia de tokens)
+  const baseUrl = gatewayUrl 
+    ? `${gatewayUrl}/google-ai-studio` 
+    : 'https://generativelanguage.googleapis.com';
+
+  const url = `${baseUrl}/v1beta/models/${model}:generateContent?key=${apiKey}`;
   
   const response = await fetch(url, {
     method: 'POST',
@@ -26,8 +31,12 @@ export async function callGemini(apiKey: string, prompt: string, model: string =
   return result.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
-export async function transcribeAudioWithGemini(apiKey: string, audioBase64: string, mimeType: string) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+export async function transcribeAudioWithGemini(apiKey: string, audioBase64: string, mimeType: string, gatewayUrl?: string) {
+  const baseUrl = gatewayUrl 
+    ? `${gatewayUrl}/google-ai-studio` 
+    : 'https://generativelanguage.googleapis.com';
+
+  const url = `${baseUrl}/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
   
   const response = await fetch(url, {
     method: 'POST',

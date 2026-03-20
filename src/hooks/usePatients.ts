@@ -10,33 +10,27 @@
  * @module hooks/usePatients
  */
 
-import { useEffect, useState } from 'react';
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { patientsApi } from '@/lib/api/workers-client';
-import { fisioLogger as logger } from '@/lib/errors/logger';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import { patientsCacheService } from '@/lib/offline/PatientsCacheService';
-import { ErrorHandler } from '@/lib/errors/ErrorHandler';
-import { PatientService } from '@/services/patientService';
+import { useEffect, useState } from "react";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { patientsApi } from "@/lib/api/workers-client";
+import { fisioLogger as logger } from "@/lib/errors/logger";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { patientsCacheService } from "@/lib/offline/PatientsCacheService";
+import { ErrorHandler } from "@/lib/errors/ErrorHandler";
+import { PatientService } from "@/services/patientService";
 import {
-
-  PATIENT_QUERY_CONFIG,
-  PATIENT_SELECT,
-  devValidate
-} from '@/lib/constants/patient-queries';
-import {
-  isOnline,
-  isNetworkError
-} from '@/lib/utils/query-helpers';
-import { getUserOrganizationId } from '@/utils/userHelpers';
-import type { Patient } from '@/types';
+	PATIENT_QUERY_CONFIG,
+	PATIENT_SELECT,
+	devValidate,
+} from "@/lib/constants/patient-queries";
+import { isOnline, isNetworkError } from "@/lib/utils/query-helpers";
+import { getUserOrganizationId } from "@/utils/userHelpers";
+import type { Patient } from "@/types";
 
 // ==============================================================================
 // MAPPING FUNCTIONS
 // ==============================================================================
-
-
 
 // ==============================================================================
 // HOOKS
@@ -53,227 +47,290 @@ import type { Patient } from '@/types';
  * - Retry with backoff for network errors
  */
 interface UseActivePatientsOptions {
-  enabled?: boolean;
-  organizationId?: string;
+	enabled?: boolean;
+	organizationId?: string;
 }
 
 export const useActivePatients = (options: UseActivePatientsOptions = {}) => {
-  const { profile, organizationId: authOrganizationId, user } = useAuth();
-  const { _toast } = useToast();
-  const queryClient = useQueryClient();
-  const isHookEnabled = options.enabled ?? true;
-  const [resolvedOrganizationId, setResolvedOrganizationId] = useState<string | null>(
-    options.organizationId || profile?.organization_id || authOrganizationId || null
-  );
+	const { profile, organizationId: authOrganizationId, user } = useAuth();
+	const { _toast } = useToast();
+	const queryClient = useQueryClient();
+	const isHookEnabled = options.enabled ?? true;
+	const [resolvedOrganizationId, setResolvedOrganizationId] = useState<
+		string | null
+	>(
+		options.organizationId ||
+			profile?.organization_id ||
+			authOrganizationId ||
+			null,
+	);
 
-  useEffect(() => {
-    const nextOrgId = options.organizationId || profile?.organization_id || authOrganizationId || null;
-    if (nextOrgId && nextOrgId !== resolvedOrganizationId) {
-      setResolvedOrganizationId(nextOrgId);
-    }
-  }, [options.organizationId, profile?.organization_id, authOrganizationId, resolvedOrganizationId]);
+	useEffect(() => {
+		const nextOrgId =
+			options.organizationId ||
+			profile?.organization_id ||
+			authOrganizationId ||
+			null;
+		if (nextOrgId && nextOrgId !== resolvedOrganizationId) {
+			setResolvedOrganizationId(nextOrgId);
+		}
+	}, [
+		options.organizationId,
+		profile?.organization_id,
+		authOrganizationId,
+		resolvedOrganizationId,
+	]);
 
-  useEffect(() => {
-    let cancelled = false;
-    if (!isHookEnabled || !user || resolvedOrganizationId) return;
+	useEffect(() => {
+		let cancelled = false;
+		if (!isHookEnabled || !user || resolvedOrganizationId) return;
 
-    getUserOrganizationId()
-      .then((orgId) => {
-        if (!cancelled && orgId) setResolvedOrganizationId(orgId);
-      })
-      .catch((error) => {
-        logger.debug('useActivePatients: fallback getUserOrganizationId falhou', error, 'usePatients');
-      });
+		getUserOrganizationId()
+			.then((orgId) => {
+				if (!cancelled && orgId) setResolvedOrganizationId(orgId);
+			})
+			.catch((error) => {
+				logger.debug(
+					"useActivePatients: fallback getUserOrganizationId falhou",
+					error,
+					"usePatients",
+				);
+			});
 
-    return () => {
-      cancelled = true;
-    };
-  }, [isHookEnabled, user, resolvedOrganizationId]);
+		return () => {
+			cancelled = true;
+		};
+	}, [isHookEnabled, user, resolvedOrganizationId]);
 
-  const organizationId = resolvedOrganizationId;
+	const organizationId = resolvedOrganizationId;
 
-  const result = useQuery({
-    queryKey: ['patients', organizationId],
-    queryFn: async () => {
-      // Try cache first when offline
-      if (!isOnline()) {
-        logger.debug('Offline: Carregando pacientes do cache', { organizationId }, 'usePatients');
-        const cacheResult = await patientsCacheService.getFromCache(organizationId);
-        if (cacheResult.data.length > 0) {
-          logger.debug('Pacientes carregados do cache offline', { count: cacheResult.data.length }, 'usePatients');
-          return cacheResult.data;
-        }
-        logger.debug('Cache vazio ou expirado', { organizationId }, 'usePatients');
-        return [];
-      }
+	const result = useQuery({
+		queryKey: ["patients", organizationId],
+		queryFn: async () => {
+			// Try cache first when offline
+			if (!isOnline()) {
+				logger.debug(
+					"Offline: Carregando pacientes do cache",
+					{ organizationId },
+					"usePatients",
+				);
+				const cacheResult =
+					await patientsCacheService.getFromCache(organizationId);
+				if (cacheResult.data.length > 0) {
+					logger.debug(
+						"Pacientes carregados do cache offline",
+						{ count: cacheResult.data.length },
+						"usePatients",
+					);
+					return cacheResult.data;
+				}
+				logger.debug(
+					"Cache vazio ou expirado",
+					{ organizationId },
+					"usePatients",
+				);
+				return [];
+			}
 
-      // Dev-only validation (removed in production for performance)
-      devValidate(PATIENT_SELECT.standard);
+			// Dev-only validation (removed in production for performance)
+			devValidate(PATIENT_SELECT.standard);
 
-      try {
-        logger.debug('useActivePatients: fetching patients', { organizationId }, 'usePatients');
+			try {
+				logger.debug(
+					"useActivePatients: fetching patients",
+					{ organizationId },
+					"usePatients",
+				);
 
-        // Execute query via Service (getActivePatients returns a thenable query builder)
-        const { data, error } = await PatientService.getActivePatients(organizationId!);
+				// Execute query via Service (getActivePatients returns a thenable query builder)
+				const { data, error } = await PatientService.getActivePatients(
+					organizationId!,
+				);
 
-        if (error) {
-          logger.error('useActivePatients: error from PatientService', { error, organizationId }, 'usePatients');
-          throw error;
-        }
+				if (error) {
+					logger.error(
+						"useActivePatients: error from PatientService",
+						{ error, organizationId },
+						"usePatients",
+					);
+					throw error;
+				}
 
-        const validPatients: Patient[] = data ?? [];
-        logger.debug('useActivePatients: fetched patients', {
-          count: validPatients.length,
-          patientIds: validPatients.map(p => p.id).slice(0, 5),
-          organizationId,
-        }, 'usePatients');
+				const validPatients: Patient[] = data ?? [];
+				logger.debug(
+					"useActivePatients: fetched patients",
+					{
+						count: validPatients.length,
+						patientIds: validPatients.map((p) => p.id).slice(0, 5),
+						organizationId,
+					},
+					"usePatients",
+				);
 
-        // Save to cache for offline use
-        if (validPatients.length > 0) {
-          patientsCacheService.saveToCache(validPatients, organizationId).catch((error) => {
-            logger.warn('Falha ao salvar pacientes no cache', error, 'usePatients');
-          });
-        }
+				// Save to cache for offline use
+				if (validPatients.length > 0) {
+					patientsCacheService
+						.saveToCache(validPatients, organizationId)
+						.catch((error) => {
+							logger.warn(
+								"Falha ao salvar pacientes no cache",
+								error,
+								"usePatients",
+							);
+						});
+				}
 
-        return validPatients;
+				return validPatients;
+			} catch (error) {
+				logger.error("Erro ao carregar pacientes", error, "usePatients");
 
-      } catch (error) {
-        logger.error('Erro ao carregar pacientes', error, 'usePatients');
+				// Try cache on network error
+				if (isNetworkError(error)) {
+					logger.debug(
+						"Erro de rede detectado, tentando cache",
+						{ organizationId },
+						"usePatients",
+					);
+					const cacheResult =
+						await patientsCacheService.getFromCache(organizationId);
+					if (cacheResult.data.length > 0) {
+						logger.debug(
+							"Pacientes carregados do cache (fallback)",
+							{ count: cacheResult.data.length },
+							"usePatients",
+						);
+						return cacheResult.data;
+					}
+				}
 
-        // Try cache on network error
-        if (isNetworkError(error)) {
-          logger.debug('Erro de rede detectado, tentando cache', { organizationId }, 'usePatients');
-          const cacheResult = await patientsCacheService.getFromCache(organizationId);
-          if (cacheResult.data.length > 0) {
-            logger.debug('Pacientes carregados do cache (fallback)', { count: cacheResult.data.length }, 'usePatients');
-            return cacheResult.data;
-          }
-        }
+				throw error;
+			}
+		},
+		enabled: isHookEnabled && !!user && !!organizationId,
+		staleTime: PATIENT_QUERY_CONFIG.staleTime,
+		retry: PATIENT_QUERY_CONFIG.maxRetries,
+	});
 
-        throw error;
-      }
-    },
-    enabled: isHookEnabled && !!user && !!organizationId,
-    staleTime: PATIENT_QUERY_CONFIG.staleTime,
-    retry: PATIENT_QUERY_CONFIG.maxRetries,
-  });
+	useEffect(() => {
+		// Prefetching patient stats removed to prevent 404 errors
+		// since the /api/patients/:id/stats endpoint does not exist on the workers API.
+		// The data is actually calculated locally in usePatientStats.ts.
+		return undefined;
+	}, [queryClient, result.data]);
 
-  useEffect(() => {
-    // Prefetching patient stats removed to prevent 404 errors 
-    // since the /api/patients/:id/stats endpoint does not exist on the workers API.
-    // The data is actually calculated locally in usePatientStats.ts.
-    return undefined;
-  }, [queryClient, result.data]);
-
-  return result;
+	return result;
 };
 
 /**
  * Alias for useActivePatients
  * @deprecated Use useActivePatients directly for clarity
  */
-export const usePatients = (options: UseActivePatientsOptions = {}) => useActivePatients(options);
+export const usePatients = (options: UseActivePatientsOptions = {}) =>
+	useActivePatients(options);
 
 /**
  * Hook for fetching a single patient by ID
  */
 export const usePatientById = (id: string | undefined) => {
-  return useQuery({
-    queryKey: ['patient', id],
-    queryFn: async () => {
-      if (!id) return null;
+	return useQuery({
+		queryKey: ["patient", id],
+		queryFn: async () => {
+			if (!id) return null;
 
-      devValidate(PATIENT_SELECT.standard);
+			devValidate(PATIENT_SELECT.standard);
 
-      const { data, error } = await PatientService.getPatientById(id);
+			const { data, error } = await PatientService.getPatientById(id);
 
-      if (error) throw error;
-      if (!data) return null;
+			if (error) throw error;
+			if (!data) return null;
 
-      return data;
-    },
-    enabled: !!id,
-    staleTime: PATIENT_QUERY_CONFIG.staleTimeLong,
-  });
+			return data;
+		},
+		enabled: !!id,
+		staleTime: PATIENT_QUERY_CONFIG.staleTimeLong,
+	});
 };
 
 /**
  * Hook for creating a new patient
  */
 export const useCreatePatient = () => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
+	const queryClient = useQueryClient();
+	const { toast } = useToast();
 
-  return useMutation({
-    mutationFn: async (patient: Record<string, unknown>) => {
-      const { data, error } = await PatientService.createPatient(patient);
+	return useMutation({
+		mutationFn: async (patient: Record<string, unknown>) => {
+			const { data, error } = await PatientService.createPatient(patient);
 
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
-      toast({
-        title: 'Paciente cadastrado',
-        description: 'O paciente foi cadastrado com sucesso.',
-      });
-    },
-    onError: (error: Error) => {
-      ErrorHandler.handle(error, 'useCreatePatient');
-    },
-  });
+			if (error) throw error;
+			return data;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["patients"] });
+			toast({
+				title: "Paciente cadastrado",
+				description: "O paciente foi cadastrado com sucesso.",
+			});
+		},
+		onError: (error: Error) => {
+			ErrorHandler.handle(error, "useCreatePatient");
+		},
+	});
 };
 
 /**
  * Hook for updating an existing patient
  */
 export const useUpdatePatient = () => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
+	const queryClient = useQueryClient();
+	const { toast } = useToast();
 
-  return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: string } & Record<string, unknown>) => {
-      const { data, error } = await PatientService.updatePatient(id, updates);
+	return useMutation({
+		mutationFn: async ({
+			id,
+			...updates
+		}: { id: string } & Record<string, unknown>) => {
+			const { data, error } = await PatientService.updatePatient(id, updates);
 
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
-      queryClient.invalidateQueries({ queryKey: ['patient', variables.id] });
-      toast({
-        title: 'Paciente atualizado',
-        description: 'As informações foram atualizadas com sucesso.',
-      });
-    },
-    onError: (error: Error) => {
-      ErrorHandler.handle(error, 'useUpdatePatient');
-    },
-  });
+			if (error) throw error;
+			return data;
+		},
+		onSuccess: (_, variables) => {
+			queryClient.invalidateQueries({ queryKey: ["patients"] });
+			queryClient.invalidateQueries({ queryKey: ["patient", variables.id] });
+			toast({
+				title: "Paciente atualizado",
+				description: "As informações foram atualizadas com sucesso.",
+			});
+		},
+		onError: (error: Error) => {
+			ErrorHandler.handle(error, "useUpdatePatient");
+		},
+	});
 };
 
 /**
  * Hook for deleting a patient
  */
 export const useDeletePatient = () => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
+	const queryClient = useQueryClient();
+	const { toast } = useToast();
 
-  return useMutation({
-    mutationFn: async (patientId: string) => {
-      const { error } = await PatientService.deletePatient(patientId);
+	return useMutation({
+		mutationFn: async (patientId: string) => {
+			const { error } = await PatientService.deletePatient(patientId);
 
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
-      toast({
-        title: 'Paciente excluído',
-        description: 'O paciente foi removido com sucesso.',
-      });
-    },
-    onError: (error: Error) => {
-      ErrorHandler.handle(error, 'useDeletePatient');
-    },
-  });
+			if (error) throw error;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["patients"] });
+			toast({
+				title: "Paciente excluído",
+				description: "O paciente foi removido com sucesso.",
+			});
+		},
+		onError: (error: Error) => {
+			ErrorHandler.handle(error, "useDeletePatient");
+		},
+	});
 };

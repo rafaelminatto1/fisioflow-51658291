@@ -6,7 +6,6 @@
  * e a experiência visual para usuários de navegação por teclado.
  */
 
-
 /**
  * Hook que configura o comportamento de focus-visible
  *
@@ -14,12 +13,12 @@
  * 'focus-visible' apenas nesses casos.
  */
 
-import { useFocusVisibleHandler } from '@/hooks/accessibility/useFocusVisibleHandler';
+import { useFocusVisibleHandler } from "@/hooks/accessibility/useFocusVisibleHandler";
 
 /**
  * Componente que inicializa o handler de focus-visible
  */
 export function FocusVisibleHandler() {
-  useFocusVisibleHandler();
-  return null;
+	useFocusVisibleHandler();
+	return null;
 }

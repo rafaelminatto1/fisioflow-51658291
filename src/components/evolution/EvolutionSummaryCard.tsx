@@ -3,35 +3,37 @@
  * Exibe EvolutionStats em layout vertical com barras de progresso
  */
 
-import { memo } from 'react';
-import { BarChart2 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { EvolutionStats } from '@/components/evolution/EvolutionStats';
+import { memo } from "react";
+import { BarChart2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EvolutionStats } from "@/components/evolution/EvolutionStats";
 
 interface EvolutionSummaryCardProps {
-  stats: {
-    totalEvolutions: number;
-    completedGoals: number;
-    totalGoals: number;
-    avgGoalProgress: number;
-    activePathologiesCount: number;
-    totalMeasurements: number;
-    completionRate: number;
-  };
+	stats: {
+		totalEvolutions: number;
+		completedGoals: number;
+		totalGoals: number;
+		avgGoalProgress: number;
+		activePathologiesCount: number;
+		totalMeasurements: number;
+		completionRate: number;
+	};
 }
 
-export const EvolutionSummaryCard = memo(function EvolutionSummaryCard({ stats }: EvolutionSummaryCardProps) {
-  return (
-    <Card className="border-primary/20 bg-primary/5 flex min-h-[300px] flex-col shadow-sm overflow-hidden">
-      <CardHeader className="pb-2 pt-3 px-4 flex-shrink-0">
-        <CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
-          <BarChart2 className="h-5 w-5 text-primary" />
-          Resumo da Evolução
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="px-4 pb-3 flex-1">
-        <EvolutionStats stats={stats} vertical />
-      </CardContent>
-    </Card>
-  );
+export const EvolutionSummaryCard = memo(function EvolutionSummaryCard({
+	stats,
+}: EvolutionSummaryCardProps) {
+	return (
+		<Card className="border-primary/20 bg-primary/5 flex min-h-[300px] flex-col shadow-sm overflow-hidden">
+			<CardHeader className="pb-2 pt-3 px-4 flex-shrink-0">
+				<CardTitle className="text-base font-semibold flex items-center gap-2 text-foreground">
+					<BarChart2 className="h-5 w-5 text-primary" />
+					Resumo da Evolução
+				</CardTitle>
+			</CardHeader>
+			<CardContent className="px-4 pb-3 flex-1">
+				<EvolutionStats stats={stats} vertical />
+			</CardContent>
+		</Card>
+	);
 });
