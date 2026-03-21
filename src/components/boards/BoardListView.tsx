@@ -56,11 +56,11 @@ export function BoardListView({
 				return (
 					<div
 						key={col.id}
-						className="rounded-xl overflow-hidden border border-border/50"
+						className="overflow-hidden rounded-[24px] border border-border/60 bg-card shadow-sm"
 					>
 						{/* Column header */}
 						<div
-							className="flex items-center gap-3 px-4 py-2.5 cursor-pointer select-none hover:bg-muted/50 transition-colors"
+							className="flex cursor-pointer select-none items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/50"
 							style={{
 								backgroundColor: col.color ? `${col.color}40` : undefined,
 							}}
@@ -109,7 +109,7 @@ export function BoardListView({
 								{colTasks.map((tarefa) => (
 									<div
 										key={tarefa.id}
-										className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/30 cursor-pointer transition-colors"
+										className="flex cursor-pointer items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/30"
 										onClick={() => onViewTask(tarefa)}
 									>
 										<Circle

@@ -1,7 +1,9 @@
 import { useState, useMemo, useCallback, Suspense } from "react";
 import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
-import { Plus, Search, Columns } from "lucide-react";
+import { Filter, Plus, Search, SlidersHorizontal, Columns } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { LoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { KanbanColumnFull } from "./KanbanColumnFull";
@@ -100,6 +102,11 @@ export function KanbanFull({
 			{} as Record<string, Tarefa[]>,
 		);
 	}, [tarefas, columns, sortedColumns, search]);
+
+	const totalVisibleTasks = Object.values(grouped).reduce(
+		(total, list) => total + list.length,
+		0,
+	);
 
 	const handleDragEnd = useCallback(
 		async (result: DropResult) => {
@@ -231,30 +238,66 @@ export function KanbanFull({
 
 	return (
 		<>
-			{/* Toolbar */}
-			<div className="flex items-center gap-3 mb-4">
-				<div className="relative w-56">
-					<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-					<Input
-						placeholder="Buscar tarefas..."
-						value={search}
-						onChange={(e) => setSearch(e.target.value)}
-						className="pl-9 h-8 text-sm"
-					/>
-				</div>
-				<Button
-					size="sm"
-					onClick={() => handleAddTask(sortedColumns[0]?.id ?? "")}
-					disabled={sortedColumns.length === 0}
-				>
-					<Plus className="h-4 w-4 mr-1.5" />
-					Nova Tarefa
-				</Button>
-			</div>
+			<Card className="mb-4 overflow-hidden rounded-[24px] border-border/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(248,250,252,0.92))] shadow-sm">
+				<CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+					<div className="space-y-3">
+						<div className="flex flex-wrap items-center gap-2">
+							<Badge variant="secondary" className="rounded-full px-3 py-1">
+								<SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" />
+								Canvas do board
+							</Badge>
+							<Badge variant="outline" className="rounded-full px-3 py-1">
+								{sortedColumns.length} coluna
+								{sortedColumns.length !== 1 ? "s" : ""}
+							</Badge>
+							<Badge variant="outline" className="rounded-full px-3 py-1">
+								{totalVisibleTasks} tarefa
+								{totalVisibleTasks !== 1 ? "s" : ""}
+							</Badge>
+							{search && (
+								<Badge variant="outline" className="rounded-full px-3 py-1">
+									<Filter className="mr-1.5 h-3.5 w-3.5" />
+									Filtro ativo
+								</Badge>
+							)}
+						</div>
+						<div>
+							<h2 className="text-lg font-semibold tracking-tight">
+								Arraste, priorize e avance o fluxo.
+							</h2>
+							<p className="text-sm text-muted-foreground">
+								Use a busca para reduzir o ruído e mantenha o board focado no que
+								precisa acontecer agora.
+							</p>
+						</div>
+					</div>
+
+					<div className="flex flex-col gap-3 sm:w-[360px] sm:flex-row">
+						<div className="relative flex-1">
+							<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+							<Input
+								placeholder="Buscar tarefas, descrições ou contexto..."
+								value={search}
+								onChange={(e) => setSearch(e.target.value)}
+								className="h-10 rounded-2xl border-border/60 bg-background pl-9 text-sm"
+							/>
+						</div>
+						<Button
+							size="sm"
+							className="h-10 rounded-2xl"
+							onClick={() => handleAddTask(sortedColumns[0]?.id ?? "")}
+							disabled={sortedColumns.length === 0}
+						>
+							<Plus className="mr-1.5 h-4 w-4" />
+							Nova tarefa
+						</Button>
+					</div>
+				</CardContent>
+			</Card>
 
 			{/* Empty state — no columns yet */}
 			{sortedColumns.length === 0 && (
-				<div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+				<div className="flex flex-col items-center justify-center gap-4 rounded-[24px] border border-dashed border-border/70 bg-muted/20 py-20 text-center">
 					<Columns className="h-12 w-12 text-muted-foreground/40" />
 					<div>
 						<p className="font-semibold text-muted-foreground">
@@ -279,7 +322,7 @@ export function KanbanFull({
 							ref={provided.innerRef}
 							{...provided.droppableProps}
 							className="flex gap-4 overflow-x-auto pb-6"
-							style={{ minHeight: "calc(100vh - 280px)" }}
+							style={{ minHeight: "calc(100vh - 360px)" }}
 						>
 							{sortedColumns.map((column, index) => (
 								<KanbanColumnFull
