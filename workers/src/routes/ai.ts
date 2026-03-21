@@ -93,7 +93,14 @@ app.post('/service', async (c) => {
       Responda de forma técnica, concisa e baseada em evidências clínicas.`;
       
       const start = performance.now();
-      const response = await callGemini(c.env.GOOGLE_AI_API_KEY, prompt, 'gemini-1.5-flash', c.env.FISIOFLOW_AI_GATEWAY_URL);
+      const response = await callGemini(
+        c.env.GOOGLE_AI_API_KEY, 
+        prompt, 
+        'gemini-1.5-flash', 
+        c.env.FISIOFLOW_AI_GATEWAY_URL,
+        c.env.FISIOFLOW_AI_GATEWAY_TOKEN,
+        'clinical'
+      );
       const duration = performance.now() - start;
       
       c.executionCtx.waitUntil(
@@ -117,7 +124,14 @@ app.post('/service', async (c) => {
       Para cada exercício, forneça o nome, a justificativa clínica e a área alvo. 
       Retorne em formato JSON: { exercises: [{ name, rationale, targetArea }] }`;
       
-      const aiResponse = await callGemini(c.env.GOOGLE_AI_API_KEY, prompt, 'gemini-1.5-flash', c.env.FISIOFLOW_AI_GATEWAY_URL);
+      const aiResponse = await callGemini(
+        c.env.GOOGLE_AI_API_KEY, 
+        prompt, 
+        'gemini-1.5-flash', 
+        c.env.FISIOFLOW_AI_GATEWAY_URL,
+        c.env.FISIOFLOW_AI_GATEWAY_TOKEN,
+        'exercise'
+      );
       try {
         const parsed = JSON.parse(aiResponse.replace(/```json|```/g, ''));
         return c.json({ data: { success: true, data: parsed } });
@@ -162,11 +176,23 @@ app.post('/transcribe-audio', async (c) => {
       } catch (e) {
         console.error('Whisper failed, falling back to Gemini', e);
         provider = 'gemini-fallback';
-        transcription = await transcribeAudioWithGemini(c.env.GOOGLE_AI_API_KEY, audioBase64, String(body.mimeType || 'audio/webm'), c.env.FISIOFLOW_AI_GATEWAY_URL);
+        transcription = await transcribeAudioWithGemini(
+          c.env.GOOGLE_AI_API_KEY, 
+          audioBase64, 
+          String(body.mimeType || 'audio/webm'), 
+          c.env.FISIOFLOW_AI_GATEWAY_URL,
+          c.env.FISIOFLOW_AI_GATEWAY_TOKEN
+        );
       }
     } else {
       provider = 'gemini-direct';
-      transcription = await transcribeAudioWithGemini(c.env.GOOGLE_AI_API_KEY, audioBase64, String(body.mimeType || 'audio/webm'), c.env.FISIOFLOW_AI_GATEWAY_URL);
+      transcription = await transcribeAudioWithGemini(
+        c.env.GOOGLE_AI_API_KEY, 
+        audioBase64, 
+        String(body.mimeType || 'audio/webm'), 
+        c.env.FISIOFLOW_AI_GATEWAY_URL,
+        c.env.FISIOFLOW_AI_GATEWAY_TOKEN
+      );
     }
 
     const duration = performance.now() - start;
@@ -387,6 +413,98 @@ app.post('/movement-video', async (c) => {
       },
     },
   });
+});
+
+/**
+ * Busca Vetorial (RAG) - Conhecimento Clínico
+ */
+app.post('/vector-search', async (c) => {
+  const { query, filter } = await c.req.json();
+  
+  if (!query) return c.json({ error: 'Query is required' }, 400);
+
+  try {
+    // 1. Gerar embedding da pergunta via Gateway
+    const baseUrl = c.env.FISIOFLOW_AI_GATEWAY_URL 
+      ? `${c.env.FISIOFLOW_AI_GATEWAY_URL}/google-ai-studio` 
+      : 'https://generativelanguage.googleapis.com';
+
+    const embedUrl = `${baseUrl}/v1beta/models/text-embedding-004:embedContent?key=${c.env.GOOGLE_AI_API_KEY}`;
+    
+    const embedRes = await fetch(embedUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${c.env.FISIOFLOW_AI_GATEWAY_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ content: { parts: [{ text: query }] } })
+    });
+
+    const { embedding } = await embedRes.json() as any;
+
+    // 2. Buscar no Vectorize (se o binding existir)
+    // Nota: Como o binding é dinâmico em 2026, verificamos a existência
+    if (c.env.CLINICAL_KNOWLEDGE) {
+      const vectorRes = await c.env.CLINICAL_KNOWLEDGE.query(embedding.values, {
+        topK: 5,
+        filter: filter || {},
+        returnMetadata: 'all'
+      });
+      return c.json({ data: vectorRes.matches });
+    }
+
+    return c.json({ data: [], message: 'Vector index not initialized' });
+  } catch (error: any) {
+    return c.json({ error: 'Vector search failed', details: error.message }, 500);
+  }
+});
+
+/**
+ * Ingestão de Conhecimento (Wiki -> Vectorize)
+ */
+app.post('/ingest', async (c) => {
+  const { text, metadata } = await c.req.json();
+  
+  if (!text) return c.json({ error: 'Text is required' }, 400);
+
+  try {
+    // 1. Gerar embedding do conteúdo via Gateway
+    const baseUrl = c.env.FISIOFLOW_AI_GATEWAY_URL 
+      ? `${c.env.FISIOFLOW_AI_GATEWAY_URL}/google-ai-studio` 
+      : 'https://generativelanguage.googleapis.com';
+
+    const embedUrl = `${baseUrl}/v1beta/models/text-embedding-004:embedContent?key=${c.env.GOOGLE_AI_API_KEY}`;
+    
+    const embedRes = await fetch(embedUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${c.env.FISIOFLOW_AI_GATEWAY_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ content: { parts: [{ text }] } })
+    });
+
+    const { embedding } = await embedRes.json() as any;
+
+    // 2. Salvar no Vectorize
+    if (c.env.CLINICAL_KNOWLEDGE) {
+      const id = `wiki_${Date.now()}`;
+      await c.env.CLINICAL_KNOWLEDGE.upsert([{
+        id,
+        values: embedding.values,
+        metadata: {
+          ...metadata,
+          text: text.substring(0, 1000), // Guardar amostra do texto para o chat
+          timestamp: new Date().toISOString()
+        }
+      }]);
+      return c.json({ success: true, id });
+    }
+
+    return c.json({ error: 'Vector index not initialized' }, 500);
+  } catch (error: any) {
+    return c.json({ error: 'Ingestion failed', details: error.message }, 500);
+  }
 });
 
 export { app as aiRoutes };
