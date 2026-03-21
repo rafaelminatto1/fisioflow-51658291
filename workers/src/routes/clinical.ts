@@ -120,6 +120,18 @@ function normalizeEvolutionTemplateRow(row: Record<string, unknown>) {
   };
 }
 
+app.get('/pathologies/options', async (c) => {
+  if (c.env.FISIOFLOW_CONFIG) {
+    const cached = await c.env.FISIOFLOW_CONFIG.get('CLINICAL_PATHOLOGY_OPTIONS', 'json');
+    if (cached) {
+      return c.json({ data: cached, fromCache: true });
+    }
+  }
+  
+  // Fallback para lista básica caso o KV falhe (vazia ou erro)
+  return c.json({ data: [], error: 'Cache not found' });
+});
+
 app.get('/insights', requireAuth, async (c) => {
   const user = c.get('user');
   const pool = await createPool(c.env);

@@ -48,7 +48,6 @@ export const examsApi = {
 			method: "DELETE",
 		}),
 };
-
 export const medicalRequestsApi = {
 	list: (patientId: string) =>
 		request<{ data: MedicalRequest[] }>(
@@ -88,6 +87,13 @@ export const medicalRequestsApi = {
 		request<{ ok: boolean }>(
 			`/api/medical-requests/${requestId}/files/${fileId}`,
 			{ method: "DELETE" },
+		),
+};
+
+export const pathologiesApi = {
+	listOptions: () =>
+		request<{ data: Array<{ value: string; label: string; category: string }> }>(
+			"/api/clinical/pathologies/options",
 		),
 };
 

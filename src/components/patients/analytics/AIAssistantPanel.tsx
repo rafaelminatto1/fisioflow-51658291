@@ -36,6 +36,7 @@ import { cn } from "@/lib/utils";
 import { useAIPatientAssistant, useAIInsights } from "@/hooks/useAIInsights";
 import ReactMarkdown from "react-markdown";
 import { usePatientAnalyticsDashboard } from "@/hooks/usePatientAnalytics";
+import { searchClinicalKnowledge } from "@/services/ai/geminiAiService";
 
 // ============================================================================
 // TYPES
@@ -139,10 +140,16 @@ export function AIAssistantPanel({
 		},
 	];
 
-	const handleSend = () => {
+	const handleSend = async () => {
 		if (!input.trim() || chat.isLoading) return;
 
-		chat.append({ role: "user", content: input });
+		// Busca vetorial nos documentos internos (Wiki/Protocolos)
+		const clinicalContext = await searchClinicalKnowledge(input);
+		const groundingText = clinicalContext.length > 0 
+			? `\n\n[CONTEXTO DA CLÍNICA]:\n${clinicalContext.map(c => `- ${c.metadata.text || c.id}`).join('\n')}`
+			: "";
+
+		chat.append({ role: "user", content: `${input}${groundingText}` });
 		setInput("");
 	};
 
