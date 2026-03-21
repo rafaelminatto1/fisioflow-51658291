@@ -46,7 +46,7 @@ export function BoardCalendarView({
 	};
 
 	return (
-		<div className="flex gap-6 flex-col md:flex-row">
+		<div className="flex flex-col gap-6 xl:flex-row">
 			{/* Calendar */}
 			<div className="flex-shrink-0">
 				<DayPicker
@@ -70,13 +70,13 @@ export function BoardCalendarView({
 							);
 						},
 					}}
-					className="border rounded-xl p-3 bg-card shadow-sm"
+					className="rounded-[24px] border border-border/60 bg-card p-4 shadow-sm"
 				/>
 			</div>
 
 			{/* Tasks for selected day */}
-			<div className="flex-1">
-				<h3 className="text-sm font-semibold mb-3 text-muted-foreground">
+			<div className="flex-1 rounded-[24px] border border-border/60 bg-card p-4 shadow-sm">
+				<h3 className="mb-4 text-sm font-semibold text-muted-foreground">
 					{selectedDay
 						? `Tarefas em ${format(selectedDay, "d 'de' MMMM", { locale: ptBR })}`
 						: "Selecione um dia"}
@@ -91,7 +91,7 @@ export function BoardCalendarView({
 						{selectedDayTasks.map((tarefa) => (
 							<div
 								key={tarefa.id}
-								className="flex items-center gap-3 p-3 rounded-xl border border-border/50 hover:bg-muted/30 cursor-pointer transition-colors"
+								className="flex cursor-pointer items-center gap-3 rounded-2xl border border-border/50 p-3 transition-colors hover:bg-muted/30"
 								onClick={() => onViewTask(tarefa)}
 							>
 								<div
