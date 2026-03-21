@@ -19,6 +19,7 @@
     "@aws-sdk/s3-request-presigner": "^3.750.0",
     "@fisioflow/db": "workspace:*",
     "@neondatabase/serverless": "^1.0.2",
+    "agents": "^0.7.9",
     "drizzle-orm": "^0.45.1",
     "hono": "^4.7.4",
     "inngest": "^3.52.3",
