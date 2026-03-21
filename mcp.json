@@ -15,6 +15,30 @@
         "add_component"
       ]
     },
+    "shadcn-official": {
+      "command": "npx",
+      "args": [
+        "shadcn@latest",
+        "mcp"
+      ],
+      "autoApprove": [
+        "get_components",
+        "add_component"
+      ]
+    },
+    "shadcn-community": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@jpisnice/shadcn-ui-mcp-server",
+        "--framework",
+        "react-native"
+      ],
+      "autoApprove": [
+        "get_components",
+        "add_component"
+      ]
+    },
     "supabase": {
       "command": "uvx",
       "args": [
@@ -30,6 +54,10 @@
         "describe_table",
         "query"
       ]
+    },
+    "supabase-http": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=ycvbtjfrchcyvmkvuocu"
     },
     "postgres": {
       "command": "uvx",
@@ -169,6 +197,14 @@
       "disabled": false,
       "autoApprove": []
     },
+    "firebase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "firebase-tools@latest",
+        "mcp"
+      ]
+    },
     "stitch": {
       "type": "http",
       "url": "https://stitch.googleapis.com/mcp",
@@ -200,6 +236,10 @@
         "screenshot",
         "evaluate"
       ]
+    },
+    "fisioflow-api": {
+      "type": "http",
+      "url": "https://api-pro.moocafisio.com.br/api"
     }
   }
 }
