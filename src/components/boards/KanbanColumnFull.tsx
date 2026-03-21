@@ -108,14 +108,14 @@ export const KanbanColumnFull = memo(function KanbanColumnFull({
 						ref={colProvided.innerRef}
 						{...colProvided.draggableProps}
 						className={cn(
-							"flex flex-col w-[280px] min-w-[280px] bg-muted/30 rounded-2xl transition-all duration-200",
+							"flex w-[320px] min-w-[320px] flex-col rounded-[24px] border border-border/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(248,250,252,0.9))] shadow-sm transition-all duration-200",
 							isOverWip && "ring-2 ring-red-500/50",
 							colSnapshot.isDragging && "shadow-2xl opacity-90",
 						)}
 					>
 						{/* Column Header */}
 						<div
-							className="p-3 rounded-t-2xl flex items-center gap-2"
+							className="flex items-center gap-2 rounded-t-[24px] p-3"
 							style={{ backgroundColor: column.color ?? "#E2E8F0" }}
 						>
 							{/* Drag handle */}
@@ -274,12 +274,12 @@ export const KanbanColumnFull = memo(function KanbanColumnFull({
 							}}
 						>
 							{(provided, snapshot) => (
-								<ScrollArea className="flex-1 h-[calc(100vh-320px)]">
+								<ScrollArea className="h-[calc(100vh-420px)] flex-1">
 									<div
 										ref={provided.innerRef}
 										{...provided.droppableProps}
 										className={cn(
-											"p-3 space-y-3 min-h-[200px] transition-colors duration-200",
+											"min-h-[200px] space-y-3 p-3 transition-colors duration-200",
 											snapshot.isDraggingOver && "bg-primary/5",
 										)}
 									>
