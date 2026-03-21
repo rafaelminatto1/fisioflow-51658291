@@ -36,23 +36,41 @@ import {
 	FlaskConical,
 } from "lucide-react";
 
-const menuItems = [
-	{ icon: LayoutDashboard, label: "Dashboard", href: "/smart-dashboard" },
-	{ icon: Users, label: "Pacientes", href: "/patients" },
-	{ icon: Calendar, label: "Agenda", href: "/agenda" },
-	{ icon: Activity, label: "Exercícios", href: "/exercises" },
-	{ icon: Brain, label: "Planos IA", href: "/smart-ai" },
-	{ icon: MessageSquare, label: "Comunicação", href: "/communications" },
-	{ icon: LayoutGrid, label: "Boards", href: "/boards" },
-	{ icon: Calendar, label: "Eventos", href: "/eventos" },
-	{ icon: ShoppingCart, label: "Treinos", href: "/vouchers" },
-	{ icon: DollarSign, label: "Financeiro", href: "/financial" },
-	{ icon: Mail, label: "CRM", href: "/crm" },
-	{ icon: BarChart3, label: "Analytics", href: "/analytics" },
-	{ icon: BarChart3, label: "Relatórios", href: "/reports" },
-	{ icon: BookOpen, label: "Wiki", href: "/wiki" },
-	{ icon: FlaskConical, label: "Testes Clínicos", href: "/clinical-tests" },
-	{ icon: Settings, label: "Configurações", href: "/settings" },
+const menuGroups = [
+	{
+		label: "Atendimento",
+		items: [
+			{ icon: Calendar, label: "Agenda de Hoje", href: "/agenda" },
+			{ icon: Users, label: "Meus Pacientes", href: "/patients" },
+		],
+	},
+	{
+		label: "Clínica",
+		items: [
+			{ icon: Activity, label: "Exercícios", href: "/exercises" },
+			{ icon: Target, label: "Protocolos e Fases", href: "/protocols" },
+			{ icon: FlaskConical, label: "Testes Clínicos", href: "/clinical-tests" },
+		],
+	},
+	{
+		label: "Inteligência & IA",
+		items: [
+			{ icon: LayoutDashboard, label: "Smart Dashboard", href: "/smart-dashboard" },
+			{ icon: Brain, label: "Assistente IA", href: "/smart-ai" },
+			{ icon: BarChart3, label: "Analytics Avançado", href: "/analytics" },
+		],
+	},
+	{
+		label: "Gestão & Operação",
+		items: [
+			{ icon: CalendarDays, label: "Eventos", href: "/eventos" },
+			{ icon: LayoutGrid, label: "Boards", href: "/boards" },
+			{ icon: Package, label: "Estoque", href: "/inventory" },
+			{ icon: MessageSquare, label: "Comunicação", href: "/communications" },
+			{ icon: DollarSign, label: "Financeiro", href: "/financial" },
+			{ icon: Settings, label: "Configurações", href: "/settings" },
+		],
+	},
 ];
 
 export function MobileHeader() {
@@ -115,35 +133,44 @@ export function MobileHeader() {
 							</div>
 
 							{/* Menu Items */}
-							<nav className="flex-1 overflow-y-auto p-4 space-y-1 scrollbar-hide">
-								{menuItems.map((item) => {
-									const Icon = item.icon;
-									const isActive = location.pathname === item.href;
+							<nav className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-hide">
+								{menuGroups.map((group) => (
+									<div key={group.label} className="space-y-2">
+										<p className="px-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+											{group.label}
+										</p>
+										<div className="space-y-1">
+											{group.items.map((item) => {
+												const Icon = item.icon;
+												const isActive = location.pathname === item.href;
 
-									return (
-										<SheetTrigger key={item.href} asChild>
-											<Link to={item.href}>
-												<Button
-													variant={isActive ? "default" : "ghost"}
-													className={cn(
-														"w-full justify-start transition-all duration-300 h-12 rounded-xl touch-target",
-														isActive
-															? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg shadow-slate-900/20 font-bold"
-															: "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white",
-													)}
-												>
-													<Icon
-														className={cn(
-															"w-5 h-5 mr-3 transition-transform duration-300",
-															isActive ? "scale-110" : "",
-														)}
-													/>
-													<span className="text-sm">{item.label}</span>
-												</Button>
-											</Link>
-										</SheetTrigger>
-									);
-								})}
+												return (
+													<SheetTrigger key={item.href} asChild>
+														<Link to={item.href}>
+															<Button
+																variant={isActive ? "default" : "ghost"}
+																className={cn(
+																	"w-full justify-start transition-all duration-300 h-12 rounded-xl touch-target",
+																	isActive
+																		? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg shadow-slate-900/20 font-bold"
+																		: "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white",
+																)}
+															>
+																<Icon
+																	className={cn(
+																		"w-5 h-5 mr-3 transition-transform duration-300",
+																		isActive ? "scale-110" : "",
+																	)}
+																/>
+																<span className="text-sm">{item.label}</span>
+															</Button>
+														</Link>
+													</SheetTrigger>
+												);
+											})}
+										</div>
+									</div>
+								))}
 							</nav>
 
 							{/* Footer com Perfil e Logout */}
