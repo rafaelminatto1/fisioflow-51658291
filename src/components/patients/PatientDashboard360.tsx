@@ -27,6 +27,7 @@ import {
 } from "@/hooks/usePatientEvolution";
 import { useSoapRecords } from "@/hooks/useSoapRecords";
 import { PatientHelpers } from "@/types";
+import { PatientRetentionAgent } from "./PatientRetentionAgent";
 
 interface PatientDashboard360Props {
 	patient: {
@@ -74,6 +75,7 @@ export const PatientDashboard360: React.FC<PatientDashboard360Props> = ({
 	};
 
 	const getAge = (birthDate: string) => {
+		if (!birthDate) return 0;
 		const today = new Date();
 		const birth = new Date(birthDate);
 		let age = today.getFullYear() - birth.getFullYear();
@@ -107,7 +109,7 @@ export const PatientDashboard360: React.FC<PatientDashboard360Props> = ({
 								<div className="flex items-center gap-4 mt-2 text-muted-foreground">
 									<span className="flex items-center gap-1">
 										<User className="h-4 w-4" />
-										{getAge(patient.birth_date)} anos
+										{getAge(patient.birth_date || "")} anos
 									</span>
 									{patient.gender && (
 										<span>
@@ -149,19 +151,11 @@ export const PatientDashboard360: React.FC<PatientDashboard360Props> = ({
 				</CardContent>
 			</Card>
 
-			{/* Educational Banner - Agents SDK */}
-			<div className="bg-indigo-500/10 border border-indigo-500/20 text-indigo-800 dark:text-indigo-300 p-4 rounded-xl flex items-start gap-3 shadow-sm animate-in slide-in-from-bottom-4 fade-in">
-				<div className="text-2xl leading-none mt-0.5">🤖</div>
-				<div className="text-sm">
-					<strong className="block mb-1 text-base">
-						Agente de Retenção Autônomo (Em breve)
-					</strong>
-					Este paciente será monitorado por um assistente invisível 24/7. Se ele
-					faltar a duas sessões ou relatar dor alta no app, o Agente criará um
-					rascunho de WhatsApp para você recuperar o paciente antes que ele
-					abandone o tratamento.
-				</div>
-			</div>
+			{/* Cloudflare Autonomous Retention Agent */}
+			<PatientRetentionAgent 
+				patientId={patient.id} 
+				patientName={PatientHelpers.getName(patient)} 
+			/>
 
 			{/* Grid de Cards de Informação */}
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
