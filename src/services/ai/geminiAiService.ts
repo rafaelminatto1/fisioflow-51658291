@@ -349,6 +349,25 @@ export async function findSimilarClinicalRecords(
 	return result;
 }
 
+/**
+ * Busca no Banco de Conhecimento Vetorial (Wiki, Protocolos, Artigos)
+ */
+export async function searchClinicalKnowledge(
+	query: string,
+	filter?: Record<string, any>
+): Promise<any[]> {
+	try {
+		const result = await callAIService<
+			{ query: string; filter?: Record<string, any> },
+			{ data: any[] }
+		>("vectorSearch", { query, filter });
+		return result.data || [];
+	} catch (error) {
+		console.error("Erro na busca vetorial:", error);
+		return [];
+	}
+}
+
 export interface ClinicalReportInput extends Record<string, unknown> {
 	patientInfo: {
 		name: string;

@@ -77,6 +77,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useGamification } from "@/hooks/useGamification";
 import { Progress } from "@/components/ui/progress";
 import { GlobalCommandPalette } from "@/components/evolution/search/GlobalCommandPalette";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const GamificationMiniProfile = ({ collapsed }: { collapsed: boolean }) => {
 	const { profile: authProfile } = useAuth();
@@ -136,322 +137,76 @@ const GamificationMiniProfile = ({ collapsed }: { collapsed: boolean }) => {
 	);
 };
 
-// Ordem baseada em frequência de uso e fluxo de trabalho clínico
-const menuItems = [
-	// NÚCLEO DO NEGÓCIO - Usado diariamente
-	{ icon: Calendar, label: "Agenda", href: "/agenda" },
-	{ icon: LayoutDashboard, label: "Dashboard", href: "/smart-dashboard" },
-	{ icon: Users, label: "Pacientes", href: "/patients" },
+// ORDEM FLUXO CLÍNICO 2026
+const mainMenuItems = [
+	{ icon: Calendar, label: "Agenda de Hoje", href: "/agenda", badge: "Hoje" },
+	{ icon: Users, label: "Meus Pacientes", href: "/patients" },
+];
 
-	// CLÍNICA DIÁRIA - Fluxo principal de atendimento
+const clinicaMenuItems = [
 	{ icon: Activity, label: "Exercícios", href: "/exercises" },
-	{ icon: Target, label: "Protocolos", href: "/protocols" },
-	{ icon: MessageSquare, label: "Comunicação", href: "/communications" },
+	{ icon: Target, label: "Protocolos e Fases", href: "/protocols" },
+	{ icon: ClipboardList, label: "Avaliações", href: "/clinical-tests" },
 ];
 
-const avaliacoesSubmenu = [
-	{
-		icon: ScanFace,
-		label: "Avaliação Postural",
-		href: "/dashboard/imagens?mode=clinical_posture",
-	},
-	{ icon: ImageIcon, label: "Avaliação de Imagem", href: "/dashboard/imagens" },
-	{
-		icon: Footprints,
-		label: "Avaliação de Marcha",
-		href: "/dashboard/imagens?mode=dynamic_demo",
-	},
-	{ icon: FlaskConical, label: "Testes Clínicos", href: "/clinical-tests" },
-];
-
-const operacionaisSubmenu = [
-	{ icon: CalendarDays, label: "Eventos", href: "/eventos" },
-	{ icon: LayoutGrid, label: "Boards", href: "/boards" },
-	{ icon: Package, label: "Estoque e Vouchers", href: "/inventory" },
-	{ icon: Video, label: "Telemedicina", href: "/telemedicine" },
-	{ icon: BookOpen, label: "Wiki Clínica", href: "/wiki" },
-	{ icon: Zap, label: "Automação e APIs", href: "/automation" },
-];
-
-const marketingSubmenu = [
-	{ icon: BarChart3, label: "Marketing Hub", href: "/marketing/dashboard" },
-	{ icon: Link2, label: "FisioLink (Bio)", href: "/marketing/fisiolink" },
-	{ icon: Users, label: "Indicações", href: "/marketing/referral" },
-];
-
-const dashboardIaSubmenu = [
-	{ icon: LayoutDashboard, label: "Dashboard Legado", href: "/dashboard" },
-	{ icon: Brain, label: "Planos IA", href: "/smart-ai" },
+const inteligenciaMenuItems = [
+	{ icon: LayoutDashboard, label: "Smart Dashboard", href: "/smart-dashboard" },
+	{ icon: Brain, label: "Assistente IA", href: "/smart-ai" },
 	{ icon: BarChart3, label: "Analytics Avançado", href: "/analytics" },
 ];
 
-const googleAiSubmenu = [
-	{ icon: Brain, label: "IA Clínica (Genkit)", href: "/ai/clinical" },
-	{ icon: Video, label: "Lab Movimento (Vision)", href: "/ai/movement" },
-	{ icon: FileText, label: "Scanner Laudos", href: "/ai/scanner" },
-	{ icon: Activity, label: "Activity Lab", href: "/ai/activity-lab" },
+const operacionalMenuItems = [
+	{ icon: CalendarDays, label: "Eventos", href: "/eventos" },
+	{ icon: LayoutGrid, label: "Boards", href: "/boards" },
+	{ icon: Package, label: "Estoque", href: "/inventory" },
+	{ icon: Video, label: "Telemedicina", href: "/telemedicine" },
+	{ icon: MessageSquare, label: "Comunicação", href: "/communications" },
 ];
+
 const adminSubmenu = [
 	{ icon: BarChart3, label: "Analytics", href: "/admin/analytics" },
 	{ icon: Users, label: "Usuários", href: "/admin/users" },
 	{ icon: Shield, label: "Auditoria & Segurança", href: "/admin/audit-logs" },
 	{ icon: Mail, label: "Convites", href: "/admin/invitations" },
 	{ icon: Database, label: "CRUD Admin", href: "/admin/crud" },
-	{ icon: Users, label: "Cohorts", href: "/admin/cohorts" },
-	{ icon: Target, label: "Metas", href: "/admin/goals" },
 	{ icon: Trophy, label: "Gamificação", href: "/admin/gamification" },
 ];
 
-const maisSubmenu = [
-	{ icon: UserCircle, label: "Portal Paciente", href: "/portal" },
-];
+const SidebarSection = ({ 
+  label, 
+  collapsed, 
+  children 
+}: { 
+  label: string; 
+  collapsed: boolean; 
+  children: React.ReactNode 
+}) => (
+  <div className="space-y-1">
+    {!collapsed && (
+      <div className="px-4 py-2 mt-4 first:mt-0">
+        <span className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.2em]">
+          {label}
+        </span>
+      </div>
+    )}
+    {children}
+  </div>
+);
 
 export function Sidebar() {
 	const [collapsed, setCollapsed] = useState(false);
-	const [avaliacoesOpen, setAvaliacoesOpen] = useState(false);
-	const [dashboardIaOpen, setDashboardIaOpen] = useState(false);
-	const [googleAiOpen, setGoogleAiOpen] = useState(false);
 	const [adminOpen, setAdminOpen] = useState(false);
-	const [operacionaisOpen, setOperacionaisOpen] = useState(false);
-	const [maisOpen, setMaisOpen] = useState(false);
-	const [marketingOpen, setMarketingOpen] = useState(false);
 	const location = useLocation();
 	const { toast } = useToast();
 	const queryClient = useQueryClient();
-	useNavPreload();
-
-	const isAvaliacoesActive =
-		location.pathname.startsWith("/dashboard/imagens") ||
-		location.pathname === "/clinical-tests";
-	const isDashboardIaActive =
-		location.pathname.startsWith("/smart-dashboard") ||
-		location.pathname.startsWith("/smart-ai") ||
-		location.pathname === "/analytics";
-	const isGoogleAiActive = location.pathname.startsWith("/ai/");
-	const isAdminActive = location.pathname.startsWith("/admin");
-	const isOperacionaisActive =
-		location.pathname.startsWith("/eventos") ||
-		location.pathname === "/inventory" ||
-		location.pathname === "/telemedicine" ||
-		location.pathname === "/tarefas-v2" ||
-		location.pathname.startsWith("/boards") ||
-		location.pathname === "/waitlist" ||
-		location.pathname.startsWith("/wiki");
-	const isMarketingActive = location.pathname.startsWith("/marketing");
-	const isMaisActive =
-		location.pathname === "/portal" || location.pathname === "/automation";
-
 	const { preloadRoute } = useNavPreload();
 
-	const renderMenuItem = (
-		item: {
-			icon: React.ComponentType<{ className?: string }>;
-			label: string;
-			href: string;
-			preload?: () => void | Promise<unknown>;
-		},
-		collapsed: boolean,
-		location: { pathname: string },
-	) => {
-		const Icon = item.icon;
-		const isActive = location.pathname === item.href;
+	const isAdminActive = location.pathname.startsWith("/admin");
 
-		const handleMouseEnter = () => {
-			// 1. Prefetch do código da rota (JS Chunk)
-			preloadRoute(item.href);
-
-			// 2. Prefetch de dados específicos baseado na rota
-			if (
-				item.href === "/tarefas" ||
-				item.href === "/tarefas-v2" ||
-				item.href === "/boards"
-			) {
-				queryClient.prefetchQuery({
-					queryKey: QueryKeys.tasks,
-					queryFn: fetchTarefas,
-				});
-			} else if (item.href === "/patients") {
-				queryClient.prefetchQuery({
-					queryKey: QueryKeys.patients,
-					queryFn: () => PatientService.getPatients(),
-				});
-			} else if (item.href === "/exercises") {
-				queryClient.prefetchQuery({
-					queryKey: QueryKeys.exercises,
-					queryFn: () => exerciseService.getExercises(),
-				});
-			} else if (
-				item.href === "/financial" ||
-				item.href.startsWith("/financeiro")
-			) {
-				queryClient.prefetchQuery({
-					queryKey: QueryKeys.finances("all"),
-					queryFn: () => FinancialService.fetchTransactions(),
-				});
-			} else if (item.href.startsWith("/marketing")) {
-				// Prefetch básico de marketing se houver
-			}
-
-			// Chamada do preload customizado se existir
-			item.preload?.();
-		};
-
-		return (
-			<Link
-				key={item.href}
-				to={item.href}
-				onMouseEnter={handleMouseEnter}
-				aria-label={`Navegar para ${item.label}`}
-				aria-current={isActive ? "page" : undefined}
-				className={cn(
-					"flex items-center gap-3 rounded-2xl transition-all duration-500 group relative overflow-hidden",
-					collapsed ? "justify-center px-2 py-3.5" : "px-4 py-3",
-					isActive
-						? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black shadow-premium-md"
-						: "text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-white",
-				)}
-			>
-				<Icon
-					className={cn(
-						"h-5 w-5 transition-all duration-500 flex-shrink-0 relative z-10",
-						isActive
-							? "scale-110"
-							: "group-hover:scale-110 group-hover:rotate-3 group-hover:text-primary",
-					)}
-				/>
-				{!collapsed && (
-					<span className="text-xs font-bold uppercase tracking-widest relative z-10">
-						{item.label}
-					</span>
-				)}
-
-				{isActive && (
-					<div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-primary rounded-r-full shadow-[0_0_12px_rgba(var(--primary),0.8)]" />
-				)}
-			</Link>
-		);
-	};
-
-	const renderSubmenu = ({
-		icon,
-		label,
-		items,
-		isOpen,
-		onOpenChange,
-		isActive,
-		collapsed,
-		location,
-	}: {
-		icon: React.ComponentType<{ className?: string }>;
-		label: string;
-		items: Array<{
-			icon?: React.ComponentType<{ className?: string }>;
-			label: string;
-			href: string;
-		}>;
-		isOpen: boolean;
-		onOpenChange: (open: boolean) => void;
-		isActive: boolean;
-		collapsed: boolean;
-		location: { pathname: string; search?: string };
-	}) => {
-		const Icon = icon;
-
-		if (collapsed) {
-			return (
-				<Link
-					to={items[0]?.href || "#"}
-					onMouseEnter={() => items[0]?.href && preloadRoute(items[0].href)}
-					aria-label={label}
-					className={cn(
-						"flex items-center justify-center px-2 py-3.5 rounded-2xl transition-all duration-500 group relative overflow-hidden",
-						isActive
-							? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black shadow-premium-md"
-							: "text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-slate-800/50 dark:hover:text-white",
-					)}
-				>
-					<Icon className="h-5 w-5 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 relative z-10" />
-					{isActive && (
-						<div className="absolute left-0 w-1.5 h-8 bg-primary rounded-r-full" />
-					)}
-				</Link>
-			);
-		}
-
-		return (
-			<Collapsible open={isOpen} onOpenChange={onOpenChange}>
-				<CollapsibleTrigger asChild>
-					<button
-						type="button"
-						onMouseEnter={() => items[0]?.href && preloadRoute(items[0].href)}
-						aria-expanded={isOpen}
-						aria-label={isOpen ? `Fechar menu ${label}` : `Abrir menu ${label}`}
-						className={cn(
-							"flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group relative overflow-hidden",
-							isActive
-								? "bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black"
-								: "text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-white",
-						)}
-					>
-						<div className="flex items-center gap-3 relative z-10">
-							<Icon
-								className={cn(
-									"h-5 w-5 transition-all duration-500",
-									isActive
-										? "text-primary scale-110"
-										: "group-hover:scale-110 group-hover:text-primary",
-								)}
-							/>
-							<span className="text-xs font-bold uppercase tracking-widest">
-								{label}
-							</span>
-						</div>
-						<ChevronDown
-							className={cn(
-								"h-3.5 w-3.5 transition-transform duration-500 flex-shrink-0 relative z-10",
-								isOpen && "rotate-180",
-							)}
-						/>
-					</button>
-				</CollapsibleTrigger>
-				<CollapsibleContent className="pl-12 space-y-1.5 mt-1.5 animate-slide-up-fade">
-					{items.map((item, index) => {
-						const isSubActive =
-							location.pathname === item.href ||
-							location.pathname + location.search === item.href ||
-							(item.href === "/dashboard/imagens" &&
-								location.pathname === "/dashboard/imagens" &&
-								!location.search);
-						return (
-							<Link
-								key={item.href}
-								to={item.href}
-								onMouseEnter={() => preloadRoute(item.href)}
-								aria-label={`Acessar subitem ${item.label}`}
-								className={cn(
-									"block px-3 py-2.5 rounded-xl text-[11px] transition-all duration-300 relative overflow-hidden group font-bold uppercase tracking-tighter",
-									isSubActive
-										? "bg-primary/10 text-primary font-black shadow-sm"
-										: "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/30 hover:text-slate-900 dark:hover:text-white hover:pl-5",
-								)}
-								style={{ transitionDelay: `${index * 30}ms` }}
-							>
-								<span className="relative z-10">{item.label}</span>
-								{isSubActive && (
-									<div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-3 bg-primary rounded-r-full shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
-								)}
-							</Link>
-						);
-					})}
-				</CollapsibleContent>
-			</Collapsible>
-		);
-	};
-
-	const { signOut: contextSignOut } = useAuth();
 	const handleLogout = async () => {
+		const { signOut } = useAuth();
 		try {
-			await contextSignOut();
+			await signOut();
 			toast({ title: "Logout realizado", description: "Até breve!" });
 		} catch (error) {
 			toast({
@@ -462,280 +217,173 @@ export function Sidebar() {
 		}
 	};
 
+	const renderMenuItem = (item: any) => {
+		const Icon = item.icon;
+		const isActive = location.pathname === item.href;
+
+		return (
+			<Link
+				key={item.href}
+				to={item.href}
+				onMouseEnter={() => preloadRoute(item.href)}
+				className={cn(
+					"flex items-center gap-3 rounded-2xl transition-all duration-500 group relative overflow-hidden",
+					collapsed ? "justify-center px-2 py-3.5" : "px-4 py-3",
+					isActive
+						? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black shadow-premium-md"
+						: "text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800/50 dark:hover:text-white",
+				)}
+			>
+				<Icon
+					className={cn(
+						"h-5 w-5 transition-all duration-500 flex-shrink-0",
+						isActive ? "scale-110" : "group-hover:scale-110 group-hover:text-primary",
+					)}
+				/>
+				{!collapsed && (
+					<div className="flex items-center justify-between flex-1">
+						<span className="text-xs font-bold uppercase tracking-widest">{item.label}</span>
+						{item.badge && (
+							<Badge className="bg-primary/10 text-primary border-0 text-[9px] h-4 px-1.5 font-black uppercase">
+								{item.badge}
+							</Badge>
+						)}
+					</div>
+				)}
+				{isActive && (
+					<div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-6 bg-primary rounded-r-full shadow-[0_0_12px_rgba(var(--primary),0.8)]" />
+				)}
+			</Link>
+		);
+	};
+
 	return (
 		<>
 			<GlobalCommandPalette />
 			<div
 				className={cn(
 					"hidden md:flex bg-white/80 dark:bg-slate-950/80 backdrop-blur-2xl border-r border-border/40 transition-all duration-500 ease-in-out flex-col h-screen sticky top-0 shadow-premium-lg z-50",
-					collapsed ? "w-[84px]" : "w-[240px]",
+					collapsed ? "w-[84px]" : "w-[280px]",
 				)}
 			>
-				{/* Header */}
-				<div
-					className={cn(
-						"shrink-0 p-5 relative",
-						collapsed ? "flex justify-center" : "",
-					)}
-				>
-					<div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
-
-					<div className="flex items-center justify-between w-full">
-						<Link
-							to="/agenda"
-							className="flex items-center gap-3 group transition-transform duration-500 hover:scale-105"
-						>
-							<OptimizedImage
-								src={fisioflowLogo}
-								alt="FisioFlow"
-								width={collapsed ? 40 : 120}
-								className={cn(
-									"h-8 w-auto transition-all",
-									collapsed ? "h-10" : "",
-								)}
-								priority
-							/>
+				{/* Premium Header */}
+				<div className="p-6 relative">
+					<div className="flex items-center justify-between">
+						<Link to="/agenda" className="flex items-center gap-3 group">
+							<div className="h-10 w-10 rounded-2xl bg-primary flex items-center justify-center shrink-0 shadow-lg shadow-primary/20 rotate-3 group-hover:rotate-0 transition-transform duration-500">
+								<Activity className="h-6 w-6 text-white" />
+							</div>
 							{!collapsed && (
-								<div className="flex flex-col">
-									<span className="text-xs font-black tracking-[0.2em] text-slate-900 dark:text-white">
-										FISIOFLOW
-									</span>
-									<span className="text-[8px] font-black tracking-widest text-primary uppercase">
-										Elite Suite
-									</span>
+								<div className="flex flex-col animate-in fade-in slide-in-from-left-2">
+									<span className="text-xl font-black tracking-tighter text-foreground">FisioFlow</span>
+									<span className="text-[10px] font-bold text-primary/60 uppercase tracking-[0.2em] leading-none">Mooca Fisio</span>
 								</div>
 							)}
 						</Link>
-
 						{!collapsed && (
 							<Button
 								variant="ghost"
 								size="icon"
-								onClick={() => setCollapsed(!collapsed)}
-								className="h-8 w-8 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-90"
+								onClick={() => setCollapsed(true)}
+								className="h-8 w-8 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
 							>
 								<ChevronLeft className="w-4 h-4" />
 							</Button>
 						)}
 					</div>
-
 					{collapsed && (
 						<Button
 							variant="ghost"
 							size="icon"
-							onClick={() => setCollapsed(!collapsed)}
-							aria-label={
-								collapsed ? "Expandir menu lateral" : "Recolher menu lateral"
-							}
-							className="absolute -right-4 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white dark:bg-slate-900 shadow-premium-md border border-border/40 z-50 hover:scale-110 active:scale-95 transition-all"
+							onClick={() => setCollapsed(false)}
+							className="absolute -right-4 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-white dark:bg-slate-900 shadow-premium-md border border-border/40 z-50"
 						>
 							<ChevronRight className="w-4 h-4" />
 						</Button>
 					)}
 				</div>
 
-				{/* Navigation */}
-				<nav
-					id="main-navigation"
-					className="flex-1 overflow-y-auto overflow-x-hidden sidebar-scroll px-3 py-4 space-y-1"
-				>
-					<style>{`
-          .sidebar-scroll::-webkit-scrollbar { width: 3px; }
-          .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
-          .sidebar-scroll::-webkit-scrollbar-thumb { background: hsl(var(--border) / 0.3); border-radius: 10px; }
-          .sidebar-scroll::-webkit-scrollbar-thumb:hover { background: hsl(var(--primary) / 0.5); }
-        `}</style>
-
-					{/* Categories with divider lines */}
-					<div className="space-y-4">
-						{/* NÚCLEO */}
-						<div className="space-y-1">
-							{!collapsed && (
-								<div className="px-4 py-2">
-									<span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.3em]">
-										Núcleo
-									</span>
-								</div>
-							)}
-							{menuItems
-								.slice(0, 3)
-								.map((item) => renderMenuItem(item, collapsed, location))}
-						</div>
-
-						<div className="space-y-1 pt-2">
-							{!collapsed && (
-								<div className="px-4 py-2 border-t border-border/30">
-									<span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] mt-2 block">
-										Clínica
-									</span>
-								</div>
-							)}
-							{menuItems
-								.slice(3, 6)
-								.map((item) => renderMenuItem(item, collapsed, location))}
-
-							{renderSubmenu({
-								icon: ScanFace,
-								label: "Avaliações",
-								items: avaliacoesSubmenu,
-								isOpen: avaliacoesOpen || isAvaliacoesActive,
-								onOpenChange: setAvaliacoesOpen,
-								isActive: isAvaliacoesActive,
-								collapsed,
-								location,
-							})}
-						</div>
-
-						<div className="space-y-1 pt-2">
-							{!collapsed && (
-								<div className="px-4 py-2 border-t border-border/30">
-									<span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] mt-2 block">
-										Gestão
-									</span>
-								</div>
-							)}
-							{menuItems
-								.slice(6)
-								.map((item) => renderMenuItem(item, collapsed, location))}
-
-							{renderSubmenu({
-								icon: LayoutGrid,
-								label: "Operacional",
-								items: operacionaisSubmenu.filter(
-									(item) => item.href !== "/tarefas-v2",
-								),
-								isOpen: operacionaisOpen || isOperacionaisActive,
-								onOpenChange: setOperacionaisOpen,
-								isActive: isOperacionaisActive,
-								collapsed,
-								location,
-							})}
-
-							{renderMenuItem(
-								{
-									icon: ClipboardList,
-									label: "Boards",
-									href: "/boards",
-								},
-								collapsed,
-								location,
-							)}
-
-							{renderMenuItem(
-								{ icon: FileText, label: "Cadastros", href: "/cadastros" },
-								collapsed,
-								location,
-							)}
-
-							{renderSubmenu({
-								icon: Star,
-								label: "Marketing",
-								items: marketingSubmenu,
-								isOpen: marketingOpen || isMarketingActive,
-								onOpenChange: setMarketingOpen,
-								isActive: isMarketingActive,
-								collapsed,
-								location,
-							})}
-
-							{renderMenuItem(
-								{ icon: DollarSign, label: "Financeiro", href: "/financial" },
-								collapsed,
-								location,
-							)}
-						</div>
-
-						<div className="space-y-1 pt-2">
-							{!collapsed && (
-								<div className="px-4 py-2 border-t border-border/30">
-									<span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] mt-2 block">
-										Inteligência
-									</span>
-								</div>
-							)}
-							{renderSubmenu({
-								icon: Sparkles,
-								label: "Dashboard IA",
-								items: dashboardIaSubmenu,
-								isOpen: dashboardIaOpen || isDashboardIaActive,
-								onOpenChange: setDashboardIaOpen,
-								isActive: isDashboardIaActive,
-								collapsed,
-								location,
-							})}
-
-							{renderSubmenu({
-								icon: Brain,
-								label: "Google AI",
-								items: googleAiSubmenu,
-								isOpen: googleAiOpen || isGoogleAiActive,
-								onOpenChange: setGoogleAiOpen,
-								isActive: isGoogleAiActive,
-								collapsed,
-								location,
-							})}
-						</div>
-
-						<div className="space-y-1 pt-2">
-							{!collapsed && (
-								<div className="px-4 py-2 border-t border-border/30">
-									<span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] mt-2 block">
-										Avançado
-									</span>
-								</div>
-							)}
-							{renderSubmenu({
-								icon: Settings,
-								label: "Admin",
-								items: adminSubmenu,
-								isOpen: adminOpen || isAdminActive,
-								onOpenChange: setAdminOpen,
-								isActive: isAdminActive,
-								collapsed,
-								location,
-							})}
-						</div>
-
-						<div className="space-y-1 pt-2">
-							{!collapsed && (
-								<div className="px-4 py-2 border-t border-border/30">
-									<span className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.3em] mt-2 block">
-										Extra
-									</span>
-								</div>
-							)}
-							{renderSubmenu({
-								icon: MoreHorizontal,
-								label: "Mais",
-								items: maisSubmenu,
-								isOpen: maisOpen || isMaisActive,
-								onOpenChange: setMaisOpen,
-								isActive: isMaisActive,
-								collapsed,
-								location,
-							})}
-						</div>
+				{/* Quick Search Hint (UX Skill: Fast Access) */}
+				{!collapsed && (
+					<div className="px-4 mb-2">
+						<button 
+							onClick={() => document.dispatchEvent(new CustomEvent('open-command-palette'))}
+							className="w-full h-10 px-3 rounded-xl bg-muted/50 border border-border/50 flex items-center justify-between group hover:bg-primary/5 hover:border-primary/20 transition-all"
+						>
+							<div className="flex items-center gap-2 text-muted-foreground group-hover:text-primary/70 transition-colors">
+								<Search className="h-4 w-4" />
+								<span className="text-[11px] font-bold uppercase tracking-wider">Buscar paciente...</span>
+							</div>
+							<kbd className="h-5 px-1.5 rounded bg-background border border-border text-[9px] font-black text-muted-foreground">⌘ K</kbd>
+						</button>
 					</div>
-				</nav>
+				)}
+
+				{/* Navigation */}
+				<ScrollArea className="flex-1 px-3 py-4">
+					<div className="space-y-6">
+						<SidebarSection label="Atendimento" collapsed={collapsed}>
+							{mainMenuItems.map(renderMenuItem)}
+						</SidebarSection>
+
+						<SidebarSection label="Clínica" collapsed={collapsed}>
+							{clinicaMenuItems.map(renderMenuItem)}
+						</SidebarSection>
+
+						<SidebarSection label="Inteligência & IA" collapsed={collapsed}>
+							{inteligenciaMenuItems.map(renderMenuItem)}
+						</SidebarSection>
+
+						<SidebarSection label="Gestão & Operação" collapsed={collapsed}>
+							{operacionalMenuItems.map(renderMenuItem)}
+						</SidebarSection>
+
+						<SidebarSection label="Configurações" collapsed={collapsed}>
+							<Collapsible open={adminOpen} onOpenChange={setAdminOpen}>
+								<CollapsibleTrigger asChild>
+									<button className={cn(
+										"flex items-center justify-between w-full px-4 py-3 rounded-2xl transition-all duration-500 group",
+										isAdminActive ? "bg-slate-50 dark:bg-slate-800/30 text-slate-900 dark:text-white font-black" : "text-slate-500"
+									)}>
+										<div className="flex items-center gap-3">
+											<Settings className="h-5 w-5" />
+											{!collapsed && <span className="text-xs font-bold uppercase tracking-widest">Painel Admin</span>}
+										</div>
+										{!collapsed && <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", adminOpen && "rotate-180")} />}
+									</button>
+								</CollapsibleTrigger>
+								<CollapsibleContent className="pl-9 space-y-1 mt-1 animate-in slide-in-from-top-2">
+									{adminSubmenu.map((item) => (
+										<Link
+											key={item.href}
+											to={item.href}
+											className={cn(
+												"block px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+												location.pathname === item.href ? "text-primary bg-primary/5" : "text-muted-foreground hover:text-foreground hover:pl-4"
+											)}
+										>
+											{item.label}
+										</Link>
+									))}
+								</CollapsibleContent>
+							</Collapsible>
+						</SidebarSection>
+					</div>
+				</ScrollArea>
 
 				{/* Footer */}
-				<div className="shrink-0 p-3 flex flex-col gap-2">
+				<div className="shrink-0 p-3 flex flex-col gap-2 border-t border-border/40">
 					<GamificationMiniProfile collapsed={collapsed} />
-
 					<Button
 						variant="ghost"
 						onClick={handleLogout}
 						className={cn(
-							"w-full justify-start gap-3 text-muted-foreground hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 dark:hover:text-red-400 rounded-2xl transition-all duration-300 group overflow-hidden",
+							"w-full justify-start gap-3 text-muted-foreground hover:bg-red-50 dark:hover:bg-red-950/20 hover:text-red-600 rounded-2xl transition-all duration-300 group",
 							collapsed ? "px-0 justify-center h-12" : "px-4 py-6",
 						)}
 					>
 						<LogOut className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
-						{!collapsed && (
-							<span className="text-xs font-black uppercase tracking-widest">
-								Sair do Sistema
-							</span>
-						)}
+						{!collapsed && <span className="text-xs font-black uppercase tracking-widest">Sair</span>}
 					</Button>
 				</div>
 			</div>

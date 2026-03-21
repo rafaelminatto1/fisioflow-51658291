@@ -33,24 +33,27 @@ binding = "FISIOFLOW_CONFIG"
 id = "4284b33fa7ed40b6bc9c59b6041c03ed"
 
 # ===== VECTORIZE (Base de Conhecimento RAG) =====
-# Apenas a declaração - criar via dashboard ou token com permissão
-# [[vectorize]]
-# binding = "CLINICAL_KNOWLEDGE"
-# index_name = "clinical-knowledge"
+[[vectorize]]
+binding = "CLINICAL_KNOWLEDGE"
+index_name = "clinical-knowledge"
 
 # ===== DURABLE OBJECTS (Realtime State & Agents) =====
 [[durable_objects.bindings]]
 name = "ORGANIZATION_STATE"
 class_name = "OrganizationState"
 
-# [[durable_objects.bindings]]
-# name = "PATIENT_AGENT"
-# class_name = "PatientAgent"
+[[durable_objects.bindings]]
+name = "PATIENT_AGENT"
+class_name = "PatientAgent"
 
 
 [[migrations]]
 tag = "v1" # Initial migration for real-time state
 new_classes = ["OrganizationState"]
+
+[[migrations]]
+tag = "v3" # Add Patient Retention Agent
+new_classes = ["PatientAgent"]
 
 # ===== AI & BROWSER RENDERING (Paid Plan) =====
 [ai]
@@ -126,6 +129,10 @@ FISIOFLOW_AI_GATEWAY_URL = "https://gateway.ai.cloudflare.com/v1/32156f9a72a32d1
 binding = "FISIOFLOW_CONFIG"
 id = "4284b33fa7ed40b6bc9c59b6041c03ed"
 
+[[env.production.vectorize]]
+binding = "CLINICAL_KNOWLEDGE"
+index_name = "clinical-knowledge"
+
 [[env.production.hyperdrive]]
 binding = "HYPERDRIVE"
 id = "12b9fefcfbc04074a63342a9212e1b4f"
@@ -136,7 +143,8 @@ bucket_name = "fisioflow-media"
 
 [env.production.durable_objects]
 bindings = [
-  { name = "ORGANIZATION_STATE", class_name = "OrganizationState" }
+  { name = "ORGANIZATION_STATE", class_name = "OrganizationState" },
+  { name = "PATIENT_AGENT", class_name = "PatientAgent" }
 ]
 
 [env.production.ai]
