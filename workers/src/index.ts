@@ -81,6 +81,8 @@ import { commissionsRoutes } from './routes/commissions';
 import { nfseRoutes } from './routes/nfse';
 import { verifyToken } from './lib/auth';
 import { getRawSql } from './lib/db';
+import { routeAgentRequest } from 'agents';
+import { PatientAgent } from './agents/PatientAgent';
 
 import { perf } from './lib/perf';
 import { logToAxiom } from './lib/axiom';
@@ -236,6 +238,7 @@ app.onError(errorHandler);
 import { handleScheduled } from './cron';
 import { handleQueue } from './queue';
 export { OrganizationState } from './lib/realtime';
+export { PatientAgent } from './agents/PatientAgent';
 
 // Hono RPC — exporta o tipo da app para type-safe client no frontend
 export type AppType = typeof app;
@@ -264,6 +267,10 @@ async function handleRealtimeWS(request: Request, env: any): Promise<Response> {
 
 export default {
   async fetch(request: Request, env: any, ctx: ExecutionContext): Promise<Response> {
+    // 1. Roteamento de Agentes (Cloudflare Agents SDK) - Intercepta /agents/*
+    const agentResponse = routeAgentRequest(request, env);
+    if (agentResponse) return agentResponse;
+
     // WebSocket upgrades: bypass Hono middleware (evita corrupção da resposta 101)
     if (request.headers.get('Upgrade') === 'websocket' && new URL(request.url).pathname === '/api/realtime') {
       return handleRealtimeWS(request, env);

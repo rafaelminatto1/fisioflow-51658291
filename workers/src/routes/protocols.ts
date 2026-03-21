@@ -20,7 +20,6 @@ const app = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 // ===== LISTA DE PROTOCOLOS =====
 app.get('/', async (c) => {
-  const db = await createDb(c.env);
   const {
     q,
     type,
@@ -30,6 +29,33 @@ app.get('/', async (c) => {
     limit = '20',
   } = c.req.query();
 
+  // Tentar cache KV se for uma busca simples sem filtros de texto
+  if (!q && !icd10 && page === '1' && c.env.FISIOFLOW_CONFIG) {
+    try {
+      const cached = await c.env.FISIOFLOW_CONFIG.get('CLINICAL_PROTOCOLS', 'json');
+      if (cached) {
+        // Aplicar filtros simples no cache se necessário ou retornar tudo se limit for alto
+        let data = cached as any[];
+        if (type) data = data.filter(p => p.protocol_type === type);
+        if (evidenceLevel) data = data.filter(p => p.evidence_level === evidenceLevel);
+        
+        return c.json({
+          data: data.slice(0, parseInt(limit)),
+          meta: {
+            page: 1,
+            limit: parseInt(limit),
+            total: data.length,
+            pages: Math.ceil(data.length / parseInt(limit)),
+            fromCache: true
+          },
+        });
+      }
+    } catch (e) {
+      console.warn('KV Cache Error:', e);
+    }
+  }
+
+  const db = await createDb(c.env);
   const pageNum = Math.max(1, parseInt(page));
   const limitNum = Math.min(500, Math.max(1, parseInt(limit)));
   const offset = (pageNum - 1) * limitNum;

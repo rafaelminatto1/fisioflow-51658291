@@ -15,6 +15,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { ClinicalImportIA } from "./ClinicalImportIA";
 import {
 	Sparkles,
 	Target,
@@ -506,6 +507,8 @@ export function KnowledgeHubView({
 
 			{/* Main Content (Center) */}
 			<main className="flex-1 space-y-6 min-w-0">
+				<ClinicalImportIA />
+				
 				<header className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-background sticky top-0 z-20 pb-2">
 					<div className="relative flex-1 max-w-xl">
 						<Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

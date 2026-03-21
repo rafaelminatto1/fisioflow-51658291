@@ -56,9 +56,13 @@ interface ClinicalTestDetailsModalProps {
 }
 
 const MediaPlaceholder = ({ label }: { label: string }) => (
-	<div className="aspect-square rounded-lg bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center p-4 transition-colors hover:bg-slate-100 hover:border-slate-300">
-		<ImageIcon className="h-6 w-6 text-slate-300 mb-2" />
-		<span className="text-[10px] text-slate-500 font-medium">{label}</span>
+	<div className="aspect-square rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center p-4 transition-all hover:bg-white hover:border-teal-300 group shadow-sm hover:shadow-md">
+		<div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-teal-50 transition-colors">
+			<ImageIcon className="h-5 w-5 text-slate-300 group-hover:text-teal-400" />
+		</div>
+		<span className="text-xs text-slate-400 font-semibold uppercase tracking-wider group-hover:text-teal-600 transition-colors">
+			{label}
+		</span>
 	</div>
 );
 
@@ -175,53 +179,27 @@ export function ClinicalTestDetailsModal({
 									className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-[1.02]"
 								/>
 								<div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
-								<div className="absolute right-3 bottom-3 inline-flex items-center gap-2 rounded-full bg-slate-900/80 px-3 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 pointer-events-none">
-									<ZoomIn className="h-3.5 w-3.5" />
+								<div className="absolute right-4 bottom-4 inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-4 py-2 text-xs font-bold text-white opacity-0 shadow-2xl transition-all translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 pointer-events-none backdrop-blur-sm border border-white/10">
+									<ZoomIn className="h-4 w-4" />
 									Clique para ampliar
 								</div>
 							</button>
 						) : (
-							<div className="w-full aspect-video rounded-2xl overflow-hidden shadow-sm border border-slate-200 relative bg-slate-900 group cursor-pointer">
-								<div className="absolute inset-0 flex flex-col items-center justify-center text-white/90 bg-slate-900/50 backdrop-blur-[1px] group-hover:bg-slate-900/40 transition-all">
-									<PlayCircle className="h-16 w-16 mb-3 text-white/90 group-hover:scale-110 group-hover:text-teal-400 transition-all duration-300 shadow-xl rounded-full bg-black/20" />
-									<span className="text-sm font-semibold tracking-wide">
+							<div className="w-full aspect-video rounded-3xl overflow-hidden shadow-2xl border border-slate-200 relative bg-slate-950 group">
+								<div className="absolute inset-0 flex flex-col items-center justify-center text-white/90 bg-gradient-to-br from-slate-900/40 via-slate-950/20 to-slate-900/70 backdrop-blur-[2px]">
+									<div className="h-20 w-20 rounded-full bg-white/10 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-white/20 transition-all duration-500 shadow-2xl border border-white/5">
+										<PlayCircle className="h-10 w-10 text-teal-400" />
+									</div>
+									<span className="text-xs font-bold tracking-[0.2em] uppercase text-white/60">
 										Visualizar Movimento
 									</span>
 								</div>
 							</div>
 						)}
-						{galleryImages.length > 0 ? (
-							<div className="grid grid-cols-2 gap-3">
-								{galleryImages.map((url, i) => (
-									<button
-										key={i}
-										type="button"
-										onClick={() => setPreviewImage(url)}
-										className="aspect-square rounded-xl overflow-hidden border border-slate-100 bg-slate-50 shadow-sm group relative cursor-zoom-in"
-										aria-label={`Ampliar imagem ${i + 2} do teste ${test.name}`}
-									>
-										<img
-											src={url}
-											alt={`${test.name} - mídia ${i + 2}`}
-											className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-										/>
-										<div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/10 transition-colors" />
-										<div className="absolute right-2 bottom-2 rounded-full bg-white/90 p-1.5 text-slate-700 opacity-0 shadow transition-opacity group-hover:opacity-100">
-											<ZoomIn className="h-3.5 w-3.5" />
-										</div>
-									</button>
-								))}
-							</div>
-						) : (
-							<div className="grid grid-cols-2 gap-3">
-								<MediaPlaceholder label="Posição Inicial" />
-								<MediaPlaceholder label="Posição Final" />
-							</div>
-						)}
 					</div>
 
-					{/* Right Column: Info */}
-					<div className="space-y-6">
+					{/* Right Column: Info + Gallery */}
+					<div className="space-y-8 flex flex-col h-full">
 						<div>
 							<h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3 flex items-center gap-2">
 								<CheckSquare className="h-4 w-4 text-teal-600" />
@@ -254,13 +232,51 @@ export function ClinicalTestDetailsModal({
 							<div className="pt-2">
 								<h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
 									<Info className="h-3 w-3" />
-									Base Científica / Referências
+									Base Científica
 								</h3>
-								<p className="text-xs text-slate-400 italic pl-5">
+								<p className="text-[11px] text-slate-400 italic pl-5 line-clamp-2 hover:line-clamp-none transition-all cursor-default">
 									{test.reference}
 								</p>
 							</div>
 						)}
+
+						{/* Gallery Moved to Right side */}
+						<div className="pt-4 mt-auto">
+							<div className="grid grid-cols-2 gap-4">
+								{galleryImages.length > 0 ? (
+									galleryImages.map((url, i) => (
+										<div key={i} className="space-y-2">
+											<span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">
+												{i === 0 ? "Posição Inicial" : "Posição Final"}
+											</span>
+											<button
+												type="button"
+												onClick={() => setPreviewImage(url)}
+												className="w-full aspect-square rounded-2xl overflow-hidden border border-slate-100 bg-slate-50 shadow-sm group relative cursor-zoom-in active:scale-95 transition-all"
+												aria-label={`Ampliar imagem ${i + 2} do teste ${test.name}`}
+											>
+												<img
+													src={url}
+													alt={`${test.name} - ${i === 0 ? "Inicial" : "Final"}`}
+													className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+												/>
+												<div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/10 transition-colors" />
+												<div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+													<div className="bg-white/90 p-2 rounded-full shadow-lg text-slate-700 border border-slate-100">
+														<ZoomIn className="h-4 w-4" />
+													</div>
+												</div>
+											</button>
+										</div>
+									))
+								) : (
+									<>
+										<MediaPlaceholder label="Posição Inicial" />
+										<MediaPlaceholder label="Posição Final" />
+									</>
+								)}
+							</div>
+						</div>
 					</div>
 				</div>
 			</CustomModalBody>
