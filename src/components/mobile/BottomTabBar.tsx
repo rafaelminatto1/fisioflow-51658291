@@ -6,6 +6,7 @@ import {
 	User,
 	LucideIcon,
 } from "lucide-react";
+import "@/styles/mobile-utilities.css";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { isNativePlatform } from "@/lib/platform/native";
