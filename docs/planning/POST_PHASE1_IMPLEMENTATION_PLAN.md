@@ -63,6 +63,7 @@ Data: 2026-03-21
 - arquivos órfãos `src/App.css` e `src/components/ui/theme/theme.css` foram removidos do repositório.
 - CSS global caiu para ~`436 KB`.
 - utilitários premium e mobile/touch começaram a ser separados de `src/index.css` para `src/styles/premium-utilities.css` e `src/styles/mobile-utilities.css`, preparando uma próxima extração real por shell/rota.
+- `useExcelExport` e `useFinancialExport` passaram a lazy-load das skills de XLSX/PDF no momento da exportação, removendo imports estáticos desses módulos dos hooks.
 
 ### Rodada avancada aplicada depois do baseline inicial
 
