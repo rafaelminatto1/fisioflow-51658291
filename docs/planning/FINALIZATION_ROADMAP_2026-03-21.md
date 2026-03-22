@@ -106,7 +106,7 @@ Estes itens não estão bloqueando o projeto, mas ainda merecem acompanhamento:
 - `dicom-vendor` continua em ~1.47 MB, também isolado em fluxos específicos.
 - `computeWorker` continua em ~1.22 MB e foi confirmado como worker especializado do ecossistema Cornerstone/VTK, não carga indevida do shell.
 - CSS global caiu para ~436 KB.
-- `workers-client.ts` caiu de 2027 para 235 linhas e hoje atua basicamente como fachada de compatibilidade e helpers base.
+- `workers-client.ts` caiu de 2027 para 7 linhas e hoje atua apenas como shim de compatibilidade sobre `@/api/v2`.
 - o app web ficou com `0` imports restantes apontando para `@/lib/api/workers-client`.
 - `posthog` ficou em chunk próprio de ~176 KB, fora do bundle principal.
 - há peers externos ainda defasados para o ecossistema Vite 8 em algumas bibliotecas secundárias.
@@ -122,5 +122,5 @@ Comandos executados com sucesso:
 Se houver uma próxima rodada, ela já não é mais “fechamento de base”. O próximo ciclo seria otimização avançada:
 - reduzir CSS global
 - revisar chunking de DICOM e worker pesado
-- decidir se `workers-client.ts` continua temporariamente como camada de compatibilidade externa ou se pode ser aposentado de vez
+- decidir, em uma etapa futura, se `workers-client.ts` pode ser removido de vez ou se vale mantê-lo como alias público estável
 - abrir branch separada para upgrades mobile maiores
