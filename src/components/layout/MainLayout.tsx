@@ -3,6 +3,8 @@
  */
 
 import React from "react";
+import "@/styles/premium-utilities.css";
+import "@/styles/mobile-utilities.css";
 import { Sidebar } from "./Sidebar";
 import { MobileHeader } from "./MobileHeader";
 import { BottomNavigation } from "./BottomNavigation";

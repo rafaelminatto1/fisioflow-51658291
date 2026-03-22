@@ -1,4 +1,5 @@
 import React from "react";
+import "@/styles/premium-utilities.css";
 import { useTheme } from "./theme/ThemeProvider";
 import { Sun, Moon, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
