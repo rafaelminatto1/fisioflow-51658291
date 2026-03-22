@@ -75,6 +75,7 @@ Resultados observados:
 - arquivos órfãos `src/App.css` e `src/components/ui/theme/theme.css` foram removidos para reduzir ruído de manutenção
 - utilitários visuais premium e mobile/touch começaram a sair de `src/index.css` para arquivos dedicados em `src/styles/*`, preparando extração futura por domínio
 - os hooks `useExcelExport` e `useFinancialExport` deixaram de importar skills pesadas de XLSX/PDF no topo e passaram a carregar essas integrações apenas no clique de exportação
+- regras globais de dialog/sheet e scroll container saíram de `src/index.css` para `src/styles/dialog-utilities.css`, carregado junto dos componentes de UI correspondentes
 
 Critérios de aceite:
 - build web verde
@@ -112,6 +113,7 @@ Estes itens não estão bloqueando o projeto, mas ainda merecem acompanhamento:
 - o viewer DICOM atual usa `ViewportType.STACK`, mas a linha atual de `@cornerstonejs/core`/`@cornerstonejs/tools` ainda mantém dependência efetiva de `@kitware/vtk.js`; o próximo grande corte aí é arquitetural, não apenas de chunking.
 - `computeWorker` continua em ~1.22 MB e foi confirmado como worker especializado do ecossistema Cornerstone/VTK, não carga indevida do shell.
 - CSS global caiu para ~436 KB.
+- o CSS global do shell caiu mais um pouco para ~434.9 KB, com `dialog-utilities.css` separado (~1.34 KB).
 - `workers-client.ts` caiu de 2027 para 7 linhas e hoje atua apenas como shim de compatibilidade sobre `@/api/v2`.
 - o app web ficou com `0` imports restantes apontando para `@/lib/api/workers-client`.
 - `apps/api/src/routes/patients.ts` caiu de 1833 para 702 linhas.

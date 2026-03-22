@@ -64,6 +64,7 @@ Data: 2026-03-21
 - CSS global caiu para ~`436 KB`.
 - utilitários premium e mobile/touch começaram a ser separados de `src/index.css` para `src/styles/premium-utilities.css` e `src/styles/mobile-utilities.css`, preparando uma próxima extração real por shell/rota.
 - `useExcelExport` e `useFinancialExport` passaram a lazy-load das skills de XLSX/PDF no momento da exportação, removendo imports estáticos desses módulos dos hooks.
+- regras de dialog/sheet e scroll container foram extraídas de `src/index.css` para `src/styles/dialog-utilities.css`, carregado pela camada `src/components/ui/*`.
 
 ### Rodada avancada aplicada depois do baseline inicial
 
@@ -109,7 +110,7 @@ Data: 2026-03-21
   - `computeWorker` ~1.22 MB, ja identificado como worker especializado do Cornerstone/VTK
   - `excel-vendor` ~930 KB
   - `knowledge` ~363 KB
-- CSS global do app web perto de `436 KB` bruto.
+- CSS global do app web perto de `434.9 KB` bruto, com `dialog-utilities.css` separado (~`1.34 KB`).
 - o viewer DICOM atual é stack-only no uso (`ViewportType.STACK`), mas a implementação baseada em `@cornerstonejs/core` e `@cornerstonejs/tools` continua puxando `vtk.js` como dependência efetiva da stack atual.
 
 ### Gargalos de manutencao confirmados
