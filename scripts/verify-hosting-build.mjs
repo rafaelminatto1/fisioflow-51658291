@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Verifica se o build do frontend produziu dist/ com index.html.
+ * Verifica se o build do frontend produziu apps/web/dist com index.html.
  * Escreve NDJSON em .cursor/debug.log para análise de hipóteses (Page Not Found).
  */
 import { existsSync, readdirSync, statSync, appendFileSync } from 'fs';
@@ -25,7 +25,7 @@ function appendLog(payload) {
 }
 
 // #region agent log
-const hostingPublic = 'dist';
+const hostingPublic = 'apps/web/dist';
 appendLog({ hypothesisId: 'H5', location: 'verify-hosting-build.mjs:dist', message: 'frontend output dir', data: { hostingPublic } });
 // #endregion
 
@@ -63,7 +63,7 @@ appendLog({ hypothesisId: 'H2', location: 'verify-hosting-build.mjs:distContents
 // #endregion
 
 if (!indexExists) {
-  console.error('ERROR: dist/index.html not found. Hosting will show Page Not Found.');
+  console.error('ERROR: apps/web/dist/index.html not found. Hosting will show Page Not Found.');
   process.exit(1);
 }
-console.log('OK: dist/index.html exists. Hosting build is valid.');
+console.log('OK: apps/web/dist/index.html exists. Hosting build is valid.');

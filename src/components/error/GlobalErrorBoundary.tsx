@@ -6,7 +6,6 @@
  */
 
 import React, { Component, ErrorInfo, ReactNode } from "react";
-import * as Sentry from "@sentry/react";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -16,6 +15,15 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { AlertCircle, Home, RefreshCw } from "lucide-react";
+
+type WindowWithOptionalSentry = Window & {
+	Sentry?: {
+		captureException: (
+			error: Error,
+			context?: Record<string, unknown>,
+		) => void;
+	};
+};
 
 interface Props {
 	children: ReactNode;
@@ -54,13 +62,15 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 		}
 
 		// Send to Sentry
-		Sentry.captureException(error, {
-			contexts: {
-				react: {
-					componentStack: errorInfo.componentStack,
+		if (typeof window !== "undefined") {
+			(window as WindowWithOptionalSentry).Sentry?.captureException(error, {
+				contexts: {
+					react: {
+						componentStack: errorInfo.componentStack,
+					},
 				},
-			},
-		});
+			});
+		}
 
 		// Call custom error handler
 		this.props.onError?.(error, errorInfo);

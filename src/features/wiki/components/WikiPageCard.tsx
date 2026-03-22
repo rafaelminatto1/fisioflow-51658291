@@ -24,6 +24,8 @@ export function WikiPageCard({
 	onEdit,
 	onDelete,
 }: WikiPageCardProps) {
+	const hasActions = Boolean(onEdit || onDelete);
+
 	return (
 		<Card
 			className="cursor-pointer hover:shadow-md transition-shadow"
@@ -35,38 +37,44 @@ export function WikiPageCard({
 						{page.icon && <span className="text-xl">{page.icon}</span>}
 						<h3 className="font-semibold line-clamp-1">{page.title}</h3>
 					</div>
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-							<Button variant="ghost" size="icon" className="h-6 w-6">
-								<MoreVertical className="w-3 h-3" />
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent align="end">
-							<DropdownMenuItem
-								onClick={(e) => {
-									e.stopPropagation();
-									onEdit?.(e);
-								}}
-							>
-								<Edit className="w-4 h-4 mr-2" />
-								Editar
-							</DropdownMenuItem>
-							<DropdownMenuItem
-								onClick={(e) => {
-									e.stopPropagation();
-									onDelete?.(e);
-								}}
-								className="text-destructive"
-							>
-								<Trash2 className="w-4 h-4 mr-2" />
-								Excluir
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
+					{hasActions && (
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+								<Button variant="ghost" size="icon" className="h-6 w-6">
+									<MoreVertical className="w-3 h-3" />
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="end">
+								{onEdit && (
+									<DropdownMenuItem
+										onClick={(e) => {
+											e.stopPropagation();
+											onEdit(e);
+										}}
+									>
+										<Edit className="w-4 h-4 mr-2" />
+										Editar
+									</DropdownMenuItem>
+								)}
+								{onDelete && (
+									<DropdownMenuItem
+										onClick={(e) => {
+											e.stopPropagation();
+											onDelete(e);
+										}}
+										className="text-destructive"
+									>
+										<Trash2 className="w-4 h-4 mr-2" />
+										Excluir
+									</DropdownMenuItem>
+								)}
+							</DropdownMenuContent>
+						</DropdownMenu>
+					)}
 				</div>
 
 				<p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-					{page.content.slice(0, 100).replace(/[#*`]/g, "")}...
+					{page.content.slice(0, 100).replace(/[#*`]/g, "") || "Sem resumo"}...
 				</p>
 
 				<div className="flex items-center justify-between">

@@ -6,6 +6,7 @@
 import { lazy } from "react";
 import { Route, Routes, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { MainLayout } from "@/components/layout/MainLayout";
 import { WikiLayout, WikiDashboard } from "@/features/wiki";
 
 // Lazy loads - Enterprise Features
@@ -37,9 +38,12 @@ const ProjectDetails = lazy(
 		import(/* webpackChunkName: "project-details" */ "@/pages/ProjectDetails"),
 );
 
-// Tasks
-const TarefasV2 = lazy(
-	() => import(/* webpackChunkName: "tasks-v2" */ "@/pages/TarefasV2"),
+// Boards / Tasks
+const BoardsHome = lazy(
+	() => import(/* webpackChunkName: "boards-home" */ "@/pages/BoardsHome"),
+);
+const BoardDetail = lazy(
+	() => import(/* webpackChunkName: "boards-detail" */ "@/pages/BoardDetail"),
 );
 
 // Clinical
@@ -142,13 +146,26 @@ const CalendarSettings = lazy(
 
 export const enterpriseRoutes = (
 	<>
-		{/* Tasks */}
-		<Route path="/tarefas" element={<Navigate to="/tarefas-v2" replace />} />
+		{/* Tasks / Boards */}
+		<Route path="/tarefas" element={<Navigate to="/boards" replace />} />
+		<Route path="/tarefas-v2" element={<Navigate to="/boards" replace />} />
 		<Route
-			path="/tarefas-v2"
+			path="/boards"
 			element={
 				<ProtectedRoute>
-					<TarefasV2 />
+					<MainLayout>
+						<BoardsHome />
+					</MainLayout>
+				</ProtectedRoute>
+			}
+		/>
+		<Route
+			path="/boards/:boardId"
+			element={
+				<ProtectedRoute>
+					<MainLayout>
+						<BoardDetail />
+					</MainLayout>
 				</ProtectedRoute>
 			}
 		/>

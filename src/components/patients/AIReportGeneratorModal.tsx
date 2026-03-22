@@ -11,7 +11,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Sparkles, FileDown, Copy, RefreshCw } from "lucide-react";
 import { useAIReportGenerator } from "@/hooks/useAIReportGenerator";
 import { ClinicalReportInput } from "@/services/ai/geminiAiService";
-import { exportClinicalReportToPDF } from "@/lib/export/clinicalReportPdfExport";
 import { toast } from "sonner";
 
 interface AIReportGeneratorModalProps {
@@ -48,6 +47,9 @@ export const AIReportGeneratorModal: React.FC<AIReportGeneratorModalProps> = ({
 		if (!generatedReport || !reportInput) return;
 		try {
 			setIsExporting(true);
+			const { exportClinicalReportToPDF } = await import(
+				"@/lib/export/clinicalReportPdfExport"
+			);
 			await exportClinicalReportToPDF(
 				patientName,
 				generatedReport,

@@ -48,7 +48,6 @@ import {
 } from "lucide-react";
 import { useTherapistOccupancy } from "@/hooks/useTherapistOccupancy";
 import { cn } from "@/lib/utils";
-import { exportOccupancyReport } from "@/lib/export/excelExport";
 import { useToast } from "@/hooks/use-toast";
 
 type PeriodFilter = "today" | "week" | "month";
@@ -103,6 +102,9 @@ export default function TherapistOccupancyPage() {
 
 		setIsExporting(true);
 		try {
+			const { exportOccupancyReport } = await import(
+				"@/lib/export/excelExport"
+			);
 			await exportOccupancyReport({
 				ocupacaoMedia: data.ocupacaoMedia,
 				totalConsultasHoje: data.totalConsultasHoje,

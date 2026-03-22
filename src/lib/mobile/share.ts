@@ -3,9 +3,8 @@
  * Funciona apenas em dispositivos nativos (iOS/Android)
  */
 
-import { Share } from "@capacitor/share";
-import { Capacitor } from "@capacitor/core";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { isNativePlatform, shareWithNativeSheet } from "@/lib/platform/native";
 
 export interface ShareOptions {
 	title?: string;
@@ -19,7 +18,7 @@ export interface ShareOptions {
  * @param options Opções de compartilhamento
  */
 export async function shareContent(options: ShareOptions): Promise<void> {
-	if (!Capacitor.isNativePlatform()) {
+	if (!isNativePlatform()) {
 		// Fallback para web
 		if (navigator.share) {
 			await navigator.share({
@@ -35,7 +34,7 @@ export async function shareContent(options: ShareOptions): Promise<void> {
 	}
 
 	try {
-		await Share.share({
+		await shareWithNativeSheet({
 			title: options.title ?? "FisioFlow",
 			text: options.text,
 			url: options.url,
