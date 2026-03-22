@@ -115,7 +115,7 @@ Data: 2026-03-21
   - `src/components/wiki/WikiEditor.tsx` com 2886 linhas
   - `src/pages/relatorios/RelatorioMedicoPage.tsx` continua grande, mas sem a camada de PDF embutida
   - `src/lib/api/workers-client.ts` com 7 linhas, agora apenas como shim de compatibilidade sobre `@/api/v2`
-  - `apps/api/src/routes/patients.ts` com 1833 linhas
+  - `apps/api/src/routes/patients.ts` com 702 linhas apos extração dos sub-recursos clínicos
   - `src/routes.tsx` deixou de ser o gargalo principal apos a agregacao por dominio
 - Ainda existe acoplamento estrutural entre web, mobile e servicos compartilhados, mas o boundary inicial de plataforma ja foi criado.
 
@@ -234,6 +234,7 @@ Status parcial:
 - `src/lib/api/workers-client.ts` ja perdeu tambem `communications`, `rehab`, `operations`, `admin`, `feedback` e `billing`, inclusive `crm`, `notifications`, `reports`, `publicBooking`, `telemedicine`, `exercisePlans`, `satisfactionSurveys`, `commissions` e `nfse`.
 - O app web ficou com `0` imports restantes apontando para `@/lib/api/workers-client`.
 - O proximo corte natural deixa de ser dominio funcional e passa a ser uma decisao de compatibilidade: manter ou aposentar a fachada `workers-client.ts`, que agora e so um shim.
+- `apps/api/src/routes/patients.ts` foi quebrado em `patients.ts`, `patients/shared.ts` e `patients/clinical-details.ts`, isolando o CRUD principal dos sub-recursos clínicos.
 
 2. Contratos compartilhados
 - Mover tipos e contratos repetidos para `packages`.
@@ -314,7 +315,7 @@ Status parcial:
 ## Proxima execucao recomendada
 
 1. Atacar `computeWorker`, `dicom-vendor`, `excel-vendor` e CSS global.
-2. Decidir o futuro da fachada `src/lib/api/workers-client.ts`, agora reduzida a 7 linhas.
+2. Continuar a decompor rotas grandes da API, agora que `patients.ts` saiu do grupo crítico.
 3. Revisar telas grandes que ainda importam `@react-pdf/renderer` diretamente, como `RelatorioMedicoPage`, `RelatorioConvenioPage` e `NFSePage`.
 4. Consolidar imports nativos remanescentes no boundary de plataforma.
 
