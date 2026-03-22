@@ -4,7 +4,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { financialApi } from "@/lib/api/workers-client";
+import { financialApi } from "@/api/v2";
 
 interface VoucherCheckoutData {
 	sessionId: string;

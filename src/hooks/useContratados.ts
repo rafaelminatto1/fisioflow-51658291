@@ -4,7 +4,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { contratadosApi, type Contratado } from "@/lib/api/workers-client";
+import { contratadosApi, type Contratado } from "@/api/v2";
 import {
 	ContratadoCreate,
 	ContratadoUpdate,

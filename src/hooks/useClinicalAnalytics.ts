@@ -5,7 +5,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { analyticsApi } from "@/lib/api/workers-client";
+import { analyticsApi } from "@/api/v2";
 import { useAuth } from "@/contexts/AuthContext";
 
 export interface DashboardMetrics {

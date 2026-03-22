@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { sessionsApi } from "@/lib/api/workers-client";
+import { sessionsApi } from "@/api/v2";
 import { useToast } from "@/hooks/use-toast";
 import { ErrorHandler } from "@/lib/errors/ErrorHandler";
 

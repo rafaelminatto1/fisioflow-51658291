@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { PatientCombobox } from "@/components/ui/patient-combobox";
 import { useActivePatients } from "@/hooks/usePatients";
 import { ExerciseProtocol } from "@/hooks/useExerciseProtocols";
-import { goalsApi, patientsApi } from "@/lib/api/workers-client";
+import { goalsApi, patientsApi } from "@/api/v2";
 import { toast } from "sonner";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { Loader2, Check } from "lucide-react";

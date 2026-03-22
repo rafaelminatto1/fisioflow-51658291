@@ -18,7 +18,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
-import type { Notification } from "@/lib/api/workers-client";
+import type { Notification } from "@/api/v2";
 
 const NOTIFICATION_ICONS: Record<string, React.ElementType> = {
 	appointment: Calendar,

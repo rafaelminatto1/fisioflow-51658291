@@ -12,7 +12,7 @@ import {
 	type RecallCampaignRecord,
 	type ReferralCodeRecord,
 	type ReviewAutomationConfigRecord,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { uploadToR2, deleteFromR2 } from "@/lib/storage/r2-storage";
 
 export type MarketingConsent = MarketingConsentRecord;

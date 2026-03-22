@@ -1,7 +1,7 @@
 /**
  * Goals Admin Service — Cloudflare Workers + Neon
  */
-import { goalProfilesApi, type GoalProfileRow } from "@/lib/api/workers-client";
+import { goalProfilesApi, type GoalProfileRow } from "@/api/v2";
 import { GoalProfile, GoalTarget } from "@/lib/goals/goalProfiles.seed";
 
 export type { GoalProfileRow };

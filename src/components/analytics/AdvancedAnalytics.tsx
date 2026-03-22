@@ -17,7 +17,7 @@ import {
 	type AppointmentRow,
 	type Pagamento,
 	type Transacao,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import {
 	BarChart,
 	Bar,

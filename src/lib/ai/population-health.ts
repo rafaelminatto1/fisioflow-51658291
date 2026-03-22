@@ -20,7 +20,7 @@ import { generateObject } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { z } from "zod";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { analyticsApi } from "@/lib/api/workers-client";
+import { analyticsApi } from "@/api/v2";
 
 export interface PopulationHealthAnalysis {
 	clinicId: string;

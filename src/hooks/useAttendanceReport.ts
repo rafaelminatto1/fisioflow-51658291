@@ -23,7 +23,7 @@ import {
 	appointmentsApi,
 	profileApi,
 	type AppointmentRow,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 export type PeriodFilter = "week" | "month" | "quarter" | "year" | "custom";
 export type StatusFilter =

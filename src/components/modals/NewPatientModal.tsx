@@ -69,7 +69,7 @@ import {
 	sanitizeEmail,
 } from "@/lib/validations";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { patientsApi } from "@/lib/api/workers-client";
+import { patientsApi } from "@/api/v2";
 import { SmartDatePicker } from "@/components/ui/smart-date-picker";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { PATHOLOGY_OPTIONS } from "@/lib/constants/pathologies";

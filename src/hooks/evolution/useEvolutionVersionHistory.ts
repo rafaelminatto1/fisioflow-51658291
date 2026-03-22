@@ -6,7 +6,7 @@
 
 import { useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { evolutionVersionsApi } from "@/lib/api/workers-client";
+import { evolutionVersionsApi } from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 const MAX_VERSIONS = 25;

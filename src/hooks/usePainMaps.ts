@@ -5,7 +5,7 @@
 import { useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { clinicalApi, PainMap, PainMapPoint } from "@/lib/api/workers-client";
+import { clinicalApi, PainMap, PainMapPoint } from "@/api/v2";
 import type { PainPoint } from "@/components/pain-map";
 
 export type { PainMap, PainMapPoint };

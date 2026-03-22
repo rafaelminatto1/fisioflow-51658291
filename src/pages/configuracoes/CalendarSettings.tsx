@@ -55,7 +55,7 @@ import {
 	Copy,
 } from "lucide-react";
 import { useCalendarIntegration } from "@/hooks/useCalendarIntegration";
-import { integrationsApi } from "@/lib/api/workers-client";
+import { integrationsApi } from "@/api/v2";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";

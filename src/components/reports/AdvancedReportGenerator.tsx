@@ -24,7 +24,7 @@ import { parseResponseDate } from "@/utils/dateUtils";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { appointmentsApi } from "@/lib/api/workers-client";
+import { appointmentsApi } from "@/api/v2";
 import { toast } from "sonner";
 
 type ReportType =

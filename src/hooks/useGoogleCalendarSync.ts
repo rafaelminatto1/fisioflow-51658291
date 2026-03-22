@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { Appointment } from "@/types/appointment";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { integrationsApi } from "@/lib/api/workers-client";
+import { integrationsApi } from "@/api/v2";
 
 type SyncResult = {
 	success: boolean;

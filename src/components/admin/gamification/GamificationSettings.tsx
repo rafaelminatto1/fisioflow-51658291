@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
 	gamificationApi,
 	type GamificationSettingRow,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 type GamificationSettingValue = string | number | boolean;
 

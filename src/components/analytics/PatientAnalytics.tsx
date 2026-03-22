@@ -11,7 +11,7 @@ import {
 	appointmentsApi,
 	type PatientRow,
 	type AppointmentRow,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import {
 	ResponsiveContainer,
 	Tooltip,

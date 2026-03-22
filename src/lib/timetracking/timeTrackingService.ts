@@ -1,7 +1,7 @@
 /**
  * Time Tracking Service — Neon/Cloudflare Workers
  */
-import { timeEntriesApi } from "@/lib/api/workers-client";
+import { timeEntriesApi } from "@/api/v2";
 import type {
 	TimeEntry,
 	TimeEntryFilters,

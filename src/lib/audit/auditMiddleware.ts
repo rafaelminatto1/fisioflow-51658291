@@ -1,4 +1,4 @@
-import { auditApi } from "@/lib/api/workers-client";
+import { auditApi } from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export type AuditAction = "INSERT" | "UPDATE" | "DELETE";

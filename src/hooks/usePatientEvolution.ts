@@ -18,7 +18,7 @@ import {
 	normalizeGoalRows,
 } from "@/lib/clinical/goalNormalization";
 import { getErrorMessage } from "@/types";
-import { goalsApi, patientsApi, evolutionApi } from "@/lib/api/workers-client";
+import { goalsApi, patientsApi, evolutionApi } from "@/api/v2";
 
 // Types
 import {

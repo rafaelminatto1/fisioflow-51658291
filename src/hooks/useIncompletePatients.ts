@@ -4,7 +4,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { patientsApi } from "@/lib/api/workers-client";
+import { patientsApi } from "@/api/v2";
 
 interface IncompletePatient {
 	id: string;

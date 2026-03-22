@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useQuery } from "@tanstack/react-query";
-import { patientsApi } from "@/lib/api/workers-client";
+import { patientsApi } from "@/api/v2";
 import {
 	User,
 	Mail,

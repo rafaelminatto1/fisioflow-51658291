@@ -42,7 +42,7 @@ import {
 } from "lucide-react";
 import { useOrganizations } from "@/hooks/useOrganizations";
 import { useOrganizationMembers } from "@/hooks/useOrganizationMembers";
-import type { OrganizationMember } from "@/lib/api/workers-client";
+import type { OrganizationMember } from "@/api/v2";
 
 const ROLE_LABELS: Record<string, string> = {
 	admin: "Administrador",

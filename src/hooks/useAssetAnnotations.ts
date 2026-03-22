@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/components/ui/use-toast";
-import { mediaApi } from "@/lib/api/workers-client";
+import { mediaApi } from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export interface Annotation {

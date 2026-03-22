@@ -27,7 +27,7 @@ import {
 	useDashboardMetrics,
 	type DashboardPeriod,
 } from "@/hooks/useDashboardMetrics";
-import { appointmentsApi, type AppointmentRow } from "@/lib/api/workers-client";
+import { appointmentsApi, type AppointmentRow } from "@/api/v2";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDateToLocalISO } from "@/utils/dateUtils";
 import { endOfWeek, startOfMonth, startOfWeek } from "date-fns";

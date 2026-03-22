@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
 	telemedicineApi,
 	type TelemedicineRoomRecord,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 export type TelemedicineRoom = TelemedicineRoomRecord;
 

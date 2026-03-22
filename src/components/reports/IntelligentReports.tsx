@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { analyticsApi } from "@/lib/api/workers-client";
+import { analyticsApi } from "@/api/v2";
 
 interface IntelligentReportsProps {
 	patientId: string;

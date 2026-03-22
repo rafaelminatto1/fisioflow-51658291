@@ -5,7 +5,7 @@
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useOrganizations } from "@/hooks/useOrganizations";
-import { whatsappApi } from "@/lib/api/workers-client";
+import { whatsappApi } from "@/api/v2";
 
 export function useWhatsAppIntegration() {
 	const { currentOrganization } = useOrganizations();

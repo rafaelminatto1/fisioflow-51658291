@@ -3,7 +3,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { notificationsApi, type Notification } from "@/lib/api/workers-client";
+import { notificationsApi, type Notification } from "@/api/v2";
 import { toast } from "sonner";
 
 export type { Notification };

@@ -4,7 +4,7 @@ import {
 	patientsApi,
 	marketingApi,
 	type PatientRow,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { organizationMembersApi } from "@/api/v2/system";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";

@@ -55,7 +55,7 @@ import {
 	gamificationApi,
 	patientsApi,
 	type PatientChallengeRow,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 interface AchievementLogEntry {
 	id: string;

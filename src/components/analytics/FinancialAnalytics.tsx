@@ -10,7 +10,7 @@ import {
 	analyticsApi,
 	financialApi,
 	type Pagamento,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import {
 	XAxis,
 	YAxis,

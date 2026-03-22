@@ -9,7 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
 	clinicalTestsApi,
 	type ClinicalTestTemplateRecord,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import {
 	CustomModal,
 	CustomModalHeader,

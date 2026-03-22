@@ -3,7 +3,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { financialApi, Convenio } from "@/lib/api/workers-client";
+import { financialApi, Convenio } from "@/api/v2";
 import { toast } from "sonner";
 
 export type { Convenio };

@@ -12,7 +12,7 @@ import { ptBR } from "date-fns/locale";
 import { Calendar, Bell } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
-import { appointmentsApi, type AppointmentRow } from "@/lib/api/workers-client";
+import { appointmentsApi, type AppointmentRow } from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 interface ActivityEvent {

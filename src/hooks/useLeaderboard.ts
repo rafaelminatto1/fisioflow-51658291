@@ -5,7 +5,7 @@
 import { useState, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { gamificationApi } from "@/lib/api/workers-client";
+import { gamificationApi } from "@/api/v2";
 import {
 	LeaderboardEntry,
 	LeaderboardFilters,

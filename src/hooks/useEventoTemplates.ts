@@ -9,7 +9,7 @@ import {
 	eventoTemplatesApi,
 	eventosApi,
 	type EventoTemplateRow,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 export type EventoTemplate = EventoTemplateRow;
 

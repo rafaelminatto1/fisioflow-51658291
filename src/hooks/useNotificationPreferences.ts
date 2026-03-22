@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
 	notificationPreferencesApi,
 	type NotificationPreferences,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 export type UpdateNotificationPreferencesInput = Partial<
 	Omit<

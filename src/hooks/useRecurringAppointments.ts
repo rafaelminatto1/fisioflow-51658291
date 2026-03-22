@@ -7,7 +7,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { schedulingApi, RecurringSeries } from "@/lib/api/workers-client";
+import { schedulingApi, RecurringSeries } from "@/api/v2";
 import { addDays, addWeeks, addMonths, addYears, startOfDay } from "date-fns";
 import type {
 	RecurringAppointmentSeries,

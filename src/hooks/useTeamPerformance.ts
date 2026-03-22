@@ -19,7 +19,7 @@ import {
 	innovationsApi,
 	organizationMembersApi,
 	type StaffPerformanceRow,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 export type PerformancePeriod =
 	| "month"

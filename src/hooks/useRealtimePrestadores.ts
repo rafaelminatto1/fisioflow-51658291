@@ -4,7 +4,7 @@
 
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { prestadoresApi } from "@/lib/api/workers-client";
+import { prestadoresApi } from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export function useRealtimePrestadores(eventoId: string) {

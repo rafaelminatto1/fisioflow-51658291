@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
 	analyticsApi,
 	type PatientProgressSummary,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { toast } from "sonner";
 
 import {

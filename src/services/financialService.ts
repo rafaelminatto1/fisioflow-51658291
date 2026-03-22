@@ -1,5 +1,5 @@
 import { financialApi } from "@/api/v2/financial";
-import { auditApi } from "@/lib/api/workers-client";
+import { auditApi } from "@/api/v2";
 import { AppError } from "@/lib/errors/AppError";
 import type { Transacao } from "@/types/workers";
 

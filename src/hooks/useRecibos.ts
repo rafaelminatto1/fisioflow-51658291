@@ -4,7 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { recibosApi, type Recibo } from "@/lib/api/workers-client";
+import { recibosApi, type Recibo } from "@/api/v2";
 
 export function useRecibos() {
 	return useQuery({

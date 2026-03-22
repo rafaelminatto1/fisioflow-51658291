@@ -10,7 +10,7 @@ import {
 	TooltipProvider,
 } from "@/components/ui/tooltip";
 import { useAudioRecorder } from "@/hooks/useAudioRecorder";
-import { aiApi } from "@/lib/api/workers-client";
+import { aiApi } from "@/api/v2";
 
 interface MagicTextareaProps
 	extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {

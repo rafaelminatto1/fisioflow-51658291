@@ -9,7 +9,7 @@ import { ErrorHandler } from "@/lib/errors/ErrorHandler";
 import { fisioLogger } from "@/lib/errors/logger";
 import { isOnline } from "@/lib/utils/query-helpers";
 import { type Patient } from "@/schemas/patient";
-import { patientsApi } from "@/lib/api/workers-client";
+import { patientsApi } from "@/api/v2";
 
 export interface PaginatedPatientsResult {
 	data: Patient[];

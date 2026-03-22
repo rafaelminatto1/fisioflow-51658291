@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import {
 	clinicalApi,
 	type ConductLibraryRecord,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 export type ConductTemplate = ConductLibraryRecord;
 

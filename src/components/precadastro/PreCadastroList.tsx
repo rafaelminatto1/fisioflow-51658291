@@ -33,7 +33,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import type { Precadastro } from "@/lib/api/workers-client";
+import type { Precadastro } from "@/api/v2";
 
 interface PreCadastroListProps {
 	precadastros: PreCadastro[];

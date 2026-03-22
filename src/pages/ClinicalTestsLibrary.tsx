@@ -12,7 +12,7 @@ import { ClinicalTestsGrid } from "@/components/clinical/ClinicalTestsGrid";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { useExerciseProtocols } from "@/hooks/useExerciseProtocols";
-import { clinicalTestsApi, type ClinicalTestTemplateRecord } from "@/lib/api/workers-client";
+import { clinicalTestsApi, type ClinicalTestTemplateRecord } from "@/api/v2";
 import {
 	clinicalTestCategoryOptions,
 	clinicalTestJointOptions,

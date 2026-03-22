@@ -10,7 +10,7 @@ import {
 	integrationsApi,
 	type GoogleIntegrationRecord,
 	type GoogleSyncLogRecord,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 function buildLocalGoogleAuthUrl(state?: string): string {
 	const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;

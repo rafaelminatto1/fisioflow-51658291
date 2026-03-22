@@ -5,7 +5,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { securityApi, type LGPDConsentRecord } from "@/lib/api/workers-client";
+import { securityApi, type LGPDConsentRecord } from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export type ConsentType =

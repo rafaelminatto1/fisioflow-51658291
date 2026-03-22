@@ -9,7 +9,7 @@ import {
 	type EvaluationFormRow,
 	type EvaluationFormFieldRow,
 	type EvaluationFormWithFieldsRow,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import {
 	EvaluationForm,
 	EvaluationFormWithFields,

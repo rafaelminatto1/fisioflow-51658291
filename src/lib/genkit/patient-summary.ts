@@ -1,4 +1,4 @@
-import { aiApi } from "@/lib/api/workers-client";
+import { aiApi } from "@/api/v2";
 
 interface PatientSummaryInput {
 	patientName: string;

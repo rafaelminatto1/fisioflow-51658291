@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { clinicalApi } from "@/lib/api/workers-client";
+import { clinicalApi } from "@/api/v2";
 import { useToast } from "@/hooks/use-toast";
 import { ErrorHandler } from "@/lib/errors/ErrorHandler";
 

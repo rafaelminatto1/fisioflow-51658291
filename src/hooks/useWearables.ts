@@ -4,7 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { wearablesApi } from "@/lib/api/workers-client";
+import { wearablesApi } from "@/api/v2";
 
 export interface WearableDataPoint {
 	id: string;

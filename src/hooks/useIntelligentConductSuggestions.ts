@@ -3,7 +3,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { patientsApi, clinicalApi } from "@/lib/api/workers-client";
+import { patientsApi, clinicalApi } from "@/api/v2";
 import { useSoapRecords } from "./useSoapRecords";
 
 export interface ConductSuggestion {

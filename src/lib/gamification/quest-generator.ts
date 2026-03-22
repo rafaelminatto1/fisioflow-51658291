@@ -6,7 +6,7 @@
  */
 
 import { differenceInDays } from "date-fns";
-import { appointmentsApi, clinicalApi } from "@/lib/api/workers-client";
+import { appointmentsApi, clinicalApi } from "@/api/v2";
 
 export type GeneratedQuest = {
 	id: string; // unique code like 'pain_map_update'
