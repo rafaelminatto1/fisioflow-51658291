@@ -16,7 +16,10 @@ export function usePreloadDicomViewer() {
 		if (!isLoaded) {
 			setIsLoaded(true);
 			// Inicia o lazy loading
-			import("../DicomViewerInner");
+			void Promise.all([
+				import("../DicomViewerInner"),
+				import("../cornerstoneRuntime"),
+			]);
 		}
 	};
 
