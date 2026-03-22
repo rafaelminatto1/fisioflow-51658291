@@ -2,6 +2,8 @@
 
 Plataforma de alta performance para clínicas de fisioterapia, utilizando a stack mais moderna de 2026: **Neon DB + Cloudflare Workers**.
 
+No mobile, o canal principal é o app nativo iOS/Android. A camada PWA da web fica como fallback para uso em navegador mobile, não como substituta dos apps nativos.
+
 ## 🛠 Stack Tecnológica
 
 - **Frontend**: React 19, Tailwind CSS, shadcn/ui.
@@ -42,7 +44,7 @@ Em Cloudflare Pages, configure `VITE_NEON_AUTH_URL` em `Production` e `Preview`.
 npm run dev
 
 # Iniciar backend local (Wrangler)
-cd workers && npm run dev
+cd apps/api && npm run dev
 
 # Migrações de Banco de Dados
 npx drizzle-kit push
@@ -51,7 +53,9 @@ npx drizzle-kit push
 ## 📁 Estrutura do Projeto
 
 - `/src`: Código fonte do frontend React.
-- `/workers`: API Serverless rodando na borda da Cloudflare.
+- `/apps/api`: API Serverless rodando na borda da Cloudflare.
+- `/apps/professional-app`: app mobile do profissional.
+- `/apps/patient-app`: app mobile do paciente.
 - `/drizzle`: Definições de esquema e migrações do PostgreSQL.
 - `/docs2026`: Documentação técnica detalhada.
 

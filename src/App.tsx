@@ -1,15 +1,11 @@
-import { Suspense, useEffect, useMemo } from "react";
+import { Suspense, lazy, useEffect, useMemo } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient } from "@tanstack/react-query";
-import { BrowserRouter, useLocation } from "react-router-dom";
-import { RealtimeProvider } from "@/contexts/RealtimeContext";
+import { BrowserRouter, useLocation, useNavigate } from "react-router-dom";
 import { AuthContextProvider } from "@/contexts/AuthContextProvider";
-import { TourProvider } from "@/contexts/TourContext";
-import { GamificationFeedbackProvider } from "@/contexts/GamificationFeedbackContext";
 import { HighContrastProvider } from "@/contexts/HighContrastContext";
-import { MobileSheetProvider } from "@/components/evolution/v3-notion/MobileBottomSheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/error/ErrorBoundary";
 import { GlobalErrorBoundary } from "@/components/error/GlobalErrorBoundary";
@@ -23,8 +19,6 @@ import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import { get, set, del } from "idb-keyval";
 import { AppRoutes } from "./routes";
-import { VersionManager } from "@/components/system/VersionManager";
-import { WebVitalsIndicator } from "@/lib/monitoring/web-vitals";
 // ============================================================================
 // NOVO: TEMA PROVIDER
 // ============================================================================
@@ -33,12 +27,8 @@ import { ThemeProvider } from "@/components/ui/theme";
 import { PremiumThemeToggle } from "@/components/ui/PremiumThemeToggle";
 
 import { FeatureFlagProvider } from "@/lib/featureFlags/hooks";
-// DESABILITADO: import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
+import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
 import { SkipLink, FocusVisibleHandler } from "@/components/accessibility";
-import { NetworkStatus } from "@/components/ui/network-status";
-import { SyncManager } from "@/components/sync/SyncManager";
-import { initPushNotifications } from "@/lib/mobile/push-notifications";
-import { useNavigate } from "react-router-dom";
 
 // Create a client with performance optimizations
 const queryClient = new QueryClient({
@@ -115,14 +105,67 @@ const NotificationInitializer = () => {
 	const navigate = useNavigate();
 
 	useEffect(() => {
-		initPushNotifications(navigate);
+		let isMounted = true;
+
+		void import("@/lib/mobile/push-notifications")
+			.then(({ initPushNotifications }) => {
+				if (isMounted) {
+					return initPushNotifications(navigate);
+				}
+
+				return undefined;
+			})
+			.catch((error) => {
+				logger.error(
+					"Falha ao carregar inicialização de push notifications",
+					error,
+					"App",
+				);
+			});
+
+		return () => {
+			isMounted = false;
+		};
 	}, [navigate]);
 
 	return null;
 };
 
-import { TourGuide } from "@/components/system/TourGuide";
-import { PosePreloadManager } from "@/components/ai/PosePreloadManager";
+const RouteAwareNetworkStatus = lazy(() =>
+	import("@/components/ui/network-status").then((module) => ({
+		default: module.NetworkStatus,
+	})),
+);
+const RouteAwareSyncManager = lazy(() =>
+	import("@/components/sync/SyncManager").then((module) => ({
+		default: module.SyncManager,
+	})),
+);
+const RouteAwareTourGuide = lazy(() =>
+	import("@/components/system/TourGuide").then((module) => ({
+		default: module.TourGuide,
+	})),
+);
+const RouteAwareVersionManager = lazy(() =>
+	import("@/components/system/VersionManager").then((module) => ({
+		default: module.VersionManager,
+	})),
+);
+const RouteAwareWebVitalsIndicator = lazy(() =>
+	import("@/lib/monitoring/web-vitals").then((module) => ({
+		default: module.WebVitalsIndicator,
+	})),
+);
+const RouteAwarePosePreloadManager = lazy(() =>
+	import("@/components/ai/PosePreloadManager").then((module) => ({
+		default: module.PosePreloadManager,
+	})),
+);
+const RouteAwareAuthenticatedAppShell = lazy(() =>
+	import("@/components/app/AuthenticatedAppShell").then((module) => ({
+		default: module.AuthenticatedAppShell,
+	})),
+);
 
 // Grouped providers for cleaner structure and better performance
 const AppProviders = ({ children }: { children: React.ReactNode }) => {
@@ -144,17 +187,8 @@ const AppProviders = ({ children }: { children: React.ReactNode }) => {
 					>
 						<TooltipProvider>
 							<AuthContextProvider>
-								<PosePreloadManager />
 								<HighContrastProvider>
-									<MobileSheetProvider>
-										<TourProvider>
-											<StatsigProviderWrapper>
-												<GamificationFeedbackProvider>
-													<RealtimeProvider>{children}</RealtimeProvider>
-												</GamificationFeedbackProvider>
-											</StatsigProviderWrapper>
-										</TourProvider>
-									</MobileSheetProvider>
+									<StatsigProviderWrapper>{children}</StatsigProviderWrapper>
 								</HighContrastProvider>
 							</AuthContextProvider>
 						</TooltipProvider>
@@ -166,6 +200,8 @@ const AppProviders = ({ children }: { children: React.ReactNode }) => {
 };
 
 const App = () => {
+	useServiceWorkerUpdate();
+
 	useEffect(() => {
 		if (!_loggedAppInit) {
 			_loggedAppInit = true;
@@ -271,11 +307,13 @@ const App = () => {
 				}}
 			>
 				<RouteAwareInfrastructure />
-				<Suspense
-					fallback={<AppLoadingSkeleton message="Carregando sistema..." />}
-				>
-					<AppRoutes />
-				</Suspense>
+				<RouteAwareAppShell>
+					<Suspense
+						fallback={<AppLoadingSkeleton message="Carregando sistema..." />}
+					>
+						<AppRoutes />
+					</Suspense>
+				</RouteAwareAppShell>
 			</BrowserRouter>
 		</AppProviders>
 	);
@@ -295,20 +333,79 @@ function isPublicBootPath(pathname: string): boolean {
 	);
 }
 
-const RouteAwareInfrastructure = () => {
+const POSE_BOOT_PATH_PREFIXES = [
+	"/ai/movement",
+	"/computer-vision",
+	"/augmented-reality",
+	"/dashboard/imagens",
+];
+
+function shouldPreloadPoseForPath(pathname: string): boolean {
+	if (
+		pathname.startsWith("/pacientes/") &&
+		pathname.includes("/imagens")
+	) {
+		return true;
+	}
+
+	return POSE_BOOT_PATH_PREFIXES.some(
+		(prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+	);
+}
+
+const RouteAwareAppShell = ({ children }: { children: React.ReactNode }) => {
 	const location = useLocation();
 	const isPublicRoute = isPublicBootPath(location.pathname);
 
+	if (isPublicRoute) {
+		return <>{children}</>;
+	}
+
+	return (
+		<Suspense fallback={<AppLoadingSkeleton message="Carregando sistema..." />}>
+			<RouteAwareAuthenticatedAppShell>{children}</RouteAwareAuthenticatedAppShell>
+		</Suspense>
+	);
+};
+
+const RouteAwareInfrastructure = () => {
+	const location = useLocation();
+	const isPublicRoute = isPublicBootPath(location.pathname);
+	const shouldPreloadPose = shouldPreloadPoseForPath(location.pathname);
+
 	return (
 		<>
-			<NetworkStatus />
-			{!isPublicRoute && <SyncManager />}
-			{!isPublicRoute && <TourGuide />}
+			<Suspense fallback={null}>
+				<RouteAwareNetworkStatus />
+			</Suspense>
+			{!isPublicRoute && (
+				<Suspense fallback={null}>
+					<RouteAwareSyncManager />
+				</Suspense>
+			)}
+			{!isPublicRoute && (
+				<Suspense fallback={null}>
+					<RouteAwareTourGuide />
+				</Suspense>
+			)}
 			{!isPublicRoute && <NotificationInitializer />}
-			{!isPublicRoute && <VersionManager />}
+			{!isPublicRoute && (
+				<Suspense fallback={null}>
+					<RouteAwareVersionManager />
+				</Suspense>
+			)}
+			{!isPublicRoute && shouldPreloadPose && (
+				<Suspense fallback={null}>
+					<RouteAwarePosePreloadManager />
+				</Suspense>
+			)}
 			{!isPublicRoute &&
 				import.meta.env.DEV &&
-				!window.location.search.includes("e2e=true") && <WebVitalsIndicator />}
+				!window.location.search.includes("e2e=true") && (
+					<Suspense fallback={null}>
+						<RouteAwareWebVitalsIndicator />
+					</Suspense>
+				)}
 		</>
 	);
 };

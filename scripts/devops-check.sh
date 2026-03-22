@@ -57,8 +57,8 @@ cd ..
 # 5. Verificar Worker (Python)
 echo -e "
 ${YELLOW}🐍 Verificando Worker Python...${NC}"
-if [ -d "workers/image-processor" ]; then
-    cd workers/image-processor
+if [ -d "apps/api/image-processor" ]; then
+    cd apps/api/image-processor
     # Verifica se consegue instalar deps (dry-run) ou sintaxe básica
     python3 -m py_compile main.py
     if [ $? -eq 0 ]; then
@@ -69,7 +69,7 @@ if [ -d "workers/image-processor" ]; then
     fi
     cd ../..
 else
-    echo -e "${YELLOW}⚠️ Diretório workers/image-processor não encontrado${NC}"
+    echo -e "${YELLOW}⚠️ Diretório apps/api/image-processor não encontrado${NC}"
 fi
 
 echo -e "

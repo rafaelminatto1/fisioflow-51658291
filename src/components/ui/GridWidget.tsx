@@ -10,6 +10,7 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import "./grid-layout.css";
 
 interface GridWidgetProps extends React.HTMLAttributes<HTMLDivElement> {
 	title?: React.ReactNode;

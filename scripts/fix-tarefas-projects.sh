@@ -21,7 +21,7 @@ echo "✅ DATABASE_URL encontrada"
 # Aplica a migração
 echo ""
 echo "📋 Aplicando migração..."
-psql "$DATABASE_URL" -f workers/migrations/ensure_tarefas_projects.sql
+psql "$DATABASE_URL" -f apps/api/migrations/ensure_tarefas_projects.sql
 
 if [ $? -eq 0 ]; then
     echo ""
@@ -34,6 +34,6 @@ else
     echo ""
     echo "❌ Erro ao aplicar migração"
     echo "   Tente executar manualmente o SQL em:"
-    echo "   workers/migrations/ensure_tarefas_projects.sql"
+    echo "   apps/api/migrations/ensure_tarefas_projects.sql"
     exit 1
 fi

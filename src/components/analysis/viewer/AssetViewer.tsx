@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { Suspense, lazy, useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Card } from "@/components/ui/card";
@@ -15,12 +15,19 @@ import {
 	ArrowRight,
 	Save,
 } from "lucide-react";
-import { Document, Page, pdfjs } from "react-pdf";
 import AnnotationLayer from "./AnnotationLayer";
 import { useAssetAnnotations } from "@/hooks/useAssetAnnotations";
 
-// PDF Worker Setup
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+const ReactPdfDocument = lazy(() =>
+	import("@/components/pdf/ReactPdfViewer").then((module) => ({
+		default: module.ReactPdfDocument,
+	})),
+);
+const ReactPdfPage = lazy(() =>
+	import("@/components/pdf/ReactPdfViewer").then((module) => ({
+		default: module.ReactPdfPage,
+	})),
+);
 
 interface AssetViewerProps {
 	file?: File;
@@ -210,20 +217,28 @@ const AssetViewer: React.FC<AssetViewerProps> = ({
 							style={{ width: dimensions.width, height: dimensions.height }}
 						>
 							{isPDF ? (
-								<Document
-									file={url}
-									onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+								<Suspense
+									fallback={
+										<div className="flex h-full items-center justify-center text-sm text-slate-400">
+											Carregando PDF...
+										</div>
+									}
 								>
-									<Page
-										pageNumber={pageNumber}
-										width={dimensions.width} // Force width? Or let it render naturally?
-										onLoadSuccess={(p) =>
-											setDimensions({ width: p.width, height: p.height })
-										}
-										renderAnnotationLayer={false}
-										renderTextLayer={false}
-									/>
-								</Document>
+									<ReactPdfDocument
+										file={url}
+										onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+									>
+										<ReactPdfPage
+											pageNumber={pageNumber}
+											width={dimensions.width}
+											onLoadSuccess={(p) =>
+												setDimensions({ width: p.width, height: p.height })
+											}
+											renderAnnotationLayer={false}
+											renderTextLayer={false}
+										/>
+									</ReactPdfDocument>
+								</Suspense>
 							) : (
 								<img
 									src={url}

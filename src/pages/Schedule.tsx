@@ -23,6 +23,7 @@ import { useBirthdayNotification } from "@/hooks/useBirthdayNotification";
 import { usePatientReengagement } from "@/hooks/usePatientReengagement";
 import { Cake, Sparkles, MessageCircle, AlertTriangle } from "lucide-react";
 import { ScheduleModals } from "@/components/schedule/ScheduleModals";
+import "@/styles/schedule.css";
 
 // Kick off the CalendarView chunk download immediately at module evaluation
 // so it runs in parallel with Schedule's own execution (eliminates waterfall).

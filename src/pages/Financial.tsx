@@ -38,18 +38,32 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { exportFinancialReport } from "@/lib/export/excelExport";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-
-import { ContasFinanceirasContent } from "./financeiro/ContasFinanceirasPage";
-import { FluxoCaixaContent } from "./financeiro/FluxoCaixaPage";
-import { RecibosContent } from "./financeiro/RecibosPage";
-import { NFSeContent } from "./financeiro/NFSePage";
 
 const PackagesManager = lazy(() =>
 	import("@/components/financial/PackagesManager").then((m) => ({
 		default: m.PackagesManager,
+	})),
+);
+const FluxoCaixaContent = lazy(() =>
+	import("./financeiro/FluxoCaixaPage").then((module) => ({
+		default: module.FluxoCaixaContent,
+	})),
+);
+const ContasFinanceirasContent = lazy(() =>
+	import("./financeiro/ContasFinanceirasPage").then((module) => ({
+		default: module.ContasFinanceirasContent,
+	})),
+);
+const RecibosContent = lazy(() =>
+	import("./financeiro/RecibosPage").then((module) => ({
+		default: module.RecibosContent,
+	})),
+);
+const NFSeContent = lazy(() =>
+	import("./financeiro/NFSePage").then((module) => ({
+		default: module.NFSeContent,
 	})),
 );
 const FinancialAIAdvisor = lazy(() =>
@@ -124,6 +138,7 @@ const Financial = () => {
 
 		setIsExporting(true);
 		try {
+			const { exportFinancialReport } = await import("@/lib/export/excelExport");
 			await exportFinancialReport({
 				totalRevenue: safeStats.totalRevenue,
 				pendingPayments: safeStats.pendingPayments,
@@ -471,28 +486,36 @@ const Financial = () => {
 						value="fluxo_caixa"
 						className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300"
 					>
-						<FluxoCaixaContent />
+						<Suspense fallback={<LoadingSkeleton type="list" rows={4} />}>
+							<FluxoCaixaContent />
+						</Suspense>
 					</TabsContent>
 
 					<TabsContent
 						value="contas"
 						className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300"
 					>
-						<ContasFinanceirasContent />
+						<Suspense fallback={<LoadingSkeleton type="list" rows={4} />}>
+							<ContasFinanceirasContent />
+						</Suspense>
 					</TabsContent>
 
 					<TabsContent
 						value="recibos"
 						className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300"
 					>
-						<RecibosContent />
+						<Suspense fallback={<LoadingSkeleton type="list" rows={4} />}>
+							<RecibosContent />
+						</Suspense>
 					</TabsContent>
 
 					<TabsContent
 						value="nfe"
 						className="animate-in fade-in-50 slide-in-from-bottom-2 duration-300"
 					>
-						<NFSeContent />
+						<Suspense fallback={<LoadingSkeleton type="list" rows={4} />}>
+							<NFSeContent />
+						</Suspense>
 					</TabsContent>
 
 					<TabsContent

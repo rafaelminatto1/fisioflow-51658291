@@ -92,17 +92,17 @@ async function generateAll() {
 
   // Patient App Icons
   console.log('Patient App:');
-  await generateIcon(patientIconSvg, 'patient-app/assets/icon.png', 1024, 1024);
-  await generateIcon(patientIconSvg, 'patient-app/assets/favicon.png', 48, 48);
-  await generateIcon(patientIconSvg, 'patient-app/assets/notification-icon.png', 96, 96);
-  await generateIcon(adaptiveIconSvg, 'patient-app/assets/adaptive-icon.png', 1024, 1024);
+  await generateIcon(patientIconSvg, 'apps/patient-app/assets/icon.png', 1024, 1024);
+  await generateIcon(patientIconSvg, 'apps/patient-app/assets/favicon.png', 48, 48);
+  await generateIcon(patientIconSvg, 'apps/patient-app/assets/notification-icon.png', 96, 96);
+  await generateIcon(adaptiveIconSvg, 'apps/patient-app/assets/adaptive-icon.png', 1024, 1024);
 
   // Professional App Icons
   console.log('\nProfessional App:');
-  await generateIcon(professionalIconSvg, 'professional-app/assets/icon.png', 1024, 1024);
-  await generateIcon(professionalIconSvg, 'professional-app/assets/favicon.png', 48, 48);
-  await generateIcon(notificationIconSvg, 'professional-app/assets/notification-icon.png', 96, 96);
-  await generateIcon(adaptiveIconSvg, 'professional-app/assets/adaptive-icon.png', 1024, 1024);
+  await generateIcon(professionalIconSvg, 'apps/professional-app/assets/icon.png', 1024, 1024);
+  await generateIcon(professionalIconSvg, 'apps/professional-app/assets/favicon.png', 48, 48);
+  await generateIcon(notificationIconSvg, 'apps/professional-app/assets/notification-icon.png', 96, 96);
+  await generateIcon(adaptiveIconSvg, 'apps/professional-app/assets/adaptive-icon.png', 1024, 1024);
 
   console.log('\n✅ All icons generated successfully!');
 }

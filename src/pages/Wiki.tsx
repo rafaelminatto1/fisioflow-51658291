@@ -68,6 +68,10 @@ import { WikiTriageBoard } from "@/features/wiki/components/WikiTriageBoard";
 import { KnowledgeHubView } from "@/features/wiki/components/KnowledgeHubView";
 import { WikiPageCard } from "@/features/wiki/components/WikiPageCard";
 import { KnowledgeArticleDialog } from "@/features/wiki/components/KnowledgeArticleDialog";
+import {
+	getEvidenceTree,
+	isEvidencePage,
+} from "@/features/wiki/utils/evidenceTrails";
 
 const TRIAGE_WIP_LIMITS = {
 	backlog: 30,
@@ -186,6 +190,13 @@ export default function WikiPage() {
 			return matchesSearch;
 		});
 	}, [pages, searchQuery]);
+
+	const evidenceTree = useMemo(() => getEvidenceTree(pages), [pages]);
+
+	const displayedPages = useMemo(() => {
+		if (searchQuery) return filteredPages;
+		return filteredPages.filter((page) => !isEvidencePage(page));
+	}, [filteredPages, searchQuery]);
 
 	const handleTagSelect = (tag: string) => {
 		setActiveView("dashboard");
@@ -476,6 +487,115 @@ export default function WikiPage() {
 								</Button>
 							</div>
 
+							{evidenceTree.root && (
+								<section className="space-y-6">
+									<div className="flex items-center gap-2 border-b pb-2">
+										<Badge variant="secondary" className="px-2 py-0.5">
+											Evidencia
+										</Badge>
+										<h2 className="text-xl font-semibold">
+											Trilhas Integradas
+										</h2>
+									</div>
+
+									<Card className="border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-cyan-50 shadow-sm">
+										<CardContent className="p-6 md:p-7">
+											<div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+												<div className="space-y-2">
+													<div className="flex items-center gap-2">
+														<Library className="h-5 w-5 text-emerald-700" />
+														<p className="text-sm font-semibold text-emerald-900">
+															Base estruturada por trilhas e protocolos
+														</p>
+													</div>
+													<h3 className="text-2xl font-bold tracking-tight text-slate-900">
+														{evidenceTree.root.title}
+													</h3>
+													<p className="max-w-3xl text-sm text-slate-600">
+														Acesso rápido às páginas estratégicas de ortopedia,
+														esportiva e pós-operatório, com desdobramento prático
+														por protocolo.
+													</p>
+												</div>
+												<Button
+													onClick={() => handlePageSelect(evidenceTree.root!)}
+													className="bg-emerald-700 hover:bg-emerald-800"
+												>
+													Abrir visão geral
+												</Button>
+											</div>
+										</CardContent>
+									</Card>
+
+									<div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+										{evidenceTree.trails.map(({ trail, protocols }) => (
+											<Card
+												key={trail.id}
+												className="border-slate-200 shadow-sm hover:shadow-md transition-shadow"
+											>
+												<CardContent className="p-5 space-y-4">
+													<div className="flex items-start justify-between gap-4">
+														<div className="space-y-2">
+															<div className="flex items-center gap-2">
+																<Badge
+																	variant="outline"
+																	className="border-emerald-200 text-emerald-800"
+																>
+																	Trilha
+																</Badge>
+																<Badge variant="secondary">
+																	{protocols.length} protocolo
+																	{protocols.length === 1 ? "" : "s"}
+																</Badge>
+															</div>
+															<h3 className="text-lg font-semibold text-slate-900">
+																{trail.title}
+															</h3>
+															<p className="text-sm text-muted-foreground line-clamp-3">
+																{trail.content
+																	.replace(/[#*`>-]/g, "")
+																	.slice(0, 180)}
+																...
+															</p>
+														</div>
+														<Button
+															variant="outline"
+															onClick={() => handlePageSelect(trail)}
+														>
+															Abrir trilha
+														</Button>
+													</div>
+
+													{protocols.length > 0 && (
+														<div className="rounded-xl bg-slate-50 p-3 space-y-2">
+															<p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+																Protocolos vinculados
+															</p>
+															<div className="flex flex-wrap gap-2">
+																{protocols.map((protocol) => (
+																	<Button
+																		key={protocol.id}
+																		variant="secondary"
+																		size="sm"
+																		onClick={() => handlePageSelect(protocol)}
+																		className="max-w-full justify-start"
+																	>
+																		<FileText className="mr-2 h-4 w-4" />
+																		<span className="truncate">
+																			{protocol.title}
+																		</span>
+																	</Button>
+																))}
+															</div>
+														</div>
+													)}
+												</CardContent>
+											</Card>
+										))}
+									</div>
+								</section>
+							)}
+
 							{/* Triage Section */}
 							<section className="space-y-6">
 								<div className="flex items-center gap-2 border-b pb-2">
@@ -593,10 +713,10 @@ export default function WikiPage() {
 											<FileText className="w-4 h-4" />
 											{searchQuery
 												? `Resultados para "${searchQuery}"`
-												: "Todas as Páginas"}
-											{filteredPages.length > 0 && (
+												: "Todas as Páginas Gerais"}
+											{displayedPages.length > 0 && (
 												<Badge variant="secondary" className="ml-2 font-mono">
-													{filteredPages.length}
+													{displayedPages.length}
 												</Badge>
 											)}
 										</h3>
@@ -610,9 +730,9 @@ export default function WikiPage() {
 													/>
 												))}
 											</div>
-										) : filteredPages.length > 0 ? (
+										) : displayedPages.length > 0 ? (
 											<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-												{filteredPages.map((page) => (
+												{displayedPages.map((page) => (
 													<WikiPageCard
 														key={page.id}
 														page={page}

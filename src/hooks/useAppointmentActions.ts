@@ -6,11 +6,11 @@ import { AppointmentService } from "@/services/appointmentService";
 import { ErrorHandler } from "@/lib/errors/ErrorHandler";
 import { appointmentPeriodKeys } from "./useAppointmentsByPeriod";
 import { AppointmentStatus } from "@/types/appointment";
-import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { triggerHapticImpact, type HapticImpactStyle } from "@/lib/platform/native";
 
-const triggerHaptic = async (style: ImpactStyle = ImpactStyle.Light) => {
+const triggerHaptic = async (style: HapticImpactStyle = "light") => {
 	try {
-		await Haptics.impact({ style });
+		await triggerHapticImpact(style);
 	} catch (e) {
 		// Ignore if not on device
 	}
@@ -28,7 +28,7 @@ export const useAppointmentActions = () => {
 			);
 		},
 		onSuccess: () => {
-			triggerHaptic(ImpactStyle.Medium);
+			triggerHaptic("medium");
 			queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
 			queryClient.invalidateQueries({ queryKey: appointmentPeriodKeys.all });
 			toast.success("Presença confirmada com sucesso");
@@ -49,7 +49,7 @@ export const useAppointmentActions = () => {
 			await AppointmentService.cancelAppointment(appointmentId, reason);
 		},
 		onSuccess: () => {
-			triggerHaptic(ImpactStyle.Heavy);
+			triggerHaptic("heavy");
 			queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
 			queryClient.invalidateQueries({ queryKey: appointmentPeriodKeys.all });
 			toast.success("Agendamento cancelado");
@@ -83,7 +83,7 @@ export const useAppointmentActions = () => {
 			);
 		},
 		onSuccess: () => {
-			triggerHaptic(ImpactStyle.Medium);
+			triggerHaptic("medium");
 			queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
 			queryClient.invalidateQueries({ queryKey: appointmentPeriodKeys.all });
 			toast.success("Agendamento remarcado com sucesso");
@@ -98,7 +98,7 @@ export const useAppointmentActions = () => {
 			await AppointmentService.updateStatus(appointmentId, "atendido");
 		},
 		onSuccess: () => {
-			triggerHaptic(ImpactStyle.Light);
+			triggerHaptic("light");
 			queryClient.invalidateQueries({ queryKey: appointmentKeys.all });
 			queryClient.invalidateQueries({ queryKey: appointmentPeriodKeys.all });
 			toast.success("Consulta marcada como atendida");

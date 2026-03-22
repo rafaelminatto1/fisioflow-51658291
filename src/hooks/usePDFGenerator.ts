@@ -4,7 +4,6 @@
  */
 
 import { useState, useCallback } from "react";
-import { PDFGeneratorFactory } from "../lib/skills/fase2-documentos";
 import type {
 	PatientData,
 	ProfessionalData,
@@ -14,6 +13,11 @@ import type {
 interface UsePDFGeneratorOptions {
 	onGenerate?: (blob: Blob) => void;
 	onError?: (error: Error) => void;
+}
+
+async function loadPDFGeneratorFactory() {
+	const module = await import("../lib/skills/fase2-documentos");
+	return module.PDFGeneratorFactory;
 }
 
 export function usePDFGenerator(options?: UsePDFGeneratorOptions) {
@@ -36,6 +40,7 @@ export function usePDFGenerator(options?: UsePDFGeneratorOptions) {
 			setError(null);
 
 			try {
+				const PDFGeneratorFactory = await loadPDFGeneratorFactory();
 				const generator = PDFGeneratorFactory.createAtestado();
 				const blob = generator.generate(
 					patient,
@@ -81,6 +86,7 @@ export function usePDFGenerator(options?: UsePDFGeneratorOptions) {
 			setError(null);
 
 			try {
+				const PDFGeneratorFactory = await loadPDFGeneratorFactory();
 				const generator = PDFGeneratorFactory.createDeclaracao();
 				const blob = generator.generate(
 					patient,
@@ -126,6 +132,7 @@ export function usePDFGenerator(options?: UsePDFGeneratorOptions) {
 			setError(null);
 
 			try {
+				const PDFGeneratorFactory = await loadPDFGeneratorFactory();
 				const generator = PDFGeneratorFactory.createReceituario();
 				const blob = generator.generate(patient, professional, clinic, {
 					prescriptions,
@@ -171,6 +178,7 @@ export function usePDFGenerator(options?: UsePDFGeneratorOptions) {
 			setError(null);
 
 			try {
+				const PDFGeneratorFactory = await loadPDFGeneratorFactory();
 				const generator = PDFGeneratorFactory.createEvolucao();
 				const blob = generator.generate(patient, professional, clinic, {
 					evaluations,
@@ -219,6 +227,7 @@ export function usePDFGenerator(options?: UsePDFGeneratorOptions) {
 			setError(null);
 
 			try {
+				const PDFGeneratorFactory = await loadPDFGeneratorFactory();
 				const generator = PDFGeneratorFactory.createPlanoTratamento();
 				const blob = generator.generate(
 					patient,

@@ -218,6 +218,8 @@ functions/.env*claude-skills/repo
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+/playwright-profile/
+/playwright-profile-auto/
 /playwright/.auth/
 
 *storybook.log

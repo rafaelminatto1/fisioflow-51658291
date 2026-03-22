@@ -5,10 +5,14 @@ import { createElement } from "react";
 
 // ── Mocks ──────────────────────────────────────────────────────────────────
 
-vi.mock("@/contexts/AuthContext", () => ({
-	useAuth: () => ({
+const mockUseAuth = vi.hoisted(() =>
+	vi.fn(() => ({
 		profile: { organization_id: "org-test-001" },
-	}),
+	})),
+);
+
+vi.mock("@/contexts/AuthContext", () => ({
+	useAuth: mockUseAuth,
 }));
 
 vi.mock("../useAppointmentsCache", () => ({
@@ -97,6 +101,9 @@ describe("useAppointmentsData", () => {
 			defaultOptions: { queries: { retry: false } },
 		});
 		vi.clearAllMocks();
+		mockUseAuth.mockReturnValue({
+			profile: { organization_id: "org-test-001" },
+		});
 	});
 
 	afterEach(() => {
@@ -168,11 +175,9 @@ describe("useAppointmentsData", () => {
 	});
 
 	it("desabilitado quando sem organization_id", async () => {
-		vi.mocked((await import("@/contexts/AuthContext")).useAuth).mockReturnValue(
-			{
-				profile: { organization_id: null },
-			} as any,
-		);
+		mockUseAuth.mockReturnValue({
+			profile: { organization_id: null },
+		} as any);
 
 		const { useAppointmentsData } = await import("../useAppointmentsData");
 		const { AppointmentService } = await import(

@@ -65,7 +65,6 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
-import { exportTeamPerformance } from "@/lib/export/excelExport";
 
 const CHART_COLORS = [
 	"hsl(var(--primary))",
@@ -99,6 +98,9 @@ export default function TeamPerformance() {
 
 		setIsExporting(true);
 		try {
+			const { exportTeamPerformance } = await import(
+				"@/lib/export/excelExport"
+			);
 			await exportTeamPerformance({
 				totalRevenue: data.totalRevenue,
 				averageTicket: data.averageTicket,

@@ -4,7 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**", "expo/**"]
+      "outputs": ["dist/**", "apps/**/dist/**", ".next/**", "expo/**"]
     },
     "dev": {
       "cache": false,
@@ -18,11 +18,11 @@
     },
     "test": {
       "dependsOn": ["^build"],
-      "outputs": ["coverage/**"]
+      "outputs": ["coverage/**", "apps/**/coverage/**"]
     },
     "test:unit": {
       "dependsOn": ["^build"],
-      "outputs": ["coverage/**"]
+      "outputs": ["coverage/**", "apps/**/coverage/**"]
     },
     "clean": {
       "cache": false

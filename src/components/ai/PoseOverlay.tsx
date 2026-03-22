@@ -3,17 +3,16 @@
  * Usa MediaPipe Pose Landmarker para detectar 33 keypoints em 3D
  */
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useCallback, useRef, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Camera, Video, RefreshCw, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import {
-	PoseLandmarker,
-	FilesetResolver,
-	Landmark,
-} from "@mediapipe/tasks-vision";
 import { resolveMediaPipeVisionFileset } from "@/lib/ai/mediapipe";
+import type {
+	Landmark,
+	PoseLandmarker as PoseLandmarkerType,
+} from "@mediapipe/tasks-vision";
 
 interface PoseKeypoint {
 	x: number;
@@ -75,13 +74,16 @@ export function PoseOverlay({
 	const [pose, setPose] = useState<PoseDetection | null>(null);
 	const [isAnalyzing, setIsAnalyzing] = useState(false);
 	const [jointAngles, setJointAngles] = useState<Record<string, number>>({});
-	const poseLandmarkerRef = useRef<PoseLandmarker | null>(null);
+	const poseLandmarkerRef = useRef<PoseLandmarkerType | null>(null);
 	const { toast } = useToast();
 
 	// Inicializar MediaPipe Pose Landmarker
 	useEffect(() => {
 		const initializePoseLandmarker = async () => {
 			try {
+				const { PoseLandmarker, FilesetResolver } = await import(
+					"@mediapipe/tasks-vision"
+				);
 				const vision = await resolveMediaPipeVisionFileset(FilesetResolver);
 				const poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
 					baseOptions: {

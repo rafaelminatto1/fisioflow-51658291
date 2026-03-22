@@ -1,66 +1,51 @@
 import { useEffect, useState } from "react";
 import {
-	CustomModal,
-	CustomModalHeader,
-	CustomModalTitle,
-	CustomModalBody,
-	CustomModalFooter,
-} from "@/components/ui/custom-modal";
-import { Button } from "@/components/ui/button";
-import {
-	PlayCircle,
-	Info,
-	ThumbsUp,
-	X,
-	CheckSquare,
-	Image as ImageIcon,
-	Edit3,
-	Trash2,
-	Download,
 	CalendarCheck,
+	CheckSquare,
+	Copy,
+	Download,
+	Edit3,
+	ExternalLink,
+	FileText,
+	Image as ImageIcon,
+	Info,
+	Link2,
+	PlayCircle,
+	ThumbsUp,
+	Trash2,
+	X,
 	ZoomIn,
 } from "lucide-react";
-import { generateClinicalTestPdf } from "@/utils/generateClinicalTestPdf";
 import { toast } from "sonner";
-import { fisioLogger as logger } from "@/lib/errors/logger";
+
+import {
+	CustomModal,
+	CustomModalBody,
+	CustomModalFooter,
+	CustomModalHeader,
+	CustomModalTitle,
+} from "@/components/ui/custom-modal";
+import { Button } from "@/components/ui/button";
+import type { ClinicalTestCatalogRecord } from "@/data/clinicalTestsCatalog";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { fisioLogger as logger } from "@/lib/errors/logger";
 import { cn } from "@/lib/utils";
 
-interface ClinicalTest {
-	id: string;
-	name: string;
-	name_en?: string;
-	category: string | null;
-	target_joint: string | null;
-	purpose: string | null;
-	execution: string | null;
-	positive_sign?: string;
-	reference?: string;
-	sensitivity_specificity?: string;
-	tags?: string[];
-	image_url?: string;
-	media_urls?: string[];
-	description?: string;
-	fields_definition?: unknown[];
-	regularity_sessions?: number | null;
-	organization_id?: string | null;
-}
-
 interface ClinicalTestDetailsModalProps {
-	test: ClinicalTest | null;
+	test: ClinicalTestCatalogRecord | null;
 	isOpen: boolean;
 	onClose: () => void;
-	onEdit: (test: ClinicalTest) => void;
-	onDelete: (test: ClinicalTest) => void;
-	onAddToProtocol: (test: ClinicalTest) => void;
+	onEdit: (test: ClinicalTestCatalogRecord) => void;
+	onDelete: (test: ClinicalTestCatalogRecord) => void;
+	onAddToProtocol: (test: ClinicalTestCatalogRecord) => void;
 }
 
 const MediaPlaceholder = ({ label }: { label: string }) => (
-	<div className="aspect-square rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center p-4 transition-all hover:bg-white hover:border-teal-300 group shadow-sm hover:shadow-md">
-		<div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center mb-3 group-hover:bg-teal-50 transition-colors">
-			<ImageIcon className="h-5 w-5 text-slate-300 group-hover:text-teal-400" />
+	<div className="flex aspect-square flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-4 text-center shadow-sm transition-all hover:border-teal-300 hover:bg-white">
+		<div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
+			<ImageIcon className="h-5 w-5 text-slate-300" />
 		</div>
-		<span className="text-xs text-slate-400 font-semibold uppercase tracking-wider group-hover:text-teal-600 transition-colors">
+		<span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
 			{label}
 		</span>
 	</div>
@@ -91,23 +76,25 @@ export function ClinicalTestDetailsModal({
 	}, [previewImage]);
 
 	useEffect(() => {
-		if (!isOpen || !test) {
-			setPreviewImage(null);
-		}
+		if (!isOpen || !test) setPreviewImage(null);
 	}, [isOpen, test]);
 
 	if (!test) return null;
 
 	const primaryImage = test.image_url || test.media_urls?.[0] || null;
 	const galleryImages = test.media_urls?.slice(1, 3) ?? [];
+	const evidenceResources = test.evidence_resources ?? [];
 
-	const handleDownloadPDF = () => {
+	const handleDownloadPDF = async () => {
 		try {
+			const { generateClinicalTestPdf } = await import(
+				"@/utils/generateClinicalTestPdf"
+			);
 			generateClinicalTestPdf(test);
-			toast.success("PDF gerado com sucesso!");
+			toast.success("PDF gerado com sucesso.");
 		} catch (error) {
 			logger.error("Error generating PDF", error, "ClinicalTestDetailsModal");
-			toast.error("Erro ao gerar PDF");
+			toast.error("Erro ao gerar PDF.");
 		}
 	};
 
@@ -116,167 +103,260 @@ export function ClinicalTestDetailsModal({
 			open={isOpen}
 			onOpenChange={(open) => !open && onClose()}
 			isMobile={isMobile}
-			contentClassName="max-w-5xl max-h-[92vh]"
+			contentClassName="max-w-6xl max-h-[94vh]"
 		>
 			<CustomModalHeader onClose={onClose}>
-				<div className="flex flex-col gap-1">
-					<div className="flex items-center gap-2">
-						<span className="text-[10px] font-bold uppercase tracking-wider text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-100">
-							{test.category || "Sem Categoria"}
+				<div className="flex flex-col gap-2">
+					<div className="flex flex-wrap items-center gap-2">
+						<span className="rounded-full border border-teal-100 bg-teal-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-teal-700">
+							{test.category || "Sem categoria"}
 						</span>
-						{test.regularity_sessions && (
-							<span className="text-[10px] font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full flex items-center gap-1 border border-amber-100">
-								<CalendarCheck className="h-3 w-3" />A cada{" "}
-								{test.regularity_sessions} sessões
+						<span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-600">
+							{test.is_builtin ? "Biblioteca curada" : "Teste da clínica"}
+						</span>
+						{test.regularity_sessions ? (
+							<span className="flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-[10px] font-medium text-amber-700">
+								<CalendarCheck className="h-3 w-3" />
+								A cada {test.regularity_sessions} sessões
 							</span>
-						)}
+						) : null}
 					</div>
-					<CustomModalTitle className="text-2xl font-bold text-slate-800 leading-tight">
+
+					<CustomModalTitle className="text-2xl font-bold leading-tight text-slate-900">
 						{test.name}
-						{test.name_en && (
-							<span className="block text-sm font-normal text-slate-400 italic mt-0.5">
+						{test.name_en ? (
+							<span className="mt-1 block text-sm font-normal italic text-slate-400">
 								{test.name_en}
 							</span>
-						)}
+						) : null}
 					</CustomModalTitle>
 				</div>
-				<div className="flex items-center gap-2 ml-auto mr-4">
-					<Button
-						variant="ghost"
-						size="icon"
-						onClick={() => onEdit(test)}
-						className="h-8 w-8 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-full"
-						title="Editar teste"
-					>
-						<Edit3 className="h-4 w-4" />
-					</Button>
-					<Button
-						variant="ghost"
-						size="icon"
-						onClick={() => onDelete(test)}
-						className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full"
-						title="Excluir teste"
-					>
-						<Trash2 className="h-4 w-4" />
-					</Button>
+
+				<div className="ml-auto mr-4 flex items-center gap-2">
+					{test.is_builtin ? (
+						<Button
+							variant="outline"
+							size="sm"
+							className="rounded-xl border-teal-200 text-teal-700 hover:bg-teal-50"
+							onClick={() => onEdit(test)}
+						>
+							<Copy className="mr-2 h-4 w-4" />
+							Duplicar
+						</Button>
+					) : (
+						<>
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={() => onEdit(test)}
+								className="h-8 w-8 rounded-full text-slate-400 hover:bg-teal-50 hover:text-teal-600"
+								title="Editar teste"
+							>
+								<Edit3 className="h-4 w-4" />
+							</Button>
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={() => onDelete(test)}
+								className="h-8 w-8 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500"
+								title="Excluir teste"
+							>
+								<Trash2 className="h-4 w-4" />
+							</Button>
+						</>
+					)}
 				</div>
 			</CustomModalHeader>
 
 			<CustomModalBody className="p-0 sm:p-0">
-				<div className="p-6 grid grid-cols-1 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] gap-8 lg:gap-10">
-					{/* Left Column: Media */}
-					<div className="space-y-4">
+				<div className="grid gap-8 p-6 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-10">
+					<div className="space-y-5">
 						{primaryImage ? (
 							<button
 								type="button"
 								onClick={() => setPreviewImage(primaryImage)}
-								className="w-full aspect-video rounded-2xl overflow-hidden shadow-sm border border-slate-100 relative bg-slate-50 group cursor-zoom-in text-left"
+								className="group relative w-full cursor-zoom-in overflow-hidden rounded-3xl border border-slate-100 bg-slate-50 text-left shadow-sm"
 								aria-label={`Ampliar imagem do teste ${test.name}`}
 							>
-								<img
-									src={primaryImage}
-									alt={`Execução: ${test.name}`}
-									className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-[1.02]"
-								/>
-								<div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors pointer-events-none" />
-								<div className="absolute right-4 bottom-4 inline-flex items-center gap-2 rounded-full bg-slate-900/90 px-4 py-2 text-xs font-bold text-white opacity-0 shadow-2xl transition-all translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 pointer-events-none backdrop-blur-sm border border-white/10">
+								<div className="aspect-video">
+									<img
+										src={primaryImage}
+										alt={`Execução: ${test.name}`}
+										className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+									/>
+								</div>
+								<div className="pointer-events-none absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/10" />
+								<div className="pointer-events-none absolute bottom-4 right-4 inline-flex translate-y-2 items-center gap-2 rounded-full border border-white/10 bg-slate-900/90 px-4 py-2 text-xs font-bold text-white opacity-0 shadow-2xl transition-all group-hover:translate-y-0 group-hover:opacity-100">
 									<ZoomIn className="h-4 w-4" />
 									Clique para ampliar
 								</div>
 							</button>
 						) : (
-							<div className="w-full aspect-video rounded-3xl overflow-hidden shadow-2xl border border-slate-200 relative bg-slate-950 group">
-								<div className="absolute inset-0 flex flex-col items-center justify-center text-white/90 bg-gradient-to-br from-slate-900/40 via-slate-950/20 to-slate-900/70 backdrop-blur-[2px]">
-									<div className="h-20 w-20 rounded-full bg-white/10 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-white/20 transition-all duration-500 shadow-2xl border border-white/5">
-										<PlayCircle className="h-10 w-10 text-teal-400" />
+							<div className="group relative w-full overflow-hidden rounded-3xl border border-slate-200 bg-slate-950 shadow-2xl">
+								<div className="aspect-video">
+									<div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-slate-900/40 via-slate-950/20 to-slate-900/70 text-white/90">
+										<div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full border border-white/5 bg-white/10 shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:bg-white/20">
+											<PlayCircle className="h-10 w-10 text-teal-400" />
+										</div>
+										<span className="text-xs font-bold uppercase tracking-[0.2em] text-white/60">
+											Visualização ilustrativa
+										</span>
 									</div>
-									<span className="text-xs font-bold tracking-[0.2em] uppercase text-white/60">
-										Visualizar Movimento
-									</span>
 								</div>
 							</div>
 						)}
+
+						<div className="grid grid-cols-2 gap-4">
+							{galleryImages.length > 0 ? (
+								galleryImages.map((url, index) => (
+									<div key={url} className="space-y-2">
+										<span className="pl-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+											{index === 0 ? "Posição inicial" : "Posição final"}
+										</span>
+										<button
+											type="button"
+											onClick={() => setPreviewImage(url)}
+											className="group relative aspect-square w-full cursor-zoom-in overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 shadow-sm transition-all active:scale-95"
+										>
+											<img
+												src={url}
+												alt={`${test.name} - ${index === 0 ? "Inicial" : "Final"}`}
+												className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+											/>
+											<div className="absolute inset-0 bg-slate-900/0 transition-colors group-hover:bg-slate-900/10" />
+											<div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
+												<div className="rounded-full border border-slate-100 bg-white/90 p-2 text-slate-700 shadow-lg">
+													<ZoomIn className="h-4 w-4" />
+												</div>
+											</div>
+										</button>
+									</div>
+								))
+							) : (
+								<>
+									<MediaPlaceholder label="Posição inicial" />
+									<MediaPlaceholder label="Posição final" />
+								</>
+							)}
+						</div>
 					</div>
 
-					{/* Right Column: Info + Gallery */}
-					<div className="space-y-8 flex flex-col h-full">
+					<div className="flex h-full flex-col gap-6">
 						<div>
-							<h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3 flex items-center gap-2">
+							<h3 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-800">
 								<CheckSquare className="h-4 w-4 text-teal-600" />
-								Protocolo de Execução
+								Protocolo de execução
 							</h3>
-							<div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-								<p className="text-slate-600 leading-relaxed text-sm whitespace-pre-line">
+							<div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+								<p className="whitespace-pre-line text-sm leading-relaxed text-slate-600">
 									{test.execution ||
-										test.description ||
 										"Nenhuma instrução de execução disponível."}
 								</p>
 							</div>
 						</div>
 
-						{test.positive_sign && (
-							<div className="animate-in fade-in slide-in-from-right-4 duration-500">
-								<h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3 flex items-center gap-2">
+						{test.positive_sign ? (
+							<div>
+								<h3 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-800">
 									<ThumbsUp className="h-4 w-4 text-blue-600" />
-									Interpretação Positiva
+									Interpretação positiva
 								</h3>
-								<div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 border-l-4 border-l-blue-500">
-									<p className="text-blue-800 text-sm font-medium italic">
+								<div className="rounded-2xl border border-blue-100 border-l-4 border-l-blue-500 bg-blue-50/60 p-4">
+									<p className="text-sm font-medium italic text-blue-900">
 										{test.positive_sign}
 									</p>
 								</div>
 							</div>
-						)}
+						) : null}
 
-						{test.reference && (
-							<div className="pt-2">
-								<h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-									<Info className="h-3 w-3" />
-									Base Científica
+						{test.evidence_summary ? (
+							<div>
+								<h3 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-800">
+									<FileText className="h-4 w-4 text-emerald-600" />
+									Leitura clínica
 								</h3>
-								<p className="text-[11px] text-slate-400 italic pl-5 line-clamp-2 hover:line-clamp-none transition-all cursor-default">
+								<div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
+									<p className="text-sm leading-relaxed text-emerald-950">
+										{test.evidence_summary}
+									</p>
+									<p className="mt-2 text-xs font-medium uppercase tracking-wider text-emerald-700">
+										{test.evidence_label || "Base científica"} •{" "}
+										{test.source_label || "Curadoria clínica"}
+									</p>
+								</div>
+							</div>
+						) : null}
+
+						{test.sensitivity_specificity ? (
+							<div>
+								<h3 className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+									<Info className="h-3.5 w-3.5" />
+									Sensibilidade e especificidade
+								</h3>
+								<p className="rounded-2xl border border-slate-100 bg-white p-4 text-sm leading-relaxed text-slate-600">
+									{test.sensitivity_specificity}
+								</p>
+							</div>
+						) : null}
+
+						{test.reference ? (
+							<div>
+								<h3 className="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">
+									<Link2 className="h-3.5 w-3.5" />
+									Referência principal
+								</h3>
+								<p className="rounded-2xl border border-slate-100 bg-white p-4 text-sm leading-relaxed text-slate-500">
 									{test.reference}
 								</p>
 							</div>
-						)}
+						) : null}
 
-						{/* Gallery Moved to Right side */}
-						<div className="pt-4 mt-auto">
-							<div className="grid grid-cols-2 gap-4">
-								{galleryImages.length > 0 ? (
-									galleryImages.map((url, i) => (
-										<div key={i} className="space-y-2">
-											<span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest pl-1">
-												{i === 0 ? "Posição Inicial" : "Posição Final"}
-											</span>
-											<button
-												type="button"
-												onClick={() => setPreviewImage(url)}
-												className="w-full aspect-square rounded-2xl overflow-hidden border border-slate-100 bg-slate-50 shadow-sm group relative cursor-zoom-in active:scale-95 transition-all"
-												aria-label={`Ampliar imagem ${i + 2} do teste ${test.name}`}
+						{evidenceResources.length > 0 ? (
+							<div className="mt-auto">
+								<h3 className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-800">
+									<FileText className="h-4 w-4 text-rose-600" />
+									PDFs e materiais de apoio
+								</h3>
+								<div className="space-y-3">
+									{evidenceResources.map((resource) => {
+										const isPdf = resource.kind === "pdf";
+
+										return (
+											<a
+												key={`${resource.title}-${resource.url}`}
+												href={resource.url}
+												target="_blank"
+												rel="noreferrer"
+												download={isPdf ? "" : undefined}
+												className="flex items-start justify-between gap-3 rounded-2xl border border-slate-100 bg-white p-4 transition-colors hover:border-teal-200 hover:bg-teal-50/40"
 											>
-												<img
-													src={url}
-													alt={`${test.name} - ${i === 0 ? "Inicial" : "Final"}`}
-													className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-												/>
-												<div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/10 transition-colors" />
-												<div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-													<div className="bg-white/90 p-2 rounded-full shadow-lg text-slate-700 border border-slate-100">
-														<ZoomIn className="h-4 w-4" />
-													</div>
+												<div className="min-w-0">
+													<p className="font-medium text-slate-900">{resource.title}</p>
+													{resource.description ? (
+														<p className="mt-1 text-sm leading-6 text-slate-500">
+															{resource.description}
+														</p>
+													) : null}
 												</div>
-											</button>
-										</div>
-									))
-								) : (
-									<>
-										<MediaPlaceholder label="Posição Inicial" />
-										<MediaPlaceholder label="Posição Final" />
-									</>
-								)}
+												<div className="flex shrink-0 items-center gap-2 text-sm font-medium text-teal-700">
+													{isPdf ? (
+														<>
+															<FileText className="h-4 w-4" />
+															PDF
+														</>
+													) : (
+														<>
+															<ExternalLink className="h-4 w-4" />
+															Abrir
+														</>
+													)}
+												</div>
+											</a>
+										);
+									})}
+								</div>
 							</div>
-						</div>
+						) : null}
 					</div>
 				</div>
 			</CustomModalBody>
@@ -284,21 +364,31 @@ export function ClinicalTestDetailsModal({
 			<CustomModalFooter isMobile={isMobile}>
 				<Button
 					variant="ghost"
-					className="rounded-xl h-11 px-6 font-bold text-slate-500 hover:bg-slate-100"
+					className="h-11 rounded-xl px-6 font-bold text-slate-500 hover:bg-slate-100"
 					onClick={handleDownloadPDF}
 				>
-					<Download className="h-4 w-4 mr-2" />
+					<Download className="mr-2 h-4 w-4" />
 					Exportar PDF
 				</Button>
-				<Button
-					className="rounded-xl h-11 px-8 bg-slate-900 text-white hover:bg-slate-800 shadow-lg shadow-slate-900/10 gap-2 font-bold uppercase tracking-wider transition-all hover:scale-105 active:scale-95"
-					onClick={() => onAddToProtocol(test)}
-				>
-					Adicionar ao Protocolo
-				</Button>
+				{test.is_builtin ? (
+					<Button
+						className="h-11 rounded-xl bg-slate-900 px-8 font-bold uppercase tracking-wider text-white shadow-lg shadow-slate-900/10 transition-all hover:scale-105 hover:bg-slate-800 active:scale-95"
+						onClick={() => onEdit(test)}
+					>
+						<Copy className="mr-2 h-4 w-4" />
+						Duplicar como teste da clínica
+					</Button>
+				) : (
+					<Button
+						className="h-11 rounded-xl bg-slate-900 px-8 font-bold uppercase tracking-wider text-white shadow-lg shadow-slate-900/10 transition-all hover:scale-105 hover:bg-slate-800 active:scale-95"
+						onClick={() => onAddToProtocol(test)}
+					>
+						Adicionar ao protocolo
+					</Button>
+				)}
 			</CustomModalFooter>
 
-			{previewImage && (
+			{previewImage ? (
 				<div
 					className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/85 p-4 backdrop-blur-md"
 					onClick={() => setPreviewImage(null)}
@@ -320,13 +410,11 @@ export function ClinicalTestDetailsModal({
 						onClick={(event) => event.stopPropagation()}
 					>
 						<div className="px-1">
-							<p className="text-sm font-semibold text-white">
-								Imagem do exercício
-							</p>
+							<p className="text-sm font-semibold text-white">Imagem do teste</p>
 							<p className="text-sm text-slate-300">{test.name}</p>
 						</div>
 
-						<div className="flex items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 p-3 sm:p-5 shadow-2xl">
+						<div className="flex items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-slate-950/95 p-3 shadow-2xl sm:p-5">
 							<img
 								src={previewImage}
 								alt={`Imagem ampliada de ${test.name}`}
@@ -338,7 +426,7 @@ export function ClinicalTestDetailsModal({
 						</div>
 					</div>
 				</div>
-			)}
+			) : null}
 		</CustomModal>
 	);
 }
