@@ -4,15 +4,11 @@
  */
 
 import { useState, useCallback } from "react";
-import {
-	saveFinancialReportPDF,
-	type FinancialReportData,
-} from "../lib/skills/fase2-documentos/financial-reports";
-import {
-	exportFinancialReport as exportFinancialExcel,
-	downloadExcelFile,
-} from "../lib/skills/fase2-documentos/xlsx-integration";
+import type { FinancialReportData } from "../lib/skills/fase2-documentos/financial-reports";
 import { useToast } from "./use-toast";
+
+type FinancialReportsModule = typeof import("../lib/skills/fase2-documentos/financial-reports");
+type XlsxIntegrationModule = typeof import("../lib/skills/fase2-documentos/xlsx-integration");
 
 interface UseFinancialExportOptions {
 	clinicName?: string;
@@ -26,10 +22,22 @@ export function useFinancialExport(options?: UseFinancialExportOptions) {
 	const [isExportingPDF, setIsExportingPDF] = useState(false);
 	const [isExportingExcel, setIsExportingExcel] = useState(false);
 
+	const loadFinancialReports = useCallback(
+		() => import("../lib/skills/fase2-documentos/financial-reports"),
+		[],
+	);
+
+	const loadXlsxIntegration = useCallback(
+		() => import("../lib/skills/fase2-documentos/xlsx-integration"),
+		[],
+	);
+
 	const exportToPDF = useCallback(
 		async (data: FinancialReportData, filename?: string) => {
 			setIsExportingPDF(true);
 			try {
+				const { saveFinancialReportPDF } =
+					(await loadFinancialReports()) as FinancialReportsModule;
 				saveFinancialReportPDF(
 					{
 						...data,
@@ -59,7 +67,7 @@ export function useFinancialExport(options?: UseFinancialExportOptions) {
 				setIsExportingPDF(false);
 			}
 		},
-		[options, toast],
+		[loadFinancialReports, options, toast],
 	);
 
 	const exportToExcel = useCallback(
@@ -81,9 +89,11 @@ export function useFinancialExport(options?: UseFinancialExportOptions) {
 		) => {
 			setIsExportingExcel(true);
 			try {
-				const buffer = await exportFinancialExcel(
+				const { exportFinancialReport, downloadExcelFile } =
+					(await loadXlsxIntegration()) as XlsxIntegrationModule;
+				const buffer = await exportFinancialReport(
 					data,
-					options?.clinicName || data.clinName || "Clínica",
+					options?.clinicName || data.clinicName || "Clínica",
 				);
 				downloadExcelFile(
 					buffer,
@@ -110,7 +120,7 @@ export function useFinancialExport(options?: UseFinancialExportOptions) {
 				setIsExportingExcel(false);
 			}
 		},
-		[options, toast],
+		[loadXlsxIntegration, options, toast],
 	);
 
 	return {
