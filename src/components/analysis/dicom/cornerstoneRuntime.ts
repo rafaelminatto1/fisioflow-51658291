@@ -3,6 +3,7 @@ import { fisioLogger as logger } from "@/lib/errors/logger";
 type CornerstoneRuntime = {
 	core: typeof import("@cornerstonejs/core");
 	tools: typeof import("@cornerstonejs/tools");
+	dicomImageLoader: typeof import("@cornerstonejs/dicom-image-loader");
 	initCornerstone: typeof import("./initCornerstone").default;
 };
 
@@ -13,11 +14,13 @@ export async function loadCornerstoneRuntime(): Promise<CornerstoneRuntime> {
 		runtimePromise = Promise.all([
 			import("@cornerstonejs/core"),
 			import("@cornerstonejs/tools"),
+			import("@cornerstonejs/dicom-image-loader"),
 			import("./initCornerstone"),
 		])
-			.then(([core, tools, initModule]) => ({
+			.then(([core, tools, dicomImageLoader, initModule]) => ({
 				core,
 				tools,
+				dicomImageLoader,
 				initCornerstone: initModule.default,
 			}))
 			.catch((error) => {

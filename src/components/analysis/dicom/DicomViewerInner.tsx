@@ -43,6 +43,11 @@ export const DicomViewerInner: React.FC<DicomViewerProps> = ({
 	const [activeTool, setActiveTool] = useState<string>("Length");
 	const [isCornerstoneInitialized, setIsCornerstoneInitialized] =
 		useState(false);
+	const [viewerMessage, setViewerMessage] = useState<string | null>(
+		file || (studyInstanceUid && seriesInstanceUid)
+			? "Carregando imagens DICOM..."
+			: "Selecione um estudo remoto ou arraste um arquivo DICOM para visualizar",
+	);
 
 	// Initialize Cornerstone and Tools
 	useEffect(() => {
@@ -123,12 +128,10 @@ export const DicomViewerInner: React.FC<DicomViewerProps> = ({
 			let imageIds: string[] = [];
 
 			if (file) {
-				// Local File Mode - placeholder for implementation
-				logger.warn(
-					"DICOM Loader disabled for build verification",
-					undefined,
-					"DicomViewerInner",
+				const imageId = runtimeRef.current.dicomImageLoader.wadouri.fileManager.add(
+					file,
 				);
+				imageIds = [imageId];
 			} else if (studyInstanceUid && seriesInstanceUid && wadoUrl) {
 				try {
 					const instances = await dicomWebClient.getInstances(
@@ -144,6 +147,7 @@ export const DicomViewerInner: React.FC<DicomViewerProps> = ({
 						});
 					}
 				} catch (e) {
+					setViewerMessage("Falha ao carregar série DICOM remota.");
 					logger.error("WADO Init Error", e, "DicomViewerInner");
 				}
 			}
@@ -154,6 +158,13 @@ export const DicomViewerInner: React.FC<DicomViewerProps> = ({
 				) as StackViewport;
 				await viewport.setStack(imageIds);
 				viewport.render();
+				setViewerMessage(null);
+			} else if (!file && !(studyInstanceUid && seriesInstanceUid)) {
+				setViewerMessage(
+					"Selecione um estudo remoto ou arraste um arquivo DICOM para visualizar",
+				);
+			} else {
+				setViewerMessage("Nenhuma imagem DICOM encontrada para exibição.");
 			}
 		};
 
@@ -161,6 +172,9 @@ export const DicomViewerInner: React.FC<DicomViewerProps> = ({
 
 		return () => {
 			try {
+				if (file && runtimeRef.current) {
+					runtimeRef.current.dicomImageLoader.wadouri.fileManager.purge();
+				}
 				if (engineRef.current) {
 					engineRef.current.destroy();
 				}
@@ -252,9 +266,9 @@ export const DicomViewerInner: React.FC<DicomViewerProps> = ({
 				className="flex-1 w-full h-[500px] bg-black relative"
 				onContextMenu={(e) => e.preventDefault()}
 			>
-				{!file && (
+				{viewerMessage && (
 					<div className="absolute inset-0 flex items-center justify-center text-slate-500">
-						Arraste um arquivo DICOM para visualizar
+						{viewerMessage}
 					</div>
 				)}
 			</div>

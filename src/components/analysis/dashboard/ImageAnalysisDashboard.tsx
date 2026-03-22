@@ -12,12 +12,15 @@ import {
 	Video,
 	RotateCcw,
 	Loader2,
+	Database,
 } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { GaitMetrics } from "@/types/analysis/schemas";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { dicomApi } from "@/api/v2";
 
 const DicomViewer = lazy(() => import("../dicom/DicomViewer"));
+const DicomBrowser = lazy(() => import("../dicom/DicomBrowser"));
 const PoseAnalyzer = lazy(() => import("../posture/PoseAnalyzer"));
 const AssetViewer = lazy(() => import("../viewer/AssetViewer"));
 const ClinicalPostureAnalysis = lazy(
@@ -79,6 +82,7 @@ const MOCK_GAIT_DATA: GaitMetrics = {
 
 type ViewerMode =
 	| "upload"
+	| "dicom_browser"
 	| "dicom"
 	| "pose"
 	| "image"
@@ -102,6 +106,40 @@ const ImageAnalysisDashboard = () => {
 	const urlMode = (searchParams.get("mode") as ViewerMode) || null;
 
 	const [file, setFile] = useState<File | null>(null);
+	const [dicomRemoteEnabled, setDicomRemoteEnabled] = useState(false);
+	const [dicomConfigLoading, setDicomConfigLoading] = useState(true);
+
+	React.useEffect(() => {
+		let isMounted = true;
+
+		const loadDicomConfig = async () => {
+			try {
+				const response = await dicomApi.config();
+				if (isMounted) {
+					setDicomRemoteEnabled(Boolean(response.data?.enabled));
+				}
+			} catch (error) {
+				logger.warn(
+					"Falha ao obter configuração DICOM",
+					error,
+					"ImageAnalysisDashboard",
+				);
+				if (isMounted) {
+					setDicomRemoteEnabled(false);
+				}
+			} finally {
+				if (isMounted) {
+					setDicomConfigLoading(false);
+				}
+			}
+		};
+
+		void loadDicomConfig();
+
+		return () => {
+			isMounted = false;
+		};
+	}, []);
 
 	const mode: ViewerMode =
 		(file ? getModeFromFile(file) : null) ?? urlMode ?? "upload";
@@ -193,6 +231,19 @@ const ImageAnalysisDashboard = () => {
 
 								<div className="mt-8 border-t pt-6 w-full max-w-md space-y-2">
 									<Button
+										variant="outline"
+										className="w-full"
+										onClick={() => handleModeChange("dicom_browser")}
+										disabled={!dicomRemoteEnabled || dicomConfigLoading}
+									>
+										<Database className="mr-2 h-4 w-4" />
+										{dicomConfigLoading
+											? "Verificando PACS DICOM..."
+											: dicomRemoteEnabled
+												? "Explorar estudos DICOM"
+												: "PACS DICOM indisponível"}
+									</Button>
+									<Button
 										variant="secondary"
 										className="w-full"
 										onClick={() => handleModeChange("clinical_posture")}
@@ -223,6 +274,14 @@ const ImageAnalysisDashboard = () => {
 					<Suspense fallback={<LoadingFallback />}>
 						<div className="flex-1 overflow-hidden border rounded-lg bg-black">
 							<DicomViewer file={file} />
+						</div>
+					</Suspense>
+				)}
+
+				{mode === "dicom_browser" && (
+					<Suspense fallback={<LoadingFallback />}>
+						<div className="flex-1 overflow-hidden border rounded-lg bg-white">
+							<DicomBrowser />
 						</div>
 					</Suspense>
 				)}
