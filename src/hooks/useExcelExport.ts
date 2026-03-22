@@ -4,13 +4,8 @@
  */
 
 import { useState, useCallback } from "react";
-import {
-	exportPatientsToExcel,
-	exportFinancialReport,
-	generatePatientImportTemplate,
-	downloadExcelFile,
-	importPatientsFromExcel,
-} from "../lib/skills/fase2-documentos/xlsx-integration";
+
+type XlsxIntegrationModule = typeof import("../lib/skills/fase2-documentos/xlsx-integration");
 
 interface UseExcelExportOptions {
 	onError?: (error: Error) => void;
@@ -20,6 +15,11 @@ interface UseExcelExportOptions {
 export function useExcelExport(options?: UseExcelExportOptions) {
 	const [isExporting, setIsExporting] = useState(false);
 	const [error, setError] = useState<Error | null>(null);
+
+	const loadXlsxIntegration = useCallback(
+		() => import("../lib/skills/fase2-documentos/xlsx-integration"),
+		[],
+	);
 
 	const exportPatients = useCallback(
 		async (
@@ -43,6 +43,8 @@ export function useExcelExport(options?: UseExcelExportOptions) {
 			setError(null);
 
 			try {
+				const { exportPatientsToExcel, downloadExcelFile } =
+					(await loadXlsxIntegration()) as XlsxIntegrationModule;
 				const buffer = await exportPatientsToExcel(patients, clinicName);
 				downloadExcelFile(
 					buffer,
@@ -64,7 +66,7 @@ export function useExcelExport(options?: UseExcelExportOptions) {
 				setIsExporting(false);
 			}
 		},
-		[options],
+		[loadXlsxIntegration, options],
 	);
 
 	const exportFinancials = useCallback(
@@ -94,6 +96,8 @@ export function useExcelExport(options?: UseExcelExportOptions) {
 			setError(null);
 
 			try {
+				const { exportFinancialReport, downloadExcelFile } =
+					(await loadXlsxIntegration()) as XlsxIntegrationModule;
 				const buffer = await exportFinancialReport(data, clinicName);
 				downloadExcelFile(
 					buffer,
@@ -117,7 +121,7 @@ export function useExcelExport(options?: UseExcelExportOptions) {
 				setIsExporting(false);
 			}
 		},
-		[options],
+		[loadXlsxIntegration, options],
 	);
 
 	const exportAttendanceStats = useCallback(
@@ -139,6 +143,8 @@ export function useExcelExport(options?: UseExcelExportOptions) {
 			setError(null);
 
 			try {
+				const { exportAttendanceStats, downloadExcelFile } =
+					(await loadXlsxIntegration()) as XlsxIntegrationModule;
 				const buffer = await exportAttendanceStats(data, clinicName);
 				downloadExcelFile(
 					buffer,
@@ -162,7 +168,7 @@ export function useExcelExport(options?: UseExcelExportOptions) {
 				setIsExporting(false);
 			}
 		},
-		[options],
+		[loadXlsxIntegration, options],
 	);
 
 	const downloadTemplate = useCallback(async () => {
@@ -170,6 +176,8 @@ export function useExcelExport(options?: UseExcelExportOptions) {
 		setError(null);
 
 		try {
+			const { generatePatientImportTemplate, downloadExcelFile } =
+				(await loadXlsxIntegration()) as XlsxIntegrationModule;
 			const buffer = await generatePatientImportTemplate();
 			downloadExcelFile(buffer, "template-importacao-pacientes.xlsx");
 
@@ -186,7 +194,7 @@ export function useExcelExport(options?: UseExcelExportOptions) {
 		} finally {
 			setIsExporting(false);
 		}
-	}, [options]);
+	}, [loadXlsxIntegration, options]);
 
 	const importPatients = useCallback(
 		async (
@@ -213,6 +221,8 @@ export function useExcelExport(options?: UseExcelExportOptions) {
 			setError(null);
 
 			try {
+				const { importPatientsFromExcel } =
+					(await loadXlsxIntegration()) as XlsxIntegrationModule;
 				const arrayBuffer = await file.arrayBuffer();
 				const patients = await importPatientsFromExcel(
 					Buffer.from(arrayBuffer),
@@ -235,7 +245,7 @@ export function useExcelExport(options?: UseExcelExportOptions) {
 				setIsExporting(false);
 			}
 		},
-		[options],
+		[loadXlsxIntegration, options],
 	);
 
 	return {
