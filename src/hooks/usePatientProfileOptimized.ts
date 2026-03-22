@@ -14,7 +14,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useCallback, useEffect, useRef } from "react";
 import { startTransition } from "react";
 import { PatientService } from "@/services/patientService";
-import { appointmentsApi, documentsApi } from "@/lib/api/workers-client";
+import { appointmentsApi, documentsApi } from "@/api/v2";
 
 // Tipos
 export type ProfileTab =

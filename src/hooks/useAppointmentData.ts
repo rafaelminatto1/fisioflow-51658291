@@ -9,7 +9,7 @@ import {
 	APPOINTMENT_SELECT,
 	devValidateAppointment,
 } from "@/lib/constants/appointment-queries";
-import { appointmentsApi, patientsApi } from "@/lib/api/workers-client";
+import { appointmentsApi, patientsApi } from "@/api/v2";
 import { fisioLogger } from "@/lib/errors/logger";
 import { type Patient, type AppointmentUnified } from "@/types";
 import { mapPatientDBToApp } from "@/utils/patientDataMappers";

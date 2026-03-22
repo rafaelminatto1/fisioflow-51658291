@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { BusinessHour, BlockedTime } from "./useScheduleSettings";
 import { useAuth } from "./useAuth";
 import { generateTimeSlots, TimeSlotInfo } from "@/utils/scheduleHelpers";
-import { profileApi, schedulingApi } from "@/lib/api/workers-client";
+import { profileApi, schedulingApi } from "@/api/v2";
 
 export type { TimeSlotInfo };
 

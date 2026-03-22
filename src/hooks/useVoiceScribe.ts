@@ -10,7 +10,7 @@
 
 import { useState, useCallback } from "react";
 import { useAudioRecorder } from "./useAudioRecorder";
-import { request } from "@/lib/api/workers-client";
+import { request } from "@/api/v2";
 
 export type VoiceScribeState =
 	| "idle"

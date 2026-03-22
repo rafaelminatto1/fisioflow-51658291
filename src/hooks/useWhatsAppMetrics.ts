@@ -6,7 +6,7 @@ import {
 	type WhatsAppMessage,
 	type WhatsAppTemplateRecord,
 	type WhatsAppWebhookLog,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 export type WhatsAppMetric = WhatsAppMessage & {
 	phone_number?: string | null;

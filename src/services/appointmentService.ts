@@ -1,7 +1,7 @@
 // Type for appointment item from API
 
 import { appointmentsApi } from "@/api/v2/appointments";
-import { auditApi } from "@/lib/api/workers-client";
+import { auditApi } from "@/api/v2";
 import {
 	AppointmentBase,
 	AppointmentFormData,

@@ -6,7 +6,7 @@ import {
 	CardTitle,
 } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
-import { appointmentsApi, type AppointmentRow } from "@/lib/api/workers-client";
+import { appointmentsApi, type AppointmentRow } from "@/api/v2";
 import {
 	XAxis,
 	YAxis,

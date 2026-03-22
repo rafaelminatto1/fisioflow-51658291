@@ -19,7 +19,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { financialApi, type Pagamento } from "@/lib/api/workers-client";
+import { financialApi, type Pagamento } from "@/api/v2";
 
 interface RevenueData {
 	date: string;

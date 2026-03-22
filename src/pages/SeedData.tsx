@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { clinicalApi, patientsApi } from "@/lib/api/workers-client";
+import { clinicalApi, patientsApi } from "@/api/v2";
 import { SessionEvolutionService } from "@/lib/services/sessionEvolutionService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";

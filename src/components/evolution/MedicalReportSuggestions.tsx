@@ -18,7 +18,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAI } from "@/integrations/neon/ai";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { evolutionApi, sessionsApi } from "@/lib/api/workers-client";
+import { evolutionApi, sessionsApi } from "@/api/v2";
 
 interface MedicalReportSuggestionsProps {
 	patientId: string;

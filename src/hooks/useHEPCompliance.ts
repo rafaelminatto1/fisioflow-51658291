@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { request } from "@/lib/api/workers-client";
+import { request } from "@/api/v2";
 
 export interface HEPComplianceData {
 	planId: string;

@@ -51,7 +51,7 @@ import { HomeCareWidget } from "@/components/evolution/HomeCareWidget";
 import { SessionExercise } from "@/components/evolution/SessionExercisesPanel";
 import { SessionImageUpload } from "@/components/evolution/SessionImageUpload";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { profileApi } from "@/lib/api/workers-client";
+import { profileApi } from "@/api/v2";
 
 export interface SOAPData {
 	subjective: string;

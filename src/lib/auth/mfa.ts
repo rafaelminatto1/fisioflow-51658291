@@ -2,7 +2,7 @@
  * MFA service backed by Workers API
  */
 
-import { securityApi, profileApi } from "@/lib/api/workers-client";
+import { securityApi, profileApi } from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export interface MFAEnrollment {

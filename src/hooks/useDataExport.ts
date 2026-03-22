@@ -13,7 +13,7 @@ import {
 	documentsApi,
 	medicalRequestsApi,
 	patientsApi,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 export function useDataExport() {
 	const [isExporting, setIsExporting] = useState(false);

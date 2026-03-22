@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { WorkSheet } from "@/lib/export/exceljsWrapper";
-import { analyticsApi, patientsApi } from "@/lib/api/workers-client";
+import { analyticsApi, patientsApi } from "@/api/v2";
 import type {
 	PatientAnalyticsData,
 	PatientGoalTracking,

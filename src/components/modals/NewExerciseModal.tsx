@@ -34,7 +34,7 @@ import {
 	Film,
 	Image as ImageIcon,
 } from "lucide-react";
-import { exercisesApi } from "@/lib/api/workers-client";
+import { exercisesApi } from "@/api/v2";
 import { uploadToR2 } from "@/lib/storage/r2-storage";
 import { toast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";

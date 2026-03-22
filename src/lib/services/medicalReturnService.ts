@@ -1,4 +1,4 @@
-import { patientsApi } from "@/lib/api/workers-client";
+import { patientsApi } from "@/api/v2";
 import type { MedicalReturn, MedicalReturnFormData } from "@/types/evolution";
 
 export class MedicalReturnService {

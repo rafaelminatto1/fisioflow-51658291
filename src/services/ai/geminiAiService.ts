@@ -2,7 +2,7 @@
  * AI Service - Migrated to Workers/Neon
  */
 
-import { aiApi } from "@/lib/api/workers-client";
+import { aiApi } from "@/api/v2";
 
 async function blobToBase64(blob: Blob): Promise<string> {
 	return new Promise((resolve, reject) => {

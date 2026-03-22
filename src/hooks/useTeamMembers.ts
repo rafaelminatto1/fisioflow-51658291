@@ -3,7 +3,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { organizationMembersApi } from "@/lib/api/workers-client";
+import { organizationMembersApi } from "@/api/v2";
 import { TeamMember } from "@/types/tarefas";
 
 export function useTeamMembers() {

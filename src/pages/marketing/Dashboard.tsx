@@ -30,7 +30,7 @@ import {
 	integrationsApi,
 	marketingApi,
 	type GoogleBusinessReviewRecord,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { ReviewsContent } from "./Reviews";
 import { ROICalculatorContent } from "./ROI";
 import { LocalSEOTracker } from "@/components/marketing/LocalSEOTracker";

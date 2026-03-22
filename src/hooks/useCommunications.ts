@@ -8,7 +8,7 @@ import { useOrganizations } from "@/hooks/useOrganizations";
 import {
 	communicationsApi,
 	type CommunicationLogRecord,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 export type CommunicationType = "email" | "whatsapp" | "sms" | "push";
 export type CommunicationStatus =

@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Mail, Send, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { communicationsApi } from "@/lib/api/workers-client";
+import { communicationsApi } from "@/api/v2";
 
 export default function EmailTest() {
 	const [email, setEmail] = useState("");

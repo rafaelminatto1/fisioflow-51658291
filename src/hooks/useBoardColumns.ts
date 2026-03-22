@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { boardsApi } from "@/lib/api/workers-client";
+import { boardsApi } from "@/api/v2";
 import type { Board, BoardColumn } from "@/types/boards";
 import type { Tarefa } from "@/types/tarefas";
 

@@ -4,7 +4,7 @@
  */
 
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { profileApi } from "@/lib/api/workers-client";
+import { profileApi } from "@/api/v2";
 
 export const ensureProfile = async (
 	userId: string,

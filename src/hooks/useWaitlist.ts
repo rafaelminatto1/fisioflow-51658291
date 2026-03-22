@@ -4,7 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { schedulingApi, WaitlistEntry } from "@/lib/api/workers-client";
+import { schedulingApi, WaitlistEntry } from "@/api/v2";
 
 export type { WaitlistEntry };
 

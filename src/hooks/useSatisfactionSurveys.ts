@@ -5,7 +5,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useOrganizations } from "@/hooks/useOrganizations";
-import { satisfactionSurveysApi } from "@/lib/api/workers-client";
+import { satisfactionSurveysApi } from "@/api/v2";
 
 export interface SatisfactionSurvey {
 	id: string;

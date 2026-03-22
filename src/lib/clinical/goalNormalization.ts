@@ -1,4 +1,4 @@
-import type { PatientGoal as GoalApiRow } from "@/lib/api/workers-client";
+import type { PatientGoal as GoalApiRow } from "@/api/v2";
 import type { PatientGoal } from "@/types/evolution";
 
 function readGoalMetadata(row: GoalApiRow): Record<string, unknown> {

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { request } from "@/lib/api/workers-client";
+import { request } from "@/api/v2";
 
 export interface NFSeRecord {
 	id: string;

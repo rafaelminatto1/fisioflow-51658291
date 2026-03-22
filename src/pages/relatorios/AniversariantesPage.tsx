@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import { Cake, Gift, Phone, Mail, Search } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { patientsApi, type PatientRow } from "@/lib/api/workers-client";
+import { patientsApi, type PatientRow } from "@/api/v2";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";

@@ -4,7 +4,7 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
-import { analyticsApi } from "@/lib/api/workers-client";
+import { analyticsApi } from "@/api/v2";
 
 export function useIntelligentReports(patientId?: string) {
 	const generateReport = useMutation({

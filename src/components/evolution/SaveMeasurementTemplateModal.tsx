@@ -33,7 +33,7 @@ import {
 	Layout,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { clinicalTestsApi } from "@/lib/api/workers-client";
+import { clinicalTestsApi } from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 interface MeasurementField {

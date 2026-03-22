@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Camera, FileSearch, Loader2 } from "lucide-react";
-import { aiApi } from "@/lib/api/workers-client";
+import { aiApi } from "@/api/v2";
 import { useToast } from "@/hooks/use-toast";
 
 export const DocumentScanner = ({

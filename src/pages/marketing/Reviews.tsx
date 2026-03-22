@@ -32,7 +32,7 @@ import { generateMarketingContent } from "@/services/ai/marketingAITemplateServi
 import {
 	integrationsApi,
 	type GoogleBusinessReviewRecord,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 type GoogleReview = GoogleBusinessReviewRecord;
 

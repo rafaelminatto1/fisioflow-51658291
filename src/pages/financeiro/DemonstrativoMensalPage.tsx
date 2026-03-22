@@ -43,7 +43,7 @@ import {
 	financialApi,
 	type ContaFinanceira,
 	type Transacao,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { useOrganizations } from "@/hooks/useOrganizations";
 
 interface DemonstrativoData {

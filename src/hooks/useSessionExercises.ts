@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
 	evolutionApi,
 	type TreatmentSessionRecord,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { SessionExercise } from "@/components/evolution/SessionExercisesPanel";
 
 type TreatmentSessionWithExercises = TreatmentSessionRecord & {

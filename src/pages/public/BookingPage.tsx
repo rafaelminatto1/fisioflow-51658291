@@ -7,7 +7,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
 	publicBookingApi,
 	type PublicBookingProfile,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { Button } from "@/components/ui/button";
 import {
 	Card,

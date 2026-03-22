@@ -11,7 +11,7 @@ import {
 import { uploadToR2 } from "@/lib/storage/r2-storage";
 import { toast } from "sonner";
 import { MotionCard } from "@fisioflow/ui";
-import { aiApi } from "@/lib/api/workers-client";
+import { aiApi } from "@/api/v2";
 
 interface AnalysisResult {
 	reps: number;

@@ -1,4 +1,4 @@
-import { evolutionApi, patientsApi } from "@/lib/api/workers-client";
+import { evolutionApi, patientsApi } from "@/api/v2";
 import type {
 	AssessmentTestConfig,
 	TestEvolutionData,

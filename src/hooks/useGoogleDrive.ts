@@ -5,7 +5,7 @@
 import { useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { integrationsApi } from "@/lib/api/workers-client";
+import { integrationsApi } from "@/api/v2";
 
 export function useGoogleDrive() {
 	const queryClient = useQueryClient();

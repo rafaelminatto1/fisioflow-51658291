@@ -2,7 +2,7 @@
  * DICOM Web Client - Migrated to Workers/Neon
  */
 
-import { dicomApi, type DicomStudyRecord } from "@/lib/api/workers-client";
+import { dicomApi, type DicomStudyRecord } from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export interface DicomStudy extends DicomStudyRecord {

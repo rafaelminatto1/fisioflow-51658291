@@ -1,4 +1,4 @@
-import { clinicalApi } from "@/lib/api/workers-client";
+import { clinicalApi } from "@/api/v2";
 import type {
 	BodyRegion,
 	PainEvolutionData,

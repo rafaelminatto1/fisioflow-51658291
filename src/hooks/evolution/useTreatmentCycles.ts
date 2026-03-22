@@ -3,7 +3,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { treatmentCyclesApi } from "@/lib/api/workers-client";
+import { treatmentCyclesApi } from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import type { TreatmentCycle } from "@/components/evolution/TreatmentCycles";
 

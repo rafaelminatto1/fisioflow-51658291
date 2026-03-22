@@ -10,7 +10,7 @@ import {
 	type Evento,
 	type Participante,
 	type Pagamento,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 interface EventosStats {
 	totalEventos: number;

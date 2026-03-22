@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { patientsApi, type PatientRow } from "@/lib/api/workers-client";
+import { patientsApi, type PatientRow } from "@/api/v2";
 import { differenceInDays, parseISO } from "date-fns";
 
 /**

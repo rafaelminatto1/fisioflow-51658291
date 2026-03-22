@@ -1,4 +1,4 @@
-import { exerciseSessionsApi } from "@/lib/api/workers-client";
+import { exerciseSessionsApi } from "@/api/v2";
 import { ExerciseSession } from "@/types/pose";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 

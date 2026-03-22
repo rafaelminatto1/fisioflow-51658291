@@ -8,7 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
 	protocolsApi,
 	type Protocol as WorkersProtocol,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import { toast } from "sonner";
 
 export interface ProtocolMilestone {

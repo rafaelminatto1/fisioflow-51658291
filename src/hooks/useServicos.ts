@@ -3,7 +3,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { servicosApi, type Servico } from "@/lib/api/workers-client";
+import { servicosApi, type Servico } from "@/api/v2";
 import { toast } from "sonner";
 
 export type { Servico };

@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { aiApi } from "@/lib/api/workers-client";
+import { aiApi } from "@/api/v2";
 
 export interface AISummaryResponse {
 	summary: string;

@@ -4,7 +4,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { projectsApi, type ProjectRecord } from "@/lib/api/workers-client";
+import { projectsApi, type ProjectRecord } from "@/api/v2";
 
 export type Project = ProjectRecord;
 

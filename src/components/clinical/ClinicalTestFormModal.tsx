@@ -6,7 +6,7 @@ import {
 	clinicalTestsApi,
 	mediaApi,
 	type ClinicalTestTemplateRecord,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 import {
 	CustomModal,
 	CustomModalHeader,

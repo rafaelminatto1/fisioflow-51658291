@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import {
 	evaluationFormsApi,
 	type EvaluationFormRow,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 export function useToggleFavorite() {
 	const queryClient = useQueryClient();

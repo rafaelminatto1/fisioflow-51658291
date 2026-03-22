@@ -12,7 +12,7 @@ import { Trophy, Medal, Crown, Flame } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { gamificationApi } from "@/lib/api/workers-client";
+import { gamificationApi } from "@/api/v2";
 
 interface LeaderboardEntry {
 	rank: number;

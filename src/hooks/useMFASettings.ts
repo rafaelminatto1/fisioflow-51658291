@@ -5,7 +5,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { securityApi, type MFASettingsRecord } from "@/lib/api/workers-client";
+import { securityApi, type MFASettingsRecord } from "@/api/v2";
 
 export type MFAMethod = "totp" | "sms" | "email";
 export type MFASettings = MFASettingsRecord;

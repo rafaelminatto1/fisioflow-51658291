@@ -19,7 +19,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useState, useMemo } from "react";
 import type { LeaderboardEntry } from "@/types/gamification";
-import { gamificationApi } from "@/lib/api/workers-client";
+import { gamificationApi } from "@/api/v2";
 
 type LeaderboardPeriod = "week" | "month" | "all";
 type LeaderboardCategory = "level" | "xp" | "streak" | "achievements";

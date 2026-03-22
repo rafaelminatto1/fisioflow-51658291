@@ -42,7 +42,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { ChatInterface } from "@/components/ai/ChatInterface";
 import { ProgressTimeline } from "@/components/ai/ProgressTimeline";
-import { aiApi, sessionsApi } from "@/lib/api/workers-client";
+import { aiApi, sessionsApi } from "@/api/v2";
 
 interface Patient {
 	id: string;

@@ -39,7 +39,7 @@ import {
 	evaluationFormsApi,
 	goalsApi,
 	patientsApi,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 import { useIncrementTemplateUsage } from "@/hooks/useTemplateStats";
 

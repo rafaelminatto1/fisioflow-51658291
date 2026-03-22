@@ -6,7 +6,7 @@
  */
 import { uploadToR2, deleteFromR2 } from "@/lib/storage/r2-storage";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { exerciseVideosApi } from "@/lib/api/workers-client";
+import { exerciseVideosApi } from "@/api/v2";
 
 // ============================================================================
 // TYPES

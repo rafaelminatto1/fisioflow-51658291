@@ -4,7 +4,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { clinicalApi } from "@/lib/api/workers-client";
+import { clinicalApi } from "@/api/v2";
 
 export interface PatientObjective {
 	id: string;

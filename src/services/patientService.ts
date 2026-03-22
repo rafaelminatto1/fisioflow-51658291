@@ -1,5 +1,5 @@
 import { patientsApi } from "@/api/v2/patients";
-import { auditApi } from "@/lib/api/workers-client";
+import { auditApi } from "@/api/v2";
 import { PatientSchema } from "@/schemas/patient";
 import { AppError } from "@/lib/errors/AppError";
 import { ErrorHandler } from "@/lib/errors/ErrorHandler";

@@ -5,7 +5,7 @@
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { appointmentsApi } from "@/lib/api/workers-client";
+import { appointmentsApi } from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export const useRealtimeAppointments = () => {

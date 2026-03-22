@@ -1,4 +1,4 @@
-import { knowledgeApi } from "@/lib/api/workers-client";
+import { knowledgeApi } from "@/api/v2";
 import type { KnowledgeArtifact, KnowledgeNote } from "../types/knowledge";
 
 function toMillis(value: unknown): number {

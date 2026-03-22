@@ -1,4 +1,4 @@
-import { clinicalApi, sessionsApi } from "@/lib/api/workers-client";
+import { clinicalApi, sessionsApi } from "@/api/v2";
 import type { ConductTemplate } from "@/types/evolution";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 

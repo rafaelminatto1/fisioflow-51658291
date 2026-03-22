@@ -7,7 +7,7 @@ import { EvaluationForm } from "@/types/clinical-forms";
 import {
 	evaluationFormsApi,
 	type EvaluationFormRow,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 const toForm = (row: EvaluationFormRow): EvaluationForm => ({
 	id: row.id,

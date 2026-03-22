@@ -1,4 +1,4 @@
-import { clinicalApi } from "@/lib/api/workers-client";
+import { clinicalApi } from "@/api/v2";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 
 export interface EngagementStatus {

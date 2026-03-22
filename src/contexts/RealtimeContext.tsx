@@ -1,5 +1,5 @@
 import { createContext, useState, useCallback, useEffect, useRef } from "react";
-import { appointmentsApi } from "@/lib/api/workers-client";
+import { appointmentsApi } from "@/api/v2";
 import { useAuth } from "@/contexts/AuthContext";
 import { fisioLogger as logger } from "@/lib/errors/logger";
 import { useDebounce } from "@/hooks/performance/useDebounce";

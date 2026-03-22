@@ -5,7 +5,7 @@ import { Loader2, MapPin } from "lucide-react";
 import {
 	integrationsApi,
 	type GooglePlacePrediction,
-} from "@/lib/api/workers-client";
+} from "@/api/v2";
 
 interface Props {
 	value: string;
