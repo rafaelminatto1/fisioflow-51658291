@@ -1,16 +1,20 @@
-import {
-	FilesetResolver,
-	PoseLandmarker,
-	PoseLandmarkerResult,
-} from "@mediapipe/tasks-vision";
 import { Point3D, UnifiedLandmark, POSE_LANDMARKS } from "@/utils/geometry";
 import { resolveMediaPipeVisionFileset } from "@/lib/ai/mediapipe";
 
-let poseLandmarker: PoseLandmarker | null = null;
+type PoseLandmarkerType = Awaited<
+	ReturnType<(typeof import("@mediapipe/tasks-vision"))["PoseLandmarker"]["createFromOptions"]>
+>;
+type PoseLandmarkerResultType =
+	import("@mediapipe/tasks-vision").PoseLandmarkerResult;
+
+let poseLandmarker: PoseLandmarkerType | null = null;
 
 const initializePoseLandmarker = async () => {
 	if (poseLandmarker) return poseLandmarker;
 
+	const { FilesetResolver, PoseLandmarker } = await import(
+		"@mediapipe/tasks-vision"
+	);
 	const vision = await resolveMediaPipeVisionFileset(FilesetResolver);
 
 	poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
@@ -85,7 +89,7 @@ export const processVideo = async (
 		// Detect
 		// detectForVideo requires a timestamp relative to start
 		const timestampMs = currentTime * 1000;
-		const result: PoseLandmarkerResult = landmarker.detectForVideo(
+		const result: PoseLandmarkerResultType = landmarker.detectForVideo(
 			videoElement,
 			timestampMs,
 		);

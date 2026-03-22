@@ -41,18 +41,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-	Document,
-	Page,
-	Text,
-	View,
-	StyleSheet,
-	PDFDownloadLink,
-	Font,
-} from "@react-pdf/renderer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useOrganizations } from "@/hooks/useOrganizations";
+import { LazyPdfDownloadButton } from "@/components/pdf/LazyPdfDownloadButton";
 import { Activity } from "lucide-react";
 import {
 	appointmentsApi,
@@ -60,101 +52,6 @@ import {
 	reportsApi,
 	patientsApi,
 } from "@/lib/api/workers-client";
-
-// Registrar font para PDF
-Font.register({
-	family: "Helvetica",
-});
-
-const styles = StyleSheet.create({
-	page: {
-		padding: 30,
-		fontSize: 10,
-		fontFamily: "Helvetica",
-	},
-	header: {
-		marginBottom: 20,
-		borderBottom: "2 solid #333",
-		paddingBottom: 15,
-	},
-	title: {
-		fontSize: 16,
-		fontWeight: "bold",
-		textAlign: "center",
-		marginBottom: 5,
-	},
-	subtitle: {
-		fontSize: 9,
-		textAlign: "center",
-		color: "#666",
-		marginBottom: 10,
-	},
-	section: {
-		marginBottom: 15,
-	},
-	sectionTitle: {
-		fontSize: 11,
-		fontWeight: "bold",
-		backgroundColor: "#f0f0f0",
-		padding: "6 10",
-		marginBottom: 10,
-		marginTop: 5,
-	},
-	row: {
-		flexDirection: "row" as const,
-		marginBottom: 5,
-	},
-	label: {
-		fontWeight: "bold",
-		width: "35%",
-	},
-	value: {
-		flex: 1,
-	},
-	table: {
-		width: "100%",
-		borderWidth: 1,
-		borderColor: "#000",
-		marginBottom: 10,
-	},
-	tableRow: {
-		flexDirection: "row" as const,
-		borderBottomWidth: 1,
-		borderBottomColor: "#000",
-		padding: 5,
-	},
-	tableCell: {
-		flex: 1,
-	},
-	tableHeader: {
-		backgroundColor: "#f0f0f0",
-		fontWeight: "bold",
-	},
-	signature: {
-		marginTop: 30,
-		flexDirection: "row" as const,
-		justifyContent: "space-between",
-	},
-	signatureLine: {
-		width: "45%",
-		borderTopWidth: 1,
-		borderTopColor: "#000",
-		paddingTop: 10,
-		textAlign: "center",
-	},
-	footer: {
-		position: "absolute",
-		bottom: 30,
-		left: 30,
-		right: 30,
-		borderTopWidth: 1,
-		borderTopColor: "#ccc",
-		paddingTop: 10,
-		fontSize: 8,
-		textAlign: "center",
-		color: "#666",
-	},
-});
 
 interface DadosPaciente {
 	nome: string;
@@ -189,7 +86,7 @@ interface DadosAtendimento {
 	sessao_atual: number;
 }
 
-interface RelatorioConvenioData {
+export interface RelatorioConvenioData {
 	id: string;
 	patientId?: string;
 	paciente: DadosPaciente;
@@ -213,258 +110,10 @@ interface RelatorioConvenioData {
 	data_emissao: string;
 }
 
-// Componente PDF do Relatório
-function RelatorioConvenioPDF({ data }: { data: RelatorioConvenioData }) {
-	return (
-		<Document>
-			<Page size="A4" style={styles.page}>
-				{/* Header */}
-				<View style={styles.header}>
-					<Text style={styles.title}>
-						RELATÓRIO DE ATENDIMENTO FISIOTERAPÊUTICO
-					</Text>
-					<Text style={styles.subtitle}>
-						Para fins de reembolso junto a convênios médicos
-					</Text>
-					<Text style={styles.subtitle}>
-						Data de emissão:{" "}
-						{format(new Date(data.data_emissao), "dd/MM/yyyy", {
-							locale: ptBR,
-						})}
-					</Text>
-				</View>
-
-				{/* Dados da Clínica */}
-				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>DADOS DA CLÍNICA</Text>
-					<View style={styles.row}>
-						<Text style={styles.label}>Razão Social:</Text>
-						<Text style={styles.value}>{data.clinica.nome}</Text>
-					</View>
-					<View style={styles.row}>
-						<Text style={styles.label}>CNPJ:</Text>
-						<Text style={styles.value}>{data.clinica.cnpj}</Text>
-					</View>
-					<View style={styles.row}>
-						<Text style={styles.label}>Endereço:</Text>
-						<Text style={styles.value}>{data.clinica.endereco}</Text>
-					</View>
-					<View style={styles.row}>
-						<Text style={styles.label}>Telefone:</Text>
-						<Text style={styles.value}>{data.clinica.telefone}</Text>
-					</View>
-				</View>
-
-				{/* Dados do Convênio */}
-				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>DADOS DO CONVÊNIO</Text>
-					<View style={styles.row}>
-						<Text style={styles.label}>Nome:</Text>
-						<Text style={styles.value}>{data.convenio.nome}</Text>
-					</View>
-					<View style={styles.row}>
-						<Text style={styles.label}>CNPJ:</Text>
-						<Text style={styles.value}>{data.convenio.cnpj}</Text>
-					</View>
-					<View style={styles.row}>
-						<Text style={styles.label}>Registro ANS:</Text>
-						<Text style={styles.value}>{data.convenio.ans}</Text>
-					</View>
-				</View>
-
-				{/* Dados do Profissional */}
-				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>
-						DADOS DO PROFISSIONAL RESPONSÁVEL
-					</Text>
-					<View style={styles.row}>
-						<Text style={styles.label}>Nome:</Text>
-						<Text style={styles.value}>{data.profissional.nome}</Text>
-					</View>
-					<View style={styles.row}>
-						<Text style={styles.label}>CPF:</Text>
-						<Text style={styles.value}>{data.profissional.cpf}</Text>
-					</View>
-					{data.profissional.registro_profissional && (
-						<View style={styles.row}>
-							<Text style={styles.label}>Registro:</Text>
-							<Text style={styles.value}>
-								{data.profissional.registro_profissional}
-								{data.profissional.uf_registro &&
-									`/${data.profissional.uf_registro}`}
-							</Text>
-						</View>
-					)}
-				</View>
-
-				{/* Dados do Paciente */}
-				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>DADOS DO PACIENTE</Text>
-					<View style={styles.row}>
-						<Text style={styles.label}>Nome Completo:</Text>
-						<Text style={styles.value}>{data.paciente.nome}</Text>
-					</View>
-					{data.paciente.cpf && (
-						<View style={styles.row}>
-							<Text style={styles.label}>CPF:</Text>
-							<Text style={styles.value}>{data.paciente.cpf}</Text>
-						</View>
-					)}
-					{data.paciente.data_nascimento && (
-						<View style={styles.row}>
-							<Text style={styles.label}>Data de Nascimento:</Text>
-							<Text style={styles.value}>
-								{format(new Date(data.paciente.data_nascimento), "dd/MM/yyyy", {
-									locale: ptBR,
-								})}
-							</Text>
-						</View>
-					)}
-					{data.paciente.telefone && (
-						<View style={styles.row}>
-							<Text style={styles.label}>Telefone:</Text>
-							<Text style={styles.value}>{data.paciente.telefone}</Text>
-						</View>
-					)}
-					{data.paciente.email && (
-						<View style={styles.row}>
-							<Text style={styles.label}>Email:</Text>
-							<Text style={styles.value}>{data.paciente.email}</Text>
-						</View>
-					)}
-					<View style={styles.row}>
-						<Text style={styles.label}>Número da Carteira:</Text>
-						<Text style={styles.value}>
-							{data.paciente.numero_convenio || "N/I"}
-						</Text>
-					</View>
-				</View>
-
-				{/* Atendimentos Realizados */}
-				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>ATENDIMENTOS REALIZADOS</Text>
-					<View style={styles.table}>
-						<View style={[styles.tableRow, styles.tableHeader]}>
-							<Text style={styles.tableCell}>Data</Text>
-							<Text style={styles.tableCell}>Horário</Text>
-							<Text style={styles.tableCell}>Tipo</Text>
-							<Text style={styles.tableCell}>Procedimentos</Text>
-							<Text style={styles.tableCell}>Códigos TUSS/CID</Text>
-						</View>
-						{data.atendimentos.map((atendimento, index) => (
-							<View key={index} style={styles.tableRow}>
-								<Text style={styles.tableCell}>
-									{format(new Date(atendimento.data), "dd/MM/yyyy", {
-										locale: ptBR,
-									})}
-								</Text>
-								<Text style={styles.tableCell}>
-									{atendimento.horario_inicio} - {atendimento.horario_fim}
-								</Text>
-								<Text style={styles.tableCell}>
-									{atendimento.tipo === "avaliacao"
-										? "Avaliação"
-										: atendimento.tipo === "evolucao"
-											? "Evolução"
-											: atendimento.tipo === "alta"
-												? "Alta"
-												: "Retorno"}
-								</Text>
-								<Text style={styles.tableCell}>
-									{atendimento.procedimentos.join(", ")}
-								</Text>
-								<Text style={styles.tableCell}>
-									{[...(atendimento.codigos_tuss || []), atendimento.cid]
-										.filter(Boolean)
-										.join(", ") || "-"}
-								</Text>
-							</View>
-						))}
-					</View>
-					<View style={styles.row}>
-						<Text style={styles.label}>Total de Sessões:</Text>
-						<Text style={styles.value}>{data.atendimentos.length}</Text>
-					</View>
-				</View>
-
-				{/* Informações Clínicas */}
-				{(data.prognostico || data.evolucao || data.conduta) && (
-					<View style={styles.section}>
-						<Text style={styles.sectionTitle}>INFORMAÇÕES CLÍNICAS</Text>
-						{data.prognostico && (
-							<>
-								<View style={styles.row}>
-									<Text style={styles.label}>Prognóstico:</Text>
-									<Text style={styles.value}>{data.prognostico}</Text>
-								</View>
-							</>
-						)}
-						{data.evolucao && (
-							<>
-								<View style={styles.row}>
-									<Text style={styles.label}>Evolução:</Text>
-									<Text style={styles.value}>{data.evolucao}</Text>
-								</View>
-							</>
-						)}
-						{data.conduta && (
-							<>
-								<View style={styles.row}>
-									<Text style={styles.label}>Conduta:</Text>
-									<Text style={styles.value}>{data.conduta}</Text>
-								</View>
-							</>
-						)}
-						{data.observacoes && (
-							<>
-								<View style={styles.row}>
-									<Text style={styles.label}>Observações:</Text>
-									<Text style={styles.value}>{data.observacoes}</Text>
-								</View>
-							</>
-						)}
-					</View>
-				)}
-
-				{/* Termo de Responsabilidade */}
-				<View style={[styles.section, { marginTop: 20 }]}>
-					<Text style={styles.sectionTitle}>TERMO DE RESPONSABILIDADE</Text>
-					<Text style={{ fontSize: 8, lineHeight: 1.3 }}>
-						Declaro que as informações prestadas são verdadeiras e correspondem
-						à realidade dos serviços efetivamente prestados. Responsabilizo-me
-						por quaisquer inconsistências que possam vir a ser identificadas.
-						Este relatório tem como única finalidade o reembolso junto ao
-						convênio médico.
-					</Text>
-				</View>
-
-				{/* Assinaturas */}
-				<View style={styles.signature}>
-					<View style={styles.signatureLine}>
-						<Text>_________________________________________</Text>
-						<Text style={{ fontSize: 8 }}>Assinatura do Profissional</Text>
-					</View>
-					<View style={styles.signatureLine}>
-						<Text>_________________________________________</Text>
-						<Text style={{ fontSize: 8 }}>Carimbo</Text>
-					</View>
-				</View>
-
-				{/* Footer */}
-				<View style={styles.footer} fixed={false}>
-					<Text>
-						Documento gerado em{" "}
-						{format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-					</Text>
-					<Text>
-						Este relatório é válido para fins de reembolso conforme legislação
-						vigente.
-					</Text>
-				</View>
-			</Page>
-		</Document>
-	);
-}
+const loadRelatorioConvenioPdf = () =>
+	import("./RelatorioConvenioPDF").then((module) => ({
+		default: module.RelatorioConvenioPDF,
+	}));
 
 // Componente de Editor do Relatório
 function RelatorioEditor({
@@ -1181,17 +830,14 @@ export default function RelatorioConvenioPage() {
 														<Edit className="h-4 w-4 mr-1" />
 														Editar
 													</Button>
-													<PDFDownloadLink
-														document={<RelatorioConvenioPDF data={relatorio} />}
+													<LazyPdfDownloadButton
+														loadDocument={loadRelatorioConvenioPdf}
+														documentProps={{ data: relatorio }}
 														fileName={`relatorio-${relatorio.paciente?.nome?.replace(/\s+/g, "-")}-${format(new Date(relatorio.data_emissao), "dd-MM-yyyy")}.pdf`}
-													>
-														{({ loading }) => (
-															<Button size="sm" disabled={loading}>
-																<Download className="h-4 w-4 mr-1" />
-																{loading ? "Gerando..." : "PDF"}
-															</Button>
-														)}
-													</PDFDownloadLink>
+														label="PDF"
+														icon={<Download className="mr-1 h-4 w-4" />}
+														buttonProps={{ size: "sm" }}
+													/>
 												</div>
 											</div>
 										))}
@@ -1354,17 +1000,13 @@ export default function RelatorioConvenioPage() {
 										<Edit className="h-4 w-4 mr-2" />
 										Editar
 									</Button>
-									<PDFDownloadLink
-										document={<RelatorioConvenioPDF data={previewRelatorio} />}
+									<LazyPdfDownloadButton
+										loadDocument={loadRelatorioConvenioPdf}
+										documentProps={{ data: previewRelatorio }}
 										fileName={`relatorio-${previewRelatorio.paciente?.nome?.replace(/\s+/g, "-")}-${format(new Date(previewRelatorio.data_emissao), "dd-MM-yyyy")}.pdf`}
-									>
-										{({ loading }) => (
-											<Button disabled={loading}>
-												<Download className="h-4 w-4 mr-2" />
-												{loading ? "Gerando..." : "Baixar PDF"}
-											</Button>
-										)}
-									</PDFDownloadLink>
+										label="Baixar PDF"
+										icon={<Download className="mr-2 h-4 w-4" />}
+									/>
 								</div>
 							</div>
 						</DialogContent>
@@ -1375,4 +1017,4 @@ export default function RelatorioConvenioPage() {
 	);
 }
 
-export { RelatorioConvenioPDF, RelatorioEditor };
+export { RelatorioEditor };

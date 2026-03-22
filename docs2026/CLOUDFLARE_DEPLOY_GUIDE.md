@@ -3,7 +3,7 @@
 ## Pré-requisitos
 
 1. Conta Cloudflare (gratuita serve para começar)
-2. Wrangler CLI instalado: `pnpm --filter @fisioflow/workers dev`
+2. Wrangler CLI instalado: `pnpm --filter @fisioflow/api dev`
 3. Autenticado: `npx wrangler login`
 
 ---
@@ -13,7 +13,7 @@
 O Hyperdrive é o pool de conexões edge que torna o Neon 10x mais rápido.
 
 ```bash
-cd workers
+cd apps/api
 npx wrangler hyperdrive create fisioflow-neon \
   --connection-string="postgresql://neondb_owner:REDACTED-NEON-PASSWORD@ep-wandering-bonus-acj4zwvo-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require"
 ```
@@ -23,7 +23,7 @@ O comando vai retornar algo como:
 ✅ Created Hyperdrive config "fisioflow-neon" (id: abc123def456...)
 ```
 
-**Copie o ID** e substitua no `workers/wrangler.toml`:
+**Copie o ID** e substitua no `apps/api/wrangler.toml`:
 ```toml
 [[hyperdrive]]
 binding = "HYPERDRIVE"
@@ -53,7 +53,7 @@ Teste: `curl https://fisioflow-api.workers.dev/api/health`
 ### Opção A: Via CLI (manual)
 ```bash
 pnpm build
-cd workers
+cd apps/api
 npx wrangler pages deploy ../dist --project-name=fisioflow
 ```
 

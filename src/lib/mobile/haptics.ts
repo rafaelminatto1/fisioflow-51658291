@@ -7,12 +7,17 @@
  * Verifica se haptics está disponível
  */
 
-import { Haptics, ImpactStyle, NotificationType } from "@capacitor/haptics";
-import { Capacitor } from "@capacitor/core";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import {
+	isNativePlatform,
+	triggerHapticImpact,
+	triggerHapticNotification,
+	triggerHapticSelection,
+	triggerHapticVibration,
+} from "@/lib/platform/native";
 
 export function isHapticsAvailable(): boolean {
-	return Capacitor.isNativePlatform();
+	return isNativePlatform();
 }
 
 /**
@@ -23,7 +28,7 @@ export async function hapticLight(): Promise<void> {
 	if (!isHapticsAvailable()) return;
 
 	try {
-		await Haptics.impact({ style: ImpactStyle.Light });
+		await triggerHapticImpact("light");
 	} catch (error) {
 		logger.error("Erro no haptic light", error, "haptics");
 	}
@@ -37,7 +42,7 @@ export async function hapticMedium(): Promise<void> {
 	if (!isHapticsAvailable()) return;
 
 	try {
-		await Haptics.impact({ style: ImpactStyle.Medium });
+		await triggerHapticImpact("medium");
 	} catch (error) {
 		logger.error("Erro no haptic medium", error, "haptics");
 	}
@@ -51,7 +56,7 @@ export async function hapticHeavy(): Promise<void> {
 	if (!isHapticsAvailable()) return;
 
 	try {
-		await Haptics.impact({ style: ImpactStyle.Heavy });
+		await triggerHapticImpact("heavy");
 	} catch (error) {
 		logger.error("Erro no haptic heavy", error, "haptics");
 	}
@@ -65,7 +70,7 @@ export async function hapticSuccess(): Promise<void> {
 	if (!isHapticsAvailable()) return;
 
 	try {
-		await Haptics.notification({ type: NotificationType.Success });
+		await triggerHapticNotification("success");
 	} catch (error) {
 		logger.error("Erro no haptic success", error, "haptics");
 	}
@@ -79,7 +84,7 @@ export async function hapticWarning(): Promise<void> {
 	if (!isHapticsAvailable()) return;
 
 	try {
-		await Haptics.notification({ type: NotificationType.Warning });
+		await triggerHapticNotification("warning");
 	} catch (error) {
 		logger.error("Erro no haptic warning", error, "haptics");
 	}
@@ -93,7 +98,7 @@ export async function hapticError(): Promise<void> {
 	if (!isHapticsAvailable()) return;
 
 	try {
-		await Haptics.notification({ type: NotificationType.Error });
+		await triggerHapticNotification("error");
 	} catch (error) {
 		logger.error("Erro no haptic error", error, "haptics");
 	}
@@ -107,8 +112,7 @@ export async function hapticSelection(): Promise<void> {
 	if (!isHapticsAvailable()) return;
 
 	try {
-		await Haptics.selectionStart();
-		await Haptics.selectionEnd();
+		await triggerHapticSelection();
 	} catch (error) {
 		logger.error("Erro no haptic selection", error, "haptics");
 	}
@@ -122,7 +126,7 @@ export async function hapticVibrate(duration: number): Promise<void> {
 	if (!isHapticsAvailable()) return;
 
 	try {
-		await Haptics.vibrate({ duration });
+		await triggerHapticVibration(duration);
 	} catch (error) {
 		logger.error("Erro no haptic vibrate", error, "haptics");
 	}

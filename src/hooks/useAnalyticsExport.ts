@@ -3,12 +3,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import XLSX from "@/lib/export/exceljsWrapper";
+import type { WorkSheet } from "@/lib/export/exceljsWrapper";
 import { analyticsApi, patientsApi } from "@/lib/api/workers-client";
 import type {
 	PatientAnalyticsData,
 	PatientGoalTracking,
 } from "@/types/patientAnalytics";
+
+type ExcelApi = (typeof import("@/lib/export/exceljsWrapper"))["default"];
 
 export type ExportFormat = "pdf" | "csv" | "json" | "excel";
 
@@ -140,6 +142,11 @@ function downloadBlob(blob: Blob, filename: string): void {
 
 function addBOMToCSV(csv: string): string {
 	return "\uFEFF" + csv;
+}
+
+async function loadExcelApi(): Promise<ExcelApi> {
+	const module = await import("@/lib/export/exceljsWrapper");
+	return module.default;
 }
 
 // ============================================================================
@@ -401,6 +408,7 @@ async function generateExcel(
 	const fileName =
 		options.fileName || `analytics_${sanitizedName}_${timestamp}.xlsx`;
 
+	const XLSX = await loadExcelApi();
 	const workbook = XLSX.utils.book_new();
 
 	// Summary Sheet
@@ -411,19 +419,19 @@ async function generateExcel(
 
 	// Trends Sheet
 	if (options.includeTrends !== false && data.trends.length > 0) {
-		const trendsSheet = createTrendsSheet(data);
+		const trendsSheet = createTrendsSheet(data, XLSX);
 		XLSX.utils.book_append_sheet(workbook, trendsSheet, "Tendências");
 	}
 
 	// Risk Analysis Sheet
 	if (options.includePredictions !== false) {
-		const riskSheet = createRiskAnalysisSheet(data);
+		const riskSheet = createRiskAnalysisSheet(data, XLSX);
 		XLSX.utils.book_append_sheet(workbook, riskSheet, "Análise de Risco");
 	}
 
 	// Goals Sheet
 	if (options.includeGoals !== false && data.goals.length > 0) {
-		const goalsSheet = createGoalsSheet(data);
+		const goalsSheet = createGoalsSheet(data, XLSX);
 		XLSX.utils.book_append_sheet(workbook, goalsSheet, "Objetivos");
 	}
 
@@ -468,7 +476,7 @@ function getImprovementLabel(value: number): string {
 	return "Baixo";
 }
 
-function createTrendsSheet(data: AnalyticsExportData): XLSX.WorkSheet {
+function createTrendsSheet(data: AnalyticsExportData, XLSX: ExcelApi): WorkSheet {
 	const trendsData = [
 		["Dados de Evolução"],
 		[""],
@@ -498,7 +506,10 @@ function getTrendDirection(change: number): string {
 	return change > 0 ? "Positiva ↗" : "Negativa ↘";
 }
 
-function createRiskAnalysisSheet(data: AnalyticsExportData): XLSX.WorkSheet {
+function createRiskAnalysisSheet(
+	data: AnalyticsExportData,
+	XLSX: ExcelApi,
+): WorkSheet {
 	const riskData = [
 		["Análise de Risco e Prognóstico"],
 		[""],
@@ -549,7 +560,7 @@ function getRiskInterpretation(
 	return "Excelente prognóstico";
 }
 
-function createGoalsSheet(data: AnalyticsExportData): XLSX.WorkSheet {
+function createGoalsSheet(data: AnalyticsExportData, XLSX: ExcelApi): WorkSheet {
 	const goalsData = [
 		["Objetivos de Tratamento"],
 		[""],
@@ -974,6 +985,7 @@ export function useBatchAnalyticsExport() {
 			const timestamp = format(new Date(), "yyyyMMdd_HHmm", { locale: ptBR });
 
 			if (outputFormat === "excel") {
+				const XLSX = await loadExcelApi();
 				const workbook = XLSX.utils.book_new();
 
 				const summaryData = [

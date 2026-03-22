@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { Suspense, lazy, useState } from "react";
 import {
 	PanelLeft,
 	PanelRight,
@@ -26,11 +26,18 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { knowledgeService } from "@/features/wiki/services/knowledgeService";
 import type { KnowledgeArtifact } from "@/features/wiki/types/knowledge";
-import { Document, Page, pdfjs } from "react-pdf";
 import { aiService } from "@/features/wiki/services/aiService";
 
-// Configure worker for react-pdf
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+const ReactPdfDocument = lazy(() =>
+	import("@/components/pdf/ReactPdfViewer").then((module) => ({
+		default: module.ReactPdfDocument,
+	})),
+);
+const ReactPdfPage = lazy(() =>
+	import("@/components/pdf/ReactPdfViewer").then((module) => ({
+		default: module.ReactPdfPage,
+	})),
+);
 
 interface StudyModeProps {
 	artifact: KnowledgeArtifact | null;
@@ -191,10 +198,8 @@ export function StudyMode({ artifact, onClose }: StudyModeProps) {
 					{/* PDF Canvas */}
 					<div className="flex-1 overflow-auto bg-slate-200/50 p-8 flex justify-center">
 						{artifact.url ? (
-							<Document
-								file={artifact.url}
-								onLoadSuccess={onDocumentLoadSuccess}
-								loading={
+							<Suspense
+								fallback={
 									<div className="flex flex-col items-center justify-center h-full space-y-4">
 										<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
 										<p className="text-sm text-muted-foreground">
@@ -202,30 +207,43 @@ export function StudyMode({ artifact, onClose }: StudyModeProps) {
 										</p>
 									</div>
 								}
-								error={
-									<div className="flex flex-col items-center justify-center h-full p-8 text-center">
-										<FileText className="h-12 w-12 text-red-400 mb-4" />
-										<p className="text-red-500 font-medium">
-											Erro ao carregar PDF
-										</p>
-										<p className="text-sm text-muted-foreground mt-2">
-											Verifique se o arquivo existe ou se você tem permissão de
-											acesso.
-										</p>
-										<p className="text-xs text-slate-400 mt-4 break-all max-w-md">
-											{artifact.url}
-										</p>
-									</div>
-								}
 							>
-								<Page
-									pageNumber={pageNumber}
-									scale={scale}
-									className="shadow-lg mb-4"
-									renderTextLayer={true}
-									renderAnnotationLayer={true}
-								/>
-							</Document>
+								<ReactPdfDocument
+									file={artifact.url}
+									onLoadSuccess={onDocumentLoadSuccess}
+									loading={
+										<div className="flex flex-col items-center justify-center h-full space-y-4">
+											<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+											<p className="text-sm text-muted-foreground">
+												Carregando documento...
+											</p>
+										</div>
+									}
+									error={
+										<div className="flex flex-col items-center justify-center h-full p-8 text-center">
+											<FileText className="h-12 w-12 text-red-400 mb-4" />
+											<p className="text-red-500 font-medium">
+												Erro ao carregar PDF
+											</p>
+											<p className="text-sm text-muted-foreground mt-2">
+												Verifique se o arquivo existe ou se você tem permissão de
+												acesso.
+											</p>
+											<p className="text-xs text-slate-400 mt-4 break-all max-w-md">
+												{artifact.url}
+											</p>
+										</div>
+									}
+								>
+									<ReactPdfPage
+										pageNumber={pageNumber}
+										scale={scale}
+										className="shadow-lg mb-4"
+										renderTextLayer={true}
+										renderAnnotationLayer={true}
+									/>
+								</ReactPdfDocument>
+							</Suspense>
 						) : (
 							<div className="flex flex-col items-center justify-center h-full text-center text-slate-400">
 								<FileText className="h-16 w-16 mb-4 opacity-20" />

@@ -9,7 +9,7 @@ config({ path: '.env.local', override: true });
 config({ path: '.env', override: false });
 
 const { Client } = pg;
-const ROUTES_DIR = resolve(process.cwd(), 'workers/src/routes');
+const ROUTES_DIR = resolve(process.cwd(), 'apps/api/src/routes');
 const SQL_REF_REGEX = /\b(FROM|JOIN|INTO|UPDATE|DELETE FROM)\s+([a-zA-Z_][a-zA-Z0-9_]*)/g;
 const IGNORED_REFS = new Set([
   'LATERAL',

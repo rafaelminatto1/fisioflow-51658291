@@ -21,7 +21,7 @@ import { getNeonAccessToken } from "@/lib/auth/neon-token";
 import { getWorkersApiUrl } from "./config";
 
 // Importação de tipo — sem impacto no bundle de runtime
-import type { AppType } from "../../../../workers/src/index";
+import type { AppType } from "../../../apps/api/src/index";
 
 function getBaseUrl(): string {
 	return getWorkersApiUrl();
