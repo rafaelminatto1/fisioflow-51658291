@@ -143,8 +143,18 @@ export default defineConfig(({ mode }) => {
                 priority: 25,
               },
               {
-                name: 'dicom-vendor',
-                test: /[\\/]node_modules[\\/](@cornerstonejs|dicom-parser)[\\/]/,
+                name: 'vtk-vendor',
+                test: /[\\/]node_modules[\\/]@kitware[\\/]vtk\.js[\\/]/,
+                priority: 26,
+              },
+              {
+                name: 'cornerstone-vendor',
+                test: /[\\/]node_modules[\\/]@cornerstonejs[\\/]/,
+                priority: 25,
+              },
+              {
+                name: 'dicom-parser-vendor',
+                test: /[\\/]node_modules[\\/]dicom-parser[\\/]/,
                 priority: 25,
               },
               {
@@ -154,7 +164,7 @@ export default defineConfig(({ mode }) => {
               },
               {
                 name: 'ui-vendor',
-                test: /[\\/]node_modules[\\/](@radix-ui|lucide-react|date-fns)[\\/]/,
+                test: /[\\/]node_modules[\\/](@radix-ui|date-fns)[\\/]/,
                 priority: 15,
               }
             ],
