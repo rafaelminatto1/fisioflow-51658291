@@ -7,15 +7,15 @@
  */
 
 import { PoseDetection, PoseProvider, AnalysisType } from "@/types/pose";
-import { Capacitor } from "@capacitor/core";
 import { fisioLogger as logger } from "@/lib/errors/logger";
+import { isNativePlatform } from "@/lib/platform/native";
 
 class NativePoseProvider implements PoseProvider {
 	private isLoaded: boolean = false;
 	private isMobile: boolean = false;
 
 	constructor() {
-		this.isMobile = Capacitor.isNativePlatform();
+		this.isMobile = isNativePlatform();
 	}
 
 	async initialize(): Promise<void> {

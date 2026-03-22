@@ -34,6 +34,9 @@ import {
 	Mail,
 	BookOpen,
 	FlaskConical,
+	Target,
+	CalendarDays,
+	Package,
 } from "lucide-react";
 
 const menuGroups = [

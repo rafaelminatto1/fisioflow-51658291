@@ -759,19 +759,7 @@ export function ExerciseLibrary({
 
 	return (
 		<div className="flex flex-col space-y-4 w-full">
-			{/* Educational Banner - KV Cache */}
-			<div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 p-3.5 rounded-xl flex items-start gap-3 animate-in fade-in shadow-sm">
-				<div className="text-xl leading-none">⚡</div>
-				<div className="text-sm">
-					<strong className="block mb-0.5">
-						Carregamento Instantâneo Ativado:
-					</strong>
-					Implementamos a tecnologia de <em>Edge Cache</em> global. Nosso
-					catálogo com milhares de exercícios agora carrega instantaneamente,
-					direto do servidor mais próximo da clínica, economizando seu tempo
-					durante as prescrições.
-				</div>
-			</div>
+
 
 			{/* Search and Filters */}
 			<div className="flex flex-col gap-4 flex-shrink-0">

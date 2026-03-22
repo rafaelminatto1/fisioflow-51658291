@@ -68,7 +68,6 @@ import {
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { exportAttendanceReport } from "@/lib/export/excelExport";
 import { useToast } from "@/hooks/use-toast";
 
 const getStatusBadge = (status: string) => {
@@ -157,6 +156,9 @@ export default function AttendanceReport() {
 
 		setIsExporting(true);
 		try {
+			const { exportAttendanceReport } = await import(
+				"@/lib/export/excelExport"
+			);
 			await exportAttendanceReport({
 				totalAppointments: data.totalAppointments,
 				attended: data.attended,

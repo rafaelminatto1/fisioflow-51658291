@@ -11,7 +11,6 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Trash2, Check, X, Download, FileText } from "lucide-react";
-import { exportPrestadoresPDF } from "@/lib/export/pdfExport";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -88,9 +87,10 @@ export function PrestadoresTab({ eventoId }: PrestadoresTabProps) {
 		await exportPrestadores.mutateAsync(eventoId);
 	};
 
-	const handleExportPDF = () => {
+	const handleExportPDF = async () => {
 		if (!prestadores) return;
 
+		const { exportPrestadoresPDF } = await import("@/lib/export/pdfExport");
 		exportPrestadoresPDF(
 			prestadores.map((p) => ({
 				nome: p.nome,

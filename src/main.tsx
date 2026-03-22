@@ -3,15 +3,27 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
-import { initSentry } from "@/lib/sentry/config";
-import { initAppCheck } from "@/lib/app-check";
 import { fisioLogger as logger } from "@/lib/errors/logger";
-import { initializeRemoteConfig } from "@/lib/remote-config-manager";
-import { initPostHog } from "@/lib/analytics/posthog";
+import {
+	ensureServiceWorkerRegistration,
+	requestBrowserNotificationPermission,
+} from "@/lib/pwa/serviceWorker";
 
 // Inicialização paralela de serviços não-bloqueantes
 const initServices = async () => {
 	try {
+		const [
+			{ initSentry },
+			{ initPostHog },
+			{ initAppCheck },
+			{ initializeRemoteConfig },
+		] = await Promise.all([
+			import("@/lib/sentry/config"),
+			import("@/lib/analytics/posthog"),
+			import("@/lib/app-check"),
+			import("@/lib/remote-config-manager"),
+		]);
+
 		initSentry();
 		initPostHog();
 		initAppCheck();
@@ -22,29 +34,12 @@ const initServices = async () => {
 		await Promise.allSettled(secondaryServices);
 		logger.info("Serviços secundários inicializados", null, "main.tsx");
 
-		// Register Service Worker for PWA and Push Notifications
-		if ("serviceWorker" in navigator && import.meta.env.PROD) {
-			try {
-				const registration = await navigator.serviceWorker.register("/sw.js");
-				logger.info(
-					"Service Worker registrado com sucesso",
-					{ scope: registration.scope },
-					"main.tsx",
-				);
-
-				// Request Notification Permission
-				if (typeof window !== "undefined" && "Notification" in window) {
-					if (Notification.permission === "default") {
-						const permission = await Notification.requestPermission();
-						logger.info("Notification permission:", { permission }, "main.tsx");
-					}
-				}
-			} catch (swError) {
-				logger.error(
-					"Falha ao registrar Service Worker",
-					swError as Error,
-					"main.tsx",
-				);
+		// PWA fallback: manter um único fluxo de registro de SW.
+		const registration = await ensureServiceWorkerRegistration();
+		if (registration) {
+			const permission = await requestBrowserNotificationPermission();
+			if (permission) {
+				logger.info("Notification permission:", { permission }, "main.tsx");
 			}
 		}
 	} catch (error) {

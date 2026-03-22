@@ -12,6 +12,7 @@ import {
 	Filter,
 	Plus,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,9 +32,12 @@ import { ArticleUploadDialog } from "../components/dialogs/ArticleUploadDialog";
 import type { KnowledgeArtifact } from "@/features/wiki/types/knowledge";
 import { seedKnowledgeBase } from "@/features/wiki/utils/seedData";
 import { toast } from "sonner";
+import { wikiService } from "@/lib/services/wikiService";
+import { getEvidenceTree } from "@/features/wiki/utils/evidenceTrails";
 
 export default function WikiDashboard() {
 	const { organizationId, user } = useAuth();
+	const navigate = useNavigate();
 	const queryClient = useQueryClient();
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedArtifact, setSelectedArtifact] =
@@ -48,6 +52,17 @@ export default function WikiDashboard() {
 				: Promise.resolve([]),
 		enabled: !!organizationId,
 	});
+
+	const { data: wikiPages = [] } = useQuery({
+		queryKey: ["wiki-pages", organizationId],
+		queryFn: () =>
+			organizationId
+				? wikiService.listPages(organizationId)
+				: Promise.resolve([]),
+		enabled: !!organizationId,
+	});
+
+	const evidenceTree = getEvidenceTree(wikiPages);
 
 	const filteredArtifacts = artifacts.filter(
 		(art) =>
@@ -184,6 +199,76 @@ export default function WikiDashboard() {
 					</CardContent>
 				</Card>
 			</div>
+
+			{evidenceTree.root && (
+				<section className="space-y-4">
+					<div className="flex items-center justify-between">
+						<div>
+							<h2 className="text-xl font-semibold text-slate-900">
+								Trilhas de Evidência
+							</h2>
+							<p className="text-sm text-slate-500">
+								Acesso rápido às trilhas clínicas e aos protocolos práticos já
+								integrados na wiki.
+							</p>
+						</div>
+						<Button
+							variant="outline"
+							onClick={() => navigate(`/wiki/${evidenceTree.root?.slug}`)}
+						>
+							Abrir wiki
+						</Button>
+					</div>
+
+					<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+						{evidenceTree.trails.map(({ trail, protocols }) => (
+							<Card
+								key={trail.id}
+								className="border-slate-200 shadow-sm hover:shadow-md transition-shadow"
+							>
+								<CardHeader className="space-y-2">
+									<div className="flex items-center justify-between gap-2">
+										<Badge
+											variant="outline"
+											className="border-emerald-200 bg-emerald-50 text-emerald-700"
+										>
+											Trilha
+										</Badge>
+										<Badge variant="secondary">
+											{protocols.length} protocolo{protocols.length === 1 ? "" : "s"}
+										</Badge>
+									</div>
+									<CardTitle className="text-base leading-snug">
+										{trail.title}
+									</CardTitle>
+									<CardDescription className="line-clamp-3">
+										{trail.content.replace(/[#*`>-]/g, "").slice(0, 120)}...
+									</CardDescription>
+								</CardHeader>
+								<CardContent className="space-y-3">
+									<Button
+										size="sm"
+										className="w-full bg-emerald-600 hover:bg-emerald-700"
+										onClick={() => navigate(`/wiki/${trail.slug}`)}
+									>
+										Abrir trilha
+									</Button>
+									{protocols[0] && (
+										<Button
+											size="sm"
+											variant="outline"
+											className="w-full"
+											onClick={() => navigate(`/wiki/${protocols[0].slug}`)}
+										>
+											Abrir protocolo
+										</Button>
+									)}
+								</CardContent>
+							</Card>
+						))}
+					</div>
+				</section>
+			)}
 
 			{/* Content Tabs */}
 			<Tabs defaultValue="all" className="space-y-6">

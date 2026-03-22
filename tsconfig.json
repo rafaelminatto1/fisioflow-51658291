@@ -14,18 +14,6 @@
       "@/*": [
         "./src/*"
       ],
-      "@fisioflow/shared-types": [
-        "./packages/shared-types/src"
-      ],
-      "@fisioflow/shared-constants": [
-        "./packages/shared-constants/src"
-      ],
-      "@fisioflow/shared-ui": [
-        "./packages/shared-ui/src"
-      ],
-      "@fisioflow/shared-utils": [
-        "./packages/shared-utils/src"
-      ],
       "@fisioflow/ui": [
         "./packages/ui/src"
       ],

@@ -7,8 +7,8 @@ import {
 	LucideIcon,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
-import { Capacitor } from "@capacitor/core";
 import { cn } from "@/lib/utils";
+import { isNativePlatform } from "@/lib/platform/native";
 
 export interface TabItem {
 	path: string;
@@ -32,7 +32,7 @@ export function BottomTabBar() {
 	const location = useLocation();
 
 	// Só mostra em plataformas nativas (iOS/Android)
-	if (!Capacitor.isNativePlatform()) {
+	if (!isNativePlatform()) {
 		return null;
 	}
 

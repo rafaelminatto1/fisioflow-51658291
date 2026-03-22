@@ -107,6 +107,15 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		],
 		observations: ["Usar como base para triagem e estratificacao de risco."],
 		keyQuestions: ["Quais intervencoes evitar em dor lombar nao especifica?"],
+		metadata: {
+			attachments: [
+				{
+					name: "JOSPT 2021 CPG - Low Back Pain",
+					url: "https://www.jospt.org/doi/pdf/10.2519/jospt.2021.0507",
+					type: "document",
+				},
+			],
+		},
 	},
 	{
 		id: "ortho-pfp-2019",
@@ -127,6 +136,15 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		],
 		observations: ["Alinhar progressao com tolerancia a carga e funcao."],
 		keyQuestions: ["Quais testes funcionais priorizar no retorno ao esporte?"],
+		metadata: {
+			attachments: [
+				{
+					name: "JOSPT 2019 CPG - Patellofemoral Pain",
+					url: "https://www.jospt.org/doi/pdf/10.2519/jospt.2019.0302",
+					type: "document",
+				},
+			],
+		},
 	},
 	{
 		id: "ortho-ankle-2021",
@@ -147,6 +165,15 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		],
 		observations: ["Mapear risco de instabilidade cronica."],
 		keyQuestions: ["Quais criterios objetivos usar para alta?"],
+		metadata: {
+			attachments: [
+				{
+					name: "JOSPT 2021 CPG - Lateral Ankle Sprain",
+					url: "https://www.jospt.org/doi/pdf/10.2519/jospt.2021.0302",
+					type: "document",
+				},
+			],
+		},
 	},
 	{
 		id: "ortho-achilles-2018",
@@ -167,6 +194,15 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		],
 		observations: ["Documentar resposta a carga e rigidez matinal."],
 		keyQuestions: ["Qual janela ideal para carga excêntrica?"],
+		metadata: {
+			attachments: [
+				{
+					name: "JOSPT 2018 CPG - Achilles Tendinopathy",
+					url: "https://www.jospt.org/doi/pdf/10.2519/jospt.2018.0302",
+					type: "document",
+				},
+			],
+		},
 	},
 	{
 		id: "ortho-rotator-cuff-2025",
@@ -187,6 +223,38 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		],
 		observations: ["Alinhar conduta com perfil funcional e idade."],
 		keyQuestions: ["Quais sinais indicam falha do manejo conservador?"],
+		metadata: {
+			attachments: [
+				{
+					name: "APTA 2025 CPG - Rotator Cuff Tendinopathy",
+					url: "https://www.orthopt.org/uploads/content_files/files/Rotator_Cuff_CPG.pdf",
+					type: "document",
+				},
+			],
+		},
+	},
+	{
+		id: "ortho-glenohumeral-oa-cpg-2023",
+		title:
+			"Physical Therapist Management of Glenohumeral Joint Osteoarthritis",
+		group: "Ortopedia",
+		subgroup: "Ombro",
+		focus: ["Osteoartrose", "Exercicio", "Manejo"],
+		evidence: "CPG",
+		year: 2023,
+		source: "PTJ / APTA",
+		url: "https://pubmed.ncbi.nlm.nih.gov/37115808/",
+		status: "verified",
+		tags: ["ombro", "osteoartrose", "diretriz"],
+		highlights: [
+			"Diretriz especifica para manejo fisioterapeutico da osteoartrose glenoumeral",
+			"Integra avaliacao funcional, educacao e exercicio terapeutico",
+			"Ajuda a estratificar expectativa, funcao e indicacoes de encaminhamento",
+		],
+		observations: [
+			"Boa base para protocolos de dor e funcao em ombro degenerativo.",
+		],
+		keyQuestions: ["Quais pacientes devem seguir manejo conservador versus encaminhamento?"],
 	},
 	{
 		id: "ortho-hip-oa",
@@ -207,6 +275,15 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		],
 		observations: ["Mapear evolucao funcional com escalas validadas."],
 		keyQuestions: ["Quais escalas de desfecho priorizar?"],
+		metadata: {
+			attachments: [
+				{
+					name: "APTA 2025 CPG - Hip Osteoarthritis",
+					url: "https://www.orthopt.org/uploads/content_files/files/Hip_pain_and_mobility_deficits_hip_osteoarthritis_2025.pdf",
+					type: "document",
+				},
+			],
+		},
 	},
 	{
 		id: "ortho-knee-oa",
@@ -227,6 +304,193 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		],
 		observations: ["Usar escalas KOOS e WOMAC para acompanhamento."],
 		keyQuestions: ["Como integrar treinamento de forca e dor?"],
+	},
+	{
+		id: "ortho-fracture-rehab-cpg-review-2020",
+		title:
+			"Fracture rehabilitation clinical practice guidelines: systematic review for the WHO package",
+		group: "Ortopedia",
+		subgroup: "Fraturas",
+		focus: ["Fraturas", "Reabilitacao", "Diretrizes"],
+		evidence: "SystematicReview",
+		year: 2020,
+		source: "Journal of Orthopaedics and Traumatology",
+		url: "https://jorthoptraumatol.springeropen.com/articles/10.1186/s10195-020-00560-w",
+		status: "verified",
+		tags: ["fratura", "diretriz", "reabilitacao"],
+		highlights: [
+			"Mapeia diretrizes clinicas para reabilitacao apos fraturas em adultos",
+			"Mostra que ha melhor cobertura para fraturas de radio distal e femur/quadril",
+			"Aponta baixa densidade de recomendacoes especificas de fisioterapia",
+		],
+		observations: [
+			"Usar como referencia-base para paginas de fraturas e para identificar lacunas de conteudo.",
+		],
+		keyQuestions: ["Quais fraturas ainda carecem de protocolo interno robusto?"],
+	},
+	{
+		id: "ortho-tka-cpg-2020",
+		title: "Physical Therapist Management of Total Knee Arthroplasty",
+		group: "Ortopedia",
+		subgroup: "Joelho",
+		focus: ["Artroplastia", "Pos-operatorio", "Exercicio"],
+		evidence: "CPG",
+		year: 2020,
+		source: "PTJ / APTA",
+		url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC7462050/",
+		status: "verified",
+		tags: ["artroplastia", "joelho", "tka"],
+		highlights: [
+			"Recomenda exercicio pre-operatorio, mobilidade precoce e treino motor",
+			"Inclui NMES e fortalecimento de maior intensidade no pos-agudo inicial",
+			"Desencoraja CPM em TKA primaria sem complicacoes",
+		],
+		observations: [
+			"Boa referencia para padronizar bundles de pos-operatorio e alta funcional.",
+		],
+		keyQuestions: ["Quais componentes devem ser obrigatorios no protocolo pos-TKA?"],
+	},
+	{
+		id: "ortho-tka-rehab-2023",
+		title: "Rehabilitation for Total Knee Arthroplasty: A Systematic Review",
+		group: "Ortopedia",
+		subgroup: "Joelho",
+		focus: ["Artroplastia", "Pos-operatorio", "Reabilitacao"],
+		evidence: "SystematicReview",
+		year: 2023,
+		source: "Am J Phys Med Rehabil",
+		url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC9464796/",
+		status: "verified",
+		tags: ["artroplastia", "joelho", "reabilitacao"],
+		highlights: [
+			"Sintetiza intervencoes agudas e pos-agudas apos TKA",
+			"Reforca componentes de forca, flexibilidade, treino funcional e equilibrio",
+			"Mostra heterogeneidade entre programas e necessidade de melhor dosagem",
+		],
+		observations: [
+			"Complementa a CPG com panorama comparativo das estrategias de reabilitacao.",
+		],
+		keyQuestions: ["Quais componentes do protocolo geram maior impacto funcional?"],
+		metadata: {
+			attachments: [
+				{
+					name: "Systematic Review - Knee Arthroplasty (PMC)",
+					url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC9464796/pdf/nihms-1786452.pdf",
+					type: "document",
+				},
+			],
+		},
+	},
+	{
+		id: "ortho-tha-rehab-2023",
+		title: "Rehabilitation for Total Hip Arthroplasty: A Systematic Review",
+		group: "Ortopedia",
+		subgroup: "Quadril",
+		focus: ["Artroplastia", "Pos-operatorio", "Reabilitacao"],
+		evidence: "SystematicReview",
+		year: 2023,
+		source: "Am J Phys Med Rehabil",
+		url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC9464790/",
+		status: "verified",
+		tags: ["artroplastia", "quadril", "tha"],
+		highlights: [
+			"Compara diferentes programas de reabilitacao apos THA eletiva",
+			"Mostra ausencia de diferencas consistentes entre programas diversos para varios desfechos",
+			"Reforca individualizacao e melhor definicao de atributos do programa",
+		],
+		observations: [
+			"Util para evitar protocolos excessivamente complexos sem ganho clinico comprovado.",
+		],
+		keyQuestions: [
+			"Quais componentes realmente diferenciam um bom protocolo pos-THA?",
+		],
+		metadata: {
+			attachments: [
+				{
+					name: "Systematic Review - Hip Arthroplasty (PMC)",
+					url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC9464790/pdf/nihms-1786451.pdf",
+					type: "document",
+				},
+			],
+		},
+	},
+	{
+		id: "ortho-tha-prehab-2022",
+		title:
+			"Effect of Prehabilitation in Form of Exercise and/or Education in Patients Undergoing Total Hip Arthroplasty",
+		group: "Ortopedia",
+		subgroup: "Quadril",
+		focus: ["Pre-operatorio", "Artroplastia", "Funcao"],
+		evidence: "SystematicReview",
+		year: 2022,
+		source: "Medicina (Kaunas)",
+		url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC9228426/",
+		status: "verified",
+		tags: ["prehabilitation", "quadril", "tha"],
+		highlights: [
+			"Exercicio pre-operatorio melhora testes funcionais apos THA",
+			"Educacao isolada nao mostrou efeito consistente nos desfechos pos-operatorios",
+			"Nao foram relatados efeitos negativos relevantes da prehabilitation",
+		],
+		observations: [
+			"Bom artigo-base para trilhas de pre-op em artroplastia de quadril.",
+		],
+		keyQuestions: ["Como estruturar um bundle minimo de prehab para THA?"],
+		metadata: {
+			attachments: [
+				{
+					name: "Prehabilitation - Hip Arthroplasty (PMC)",
+					url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC9228426/pdf/medicina-58-00742.pdf",
+					type: "document",
+				},
+			],
+		},
+	},
+	{
+		id: "ortho-tka-prehab-2025",
+		title:
+			"Preoperative High-Intensity Strength Training and Outcomes After Total Knee Arthroplasty",
+		group: "Ortopedia",
+		subgroup: "Joelho",
+		focus: ["Pre-operatorio", "Artroplastia", "Forca"],
+		evidence: "SystematicReview",
+		year: 2025,
+		source: "J Arthroplasty",
+		url: "https://pubmed.ncbi.nlm.nih.gov/41320898/",
+		status: "verified",
+		tags: ["prehabilitation", "joelho", "tka"],
+		highlights: [
+			"Treino de forca pre-operatorio de maior intensidade melhora 6MWT e WOMAC",
+			"Mostra beneficio tambem para flexao e qualidade de vida apos TKA",
+			"Reforca prehab ativa em vez de apenas orientacao pre-operatoria",
+		],
+		observations: [
+			"Priorizar em pacientes com boa tolerancia a treino e perda funcional pre-op.",
+		],
+		keyQuestions: ["Quem mais se beneficia de prehab de alta intensidade antes da TKA?"],
+	},
+	{
+		id: "ortho-hip-fracture-exercise-2023",
+		title:
+			"Effectiveness of intensive versus regular or no exercise in older adults after hip fracture surgery",
+		group: "Ortopedia",
+		subgroup: "Quadril",
+		focus: ["Fratura", "Pos-operatorio", "Exercicio"],
+		evidence: "SystematicReview",
+		year: 2023,
+		source: "Brazilian Journal of Physical Therapy",
+		url: "https://pubmed.ncbi.nlm.nih.gov/36738661/",
+		status: "verified",
+		tags: ["fratura de quadril", "idoso", "pos-operatorio"],
+		highlights: [
+			"Exercicio mais intensivo melhora funcao fisica, mobilidade e AVDs apos cirurgia",
+			"Mostra ganhos em velocidade de marcha, TUG e equilibrio",
+			"A qualidade da evidencia foi baixa, mas o sinal clinico foi favoravel",
+		],
+		observations: [
+			"Valioso para protocolos de fratura de quadril com foco em mobilizacao precoce.",
+		],
+		keyQuestions: ["Como aumentar intensidade sem comprometer seguranca em idosos?"],
 	},
 	{
 		id: "ortho-neck-pain",
@@ -287,6 +551,15 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		],
 		observations: ["Definir progressao de carga com testes funcionais."],
 		keyQuestions: ["Quais parametros de carga usar?"],
+		metadata: {
+			attachments: [
+				{
+					name: "JOSPT 2022 CPG - Lateral Elbow Pain",
+					url: "https://www.jospt.org/doi/pdf/10.2519/jospt.2022.0302",
+					type: "document",
+				},
+			],
+		},
 	},
 	{
 		id: "ortho-shoulder-instability",
@@ -320,6 +593,15 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		],
 		observations: ["Usar LEFS e escalas funcionais padrao."],
 		keyQuestions: ["Qual combinacao de intervencoes e mais eficiente?"],
+		metadata: {
+			attachments: [
+				{
+					name: "JOSPT 2023 CPG - Plantar Fasciitis",
+					url: "https://www.jospt.org/doi/pdf/10.2519/jospt.2023.0303",
+					type: "document",
+				},
+			],
+		},
 	},
 	{
 		id: "sport-rtp-panther-2020",
@@ -340,6 +622,37 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		],
 		observations: ["Usar como guia para baterias de teste."],
 		keyQuestions: ["Quais testes devem ser obrigatorios?"],
+		metadata: {
+			attachments: [
+				{
+					name: "Panther Consensus 2020 - ACL RTS",
+					url: "https://www.zora.uzh.ch/id/eprint/193138/1/Panther_Consensus_RTS_ZORA.pdf",
+					type: "document",
+				},
+			],
+		},
+	},
+	{
+		id: "sport-acl-prevention-cpg-2023",
+		title: "Exercise-Based Knee and Anterior Cruciate Ligament Injury Prevention",
+		group: "Esportiva",
+		subgroup: "Joelho",
+		focus: ["Prevencao", "ACL", "Treino neuromuscular"],
+		evidence: "CPG",
+		year: 2023,
+		source: "JOSPT",
+		url: "https://pubmed.ncbi.nlm.nih.gov/36587265/",
+		status: "verified",
+		tags: ["acl", "prevencao", "neuromuscular"],
+		highlights: [
+			"Atualiza a diretriz de prevencao de lesoes de joelho e LCA com base em exercicio",
+			"Fortalece o uso de programas neuromusculares estruturados como padrao preventivo",
+			"Pode ser aplicado tanto em prevencao primaria quanto secundaria",
+		],
+		observations: [
+			"Importante para trilhas esportivas de prevencao, aquecimento e retorno gradual.",
+		],
+		keyQuestions: ["Como integrar programas preventivos de LCA na rotina da equipe?"],
 	},
 	{
 		id: "sport-doha-groin-2015",
@@ -362,6 +675,15 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		keyQuestions: [
 			"Como integrar classificacao com protocolos de reabilitacao?",
 		],
+		metadata: {
+			attachments: [
+				{
+					name: "Doha Agreement 2015 - Groin Pain",
+					url: "https://bjsm.bmj.com/content/bjsports/49/12/768.full.pdf",
+					type: "document",
+				},
+			],
+		},
 	},
 	{
 		id: "sport-hamstring",
@@ -526,6 +848,15 @@ export const knowledgeBase: KnowledgeArticle[] = [
 		],
 		observations: ["Incluir criterios objetivos de progressao."],
 		keyQuestions: ["Como padronizar criterios de alta?"],
+		metadata: {
+			attachments: [
+				{
+					name: "Aspetar 2023 CPG - ACL Reconstruction",
+					url: "https://bjsm.bmj.com/content/bjsports/early/2023/02/01/bjsports-2022-106173.full.pdf",
+					type: "document",
+				},
+			],
+		},
 	},
 	{
 		id: "postop-acl-kngf-2016",
@@ -589,16 +920,26 @@ export const knowledgeBase: KnowledgeArticle[] = [
 	},
 	{
 		id: "postop-meniscus-repair",
-		title: "Reparo meniscal: protocolos e criterios de carga",
+		title:
+			"Return-to-Play and Rehabilitation Protocols Following Isolated Meniscal Repair",
 		group: "Pos-operatorio esportivo",
 		subgroup: "Joelho",
 		focus: ["Carga", "ROM", "RTS"],
-		evidence: "Protocol",
-		status: "pending",
+		evidence: "SystematicReview",
+		year: 2021,
+		source: "Arthroscopy, Sports Medicine, and Rehabilitation",
+		url: "https://pubmed.ncbi.nlm.nih.gov/33615271/",
+		status: "verified",
 		tags: ["menisco", "reparo"],
-		highlights: pendingHighlights,
-		observations: pendingObservations,
-		keyQuestions: ["Qual janela de protecao biologica?"],
+		highlights: [
+			"A literatura usa majoritariamente criterios por tempo, com 6 meses sendo o marco mais comum de retorno",
+			"Ha grande heterogeneidade entre protocolos e baixa padronizacao de criterios objetivos",
+			"O retorno ao esporte e frequente, mas a qualidade do criterio de progressao ainda e limitada",
+		],
+		observations: [
+			"Bom artigo para construir protocolo interno mais criterial do que a literatura media.",
+		],
+		keyQuestions: ["Quais criterios objetivos devem complementar o criterio temporal apos reparo meniscal?"],
 	},
 	{
 		id: "postop-acl-meniscus",
@@ -615,42 +956,80 @@ export const knowledgeBase: KnowledgeArticle[] = [
 	},
 	{
 		id: "postop-rotator-cuff-repair",
-		title: "Reparo do manguito: fases de mobilidade e forca",
+		title:
+			"Effectiveness of early versus delayed rehabilitation following rotator cuff repair",
 		group: "Pos-operatorio esportivo",
 		subgroup: "Ombro",
 		focus: ["ROM", "Forca", "Retorno"],
-		evidence: "Protocol",
-		status: "pending",
+		evidence: "SystematicReview",
+		year: 2021,
+		source: "PLoS One",
+		url: "https://pubmed.ncbi.nlm.nih.gov/34048450/",
+		status: "verified",
 		tags: ["manguito", "reparo"],
-		highlights: pendingHighlights,
-		observations: pendingObservations,
-		keyQuestions: ["Qual timing para carga ativa?"],
+		highlights: [
+			"Mobilizacao precoce melhora ROM inicial apos reparo do manguito",
+			"Na maioria dos desfechos nao houve diferenca clinica relevante entre protocolos",
+			"Reabilitacao precoce nao aumentou risco de re-ruptura nessa sintese",
+		],
+		observations: [
+			"Usar para calibrar sling, progressao de movimento e expectativas por fase.",
+		],
+		keyQuestions: ["Qual timing ideal para progredir de movimento passivo para ativo?"],
+		metadata: {
+			attachments: [
+				{
+					name: "Meta-analysis - Rotator Cuff Repair (PLoS)",
+					url: "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0252137&type=printable",
+					type: "document",
+				},
+			],
+		},
 	},
 	{
 		id: "postop-shoulder-instability",
-		title: "Instabilidade do ombro pos-cirurgia: criterios de retorno",
+		title: "Return to sport after surgical treatment for posterior shoulder instability",
 		group: "Pos-operatorio esportivo",
 		subgroup: "Ombro",
 		focus: ["Estabilidade", "RTS"],
-		evidence: "Protocol",
-		status: "pending",
+		evidence: "SystematicReview",
+		year: 2020,
+		source: "JSES International",
+		url: "https://pubmed.ncbi.nlm.nih.gov/33345218/",
+		status: "verified",
 		tags: ["ombro", "instabilidade"],
-		highlights: pendingHighlights,
-		observations: pendingObservations,
-		keyQuestions: ["Quais testes de estabilidade sao chave?"],
+		highlights: [
+			"Mostra alta taxa de retorno ao esporte apos cirurgia para instabilidade posterior do ombro",
+			"O tempo de retorno relatado gira em torno de 4 a 8 meses",
+			"Os desfechos funcionais melhoram, mas ainda ha variacao no retorno ao nivel pre-lesao",
+		],
+		observations: [
+			"Util para calibrar expectativa de retorno e progressao funcional apos estabilizacao.",
+		],
+		keyQuestions: ["Quais testes e marcos clinicos devem liberar retorno overhead ou de contato?"],
 	},
 	{
 		id: "postop-hip-arthroscopy",
-		title: "Artroscopia de quadril: retorno gradual e forca",
+		title:
+			"Criteria for Return to Play After Hip Arthroscopy in the Treatment of Femoroacetabular Impingement",
 		group: "Pos-operatorio esportivo",
 		subgroup: "Quadril",
 		focus: ["RTS", "Forca", "Mobilidade"],
-		evidence: "Protocol",
-		status: "pending",
+		evidence: "SystematicReview",
+		year: 2022,
+		source: "Am J Sports Med",
+		url: "https://pubmed.ncbi.nlm.nih.gov/34591697/",
+		status: "verified",
 		tags: ["quadril", "artroscopia"],
-		highlights: pendingHighlights,
-		observations: pendingObservations,
-		keyQuestions: ["Quando iniciar carga total?"],
+		highlights: [
+			"A maioria dos estudos reporta retorno ao esporte em cerca de 6 a 7 meses apos artroscopia para FAI",
+			"Os criterios de RTP sao pouco padronizados apesar do alto volume de literatura",
+			"Ha boa taxa global de retorno, mas variacao importante para retorno ao nivel previo",
+		],
+		observations: [
+			"Serve de base para um protocolo interno com mais testes objetivos de forca e controle de carga.",
+		],
+		keyQuestions: ["Quais testes devem ser exigidos antes do retorno a mudancas de direcao e impacto?"],
 	},
 	{
 		id: "postop-ucl",
@@ -667,16 +1046,26 @@ export const knowledgeBase: KnowledgeArticle[] = [
 	},
 	{
 		id: "postop-mpfl",
-		title: "Reconstrucao MPFL: estabilidade patelar",
+		title:
+			"Fear of Reinjury, Psychological Factors, and Sport Played Following Medial Patellofemoral Ligament Reconstruction",
 		group: "Pos-operatorio esportivo",
 		subgroup: "Joelho",
 		focus: ["Estabilidade", "Forca"],
-		evidence: "Protocol",
-		status: "pending",
+		evidence: "SystematicReview",
+		year: 2024,
+		source: "Arthroscopy",
+		url: "https://pubmed.ncbi.nlm.nih.gov/38849062/",
+		status: "verified",
 		tags: ["patela", "estabilidade"],
-		highlights: pendingHighlights,
-		observations: pendingObservations,
-		keyQuestions: ["Quais criterios para corrida?"],
+		highlights: [
+			"O retorno ao esporte apos MPFLR e geralmente alto, mas o retorno ao mesmo nivel varia bastante",
+			"Medo de recidiva e prontidao psicologica influenciam fortemente o retorno",
+			"O tipo de esporte interfere na chance de voltar ao nivel anterior",
+		],
+		observations: [
+			"Incluir componente psicologico e esporte-especifico no protocolo de alta apos MPFLR.",
+		],
+		keyQuestions: ["Como incorporar prontidao psicologica ao retorno apos MPFLR?"],
 	},
 	{
 		id: "postop-patellar-tendon",
@@ -693,42 +1082,72 @@ export const knowledgeBase: KnowledgeArticle[] = [
 	},
 	{
 		id: "postop-achilles-rupture",
-		title: "Ruptura de aquiles pos-cirurgia: retorno ao esporte",
+		title:
+			"Successful functional outcomes and return to sport after surgery for acute Achilles tendon rupture",
 		group: "Pos-operatorio esportivo",
 		subgroup: "Tornozelo",
 		focus: ["Forca", "RTS"],
-		evidence: "Protocol",
-		status: "pending",
+		evidence: "SystematicReview",
+		year: 2024,
+		source: "Knee Surgery, Sports Traumatology, Arthroscopy",
+		url: "https://pubmed.ncbi.nlm.nih.gov/41164319/",
+		status: "verified",
 		tags: ["aquiles", "pos-op"],
-		highlights: pendingHighlights,
-		observations: pendingObservations,
-		keyQuestions: ["Quais testes de impulso e salto?"],
+		highlights: [
+			"Apos reparo cirurgico agudo do Aquiles, cerca de 77% retornam ao esporte",
+			"O tempo medio de retorno fica em torno de 8 meses",
+			"Re-ruptura e infeccao sao as complicacoes pos-operatorias mais reportadas",
+		],
+		observations: [
+			"Boa referencia para fases tardias, pliometria e expectativa de retorno ao esporte.",
+		],
+		keyQuestions: ["Quais marcadores de forca plantarflexora devem anteceder corrida e salto?"],
 	},
 	{
 		id: "postop-cartilage-repair",
-		title: "Reparo de cartilagem: criterios de carga e impacto",
+		title:
+			"High Rate of Return to Sport for Athletes Undergoing Articular Cartilage Restoration Procedures for the Knee",
 		group: "Pos-operatorio esportivo",
 		subgroup: "Joelho",
 		focus: ["Carga", "Impacto"],
-		evidence: "Protocol",
-		status: "pending",
+		evidence: "SystematicReview",
+		year: 2025,
+		source: "Am J Sports Med",
+		url: "https://pubmed.ncbi.nlm.nih.gov/39790040/",
+		status: "verified",
 		tags: ["cartilagem", "joelho"],
-		highlights: pendingHighlights,
-		observations: pendingObservations,
-		keyQuestions: ["Qual janela de protecao para impacto?"],
+		highlights: [
+			"A literatura contemporanea mostra retorno ao esporte global em torno de 80% apos restauracao cartilaginosa do joelho",
+			"OATS e MACI apresentam maior propensao de retorno ao mesmo ou maior nivel",
+			"Microfratura se associa de forma consistente a pior capacidade de retorno esportivo",
+		],
+		observations: [
+			"Importante para modular prognostico esportivo conforme a tecnica cartilaginosa utilizada.",
+		],
+		keyQuestions: ["Como modular impacto e expectativa conforme a tecnica de restauracao cartilaginosa?"],
 	},
 	{
 		id: "postop-ankle",
-		title: "Cirurgia ligamentar de tornozelo: retorno gradual",
+		title:
+			"Return to Sport After Anatomic Lateral Ankle Stabilization Surgery for Chronic Ankle Instability",
 		group: "Pos-operatorio esportivo",
 		subgroup: "Tornozelo",
 		focus: ["Estabilidade", "RTS"],
-		evidence: "Protocol",
-		status: "pending",
+		evidence: "SystematicReview",
+		year: 2024,
+		source: "Am J Sports Med",
+		url: "https://pubmed.ncbi.nlm.nih.gov/37252803/",
+		status: "verified",
 		tags: ["tornozelo", "pos-op"],
-		highlights: pendingHighlights,
-		observations: pendingObservations,
-		keyQuestions: ["Quais testes de salto priorizar?"],
+		highlights: [
+			"A cirurgia anatomica para instabilidade lateral cronica tem alta taxa de retorno ao esporte",
+			"O retorno ao nivel pre-lesao tambem e alto, com media de retorno em torno de 12 semanas",
+			"Idade e IMC mais altos se associam a maior risco de falha no retorno",
+		],
+		observations: [
+			"Valioso para definir janelas de retorno e aconselhamento de risco apos cirurgia ligamentar lateral.",
+		],
+		keyQuestions: ["Quais testes funcionais devem anteceder retorno a saltos e mudancas de direcao?"],
 	},
 	{
 		id: "postop-shoulder-labral",

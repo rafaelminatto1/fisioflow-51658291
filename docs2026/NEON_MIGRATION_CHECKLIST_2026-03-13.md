@@ -119,7 +119,7 @@ Testar pelo menos:
 
 Ponto de codigo mais sensivel:
 
-[patientPortal.ts](/home/rafael/Documents/fisioflow/fisioflow-51658291/workers/src/routes/patientPortal.ts#L326)
+[patientPortal.ts](/home/rafael/Documents/fisioflow/fisioflow-51658291/apps/api/src/routes/patientPortal.ts#L326)
 
 Hoje esse arquivo faz fallback se as colunas nao existem. Apos a migration, ele passa a conseguir usar `profile_id`, `user_id`, `professional_id` e `professional_name` corretamente.
 

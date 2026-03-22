@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 
 const workerClientPath = 'src/lib/api/workers-client.ts';
-const routesDir = 'workers/src/routes';
+const routesDir = 'apps/api/src/routes';
 
 function getEndpointsFromClient() {
   const content = fs.readFileSync(workerClientPath, 'utf-8');

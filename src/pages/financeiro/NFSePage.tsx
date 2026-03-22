@@ -50,14 +50,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import {
-	Document,
-	Page,
-	Text,
-	View,
-	StyleSheet,
-	PDFDownloadLink,
-} from "@react-pdf/renderer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganizations } from "@/hooks/useOrganizations";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -68,7 +60,7 @@ import {
 } from "@/lib/api/workers-client";
 import { MainLayout } from "@/components/layout/MainLayout";
 
-interface NFSe extends NFSeRecord {
+export interface NFSe extends NFSeRecord {
 	destinatario: {
 		nome: string;
 		cnpj_cpf: string;
@@ -145,78 +137,6 @@ function normalizeNFSe(row: NFSeRecord): NFSe {
 			),
 		},
 	};
-}
-
-// Estilos para PDF
-const styles = StyleSheet.create({
-	page: { padding: 40, fontFamily: "Helvetica", fontSize: 10 },
-	header: { marginBottom: 20, borderBottom: "1 solid #000", paddingBottom: 10 },
-	title: {
-		fontSize: 14,
-		fontWeight: "bold",
-		textAlign: "center",
-		marginBottom: 5,
-	},
-	subtitle: { fontSize: 8, textAlign: "center", color: "#666" },
-	section: { marginBottom: 15 },
-	sectionTitle: {
-		fontSize: 10,
-		fontWeight: "bold",
-		backgroundColor: "#f0f0f0",
-		padding: "4 8",
-		marginBottom: 8,
-	},
-	row: { flexDirection: "row", marginBottom: 4 },
-	label: { fontWeight: "bold", width: "30%" },
-	value: { flex: 1 },
-	table: {
-		width: "100%",
-		borderWidth: 1,
-		borderColor: "#000",
-		marginBottom: 15,
-	},
-	tableRow: {
-		flexDirection: "row",
-		borderBottomWidth: 1,
-		borderBottomColor: "#000",
-		padding: 4,
-	},
-	tableCell: { flex: 1 },
-	totals: { borderWidth: 1, borderColor: "#000", padding: 8 },
-	totalRow: {
-		flexDirection: "row",
-		justifyContent: "space-between",
-		marginBottom: 4,
-	},
-	footer: {
-		marginTop: 20,
-		paddingTop: 10,
-		borderTop: "1 solid #000",
-		fontSize: 7,
-		textAlign: "center",
-		color: "#666",
-	},
-});
-
-export function NFSePDFDocument({ nfse }: { nfse: NFSe }) {
-	return (
-		<Document>
-			<Page size="A4" style={styles.page}>
-				<View style={styles.header}>
-					<Text style={styles.title}>
-						NOTA FISCAL DE SERVIÇO ELETRÔNICA - NFSe
-					</Text>
-					<Text style={styles.subtitle}>
-						Número: {nfse.numero} | Série: {nfse.serie}
-					</Text>
-				</View>
-				{/* ... Rest of document ... */}
-				<View style={styles.footer}>
-					<Text>Documento eletrônico conforme Lei 14.063/2020</Text>
-				</View>
-			</Page>
-		</Document>
-	);
 }
 
 export function NFSePreview({
