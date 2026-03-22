@@ -287,7 +287,7 @@ All colors MUST be HSL.
     }
   }
 
-  @keyframes shimmer {
+  @keyframes shimmer-background {
     0% {
       background-position: -1000px 0;
     }
@@ -321,7 +321,7 @@ All colors MUST be HSL.
     animation: pulse-glow 2s ease-in-out infinite;
   }
 
-  @keyframes shimmer {
+  @keyframes shimmer-slide {
     0% {
       transform: translateX(-100%);
     }
@@ -332,7 +332,7 @@ All colors MUST be HSL.
   }
 
   .animate-shimmer {
-    animation: shimmer 2s infinite;
+    animation: shimmer-slide 2s infinite;
   }
 
   .skeleton-shimmer {
@@ -341,7 +341,7 @@ All colors MUST be HSL.
         hsl(var(--muted-foreground) / 0.1) 50%,
         hsl(var(--muted)) 100%);
     background-size: 1000px 100%;
-    animation: shimmer 2s infinite linear;
+    animation: shimmer-background 2s infinite linear;
   }
 
   /* Visual Depth Utilities */
