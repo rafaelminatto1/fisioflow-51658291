@@ -91,6 +91,7 @@ Entregas:
 - `src/lib/api/workers-client.ts` foi reduzido com extrações de `scheduling`, `imaging`, `events`, `boards`, `tracking`, `communications`, `rehab`, `operations`, `clinicalApi`, `clinicalPublicApi`, `admin`, `feedback` e `billing` para `src/api/v2/*`
 - `src/api/v2/index.ts` passou a ser o barrel oficial para consumo do app, e os imports internos deixaram de apontar para `@/lib/api/workers-client`
 - `apps/api/src/routes/patients.ts` foi decomposto: os sub-recursos clínicos do paciente saíram para `routes/patients/clinical-details.ts`, com utilitários compartilhados em `routes/patients/shared.ts`
+- `apps/api/src/routes/clinical.ts` foi decomposto: os recursos clínicos foram extraídos para `routes/clinical/resources.ts`, com utilitários compartilhados em `routes/clinical/shared.ts`
 
 Critérios de aceite:
 - rota principal deixa de ser arquivo monolítico
@@ -110,6 +111,7 @@ Estes itens não estão bloqueando o projeto, mas ainda merecem acompanhamento:
 - `workers-client.ts` caiu de 2027 para 7 linhas e hoje atua apenas como shim de compatibilidade sobre `@/api/v2`.
 - o app web ficou com `0` imports restantes apontando para `@/lib/api/workers-client`.
 - `apps/api/src/routes/patients.ts` caiu de 1833 para 702 linhas.
+- `apps/api/src/routes/clinical.ts` caiu para 159 linhas, com `routes/clinical/resources.ts` concentrando 1120 linhas de sub-recursos e `routes/clinical/shared.ts` concentrando 111 linhas de helpers.
 - `posthog` ficou em chunk próprio de ~176 KB, fora do bundle principal.
 - há peers externos ainda defasados para o ecossistema Vite 8 em algumas bibliotecas secundárias.
 
@@ -125,5 +127,5 @@ Se houver uma próxima rodada, ela já não é mais “fechamento de base”. O 
 - reduzir CSS global
 - revisar chunking de DICOM e worker pesado
 - decidir, em uma etapa futura, se `workers-client.ts` pode ser removido de vez ou se vale mantê-lo como alias público estável
-- continuar a decomposição das rotas grandes da API, começando por `clinical.ts` e `analytics.ts`
+- continuar a decomposição das rotas grandes da API, agora começando por `analytics.ts`
 - abrir branch separada para upgrades mobile maiores
