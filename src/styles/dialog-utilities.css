@@ -1,0 +1,62 @@
+[data-radix-scroll-area-viewport] {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+[data-state="open"][role="dialog"] {
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+[data-radix-dialog-content][data-state="open"] {
+  max-height: min(85vh, 800px);
+  max-width: min(95vw, 600px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  [data-radix-dialog-content][data-state="open"] {
+    max-height: calc(100dvh - 2rem);
+    max-width: calc(100vw - 2rem);
+    display: flex;
+    flex-direction: column;
+  }
+
+  [data-radix-dialog-content][data-state="open"] [data-radix-dialog-footer] {
+    flex-shrink: 0;
+    padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
+    position: sticky;
+    bottom: 0;
+    background: inherit;
+    border-top: 1px solid hsl(var(--border));
+  }
+
+  [data-radix-dialog-content][data-state="open"] > div:not([data-radix-dialog-header]):not([data-radix-dialog-footer]) {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+  }
+}
+
+[data-radix-dialog-content][data-state="open"]::-webkit-scrollbar {
+  width: 6px;
+}
+
+[data-radix-dialog-content][data-state="open"]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-radix-dialog-content][data-state="open"]::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 3px;
+}
+
+[data-radix-dialog-content][data-state="open"]::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
