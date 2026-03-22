@@ -117,6 +117,7 @@ Data: 2026-03-21
 - `src/lib/api/workers-client.ts` com 7 linhas, agora apenas como shim de compatibilidade sobre `@/api/v2`
 - `apps/api/src/routes/patients.ts` com 702 linhas apos extração dos sub-recursos clínicos
 - `apps/api/src/routes/clinical.ts` com 159 linhas apos extração dos recursos clínicos para `routes/clinical/resources.ts` e `routes/clinical/shared.ts`
+- `apps/api/src/routes/analytics.ts` com 317 linhas apos extração dos blocos de analytics por paciente e ML para `routes/analytics/patient.ts`, `routes/analytics/ml.ts` e `routes/analytics/shared.ts`
 - `src/routes.tsx` deixou de ser o gargalo principal apos a agregacao por dominio
 - Ainda existe acoplamento estrutural entre web, mobile e servicos compartilhados, mas o boundary inicial de plataforma ja foi criado.
 
@@ -237,6 +238,7 @@ Status parcial:
 - O proximo corte natural deixa de ser dominio funcional e passa a ser uma decisao de compatibilidade: manter ou aposentar a fachada `workers-client.ts`, que agora e so um shim.
 - `apps/api/src/routes/patients.ts` foi quebrado em `patients.ts`, `patients/shared.ts` e `patients/clinical-details.ts`, isolando o CRUD principal dos sub-recursos clínicos.
 - `apps/api/src/routes/clinical.ts` foi quebrado em `clinical.ts`, `clinical/shared.ts` e `clinical/resources.ts`, isolando os endpoints-base dos recursos clínicos mais volumosos.
+- `apps/api/src/routes/analytics.ts` foi quebrado em `analytics.ts`, `analytics/patient.ts`, `analytics/ml.ts` e `analytics/shared.ts`, isolando overview, analytics por paciente e blocos de ML/population health.
 
 2. Contratos compartilhados
 - Mover tipos e contratos repetidos para `packages`.
@@ -317,7 +319,7 @@ Status parcial:
 ## Proxima execucao recomendada
 
 1. Atacar `computeWorker`, `dicom-vendor`, `excel-vendor` e CSS global.
-2. Continuar a decompor rotas grandes da API, agora que `patients.ts` e `clinical.ts` saíram do grupo crítico.
+2. Continuar a decompor rotas grandes da API, agora que `patients.ts`, `clinical.ts` e `analytics.ts` saíram do grupo crítico.
 3. Revisar telas grandes que ainda importam `@react-pdf/renderer` diretamente, como `RelatorioMedicoPage`, `RelatorioConvenioPage` e `NFSePage`.
 4. Consolidar imports nativos remanescentes no boundary de plataforma.
 
